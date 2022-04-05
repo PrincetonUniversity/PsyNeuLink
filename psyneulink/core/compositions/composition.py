@@ -6639,7 +6639,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                              and proj_spec._init_args[SENDER] == None
                                              and proj_spec._init_args[RECEIVER] == None))]
                 proj_specs = [proj_spec for proj_spec in proj_specs if proj_spec not in default_proj_spec]
-                # Validate that there is no more than one matrix specification, and remove it from list
+                # Validate that there is no more than one matrix or default proj specification, and remove it from list
                 if len(default_proj_spec) > 1:
                     raise CompositionError(f"There is more than one matrix specification in the set of Projection "
                                            f"specifications for entry {c} of the {pathway_arg_str}: {default_proj_spec}.")
@@ -6650,8 +6650,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # PARSE PROJECTION SPECFICATIONS AND INSTANTIATE PROJECTIONS
                 try:
-                    # If there is a matrix spec and no Projection specs,
-                    #    use matrix to construct matrix for all node_pairs
+                    # If there is a default specification and no other Projection specs,
+                    #    use default to construct Projections for all node_pairs
                     if default_proj_spec and not proj_specs:
                         proj_set.extend([self.add_projection(projection=default_proj_spec,
                                                                sender=sender, receiver=receiver,
@@ -6681,11 +6681,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                            f"{pathway_arg_str} that has {err_msg}.")
                                 proj_set.append(self.add_projection(proj, allow_duplicates=False))
                                 if default_proj_spec:
-                                    # Remove from node_pairs all entries with sender AND receiver
+                                    # If there IS a default Projection specification, remove from node_pairs
+                                    #   only the entry for the sender-receiver pair, so that the sender is assigned
+                                    #   a default Projection to all other receivers (to which a Projection is not
+                                    #   explicitly specified) and the receiver is assigned a default Projection from
+                                    #   all other senders (from which a Projection is not explicitly specified).
                                     node_pairs = [pair for pair in node_pairs
                                                   if not all(node in pair for node in {sender_node, receiver_node})]
                                 else:
-                                    # Remove from node_pairs all entries with sender OR receiver
+                                    # If there is NOT a default Projection specification, remove from node_pairs
+                                    #   all other entries with either the same sender OR receiver, so that neither
+                                    #   the sender nor receiver are assigned any other default Projections.
                                     node_pairs = [pair for pair in node_pairs
                                                   if not any(node in pair for node in {sender_node, receiver_node})]
 
@@ -6708,7 +6714,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 except (InputPortError, ProjectionError) as error:
                                     raise ProjectionError(str(error.error_value))
                         # If any sender-receiver pairs remain, assign default Projection
-                        #    (with default_proj_spec if specified)
                         proj_set.extend([self.add_projection(projection=default_proj_spec,
                                                              sender=sender,
                                                              receiver=receiver,
