@@ -6630,7 +6630,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # FIX: 4/4/22 - REFACTOR TO REPLACE "matrix_spec" WITH default_proj_spec THAT USES
                 #               EITHER matrix or GENERIC PROJECTION, OF WHICH THERE CAN BE ONLY ONE (AND DOCUMENT THAT)
                 #               WHERE GENERIC PROJECTION = ONE WITH NO SENDER OR RECEIVER SPECIFIED
-                # Get any matrix specifications
+                # Get matrix specification or default Projection specification
+                #     (i.e., one that has not sender or receive specified)
                 default_proj_spec = [proj_spec for proj_spec in proj_specs
                                      if (is_matrix(proj_spec)
                                          or (isinstance(proj_spec, Projection)
@@ -6652,10 +6653,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # If there is a matrix spec and no Projection specs,
                     #    use matrix to construct matrix for all node_pairs
                     if default_proj_spec and not proj_specs:
-                        proj_set.extend = [self.add_projection(projection=default_proj_spec,
+                        proj_set.extend([self.add_projection(projection=default_proj_spec,
                                                                sender=sender, receiver=receiver,
                                                                allow_duplicates=False)
-                                           for sender, receiver in node_pairs]
+                                           for sender, receiver in node_pairs])
                     else:
                         for proj_spec in proj_specs:
                             proj = _get_spec_if_tuple(proj_spec)
