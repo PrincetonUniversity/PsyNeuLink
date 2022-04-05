@@ -2779,8 +2779,8 @@ from psyneulink.core.globals.keywords import \
     MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, NODE, OBJECTIVE_MECHANISM, ONLINE, OUTCOME, \
     OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
     PARAMETER, PARAMETER_CIM_NAME, PORT, \
-    PROCESSING_PATHWAY, PROJECTION, PROJECTION_TYPE, PROJECTION_PARAMS, PULSE_CLAMP, \
-    SAMPLE, SHADOW_INPUTS, SOFT_CLAMP, SSE, \
+    PROCESSING_PATHWAY, PROJECTION, PROJECTION_TYPE, PROJECTION_PARAMS, PULSE_CLAMP, RECEIVER, \
+    SAMPLE, SENDER, SHADOW_INPUTS, SOFT_CLAMP, SSE, \
     TARGET, TARGET_MECHANISM, TEXT, VARIABLE, WEIGHT, OWNER_MECH
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase
@@ -6627,15 +6627,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # FIX: 4/2/22: SHOULD is_numeric BE REPLACED WITH is_matrix??
                 proj_specs = [pathway[c]] if is_numeric(pathway[c]) else convert_to_list(pathway[c])
 
-                # Get any matrix specifications and all non-matrix specifications (Projections or Ports)
-                matrix_spec = [proj_spec for proj_spec in proj_specs if is_matrix(proj_spec)]
-                proj_specs = [proj_spec for proj_spec in proj_specs if not is_matrix(proj_spec)]
-
+                # FIX: 4/4/22 - REFACTOR TO REPLACE "matrix_spec" WITH default_proj_spec THAT USES
+                #               EITHER matrix or GENERIC PROJECTION, OF WHICH THERE CAN BE ONLY ONE (AND DOCUMENT THAT)
+                #               WHERE GENERIC PROJECTION = ONE WITH NO SENDER OR RECEIVER SPECIFIED
+                # Get any matrix specifications
+                default_proj_spec = [proj_spec for proj_spec in proj_specs
+                                     if (is_matrix(proj_spec)
+                                         or (isinstance(proj_spec, Projection)
+                                             and proj_spec._initialization_status & ContextFlags.DEFERRED_INIT
+                                             and proj_spec._init_args[SENDER] == None
+                                             and proj_spec._init_args[RECEIVER] == None))]
+                proj_specs = [proj_spec for proj_spec in proj_specs if proj_spec not in default_proj_spec]
                 # Validate that there is no more than one matrix specification, and remove it from list
-                if len(matrix_spec) > 1:
+                if len(default_proj_spec) > 1:
                     raise CompositionError(f"There is more than one matrix specification in the set of Projection "
-                                           f"specifications for entry {c} of the {pathway_arg_str}: {matrix_spec}.")
-                matrix_spec = matrix_spec[0] if matrix_spec else None
+                                           f"specifications for entry {c} of the {pathway_arg_str}: {default_proj_spec}.")
+                default_proj_spec = default_proj_spec[0] if default_proj_spec else None
 
                 # Collect all Projection specifications (to add to Composition at end)
                 proj_set = []
@@ -6644,8 +6651,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 try:
                     # If there is a matrix spec and no Projection specs,
                     #    use matrix to construct matrix for all node_pairs
-                    if matrix_spec and not proj_specs:
-                        proj_set.extend = [self.add_projection(projection=matrix_spec,
+                    if default_proj_spec and not proj_specs:
+                        proj_set.extend = [self.add_projection(projection=default_proj_spec,
                                                                sender=sender, receiver=receiver,
                                                                allow_duplicates=False)
                                            for sender, receiver in node_pairs]
@@ -6655,6 +6662,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             feedback = proj_spec[1] if isinstance(proj_spec, tuple) else False
 
                             if isinstance(proj, Projection):
+                                # FIX 4/4/22 - TEST FOR DEFERRED INIT HERE:
+                                #              IF NOT SENDER OR RECEIVER, PROGRAM ERROR: SHOULD HAVE BEEN REMOVED ABOVE
+                                #              IF JUST SENDER OR RECEIVER, TREAT AS PER PORTS BELOW
                                 # Validate that Projection is between a Node in senders and one in receivers
                                 sender_node = proj.sender.owner
                                 receiver_node = proj.receiver.owner
@@ -6669,8 +6679,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     raise CompositionError(f"A Projection is specified in entry {c} of the "
                                                            f"{pathway_arg_str} that has {err_msg}.")
                                 proj_set.append(self.add_projection(proj, allow_duplicates=False))
-                                # FIX: 4/4/22 - BELOW NEED TO CHECK IF MATRIX IS SPECIFIED: IF SO, ALL, ELSE ANY
-                                if matrix_spec:
+                                if default_proj_spec:
                                     # Remove from node_pairs all entries with sender AND receiver
                                     node_pairs = [pair for pair in node_pairs
                                                   if not all(node in pair for node in {sender_node, receiver_node})]
@@ -6682,10 +6691,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             elif isinstance(proj, Port):
                                 # Implement default Projection (using matrix if specified) for all remaining specs
                                 try:
+                                    # FIX: 4/4/22 - INCLUDE TEST FOR DEFERRED_INIT WITH ONLY RECEIVER SPECIFIED
                                     if isinstance(proj, InputPort):
                                         for sender in senders:
                                             proj_set.append(self.add_projection(sender=sender, receiver=proj,
                                                                                 allow_duplicates=False))
+                                    # FIX: 4/4/22 - INCLUDE TEST FOR DEFERRED_INIT WITH ONLY SENDER SPECIFIED
                                     elif isinstance(proj, OutputPort):
                                         for receiver in receivers:
                                             proj_set.append(self.add_projection(sender=proj, receiver=receiver,
@@ -6695,9 +6706,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     node_pairs = [pair for pair in node_pairs if (proj.owner not in pair)]
                                 except (InputPortError, ProjectionError) as error:
                                     raise ProjectionError(str(error.error_value))
-
-                        # If any sender-receiver pairs remain, assign default Projection (with matrix_spec if specified)
-                        proj_set.extend([self.add_projection(projection=matrix_spec,
+                        # If any sender-receiver pairs remain, assign default Projection
+                        #    (with default_proj_spec if specified)
+                        proj_set.extend([self.add_projection(projection=default_proj_spec,
                                                              sender=sender,
                                                              receiver=receiver,
                                                              allow_duplicates=False)
