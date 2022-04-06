@@ -6657,10 +6657,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # If there is a default specification and no other Projection specs,
                     #    use default to construct Projections for all node_pairs
                     if default_proj_spec is not None and not proj_specs:
-                        proj_set.extend([self.add_projection(projection=default_proj_spec,
-                                                             sender=sender, receiver=receiver,
+                        # # # MODIFIED 4/5/22 OLD:
+                        # proj_set.extend([self.add_projection(projection=default_proj_spec,
+                        #                                      sender=sender, receiver=receiver,
+                        #                                      allow_duplicates=False, feedback=feedback)
+                        #                    for sender, receiver in node_pairs])
+                        # # MODIFIED 4/5/22 NEW:
+                        #  FIX: NEED TO USE MappingProjection TO GET DUPLICATE ERROR HERE,
+                        #       OR MODIFY add_projection TO RETURN ERRORS (IN WHICH CASE CAN BE USED BELOW AS WELL)
+                        #  FIX: replace default_proj_spec in call to add_projection with proj
+                        proj_set.extend([self.add_projection(projection=MappingProjection(sender=sender,
+                                                                                          matrix=default_proj_spec,
+                                                                                          receiver=receiver),
                                                              allow_duplicates=False, feedback=feedback)
-                                           for sender, receiver in node_pairs])
+                                         for sender, receiver in node_pairs])
+                        # MODIFIED 4/4/22 END
                     else:
                         for proj_spec in proj_specs:
                             proj = _get_spec_if_tuple(proj_spec)
@@ -6730,7 +6741,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                          for sender, receiver in node_pairs])
 
                 except (InputPortError, ProjectionError, MappingError) as error:
-                    raise CompositionError(f"Bad Projection specification in {pathway_arg_str} ({proj}): "
+    raise CompositionError(f"Bad Projection specification in {pathway_arg_str} ({proj}): "
                                            f"{str(error.error_value)}")
 
                 except DuplicateProjectionError:
