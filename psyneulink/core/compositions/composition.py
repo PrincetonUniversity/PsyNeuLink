@@ -1,4 +1,4 @@
- # Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
+# Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
 #     http://www.apache.org/licenses/LICENSE-2.0
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
@@ -8,8 +8,8 @@
 
 # ********************************************* Composition ************************************************************
 
-"""
 
+"""
 Contents
 --------
 
@@ -6639,7 +6639,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Validate that there is no more than one default Projection specification
                 if len(default_proj_spec) > 1:
                     raise CompositionError(f"There is more than one matrix specification in the set of Projection "
-                                           f"specifications for entry {c} of the {pathway_arg_str}: {default_proj_spec}.")
+                                           f"specifications for entry {c} of the {pathway_arg_str}: "
+                                           f"{default_proj_spec}.")
                 # Remove from list:
                 default_proj_spec = default_proj_spec[0] if default_proj_spec else None
                 # Unpack if tuple spec, and assign feedback (with False as default)
@@ -6809,7 +6810,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 pass
             else:
                 # Otherwise, something has gone wrong
-                assert False, f"PROGRAM ERROR: Bad pathway specification for {self.name} in {pathway_arg_str}: {pathway}."
+                assert False, \
+                    f"PROGRAM ERROR: Bad pathway specification for {self.name} in {pathway_arg_str}: {pathway}."
 
         pathway = Pathway(pathway=explicit_pathway,
                           composition=self,
