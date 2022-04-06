@@ -3464,7 +3464,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         argument of the Composition's constructor and/or one of its `Pathway addition methods
         <Composition_Pathway_Addition_Methods>`; each item is a list of `Nodes <Composition_Nodes>`
         (`Mechanisms <Mechanism>` and/or Compositions) intercolated with the `Projection(s) <Projection>` between each
-        pair of Nodes;  both Nodes are Mechanism, then only a single Projection can be specified;  if either is a
+        pair of Nodes; if both Nodes are Mechanisms, then only a single Projection can be specified;  if either is a
         Composition then, under some circumstances, there can be a set of Projections, specifying how the `INPUT
         <NodeRole.INPUT>` Node(s) of the sender project to the `OUTPUT <NodeRole.OUTPUT>` Node(s) of the receiver
         (see `add_linear_processing_pathway` for additional details).
@@ -6400,13 +6400,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Node.  If either is a set of Nodes, or has more than one `INPUT <NodeRole.INPUT>` or `OUTPUT <NodeRole.OUTPUT>`
         Node, respectively, then a list or set of Projections can be specified between any or all pairs of the Nodes in
         the nested Composition(s) or set(s). Each specification must either be a MappingProjection between a particular
-        pair of nodes, or a specification of a MappingProjection `matrix <MappingProjection.matrix>`, and there can be
-        only one of the latter.  The matrix specification is used to implement a Projection between any pair of Nodes
-        for which no MappingProjection is specified;  if no matrix specification is provided, then no Projection is
-        created between any pairs for which no MappingProjection is specified.  If no specification is provided between
-        entries in a pathway with either multiple sender and/or receiver nodes specified, or only a matrix specification
-        is intercolated between them, then a default set of Projections is constructed (using the matrix specification,
-        if provided) between each pair of sender and receiver Nodes in the set(s), as follows:
+        pair of nodes, or a specification of a default MappingProjection (either a `matrix <MappingProjection.matrix>`,
+        specification, or a MappingProjection without any `sender <MappingProjection.sender>` or `receiver
+        <MappingProjection.receiver>` specified), and there can be only default MappingProjection specified. The
+        default MappingProjection specification is used to implement a Projection between any pair of Nodes for which no
+        MappingProjection is otherwise specified;  if no default MappingProjection is specified, then no Projection is
+        created between any pairs for which no MappingProjection is specified.  If a pair of entries in a pathway has
+        multiple sender and/or receiver nodes specified, and either no Projection(s) or only a default Projection
+        intercollated between them, then a default set of Projections is constructed (using the default Projection
+        specification, if provided) between each pair of sender and receiver Nodes in the set(s), as follows:
 
         * *One to one* - if both the sender and receiver entries are Mechanisms, or if either is a Composition and the
           sender has a single `OUTPUT <NodeRole.OUTPUT>` Node and the receiver has a single `INPUT <NodeRole.INPUT>`
@@ -6421,15 +6423,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
           Nodes, then a `MappingProjection` is created from the `primary OutputPort <OutputPort_Primary>` of the sender
           Mechanism (or of its sole `OUTPUT <NodeRole.OUTPUT>` Node if the sender is a Composition) to the `primary
           InputPort <InputPort_Primary>` of each `INPUT <NodeRole.OUTPUT>` Node of the receiver Composition and/or
-          Mechanism in the receiver set, and a *set* containing the Projections is intercolated between the two entries
-          in the `Pathway`.
+          Mechanism in the receiver set, and a set containing the Projections is intercolated between the two
+          entries in the `Pathway`.
 
         * *Many to one* - if the sender is a Composition with more than one `OUTPUT <NodeRole.OUTPUT>` Node or a
           set of Nodes, and the receiver is either a Mechanism or a Composition with a single `INPUT <NodeRole.INPUT>`
           Node, then a `MappingProjection` is created from the `primary OutputPort <OutputPort_Primary>` of each
           `OUTPUT <NodeRole.OUTPUT>` Node in the Composition or Mechanism in the set of sender(s), to the `primary
           InputPort <InputPort_Primary>` of the receiver Mechanism (or of its sole `INPUT <NodeRole.INPUT>` Node if
-          the receiver is a Composition), and a *set* containing the Projections is intercolated between the
+          the receiver is a Composition), and a set containing the Projections is intercolated between the
           two entries in the `Pathway`.
 
         * *Many to many* - if both the sender and receiver entries contain multiple Nodes (i.e., are sets,  and/or the
