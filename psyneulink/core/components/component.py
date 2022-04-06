@@ -1362,7 +1362,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                                        state['buffer'], state['uinteger'], state['buffer_pos'],
                                        state['has_uint32'], x.used_seed[0]))
             elif isinstance(x, Time):
-                val = tuple(getattr(x, graph_scheduler.time._time_scale_to_attr_str(t)) for t in TimeScale)
+                val = tuple(x._get_by_time_scale(t) for t in TimeScale)
             elif isinstance(x, Component):
                 return x._get_state_initializer(context)
             elif isinstance(x, ContentAddressableList):
