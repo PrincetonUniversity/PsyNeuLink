@@ -16,8 +16,6 @@ Contents
   * `PathwayProjection_Overview`
   * `PathwayProjection_Creation`
   * `PathwayProjection_Structure`
-      - `PathwayProjection_Sender`
-      - `PathwayProjection_Receiver`
   * `PathwayProjection_Execution`
   * `PathwayProjection_Class_Reference`
 
@@ -46,7 +44,6 @@ Structure
 
 A PathwayProjection has the same structure as a `Projection <Projection_Structure>`.
 
-
 .. _PathwayProjection_Execution:
 
 Execution
@@ -63,10 +60,9 @@ See `Projection <Projection_Class_Reference>`.
 
 """
 
-from psyneulink.core.components.projections.projection import Projection_Base, ProjectionRegistry
+from psyneulink.core.components.projections.projection import Projection_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import NAME, PATHWAY_PROJECTION, RECEIVER, SENDER
-from psyneulink.core.globals.registry import remove_instance_from_registry
 
 __all__ = []
 

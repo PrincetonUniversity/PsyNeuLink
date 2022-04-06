@@ -2744,7 +2744,8 @@ from psyneulink.core.components.functions.nonstateful.learningfunctions import \
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError, MechanismList
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
-from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP, OptimizationControlMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP, \
+    OptimizationControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
     LearningMechanism, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
@@ -2762,7 +2763,7 @@ from psyneulink.core.components.projections.modulatory.modulatoryprojection impo
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection, MappingError
 from psyneulink.core.components.projections.pathway.pathwayprojection import PathwayProjection_Base
 from psyneulink.core.components.projections.projection import \
-    Projection_Base, ProjectionError, DuplicateProjectionError, _is_projection_spec
+    Projection_Base, ProjectionError, DuplicateProjectionError
 from psyneulink.core.components.shellclasses import Composition_Base
 from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.compositions.report import Report, \
@@ -6741,7 +6742,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                          for sender, receiver in node_pairs])
 
                 except (InputPortError, ProjectionError, MappingError) as error:
-    raise CompositionError(f"Bad Projection specification in {pathway_arg_str} ({proj}): "
+                    raise CompositionError(f"Bad Projection specification in {pathway_arg_str} ({proj}): "
                                            f"{str(error.error_value)}")
 
                 except DuplicateProjectionError:
