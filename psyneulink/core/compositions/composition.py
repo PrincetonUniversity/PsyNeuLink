@@ -6627,11 +6627,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # FIX: 4/2/22: SHOULD is_numeric BE REPLACED WITH is_matrix??
                 proj_specs = [pathway[c]] if is_numeric(pathway[c]) else convert_to_list(pathway[c])
 
-                # FIX: 4/4/22 - REFACTOR TO REPLACE "matrix_spec" WITH default_proj_spec THAT USES
-                #               EITHER matrix or GENERIC PROJECTION, OF WHICH THERE CAN BE ONLY ONE (AND DOCUMENT THAT)
-                #               WHERE GENERIC PROJECTION = ONE WITH NO SENDER OR RECEIVER SPECIFIED
-                # Get matrix specification or default Projection specification
-                #     (i.e., one that has not sender or receive specified)
+                # Get default Projection specification (matrix spec or Projection with no sender or receiver pecified)
                 default_proj_spec = [proj_spec for proj_spec in proj_specs
                                      if (is_matrix(proj_spec)
                                          or (isinstance(proj_spec, Projection)
@@ -6639,11 +6635,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                              and proj_spec._init_args[SENDER] is None
                                              and proj_spec._init_args[RECEIVER] is None))]
                 proj_specs = [proj_spec for proj_spec in proj_specs if proj_spec not in default_proj_spec]
-                # Validate that there is no more than one matrix or default proj specification, and remove it from list
+
+                # Validate that there is no more than one default Projection specification
                 if len(default_proj_spec) > 1:
                     raise CompositionError(f"There is more than one matrix specification in the set of Projection "
                                            f"specifications for entry {c} of the {pathway_arg_str}: {default_proj_spec}.")
+                # Remove from list:
                 default_proj_spec = default_proj_spec[0] if default_proj_spec else None
+                # Unpack if tuple spec, and assign feedback (with False as default)
+                default_proj_spec, feedback = (default_proj_spec if isinstance(default_proj_spec, tuple)
+                                               else (default_proj_spec, False))
 
                 # Collect all Projection specifications (to add to Composition at end)
                 proj_set = []
@@ -6652,10 +6653,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 try:
                     # If there is a default specification and no other Projection specs,
                     #    use default to construct Projections for all node_pairs
-                    if default_proj_spec and not proj_specs:
+                    if default_proj_spec is not None and not proj_specs:
                         proj_set.extend([self.add_projection(projection=default_proj_spec,
-                                                               sender=sender, receiver=receiver,
-                                                               allow_duplicates=False)
+                                                             sender=sender, receiver=receiver,
+                                                             allow_duplicates=False, feedback=feedback)
                                            for sender, receiver in node_pairs])
                     else:
                         for proj_spec in proj_specs:
@@ -6669,17 +6670,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 # Validate that Projection is between a Node in senders and one in receivers
                                 sender_node = proj.sender.owner
                                 receiver_node = proj.receiver.owner
-                                err_msg = None
-                                if sender_node not in senders:
-                                    err_msg = f"a sender ('{sender_node.name}') that does not belong " \
-                                              f"to a Node specified in the precedeing entry."
-                                elif receiver_node not in receivers:
-                                    err_msg = f"a receiver ('{receiver_node.name}') that does not belong " \
-                                              f"to a Node specified in the subsequent entry."
-                                if err_msg:
-                                    raise CompositionError(f"A Projection is specified in entry {c} of the "
-                                                           f"{pathway_arg_str} that has {err_msg}.")
-                                proj_set.append(self.add_projection(proj, allow_duplicates=False))
+                                # MODIFIED 4/4/22 NEW:
+                                # err_msg = None
+                                # if sender_node not in senders:
+                                #     err_msg = f"a sender ('{sender_node.name}') that does not belong " \
+                                #               f"to a Node specified in the preceding entry."
+                                # elif receiver_node not in receivers:
+                                #     err_msg = f"a receiver ('{receiver_node.name}') that does not belong " \
+                                #               f"to a Node specified in the subsequent entry."
+                                # if err_msg:
+                                #     raise CompositionError(f"A Projection is specified in entry {c} of the "
+                                #                            f"{pathway_arg_str} that has {err_msg}.")
+                                # MODIFIED 4/4/22 END
+                                proj_set.append(self.add_projection(proj, allow_duplicates=False, feedback=feedback))
                                 if default_proj_spec:
                                     # If there IS a default Projection specification, remove from node_pairs
                                     #   only the entry for the sender-receiver pair, so that the sender is assigned
@@ -6701,13 +6704,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     # FIX: 4/4/22 - INCLUDE TEST FOR DEFERRED_INIT WITH ONLY RECEIVER SPECIFIED
                                     if isinstance(proj, InputPort):
                                         for sender in senders:
-                                            proj_set.append(self.add_projection(sender=sender, receiver=proj,
-                                                                                allow_duplicates=False))
+                                            proj_set.append(self.add_projection(
+                                                projection=MappingProjection(sender=sender, receiver=proj),
+                                                allow_duplicates=False, feedback=feedback))
                                     # FIX: 4/4/22 - INCLUDE TEST FOR DEFERRED_INIT WITH ONLY SENDER SPECIFIED
                                     elif isinstance(proj, OutputPort):
                                         for receiver in receivers:
-                                            proj_set.append(self.add_projection(sender=proj, receiver=receiver,
-                                                                                allow_duplicates=False))
+                                            proj_set.append(self.add_projection(
+                                                projection=MappingProjection(sender=proj, receiver=receiver),
+                                                allow_duplicates=False, feedback=feedback))
                                     # Remove from node_pairs all pairs involving the owner of the Port
                                     #   (since all Projections to or from it have been implemented)
                                     node_pairs = [pair for pair in node_pairs if (proj.owner not in pair)]
@@ -6717,7 +6722,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         proj_set.extend([self.add_projection(projection=default_proj_spec,
                                                              sender=sender,
                                                              receiver=receiver,
-                                                             allow_duplicates=False)
+                                                             allow_duplicates=False,
+                                                             feedback=feedback)
                                          for sender, receiver in node_pairs])
 
                 except (InputPortError, ProjectionError, MappingError) as error:
@@ -6749,9 +6755,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     warnings.warn(f"{warning_msg} that already exists between those nodes ({duplicate.name}) "
                                   f"and so will be ignored.")
                     proj=duplicate
-
-                except AttributeError as e:
-                    assert False, f"PROGRAM ERROR: {e}"
 
                 # # MODIFIED 4/4/22 OLD:
                 # If there is a single Projection, remove from list and append
