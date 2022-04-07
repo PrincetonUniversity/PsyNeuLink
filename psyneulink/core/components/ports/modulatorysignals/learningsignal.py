@@ -194,7 +194,7 @@ from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import 
 from psyneulink.core.components.ports.outputport import PRIMARY
 from psyneulink.core.globals.keywords import \
     LEARNING_PROJECTION, LEARNING_SIGNAL, OUTPUT_PORT_PARAMS, PARAMETER_PORT, PARAMETER_PORTS, RECEIVER
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import parameter_spec
@@ -333,6 +333,7 @@ class LearningSignal(ModulatorySignal):
         value = Parameter(np.array([0]), read_only=True, aliases=['learning_signal'], pnl_internal=True)
         learning_rate = None
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  owner=None,

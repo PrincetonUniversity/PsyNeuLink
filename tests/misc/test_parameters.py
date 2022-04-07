@@ -469,6 +469,7 @@ class TestSpecificationType:
             else:
 
                 class TestComponent(parent_class):
+                    @pnl.core.globals.parameters.check_user_specified
                     def __init__(self, p=init_param):
                         super().__init__(p=p)
 
@@ -485,6 +486,7 @@ class TestSpecificationType:
                     class Parameters(parent_class.Parameters):
                         pass
 
+                    @pnl.core.globals.parameters.check_user_specified
                     def __init__(self, p=init_param):
                         super().__init__(p=p)
 
@@ -501,6 +503,7 @@ class TestSpecificationType:
                     class Parameters(parent_class.Parameters):
                         p = cls_param
 
+                    @pnl.core.globals.parameters.check_user_specified
                     def __init__(self, p=init_param):
                         super().__init__(p=p)
 
@@ -551,7 +554,8 @@ class TestSpecificationType:
         ],
     )
     @pytest.mark.parametrize(
-        "parent_cls_param, parent_init_param", [(1, 1), (1, None), (None, 1), (pnl.Parameter, 1)]
+        "parent_cls_param, parent_init_param",
+        [(1, 1), (1, None), (None, 1), (pnl.Parameter, 1)],
     )
     def test_inheritance(
         self,

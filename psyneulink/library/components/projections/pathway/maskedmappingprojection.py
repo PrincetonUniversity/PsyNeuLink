@@ -73,6 +73,7 @@ from psyneulink.core.components.functions.function import get_matrix
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import projection_keywords
 from psyneulink.core.globals.keywords import MASKED_MAPPING_PROJECTION, MATRIX
+from psyneulink.core.globals.parameters import check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
@@ -170,6 +171,7 @@ class MaskedMappingProjection(MappingProjection):
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  sender=None,

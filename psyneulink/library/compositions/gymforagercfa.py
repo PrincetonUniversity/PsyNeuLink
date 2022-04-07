@@ -81,7 +81,7 @@ import typecheck as tc
 from psyneulink.library.compositions.regressioncfa import RegressionCFA
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BayesGLM
 from psyneulink.core.globals.keywords import DEFAULT_VARIABLE
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 
 __all__ = ['GymForagerCFA']
 
@@ -108,6 +108,7 @@ class GymForagerCFA(RegressionCFA):
     class Parameters(RegressionCFA.Parameters):
         update_weights = Parameter(BayesGLM, stateful=False, loggable=False)
 
+    @check_user_specified
     def __init__(self,
                  name=None,
                  update_weights=BayesGLM,

@@ -70,7 +70,7 @@ from psyneulink.core.globals.keywords import \
     RATE, RECEIVER, RELU_FUNCTION, SCALE, SLOPE, SOFTMAX_FUNCTION, STANDARD_DEVIATION, SUM, \
     TRANSFER_FUNCTION_TYPE, TRANSFER_WITH_COSTS_FUNCTION, VARIANCE, VARIABLE, X_0, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import \
-    FunctionParameter, Parameter, get_validator_by_function
+    FunctionParameter, Parameter, get_validator_by_function, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, is_pref_set
 from psyneulink.core.globals.utilities import parameter_spec, safe_len
@@ -197,6 +197,7 @@ class Identity(TransferFunction):  # -------------------------------------------
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -364,6 +365,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
         slope = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         intercept = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -625,6 +627,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
         offset = Parameter(0.0, modulable=True)
         bounds = (0, None)
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -915,6 +918,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
         scale = Parameter(1.0, modulable=True)
         bounds = (0, 1)
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -1233,6 +1237,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         scale = Parameter(1.0, modulable=True)
         bounds = (0, 1)
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -1497,6 +1502,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         leak = Parameter(0.0, modulable=True)
         bounds = (None, None)
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -1705,6 +1711,7 @@ class Angle(TransferFunction):  # ----------------------------------------------
             if variable.ndim != 1 or len(variable) < 2:
                 return f"must be list or 1d array of length 2 or greater."
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -1970,6 +1977,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         offset = Parameter(0.0, modulable=True)
         bounds = (None, None)
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -2243,6 +2251,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
         bounds = (None, None)
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -2523,6 +2532,7 @@ class SoftMax(TransferFunction):
             else:
                 return 'not one of {0}'.format(options)
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -2925,6 +2935,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     #         return True
     #     return False
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -3926,6 +3937,7 @@ class TransferWithCosts(TransferFunction):
             function_parameter_name=ADDITIVE_PARAM,
         )
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
