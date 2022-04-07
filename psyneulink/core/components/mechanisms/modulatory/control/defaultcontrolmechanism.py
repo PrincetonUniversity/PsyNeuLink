@@ -40,6 +40,7 @@ from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism i
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import CONTROL, INPUT_PORTS, NAME
+from psyneulink.core.globals.parameters import check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import ContentAddressableList
@@ -87,6 +88,7 @@ class DefaultControlMechanism(ControlMechanism):
     #     PREFERENCE_SET_NAME: 'DefaultControlMechanismCustomClassPreferences',
     #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,

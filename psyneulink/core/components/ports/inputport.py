@@ -589,7 +589,7 @@ from psyneulink.core.globals.keywords import \
     LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, NAME, OPERATION, OUTPUT_PORT, OUTPUT_PORTS, OWNER, \
     PARAMS, PRODUCT, PROJECTIONS, REFERENCE_VALUE, \
     SENDER, SHADOW_INPUTS, SHADOW_INPUT_NAME, SIZE, PORT_TYPE, SUM, VALUE, VARIABLE, WEIGHT
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
@@ -874,6 +874,7 @@ class InputPort(Port_Base):
     #endregion
 
     @handle_external_context()
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  owner=None,

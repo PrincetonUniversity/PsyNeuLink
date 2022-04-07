@@ -415,7 +415,7 @@ from psyneulink.core.components.functions.stateful.memoryfunctions import \
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.globals.keywords import EPISODIC_MEMORY_MECHANISM, INITIALIZER, NAME, OWNER_VALUE, VARIABLE
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import deprecation_warning, convert_to_np_array, convert_all_elements_to_np_array
 
@@ -512,6 +512,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
         variable = Parameter([[0,0]], pnl_internal=True, constructor_argument='default_variable')
         function = Parameter(ContentAddressableMemory, stateful=False, loggable=False)
 
+    @check_user_specified
     def __init__(self,
                  default_variable:Union[int, list, np.ndarray]=None,
                  size:Optional[Union[int, list, np.ndarray]]=None,

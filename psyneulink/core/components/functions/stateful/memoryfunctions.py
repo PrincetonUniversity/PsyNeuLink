@@ -45,7 +45,7 @@ from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, BUFFER_FUNCTION, MEMORY_FUNCTION, COSINE, \
     ContentAddressableMemory_FUNCTION, DictionaryMemory_FUNCTION, \
     MIN_INDICATOR, MULTIPLICATIVE_PARAM, NEWEST, NOISE, OLDEST, OVERWRITE, RATE, RANDOM, VARIABLE
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import \
     all_within_range, convert_to_np_array, convert_to_list, convert_all_elements_to_np_array
@@ -225,6 +225,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         changes_shape = Parameter(True, stateful=False, loggable=False, pnl_internal=True)
 
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  # FIX: 12/11/18 JDC - NOT SAFE TO SPECIFY A MUTABLE TYPE AS DEFAULT
@@ -1152,6 +1153,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                 initializer = ContentAddressableMemory._enforce_memory_shape(initializer)
             return initializer
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  # FIX: REINSTATE WHEN 3.6 IS RETIRED:
@@ -2173,6 +2175,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         selection_function = Parameter(OneHot(mode=MIN_INDICATOR), stateful=False, loggable=False)
 
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,

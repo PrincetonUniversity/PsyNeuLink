@@ -421,7 +421,8 @@ from psyneulink.core.globals.keywords import \
     OUTPUT_PORT, OUTPUT_PORTS, OUTPUT_PORT_PARAMS, \
     PARAMETER_PORT, PARAMETER_PORTS, PROJECTIONS, \
     RECEIVER, FUNCTION
-from psyneulink.core.globals.parameters import FunctionParameter, Parameter, get_validator_by_function
+from psyneulink.core.globals.parameters import FunctionParameter, Parameter, get_validator_by_function, \
+    check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.sampleiterator import SampleSpec, SampleIterator
@@ -792,6 +793,7 @@ class ControlSignal(ModulatorySignal):
 
     #endregion
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  owner=None,

@@ -2782,7 +2782,7 @@ from psyneulink.core.globals.keywords import \
     SAMPLE, SENDER, SHADOW_INPUTS, SOFT_CLAMP, SSE, \
     TARGET, TARGET_MECHANISM, TEXT, VARIABLE, WEIGHT, OWNER_MECH
 from psyneulink.core.globals.log import CompositionLog, LogCondition
-from psyneulink.core.globals.parameters import Parameter, ParametersBase
+from psyneulink.core.globals.parameters import Parameter, ParametersBase, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, _assign_prefs
 from psyneulink.core.globals.registry import register_category
@@ -3743,6 +3743,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     class _CompilationData(ParametersBase):
         execution = None
 
+    @check_user_specified
     def __init__(
             self,
             pathways=None,

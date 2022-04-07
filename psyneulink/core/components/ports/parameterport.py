@@ -382,7 +382,7 @@ from psyneulink.core.globals.keywords import \
     CONTEXT, CONTROL_PROJECTION, CONTROL_SIGNAL, CONTROL_SIGNALS, FUNCTION, FUNCTION_PARAMS, \
     LEARNING_SIGNAL, LEARNING_SIGNALS, MECHANISM, NAME, PARAMETER_PORT, PARAMETER_PORT_PARAMS, PATHWAY_PROJECTION, \
     PROJECTION, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, VALUE
-from psyneulink.core.globals.parameters import ParameterBase, ParameterAlias, SharedParameter
+from psyneulink.core.globals.parameters import ParameterBase, ParameterAlias, SharedParameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities \
@@ -701,6 +701,7 @@ class ParameterPort(Port_Base):
     #endregion
 
     tc.typecheck
+    @check_user_specified
     def __init__(self,
                  owner,
                  reference_value=None,

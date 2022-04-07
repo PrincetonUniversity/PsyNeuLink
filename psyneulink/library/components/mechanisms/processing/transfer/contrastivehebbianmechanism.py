@@ -342,7 +342,7 @@ from psyneulink.core.globals.context import ContextFlags, handle_external_contex
 from psyneulink.core.globals.keywords import \
     CONTRASTIVE_HEBBIAN_MECHANISM, COUNT, FUNCTION, HARD_CLAMP, HOLLOW_MATRIX, MAX_ABS_DIFF, NAME, \
     SIZE, SOFT_CLAMP, TARGET, VARIABLE
-from psyneulink.core.globals.parameters import Parameter, SharedParameter
+from psyneulink.core.globals.parameters import Parameter, SharedParameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import is_numeric_or_none, parameter_spec
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
@@ -977,6 +977,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     standard_output_port_names = RecurrentTransferMechanism.standard_output_port_names.copy()
     standard_output_port_names = [i['name'] for i in standard_output_ports]
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  input_size:int,

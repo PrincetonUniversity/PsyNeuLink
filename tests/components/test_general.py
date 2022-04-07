@@ -55,6 +55,14 @@ def test_function_parameters_stateless(class_):
         pass
 
 
+@pytest.mark.parametrize("class_", component_classes)
+def test_constructors_have_check_user_specified(class_):
+    assert "check_user_specified" in inspect.getsource(class_.__init__), (
+        f"The __init__ method of Component {class_.__name__} must be wrapped by"
+        f" check_user_specified in {pnl.core.globals.parameters.check_user_specified.__module__}"
+    )
+
+
 @pytest.fixture(scope='module')
 def nested_compositions():
     comp = pnl.Composition(name='comp')

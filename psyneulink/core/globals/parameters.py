@@ -300,6 +300,7 @@ Class Reference
 
 import collections
 import copy
+import functools
 import inspect
 import itertools
 import logging
@@ -409,6 +410,79 @@ def get_init_signature_default_value(obj, parameter):
         return get_function_sig_default_value(obj.__init__, parameter)
     else:
         return inspect._empty
+
+
+def check_user_specified(func):
+    @functools.wraps(func)
+    def check_user_specified_wrapper(self, *args, **kwargs):
+        if 'params' in kwargs and kwargs['params'] is not None:
+            orig_kwargs = copy.copy(kwargs)
+            kwargs = {**kwargs, **kwargs['params']}
+            del kwargs['params']
+        else:
+            orig_kwargs = kwargs
+
+        # find the corresponding constructor in chained wrappers
+        constructor = func
+        while '__init__' not in constructor.__qualname__:
+            constructor = constructor.__wrapped__
+
+        for k, v in kwargs.items():
+            try:
+                p = getattr(self.parameters, k)
+            except AttributeError:
+                pass
+            else:
+                if k == p.constructor_argument:
+                    kwargs[p.name] = v
+
+        try:
+            self._user_specified_args
+        except AttributeError:
+            self._prev_constructor = constructor if '__init__' in type(self).__dict__ else None
+            self._user_specified_args = copy.copy(kwargs)
+        else:
+            # add args determined in constructor to user_specifed.
+            # since some args are set by the values of other
+            # user_specified args in a constructor, we label these as
+            # user_specified also (ex. LCAMechanism hetero/competition)
+            for k, v in kwargs.items():
+                # we only know changes in passed parameter values after
+                # calling the next __init__ in the hierarchy, so can
+                # only check _prev_constructor
+                if k not in self._user_specified_args and self._prev_constructor is not None:
+                    prev_constructor_default = get_function_sig_default_value(
+                        self._prev_constructor, k
+                    )
+                    if (
+                        # arg value passed through constructor is
+                        # different than default arg in signature
+                        (
+                            type(prev_constructor_default) != type(v)
+                            or not safe_equals(prev_constructor_default, v)
+                        )
+                        # arg value is different than the value given
+                        # from the previous constructor in the class
+                        # hierarchy
+                        and (
+                            k not in self._prev_kwargs
+                            or (
+                                type(self._prev_kwargs[k]) != type(v)
+                                or not safe_equals(self._prev_kwargs[k], v)
+                            )
+                        )
+                    ):
+                        # NOTE: this is a good place to identify
+                        # potentially unnecessary/inconsistent default
+                        # parameter settings in body of constructors
+                        self._user_specified_args[k] = v
+
+            self._prev_constructor = constructor
+
+        self._prev_kwargs = kwargs
+        return func(self, *args, **orig_kwargs)
+
+    return check_user_specified_wrapper
 
 
 class ParametersTemplate:

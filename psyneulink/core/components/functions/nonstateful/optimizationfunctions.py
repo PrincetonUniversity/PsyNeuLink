@@ -48,7 +48,7 @@ from psyneulink.core.globals.defaults import MPI_IMPLEMENTATION
 from psyneulink.core.globals.keywords import \
     BOUNDS, GRADIENT_OPTIMIZATION_FUNCTION, GRID_SEARCH_FUNCTION, GAUSSIAN_PROCESS_FUNCTION, \
     OPTIMIZATION_FUNCTION_TYPE, OWNER, VALUE, VARIABLE
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.utilities import call_with_pruned_args
 
@@ -404,6 +404,7 @@ class OptimizationFunction(Function_Base):
         saved_samples = Parameter([], read_only=True, pnl_internal=True)
         saved_values = Parameter([], read_only=True, pnl_internal=True)
 
+    @check_user_specified
     @tc.typecheck
     def __init__(
         self,
@@ -1084,6 +1085,7 @@ class GradientOptimization(OptimizationFunction):
             else:
                 return -1
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -1486,6 +1488,7 @@ class GridSearch(OptimizationFunction):
 
     # TODO: should save_values be in the constructor if it's ignored?
     # is False or True the correct value?
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -2198,6 +2201,7 @@ class GaussianProcess(OptimizationFunction):
 
     # TODO: should save_values be in the constructor if it's ignored?
     # is False or True the correct value?
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -2458,6 +2462,7 @@ class ParamEstimationFunction(OptimizationFunction):
         save_samples = True
         save_values = True
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  priors,
