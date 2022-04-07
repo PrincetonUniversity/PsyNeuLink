@@ -6630,7 +6630,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # FIX: 4/2/22: SHOULD is_numeric BE REPLACED WITH is_matrix??
                 proj_specs = [pathway[c]] if is_numeric(pathway[c]) else convert_to_list(pathway[c])
 
-                # Get default Projection specification (matrix spec or Projection with no sender or receiver pecified)
+                # Get default Projection specification (matrix spec or Projection with no sender or receiver specified)
                 default_proj_spec = [proj_spec for proj_spec in proj_specs
                                      if (is_matrix(proj_spec)
                                          or (isinstance(proj_spec, Projection)
@@ -6653,35 +6653,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Collect all Projection specifications (to add to Composition at end)
                 proj_set = []
 
-                # FIX: 4/7/22 - COLLECTION PROJECTIONS IN proj_set AND CALL self.add_projections ON ALL OF THEM AT END?
-                #               WOULD THAT MISS DUPLICATE CHECKING?
-
-                # PARSE PROJECTION SPECFICATIONS AND INSTANTIATE PROJECTIONS
+                # PARSE PROJECTION SPECIFICATIONS AND INSTANTIATE PROJECTIONS
                 try:
-                    # If there is a default specification and no other Projection specs,
-                    #    use default to construct Projections for all node_pairs
+                    # IMPLEMENTATION NOTE:
+                    #    self.add_projection is called for each Projection
+                    #    to catch any duplicates with exceptions below
+
                     if default_proj_spec is not None and not proj_specs:
-                        # # # MODIFIED 4/5/22 OLD:
-                        # proj_set.extend([self.add_projection(projection=default_proj_spec,
-                        #                                      sender=sender, receiver=receiver,
-                        #                                      allow_duplicates=False, feedback=feedback)
-                        #                    for sender, receiver in node_pairs])
-                        # # MODIFIED 4/5/22 NEW:
-                        #  FIX: NEED TO USE MappingProjection TO GET DUPLICATE ERROR HERE,
-                        #       OR MODIFY add_projection TO RETURN ERRORS (IN WHICH CASE CAN BE USED BELOW AS WELL)
-                        #  FIX: replace default_proj_spec in call to add_projection with proj
-                        #  FIX: MUST ALSO ASSIGN RECEIVER AND SENDER TO BE ACCESSIBLE FOR USE BY EXCEPTIONS BELOW
-                        # # MODIFIED 4/7/22 OLD:
-                        # proj_set.extend([self.add_projection(projection=MappingProjection(sender=sender,
-                        #                                                                   matrix=default_proj_spec,
-                        #                                                                   receiver=receiver),
-                        #                                      allow_duplicates=False, feedback=feedback)
-                        #                  for sender, receiver in node_pairs])
-                        # MODIFIED 4/7/22 NEW:
-                        # FIX: MAKE LOCAL METHOD _assign_default_proj_spec() AND CALL HERE AS WELL AS BELOW
+                        # If there is a default specification and no other Projection specs,
+                        #    use default to construct Projections for all node_pairs
                         for sender, receiver in node_pairs:
-                            # projection = default_proj_spec if not isinstance(default_proj_spec, Projection)
-                            # OLD
+                            # Default is a Projection
                             if isinstance(default_proj_spec, Projection):
                                 projection = self.add_projection(projection=default_proj_spec,
                                                                  sender=sender,
@@ -6689,32 +6671,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                  allow_duplicates=False,
                                                                  feedback=feedback)
                             else:
+                                # Default is a matrix_spec
+                                assert is_matrix(default_proj_spec), \
+                                    f"PROGRAM ERROR: Expected {default_proj_spec} to be " \
+                                    f"a matrix specification in {pathway_arg_str}."
                                 projection = self.add_projection(projection=MappingProjection(sender=sender,
                                                                                               matrix=default_proj_spec,
                                                                                               receiver=receiver),
                                                                  allow_duplicates=False,
                                                                  feedback=feedback)
                             proj_set.append(projection)
-                            # # NEW:
-                            # if isinstance(default_proj_spec, Projection):
-                            #     # Default Projection specified
-                            #     projection =default_proj_spec,
-                            #     # sender_arg=sender
-                            #     # receiver_arg=receiver
-                            # else:
-                            #     # Matrix specified for default Projection
-                            #     assert is_matrix(default_proj_spec)
-                            #     projection = MappingProjection(matrix=default_proj_spec)
-                            #     # sender_arg=None
-                            #     # receiver_arg=None
-                            # proj_set.append(self.add_projection(projection=projection,
-                            #                                     sender=sender,
-                            #                                     receiver=receiver,
-                            #                                     allow_duplicates=False,
-                            #                                     feedback=feedback))
-                        # MODIFIED 4/7/22 END
-                        # MODIFIED 4/4/22 END
                     else:
+                        # Projections have been specified
                         for proj_spec in proj_specs:
                             proj = _get_spec_if_tuple(proj_spec)
                             feedback = proj_spec[1] if isinstance(proj_spec, tuple) else False
@@ -6726,18 +6694,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 # Validate that Projection is between a Node in senders and one in receivers
                                 sender_node = proj.sender.owner
                                 receiver_node = proj.receiver.owner
-                                # MODIFIED 4/4/22 NEW:
-                                # err_msg = None
-                                # if sender_node not in senders:
-                                #     err_msg = f"a sender ('{sender_node.name}') that does not belong " \
-                                #               f"to a Node specified in the preceding entry."
-                                # elif receiver_node not in receivers:
-                                #     err_msg = f"a receiver ('{receiver_node.name}') that does not belong " \
-                                #               f"to a Node specified in the subsequent entry."
-                                # if err_msg:
-                                #     raise CompositionError(f"A Projection is specified in entry {c} of the "
-                                #                            f"{pathway_arg_str} that has {err_msg}.")
-                                # MODIFIED 4/4/22 END
                                 proj_set.append(self.add_projection(proj, allow_duplicates=False, feedback=feedback))
                                 if default_proj_spec:
                                     # If there IS a default Projection specification, remove from node_pairs
@@ -6788,7 +6744,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                            f"{str(error.error_value)}")
 
                 except DuplicateProjectionError:
-                    # FIX: 7/22/19 ADD WARNING HERE??
                     # FIX: 7/22/19 MAKE THIS A METHOD ON Projection??
                     duplicate = [p for p in receiver.afferents if p in sender.efferents]
                     assert len(duplicate)==1, \
@@ -6811,11 +6766,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # Version that forbids *any* duplicate Projections between same sender and receiver
                     warnings.warn(f"{warning_msg} that already exists between those nodes ({duplicate.name}) "
                                   f"and so will be ignored.")
-                    # # MODIFIED 4/7/22 OLD:
-                    # proj=duplicate
-                    # MODIFIED 4/7/22 NEW:
                     proj_set.append(self.add_projection(duplicate))
-                    # MODIFIED 4/7/22 END
 
                 # # MODIFIED 4/4/22 OLD:
                 # If there is a single Projection, remove from list and append
@@ -6826,9 +6777,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     projections.append(proj_set[0])
                 else:
                     projections.append(proj_set)
-                # # MODIFIED 4/4/22 NEW:
-                # projections.append(proj_set)
-                # MODIFIED 4/4/22 END
 
             # BAD PATHWAY ENTRY: contains neither Node nor Projection specification(s)
             else:
