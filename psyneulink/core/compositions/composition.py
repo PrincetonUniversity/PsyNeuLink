@@ -6653,6 +6653,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Collect all Projection specifications (to add to Composition at end)
                 proj_set = []
 
+                # FIX: 4/7/22 - COLLECTION PROJECTIONS IN proj_set AND CALL self.add_projections ON ALL OF THEM AT END?
+                #               WOULD THAT MISS DUPLICATE CHECKING?
+
                 # PARSE PROJECTION SPECFICATIONS AND INSTANTIATE PROJECTIONS
                 try:
                     # If there is a default specification and no other Projection specs,
