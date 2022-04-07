@@ -6677,12 +6677,38 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         # MODIFIED 4/7/22 NEW:
                         # FIX: MAKE LOCAL METHOD _assign_default_proj_spec() AND CALL HERE AS WELL AS BELOW
                         for sender, receiver in node_pairs:
-                            projection = MappingProjection(sender=sender,
-                                                           matrix=default_proj_spec,
-                                                           receiver=receiver)
-                            proj_set.append(self.add_projection(projection=projection,
-                                                                allow_duplicates=False,
-                                                                feedback=feedback))
+                            # projection = default_proj_spec if not isinstance(default_proj_spec, Projection)
+                            # OLD
+                            if isinstance(default_proj_spec, Projection):
+                                projection = self.add_projection(projection=default_proj_spec,
+                                                                 sender=sender,
+                                                                 receiver=receiver,
+                                                                 allow_duplicates=False,
+                                                                 feedback=feedback)
+                            else:
+                                projection = self.add_projection(projection=MappingProjection(sender=sender,
+                                                                                              matrix=default_proj_spec,
+                                                                                              receiver=receiver),
+                                                                 allow_duplicates=False,
+                                                                 feedback=feedback)
+                            proj_set.append(projection)
+                            # # NEW:
+                            # if isinstance(default_proj_spec, Projection):
+                            #     # Default Projection specified
+                            #     projection =default_proj_spec,
+                            #     # sender_arg=sender
+                            #     # receiver_arg=receiver
+                            # else:
+                            #     # Matrix specified for default Projection
+                            #     assert is_matrix(default_proj_spec)
+                            #     projection = MappingProjection(matrix=default_proj_spec)
+                            #     # sender_arg=None
+                            #     # receiver_arg=None
+                            # proj_set.append(self.add_projection(projection=projection,
+                            #                                     sender=sender,
+                            #                                     receiver=receiver,
+                            #                                     allow_duplicates=False,
+                            #                                     feedback=feedback))
                         # MODIFIED 4/7/22 END
                         # MODIFIED 4/4/22 END
                     else:
@@ -6766,6 +6792,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         f"PROGRAM ERROR: Could not identify duplicate on DuplicateProjectionError " \
                         f"for {Projection.__name__} between {sender.name} and {receiver.name} " \
                         f"in call to {repr('add_linear_processing_pathway')} for {self.name}."
+                    duplicate = duplicate[0]
                     warning_msg = f"Projection specified between {sender.name} and {receiver.name} " \
                                   f"in {pathway_arg_str} is a duplicate of one"
                     # IMPLEMENTATION NOTE: Version that allows different Projections between same
@@ -6779,12 +6806,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     #         warnings.warn(f" that already exists between those nodes ({duplicate.name}). The "
                     #                       f"new one will be used; delete it if you want to use the existing one")
                     # Version that forbids *any* duplicate Projections between same sender and receiver
-                    warnings.warn(f"{warning_msg} that already exists between those nodes ({duplicate[0].name}) "
+                    warnings.warn(f"{warning_msg} that already exists between those nodes ({duplicate.name}) "
                                   f"and so will be ignored.")
                     # # MODIFIED 4/7/22 OLD:
                     # proj=duplicate
                     # MODIFIED 4/7/22 NEW:
-                    proj_set.extend(duplicate)
+                    proj_set.append(self.add_projection(duplicate))
                     # MODIFIED 4/7/22 END
 
                 # # MODIFIED 4/4/22 OLD:
