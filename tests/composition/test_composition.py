@@ -1069,132 +1069,135 @@ class TestCompositionPathwaysArg:
                f'must be a Node, list, tuple or dict: (InputPort InputPort-0) is not."'\
                in str(err.value)
 
-    # @pytest.mark.parametrize("nodes_config", [
-    #     # "many_many",
-    #     "many_one_many",
-    # ])
-    # @pytest.mark.parametrize("projs", [
-    #     # "none",
-    #     "default_proj",
-    #     "matrix_spec",
-    #     "some_projs_no_default",
-    #     "some_projs_and_matrix",
-    #     "some_projs_and_default"
-    # ])
-    # @pytest.mark.parametrize("set_or_list", ["set", "list"])
-    # def test_composition_pathways_arg_with_various_set_or_list_configurations(self, nodes_config, projs, set_or_list):
-    #     import itertools
-    #
-    #     A = ProcessingMechanism(name='A')
-    #     B = ProcessingMechanism(name='B')
-    #     # B_comparator = ComparatorMechanism(name='B COMPARATOR')
-    #     C = ProcessingMechanism(name='C')
-    #     D = ProcessingMechanism(name='D')
-    #     E = ProcessingMechanism(name='E')
-    #     F = ProcessingMechanism(name='F')
-    #     M = ProcessingMechanism(name='M')
-    #     # C = A.input_port
-    #     # proj = MappingProjection(sender=A, receiver=B)
-    #
-    #     default_proj = MappingProjection(matrix=[2])
-    #     default_matrix = [1]
-    #     A_D = MappingProjection(sender=A, receiver=D, matrix=[2])
-    #     B_D = MappingProjection(sender=B, receiver=D, matrix=[3])
-    #     B_E = MappingProjection(sender=B, receiver=E, matrix=[4])
-    #     C_E = MappingProjection(sender=C, receiver=E, matrix=[5])
-    #     A_M = MappingProjection(sender=A, receiver=M, matrix=[6])
-    #     C_M = MappingProjection(sender=C, receiver=M, matrix=[7])
-    #     M_D = MappingProjection(sender=M, receiver=D, matrix=[8])
-    #     M_F = MappingProjection(sender=M, receiver=F, matrix=[9])
-    #
-    #     # FIX: MODIFY TO INCLUDE many to first (set->list) and last to many(list->set)
-    #     # nodes_1 = {A,B,C} if set_or_list == 'set' else [A,B,C]
-    #     # nodes_2 = {D,E,F} if set_or_list == 'set' else [D,E,F]
-    #     nodes_1 = {A,B,C}
-    #     nodes_2 = {D,E,F}
-    #     # FIX FOR THE FOLLOWING:
-    #     # nodes_1 = {A.output_port,B,C} if set_or_list == 'set' else [A.output_port,B,C]
-    #     # nodes_2 = {D,E,F.input_port} if set_or_list == 'set' else [D,E,F.input_port]
-    #
-    #     if projs != "none":
-    #         if nodes_config == "many_many":
-    #             projections = {
-    #                 "default_proj": default_proj,
-    #                 "matrix_spec": [10],
-    #                 "some_projs_no_default": {A_D, B_E} if set_or_list == 'set' else [A_D, B_E],
-    #                 "some_pojs_and_matrix":  [A_D, C_E, default_matrix], # matrix spec requires list
-    #                 "some_pojs_and_default":
-    #                     {B_D, B_E, default_proj}  if set_or_list == 'set' else [B_D, B_E, default_proj]
-    #             }
-    #         else:
-    #             # Tuples with first item for nodes_1 -> M and second item M -> nodes_2
-    #             projections = {
-    #                 "default_proj": (default_proj, default_proj),
-    #                 "matrix_spec": ([11], [12]),
-    #                 "some_projs_no_default":
-    #                     ({A_M, C_M}, {M_D, M_F}) if set_or_list == 'set' else ([A_M, C_M], [M_D, M_F]),
-    #                 "some_pojs_and_matrix":  ([A_M, C_M, default_matrix],
-    #                                           [M_D, M_F, default_matrix]),  # matrix spec requires list
-    #                 "some_pojs_and_default":
-    #                     ({A_M, C_M, default_proj}, {M_D, M_F, default_proj})
-    #                     if set_or_list == 'set' else ([A_M, C_M, default_proj], [M_D, M_F, default_proj])
-    #             }
-    #
-    #     if nodes_config == "many_many":
-    #         if projs == 'none':
-    #             comp = Composition([nodes_1, nodes_2])
-    #             # Each sender projects to 3 receivers
-    #             assert all(len([p for p in node.efferents if p in comp.projections])==3 for node in {A,B,C})
-    #             # Each receiver gets Projections from 3 senders
-    #             assert all(len([p for p in node.path_afferents if p in comp.projections])==3 for node in {D,E,F})
-    #             for sender,receiver in itertools.product([A,B,C],[D,E,F]):
-    #                 # Each sender projects to all of the receivers
-    #                 assert sender in {p.sender.owner for p in receiver.path_afferents if p in comp.projections}
-    #                 # Each receiver receives a Projections from all of the senders
-    #                 assert receiver in {p.receiver.owner for p in sender.efferents if p in comp.projections}
-    #             # All of the Projection matrices have been assigned matrix as their value
-    #             assert all(p.parameters.matrix.get() ==
-    #                        default_matrix for p in sender.path_afferents for sender in {A,B,C})
-    #         else:
-    #             comp = Composition([nodes_1, projections[projs], nodes_2])
-    #
-    #     else:
-    #         if projs == 'none':
-    #             comp = Composition([nodes_1, M, nodes_2])
-    #         else:
-    #             comp = Composition([nodes_1, projections[projs][0], M, projections[projs][1], nodes_2])
-    #
-    #
-    #    # # -----------------
-    #    #
-    #    #  projAD = MappingProjection(sender=A, receiver=D, matrix=[5])
-    #    #  # pway = Pathway({A,B,C})
-    #    #
-    #    #  # # Two Compositions in sequence with two Nodes each (many->many)
-    #    #  # compA = Composition({A,B})
-    #    #  # compB = Composition({C,D})
-    #    #  # comp = Composition([compA, compB])
-    #    #
-    #    #  # Projections in set to two InputPorts (on B)
-    #    #  # projS = MappingProjection(sender=A, receiver=B_comparator.input_ports[SAMPLE])
-    #    #  # projT = MappingProjection(sender=A, receiver=B_comparator.input_ports[TARGET])
-    #    #  # comp = Composition([A,{projS, projT}, B_comparator])
-    #    #
-    #    #  # comp = Composition([A,proj,D])
-    #    #  # comp = Composition(nodes={A,B,C})
-    #    #  # comp = Composition([A,B,C])
-    #    #  comp = Composition([{A,B,C}, [projAD], D, {E,F}])
-    #    #  # comp = Composition([{A,B,C}, [projAD, RANDOM_CONNECTIVITY_MATRIX], D, {E,F}])
-    #    #  # comp = Composition([{A,B,C}, [32], D, {E,F}])
-    #    #  # comp = Composition([{A,B,C}, D, {E,F}])
-    #    #  # comp = Composition([{A,B,C}, D, {E,F,B}])
-    #    #  # pway = [{(A, NodeRole.OUTPUT),B,C}, D, {(E, NodeRole.INPUT),F}]
-    #    #  # comp = Composition(pway)
-    #    #  # comp = Composition([{(A, NodeRole.OUTPUT),B,C}, D, {(E, NodeRole.INPUT),F}])
-    #    #  # comp = Composition([[{A,B,C}, D, {E,F}]])
-    #    #  # comp = Composition(pathways=pway)
-    #    #  # comp = Composition([[A,B],[C,D]])
-    #    #  # comp = Composition([A,B,C], {D,E})
+    @pytest.mark.parametrize("nodes_config", [
+        "many_many",
+        "many_one_many",
+    ])
+    @pytest.mark.parametrize("projs", [
+        # "none",
+        # "default_proj",
+        "matrix_spec",
+        # "some_projs_no_default",
+        # "some_projs_and_matrix",
+        # "some_projs_and_default"
+    ])
+    @pytest.mark.parametrize("set_or_list", [
+        "set",
+        "list"
+    ])
+    def test_composition_pathways_arg_with_various_set_or_list_configurations(self, nodes_config, projs, set_or_list):
+        import itertools
+
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        # B_comparator = ComparatorMechanism(name='B COMPARATOR')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        E = ProcessingMechanism(name='E')
+        F = ProcessingMechanism(name='F')
+        M = ProcessingMechanism(name='M')
+        # C = A.input_port
+        # proj = MappingProjection(sender=A, receiver=B)
+
+        default_proj = MappingProjection(matrix=[2])
+        default_matrix = [1]
+        A_D = MappingProjection(sender=A, receiver=D, matrix=[2])
+        B_D = MappingProjection(sender=B, receiver=D, matrix=[3])
+        B_E = MappingProjection(sender=B, receiver=E, matrix=[4])
+        C_E = MappingProjection(sender=C, receiver=E, matrix=[5])
+        A_M = MappingProjection(sender=A, receiver=M, matrix=[6])
+        C_M = MappingProjection(sender=C, receiver=M, matrix=[7])
+        M_D = MappingProjection(sender=M, receiver=D, matrix=[8])
+        M_F = MappingProjection(sender=M, receiver=F, matrix=[9])
+
+        # FIX: MODIFY TO INCLUDE many to first (set->list) and last to many(list->set)
+        # nodes_1 = {A,B,C} if set_or_list == 'set' else [A,B,C]
+        # nodes_2 = {D,E,F} if set_or_list == 'set' else [D,E,F]
+        nodes_1 = {A,B,C}
+        nodes_2 = {D,E,F}
+        # FIX FOR THE FOLLOWING:
+        # nodes_1 = {A.output_port,B,C} if set_or_list == 'set' else [A.output_port,B,C]
+        # nodes_2 = {D,E,F.input_port} if set_or_list == 'set' else [D,E,F.input_port]
+
+        if projs != "none":
+            if nodes_config == "many_many":
+                projections = {
+                    "default_proj": default_proj,
+                    "matrix_spec": [10],
+                    "some_projs_no_default": {A_D, B_E} if set_or_list == 'set' else [A_D, B_E],
+                    "some_pojs_and_matrix":  [A_D, C_E, default_matrix], # matrix spec requires list
+                    "some_pojs_and_default":
+                        {B_D, B_E, default_proj}  if set_or_list == 'set' else [B_D, B_E, default_proj]
+                }
+            else:
+                # Tuples with first item for nodes_1 -> M and second item M -> nodes_2
+                projections = {
+                    "default_proj": (default_proj, default_proj),
+                    "matrix_spec": ([11], [12]),
+                    "some_projs_no_default":
+                        ({A_M, C_M}, {M_D, M_F}) if set_or_list == 'set' else ([A_M, C_M], [M_D, M_F]),
+                    "some_pojs_and_matrix":  ([A_M, C_M, default_matrix],
+                                              [M_D, M_F, default_matrix]),  # matrix spec requires list
+                    "some_pojs_and_default":
+                        ({A_M, C_M, default_proj}, {M_D, M_F, default_proj})
+                        if set_or_list == 'set' else ([A_M, C_M, default_proj], [M_D, M_F, default_proj])
+                }
+
+        if nodes_config == "many_many":
+            if projs == 'none':
+                comp = Composition([nodes_1, nodes_2])
+                # Each sender projects to 3 receivers
+                assert all(len([p for p in node.efferents if p in comp.projections])==3 for node in {A,B,C})
+                # Each receiver gets Projections from 3 senders
+                assert all(len([p for p in node.path_afferents if p in comp.projections])==3 for node in {D,E,F})
+                for sender,receiver in itertools.product([A,B,C],[D,E,F]):
+                    # Each sender projects to all of the receivers
+                    assert sender in {p.sender.owner for p in receiver.path_afferents if p in comp.projections}
+                    # Each receiver receives a Projections from all of the senders
+                    assert receiver in {p.receiver.owner for p in sender.efferents if p in comp.projections}
+                # All of the Projection matrices have been assigned matrix as their value
+                assert all(p.parameters.matrix.get() ==
+                           default_matrix for p in sender.path_afferents for sender in {A,B,C})
+            else:
+                comp = Composition([nodes_1, projections[projs], nodes_2])
+
+        else:
+            if projs == 'none':
+                comp = Composition([nodes_1, M, nodes_2])
+            else:
+                comp = Composition([nodes_1, projections[projs][0], M, projections[projs][1], nodes_2])
+
+
+       # # -----------------
+       #
+       #  projAD = MappingProjection(sender=A, receiver=D, matrix=[5])
+       #  # pway = Pathway({A,B,C})
+       #
+       #  # # Two Compositions in sequence with two Nodes each (many->many)
+       #  # compA = Composition({A,B})
+       #  # compB = Composition({C,D})
+       #  # comp = Composition([compA, compB])
+       #
+       #  # Projections in set to two InputPorts (on B)
+       #  # projS = MappingProjection(sender=A, receiver=B_comparator.input_ports[SAMPLE])
+       #  # projT = MappingProjection(sender=A, receiver=B_comparator.input_ports[TARGET])
+       #  # comp = Composition([A,{projS, projT}, B_comparator])
+       #
+       #  # comp = Composition([A,proj,D])
+       #  # comp = Composition(nodes={A,B,C})
+       #  # comp = Composition([A,B,C])
+       #  comp = Composition([{A,B,C}, [projAD], D, {E,F}])
+       #  # comp = Composition([{A,B,C}, [projAD, RANDOM_CONNECTIVITY_MATRIX], D, {E,F}])
+       #  # comp = Composition([{A,B,C}, [32], D, {E,F}])
+       #  # comp = Composition([{A,B,C}, D, {E,F}])
+       #  # comp = Composition([{A,B,C}, D, {E,F,B}])
+       #  # pway = [{(A, NodeRole.OUTPUT),B,C}, D, {(E, NodeRole.INPUT),F}]
+       #  # comp = Composition(pway)
+       #  # comp = Composition([{(A, NodeRole.OUTPUT),B,C}, D, {(E, NodeRole.INPUT),F}])
+       #  # comp = Composition([[{A,B,C}, D, {E,F}]])
+       #  # comp = Composition(pathways=pway)
+       #  # comp = Composition([[A,B],[C,D]])
+       #  # comp = Composition([A,B,C], {D,E})
 
     def test_composition_pathways_arg_dict_and_list_and_pathway_roles(self):
         A = ProcessingMechanism(name='A')

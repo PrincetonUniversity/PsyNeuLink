@@ -5759,9 +5759,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 return
             else:
                 # Initialize Projection
-                projection._init_args['sender'] = sender
-                projection._init_args['receiver'] = receiver
-                # # MODIFIED 4/8/22 OLD:
+                projection._init_args[SENDER] = sender
+                projection._init_args[RECEIVER] = receiver
+                # # # MODIFIED 4/8/22 OLD:
                 # try:
                 #     projection._deferred_init()
                 # except DuplicateProjectionError:
@@ -6831,6 +6831,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     warnings.warn(f"{warning_msg} that already exists between those nodes ({duplicate.name}) "
                                   f"and so will be ignored.")
                     proj_set.append(self.add_projection(duplicate))
+                    # Restore initial state of _init_args for default_projection for potential later use
+                    #   (copy above doesn't reach _init_args dict)
+                    if isinstance(default_proj_spec, Projection):
+                        default_proj_spec._init_args[SENDER] = None
+                        default_proj_spec._init_args[RECEIVER] = None
+                    # # MODIFIED 4/8/22 END
 
                 # # MODIFIED 4/4/22 OLD:
                 # If there is a single Projection, remove from list and append
