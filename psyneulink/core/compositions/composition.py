@@ -6389,9 +6389,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         .. _Composition_Add_Linear_Processing_Pathway:
 
-        Each `Node <Composition_Nodes>` can be either a `Mechanism`, a `Composition`, or a tuple (Mechanism, `NodeRoles
+        Each `Node <Composition_Nodes>` can be either a `Mechanism`, a `Composition`, a tuple (Mechanism, `NodeRoles
         <NodeRole>`) that can be used to assign `required_roles` to Mechanisms (see `Composition_Nodes` for additional
-        details).
+        details), or a set of any of these.  If a set is specified, Projections will be assigned to or from each
+        member of the set in the same way as the others, as described below (note: a set and not a list must be used
+        for this purpose, since a list is interpreted as its own linear pathway specification for the specified Nodes).
 
         `Projections <Projection>` can be intercolated between any pair of `Nodes <Composition_Nodes>`or sets of nodes,
         with the preceding one(s) in the pathway as the **sender(s)** and the one(s) following it the **receiver(s)**.
@@ -6403,10 +6405,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         the nested Composition(s) or set(s). Each specification must either be a MappingProjection between a particular
         pair of nodes, or a specification of a default MappingProjection (either a `matrix <MappingProjection.matrix>`,
         specification, or a MappingProjection without any `sender <MappingProjection.sender>` or `receiver
-        <MappingProjection.receiver>` specified), and there can be only default MappingProjection specified. The
-        default MappingProjection specification is used to implement a Projection between any pair of Nodes for which no
+        <MappingProjection.receiver>` specified), and there can be only default MappingProjection specified (note: if
+        a collection of Projection specifications includes a default matrix specification, then these must be placed
+        in a list and not a set, since a matrix is unhashable and thus cannot be placed in a set). The default
+        MappingProjection specification is used to implement a Projection between any pair of Nodes for which no
         MappingProjection is otherwise specified;  if no default MappingProjection is specified, then no Projection is
-        created between any pairs for which no MappingProjection is specified.  If a pair of entries in a pathway has
+        created between any pairs for which no MappingProjection is specified. If a pair of entries in a pathway has
         multiple sender and/or receiver nodes specified, and either no Projection(s) or only a default Projection
         intercollated between them, then a default set of Projections is constructed (using the default Projection
         specification, if provided) between each pair of sender and receiver Nodes in the set(s), as follows:
@@ -6665,7 +6669,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         for sender, receiver in node_pairs:
                             # Default is a Projection
                             if isinstance(default_proj_spec, Projection):
-                                projection = self.add_projection(projection=default_proj_spec,
+                                projection = self.add_projection(projection=copy(default_proj_spec),
                                                                  sender=sender,
                                                                  receiver=receiver,
                                                                  allow_duplicates=False,
