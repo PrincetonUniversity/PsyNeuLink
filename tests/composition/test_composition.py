@@ -1070,18 +1070,21 @@ class TestCompositionPathwaysArg:
                in str(err.value)
 
     @pytest.mark.parametrize("nodes_config", [
-        # "many_many",
+        "many_many",
         "many_one_many",
     ])
     @pytest.mark.parametrize("projs", [
         # "none",
-        "default_proj",
+        # "default_proj",
         "matrix_spec",
-        "some_projs_no_default",
-        "some_projs_and_matrix",
-        "some_projs_and_default"
+        # "some_projs_no_default",
+        # "some_projs_and_matrix",
+        # "some_projs_and_default"
     ])
-    @pytest.mark.parametrize("set_or_list", ["set", "list"])
+    @pytest.mark.parametrize("set_or_list", [
+        "set",
+        "list"
+    ])
     def test_composition_pathways_arg_with_various_set_or_list_configurations(self, nodes_config, projs, set_or_list):
         import itertools
 
