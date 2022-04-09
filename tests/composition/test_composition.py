@@ -1071,7 +1071,7 @@ class TestCompositionPathwaysArg:
 
     @pytest.mark.parametrize("nodes_config", [
         "many_many",
-        # "many_one_many",
+        "many_one_many",
     ])
     @pytest.mark.parametrize("projs", [
         "none",
@@ -1102,14 +1102,17 @@ class TestCompositionPathwaysArg:
 
         default_proj = MappingProjection(matrix=[2])
         default_matrix = [1]
+        # For many_many:
         A_D = MappingProjection(sender=A, receiver=D, matrix=[2])
         B_D = MappingProjection(sender=B, receiver=D, matrix=[3])
         B_E = MappingProjection(sender=B, receiver=E, matrix=[4])
         C_E = MappingProjection(sender=C, receiver=E, matrix=[5])
+        # For many_one_many:
         A_M = MappingProjection(sender=A, receiver=M, matrix=[6])
         C_M = MappingProjection(sender=C, receiver=M, matrix=[7])
         M_D = MappingProjection(sender=M, receiver=D, matrix=[8])
         M_F = MappingProjection(sender=M, receiver=F, matrix=[9])
+        B_M = MappingProjection(sender=B, receiver=M, matrix=[100])
 
         # FIX: 4/9/22 - MODIFY TO INCLUDE many to first (set->list) and last to many(list->set)
         # nodes_1 = {A,B,C} if set_or_list == 'set' else [A,B,C]
@@ -1158,7 +1161,6 @@ class TestCompositionPathwaysArg:
             if projs == 'none':
                 comp = Composition([nodes_1, nodes_2])
                 matrix_val = default_matrix
-
             else:
                 comp = Composition([nodes_1, projections[projs], nodes_2])
 
@@ -1199,11 +1201,39 @@ class TestCompositionPathwaysArg:
         elif nodes_config == 'many_one_many':
             if projs == 'none':
                 comp = Composition([nodes_1, M, nodes_2])
-                assert True
+                matrix_val = default_matrix
 
             else:
                 comp = Composition([nodes_1, projections[projs][0], M, projections[projs][1], nodes_2])
-                assert True
+                if projs == 'matrix_spec':
+                    matrix_val = projections[projs][1]
+
+            if projs == "some_projs_no_default":
+                assert all(p in comp.projections for p in {A_M, C_M, M_D, M_F})
+                # Pre-specified Projections that were not included in pathways should not be in Composition:
+                assert B_M not in comp.projections
+                # FIX: 4/9/22 - RESTORE ONCE TERMINAL ASSIGNMENT BUG IS FIXED
+                # assert B in comp.get_nodes_by_role(NodeRole.SINGLETON)
+                assert E in comp.get_nodes_by_role(NodeRole.SINGLETON)
+
+            else:
+                # Each sender projects to just one receiver
+                assert all(len([p for p in node.efferents if p in comp.projections])==1 for node in {A,B,C})
+                # Each receiver receives from just one sender
+                assert all(len([p for p in node.path_afferents if p in comp.projections])==1 for node in {D,E,F})
+                for sender,receiver in itertools.product([A,B,C],[M]):
+                    # Each sender projects to M:
+                    assert sender in {p.sender.owner for p in receiver.path_afferents if p in comp.projections}
+                    # Each receiver receives from M:
+                    assert receiver in {p.receiver.owner for p in sender.efferents if p in comp.projections}
+                # Matrices for pre-specified Projections should preserve their specified value:
+                A_M.parameters.matrix.get() == [6]
+                C_M.parameters.matrix.get() == [7]
+                M_D.parameters.matrix.get() == [8]
+                M_F.parameters.matrix.get() == [9]
+                # Matrices for pairs without pre-specified Projections should be assigned value of default
+                assert [p.parameters.matrix.get() for p in B.efferents if p.receiver.owner.name == 'M'] == [100]
+                assert [p.parameters.matrix.get() for p in M.efferents if p.receiver.owner.name == 'E'] == matrix_val
 
         else:
             assert False, f"TEST ERROR: No handling for '{nodes_config}' condition."
