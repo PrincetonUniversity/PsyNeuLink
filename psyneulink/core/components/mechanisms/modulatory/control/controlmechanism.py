@@ -1150,7 +1150,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         )
 
         monitor_for_control = Parameter(
-            [OUTCOME],
+            [],
             stateful=False,
             loggable=False,
             read_only=True,
