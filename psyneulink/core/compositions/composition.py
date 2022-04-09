@@ -6660,7 +6660,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 spec = possible_default_proj_spec[0] if possible_default_proj_spec else None
                 # If it appears only once on its own in the pathways arg and there is only one sender and one receiver
                 #     consider it an individual Projection specification rather than a specification of the default
-                if sum(isinstance(spec, Projection) for spec in pathway) == len(senders) == len(receivers) == 1:
+                if sum(isinstance(s, Projection) and s is spec for s in pathway) == len(senders) == len(receivers) == 1:
                     default_proj_spec = None
                     proj_specs = all_proj_specs
                 else:
@@ -6673,16 +6673,49 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Collect all Projection specifications (to add to Composition at end)
                 proj_set = []
 
-                # PARSE PROJECTION SPECIFICATIONS AND INSTANTIATE PROJECTIONS
-                try:
-                    # IMPLEMENTATION NOTE:
-                    #    self.add_projection is called for each Projection
-                    #    to catch any duplicates with exceptions below
+                def handle_misc_errors(proj, error):
+                    raise CompositionError(f"Bad Projection specification in {pathway_arg_str} ({proj}): "
+                                           f"{str(error.error_value)}")
 
-                    if default_proj_spec is not None and not proj_specs:
-                        # If there is a default specification and no other Projection specs,
-                        #    use default to construct Projections for all node_pairs
-                        for sender, receiver in node_pairs:
+                def handle_duplicates(sender, receiver):
+                    duplicate = [p for p in receiver.afferents if p in sender.efferents]
+                    assert len(duplicate)==1, \
+                        f"PROGRAM ERROR: Could not identify duplicate on DuplicateProjectionError " \
+                        f"for {Projection.__name__} between {sender.name} and {receiver.name} " \
+                        f"in call to {repr('add_linear_processing_pathway')} for {self.name}."
+                    duplicate = duplicate[0]
+                    warning_msg = f"Projection specified between {sender.name} and {receiver.name} " \
+                                  f"in {pathway_arg_str} is a duplicate of one"
+                    # IMPLEMENTATION NOTE: Version that allows different Projections between same
+                    #                      sender and receiver in different Compositions
+                    # if duplicate in self.projections:
+                    #     warnings.warn(f"{warning_msg} already in the Composition ({duplicate.name}) "
+                    #                   f"and so will be ignored.")
+                    #     proj=duplicate
+                    # else:
+                    #     if self.prefs.verbosePref:
+                    #         warnings.warn(f" that already exists between those nodes ({duplicate.name}). The "
+                    #                       f"new one will be used; delete it if you want to use the existing one")
+                    # Version that forbids *any* duplicate Projections between same sender and receiver
+                    warnings.warn(f"{warning_msg} that already exists between those nodes ({duplicate.name}) "
+                                  f"and so will be ignored.")
+                    proj_set.append(self.add_projection(duplicate))
+                    # Restore initial state of _init_args for default_projection for potential later use
+                    #   (copy above doesn't reach _init_args dict)
+                    if isinstance(default_proj_spec, Projection):
+                        default_proj_spec._init_args[SENDER] = None
+                        default_proj_spec._init_args[RECEIVER] = None
+
+                # PARSE PROJECTION SPECIFICATIONS AND INSTANTIATE PROJECTIONS
+                # IMPLEMENTATION NOTE:
+                #    self.add_projection is called for each Projection
+                #    to catch any duplicates with exceptions below
+
+                if default_proj_spec is not None and not proj_specs:
+                    # If there is a default specification and no other Projection specs,
+                    #    use default to construct Projections for all node_pairs
+                    for sender, receiver in node_pairs:
+                        try:
                             # Default is a Projection
                             if isinstance(default_proj_spec, Projection):
                                 # Copy so that assignments made to instantiated Projection don't affect default
@@ -6702,9 +6735,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                  allow_duplicates=False,
                                                                  feedback=feedback)
                             proj_set.append(projection)
-                    else:
-                        # Projections have been specified
-                        for proj_spec in proj_specs:
+
+                        except (InputPortError, ProjectionError, MappingError) as error:
+                            handle_misc_errors(proj, error)
+                        except DuplicateProjectionError:
+                            handle_duplicates(sender, receiver)
+
+                else:
+                    # Projections have been specified
+                    for proj_spec in proj_specs:
+                        try:
                             proj = _get_spec_if_tuple(proj_spec)
                             feedback = proj_spec[1] if isinstance(proj_spec, tuple) else False
 
@@ -6757,49 +6797,55 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     node_pairs = [pair for pair in node_pairs if (proj.owner not in pair)]
                                 except (InputPortError, ProjectionError) as error:
                                     raise ProjectionError(str(error.error_value))
-                        # If any sender-receiver pairs remain, assign default Projection
-                        # FIX: 4/7/22 - REPLACE BELOW WITH CALL TO _assign_default_proj_spec(sender, receiver)
-                        proj_set.extend([self.add_projection(projection=default_proj_spec,
-                                                             sender=sender,
-                                                             receiver=receiver,
-                                                             allow_duplicates=False,
-                                                             feedback=feedback)
-                                         for sender, receiver in node_pairs])
 
-                except (InputPortError, ProjectionError, MappingError) as error:
-                    raise CompositionError(f"Bad Projection specification in {pathway_arg_str} ({proj}): "
-                                           f"{str(error.error_value)}")
+                        except (InputPortError, ProjectionError, MappingError) as error:
+                            handle_misc_errors(proj, error)
+                        except DuplicateProjectionError:
+                            handle_duplicates(sender, receiver)
 
-                except DuplicateProjectionError:
-                    # FIX: 7/22/19 MAKE THIS A METHOD ON Projection??
-                    duplicate = [p for p in receiver.afferents if p in sender.efferents]
-                    assert len(duplicate)==1, \
-                        f"PROGRAM ERROR: Could not identify duplicate on DuplicateProjectionError " \
-                        f"for {Projection.__name__} between {sender.name} and {receiver.name} " \
-                        f"in call to {repr('add_linear_processing_pathway')} for {self.name}."
-                    duplicate = duplicate[0]
-                    warning_msg = f"Projection specified between {sender.name} and {receiver.name} " \
-                                  f"in {pathway_arg_str} is a duplicate of one"
-                    # IMPLEMENTATION NOTE: Version that allows different Projections between same
-                    #                      sender and receiver in different Compositions
-                    # if duplicate in self.projections:
-                    #     warnings.warn(f"{warning_msg} already in the Composition ({duplicate.name}) "
-                    #                   f"and so will be ignored.")
-                    #     proj=duplicate
-                    # else:
-                    #     if self.prefs.verbosePref:
-                    #         warnings.warn(f" that already exists between those nodes ({duplicate.name}). The "
-                    #                       f"new one will be used; delete it if you want to use the existing one")
-                    # Version that forbids *any* duplicate Projections between same sender and receiver
-                    warnings.warn(f"{warning_msg} that already exists between those nodes ({duplicate.name}) "
-                                  f"and so will be ignored.")
-                    proj_set.append(self.add_projection(duplicate))
-                    # Restore initial state of _init_args for default_projection for potential later use
-                    #   (copy above doesn't reach _init_args dict)
-                    if isinstance(default_proj_spec, Projection):
-                        default_proj_spec._init_args[SENDER] = None
-                        default_proj_spec._init_args[RECEIVER] = None
-                    # # MODIFIED 4/8/22 END
+                    # If any sender-receiver pairs remain, assign default Projection
+                    # FIX: 4/7/22 - REPLACE BELOW WITH CALL TO _assign_default_proj_spec(sender, receiver)
+                    proj_set.extend([self.add_projection(projection=default_proj_spec,
+                                                         sender=sender,
+                                                         receiver=receiver,
+                                                         allow_duplicates=False,
+                                                         feedback=feedback)
+                                     for sender, receiver in node_pairs])
+
+                # except (InputPortError, ProjectionError, MappingError) as error:
+                #     raise CompositionError(f"Bad Projection specification in {pathway_arg_str} ({proj}): "
+                #                            f"{str(error.error_value)}")
+                #
+                # except DuplicateProjectionError:
+                #     handle_duplicates(sender, receiver)
+                    # # FIX: 7/22/19 MAKE THIS A METHOD ON Projection??
+                    # duplicate = [p for p in receiver.afferents if p in sender.efferents]
+                    # assert len(duplicate)==1, \
+                    #     f"PROGRAM ERROR: Could not identify duplicate on DuplicateProjectionError " \
+                    #     f"for {Projection.__name__} between {sender.name} and {receiver.name} " \
+                    #     f"in call to {repr('add_linear_processing_pathway')} for {self.name}."
+                    # duplicate = duplicate[0]
+                    # warning_msg = f"Projection specified between {sender.name} and {receiver.name} " \
+                    #               f"in {pathway_arg_str} is a duplicate of one"
+                    # # IMPLEMENTATION NOTE: Version that allows different Projections between same
+                    # #                      sender and receiver in different Compositions
+                    # # if duplicate in self.projections:
+                    # #     warnings.warn(f"{warning_msg} already in the Composition ({duplicate.name}) "
+                    # #                   f"and so will be ignored.")
+                    # #     proj=duplicate
+                    # # else:
+                    # #     if self.prefs.verbosePref:
+                    # #         warnings.warn(f" that already exists between those nodes ({duplicate.name}). The "
+                    # #                       f"new one will be used; delete it if you want to use the existing one")
+                    # # Version that forbids *any* duplicate Projections between same sender and receiver
+                    # warnings.warn(f"{warning_msg} that already exists between those nodes ({duplicate.name}) "
+                    #               f"and so will be ignored.")
+                    # proj_set.append(self.add_projection(duplicate))
+                    # # Restore initial state of _init_args for default_projection for potential later use
+                    # #   (copy above doesn't reach _init_args dict)
+                    # if isinstance(default_proj_spec, Projection):
+                    #     default_proj_spec._init_args[SENDER] = None
+                    #     default_proj_spec._init_args[RECEIVER] = None
 
                 # # MODIFIED 4/4/22 OLD:
                 # If there is a single Projection, remove from list and append

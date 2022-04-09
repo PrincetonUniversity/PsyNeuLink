@@ -1070,14 +1070,14 @@ class TestCompositionPathwaysArg:
                in str(err.value)
 
     @pytest.mark.parametrize("nodes_config", [
-        # "many_many",
-        "many_one_many",
+        "many_many",
+        # "many_one_many",
     ])
     @pytest.mark.parametrize("projs", [
         # "none",
         # "default_proj",
         # "matrix_spec",
-        # "some_projs_no_default",
+        "some_projs_no_default",
         # "some_projs_and_matrix",
         # "some_projs_and_default"
     ])
@@ -1125,7 +1125,7 @@ class TestCompositionPathwaysArg:
                     "default_proj": default_proj,
                     "matrix_spec": [10],
                     "some_projs_no_default": {A_D, B_E} if set_or_list == 'set' else [A_D, B_E],
-                    "some_pojs_and_matrix":  [A_D, C_E, default_matrix], # matrix spec requires list
+                    "some_projs_and_matrix":  [A_D, C_E, default_matrix], # matrix spec requires list
                     "some_pojs_and_default":
                         {B_D, B_E, default_proj} if set_or_list == 'set' else [B_D, B_E, default_proj]
                 }
@@ -1146,20 +1146,50 @@ class TestCompositionPathwaysArg:
         if nodes_config == "many_many":
             if projs == 'none':
                 comp = Composition([nodes_1, nodes_2])
-                # Each sender projects to 3 receivers
-                assert all(len([p for p in node.efferents if p in comp.projections])==3 for node in {A,B,C})
-                # Each receiver gets Projections from 3 senders
-                assert all(len([p for p in node.path_afferents if p in comp.projections])==3 for node in {D,E,F})
-                for sender,receiver in itertools.product([A,B,C],[D,E,F]):
-                    # Each sender projects to all of the receivers
-                    assert sender in {p.sender.owner for p in receiver.path_afferents if p in comp.projections}
-                    # Each receiver receives a Projections from all of the senders
-                    assert receiver in {p.receiver.owner for p in sender.efferents if p in comp.projections}
-                # All of the Projection matrices have been assigned matrix as their value
-                assert all(p.parameters.matrix.get() ==
-                           default_matrix for p in sender.path_afferents for sender in {A,B,C})
+                matrix_val = default_matrix
             else:
                 comp = Composition([nodes_1, projections[projs], nodes_2])
+                if projs == 'default_proj':
+                    matrix_val = default_proj._init_args['matrix']
+                elif projs == 'matrix_spec':
+                    matrix_val = projections[projs]
+            if projs in {'none', 'default_proj'}:
+                # Each sender projects to all three 3 receivers
+                assert all(len([p for p in node.efferents if p in comp.projections])==3 for node in {A,B,C})
+                # Each receiver gets Projections from all 3 senders
+                assert all(len([p for p in node.path_afferents if p in comp.projections])==3 for node in {D,E,F})
+                for sender,receiver in itertools.product([A,B,C],[D,E,F]):
+                    # Each sender projects to each of the receivers
+                    assert sender in {p.sender.owner for p in receiver.path_afferents if p in comp.projections}
+                    # Each receiver receives a Projection from each of the senders
+                    assert receiver in {p.receiver.owner for p in sender.efferents if p in comp.projections}
+                # Matrices for pairs without pre-specified Projections should be assigned value of default
+                assert [p.parameters.matrix.get() for p in A.efferents if p.receiver.owner.name == 'E'] == matrix_val
+                assert [p.parameters.matrix.get() for p in A.efferents if p.receiver.owner.name == 'F'] == matrix_val
+                assert [p.parameters.matrix.get() for p in B.efferents if p.receiver.owner.name == 'F'] == matrix_val
+                assert [p.parameters.matrix.get() for p in C.efferents if p.receiver.owner.name == 'D'] == matrix_val
+                assert [p.parameters.matrix.get() for p in C.efferents if p.receiver.owner.name == 'F'] == matrix_val
+            elif projs == "some_projs_no_default":
+                # Each sender projects to all three 3 receivers
+                assert all(len([p for p in node.efferents if p in comp.projections])==1 for node in {A,B,C})
+                # Each receiver gets Projections from all 3 senders
+                assert all(len([p for p in node.path_afferents if p in comp.projections])==1 for node in {D,E,F})
+                # Verify 3 pairs of connected nodes
+                for sender,receiver in zip([A,B,C],[D,E,F]):
+                    # Each sender projects to each of the receivers
+                    assert sender in {p.sender.owner for p in receiver.path_afferents if p in comp.projections}
+                    # Each receiver receives a Projection from each of the senders
+                    assert receiver in {p.receiver.owner for p in sender.efferents if p in comp.projections}
+                # Matrices for pairs without pre-specified Projections should be assigned value of default
+                assert [p.parameters.matrix.get() for p in A.efferents if p.receiver.owner.name == 'E'] == matrix_val
+                assert [p.parameters.matrix.get() for p in A.efferents if p.receiver.owner.name == 'F'] == matrix_val
+                assert [p.parameters.matrix.get() for p in B.efferents if p.receiver.owner.name == 'F'] == matrix_val
+                assert [p.parameters.matrix.get() for p in C.efferents if p.receiver.owner.name == 'D'] == matrix_val
+                assert [p.parameters.matrix.get() for p in C.efferents if p.receiver.owner.name == 'F'] == matrix_val
+            elif projs == "some_pojs_and_default":
+                pass
+            else:
+                assert False, f"TEST ERROR"
 
         else:
             if projs == 'none':
