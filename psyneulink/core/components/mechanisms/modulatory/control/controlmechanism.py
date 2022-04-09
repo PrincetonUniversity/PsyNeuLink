@@ -378,11 +378,12 @@ ControlMechanism's `function <ControlMechanism.function>` to determine its `cont
 A ControlMechanism's `function <ControlMechanism.function>` uses its `outcome <ControlMechanism.outcome>`
 attribute (the `value <InputPort.value>` of its *OUTCOME* `InputPort`) to generate a `control_allocation
 <ControlMechanism.control_allocation>`.  By default, its `function <ControlMechanism.function>` is assigned
-the `DefaultAllocationFunction`, which takes a single value as its input, and assigns that as the value of
-each item of `control_allocation <ControlMechanism.control_allocation>`.  Each of these items is assigned as
-the allocation for the corresponding  `ControlSignal` in `control_signals <ControlMechanism.control_signals>`. This
+the `Identity`, which takes a single value as its input, and copies it to the output, this assigns the value of
+each item of `control_allocation <ControlMechanism.control_allocation>`.  This item is assigned as
+the allocation for the all `ControlSignal` in `control_signals <ControlMechanism.control_signals>`. This
 distributes the ControlMechanism's input as the allocation to each of its `control_signals
-<ControlMechanism.control_signals>`.  This same behavior also applies to any custom function assigned to a
+<ControlMechanism.control_signals>`.
+This same behavior also applies to any custom function assigned to a
 ControlMechanism that returns a 2d array with a single item in its outer dimension (axis 0).  If a function is
 assigned that returns a 2d array with more than one item, and it has the same number of `control_signals
 <ControlMechanism.control_signals>`, then each ControlSignal is assigned to the corresponding item of the function's
@@ -589,6 +590,7 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import Function_Base, is_function_type
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import Concatenate
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base
@@ -612,7 +614,6 @@ from psyneulink.core.globals.utilities import ContentAddressableList, convert_to
 
 __all__ = [
     'CONTROL_ALLOCATION', 'GATING_ALLOCATION', 'ControlMechanism', 'ControlMechanismError', 'ControlMechanismRegistry',
-    'DefaultAllocationFunction'
 ]
 
 CONTROL_ALLOCATION = 'control_allocation'
@@ -725,58 +726,6 @@ def _net_outcome_getter(owning_component=None, context=None):
         )
     except TypeError:
         return [0]
-
-
-class DefaultAllocationFunction(Function_Base):
-    """Take a single 1d item and return a 2d array with n identical items
-    Takes the default input (a single value in the *OUTCOME* InputPort of the ControlMechanism),
-    and returns the same allocation for each of its `control_signals <ControlMechanism.control_signals>`.
-    """
-    componentName = 'Default Control Function'
-    class Parameters(Function_Base.Parameters):
-        """
-            Attributes
-            ----------
-
-                num_control_signals
-                    see `num_control_signals <DefaultAllocationFunction.num_control_signals>`
-
-                    :default value: 1
-                    :type: ``int``
-        """
-        num_control_signals = Parameter(1, stateful=False)
-
-    def __init__(self,
-                 default_variable=None,
-                 params=None,
-                 owner=None
-                 ):
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         )
-
-    def _function(self,
-                 variable=None,
-                 context=None,
-                 params=None,
-                 ):
-        num_ctl_sigs = self._get_current_parameter_value('num_control_signals')
-        result = np.array([variable[0]] * num_ctl_sigs)
-        return self.convert_output_type(result)
-
-    def reset(self, *args, force=False, context=None, **kwargs):
-        # Override Component.reset which requires that the Component is stateful
-        pass
-
-    def _gen_llvm_function_body(self, ctx, builder, _1, _2, arg_in, arg_out, *, tags:frozenset):
-        val_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        val = builder.load(val_ptr)
-        with pnlvm.helpers.array_ptr_loop(builder, arg_out, "alloc_loop") as (b, idx):
-            out_ptr = builder.gep(arg_out, [ctx.int32_ty(0), idx])
-            builder.store(val, out_ptr)
-        return builder
 
 
 class ControlMechanism(ModulatoryMechanism_Base):
@@ -1329,7 +1278,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                                                     f"creating unnecessary and/or duplicated Components.")
                     control = convert_to_list(args)
 
-        function = function or DefaultAllocationFunction
+        function = function or Identity
 
         super(ControlMechanism, self).__init__(
             default_variable=default_variable,
@@ -1727,42 +1676,33 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
     def _instantiate_control_signals(self, context):
         """Subclasses can override for class-specific implementation (see OptimizationControlMechanism for example)"""
-        output_port_specs = list(enumerate(self.output_ports))
 
-        for i, control_signal in output_port_specs:
+        for i, control_signal in enumerate(self.output_ports):
             self.control[i] = self._instantiate_control_signal(control_signal, context=context)
-        num_control_signals = i + 1
 
-        # For DefaultAllocationFunction, set defaults.value to have number of items equal to num control_signals
-        if isinstance(self.function, DefaultAllocationFunction):
-            self.defaults.value = np.tile(self.function.value, (num_control_signals, 1))
-            self.parameters.control_allocation._set(copy.deepcopy(self.defaults.value), context)
-            self.function.num_control_signals = num_control_signals
-
-        # For other functions, assume that if its value has:
+        # For functions, assume that if its value has:
         # - one item, all control_signals should get it (i.e., the default: (OWNER_VALUE, 0));
         # - same number of items as the number of control_signals;
         #     assign each control_signal to the corresponding item of the function's value
         # - a different number of items than number of control_signals,
         #     leave things alone, and allow any errant indices for control_signals to be caught later.
-        else:
-            self.defaults.value = np.array(self.function.value)
-            self.parameters.value._set(copy.deepcopy(self.defaults.value), context)
+        self.defaults.value = np.array(self.function.value)
+        self.parameters.value._set(copy.deepcopy(self.defaults.value), context)
 
-            len_fct_value = len(self.function.value)
+        len_fct_value = len(self.function.value)
 
-            # Assign each ControlSignal's variable_spec to index of ControlMechanism's value
-            for i, control_signal in enumerate(self.control):
+        # Assign each ControlSignal's variable_spec to index of ControlMechanism's value
+        for i, control_signal in enumerate(self.control):
 
-                # If number of control_signals is same as number of items in function's value,
-                #    assign each ControlSignal to the corresponding item of the function's value
-                if len_fct_value == num_control_signals:
-                    control_signal._variable_spec = [(OWNER_VALUE, i)]
+            # If number of control_signals is same as number of items in function's value,
+            #    assign each ControlSignal to the corresponding item of the function's value
+            if len_fct_value == len(self.control):
+                control_signal._variable_spec = (OWNER_VALUE, i)
 
-                if not isinstance(control_signal.owner_value_index, int):
-                    assert False, \
-                        f"PROGRAM ERROR: The \'owner_value_index\' attribute for {control_signal.name} " \
-                            f"of {self.name} ({control_signal.owner_value_index})is not an int."
+            if not isinstance(control_signal.owner_value_index, int):
+                assert False, \
+                    f"PROGRAM ERROR: The \'owner_value_index\' attribute for {control_signal.name} " \
+                        f"of {self.name} ({control_signal.owner_value_index})is not an int."
 
     def _instantiate_control_signal(self,  control_signal, context=None):
         """Parse and instantiate ControlSignal (or subclass relevant to ControlMechanism subclass)

@@ -34,6 +34,9 @@ def pytest_addoption(parser):
     parser.addoption('--{0}'.format(mark_stress_tests), action='store_true', default=False, help='Run {0} tests (long)'.format(mark_stress_tests))
 
 def pytest_runtest_setup(item):
+    # Check that all 'cuda' tests are also marked 'llvm'
+    assert 'llvm' in item.keywords or 'cuda' not in item.keywords
+
     for m in marks_default_skip:
         if m in item.keywords and not item.config.getvalue(m):
             pytest.skip('{0} tests not requested'.format(m))

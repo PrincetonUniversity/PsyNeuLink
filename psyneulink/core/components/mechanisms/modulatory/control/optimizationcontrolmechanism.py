@@ -3498,9 +3498,16 @@ class OptimizationControlMechanism(ControlMechanism):
 
         return f
 
-    def _gen_llvm_invoke_function(self, ctx, builder, function, params, context, variable, *, tags:frozenset):
+    def _gen_llvm_invoke_function(self, ctx, builder, function, params, context,
+                                  variable, out, *, tags:frozenset):
         fun = ctx.import_llvm_function(function)
+
+        # The function returns (sample_optimal, value_optimal),
+        # but the value of mechanism is only 'sample_optimal'
+        # so we cannot reuse the space provided and need to explicitly copy
+        # the results later.
         fun_out = builder.alloca(fun.args[3].type.pointee, name="func_out")
+        value = builder.gep(fun_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
         args = [params, context, variable, fun_out]
         # If we're calling compiled version of Composition.evaluate,
@@ -3509,13 +3516,17 @@ class OptimizationControlMechanism(ControlMechanism):
             args += builder.function.args[-3:]
         builder.call(fun, args)
 
-        return fun_out, builder
 
-    def _gen_llvm_output_port_parse_variable(self, ctx, builder, params, state, value, port):
-        # The function returns (sample_optimal, value_optimal),
-        # but the value of mechanism is only 'sample_optimal'
-        value = builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        return super()._gen_llvm_output_port_parse_variable(ctx, builder, params, state, value, port)
+        # The mechanism also converts the value to array of arrays
+        # e.g. [3 x double] -> [3 x [1 x double]]
+        assert len(value.type.pointee) == len(out.type.pointee)
+        assert value.type.pointee.element == out.type.pointee.element.element
+        with pnlvm.helpers.array_ptr_loop(builder, out, id='mech_value_copy') as (b, idx):
+            src = b.gep(value, [ctx.int32_ty(0), idx])
+            dst = b.gep(out, [ctx.int32_ty(0), idx, ctx.int32_ty(0)])
+            b.store(b.load(src), dst)
+
+        return out, builder
 
     @property
     def agent_rep_type(self):

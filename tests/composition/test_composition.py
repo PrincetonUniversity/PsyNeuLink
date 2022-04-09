@@ -7579,6 +7579,52 @@ class TestMisc:
         comp.remove_node(D)
         comp.learn(inputs={n: [0] for n in comp.get_nodes_by_role(pnl.NodeRole.INPUT)})
 
+    def test_rebuild_scheduler_after_add_node(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+
+        comp = Composition(pathways=[A, C])
+
+        comp.scheduler.add_condition(C, pnl.EveryNCalls(A, 2))
+        comp.add_node(B)
+        comp.scheduler.add_condition(B, pnl.EveryNCalls(A, 2))
+
+        comp.run(inputs={A: [0], B: [0]})
+
+        assert type(comp.scheduler.conditions[A]) is pnl.Always
+        assert(
+            type(comp.scheduler.conditions[B]) is pnl.EveryNCalls
+            and comp.scheduler.conditions[B].args == (A, 2)
+        )
+        assert(
+            type(comp.scheduler.conditions[C]) is pnl.EveryNCalls
+            and comp.scheduler.conditions[C].args == (A, 2)
+        )
+        assert comp.scheduler.execution_list[comp.default_execution_id] == [{A}, {A, B}, {C}]
+        assert set(comp.scheduler._user_specified_conds.keys()) == {B, C}
+
+    def test_rebuild_scheduler_after_remove_node(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+
+        comp = Composition(pathways=[[A, C], [B, C]])
+
+        comp.scheduler.add_condition(C, pnl.EveryNCalls(A, 2))
+        comp.remove_node(B)
+
+        comp.run(inputs={A: [0]})
+
+        assert type(comp.scheduler.conditions[A]) is pnl.Always
+        assert B not in comp.scheduler.conditions
+        assert(
+            type(comp.scheduler.conditions[C]) is pnl.EveryNCalls
+            and comp.scheduler.conditions[C].args == (A, 2)
+        )
+        assert comp.scheduler.execution_list[comp.default_execution_id] == [{A}, {A}, {C}]
+        assert set(comp.scheduler._user_specified_conds.keys()) == {C}
+
 
 class TestInputSpecsDocumentationExamples:
 

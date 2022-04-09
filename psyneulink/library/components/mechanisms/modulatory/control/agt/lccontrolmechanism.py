@@ -821,8 +821,7 @@ class LCControlMechanism(ControlMechanism):
     ):
         """Updates LCControlMechanism's ControlSignal based on input and mode parameter value
         """
-        # IMPLEMENTATION NOTE:  skip ControlMechanism._execute since it is a stub method that returns input_values
-        output_values = super(ControlMechanism, self)._execute(
+        output_values = super()._execute(
             variable=variable,
             context=context,
             runtime_params=runtime_params,
@@ -834,17 +833,23 @@ class LCControlMechanism(ControlMechanism):
 
         return gain_t, output_values[0], output_values[1], output_values[2]
 
-    def _gen_llvm_invoke_function(self, ctx, builder, function, params, state, variable, *, tags:frozenset):
+    def _gen_llvm_invoke_function(self, ctx, builder, function, params, state,
+                                  variable, out, *, tags:frozenset):
         assert function is self.function
-        mf_out, builder = super()._gen_llvm_invoke_function(ctx, builder, function, params, state, variable, tags=tags)
+        mf_out, builder = super()._gen_llvm_invoke_function(ctx, builder, function,
+                                                            params, state, variable,
+                                                            None, tags=tags)
 
         # prepend gain type (matches output[1] type)
         gain_ty = mf_out.type.pointee.elements[1]
-        elements = gain_ty, *mf_out.type.pointee.elements
-        elements_ty = pnlvm.ir.LiteralStructType(elements)
 
-        # allocate new output type
-        new_out = builder.alloca(elements_ty, name="function_out")
+        assert all(e == gain_ty for e in mf_out.type.pointee.elements)
+        mech_out_ty = pnlvm.ir.ArrayType(gain_ty, len(mf_out.type.pointee.elements) + 1)
+
+        # allocate a new output location if the type doesn't match the one
+        # provided by the caller.
+        if mech_out_ty != out.type.pointee:
+            out = builder.alloca(mech_out_ty, name="mechanism_out")
 
         # Load mechanism parameters
         params = builder.function.args[0]
@@ -867,7 +872,7 @@ class LCControlMechanism(ControlMechanism):
 
         # Apply to the entire vector
         vi = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(1)])
-        vo = builder.gep(new_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        vo = builder.gep(out, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
         with pnlvm.helpers.array_ptr_loop(builder, vi, "LC_gain") as (b1, index):
             in_ptr = b1.gep(vi, [ctx.int32_ty(0), index])
@@ -881,11 +886,11 @@ class LCControlMechanism(ControlMechanism):
         # copy the main function return value
         for i, _ in enumerate(mf_out.type.pointee.elements):
             ptr = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
-            out_ptr = builder.gep(new_out, [ctx.int32_ty(0), ctx.int32_ty(i + 1)])
+            out_ptr = builder.gep(out, [ctx.int32_ty(0), ctx.int32_ty(i + 1)])
             val = builder.load(ptr)
             builder.store(val, out_ptr)
 
-        return new_out, builder
+        return out, builder
 
     # 5/8/20: ELIMINATE SYSTEM
     # SEEMS TO STILL BE USED BY SOME MODELS;  DELETE WHEN THOSE ARE UPDATED

@@ -181,7 +181,7 @@ jobs:
         path: dist/
 
     - name: Upload dist files to release
-      uses: actions/github-script@v5
+      uses: actions/github-script@v6
       with:
         script: |
           const fs = require('fs')
