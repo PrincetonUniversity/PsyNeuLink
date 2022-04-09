@@ -6634,55 +6634,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     raise CompositionError(f"A Projection specified in {pathway_arg_str} "
                                            f"is not between two Nodes: {pathway[c]}")
 
-                # # MODIFIED 4/8/22 OLD:
-                # # Convert specs in entry to list (embedding in one if matrix) for consistency of handling below
-                # # FIX: 4/8/22: SHOULD is_numeric BE REPLACED WITH is_matrix??
-                # proj_specs = [pathway[c]] if is_numeric(pathway[c]) else convert_to_list(pathway[c])
-                #
-                # # Get default Projection specification (matrix spec or Projection with no sender or receiver specified)
-                # # FIX: 4/8/22 NEED TO CONDITIONALIZE ASSIGNMENT HERE BASED ON WHETHER IT IS PROJECTION
-                # #             BETWEEN A SINGLE PAIR OF NODES (IN WHICH CASE *IT* SHOULD BE INSTANTIATED)
-                # #             OR A DEFAULT PROJECTION AMONG A SET OF OTHERS (IN WHICH CASE IT SHOULD BE COPIED)
-                # #             EITHER:
-                # #             1) THIS NEEDS TO BE DETERMINED BY CONTEXT,
-                # #             2) OR CAN ENFORCE THAT DEFAULT MUST BE IN SET
-                # #             THE PROBLEM WITH 1) IS IF THE SAME PROJECTION IS USED AS A DEFAULT FOR SINGLE PAIRS BUT
-                # #                   IN TWO PLACES
-                # default_proj_spec = [proj_spec for proj_spec in proj_specs
-                #                      if (is_matrix(proj_spec)
-                #                          or (isinstance(proj_spec, Projection)
-                #                              and proj_spec._initialization_status & ContextFlags.DEFERRED_INIT
-                #                              and proj_spec._init_args[SENDER] is None
-                #                              and proj_spec._init_args[RECEIVER] is None))]
-                # # Validate that there is no more than one default Projection specification
-                # if len(default_proj_spec) > 1:
-                #     raise CompositionError(f"There is more than one matrix specification in the set of Projection "
-                #                            f"specifications for entry {c} of the {pathway_arg_str}: "
-                #                            f"{default_proj_spec}.")
-                #
-                # # Get all specs other than default_proj_spec
-                # proj_specs = [proj_spec for proj_spec in proj_specs if proj_spec not in default_proj_spec]
-                #
-                # # Remove default_proj_spec from list:
-                # default_proj_spec = default_proj_spec[0] if default_proj_spec else None
-                # # Unpack if tuple spec, and assign feedback (with False as default)
-                # default_proj_spec, feedback = (default_proj_spec if isinstance(default_proj_spec, tuple)
-                #                                else (default_proj_spec, False))
-
-                # MODIFIED 4/8/22 NEW:
                 # Convert specs in entry to list (embedding in one if matrix) for consistency of handling below
                 # FIX: 4/8/22: SHOULD is_numeric BE REPLACED WITH is_matrix??
                 all_proj_specs = [pathway[c]] if is_numeric(pathway[c]) else convert_to_list(pathway[c])
 
-                # Get default Projection specification (matrix spec or Projection with no sender or receiver specified)
-                # FIX: 4/8/22 NEED TO CONDITIONALIZE ASSIGNMENT HERE BASED ON WHETHER IT IS PROJECTION
-                #             BETWEEN A SINGLE PAIR OF NODES (IN WHICH CASE *IT* SHOULD BE INSTANTIATED)
-                #             OR A DEFAULT PROJECTION AMONG A SET OF OTHERS (IN WHICH CASE IT SHOULD BE COPIED)
-                #             EITHER:
-                #             1) THIS NEEDS TO BE DETERMINED BY CONTEXT,
-                #             2) OR CAN ENFORCE THAT DEFAULT MUST BE IN SET
-                #             THE PROBLEM WITH 1) IS IF THE SAME PROJECTION IS USED AS A DEFAULT FOR SINGLE PAIRS BUT
-                #                   IN TWO PLACES
+                # Get default Projection specification
+                #  Must be a matrix spec, or a Projection with no sender or receiver specified
+                #  If it is:
+                #    - a single Projection, not in a set or list
+                #    - appears only once in the pathways arg
+                #    - it is preceded by only one sender Node and followed by only one receiver Node
+                #  then treat as an individual Projection specification and not a default projection specification
                 possible_default_proj_spec = [proj_spec for proj_spec in all_proj_specs
                                               if (is_matrix(proj_spec)
                                                   or (isinstance(proj_spec, Projection)
@@ -6694,20 +6656,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     raise CompositionError(f"There is more than one matrix specification in the set of Projection "
                                            f"specifications for entry {c} of the {pathway_arg_str}: "
                                            f"{possible_default_proj_spec}.")
-                # Remove spec from its list:
+                # Get spec from list:
                 spec = possible_default_proj_spec[0] if possible_default_proj_spec else None
-                # If it appears only once on its own in the pathways arg,
+                # If it appears only once on its own in the pathways arg and there is only one sender and one receiver
                 #     consider it an individual Projection specification rather than a specification of the default
-                if pathway.count(spec) != 1:
-                    default_proj_spec = spec
-
-                # Unpack if tuple spec, and assign feedback (with False as default)
-                default_proj_spec, feedback = (spec if isinstance(spec, tuple) else (spec, False))
-
-                # Get all specs other than default_proj_spec
-                proj_specs = [proj_spec for proj_spec in all_proj_specs if proj_spec not in possible_default_proj_spec]
-
-                # MODIFIED 4/8/22 END
+                if sum(isinstance(spec, Projection) for spec in pathway) == len(senders) == len(receivers) == 1:
+                    default_proj_spec = None
+                    proj_specs = all_proj_specs
+                else:
+                    # Unpack if tuple spec, and assign feedback (with False as default)
+                    default_proj_spec, feedback = (spec if isinstance(spec, tuple) else (spec, False))
+                    # Get all specs other than default_proj_spec
+                    # proj_specs = [proj_spec for proj_spec in all_proj_specs if proj_spec not in possible_default_proj_spec]
+                    proj_specs = [proj_spec for proj_spec in all_proj_specs if proj_spec is not spec]
 
                 # Collect all Projection specifications (to add to Composition at end)
                 proj_set = []
@@ -6724,16 +6685,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         for sender, receiver in node_pairs:
                             # Default is a Projection
                             if isinstance(default_proj_spec, Projection):
-                                # MODIFIED 4/8/22 OLD:
-                                projection = self.add_projection(projection=default_proj_spec,
-                                # # MODIFIED 4/8/22 NEW:
-                                # projection = self.add_projection(projection=copy(default_proj_spec),
-                                # MODIFIED 4/8/22 END
+                                # Copy so that assignments made to instantiated Projection don't affect default
+                                projection = self.add_projection(projection=copy(default_proj_spec),
                                                                  sender=sender,
                                                                  receiver=receiver,
                                                                  allow_duplicates=False,
                                                                  feedback=feedback)
-                                assert True
                             else:
                                 # Default is a matrix_spec
                                 assert is_matrix(default_proj_spec), \
@@ -6752,13 +6709,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             feedback = proj_spec[1] if isinstance(proj_spec, tuple) else False
 
                             if isinstance(proj, Projection):
-                                # FIX 4/4/22 - TEST FOR DEFERRED INIT HERE:
-                                #              IF NOT SENDER OR RECEIVER, PROGRAM ERROR: SHOULD HAVE BEEN REMOVED ABOVE
+                                # FIX 4/4/22 - TEST FOR DEFERRED INIT HERE (THAT IS NOT A default_proj_spec)
                                 #              IF JUST SENDER OR RECEIVER, TREAT AS PER PORTS BELOW
                                 # Validate that Projection is between a Node in senders and one in receivers
-                                sender_node = proj.sender.owner
-                                receiver_node = proj.receiver.owner
-                                proj_set.append(self.add_projection(proj, allow_duplicates=False, feedback=feedback))
+                                if proj._initialization_status & ContextFlags.DEFERRED_INIT:
+                                    sender_node = senders[0]
+                                    receiver_node = receivers[0]
+                                else:
+                                    sender_node = proj.sender.owner
+                                    receiver_node = proj.receiver.owner
+                                proj_set.append(self.add_projection(proj,
+                                                                    sender = sender_node,
+                                                                    receiver = receiver_node,
+                                                                    allow_duplicates=False, feedback=feedback))
                                 if default_proj_spec:
                                     # If there IS a default Projection specification, remove from node_pairs
                                     #   only the entry for the sender-receiver pair, so that the sender is assigned

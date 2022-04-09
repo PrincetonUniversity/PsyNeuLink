@@ -1070,13 +1070,13 @@ class TestCompositionPathwaysArg:
                in str(err.value)
 
     @pytest.mark.parametrize("nodes_config", [
-        "many_many",
+        # "many_many",
         "many_one_many",
     ])
     @pytest.mark.parametrize("projs", [
         # "none",
         # "default_proj",
-        "matrix_spec",
+        # "matrix_spec",
         # "some_projs_no_default",
         # "some_projs_and_matrix",
         # "some_projs_and_default"
@@ -1127,7 +1127,7 @@ class TestCompositionPathwaysArg:
                     "some_projs_no_default": {A_D, B_E} if set_or_list == 'set' else [A_D, B_E],
                     "some_pojs_and_matrix":  [A_D, C_E, default_matrix], # matrix spec requires list
                     "some_pojs_and_default":
-                        {B_D, B_E, default_proj}  if set_or_list == 'set' else [B_D, B_E, default_proj]
+                        {B_D, B_E, default_proj} if set_or_list == 'set' else [B_D, B_E, default_proj]
                 }
             else:
                 # Tuples with first item for nodes_1 -> M and second item M -> nodes_2
