@@ -1084,9 +1084,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     #                      insuring that assignment by one instance will not affect the value of others.
     name = None
 
-    _deepcopy_shared_keys = frozenset([
-        '_init_args',
-    ])
+    _deepcopy_shared_keys = frozenset([])
 
     def __init__(self,
                  default_variable,
