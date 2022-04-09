@@ -1114,11 +1114,9 @@ class TestCompositionPathwaysArg:
         M_F = MappingProjection(sender=M, receiver=F, matrix=[9])
         B_M = MappingProjection(sender=B, receiver=M, matrix=[100])
 
-        # FIX: 4/9/22 - MODIFY TO INCLUDE many to first (set->list) and last to many(list->set)
-        # nodes_1 = {A,B,C} if set_or_list == 'set' else [A,B,C]
-        # nodes_2 = {D,E,F} if set_or_list == 'set' else [D,E,F]
         nodes_1 = {A,B,C}
         nodes_2 = {D,E,F}
+        # FIX: 4/9/22 - MODIFY TO INCLUDE many to first (set->list) and last to many(list->set)
         # FIX: 4/9/22 - INCLUDE PORT SPECS:
         # nodes_1 = {A.output_port,B,C} if set_or_list == 'set' else [A.output_port,B,C]
         # nodes_2 = {D,E,F.input_port} if set_or_list == 'set' else [D,E,F.input_port]

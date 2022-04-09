@@ -5761,15 +5761,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Initialize Projection
                 projection._init_args[SENDER] = sender
                 projection._init_args[RECEIVER] = receiver
-                # # # MODIFIED 4/8/22 OLD:
-                # try:
-                #     projection._deferred_init()
-                # except DuplicateProjectionError:
-                #     # return projection
-                #     return
-                # MODIFIED 4/8/22 NEW:
                 projection._deferred_init()
-                # MODIFIED 4/8/22 END
 
         else:
             existing_projections = self._check_for_existing_projections(projection, sender=sender, receiver=receiver)
@@ -6616,7 +6608,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Confirm that it is between two nodes, then add the Projection;
             #    note: if Projection is already instantiated and valid, it is used as is
             #          if it is a list or set...
-            #          FIX: 4/4/22 - FINISH COMMENT
+            #          FIX: 4/9/22 - FINISH COMMENT
 
             # The current entry is a Projection specification or a list or set of them
             elif _is_pathway_entry_spec(pathway[c], PROJECTION):
@@ -6640,7 +6632,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                            f"is not between two Nodes: {pathway[c]}")
 
                 # Convert specs in entry to list (embedding in one if matrix) for consistency of handling below
-                # FIX: 4/8/22: SHOULD is_numeric BE REPLACED WITH is_matrix??
+                # FIX: 4/9/22: SHOULD is_numeric BE REPLACED WITH is_matrix??
                 all_proj_specs = [pathway[c]] if is_numeric(pathway[c]) else convert_to_list(pathway[c])
 
                 # Get default Projection specification
@@ -6711,6 +6703,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #    self.add_projection is called for each Projection
                 #    to catch any duplicates with exceptions below
 
+                # FIX: 4/9/22 - REFACTOR TO DO ANY SPECIFIED ASSIGNMENTS FIRST, AND THEN DEFAULT ASSIGNMENTS (IF ANY)
                 if default_proj_spec is not None and not proj_specs:
                     # If there is a default specification and no other Projection specs,
                     #    use default to construct Projections for all node_pairs
@@ -6750,7 +6743,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             feedback = proj_spec[1] if isinstance(proj_spec, tuple) else False
 
                             if isinstance(proj, Projection):
-                                # FIX 4/4/22 - TEST FOR DEFERRED INIT HERE (THAT IS NOT A default_proj_spec)
+                                # FIX 4/9/22 - TEST FOR DEFERRED INIT HERE (THAT IS NOT A default_proj_spec)
                                 #              IF JUST SENDER OR RECEIVER, TREAT AS PER PORTS BELOW
                                 # Validate that Projection is between a Node in senders and one in receivers
                                 if proj._initialization_status & ContextFlags.DEFERRED_INIT:
@@ -6782,13 +6775,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             elif isinstance(proj, Port):
                                 # Implement default Projection (using matrix if specified) for all remaining specs
                                 try:
-                                    # FIX: 4/4/22 - INCLUDE TEST FOR DEFERRED_INIT WITH ONLY RECEIVER SPECIFIED
+                                    # FIX: 4/9/22 - INCLUDE TEST FOR DEFERRED_INIT WITH ONLY RECEIVER SPECIFIED
                                     if isinstance(proj, InputPort):
                                         for sender in senders:
                                             proj_set.append(self.add_projection(
                                                 projection=MappingProjection(sender=sender, receiver=proj),
                                                 allow_duplicates=False, feedback=feedback))
-                                    # FIX: 4/4/22 - INCLUDE TEST FOR DEFERRED_INIT WITH ONLY SENDER SPECIFIED
+                                    # FIX: 4/9/22 - INCLUDE TEST FOR DEFERRED_INIT WITH ONLY SENDER SPECIFIED
                                     elif isinstance(proj, OutputPort):
                                         for receiver in receivers:
                                             proj_set.append(self.add_projection(
@@ -6805,7 +6798,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         except DuplicateProjectionError:
                             handle_duplicates(sender, receiver)
 
-                    # FIX: 4/7/22 - REPLACE BELOW WITH CALL TO _assign_default_proj_spec(sender, receiver)
+                    # FIX: 4/9/22 - REPLACE BELOW WITH CALL TO _assign_default_proj_spec(sender, receiver)
                     # If a default Projection is specified and any sender-receiver pairs remain, assign default
                     if default_proj_spec and node_pairs:
                         for sender, receiver in node_pairs:
@@ -6835,18 +6828,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 raise CompositionError(f"An entry in {pathway_arg_str} is not a Node (Mechanism or Composition) "
                                        f"or a Projection nor a set of either: {repr(pathway[c])}.")
 
-        # FIX: 4/8/22 - KEEP NODES IN SETS IF THEY WERE SO SPECIFIED
-        # # MODIFIED 4/9/22 OLD:
-        # # Finally, clean up any tuple specs
-        # for i, n in enumerate(nodes):
-        #     if isinstance(n, tuple):
-        #         nodes[i] = nodes[i][0]
-        # # interleave nodes and projections
-        # explicit_pathway = [nodes[0]]
-        # for i in range(len(projections)):
-        #     explicit_pathway.append(projections[i])
-        #     explicit_pathway.append(nodes[i + 1])
-        # MODIFIED 4/9/22 NEW:
         # Finally, clean up any tuple specs
         for i, n_e in enumerate(node_entries):
             for n in convert_to_list(n_e):
@@ -6857,7 +6838,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for i in range(len(projections)):
             explicit_pathway.append(projections[i])
             explicit_pathway.append(node_entries[i + 1])
-        # MODIFIED 4/9/22 END
 
         # If pathway is an existing one, return that
         existing_pathway = next((p for p in self.pathways if explicit_pathway==p.pathway), None)
@@ -6959,17 +6939,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pathways = [Pathway(node) for node in pathways]
 
         # Possibility 2 (list is a single pathway spec) or 2.5 (includes one or more sets):
-        # # MODIFIED 4/1/22 OLD:
-        # if (isinstance(pathways, list)
-        #         and _is_node_spec(pathways[0]) and all(_is_pathway_entry_spec(p, ANY) for p in pathways)):
-        # MODIFIED 4/1/22 NEW:
         if (isinstance(pathways, list) and
                 # First item must be a node_spec or set of them
                 ((_is_node_spec(pathways[0])
                   or (isinstance(pathways[0], set) and all(_is_node_spec(item) for item in pathways[0])))
                 # All other items must be either Nodes, Projections or sets
                  and all(_is_pathway_entry_spec(p, ANY) for p in pathways))):
-        # MODIFIED 4/1/22 END
             # Place in outter list (to conform to processing of multiple pathways below)
             pathways = [pathways]
         # If pathways is not now a list it must be illegitimate
@@ -7023,7 +6998,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 pathway = pathway.pathway
             if _is_node_spec(pathway) or isinstance(pathway, (list, tuple)):
                 pway_type, pway, pway_learning_fct = identify_pway_type_and_parse_tuple_prn(pathway, f"a tuple")
-            # FIX: 4/1/22 - HANDLE SETS HERE, BY INSTANTIATING A PATHWAY FOR EACH NODE IN SET??
             elif isinstance(pathway, dict):
                 if len(pathway)!=1:
                     raise CompositionError(f"A dict specified in the {pathways_arg_str} "
