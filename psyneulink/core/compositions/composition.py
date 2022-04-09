@@ -6705,11 +6705,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     warnings.warn(f"{warning_msg} that already exists between those nodes ({duplicate.name}) "
                                   f"and so will be ignored.")
                     proj_set.append(self.add_projection(duplicate))
-                    # Restore initial state of _init_args for default_projection for potential later use
-                    #   (copy above doesn't reach _init_args dict)
-                    if isinstance(default_proj_spec, Projection):
-                        default_proj_spec._init_args[SENDER] = None
-                        default_proj_spec._init_args[RECEIVER] = None
 
                 # PARSE PROJECTION SPECIFICATIONS AND INSTANTIATE PROJECTIONS
                 # IMPLEMENTATION NOTE:
@@ -6724,7 +6719,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             # Default is a Projection
                             if isinstance(default_proj_spec, Projection):
                                 # Copy so that assignments made to instantiated Projection don't affect default
-                                projection = self.add_projection(projection=copy(default_proj_spec),
+                                projection = self.add_projection(projection=deepcopy(default_proj_spec),
                                                                  sender=sender,
                                                                  receiver=receiver,
                                                                  allow_duplicates=False,
@@ -6747,6 +6742,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             handle_duplicates(sender, receiver)
 
                 else:
+                    # FIX: 4/9/22 - PUT THIS FIRST (BEFORE BLOCK JUST ABOVE) AND THEN ASSIGN TO ANY LEFT IN node_pairs
                     # Projections have been specified
                     for proj_spec in proj_specs:
                         try:
@@ -6782,6 +6778,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     node_pairs = [pair for pair in node_pairs
                                                   if not any(node in pair for node in {sender_node, receiver_node})]
 
+                            # FIX: 4/9/22 - SHOULD INCLUDE MECH SPEC (AND USE PRIMARY PORT) HERE:
                             elif isinstance(proj, Port):
                                 # Implement default Projection (using matrix if specified) for all remaining specs
                                 try:
@@ -6808,17 +6805,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         except DuplicateProjectionError:
                             handle_duplicates(sender, receiver)
 
-                    # If any sender-receiver pairs remain, assign default Projection
                     # FIX: 4/7/22 - REPLACE BELOW WITH CALL TO _assign_default_proj_spec(sender, receiver)
-                    if default_proj_spec:
-                        proj_set.extend([self.add_projection(projection=default_proj_spec,
-                                                             sender=sender,
-                                                             receiver=receiver,
-                                                             allow_duplicates=False,
-                                                             feedback=feedback)
-                                         for sender, receiver in node_pairs])
+                    # If a default Projection is specified and any sender-receiver pairs remain, assign default
+                    if default_proj_spec and node_pairs:
+                        for sender, receiver in node_pairs:
+                            try:
+                                p = self.add_projection(projection=deepcopy(default_proj_spec),
+                                                        sender=sender,
+                                                        receiver=receiver,
+                                                        allow_duplicates=False,
+                                                        feedback=feedback)
+                                proj_set.append(p)
+                            except (InputPortError, ProjectionError, MappingError) as error:
+                                handle_misc_errors(proj, error)
+                            except DuplicateProjectionError:
+                                handle_duplicates(sender, receiver)
 
-                # If there is a single Projection, remove from list and append
+                # If there is a single Projection, extract it from list and append as Projection
                 # IMPLEMENTATION NOTE:
                 #    this is to support calls to add_learing_processing_pathway by add_learning_<> methods
                 #    that do not yet support a list or set of Projection specifications
