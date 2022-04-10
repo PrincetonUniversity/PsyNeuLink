@@ -22,6 +22,7 @@ from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.ports.inputport import InputPort
@@ -936,9 +937,10 @@ class TestDuplicatePathwayWarnings:
         comp.add_linear_processing_pathway(pathway=[A,B,C])
 
         regexp = "Pathway specified in 'pathway' arg for add_linear_procesing_pathway method .*"\
-                f"has same Nodes in same order as one already in {comp.name}"
+                 f"has same Nodes in same order as one already in {comp.name}"
         with pytest.warns(UserWarning, match=regexp):
             comp.add_linear_processing_pathway(pathway=[A,B])
+            assert True
 
     def test_add_backpropagation_pathway_exact_duplicate_warning(self):
         A = TransferMechanism()
@@ -1041,6 +1043,198 @@ class TestCompositionPathwaysArg:
                                             PathwayRole.SINGLETON,
                                             PathwayRole.OUTPUT,
                                             PathwayRole.TERMINAL}
+
+    def test_composition_pathways_arg_set(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        c = Composition({A,B,C})
+        assert all(name in c.pathways.names for name in {'Pathway-0', 'Pathway-1', 'Pathway-2'})
+        assert all(set(c.get_roles_by_node(node)) == {NodeRole.INPUT,
+                                                      NodeRole.ORIGIN,
+                                                      NodeRole.SINGLETON,
+                                                      NodeRole.OUTPUT,
+                                                      NodeRole.TERMINAL}
+                   for node in {A,B,C})
+        assert all(set(c.pathways[i].roles) == {PathwayRole.INPUT,
+                                            PathwayRole.ORIGIN,
+                                            PathwayRole.SINGLETON,
+                                            PathwayRole.OUTPUT,
+                                            PathwayRole.TERMINAL}
+                   for i in range(0,2))
+
+        with pytest.raises(CompositionError) as err:
+            d = Composition({A,B,C.input_port})
+        assert f'"Every item in the \'pathways\' arg of the constructor for Composition-1 ' \
+               f'must be a Node, list, tuple or dict: (InputPort InputPort-0) is not."'\
+               in str(err.value)
+
+    @pytest.mark.parametrize("nodes_config", [
+        "many_many",
+        "many_one_many",
+    ])
+    @pytest.mark.parametrize("projs", [
+        "none",
+        "default_proj",
+        "matrix_spec",
+        "some_projs_no_default",
+        "some_projs_and_matrix_spec",
+        "some_projs_and_default_proj"
+    ])
+    @pytest.mark.parametrize("set_or_list", [
+        "set",
+        "list"
+    ])
+    def test_composition_pathways_arg_with_various_set_or_list_configurations(self, nodes_config, projs, set_or_list):
+        import itertools
+
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        # FIX: 4/9/22 - INCLUDE TWO PORT MECHANISM:
+        # B_comparator = ComparatorMechanism(name='B COMPARATOR')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        E = ProcessingMechanism(name='E')
+        F = ProcessingMechanism(name='F')
+        M = ProcessingMechanism(name='M')
+        # C = A.input_port
+        # proj = MappingProjection(sender=A, receiver=B)
+
+        default_proj = MappingProjection(matrix=[2])
+        default_matrix = [1]
+        # For many_many:
+        A_D = MappingProjection(sender=A, receiver=D, matrix=[2])
+        B_D = MappingProjection(sender=B, receiver=D, matrix=[3])
+        B_E = MappingProjection(sender=B, receiver=E, matrix=[4])
+        C_E = MappingProjection(sender=C, receiver=E, matrix=[5])
+        # For many_one_many:
+        A_M = MappingProjection(sender=A, receiver=M, matrix=[6])
+        C_M = MappingProjection(sender=C, receiver=M, matrix=[7])
+        M_D = MappingProjection(sender=M, receiver=D, matrix=[8])
+        M_F = MappingProjection(sender=M, receiver=F, matrix=[9])
+        B_M = MappingProjection(sender=B, receiver=M, matrix=[100])
+
+        nodes_1 = {A,B,C}
+        nodes_2 = {D,E,F}
+        # FIX: 4/9/22 - MODIFY TO INCLUDE many to first (set->list) and last to many(list->set)
+        # FIX: 4/9/22 - INCLUDE PORT SPECS:
+        # nodes_1 = {A.output_port,B,C} if set_or_list == 'set' else [A.output_port,B,C]
+        # nodes_2 = {D,E,F.input_port} if set_or_list == 'set' else [D,E,F.input_port]
+
+        if projs != "none":
+            if nodes_config == "many_many":
+                projections = {
+                    "default_proj": default_proj,
+                    "matrix_spec": [10],
+                    "some_projs_no_default": {A_D, B_E} if set_or_list == 'set' else [A_D, B_E],
+                    "some_projs_and_matrix_spec":  [A_D, C_E, default_matrix], # matrix spec requires list
+                    "some_projs_and_default_proj":
+                        {B_D, B_E, default_proj} if set_or_list == 'set' else [B_D, B_E, default_proj]
+                }
+            elif nodes_config == "many_one_many":
+                # Tuples with first item for nodes_1 -> M and second item M -> nodes_2
+                projections = {
+                    "default_proj": (default_proj, default_proj),
+                    "matrix_spec": ([11], [12]),
+                    "some_projs_no_default":
+                        ({A_M, C_M}, {M_D, M_F}) if set_or_list == 'set' else ([A_M, C_M], [M_D, M_F]),
+                    "some_projs_and_matrix_spec":  ([A_M, C_M, default_matrix],
+                                              [M_D, M_F, default_matrix]),  # matrix spec requires list
+                    "some_projs_and_default_proj":
+                        ({A_M, C_M, default_proj}, {M_D, M_F, default_proj})
+                        if set_or_list == 'set' else ([A_M, C_M, default_proj], [M_D, M_F, default_proj])
+                }
+            else:
+                assert False, f"TEST ERROR: No handling for '{nodes_config}' condition."
+
+        if projs in {'default_proj', 'some_projs_and_default_proj'}:
+            matrix_val = default_proj._init_args['matrix']
+        elif projs == 'matrix_spec':
+            matrix_val = projections[projs]
+        elif projs == "some_projs_and_matrix_spec":
+            matrix_val = default_matrix
+
+        if nodes_config == "many_many":
+
+            if projs == 'none':
+                comp = Composition([nodes_1, nodes_2])
+                matrix_val = default_matrix
+            else:
+                comp = Composition([nodes_1, projections[projs], nodes_2])
+
+            if projs == "some_projs_no_default":
+                assert A_D in comp.projections
+                assert B_E in comp.projections
+                # Pre-specified Projections that were not included in pathways should not be in Composition:
+                assert B_D not in comp.projections
+                assert C_E not in comp.projections
+                # FIX: 4/9/22 - RESTORE ONCE TERMINAL ASSIGNMENT BUG IS FIXED
+                # assert C in comp.get_nodes_by_role(NodeRole.SINGLETON)
+                assert F in comp.get_nodes_by_role(NodeRole.SINGLETON)
+
+            else:
+                # If there is no Projection specification or a default one, then there should be all-to-all Projections
+                # Each sender projects to all three 3 receivers
+                assert all(len([p for p in node.efferents if p in comp.projections])==3 for node in {A,B,C})
+                # Each receiver gets Projections from all 3 senders
+                assert all(len([p for p in node.path_afferents if p in comp.projections])==3 for node in {D,E,F})
+                for sender,receiver in itertools.product([A,B,C],[D,E,F]):
+                    # Each sender projects to each of the receivers
+                    assert sender in {p.sender.owner for p in receiver.path_afferents if p in comp.projections}
+                    # Each receiver receives a Projection from each of the senders
+                    assert receiver in {p.receiver.owner for p in sender.efferents if p in comp.projections}
+
+                # Matrices for pre-specified Projections should preserve their specified value:
+                A_D.parameters.matrix.get() == [2]
+                B_D.parameters.matrix.get() == [3]
+                B_E.parameters.matrix.get() == [4]
+                C_E.parameters.matrix.get() == [5]
+                # Matrices for pairs without pre-specified Projections should be assigned value of default
+                assert [p.parameters.matrix.get() for p in A.efferents if p.receiver.owner.name == 'E'] == matrix_val
+                assert [p.parameters.matrix.get() for p in A.efferents if p.receiver.owner.name == 'F'] == matrix_val
+                assert [p.parameters.matrix.get() for p in B.efferents if p.receiver.owner.name == 'F'] == matrix_val
+                assert [p.parameters.matrix.get() for p in C.efferents if p.receiver.owner.name == 'D'] == matrix_val
+                assert [p.parameters.matrix.get() for p in C.efferents if p.receiver.owner.name == 'F'] == matrix_val
+
+        elif nodes_config == 'many_one_many':
+            if projs == 'none':
+                comp = Composition([nodes_1, M, nodes_2])
+                matrix_val = default_matrix
+
+            else:
+                comp = Composition([nodes_1, projections[projs][0], M, projections[projs][1], nodes_2])
+                if projs == 'matrix_spec':
+                    matrix_val = projections[projs][1]
+
+            if projs == "some_projs_no_default":
+                assert all(p in comp.projections for p in {A_M, C_M, M_D, M_F})
+                # Pre-specified Projections that were not included in pathways should not be in Composition:
+                assert B_M not in comp.projections
+                # FIX: 4/9/22 - RESTORE ONCE TERMINAL ASSIGNMENT BUG IS FIXED
+                # assert B in comp.get_nodes_by_role(NodeRole.SINGLETON)
+                assert E in comp.get_nodes_by_role(NodeRole.SINGLETON)
+
+            else:
+                # Each sender projects to just one receiver
+                assert all(len([p for p in node.efferents if p in comp.projections])==1 for node in {A,B,C})
+                # Each receiver receives from just one sender
+                assert all(len([p for p in node.path_afferents if p in comp.projections])==1 for node in {D,E,F})
+                for sender,receiver in itertools.product([A,B,C],[M]):
+                    # Each sender projects to M:
+                    assert sender in {p.sender.owner for p in receiver.path_afferents if p in comp.projections}
+                    # Each receiver receives from M:
+                    assert receiver in {p.receiver.owner for p in sender.efferents if p in comp.projections}
+                # Matrices for pre-specified Projections should preserve their specified value:
+                A_M.parameters.matrix.get() == [6]
+                C_M.parameters.matrix.get() == [7]
+                M_D.parameters.matrix.get() == [8]
+                M_F.parameters.matrix.get() == [9]
+                # Matrices for pairs without pre-specified Projections should be assigned value of default
+                assert [p.parameters.matrix.get() for p in B.efferents if p.receiver.owner.name == 'M'] == [100]
+                assert [p.parameters.matrix.get() for p in M.efferents if p.receiver.owner.name == 'E'] == matrix_val
+
+        else:
+            assert False, f"TEST ERROR: No handling for '{nodes_config}' condition."
 
     def test_composition_pathways_arg_dict_and_list_and_pathway_roles(self):
         A = ProcessingMechanism(name='A')
@@ -3283,8 +3477,9 @@ class TestRun:
         with pytest.raises(CompositionError) as error_text:
         # Typo in IdentityMatrix
             comp.add_linear_processing_pathway([A, "IdntityMatrix", B])
-        assert ("An entry in \'pathway\' arg for add_linear_procesing_pathway method" in str(error_text.value) and
-                "is not a Node (Mechanism or Composition) or a Projection: \'IdntityMatrix\'." in str(error_text.value))
+        assert (f"An entry in 'pathway' arg for add_linear_procesing_pathway method of \'Composition-0\' "
+                f"is not a Node (Mechanism or Composition) or a Projection nor a set of either: \'IdntityMatrix\'."
+                in str(error_text.value))
 
     @pytest.mark.composition
     def test_LPP_two_origins_one_terminal(self, comp_mode):

@@ -94,7 +94,7 @@ one specified in the Pathway `template's <Pathway_Template>` `name <Pathway.name
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 The following formats can be used to specify a Pathway in the **pathway** argument of the constructor for the
-Pathway, the **pathways** argument of a the constructor for a `Composition`, or the corresponding argument
+Pathway, the **pathways** argument of the constructor for a `Composition`, or the corresponding argument
 of any of a Composition's `Pathway addition methods <Composition_Pathway_Addition_Methods>`:
 
     * `Node <Composition_Nodes>`: -- assigns the Node to a `SINGLETON` Pathway.
@@ -211,7 +211,7 @@ def _is_pathway_entry_spec(entry, desired_type:tc.enum(NODE, PROJECTION, ANY)):
     """Test whether pathway entry is specified type (NODE or PROJECTION)"""
     from psyneulink.core.components.projections.projection import _is_projection_spec
     node_specs = (Mechanism, Composition)
-    is_node = is_proj = False
+    is_node = is_proj = is_set = False
 
     if desired_type in {NODE, ANY}:
         is_node = (isinstance(entry, node_specs)
@@ -228,7 +228,10 @@ def _is_pathway_entry_spec(entry, desired_type:tc.enum(NODE, PROJECTION, ANY)):
                    or (isinstance(entry, (set,list))
                        and all(_is_projection_spec(item) for item in entry)))
 
-    if is_node or is_proj:
+    if desired_type in {ANY}:
+        is_set = (isinstance(entry, set) and all(_is_node_spec(item) for item in entry))
+
+    if is_node or is_proj or is_set:
         return True
     else:
         return False
