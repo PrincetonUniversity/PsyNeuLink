@@ -153,7 +153,7 @@ jobs:
         ref: gh-pages
 
     - name: Download branch docs
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
       with:
         name: Documentation-head-${{ matrix.os }}-${{ matrix.python-version }}-x64
         path: _built_docs/${{ github.ref }}
@@ -170,7 +170,7 @@ jobs:
       if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/devel' || github.ref == 'refs/heads/docs'
 
     - name: Download main docs
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
       with:
         name: Documentation-head-${{ matrix.os }}-${{ matrix.python-version }}-x64
         # This overwrites files in current directory
