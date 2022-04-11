@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.9.0.0+521.g15a2fb3b6 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.9.0.0+522.g36c611ade documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.9.0.0+521
+                  0.9.0.0+522
                 </div>
               
             
@@ -3859,6 +3859,25 @@ labeled as EdgeType.FEEDBACK (True) but are not in a cycle</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition.add_pathways">
+<span class="sig-name descname"><span class="pre">add_pathways</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pathways</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_pathways" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add pathways to the Composition.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>pathways</strong> (<a class="reference internal" href="Pathway.html#psyneulink.core.compositions.pathway.Pathway" title="psyneulink.core.compositions.pathway.Pathway"><em>Pathway</em></a><em> or </em><em>list</em><em>[</em><a class="reference internal" href="Pathway.html#psyneulink.core.compositions.pathway.Pathway" title="psyneulink.core.compositions.pathway.Pathway"><em>Pathway</em></a><em>]</em>) – specifies one or more <a class="reference internal" href="Pathway.html"><span class="doc">Pathways</span></a> to add to the Composition.  Any valid form of <a class="reference internal" href="Pathway.html#pathway-specification"><span class="std std-ref">Pathway
+specification</span></a> can be used.  A set can also be used, all elements of which are
+<a class="reference internal" href="#composition-nodes"><span class="std std-ref">Nodes</span></a>, in which case a separate <a class="reference internal" href="Pathway.html"><span class="doc">Pathway</span></a> is constructed for each.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List of <a class="reference internal" href="Pathway.html"><span class="doc">Pathways</span></a> added to the Composition.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list[<a class="reference internal" href="Pathway.html#psyneulink.core.compositions.pathway.Pathway" title="psyneulink.core.compositions.pathway.Pathway">Pathway</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition.add_linear_processing_pathway">
 <span class="sig-name descname"><span class="pre">add_linear_processing_pathway</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pathway</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_linear_processing_pathway" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add sequence of <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Nodes</span></a> with intercolated Projections.</p>
@@ -3929,25 +3948,6 @@ See <a class="reference internal" href="#composition-add-linear-processing-pathw
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><a class="reference internal" href="Pathway.html"><span class="doc">Pathway</span></a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition.add_pathways">
-<span class="sig-name descname"><span class="pre">add_pathways</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pathways</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_pathways" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add pathways to the Composition.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>pathways</strong> (<a class="reference internal" href="Pathway.html#psyneulink.core.compositions.pathway.Pathway" title="psyneulink.core.compositions.pathway.Pathway"><em>Pathway</em></a><em> or </em><em>list</em><em>[</em><a class="reference internal" href="Pathway.html#psyneulink.core.compositions.pathway.Pathway" title="psyneulink.core.compositions.pathway.Pathway"><em>Pathway</em></a><em>]</em>) – specifies one or more <a class="reference internal" href="Pathway.html"><span class="doc">Pathways</span></a> to add to the Composition.  Any valid form of <a class="reference internal" href="Pathway.html#pathway-specification"><span class="std std-ref">Pathway
-specification</span></a> can be used.  A set can also be used, all elements of which are
-<a class="reference internal" href="#composition-nodes"><span class="std std-ref">Nodes</span></a>, in which case a separate <a class="reference internal" href="Pathway.html"><span class="doc">Pathway</span></a> is constructed for each.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>List of <a class="reference internal" href="Pathway.html"><span class="doc">Pathways</span></a> added to the Composition.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>list[<a class="reference internal" href="Pathway.html#psyneulink.core.compositions.pathway.Pathway" title="psyneulink.core.compositions.pathway.Pathway">Pathway</a>]</p>
 </dd>
 </dl>
 </dd></dl>
