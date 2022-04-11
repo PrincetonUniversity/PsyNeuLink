@@ -895,7 +895,6 @@ class TestCompositionPathwayAdditionMethods:
         ('[A, "B"]','e1'),                        # BAD ITEM ERROR
         ('[[A,B, [C,D]],[E,F]]','e2'),            # EMBEDDED LIST ERROR
         ('[{A,B}, [MapProj(B,D)], [C,D]]', 'e3')  # BAD ITEM ERROR, FIX: BUT SHOULD ALLOW EMBEDDED PER ABOVE
-
     ]
     @pytest.mark.parametrize('config', config, ids=[x[0] for x in config])
     def test_various_pathway_configurations_in_constructor(self, config):
