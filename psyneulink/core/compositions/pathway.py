@@ -54,7 +54,7 @@ or automatically when a Pathway is `assigned to a Composition <Pathway_Assignmen
 *Pathway as a Template*
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-A Pathway created on its own, using its constructor, is a **template**, that can be used to `specifiy a Pathway
+A Pathway created on its own, using its constructor, is a **template**, that can be used to `specify a Pathway
 <Pathway_Specification>` for one or more Compositions, as described `below <Pathway_Assignment_to_Composition>`;
 however, it cannot be executed on its own.  When a Pathway object is used to assign a Pathway to a Composition,
 its `pathway <Pathway.pathway>` attribute, and its `name <Pathway.name>` if that is not otherwise specified (see
@@ -210,13 +210,13 @@ PathwayRegistry= {}
 def _is_pathway_entry_spec(entry, desired_type:tc.enum(NODE, PROJECTION, ANY)):
     """Test whether pathway entry is specified type (NODE or PROJECTION)"""
     from psyneulink.core.components.projections.projection import _is_projection_spec
-    node_specs = (Mechanism, Composition)
+    node_types = (Mechanism, Composition)
     is_node = is_proj = is_set = False
 
     if desired_type in {NODE, ANY}:
-        is_node = (isinstance(entry, node_specs)
+        is_node = (isinstance(entry, node_types)
                    or (isinstance(entry, tuple)
-                       and isinstance(entry[0], node_specs)
+                       and isinstance(entry[0], node_types)
                        and (isinstance(entry[1], NodeRole) or
                             (isinstance(entry[1], list) and all(isinstance(nr, NodeRole) for nr in entry[1])))))
 
@@ -226,6 +226,7 @@ def _is_pathway_entry_spec(entry, desired_type:tc.enum(NODE, PROJECTION, ANY)):
                        and _is_projection_spec(entry[0])
                        and entry[1] in {True, FEEDBACK, False, MAYBE})
                    or (isinstance(entry, (set,list))
+                   # or (isinstance(entry, set)
                        and all(_is_projection_spec(item) for item in entry)))
 
     if desired_type in {ANY}:
