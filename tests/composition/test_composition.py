@@ -618,7 +618,7 @@ class TestPathway:
 
 
 @pytest.mark.pathways
-class TestCompositionPathwayAdditionMethods:
+class TestCompositionPathwayArgsAndAdditionMethods:
 
     def test_add_pathways_with_all_types(self):
         A = ProcessingMechanism(name='A')
@@ -894,10 +894,20 @@ class TestCompositionPathwayAdditionMethods:
         ('[[[A,B]], [[C,D]]]','p5'),              # PARALLEL: A->B, C->D (FORGIVES EMBEDDED LISTS OF [A, B] and [C,D])
         ('[A, "B"]','e1'),                        # BAD ITEM ERROR
         ('[[A,B, [C,D]],[E,F]]','e2'),            # EMBEDDED LIST ERROR
-        ('[{A,B}, [MapProj(B,D)], [C,D]]', 'e3')  # BAD ITEM ERROR, FIX: BUT SHOULD ALLOW EMBEDDED PER ABOVE
+        ('[{A,B}, [MapProj(B,D)], [C,D]]', 'e3')  # BAD ITEM ERROR, FIX: SHOULD ALLOW EMBEDDED PER ABOVE
     ]
     @pytest.mark.parametrize('config', config, ids=[x[0] for x in config])
     def test_various_pathway_configurations_in_constructor(self, config):
+        """Test combinations of sets and lists in pathways specification of Composition constructor
+        Principles:
+          if outer list (pathways spec) contains:
+          - single item or only sets, treat single (sequential) pathway
+          - one or more lists within it, treat all items as a separate (parallel) pathways
+          - one or more lists each with a single list within it ([[[A,B]],[[C,D]]]}), each is treated as a pathway
+          - any list with more than a single list within it ([[[A,B],[C,D]}), an error is generated
+          - any bad items (strings, misplaced items), an error is generated
+        """
+
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         # B_comparator = ComparatorMechanism(name='B COMPARATOR')
@@ -906,57 +916,54 @@ class TestCompositionPathwayAdditionMethods:
         E = ProcessingMechanism(name='E')
         F = ProcessingMechanism(name='F')
 
-        # **PRINCIPLE**:
-        #     IF SINGLE ITEM OR ONLY SETS, TREAT AS SEQUENTIAL;
-        #     IF LIST IS PRESENT (AT FIRST LEVEL), TREAT AS PARALLEL PATHWAYS
-        #     IF EMBEDDED LIST IS PRESENT: EMBEDDED LIST ERROR
-        #     IF ANY BAD ITEMS (STRINGS, MISPLACED ITEMS) -> RELEVANT MESSAGE
-
         # LEGAL:
-        if config[0] == '[A,{B,C}]':
-            comp = Composition([A,{B,C}])     # SEQUENTIAL A->{B,C}) (s1)
-        elif config[0] == '[A,[B,C]]':
-            comp = Composition([A,[B,C]])     # PARALLEL:  A, B->C (p1)
-        elif config[0] == '[{A},{B,C}]':
-            comp = Composition([{A},{B,C}])   # SEQUENTIAL: A->{B,C} (s1)
-        elif config[0] == '[[A],{B,C}]':
-            comp = Composition([[A],{B,C}])   # PARALLEL: A, B, C (p2)
-        elif config[0] == '[[A,B],{C,D}]':
-            comp = Composition([[A,B],{C,D}]) # PARALLEL: A->B, C, D (p3)
-        elif config[0] == '[[A,B],C,D ]':
-            comp = Composition([[A,B],C,D ])  # PARALLEL: A->B, C, D (p3)
-        elif config[0] == '[[A,B],[C,D]]':
-            comp = Composition([[A,B],[C,D]])   # PARALLEL: A->B, C->D {p5)
-        elif config[0] == '[{A,B}, MapProj(B,D), C, D]':
-            comp = Composition([{A,B}, MappingProjection(B,D), C, D])  # SEQUENTIAL: A, B->D, C->D (s2)
-        elif config[0] == '[{A,B}, [MapProj(B,D)], C, D]':
-            comp = Composition([{A,B}, [MappingProjection(B,D)], C, D])  # SEQUENTIAL: A, B->D, C->D (s2)
-        elif config[0] == '[{A,B}, {MapProj(B,D)}, C, D]':
-            comp = Composition([{A,B}, {MappingProjection(B,D)}, C, D])  # SEQUENTIAL: A, B->D, C->D (s2)
-        elif config[0] == '[{A,B}, [[C,D]]]':
-            comp = Composition([{A,B}, [[C,D]]]) # PARALLEL: A, B, C->D (FORGIVES EMBEDDED LIST [C,D]) (p4)
-        elif config[0] == '[[A,B], [[C,D]]]':
-            comp = Composition([[A,B], [[C,D]]]) # PARALLEL: A->B, C->D (FORGIVES EMBEDDED LIST [C,D])  (p5)
-        elif config[0] == '[[[A,B]], [[C,D]]]':
-            comp = Composition([[[A,B]], [[C,D]]]) # PARALLEL: A->B, C->D (FORGIVES EMBEDDED LISTS [A,B] & [C,D]) (p5)
-        elif config[0] == '[A, "B"]':
+        if config[0] == '[A,{B,C}]':                 # SEQUENTIAL A->{B,C}) (s1)
+            comp = Composition([A,{B,C}])
+        elif config[0] == '[A,[B,C]]':               # PARALLEL:  A, B->C (p1)
+            comp = Composition([A,[B,C]])
+        elif config[0] == '[{A},{B,C}]':             # SEQUENTIAL: A->{B,C} (s1)
+            comp = Composition([{A},{B,C}])
+        elif config[0] == '[[A],{B,C}]':             # PARALLEL: A, B, C (p2)
+            comp = Composition([[A],{B,C}])
+        elif config[0] == '[[A,B],{C,D}]':           # PARALLEL: A->B, C, D (p3)
+            comp = Composition([[A,B],{C,D}])
+        elif config[0] == '[[A,B],C,D ]':            # PARALLEL: A->B, C, D (p3)
+            comp = Composition([[A,B],C,D ])
+        elif config[0] == '[[A,B],[C,D]]':           # PARALLEL: A->B, C->D {p5)
+            comp = Composition([[A,B],[C,D]])
+        elif config[0] == '[{A,B}, MapProj(B,D), C, D]':                   # SEQUENTIAL: A, B->D, C->D (s2)
+            comp = Composition([{A,B}, MappingProjection(B,D), C, D])
+        elif config[0] == '[{A,B}, [MapProj(B,D)], C, D]':                 # SEQUENTIAL: A, B->D, C->D (s2)
+            comp = Composition([{A,B}, [MappingProjection(B,D)], C, D])
+        elif config[0] == '[{A,B}, {MapProj(B,D)}, C, D]':                 # SEQUENTIAL: A, B->D, C->D (s2)
+            comp = Composition([{A,B}, {MappingProjection(B,D)}, C, D])
+        elif config[0] == '[{A,B}, [[C,D]]]':        # PARALLEL: A, B, C->D (FORGIVES EMBEDDED LIST [C,D]) (p4)
+            comp = Composition([{A,B}, [[C,D]]])
+        elif config[0] == '[[A,B], [[C,D]]]':        # PARALLEL: A->B, C->D (SINGLE EMBEDDED LIST OK [C,D])  (p5)
+            comp = Composition([[A,B], [[C,D]]])
+        elif config[0] == '[[[A,B]], [[C,D]]]':      # PARALLEL: A->B, C->D (FORGIVES EMBEDDED LISTS [A,B] & [C,D]) (p5)
+            comp = Composition([[[A,B]], [[C,D]]])
+
+        # ERRORS:
+        elif config[0] == '[A, "B"]':                                      # BAD ITEM ERROR (e1)
             with pytest.raises(CompositionError) as error_text:
-                comp = Composition([A, "B"])                     # BAD ITEM ERROR (e1)
+                comp = Composition([A, "B"])
             assert f"Every item in the 'pathways' arg of the constructor for Composition-0 must be " \
                    f"a Node, list, set, tuple or dict; the following are not: 'B'" in str(error_text.value)
-        elif config[0] == '[[A,B, [C,D]],[E,F]]':
+        elif config[0] == '[[A,B, [C,D]],[E,F]]':                          # EMBEDDED LIST ERROR (e2)
             with pytest.raises(CompositionError) as error_text:
-                comp = Composition([[A,B, [C,D]],[E,F]])         # EMBEDDED LIST ERROR (e2)
+                comp = Composition([[A,B, [C,D]],[E,F]])
             assert f"The following entries in a pathway specified for \'Composition-0\' are not " \
                    f"a Node (Mechanism or Composition) or a Projection nor a set of either: " \
                    f"[(ProcessingMechanism C), (ProcessingMechanism D)]" in str(error_text.value)
-        elif config[0] == '[{A,B}, [MapProj(B,D)], [C,D]]':
+        elif config[0] == '[{A,B}, [MapProj(B,D)], [C,D]]':                # BAD ITEM ERROR (e3)
             with pytest.raises(CompositionError) as error_text:
-                comp = Composition([{A,B}, [MappingProjection(B,D)], [C,D]]) # # BAD ITEM ERROR (e3)
+                comp = Composition([{A,B}, [MappingProjection(B,D)], [C,D]])
             assert f"Every item in the 'pathways' arg of the constructor for Composition-0 must be " \
                    f"a Node, list, set, tuple or dict; the following are not: " \
                    f"(MappingProjection MappingProjection from B[OutputPort-0] to D[InputPort-0])" \
                    in str(error_text.value)
+
         else:
             assert False, f"BAD CONFIG ARG: {config}"
 
@@ -982,17 +989,17 @@ class TestCompositionPathwayAdditionMethods:
             assert all(node in comp.get_nodes_by_role(NodeRole.INPUT) for node in {A,B})
             assert all(node in comp.get_nodes_by_role(NodeRole.OUTPUT) for node in {A,C})
         if config[1] == 'p2':
-            assert all(node in comp.get_nodes_by_role(NodeRole.SINGLETON)  for node in {A,B,C})
+            assert all(node in comp.get_nodes_by_role(NodeRole.SINGLETON) for node in {A,B,C})
         if config[1] == 'p3':
             assert len(A.efferents) == 1
             assert len(B.path_afferents) == 1
             assert A.efferents[0].receiver.owner == B
-            assert all(node in comp.get_nodes_by_role(NodeRole.SINGLETON)  for node in {C,D})
+            assert all(node in comp.get_nodes_by_role(NodeRole.SINGLETON) for node in {C,D})
         if config[1] == 'p4':
             assert len(C.efferents) == 1
             assert len(D.path_afferents) == 1
             assert C.efferents[0].receiver.owner == D
-            assert all(node in comp.get_nodes_by_role(NodeRole.SINGLETON)  for node in {A,B})
+            assert all(node in comp.get_nodes_by_role(NodeRole.SINGLETON) for node in {A,B})
             assert all(node in comp.get_nodes_by_role(NodeRole.INPUT) for node in {A,B,C})
             assert all(node in comp.get_nodes_by_role(NodeRole.OUTPUT) for node in {A,D})
         if config[1] == 'p5':
