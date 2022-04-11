@@ -891,7 +891,11 @@ class TestCompositionPathwayAdditionMethods:
         ('[{A,B}, {MapProj(B,D)}, C, D]', 's2'),  # SEQUENTIAL: A, B->D, C->D
         ('[{A,B}, [[C,D]]]', 'p4'),               # PARALLEL: A, B, C->D (FORGIVES EMBEDDED LIST OF [C,D])
         ('[[A,B], [[C,D]]]', 'p5'),               # PARALLEL: A->B, C->D (FORGIVES EMBEDDED LIST OF [C,D])
-        ('[[[A,B]], [[C,D]]]','p5')               # PARALLEL: A->B, C->D (FORGIVES EMBEDDED LISTS OF [A, B] and [C,D])
+        ('[[[A,B]], [[C,D]]]','p5'),              # PARALLEL: A->B, C->D (FORGIVES EMBEDDED LISTS OF [A, B] and [C,D])
+        ('[A, "B"]','e1'),                        # BAD ITEM ERROR
+        ('[[A,B, [C,D]],[E,F]]','e2'),            # EMBEDDED LIST ERROR
+        ('[{A,B}, [MapProj(B,D)], [C,D]]', 'e3')  # BAD ITEM ERROR, FIX: BUT SHOULD ALLOW EMBEDDED PER ABOVE
+
     ]
     @pytest.mark.parametrize('config', config, ids=[x[0] for x in config])
     def test_various_pathway_configurations_in_constructor(self, config):
@@ -936,13 +940,28 @@ class TestCompositionPathwayAdditionMethods:
             comp = Composition([[A,B], [[C,D]]]) # PARALLEL: A->B, C->D (FORGIVES EMBEDDED LIST [C,D])  (p5)
         elif config[0] == '[[[A,B]], [[C,D]]]':
             comp = Composition([[[A,B]], [[C,D]]]) # PARALLEL: A->B, C->D (FORGIVES EMBEDDED LISTS [A,B] & [C,D]) (p5)
+        elif config[0] == '[A, "B"]':
+            with pytest.raises(CompositionError) as error_text:
+                comp = Composition([A, "B"])                     # BAD ITEM ERROR (e1)
+            assert f"Every item in the 'pathways' arg of the constructor for Composition-0 must be " \
+                   f"a Node, list, set, tuple or dict; the following are not: 'B'" in str(error_text.value)
+        elif config[0] == '[[A,B, [C,D]],[E,F]]':
+            with pytest.raises(CompositionError) as error_text:
+                comp = Composition([[A,B, [C,D]],[E,F]])         # EMBEDDED LIST ERROR (e2)
+            assert f"The following entries in a pathway specified for \'Composition-0\' are not " \
+                   f"a Node (Mechanism or Composition) or a Projection nor a set of either: " \
+                   f"[(ProcessingMechanism C), (ProcessingMechanism D)]" in str(error_text.value)
+        elif config[0] == '[{A,B}, [MapProj(B,D)], [C,D]]':
+            with pytest.raises(CompositionError) as error_text:
+                comp = Composition([{A,B}, [MappingProjection(B,D)], [C,D]]) # # BAD ITEM ERROR (e3)
+            assert f"Every item in the 'pathways' arg of the constructor for Composition-0 must be " \
+                   f"a Node, list, set, tuple or dict; the following are not: " \
+                   f"(MappingProjection MappingProjection from B[OutputPort-0] to D[InputPort-0])" \
+                   in str(error_text.value)
         else:
             assert False, f"BAD CONFIG ARG: {config}"
-        # ERRORS:
-        # comp= Composition([A, 'B'])              # CRASHES CORRECTLY: BAD ITEM ERROR
-        # comp = Composition([[A,B, [C,D]],[E,F]])   # CRASHES UNRECOGNIZED ERROR BUT SHOULD MAKE **EMBEDDED LIST ERROR**
-        # comp = Composition([{A,B}, [MappingProjection(B,D)], [C,D]]) # CRASHES WITH BAD ITEM ERROR, SHOW ALLOW OR EMBEDED
 
+        # Tests:
         if config[1] == 's1':
             assert len(A.efferents) == 2
             assert all(len(receiver.path_afferents) == 1 for receiver in {B,C})
@@ -986,7 +1005,6 @@ class TestCompositionPathwayAdditionMethods:
             assert C.efferents[0].receiver.owner == D
             assert all(node in comp.get_nodes_by_role(NodeRole.INPUT) for node in {A,C})
             assert all(node in comp.get_nodes_by_role(NodeRole.OUTPUT) for node in {B,D})
-
 
     def test_add_pathways_bad_arg_error(self):
         I = InputPort(name='I')
