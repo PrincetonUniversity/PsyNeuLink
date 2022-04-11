@@ -844,6 +844,8 @@ class TestCompositionPathwayAdditionMethods:
         C = ProcessingMechanism(name='C')
         D = ProcessingMechanism(name='D')
         E = ProcessingMechanism(name='E')
+        X = ProcessingMechanism(name='X')
+        Y = ProcessingMechanism(name='Y')
         F = ProcessingMechanism(name='F')
         G = ProcessingMechanism(name='G')
         H = ProcessingMechanism(name='H')
@@ -858,17 +860,64 @@ class TestCompositionPathwayAdditionMethods:
         c.add_pathways(pathways=[A,
                                  [B,C],
                                  (D,E),
+                                 {X,Y},
                                  {'DICT PATHWAY': F},
                                  ([G, H], BackPropagation),
                                  {'LEARNING PATHWAY': ([J,K], Reinforcement)},
                                  p])
-        assert len(c.pathways) == 7
+        assert len(c.pathways) == 8
+        assert isinstance(c.pathways[0].pathway, list) and len(c.pathways[0].pathway) == 1
+        assert isinstance(c.pathways[1].pathway, list) and len(c.pathways[1].pathway) == 3
+        assert isinstance(c.pathways[2].pathway, list) and len(c.pathways[2].pathway) == 3
+        assert isinstance(c.pathways[3].pathway[0], set) and len(c.pathways[3].pathway) == 1
         assert c.pathways['P'].input == L
         assert c.pathways['DICT PATHWAY'].input == F
         assert c.pathways['DICT PATHWAY'].output == F
         assert c.pathways['LEARNING PATHWAY'].output == K
-        [p for p in c.pathways if p.input == G][0].learning_function == BackPropagation
+        assert [p for p in c.pathways if p.input == G][0].learning_function == BackPropagation
         assert c.pathways['LEARNING PATHWAY'].learning_function == Reinforcement
+
+    def test_various_pathway_configurations_in_constructor(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        # B_comparator = ComparatorMechanism(name='B COMPARATOR')
+        C = ProcessingMechanism(name='C')
+        C2 = ProcessingMechanism(name='C2')
+        D = ProcessingMechanism(name='D')
+        E = ProcessingMechanism(name='E')
+        F = ProcessingMechanism(name='F')
+
+        # p1 = Pathway({A,B})
+        # p2 = Pathway({C,D})
+        # comp = Composition(pathways={p1,p2}) # <- CRASHES in add_pathways()
+        # comp = Composition([{A,B}, p2]) # <- FAILS TO CREATE PATHWAY FROM THE TWO SETS
+        # comp = Composition(p1)
+        # comp = Composition({p1}) # <- CRASHES in add_pathways()
+        # comp.show_graph()
+
+        # **PRINCIPLE**:
+        #     IF SINGLE ITEM OR ONLY SETS, TREAT AS SEQUENTIAL;
+        #     IF LIST IS PRESENT (AT FIRST LEVEL), TREAT AS PARALLEL PATHWAYS
+        #     IF EMBEDDED LIST IS PRESENT: EMBEDDED LIST ERROR
+        #     IF ANY BAD ITEMS (STRINGS, MISPLACED ITEMS) -> RELEVANT MESSAGE
+        # LEGAL:
+        # icomp = Composition([A,{B,C}])     # SEQUENTIAL A->{B,C})
+        # icomp = Composition([A,[B,C]])     # PARALLEL:  A, B->C
+        # icomp = Composition([{A},{B,C}])   # SEQUENTIAL: A->{B,C}
+        # icomp = Composition([[A],{B,C}])   # PARALLEL: A, B, C
+        # icomp = Composition([[A,B],{C,D}]) # PARALLEL: A->B, C, D
+        # icomp = Composition([[A,B],C,D ])  # PARALLEL: A->B, C, D
+        # icomp = Composition([[A,B],[C,D]])   # PARALLEL: A->B, C->D
+        # icomp = Composition([{A,B}, MappingProjection(B,D), C, D])  # SEQUENTIAL: A, B->D, C->D
+        # icomp = Composition([{A,B}, [MappingProjection(B,D)], C, D])  # SEQUENTIAL: A, B->D, C->D
+        # icomp = Composition([{A,B}, {MappingProjection(B,D)}, C, D])  # SEQUENTIAL: A, B->D, C->D
+        # icomp = Composition([{A,B}, [[C,D]]])     # ALLOWED (FORGIVES DOUBLE EMBDEDDING OF [C,D}
+        # icomp = Composition([[A,B], [[C,D]]])     # ALLOWED (FORGIVES DOUBLE EMBDEDDING OF [C,D}
+        # icomp = Composition([[[A,B]], [[C,D]]])     # ALLOWED (FORGIVES EMBDEDDING OF [A,B] and [C,D}
+        # ERRORS:
+        # icomp= Composition([A, 'B'])              # CRASHES CORRECTLY: BAD ITEM ERROR
+        # icomp = Composition([[A,B, [C,D]],[E,F]])   # CRASHES UNRECOGNIZED ERROR BUT SHOULD MAKE **EMBEDDED LIST ERROR**
+        # icomp = Composition([{A,B}, [MappingProjection(B,D)], [C,D]]) # CRASHES WITH BAD ITEM ERROR, SHOW ALLOW OR EMBEDED
 
     def test_add_pathways_bad_arg_error(self):
         I = InputPort(name='I')
