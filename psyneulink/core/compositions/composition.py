@@ -6827,7 +6827,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                            f"is not between two Nodes: {pathway[c]}")
 
                 # Convert specs in entry to list (embedding in one if matrix) for consistency of handling below
-                # FIX: 4/9/22: SHOULD is_numeric BE REPLACED WITH is_matrix??
                 all_proj_specs = [pathway[c]] if is_numeric(pathway[c]) else convert_to_list(pathway[c])
 
                 # Get default Projection specification
