@@ -879,21 +879,21 @@ class TestCompositionPathwayAdditionMethods:
                                               PathwayRole.OUTPUT}
 
     config = [
-        '[A,{B,C}]',                       # SEQUENTIAL A->{B,C})
-        '[A,[B,C]]',                       # PARALLEL:  A, B->C
-        '[{A},{B,C}]',                     # SEQUENTIAL: A->{B,C}
-        '[[A],{B,C}]',                     # PARALLEL: A, B, C
-        '[[A,B],{C,D}]',                   # PARALLEL: A->B, C, D
-        '[[A,B],C,D ]',                    # PARALLEL: A->B, C, D
-        '[[A,B],[C,D]]',                   # PARALLEL: A->B, C->D
-        '[{A,B}, MapProj(B,D), C, D]',     # SEQUENTIAL: A, B->D, C->D
-        '[{A,B}, [MapProj(B,D)], C, D]',   # SEQUENTIAL: A, B->D, C->D
-        '[{A,B}, {MapProj(B,D)}, C, D]',   # SEQUENTIAL: A, B->D, C->D
-        '[{A,B}, [[C,D]]]',                # PARALLEL: A, B, C->D (FORGIVES EMBEDDED LIST OF [C,D])
-        '[[A,B], [[C,D]]]',                # PARALLEL: A->B, C->D (FORGIVES EMBEDDED LIST OF [C,D])
-        '[[[A,B]], [[C,D]]]'               # PARALLEL: A->B, C->D (FORGIVES EMBEDDED LISTS OF [A,B] and [C,D])
+        ('[A,{B,C}]', 's1'),                      # SEQUENTIAL A->{B,C})
+        ('[A,[B,C]]', 'p1'),                      # PARALLEL:  A, B->C
+        ('[{A},{B,C}]', 's1'),                    # SEQUENTIAL: A->{B,C}
+        ('[[A],{B,C}]', 'p2'),                    # PARALLEL: A, B, C
+        ('[[A,B],{C,D}]', 'p3'),                  # PARALLEL: A->B, C, D
+        ('[[A,B],C,D ]', 'p3'),                   # PARALLEL: A->B, C, D
+        ('[[A,B],[C,D]]', 'p5'),                  # PARALLEL: A->B, C->D
+        ('[{A,B}, MapProj(B,D), C, D]', 's2'),    # SEQUENTIAL: A, B->D, C->D
+        ('[{A,B}, [MapProj(B,D)], C, D]', 's2'),  # SEQUENTIAL: A, B->D, C->D
+        ('[{A,B}, {MapProj(B,D)}, C, D]', 's2'),  # SEQUENTIAL: A, B->D, C->D
+        ('[{A,B}, [[C,D]]]', 'p4'),               # PARALLEL: A, B, C->D (FORGIVES EMBEDDED LIST OF [C,D])
+        ('[[A,B], [[C,D]]]', 'p5'),               # PARALLEL: A->B, C->D (FORGIVES EMBEDDED LIST OF [C,D])
+        ('[[[A,B]], [[C,D]]]','p5')               # PARALLEL: A->B, C->D (FORGIVES EMBEDDED LISTS OF [A, B] and [C,D])
     ]
-    @pytest.mark.parametrize('config', config)
+    @pytest.mark.parametrize('config', config, ids=[x[0] for x in config])
     def test_various_pathway_configurations_in_constructor(self, config):
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
@@ -910,38 +910,83 @@ class TestCompositionPathwayAdditionMethods:
         #     IF ANY BAD ITEMS (STRINGS, MISPLACED ITEMS) -> RELEVANT MESSAGE
 
         # LEGAL:
-        if config == '[A,{B,C}]':
-            comp = Composition([A,{B,C}])     # SEQUENTIAL A->{B,C})
-        elif config == '[A,[B,C]]':
-            comp = Composition([A,[B,C]])     # PARALLEL:  A, B->C
-        elif config == '[{A},{B,C}]':
-            comp = Composition([{A},{B,C}])   # SEQUENTIAL: A->{B,C}
-        elif config == '[[A],{B,C}]':
-            comp = Composition([[A],{B,C}])   # PARALLEL: A, B, C
-        elif config == '[[A,B],{C,D}]':
-            comp = Composition([[A,B],{C,D}]) # PARALLEL: A->B, C, D
-        elif config == '[[A,B],C,D ]':
-            comp = Composition([[A,B],C,D ])  # PARALLEL: A->B, C, D
-        elif config == '[[A,B],[C,D]]':
-            comp = Composition([[A,B],[C,D]])   # PARALLEL: A->B, C->D
-        elif config == '[{A,B}, MapProj(B,D), C, D]':
-            comp = Composition([{A,B}, MappingProjection(B,D), C, D])  # SEQUENTIAL: A, B->D, C->D
-        elif config == '[{A,B}, [MapProj(B,D)], C, D]':
-            comp = Composition([{A,B}, [MappingProjection(B,D)], C, D])  # SEQUENTIAL: A, B->D, C->D
-        elif config == '[{A,B}, {MapProj(B,D)}, C, D]':
-            comp = Composition([{A,B}, {MappingProjection(B,D)}, C, D])  # SEQUENTIAL: A, B->D, C->D
-        elif config == '[{A,B}, [[C,D]]]':
-            comp = Composition([{A,B}, [[C,D]]]) # PARALLEL: A, B, C->D (FORGIVES EMBEDDED LIST OF [C,D])
-        elif config == '[[A,B], [[C,D]]]':
-            comp = Composition([[A,B], [[C,D]]]) # PARALLEL: A->B, C->D (FORGIVES EMBEDDED LIST OF [C,D])
-        elif config == '[[[A,B]], [[C,D]]]':
-            comp = Composition([[[A,B]], [[C,D]]]) # PARALLEL: A->B, C->D (FORGIVES EMBEDDED LISTS OF [A,B] and [C,D])
+        if config[0] == '[A,{B,C}]':
+            comp = Composition([A,{B,C}])     # SEQUENTIAL A->{B,C}) (s1)
+        elif config[0] == '[A,[B,C]]':
+            comp = Composition([A,[B,C]])     # PARALLEL:  A, B->C (p1)
+        elif config[0] == '[{A},{B,C}]':
+            comp = Composition([{A},{B,C}])   # SEQUENTIAL: A->{B,C} (s1)
+        elif config[0] == '[[A],{B,C}]':
+            comp = Composition([[A],{B,C}])   # PARALLEL: A, B, C (p2)
+        elif config[0] == '[[A,B],{C,D}]':
+            comp = Composition([[A,B],{C,D}]) # PARALLEL: A->B, C, D (p3)
+        elif config[0] == '[[A,B],C,D ]':
+            comp = Composition([[A,B],C,D ])  # PARALLEL: A->B, C, D (p3)
+        elif config[0] == '[[A,B],[C,D]]':
+            comp = Composition([[A,B],[C,D]])   # PARALLEL: A->B, C->D {p5)
+        elif config[0] == '[{A,B}, MapProj(B,D), C, D]':
+            comp = Composition([{A,B}, MappingProjection(B,D), C, D])  # SEQUENTIAL: A, B->D, C->D (s2)
+        elif config[0] == '[{A,B}, [MapProj(B,D)], C, D]':
+            comp = Composition([{A,B}, [MappingProjection(B,D)], C, D])  # SEQUENTIAL: A, B->D, C->D (s2)
+        elif config[0] == '[{A,B}, {MapProj(B,D)}, C, D]':
+            comp = Composition([{A,B}, {MappingProjection(B,D)}, C, D])  # SEQUENTIAL: A, B->D, C->D (s2)
+        elif config[0] == '[{A,B}, [[C,D]]]':
+            comp = Composition([{A,B}, [[C,D]]]) # PARALLEL: A, B, C->D (FORGIVES EMBEDDED LIST [C,D]) (p4)
+        elif config[0] == '[[A,B], [[C,D]]]':
+            comp = Composition([[A,B], [[C,D]]]) # PARALLEL: A->B, C->D (FORGIVES EMBEDDED LIST [C,D])  (p5)
+        elif config[0] == '[[[A,B]], [[C,D]]]':
+            comp = Composition([[[A,B]], [[C,D]]]) # PARALLEL: A->B, C->D (FORGIVES EMBEDDED LISTS [A,B] & [C,D]) (p5)
         else:
             assert False, f"BAD CONFIG ARG: {config}"
         # ERRORS:
         # comp= Composition([A, 'B'])              # CRASHES CORRECTLY: BAD ITEM ERROR
         # comp = Composition([[A,B, [C,D]],[E,F]])   # CRASHES UNRECOGNIZED ERROR BUT SHOULD MAKE **EMBEDDED LIST ERROR**
         # comp = Composition([{A,B}, [MappingProjection(B,D)], [C,D]]) # CRASHES WITH BAD ITEM ERROR, SHOW ALLOW OR EMBEDED
+
+        if config[1] == 's1':
+            assert len(A.efferents) == 2
+            assert all(len(receiver.path_afferents) == 1 for receiver in {B,C})
+            assert all(receiver in [p.receiver.owner for p in A.efferents] for receiver in {B,C})
+            assert [A] == comp.get_nodes_by_role(NodeRole.INPUT)
+            assert all(node in comp.get_nodes_by_role(NodeRole.OUTPUT) for node in {B,C})
+        if config[1] == 's2':
+            assert all(len(sender.efferents) == 1 for sender in {B,C})
+            assert len(D.path_afferents) == 2
+            assert all(D in [p.receiver.owner for p in receiver.efferents] for receiver in {B,C})
+            assert [A] == comp.get_nodes_by_role(NodeRole.SINGLETON)
+            assert all(node in comp.get_nodes_by_role(NodeRole.INPUT) for node in {B,C})
+            assert all(node in comp.get_nodes_by_role(NodeRole.OUTPUT) for node in {A,D})
+        if config[1] == 'p1':
+            assert len(B.efferents) == 1
+            assert len(C.path_afferents) == 1
+            assert B.efferents[0].receiver.owner == C
+            assert [A] == comp.get_nodes_by_role(NodeRole.SINGLETON)
+            assert all(node in comp.get_nodes_by_role(NodeRole.INPUT) for node in {A,B})
+            assert all(node in comp.get_nodes_by_role(NodeRole.OUTPUT) for node in {A,C})
+        if config[1] == 'p2':
+            assert all(node in comp.get_nodes_by_role(NodeRole.SINGLETON)  for node in {A,B,C})
+        if config[1] == 'p3':
+            assert len(A.efferents) == 1
+            assert len(B.path_afferents) == 1
+            assert A.efferents[0].receiver.owner == B
+            assert all(node in comp.get_nodes_by_role(NodeRole.SINGLETON)  for node in {C,D})
+        if config[1] == 'p4':
+            assert len(C.efferents) == 1
+            assert len(D.path_afferents) == 1
+            assert C.efferents[0].receiver.owner == D
+            assert all(node in comp.get_nodes_by_role(NodeRole.SINGLETON)  for node in {A,B})
+            assert all(node in comp.get_nodes_by_role(NodeRole.INPUT) for node in {A,B,C})
+            assert all(node in comp.get_nodes_by_role(NodeRole.OUTPUT) for node in {A,D})
+        if config[1] == 'p5':
+            assert len(A.efferents) == 1
+            assert len(B.path_afferents) == 1
+            assert A.efferents[0].receiver.owner == B
+            assert len(C.efferents) == 1
+            assert len(D.path_afferents) == 1
+            assert C.efferents[0].receiver.owner == D
+            assert all(node in comp.get_nodes_by_role(NodeRole.INPUT) for node in {A,C})
+            assert all(node in comp.get_nodes_by_role(NodeRole.OUTPUT) for node in {B,D})
+
 
     def test_add_pathways_bad_arg_error(self):
         I = InputPort(name='I')
