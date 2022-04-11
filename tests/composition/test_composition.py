@@ -894,8 +894,7 @@ class TestCompositionPathwayArgsAndAdditionMethods:
         ('[[[A,B]], [[C,D]]]','p5'),              # PARALLEL: A->B, C->D (FORGIVES EMBEDDED LISTS OF [A, B] and [C,D])
         ('[A, "B"]','e1'),                        # BAD ITEM ERROR
         ('[[A,B, [C,D]],[E,F]]','e2'),            # EMBEDDED LIST ERROR
-        ('[{A,B}, [MapProj(B,D)], [C,D]]', 'e3')  # BAD ITEM ERROR, FIX: BUT SHOULD ALLOW EMBEDDED PER ABOVE
-
+        ('[{A,B}, [MapProj(B,D)], [C,D]]', 'e3')  # BAD ITEM ERROR, FIX: SHOULD ALLOW EMBEDDED PER ABOVE
     ]
     @pytest.mark.parametrize('config', config, ids=[x[0] for x in config])
     def test_various_pathway_configurations_in_constructor(self, config):
@@ -990,17 +989,17 @@ class TestCompositionPathwayArgsAndAdditionMethods:
             assert all(node in comp.get_nodes_by_role(NodeRole.INPUT) for node in {A,B})
             assert all(node in comp.get_nodes_by_role(NodeRole.OUTPUT) for node in {A,C})
         if config[1] == 'p2':
-            assert all(node in comp.get_nodes_by_role(NodeRole.SINGLETON)  for node in {A,B,C})
+            assert all(node in comp.get_nodes_by_role(NodeRole.SINGLETON) for node in {A,B,C})
         if config[1] == 'p3':
             assert len(A.efferents) == 1
             assert len(B.path_afferents) == 1
             assert A.efferents[0].receiver.owner == B
-            assert all(node in comp.get_nodes_by_role(NodeRole.SINGLETON)  for node in {C,D})
+            assert all(node in comp.get_nodes_by_role(NodeRole.SINGLETON) for node in {C,D})
         if config[1] == 'p4':
             assert len(C.efferents) == 1
             assert len(D.path_afferents) == 1
             assert C.efferents[0].receiver.owner == D
-            assert all(node in comp.get_nodes_by_role(NodeRole.SINGLETON)  for node in {A,B})
+            assert all(node in comp.get_nodes_by_role(NodeRole.SINGLETON) for node in {A,B})
             assert all(node in comp.get_nodes_by_role(NodeRole.INPUT) for node in {A,B,C})
             assert all(node in comp.get_nodes_by_role(NodeRole.OUTPUT) for node in {A,D})
         if config[1] == 'p5':

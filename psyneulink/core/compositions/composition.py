@@ -6373,17 +6373,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 pathway = pathway[0]
             else:
                 raise CompositionError(f"Unrecognized tuple specification in {pathway_arg_str}: {pathway}")
-        # MODIFIED 4/9/22 NEW:
         elif not isinstance(pathway, collections.abc.Iterable) or all(_is_pathway_entry_spec(n, ANY) for n in pathway):
             pathway = convert_to_list(pathway)
-        # # MODIFIED 4/9/22 NEWER:
-        # elif not isinstance(pathway, collections.abc.Iterable):
-        #     # If pathway spec is a single non-iterable, put in list:
-        #     pathway = convert_to_list(pathway)
-        # elif all(_is_pathway_entry_spec(n, ANY) for n in pathway):
-        #     # If pathway is iterable (passed above) composed of legal entries, make it a list
-        #     pathway = convert_to_list(pathway)
-        # MODIFIED 4/9/22 END
         else:
             bad_entry_error_msg = f"The following entries in a pathway specified for '{self.name}' are not " \
                                   f"a Node (Mechanism or Composition) or a Projection nor a set of either: "
@@ -6391,33 +6382,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise CompositionError(f"{bad_entry_error_msg}{','.join(bad_entries)}")
             # raise CompositionError(f"Unrecognized specification in {pathway_arg_str}: {pathway}")
 
-        # FIX: 4/11/22 -- MOVED TO add_pathways
-        # # MODIFIED 4/9/22 OLDEST:
         lists = [entry for entry in pathway
                  if isinstance(entry, list) and all(_is_pathway_entry_spec(node, NODE) for node in entry)]
         if lists:
             raise CompositionError(f"Pathway specification for {pathway_arg_str} has embedded list(s): {lists}")
         return pathway, pathway_name
-        # FIX: 4/11/22 -- END MOVE
-
-        # # MODIFIED 4/9/22 NEW:
-        # # Expand any lists embedded in pathway and include "inline"
-        # expanded_pathway = []
-        # for entry in pathway:
-        #     if isinstance(entry, list) and (_is_pathway_entry_spec(node, NODE) for node in entry):
-        #         expanded_pathway.extend(entry)
-        #     else:
-        #         expanded_pathway.append(entry)
-        # return expanded_pathway, pathway_name
-
-        # # MODIFIED 4/9/22 NEWER:
-        # # If there are any lists in of Nodes pathway, then treat ALL entries as parallel pathways, and embed in lists"
-        # if any(isinstance(entry, list) and all(_is_pathway_entry_spec(node, NODE)
-        #                                        for node in entry) for entry in pathway):
-        #     pathway = [entry if isinstance(entry, list) and all(_is_pathway_entry_spec(node, NODE) for node in entry)
-        #                else [entry] for entry in pathway]
-        # # MODIFIED 4/9/22 END
-        # return pathway, pathway_name
 
     # FIX: REFACTOR TO TAKE Pathway OBJECT AS ARGUMENT
     def add_pathway(self, pathway):
@@ -6509,13 +6478,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pathways = convert_to_list(pathways)
 
         # Possibility 1 (set of Nodes): create a Pathway for each Node (since set is in pathways arg)
-        # # MODIFIED 4/11/22 OLD:
-        # elif isinstance(pathways, set):
-        #     pathways = [Pathway(node) for node in pathways]
-        # MODIFIED 4/11/22 NEW:
         elif isinstance(pathways, set):
             pathways = [pathways]
-        # MODIFIED 4/11/22 END
 
         # Possibility 2 (list is a single pathway spec) or 2.5 (includes one or more sets):
         if (isinstance(pathways, list) and
@@ -6536,26 +6500,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # pathways should now be a list in which each entry should be *some* form of pathway specification
         #    (including original spec as possibilities 5, 6, or 7)
 
-        # # FIX: 4/11/22 -- MOVED FROM _parse_pathway
-        # # # MODIFIED 4/9/22 OLDEST:
-        # lists = [pathway for pathway in pathways
-        #          if isinstance(pathway, list) and all(_is_pathway_entry_spec(pathway, ANY) for node in pathway)]
-        # if lists:
-        #     raise CompositionError(f"Pathway specification for {pathway_arg_str} has embedded list(s): {lists}")
-        # # FIX: 4/11/22 -- END MOVE
-
-        # # MODIFIED 4/9/22 NEW:
-        # # If there are any lists of Nodes in pathway, then treat ALL entries as parallel pathways, and embed in lists"
-        # if (isinstance(pathways, collections.abc.Iterable)
-        #         and any(isinstance(entry, list)
-        #                 and all(_is_pathway_entry_spec(node,NODE) for node in entry) for entry in pathways)):
-        #     pathways = [entry if isinstance(entry, list)
-        #                          and all(_is_pathway_entry_spec(node, NODE) for node in entry)
-        #                 else [entry] for entry in pathways]
-        # else:
-        #     # Put single pathway in outer list for consistency of handling below (with specified pathway as pathways[0])
-        #     pathways = np.atleast_2d(np.array(pathways, dtype=object)).tolist()
-        # MODIFIED 4/9/11 NEWER:
         # If there are any lists of Nodes in pathway, or a Pathway or dict with such a list,
         #     then treat ALL entries as parallel pathways, and embed in lists"
         if (isinstance(pathways, collections.abc.Iterable)
@@ -6564,7 +6508,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             # Put single pathway in outer list for consistency of handling below (with specified pathway as pathways[0])
             pathways = np.atleast_2d(np.array(pathways, dtype=object)).tolist()
-        # # MODIFIED 4/9/22 END
 
         added_pathways = []
 
@@ -6856,10 +6799,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         projections.append(projs)
 
             # PROJECTION ENTRY --------------------------------------------------------------------------
-            # Confirm that it is between two nodes, then add the Projection;
-            #    note: if Projection is already instantiated and valid, it is used as is
-            #          if it is a list or set...
-            #          FIX: 4/9/22 - FINISH COMMENT
+            # Validate that it is between two nodes, then add the Projection;
+            #    note: if Projection is already instantiated and valid, it is used as is;  if it is a set or list:
+            #          - those are implemented between the corresponding pairs of sender and receiver Nodes
+            #          - the list or set has a default Projection or matrix specification,
+            #            that is used between all pairs of Nodes for which a Projection has not been specified
 
             # The current entry is a Projection specification or a list or set of them
             elif _is_pathway_entry_spec(pathway[c], PROJECTION):
@@ -7076,10 +7020,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # BAD PATHWAY ENTRY: contains neither Node nor Projection specification(s)
             else:
-                # MODIFIED 4/11/22 OLD: FIX - SHOULD CHANGE TO ASSERT, AS SHOULD HAVE BEEN CAUGHT IN VALIDATION
-                raise CompositionError(f"An entry in {pathway_arg_str} is not a Node (Mechanism or Composition) "
-                                       f"or a Projection nor a set of either: {repr(pathway[c])}.")
-                # MODIFIED 4/11/22 END
+                assert False, f"PROGRAM ERROR : An entry in {pathway_arg_str} is not a Node (Mechanism " \
+                              f"or Composition) or a Projection nor a set of either: {repr(pathway[c])}."
 
         # Finally, clean up any tuple specs
         for i, n_e in enumerate(node_entries):
