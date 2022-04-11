@@ -78,7 +78,7 @@ jobs:
 
     steps:
     - name: Download dist files
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
       with:
         name: Python-dist-files
         path: dist/
@@ -141,7 +141,7 @@ jobs:
 
     steps:
     - name: Download dist files
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
       with:
         name: Python-dist-files
         path: dist/
@@ -175,7 +175,7 @@ jobs:
 
     steps:
     - name: Download dist files
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
       with:
         name: Python-dist-files
         path: dist/
