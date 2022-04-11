@@ -82,7 +82,7 @@ All of the Pathways assigned to a Composition are listed in its `pathways <Compo
 If the **name** argument of the Pathway's constructor is used to assign it a name, this is used as the name of the
 Pathway created when it is assigned to a Composition in its constructor, or using its `add_pathways
 <Composition.add_pathways>` method.  This is also the case if one of the Composition's other `Pathway addition methods
-<Compositiion_Pathway_Addition_Methods>` is used, as long as the **name** argument of those methods is not specified.
+<Composition_Pathway_Addition_Methods>` is used, as long as the **name** argument of those methods is not specified.
 However, if the **name** argument is specified in those methods, or `Pathway specification dictionary
 <Pathway_Specification_Dictionary>` is used to specify the Pathway's name, that takes precedence over, and replaces
 one specified in the Pathway `template's <Pathway_Template>` `name <Pathway.name>` attribute.
@@ -102,12 +102,18 @@ of any of a Composition's `Pathway addition methods <Composition_Pathway_Additio
     .. _Pathway_Specification_List:
 
     * **list**: [`Node <Composition_Nodes>`, <`Projection(s) <Projection>`,> `Node <Composition_Nodes>`...] --
-      each item of the list must be a `Node <Composition_Nodes>` -- i.e., Mechanism or Composition, or a
-      (`Mechanism <Mechanism>`, `NodeRoles <NodeRole>`) tuple -- or, optionally, a `Projection specification
-      <Projection_Specification>`, a (`Projection specification <Projection_Specification>`, `feedback specification
-      <Composition_Feedback_Designation>`) tuple, or a set of either interposed between a pair of nodes (see
+      each item of the list must be a `Node <Composition_Nodes>` (i.e., Mechanism or Composition, or a
+      (`Mechanism <Mechanism>`, `NodeRoles <NodeRole>`) tuple) or set of Nodes, optionally with a `Projection
+      specification <Projection_Specification>`, a (`Projection specification <Projection_Specification>`,
+      `feedback specification <Composition_Feedback_Designation>`) tuple, or a set of either interposed between
+      a pair of (sets of) Nodes (see `add_linear_processing_pathway <Composition.add_linear_processing_pathway>`
+      for additional details).  The list must begin and end with a (set of) Node(s).
+    ..
+    * **set**: {`Node <Composition_Nodes>`, `Node <Composition_Nodes>`...} --
+      each item of the set must be a `Node <Composition_Nodes>` (i.e., Mechanism or Composition, or a
+      (`Mechanism <Mechanism>`, `NodeRoles <NodeRole>`) tuple);  each Node is treated as a `SINGLETON
+      <NodeRole.SINGLETON>`.  Sets can also be used in a list specification (see above; and see
       `add_linear_processing_pathway <Composition.add_linear_processing_pathway>` for additional details).
-      The list must begin and end with a node.
     ..
     * **2-item tuple**: (Pathway, `LearningFunction`) -- used to specify a `learning Pathway
       <Composition_Learning_Pathway>`;  the 1st item must be a `Node <Composition_Nodes>` or list, as
