@@ -6348,6 +6348,46 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     # region ----------------------------------  PROCESSING  -----------------------------------------------------------
 
+    def _parse_pathway(self, pathway, name, pathway_arg_str):
+        from psyneulink.core.compositions.pathway import Pathway, _is_pathway_entry_spec
+
+        # Deal with Pathway() or tuple specifications
+        if isinstance(pathway, Pathway):
+            # Give precedence to name specified in call to add_linear_processing_pathway
+            pathway_name = name or pathway.name
+            pathway = pathway.pathway
+        else:
+            pathway_name = name
+
+        if isinstance(pathway, tuple):
+            # If tuple is just a single Node specification for a pathway, return in list:
+            if _is_pathway_entry_spec(pathway, NODE):
+                pathway = [pathway]
+            # If tuple is used to specify a sequence of nodes, convert to list (even though not documented):
+            elif all(_is_pathway_entry_spec(n, ANY) for n in pathway):
+                pathway = list(pathway)
+            # If tuple is (pathway, LearningFunction), get pathway and ignore LearningFunction
+            elif isinstance(pathway[1],type) and issubclass(pathway[1], LearningFunction):
+                warnings.warn(f"{LearningFunction.__name__} found in specification of {pathway_arg_str}: {pathway[1]}; "
+                              f"it will be ignored")
+                pathway = pathway[0]
+            else:
+                raise CompositionError(f"Unrecognized tuple specification in {pathway_arg_str}: {pathway}")
+        elif not isinstance(pathway, collections.abc.Iterable) or all(_is_pathway_entry_spec(n, ANY) for n in pathway):
+            pathway = convert_to_list(pathway)
+        else:
+            bad_entry_error_msg = f"The following entries in a pathway specified for '{self.name}' are not " \
+                                  f"a Node (Mechanism or Composition) or a Projection nor a set of either: "
+            bad_entries = [repr(entry) for entry in pathway if not _is_pathway_entry_spec(entry, ANY)]
+            raise CompositionError(f"{bad_entry_error_msg}{','.join(bad_entries)}")
+            # raise CompositionError(f"Unrecognized specification in {pathway_arg_str}: {pathway}")
+
+        lists = [entry for entry in pathway
+                 if isinstance(entry, list) and all(_is_pathway_entry_spec(node, NODE) for node in entry)]
+        if lists:
+            raise CompositionError(f"Pathway specification for {pathway_arg_str} has embedded list(s): {lists}")
+        return pathway, pathway_name
+
     # FIX: REFACTOR TO TAKE Pathway OBJECT AS ARGUMENT
     def add_pathway(self, pathway):
         """Add an existing `Pathway <Composition_Pathways>` to the Composition
@@ -6378,6 +6418,182 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.add_projection(p, p.sender.owner, p.receiver.owner)
 
         self._analyze_graph()
+
+    @handle_external_context()
+    def add_pathways(self, pathways, context=None):
+        """Add pathways to the Composition.
+
+        Arguments
+        ---------
+
+        pathways : Pathway or list[Pathway]
+            specifies one or more `Pathways <Pathway>` to add to the Composition.  Any valid form of `Pathway
+            specification <Pathway_Specification>` can be used.  A set can also be used, all elements of which are
+            `Nodes <Composition_Nodes>`, in which case a separate `Pathway` is constructed for each.
+
+        Returns
+        -------
+
+        list[Pathway] :
+            List of `Pathways <Pathway>` added to the Composition.
+
+        """
+
+        # Possible specifications for **pathways** arg:
+        #  Node specs (single or set):
+        #  0  Single node:  NODE
+        #  1  Set:  {NODE...} -> generate a Pathway for each NODE
+        #  Single pathway spec (list, tuple or dict):
+        #  2   single list:   PWAY = [NODE] or [NODE...] in which *all* are NODES with optional intercolated Projections
+        #  2.5 single with sets: PWAY = [NODE or {NODE...}] or [NODE or {NODE...}, NODE or {NODE...}...]
+        #  3   single tuple:  (PWAY, LearningFunction) = (NODE, LearningFunction) or
+        #                                                 ([NODE...], LearningFunction)
+        #  4   single dict:   {NAME: PWAY} = {NAME: NODE} or
+        #                                    {NAME: [NODE...]} or
+        #                                    {NAME: ([NODE...], LearningFunction)}
+        #  Multiple pathway specs (in outer list):
+        #  5   list with list(s): [PWAY] = [NODE, [NODE]] or [[NODE...]...]
+        #  6   list with tuple(s):  [(PWAY, LearningFunction)...] = [(NODE..., LearningFunction)...] or
+        #                                                       [([NODE...], LearningFunction)...]
+        #  7   list with dict: [{NAME: PWAY}...] = [{NAME: NODE...}...] or
+        #                                          [{NAME: [NODE...]}...] or
+        #                                          [{NAME: (NODE, LearningFunction)}...] or
+        #                                          [{NAME: ([NODE...], LearningFunction)}...]
+
+        from psyneulink.core.compositions.pathway import Pathway, _is_node_spec, _is_pathway_entry_spec
+
+        if context.source == ContextFlags.COMMAND_LINE:
+            pathways_arg_str = f"'pathways' arg for the add_pathways method of {self.name}"
+        elif context.source == ContextFlags.CONSTRUCTOR:
+            pathways_arg_str = f"'pathways' arg of the constructor for {self.name}"
+        else:
+            assert False, f"PROGRAM ERROR:  unrecognized context passed to add_pathways of {self.name}."
+        context.string = pathways_arg_str
+
+        if not pathways:
+            return
+
+        # Possibilities 0, 3 or 4 (single NODE, set of NODESs tuple, dict or Pathway specified, so convert to list
+        if _is_node_spec(pathways) or isinstance(pathways, (tuple, dict, Pathway)):
+            pathways = convert_to_list(pathways)
+
+        # Possibility 1 (set of Nodes): create a Pathway for each Node (since set is in pathways arg)
+        elif isinstance(pathways, set):
+            pathways = [pathways]
+
+        # Possibility 2 (list is a single pathway spec) or 2.5 (includes one or more sets):
+        if (isinstance(pathways, list) and
+                # First item must be a node_spec or set of them
+                ((_is_node_spec(pathways[0])
+                  or (isinstance(pathways[0], set) and all(_is_node_spec(item) for item in pathways[0])))
+                # All other items must be either Nodes, Projections or sets
+                 and all(_is_pathway_entry_spec(p, ANY) for p in pathways))):
+            # Place in outter list (to conform to processing of multiple pathways below)
+            pathways = [pathways]
+            # assert False, f"GOT TO POSSIBILITY 2" # SHOULD HAVE BEEN DONE ABOVE
+
+        # If pathways is not now a list it must be illegitimate
+        if not isinstance(pathways, list):
+            raise CompositionError(f"The {pathways_arg_str} must be a "
+                                   f"Node, list, set, tuple, dict or Pathway object: {pathways}.")
+
+        # pathways should now be a list in which each entry should be *some* form of pathway specification
+        #    (including original spec as possibilities 5, 6, or 7)
+
+        # If there are any lists of Nodes in pathway, or a Pathway or dict with such a list,
+        #     then treat ALL entries as parallel pathways, and embed in lists"
+        if (isinstance(pathways, collections.abc.Iterable)
+                and any(isinstance(pathway, (list, dict, Pathway))) for pathway in pathways):
+            pathways = [pathway if isinstance(pathway, (list, dict, Pathway)) else [pathway] for pathway in pathways]
+        else:
+            # Put single pathway in outer list for consistency of handling below (with specified pathway as pathways[0])
+            pathways = np.atleast_2d(np.array(pathways, dtype=object)).tolist()
+
+        added_pathways = []
+
+        def identify_pway_type_and_parse_tuple_prn(pway, tuple_or_dict_str):
+            """
+            Determine whether pway is PROCESSING_PATHWAY or LEARNING_PATHWAY and, if it is the latter,
+            parse tuple into pathway specification and LearningFunction.
+            Return pathway type, pathway, and learning_function or None
+            """
+            learning_function = None
+
+            if isinstance(pway, Pathway):
+                pway = pway.pathway
+
+            if (_is_node_spec(pway) or isinstance(pway, (list, set)) or
+                    # Forgive use of tuple to specify a pathway, and treat as if it was a list spec
+                    (isinstance(pway, tuple) and all(_is_pathway_entry_spec(n, ANY) for n in pathway))):
+                pway_type = PROCESSING_PATHWAY
+                if isinstance(pway, set):
+                    pway = [pway]
+                return pway_type, pway, None
+            elif isinstance(pway, tuple):
+                pway_type = LEARNING_PATHWAY
+                if len(pway)!=2:
+                    raise CompositionError(f"A tuple specified in the {pathways_arg_str}"
+                                           f" has more than two items: {pway}")
+                pway, learning_function = pway
+                if not (_is_node_spec(pway) or isinstance(pway, (list, Pathway))):
+                    raise CompositionError(f"The 1st item in {tuple_or_dict_str} specified in the "
+                                           f" {pathways_arg_str} must be a node or a list: {pway}")
+                if not (isinstance(learning_function, type) and issubclass(learning_function, LearningFunction)):
+                    raise CompositionError(f"The 2nd item in {tuple_or_dict_str} specified in the "
+                                           f"{pathways_arg_str} must be a LearningFunction: {learning_function}")
+                return pway_type, pway, learning_function
+            else:
+                assert False, f"PROGRAM ERROR: arg to identify_pway_type_and_parse_tuple_prn in {self.name}" \
+                              f"is not a Node, list or tuple: {pway}"
+
+        # Validate items in pathways list and add to Composition using relevant add_linear_<> method.
+        bad_entry_error_msg = f"Every item in the {pathways_arg_str} must be a " \
+                              f"Node, list, set, tuple or dict; the following are not: "
+        for pathway in pathways:
+            pathway = pathway[0] if isinstance(pathway, list) and len(pathway) == 1 else pathway
+            pway_name = None
+            if isinstance(pathway, Pathway):
+                pway_name = pathway.name
+                pathway = pathway.pathway
+            if _is_node_spec(pathway) or isinstance(pathway, (list, set, tuple)):
+                if isinstance(pathway, set):
+                    bad_entries = [repr(entry) for entry in pathway if not _is_node_spec(entry)]
+                    if bad_entries:
+                        raise CompositionError(f"{bad_entry_error_msg}{','.join(bad_entries)}")
+                pway_type, pway, pway_learning_fct = identify_pway_type_and_parse_tuple_prn(pathway, f"a tuple")
+            elif isinstance(pathway, dict):
+                if len(pathway)!=1:
+                    raise CompositionError(f"A dict specified in the {pathways_arg_str} "
+                                           f"contains more than one entry: {pathway}.")
+                pway_name, pway = list(pathway.items())[0]
+                if not isinstance(pway_name, str):
+                    raise CompositionError(f"The key in a dict specified in the {pathways_arg_str} must be a str "
+                                           f"(to be used as its name): {pway_name}.")
+                if _is_node_spec(pway) or isinstance(pway, (list, tuple, Pathway)):
+                    pway_type, pway, pway_learning_fct = identify_pway_type_and_parse_tuple_prn(pway,
+                                                                                                f"the value of a dict")
+                else:
+                    raise CompositionError(f"The value in a dict specified in the {pathways_arg_str} must be "
+                                           f"a pathway specification (Node, list or tuple): {pway}.")
+            else:
+                raise CompositionError(f"{bad_entry_error_msg}{repr(pathway)}")
+
+            context.source = ContextFlags.METHOD
+            if pway_type == PROCESSING_PATHWAY:
+                new_pathway = self.add_linear_processing_pathway(pathway=pway,
+                                                                 name=pway_name,
+                                                                 context=context)
+            elif pway_type == LEARNING_PATHWAY:
+                new_pathway = self.add_linear_learning_pathway(pathway=pway,
+                                                               learning_function=pway_learning_fct,
+                                                               name=pway_name,
+                                                               context=context)
+            else:
+                assert False, f"PROGRAM ERROR: failure to determine pathway_type in add_pathways for {self.name}."
+
+            added_pathways.append(new_pathway)
+
+        return added_pathways
 
     @handle_external_context()
     def add_linear_processing_pathway(self, pathway, name:str=None, context=None, *args):
@@ -6469,10 +6685,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         `Pathway` :
             `Pathway` added to Composition.
-
         """
 
         from psyneulink.core.compositions.pathway import Pathway, _is_node_spec, _is_pathway_entry_spec
+
         def _get_spec_if_tuple(spec):
             return spec[0] if isinstance(spec, tuple) else spec
 
@@ -6489,31 +6705,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         context.source = ContextFlags.METHOD
         context.string = pathway_arg_str
 
-        # First, deal with Pathway() or tuple specifications
-        if isinstance(pathway, Pathway):
-            # Give precedence to name specified in call to add_linear_processing_pathway
-            pathway_name = name or pathway.name
-            pathway = pathway.pathway
-        else:
-            pathway_name = name
+        pathway, pathway_name = self._parse_pathway(pathway, name, pathway_arg_str)
 
-        if _is_pathway_entry_spec(pathway, ANY):
-            pathway = convert_to_list(pathway)
-        elif isinstance(pathway, tuple):
-            # If tuple is used to specify a sequence of nodes, convert to list (even though not documented):
-            if all(_is_pathway_entry_spec(n, ANY) for n in pathway):
-                pathway = list(pathway)
-            # If tuple is (pathway, LearningFunction), get pathway and ignore LearningFunction
-            elif isinstance(pathway[1],type) and issubclass(pathway[1], LearningFunction):
-                warnings.warn(f"{LearningFunction.__name__} found in specification of {pathway_arg_str}: {pathway[1]}; "
-                              f"it will be ignored")
-                pathway = pathway[0]
-            else:
-                raise CompositionError(f"Unrecognized tuple specification in {pathway_arg_str}: {pathway}")
-        else:
-            raise CompositionError(f"Unrecognized specification in {pathway_arg_str}: {pathway}")
-
-        # Then, verify that the pathway begins with a Node or set of Nodes
+        # Verify that the pathway begins with a Node or set of Nodes
         if _is_node_spec(pathway[0]):
             # Use add_nodes so that node spec can also be a tuple with required_roles
             self.add_nodes(nodes=[pathway[0]], context=context)
@@ -6529,7 +6723,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise CompositionError(f"First item in {pathway_arg_str} must be "
                                    f"a Node (Mechanism or Composition): {pathway}.")
 
-        # Next, add all of the remaining nodes in the pathway
+        # Add all of the remaining nodes in the pathway
         for c in range(1, len(pathway)):
             # if the entry is for a Node (Mechanism, Composition or (Mechanism, NodeRole(s)) tuple), add it
             if _is_node_spec(pathway[c]):
@@ -6605,10 +6799,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         projections.append(projs)
 
             # PROJECTION ENTRY --------------------------------------------------------------------------
-            # Confirm that it is between two nodes, then add the Projection;
-            #    note: if Projection is already instantiated and valid, it is used as is
-            #          if it is a list or set...
-            #          FIX: 4/9/22 - FINISH COMMENT
+            # Validate that it is between two nodes, then add the Projection;
+            #    note: if Projection is already instantiated and valid, it is used as is;  if it is a set or list:
+            #          - those are implemented between the corresponding pairs of sender and receiver Nodes
+            #          - the list or set has a default Projection or matrix specification,
+            #            that is used between all pairs of Nodes for which a Projection has not been specified
 
             # The current entry is a Projection specification or a list or set of them
             elif _is_pathway_entry_spec(pathway[c], PROJECTION):
@@ -6616,7 +6811,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Validate that Projection specification is not last entry
                 if c == len(pathway) - 1:
                     raise CompositionError(f"The last item in the {pathway_arg_str} cannot be a Projection: "
-                                           f"{proj_spec}.")
+                                           f"{pathway[c]}.")
 
                 # Validate that entry is between two Nodes (or sets of Nodes)
                 #     and get all pairings of sender and receiver nodes
@@ -6825,8 +7020,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # BAD PATHWAY ENTRY: contains neither Node nor Projection specification(s)
             else:
-                raise CompositionError(f"An entry in {pathway_arg_str} is not a Node (Mechanism or Composition) "
-                                       f"or a Projection nor a set of either: {repr(pathway[c])}.")
+                assert False, f"PROGRAM ERROR : An entry in {pathway_arg_str} is not a Node (Mechanism " \
+                              f"or Composition) or a Projection nor a set of either: {repr(pathway[c])}."
 
         # Finally, clean up any tuple specs
         for i, n_e in enumerate(node_entries):
@@ -6876,162 +7071,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._analyze_graph(context)
 
         return pathway
-
-    @handle_external_context()
-    def add_pathways(self, pathways, context=None):
-        """Add pathways to the Composition.
-
-        Arguments
-        ---------
-
-        pathways : Pathway or list[Pathway]
-            specifies one or more `Pathways <Pathway>` to add to the Composition.  Any valid form of `Pathway
-            specification <Pathway_Specification>` can be used.  A set can also be used, all elements of which are
-            `Nodes <Composition_Nodes>`, in which case a separate `Pathway` is constructed for each.
-
-        Returns
-        -------
-
-        list[Pathway] :
-            List of `Pathways <Pathway>` added to the Composition.
-
-        """
-
-        # Possible specifications for **pathways** arg:
-        # 0  Single node:  NODE
-        # 1  Set:  {NODE...} -> generate a Pathway for each NODE
-        # Single pathway spec (list, tuple or dict):
-        # 2   single list:   PWAY = [NODE] or [NODE...] in which *all* are NODES with optional intercolated Projections
-        # 2.5 single with sets: PWAY = [NODE or {NODE...}] or [NODE or {NODE...}, NODE or {NODE...}...]
-        # 3   single tuple:  (PWAY, LearningFunction) = (NODE, LearningFunction) or
-        #                                                ([NODE...], LearningFunction)
-        # 4   single dict:   {NAME: PWAY} = {NAME: NODE} or
-        #                                   {NAME: [NODE...]} or
-        #                                   {NAME: ([NODE...], LearningFunction)}
-        # Multiple pathway specs (outer list):
-        # 5   list with list: [PWAY] = [NODE, [NODE]] or [[NODE...]...]
-        # 6   list with tuple:  [(PWAY, LearningFunction)...] = [(NODE..., LearningFunction)...] or
-        #                                                      [([NODE...], LearningFunction)...]
-        # 7   list with dict: [{NAME: PWAY}...] = [{NAME: NODE...}...] or
-        #                                         [{NAME: [NODE...]}...] or
-        #                                         [{NAME: (NODE, LearningFunction)}...] or
-        #                                         [{NAME: ([NODE...], LearningFunction)}...]
-
-        from psyneulink.core.compositions.pathway import Pathway, _is_node_spec, _is_pathway_entry_spec
-
-        if context.source == ContextFlags.COMMAND_LINE:
-            pathways_arg_str = f"'pathways' arg for the add_pathways method of {self.name}"
-        elif context.source == ContextFlags.CONSTRUCTOR:
-            pathways_arg_str = f"'pathways' arg of the constructor for {self.name}"
-        else:
-            assert False, f"PROGRAM ERROR:  unrecognized context passed to add_pathways of {self.name}."
-        context.string = pathways_arg_str
-
-        if not pathways:
-            return
-
-        # Possibilities 0, 3 or 4 (single NODE, tuple or dict specified, so convert to list
-        elif _is_node_spec(pathways) or isinstance(pathways, (tuple, dict, Pathway)):
-            pathways = convert_to_list(pathways)
-
-        # Possibility 1 (set of Nodes): create a Pathway for each Node (since set is in pathways arg)
-        elif isinstance(pathways, set):
-            pathways = [Pathway(node) for node in pathways]
-
-        # Possibility 2 (list is a single pathway spec) or 2.5 (includes one or more sets):
-        if (isinstance(pathways, list) and
-                # First item must be a node_spec or set of them
-                ((_is_node_spec(pathways[0])
-                  or (isinstance(pathways[0], set) and all(_is_node_spec(item) for item in pathways[0])))
-                # All other items must be either Nodes, Projections or sets
-                 and all(_is_pathway_entry_spec(p, ANY) for p in pathways))):
-            # Place in outter list (to conform to processing of multiple pathways below)
-            pathways = [pathways]
-        # If pathways is not now a list it must be illegitimate
-        if not isinstance(pathways, list):
-            raise CompositionError(f"The {pathways_arg_str} must be a "
-                                   f"Node, list, tuple, dict or Pathway object: {pathways}.")
-
-        # pathways should now be a list in which each entry should be *some* form of pathway specification
-        #    (including original spec as possibilities 5, 6, or 7)
-
-        added_pathways = []
-
-        def identify_pway_type_and_parse_tuple_prn(pway, tuple_or_dict_str):
-            """
-            Determine whether pway is PROCESSING_PATHWAY or LEARNING_PATHWAY and, if it is the latter,
-            parse tuple into pathway specification and LearningFunction.
-            Return pathway type, pathway, and learning_function or None
-            """
-            learning_function = None
-
-            if isinstance(pway, Pathway):
-                pway = pway.pathway
-
-            if (_is_node_spec(pway) or isinstance(pway, list) or
-                    # Forgive use of tuple to specify a pathway, and treat as if it was a list spec
-                    (isinstance(pway, tuple) and all(_is_pathway_entry_spec(n, ANY) for n in pathway))):
-                pway_type = PROCESSING_PATHWAY
-                return pway_type, pway, None
-            elif isinstance(pway, tuple):
-                pway_type = LEARNING_PATHWAY
-                if len(pway)!=2:
-                    raise CompositionError(f"A tuple specified in the {pathways_arg_str}"
-                                           f" has more than two items: {pway}")
-                pway, learning_function = pway
-                if not (_is_node_spec(pway) or isinstance(pway, (list, Pathway))):
-                    raise CompositionError(f"The 1st item in {tuple_or_dict_str} specified in the "
-                                           f" {pathways_arg_str} must be a node or a list: {pway}")
-                if not (isinstance(learning_function, type) and issubclass(learning_function, LearningFunction)):
-                    raise CompositionError(f"The 2nd item in {tuple_or_dict_str} specified in the "
-                                           f"{pathways_arg_str} must be a LearningFunction: {learning_function}")
-                return pway_type, pway, learning_function
-            else:
-                assert False, f"PROGRAM ERROR: arg to identify_pway_type_and_parse_tuple_prn in {self.name}" \
-                              f"is not a Node, list or tuple: {pway}"
-
-        # Validate items in pathways list and add to Composition using relevant add_linear_<> method.
-        for pathway in pathways:
-            pway_name = None
-            if isinstance(pathway, Pathway):
-                pway_name = pathway.name
-                pathway = pathway.pathway
-            if _is_node_spec(pathway) or isinstance(pathway, (list, tuple)):
-                pway_type, pway, pway_learning_fct = identify_pway_type_and_parse_tuple_prn(pathway, f"a tuple")
-            elif isinstance(pathway, dict):
-                if len(pathway)!=1:
-                    raise CompositionError(f"A dict specified in the {pathways_arg_str} "
-                                           f"contains more than one entry: {pathway}.")
-                pway_name, pway = list(pathway.items())[0]
-                if not isinstance(pway_name, str):
-                    raise CompositionError(f"The key in a dict specified in the {pathways_arg_str} must be a str "
-                                           f"(to be used as its name): {pway_name}.")
-                if _is_node_spec(pway) or isinstance(pway, (list, tuple, Pathway)):
-                    pway_type, pway, pway_learning_fct = identify_pway_type_and_parse_tuple_prn(pway,
-                                                                                                f"the value of a dict")
-                else:
-                    raise CompositionError(f"The value in a dict specified in the {pathways_arg_str} must be "
-                                           f"a pathway specification (Node, list or tuple): {pway}.")
-            else:
-                raise CompositionError(f"Every item in the {pathways_arg_str} must be "
-                                       f"a Node, list, tuple or dict: {repr(pathway)} is not.")
-
-            context.source = ContextFlags.METHOD
-            if pway_type == PROCESSING_PATHWAY:
-                new_pathway = self.add_linear_processing_pathway(pathway=pway,
-                                                                 name=pway_name,
-                                                                 context=context)
-            elif pway_type == LEARNING_PATHWAY:
-                new_pathway = self.add_linear_learning_pathway(pathway=pway,
-                                                               learning_function=pway_learning_fct,
-                                                               name=pway_name,
-                                                               context=context)
-            else:
-                assert False, f"PROGRAM ERROR: failure to determine pathway_type in add_pathways for {self.name}."
-
-            added_pathways.append(new_pathway)
-
-        return added_pathways
 
     # endregion PROCESSING PATHWAYS
 

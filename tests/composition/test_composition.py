@@ -22,7 +22,6 @@ from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.ports.inputport import InputPort
@@ -576,6 +575,7 @@ comp.add_node(B)
         assert repr(warning[1].message.args[0]) == '"\\nThe following Projections were specified but are not being used by Nodes in \'COMP_2\':\\n\\tMappingProjection from A[OutputPort-0] to C[InputPort-0] (to \'C\' from \'A\')."'
 
 
+@pytest.mark.pathways
 class TestPathway:
 
     def test_pathway_standalone_object(self):
@@ -617,7 +617,47 @@ class TestPathway:
         assert "Illegal argument(s) used in constructor for Pathway: foo." in str(error_text.value)
 
 
-class TestCompositionPathwayAdditionMethods:
+@pytest.mark.pathways
+class TestCompositionPathwayArgsAndAdditionMethods:
+
+    def test_add_pathways_with_all_types(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        E = ProcessingMechanism(name='E')
+        X = ProcessingMechanism(name='X')
+        Y = ProcessingMechanism(name='Y')
+        F = ProcessingMechanism(name='F')
+        G = ProcessingMechanism(name='G')
+        H = ProcessingMechanism(name='H')
+        J = ProcessingMechanism(name='J')
+        K = ProcessingMechanism(name='K')
+        L = ProcessingMechanism(name='L')
+        M = ProcessingMechanism(name='M')
+
+        # FIX: 4/9/22 - ADD SET SPEC
+        p = Pathway(pathway=[L,M], name='P')
+        c = Composition()
+        c.add_pathways(pathways=[A,
+                                 [B,C],
+                                 (D,E),
+                                 {X,Y},
+                                 {'DICT PATHWAY': F},
+                                 ([G, H], BackPropagation),
+                                 {'LEARNING PATHWAY': ([J,K], Reinforcement)},
+                                 p])
+        assert len(c.pathways) == 8
+        assert isinstance(c.pathways[0].pathway, list) and len(c.pathways[0].pathway) == 1
+        assert isinstance(c.pathways[1].pathway, list) and len(c.pathways[1].pathway) == 3
+        assert isinstance(c.pathways[2].pathway, list) and len(c.pathways[2].pathway) == 3
+        assert isinstance(c.pathways[3].pathway[0], set) and len(c.pathways[3].pathway) == 1
+        assert c.pathways['P'].input == L
+        assert c.pathways['DICT PATHWAY'].input == F
+        assert c.pathways['DICT PATHWAY'].output == F
+        assert c.pathways['LEARNING PATHWAY'].output == K
+        assert [p for p in c.pathways if p.input == G][0].learning_function == BackPropagation
+        assert c.pathways['LEARNING PATHWAY'].learning_function == Reinforcement
 
     def test_pathway_attributes(self):
         c = Composition()
@@ -838,44 +878,148 @@ class TestCompositionPathwayAdditionMethods:
                                               PathwayRole.LEARNING,
                                               PathwayRole.OUTPUT}
 
-    def test_add_pathways_with_all_types(self):
+    config = [
+        ('[A,{B,C}]', 's1'),                      # SEQUENTIAL A->{B,C})
+        ('[A,[B,C]]', 'p1'),                      # PARALLEL:  A, B->C
+        ('[{A},{B,C}]', 's1'),                    # SEQUENTIAL: A->{B,C}
+        ('[[A],{B,C}]', 'p2'),                    # PARALLEL: A, B, C
+        ('[[A,B],{C,D}]', 'p3'),                  # PARALLEL: A->B, C, D
+        ('[[A,B],C,D ]', 'p3'),                   # PARALLEL: A->B, C, D
+        ('[[A,B],[C,D]]', 'p5'),                  # PARALLEL: A->B, C->D
+        ('[{A,B}, MapProj(B,D), C, D]', 's2'),    # SEQUENTIAL: A, B->D, C->D
+        ('[{A,B}, [MapProj(B,D)], C, D]', 's2'),  # SEQUENTIAL: A, B->D, C->D
+        ('[{A,B}, {MapProj(B,D)}, C, D]', 's2'),  # SEQUENTIAL: A, B->D, C->D
+        ('[{A,B}, [[C,D]]]', 'p4'),               # PARALLEL: A, B, C->D (FORGIVES EMBEDDED LIST OF [C,D])
+        ('[[A,B], [[C,D]]]', 'p5'),               # PARALLEL: A->B, C->D (FORGIVES EMBEDDED LIST OF [C,D])
+        ('[[[A,B]], [[C,D]]]','p5'),              # PARALLEL: A->B, C->D (FORGIVES EMBEDDED LISTS OF [A, B] and [C,D])
+        ('[A, "B"]','e1'),                        # BAD ITEM ERROR
+        ('[[A,B, [C,D]],[E,F]]','e2'),            # EMBEDDED LIST ERROR
+        ('[{A,B}, [MapProj(B,D)], [C,D]]', 'e3')  # BAD ITEM ERROR, FIX: SHOULD ALLOW EMBEDDED PER ABOVE
+    ]
+    @pytest.mark.parametrize('config', config, ids=[x[0] for x in config])
+    def test_various_pathway_configurations_in_constructor(self, config):
+        """Test combinations of sets and lists in pathways specification of Composition constructor
+        Principles:
+          if outer list (pathways spec) contains:
+          - single item or only sets, treat single (sequential) pathway
+          - one or more lists within it, treat all items as a separate (parallel) pathways
+          - one or more lists each with a single list within it ([[[A,B]],[[C,D]]]}), each is treated as a pathway
+          - any list with more than a single list within it ([[[A,B],[C,D]}), an error is generated
+          - any bad items (strings, misplaced items), an error is generated
+        """
+
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
+        # B_comparator = ComparatorMechanism(name='B COMPARATOR')
         C = ProcessingMechanism(name='C')
         D = ProcessingMechanism(name='D')
         E = ProcessingMechanism(name='E')
         F = ProcessingMechanism(name='F')
-        G = ProcessingMechanism(name='G')
-        H = ProcessingMechanism(name='H')
-        J = ProcessingMechanism(name='J')
-        K = ProcessingMechanism(name='K')
-        L = ProcessingMechanism(name='L')
-        M = ProcessingMechanism(name='M')
 
-        p = Pathway(pathway=[L,M], name='P')
-        c = Composition()
-        c.add_pathways(pathways=[A,
-                                 [B,C],
-                                 (D,E),
-                                 {'DICT PATHWAY': F},
-                                 ([G, H], BackPropagation),
-                                 {'LEARNING PATHWAY': ([J,K], Reinforcement)},
-                                 p])
-        assert len(c.pathways) == 7
-        assert c.pathways['P'].input == L
-        assert c.pathways['DICT PATHWAY'].input == F
-        assert c.pathways['DICT PATHWAY'].output == F
-        assert c.pathways['LEARNING PATHWAY'].output == K
-        [p for p in c.pathways if p.input == G][0].learning_function == BackPropagation
-        assert c.pathways['LEARNING PATHWAY'].learning_function == Reinforcement
+        # LEGAL:
+        if config[0] == '[A,{B,C}]':                 # SEQUENTIAL A->{B,C}) (s1)
+            comp = Composition([A,{B,C}])
+        elif config[0] == '[A,[B,C]]':               # PARALLEL:  A, B->C (p1)
+            comp = Composition([A,[B,C]])
+        elif config[0] == '[{A},{B,C}]':             # SEQUENTIAL: A->{B,C} (s1)
+            comp = Composition([{A},{B,C}])
+        elif config[0] == '[[A],{B,C}]':             # PARALLEL: A, B, C (p2)
+            comp = Composition([[A],{B,C}])
+        elif config[0] == '[[A,B],{C,D}]':           # PARALLEL: A->B, C, D (p3)
+            comp = Composition([[A,B],{C,D}])
+        elif config[0] == '[[A,B],C,D ]':            # PARALLEL: A->B, C, D (p3)
+            comp = Composition([[A,B],C,D ])
+        elif config[0] == '[[A,B],[C,D]]':           # PARALLEL: A->B, C->D {p5)
+            comp = Composition([[A,B],[C,D]])
+        elif config[0] == '[{A,B}, MapProj(B,D), C, D]':                   # SEQUENTIAL: A, B->D, C->D (s2)
+            comp = Composition([{A,B}, MappingProjection(B,D), C, D])
+        elif config[0] == '[{A,B}, [MapProj(B,D)], C, D]':                 # SEQUENTIAL: A, B->D, C->D (s2)
+            comp = Composition([{A,B}, [MappingProjection(B,D)], C, D])
+        elif config[0] == '[{A,B}, {MapProj(B,D)}, C, D]':                 # SEQUENTIAL: A, B->D, C->D (s2)
+            comp = Composition([{A,B}, {MappingProjection(B,D)}, C, D])
+        elif config[0] == '[{A,B}, [[C,D]]]':        # PARALLEL: A, B, C->D (FORGIVES EMBEDDED LIST [C,D]) (p4)
+            comp = Composition([{A,B}, [[C,D]]])
+        elif config[0] == '[[A,B], [[C,D]]]':        # PARALLEL: A->B, C->D (SINGLE EMBEDDED LIST OK [C,D])  (p5)
+            comp = Composition([[A,B], [[C,D]]])
+        elif config[0] == '[[[A,B]], [[C,D]]]':      # PARALLEL: A->B, C->D (FORGIVES EMBEDDED LISTS [A,B] & [C,D]) (p5)
+            comp = Composition([[[A,B]], [[C,D]]])
+
+        # ERRORS:
+        elif config[0] == '[A, "B"]':                                      # BAD ITEM ERROR (e1)
+            with pytest.raises(CompositionError) as error_text:
+                comp = Composition([A, "B"])
+            assert f"Every item in the 'pathways' arg of the constructor for Composition-0 must be " \
+                   f"a Node, list, set, tuple or dict; the following are not: 'B'" in str(error_text.value)
+        elif config[0] == '[[A,B, [C,D]],[E,F]]':                          # EMBEDDED LIST ERROR (e2)
+            with pytest.raises(CompositionError) as error_text:
+                comp = Composition([[A,B, [C,D]],[E,F]])
+            assert f"The following entries in a pathway specified for \'Composition-0\' are not " \
+                   f"a Node (Mechanism or Composition) or a Projection nor a set of either: " \
+                   f"[(ProcessingMechanism C), (ProcessingMechanism D)]" in str(error_text.value)
+        elif config[0] == '[{A,B}, [MapProj(B,D)], [C,D]]':                # BAD ITEM ERROR (e3)
+            with pytest.raises(CompositionError) as error_text:
+                comp = Composition([{A,B}, [MappingProjection(B,D)], [C,D]])
+            assert f"Every item in the 'pathways' arg of the constructor for Composition-0 must be " \
+                   f"a Node, list, set, tuple or dict; the following are not: " \
+                   f"(MappingProjection MappingProjection from B[OutputPort-0] to D[InputPort-0])" \
+                   in str(error_text.value)
+
+        else:
+            assert False, f"BAD CONFIG ARG: {config}"
+
+        # Tests:
+        if config[1] == 's1':
+            assert len(A.efferents) == 2
+            assert all(len(receiver.path_afferents) == 1 for receiver in {B,C})
+            assert all(receiver in [p.receiver.owner for p in A.efferents] for receiver in {B,C})
+            assert [A] == comp.get_nodes_by_role(NodeRole.INPUT)
+            assert all(node in comp.get_nodes_by_role(NodeRole.OUTPUT) for node in {B,C})
+        if config[1] == 's2':
+            assert all(len(sender.efferents) == 1 for sender in {B,C})
+            assert len(D.path_afferents) == 2
+            assert all(D in [p.receiver.owner for p in receiver.efferents] for receiver in {B,C})
+            assert [A] == comp.get_nodes_by_role(NodeRole.SINGLETON)
+            assert all(node in comp.get_nodes_by_role(NodeRole.INPUT) for node in {B,C})
+            assert all(node in comp.get_nodes_by_role(NodeRole.OUTPUT) for node in {A,D})
+        if config[1] == 'p1':
+            assert len(B.efferents) == 1
+            assert len(C.path_afferents) == 1
+            assert B.efferents[0].receiver.owner == C
+            assert [A] == comp.get_nodes_by_role(NodeRole.SINGLETON)
+            assert all(node in comp.get_nodes_by_role(NodeRole.INPUT) for node in {A,B})
+            assert all(node in comp.get_nodes_by_role(NodeRole.OUTPUT) for node in {A,C})
+        if config[1] == 'p2':
+            assert all(node in comp.get_nodes_by_role(NodeRole.SINGLETON) for node in {A,B,C})
+        if config[1] == 'p3':
+            assert len(A.efferents) == 1
+            assert len(B.path_afferents) == 1
+            assert A.efferents[0].receiver.owner == B
+            assert all(node in comp.get_nodes_by_role(NodeRole.SINGLETON) for node in {C,D})
+        if config[1] == 'p4':
+            assert len(C.efferents) == 1
+            assert len(D.path_afferents) == 1
+            assert C.efferents[0].receiver.owner == D
+            assert all(node in comp.get_nodes_by_role(NodeRole.SINGLETON) for node in {A,B})
+            assert all(node in comp.get_nodes_by_role(NodeRole.INPUT) for node in {A,B,C})
+            assert all(node in comp.get_nodes_by_role(NodeRole.OUTPUT) for node in {A,D})
+        if config[1] == 'p5':
+            assert len(A.efferents) == 1
+            assert len(B.path_afferents) == 1
+            assert A.efferents[0].receiver.owner == B
+            assert len(C.efferents) == 1
+            assert len(D.path_afferents) == 1
+            assert C.efferents[0].receiver.owner == D
+            assert all(node in comp.get_nodes_by_role(NodeRole.INPUT) for node in {A,C})
+            assert all(node in comp.get_nodes_by_role(NodeRole.OUTPUT) for node in {B,D})
 
     def test_add_pathways_bad_arg_error(self):
         I = InputPort(name='I')
         c = Composition()
         with pytest.raises(pnl.CompositionError) as error_text:
             c.add_pathways(pathways=I)
-        assert ("The \'pathways\' arg for the add_pathways method" in str(error_text.value)
-                and "must be a Node, list, tuple, dict or Pathway object" in str(error_text.value))
+        assert f"The 'pathways' arg for the add_pathways method of Composition-0 must be a " \
+               f"Node, list, set, tuple, dict or Pathway object: (InputPort I [Deferred Init])." \
+               in str(error_text.value)
 
     def test_add_pathways_arg_pathways_list_and_item_not_list_or_dict_or_node_error(self):
         A = ProcessingMechanism(name='A')
@@ -883,8 +1027,8 @@ class TestCompositionPathwayAdditionMethods:
         c = Composition()
         with pytest.raises(pnl.CompositionError) as error_text:
             c.add_pathways(pathways=[[A,B], 'C'])
-        assert ("Every item in the \'pathways\' arg for the add_pathways method" in str(error_text.value)
-                and "must be a Node, list, tuple or dict:" in str(error_text.value))
+        assert f"Every item in the 'pathways' arg for the add_pathways method of Composition-0 must be a " \
+              f"Node, list, set, tuple or dict; the following are not: 'C'" in str(error_text.value)
 
     def test_for_add_processing_pathway_recursion_error(self):
         A = TransferMechanism()
@@ -903,6 +1047,7 @@ class TestCompositionPathwayAdditionMethods:
                f"add_backpropagation_learning_pathway method of {C.name}." in str(error_text.value)
 
 
+@pytest.mark.pathways
 class TestDuplicatePathwayWarnings:
 
     def test_add_processing_pathway_exact_duplicate_warning(self):
@@ -998,6 +1143,7 @@ class TestDuplicatePathwayWarnings:
         len(comp.pathways)==2
 
 
+@pytest.mark.pathways
 class TestCompositionPathwaysArg:
 
     def test_composition_pathways_arg_pathway_object(self):
@@ -1049,25 +1195,29 @@ class TestCompositionPathwaysArg:
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
         c = Composition({A,B,C})
-        assert all(name in c.pathways.names for name in {'Pathway-0', 'Pathway-1', 'Pathway-2'})
+        # # MODIFIED 4/11/22 OLD:
+        # # assert all(name in c.pathways.names for name in {'Pathway-0', 'Pathway-1', 'Pathway-2'})
+        # MODIFIED 4/11/22 NEW:
+        assert all(name in c.pathways.names for name in {'Pathway-0'})
+        # MODIFIED 4/11/22 END
         assert all(set(c.get_roles_by_node(node)) == {NodeRole.INPUT,
                                                       NodeRole.ORIGIN,
                                                       NodeRole.SINGLETON,
                                                       NodeRole.OUTPUT,
                                                       NodeRole.TERMINAL}
                    for node in {A,B,C})
-        assert all(set(c.pathways[i].roles) == {PathwayRole.INPUT,
-                                            PathwayRole.ORIGIN,
-                                            PathwayRole.SINGLETON,
-                                            PathwayRole.OUTPUT,
-                                            PathwayRole.TERMINAL}
-                   for i in range(0,2))
+        # assert all(set(c.pathways[i].roles) == {PathwayRole.INPUT,
+        #                                     PathwayRole.ORIGIN,
+        #                                     PathwayRole.SINGLETON,
+        #                                     PathwayRole.OUTPUT,
+        #                                     PathwayRole.TERMINAL}
+        #            for i in range(0,1))
 
         with pytest.raises(CompositionError) as err:
             d = Composition({A,B,C.input_port})
-        assert f'"Every item in the \'pathways\' arg of the constructor for Composition-1 ' \
-               f'must be a Node, list, tuple or dict: (InputPort InputPort-0) is not."'\
-               in str(err.value)
+        assert f"Every item in the \'pathways\' arg of the constructor for Composition-1 must be " \
+               f"a Node, list, set, tuple or dict; the following are not: (InputPort InputPort-0)" in str(err.value)
+
 
     @pytest.mark.parametrize("nodes_config", [
         "many_many",
@@ -1301,8 +1451,8 @@ class TestCompositionPathwaysArg:
         B = ProcessingMechanism(name='B')
         with pytest.raises(pnl.CompositionError) as error_text:
             c = Composition(pathways=[[A,B], 'C'])
-        assert ("Every item in the \'pathways\' arg of the constructor" in str(error_text.value) and
-                "must be a Node, list, tuple or dict:" in str(error_text.value))
+        assert ("Every item in the 'pathways' arg of the constructor for Composition-0 must be "
+                "a Node, list, set, tuple or dict; the following are not: 'C'" in str(error_text.value))
 
     def test_composition_pathways_arg_pathways_dict_and_item_not_list_dict_or_node_error(self):
         A = ProcessingMechanism(name='A')
@@ -1311,8 +1461,8 @@ class TestCompositionPathwaysArg:
         D = ProcessingMechanism(name='D')
         with pytest.raises(pnl.CompositionError) as error_text:
             c = Composition(pathways=[{'P1':[A,B]}, 'C'])
-        assert ("Every item in the \'pathways\' arg of the constructor" in str(error_text.value) and
-                "must be a Node, list, tuple or dict:" in str(error_text.value))
+        assert ("Every item in the 'pathways' arg of the constructor for Composition-0 must be "
+                "a Node, list, set, tuple or dict; the following are not: 'C'" in str(error_text.value))
 
     def test_composition_pathways_arg_dict_with_more_than_one_entry_error(self):
         A = ProcessingMechanism(name='A')
@@ -1406,16 +1556,17 @@ class TestCompositionPathwaysArg:
         I = InputPort(name='I')
         with pytest.raises(pnl.CompositionError) as error_text:
             c = Composition(pathways=I)
-        assert ("The \'pathways\' arg of the constructor" in str(error_text.value) and
-                "must be a Node, list, tuple, dict or Pathway object" in str(error_text.value))
+        assert ("The 'pathways' arg of the constructor for Composition-0 must be a Node, list, "
+                "set, tuple, dict or Pathway object: (InputPort I [Deferred Init])."
+                in str(error_text.value))
 
     def test_composition_arg_pathways_list_and_item_not_list_or_dict_or_node_error(self):
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         with pytest.raises(pnl.CompositionError) as error_text:
             c = Composition(pathways=[[A,B], 'C'])
-        assert ("Every item in the \'pathways\' arg of the constructor" in str(error_text.value) and
-                "must be a Node, list, tuple or dict:" in str(error_text.value))
+        assert ("Every item in the 'pathways' arg of the constructor for Composition-0 must be a "
+                "Node, list, set, tuple or dict; the following are not: 'C'" in str(error_text.value))
 
     def test_composition_learning_pathway_dict_and_list_error(self):
         A = ProcessingMechanism(name='A')
@@ -1889,7 +2040,7 @@ class TestGraphCycles:
         output = comp.run(inputs={R1: [1.0]}, num_trials=3)
         assert np.allclose(output, [[np.array([22.])]])
 
-
+@pytest.mark.pathways
 class TestExecutionOrder:
     def test_2_node_loop(self):
         A = ProcessingMechanism(name="A")
@@ -2600,7 +2751,7 @@ class TestExecutionOrder:
         assert comp.scheduler.execution_list[comp.default_execution_id] == [{A, B}]
         assert comp.scheduler.execution_timestamps[comp.default_execution_id][0].absolute == 1 * pnl._unit_registry.ms
 
-
+@pytest.mark.pathways
 class TestGetMechanismsByRole:
 
     def test_multiple_roles(self):
@@ -3477,8 +3628,8 @@ class TestRun:
         with pytest.raises(CompositionError) as error_text:
         # Typo in IdentityMatrix
             comp.add_linear_processing_pathway([A, "IdntityMatrix", B])
-        assert (f"An entry in 'pathway' arg for add_linear_procesing_pathway method of \'Composition-0\' "
-                f"is not a Node (Mechanism or Composition) or a Projection nor a set of either: \'IdntityMatrix\'."
+        assert (f"The following entries in a pathway specified for 'Composition-0' are not a Node "
+                f"(Mechanism or Composition) or a Projection nor a set of either: 'IdntityMatrix'"
                 in str(error_text.value))
 
     @pytest.mark.composition
@@ -4780,153 +4931,7 @@ class TestNestedCompositions:
         assert len(terminals) == 1
         assert myMech5 in terminals
 
-    # MODIFIED 5/8/20 OLD:  ELIMINATE SYSTEM:
-    # FIX SHOULD THESE BE RE-WRITTEN WITH STANDARD NESTED COMPOSITIONS AND PATHWAYS?
-    # def test_one_pathway_inside_one_system(self):
-    #     # create a PathwayComposition | blank slate for composition
-    #     myPath = PathwayComposition()
-    #
-    #     # create mechanisms to add to myPath
-    #     myMech1 = TransferMechanism(function=Linear(slope=2.0))  # 1 x 2 = 2
-    #     myMech2 = TransferMechanism(function=Linear(slope=2.0))  # 2 x 2 = 4
-    #     myMech3 = TransferMechanism(function=Linear(slope=2.0))  # 4 x 2 = 8
-    #
-    #     # add mechanisms to myPath with default MappingProjections between them
-    #     myPath.add_linear_processing_pathway([myMech1, myMech2, myMech3])
-    #
-    #     # assign input to origin mech
-    #     stimulus = {myMech1: [[1]]}
-    #
-    #     # execute path (just for comparison)
-    #     myPath.run(inputs=stimulus)
-    #
-    #     # create a SystemComposition | blank slate for composition
-    #     sys = SystemComposition()
-    #
-    #     # add a PathwayComposition [myPath] to the SystemComposition [sys]
-    #     sys.add_pathway(myPath)
-    #
-    #     # execute the SystemComposition
-    #     output = sys.run(inputs=stimulus)
-    #     assert np.allclose([8], output)
-    #
-    # def test_two_paths_converge_one_system(self):
-    #
-    #     # mech1 ---> mech2 --
-    #     #                   --> mech3
-    #     # mech4 ---> mech5 --
-    #
-    #     # 1x2=2 ---> 2x2=4 --
-    #     #                   --> (4+4)x2=16
-    #     # 1x2=2 ---> 2x2=4 --
-    #
-    #     # create a PathwayComposition | blank slate for composition
-    #     myPath = PathwayComposition()
-    #
-    #     # create mechanisms to add to myPath
-    #     myMech1 = TransferMechanism(function=Linear(slope=2.0))  # 1 x 2 = 2
-    #     myMech2 = TransferMechanism(function=Linear(slope=2.0))  # 2 x 2 = 4
-    #     myMech3 = TransferMechanism(function=Linear(slope=2.0))  # 4 x 2 = 8
-    #
-    #     # add mechanisms to myPath with default MappingProjections between them
-    #     myPath.add_linear_processing_pathway([myMech1, myMech2, myMech3])
-    #
-    #     myPath2 = PathwayComposition()
-    #     myMech4 = TransferMechanism(function=Linear(slope=2.0))  # 1 x 2 = 2
-    #     myMech5 = TransferMechanism(function=Linear(slope=2.0))  # 2 x 2 = 4
-    #     myPath2.add_linear_processing_pathway([myMech4, myMech5, myMech3])
-    #
-    #     sys = SystemComposition()
-    #     sys.add_pathway(myPath)
-    #     sys.add_pathway(myPath2)
-    #     # assign input to origin mechs
-    #     stimulus = {myMech1: [[1]], myMech4: [[1]]}
-    #
-    #     # schedule = Scheduler(composition=sys)
-    #     output = sys.run(inputs=stimulus)
-    #     assert np.allclose(16, output)
-    #
-    # def test_two_paths_in_series_one_system(self):
-    #
-    #     # [ mech1 --> mech2 --> mech3 ] -->   [ mech4  -->  mech5  -->  mech6 ]
-    #     #   1x2=2 --> 2x2=4 --> 4x2=8   --> (8+1)x2=18 --> 18x2=36 --> 36*2=64
-    #     #                                X
-    #     #                                |
-    #     #                                1
-    #     # (if mech4 were recognized as an origin mech, and used SOFT_CLAMP, we would expect the final result to be 72)
-    #     # create a PathwayComposition | blank slate for composition
-    #     myPath = PathwayComposition()
-    #
-    #     # create mechanisms to add to myPath
-    #     myMech1 = TransferMechanism(function=Linear(slope=2.0))  # 1 x 2 = 2
-    #     myMech2 = TransferMechanism(function=Linear(slope=2.0))  # 2 x 2 = 4
-    #     myMech3 = TransferMechanism(function=Linear(slope=2.0))  # 4 x 2 = 8
-    #
-    #     # add mechanisms to myPath with default MappingProjections between them
-    #     myPath.add_linear_processing_pathway([myMech1, myMech2, myMech3])
-    #
-    #     myPath2 = PathwayComposition()
-    #     myMech4 = TransferMechanism(function=Linear(slope=2.0))
-    #     myMech5 = TransferMechanism(function=Linear(slope=2.0))
-    #     myMech6 = TransferMechanism(function=Linear(slope=2.0))
-    #     myPath2.add_linear_processing_pathway([myMech4, myMech5, myMech6])
-    #
-    #     sys = SystemComposition()
-    #     sys.add_pathway(myPath)
-    #     sys.add_pathway(myPath2)
-    #     sys.add_projection(projection=MappingProjection(sender=myMech3,
-    #                                                     receiver=myMech4), sender=myMech3, receiver=myMech4)
-    #
-    #     # assign input to origin mechs
-    #     # myMech4 ignores its input from the outside world because it is no longer considered an origin!
-    #     stimulus = {myMech1: [[1]]}
-    #
-    #     # schedule = Scheduler(composition=sys)
-    #     output = sys.run(inputs=stimulus)
-    #
-    #     assert np.allclose([64], output)
-    #
-    # def test_two_paths_converge_one_system_scheduling_matters(self):
-    #
-    #     # mech1 ---> mech2 --
-    #     #                   --> mech3
-    #     # mech4 ---> mech5 --
-    #
-    #     # 1x2=2 ---> 2x2=4 --
-    #     #                   --> (4+4)x2=16
-    #     # 1x2=2 ---> 2x2=4 --
-    #
-    #     # create a PathwayComposition | blank slate for composition
-    #     myPath = PathwayComposition()
-    #
-    #     # create mechanisms to add to myPath
-    #     myMech1 = IntegratorMechanism(function=Linear(slope=2.0))  # 1 x 2 = 2
-    #     myMech2 = TransferMechanism(function=Linear(slope=2.0))  # 2 x 2 = 4
-    #     myMech3 = TransferMechanism(function=Linear(slope=2.0))  # 4 x 2 = 8
-    #
-    #     # add mechanisms to myPath with default MappingProjections between them
-    #     myPath.add_linear_processing_pathway([myMech1, myMech2, myMech3])
-    #
-    #     myPathScheduler = Scheduler(composition=myPath)
-    #     myPathScheduler.add_condition(myMech2, AfterNCalls(myMech1, 2))
-    #
-    #     myPath.run(inputs={myMech1: [[1]]}, scheduler=myPathScheduler)
-    #     myPath.run(inputs={myMech1: [[1]]}, scheduler=myPathScheduler)
-    #     myPath2 = PathwayComposition()
-    #     myMech4 = TransferMechanism(function=Linear(slope=2.0))  # 1 x 2 = 2
-    #     myMech5 = TransferMechanism(function=Linear(slope=2.0))  # 2 x 2 = 4
-    #     myPath2.add_linear_processing_pathway([myMech4, myMech5, myMech3])
-    #
-    #     sys = SystemComposition()
-    #     sys.add_pathway(myPath)
-    #     sys.add_pathway(myPath2)
-    #     # assign input to origin mechs
-    #     stimulus = {myMech1: [[1]], myMech4: [[1]]}
-    #
-    #     # schedule = Scheduler(composition=sys)
-    #     output = sys.run(inputs=stimulus)
-    #     assert np.allclose(16, output)
-    # MODIFIED 5/8/20 END
+    @pytest.mark.pathways
     def test_three_level_deep_pathway_routing_single_mech(self):
         p2 = ProcessingMechanism(name='p2')
         p0 = ProcessingMechanism(name='p0')
@@ -4939,6 +4944,7 @@ class TestNestedCompositions:
         result = c0.run([5])
         assert result == [5]
 
+    @pytest.mark.pathways
     def test_three_level_deep_pathway_routing_two_mech(self):
         p3a = ProcessingMechanism(name='p3a')
         p3b = ProcessingMechanism(name='p3b')
@@ -4954,6 +4960,7 @@ class TestNestedCompositions:
         result = c1.run([5])
         assert result == [5, 5]
 
+    @pytest.mark.pathways
     def test_three_level_deep_modulation_routing_single_mech(self):
         p3 = ProcessingMechanism(name='p3')
         ctrl1 = ControlMechanism(name='ctrl1',
@@ -4966,6 +4973,7 @@ class TestNestedCompositions:
         result = c1.run({c2: 2, ctrl1: 5})
         assert result == [10]
 
+    @pytest.mark.pathways
     def test_three_level_deep_modulation_routing_two_mech(self):
         p3a = ProcessingMechanism(name='p3a')
         p3b = ProcessingMechanism(name='p3b')
@@ -4982,6 +4990,7 @@ class TestNestedCompositions:
         result = c1.run({c2: [[2], [2]], ctrl1: [5]})
         assert result == [10, 10]
 
+    @pytest.mark.pathways
     @pytest.mark.state_features
     def test_four_level_nested_transfer_mechanism_composition_parallel(self):
         # mechanisms
