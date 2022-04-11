@@ -22,7 +22,6 @@ from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.ports.inputport import InputPort
@@ -575,6 +574,7 @@ comp.add_node(B)
         assert repr(warning[0].message.args[0]) == '"\\nThe following Projections were specified but are not being used by Nodes in \'iCOMP\':\\n\\tMappingProjection from A[OutputPort-0] to C[InputPort-0] (from \'A\' to \'C\')."'
         assert repr(warning[1].message.args[0]) == '"\\nThe following Projections were specified but are not being used by Nodes in \'COMP_2\':\\n\\tMappingProjection from A[OutputPort-0] to C[InputPort-0] (to \'C\' from \'A\')."'
 
+
 @pytest.mark.pathways
 class TestPathway:
 
@@ -616,8 +616,48 @@ class TestPathway:
             Pathway(pathway=[], foo='bar')
         assert "Illegal argument(s) used in constructor for Pathway: foo." in str(error_text.value)
 
+
 @pytest.mark.pathways
 class TestCompositionPathwayAdditionMethods:
+
+    def test_add_pathways_with_all_types(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        E = ProcessingMechanism(name='E')
+        X = ProcessingMechanism(name='X')
+        Y = ProcessingMechanism(name='Y')
+        F = ProcessingMechanism(name='F')
+        G = ProcessingMechanism(name='G')
+        H = ProcessingMechanism(name='H')
+        J = ProcessingMechanism(name='J')
+        K = ProcessingMechanism(name='K')
+        L = ProcessingMechanism(name='L')
+        M = ProcessingMechanism(name='M')
+
+        # FIX: 4/9/22 - ADD SET SPEC
+        p = Pathway(pathway=[L,M], name='P')
+        c = Composition()
+        c.add_pathways(pathways=[A,
+                                 [B,C],
+                                 (D,E),
+                                 {X,Y},
+                                 {'DICT PATHWAY': F},
+                                 ([G, H], BackPropagation),
+                                 {'LEARNING PATHWAY': ([J,K], Reinforcement)},
+                                 p])
+        assert len(c.pathways) == 8
+        assert isinstance(c.pathways[0].pathway, list) and len(c.pathways[0].pathway) == 1
+        assert isinstance(c.pathways[1].pathway, list) and len(c.pathways[1].pathway) == 3
+        assert isinstance(c.pathways[2].pathway, list) and len(c.pathways[2].pathway) == 3
+        assert isinstance(c.pathways[3].pathway[0], set) and len(c.pathways[3].pathway) == 1
+        assert c.pathways['P'].input == L
+        assert c.pathways['DICT PATHWAY'].input == F
+        assert c.pathways['DICT PATHWAY'].output == F
+        assert c.pathways['LEARNING PATHWAY'].output == K
+        assert [p for p in c.pathways if p.input == G][0].learning_function == BackPropagation
+        assert c.pathways['LEARNING PATHWAY'].learning_function == Reinforcement
 
     def test_pathway_attributes(self):
         c = Composition()
@@ -838,86 +878,70 @@ class TestCompositionPathwayAdditionMethods:
                                               PathwayRole.LEARNING,
                                               PathwayRole.OUTPUT}
 
-    def test_add_pathways_with_all_types(self):
-        A = ProcessingMechanism(name='A')
-        B = ProcessingMechanism(name='B')
-        C = ProcessingMechanism(name='C')
-        D = ProcessingMechanism(name='D')
-        E = ProcessingMechanism(name='E')
-        X = ProcessingMechanism(name='X')
-        Y = ProcessingMechanism(name='Y')
-        F = ProcessingMechanism(name='F')
-        G = ProcessingMechanism(name='G')
-        H = ProcessingMechanism(name='H')
-        J = ProcessingMechanism(name='J')
-        K = ProcessingMechanism(name='K')
-        L = ProcessingMechanism(name='L')
-        M = ProcessingMechanism(name='M')
-
-        # FIX: 4/9/22 - ADD SET SPEC
-        p = Pathway(pathway=[L,M], name='P')
-        c = Composition()
-        c.add_pathways(pathways=[A,
-                                 [B,C],
-                                 (D,E),
-                                 {X,Y},
-                                 {'DICT PATHWAY': F},
-                                 ([G, H], BackPropagation),
-                                 {'LEARNING PATHWAY': ([J,K], Reinforcement)},
-                                 p])
-        assert len(c.pathways) == 8
-        assert isinstance(c.pathways[0].pathway, list) and len(c.pathways[0].pathway) == 1
-        assert isinstance(c.pathways[1].pathway, list) and len(c.pathways[1].pathway) == 3
-        assert isinstance(c.pathways[2].pathway, list) and len(c.pathways[2].pathway) == 3
-        assert isinstance(c.pathways[3].pathway[0], set) and len(c.pathways[3].pathway) == 1
-        assert c.pathways['P'].input == L
-        assert c.pathways['DICT PATHWAY'].input == F
-        assert c.pathways['DICT PATHWAY'].output == F
-        assert c.pathways['LEARNING PATHWAY'].output == K
-        assert [p for p in c.pathways if p.input == G][0].learning_function == BackPropagation
-        assert c.pathways['LEARNING PATHWAY'].learning_function == Reinforcement
-
-    def test_various_pathway_configurations_in_constructor(self):
+    config = [
+        '[A,{B,C}]',                       # SEQUENTIAL A->{B,C})
+        '[A,[B,C]]',                       # PARALLEL:  A, B->C
+        '[{A},{B,C}]',                     # SEQUENTIAL: A->{B,C}
+        '[[A],{B,C}]',                     # PARALLEL: A, B, C
+        '[[A,B],{C,D}]',                   # PARALLEL: A->B, C, D
+        '[[A,B],C,D ]',                    # PARALLEL: A->B, C, D
+        '[[A,B],[C,D]]',                   # PARALLEL: A->B, C->D
+        '[{A,B}, MapProj(B,D), C, D]',     # SEQUENTIAL: A, B->D, C->D
+        '[{A,B}, [MapProj(B,D)], C, D]',   # SEQUENTIAL: A, B->D, C->D
+        '[{A,B}, {MapProj(B,D)}, C, D]',   # SEQUENTIAL: A, B->D, C->D
+        '[{A,B}, [[C,D]]]',                # PARALLEL: A, B, C->D (FORGIVES EMBEDDED LIST OF [C,D])
+        '[[A,B], [[C,D]]]',                # PARALLEL: A->B, C->D (FORGIVES EMBEDDED LIST OF [C,D])
+        '[[[A,B]], [[C,D]]]'               # PARALLEL: A->B, C->D (FORGIVES EMBEDDED LISTS OF [A,B] and [C,D])
+    ]
+    @pytest.mark.parametrize('config', config)
+    def test_various_pathway_configurations_in_constructor(self, config):
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         # B_comparator = ComparatorMechanism(name='B COMPARATOR')
         C = ProcessingMechanism(name='C')
-        C2 = ProcessingMechanism(name='C2')
         D = ProcessingMechanism(name='D')
         E = ProcessingMechanism(name='E')
         F = ProcessingMechanism(name='F')
-
-        # p1 = Pathway({A,B})
-        # p2 = Pathway({C,D})
-        # comp = Composition(pathways={p1,p2}) # <- CRASHES in add_pathways()
-        # comp = Composition([{A,B}, p2]) # <- FAILS TO CREATE PATHWAY FROM THE TWO SETS
-        # comp = Composition(p1)
-        # comp = Composition({p1}) # <- CRASHES in add_pathways()
-        # comp.show_graph()
 
         # **PRINCIPLE**:
         #     IF SINGLE ITEM OR ONLY SETS, TREAT AS SEQUENTIAL;
         #     IF LIST IS PRESENT (AT FIRST LEVEL), TREAT AS PARALLEL PATHWAYS
         #     IF EMBEDDED LIST IS PRESENT: EMBEDDED LIST ERROR
         #     IF ANY BAD ITEMS (STRINGS, MISPLACED ITEMS) -> RELEVANT MESSAGE
+
         # LEGAL:
-        # icomp = Composition([A,{B,C}])     # SEQUENTIAL A->{B,C})
-        # icomp = Composition([A,[B,C]])     # PARALLEL:  A, B->C
-        # icomp = Composition([{A},{B,C}])   # SEQUENTIAL: A->{B,C}
-        # icomp = Composition([[A],{B,C}])   # PARALLEL: A, B, C
-        # icomp = Composition([[A,B],{C,D}]) # PARALLEL: A->B, C, D
-        # icomp = Composition([[A,B],C,D ])  # PARALLEL: A->B, C, D
-        # icomp = Composition([[A,B],[C,D]])   # PARALLEL: A->B, C->D
-        # icomp = Composition([{A,B}, MappingProjection(B,D), C, D])  # SEQUENTIAL: A, B->D, C->D
-        # icomp = Composition([{A,B}, [MappingProjection(B,D)], C, D])  # SEQUENTIAL: A, B->D, C->D
-        # icomp = Composition([{A,B}, {MappingProjection(B,D)}, C, D])  # SEQUENTIAL: A, B->D, C->D
-        # icomp = Composition([{A,B}, [[C,D]]])     # ALLOWED (FORGIVES DOUBLE EMBDEDDING OF [C,D}
-        # icomp = Composition([[A,B], [[C,D]]])     # ALLOWED (FORGIVES DOUBLE EMBDEDDING OF [C,D}
-        # icomp = Composition([[[A,B]], [[C,D]]])     # ALLOWED (FORGIVES EMBDEDDING OF [A,B] and [C,D}
+        if config == '[A,{B,C}]':
+            comp = Composition([A,{B,C}])     # SEQUENTIAL A->{B,C})
+        elif config == '[A,[B,C]]':
+            comp = Composition([A,[B,C]])     # PARALLEL:  A, B->C
+        elif config == '[{A},{B,C}]':
+            comp = Composition([{A},{B,C}])   # SEQUENTIAL: A->{B,C}
+        elif config == '[[A],{B,C}]':
+            comp = Composition([[A],{B,C}])   # PARALLEL: A, B, C
+        elif config == '[[A,B],{C,D}]':
+            comp = Composition([[A,B],{C,D}]) # PARALLEL: A->B, C, D
+        elif config == '[[A,B],C,D ]':
+            comp = Composition([[A,B],C,D ])  # PARALLEL: A->B, C, D
+        elif config == '[[A,B],[C,D]]':
+            comp = Composition([[A,B],[C,D]])   # PARALLEL: A->B, C->D
+        elif config == '[{A,B}, MapProj(B,D), C, D]':
+            comp = Composition([{A,B}, MappingProjection(B,D), C, D])  # SEQUENTIAL: A, B->D, C->D
+        elif config == '[{A,B}, [MapProj(B,D)], C, D]':
+            comp = Composition([{A,B}, [MappingProjection(B,D)], C, D])  # SEQUENTIAL: A, B->D, C->D
+        elif config == '[{A,B}, {MapProj(B,D)}, C, D]':
+            comp = Composition([{A,B}, {MappingProjection(B,D)}, C, D])  # SEQUENTIAL: A, B->D, C->D
+        elif config == '[{A,B}, [[C,D]]]':
+            comp = Composition([{A,B}, [[C,D]]]) # PARALLEL: A, B, C->D (FORGIVES EMBEDDED LIST OF [C,D])
+        elif config == '[[A,B], [[C,D]]]':
+            comp = Composition([[A,B], [[C,D]]]) # PARALLEL: A->B, C->D (FORGIVES EMBEDDED LIST OF [C,D])
+        elif config == '[[[A,B]], [[C,D]]]':
+            comp = Composition([[[A,B]], [[C,D]]]) # PARALLEL: A->B, C->D (FORGIVES EMBEDDED LISTS OF [A,B] and [C,D])
+        else:
+            assert False, f"BAD CONFIG ARG: {config}"
         # ERRORS:
-        # icomp= Composition([A, 'B'])              # CRASHES CORRECTLY: BAD ITEM ERROR
-        # icomp = Composition([[A,B, [C,D]],[E,F]])   # CRASHES UNRECOGNIZED ERROR BUT SHOULD MAKE **EMBEDDED LIST ERROR**
-        # icomp = Composition([{A,B}, [MappingProjection(B,D)], [C,D]]) # CRASHES WITH BAD ITEM ERROR, SHOW ALLOW OR EMBEDED
+        # comp= Composition([A, 'B'])              # CRASHES CORRECTLY: BAD ITEM ERROR
+        # comp = Composition([[A,B, [C,D]],[E,F]])   # CRASHES UNRECOGNIZED ERROR BUT SHOULD MAKE **EMBEDDED LIST ERROR**
+        # comp = Composition([{A,B}, [MappingProjection(B,D)], [C,D]]) # CRASHES WITH BAD ITEM ERROR, SHOW ALLOW OR EMBEDED
 
     def test_add_pathways_bad_arg_error(self):
         I = InputPort(name='I')
@@ -952,6 +976,7 @@ class TestCompositionPathwayAdditionMethods:
             C.add_backpropagation_learning_pathway(pathway=[A,C])
         assert f"Attempt to add Composition as a Node to itself in 'pathway' arg for " \
                f"add_backpropagation_learning_pathway method of {C.name}." in str(error_text.value)
+
 
 @pytest.mark.pathways
 class TestDuplicatePathwayWarnings:
@@ -1047,6 +1072,7 @@ class TestDuplicatePathwayWarnings:
         comp.add_linear_processing_pathway(pathway=[B,A])
         {A,B} == set(comp.nodes)
         len(comp.pathways)==2
+
 
 @pytest.mark.pathways
 class TestCompositionPathwaysArg:
