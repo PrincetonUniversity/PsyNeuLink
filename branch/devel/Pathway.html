@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Pathway &mdash; PsyNeuLink 0.9.0.0+523.ge941c5528 documentation</title>
+  <title>Pathway &mdash; PsyNeuLink 0.9.0.0+524.gd3639cacb documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.9.0.0+523
+                  0.9.0.0+524
                 </div>
               
             
@@ -217,7 +217,15 @@
 <li><p><a class="reference internal" href="#pathway-template"><span class="std std-ref">Pathway as a Template</span></a></p></li>
 <li><p><a class="reference internal" href="#pathway-assignment-to-composition"><span class="std std-ref">Assigning Pathways to a Composition</span></a></p></li>
 <li><p><a class="reference internal" href="#pathway-name"><span class="std std-ref">Pathway Name</span></a></p></li>
-<li><p><a class="reference internal" href="#pathway-specification"><span class="std std-ref">Pathway Specification</span></a></p></li>
+<li><dl class="simple">
+<dt><a class="reference internal" href="#pathway-specification"><span class="std std-ref">Pathway Specification</span></a></dt><dd><ul>
+<li><p><a class="reference internal" href="#pathway-specification-formats"><span class="std std-ref">Pathway Specification Formats</span></a></p></li>
+<li><p><a class="reference internal" href="#pathway-specification-projections"><span class="std std-ref">Pathway Projection Specifications</span></a></p></li>
+<li><p><a class="reference internal" href="#pathway-specification-multiple"><span class="std std-ref">Multiple Pathway Specifications</span></a></p></li>
+</ul>
+</dd>
+</dl>
+</li>
 <li><p><a class="reference internal" href="Composition.html#composition-add-nested"><span class="std std-ref">Adding Nested Compositions</span></a></p></li>
 </ul>
 </dd>
@@ -232,9 +240,9 @@
 <section id="overview">
 <span id="pathway-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A Pathway is a sequence of <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> and <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>. Generally, Pathways are assigned
-to <a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a>, but a Pathway object can be created on its and used as a template for specifying a
-Pathway for a Composition, as described below.  See <a class="reference internal" href="Composition.html#composition-pathways"><span class="std std-ref">Pathways</span></a> for additional information about
-Pathways in Compositions.</p>
+to a <a class="reference internal" href="Compositions.html"><span class="doc">Compositions</span></a>, but a Pathway object can also be created on its and used as a template for specifying a Pathway for
+a Composition, as described below (see <a class="reference internal" href="Composition.html#composition-pathways"><span class="std std-ref">Pathways</span></a> for additional information about Pathways in
+Compositions).</p>
 </section>
 <section id="creating-a-pathway">
 <span id="pathway-creation"></span><h2>Creating a Pathway<a class="headerlink" href="#creating-a-pathway" title="Permalink to this headline">¶</a></h2>
@@ -260,32 +268,108 @@ All of the Pathways assigned to a Composition are listed in its <a class="refere
 <section id="pathway-name">
 <span id="id1"></span><h3><em>Pathway Name</em><a class="headerlink" href="#pathway-name" title="Permalink to this headline">¶</a></h3>
 <p>If the <strong>name</strong> argument of the Pathway’s constructor is used to assign it a name, this is used as the name of the
-Pathway created when it is assigned to a Composition in its constructor, or using its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.add_pathways" title="psyneulink.core.compositions.composition.Composition.add_pathways"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">add_pathways</span></code></a> method.  This is also the case if one of the Composition’s other <code class="xref any docutils literal notranslate"><span class="pre">Pathway</span> <span class="pre">addition</span> <span class="pre">methods</span></code> is used, as long as the <strong>name</strong> argument of those methods is not specified.
+Pathway created when it is assigned to a Composition in its constructor, or using its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.add_pathways" title="psyneulink.core.compositions.composition.Composition.add_pathways"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">add_pathways</span></code></a> method.  This is also the case if one of the Composition’s other <a class="reference internal" href="Composition.html#composition-pathway-addition-methods"><span class="std std-ref">Pathway addition methods</span></a> is used, as long as the <strong>name</strong> argument of those methods is not specified.
 However, if the <strong>name</strong> argument is specified in those methods, or <a class="reference internal" href="#pathway-specification-dictionary"><span class="std std-ref">Pathway specification dictionary</span></a> is used to specify the Pathway’s name, that takes precedence over, and replaces
 one specified in the Pathway <a class="reference internal" href="#pathway-template"><span class="std std-ref">template's</span></a> <a class="reference internal" href="#psyneulink.core.compositions.pathway.Pathway.name" title="psyneulink.core.compositions.pathway.Pathway.name"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">name</span></code></a> attribute.</p>
 </section>
 <section id="pathway-specification">
 <span id="id2"></span><h3><em>Pathway Specification</em><a class="headerlink" href="#pathway-specification" title="Permalink to this headline">¶</a></h3>
-<p>The following formats can be used to specify a Pathway in the <strong>pathway</strong> argument of the constructor for the
-Pathway, the <strong>pathways</strong> argument of the constructor for a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, or the corresponding argument
+<p>Pathway are specified as a list, each element of which is either a <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a> or set of Nodes,
+possibly intercolated with specifications of <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> between them.  <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a>
+can be either a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, or a tuple (Mechanism or Composition, <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">NodeRoles</span></code></a>) that can
+be used to assign <code class="xref any docutils literal notranslate"><span class="pre">required_roles</span></code> to the Nodes in the Composition (see <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> for additional details).
+The Node(s) specified in each entry of the list project to the Node(s) specified in the next entry.</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Only a <em>set</em> can be used to specify multiple Nodes for a given entry in a Pathway; a <em>list</em> can <em>note</em> be used
+for this purpose, as a list containing Nodes is always interpreted as a Pathway, and Pathways cannot be nested.</p>
+</div>
+</div></blockquote>
+<section id="pathway-projection-specifications">
+<span id="pathway-specification-projections"></span><h4><em>Pathway Projection Specifications</em><a class="headerlink" href="#pathway-projection-specifications" title="Permalink to this headline">¶</a></h4>
+<p>Where no Projections are specified between entries in the list, default Projections (using a <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX" title="psyneulink.core.globals.keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">FULL_CONNECTIVITY_MATRIX</span></code></a>;
+see <a class="reference internal" href="MappingProjection.html#mappingprojection-matrix-specification"><span class="std std-ref">Specifying the Matrix Parameter</span></a>) are created from each Node in the first entry, as the sender(s),
+to each Node in the second, as receiver(s) (described further <a class="reference internal" href="#pathway-projections"><span class="std std-ref">below</span></a>).  Projections between
+Nodes in the two entries can also be specified explicitly, by intercolating a Projection or set of Projections between
+the two entries in the list.  If the sender and receiver are both a single Mechanism, then a single <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>
+can be <a class="reference internal" href="MappingProjection.html#mappingprojection-creation"><span class="std std-ref">specified</span></a> between them.  The same applies if the sender is a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> with
+a single <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a> Node and/or the receiver is a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> with a single <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a>
+Node.  If either is a set of Nodes, or is a <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested Composition</span></a> with more than one <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> or <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a> Node, respectively, then a collection of Projections can be specified
+between any or all pairs of the Nodes in the set(s) and/or nested Composition(s), using either a set or list of
+Projections (order of specification does not matter whether a set or a list is used). The collection can contain
+<a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> between a specific pairs of Nodes and/or a single default specification
+(either a <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> specification or a MappingProjection without any <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a> or <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.receiver" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">receiver</span></code></a> specified).</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If a collection of Projection specifications includes a default matrix specification, then a list must be used
+to specify the collection and <em>not</em> a set (since a matrix is unhashable and thus cannot be included in a set).</p>
+</div>
+</div></blockquote>
+<p>If a default Projection specification is included in the set, it is used to implement a Projection between any pair
+of Nodes for which no MappingProjection is otherwise specified, whether within the collection or on its own; if no
+Projections are specified for any individual pairs, a default Projection is created for every pairing of senders and
+receivers. If a collection contains Projections for one or more pairs of Nodes, but does not include a default
+projection specification, then no Projection is created between any of the other pairings.</p>
+<p>If a pair of entries in a pathway has multiple sender and/or receiver Nodes specified (either in a set and/or belonging
+to <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested Composition</span></a>, and either no Projection(s) or only a default Projection is intercollated
+between them, then a default set of Projections is constructed (using the default Projection specification, if provided)
+between each pair of sender and receiver Nodes in the set(s) or nested Composition(s), as follows:</p>
+<ul class="simple" id="pathway-projections">
+<li><p><em>One to one</em> - if both the sender and receiver entries are Mechanisms, or if either is a Composition and the
+sender has a single <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a> Node and the receiver has a single <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a>
+Node, then a default <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> is created from the <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a> of the
+sender (or of its sole <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a> Node, if the sender is a Composition) to the <a class="reference internal" href="InputPort.html#inputport-primary"><span class="std std-ref">primary InputPort</span></a> of the receiver (or of its sole of <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> Node, if the receiver is
+a Composition), and the Projection specification is intercolated between the two entries in the <a class="reference internal" href="#"><span class="doc">Pathway</span></a>.</p></li>
+<li><p><em>One to many</em> - if the sender is either a Mechanism or a Composition with a single <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a> Node,
+but the receiver is either a Composition with more than one <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> Node or a set of Nodes, then
+a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> is created from the <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a> of the sender Mechanism (or of
+its sole <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a> Node if the sender is a Composition) to the <a class="reference internal" href="InputPort.html#inputport-primary"><span class="std std-ref">primary InputPort</span></a> of each <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> Node of the receiver Composition and/or Mechanism in the
+receiver set, and a set containing the Projections is intercolated between the two entries in the <a class="reference internal" href="#"><span class="doc">Pathway</span></a>.</p></li>
+<li><p><em>Many to one</em> - if the sender is a Composition with more than one <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a> Node or a set of
+Nodes, and the receiver is either a Mechanism or a Composition with a single <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a> Node in the Composition or Mechanism in the set of sender(s), to the <a class="reference internal" href="InputPort.html#inputport-primary"><span class="std std-ref">primary InputPort</span></a> of the receiver Mechanism (or of its sole <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> Node if the receiver is
+a Composition), and a set containing the Projections is intercolated between the two entries in the <a class="reference internal" href="#"><span class="doc">Pathway</span></a>.</p></li>
+<li><p><em>Many to many</em> - if both the sender and receiver entries contain multiple Nodes (i.e., are sets,  and/or the
+the sender is a Composition that has more than one <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> Node and/or the receiver has more
+than one <code class="xref any docutils literal notranslate"><span class="pre">OUTPUT</span></code> Node), then a Projection is constructed for every pairing of Nodes in the
+sender and receiver entries, using the <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a> of each sender Node and the
+<a class="reference internal" href="InputPort.html#inputport-primary"><span class="std std-ref">primary InputPort</span></a> of each receiver node.</p></li>
+</ul>
+</section>
+<section id="pathway-specification-formats">
+<span id="id3"></span><h4><em>Pathway Specification Formats</em><a class="headerlink" href="#pathway-specification-formats" title="Permalink to this headline">¶</a></h4>
+<p>The following formats can be used to specify a Pathway in the <strong>pathway</strong> argument of the constructor for
+the Pathway, the <strong>pathways</strong> argument of the constructor for a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, or the corresponding argument
 of any of a Composition’s <a class="reference internal" href="Composition.html#composition-pathway-addition-methods"><span class="std std-ref">Pathway addition methods</span></a>:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p><a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a>: – assigns the Node to a <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.SINGLETON" title="psyneulink.core.compositions.composition.NodeRole.SINGLETON"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">SINGLETON</span></code></a> Pathway.</p></li>
+<li><p><a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a>: – assigns the Node as <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.SINGLETON" title="psyneulink.core.compositions.composition.NodeRole.SINGLETON"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">SINGLETON</span></code></a> in a Pathway.</p></li>
 </ul>
 <ul class="simple" id="pathway-specification-list">
 <li><p><strong>list</strong>: [<a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a>, &lt;<a class="reference internal" href="Projection.html"><span class="doc">Projection(s)</span></a>,&gt; <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a>…] –
-each item of the list must be a <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a> – i.e., Mechanism or Composition, or a
-(<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">NodeRoles</span></code></a>) tuple – or, optionally, a <a class="reference internal" href="Projection.html#projection-specification"><span class="std std-ref">Projection specification</span></a>, a (<a class="reference internal" href="Projection.html#projection-specification"><span class="std std-ref">Projection specification</span></a>, <a class="reference internal" href="Composition.html#composition-feedback-designation"><span class="std std-ref">feedback specification</span></a>) tuple, or a set of either interposed between a pair of nodes (see
-<a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.add_linear_processing_pathway" title="psyneulink.core.compositions.composition.Composition.add_linear_processing_pathway"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">add_linear_processing_pathway</span></code></a> for additional details).
-The list must begin and end with a node.</p></li>
+each item of the list must be a <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a> (i.e., Mechanism or Composition, or a
+(<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">NodeRoles</span></code></a>) tuple) or set of Nodes, optionally with a <a class="reference internal" href="Projection.html#projection-specification"><span class="std std-ref">Projection
+specification</span></a>, a (<a class="reference internal" href="Projection.html#projection-specification"><span class="std std-ref">Projection specification</span></a>,
+<a class="reference internal" href="Composition.html#composition-feedback-designation"><span class="std std-ref">feedback specification</span></a>) tuple, or a set of either interposed between
+a pair of (sets of) Nodes (see <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.add_linear_processing_pathway" title="psyneulink.core.compositions.composition.Composition.add_linear_processing_pathway"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">add_linear_processing_pathway</span></code></a>
+for additional details).  The list must begin and end with a (set of) Node(s).</p></li>
 </ul>
 <ul class="simple">
-<li><p><strong>2-item tuple</strong>: (Pathway, <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.LearningFunction" title="psyneulink.core.components.functions.learningfunctions.LearningFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LearningFunction</span></code></a>) – used to specify a <a class="reference internal" href="Composition.html#composition-learning-pathway"><span class="std std-ref">learning Pathway</span></a>;  the 1st item must be a <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a> or list, as
-described above, and the 2nd item be a subclass of <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.LearningFunction" title="psyneulink.core.components.functions.learningfunctions.LearningFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LearningFunction</span></code></a>.</p></li>
+<li><p><strong>set</strong>: {<a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a>, <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a>…} –
+each item of the set must be a <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a> (i.e., Mechanism or Composition, or a
+(<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">NodeRoles</span></code></a>) tuple);  each Node is treated as a <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.SINGLETON" title="psyneulink.core.compositions.composition.NodeRole.SINGLETON"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">SINGLETON</span></code></a>.  Sets can also be used in a list specification (see above; and see
+<a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.add_linear_processing_pathway" title="psyneulink.core.compositions.composition.Composition.add_linear_processing_pathway"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">add_linear_processing_pathway</span></code></a> for additional details).</p></li>
+</ul>
+<ul class="simple">
+<li><p><strong>2-item tuple</strong>: (Pathway, <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.LearningFunction" title="psyneulink.core.components.functions.learningfunctions.LearningFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LearningFunction</span></code></a>) – used to specify a <a class="reference internal" href="Composition.html#composition-learning-pathway"><span class="std std-ref">learning Pathway</span></a>;  the 1st item must be one of the forms of Pathway specification
+described above, and the 2nd item must be a subclass of <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.LearningFunction" title="psyneulink.core.components.functions.learningfunctions.LearningFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LearningFunction</span></code></a>.</p></li>
 </ul>
 </div></blockquote>
-<p id="multiple-pathway-specification">In addition to the forms of single Pathway specification <a class="reference internal" href="#pathway-specification"><span class="std std-ref">above</span></a>, where multiple Pathways
+</section>
+<section id="multiple-pathway-specifications">
+<span id="pathway-specification-multiple"></span><h4><em>Multiple Pathway Specifications</em><a class="headerlink" href="#multiple-pathway-specifications" title="Permalink to this headline">¶</a></h4>
+<p>In addition to the forms of single Pathway specification <a class="reference internal" href="#pathway-specification"><span class="std std-ref">above</span></a>, where multiple Pathways
 can be specified (e.g., the <strong>pathways</strong> argument of the constructor for a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> or its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.add_pathways" title="psyneulink.core.compositions.composition.Composition.add_pathways"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">add_pathways</span></code></a> method), they can be specified in a list, in which each item of the list can be any of
 the forms above, or one of the following:</p>
 <blockquote>
@@ -302,21 +386,23 @@ or one of the standard <a class="reference internal" href="#pathway-specificatio
 <dt>If any of the following is used to specify the <strong>pathways</strong> argument:</dt><dd><ul class="simple">
 <li><p>a <strong>standalone</strong> <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a> (i.e., not in a list),</p></li>
 <li><p>a <strong>single Node</strong> alone in a list,</p></li>
+<li><p>a <strong>set</strong> of Nodes,</p></li>
 <li><p>one or more Nodes with any other form of <a class="reference internal" href="#pathway-specification"><span class="std std-ref">Pathway specification</span></a> in the list</p></li>
 </ul>
 </dd>
 </dl>
-<p>then each such Node in the list is treated as its own <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.SINGLETON" title="psyneulink.core.compositions.composition.NodeRole.SINGLETON"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">SINGLETON</span></code></a> pathway (i.e., one containing a single
-Node that is both the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.ORIGIN" title="psyneulink.core.compositions.composition.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ORIGIN</span></code></a> and the`TERMINAL` of the Pathway).  However, if the list contains only
-Nodes, then it is treated as a single Pathway (i.e., the list form of <a class="reference internal" href="#pathway-specification"><span class="std std-ref">Pathway specification</span></a>.  Thus:</p>
+<p>then each such Node in the list is assigned as a <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.SINGLETON" title="psyneulink.core.compositions.composition.NodeRole.SINGLETON"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">SINGLETON</span></code></a> Node in its own Pathway.
+However, if the list contains only Nodes, then it is treated as a single Pathway (i.e., the list form of
+<a class="reference internal" href="#pathway-specification"><span class="std std-ref">Pathway specification</span></a> described above.  Thus:</p>
 <blockquote>
 <div><p><strong>pathway</strong>: NODE -&gt; single pathway</p>
 <p><strong>pathway</strong>: [NODE] -&gt; single pathway</p>
 <p><strong>pathway</strong>: [NODE, NODE…] -&gt; single pathway</p>
-<p><strong>pathway</strong>: [NODE, NODE, () or {} or <a class="reference internal" href="#"><span class="doc">Pathway</span></a>…] -&gt; three or more pathways</p>
+<p><strong>pathway</strong>: [NODE, () or {} or <a class="reference internal" href="#"><span class="doc">Pathway</span></a>…] -&gt; individual Pathways for each specification.</p>
 </div></blockquote>
 </div>
 </div></blockquote>
+</section>
 </section>
 </section>
 <section id="structure">
@@ -332,7 +418,7 @@ in the specification of any of these.  In contrast, when a Pathway is created by
 that comprise <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a>, and the <a class="reference internal" href="Projection.html"><span class="doc">Projection(s)</span></a> between them, are listed in the
 Pathway’s <a class="reference internal" href="#psyneulink.core.compositions.pathway.Pathway.pathway" title="psyneulink.core.compositions.pathway.Pathway.pathway"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">pathway</span></code></a> attribute.</p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.compositions.pathway.Pathway.composition" title="psyneulink.core.compositions.pathway.Pathway.composition"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">composition</span></code></a> - contains the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> that created the Pathway and to which it belongs,
-or None if it is a <a href="#id3"><span class="problematic" id="id4">``</span></a>template &lt;Pathway_Template&gt;` (i.e., was constructed on its own).</p></li>
+or None if it is a <a href="#id4"><span class="problematic" id="id5">``</span></a>template &lt;Pathway_Template&gt;` (i.e., was constructed on its own).</p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.compositions.pathway.Pathway.roles" title="psyneulink.core.compositions.pathway.Pathway.roles"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">roles</span></code></a> and <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a> attributes - if the Pathway was created by a Composition,
 the <a class="reference internal" href="#psyneulink.core.compositions.pathway.Pathway.roles" title="psyneulink.core.compositions.pathway.Pathway.roles"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">roles</span></code></a> attribute <a class="reference internal" href="#psyneulink.core.compositions.pathway.PathwayRole" title="psyneulink.core.compositions.pathway.PathwayRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">this</span> <span class="pre">lists</span> <span class="pre">the</span> <span class="pre">`PathwayRoles</span></code></a> assigned to it by the Composition
 that correspond to the <code class="xref any docutils literal notranslate"><span class="pre">NodeRoles</span> <span class="pre">&lt;NodeRole</span></code>&gt; of its Components, and the <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> with each of
@@ -603,7 +689,12 @@ See <code class="xref any docutils literal notranslate"><span class="pre">note</
 <li><a class="reference internal" href="#pathway-as-a-template"><em>Pathway as a Template</em></a></li>
 <li><a class="reference internal" href="#assigning-pathways-to-a-composition"><em>Assigning Pathways to a Composition</em></a></li>
 <li><a class="reference internal" href="#pathway-name"><em>Pathway Name</em></a></li>
-<li><a class="reference internal" href="#pathway-specification"><em>Pathway Specification</em></a></li>
+<li><a class="reference internal" href="#pathway-specification"><em>Pathway Specification</em></a><ul>
+<li><a class="reference internal" href="#pathway-projection-specifications"><em>Pathway Projection Specifications</em></a></li>
+<li><a class="reference internal" href="#pathway-specification-formats"><em>Pathway Specification Formats</em></a></li>
+<li><a class="reference internal" href="#multiple-pathway-specifications"><em>Multiple Pathway Specifications</em></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li><a class="reference internal" href="#structure">Structure</a></li>
