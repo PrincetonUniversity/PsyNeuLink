@@ -3842,8 +3842,7 @@ class TransferWithCosts(TransferFunction):
                     :default value: None
                     :type:
         """
-        variable = Parameter(np.array([0]),
-                             history_min_length=1)
+        variable = Parameter(np.array([0]), history_min_length=1, constructor_argument='default_variable')
 
         intensity = Parameter(np.zeros_like(variable.default_value),
                               history_min_length=1)
