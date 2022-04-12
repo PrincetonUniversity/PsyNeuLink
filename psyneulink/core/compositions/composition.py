@@ -114,15 +114,13 @@ The following arguments of the Composition's constructor can be used to add Comp
    .. _Composition_Pathways_Arg:
 
     - **pathways**
-        adds one or more `Pathways <Composition_Pathways>` to the Composition; this is equivalent to constructing the
-        Composition and then calling its `add_pathways <Composition.add_pathways>` method, and can use the same forms
-        of specification as the **pathways** argument of that method.  If a set is provided containing `Nodes
-        Composition_Nodes>`, then a separate `Pathway` is constructed for each node in the set (note that this differs
-        from specifying nodes in the **nodes** argument (see below), which does *not* construct Pathways for them).
-        If any `learning Pathways <Composition_Learning_Pathway>` are included, then the constructor's
-        **disable_learning** argument can be used to disable learning on those by default (though it will still allow
-        learning to occur on any other Compositions, either nested within the current one, or within which the
-        current one is nested (see `Composition_Learning` for a full description).
+        adds one or more `Pathways <Composition_Pathways>` to the Composition; this is equivalent to constructing
+        the Composition and then calling its `add_pathways <Composition.add_pathways>` method, and can use the
+        same forms of specification as the **pathways** argument of that method (see `Pathway_Specification` for
+        additonal details). If any `learning Pathways <Composition_Learning_Pathway>` are included, then the
+        constructor's **disable_learning** argument can be used to disable learning on those by default (though it
+        will still allow learning to occur on any other Compositions, either nested within the current one,
+        or within which the current one is nested (see `Composition_Learning` for a full description).
 
    .. _Composition_Nodes_Arg:
 
@@ -3332,12 +3330,30 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     ---------
 
     pathways : Pathway specification or list[Pathway specification...]
-        specifies one or more Pathways to add to the Compositions (see `pathways <Composition_Pathways_Arg>` as
+        specifies one or more Pathways to add to the Compositions. A list containing `Node <Composition_Nodes>`
+        and possible `Projection` specifications at its top level is treated as a single `Pathway`; a list containing
+        any nested lists or other forms of `Pathway specification <Pathway_Specification_Formats>` is treated as
+        `multiple pathways <Pathway_Specification_Multiple>` (see `pathways <Composition_Pathways_Arg>` as
         well as `Pathway specification <Pathway_Specification>` for additional details).
+
+        .. technical_note::
+
+           The design pattern for use of sets and lists in specifying the **pathways** argument are:
+             - sets comprise Nodes that all occupy the same (parallel) position within a processing Pathway;
+             - lists comprise *sequences* of Nodes; embedded list are either ignored or a generate an error (see below)
+               (this is because lists of Nodes are interpreted as Pathways and Pathways cannot be nested, which would be
+               redundant since the same can be accomplished by simply including the items "inline" within a single list)
+             - if the Pathway specification contains (in its outer list):
+                 - only a single item or set of items, each is treated as a SINGLETON <NodeRole.SINGLETON> in a Pathway;
+                 - one or more lists, the items in each list are treated as separate (parallel) pathways;
+                 - singly-nested lists ([[[A,B]],[[C,D]]]}), they are collapsed and treated as a Pathway;
+                 - any list with more than one list nested within it ([[[A,B],[C,D]}), an error is generated;
+                 - Pathway objects are treated as a list (if its pathway attribute is a set, it is wrapped in a list)
+             (see `tests <test_various_pathway_configurations_in_constructor>` for examples)
 
     nodes : `Mechanism <Mechanism>`, `Composition` or list[`Mechanism <Mechanism>`, `Composition`] : default None
         specifies one or more `Nodes <Composition_Nodes>` to add to the Composition;  these are each treated as
-        `SINGLETONs <NodeRole.SINGLETON>` unless they are explicitly assigned `Projections <Projection>`.
+        `SINGLETON <NodeRole.SINGLETON>`\\s unless they are explicitly assigned `Projections <Projection>`.
 
     projections : `Projection <Projection>` or list[`Projection <Projection>`] : default None
         specifies one or more `Projections <Projection>` to add to the Composition;  these are not functional
@@ -6606,7 +6622,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         The Node(s) specified in each entry of the list project to the Node(s) specified in the next entry
         (see `Pathway_Specification` for details).
 
-        .. _note::
+        .. note::
            Any specifications of the **monitor_for_control** `argument <ControlMechanism_Monitor_for_Control_Argument>`
            of a constructor for a `ControlMechanism` or the **monitor** argument in the constructor for an
            `ObjectiveMechanism` in the **objective_mechanism** `argument <ControlMechanism_ObjectiveMechanism>` of a

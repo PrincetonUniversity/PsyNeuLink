@@ -170,13 +170,6 @@ Projection specification, if provided) between each pair of sender and receiver 
   sender and receiver entries, using the `primary OutputPort <OutputPort_Primary>` of each sender Node and the
   `primary InputPort <InputPort_Primary>` of each receiver node.
 
-.. _note::
-   Any specifications of the **monitor_for_control** `argument <ControlMechanism_Monitor_for_Control_Argument>`
-   of a constructor for a `ControlMechanism` or the **monitor** argument in the constructor for an
-   `ObjectiveMechanism` in the **objective_mechanism** `argument <ControlMechanism_ObjectiveMechanism>` of a
-   ControlMechanism supercede any MappingProjections that would otherwise be created for them when specified
-   in the **pathway** argument of add_linear_processing_pathway.
-
 .. _Pathway_Specification_Formats:
 
 *Pathway Specification Formats*
