@@ -193,10 +193,10 @@ These methods can be used to add `Pathways <Composition_Pathways>` to an existin
 
     - `add_linear_processing_pathway <Composition.add_linear_processing_pathway>`
 
-        adds and a list of `Nodes <Composition_Nodes>` and `Projections <Projection>` to the Composition,
-        inserting a default Projection between any adjacent pair of Nodes for which one is not otherwise specified
-        (or possibly a set of Projections if either Node is a Composition -- see method documentation for details);
-        returns the `Pathway` added to the Composition.
+        adds and a list of `Nodes <Composition_Nodes>` and `Projections <Projection>` to the Composition, inserting
+        a default Projection between any adjacent set(s) of Nodes for which a Projection is not otherwise specified
+        (see method documentation and `Pathway_Specification` for additonal details); returns the `Pathway` added to
+        the Composition.
 
     COMMENT:
     The following set of `learning methods <Composition_Learning_Methods>` can be used to add `Pathways
@@ -6601,7 +6601,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         .. _Composition_Add_Linear_Processing_Pathway:
 
-        A Pathway are specified as a list, each element of which is either a `Node <Composition_Nodes>` or
+        A Pathway is specified as a list, each element of which is either a `Node <Composition_Nodes>` or
         set of Nodes, possibly intercolated with specifications of `Projections <Projection>` between them.
         The Node(s) specified in each entry of the list project to the Node(s) specified in the next entry
         (see `Pathway_Specification` for details).
