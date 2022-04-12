@@ -152,6 +152,7 @@ from psyneulink.core.globals.context import Context, ContextFlags, handle_extern
 from psyneulink.core.globals.keywords import BEFORE
 from psyneulink.core.globals.parameters import Parameter
 
+
 __all__ = ['ParameterEstimationComposition']
 
 COMPOSITION_SPECIFICATION_ARGS = {'nodes', 'pathways', 'projections'}
@@ -449,11 +450,13 @@ class ParameterEstimationComposition(Composition):
         self._validate_params(locals())
 
         # Assign model
-        if model:
+        if model is not None:
             # If model has been specified, assign as (only) node in PEC, otherwise specification(s) in kwargs are used
             # (Note: _validate_params() ensures that either model or nodes and/or pathways are specified, but not both)
-            kwargs.update({'nodes':model})
-        self.model = model or self
+            kwargs.update({'nodes': model})
+            self.model = model
+        else:
+            self.model = self
 
         self.optimized_parameter_values = []
 
@@ -468,7 +471,8 @@ class ParameterEstimationComposition(Composition):
         # (Note: Implement after Composition itself, so that:
         #     - Composition's components are all available (limits need for deferred_inits)
         #     - search for seed params in _instantiate_ocm doesn't include pem itself or its functions)
-        ocm = self._instantiate_ocm(parameters=parameters,
+        ocm = self._instantiate_ocm(agent_rep=self.model,
+                                    parameters=parameters,
                                     outcome_variables=outcome_variables,
                                     data=data,
                                     objective_function=objective_function,
@@ -515,12 +519,13 @@ class ParameterEstimationComposition(Composition):
         # Disallow simultaneous specification of
         #     data (for data fitting; see _ParameterEstimationComposition_Data_Fitting)
         #          and objective_function (for optimization; see _ParameterEstimationComposition_Optimization)
-        if args['data'] and args['objective_function']:
+        if args['data'] is not None and args['objective_function'] is not None:
             raise ParameterEstimationCompositionError(f"Both 'data' and 'objective_function' args were "
                                                       f"specified for {pec_name}; must choose one "
                                                       f"('data' for fitting or 'objective_function' for optimization).")
 
     def _instantiate_ocm(self,
+                         agent_rep,
                          parameters,
                          outcome_variables,
                          data,
@@ -544,11 +549,11 @@ class ParameterEstimationComposition(Composition):
                                                  function=objective_function) if objective_function else None
 
         # FIX: NEED TO BE SURE CONSTRUCTOR FOR MLE optimization_function HAS data ATTRIBUTE
-        if data:
+        if data is not None:
             optimization_function.data = data
 
         return OptimizationControlMechanism(
-            agent_rep=self,
+            agent_rep=agent_rep,
             monitor_for_control=outcome_variables,
             allow_probes=True,
             objective_mechanism=objective_mechanism,
@@ -558,7 +563,8 @@ class ParameterEstimationComposition(Composition):
             num_trials_per_estimate=num_trials_per_estimate,
             initial_seed=initial_seed,
             same_seed_for_all_allocations=same_seed_for_all_parameter_combinations,
-            context=context
+            context=context,
+            comp_execution_mode="LLVM",
         )
 
     # def run(self):

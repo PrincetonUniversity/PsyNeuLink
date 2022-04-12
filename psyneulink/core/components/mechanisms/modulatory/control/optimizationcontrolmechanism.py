@@ -1061,12 +1061,13 @@ from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
     ALL, COMPOSITION, COMPOSITION_FUNCTION_APPROXIMATOR, CONCATENATE, DEFAULT_INPUT, DEFAULT_VARIABLE, EID_FROZEN, \
     FUNCTION, INTERNAL_ONLY, NAME, OPTIMIZATION_CONTROL_MECHANISM, NODE, OWNER_VALUE, PARAMS, PORT, PROJECTIONS, \
-    SHADOW_INPUTS, SHADOW_INPUT_NAME, VALUE
+    SHADOW_INPUTS, SHADOW_INPUT_NAME, VALUE, OVERRIDE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleSpec
 from psyneulink.core.globals.utilities import convert_to_list, ContentAddressableList, is_numeric
 from psyneulink.core.llvm.debug import debug_env
+from psyneulink.core.llvm import _convert_llvm_ir_to_ctype
 
 __all__ = [
     'OptimizationControlMechanism', 'OptimizationControlMechanismError',
@@ -2841,7 +2842,11 @@ class OptimizationControlMechanism(ControlMechanism):
             randomization_control_signal = ControlSignal(name=RANDOMIZATION_CONTROL_SIGNAL,
                                                          modulates=[param.parameters.seed.port
                                                                     for param in self.random_variables],
-                                                         allocation_samples=randomization_seed_mod_values)
+                                                         allocation_samples=randomization_seed_mod_values,
+                                                         modulation=OVERRIDE,
+                                                         cost_options=CostFunctions.NONE,
+                                                         # FIXME: Hack that Jan found to prevent some LLVM runtime errors
+                                                         default_allocation=[self.num_estimates])
             randomization_control_signal_index = len(self.output_ports)
             randomization_control_signal._variable_spec = (OWNER_VALUE, randomization_control_signal_index)
 
@@ -3275,8 +3280,12 @@ class OptimizationControlMechanism(ControlMechanism):
                                                        ctx.int32_ty(controller_idx)])
 
         # Get simulation function
+        sim_tags = {"run", "simulation"}
+        if 'simulation_return_results' in tags:
+            sim_tags.add('simulation_return_results')
+
         sim_f = ctx.import_llvm_function(self.agent_rep,
-                                         tags=frozenset({"run", "simulation"}))
+                                         tags=frozenset(sim_tags))
 
         # Apply allocation sample to simulation data
         assert len(self.output_ports) == len(allocation_sample.type.pointee)
@@ -3301,7 +3310,7 @@ class OptimizationControlMechanism(ControlMechanism):
             if ip.shadow_inputs is None:
                 continue
 
-            # shadow inputs point to an input port of of a node.
+            # shadow inputs point to an input port of a node.
             # If that node takes direct input, it will have an associated
             # (input_port, output_port) in the input_CIM.
             # Take the former as an index to composition input variable.
@@ -3354,8 +3363,13 @@ class OptimizationControlMechanism(ControlMechanism):
         num_inputs = builder.alloca(ctx.int32_ty, name="num_inputs")
         builder.store(num_inputs.type.pointee(1), num_inputs)
 
-        # Simulations don't store output
-        comp_output = sim_f.args[4].type(None)
+        # Simulations don't store output unless they are requested by simulation_return_results tag
+        if "simulation_return_results" not in sim_tags:
+            comp_output = sim_f.args[4].type(None)
+        else:
+            ct_vo = _convert_llvm_ir_to_ctype(sim_f.args[4].type) * self.num_trials_per_estimate
+            comp_output = ct_vo()
+
         builder.call(sim_f, [comp_state, comp_params, comp_data, comp_input,
                              comp_output, num_runs, num_inputs])
 

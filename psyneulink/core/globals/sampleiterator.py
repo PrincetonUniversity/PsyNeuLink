@@ -51,7 +51,7 @@ class SampleIteratorError(Exception):
         self.error_value = error_value
 
 
-class SampleSpec():
+class SampleSpec:
     """
     SampleSpec(      \
     start=None,      \
@@ -150,13 +150,13 @@ class SampleSpec():
 
     @tc.typecheck
     def __init__(self,
-                 start:tc.optional(tc.any(int, float))=None,
-                 stop:tc.optional(tc.any(int, float))=None,
-                 step:tc.optional(tc.any(int, float))=None,
-                 num:tc.optional(int)=None,
-                 function:tc.optional(callable)=None,
-                 precision:tc.optional(int)=None,
-                 custom_spec = None
+                 start: tc.optional(tc.any(int, float))=None,
+                 stop: tc.optional(tc.any(int, float))=None,
+                 step: tc.optional(tc.any(int, float))=None,
+                 num: tc.optional(int)=None,
+                 function: tc.optional(callable)=None,
+                 precision: tc.optional(int)=None,
+                 custom_spec=None
                  ):
 
         self.custom_spec = custom_spec
@@ -214,6 +214,14 @@ class SampleSpec():
 
         # Restore global precision
         getcontext().prec = _global_precision
+
+    def __str__(self):
+        return self.__repr__()
+
+    def __repr__(self):
+        params_list = ['start', 'stop', 'step', 'num', 'function', 'custom_spec']
+        params_str = ", ".join([f"{k}={repr(getattr(self, k))}" for k in params_list if getattr(self, k) is not None])
+        return f"SampleSpec({params_str})"
 
 
 allowable_specs = (tuple, list, np.array, range, np.arange, callable, SampleSpec)
@@ -432,3 +440,6 @@ class SampleIterator(Iterator):
 
         self.current_step = 0
         self.head = head or self.start
+
+    def __repr__(self):
+        return '{}({})'.format(self.__class__.__name__, self.specification)

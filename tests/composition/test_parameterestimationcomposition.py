@@ -128,37 +128,41 @@ def test_parameter_estimation_mle():
                        output_ports=[pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME],
                        name='DDM')
 
-    comp = pnl.Composition(pathways=decision)
+    # comp = pnl.Composition(pathways=decision)
 
     # Lets generate an "experimental" dataset to fit. This is a parameter recovery test
     # The input will be 250 trials of the same constant stimulus drift rate of 1
     input = np.ones((250, 1))
     inputs_dict = {decision: input}
 
-    # Run the composition to generate some data to fit
-    comp.run(inputs=inputs_dict,
-             num_trials=len(input),
-             execution_mode=pnl.ExecutionMode.LLVMRun)
+    # # Run the composition to generate some data to fit
+    # comp.run(inputs=inputs_dict,
+    #          num_trials=len(input),
+    #          execution_mode=pnl.ExecutionMode.LLVMRun)
+    #
+    # # Store the results of this "experiment" as a numpy array. This should be a
+    # # 2D array of shape (len(input), 2). The first column being a discrete variable
+    # # specifying the upper or lower decision boundary and the second column is the
+    # # reaction time. We will put the data into a pandas DataFrame, this makes it
+    # # easier to specify which columns in the data are categorical or not.
+    # data_to_fit = pd.DataFrame(np.squeeze(np.array(comp.results)),
+    #                            columns=['decision', 'rt'])
+    # data_to_fit['decision'] = pd.Categorical(data_to_fit['decision'])
 
-    # Store the results of this "experiment" as a numpy array. This should be a
-    # 2D array of shape (len(input), 2). The first column being a discrete variable
-    # specifying the upper or lower decision boundary and the second column is the
-    # reaction time. We will put the data into a pandas DataFrame, this makes it
-    # easier to specify which columns in the data are categorical or not.
-    data_to_fit = pd.DataFrame(np.squeeze(np.array(comp.results)),
-                               columns=['decision', 'rt'])
-    data_to_fit['decision'] = pd.Categorical(data_to_fit['decision'])
 
     pec = pnl.ParameterEstimationComposition(name='pec',
-                                             model=comp,
-                                             parameters={('drift_rate', decision): [1, 2],
+                                             nodes=[decision],
+                                             parameters={('rate', decision): [1, 2],
                                                          ('threshold', decision): [1, 2], },
                                              outcome_variables=[decision.output_ports[DECISION_VARIABLE],
                                                                 decision.output_ports[RESPONSE_TIME]],
-                                             objective_function=None,
+                                             # data=data_to_fit,
+                                             objective_function=LinearCombination,
                                              optimization_function=MaxLikelihoodEstimator,
-                                             num_estimates=100,
+                                             num_estimates=10000,
+                                             num_trials_per_estimate=len(input)
                                              )
-    ctlr = pec.controller
 
-    pec.run()
+    pec.run(inputs=inputs_dict,
+            num_trials=len(input))
+

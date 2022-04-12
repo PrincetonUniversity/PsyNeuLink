@@ -2,13 +2,11 @@ from fastkde import fastKDE
 from scipy.interpolate import interpn
 from scipy.optimize import differential_evolution
 
+from psyneulink.core.globals import SampleIterator
 from psyneulink.core.globals.context import Context
-from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.scheduling.condition import AtTrialStart
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.llvm import ExecutionMode
 from psyneulink.core.components.functions.nonstateful.optimizationfunctions import OptimizationFunction
-
 
 import typing
 import time
@@ -222,7 +220,7 @@ def simulation_likelihood(
 
 
 def make_likelihood_function(
-    composition: "psyneulink.core.composition.Composition",
+    composition: 'Composition',
     fit_params: typing.List[Parameter],
     inputs: typing.Union[np.ndarray, typing.List],
     data_to_fit: typing.Union[np.ndarray, pd.DataFrame],
@@ -371,81 +369,68 @@ def make_likelihood_function(
 
 class MaxLikelihoodEstimator(OptimizationFunction):
     """
-    A class for performing parameter estimation for a composition using maximum likelihood estimation (MLE).
+    A class for performing parameter estimation for a composition using maximum likelihood estimation (MLE). When a
+    ParameterEstimationComposition is used for `ParameterEstimationComposition_Data_Fitting`, an instance of this class
+    can be assigned to the ParameterEstimationComposition's
+    `optimization_function <ParameterEstimationComposition.optimization_function>`.
     """
 
     def __init__(
         self,
-        default_variable=None,
-        objective_function = None,
         search_space=None,
-        direction=None,
         save_samples=None,
         save_values=None,
-        select_randomly_from_optimal_values=None,
-        seed=None,
-        params=None,
-        owner=None,
-        prefs=None,
-        log_likelihood_function: typing.Callable=None,
-        fit_params_bounds: typing.Dict[str, typing.Tuple]=None,
+        **kwargs,
     ):
-        self.log_likelihood_function = log_likelihood_function
-        self.fit_params_bounds = fit_params_bounds
-
-        # Setup a named tuple to store records for each iteration if the user requests it
-        self.IterRecord = collections.namedtuple(
-            "IterRecord",
-            f"{' '.join(self.fit_params_bounds.keys())} neg_log_likelihood likelihood_eval_time",
-        )
-
-        search_function = self._traverse_grid
-        search_termination_function = self._grid_complete
-        self._return_values = save_values
-        self._return_samples = save_values
-        try:
-            search_space = [x if isinstance(x, SampleIterator) else SampleIterator(x) for x in search_space]
-        except TypeError:
-            pass
-
-        self.num_iterations = 1 if search_space is None else np.product([i.num for i in search_space])
 
         super().__init__(
-            default_variable=default_variable,
-            objective_function=objective_function,
-            search_function=search_function,
-            search_termination_function=search_termination_function,
             search_space=search_space,
-            select_randomly_from_optimal_values=select_randomly_from_optimal_values,
             save_samples=save_samples,
             save_values=save_values,
-            seed=seed,
-            direction=direction,
-            params=params,
-            owner=owner,
-            prefs=prefs,
+            **kwargs
         )
-
-    def _validate_params(self, request_set, target_set=None, context=None):
-
-        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
-        if SEARCH_SPACE in request_set and request_set[SEARCH_SPACE] is not None:
-            search_space = request_set[SEARCH_SPACE]
-
-            # Check that all iterators are finite (i.e., with num!=None)
-            if not all(s.num is not None for s in search_space if (s is not None and s.num)):
-                raise OptimizationFunctionError("All {}s in {} arg of {} must be finite (i.e., SampleIteror.num!=None)".
-                                                format(SampleIterator.__name__,
-                                                       repr(SEARCH_SPACE),
-                                                       self.__class__.__name__))
-
 
     def _function(self,
                  variable=None,
                  context=None,
                  params=None,
                  **kwargs):
-        pass
+
+        # FIXME: Setting these default values up properly is a pain while initializing, ask Jon
+        optimal_sample = np.array([[0.0], [0.0], [0.0]])
+        optimal_value = np.array([1.0])
+        saved_samples = []
+        saved_values = []
+
+        if not self.is_initializing:
+
+            if self.owner is None:
+                raise ValueError("MaximumLikelihoodEstimator must be assigned to an OptimizationControlMechanism, "
+                                 "self.owner is None")
+
+            def run_simulations(*args):
+                search_space = self.parameters.search_space._get(context)
+                for i, arg in enumerate(args):
+                    if i < len(search_space):
+                        search_space[i] = SampleIterator(np.array([arg]))
+                    else:
+                        raise ValueError("Too many arguments passed to run_simulations")
+
+                self.parameters.search_space._set(search_space, context)
+
+                all_values, num_evals = self._grid_evaluate(self.owner, context, return_results=True)
+                all_values = np.ctypeslib.as_array(all_values)
+
+                return all_values, num_evals
+
+            t0 = time.time()
+            all_values, num_evals = run_simulations(1, 1)
+            t1 = time.time()
+
+            print(f"Number of evaluations: {num_evals}, Elapsed time: {t1 - t0}")
+
+        return optimal_sample, optimal_value, saved_samples, saved_values
+
 
     def fit(self, display_iter: bool = False, save_iterations: bool = False):
 
@@ -505,16 +490,6 @@ class MaxLikelihoodEstimator(OptimizationFunction):
                                 f"Likelihood-Eval-Time: {elapsed} (seconds)"
                             )
 
-                    # Are we saving each iteration
-                    if save_iterations:
-                        iterations.append(
-                            self.IterRecord(
-                                **params,
-                                neg_log_likelihood=p,
-                                likelihood_eval_time=elapsed,
-                            )
-                        )
-
                     return p
 
                 def progress_callback(x, convergence):
@@ -560,11 +535,5 @@ class MaxLikelihoodEstimator(OptimizationFunction):
             "fitted_params": fitted_params,
             "neg-log-likelihood": r.fun,
         }
-
-        # Return a record for each iteration if we were supposed to.
-        if save_iterations:
-            output_dict["iterations"] = pd.DataFrame.from_records(
-                iterations, columns=self.IterRecord._fields
-            )
 
         return output_dict
