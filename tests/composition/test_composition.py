@@ -7351,6 +7351,17 @@ class TestNodeRoles:
         assert comp.get_nodes_by_role(NodeRole.CONTROLLER) == [comp.controller]
         assert comp.nodes_to_roles[comp.controller] == {NodeRole.CONTROLLER}
 
+    def test_inactive_terminal_projection(self):
+        A = pnl.ProcessingMechanism(name='A')
+        B = pnl.ProcessingMechanism(name='B')
+        C = pnl.ProcessingMechanism(name='C')
+        D = pnl.ProcessingMechanism(name='D')
+
+        pnl.MappingProjection(sender=A, receiver=D)
+        comp = pnl.Composition([[A],[B,C]])
+
+        assert comp.nodes_to_roles[A] == {NodeRole.INPUT, NodeRole.OUTPUT, NodeRole.SINGLETON, NodeRole.ORIGIN, NodeRole.TERMINAL}
+
 
 class TestMisc:
 
