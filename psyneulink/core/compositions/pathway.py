@@ -223,12 +223,12 @@ the forms above, or one of the following:
          * a **set** of Nodes, \n
          * one or more Nodes with any other form of `Pathway specification <Pathway_Specification>` in the list \n
        then each such Node in the list is assigned as a `SINGLETON <NodeRole.SINGLETON>` Node in its own Pathway.
-       However, if the list contains only Nodes, then it is treated as a single Pathway (i.e., the list form of 
+       However, if the list contains only Nodes, then it is treated as a single Pathway (i.e., the list form of
        `Pathway specification <Pathway_Specification>` described above.  Thus:
          **pathway**: NODE -> single pathway \n
          **pathway**: [NODE] -> single pathway \n
          **pathway**: [NODE, NODE...] -> single pathway \n
-         **pathway**: [NODE, () or {} or `Pathway`...] -> individual Pathways for each specification. 
+         **pathway**: [NODE, () or {} or `Pathway`...] -> individual Pathways for each specification.
 
 
 .. _Pathway_Structure:
