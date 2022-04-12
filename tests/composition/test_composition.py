@@ -1318,8 +1318,7 @@ class TestCompositionPathwaysArg:
                 # Pre-specified Projections that were not included in pathways should not be in Composition:
                 assert B_D not in comp.projections
                 assert C_E not in comp.projections
-                # FIX: 4/9/22 - RESTORE ONCE TERMINAL ASSIGNMENT BUG IS FIXED
-                # assert C in comp.get_nodes_by_role(NodeRole.SINGLETON)
+                assert C in comp.get_nodes_by_role(NodeRole.SINGLETON)
                 assert F in comp.get_nodes_by_role(NodeRole.SINGLETON)
 
             else:
@@ -1360,8 +1359,7 @@ class TestCompositionPathwaysArg:
                 assert all(p in comp.projections for p in {A_M, C_M, M_D, M_F})
                 # Pre-specified Projections that were not included in pathways should not be in Composition:
                 assert B_M not in comp.projections
-                # FIX: 4/9/22 - RESTORE ONCE TERMINAL ASSIGNMENT BUG IS FIXED
-                # assert B in comp.get_nodes_by_role(NodeRole.SINGLETON)
+                assert B in comp.get_nodes_by_role(NodeRole.SINGLETON)
                 assert E in comp.get_nodes_by_role(NodeRole.SINGLETON)
 
             else:
