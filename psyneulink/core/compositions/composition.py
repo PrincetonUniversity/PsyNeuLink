@@ -4566,7 +4566,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #   consideration set.  Identifying these assumes that graph_processing has been called/updated,
         #   which identifies and "breaks" cycles, and assigns FEEDBACK_SENDER to the appropriate consideration set(s).
         for node in self.nodes:
-            if not any([efferent for efferent in node.efferents if efferent.receiver.owner is not self.output_CIM]):
+            if not any([
+                efferent.is_active_in_composition(self) for efferent in node.efferents
+                if efferent.receiver.owner is not self.output_CIM
+            ]):
                 self._add_node_role(node, NodeRole.TERMINAL)
 
     def _add_node_aux_components(self, node, context=None):
