@@ -1318,8 +1318,7 @@ class TestCompositionPathwaysArg:
                 # Pre-specified Projections that were not included in pathways should not be in Composition:
                 assert B_D not in comp.projections
                 assert C_E not in comp.projections
-                # FIX: 4/9/22 - RESTORE ONCE TERMINAL ASSIGNMENT BUG IS FIXED
-                # assert C in comp.get_nodes_by_role(NodeRole.SINGLETON)
+                assert C in comp.get_nodes_by_role(NodeRole.SINGLETON)
                 assert F in comp.get_nodes_by_role(NodeRole.SINGLETON)
 
             else:
@@ -1360,8 +1359,7 @@ class TestCompositionPathwaysArg:
                 assert all(p in comp.projections for p in {A_M, C_M, M_D, M_F})
                 # Pre-specified Projections that were not included in pathways should not be in Composition:
                 assert B_M not in comp.projections
-                # FIX: 4/9/22 - RESTORE ONCE TERMINAL ASSIGNMENT BUG IS FIXED
-                # assert B in comp.get_nodes_by_role(NodeRole.SINGLETON)
+                assert B in comp.get_nodes_by_role(NodeRole.SINGLETON)
                 assert E in comp.get_nodes_by_role(NodeRole.SINGLETON)
 
             else:
@@ -7350,6 +7348,17 @@ class TestNodeRoles:
 
         assert comp.get_nodes_by_role(NodeRole.CONTROLLER) == [comp.controller]
         assert comp.nodes_to_roles[comp.controller] == {NodeRole.CONTROLLER}
+
+    def test_inactive_terminal_projection(self):
+        A = pnl.ProcessingMechanism(name='A')
+        B = pnl.ProcessingMechanism(name='B')
+        C = pnl.ProcessingMechanism(name='C')
+        D = pnl.ProcessingMechanism(name='D')
+
+        pnl.MappingProjection(sender=A, receiver=D)
+        comp = pnl.Composition([[A],[B,C]])
+
+        assert comp.nodes_to_roles[A] == {NodeRole.INPUT, NodeRole.OUTPUT, NodeRole.SINGLETON, NodeRole.ORIGIN, NodeRole.TERMINAL}
 
 
 class TestMisc:
