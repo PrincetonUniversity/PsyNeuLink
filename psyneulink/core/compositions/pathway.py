@@ -178,7 +178,7 @@ between each pair of sender and receiver Nodes in the set(s) or nested Compositi
 |
 
   .. _Pathway_Figure:
-  
+
   .. figure:: _static/Pathways_fig.svg
      :scale: 50%
 
