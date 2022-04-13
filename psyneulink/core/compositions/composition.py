@@ -6395,10 +6395,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         elif not isinstance(pathway, collections.abc.Iterable) or all(_is_pathway_entry_spec(n, ANY) for n in pathway):
             pathway = convert_to_list(pathway)
         else:
-            bad_entry_error_msg = f"The following entries in a pathway specified for '{self.name}' are not " \
-                                  f"a Node (Mechanism or Composition) or a Projection nor a set of either: "
-            bad_entries = [repr(entry) for entry in pathway if not _is_pathway_entry_spec(entry, ANY)]
-            raise CompositionError(f"{bad_entry_error_msg}{','.join(bad_entries)}")
+            bad_entries = [entry for entry in pathway if not _is_pathway_entry_spec(entry, ANY)]
+            embedded_list = [entry for entry in bad_entries if isinstance(entry, list)]
+            if embedded_list:
+                raise CompositionError(f"The {pathway_arg_str} contains one or more entries with "
+                                       f"embeded lists, which are not allowed within a Pathway: "
+                                       f"{','.join([repr(entry) for entry in embedded_list])}")
+            else:
+                bad_entry_error_msg = f"The following entries in a pathway specified for '{self.name}' are not " \
+                                      f"a Node (Mechanism or Composition) or a Projection nor a set of either: "
+                raise CompositionError(f"{bad_entry_error_msg}{','.join( [repr(entry) for entry in bad_entries])}")
             # raise CompositionError(f"Unrecognized specification in {pathway_arg_str}: {pathway}")
 
         lists = [entry for entry in pathway

@@ -414,6 +414,16 @@ class PathwayRole(Enum):
     LEARNING = 8
 
 
+class PathwayError(Exception):
+
+    def __init__(self, error_value, **kwargs):
+        self.error_value = error_value
+        self.return_items = kwargs
+
+    def __str__(self):
+        return repr(self.error_value)
+
+
 class Pathway(object):
     """
     Pathway(      \
@@ -537,6 +547,13 @@ class Pathway(object):
                 registry=PathwayRegistry,
                 name=name
             )
+
+        # Validate entries (no lists allowed for Nodes -- only allowed for Projections)
+        bad_entries = [repr(entry) for entry in pathway
+                       if isinstance(entry,list) and not _is_pathway_entry_spec(entry, PROJECTION)]
+        if bad_entries:
+            raise PathwayError(f"A Pathway cannot contain an embedded list with Nodes (use set): "
+                               f"{', '.join(bad_entries)}")
 
         # Initialize attributes
         self.pathway = pathway
