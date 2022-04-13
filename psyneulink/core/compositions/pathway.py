@@ -102,9 +102,13 @@ can be either a `Mechanism`, a `Composition`, or a tuple (Mechanism or Compositi
 be used to assign `required_roles` to the Nodes in the Composition (see `Composition_Nodes` for additional details).
 The Node(s) specified in each entry of the list project to the Node(s) specified in the next entry.
 
+    .. _Pathway_Projection_List_Note:
+
     .. note::
-       Only a *set* can be used to specify multiple Nodes for a given entry in a Pathway; a *list* can *note* be used
-       for this purpose, as a list containing Nodes is always interpreted as a Pathway, and Pathways cannot be nested.
+       Only a *set* can be used to specify multiple Nodes for a given entry in a Pathway; a *list* can *not* be used
+       for this purpose, as a list containing Nodes is always interpreted as a Pathway. If a list *is* included in a
+       Pathway specification, then it and all other entries are considered as separate, parallel Pathways (see
+       example *vii* in the `figure <Pathway_Figure>` below).
 
 .. _Pathway_Specification_Projections:
 
@@ -125,6 +129,8 @@ Projections (order of specification does not matter whether a set or a list is u
 `MappingProjections <MappingProjection>` between a specific pairs of Nodes and/or a single default specification
 (either a `matrix <MappingProjection.matrix>` specification or a MappingProjection without any `sender
 <MappingProjection.sender>` or `receiver <MappingProjection.receiver>` specified).
+
+    .. _Pathway_Projection_Matrix_Note:
 
     .. note::
        If a collection of Projection specifications includes a default matrix specification, then a list must be used
@@ -168,6 +174,35 @@ between each pair of sender and receiver Nodes in the set(s) or nested Compositi
   than one `OUTPUT <NodeRole.OutPUT>` Node), then a Projection is constructed for every pairing of Nodes in the
   sender and receiver entries, using the `primary OutputPort <OutputPort_Primary>` of each sender Node and the
   `primary InputPort <InputPort_Primary>` of each receiver node.
+
+|
+
+  .. _Pathway_Figure:
+
+  .. figure:: _static/Pathways_fig.svg
+     :scale: 50%
+
+     **Examples of Pathway specifications** (including in the **pathways** argument of a `Composition`. *i)* Set
+     of `Nodes <Composition_Nodes>`: each is treated as a `SINGLETON <NodeRole.SINGLETON>` within a single Pathway.
+     *ii)* List of Nodes: forms a sequential Pathway. *iii)* Single Node followed by a set:  one to many mapping.
+     *iv)* Set followed by a single Node: many to one mapping. *v)* Set followed by a set: many to many mapping.
+     *vi)* Set followed by a list: because there is a list in the specification (``[C,D]``) all other entries are
+     also treated as parallel Pathways (see `note <Pathway_Projection_List_Note>` above), so ``A`` and ``B`` in the
+     set are `SINGLETON <NodeRole.SINGLETON>`\\s. *vii)* Set of Projections intercolated between two sets of Nodes:
+     since the set of Projections does not include any involving ``B`` or ``E`` nor a default Projection specification,
+     they are treated as `SINGLETON <NodeRole.SINGLETON>`\\s (compare with *x*). *viii)* Set followed by a Node and
+     then a set:  many to one to many mapping. *ix)* Node followed by one that is a `nested Composition
+     <Composition_Nested>` then another Node: one to many to one mapping. *x)* Set followed by a list of Projections
+     then another set: since the list of Projections contains a default Projection specification (``matrix``)
+     Projections are created between all pairings of nodes in the sets that precede and follow the list (compare with
+     *vii*); note that the Projections must be specified in a list because the matrix is a list (or array), which
+     cannot be included in a set (see `note <Pathway_Projection_Matrix_Note>` above).
+
+     .. technical_note::
+        The full code for the examples above can be found in `test_pathways_examples`,
+        although some have been graphically rearranged for illustrative purposes.
+
+
 
 .. _Pathway_Specification_Formats:
 
