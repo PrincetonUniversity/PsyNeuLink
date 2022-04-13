@@ -96,6 +96,9 @@ one specified in the Pathway `template's <Pathway_Template>` `name <Pathway.name
 *Pathway Specification*
 ~~~~~~~~~~~~~~~~~~~~~~~
 
+# FIX: 4/13/22 - ADD STATEMENT THAT NESTED PATHWAYS ARE NOT ALLOWED, BUT IN SOME PLACE MULTIPLE PATHWAYS CAN BE
+                 SPECIFIED AS DESCRIBED BELOW <LINK TO MULTIPLE PATHWAYS SECTION>
+
 Pathway are specified as a list, each element of which is either a `Node <Composition_Nodes>` or set of Nodes,
 possibly intercolated with specifications of `Projections <Projection>` between them.  `Nodes <Composition_Nodes>`
 can be either a `Mechanism`, a `Composition`, or a tuple (Mechanism or Composition, `NodeRoles <NodeRole>`) that can
@@ -104,6 +107,7 @@ The Node(s) specified in each entry of the list project to the Node(s) specified
 
     .. _Pathway_Projection_List_Note:
 
+    # FIX TO REFERENCE STATEMENT ABOVE AND MULTIPLE PATHWAY SPECIFICATION BELOW
     .. note::
        Only a *set* can be used to specify multiple Nodes for a given entry in a Pathway; a *list* can *not* be used
        for this purpose, as a list containing Nodes is always interpreted as a Pathway. If a list *is* included in a
@@ -241,8 +245,8 @@ of any of a Composition's `Pathway addition methods <Composition_Pathway_Additio
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In addition to the forms of single Pathway specification `above <Pathway_Specification>`, where multiple Pathways
-can be specified (e.g., the **pathways** argument of the constructor for a `Composition` or its `add_pathways
-<Composition.add_pathways>` method), they can be specified in a list, in which each item of the list can be any of
+are allowed -- in the **pathways** argument of the constructor for a `Composition`, or in its `add_pathways
+<Composition.add_pathways>` method -- they can be specified in a list, in which each item of the list can be any of
 the forms above, or one of the following:
 
     * **Pathway** object or constructor: Pathway(pathway=\ `Pathway specification <Pathway_Specification>`,...).
@@ -251,6 +255,7 @@ the forms above, or one of the following:
     * **dict**: {name : Pathway) -- in which **name** is a str and **Pathway** is a Pathway object or constuctor,
       or one of the standard `Pathway specifications <Pathway_Specification>` listed above.
 
+    # FIX: 4/13/22: a standalone set does not ever get translated into multiple pathways
     .. note::
        If any of the following is used to specify the **pathways** argument:
          * a **standalone** `Node <Composition_Nodes>` (i.e., not in a list), \n
@@ -265,6 +270,7 @@ the forms above, or one of the following:
          **pathway**: [NODE, NODE...] -> single pathway \n
          **pathway**: [NODE, () or {} or `Pathway`...] -> individual Pathways for each specification.
 
+    # FIX: 4/13/22: ADD NOTE REGARDING NO EMBDEEDED LISTS ALLOWED WITHIN THE OUTER LIST
 
 .. _Pathway_Structure:
 

@@ -113,6 +113,7 @@ The following arguments of the Composition's constructor can be used to add Comp
 
    .. _Composition_Pathways_Arg:
 
+    #FIX: 4/13/22 - ADD MENTION OF AND <LINK> TO SECTION ON MULTIPLE PATHWAYS IN Pathway DOCSTRING AND EXAMPLES
     - **pathways**
         adds one or more `Pathways <Composition_Pathways>` to the Composition; this is equivalent to constructing
         the Composition and then calling its `add_pathways <Composition.add_pathways>` method, and can use the
@@ -470,6 +471,10 @@ be constructed or executed on their own).
 
 .. _Composition_Projections:
 
+COMMENT:
+    FIX: 4/13/22 - REFERENCE Composition_Projections_Note OR MOVE THAT NOTE SOMEWHERE HERE
+COMMENT
+
 *Projections*
 ~~~~~~~~~~~~~
 
@@ -536,6 +541,8 @@ added to the Composition and not used during its execution.
 *Pathways*
 ~~~~~~~~~~
 
+#FIX: 4/13/22 - CORRECT:  SPECIFCIATIONS IN **pathways** ARG OF ARE USED TO COSNTRUCT PATHWAYS
+                NOTE: ADD MENTION OF AND <LINK> TO SECTION ON MULTIPLE PATHWAYS IN Pathway DOCSTRING AND EXAMPLES
 A `Pathway` is an alternating sequence of `Nodes <Composition_Nodes>` and `Projections <Projection>` in a Composition.
 Although a Composition is not required to have any Pathways, these are useful for constructing Compositions, and are
 required for implementing `learning <Composition_Learning>` in a Composition. Pathways can be specified in the
@@ -3329,6 +3336,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     Arguments
     ---------
 
+   # FIX: 4/13/22 - ADD <LINK> TO EXAMPLES IN Pathways
     pathways : Pathway specification or list[Pathway specification...]
         specifies one or more Pathways to add to the Compositions. A list containing `Node <Composition_Nodes>`
         and possible `Projection` specifications at its top level is treated as a single `Pathway`; a list containing
@@ -3338,6 +3346,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         .. technical_note::
 
+           # FIX: 4/13/22 - MAKE SURE THIS IS CONSISTENT WITH OTHER DOCUMENTION OF PATHWAYS HERE AND IN Pathways
            The design pattern for use of sets and lists in specifying the **pathways** argument are:
              - sets comprise Nodes that all occupy the same (parallel) position within a processing Pathway;
              - lists comprise *sequences* of Nodes; embedded list are either ignored or a generate an error (see below)
@@ -3479,12 +3488,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     pathways : ContentAddressableList[`Pathway`]
         a list of all `Pathways <Pathway>` in the Composition that were specified in the **pathways**
         argument of the Composition's constructor and/or one of its `Pathway addition methods
-        <Composition_Pathway_Addition_Methods>`; each item is a list of `Nodes <Composition_Nodes>`
-        (`Mechanisms <Mechanism>` and/or Compositions) intercolated with the `Projection(s) <Projection>` between each
-        pair of Nodes; if both Nodes are Mechanisms, then only a single Projection can be specified;  if either is a
-        Composition then, under some circumstances, there can be a set of Projections, specifying how the `INPUT
-        <NodeRole.INPUT>` Node(s) of the sender project to the `OUTPUT <NodeRole.OUTPUT>` Node(s) of the receiver
-        (see `add_linear_processing_pathway` for additional details).
+        <Composition_Pathway_Addition_Methods>` (see `Composition_Pathways` for additional details).
 
     projections : ContentAddressableList[`Projection`]
         a list of all of the `Projections <Projection>` activated for the Composition;  this includes all of
@@ -3493,7 +3497,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         the corresponding `ParameterPorts <ParameterPorts>`; from its *OUTPUT* Nodes to its `output_CIM
         <Composition.output_CIM>`; and, if it is `nested <Composition_Nested>` in another Composition, then the
         Projections to its `input_CIM <Composition.input_CIM>` and from its `output_CIM <Composition.output_CIM>`
-        to other Nodes in the Comopsition within which it is nested.
+        to other Nodes in the Composition within which it is nested.
+
+        .. _Composition_Projections_Note:
+
+        .. note::
+           A Mechanism and/or `nested Composition <Composition_Nested>` may have Projections assigned to it
+           that are not part of a given Composition; those are *not* listed in that Composition's `projections
+           <Composition.projections>` attribute and have no effect when that Composition is `executed
+           <Composition_Execution>`.  For a Projection to be activated in a Composition, it must be explicitly
+           specified in the **pathway** argument of the Composition's constructor, or one of its pathway or
+           projection `addition methods <Composition_Addition_Methods>`.
 
     input_CIM : `CompositionInterfaceMechanism`
         mediates input values for the `INPUT` `Nodes <Composition_Nodes>` of the Composition. If the Composition is
@@ -6451,6 +6465,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Arguments
         ---------
 
+        #FIX: 4/13/22 - CORRECT: NODES IN A SET GET ASSIGNED TO A SINGLE ENTRY IN A PATHWAY
+                        <LINK> TO RELEVANT SECTION OF PATHWAY DOCSTRING HERE;  ALSO ADD MENTION OF
+                        AND <LINK> TO SECTION ON MULTIPLE PATHWAYS IN Pathway DOCSTRING
         pathways : Pathway or list[Pathway]
             specifies one or more `Pathways <Pathway>` to add to the Composition.  Any valid form of `Pathway
             specification <Pathway_Specification>` can be used.  A set can also be used, all elements of which are
@@ -6626,6 +6643,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         .. _Composition_Add_Linear_Processing_Pathway:
 
+       # FIX: 4/13/22 - NOTE THAT NESTED PATHWAYS ARE NOT ALLOWED
         A Pathway is specified as a list, each element of which is either a `Node <Composition_Nodes>` or
         set of Nodes, possibly intercolated with specifications of `Projections <Projection>` between them.
         The Node(s) specified in each entry of the list project to the Node(s) specified in the next entry
@@ -6641,6 +6659,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Arguments
         ---------
 
+       # FIX: 4/13/22 - NOTE THAT NESTED PATHWAYS ARE NOT ALLOWED
         pathway : `Node <Composition_Nodes>`, list or `Pathway`
             specifies the `Nodes <Composition_Nodes>`, and optionally `Projections <Projection>`, used to construct a
             processing `Pathway <Pathway>`. Any standard form of `Pathway specification <Pathway_Specification>` can
