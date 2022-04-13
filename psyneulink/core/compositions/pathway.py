@@ -169,6 +169,26 @@ between each pair of sender and receiver Nodes in the set(s) or nested Compositi
   sender and receiver entries, using the `primary OutputPort <OutputPort_Primary>` of each sender Node and the
   `primary InputPort <InputPort_Primary>` of each receiver node.
 
+|
+
+  .. figure:: _static/Pathways_fig.svg
+     :scale: 50%
+
+     **Examples of Pathway specifications.**  *i)* Set of `Nodes <Composition_Nodes>`: each is treated as a
+     `SINGLETON <NodeRole.SINGLETON>` within a single Pathway. *ii)* List of Nodes: forms a sequential Pathway.
+     *iii)* Set followed by a list:  forms a divergent Pathway.  *iv)* Set of Nodes followed by a single Node:
+     forms a convergent Pathway. *v)* Two lists and two single Node:  Forms two parallel pathway and a pair of
+     `SINGLETON <NodeRole.SINGLETON>`\\s.  *vi)* Set of Nodes followed by Projection and two Nodes: since the
+     set with the Projection does not contain a default Projection specification, no Projections are
+     *automatically* created between the Nodes in the preceding entry (``A`` or ``B``) and the following one
+     (``C``), so ``A`` is a `SINGLETON <NodeRole.SINGLETON>`;  however, since ``B`` is the the `sender
+     <MappingProjection.sender>` of the specified Projection, it projects to ``D``; since ``C`` is followed by
+     ``D`` in the list, it too projects to ``D``.  *vii)* A Node followed by a set of Nodes, and then another
+     Node: forms a divergent then convergent Pathway.  *viii)* A set followed by a Node and then a set:  forms a
+     convergent then divergent Pathway.  *ix)*  A Node by a Node that is a `nested Composition <Composition_Nested>`
+     that has a set of Nodes, and then another Node in the outer Comopsition:  forms a Pathway similar in
+     configuration to *vii*.
+
 .. _Pathway_Specification_Formats:
 
 *Pathway Specification Formats*
