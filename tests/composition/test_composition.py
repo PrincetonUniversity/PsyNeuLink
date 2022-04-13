@@ -1218,7 +1218,6 @@ class TestCompositionPathwaysArg:
         assert f"Every item in the \'pathways\' arg of the constructor for Composition-1 must be " \
                f"a Node, list, set, tuple or dict; the following are not: (InputPort InputPort-0)" in str(err.value)
 
-
     @pytest.mark.parametrize("nodes_config", [
         "many_many",
         "many_one_many",
@@ -1383,6 +1382,9 @@ class TestCompositionPathwaysArg:
 
         else:
             assert False, f"TEST ERROR: No handling for '{nodes_config}' condition."
+
+    def test_pathways_examples(self):
+        pass
 
     def test_composition_pathways_arg_dict_and_list_and_pathway_roles(self):
         A = ProcessingMechanism(name='A')
