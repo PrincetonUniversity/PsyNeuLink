@@ -101,6 +101,8 @@ Class Reference
 """
 import typecheck as tc
 
+from typing import Optional, Union
+
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.function import FunctionOutputType
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
@@ -245,7 +247,7 @@ class GatingProjection(ModulatoryProjection_Base):
                  function=None,
                  weight=None,
                  exponent=None,
-                 gating_signal_params:tc.optional(dict)=None,
+                 gating_signal_params:Optional[dict]=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,

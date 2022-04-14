@@ -1086,6 +1086,8 @@ from numbers import Number
 import numpy as np
 import typecheck as tc
 
+from typing import Optional, Union
+
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component
 from psyneulink.core.components.functions.function import FunctionOutputType

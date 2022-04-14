@@ -83,6 +83,8 @@ Class Reference
 from collections.abc import Iterable
 
 import typecheck as tc
+
+from typing import Optional, Union
 import numpy as np
 
 from psyneulink.core.components.functions.function import Function
@@ -156,9 +158,9 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 input_ports:tc.optional(tc.any(list, dict))=None,
+                 input_ports:Optional[Union[list, dict]]=None,
                  function=None,
-                 output_ports:tc.optional(tc.any(str, Iterable))=None,
+                 output_ports:Optional[Union[str, Iterable]]=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,

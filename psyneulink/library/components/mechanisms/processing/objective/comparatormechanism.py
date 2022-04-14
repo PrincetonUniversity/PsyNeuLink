@@ -144,6 +144,8 @@ from collections.abc import Iterable
 import numpy as np
 import typecheck as tc
 
+from typing import Optional, Union
+
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -329,7 +331,7 @@ class ComparatorMechanism(ObjectiveMechanism):
                  sample: tc.optional(tc.any(OutputPort, Mechanism_Base, dict, is_numeric, str))=None,
                  target: tc.optional(tc.any(OutputPort, Mechanism_Base, dict, is_numeric, str))=None,
                  function=None,
-                 output_ports:tc.optional(tc.optional(tc.any(str, Iterable))) = None,
+                 output_ports:Optional[Union[str, Iterable]] = None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,

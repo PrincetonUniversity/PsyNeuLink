@@ -366,6 +366,8 @@ from collections.abc import Iterable
 import numpy as np
 import typecheck as tc
 
+from typing import Optional, Union
+
 from psyneulink.core.components.functions.function import DEFAULT_SEED, _random_state_getter, _seed_setter
 from psyneulink.core.components.functions.stateful.integratorfunctions import \
     DriftDiffusionIntegrator, IntegratorFunction
@@ -760,7 +762,7 @@ class DDM(ProcessingMechanism):
                  input_format:tc.optional(tc.enum(SCALAR, ARRAY, VECTOR))=None,
                  function=None,
                  input_ports=None,
-                 output_ports: tc.optional(tc.any(str, Iterable)) = None,
+                 output_ports: Optional[Union[str, Iterable]] = None,
                  seed=None,
                  params=None,
                  name=None,

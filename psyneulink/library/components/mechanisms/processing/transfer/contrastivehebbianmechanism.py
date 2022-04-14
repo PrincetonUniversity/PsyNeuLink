@@ -334,6 +334,8 @@ from collections.abc import Iterable
 import copy
 import numpy as np
 import typecheck as tc
+
+from typing import Optional, Union
 from psyneulink.core.components.functions.function import get_matrix, is_function_type
 from psyneulink.core.components.functions.nonstateful.learningfunctions import ContrastiveHebbian, Hebbian
 from psyneulink.core.components.functions.nonstateful.objectivefunctions import Distance
@@ -980,11 +982,11 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     # @tc.typecheck
     def __init__(self,
                  input_size:int,
-                 hidden_size:tc.optional(int)=None,
-                 target_size:tc.optional(int)=None,
-                 separated: tc.optional(bool) = None,
+                 hidden_size:Optional[int]=None,
+                 target_size:Optional[int]=None,
+                 separated: Optional[bool] = None,
                  mode:tc.optional(tc.enum(SIMPLE_HEBBIAN))=None,
-                 continuous: tc.optional(bool) = None,
+                 continuous: Optional[bool] = None,
                  clamp:tc.optional(tc.enum(SOFT_CLAMP, HARD_CLAMP))=None,
                  combination_function:tc.optional(is_function_type)=None,
                  function=None,
@@ -995,19 +997,19 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                  initial_value=None,
                  noise=None,
                  integration_rate: is_numeric_or_none=None,
-                 integrator_mode: tc.optional(bool) = None,
+                 integrator_mode: Optional[bool] = None,
                  clip=None,
                  minus_phase_termination_condition:tc.optional(tc.enum(CONVERGENCE, COUNT))=None,
-                 minus_phase_termination_threshold: tc.optional(float) = None,
+                 minus_phase_termination_threshold: Optional[float] = None,
                  plus_phase_termination_condition:tc.optional(tc.enum(CONVERGENCE, COUNT))=None,
-                 plus_phase_termination_threshold: tc.optional(float) = None,
+                 plus_phase_termination_threshold: Optional[float] = None,
                  phase_convergence_function: tc.optional(tc.any(is_function_type)) = None,
-                 max_passes:tc.optional(int)=None,
-                 enable_learning: tc.optional(bool) = None,
+                 max_passes:Optional[int]=None,
+                 enable_learning: Optional[bool] = None,
                  learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
                  learning_function: tc.optional(tc.any(is_function_type)) = None,
-                 additional_input_ports:tc.optional(tc.optional(tc.any(list, dict))) = None,
-                 additional_output_ports:tc.optional(tc.any(str, Iterable))=None,
+                 additional_input_ports: Optional[Union[list, dict]] = None,
+                 additional_output_ports:Optional[Union[str, Iterable]]=None,
                  params=None,
                  name=None,
                  prefs: is_pref_set=None,

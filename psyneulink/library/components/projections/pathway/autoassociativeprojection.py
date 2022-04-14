@@ -104,6 +104,8 @@ import numbers
 import numpy as np
 import typecheck as tc
 
+from typing import Optional, Union
+
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.nonstateful.transferfunctions import LinearMatrix
 from psyneulink.core.components.functions.function import get_matrix

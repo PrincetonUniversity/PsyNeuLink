@@ -77,6 +77,8 @@ Class Reference
 import numpy as np
 import typecheck as tc
 
+from typing import Optional, Union
+
 from enum import Enum
 from itertools import product
 
@@ -249,7 +251,7 @@ class RegressionCFA(CompositionFunctionApproximator):
     def __init__(self,
                  name=None,
                  update_weights=None,
-                 prediction_terms:tc.optional(list)=None):
+                 prediction_terms:Optional[list]=None):
 
         self._instantiate_prediction_terms(prediction_terms)
 

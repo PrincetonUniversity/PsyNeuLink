@@ -777,6 +777,8 @@ from collections.abc import Iterable
 import numpy as np
 import typecheck as tc
 
+from typing import Optional, Union
+
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import ComponentError, DefaultsFlexibility, component_keywords
 from psyneulink.core.components.functions.function import Function, get_param_value_for_keyword, is_function_type
@@ -2585,7 +2587,7 @@ def _instantiate_port_list(owner,
 def _instantiate_port(port_type:_is_port_class,           # Port's type
                        owner:tc.any(Mechanism, Projection),  # Port's owner
                        reference_value,                      # constraint for Port's value and default for variable
-                       name:tc.optional(str)=None,           # port's name if specified
+                       name:Optional[str]=None,           # port's name if specified
                        variable=None,                        # used as default value for port if specified
                        params=None,                          # port-specific params
                        prefs=None,

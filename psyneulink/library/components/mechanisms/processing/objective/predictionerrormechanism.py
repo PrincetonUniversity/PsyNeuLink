@@ -168,6 +168,8 @@ from typing import Iterable
 import numpy as np
 import typecheck as tc
 
+from typing import Optional, Union
+
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import PredictionErrorDeltaFunction
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.ports.outputport import OutputPort
@@ -292,7 +294,7 @@ class PredictionErrorMechanism(ComparatorMechanism):
                                             is_numeric,
                                             str)) = None,
                  function=None,
-                 output_ports: tc.optional(tc.optional(tc.any(str, Iterable))) = None,
+                 output_ports: Optional[Union[str, Iterable]] = None,
                  learning_rate: tc.optional(is_numeric) = None,
                  params=None,
                  name=None,

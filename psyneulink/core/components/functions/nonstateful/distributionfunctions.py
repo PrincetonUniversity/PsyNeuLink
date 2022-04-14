@@ -27,6 +27,8 @@ Functions that return one or more samples from a distribution.
 import numpy as np
 import typecheck as tc
 
+from typing import Optional, Union
+
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import (
     DEFAULT_SEED, Function_Base, FunctionError,

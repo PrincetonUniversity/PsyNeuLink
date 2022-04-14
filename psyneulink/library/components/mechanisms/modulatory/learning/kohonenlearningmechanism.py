@@ -97,6 +97,8 @@ Class Reference
 import numpy as np
 import typecheck as tc
 
+from typing import Optional, Union
+
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.nonstateful.learningfunctions import Hebbian
@@ -326,8 +328,8 @@ class KohonenLearningMechanism(LearningMechanism):
                  size=None,
                  matrix:tc.optional(ParameterPort)=None,
                  function: tc.optional(is_function_type) = None,
-                 learning_signals:tc.optional(tc.optional(list)) = None,
-                 modulation:tc.optional(str)=None,
+                 learning_signals:tc.optional(Optional[list]) = None,
+                 modulation:Optional[str]=None,
                  learning_rate:tc.optional(parameter_spec)=None,
                  params=None,
                  name=None,

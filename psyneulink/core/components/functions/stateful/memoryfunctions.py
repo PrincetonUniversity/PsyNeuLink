@@ -33,6 +33,8 @@ from typing import Optional, Union
 import numpy as np
 import typecheck as tc
 
+from typing import Optional, Union
+
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import (
     DEFAULT_SEED, FunctionError, _random_state_getter, _seed_setter, is_function_type, EPSILON, _noise_setter
@@ -233,10 +235,10 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
                  # noise: Optional[Union[int, float, callable]] = None, # Changed to 0.0 - None fails validation
                  # rate: Optional[Union[int, float, list, np.ndarray]] = 1.0,
                  # noise: Optional[Union[int, float, list, np.ndarray, callable]] = 0.0,
-                 history:tc.optional(int)=None,
+                 history:Optional[int]=None,
                  # history: Optional[int] = None,
                  initializer=None,
-                 params: tc.optional(dict) = None,
+                 params: Optional[dict] = None,
                  # params: Optional[dict] = None,
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None
@@ -2176,10 +2178,10 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
     # @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 retrieval_prob: tc.optional(tc.any(int, float))=None,
-                 storage_prob: tc.optional(tc.any(int, float))=None,
-                 noise: tc.optional(tc.any(int, float, list, np.ndarray, callable))=None,
-                 rate: tc.optional(tc.any(int, float, list, np.ndarray))=None,
+                 retrieval_prob: Optional[Union[int, float]]=None,
+                 storage_prob: Optional[Union[int, float]]=None,
+                 noise: Optional[Union[int, float, list, np.ndarray, callable]]=None,
+                 rate: Optional[Union[int, float, list, np.ndarray]]=None,
                  initializer=None,
                  distance_function:tc.optional(tc.any(Distance, is_function_type))=None,
                  selection_function:tc.optional(tc.any(OneHot, is_function_type))=None,
@@ -2187,7 +2189,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
                  equidistant_keys_select:tc.optional(tc.enum(RANDOM, OLDEST, NEWEST))=None,
                  max_entries=None,
                  seed=None,
-                 params: tc.optional(tc.optional(tc.any(list, np.ndarray))) = None,
+                 params: tc.optional(tc.any(list, np.ndarray)) = None,
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None):
 

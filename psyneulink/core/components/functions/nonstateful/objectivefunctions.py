@@ -23,6 +23,8 @@ import functools
 
 import numpy as np
 import typecheck as tc
+
+from typing import Optional, Union
 import types
 
 from psyneulink.core import llvm as pnlvm
@@ -213,8 +215,8 @@ class Stability(ObjectiveFunction):
                  matrix=None,
                  # metric:is_distance_metric=None,
                  metric: tc.optional(tc.any(tc.enum(ENERGY, ENTROPY), is_distance_metric)) = None,
-                 transfer_fct: tc.optional(tc.optional(tc.any(types.FunctionType, types.MethodType))) = None,
-                 normalize: tc.optional(bool) = None,
+                 transfer_fct: tc.optional(tc.any(types.FunctionType, types.MethodType)) = None,
+                 normalize: Optional[bool] = None,
                  params=None,
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None):
@@ -783,7 +785,7 @@ class Distance(ObjectiveFunction):
     def __init__(self,
                  default_variable=None,
                  metric: tc.optional(DistanceMetrics._is_metric) = None,
-                 normalize: tc.optional(bool) = None,
+                 normalize: Optional[bool] = None,
                  params=None,
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None):

@@ -89,6 +89,8 @@ Class Reference
 from collections.abc import Iterable
 
 import typecheck as tc
+
+from typing import Optional, Union
 import numpy as np
 
 from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
@@ -287,7 +289,7 @@ class ProcessingMechanism(ProcessingMechanism_Base):
                  default_variable=None,
                  size=None,
                  input_ports:tc.optional(tc.any(Iterable, Mechanism, OutputPort, InputPort))=None,
-                 output_ports:tc.optional(tc.any(str, Iterable))=None,
+                 output_ports:Optional[Union[str, Iterable]]=None,
                  function=None,
                  params=None,
                  name=None,

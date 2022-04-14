@@ -162,6 +162,8 @@ Class Reference
 """
 import typecheck as tc
 
+from typing import Optional, Union
+
 from psyneulink.core.components.functions.stateful.integratorfunctions import DualAdaptiveIntegrator
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import MONITORED_OUTPUT_PORTS, ObjectiveMechanism
@@ -248,9 +250,9 @@ class AGTControlMechanism(ControlMechanism):
     def __init__(self,
                  monitored_output_ports=None,
                  function=None,
-                 # control_signals:tc.optional(tc.optional(list)) = None,
+                 # control_signals:tc.optional(Optional[list]) = None,
                  control_signals= None,
-                 modulation:tc.optional(str)=None,
+                 modulation:Optional[str]=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None):

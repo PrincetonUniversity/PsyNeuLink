@@ -11,6 +11,8 @@
 
 import numpy as np
 import typecheck as tc
+
+from typing import Optional, Union
 from inspect import signature, _empty, getsourcelines, getsourcefile, getclosurevars
 import ast
 

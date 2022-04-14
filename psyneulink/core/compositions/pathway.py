@@ -282,6 +282,8 @@ from enum import Enum
 
 import typecheck as tc
 
+from typing import Optional, Union
+
 from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
 from psyneulink.core.globals.context import ContextFlags, handle_external_context

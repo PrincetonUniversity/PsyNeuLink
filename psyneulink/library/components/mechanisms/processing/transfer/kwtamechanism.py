@@ -185,6 +185,8 @@ from collections.abc import Iterable
 import numpy as np
 import typecheck as tc
 
+from typing import Optional, Union
+
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Logistic
 from psyneulink.core.globals.keywords import KWTA_MECHANISM, K_VALUE, RATIO, RESULT, THRESHOLD
 from psyneulink.core.globals.parameters import Parameter
@@ -361,8 +363,8 @@ class KWTAMechanism(RecurrentTransferMechanism):
                  average_based=None,
                  inhibition_only=None,
                  clip=None,
-                 input_ports:tc.optional(tc.optional(tc.any(list, dict))) = None,
-                 output_ports:tc.optional(tc.any(str, Iterable))=None,
+                 input_ports: Optional[Union[list, dict]] = None,
+                 output_ports:Optional[Union[str, Iterable]]=None,
                  params=None,
                  name=None,
                  prefs: tc.optional(is_pref_set) = None,

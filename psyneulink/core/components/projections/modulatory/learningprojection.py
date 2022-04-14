@@ -184,6 +184,8 @@ import warnings
 import numpy as np
 import typecheck as tc
 
+from typing import Optional, Union
+
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.function import is_function_type
@@ -447,12 +449,12 @@ class LearningProjection(ModulatoryProjection_Base):
                  error_function:tc.optional(is_function_type)=None,
                  learning_function:tc.optional(is_function_type)=None,
                  # FIX: 10/3/17 - TEST IF THIS OK AND REINSTATE IF SO
-                 # learning_signal_params:tc.optional(dict)=None,
+                 # learning_signal_params:Optional[dict]=None,
                  learning_rate:tc.optional(tc.any(parameter_spec))=None,
                  learning_enabled:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=None,
                  weight=None,
                  exponent=None,
-                 params:tc.optional(dict)=None,
+                 params:Optional[dict]=None,
                  name=None,
                  prefs:is_pref_set=None,
                  **kwargs

@@ -532,6 +532,8 @@ from enum import Enum
 import numpy as np
 import typecheck as tc
 
+from typing import Optional, Union
+
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
@@ -1006,9 +1008,9 @@ class LearningMechanism(ModulatoryMechanism_Base):
                  size=None,
                  error_sources:tc.optional(tc.any(Mechanism, list))=None,
                  function=None,
-                 learning_signals:tc.optional(tc.optional(list)) = None,
+                 learning_signals:tc.optional(Optional[list]) = None,
                  output_ports=None,
-                 modulation:tc.optional(str)=None,
+                 modulation:Optional[str]=None,
                  learning_rate:tc.optional(parameter_spec)=None,
                  learning_enabled:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=None,
                  in_composition=False,

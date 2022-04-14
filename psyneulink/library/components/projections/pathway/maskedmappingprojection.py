@@ -68,6 +68,8 @@ Class Reference
 import numpy as np
 import typecheck as tc
 
+from typing import Optional, Union
+
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.function import get_matrix
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
@@ -175,7 +177,7 @@ class MaskedMappingProjection(MappingProjection):
                  sender=None,
                  receiver=None,
                  matrix=None,
-                 mask:tc.optional(tc.any(int,float,list,np.ndarray,np.matrix))=None,
+                 mask:Optional[Union[int, float, list, np.ndarray, np.matrix]]=None,
                  mask_operation: tc.optional(tc.enum(ADD, MULTIPLY, EXPONENTIATE)) = None,
                  function=None,
                  params=None,

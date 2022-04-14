@@ -31,6 +31,8 @@ import warnings
 import numpy as np
 import typecheck as tc
 
+from typing import Optional, Union
+
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.nonstateful.distributionfunctions import DistributionFunction
@@ -226,7 +228,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
                  rate=None,
                  noise=None,
                  initializer=None,
-                 params: tc.optional(tc.optional(dict)) = None,
+                 params: Optional[dict] = None,
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None,
                  context=None,
@@ -557,7 +559,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
                  increment=None,
                  noise=None,
                  initializer=None,
-                 params: tc.optional(tc.optional(dict)) = None,
+                 params: Optional[dict] = None,
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None):
 
@@ -833,7 +835,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
                  noise=None,
                  offset=None,
                  initializer=None,
-                 params: tc.optional(tc.optional(dict)) = None,
+                 params: Optional[dict] = None,
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None):
         super().__init__(
@@ -1068,7 +1070,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
                  noise=None,
                  offset=None,
                  initializer=None,
-                 params: tc.optional(tc.optional(dict)) = None,
+                 params: Optional[dict] = None,
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None):
 
@@ -1589,7 +1591,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
                  long_term_rate=None,
                  operation=None,
                  offset=None,
-                 params: tc.optional(tc.optional(dict)) = None,
+                 params: Optional[dict] = None,
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None):
 
@@ -2024,7 +2026,7 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
                  min_val: tc.optional(parameter_spec) = None,
                  noise=None,
                  initializer=None,
-                 params: tc.optional(tc.optional(dict)) = None,
+                 params: Optional[dict] = None,
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None,
                  # **kwargs
@@ -2430,7 +2432,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         threshold=None,
         time_step_size=None,
         seed=None,
-        params: tc.optional(tc.optional(dict)) = None,
+        params: Optional[dict] = None,
         owner=None,
         prefs: tc.optional(is_pref_set) = None,
         **kwargs
@@ -2955,7 +2957,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
                  initializer=None,
                  angle_function=None,
                  seed=None,
-                 params: tc.optional(tc.optional(dict)) = None,
+                 params: Optional[dict] = None,
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None,
                  **kwargs):
@@ -3459,7 +3461,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         non_decision_time=None,
         time_step_size=None,
         starting_value=None,
-        params: tc.optional(tc.optional(dict)) = None,
+        params: Optional[dict] = None,
         seed=None,
         owner=None,
         prefs: tc.optional(is_pref_set) = None,
@@ -3750,7 +3752,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
                  offset=None,
                  time_step_size=None,
                  initializer=None,
-                 params: tc.optional(tc.optional(dict)) = None,
+                 params: Optional[dict] = None,
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None,
                  **kwargs):
@@ -4447,7 +4449,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
                  mode=None,
                  uncorrelated_activity=None,
                  integration_method=None,
-                 params: tc.optional(tc.optional(dict)) = None,
+                 params: Optional[dict] = None,
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None,
                  **kwargs):

@@ -826,6 +826,8 @@ from collections.abc import Iterable
 import numpy as np
 import typecheck as tc
 
+from typing import Optional, Union
+
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination, SUM
 from psyneulink.core.components.functions.nonstateful.distributionfunctions import DistributionFunction
@@ -1297,9 +1299,9 @@ class TransferMechanism(ProcessingMechanism_Base):
                  integration_rate=None,
                  on_resume_integrator_mode=None,
                  termination_measure=None,
-                 termination_threshold:tc.optional(tc.any(int, float))=None,
+                 termination_threshold:Optional[Union[int, float]]=None,
                  termination_comparison_op: tc.optional(tc.any(str, is_comparison_operator)) = None,
-                 output_ports:tc.optional(tc.any(str, Iterable))=None,
+                 output_ports:Optional[Union[str, Iterable]]=None,
                  params=None,
                  name=None,
                  prefs: tc.optional(is_pref_set) = None,

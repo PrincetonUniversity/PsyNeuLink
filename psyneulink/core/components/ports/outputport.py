@@ -621,6 +621,8 @@ import warnings
 import numpy as np
 import typecheck as tc
 
+from typing import Optional, Union
+
 from psyneulink.core.components.component import Component, ComponentError
 from psyneulink.core.components.functions.function import Function
 from psyneulink.core.components.ports.port import Port_Base, _instantiate_port_list, port_type_keywords

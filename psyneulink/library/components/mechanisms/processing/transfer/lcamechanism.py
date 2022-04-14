@@ -191,6 +191,8 @@ from collections.abc import Iterable
 import numpy as np
 import typecheck as tc
 
+from typing import Optional, Union
+
 from psyneulink.core.components.functions.nonstateful.objectivefunctions import Distance, MAX_ABS_DIFF
 from psyneulink.core.components.functions.nonstateful.selectionfunctions import max_vs_avg, max_vs_next, MAX_VS_NEXT, MAX_VS_AVG
 from psyneulink.core.components.functions.stateful.integratorfunctions import LeakyCompetingIntegrator
@@ -441,7 +443,7 @@ class LCAMechanism(RecurrentTransferMechanism):
     def __init__(self,
                  default_variable=None,
                  size:tc.optional(tc.any(int, list, np.array))=None,
-                 input_ports:tc.optional(tc.any(list, dict))=None,
+                 input_ports:Optional[Union[list, dict]]=None,
                  function=None,
                  initial_value=None,
                  leak=None,
@@ -452,7 +454,7 @@ class LCAMechanism(RecurrentTransferMechanism):
                  integrator_mode=None,
                  time_step_size=None,
                  clip=None,
-                 output_ports:tc.optional(tc.any(str, Iterable))=None,
+                 output_ports:Optional[Union[str, Iterable]]=None,
                  integrator_function=None,
                  params=None,
                  name=None,

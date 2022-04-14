@@ -190,6 +190,8 @@ Class Reference
 import numpy as np
 import typecheck as tc
 
+from typing import Optional, Union
+
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.core.components.ports.outputport import PRIMARY
 from psyneulink.core.globals.keywords import \
@@ -342,8 +344,8 @@ class LearningSignal(ModulatorySignal):
                  index=PRIMARY,
                  assign=None,
                  function=None,
-                 learning_rate: tc.optional(tc.optional(parameter_spec)) = None,
-                 modulation:tc.optional(str)=None,
+                 learning_rate: tc.optional(parameter_spec) = None,
+                 modulation:Optional[str]=None,
                  modulates=None,
                  params=None,
                  name=None,

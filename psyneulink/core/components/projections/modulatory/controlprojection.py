@@ -111,6 +111,8 @@ import inspect
 
 import typecheck as tc
 
+from typing import Optional, Union
+
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
@@ -244,7 +246,7 @@ class ControlProjection(ModulatoryProjection_Base):
                  weight=None,
                  exponent=None,
                  function=None,
-                 control_signal_params:tc.optional(dict)=None,
+                 control_signal_params:Optional[dict]=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,

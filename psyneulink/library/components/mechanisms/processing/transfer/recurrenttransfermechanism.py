@@ -190,6 +190,8 @@ from collections.abc import Iterable
 import numpy as np
 import typecheck as tc
 
+from typing import Optional, Union
+
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import _get_parametervalue_attr
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
@@ -648,7 +650,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 input_ports:tc.optional(tc.optional(tc.any(list, dict))) = None,
+                 input_ports: Optional[Union[list, dict]] = None,
                  has_recurrent_input_port=None,
                  combination_function: tc.optional(is_function_type) = None,
                  function=None,
@@ -661,12 +663,12 @@ class RecurrentTransferMechanism(TransferMechanism):
                  integration_rate: is_numeric_or_none=None,
                  noise=None,
                  clip=None,
-                 enable_learning: tc.optional(bool) = None,
+                 enable_learning: Optional[bool] = None,
                  learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
                  learning_function: tc.optional(tc.any(is_function_type)) = None,
                  learning_condition:tc.optional(tc.any(Condition, TimeScale,
                                                        tc.enum(UPDATE, CONVERGENCE)))=None,
-                 output_ports:tc.optional(tc.any(str, Iterable))=None,
+                 output_ports:Optional[Union[str, Iterable]]=None,
                  params=None,
                  name=None,
                  prefs: is_pref_set=None,
@@ -1149,7 +1151,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     @handle_external_context()
     def configure_learning(self,
                            learning_function:tc.optional(tc.any(is_function_type))=None,
-                           learning_rate:tc.optional(tc.any(numbers.Number, list, np.ndarray, np.matrix))=None,
+                           learning_rate:Optional[Union[numbers.Number, list, np.ndarray, np.matrix]]=None,
                            learning_condition:tc.any(Condition, TimeScale,
                                                      tc.enum(UPDATE, CONVERGENCE))=None,
                            context=None):

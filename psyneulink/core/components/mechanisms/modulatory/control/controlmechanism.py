@@ -588,6 +588,8 @@ import warnings
 import numpy as np
 import typecheck as tc
 
+from typing import Optional, Union
+
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import Function_Base, is_function_type
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity
@@ -1221,13 +1223,13 @@ class ControlMechanism(ModulatoryMechanism_Base):
                  allow_probes:bool = False,
                  outcome_input_ports_option:tc.optional(tc.enum(CONCATENATE, COMBINE, SEPARATE))=None,
                  function=None,
-                 default_allocation:tc.optional(tc.any(int, float, list, np.ndarray))=None,
+                 default_allocation:Optional[Union[int, float, list, np.ndarray]]=None,
                  control:tc.optional(tc.any(is_iterable,
                                             ParameterPort,
                                             InputPort,
                                             OutputPort,
                                             ControlSignal))=None,
-                 modulation:tc.optional(str)=None,
+                 modulation:Optional[str]=None,
                  combine_costs:tc.optional(is_function_type)=None,
                  compute_reconfiguration_cost:tc.optional(is_function_type)=None,
                  compute_net_outcome=None,

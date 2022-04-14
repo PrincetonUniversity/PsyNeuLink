@@ -24,6 +24,8 @@ import warnings
 import numpy as np
 import typecheck as tc
 
+from typing import Optional, Union
+
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility, _has_initializers_setter, ComponentsMeta
 from psyneulink.core.components.functions.nonstateful.distributionfunctions import DistributionFunction
@@ -219,7 +221,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                  rate=None,
                  noise=None,
                  initializer=None,
-                 params: tc.optional(tc.optional(dict)) = None,
+                 params: Optional[dict] = None,
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None,
                  context=None,

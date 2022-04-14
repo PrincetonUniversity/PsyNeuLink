@@ -205,6 +205,8 @@ from typing import Union
 
 import numpy as np
 import typecheck as tc
+
+from typing import Optional, Union
 from PIL import Image
 
 from psyneulink.core.components.component import Component

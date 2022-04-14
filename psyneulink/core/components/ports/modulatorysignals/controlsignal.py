@@ -403,6 +403,8 @@ import warnings
 import numpy as np
 import typecheck as tc
 
+from typing import Optional, Union
+
 # FIX: EVCControlMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCControlMechanism
 #            SHOULD THEY BE LIMITED TO EVC??
 from psyneulink.core import llvm as pnlvm
@@ -799,13 +801,13 @@ class ControlSignal(ModulatorySignal):
                  default_allocation=None,
                  size=None,
                  transfer_function=None,
-                 cost_options:tc.optional(tc.any(CostFunctions, list))=None,
+                 cost_options: Optional[Union[CostFunctions, list]] = None,
                  intensity_cost_function:tc.optional(is_function_type)=None,
                  adjustment_cost_function:tc.optional(is_function_type)=None,
                  duration_cost_function:tc.optional(is_function_type)=None,
                  combine_costs_function:tc.optional(is_function_type)=None,
                  allocation_samples=None,
-                 modulation:tc.optional(str)=None,
+                 modulation:Optional[str]=None,
                  control=None,
                  params=None,
                  name=None,

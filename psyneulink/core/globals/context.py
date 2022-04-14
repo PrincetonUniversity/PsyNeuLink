@@ -93,6 +93,8 @@ from queue import Queue
 import time as py_time  # "time" is declared below
 import typecheck as tc
 
+from typing import Optional, Union
+
 from psyneulink.core.globals.keywords import CONTEXT, CONTROL, EXECUTING, EXECUTION_PHASE, FLAGS, INITIALIZING, LEARNING, SEPARATOR_BAR, SOURCE, VALIDATE
 from psyneulink.core.globals.utilities import get_deepcopy_with_shared
 
@@ -190,7 +192,7 @@ class ContextFlags(enum.IntFlag):
                             fields:tc.any(tc.enum(EXECUTION_PHASE,
                                                   SOURCE), set, list)={EXECUTION_PHASE,
                                                                        SOURCE},
-                            string:tc.optional(str)=None):
+                            string:Optional[str]=None):
         """Return string with the names of flags that are set in **condition_flags**
 
         If **fields** is specified, then only the names of the flag(s) in the specified field(s) are returned.

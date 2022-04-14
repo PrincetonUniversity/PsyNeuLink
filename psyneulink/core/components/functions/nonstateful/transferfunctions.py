@@ -50,6 +50,8 @@ from math import e, pi, sqrt
 import numpy as np
 import typecheck as tc
 
+from typing import Optional, Union
+
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
@@ -367,8 +369,8 @@ class Linear(TransferFunction):  # ---------------------------------------------
     # @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 slope: tc.optional(tc.optional(parameter_spec)) = None,
-                 intercept: tc.optional(tc.optional(parameter_spec)) = None,
+                 slope: tc.optional(parameter_spec) = None,
+                 intercept: tc.optional(parameter_spec) = None,
                  params=None,
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None):
@@ -2529,7 +2531,7 @@ class SoftMax(TransferFunction):
                  gain: tc.optional(parameter_spec) = None,
                  output=None,
                  per_item=None,
-                 params: tc.optional(tc.optional(dict)) = None,
+                 params: Optional[dict] = None,
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None):
 

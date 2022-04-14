@@ -36,6 +36,8 @@ import numbers
 import numpy as np
 import typecheck as tc
 
+from typing import Optional, Union
+
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import Function_Base, FunctionError, FunctionOutputType
 from psyneulink.core.globals.keywords import \
@@ -425,7 +427,7 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
                  default_variable=None,
                  scale: tc.optional(parameter_spec) = None,
                  offset: tc.optional(parameter_spec) = None,
-                 arrangement:tc.optional(tc.any(int, tuple, list))=None,
+                 arrangement:Optional[Union[int, tuple, list]]=None,
                  params=None,
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None):
@@ -1957,7 +1959,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
     # @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 gamma: tc.optional(tc.optional(float)) = None,
+                 gamma: tc.optional(Optional[float]) = None,
                  params=None,
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None):

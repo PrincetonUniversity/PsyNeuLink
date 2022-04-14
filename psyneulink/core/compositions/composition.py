@@ -2729,6 +2729,8 @@ import networkx
 import numpy as np
 import pint
 import typecheck as tc
+
+from typing import Optional, Union
 from PIL import Image
 
 from psyneulink.core import llvm as pnlvm
@@ -10058,11 +10060,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def learn(
             self,
             inputs: dict,
-            targets: tc.optional(dict) = None,
-            num_trials: tc.optional(int) = None,
+            targets: Optional[dict] = None,
+            num_trials: Optional[int] = None,
             epochs: int = 1,
             minibatch_size: int = 1,
-            patience: tc.optional(int) = None,
+            patience: Optional[int] = None,
             min_delta: int = 0,
             context: tc.optional(Context) = None,
             execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,

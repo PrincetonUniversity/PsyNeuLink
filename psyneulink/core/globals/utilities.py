@@ -112,6 +112,8 @@ import types
 import typing
 import typecheck as tc
 
+from typing import Optional, Union
+
 from enum import Enum, EnumMeta, IntEnum
 from collections.abc import Mapping
 from collections import UserDict, UserList

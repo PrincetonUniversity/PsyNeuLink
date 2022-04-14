@@ -77,6 +77,8 @@ from collections.abc import Iterable
 import numpy as np
 import typecheck as tc
 
+from typing import Optional, Union
+
 from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.nonstateful.learningfunctions import Kohonen
 from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot
@@ -290,7 +292,7 @@ class KohonenMechanism(TransferMechanism):
                  learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
                  learning_function: tc.optional(is_function_type) = None,
                  learned_projection:tc.optional(MappingProjection)=None,
-                 additional_output_ports:tc.optional(tc.any(str, Iterable))=None,
+                 additional_output_ports:Optional[Union[str, Iterable]]=None,
                  name=None,
                  prefs: tc.optional(is_pref_set) = None,
                  **kwargs
@@ -351,7 +353,7 @@ class KohonenMechanism(TransferMechanism):
     @handle_external_context()
     def configure_learning(self,
                            learning_function:tc.optional(tc.any(is_function_type))=None,
-                           learning_rate:tc.optional(tc.any(numbers.Number, list, np.ndarray, np.matrix))=None,
+                           learning_rate:Optional[Union[numbers.Number, list, np.ndarray, np.matrix]]=None,
                            learned_projection:tc.optional(MappingProjection)=None,
                            context=None):
         """Provide user-accessible-interface to _instantiate_learning_mechanism

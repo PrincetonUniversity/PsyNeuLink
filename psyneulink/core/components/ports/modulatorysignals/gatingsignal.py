@@ -246,6 +246,8 @@ Class Reference
 import numpy as np
 import typecheck as tc
 
+from typing import Optional, Union
+
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.ports.outputport import _output_port_variable_getter
 from psyneulink.core.globals.defaults import defaultGatingAllocation
@@ -424,7 +426,7 @@ class GatingSignal(ControlSignal):
                  default_allocation=defaultGatingAllocation,
                  size=None,
                  transfer_function=None,
-                 modulation:tc.optional(str)=None,
+                 modulation:Optional[str]=None,
                  gate=None,
                  params=None,
                  name=None,

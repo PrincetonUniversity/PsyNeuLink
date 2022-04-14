@@ -577,6 +577,8 @@ import warnings
 import numpy as np
 import typecheck as tc
 
+from typing import Optional, Union
+
 from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import Function
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import CombinationFunction, LinearCombination
@@ -886,7 +888,7 @@ class InputPort(Port_Base):
                  combine:tc.optional(tc.enum(SUM,PRODUCT))=None,
                  weight=None,
                  exponent=None,
-                 internal_only: tc.optional(bool) = None,
+                 internal_only: Optional[bool] = None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,

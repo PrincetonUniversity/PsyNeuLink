@@ -298,6 +298,8 @@ Class Reference
 """
 import typecheck as tc
 
+from typing import Optional, Union
+
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.stateful.integratorfunctions import FitzHughNagumoIntegrator
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
@@ -667,9 +669,9 @@ class LCControlMechanism(ControlMechanism):
                  default_variable=None,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputPort))=None,
-                 # modulated_mechanisms:tc.optional(tc.optional(tc.any(list,str))) = None,
+                 # modulated_mechanisms:tc.optional(tc.any(list,str)) = None,
                  modulated_mechanisms=None,
-                 modulation:tc.optional(str)=None,
+                 modulation:Optional[str]=None,
                  integration_method="RK4",
                  initial_w_FitzHughNagumo=0.0,
                  initial_v_FitzHughNagumo=0.0,

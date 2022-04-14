@@ -78,6 +78,8 @@ Class Reference
 import numpy as np
 import typecheck as tc
 
+from typing import Optional, Union
+
 from psyneulink.library.compositions.regressioncfa import RegressionCFA
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BayesGLM
 from psyneulink.core.globals.keywords import DEFAULT_VARIABLE
@@ -111,7 +113,7 @@ class GymForagerCFA(RegressionCFA):
     def __init__(self,
                  name=None,
                  update_weights=BayesGLM,
-                 prediction_terms:tc.optional(list)=None):
+                 prediction_terms:Optional[list]=None):
 
         self.update_weights = update_weights
         self._instantiate_prediction_terms(prediction_terms)

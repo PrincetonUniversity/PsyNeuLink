@@ -36,6 +36,8 @@ COMMENT
 import numpy as np
 import typecheck as tc
 
+from typing import Optional, Union
+
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.globals.defaults import defaultControlAllocation
@@ -90,7 +92,7 @@ class DefaultControlMechanism(ControlMechanism):
     # @tc.typecheck
     def __init__(self,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
-                 control_signals:tc.optional(list)=None,
+                 control_signals:Optional[list]=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,

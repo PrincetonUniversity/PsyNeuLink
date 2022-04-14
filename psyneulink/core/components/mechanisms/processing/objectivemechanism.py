@@ -369,6 +369,8 @@ from collections.abc import Iterable
 
 import typecheck as tc
 
+from typing import Optional, Union
+
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.ports.inputport import InputPort, INPUT_PORT
@@ -568,7 +570,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  default_variable=None,
                  size=None,
                  function=None,
-                 output_ports:tc.optional(tc.any(str, Iterable))=None,
+                 output_ports:Optional[Union[str, Iterable]]=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -870,7 +872,7 @@ def _parse_monitor_specs(monitor_specs):
 #     owner,
 #     sender_list: tc.any(list, ContentAddressableList),
 #     receiver_list: tc.any(list, ContentAddressableList),
-#     receiver_projection_specs: tc.optional(list)=None,
+#     receiver_projection_specs: Optional[list]=None,
 #     system=None,
 #     context=None
 # ):
