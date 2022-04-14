@@ -753,7 +753,7 @@ class DDM(ProcessingMechanism):
                             ]
     standard_output_port_names = [i['name'] for i in standard_output_ports]
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  size=None,

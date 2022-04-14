@@ -644,7 +644,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     standard_output_port_names = TransferMechanism.standard_output_port_names.copy()
     standard_output_port_names.extend([ENERGY_OUTPUT_PORT_NAME, ENTROPY_OUTPUT_PORT_NAME])
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  size=None,
@@ -1062,7 +1062,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             return
 
     # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
-    @tc.typecheck
+    # @tc.typecheck
     def _instantiate_recurrent_projection(self,
                                           mech: Mechanism_Base,
                                           # this typecheck was failing, I didn't want to fix (7/19/17 CW)

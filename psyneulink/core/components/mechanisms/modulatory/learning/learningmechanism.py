@@ -999,7 +999,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
             structural=True,
         )
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  # default_variable:tc.any(list, np.ndarray),
                  default_variable=None,

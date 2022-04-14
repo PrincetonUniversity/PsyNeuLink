@@ -333,7 +333,7 @@ class LearningSignal(ModulatorySignal):
         value = Parameter(np.array([0]), read_only=True, aliases=['learning_signal'], pnl_internal=True)
         learning_rate = None
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  owner=None,
                  reference_value=None,

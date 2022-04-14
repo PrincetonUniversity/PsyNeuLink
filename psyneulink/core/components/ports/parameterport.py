@@ -802,7 +802,7 @@ class ParameterPort(Port_Base):
     def _get_all_projections(self):
         return self.mod_afferents
 
-    @tc.typecheck
+    # @tc.typecheck
     def _parse_port_specific_specs(self, owner, port_dict, port_specific_spec):
         """Get connections specified in a ParameterPort specification tuple
 

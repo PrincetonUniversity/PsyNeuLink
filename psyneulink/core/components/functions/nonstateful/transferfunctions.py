@@ -197,7 +197,7 @@ class Identity(TransferFunction):  # -------------------------------------------
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  params=None,
@@ -364,7 +364,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
         slope = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         intercept = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  slope: tc.optional(tc.optional(parameter_spec)) = None,
@@ -625,7 +625,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
         offset = Parameter(0.0, modulable=True)
         bounds = (0, None)
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  rate: tc.optional(parameter_spec) = None,
@@ -915,7 +915,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
         scale = Parameter(1.0, modulable=True)
         bounds = (0, 1)
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  gain: tc.optional(parameter_spec) = None,
@@ -1233,7 +1233,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         scale = Parameter(1.0, modulable=True)
         bounds = (0, 1)
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  gain: tc.optional(parameter_spec) = None,
@@ -1497,7 +1497,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         leak = Parameter(0.0, modulable=True)
         bounds = (None, None)
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  gain: tc.optional(parameter_spec) = None,
@@ -1705,7 +1705,7 @@ class Angle(TransferFunction):  # ----------------------------------------------
             if variable.ndim != 1 or len(variable) < 2:
                 return f"must be list or 1d array of length 2 or greater."
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  params=None,
@@ -1970,7 +1970,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         offset = Parameter(0.0, modulable=True)
         bounds = (None, None)
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  standard_deviation: tc.optional(parameter_spec) = None,
@@ -2243,7 +2243,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
         bounds = (None, None)
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  variance: tc.optional(parameter_spec) = None,
@@ -2523,7 +2523,7 @@ class SoftMax(TransferFunction):
             else:
                 return 'not one of {0}'.format(options)
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  gain: tc.optional(parameter_spec) = None,
@@ -2925,7 +2925,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     #         return True
     #     return False
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  matrix=None,
@@ -3927,7 +3927,7 @@ class TransferWithCosts(TransferFunction):
             function_parameter_name=ADDITIVE_PARAM,
         )
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  size=None,
@@ -4140,7 +4140,7 @@ class TransferWithCosts(TransferFunction):
             and enabled_cost_functions == CostFunctions.NONE
         )
 
-    @tc.typecheck
+    # @tc.typecheck
     def assign_costs(self, cost_functions: tc.any(CostFunctions, list), execution_context=None):
         """Assigns specified functions; all others are disabled.
 
@@ -4159,7 +4159,7 @@ class TransferWithCosts(TransferFunction):
         self.parameters.enabled_cost_functions.set(CostFunctions.NONE, execution_context)
         return self.enable_costs(cost_functions, execution_context)
 
-    @tc.typecheck
+    # @tc.typecheck
     def enable_costs(self, cost_functions: tc.any(CostFunctions, list), execution_context=None):
         """Enable specified `cost functions <TransferWithCosts_Cost_Functions>`;
         settings for all other cost functions are left intact.
@@ -4183,7 +4183,7 @@ class TransferWithCosts(TransferFunction):
         self.parameters.enabled_cost_functions.set(enabled_cost_functions, execution_context)
         return enabled_cost_functions
 
-    @tc.typecheck
+    # @tc.typecheck
     def disable_costs(self, cost_functions: tc.any(CostFunctions, list), execution_context=None):
         """Disable specified `cost functions <TransferWithCosts_Cost_Functions>`;
         settings for all other cost functions are left intact.

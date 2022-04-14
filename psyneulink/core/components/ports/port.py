@@ -1004,7 +1004,7 @@ class Port_Base(Port):
 
     classPreferenceLevel = PreferenceLevel.CATEGORY
 
-    @tc.typecheck
+    # @tc.typecheck
     @abc.abstractmethod
     def __init__(self,
                  owner:tc.any(Mechanism, Projection),
@@ -2581,7 +2581,7 @@ def _instantiate_port_list(owner,
 
     return ports
 
-@tc.typecheck
+# @tc.typecheck
 def _instantiate_port(port_type:_is_port_class,           # Port's type
                        owner:tc.any(Mechanism, Projection),  # Port's owner
                        reference_value,                      # constraint for Port's value and default for variable
@@ -2810,7 +2810,7 @@ PORT_SPEC_INDEX = 0
 #          THESE CAN BE USED BY THE InputPort's LinearCombination Function
 #          (AKIN TO HOW THE MECHANISM'S FUNCTION COMBINES InputPort VALUES)
 #          THIS WOULD ALLOW FULLY GENEREAL (HIEARCHICALLY NESTED) ALGEBRAIC COMBINATION OF INPUT VALUES TO A MECHANISM
-@tc.typecheck
+# @tc.typecheck
 def _parse_port_spec(port_type=None,
                       owner=None,
                       reference_value=None,
@@ -3354,7 +3354,7 @@ def _parse_port_spec(port_type=None,
 
 # FIX: REPLACE mech_port_attribute WITH DETERMINATION FROM port_type
 # FIX:          ONCE PORT CONNECTION CHARACTERISTICS HAVE BEEN IMPLEMENTED IN REGISTRY
-@tc.typecheck
+# @tc.typecheck
 def _get_port_for_socket(owner,
                           connectee_port_type:tc.optional(_is_port_class)=None,
                           port_spec=None,

@@ -206,7 +206,7 @@ class Stability(ObjectiveFunction):
         transfer_fct = Parameter(None, stateful=False, loggable=False)
         normalize = Parameter(False, stateful=False)
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  size=None,
@@ -779,7 +779,7 @@ class Distance(ObjectiveFunction):
         variable = Parameter(np.array([[0], [0]]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         metric = Parameter(DIFFERENCE, stateful=False)
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  metric: tc.optional(DistanceMetrics._is_metric) = None,

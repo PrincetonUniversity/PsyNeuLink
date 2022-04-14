@@ -201,7 +201,7 @@ class Concatenate(CombinationFunction):  # -------------------------------------
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         changes_shape = Parameter(True, stateful=False, loggable=False, pnl_internal=True)
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  scale: tc.optional(parameter_spec) = None,
@@ -420,7 +420,7 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  scale: tc.optional(parameter_spec) = None,
@@ -723,7 +723,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         changes_shape = Parameter(True, stateful=False, loggable=False, pnl_internal=True)
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  # weights: tc.optional(parameter_spec)=None,
                  # exponents: tc.optional(parameter_spec)=None,
@@ -1165,7 +1165,7 @@ class LinearCombination(
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  # weights: tc.optional(parameter_spec)=None,
@@ -1689,7 +1689,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  # weights:tc.optional(parameter_spec)=None,
@@ -1948,7 +1948,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
         variable = Parameter(np.array([[1], [1]]), pnl_internal=True, constructor_argument='default_variable')
         gamma = Parameter(1.0, modulable=True)
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  gamma: tc.optional(tc.optional(float)) = None,

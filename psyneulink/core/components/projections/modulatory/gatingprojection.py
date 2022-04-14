@@ -238,7 +238,7 @@ class GatingProjection(ModulatoryProjection_Base):
 
     projection_sender = GatingMechanism
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  sender=None,
                  receiver=None,

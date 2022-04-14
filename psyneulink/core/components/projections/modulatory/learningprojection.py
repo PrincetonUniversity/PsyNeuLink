@@ -440,7 +440,7 @@ class LearningProjection(ModulatoryProjection_Base):
 
     projection_sender = LearningMechanism
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  sender:tc.optional(tc.any(LearningSignal, LearningMechanism))=None,
                  receiver:tc.optional(tc.any(ParameterPort, MappingProjection))=None,

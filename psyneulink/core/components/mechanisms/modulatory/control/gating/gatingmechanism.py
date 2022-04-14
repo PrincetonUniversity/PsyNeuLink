@@ -433,7 +433,7 @@ class GatingMechanism(ControlMechanism):
             constructor_argument='gate'
         )
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  default_gating_allocation=None,
                  size=None,

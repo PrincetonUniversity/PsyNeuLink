@@ -52,7 +52,7 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
     class Parameters(Mechanism_Base.Parameters):
         variable = np.array([SystemDefaultInputValue])
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  size=None,

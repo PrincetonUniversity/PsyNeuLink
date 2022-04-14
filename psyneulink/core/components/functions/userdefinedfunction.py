@@ -450,7 +450,7 @@ class UserDefinedFunction(Function_Base):
             pnl_internal=True,
         )
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  custom_function=None,
                  default_variable=None,

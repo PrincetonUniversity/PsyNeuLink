@@ -792,7 +792,7 @@ class ControlSignal(ModulatorySignal):
 
     #endregion
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  owner=None,
                  reference_value=None,

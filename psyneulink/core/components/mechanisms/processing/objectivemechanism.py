@@ -562,7 +562,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     standard_output_port_names.extend([OUTCOME])
 
     # FIX:  TYPECHECK MONITOR TO LIST OR ZIP OBJECT
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  monitor=None,
                  default_variable=None,
@@ -865,7 +865,7 @@ def _parse_monitor_specs(monitor_specs):
 # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
 #                      ??MAYBE INTEGRATE INTO Port MODULE (IN _instantate_port)
 # KAM commented out _instantiate_monitoring_projections 9/28/18 to avoid confusion because it never gets called
-# @tc.typecheck
+# # @tc.typecheck
 # def _instantiate_monitoring_projections(
 #     owner,
 #     sender_list: tc.any(list, ContentAddressableList),

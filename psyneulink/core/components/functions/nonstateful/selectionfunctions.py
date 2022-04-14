@@ -201,7 +201,7 @@ class OneHot(SelectionFunction):
                 # returns error message
                 return 'not one of {0}'.format(options)
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  mode: tc.optional(tc.enum(MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR,

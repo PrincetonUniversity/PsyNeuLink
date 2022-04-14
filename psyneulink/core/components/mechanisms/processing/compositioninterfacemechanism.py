@@ -174,7 +174,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         """
         function = Parameter(Identity, stateful=False, loggable=False)
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  size=None,

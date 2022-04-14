@@ -148,7 +148,7 @@ class SampleSpec():
 
     """
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  start:tc.optional(tc.any(int, float))=None,
                  stop:tc.optional(tc.any(int, float))=None,

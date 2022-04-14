@@ -1145,7 +1145,7 @@ class EVCAuxiliaryFunction(Function_Base):
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
        }
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  function,
                  variable=None,

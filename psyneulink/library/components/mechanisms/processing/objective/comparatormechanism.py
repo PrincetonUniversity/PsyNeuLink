@@ -323,7 +323,7 @@ class ComparatorMechanism(ObjectiveMechanism):
     standard_output_port_names = ObjectiveMechanism.standard_output_port_names.copy()
     standard_output_port_names.extend([SSE, MSE])
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  sample: tc.optional(tc.any(OutputPort, Mechanism_Base, dict, is_numeric, str))=None,

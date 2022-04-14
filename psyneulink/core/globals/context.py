@@ -185,7 +185,7 @@ class ContextFlags(enum.IntFlag):
     ALL_FLAGS = INITIALIZATION_MASK | EXECUTION_PHASE_MASK | SOURCE_MASK | RUN_MODE_MASK
 
     @classmethod
-    @tc.typecheck
+    # @tc.typecheck
     def _get_context_string(cls, condition_flags,
                             fields:tc.any(tc.enum(EXECUTION_PHASE,
                                                   SOURCE), set, list)={EXECUTION_PHASE,
@@ -535,7 +535,7 @@ class Context():
 
         self._change_flags(old, new, operation=replace)
 
-@tc.typecheck
+# @tc.typecheck
 def _get_context(context:tc.any(ContextFlags, Context, str)):
     """Set flags based on a string of ContextFlags keywords
     If context is already a ContextFlags mask, return that

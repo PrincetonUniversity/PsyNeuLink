@@ -319,7 +319,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  default_variable:tc.any(list, np.ndarray),
                  size=None,

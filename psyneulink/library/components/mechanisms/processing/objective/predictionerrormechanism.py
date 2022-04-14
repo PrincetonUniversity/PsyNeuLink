@@ -283,7 +283,7 @@ class PredictionErrorMechanism(ComparatorMechanism):
         sample = None
         target = None
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  sample: tc.optional(tc.any(OutputPort, Mechanism_Base, dict,
                                             is_numeric,

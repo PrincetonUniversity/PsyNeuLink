@@ -274,7 +274,7 @@ class KohonenMechanism(TransferMechanism):
                                     FUNCTION: OneHot(mode=MAX_INDICATOR)}
                                    ])
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  size=None,

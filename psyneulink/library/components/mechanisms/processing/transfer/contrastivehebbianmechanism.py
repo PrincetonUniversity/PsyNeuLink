@@ -977,7 +977,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     standard_output_port_names = RecurrentTransferMechanism.standard_output_port_names.copy()
     standard_output_port_names = [i['name'] for i in standard_output_ports]
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  input_size:int,
                  hidden_size:tc.optional(int)=None,
@@ -1145,7 +1145,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         if self._target_included:
             self.parameters.output_activity._set(self.input_ports[TARGET].socket_template, context)
 
-    @tc.typecheck
+    # @tc.typecheck
     def _instantiate_recurrent_projection(self,
                                           mech: Mechanism,
                                           # this typecheck was failing, I didn't want to fix (7/19/17 CW)
