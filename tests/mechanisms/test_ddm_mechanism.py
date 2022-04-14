@@ -456,7 +456,7 @@ def test_DDM_rate(benchmark, rate, expected, mech_mode):
 
 
 def test_DDM_rate_fn():
-    with pytest.raises(typecheck.framework.InputParameterError) as error_text:
+    with pytest.raises(ValueError) as error_text:
         stim = [10]
         T = DDM(
             name='DDM',

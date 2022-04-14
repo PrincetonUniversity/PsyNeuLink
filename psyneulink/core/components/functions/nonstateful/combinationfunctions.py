@@ -737,6 +737,12 @@ class Reduce(CombinationFunction):  # ------------------------------------------
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None):
 
+        if scale is not None and not np.isscalar(scale):
+            raise ValueError("scale must be a scalar")
+
+        if offset is not None and not np.isscalar(offset):
+            raise ValueError("vector offset is not supported")
+
         super().__init__(
             default_variable=default_variable,
             weights=weights,
