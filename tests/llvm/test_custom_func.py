@@ -4,8 +4,6 @@ import pytest
 
 from psyneulink.core import llvm as pnlvm
 
-from llvmlite import ir
-
 
 @pytest.mark.llvm
 @pytest.mark.parametrize('mode', ['CPU',
@@ -20,14 +18,15 @@ def test_integer_broadcast(mode, val):
     with pnlvm.LLVMBuilderContext.get_current() as ctx:
         custom_name = ctx.get_unique_name("broadcast")
         int_ty = ctx.convert_python_struct_to_llvm_ir(val)
-        int_array_ty = ir.ArrayType(int_ty, 8)
-        func_ty = ir.FunctionType(ir.VoidType(), (int_ty.as_pointer(),
-                                                  int_array_ty.as_pointer()))
-        function = ir.Function(ctx.module, func_ty, name=custom_name)
+        int_array_ty = pnlvm.ir.ArrayType(int_ty, 8)
+        func_ty = pnlvm.ir.FunctionType(pnlvm.ir.VoidType(),
+                                        (int_ty.as_pointer(),
+                                         int_array_ty.as_pointer()))
+        function = pnlvm.ir.Function(ctx.module, func_ty, name=custom_name)
 
         i, o = function.args
         block = function.append_basic_block(name="entry")
-        builder = ir.IRBuilder(block)
+        builder = pnlvm.ir.IRBuilder(block)
         ival = builder.load(i)
         ival = builder.add(ival, ival.type(1))
         with pnlvm.helpers.array_ptr_loop(builder, o, "broadcast") as (b, i):
