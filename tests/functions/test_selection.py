@@ -45,8 +45,8 @@ names = [
     "OneHot MIN_ABS_INDICATOR",
     "OneHot PROB",
     "OneHot PROB_INDICATOR",
-    "OneHot PROB PHILOX",
-    "OneHot PROB_INDICATOR PHILOX",
+    "OneHot PROB Philox",
+    "OneHot PROB_INDICATOR Philox",
 ]
 
 GROUP_PREFIX="SelectionFunction "
