@@ -287,10 +287,6 @@ def parameter_spec(param, numeric_only=None):
     from psyneulink.core.globals.keywords import MODULATORY_SPEC_KEYWORDS
     from psyneulink.core.components.component import Component
 
-    if inspect.isclass(param):
-        param = param.__name__
-    elif isinstance(param, Component):
-        param = param.__class__.__name__
     if (isinstance(param, (numbers.Number,
                            np.ndarray,
                            list,
