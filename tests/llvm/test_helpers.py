@@ -464,8 +464,8 @@ def test_helper_numerical(mode, op, var, expected, fp_type):
 @pytest.mark.parametrize('mode', ['CPU',
                                   pytest.param('PTX', marks=pytest.mark.cuda)])
 @pytest.mark.parametrize('var,expected', [
-    (np.array([1,2,3], dtype=np.float64), np.array([2,3,4], dtype=np.float64)),
-    (np.array([[1,2],[3,4]], dtype=np.float64), np.array([[2,3],[4,5]], dtype=np.float64)),
+    (np.asfarray([1,2,3]), np.asfarray([2,3,4])),
+    (np.asfarray([[1,2],[3,4]]), np.asfarray([[2,3],[4,5]])),
 ], ids=["vector", "matrix"])
 def test_helper_elementwise_op(mode, var, expected):
     with pnlvm.LLVMBuilderContext.get_current() as ctx:
@@ -484,12 +484,18 @@ def test_helper_elementwise_op(mode, var, expected):
         builder.ret_void()
 
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
+
+    # convert input to the right type
+    dt = np.dtype(bin_f.byref_arg_types[0])
+    dt = np.empty(1, dtype=dt).flatten().dtype
+    var = var.astype(dt)
+
     if mode == 'CPU':
         ct_vec = np.ctypeslib.as_ctypes(var)
         res = bin_f.byref_arg_types[1]()
         bin_f(ct_vec, ctypes.byref(res))
     else:
-        res = copy.deepcopy(var)
+        res = np.empty_like(var)
         bin_f.cuda_wrap_call(var, res)
 
     assert np.array_equal(res, expected)
@@ -529,13 +535,20 @@ def test_helper_recursive_iterate_arrays(mode, var1, var2, expected):
         builder.ret_void()
 
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
+
+    # convert input to the right type
+    dt = np.dtype(bin_f.byref_arg_types[0])
+    dt = np.empty(1, dtype=dt).flatten().dtype
+    var1 = var1.astype(dt)
+    var2 = var2.astype(dt)
+
     if mode == 'CPU':
         ct_vec = np.ctypeslib.as_ctypes(var1)
         ct_vec_2 = np.ctypeslib.as_ctypes(var2)
         res = bin_f.byref_arg_types[2]()
         bin_f(ct_vec, ct_vec_2, ctypes.byref(res))
     else:
-        res = copy.deepcopy(var1)
+        res = np.empty_like(var1)
         bin_f.cuda_wrap_call(var1, var2, res)
 
     assert np.array_equal(res, expected)
