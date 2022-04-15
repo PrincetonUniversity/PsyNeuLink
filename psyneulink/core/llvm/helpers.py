@@ -218,7 +218,8 @@ def csch(ctx, builder, x):
 
 
 def is_close(ctx, builder, val1, val2, rtol=1e-05, atol=1e-08):
-    is_close_f = ctx.get_builtin("is_close")
+    assert val1.type == val2.type
+    is_close_f = ctx.get_builtin("is_close_{}".format(val1.type))
     rtol_val = val1.type(rtol)
     atol_val = val1.type(atol)
     return builder.call(is_close_f, [val1, val2, rtol_val, atol_val])

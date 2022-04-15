@@ -389,24 +389,27 @@ def setup_mat_add(ctx):
 
 
 def setup_is_close(ctx):
-    builder = _setup_builtin_func_builder(ctx, "is_close", [ctx.float_ty,
-                                                            ctx.float_ty,
-                                                            ctx.float_ty,
-                                                            ctx.float_ty],
-                                          return_type=ctx.bool_ty)
-    val1, val2, rtol, atol = builder.function.args
+    # Make sure we always have fp64 variant
+    for float_ty in {ctx.float_ty, ir.DoubleType()}:
+        name = "is_close_{}".format(float_ty)
+        builder = _setup_builtin_func_builder(ctx, name, [float_ty,
+                                                          float_ty,
+                                                          float_ty,
+                                                          float_ty],
+                                              return_type=ctx.bool_ty)
+        val1, val2, rtol, atol = builder.function.args
 
-    fabs_f = ctx.get_builtin("fabs", [val2.type])
+        fabs_f = ctx.get_builtin("fabs", [val2.type])
 
-    diff = builder.fsub(val1, val2, "is_close_diff")
-    abs_diff = builder.call(fabs_f, [diff], "is_close_abs")
+        diff = builder.fsub(val1, val2, "is_close_diff")
+        abs_diff = builder.call(fabs_f, [diff], "is_close_abs")
 
-    abs2 = builder.call(fabs_f, [val2], "abs_val2")
+        abs2 = builder.call(fabs_f, [val2], "abs_val2")
 
-    rtol = builder.fmul(rtol, abs2, "is_close_rtol")
-    tol = builder.fadd(rtol, atol, "is_close_atol")
-    res  = builder.fcmp_ordered("<=", abs_diff, tol, "is_close_cmp")
-    builder.ret(res)
+        rtol = builder.fmul(rtol, abs2, "is_close_rtol")
+        tol = builder.fadd(rtol, atol, "is_close_atol")
+        res  = builder.fcmp_ordered("<=", abs_diff, tol, "is_close_cmp")
+        builder.ret(res)
 
 
 def setup_csch(ctx):

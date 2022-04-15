@@ -108,7 +108,11 @@ def test_helper_fclamp_const(mode):
                          [[1, 1], [1, 100], [1,2], [-4,5], [0, -100], [-1,-2],
                           [[1,1,1,-4,0,-1], [1,100,2,5,-100,-2]]
                          ])
-def test_helper_is_close(mode, var1, var2, rtol, atol):
+@pytest.mark.parametrize('fp_type', [ir.DoubleType, ir.FloatType])
+def test_helper_is_close(mode, var1, var2, rtol, atol, fp_type):
+
+    # Instantiate LLVMBuilderContext using the preferred fp type
+    pnlvm.builder_context.LLVMBuilderContext(fp_type())
 
     tolerance = {}
     if rtol is not None:
@@ -116,11 +120,10 @@ def test_helper_is_close(mode, var1, var2, rtol, atol):
     if atol is not None:
         tolerance['atol'] = atol
 
-
     with pnlvm.LLVMBuilderContext.get_current() as ctx:
-        double_ptr_ty = ir.DoubleType().as_pointer()
-        func_ty = ir.FunctionType(ir.VoidType(), [double_ptr_ty, double_ptr_ty,
-                                                  double_ptr_ty, ctx.int32_ty])
+        float_ptr_ty = ctx.float_ty.as_pointer()
+        func_ty = ir.FunctionType(ir.VoidType(), [float_ptr_ty, float_ptr_ty,
+                                                  float_ptr_ty, ctx.int32_ty])
 
         custom_name = ctx.get_unique_name("is_close")
         function = ir.Function(ctx.module, func_ty, name=custom_name)
@@ -143,13 +146,15 @@ def test_helper_is_close(mode, var1, var2, rtol, atol):
 
         builder.ret_void()
 
-    vec1 = np.atleast_1d(np.asfarray(var1))
-    vec2 = np.atleast_1d(np.asfarray(var2))
+    bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
+
+    dty = np.dtype(bin_f.byref_arg_types[0])
+    vec1 = np.atleast_1d(np.asfarray(var1, dtype=dty))
+    vec2 = np.atleast_1d(np.asfarray(var2, dtype=dty))
     assert len(vec1) == len(vec2)
     res = np.empty_like(vec2)
 
     ref = np.isclose(vec1, vec2, **tolerance)
-    bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
     if mode == 'CPU':
         ct_ty = ctypes.POINTER(bin_f.byref_arg_types[0])
         ct_vec1 = vec1.ctypes.data_as(ct_ty)

@@ -55,8 +55,9 @@ def module_count():
 
 
 _BUILTIN_PREFIX = "__pnl_builtin_"
-_builtin_intrinsics = frozenset(('pow', 'log', 'exp', 'tanh', 'coth', 'csch', 'is_close', 'mt_rand_init',
-                                 'philox_rand_init'))
+_builtin_intrinsics = frozenset(('pow', 'log', 'exp', 'tanh', 'coth', 'csch',
+                                 'is_close_float', 'is_close_double',
+                                 'mt_rand_init', 'philox_rand_init'))
 
 
 class _node_wrapper():
