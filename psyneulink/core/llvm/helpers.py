@@ -303,6 +303,24 @@ def convert_type(builder, val, t):
         # Python integers are signed
         return builder.fptosi(val, t)
 
+    if is_floating_point(val) and is_floating_point(t):
+        if isinstance(val.type, ir.HalfType) or isinstance(t, ir.DoubleType):
+            return builder.fpext(val, t)
+        elif isinstance(val.type, ir.DoubleType) or isinstance(t, ir.HalfType):
+            # FIXME: Direct conversion from double to half needs a runtime
+            #        function (__truncdfhf2). llvmlite MCJIT fails to provide
+            #        it and instead generates invocation of a NULL pointer.
+            #        Use double conversion (double->float->half) instead.
+            #        Both steps can be done in one CPU instruction,
+            #        but the result can be slightly different
+            #        see: https://github.com/numba/llvmlite/issues/834
+            if isinstance(val.type, ir.DoubleType) and isinstance(t, ir.HalfType):
+                val = builder.fptrunc(val, ir.FloatType())
+            return builder.fptrunc(val, t)
+        else:
+            assert val.type == t
+            return val
+
     assert False, "Unknown type conversion: {} -> {}".format(val.type, t)
 
 

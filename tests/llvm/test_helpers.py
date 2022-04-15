@@ -534,3 +534,47 @@ def test_helper_recursive_iterate_arrays(mode, var1, var2, expected):
         bin_f.cuda_wrap_call(var1, var2, res)
 
     assert np.array_equal(res, expected)
+
+
+_fp_types = [ir.DoubleType, ir.FloatType, ir.HalfType]
+
+
+@pytest.mark.llvm
+@pytest.mark.parametrize('mode', ['CPU',
+                                  pytest.param('PTX', marks=pytest.mark.cuda)])
+@pytest.mark.parametrize('t1', _fp_types)
+@pytest.mark.parametrize('t2', _fp_types)
+@pytest.mark.parametrize('val', [1.0, '-Inf', 'Inf', 'NaN', 16777216, 16777217, -1.0])
+def test_helper_convert_fp_type(t1, t2, mode, val):
+    with pnlvm.LLVMBuilderContext.get_current() as ctx:
+        func_ty = ir.FunctionType(ir.VoidType(), [t1().as_pointer(), t2().as_pointer()])
+        custom_name = ctx.get_unique_name("fp_convert")
+        function = ir.Function(ctx.module, func_ty, name=custom_name)
+        x, y = function.args
+        block = function.append_basic_block(name="entry")
+        builder = ir.IRBuilder(block)
+
+        x_val = builder.load(x)
+        conv_x = pnlvm.helpers.convert_type(builder, x_val, y.type.pointee)
+        builder.store(conv_x, y)
+        builder.ret_void()
+
+    bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
+
+    # Convert type to numpy dtype
+    npt1, npt2 = (np.dtype(bin_f.byref_arg_types[x]) for x in (0, 1))
+    npt1, npt2 = (np.float16().dtype if x == np.uint16 else x for x in (npt1, npt2))
+
+    # instantiate value, result and reference
+    x = np.asfarray(val, dtype=npt1)
+    y = np.asfarray(np.random.rand(), dtype=npt2)
+    ref = x.astype(npt2)
+
+    if mode == 'CPU':
+        ct_x = x.ctypes.data_as(bin_f.c_func.argtypes[0])
+        ct_y = y.ctypes.data_as(bin_f.c_func.argtypes[1])
+        bin_f(ct_x, ct_y)
+    else:
+        bin_f.cuda_wrap_call(x, y)
+
+    assert np.allclose(y, ref, equal_nan=True)

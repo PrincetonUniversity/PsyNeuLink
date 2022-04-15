@@ -615,6 +615,10 @@ def _convert_llvm_ir_to_ctype(t: ir.Type):
         return ctypes.c_double
     elif type_t is ir.FloatType:
         return ctypes.c_float
+    elif type_t is ir.HalfType:
+        # There's no half type in ctypes. Use uint16 instead.
+        # User will need to do the necessary casting.
+        return ctypes.c_uint16
     elif type_t is ir.PointerType:
         pointee = _convert_llvm_ir_to_ctype(t.pointee)
         ret_t = ctypes.POINTER(pointee)
