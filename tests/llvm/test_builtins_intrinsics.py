@@ -10,12 +10,16 @@ y = np.random.rand()
 @pytest.mark.benchmark(group="Builtins")
 @pytest.mark.parametrize("op, args, builtin, result", [
                          (np.exp, (x,), "__pnl_builtin_exp", np.exp(x)),
+                         #~900 is the limit after which exp returns inf
+                         (np.exp, (900.0,), "__pnl_builtin_exp", np.exp(900.0)),
                          (np.log, (x,), "__pnl_builtin_log", np.log(x)),
                          (np.power, (x,y), "__pnl_builtin_pow", np.power(x, y)),
                          (np.tanh, (x,), "__pnl_builtin_tanh", np.tanh(x)),
+                         #~900 is the limit after which exp(2x) used in tanh formula returns inf
+                         (np.tanh, (450.0,), "__pnl_builtin_tanh", np.tanh(450)),
                          (lambda x: 1.0 / np.tanh(x), (x,), "__pnl_builtin_coth", 1 / np.tanh(x)),
                          (lambda x: 1.0 / np.sinh(x), (x,), "__pnl_builtin_csch", 1 / np.sinh(x)),
-                         ], ids=["EXP", "LOG", "POW", "TANH", "COTH", "CSCH"])
+                         ], ids=["EXP", "Large EXP", "LOG", "POW", "TANH", "Large TANH", "COTH", "CSCH"])
 def test_builtin_op(benchmark, op, args, builtin, result, func_mode):
     if func_mode == 'Python':
         f = op
