@@ -38,10 +38,11 @@ def test_builtin_op(benchmark, op, args, builtin, result, func_mode):
             builder.ret_void()
 
         bin_f = pnlvm.LLVMBinaryFunction.get(wrap_name)
-        ptx_res = np.asarray(type(result)(0))
+        dty = np.dtype(bin_f.byref_arg_types[0])
+        ptx_res = np.empty_like(result, dtype=dty)
         ptx_res_arg = pnlvm.jit_engine.pycuda.driver.Out(ptx_res)
         def f(*a):
-            bin_f.cuda_call(*(np.double(p) for p in a), ptx_res_arg)
+            bin_f.cuda_call(*(dty.type(p) for p in a), ptx_res_arg)
             return ptx_res
     res = benchmark(f, *args)
     assert np.allclose(res, result)
