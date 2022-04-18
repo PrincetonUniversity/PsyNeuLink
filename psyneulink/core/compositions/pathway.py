@@ -96,23 +96,48 @@ one specified in the Pathway `template's <Pathway_Template>` `name <Pathway.name
 *Pathway Specification*
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-# FIX: 4/13/22 - ADD STATEMENT THAT NESTED PATHWAYS ARE NOT ALLOWED, BUT IN SOME PLACE MULTIPLE PATHWAYS CAN BE
-                 SPECIFIED AS DESCRIBED BELOW <LINK TO MULTIPLE PATHWAYS SECTION>
-
-Pathway are specified as a list, each element of which is either a `Node <Composition_Nodes>` or set of Nodes,
+A Pathway is specified as a list, each element of which is either a `Node <Composition_Nodes>` or set of Nodes,
 possibly intercolated with specifications of `Projections <Projection>` between them.  `Nodes <Composition_Nodes>`
 can be either a `Mechanism`, a `Composition`, or a tuple (Mechanism or Composition, `NodeRoles <NodeRole>`) that can
 be used to assign `required_roles` to the Nodes in the Composition (see `Composition_Nodes` for additional details).
-The Node(s) specified in each entry of the list project to the Node(s) specified in the next entry.
+The Node(s) specified in each entry of the list project to the Node(s) specified in the next entry.  In general, this
+also determines their order of execution (though see `Pathway_Execution` for exceptions).
 
-    .. _Pathway_Projection_List_Note:
+    .. _Pathway_Projection_Nesting_Warning:
 
-    # FIX TO REFERENCE STATEMENT ABOVE AND MULTIPLE PATHWAY SPECIFICATION BELOW
-    .. note::
-       Only a *set* can be used to specify multiple Nodes for a given entry in a Pathway; a *list* can *not* be used
-       for this purpose, as a list containing Nodes is always interpreted as a Pathway. If a list *is* included in a
-       Pathway specification, then it and all other entries are considered as separate, parallel Pathways (see
-       example *vii* in the `figure <Pathway_Figure>` below).
+    .. warning::
+       Pathways can *not* be nested; that is, the list used to specify an individual Pathway cannot itself
+       contain any lists that contain Nodes -- doing generates an error. A *set* can be used to specify
+       multiple Nodes for a given entry in a Pathway, as described under `Pathway_Specification_Formats`;
+       a list (or a set) can be used to specify multiple *Projections* in a Pathway, as described under
+       `Pathway_Specification_Projections`; and, in some places, a list can be used to specify multiple
+       *Pathways*, as described under `Pathway_Specification_Multiple`. However, the specification of an
+       individual Pathway can *never* include a list that contains any Nodes.
+
+    .. technical_note::
+       The prohibition of nested Pathways should not pose a problem since, with the exception of sets of
+       Nodes, the items in a Pathway are always executed sequentially, so it should be possible to achieve
+       the same effect of a sequence of nested lists by including the elements within them in the same order
+       all within a single outer list. Specifying pathways for parallel execution can be achieved by specifying
+       multiple pathways in the **pathway** argument of a Composition's constructor, or its `add_pathways
+       <Composition.add_pathways>` method, as described under `Pathway_Specification_Multiple` below.
+
+# FIX: 4/13/22 - FINISH:
+CF RELEVANT DISCUSSIONS IN Composition DOCSTRING
+*Branching*.
+      - local branching allowed, but not open-ended (sub-branching) -- violates idea of a defined "pathway":
+        - allowed A -> {B,C} -> D -> {E,F}
+        - not allowed: A -> B -> {C, D} -> C -> E, D -> E)
+
+*Recurrence*.
+      - can be recurrent, both locally within (A -> B <-> C -> D) and wider reaching A -> B-> C->)
+
+*Overlap*.
+      - note re: using same NODES = overlapping w/ example (Stroop) -- see Multiple Pathways below
+
+
+All of these configurations are achieved and/or can be customized by the assignment of Projections within a Pathways,
+as described below.
 
 .. _Pathway_Specification_Projections:
 
@@ -180,33 +205,59 @@ between each pair of sender and receiver Nodes in the set(s) or nested Compositi
   `primary InputPort <InputPort_Primary>` of each receiver node.
 
 |
+      COMMENT:
+      # FIX: ADD EXAMPLES WITH HOP AND RECURRENCE
+      COMMENT
 
-  .. _Pathway_Figure:
+      .. _Pathway_Figure_Single:
 
-  .. figure:: _static/Pathways_fig.svg
-     :scale: 50%
+      .. figure:: _static/Pathways_Single_fig.svg
+         :scale: 50%
 
-     **Examples of Pathway specifications** (including in the **pathways** argument of a `Composition`. *i)* Set
-     of `Nodes <Composition_Nodes>`: each is treated as a `SINGLETON <NodeRole.SINGLETON>` within a single Pathway.
-     *ii)* List of Nodes: forms a sequential Pathway. *iii)* Single Node followed by a set:  one to many mapping.
-     *iv)* Set followed by a single Node: many to one mapping. *v)* Set followed by a set: many to many mapping.
-     *vi)* Set followed by a list: because there is a list in the specification (``[C,D]``) all other entries are
-     also treated as parallel Pathways (see `note <Pathway_Projection_List_Note>` above), so ``A`` and ``B`` in the
-     set are `SINGLETON <NodeRole.SINGLETON>`\\s. *vii)* Set of Projections intercolated between two sets of Nodes:
-     since the set of Projections does not include any involving ``B`` or ``E`` nor a default Projection specification,
-     they are treated as `SINGLETON <NodeRole.SINGLETON>`\\s (compare with *x*). *viii)* Set followed by a Node and
-     then a set:  many to one to many mapping. *ix)* Node followed by one that is a `nested Composition
-     <Composition_Nested>` then another Node: one to many to one mapping. *x)* Set followed by a list of Projections
-     then another set: since the list of Projections contains a default Projection specification (``matrix``)
-     Projections are created between all pairings of nodes in the sets that precede and follow the list (compare with
-     *vii*); note that the Projections must be specified in a list because the matrix is a list (or array), which
-     cannot be included in a set (see `note <Pathway_Projection_Matrix_Note>` above).
+         **Examples of single Pathway specifications** (with alternate specifications shown under some configurations).
+         *i)* Set of `Nodes <Composition_Nodes>`: each is treated as a `SINGLETON <NodeRole.SINGLETON>`, that are
+         all executed in parallel.
+         *ii)* List of Nodes: forms a sequence of Nodes that are executed in order.
+         *iii)* List of Nodes with intercollated Projections that form a "hop": ``B`` Projects both to ``C`` and ``D``,
+         so that when the latter executes it receives input from both ``B`` and ``C``.
+         *iv)* List of Nodes with intercollated Projections that form a recurrence: the feedbak projection (``db``)
+         forms a loop involving ``B``, ``C`` and ``D``; note that since that Projection is intercollated between ``D``
+         and ``E``, the Projection from ``D`` to ``E`` (``de``) must also be explicitly specified or not Projection
+         will be created between them.
+         *v)* Single Node followed by a set: forms a one to many mapping, in which ``A`` executes first, followed by
+         simultaneous execution of ``B`` and ``C``.
+         *vi)* Set followed by a single Node: forms a many to one mapping, in which ``A`` and ``B`` execute
+         simultaneously, followed by ``C``.
+         *vii)* Set followed by a set: forms a many to many mapping, in which ``A`` and ``B`` execute simultaneously,
+         followed by ``C`` and ``D``.  *vi)* Set followed by a Node and then a set:  many to one to many mapping.
+         *viii)* Set followed by a Node and then another set: forms a many to one to many mapping.
+         *ix)* Node followed by one that is a `nested Composition <Composition_Nested>` then another Node: forms a
+         one to many to one mapping, from the outer Composition to the Nodes of the nested Composition, and then back
+         out to the outer Composition.
+         *x)* Set of Projections intercolated between two sets of Nodes: since the set of Projections does not
+         include any involving ``B`` or ``E``, nor a default Projection specification, they are treated as
+         `SINGLETON <NodeRole.SINGLETON>`\\s
+         COMMENT:
+         (compare with *ZZZ* in the `figure below <Pathway_Figure_Multiple>`)
+         COMMENT
+         , though all are within the same Pathway.
+         *xi)* Set of Projections intercolated between two
+         sets of Nodes:  same as to *x*, except that a default matrix is specified (``matrix``) in the set of
+         Projections; as a consequence, Projections are created for all of the other pairings of Nodes, forming
+         and all-to-all mapping (note that, in this case, the Projections must be specified in a list (rather than
+         a set, as in *x*), since the matrix itself is a list, which cannot be included in a set; see `note
+         <Pathway_Projection_Matrix_Note>` above).
+         COMMENT:
+         PUT IN EXAMPLE: Note that the value of the `matrix <MappingProjection.matrix>` for the default Projections
+         is assigned ``[3]``, whereas the value of the matrix assigned to the ``af`` and ``cd`` Projections is ``[1]``
+         (the default value of the `matrix <MappingProjection.matrix>` parameter of a `MappingProjection` is not
+         specified -- see `example <ZZZ>` below).
+         COMMENT
 
-     .. technical_note::
-        The full code for the examples above can be found in `test_pathways_examples`,
-        although some have been graphically rearranged for illustrative purposes.
-
-
+         |
+         .. technical_note::
+            The full code for the examples above can be found in `test_pathway_figure_examples`,
+            although some have been graphically rearranged for illustrative purposes.
 
 .. _Pathway_Specification_Formats:
 
@@ -226,14 +277,22 @@ of any of a Composition's `Pathway addition methods <Composition_Pathway_Additio
       (`Mechanism <Mechanism>`, `NodeRoles <NodeRole>`) tuple) or set of Nodes, optionally with a `Projection
       specification <Projection_Specification>`, a (`Projection specification <Projection_Specification>`,
       `feedback specification <Composition_Feedback_Designation>`) tuple, or a set of either interposed between
-      a pair of (sets of) Nodes (see `add_linear_processing_pathway <Composition.add_linear_processing_pathway>`
-      for additional details).  The list must begin and end with a (set of) Node(s).
-    ..
+      a pair of (sets of) Nodes (see `Pathway_Specification_Projections` above for additional details). The list
+      must begin and end with a (set of) Node(s).  By default, the elements of a list execute sequentially in the
+      order determined their position in the list; however this can be modified by the use of `Conditions <Condition>`
+      (see `Pathway_Execution` for an example).
+
+    .. _Pathway_Specification_Set:
+
     * **set**: {`Node <Composition_Nodes>`, `Node <Composition_Nodes>`...} --
-      each item of the set must be a `Node <Composition_Nodes>` (i.e., Mechanism or Composition, or a
-      (`Mechanism <Mechanism>`, `NodeRoles <NodeRole>`) tuple);  each Node is treated as a `SINGLETON
-      <NodeRole.SINGLETON>`.  Sets can also be used in a list specification (see above; and see
-      `add_linear_processing_pathway <Composition.add_linear_processing_pathway>` for additional details).
+      each item of the set must be a `Node <Composition_Nodes>` (i.e., Mechanism or Composition, or a (`Mechanism
+      <Mechanism>`, `NodeRoles <NodeRole>`) tuple);  each Node is treated as a `SINGLETON <NodeRole.SINGLETON>` and,
+      by default, all are executed simultaneously (i.e., within the same `TIME_STEP <TimeScale.TIME_STEP>` of
+      execution), though this can be modified by the use of `Conditions`. Sets of Nodes can also be specified within
+      a list in which case, by default, they all execute at the same point in the sequence of execution specified by
+      the list (again, subject to the specification of any relevant `Conditions <Condition>`).  Sets of Nodes can be
+      combined with sets of Projections in a list to create a variety of configurations within a Pathway, as described
+      above under `Pathway_Specification_Projections` (see `figure <Pathway_Figure_Single>` for examples)
     ..
     * **2-item tuple**: (Pathway, `LearningFunction`) -- used to specify a `learning Pathway
       <Composition_Learning_Pathway>`;  the 1st item must be one of the forms of Pathway specification
@@ -244,10 +303,24 @@ of any of a Composition's `Pathway addition methods <Composition_Pathway_Additio
 *Multiple Pathway Specifications*
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In addition to the forms of single Pathway specification `above <Pathway_Specification>`, where multiple Pathways
-are allowed -- in the **pathways** argument of the constructor for a `Composition`, or in its `add_pathways
-<Composition.add_pathways>` method -- they can be specified in a list, in which each item of the list can be any of
-the forms above, or one of the following:
+Multiple Pathways can be sepecified in the **pathways** argument of the constructor for a `Composition` or its
+`add_pathways <Composition.add_pathways>` method, by including them in a list, in which each can be any of the forms
+of Pathway specification described above above, or one of the ones listed below. Each item in the list constitutes
+a separate Pathway, that are executed in parallel with one another (subject to any `Conditions <Condition>` specified
+for their `Nodes <Composition_Nodes>`; see `Pathway_Execution`).
+
+    .. _Pathway_Specification_Multiple_List:
+
+    .. note::
+       For convenience, the **pathways** argument of a Composition and its `add_pathways <Composition.add_pathways>`
+       method permit a single pathway to be specified in a list without embedding it in an outer list.  However,
+       this can *not* include any lists of Nodes, which would constitute nested Pathways that are not permitted (see
+       `note <Pathway_Projection_Nesting_Warning>` above).  Accordingly, if any list is specified that contains any
+       Nodes, then that -- and *all* other items in the list -- are interpreted as their own distinct Pathway
+       specifications (see example ** in the `figure <Pathway_Figure_Multiple>` below).
+
+In addition to a list, set or 2-item tuple, the following can also be used to specify a Pathway where multiple
+Pathways can be specified:
 
     * **Pathway** object or constructor: Pathway(pathway=\ `Pathway specification <Pathway_Specification>`,...).
     ..
@@ -255,7 +328,7 @@ the forms above, or one of the following:
     * **dict**: {name : Pathway) -- in which **name** is a str and **Pathway** is a Pathway object or constuctor,
       or one of the standard `Pathway specifications <Pathway_Specification>` listed above.
 
-    # FIX: 4/13/22: a standalone set does not ever get translated into multiple pathways
+    COMMENT:
     .. note::
        If any of the following is used to specify the **pathways** argument:
          * a **standalone** `Node <Composition_Nodes>` (i.e., not in a list), \n
@@ -269,8 +342,26 @@ the forms above, or one of the following:
          **pathway**: [NODE] -> single pathway \n
          **pathway**: [NODE, NODE...] -> single pathway \n
          **pathway**: [NODE, () or {} or `Pathway`...] -> individual Pathways for each specification.
+    COMMENT
 
-    # FIX: 4/13/22: ADD NOTE REGARDING NO EMBDEEDED LISTS ALLOWED WITHIN THE OUTER LIST
+    .. _Pathway_Figure_Multiple:
+
+    .. figure:: _static/Pathways_Multiple_fig.svg
+       :scale: 50%
+
+       **Examples of multiple Pathway specifications**. *i)* Set followed by a list: because there is a list
+       in the specification (``[C,D]``) all other entries are also treated as parallel Pathways (see `note
+       <Pathway_Projection_Nesting_Warning>` above), so ``A`` and ``B`` in the set are `SINGLETON
+       <NodeRole.SINGLETON>`\\s. *ii)* Set of Projections intercolated between two sets of Nodes: since the
+       set of Projections does not include any involving ``B`` or ``E`` nor a default Projection specification,
+       they are treated as `SINGLETON <NodeRole.SINGLETON>`\\s (compare with *x*).
+
+# FIX: 4/13/22 - FINISH:
+*Sequence*
+      - can break a Pathway into sequence of Pathways;  useful if the are to be used in different ways in diff Comps?
+
+*Overlap*.
+      - note re: using same NODES = overlapping w/ example (Stroop) -- see Multiple Pathways below
 
 .. _Pathway_Structure:
 
@@ -279,7 +370,7 @@ Structure
 
 .. _Pathway_Attribute:
 
-A Pathway has the following primary attributes:
+A Pathway object has the following primary attributes:
 
 * `pathway <Pathway.pathway>` - if the Pathway was created on its own, this contains the specification provided in
   the **pathway** arg of its constructor; that is, depending upon how it was specified, it may or may not contain
@@ -308,8 +399,53 @@ Execution
 ---------
 
 A Pathway cannot be executed on its own.  Its Components are executed when the Composition to which it belongs is
-executed, by default in the order in which they appear in the `pathway <Pathway.pathway>` attribute;  however, this
-can be modified by `Conditions <Condition>` added to the Composition's `scheduler <Composition.scheduler>`.
+executed, sequentially in the order in which they appear in the `pathway <Pathway.pathway>` attribute, with Nodes
+specified within a `set <Pathway_Specification_Set>` all executed within the same `TIME_STEP <TimeScale.TIME_STEP>`.
+However, the order can be modified by `Conditions <Condition>` assigned to the Composition's `scheduler
+<Composition.scheduler>` (see `example <Pathway_Example_Conditions>` below).
+
+.. _Pathway_Examples
+
+Examples
+--------
+
+.. _Pathway_Projection_Example:
+   SHOW CODE AND MATRIX VALUE ASSIGNEMENTS FOR EXAMPLE iX IN FIGURE_SINGLE
+
+.. _Pathway_Example_Overlap:
+   - STROOP EXAMPLE
+
+.. _Pathway_Example_Recurrence:
+   - CONFLICT MONITORING EXAMPLE?
+
+.. _Pathway_Example_Overlapping
+   - RUMELHART NETWORK
+
+.. _Pathway_Example_Branching:
+   - WITHIN PATHWAY AND ILLEGAL OPEN ENDED.
+
+.. _Pathway_Example_Conditions:
+
+The following example illustrates the use of `Conditions <Condition>` to modify the order of execution of `Nodes
+<Composition_Nodes>` in a Pathway::
+
+    >>> A = pnl.ProcessingMechanism(name='A')
+    >>> B = pnl.ProcessingMechanism(name='B')
+    >>> C = pnl.ProcessingMechanism(name='C')
+    >>>
+    >>> comp = pnl.Composition(pathways=[[A, B], [C]])
+    >>> comp.scheduler.add_condition_set({ A: pnl.EveryNCalls(B, 1),
+    ...                                    B: pnl.EveryNCalls(C, 1)})
+    >>> comp.run(inputs={A: 0, C: 0})
+    [array([0.]), array([0.])]
+    >>> print(comp.scheduler.execution_list)
+    {'Composition-0': [{(ProcessingMechanism C)}, {(ProcessingMechanism B)}, {(ProcessingMechanism C), (ProcessingMechanism A)}]}
+
+``B`` follows ``A`` in the Pathway ``[A, B]`` specified for ``comp``, so ordinarily it would execute only *after*
+``A`` each time that executes.  However, the `Condition` specified for ``A`` (``pnl.EveryNCalls(B, 1)``) causes it to
+execute only after ``B`` executes.  Since the Condition specified for ``B`` makes it dependent on ``C``, both ``A``
+and ``B`` wait until ``C`` has executed, after which the Condition ``B`` is satisfied so it executes, satisfying the
+Condition for ``A`` which then executes, thus reversing the order of execution for ``A`` and ``B``.
 
 .. _Pathway_Class_Reference:
 

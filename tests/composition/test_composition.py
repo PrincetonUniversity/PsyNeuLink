@@ -1383,8 +1383,233 @@ class TestCompositionPathwaysArg:
         else:
             assert False, f"TEST ERROR: No handling for '{nodes_config}' condition."
 
-    def test_pathways_examples(self):
-        pass
+
+    @pytest.mark.parametrize('fig', [
+        # 'single',
+        'multiple'
+    ])
+    @pytest.mark.parametrize('config', [
+        'i',
+        'ii',
+        'iii',
+        'iv',
+        'v',
+        'vi',
+        'vii',
+        'viii',
+        'ix',
+        'xi'
+    ])
+    def test_pathway_figure_examples(self, fig, config):
+        """Examples used in figures in pathway.py
+        """
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        E = ProcessingMechanism(name='E')
+        F = ProcessingMechanism(name='F')
+        G = ProcessingMechanism(name='G')
+
+        if fig == 'single':
+            if config == 'i':
+                # singeltons
+                c1 = Composition({A,B,C}, name="{A, B, C}", show_graph_attributes={'direction':'LR'})
+                c2 = Composition([[A],{B,C}], name="[[A], {B, C}]")
+                assert all(node in c1.get_nodes_by_role(NodeRole.SINGLETON) for node in {A,B,C})
+                assert all(node in c2.get_nodes_by_role(NodeRole.SINGLETON) for node in {A,B,C})
+                all(len(c.pathways)==1 for c in {c1, c2})
+
+            elif config == 'ii':
+                # chain
+                c1 = Composition([A,B,C], name="[A, B, C]")
+                c2 = Composition([{A},B,{C}], name="[{A}, B, {C}]")
+
+                # A sends to B
+                assert A.efferents[0].receiver.owner == B
+                # B sends to C
+                assert B.efferents[0].receiver.owner == C
+
+                # All relevant Projections are in both Compositions
+                assert all(A.efferents[0] in c.projections for c in {c1, c2})
+                assert all(B.path_afferents[0] in c.projections for c in {c1, c2})
+                assert all(B.efferents[0] in c.projections for c in {c1, c2})
+                assert all(C.path_afferents[0] in c.projections for c in {c1, c2})
+
+                # All Nodes have relevant NodeRoles
+                assert all(role in c.get_roles_by_node(A)
+                           for role in {NodeRole.INPUT, NodeRole.ORIGIN} for c in {c1, c2})
+                assert all(NodeRole.INTERNAL in c.get_roles_by_node(B) for c in {c1, c2})
+                assert all(role in c.get_roles_by_node(C)
+                           for role in {NodeRole.OUTPUT, NodeRole.TERMINAL} for c in {c1, c2})
+                all(len(c.pathways)==1 for c in {c1, c2})
+
+            elif config == 'iii':
+                # one-to-many (divergent)
+                c1 = Composition([A,{B,C}], name="[A, {B, C}]")
+                c2 = Composition([{A},{B,C}], name="[{A}, {B, C}]")
+
+                # A sends to both B and C
+                assert all(receiver in [p.receiver.owner for p in A.efferents] for receiver in {B,C})
+                # B and C both receive from A
+                assert all(receiver.path_afferents[0].sender.owner == A for receiver in {B,C})
+
+                # All relevant Projections are in both Compositions and Nodes have relevant NodeRoles
+                assert all(p in c.projections for p in A.efferents for c in {c1, c2})
+                assert all(role in c.get_roles_by_node(A)
+                           for role in {NodeRole.INPUT, NodeRole.ORIGIN} for c in {c1, c2})
+                assert all(role in c.get_roles_by_node(node)
+                           for role in {NodeRole.OUTPUT, NodeRole.TERMINAL} for node in {B,C} for c in {c1, c2})
+                all(len(c.pathways)==1 for c in {c1, c2})
+
+            elif config == 'iv':
+                # many-to-one (convergent)
+                c1 = Composition([{A,B},C], name="[{A, B}, C]")
+                c2 = Composition([{A,B},{C}], name="[{A, B}, {C}]")
+
+                # A and B both send to C
+                assert all(C == sender.efferents[0].receiver.owner for sender in {A,B})
+                # C receives from both A and B
+                assert all(sender in [p.sender.owner for p in C.path_afferents] for sender in {A,B})
+
+                # All relevant Projections are in both Compositions and Nodes have relevant NodeRoles
+                assert all(p in c.projections for p in C.path_afferents for c in {c1, c2})
+                assert all(role in c.get_roles_by_node(node)
+                           for role in {NodeRole.INPUT, NodeRole.ORIGIN} for node in {A,B} for c in {c1, c2})
+                assert all(role in c.get_roles_by_node(C)
+                           for role in {NodeRole.OUTPUT, NodeRole.TERMINAL} for c in {c1, c2})
+
+            elif config == 'v':
+                # many-to-many
+                c1 = Composition([{A,B},{C,D}], name="[{A, B}, {C, D}]")
+
+                # A and B both send to C and D
+                assert all(r in [p.receiver.owner for p in sender.efferents] for sender in {A,B} for r in {C,D})
+                # C and D both receive from both A and B
+                assert all(s in [p.sender.owner for p in receiver.path_afferents] for receiver in {C,D} for s in {A,B})
+
+                # All relevant Projections are in Composition and Nodes have relevant NodeRoles
+                assert all(p in c1.projections for sender in {A,B} for p in sender.efferents)
+                assert all(p in c1.projections for receiver in {C,D} for p in receiver.path_afferents)
+                assert all(role in c1.get_roles_by_node(node)
+                           for role in {NodeRole.INPUT, NodeRole.ORIGIN} for node in {A,B})
+                assert all(role in c1.get_roles_by_node(node)
+                           for role in {NodeRole.OUTPUT, NodeRole.TERMINAL} for node in {C,D})
+                len(c1.pathways)==1
+
+            elif config == 'vi':
+                # many-to-one-to-many
+                c1 = Composition([{A,B,C},D,{E,F,G}], name="[{A, B, C}, D, {E, F, G}]")
+
+                # A, B and C all send to D
+                all(p.receiver.owner == D for sender in {A,B,C} for p in sender.efferents)
+                # D sends to E, F and G
+                all(p.sender.owner == D for receiver in {D,E,F} for p in receiver.path_afferents)
+
+                # All relevant Projections are in Composition and Nodes have relevant NodeRoles
+                assert all(p in c1.projections for sender in {A,B,C} for p in sender.efferents)
+                assert all(p in c1.projections for p_set in [D.path_afferents, D.efferents] for p in p_set)
+                assert all(p in c1.projections for receiver in {D,E,F} for p in receiver.path_afferents)
+                assert all(role in c1.get_roles_by_node(node)
+                           for role in {NodeRole.INPUT, NodeRole.ORIGIN} for node in {A,B,C})
+                assert NodeRole.INTERNAL in c1.get_roles_by_node(D)
+                assert all(role in c1.get_roles_by_node(node)
+                           for role in {NodeRole.OUTPUT, NodeRole.TERMINAL} for node in {E,F,G})
+                len(c1.pathways)==1
+
+            elif config == 'vii':
+                # one-to-many(nested comp)-to-one
+                icomp = Composition({B,C,D}, name="{B, C, D}")
+                c1 = Composition([A,{icomp},{E}], name="[A, {icomp}, {E}]")
+
+                # A sends to B, C and D
+                assert all(receiver in [p.receiver for p in A.efferents] for receiver in icomp.input_CIM.input_ports)
+                # B, C and D send to E
+                assert all(sender in [p.sender for p in E.path_afferents] for sender in icomp.output_CIM.output_ports)
+
+                # All relevant Projections are in Composition and Nodes have relevant NodeRoles
+                assert all(p in c1.projections for p in A.efferents)
+                assert all(p in c1.projections for p in E.path_afferents)
+                assert all(role in c1.get_roles_by_node(A) for role in {NodeRole.INPUT, NodeRole.ORIGIN})
+                assert NodeRole.INTERNAL in c1.get_roles_by_node(icomp)
+                assert all(role in icomp.get_roles_by_node(node)
+                           for role in {NodeRole.INPUT, NodeRole.SINGLETON} for node in {B,C,D})
+                assert all(role in c1.get_roles_by_node(E) for role in {NodeRole.OUTPUT, NodeRole.TERMINAL})
+                len(c1.pathways)==1
+
+            elif config == 'viii':
+                # many-to-many with projections but no default
+                af = MappingProjection(A,F)
+                cd = MappingProjection(C,D)
+                comp = Composition([{A,B,C},{af,cd},{D,E,F}], name="af=MappingProjection(A,F)\n"
+                                                                   "cd=MappingProjection(C,D)\n"
+                                                                   "{A, B, C},{af, cd},{D, E, F}\n")
+                len(c1.pathways)==1
+
+            elif config == 'ix':
+                af = MappingProjection(A,F)
+                cd = MappingProjection(C,D)
+                matrix = [3]
+                # many-to-many with projections and default -- NOTE use of list for collection of Projections
+                comp = Composition([{A,B,C},[af,cd,matrix],{D,E,F}], name="af=MappingProjection(A,F)\n"
+                                                                 "cd=MappingProjection(C,D)\n"
+                                                                 "{A, B, C},{af,cd,matrix},{D, E, F}\n")
+                len(c1.pathways)==1
+
+            elif config == 'x':
+                # hop
+                bc = MappingProjection(B,C)
+                bd = MappingProjection(B,D)
+                c1 = Composition([A,B,{bc,bd},C,D], name="bc=MappingProjection(B,C)\n"
+                                                         "bd=MappingProjection(B,D)\n"
+                                                         "[A, B, {bc, bd}, C, D]",
+                                 show_graph_attributes={'direction':'LR'})
+                len(c1.pathways)==1
+
+            elif config == 'xi':
+                # recurrent
+                db = MappingProjection(D,B)
+                de = MappingProjection(D,E)
+                c1 = Composition([A,B,C,D,{db,de},E], name="db=MappingProjection(D,B)\n"
+                                                           "de=MappingProjection(D,E)\n"
+                                                           "[A, B, C, D, {db, de}, E]\n",
+                                   show_graph_attributes={'direction':'LR'})
+                len(c1.pathways)==1
+
+
+            else:
+                assert False, f"BAD 'config' param for '{fig}' in test_pathway_figure_examples"
+
+        elif fig == 'multiple':
+            if config == 'i':
+                A_F = MappingProjection(A,F)
+                C_D = MappingProjection(C,D)
+                c1 = Composition([{A,B,C},{A_F,C_D},{D,E,F}],
+                                  name="A_F = MappingProjection(A,F)\n"
+                                       "C_D = MappingProjection(C,D)\n"
+                                       "[{A, B, C}, {A_F, C_D}, {D, E, F}]")
+                len(c1.pathways) == 1
+
+            elif config == 'ii':
+                c1 = Composition([[A,B],[C,D],E,F], name="[[A, B], [C, D], E, F])")
+                c2 = Composition([[A,B],[C,D],{E,F}], name="[[A, B], [C, D], {E, F}]")
+                c3 = Composition([[A,B],[C,D],{E},{F}], name="[[A, B], [C, D], {E}, {F}]")
+                len(c1.pathways) == 4
+
+            elif config == 'iii':
+                A_F = MappingProjection(A,F)
+                C_D = MappingProjection(C,D)
+                matrix=[3]
+                c1 = Composition([{A,B,C},[A_F, C_D, matrix],{D,E,F}],
+                                  name="A_F = MappingProjection(A,F)\n"
+                                       "C_D = MappingProjection(C,D)\n"
+                                       "[{A, B, C}, {A_F, C_D, matrix}, {D, E, F}]")
+                len(c1.pathways) == 1
+            else:
+                pytest.skip("Multiple pathways examples not yet implemented")
+
+        else:
+            assert False, f"BAD 'fig' param in test_pathway_figure_examples"
 
     def test_composition_pathways_arg_dict_and_list_and_pathway_roles(self):
         A = ProcessingMechanism(name='A')

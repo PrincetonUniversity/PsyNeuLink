@@ -113,15 +113,14 @@ The following arguments of the Composition's constructor can be used to add Comp
 
    .. _Composition_Pathways_Arg:
 
-    #FIX: 4/13/22 - ADD MENTION OF AND <LINK> TO SECTION ON MULTIPLE PATHWAYS IN Pathway DOCSTRING AND EXAMPLES
     - **pathways**
         adds one or more `Pathways <Composition_Pathways>` to the Composition; this is equivalent to constructing
         the Composition and then calling its `add_pathways <Composition.add_pathways>` method, and can use the
-        same forms of specification as the **pathways** argument of that method (see `Pathway_Specification` for
-        additonal details). If any `learning Pathways <Composition_Learning_Pathway>` are included, then the
-        constructor's **disable_learning** argument can be used to disable learning on those by default (though it
-        will still allow learning to occur on any other Compositions, either nested within the current one,
-        or within which the current one is nested (see `Composition_Learning` for a full description).
+        same forms of specification as the **pathways** argument of that method (see `Pathway_Specification` and
+        `Pathway_Specification_Multiple` for details). If any `learning Pathways<Composition_Learning_Pathway>`
+        are included, then the constructor's **disable_learning** argument can be used to disable learning on those
+        by default (though it will still allow learning to occur on any other Compositions, either nested within the
+        current one, or within which the current one is nested (see `Composition_Learning` for a full description).
 
    .. _Composition_Nodes_Arg:
 
@@ -541,20 +540,24 @@ added to the Composition and not used during its execution.
 *Pathways*
 ~~~~~~~~~~
 
-#FIX: 4/13/22 - CORRECT:  SPECIFCIATIONS IN **pathways** ARG OF ARE USED TO COSNTRUCT PATHWAYS
-                NOTE: ADD MENTION OF AND <LINK> TO SECTION ON MULTIPLE PATHWAYS IN Pathway DOCSTRING AND EXAMPLES
 A `Pathway` is an alternating sequence of `Nodes <Composition_Nodes>` and `Projections <Projection>` in a Composition.
 Although a Composition is not required to have any Pathways, these are useful for constructing Compositions, and are
-required for implementing `learning <Composition_Learning>` in a Composition. Pathways can be specified in the
-**pathways** argument of the Composition's constructor, or using one of its `Pathway addition methods
-<Composition_Pathway_Addition_Methods>`.  Pathways must be linear (that is, the cannot have branches), but they can be
-continguous, overlapping, intersecting, or disjoint, and can have one degree of converging and/or diverging branches
-(meaning that their branches can't branch). Each Pathway has a name (that can be assigned when it is constructed) and
-a set of attributes, including a `pathway <Pathway.pathway>` attribute that lists the Nodes and Projections in the
-Pathway, a `roles <Pathway.roles>` attribute that lists the `PathwayRoles <PathwayRole>` assigned to it (based on
-the `NodeRoles <NodeRole>` assigned to its Nodes), and attributes for particular types of nodes (e.g., `INPUT` and
-`OUTPUT`) if the Pathway includes nodes assigned the corresponding `NodeRoles <NodeRole>`. If a Pathway does not have
-a particular type of Node, then its attribute returns None. There are
+required for implementing `learning <Composition_Learning>` in a Composition.  Pathways are construted automatically
+when using the **pathways** argument of the Composition's constructor, or using one of its `Pathway addition methods
+<Composition_Pathway_Addition_Methods>`, though they can be constructed independently and used in those places as
+well. Pathways are generally linear in structure -- they cannot be nested nor can they branch hierarchically (i.e.,
+have sub-branches) -- though they can have one degree of converging and/or diverging branches, and can also have hops
+(feedforward Projections that skip nodes) and recurrence (feedback connections within the Pathway). Pathways can also
+be combined within a Composition in any way: sequentially, intersecting, and/or in loops. `Pathway_Specification`
+provides details on specifying individual Pathways (see `Pathway_Figure_Single` for examples), and
+`Pathway_Specification_Multiple` on specifying collections of Pathways.
+
+Each Pathway has a name (assigned a default if it is specified in a **pathways** argument), a `pathway
+<Pathway.pathway>` attribute that lists the  Nodes and Projections in the Pathway, a `roles <Pathway.roles>`
+attribute that lists the `PathwayRoles <PathwayRole>` assigned to it (based on the `NodeRoles <NodeRole>`
+assigned to its Nodes), and attributes for particular types of nodes (e.g., `INPUT` and `OUTPUT`) if the Pathway
+includes nodes assigned the corresponding `NodeRoles <NodeRole>`. If a Pathway does not have a particular type of
+Node, then the corresponding attribute returns None. There are
 COMMENT:
 ADD modulatory Pathways
 three types of Pathways: processing Pathways, `control Pathways <Composition_Control_Pathways>`, and `learning Pathways
@@ -564,7 +567,9 @@ Pathways in a Composition are listed in its `pathways <Composition.pathways>` at
 COMMENT
 two types of Pathways: processing Pathways and `learning Pathways <Composition_Learning_Pathway>`.  Processing
 Pathways are ones not configured for learning; learning Pathways are described under `Composition_Learning`. All
-of the Pathways in a Composition are listed in its `pathways <Composition.pathways>` attribute.
+of the Pathways in a Composition are listed in its `pathways <Composition.pathways>` attribute. `Single Pathways
+<Pathway_Figure_Single>`, `Multiple Pathways <Pathway_Figure_Multiple>` and `Pathway_Examples` provide examples of
+various configurations of Pathways.
 
 
 .. _Composition_Controller:
