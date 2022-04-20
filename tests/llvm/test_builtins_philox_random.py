@@ -9,7 +9,7 @@ SEED = 0
 @pytest.mark.benchmark(group="Philox integer PRNG")
 @pytest.mark.parametrize('mode', ['numpy',
                                   pytest.param('LLVM', marks=pytest.mark.llvm),
-                                  pytest.param('PTX', marks=pytest.mark.cuda)])
+                                  pytest.helpers.cuda_param('PTX')])
 @pytest.mark.parametrize('seed, expected', [
     (0, [259491006799949737,  4754966410622352325,  8698845897610382596, 1686395276220330909, 18061843536446043542, 4723914225006068263]),
     (-5, [4936860362606747269, 11611290354192475889, 2015254117581537576, 4620074701282684350, 9574602527017877750, 2811009141214824706]),
@@ -57,7 +57,7 @@ def test_random_int64(benchmark, mode, seed, expected):
 @pytest.mark.benchmark(group="Philox integer PRNG")
 @pytest.mark.parametrize('mode', ['numpy',
                                   pytest.param('LLVM', marks=pytest.mark.llvm),
-                                  pytest.param('PTX', marks=pytest.mark.cuda)])
+                                  pytest.helpers.cuda_param('PTX')])
 def test_random_int32(benchmark, mode):
     res = []
     if mode == 'numpy':
@@ -99,7 +99,7 @@ def test_random_int32(benchmark, mode):
 @pytest.mark.benchmark(group="Philox floating point PRNG")
 @pytest.mark.parametrize('mode', ['numpy',
                                   pytest.param('LLVM', marks=pytest.mark.llvm),
-                                  pytest.param('PTX', marks=pytest.mark.cuda)])
+                                  pytest.helpers.cuda_param('PTX')])
 def test_random_double(benchmark, mode):
     res = []
     if mode == 'numpy':
@@ -138,7 +138,7 @@ def test_random_double(benchmark, mode):
 @pytest.mark.benchmark(group="Philox floating point PRNG")
 @pytest.mark.parametrize('mode', ['numpy',
                                   pytest.param('LLVM', marks=pytest.mark.llvm),
-                                  pytest.param('PTX', marks=pytest.mark.cuda)])
+                                  pytest.helpers.cuda_param('PTX')])
 def test_random_float(benchmark, mode):
     res = []
     if mode == 'numpy':
@@ -177,7 +177,7 @@ def test_random_float(benchmark, mode):
 @pytest.mark.benchmark(group="Philox Normal distribution")
 @pytest.mark.parametrize('mode', ['numpy',
                                   pytest.param('LLVM', marks=pytest.mark.llvm),
-                                  pytest.param('PTX', marks=pytest.mark.cuda)])
+                                  pytest.helpers.cuda_param('PTX')])
 @pytest.mark.parametrize('fp_type', [pnlvm.ir.DoubleType(), pnlvm.ir.FloatType()],
                          ids=lambda x: str(x))
 def test_random_normal(benchmark, mode, fp_type):

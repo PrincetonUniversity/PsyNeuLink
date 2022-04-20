@@ -10,7 +10,7 @@ SEED = 0
 @pytest.mark.benchmark(group="Mersenne Twister integer PRNG")
 @pytest.mark.parametrize('mode', ['Python', 'numpy',
                                   pytest.param('LLVM', marks=pytest.mark.llvm),
-                                  pytest.param('PTX', marks=pytest.mark.cuda)])
+                                  pytest.helpers.cuda_param('PTX')])
 def test_random_int(benchmark, mode):
     res = []
     if mode == 'Python':
@@ -53,7 +53,7 @@ def test_random_int(benchmark, mode):
 @pytest.mark.benchmark(group="Mersenne Twister floating point PRNG")
 @pytest.mark.parametrize('mode', ['Python', 'numpy',
                                   pytest.param('LLVM', marks=pytest.mark.llvm),
-                                  pytest.param('PTX', marks=pytest.mark.cuda)])
+                                  pytest.helpers.cuda_param('PTX')])
 def test_random_float(benchmark, mode):
     res = []
     if mode == 'Python':
@@ -97,7 +97,7 @@ def test_random_float(benchmark, mode):
 @pytest.mark.benchmark(group="Marsenne Twister Normal distribution")
 @pytest.mark.parametrize('mode', ['numpy',
                                   pytest.param('LLVM', marks=pytest.mark.llvm),
-                                  pytest.param('PTX', marks=pytest.mark.cuda)])
+                                  pytest.helpers.cuda_param('PTX')])
 # Python uses different algorithm so skip it in this test
 def test_random_normal(benchmark, mode):
     if mode == 'numpy':

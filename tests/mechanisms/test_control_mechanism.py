@@ -109,6 +109,8 @@ class TestLCControlMechanism:
         assert T_1.parameter_ports[pnl.SLOPE].mod_afferents[0] in LC.control_signals[0].efferents
         assert T_2.parameter_ports[pnl.SLOPE].mod_afferents[0] in LC.control_signals[0].efferents
 
+
+class TestControlMechanism:
     def test_control_modulation(self):
         Tx = pnl.TransferMechanism(name='Tx')
         Ty = pnl.TransferMechanism(name='Ty')
@@ -124,8 +126,10 @@ class TestLCControlMechanism:
         # comp.show_graph()
 
         assert Tz.parameter_ports[pnl.SLOPE].mod_afferents[0].sender.owner == C
+        assert C.parameters.control_allocation.get() == [1]
         result = comp.run(inputs={Tx:[1,1], Ty:[4,4]})
         assert comp.results == [[[4.], [4.]], [[4.], [4.]]]
+
 
     def test_identicalness_of_control_and_gating(self):
         """Tests same configuration as gating in tests/mechansims/test_gating_mechanism"""
@@ -168,6 +172,8 @@ class TestLCControlMechanism:
         # c.add_linear_processing_pathway(pathway=z)
         comp.add_node(Control_Mechanism)
 
+        assert np.allclose(Control_Mechanism.parameters.control_allocation.get(), [0, 0, 0])
+
         stim_list = {
             Input_Layer: [[-1, 30]],
             Control_Mechanism: [1.0],
@@ -190,13 +196,17 @@ class TestLCControlMechanism:
         expected_results = [[0.96941429, 0.9837254 , 0.99217549]]
         assert np.allclose(results, expected_results)
 
+
     def test_control_of_all_input_ports(self, comp_mode):
         mech = pnl.ProcessingMechanism(input_ports=['A','B','C'])
         control_mech = pnl.ControlMechanism(control=mech.input_ports)
         comp = pnl.Composition()
         comp.add_nodes([(mech, pnl.NodeRole.INPUT), (control_mech, pnl.NodeRole.INPUT)])
         results = comp.run(inputs={mech:[[2],[2],[2]], control_mech:[2]}, num_trials=2, execution_mode=comp_mode)
+
+        assert np.allclose(control_mech.parameters.control_allocation.get(), [1, 1, 1])
         np.allclose(results, [[4],[4],[4]])
+
 
     def test_control_of_all_output_ports(self, comp_mode):
         mech = pnl.ProcessingMechanism(output_ports=[{pnl.VARIABLE: (pnl.OWNER_VALUE, 0)},
@@ -206,6 +216,8 @@ class TestLCControlMechanism:
         comp = pnl.Composition()
         comp.add_nodes([(mech, pnl.NodeRole.INPUT), (control_mech, pnl.NodeRole.INPUT)])
         results = comp.run(inputs={mech:[[2]], control_mech:[3]}, num_trials=2, execution_mode=comp_mode)
+
+        assert np.allclose(control_mech.parameters.control_allocation.get(), [1, 1, 1])
         np.allclose(results, [[6],[6],[6]])
 
     def test_control_signal_default_allocation_specification(self):
@@ -227,6 +239,7 @@ class TestLCControlMechanism:
         comp = pnl.Composition()
         comp.add_nodes([m1,m2,m3])
         comp.add_controller(c1)
+        assert np.allclose(c1.parameters.control_allocation.get(), [10, 10, 10])
         assert c1.control_signals[0].value == [10] # defaultControlAllocation should be assigned
                                                    # (as no default_allocation from pnl.ControlMechanism)
         assert m1.parameter_ports[pnl.SLOPE].value == [1]
@@ -266,6 +279,7 @@ class TestLCControlMechanism:
         comp = pnl.Composition()
         comp.add_nodes([m1,m2,m3])
         comp.add_controller(c2)
+        assert np.allclose(c2.parameters.control_allocation.get(), [10, 10, 10])
         assert c2.control_signals[0].value == [4]        # default_allocation from pnl.ControlMechanism assigned
         assert m1.parameter_ports[pnl.SLOPE].value == [10]  # has not yet received pnl.ControlSignal value
         assert c2.control_signals[1].value == [5]        # default_allocation from pnl.ControlSignal assigned (converted scalar)

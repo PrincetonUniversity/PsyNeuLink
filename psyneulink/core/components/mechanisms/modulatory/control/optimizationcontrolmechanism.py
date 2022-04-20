@@ -605,7 +605,7 @@ OptimizationControlMechanism is the controller, then it must meet the following 
     <ControlMechanism.net_outcome>` made for each `control_allocation <ControlMechanism.control_allocation>`).
   COMMENT
 
- .. _OptimizationControlMechanism_State:
+.. _OptimizationControlMechanism_State:
 
 *State*
 ~~~~~~~
@@ -748,23 +748,24 @@ OptimizationControlMechanism's `outcome <ControlMechanism.outcome>` attribute.
 If an OptimizationControlMechanism has an `objective_mechanism <ControlMechanism.objective_mechanism>`, it is
 assigned a single outcome_input_port, named *OUTCOME*, that receives a Projection from the objective_mechanism's
 `OUTCOME OutputPort <ObjectiveMechanism_Output>`. The OptimizationControlMechanism's `objective_mechanism
-<ControlMechanism>` is used to evaluate the outcome of executing its `agent_rep
+<ControlMechanism.objective_mechanism>` is used to evaluate the outcome of executing its `agent_rep
 <OptimizationControlMechanism.agent_rep>` for a given `state <OptimizationControlMechanism_State>`. This passes
 the result to the OptimizationControlMechanism's *OUTCOME* InputPort, that is placed in its `outcome
 <ControlMechanism.outcome>` attribute.
 
     .. note::
-        An OptimizationControlMechanism's `objective_mechanism <ControlMechanism.objective_mechanism>` and its `function
-        <ObjectiveMechanism.function>` are distinct from, and should not be confused with the `objective_function
-        <OptimizationFunction.objective_function>` parameter of the OptimizationControlMechanism's `function
-        <OptimizationControlMechanism.function>`.  The `objective_mechanism <ControlMechanism.objective_mechanism>`\\'s
-        `function <ObjectiveMechanism.function>` evaluates the `outcome <ControlMechanism.outcome>` of processing
-        without taking into account the `costs <ControlMechanism.costs>` of the OptimizationControlMechanism's
-        `control_signals <OptimizationControlMechanism.control_signals>`.  In contrast, its `evaluate_agent_rep
-        <OptimizationControlMechanism.evaluate_agent_rep>` method, which is assigned as the `objective_function`
-        parameter of its `function <OptimizationControlMechanism.function>`, takes the `costs <ControlMechanism.costs>`
-        of the OptimizationControlMechanism's `control_signals <OptimizationControlMechanism.control_signals>` into
-        account when calculating the `net_outcome` that it returns as its result.
+        An OptimizationControlMechanism's `objective_mechanism <ControlMechanism.objective_mechanism>` and the `function
+        <ObjectiveMechanism.function>` of that Mechanism, are distinct from and should not be confused with the
+        `objective_function <OptimizationFunction.objective_function>` parameter of the OptimizationControlMechanism's
+        `function <OptimizationControlMechanism.function>`.  The `objective_mechanism
+        <ControlMechanism.objective_mechanism>`\\'s `function <ObjectiveMechanism.function>` evaluates the `outcome
+        <ControlMechanism.outcome>` of processing without taking into account the `costs <ControlMechanism.costs>` of
+        the OptimizationControlMechanism's `control_signals <OptimizationControlMechanism.control_signals>`.  In
+        contrast, its `evaluate_agent_rep <OptimizationControlMechanism.evaluate_agent_rep>` method, which is assigned
+        as the `objective_function` parameter of its `function <OptimizationControlMechanism.function>`, takes the
+        `costs <ControlMechanism.costs>` of the OptimizationControlMechanism's `control_signals
+        <OptimizationControlMechanism.control_signals>` into account when calculating the `net_outcome` that it
+        returns as its result.
 
 COMMENT:
 ADD HINT HERE RE: USE OF CONCATENATION
@@ -1098,9 +1099,9 @@ from psyneulink.core.globals.keywords import \
     ALL, COMPOSITION, COMPOSITION_FUNCTION_APPROXIMATOR, CONCATENATE, DEFAULT_INPUT, DEFAULT_VARIABLE, EID_FROZEN, \
     FUNCTION, INPUT_PORT, INTERNAL_ONLY, NAME, OPTIMIZATION_CONTROL_MECHANISM, NODE, OWNER_VALUE, PARAMS, PORT, \
     PROJECTIONS, SHADOW_INPUTS, VALUE
-from psyneulink.core.globals.registry import rename_instance_in_registry
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
+from psyneulink.core.globals.registry import rename_instance_in_registry
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleSpec
 from psyneulink.core.globals.utilities import convert_to_list, ContentAddressableList, is_numeric
 from psyneulink.core.llvm.debug import debug_env
@@ -1417,7 +1418,8 @@ class OptimizationControlMechanism(ControlMechanism):
         its `monitor_for_control <ControlMechanism.monitor_for_control>` attribute, the values of which are used
         to compute the `net_outcome <ControlMechanism.net_outcome>` of executing the `agent_rep
         <OptimizationControlMechanism.agent_rep>` in a given `OptimizationControlMechanism_State`
-        (see `Outcome <OptimizationControlMechanism_Outcome>` for additional details).
+        (see `objective_mechanism <OptimizationControlMechanism_ObjectiveMechanism>` and `outcome_input_ports
+        <OptimizationControlMechanism_Outcome>` for additional details).
 
     state : ndarray
         lists the values of the current state -- a concatenation of the `state_feature_values
@@ -3496,9 +3498,16 @@ class OptimizationControlMechanism(ControlMechanism):
 
         return f
 
-    def _gen_llvm_invoke_function(self, ctx, builder, function, params, context, variable, *, tags:frozenset):
+    def _gen_llvm_invoke_function(self, ctx, builder, function, params, context,
+                                  variable, out, *, tags:frozenset):
         fun = ctx.import_llvm_function(function)
+
+        # The function returns (sample_optimal, value_optimal),
+        # but the value of mechanism is only 'sample_optimal'
+        # so we cannot reuse the space provided and need to explicitly copy
+        # the results later.
         fun_out = builder.alloca(fun.args[3].type.pointee, name="func_out")
+        value = builder.gep(fun_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
         args = [params, context, variable, fun_out]
         # If we're calling compiled version of Composition.evaluate,
@@ -3507,13 +3516,17 @@ class OptimizationControlMechanism(ControlMechanism):
             args += builder.function.args[-3:]
         builder.call(fun, args)
 
-        return fun_out, builder
 
-    def _gen_llvm_output_port_parse_variable(self, ctx, builder, params, state, value, port):
-        # The function returns (sample_optimal, value_optimal),
-        # but the value of mechanism is only 'sample_optimal'
-        value = builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        return super()._gen_llvm_output_port_parse_variable(ctx, builder, params, state, value, port)
+        # The mechanism also converts the value to array of arrays
+        # e.g. [3 x double] -> [3 x [1 x double]]
+        assert len(value.type.pointee) == len(out.type.pointee)
+        assert value.type.pointee.element == out.type.pointee.element.element
+        with pnlvm.helpers.array_ptr_loop(builder, out, id='mech_value_copy') as (b, idx):
+            src = b.gep(value, [ctx.int32_ty(0), idx])
+            dst = b.gep(out, [ctx.int32_ty(0), idx, ctx.int32_ty(0)])
+            b.store(b.load(src), dst)
+
+        return out, builder
 
     @property
     def agent_rep_type(self):
