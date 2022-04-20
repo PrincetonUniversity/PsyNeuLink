@@ -49,13 +49,13 @@ runs:
         fi
 
     - name: Install updated package
-      if: ${{ startsWith(github.head_ref, 'dependabot/pip') }}
+      if: ${{ startsWith(github.head_ref, 'dependabot/pip') && matrix.pnl-version != 'base' }}
       shell: bash
       id: new_package
       run: |
         export NEW_PACKAGE=`echo '${{ github.head_ref }}' | cut -f 4 -d/ | sed 's/-gt.*//' | sed 's/-lt.*//'`
         echo "::set-output name=new_package::$NEW_PACKAGE"
-        pip install "`grep $NEW_PACKAGE requirements*.txt | head -n1`"
+        pip install "`echo $NEW_PACKAGE | sed 's/[-_]/./g' | xargs grep *requirements.txt -h -e | head -n1`"
         pip show "$NEW_PACKAGE" | grep 'Version' | tee new_version.deps
 
     - name: Python dependencies
@@ -78,7 +78,7 @@ runs:
         done
 
     - name: Check updated package
-      if: ${{ startsWith(github.head_ref, 'dependabot/pip') }}
+      if: ${{ startsWith(github.head_ref, 'dependabot/pip') && matrix.pnl-version != 'base' }}
       shell: bash
       run: |
         pip show ${{ steps.new_package.outputs.new_package }} | grep 'Version' | tee installed_version.deps
