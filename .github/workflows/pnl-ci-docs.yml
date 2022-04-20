@@ -95,7 +95,8 @@ jobs:
       # The generated docs include PNL version,
       # set it to a fixed value to prevent polluting the diff
       # This needs to be done after installing PNL
-      # to not interfere with dependency resolving
+      # to not interfere with dependency resolution
+      id: add_zero_tag
       if: github.event_name == 'pull_request'
       run: git tag --force 'v0.0.0.0'
 
@@ -104,8 +105,9 @@ jobs:
 
     - name: Remove git tag
       # The generated docs include PNL version,
-      # This was set to a fixed value to prevent polluting the diff
-      if: github.event_name == 'pull_request' && always()
+      # A special tag was set to a fixed value
+      # to prevent polluting the diff
+      if: steps.add_zero_tag.outcome != 'skipped'
       run: git tag -d 'v0.0.0.0'
 
     - name: Upload Documentation
