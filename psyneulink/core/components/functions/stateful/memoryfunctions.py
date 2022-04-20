@@ -56,6 +56,15 @@ __all__ = ['MemoryFunction', 'Buffer', 'DictionaryMemory', 'ContentAddressableMe
 class MemoryFunction(StatefulFunction):  # -----------------------------------------------------------------------------
     componentType = MEMORY_FUNCTION
 
+    # TODO: refactor to avoid skip of direct super
+    def _update_default_variable(self, new_default_variable, context=None):
+        if not self.parameters.initializer._user_specified:
+            self._initialize_previous_value([np.zeros_like(new_default_variable)], context)
+
+        # bypass the additional _initialize_previous_value call used by
+        # other stateful functions
+        super(StatefulFunction, self)._update_default_variable(new_default_variable, context=context)
+
 
 class Buffer(MemoryFunction):  # ------------------------------------------------------------------------------
     """
@@ -258,16 +267,6 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         self.parameters.previous_value.set(previous_value, context, override=True)
 
         return previous_value
-
-    # TODO: Buffer variable fix: remove this or refactor to avoid skip
-    # of direct super
-    def _update_default_variable(self, new_default_variable, context=None):
-        if not self.parameters.initializer._user_specified:
-            self._initialize_previous_value([np.zeros_like(new_default_variable)], context)
-
-        # bypass the additional _initialize_previous_value call used by
-        # other stateful functions
-        super(StatefulFunction, self)._update_default_variable(new_default_variable, context=context)
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
         self.parameters.previous_value._set(
