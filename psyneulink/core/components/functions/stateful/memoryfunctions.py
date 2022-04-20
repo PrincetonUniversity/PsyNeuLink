@@ -59,7 +59,8 @@ class MemoryFunction(StatefulFunction):  # -------------------------------------
     # TODO: refactor to avoid skip of direct super
     def _update_default_variable(self, new_default_variable, context=None):
         if not self.parameters.initializer._user_specified:
-            self._initialize_previous_value([np.zeros_like(new_default_variable)], context)
+            # use * 0 instead of zeros_like to deal with ragged arrays
+            self._initialize_previous_value([new_default_variable * 0], context)
 
         # bypass the additional _initialize_previous_value call used by
         # other stateful functions
