@@ -1605,7 +1605,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         return builder.fcmp_ordered(cmp_str, cmp_val, threshold)
 
     def _gen_llvm_mechanism_functions(self, ctx, builder, m_base_params, m_params,
-                                      m_state, arg_in, ip_out, *, tags:frozenset):
+                                      m_state, m_in, m_val, ip_out, *, tags:frozenset):
 
         if self.integrator_mode:
             if_state = pnlvm.helpers.get_state_ptr(builder, self, m_state,
@@ -1614,20 +1614,23 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                          "integrator_function")
             if_params, builder = self._gen_llvm_param_ports_for_obj(
                     self.integrator_function, if_base_params, ctx, builder,
-                    m_base_params, m_state, arg_in)
+                    m_base_params, m_state, m_in)
 
             mf_in, builder = self._gen_llvm_invoke_function(
-                    ctx, builder, self.integrator_function, if_params, if_state, ip_out, tags=tags)
+                    ctx, builder, self.integrator_function, if_params,
+                    if_state, ip_out, None, tags=tags)
         else:
             mf_in = ip_out
 
         mf_state = pnlvm.helpers.get_state_ptr(builder, self, m_state, "function")
         mf_base_params = pnlvm.helpers.get_param_ptr(builder, self, m_base_params, "function")
         mf_params, builder = self._gen_llvm_param_ports_for_obj(
-                self.function, mf_base_params, ctx, builder, m_base_params, m_state, arg_in)
+                self.function, mf_base_params, ctx, builder, m_base_params, m_state, m_in)
 
         mf_out, builder = self._gen_llvm_invoke_function(ctx, builder,
-                                                         self.function, mf_params, mf_state, mf_in, tags=tags)
+                                                         self.function, mf_params,
+                                                         mf_state, mf_in, m_val,
+                                                         tags=tags)
 
         clip_ptr = pnlvm.helpers.get_param_ptr(builder, self, m_params, "clip")
         if len(clip_ptr.type.pointee) != 0:

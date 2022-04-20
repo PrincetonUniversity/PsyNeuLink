@@ -18,7 +18,7 @@ jobs:
     steps:
     - name: 'Download docs artifacts'
       id: docs-artifacts
-      uses: actions/github-script@v5
+      uses: actions/github-script@v6
       with:
         script: |
           var artifacts = await github.rest.actions.listWorkflowRunArtifacts({
@@ -70,7 +70,7 @@ jobs:
         (diff -r docs-base docs-head && echo 'No differences!' || true) | tee ./result.diff
 
     - name: Post comment with docs diff
-      uses: actions/github-script@v5
+      uses: actions/github-script@v6
       with:
         script: |
           var fs = require('fs');
