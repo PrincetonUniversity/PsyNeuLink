@@ -1202,36 +1202,29 @@ class TransferMechanism(ProcessingMechanism_Base):
                     :default value: None
                     :type:
         """
-        integrator_mode = Parameter(False, setter=_integrator_mode_setter, valid_types=bool)
+
+        integrator_mode = Parameter(setter=_integrator_mode_setter, valid_types=bool)
         integration_rate = FunctionParameter(
-            0.5,
             function_name='integrator_function',
             function_parameter_name='rate',
             primary=True,
         )
         initial_value = FunctionParameter(
-            None,
             function_name='integrator_function',
             function_parameter_name='initializer'
         )
-        integrator_function = Parameter(AdaptiveIntegrator, stateful=False, loggable=False)
-        function = Parameter(Linear, stateful=False, loggable=False, dependencies='integrator_function')
-        integrator_function_value = Parameter([[0]], read_only=True)
-        on_resume_integrator_mode = Parameter(CURRENT_VALUE, stateful=False, loggable=False)
-        clip = None
-        noise = FunctionParameter(0.0, function_name='integrator_function')
-        termination_measure = Parameter(
-            Distance(metric=MAX_ABS_DIFF),
-            modulable=False,
-            stateful=False,
-            loggable=False
-        )
-        termination_threshold = Parameter(None, modulable=True)
-        termination_comparison_op = Parameter(LESS_THAN_OR_EQUAL, modulable=False, loggable=False)
+        integrator_function = Parameter(stateful=False, loggable=False)
+        function = Parameter(stateful=False, loggable=False, dependencies="integrator_function")
+        integrator_function_value = Parameter(read_only=True)
+        on_resume_integrator_mode = Parameter(stateful=False, loggable=False)
+        clip = Parameter()
+        noise = FunctionParameter(function_name="integrator_function")
+        termination_measure = Parameter(modulable=False, stateful=False, loggable=False)
+        termination_threshold = Parameter(modulable=True)
+        termination_comparison_op = Parameter(modulable=False, loggable=False)
         termination_measure_value = Parameter(0.0, modulable=False, read_only=True, pnl_internal=True)
 
         output_ports = Parameter(
-            [RESULTS],
             stateful=False,
             loggable=False,
             read_only=True,
@@ -1289,18 +1282,18 @@ class TransferMechanism(ProcessingMechanism_Base):
                  default_variable=None,
                  size=None,
                  input_ports:tc.optional(tc.any(Iterable, Mechanism, OutputPort, InputPort))=None,
-                 function=None,
-                 noise=None,
+                 function=Linear,
+                 noise=0.0,
                  clip=None,
-                 integrator_mode=None,
-                 integrator_function=None,
+                 integrator_mode=False,
+                 integrator_function=AdaptiveIntegrator,
                  initial_value=None,
-                 integration_rate=None,
-                 on_resume_integrator_mode=None,
-                 termination_measure=None,
+                 integration_rate=0.5,
+                 on_resume_integrator_mode=CURRENT_VALUE,
+                 termination_measure=Distance(metric=MAX_ABS_DIFF),
                  termination_threshold:tc.optional(tc.any(int, float))=None,
-                 termination_comparison_op: tc.optional(tc.any(str, is_comparison_operator)) = None,
-                 output_ports:tc.optional(tc.any(str, Iterable))=None,
+                 termination_comparison_op: tc.optional(tc.any(str, is_comparison_operator)) = LESS_THAN_OR_EQUAL,
+                 output_ports:tc.optional(tc.any(str, Iterable))=[RESULTS],
                  params=None,
                  name=None,
                  prefs: tc.optional(is_pref_set) = None,
