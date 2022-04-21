@@ -8,9 +8,12 @@ from llvmlite import ir
 
 DIM_X = 1000
 DIM_Y = 2000
-u = np.random.rand(DIM_X, DIM_Y)
+# These are just basic tests to check that matrix indexing and operations
+# work correctly when compiled. The values don't matter much.
+# Might as well make them representable in fp32 for single precision testing.
+u = np.random.rand(DIM_X, DIM_Y).astype(np.float32).astype(np.float64)
+v = np.random.rand(DIM_X, DIM_Y).astype(np.float32).astype(np.float64)
 trans_u = u.transpose()
-v = np.random.rand(DIM_X, DIM_Y)
 vector = np.random.rand(DIM_X)
 trans_vector = np.random.rand(DIM_Y)
 scalar = np.random.rand()

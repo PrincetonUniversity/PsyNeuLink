@@ -6,10 +6,11 @@ from psyneulink.core import llvm as pnlvm
 
 
 DIM_X=1500
-
-
-u = np.random.rand(DIM_X)
-v = np.random.rand(DIM_X)
+# These are just basic tests to check that vector indexing and operations
+# work correctly when compiled. The values don't matter much.
+# Might as well make them representable in fp32 for single precision testing.
+u = np.random.rand(DIM_X).astype(np.float32).astype(np.float64)
+v = np.random.rand(DIM_X).astype(np.float32).astype(np.float64)
 scalar = np.random.rand()
 
 
