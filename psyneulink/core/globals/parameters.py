@@ -823,7 +823,6 @@ class Parameter(ParameterBase):
         'default_value',
         'history_max_length',
         'log_condition',
-        'delivery_condition',
         'spec',
     }
 
