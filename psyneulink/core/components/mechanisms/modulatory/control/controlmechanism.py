@@ -1150,7 +1150,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         )
 
         monitor_for_control = Parameter(
-            [OUTCOME],
+            [],
             stateful=False,
             loggable=False,
             read_only=True,
@@ -1167,6 +1167,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
             aliases=[CONTROL, CONTROL_SIGNALS],
             constructor_argument=CONTROL
         )
+        function = Parameter(Identity, stateful=False, loggable=False)
 
         def _parse_output_ports(self, output_ports):
             def is_2tuple(o):
@@ -1277,8 +1278,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
                                                     f"These are synonyms, but only one should be used to avoid "
                                                     f"creating unnecessary and/or duplicated Components.")
                     control = convert_to_list(args)
-
-        function = function or Identity
 
         super(ControlMechanism, self).__init__(
             default_variable=default_variable,

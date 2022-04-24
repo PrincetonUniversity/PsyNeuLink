@@ -269,6 +269,17 @@ def test_function_user_specified(kwargs, parameter, is_user_specified):
     assert getattr(t.function.parameters, parameter)._user_specified == is_user_specified
 
 
+# sort param names or pytest-xdist may cause failure
+# see https://github.com/pytest-dev/pytest/issues/4101
+@pytest.mark.parametrize('attr', sorted(pnl.Parameter._additional_param_attr_properties))
+def test_additional_param_attrs(attr):
+    assert hasattr(pnl.Parameter, f'_set_{attr}'), (
+        f'To include {attr} in Parameter._additional_param_attr_properties, you'
+        f' must add a _set_{attr} method on Parameter. If this is unneeded,'
+        ' remove it from Parameter._additional_param_attr_properties.'
+    )
+
+
 class TestSharedParameters:
 
     recurrent_mech = pnl.RecurrentTransferMechanism(default_variable=[0, 0], enable_learning=True)
