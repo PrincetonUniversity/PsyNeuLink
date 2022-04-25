@@ -18,8 +18,7 @@ module_seed = 0
 np.random.seed(0)
 SIZE=10
 test_var = np.random.rand(2, SIZE)
-#TODO: Initializer should use different values to test recall
-test_initializer = np.array([[test_var[0], test_var[1]]])
+test_initializer = np.array([[test_var[0] * 5, test_var[1] * 4]])
 test_noise_arr = np.random.rand(SIZE)
 
 RAND1 = np.random.random(1)
@@ -94,13 +93,13 @@ test_data = [
                  [[0.45615033221654855, 0.5684339488686485, 0.018789800436355142, 0.6176354970758771, 0.6120957227224214, 0.6169339968747569, 0.9437480785146242, 0.6818202991034834, 0.359507900573786, 0.43703195379934145],
                   [0.6976311959272649, 0.06022547162926983, 0.6667667154456677, 0.6706378696181594, 0.2103825610738409, 0.1289262976548533, 0.31542835092418386, 0.3637107709426226, 0.5701967704178796, 0.43860151346232035]],
                  id="DictionaryMemory Initializer Philox"),
-    pytest.param(Functions.DictionaryMemory, philox_var, {'rate':RAND1, 'retrieval_prob':0.1, 'seed': module_seed},
+    pytest.param(Functions.DictionaryMemory, philox_var, {'rate':RAND1, 'retrieval_prob':0.01, 'seed': module_seed},
                  [[ 0. for i in range(SIZE) ],[ 0. for i in range(SIZE) ]],
                  id="DictionaryMemory Low Retrieval Philox"),
     pytest.param(Functions.DictionaryMemory, philox_var, {'rate':RAND1, 'storage_prob':0.01, 'seed': module_seed},
                  [[ 0. for i in range(SIZE) ],[ 0. for i in range(SIZE) ]],
                  id="DictionaryMemory Low Storage Philox"),
-    pytest.param(Functions.DictionaryMemory, philox_var, {'rate':RAND1, 'retrieval_prob':0.9, 'storage_prob':0.9, 'seed': module_seed},
+    pytest.param(Functions.DictionaryMemory, philox_var, {'rate':RAND1, 'retrieval_prob':0.95, 'storage_prob':0.95, 'seed': module_seed},
                  [[0.45615033221654855, 0.5684339488686485, 0.018789800436355142, 0.6176354970758771, 0.6120957227224214, 0.6169339968747569, 0.9437480785146242, 0.6818202991034834, 0.359507900573786, 0.43703195379934145],
                   [0.6976311959272649, 0.06022547162926983, 0.6667667154456677, 0.6706378696181594, 0.2103825610738409, 0.1289262976548533, 0.31542835092418386, 0.3637107709426226, 0.5701967704178796, 0.43860151346232035]],
                  id="DictionaryMemory High Storage/Retrieve Philox"),
