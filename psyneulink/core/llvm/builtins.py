@@ -418,11 +418,14 @@ def setup_csch(ctx):
     x = builder.function.args[0]
     exp_f = ctx.get_builtin("exp", [x.type])
     # (2e**x)/(e**2x - 1)
+    # 2/(e**x - e**-x)
     ex = builder.call(exp_f, [x])
-    num = builder.fmul(ex.type(2), ex)
-    _2x = builder.fmul(x.type(2), x)
-    e2x = builder.call(exp_f, [_2x])
-    den = builder.fsub(e2x, e2x.type(1))
+
+    nx = helpers.fneg(builder, x)
+    enx = builder.call(exp_f, [nx])
+    den = builder.fsub(ex, enx)
+    num = den.type(2)
+
     res = builder.fdiv(num, den)
     builder.ret(res)
 
