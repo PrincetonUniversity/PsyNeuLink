@@ -26,8 +26,6 @@ RAND1 = np.random.random(1)
 RAND2 = np.random.random()
 
 philox_var = np.random.rand(2, SIZE)
-#TODO: Initializer should use different values to test recall
-philox_initializer = np.array([[philox_var[0], philox_var[1]]])
 
 test_data = [
 # Default initializer does not work
