@@ -15,11 +15,13 @@ y = np.random.rand()
                          (np.log, (x,), "__pnl_builtin_log", np.log(x)),
                          (np.power, (x,y), "__pnl_builtin_pow", np.power(x, y)),
                          (np.tanh, (x,), "__pnl_builtin_tanh", np.tanh(x)),
-                         #~900 is the limit after which exp(2x) used in tanh formula returns inf
+                         #~450 is the limit after which exp(2x) used in tanh formula returns inf
                          (np.tanh, (450.0,), "__pnl_builtin_tanh", np.tanh(450)),
                          (lambda x: 1.0 / np.tanh(x), (x,), "__pnl_builtin_coth", 1 / np.tanh(x)),
+                         #~450 is the limit after which exp(2x) used in coth formula returns inf
+                         (lambda x: 1.0 / np.tanh(x), (450,), "__pnl_builtin_coth", 1 / np.tanh(450)),
                          (lambda x: 1.0 / np.sinh(x), (x,), "__pnl_builtin_csch", 1 / np.sinh(x)),
-                         ], ids=["EXP", "Large EXP", "LOG", "POW", "TANH", "Large TANH", "COTH", "CSCH"])
+                         ], ids=["EXP", "Large EXP", "LOG", "POW", "TANH", "Large TANH", "COTH", "Large COTH", "CSCH"])
 def test_builtin_op(benchmark, op, args, builtin, result, func_mode):
     if func_mode == 'Python':
         f = op

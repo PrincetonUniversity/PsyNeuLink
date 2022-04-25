@@ -432,8 +432,8 @@ def setup_tanh(ctx):
                                           return_type=ctx.float_ty)
     x = builder.function.args[0]
     exp_f = ctx.get_builtin("exp", [x.type])
-    # (e**2x - 1)/(e**2x + 1) is faster but doesn't handle large inputs (exp ->Inf) well
-    # (1 - (2/(exp(2*x) + 1 ))) is a bit slower but handles large inputs better
+    # (e**2x - 1)/(e**2x + 1) is faster but doesn't handle large inputs (exp -> Inf) well (Inf/Inf = NaN)
+    # (1 - (2/(exp(2*x) + 1))) is a bit slower but handles large inputs better
     _2x = builder.fmul(x.type(2), x)
     e2x = builder.call(exp_f, [_2x])
     den = builder.fadd(e2x, e2x.type(1))
@@ -447,12 +447,14 @@ def setup_coth(ctx):
                                           return_type=ctx.float_ty)
     x = builder.function.args[0]
     exp_f = ctx.get_builtin("exp", [x.type])
+    # (e**2x + 1)/(e**2x - 1) is faster but doesn't handle large inputs (exp -> Inf) well (Inf/Inf = NaN)
+    # (1 + (2/(exp(2*x) - 1))) is a bit slower but handles large inputs better
     # (e**2x + 1)/(e**2x - 1)
     _2x = builder.fmul(x.type(2), x)
     e2x = builder.call(exp_f, [_2x])
-    num = builder.fadd(e2x, e2x.type(1))
     den = builder.fsub(e2x, e2x.type(1))
-    res = builder.fdiv(num, den)
+    res = builder.fdiv(den.type(2), den)
+    res = builder.fadd(res.type(1), res)
     builder.ret(res)
 
 
