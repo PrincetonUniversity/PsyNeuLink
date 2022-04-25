@@ -15,9 +15,15 @@ RAND3 = np.random.rand()
 RAND4 = np.random.rand()
 RAND5 = np.random.rand()
 
-dda_expected_default = (1.9774974807292212, 0.012242689689501842, 1.9774974807292207, 1.3147677945132479, 1.7929299891370192, 1.9774974807292207, 1.3147677945132479, 1.7929299891370192)
-dda_expected_random = (0.4236547993389047, -2.7755575615628914e-17, 0.5173675420165031, 0.06942854144616283, 6.302631815990666, 1.4934079600147951, 0.4288991185241868, 1.7740760781361433)
-dda_expected_negative = (0.42365479933890504, 0.0, 0.5173675420165031, 0.06942854144616283, 6.302631815990666, 1.4934079600147951, 0.4288991185241868, 1.7740760781361433)
+dda_expected_default = (1.9774974807292212, 0.012242689689501842,
+                        1.9774974807292207, 1.3147677945132479, 1.7929299891370192,
+                        1.9774974807292207, 1.3147677945132479, 1.7929299891370192)
+dda_expected_random = (0.4236547993389047, -2.7755575615628914e-17,
+                       0.5173675420165031, 0.06942854144616283, 6.302631815990666,
+                       1.4934079600147951, 0.4288991185241868, 1.7740760781361433)
+dda_expected_negative = (0.42365479933890504, 0.0,
+                         0.5173675420165031, 0.06942854144616283, 6.302631815990666,
+                         1.4934079600147951, 0.4288991185241868, 1.7740760781361433)
 dda_expected_small = (0.5828813465336954, 0.04801236718458773,
                       0.532471083815943, 0.09633801362499317, 6.111833139205608,
                       1.5821207676710864, 0.5392724012504414, 1.8065252817609618)
@@ -33,9 +39,21 @@ normal_expected_philox = (0.5910357654927911)
 uniform_expected_philox = (0.6043448764869507)
 
 llvm_expected = {}
-llvm_expected[dda_expected_small] = (0.5828813465336954, 0.04801236718458773,
-                                     0.5324710838085324, 0.09633787836991654, 6.0158766570416775,
-                                     1.5821207675877176, 0.5392731045768397, 1.8434859117411773)
+llvm_expected = {'fp64': {}, 'fp32': {}}
+llvm_expected['fp64'][dda_expected_small] = (0.5828813465336954, 0.04801236718458773,
+                                             0.5324710838085324, 0.09633787836991654, 6.0158766570416775,
+                                             1.5821207675877176, 0.5392731045768397, 1.8434859117411773)
+
+# add fp32 results
+llvm_expected['fp32'][dda_expected_random] = (0.42365485429763794, 0.0,
+                                              0.5173675417900085, 0.06942801177501678, 6.302331447601318,
+                                              1.4934077262878418, 0.428894966840744, 1.7738982439041138)
+llvm_expected['fp32'][dda_expected_negative] = (0.4236549735069275, 5.960464477539063e-08,
+                                                0.5173678398132324, 0.06942889094352722, 6.303247451782227,
+                                                1.4934080839157104, 0.42889583110809326, 1.7739603519439697)
+llvm_expected['fp32'][dda_expected_small] = None
+llvm_expected['fp32'][normal_expected_philox] = (0.5655658841133118)
+llvm_expected['fp32'][uniform_expected_philox] = (0.6180108785629272)
 
 test_data = [
     pytest.param(Functions.DriftDiffusionAnalytical, test_var, {}, None,
@@ -88,7 +106,11 @@ test_data = [
 def test_execute(func, variable, params, llvm_skip, expected, benchmark, func_mode):
     benchmark.group = "TransferFunction " + func.componentName
     if func_mode != 'Python':
-        expected = llvm_expected.get(expected, expected)
+        precision = pytest.helpers.llvm_current_fp_precision()
+        expected = llvm_expected.get(precision, {}).get(expected, expected)
+
+    if expected is None:
+        pytest.skip(llvm_skip)
 
     f = func(default_variable=variable, **params)
     if np.isinf(variable):
@@ -97,7 +119,10 @@ def test_execute(func, variable, params, llvm_skip, expected, benchmark, func_mo
     ex = pytest.helpers.get_func_execution(f, func_mode)
     res = ex(variable)
 
-    assert np.allclose(res, expected)
+    if pytest.helpers.llvm_current_fp_precision() == 'fp32':
+        assert np.allclose(res, expected)
+    else:
+        np.testing.assert_allclose(res, expected)
 
     if benchmark.enabled:
         benchmark(ex, variable)
