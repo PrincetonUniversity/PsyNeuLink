@@ -205,7 +205,7 @@ from psyneulink.core.globals.keywords import \
     LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, \
     MATRIX, PARAMETER_PORT, PROJECTION_SENDER, ONLINE, AFTER
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import iscompatible, parameter_spec
 
@@ -456,7 +456,7 @@ class LearningProjection(ModulatoryProjection_Base):
                  exponent=None,
                  params:Optional[dict]=None,
                  name=None,
-                 prefs:is_pref_set=None,
+                 prefs:   Optional[ValidPrefSet] = None,
                  **kwargs
                  ):
 

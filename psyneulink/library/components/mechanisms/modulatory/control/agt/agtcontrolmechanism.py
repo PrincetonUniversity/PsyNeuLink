@@ -171,7 +171,7 @@ from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.keywords import \
     INIT_EXECUTE_METHOD_ONLY, MECHANISM, OBJECTIVE_MECHANISM
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
 __all__ = [
@@ -255,7 +255,7 @@ class AGTControlMechanism(ControlMechanism):
                  modulation:Optional[str]=None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None):
+                 prefs:   Optional[ValidPrefSet] = None):
 
         super().__init__(
             objective_mechanism=ObjectiveMechanism(

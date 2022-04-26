@@ -93,7 +93,7 @@ from psyneulink.core.globals.keywords import \
     DEFAULT_MATRIX, FUNCTION, GAUSSIAN, IDENTITY_MATRIX, KOHONEN_MECHANISM, \
     LEARNING_SIGNAL, MATRIX, MAX_INDICATOR, NAME, OWNER_VALUE, OWNER_VARIABLE, RESULT, VARIABLE
 from psyneulink.core.globals.parameters import Parameter, SharedParameter
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.utilities import is_numeric_or_none, parameter_spec
 from psyneulink.library.components.mechanisms.modulatory.learning.kohonenlearningmechanism import KohonenLearningMechanism
 
@@ -294,7 +294,7 @@ class KohonenMechanism(TransferMechanism):
                  learned_projection:tc.optional(MappingProjection)=None,
                  additional_output_ports:Optional[Union[str, Iterable]]=None,
                  name=None,
-                 prefs: tc.optional(is_pref_set) = None,
+                 prefs:  Optional[ValidPrefSet] = None,
                  **kwargs
                  ):
         # # Default output_ports is specified in constructor as a string rather than a list

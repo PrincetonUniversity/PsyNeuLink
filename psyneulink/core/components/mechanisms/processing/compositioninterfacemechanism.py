@@ -125,7 +125,7 @@ from psyneulink.core.globals.context import ContextFlags, handle_external_contex
 from psyneulink.core.globals.keywords import COMPOSITION_INTERFACE_MECHANISM, INPUT_PORTS, OUTPUT_PORTS, \
     PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
 __all__ = ['CompositionInterfaceMechanism']
@@ -186,7 +186,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
                  port_map=None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None):
+                 prefs:   Optional[ValidPrefSet] = None):
 
         if default_variable is None and size is None:
             default_variable = self.class_defaults.variable

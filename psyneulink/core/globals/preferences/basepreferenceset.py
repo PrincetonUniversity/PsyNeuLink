@@ -12,6 +12,8 @@
 
 import inspect
 
+from typing import Union, Literal, Dict, Any
+
 from psyneulink.core.globals.keywords import \
     NAME, DEFAULT_PREFERENCE_SET_OWNER, PREF_LEVEL, PREFERENCE_SET_NAME, PREFS, PREFS_OWNER
 from psyneulink.core.globals.log import LogCondition
@@ -26,7 +28,7 @@ __all__ = [
     'CATEGORY_DEFAULT_PREFERENCES', 'INSTANCE_DEFAULT_PREFERENCES', 'SUBTYPE_DEFAULT_PREFERENCES',
     'TYPE_DEFAULT_PREFERENCES', 'LOG_PREF', 'PARAM_VALIDATION_PREF',
     'REPORT_OUTPUT_PREF', 'RUNTIME_PARAM_MODULATION_PREF', 'SubtypeDefaultPreferencesDict',
-    'TypeDefaultPreferencesDict', 'VERBOSE_PREF',
+    'TypeDefaultPreferencesDict', 'VERBOSE_PREF', 'ValidPrefSet'
 ]
 
 # Keypaths for preferences:
@@ -107,20 +109,6 @@ ComponentDefaultPrefDicts = {
     PreferenceLevel.TYPE: TypeDefaultPreferencesDict,
     PreferenceLevel.SUBTYPE: SubtypeDefaultPreferencesDict,
     PreferenceLevel.INSTANCE: InstanceDefaultPreferencesDict}
-
-def is_pref(pref):
-    return pref in BasePreferenceSetPrefs
-
-
-def is_pref_set(pref):
-    if pref is None:
-        return True
-    if isinstance(pref, (BasePreferenceSet, type(None))):
-        return True
-    if isinstance(pref, dict):
-        if all(key in BasePreferenceSetPrefs for key in pref):
-            return True
-    return False
 
 
 class BasePreferenceSet(PreferenceSet):
@@ -455,3 +443,23 @@ class BasePreferenceSet(PreferenceSet):
         :return:
         """
         self.set_preference(candidate_info=setting, pref_ivar_name=RUNTIME_PARAM_MODULATION_PREF)
+
+
+def is_pref(pref):
+    return pref in BasePreferenceSetPrefs
+
+
+def is_pref_set(pref):
+    if pref is None:
+        return True
+    if isinstance(pref, (BasePreferenceSet, type(None))):
+        return True
+    if isinstance(pref, dict):
+        if all(key in BasePreferenceSetPrefs for key in pref):
+            return True
+    return False
+
+
+ValidPrefSet = Union[None, BasePreferenceSet,
+                     Dict[Literal['_report_output_pref', '_log_pref','_delivery_pref','_param_validation_pref',
+                                  '_verbose_pref', '_runtime_param_modulation_pref'], Any]]

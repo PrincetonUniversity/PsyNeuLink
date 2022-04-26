@@ -345,7 +345,7 @@ from psyneulink.core.globals.keywords import \
     CONTRASTIVE_HEBBIAN_MECHANISM, COUNT, FUNCTION, HARD_CLAMP, HOLLOW_MATRIX, MAX_ABS_DIFF, NAME, \
     SIZE, SOFT_CLAMP, TARGET, VARIABLE
 from psyneulink.core.globals.parameters import Parameter, SharedParameter
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.utilities import is_numeric_or_none, parameter_spec
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
     CONVERGENCE, RECURRENT, RECURRENT_INDEX, RecurrentTransferMechanism
@@ -1012,7 +1012,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                  additional_output_ports:Optional[Union[str, Iterable]]=None,
                  params=None,
                  name=None,
-                 prefs: is_pref_set=None,
+                 prefs:    Optional[ValidPrefSet] = None,
                  **kwargs):
         """Instantiate ContrastiveHebbianMechanism
         """

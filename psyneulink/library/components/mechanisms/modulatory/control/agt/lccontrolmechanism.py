@@ -310,7 +310,7 @@ from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.keywords import \
     INIT_EXECUTE_METHOD_ONLY, MULTIPLICATIVE_PARAM, PROJECTIONS
 from psyneulink.core.globals.parameters import Parameter, ParameterAlias
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_iterable, convert_to_list
 
@@ -695,7 +695,7 @@ class LCControlMechanism(ControlMechanism):
                  scaling_factor_gain=None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None
+                 prefs:   Optional[ValidPrefSet] = None
                  ):
 
         super().__init__(

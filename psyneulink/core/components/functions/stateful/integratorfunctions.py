@@ -51,7 +51,7 @@ from psyneulink.core.globals.keywords import \
     MULTIPLICATIVE_PARAM, NOISE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_PORTS, PRODUCT, \
     RATE, REST, SIMPLE_INTEGRATOR_FUNCTION, SUM, TIME_STEP_SIZE, THRESHOLD, VARIABLE, MODEL_SPEC_ID_MDF_VARIABLE
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.utilities import ValidParamSpecType, all_within_range, \
     convert_all_elements_to_np_array
 
@@ -230,7 +230,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
                  initializer=None,
                  params: Optional[dict] = None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None,
+                 prefs:  Optional[ValidPrefSet] = None,
                  context=None,
                  **kwargs):
 
@@ -561,7 +561,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
                  initializer=None,
                  params: Optional[dict] = None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -837,7 +837,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
                  initializer=None,
                  params: Optional[dict] = None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
         super().__init__(
             default_variable=default_variable,
             rate=rate,
@@ -1072,7 +1072,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
                  initializer=None,
                  params: Optional[dict] = None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1593,7 +1593,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
                  offset=None,
                  params: Optional[dict] = None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -2028,7 +2028,7 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
                  initializer=None,
                  params: Optional[dict] = None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None,
+                 prefs:  Optional[ValidPrefSet] = None,
                  # **kwargs
                  ):
 
@@ -2434,7 +2434,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         seed=None,
         params: Optional[dict] = None,
         owner=None,
-        prefs: tc.optional(is_pref_set) = None,
+        prefs:  Optional[ValidPrefSet] = None,
         **kwargs
     ):
 
@@ -2959,7 +2959,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
                  seed=None,
                  params: Optional[dict] = None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None,
+                 prefs:  Optional[ValidPrefSet] = None,
                  **kwargs):
 
         # Assign here as default, for use in initialization of function
@@ -3464,7 +3464,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         params: Optional[dict] = None,
         seed=None,
         owner=None,
-        prefs: tc.optional(is_pref_set) = None,
+        prefs:  Optional[ValidPrefSet] = None,
         **kwargs
     ):
 
@@ -3754,7 +3754,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
                  initializer=None,
                  params: Optional[dict] = None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None,
+                 prefs:  Optional[ValidPrefSet] = None,
                  **kwargs):
 
         # IMPLEMENTATION NOTE:  For backward compatibility of LeakyFun in tests/functions/test_integrator.py
@@ -4451,7 +4451,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
                  integration_method=None,
                  params: Optional[dict] = None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None,
+                 prefs:  Optional[ValidPrefSet] = None,
                  **kwargs):
 
         # These may be passed (as standard IntegratorFunction args) but are not used by FitzHughNagumo

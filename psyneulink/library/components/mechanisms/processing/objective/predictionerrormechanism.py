@@ -175,7 +175,7 @@ from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.keywords import PREDICTION_ERROR_MECHANISM, SAMPLE, TARGET
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PREFERENCE_SET_NAME
 from psyneulink.core.globals.utilities import is_numeric
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism, ComparatorMechanismError
@@ -298,7 +298,7 @@ class PredictionErrorMechanism(ComparatorMechanism):
                  learning_rate: tc.optional(is_numeric) = None,
                  params=None,
                  name=None,
-                 prefs: tc.optional(is_pref_set) = None,
+                 prefs:  Optional[ValidPrefSet] = None,
                  **kwargs
                  ):
 

@@ -610,7 +610,7 @@ from psyneulink.core.globals.keywords import \
     OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PARAMS, PORT_TYPE, PRODUCT, PROJECTION_TYPE, PROJECTIONS, \
     SEPARATE, SIZE
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import ContentAddressableList, convert_to_list, convert_to_np_array, is_iterable
 
@@ -1235,7 +1235,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                  compute_net_outcome=None,
                  params=None,
                  name=None,
-                 prefs:tc.optional(is_pref_set)=None,
+                 prefs:  Optional[ValidPrefSet] = None,
                  **kwargs
                  ):
 

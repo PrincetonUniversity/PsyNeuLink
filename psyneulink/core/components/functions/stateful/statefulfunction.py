@@ -33,7 +33,7 @@ from psyneulink.core.components.functions.function import Function_Base, Functio
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import STATEFUL_FUNCTION_TYPE, STATEFUL_FUNCTION, NOISE, RATE
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.utilities import iscompatible, convert_to_np_array, contains_type
 
 __all__ = ['StatefulFunction']
@@ -223,7 +223,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                  initializer=None,
                  params: Optional[dict] = None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None,
+                 prefs:  Optional[ValidPrefSet] = None,
                  context=None,
                  **kwargs
                  ):

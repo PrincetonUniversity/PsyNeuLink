@@ -39,7 +39,7 @@ from psyneulink.core.globals.keywords import \
     EXPONENTIAL_DIST_FUNCTION, GAMMA_DIST_FUNCTION, HIGH, LOW, MULTIPLICATIVE_PARAM, NOISE, NORMAL_DIST_FUNCTION, \
     SCALE, STANDARD_DEVIATION, THRESHOLD, UNIFORM_DIST_FUNCTION, WALD_DIST_FUNCTION
 from psyneulink.core.globals.utilities import convert_to_np_array, ValidParamSpecType
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 
 from psyneulink.core.globals.parameters import Parameter
 
@@ -169,7 +169,7 @@ class NormalDist(DistributionFunction):
                  params=None,
                  owner=None,
                  seed=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -351,7 +351,7 @@ class UniformToNormalDist(DistributionFunction):
                  params=None,
                  owner=None,
                  seed=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -476,7 +476,7 @@ class ExponentialDist(DistributionFunction):
                  seed=None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -603,7 +603,7 @@ class UniformDist(DistributionFunction):
                  seed=None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -760,7 +760,7 @@ class GammaDist(DistributionFunction):
                  seed=None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -894,7 +894,7 @@ class WaldDist(DistributionFunction):
                  seed=None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1132,7 +1132,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
                  non_decision_time: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None,
+                 prefs:  Optional[ValidPrefSet] = None,
                  shenhav_et_al_compat_mode=False):
 
         self._shenhav_et_al_compat_mode = shenhav_et_al_compat_mode

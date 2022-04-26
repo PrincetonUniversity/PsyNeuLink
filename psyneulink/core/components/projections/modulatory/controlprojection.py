@@ -123,7 +123,7 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, INPUT_PORT, OUTPUT_PORT, PARAMETER_PORT
 from psyneulink.core.globals.parameters import Parameter, SharedParameter
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
 __all__ = [
@@ -249,7 +249,7 @@ class ControlProjection(ModulatoryProjection_Base):
                  control_signal_params:Optional[dict]=None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
+                 prefs:   Optional[ValidPrefSet] = None,
                  **kwargs):
         # If receiver has not been assigned, defer init to Port.instantiate_projection_to_state()
         if (sender is None or sender.initialization_status == ContextFlags.DEFERRED_INIT or

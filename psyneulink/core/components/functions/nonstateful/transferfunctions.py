@@ -74,7 +74,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import \
     FunctionParameter, Parameter, get_validator_by_function
 from psyneulink.core.globals.preferences.basepreferenceset import \
-    REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, is_pref_set
+    REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, ValidPrefSet
 from psyneulink.core.globals.utilities import ValidParamSpecType, safe_len
 
 __all__ = ['Angle', 'Exponential', 'Gaussian', 'GaussianDistort', 'Identity', 'Linear', 'LinearMatrix',
@@ -204,7 +204,7 @@ class Identity(TransferFunction):  # -------------------------------------------
                  default_variable=None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
         super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
@@ -373,7 +373,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
                  intercept: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -636,7 +636,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
                  offset: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
         super().__init__(
             default_variable=default_variable,
             rate=rate,
@@ -927,7 +927,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
                  scale: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
         super().__init__(
             default_variable=default_variable,
             gain=gain,
@@ -1245,7 +1245,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
                  scale: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
         super().__init__(
             default_variable=default_variable,
             gain=gain,
@@ -1507,7 +1507,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
                  leak: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
         super().__init__(
             default_variable=default_variable,
             gain=gain,
@@ -1712,7 +1712,7 @@ class Angle(TransferFunction):  # ----------------------------------------------
                  default_variable=None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1981,7 +1981,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
                  offset: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
         super().__init__(
             default_variable=default_variable,
             standard_deviation=standard_deviation,
@@ -2255,7 +2255,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
                  seed=None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -2533,7 +2533,7 @@ class SoftMax(TransferFunction):
                  per_item=None,
                  params: Optional[dict] = None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         try:
             # needed because one_hot_function is initialized here based
@@ -2933,7 +2933,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                  matrix=None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         # Note: this calls _validate_variable and _validate_params which are overridden below;
         #       the latter implements the matrix if required
@@ -3941,7 +3941,7 @@ class TransferWithCosts(TransferFunction):
                  combine_costs_fct:tc.optional(is_function_type)=None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         # if size:
         #     if default_variable is None:

@@ -48,7 +48,7 @@ from psyneulink.core.globals.keywords import \
     ContentAddressableMemory_FUNCTION, DictionaryMemory_FUNCTION, \
     MIN_INDICATOR, MULTIPLICATIVE_PARAM, NEWEST, NOISE, OLDEST, OVERWRITE, RATE, RANDOM, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.utilities import \
     all_within_range, convert_to_np_array, convert_to_list, convert_all_elements_to_np_array
 
@@ -241,7 +241,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
                  params: Optional[dict] = None,
                  # params: Optional[dict] = None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None
+                 prefs:  Optional[ValidPrefSet] = None
                  ):
 
         super().__init__(
@@ -1173,7 +1173,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                  # seed:Optional[int]=None,
                  # params:Optional[Union[list, np.ndarray]]=None,
                  # owner=None,
-                 # prefs:tc.optional(is_pref_set)=None):
+                 # prefs:  Optional[ValidPrefSet] = None):
                  default_variable=None,
                  retrieval_prob=None,
                  storage_prob=None,
@@ -1190,7 +1190,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                  seed=None,
                  params=None,
                  owner=None,
-                 prefs:tc.optional(is_pref_set)=None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         self._memory = []
 
@@ -2191,7 +2191,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
                  seed=None,
                  params: tc.optional(tc.any(list, np.ndarray)) = None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         if initializer is None:
             initializer = []

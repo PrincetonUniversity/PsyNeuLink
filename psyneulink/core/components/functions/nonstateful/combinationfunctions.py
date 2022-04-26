@@ -49,7 +49,7 @@ from psyneulink.core.globals.utilities import convert_to_np_array, is_numeric, n
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import \
-    REPORT_OUTPUT_PREF, is_pref_set, PreferenceEntry, PreferenceLevel
+    REPORT_OUTPUT_PREF, ValidPrefSet, PreferenceEntry, PreferenceLevel
 
 __all__ = ['CombinationFunction', 'Concatenate', 'CombineMeans', 'Rearrange', 'Reduce', 'LinearCombination',
            'PredictionErrorDeltaFunction']
@@ -210,7 +210,7 @@ class Concatenate(CombinationFunction):  # -------------------------------------
                  offset: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -430,7 +430,7 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
                  arrangement:Optional[Union[int, tuple, list]]=None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -737,7 +737,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
                  offset: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         if scale is not None and not np.isscalar(scale):
             raise ValueError("scale must be a scalar")
@@ -1185,7 +1185,7 @@ class LinearCombination(
                  offset=None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1709,7 +1709,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
                  offset=None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1962,7 +1962,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
                  gamma: tc.optional(Optional[float]) = None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,

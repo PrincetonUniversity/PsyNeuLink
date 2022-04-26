@@ -115,7 +115,7 @@ from psyneulink.core.globals.keywords import \
     FUNCTION_OUTPUT_TYPE, GATE, GATING_MECHANISM, GATING_PROJECTION, GATING_SIGNAL, \
     INPUT_PORT, OUTPUT_PORT
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
 __all__ = [
@@ -250,7 +250,7 @@ class GatingProjection(ModulatoryProjection_Base):
                  gating_signal_params:Optional[dict]=None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
+                 prefs:   Optional[ValidPrefSet] = None,
                  **kwargs
                  ):
         # If receiver has not been assigned, defer init to Port.instantiate_projection_to_state()

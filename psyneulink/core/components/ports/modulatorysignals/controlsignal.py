@@ -424,7 +424,7 @@ from psyneulink.core.globals.keywords import \
     PARAMETER_PORT, PARAMETER_PORTS, PROJECTIONS, \
     RECEIVER, FUNCTION
 from psyneulink.core.globals.parameters import FunctionParameter, Parameter, get_validator_by_function
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.sampleiterator import SampleSpec, SampleIterator
 from psyneulink.core.globals.sampleiterator import is_sample_spec
@@ -811,7 +811,7 @@ class ControlSignal(ModulatorySignal):
                  control=None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
+                 prefs:   Optional[ValidPrefSet] = None,
                  **kwargs):
 
         try:

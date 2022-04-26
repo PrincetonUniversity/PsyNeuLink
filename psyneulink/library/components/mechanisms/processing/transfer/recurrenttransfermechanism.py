@@ -213,7 +213,7 @@ from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import \
     AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_PORT, MATRIX, NAME, RECURRENT_TRANSFER_MECHANISM, RESULT
 from psyneulink.core.globals.parameters import Parameter, SharedParameter
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.registry import register_instance, remove_instance_from_registry
 from psyneulink.core.globals.socket import ConnectionInfo
 from psyneulink.core.globals.utilities import is_numeric_or_none, parameter_spec
@@ -671,7 +671,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                  output_ports:Optional[Union[str, Iterable]]=None,
                  params=None,
                  name=None,
-                 prefs: is_pref_set=None,
+                 prefs:    Optional[ValidPrefSet] = None,
                  **kwargs):
         """Instantiate RecurrentTransferMechanism
         """

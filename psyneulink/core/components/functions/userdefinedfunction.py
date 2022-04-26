@@ -21,7 +21,7 @@ from psyneulink.core.globals.keywords import \
     CONTEXT, CUSTOM_FUNCTION, OWNER, PARAMS, \
     SELF, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences import is_pref_set
+from psyneulink.core.globals.preferences import ValidPrefSet
 from psyneulink.core.globals.utilities import _is_module_class, iscompatible
 
 from psyneulink.core import llvm as pnlvm
@@ -458,7 +458,7 @@ class UserDefinedFunction(Function_Base):
                  default_variable=None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None,
+                 prefs:  Optional[ValidPrefSet] = None,
                  stateful_parameter=None,
                  **kwargs):
 

@@ -193,7 +193,7 @@ from psyneulink.core.globals.keywords import \
     CONTROL, CONTROL_SIGNALS, GATE, GATING_PROJECTION, GATING_SIGNAL, GATING_SIGNALS, \
     INIT_EXECUTE_METHOD_ONLY, MONITOR_FOR_CONTROL, PORT_TYPE, PROJECTIONS, PROJECTION_TYPE
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import ContentAddressableList, convert_to_list
 
@@ -446,7 +446,7 @@ class GatingMechanism(ControlMechanism):
                  modulation:Optional[str]=None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
+                 prefs:   Optional[ValidPrefSet] = None,
                  **kwargs):
 
         gate = convert_to_list(gate) or []
