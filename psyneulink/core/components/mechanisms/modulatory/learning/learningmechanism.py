@@ -550,7 +550,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import FunctionParameter, Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import ContentAddressableList, convert_to_np_array, is_numeric, parameter_spec, \
+from psyneulink.core.globals.utilities import ContentAddressableList, convert_to_np_array, is_numeric, ValidParamSpecType, \
     convert_to_list
 
 __all__ = [
@@ -1011,7 +1011,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
                  learning_signals:tc.optional(Optional[list]) = None,
                  output_ports=None,
                  modulation:Optional[str]=None,
-                 learning_rate:tc.optional(parameter_spec)=None,
+                 learning_rate: Optional[ValidParamSpecType] = None,
                  learning_enabled:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=None,
                  in_composition=False,
                  params=None,

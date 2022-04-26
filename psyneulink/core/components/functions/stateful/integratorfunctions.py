@@ -52,7 +52,7 @@ from psyneulink.core.globals.keywords import \
     RATE, REST, SIMPLE_INTEGRATOR_FUNCTION, SUM, TIME_STEP_SIZE, THRESHOLD, VARIABLE, MODEL_SPEC_ID_MDF_VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
-from psyneulink.core.globals.utilities import parameter_spec, all_within_range, \
+from psyneulink.core.globals.utilities import ValidParamSpecType, all_within_range, \
     convert_all_elements_to_np_array
 
 __all__ = ['SimpleIntegrator', 'AdaptiveIntegrator', 'DriftDiffusionIntegrator', 'DriftOnASphereIntegrator',
@@ -831,7 +831,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
     # @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 rate: tc.optional(parameter_spec) = None,
+                 rate: Optional[ValidParamSpecType] = None,
                  noise=None,
                  offset=None,
                  initializer=None,
@@ -2019,11 +2019,11 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
     # @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 rate: tc.optional(parameter_spec) = None,
-                 decay: tc.optional(parameter_spec) = None,
-                 rest: tc.optional(parameter_spec) = None,
-                 max_val: tc.optional(parameter_spec) = None,
-                 min_val: tc.optional(parameter_spec) = None,
+                 rate: Optional[ValidParamSpecType] = None,
+                 decay: Optional[ValidParamSpecType] = None,
+                 rest: Optional[ValidParamSpecType] = None,
+                 max_val: Optional[ValidParamSpecType] = None,
+                 min_val: Optional[ValidParamSpecType] = None,
                  noise=None,
                  initializer=None,
                  params: Optional[dict] = None,
@@ -2424,9 +2424,9 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
     def __init__(
         self,
         default_variable=None,
-        rate: tc.optional(parameter_spec) = None,
+        rate: Optional[ValidParamSpecType] = None,
         noise=None,
-        offset: tc.optional(parameter_spec) = None,
+        offset: Optional[ValidParamSpecType] = None,
         starting_value=None,
         non_decision_time=None,
         threshold=None,
@@ -2947,9 +2947,9 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
     # @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 rate: tc.optional(parameter_spec) = None,
+                 rate: Optional[ValidParamSpecType] = None,
                  noise=None,
-                 offset: tc.optional(parameter_spec) = None,
+                 offset: Optional[ValidParamSpecType] = None,
                  starting_point=None,
                  # threshold=None,
                  time_step_size=None,
@@ -3454,10 +3454,10 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
     def __init__(
         self,
         default_variable=None,
-        rate: tc.optional(parameter_spec) = None,
+        rate: Optional[ValidParamSpecType] = None,
         decay=None,
         noise=None,
-        offset: tc.optional(parameter_spec) = None,
+        offset: Optional[ValidParamSpecType] = None,
         non_decision_time=None,
         time_step_size=None,
         starting_value=None,
@@ -3747,7 +3747,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
     # @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 leak: tc.optional(parameter_spec) = None,
+                 leak: Optional[ValidParamSpecType] = None,
                  noise=None,
                  offset=None,
                  time_step_size=None,

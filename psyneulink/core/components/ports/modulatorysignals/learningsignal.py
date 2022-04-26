@@ -199,7 +199,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import parameter_spec
+from psyneulink.core.globals.utilities import ValidParamSpecType
 
 __all__ = [
     'LearningSignal', 'LearningSignalError',
@@ -344,7 +344,7 @@ class LearningSignal(ModulatorySignal):
                  index=PRIMARY,
                  assign=None,
                  function=None,
-                 learning_rate: tc.optional(parameter_spec) = None,
+                 learning_rate: Optional[ValidParamSpecType] = None,
                  modulation:Optional[str]=None,
                  modulates=None,
                  params=None,

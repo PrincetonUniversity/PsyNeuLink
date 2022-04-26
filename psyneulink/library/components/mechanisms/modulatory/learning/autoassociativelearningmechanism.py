@@ -109,7 +109,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import is_numeric, parameter_spec
+from psyneulink.core.globals.utilities import is_numeric, ValidParamSpecType
 
 __all__ = [
     'AutoAssociativeLearningMechanism', 'AutoAssociativeLearningMechanismError', 'DefaultTrainingMechanism',
@@ -328,7 +328,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                  function: tc.optional(is_function_type) = None,
                  learning_signals:tc.optional(Optional[list]) = None,
                  modulation:Optional[str]=None,
-                 learning_rate:tc.optional(parameter_spec)=None,
+                 learning_rate: Optional[ValidParamSpecType] = None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,

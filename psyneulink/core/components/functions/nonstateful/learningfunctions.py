@@ -778,7 +778,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
 
     def __init__(self,
                  default_variable=None,
-                 # learning_rate: tc.optional(parameter_spec) = None,
+                 # learning_rate: Optional[ValidParamSpecType] = None,
                  learning_rate=None,
                  distance_function:tc.any(tc.enum(GAUSSIAN, LINEAR, EXPONENTIAL), is_function_type)=None,
                  params=None,
@@ -1282,7 +1282,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
 
     def __init__(self,
                  default_variable=None,
-                 # learning_rate: tc.optional(parameter_spec) = None,
+                 # learning_rate: Optional[ValidParamSpecType] = None,
                  learning_rate=None,
                  params=None,
                  owner=None,
@@ -1589,7 +1589,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
 
     def __init__(self,
                  default_variable=None,
-                 # learning_rate: tc.optional(parameter_spec) = None,
+                 # learning_rate: Optional[ValidParamSpecType] = None,
                  learning_rate=None,
                  params=None,
                  owner=None,
@@ -1940,7 +1940,7 @@ class BackPropagation(LearningFunction):
     def __init__(self,
                  default_variable=None,
                  activation_derivative_fct: Optional[Union[types.FunctionType, types.MethodType]]=None,
-                 # learning_rate: tc.optional(parameter_spec) = None,
+                 # learning_rate: Optional[ValidParamSpecType] = None,
                  learning_rate=None,
                  loss_function=None,
                  params=None,

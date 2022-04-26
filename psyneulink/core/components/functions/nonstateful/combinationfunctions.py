@@ -45,7 +45,7 @@ from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, EXPONENTS, LINEAR_COMBINATION_FUNCTION, MULTIPLICATIVE_PARAM, OFFSET, OPERATION, \
     PREDICTION_ERROR_DELTA_FUNCTION, PRODUCT, REARRANGE_FUNCTION, REDUCE_FUNCTION, SCALE, SUM, WEIGHTS, \
     PREFERENCE_SET_NAME, VARIABLE
-from psyneulink.core.globals.utilities import convert_to_np_array, is_numeric, np_array_less_than_2d, parameter_spec
+from psyneulink.core.globals.utilities import convert_to_np_array, is_numeric, np_array_less_than_2d, ValidParamSpecType
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import \
@@ -206,8 +206,8 @@ class Concatenate(CombinationFunction):  # -------------------------------------
     # @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 scale: tc.optional(parameter_spec) = None,
-                 offset: tc.optional(parameter_spec) = None,
+                 scale: Optional[ValidParamSpecType] = None,
+                 offset: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None):
@@ -425,8 +425,8 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
     # @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 scale: tc.optional(parameter_spec) = None,
-                 offset: tc.optional(parameter_spec) = None,
+                 scale: Optional[ValidParamSpecType] = None,
+                 offset: Optional[ValidParamSpecType] = None,
                  arrangement:Optional[Union[int, tuple, list]]=None,
                  params=None,
                  owner=None,
@@ -727,14 +727,14 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
     # @tc.typecheck
     def __init__(self,
-                 # weights: tc.optional(parameter_spec)=None,
-                 # exponents: tc.optional(parameter_spec)=None,
+                 # weights:  Optional[ValidParamSpecType] = None,
+                 # exponents:  Optional[ValidParamSpecType] = None,
                  weights=None,
                  exponents=None,
                  default_variable=None,
                  operation: tc.optional(tc.enum(SUM, PRODUCT)) = None,
-                 scale: tc.optional(parameter_spec) = None,
-                 offset: tc.optional(parameter_spec) = None,
+                 scale: Optional[ValidParamSpecType] = None,
+                 offset: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None):
@@ -1176,8 +1176,8 @@ class LinearCombination(
     # @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 # weights: tc.optional(parameter_spec)=None,
-                 # exponents: tc.optional(parameter_spec)=None,
+                 # weights:  Optional[ValidParamSpecType] = None,
+                 # exponents:  Optional[ValidParamSpecType] = None,
                  weights=None,
                  exponents=None,
                  operation: tc.optional(tc.enum(SUM, PRODUCT)) = None,
@@ -1700,8 +1700,8 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
     # @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 # weights:tc.optional(parameter_spec)=None,
-                 # exponents:tc.optional(parameter_spec)=None,
+                 # weights: Optional[ValidParamSpecType] = None,
+                 # exponents: Optional[ValidParamSpecType] = None,
                  weights=None,
                  exponents=None,
                  operation: tc.optional(tc.enum(SUM, PRODUCT)) = None,

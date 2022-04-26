@@ -75,7 +75,7 @@ from psyneulink.core.globals.parameters import \
     FunctionParameter, Parameter, get_validator_by_function
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, is_pref_set
-from psyneulink.core.globals.utilities import parameter_spec, safe_len
+from psyneulink.core.globals.utilities import ValidParamSpecType, safe_len
 
 __all__ = ['Angle', 'Exponential', 'Gaussian', 'GaussianDistort', 'Identity', 'Linear', 'LinearMatrix',
            'Logistic', 'ReLU', 'SoftMax', 'Tanh', 'TransferFunction', 'TransferWithCosts'
@@ -369,8 +369,8 @@ class Linear(TransferFunction):  # ---------------------------------------------
     # @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 slope: tc.optional(parameter_spec) = None,
-                 intercept: tc.optional(parameter_spec) = None,
+                 slope: Optional[ValidParamSpecType] = None,
+                 intercept: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None):
@@ -630,10 +630,10 @@ class Exponential(TransferFunction):  # ----------------------------------------
     # @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 rate: tc.optional(parameter_spec) = None,
-                 scale: tc.optional(parameter_spec) = None,
-                 bias: tc.optional(parameter_spec) = None,
-                 offset: tc.optional(parameter_spec) = None,
+                 rate: Optional[ValidParamSpecType] = None,
+                 scale: Optional[ValidParamSpecType] = None,
+                 bias: Optional[ValidParamSpecType] = None,
+                 offset: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None):
@@ -920,11 +920,11 @@ class Logistic(TransferFunction):  # -------------------------------------------
     # @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 gain: tc.optional(parameter_spec) = None,
+                 gain: Optional[ValidParamSpecType] = None,
                  x_0=None,
                  bias=None,
-                 offset: tc.optional(parameter_spec) = None,
-                 scale: tc.optional(parameter_spec) = None,
+                 offset: Optional[ValidParamSpecType] = None,
+                 scale: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None):
@@ -1238,11 +1238,11 @@ class Tanh(TransferFunction):  # -----------------------------------------------
     # @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 gain: tc.optional(parameter_spec) = None,
+                 gain: Optional[ValidParamSpecType] = None,
                  x_0=None,
                  bias=None,
-                 offset: tc.optional(parameter_spec) = None,
-                 scale: tc.optional(parameter_spec) = None,
+                 offset: Optional[ValidParamSpecType] = None,
+                 scale: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None):
@@ -1502,9 +1502,9 @@ class ReLU(TransferFunction):  # -----------------------------------------------
     # @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 gain: tc.optional(parameter_spec) = None,
-                 bias: tc.optional(parameter_spec) = None,
-                 leak: tc.optional(parameter_spec) = None,
+                 gain: Optional[ValidParamSpecType] = None,
+                 bias: Optional[ValidParamSpecType] = None,
+                 leak: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None):
@@ -1975,10 +1975,10 @@ class Gaussian(TransferFunction):  # -------------------------------------------
     # @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 standard_deviation: tc.optional(parameter_spec) = None,
-                 bias: tc.optional(parameter_spec) = None,
-                 scale: tc.optional(parameter_spec) = None,
-                 offset: tc.optional(parameter_spec) = None,
+                 standard_deviation: Optional[ValidParamSpecType] = None,
+                 bias: Optional[ValidParamSpecType] = None,
+                 scale: Optional[ValidParamSpecType] = None,
+                 offset: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None):
@@ -2248,10 +2248,10 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
     # @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 variance: tc.optional(parameter_spec) = None,
-                 bias: tc.optional(parameter_spec) = None,
-                 scale: tc.optional(parameter_spec) = None,
-                 offset: tc.optional(parameter_spec) = None,
+                 variance: Optional[ValidParamSpecType] = None,
+                 bias: Optional[ValidParamSpecType] = None,
+                 scale: Optional[ValidParamSpecType] = None,
+                 offset: Optional[ValidParamSpecType] = None,
                  seed=None,
                  params=None,
                  owner=None,
@@ -2528,7 +2528,7 @@ class SoftMax(TransferFunction):
     # @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 gain: tc.optional(parameter_spec) = None,
+                 gain: Optional[ValidParamSpecType] = None,
                  output=None,
                  per_item=None,
                  params: Optional[dict] = None,

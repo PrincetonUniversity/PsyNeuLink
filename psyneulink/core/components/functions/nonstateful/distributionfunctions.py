@@ -38,7 +38,7 @@ from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, DIST_FUNCTION_TYPE, BETA, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_ANALYTICAL_FUNCTION, \
     EXPONENTIAL_DIST_FUNCTION, GAMMA_DIST_FUNCTION, HIGH, LOW, MULTIPLICATIVE_PARAM, NOISE, NORMAL_DIST_FUNCTION, \
     SCALE, STANDARD_DEVIATION, THRESHOLD, UNIFORM_DIST_FUNCTION, WALD_DIST_FUNCTION
-from psyneulink.core.globals.utilities import convert_to_np_array, parameter_spec
+from psyneulink.core.globals.utilities import convert_to_np_array, ValidParamSpecType
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 
 from psyneulink.core.globals.parameters import Parameter
@@ -1125,11 +1125,11 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
     # @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 drift_rate: tc.optional(parameter_spec) = None,
-                 starting_value: tc.optional(parameter_spec) = None,
-                 threshold: tc.optional(parameter_spec) = None,
-                 noise: tc.optional(parameter_spec) = None,
-                 non_decision_time: tc.optional(parameter_spec) = None,
+                 drift_rate: Optional[ValidParamSpecType] = None,
+                 starting_value: Optional[ValidParamSpecType] = None,
+                 threshold: Optional[ValidParamSpecType] = None,
+                 noise: Optional[ValidParamSpecType] = None,
+                 non_decision_time: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None,

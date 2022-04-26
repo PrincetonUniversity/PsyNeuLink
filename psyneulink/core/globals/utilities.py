@@ -112,7 +112,8 @@ import types
 import typing
 import typecheck as tc
 
-from typing import Optional, Union
+from numbers import Number
+from typing import Optional, Union, Literal
 
 from enum import Enum, EnumMeta, IntEnum
 from collections.abc import Mapping
@@ -120,6 +121,7 @@ from collections import UserDict, UserList
 from itertools import chain, combinations
 
 import numpy as np
+from numpy.typing import NDArray
 
 from psyneulink.core.globals.keywords import \
     comparison_operators, DISTANCE_METRICS, EXPONENTIAL, GAUSSIAN, LINEAR, MATRIX_KEYWORD_VALUES, NAME, SINUSOID, VALUE
@@ -287,6 +289,10 @@ def parameter_spec(param, numeric_only=None):
     from psyneulink.core.globals.keywords import MODULATORY_SPEC_KEYWORDS
     from psyneulink.core.components.component import Component
 
+    if inspect.isclass(param):
+        param = param.__name__
+    elif isinstance(param, Component):
+        param = param.__class__.__name__
     if (isinstance(param, (numbers.Number,
                            np.ndarray,
                            list,
@@ -301,6 +307,46 @@ def parameter_spec(param, numeric_only=None):
                 return False
         return True
     return False
+
+
+NumericCollections = Union[Number, list[Number], tuple[Number], NDArray]
+
+
+# A set of all valid parameter specification types
+ValidParamSpecType = Union[
+    numbers.Number,
+    NDArray,
+    list,
+    tuple,
+    dict,
+    types.FunctionType,
+    'Projection',
+    'ControlMechanism',
+    type['ControlMechanism'],
+    'ControlProjection',
+    type['ControlProjection'],
+    'ControlSignal',
+    type['ControlSignal'],
+    'GatingMechanism',
+    type['GatingMechanism'],
+    'GatingProjection',
+    type['GatingProjection'],
+    'GatingSignal',
+    type['GatingSignal'],
+    'LearningMechanism',
+    type['LearningMechanism'],
+    'LearningProjection',
+    type['LearningProjection'],
+    'LearningSignal',
+    type['LearningSignal'],
+    'AutoAssociativeProjection',
+    type['AutoAssociativeProjection'],
+    'MappingProjection',
+    type['MappingProjection'],
+    'MaskedMappingProjection',
+    type['MaskedMappingProjection'],
+    Literal['LEARNING', 'bias', 'control', 'gain', 'gate', 'leak', 'offset'],
+]
 
 
 def all_within_range(x, min, max):
