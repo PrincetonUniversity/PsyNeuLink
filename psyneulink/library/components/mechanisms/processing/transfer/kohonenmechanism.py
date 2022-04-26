@@ -77,7 +77,7 @@ from collections.abc import Iterable
 import numpy as np
 import typecheck as tc
 
-from typing import Optional, Union
+from typing import Optional, Union, Callable
 
 from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.nonstateful.learningfunctions import Kohonen
@@ -290,7 +290,7 @@ class KohonenMechanism(TransferMechanism):
                  clip=None,
                  enable_learning=None,
                  learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
-                 learning_function: tc.optional(is_function_type) = None,
+                 learning_function: Optional[Callable] = None,
                  learned_projection:tc.optional(MappingProjection)=None,
                  additional_output_ports:Optional[Union[str, Iterable]]=None,
                  name=None,

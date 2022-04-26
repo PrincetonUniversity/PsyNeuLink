@@ -184,7 +184,7 @@ import warnings
 import numpy as np
 import typecheck as tc
 
-from typing import Optional, Union
+from typing import Optional, Union, Callable
 
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
@@ -446,8 +446,8 @@ class LearningProjection(ModulatoryProjection_Base):
     def __init__(self,
                  sender:tc.optional(tc.any(LearningSignal, LearningMechanism))=None,
                  receiver:tc.optional(tc.any(ParameterPort, MappingProjection))=None,
-                 error_function:tc.optional(is_function_type)=None,
-                 learning_function:tc.optional(is_function_type)=None,
+                 error_function:Optional[Callable] = None,
+                 learning_function:Optional[Callable] = None,
                  # FIX: 10/3/17 - TEST IF THIS OK AND REINSTATE IF SO
                  # learning_signal_params:Optional[dict]=None,
                  learning_rate:tc.optional(tc.any(parameter_spec))=None,

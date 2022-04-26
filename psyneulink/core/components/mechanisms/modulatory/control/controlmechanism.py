@@ -588,7 +588,7 @@ import warnings
 import numpy as np
 import typecheck as tc
 
-from typing import Optional, Union
+from typing import Optional, Union, Callable
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import Function_Base, is_function_type
@@ -1230,8 +1230,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
                                             OutputPort,
                                             ControlSignal))=None,
                  modulation:Optional[str]=None,
-                 combine_costs:tc.optional(is_function_type)=None,
-                 compute_reconfiguration_cost:tc.optional(is_function_type)=None,
+                 combine_costs:Optional[Callable] = None,
+                 compute_reconfiguration_cost:Optional[Callable] = None,
                  compute_net_outcome=None,
                  params=None,
                  name=None,

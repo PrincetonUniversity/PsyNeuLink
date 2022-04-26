@@ -403,7 +403,7 @@ import warnings
 import numpy as np
 import typecheck as tc
 
-from typing import Optional, Union
+from typing import Optional, Union, Callable
 
 # FIX: EVCControlMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCControlMechanism
 #            SHOULD THEY BE LIMITED TO EVC??
@@ -802,10 +802,10 @@ class ControlSignal(ModulatorySignal):
                  size=None,
                  transfer_function=None,
                  cost_options: Optional[Union[CostFunctions, list]] = None,
-                 intensity_cost_function:tc.optional(is_function_type)=None,
-                 adjustment_cost_function:tc.optional(is_function_type)=None,
-                 duration_cost_function:tc.optional(is_function_type)=None,
-                 combine_costs_function:tc.optional(is_function_type)=None,
+                 intensity_cost_function:Optional[Callable] = None,
+                 adjustment_cost_function:Optional[Callable] = None,
+                 duration_cost_function:Optional[Callable] = None,
+                 combine_costs_function:Optional[Callable] = None,
                  allocation_samples=None,
                  modulation:Optional[str]=None,
                  control=None,

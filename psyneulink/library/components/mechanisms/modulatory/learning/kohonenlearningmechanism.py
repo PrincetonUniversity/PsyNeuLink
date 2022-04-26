@@ -97,7 +97,7 @@ Class Reference
 import numpy as np
 import typecheck as tc
 
-from typing import Optional, Union
+from typing import Optional, Union, Callable
 
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.function import is_function_type
@@ -327,7 +327,7 @@ class KohonenLearningMechanism(LearningMechanism):
                  default_variable:tc.any(list, np.ndarray),
                  size=None,
                  matrix:tc.optional(ParameterPort)=None,
-                 function: tc.optional(is_function_type) = None,
+                 function: Optional[Callable] = None,
                  learning_signals:tc.optional(Optional[list]) = None,
                  modulation:Optional[str]=None,
                  learning_rate: Optional[ValidParamSpecType] = None,

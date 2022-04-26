@@ -38,7 +38,7 @@ from numbers import Number
 import numpy as np
 import typecheck as tc
 
-from typing import Optional, Union
+from typing import Optional, Union, Callable
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import (
@@ -410,12 +410,12 @@ class OptimizationFunction(Function_Base):
     def __init__(
         self,
         default_variable=None,
-        objective_function:tc.optional(is_function_type)=None,
-        aggregation_function:tc.optional(is_function_type)=None,
-        search_function:tc.optional(is_function_type)=None,
+        objective_function:Optional[Callable] = None,
+        aggregation_function:Optional[Callable] = None,
+        search_function:Optional[Callable] = None,
         search_space=None,
         randomization_dimension=None,
-        search_termination_function:tc.optional(is_function_type)=None,
+        search_termination_function:Optional[Callable] = None,
         save_samples:Optional[bool]=None,
         save_values:Optional[bool]=None,
         max_iterations:Optional[int]=None,
@@ -1089,12 +1089,12 @@ class GradientOptimization(OptimizationFunction):
     # @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 objective_function:tc.optional(is_function_type)=None,
-                 gradient_function:tc.optional(is_function_type)=None,
+                 objective_function:Optional[Callable] = None,
+                 gradient_function:Optional[Callable] = None,
                  direction:tc.optional(tc.enum(ASCENT, DESCENT))=None,
                  search_space=None,
                  step_size:Optional[Union[int, float]]=None,
-                 annealing_function:tc.optional(is_function_type)=None,
+                 annealing_function:Optional[Callable] = None,
                  convergence_criterion:tc.optional(tc.enum(VARIABLE, VALUE))=None,
                  convergence_threshold:Optional[Union[int, float]]=None,
                  max_iterations:Optional[int]=None,
@@ -1491,7 +1491,7 @@ class GridSearch(OptimizationFunction):
     # @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 objective_function:tc.optional(is_function_type)=None,
+                 objective_function:Optional[Callable] = None,
                  search_space=None,
                  direction:tc.optional(tc.enum(MAXIMIZE, MINIMIZE))=None,
                  save_samples:Optional[bool]=None,
@@ -2203,7 +2203,7 @@ class GaussianProcess(OptimizationFunction):
     # @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 objective_function:tc.optional(is_function_type)=None,
+                 objective_function:Optional[Callable] = None,
                  search_space=None,
                  direction:tc.optional(tc.enum(MAXIMIZE, MINIMIZE))=None,
                  save_values:Optional[bool]=None,
@@ -2472,7 +2472,7 @@ class ParamEstimationFunction(OptimizationFunction):
                  n_sim=None,
                  seed=None,
                  default_variable=None,
-                 objective_function:tc.optional(is_function_type)=None,
+                 objective_function:Optional[Callable] = None,
                  search_space=None,
                  params=None,
                  owner=None,

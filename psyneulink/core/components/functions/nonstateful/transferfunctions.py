@@ -50,7 +50,7 @@ from math import e, pi, sqrt
 import numpy as np
 import typecheck as tc
 
-from typing import Optional, Union
+from typing import Optional, Union, Callable
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import parameter_keywords
@@ -3933,12 +3933,12 @@ class TransferWithCosts(TransferFunction):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 transfer_fct:tc.optional(is_function_type)=None,
+                 transfer_fct:Optional[Callable] = None,
                  enabled_cost_functions:tc.optional(tc.any(CostFunctions, list))=None,
-                 intensity_cost_fct:tc.optional(is_function_type)=None,
-                 adjustment_cost_fct:tc.optional(is_function_type)=None,
-                 duration_cost_fct:tc.optional(is_function_type)=None,
-                 combine_costs_fct:tc.optional(is_function_type)=None,
+                 intensity_cost_fct:Optional[Callable] = None,
+                 adjustment_cost_fct:Optional[Callable] = None,
+                 duration_cost_fct:Optional[Callable] = None,
+                 combine_costs_fct:Optional[Callable] = None,
                  params=None,
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None):

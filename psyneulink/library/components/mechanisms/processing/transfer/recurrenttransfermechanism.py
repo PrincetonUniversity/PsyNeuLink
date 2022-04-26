@@ -190,7 +190,7 @@ from collections.abc import Iterable
 import numpy as np
 import typecheck as tc
 
-from typing import Optional, Union
+from typing import Optional, Union, Callable
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import _get_parametervalue_attr
@@ -652,7 +652,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                  size=None,
                  input_ports: Optional[Union[list, dict]] = None,
                  has_recurrent_input_port=None,
-                 combination_function: tc.optional(is_function_type) = None,
+                 combination_function: Optional[Callable] = None,
                  function=None,
                  matrix=None,
                  auto=None,
