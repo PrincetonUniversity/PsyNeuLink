@@ -588,7 +588,7 @@ import warnings
 import numpy as np
 import typecheck as tc
 
-from typing import Optional, Union, Callable
+from typing import Optional, Union, Callable, Literal, Iterable
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import Function_Base, is_function_type
@@ -1218,24 +1218,20 @@ class ControlMechanism(ModulatoryMechanism_Base):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputPort))=None,
+                 monitor_for_control: Optional[Union[Iterable, Mechanism, OutputPort]] = None,
                  objective_mechanism=None,
-                 allow_probes:bool = False,
-                 outcome_input_ports_option:tc.optional(tc.enum(CONCATENATE, COMBINE, SEPARATE))=None,
+                 allow_probes: bool = False,
+                 outcome_input_ports_option: Optional[Literal['concatenate', 'combine', 'separate']] = None,
                  function=None,
-                 default_allocation:Optional[Union[int, float, list, np.ndarray]]=None,
-                 control:tc.optional(tc.any(is_iterable,
-                                            ParameterPort,
-                                            InputPort,
-                                            OutputPort,
-                                            ControlSignal))=None,
-                 modulation:Optional[str]=None,
-                 combine_costs:Optional[Callable] = None,
-                 compute_reconfiguration_cost:Optional[Callable] = None,
+                 default_allocation: Optional[Union[int, float, list, np.ndarray]] = None,
+                 control: Optional[Union[Iterable, ParameterPort, InputPort, OutputPort, ControlSignal]] = None,
+                 modulation: Optional[str] = None,
+                 combine_costs: Optional[Callable] = None,
+                 compute_reconfiguration_cost: Optional[Callable] = None,
                  compute_net_outcome=None,
                  params=None,
                  name=None,
-                 prefs:  Optional[ValidPrefSet] = None,
+                 prefs: Optional[ValidPrefSet] = None,
                  **kwargs
                  ):
 
@@ -1888,7 +1884,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         if self.objective_mechanism:
             self.objective_mechanism._add_process(process, role)
 
-    def _remove_default_control_signal(self, type:tc.enum(CONTROL_SIGNAL, GATING_SIGNAL)):
+    def _remove_default_control_signal(self, type: Literal['ControlSignal', 'GatingSignal']):
         if type == CONTROL_SIGNAL:
             ctl_sig_attribute = self.control_signals
         elif type == GATING_SIGNAL:

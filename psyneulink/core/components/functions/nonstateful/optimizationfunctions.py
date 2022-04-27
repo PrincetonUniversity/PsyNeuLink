@@ -38,7 +38,7 @@ from numbers import Number
 import numpy as np
 import typecheck as tc
 
-from typing import Optional, Union, Callable
+from typing import Optional, Union, Callable, Literal
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import (
@@ -1089,17 +1089,17 @@ class GradientOptimization(OptimizationFunction):
     # @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 objective_function:Optional[Callable] = None,
-                 gradient_function:Optional[Callable] = None,
-                 direction:tc.optional(tc.enum(ASCENT, DESCENT))=None,
+                 objective_function: Optional[Callable] = None,
+                 gradient_function: Optional[Callable] = None,
+                 direction: Optional[Literal['ascent', 'descent']] = None,
                  search_space=None,
-                 step_size:Optional[Union[int, float]]=None,
-                 annealing_function:Optional[Callable] = None,
-                 convergence_criterion:tc.optional(tc.enum(VARIABLE, VALUE))=None,
-                 convergence_threshold:Optional[Union[int, float]]=None,
-                 max_iterations:Optional[int]=None,
-                 save_samples:Optional[bool]=None,
-                 save_values:Optional[bool]=None,
+                 step_size: Optional[Union[int, float]] = None,
+                 annealing_function: Optional[Callable] = None,
+                 convergence_criterion: Optional[Literal['variable', 'value']] = None,
+                 convergence_threshold: Optional[Union[int, float]] = None,
+                 max_iterations: Optional[int] = None,
+                 save_samples: Optional[bool] = None,
+                 save_values: Optional[bool] = None,
                  params=None,
                  owner=None,
                  prefs=None):
@@ -1491,11 +1491,11 @@ class GridSearch(OptimizationFunction):
     # @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 objective_function:Optional[Callable] = None,
+                 objective_function: Optional[Callable] = None,
                  search_space=None,
-                 direction:tc.optional(tc.enum(MAXIMIZE, MINIMIZE))=None,
-                 save_samples:Optional[bool]=None,
-                 save_values:Optional[bool]=None,
+                 direction: Optional[Literal['maximize', 'minimize']] = None,
+                 save_samples: Optional[bool] = None,
+                 save_values: Optional[bool] = None,
                  # tolerance=0.,
                  select_randomly_from_optimal_values=None,
                  seed=None,
@@ -2203,10 +2203,10 @@ class GaussianProcess(OptimizationFunction):
     # @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 objective_function:Optional[Callable] = None,
+                 objective_function: Optional[Callable] = None,
                  search_space=None,
-                 direction:tc.optional(tc.enum(MAXIMIZE, MINIMIZE))=None,
-                 save_values:Optional[bool]=None,
+                 direction: Optional[Literal['maximize', 'minimize']] = None,
+                 save_values: Optional[bool] = None,
                  params=None,
                  owner=None,
                  prefs=None,

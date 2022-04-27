@@ -389,7 +389,7 @@ from collections.abc import MutableMapping
 import numpy as np
 import typecheck as tc
 
-from typing import Optional, Union
+from typing import Optional, Union, Literal
 
 from psyneulink.core.globals.context import ContextFlags, _get_time, handle_external_context
 from psyneulink.core.globals.context import time as time_object
@@ -1123,9 +1123,9 @@ class Log:
 
     # @tc.typecheck
     def print_entries(self,
-                      entries:tc.optional(tc.any(str, list, is_component))=ALL,
-                      width:int=120,
-                      display:tc.any(tc.enum(TIME, CONTEXT, VALUE, ALL), list)=ALL,
+                      entries: Optional[Union[str, list, 'Component']] = 'all',
+                      width: int = 120,
+                      display: Union[Literal['time', 'context', 'value', 'all'], list] = 'all',
                       contexts=NotImplemented,
                       exclude_sims=False,
                       # long_context=False
@@ -1885,7 +1885,7 @@ class CompositionLog(Log):
             return param
 
 
-def _log_trials_and_runs(composition, curr_condition: tc.enum(LogCondition.TRIAL, LogCondition.RUN), context):
+def _log_trials_and_runs(composition, curr_condition: Literal[LogCondition.TRIAL, LogCondition.RUN], context):
     # FIX: ALSO CHECK TIME FOR scheduler_learning, AND CHECK DATE FOR BOTH, AND USE WHICHEVER IS LATEST
     # FIX:  BUT WHAT IF THIS PARTICULAR COMPONENT WAS RUN IN THE LAST TIME_STEP??
     for mech in composition.mechanisms:

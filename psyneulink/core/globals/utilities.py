@@ -413,6 +413,20 @@ def is_distance_metric(s):
         return False
 
 
+# Allowed distance metrics literals
+DistanceMetricLiteral = Literal[
+    'max_abs_diff',
+    'difference',
+    'normed_L0_similarity',
+    'euclidean',
+    'angle',
+    'correlation',
+    'cosine',
+    'cross-entropy',
+    'energy'
+]
+
+
 def is_iterable(x):
     """
     Returns

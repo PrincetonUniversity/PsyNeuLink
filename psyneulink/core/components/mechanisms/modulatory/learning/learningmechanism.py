@@ -532,7 +532,7 @@ from enum import Enum
 import numpy as np
 import typecheck as tc
 
-from typing import Optional, Union
+from typing import Optional, Union, Literal
 
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation
@@ -1006,17 +1006,17 @@ class LearningMechanism(ModulatoryMechanism_Base):
                  # default_variable:tc.any(list, np.ndarray),
                  default_variable=None,
                  size=None,
-                 error_sources:tc.optional(tc.any(Mechanism, list))=None,
+                 error_sources: tc.optional(tc.any(Mechanism, list)) = None,
                  function=None,
-                 learning_signals:tc.optional(Optional[list]) = None,
+                 learning_signals: tc.optional(Optional[list]) = None,
                  output_ports=None,
-                 modulation:Optional[str]=None,
+                 modulation: Optional[str] = None,
                  learning_rate: Optional[ValidParamSpecType] = None,
-                 learning_enabled:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=None,
+                 learning_enabled: Optional[Union[bool, Literal['online', 'after']]] = None,
                  in_composition=False,
                  params=None,
                  name=None,
-                 prefs:   Optional[ValidPrefSet] = None,
+                 prefs: Optional[ValidPrefSet] = None,
                  **kwargs
                  ):
         # IMPLEMENTATION NOTE:
@@ -1387,7 +1387,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
     #         return self._learning_enabled
     #
     # @learning_enabled.setter
-    # def learning_enabled(self, assignment:tc.any(bool, tc.enum(ONLINE, AFTER))):
+    # def learning_enabled(self, assignment: Optional[Union[bool, Literal['online', 'after']]] = None):
     #     self._learning_enabled = assignment
 
     @property

@@ -206,7 +206,7 @@ from typing import Union
 import numpy as np
 import typecheck as tc
 
-from typing import Optional, Union
+from typing import Optional, Union, Literal
 from PIL import Image
 
 from psyneulink.core.components.component import Component
@@ -398,7 +398,7 @@ class ShowGraph():
 
     def __init__(self,
                  composition,
-                 direction:tc.enum('BT', 'TB', 'LR', 'RL')='BT',
+                 direction: Literal['BT', 'TB', 'LR', 'RL'] = 'BT',
                  # Node shapes:
                  mechanism_shape = 'oval',
                  feedback_shape = 'octagon',
@@ -477,21 +477,21 @@ class ShowGraph():
     # @tc.typecheck
     @handle_external_context(source=ContextFlags.COMPOSITION)
     def show_graph(self,
-                   show_all:bool=False,
-                   show_node_structure:tc.any(bool, tc.enum(VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS,
-                                                            PORT_FUNCTION_PARAMS, ROLES, ALL))=False,
-                   show_nested:tc.optional(tc.any(bool,int,dict,tc.enum(NESTED, INSET)))=NESTED,
-                   show_nested_args:tc.optional(tc.any(bool,dict,tc.enum(ALL)))=ALL,
-                   show_cim:bool=False,
-                   show_controller:tc.any(bool, tc.enum(AGENT_REP))=True,
-                   show_learning:bool=False,
-                   show_headers:bool=True,
-                   show_types:bool=False,
-                   show_dimensions:bool=False,
-                   show_projection_labels:bool=False,
-                   show_projections_not_in_composition=False,
+                   show_all: bool = False,
+                   show_node_structure: Union[bool, Literal['values', 'labels', 'functions', 'MECHANISM_FUNCTION_PARAMS',
+                                                             'PORT_FUNCTION_PARAMS', 'roles', 'all']] = False,
+                   show_nested: Optional[Union[bool, int, dict, Literal['nested', 'inset']]] = 'nested',
+                   show_nested_args: Optional[Union[bool, dict, Literal['all']]] = 'all',
+                   show_cim: bool = False,
+                   show_controller: Union[bool, Literal['agent_rep']] = True,
+                   show_learning: bool = False,
+                   show_headers: bool = True,
+                   show_types: bool = False,
+                   show_dimensions: bool = False,
+                   show_projection_labels: bool = False,
+                   show_projections_not_in_composition: bool = False,
                    active_items=None,
-                   output_fmt:tc.optional(tc.enum('pdf','gv','jupyter','gif'))='pdf',
+                   output_fmt: Optional[Literal['pdf', 'gv', 'jupyter', 'gif']] = 'pdf',
                    context=None,
                    *args,
                    **kwargs):
@@ -2453,7 +2453,7 @@ class ShowGraph():
         composition = self.composition
 
         # Sort nodes for display
-        def get_index_of_node_in_G_body(node, node_type:tc.enum(MECHANISM, PROJECTION, COMPOSITION)):
+        def get_index_of_node_in_G_body(node, node_type: Literal['MECHANISM', 'Projection', 'Composition']):
             """Get index of node in G.body"""
             for i, item in enumerate(G.body):
                 quoted_items = item.split('"')[1::2]

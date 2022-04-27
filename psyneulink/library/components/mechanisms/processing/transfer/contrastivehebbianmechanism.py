@@ -335,7 +335,7 @@ import copy
 import numpy as np
 import typecheck as tc
 
-from typing import Optional, Union, Callable
+from typing import Optional, Union, Callable, Literal
 
 from psyneulink.core.components.functions.function import get_matrix, is_function_type
 from psyneulink.core.components.functions.nonstateful.learningfunctions import ContrastiveHebbian, Hebbian
@@ -347,7 +347,7 @@ from psyneulink.core.globals.keywords import \
     SIZE, SOFT_CLAMP, TARGET, VARIABLE
 from psyneulink.core.globals.parameters import Parameter, SharedParameter
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
-from psyneulink.core.globals.utilities import is_numeric_or_none, parameter_spec
+from psyneulink.core.globals.utilities import is_numeric_or_none, ValidParamSpecType
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
     CONVERGENCE, RECURRENT, RECURRENT_INDEX, RecurrentTransferMechanism
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
@@ -982,14 +982,14 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
     # @tc.typecheck
     def __init__(self,
-                 input_size:int,
-                 hidden_size:Optional[int]=None,
-                 target_size:Optional[int]=None,
+                 input_size: int,
+                 hidden_size: Optional[int] = None,
+                 target_size: Optional[int] = None,
                  separated: Optional[bool] = None,
-                 mode:tc.optional(tc.enum(SIMPLE_HEBBIAN))=None,
+                 mode: Optional[Literal['SIMPLE_HEBBIAN']] = None,
                  continuous: Optional[bool] = None,
-                 clamp:tc.optional(tc.enum(SOFT_CLAMP, HARD_CLAMP))=None,
-                 combination_function:Optional[Callable] = None,
+                 clamp: Optional[Literal['soft_clamp', 'hard_clamp']] = None,
+                 combination_function: Optional[Callable] = None,
                  function=None,
                  matrix=None,
                  auto=None,
@@ -997,23 +997,23 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                  integrator_function=None,
                  initial_value=None,
                  noise=None,
-                 integration_rate: is_numeric_or_none=None,
+                 integration_rate: is_numeric_or_none = None,
                  integrator_mode: Optional[bool] = None,
                  clip=None,
-                 minus_phase_termination_condition:tc.optional(tc.enum(CONVERGENCE, COUNT))=None,
+                 minus_phase_termination_condition: Optional[Literal['CONVERGENCE', 'COUNT']] = None,
                  minus_phase_termination_threshold: Optional[float] = None,
-                 plus_phase_termination_condition:tc.optional(tc.enum(CONVERGENCE, COUNT))=None,
+                 plus_phase_termination_condition: Optional[Literal['CONVERGENCE', 'COUNT']] = None,
                  plus_phase_termination_threshold: Optional[float] = None,
-                 phase_convergence_function: tc.optional(tc.any(is_function_type)) = None,
-                 max_passes:Optional[int]=None,
+                 phase_convergence_function: Optional[Callable] = None,
+                 max_passes: Optional[int] = None,
                  enable_learning: Optional[bool] = None,
-                 learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
-                 learning_function: tc.optional(tc.any(is_function_type)) = None,
+                 learning_rate: Optional[Union[ValidParamSpecType, bool]] = None,
+                 learning_function: Optional[Callable] = None,
                  additional_input_ports: Optional[Union[list, dict]] = None,
-                 additional_output_ports:Optional[Union[str, Iterable]]=None,
+                 additional_output_ports: Optional[Union[str, Iterable]] = None,
                  params=None,
                  name=None,
-                 prefs:    Optional[ValidPrefSet] = None,
+                 prefs: Optional[ValidPrefSet] = None,
                  **kwargs):
         """Instantiate ContrastiveHebbianMechanism
         """

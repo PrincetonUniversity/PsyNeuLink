@@ -366,7 +366,7 @@ from collections.abc import Iterable
 import numpy as np
 import typecheck as tc
 
-from typing import Optional, Union
+from typing import Optional, Union, Literal
 
 from psyneulink.core.components.functions.function import DEFAULT_SEED, _random_state_getter, _seed_setter
 from psyneulink.core.components.functions.stateful.integratorfunctions import \
@@ -759,7 +759,7 @@ class DDM(ProcessingMechanism):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 input_format:tc.optional(tc.enum(SCALAR, ARRAY, VECTOR))=None,
+                 input_format: Optional[Literal['SCALAR', 'ARRAY', 'VECTOR']] = None,
                  function=None,
                  input_ports=None,
                  output_ports: Optional[Union[str, Iterable]] = None,

@@ -24,7 +24,7 @@ import functools
 import numpy as np
 import typecheck as tc
 
-from typing import Optional, Union
+from typing import Optional, Union, Literal
 import types
 
 from psyneulink.core import llvm as pnlvm
@@ -37,7 +37,7 @@ from psyneulink.core.globals.keywords import \
     NORMED_L0_SIMILARITY, OBJECTIVE_FUNCTION_TYPE, SIZE, STABILITY_FUNCTION
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
-from psyneulink.core.globals.utilities import is_distance_metric, safe_len, convert_to_np_array
+from psyneulink.core.globals.utilities import DistanceMetricLiteral, safe_len, convert_to_np_array
 from psyneulink.core.globals.utilities import is_iterable
 
 
@@ -214,7 +214,7 @@ class Stability(ObjectiveFunction):
                  size=None,
                  matrix=None,
                  # metric:is_distance_metric=None,
-                 metric: tc.optional(tc.any(tc.enum(ENERGY, ENTROPY), is_distance_metric)) = None,
+                 metric: Optional[DistanceMetricLiteral] = None,
                  transfer_fct: tc.optional(tc.any(types.FunctionType, types.MethodType)) = None,
                  normalize: Optional[bool] = None,
                  params=None,

@@ -190,7 +190,7 @@ from collections.abc import Iterable
 import numpy as np
 import typecheck as tc
 
-from typing import Optional, Union, Callable
+from typing import Optional, Union, Callable, Literal
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import _get_parametervalue_attr
@@ -216,7 +216,7 @@ from psyneulink.core.globals.parameters import Parameter, SharedParameter
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.registry import register_instance, remove_instance_from_registry
 from psyneulink.core.globals.socket import ConnectionInfo
-from psyneulink.core.globals.utilities import is_numeric_or_none, parameter_spec
+from psyneulink.core.globals.utilities import is_numeric_or_none, ValidParamSpecType
 from psyneulink.core.scheduling.condition import Condition, WhenFinished
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism import \
@@ -660,18 +660,17 @@ class RecurrentTransferMechanism(TransferMechanism):
                  integrator_mode=None,
                  integrator_function=None,
                  initial_value=None,
-                 integration_rate: is_numeric_or_none=None,
+                 integration_rate: is_numeric_or_none = None,
                  noise=None,
                  clip=None,
                  enable_learning: Optional[bool] = None,
-                 learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
-                 learning_function: tc.optional(tc.any(is_function_type)) = None,
-                 learning_condition:tc.optional(tc.any(Condition, TimeScale,
-                                                       tc.enum(UPDATE, CONVERGENCE)))=None,
-                 output_ports:Optional[Union[str, Iterable]]=None,
+                 learning_rate: Optional[Union[ValidParamSpecType, bool]] = None,
+                 learning_function: Optional[Callable] = None,
+                 learning_condition: Optional[Union[Condition, TimeScale, Literal['UPDATE', 'CONVERGENCE']]] = None,
+                 output_ports: Optional[Union[str, Iterable]] = None,
                  params=None,
                  name=None,
-                 prefs:    Optional[ValidPrefSet] = None,
+                 prefs: Optional[ValidPrefSet] = None,
                  **kwargs):
         """Instantiate RecurrentTransferMechanism
         """
@@ -1150,10 +1149,9 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     @handle_external_context()
     def configure_learning(self,
-                           learning_function:tc.optional(tc.any(is_function_type))=None,
-                           learning_rate:Optional[Union[numbers.Number, list, np.ndarray, np.matrix]]=None,
-                           learning_condition:tc.any(Condition, TimeScale,
-                                                     tc.enum(UPDATE, CONVERGENCE))=None,
+                           learning_function: Optional[Callable] = None,
+                           learning_rate: Optional[Union[numbers.Number, list, np.ndarray, np.matrix]] = None,
+                           learning_condition: Union[Condition, TimeScale, Literal['UPDATE', 'CONVERGENCE']] = None,
                            context=None):
         """Provide user-accessible-interface to _instantiate_learning_mechanism
 

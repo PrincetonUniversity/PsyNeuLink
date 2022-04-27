@@ -28,7 +28,7 @@ from collections import namedtuple
 import numpy as np
 import typecheck as tc
 
-from typing import Optional, Union
+from typing import Optional, Union, Literal, Callable
 
 from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.function import (
@@ -780,7 +780,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
                  default_variable=None,
                  # learning_rate: Optional[ValidParamSpecType] = None,
                  learning_rate=None,
-                 distance_function:tc.any(tc.enum(GAUSSIAN, LINEAR, EXPONENTIAL), is_function_type)=None,
+                 distance_function: Union[Literal['gaussian', 'linear', 'exponential'], Callable] = None,
                  params=None,
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None):

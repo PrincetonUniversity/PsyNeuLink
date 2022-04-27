@@ -2730,13 +2730,14 @@ import numpy as np
 import pint
 import typecheck as tc
 
-from typing import Optional, Union
+from typing import Optional, Union, Literal
+
 from PIL import Image
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentsMeta
 from psyneulink.core.components.functions.fitfunctions import make_likelihood_function
-from psyneulink.core.components.functions.function import is_function_type
+from psyneulink.core.components.functions.function import is_function_type, Function
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination, \
     PredictionErrorDeltaFunction
 from psyneulink.core.components.functions.nonstateful.learningfunctions import \
@@ -3750,14 +3751,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pathways=None,
             nodes=None,
             projections=None,
-            allow_probes:Union[bool, CONTROL]=True,
-            include_probes_in_output:bool=False,
-            disable_learning:bool=False,
-            controller:ControlMechanism=None,
+            allow_probes: Union[bool, CONTROL] = True,
+            include_probes_in_output: bool = False,
+            disable_learning: bool = False,
+            controller: ControlMechanism = None,
             enable_controller=None,
-            controller_mode:tc.enum(BEFORE,AFTER)=AFTER,
+            controller_mode: Literal['before', 'after'] = 'after',
             controller_time_scale=TimeScale.TRIAL,
-            controller_condition:Condition=Always(),
+            controller_condition: Condition = Always(),
             retain_old_simulation_data=None,
             show_graph_attributes=None,
             name=None,
@@ -5440,8 +5441,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _get_nested_node_CIM_port(self,
                                   node: Mechanism,
-                                  node_port: tc.any(InputPort, OutputPort),
-                                  role: tc.enum(NodeRole.INPUT, NodeRole.PROBE, NodeRole.OUTPUT)
+                                  node_port: Union[InputPort, OutputPort],
+                                  role: Literal[NodeRole.INPUT, NodeRole.PROBE, NodeRole.OUTPUT]
                                   ):
         """Check for node in nested Composition
         Assign NodeRole.PROBE to relevant nodes if allow_probes is specified (see handle_probes below)
@@ -7047,12 +7048,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     @handle_external_context()
     def add_linear_learning_pathway(self,
                                     pathway,
-                                    learning_function:LearningFunction,
+                                    learning_function: LearningFunction,
                                     loss_function=None,
-                                    learning_rate:tc.any(int,float)=0.05,
+                                    learning_rate: Union[int, float] = 0.05,
                                     error_function=LinearCombination,
-                                    learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=AFTER,
-                                    name:str=None,
+                                    learning_update: Union[bool, Literal['before', 'after']] = 'after',
+                                    name: str = None,
                                     context=None):
         """Implement learning pathway (including necessary `learning components <Composition_Learning_Components>`.
 
@@ -7237,13 +7238,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._analyze_graph()
         return learning_pathway
 
-
     def add_reinforcement_learning_pathway(self,
-                                           pathway,
-                                           learning_rate=0.05,
-                                           error_function=None,
-                                           learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE,
-                                           name:str=None):
+                                           pathway: list,
+                                           learning_rate: float = 0.05,
+                                           error_function: Optional[Function] = None,
+                                           learning_update: Union[bool, Literal['online', 'after']] = 'online',
+                                           name: str = None):
         """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`Reinforcement`
 
         Arguments
@@ -7287,11 +7287,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                 name=name)
 
     def add_td_learning_pathway(self,
-                                pathway,
-                                learning_rate=0.05,
-                                error_function=None,
-                                learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE,
-                                name:str=None):
+                                pathway: list,
+                                learning_rate: float = 0.05,
+                                error_function: Optional[Function] = None,
+                                learning_update: Union[bool, Literal['online', 'after']] = 'online',
+                                name: Optional[str] = None):
         """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`TDLearning`
 
         Arguments
@@ -7334,12 +7334,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                 name=name)
 
     def add_backpropagation_learning_pathway(self,
-                                             pathway,
-                                             learning_rate=0.05,
-                                             error_function=None,
-                                             loss_function:tc.enum(MSE,SSE)=MSE,
-                                             learning_update:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=AFTER,
-                                             name:str=None):
+                                             pathway: list,
+                                             learning_rate: float = 0.05,
+                                             error_function: Optional[Function] = None,
+                                             loss_function: Literal['MSE', 'SSE'] = 'MSE',
+                                             learning_update: Optional[Union[bool, Literal['online', 'after']]] = 'after',
+                                             name: str = None):
         """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`Backpropagation`
 
         Arguments

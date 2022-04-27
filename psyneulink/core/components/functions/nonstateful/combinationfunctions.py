@@ -36,7 +36,7 @@ import numbers
 import numpy as np
 import typecheck as tc
 
-from typing import Optional, Union
+from typing import Optional, Union, Literal
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import Function_Base, FunctionError, FunctionOutputType
@@ -732,7 +732,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
                  weights=None,
                  exponents=None,
                  default_variable=None,
-                 operation: tc.optional(tc.enum(SUM, PRODUCT)) = None,
+                 operation: Optional[Literal['sum', 'product']] = None,
                  scale: Optional[ValidParamSpecType] = None,
                  offset: Optional[ValidParamSpecType] = None,
                  params=None,
@@ -1180,7 +1180,7 @@ class LinearCombination(
                  # exponents:  Optional[ValidParamSpecType] = None,
                  weights=None,
                  exponents=None,
-                 operation: tc.optional(tc.enum(SUM, PRODUCT)) = None,
+                 operation: Optional[Literal['sum', 'product']] = None,
                  scale=None,
                  offset=None,
                  params=None,
@@ -1704,7 +1704,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
                  # exponents: Optional[ValidParamSpecType] = None,
                  weights=None,
                  exponents=None,
-                 operation: tc.optional(tc.enum(SUM, PRODUCT)) = None,
+                 operation: Optional[Literal['sum', 'product']] = None,
                  scale=None,
                  offset=None,
                  params=None,

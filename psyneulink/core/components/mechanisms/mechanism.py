@@ -1086,7 +1086,7 @@ from numbers import Number
 import numpy as np
 import typecheck as tc
 
-from typing import Optional, Union
+from typing import Optional, Union, Literal, Type
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component
@@ -3261,19 +3261,19 @@ class Mechanism_Base(Mechanism):
 
     # @tc.typecheck
     def _show_structure(self,
-                        show_functions:bool=False,
-                        show_mech_function_params:bool=False,
-                        show_port_function_params:bool=False,
-                        show_values:bool=False,
-                        use_labels:bool=False,
-                        show_headers:bool=False,
-                        show_roles:bool=False,
-                        show_conditions:bool=False,
+                        show_functions: bool = False,
+                        show_mech_function_params: bool = False,
+                        show_port_function_params: bool = False,
+                        show_values: bool = False,
+                        use_labels: bool = False,
+                        show_headers: bool = False,
+                        show_roles: bool = False,
+                        show_conditions: bool = False,
                         composition=None,
-                        compact_cim:bool=False,
-                        condition:tc.optional(Condition)=None,
-                        node_border:str="1",
-                        output_fmt:tc.enum('pdf','struct')='pdf',
+                        compact_cim: bool = False,
+                        condition: Optional[Condition] = None,
+                        node_border: str = "1",
+                        output_fmt: Literal['pdf', 'struct'] = 'pdf',
                         context=None
                         ):
         """Generate a detailed display of a the structure of a Mechanism.
@@ -3448,8 +3448,8 @@ class Mechanism_Base(Mechanism):
                    mech_name + mech_roles + mech_condition + mech_function + mech_value + '</td>'
 
         # @tc.typecheck
-        def port_table(port_list:ContentAddressableList,
-                        port_type:tc.enum(InputPort, ParameterPort, OutputPort)):
+        def port_table(port_list: ContentAddressableList,
+                       port_type: Union[Type[InputPort], Type[ParameterPort], Type[OutputPort]]):
             """Return html with table for each port in port_list, including functions and/or values as specified
 
             Each table has a header cell and and inner table with cells for each port in the list

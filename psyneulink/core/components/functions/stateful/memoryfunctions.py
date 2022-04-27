@@ -33,7 +33,7 @@ from typing import Optional, Union
 import numpy as np
 import typecheck as tc
 
-from typing import Optional, Union
+from typing import Optional, Union, Literal
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import (
@@ -2174,24 +2174,23 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         distance_function = Parameter(Distance(metric=COSINE), stateful=False, loggable=False)
         selection_function = Parameter(OneHot(mode=MIN_INDICATOR), stateful=False, loggable=False)
 
-
     # @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 retrieval_prob: Optional[Union[int, float]]=None,
-                 storage_prob: Optional[Union[int, float]]=None,
-                 noise: Optional[Union[int, float, list, np.ndarray, callable]]=None,
-                 rate: Optional[Union[int, float, list, np.ndarray]]=None,
+                 retrieval_prob: Optional[Union[int, float]] = None,
+                 storage_prob: Optional[Union[int, float]] = None,
+                 noise: Optional[Union[int, float, list, np.ndarray, callable]] = None,
+                 rate: Optional[Union[int, float, list, np.ndarray]] = None,
                  initializer=None,
-                 distance_function:tc.optional(tc.any(Distance, is_function_type))=None,
-                 selection_function:tc.optional(tc.any(OneHot, is_function_type))=None,
-                 duplicate_keys:tc.optional(tc.any(bool, tc.enum(OVERWRITE)))=None,
-                 equidistant_keys_select:tc.optional(tc.enum(RANDOM, OLDEST, NEWEST))=None,
+                 distance_function: Optional[Union[Distance, callable]] = None,
+                 selection_function: Optional[Union[OneHot, callable]] = None,
+                 duplicate_keys: Optional[Union[bool, Literal['overwrite']]] = None,
+                 equidistant_keys_select: Optional[Literal['random', 'oldest', 'newest']] = None,
                  max_entries=None,
                  seed=None,
-                 params: tc.optional(tc.any(list, np.ndarray)) = None,
+                 params: Optional[Union[list, np.ndarray]] = None,
                  owner=None,
-                 prefs:  Optional[ValidPrefSet] = None):
+                 prefs: Optional[ValidPrefSet] = None):
 
         if initializer is None:
             initializer = []

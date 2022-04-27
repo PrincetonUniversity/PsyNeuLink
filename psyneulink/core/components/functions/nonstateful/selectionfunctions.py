@@ -27,7 +27,7 @@ __all__ = ['SelectionFunction', 'OneHot', 'max_vs_avg', 'max_vs_next', 'MAX_VS_N
 import numpy as np
 import typecheck as tc
 
-from typing import Optional, Union
+from typing import Optional, Union, Literal
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
@@ -206,9 +206,9 @@ class OneHot(SelectionFunction):
     # @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 mode: tc.optional(tc.enum(MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR,
-                               MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR, MIN_ABS_INDICATOR,
-                               PROB, PROB_INDICATOR))=None,
+                 mode: Optional[Literal['MAX_VAL', 'MAX_ABS_VAL', 'MAX_INDICATOR', 'MAX_ABS_INDICATOR',
+                               'MIN_VAL', 'MIN_ABS_VAL', 'MIN_INDICATOR', 'MIN_ABS_INDICATOR',
+                               'PROB', 'PROB_INDICATOR']] = None,
                  seed=None,
                  params=None,
                  owner=None,

@@ -577,7 +577,7 @@ import warnings
 import numpy as np
 import typecheck as tc
 
-from typing import Optional, Union
+from typing import Optional, Union, Literal
 
 from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import Function
@@ -885,7 +885,7 @@ class InputPort(Port_Base):
                  default_input=None,
                  function=None,
                  projections=None,
-                 combine:tc.optional(tc.enum(SUM,PRODUCT))=None,
+                 combine: Optional[Literal['sum', 'product']] = None,
                  weight=None,
                  exponent=None,
                  internal_only: Optional[bool] = None,
