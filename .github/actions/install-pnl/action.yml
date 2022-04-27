@@ -48,6 +48,16 @@ runs:
           [[ ${{ runner.os }} = Windows* ]] && pip install "pywinpty<1" "terminado<0.10"
         fi
 
+    - name: Install updated package
+      if: ${{ startsWith(github.head_ref, 'dependabot/pip') && matrix.pnl-version != 'base' }}
+      shell: bash
+      id: new_package
+      run: |
+        export NEW_PACKAGE=`echo '${{ github.head_ref }}' | cut -f 4 -d/ | sed 's/-gt.*//' | sed 's/-lt.*//'`
+        echo "::set-output name=new_package::$NEW_PACKAGE"
+        pip install "`echo $NEW_PACKAGE | sed 's/[-_]/./g' | xargs grep *requirements.txt -h -e | head -n1`"
+        pip show "$NEW_PACKAGE" | grep 'Version' | tee new_version.deps
+
     - name: Python dependencies
       shell: bash
       run: |
@@ -66,3 +76,11 @@ runs:
             pip cache remove -v $P || true
           fi
         done
+
+    - name: Check updated package
+      if: ${{ startsWith(github.head_ref, 'dependabot/pip') && matrix.pnl-version != 'base' }}
+      shell: bash
+      run: |
+        pip show ${{ steps.new_package.outputs.new_package }} | grep 'Version' | tee installed_version.deps
+        cmp -s new_version.deps installed_version.deps || echo "::error::Package version restricted by dependencies: ${{ steps.new_package.outputs.new_package }}"
+        diff new_version.deps installed_version.deps
