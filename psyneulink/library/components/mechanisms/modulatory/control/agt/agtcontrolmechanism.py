@@ -250,12 +250,12 @@ class AGTControlMechanism(ControlMechanism):
     def __init__(self,
                  monitored_output_ports=None,
                  function=None,
-                 # control_signals:tc.optional(Optional[list]) = None,
-                 control_signals= None,
-                 modulation:Optional[str]=None,
+                 # control_signals: Optional[list] = None,
+                 control_signals=None,
+                 modulation: Optional[str] = None,
                  params=None,
                  name=None,
-                 prefs:   Optional[ValidPrefSet] = None):
+                 prefs: Optional[ValidPrefSet] = None):
 
         super().__init__(
             objective_mechanism=ObjectiveMechanism(

@@ -10066,14 +10066,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             minibatch_size: int = 1,
             patience: Optional[int] = None,
             min_delta: int = 0,
-            context: tc.optional(Context) = None,
-            execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
+            context: Optional[Context] = None,
+            execution_mode: pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
             randomize_minibatches=False,
-            call_before_minibatch = None,
-            call_after_minibatch = None,
+            call_before_minibatch=None,
+            call_after_minibatch=None,
             *args,
             **kwargs
-            ):
+    ):
         """
             Runs the composition in learning mode - that is, any components with disable_learning False will be
             executed in learning mode. See `Composition_Learning` for details.

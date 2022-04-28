@@ -3885,7 +3885,7 @@ class Mechanism_Base(Mechanism):
         raise MechanismError("{} is not an InputPort of {}.".format(port.name, self.name))
 
     # # @tc.typecheck
-    # def _get_port_value_labels(self, port_type:tc.any(InputPort, OutputPort)):
+    # def _get_port_value_labels(self, port_type: Union[InputPort, OutputPort]):
     def _get_port_value_labels(self, port_type, context=None):
         """Return list of labels for the value of each Port of specified port_type.
         If the labels_dict has subdicts (one for each Port), get label for the value of each Port from its subdict.

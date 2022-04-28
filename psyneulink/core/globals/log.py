@@ -945,11 +945,11 @@ class Log:
 
     # @tc.typecheck
     def _log_value(
-        self,
-        value,
-        time=None,
-        condition:tc.optional(LogCondition)=None,
-        context=None,
+            self,
+            value,
+            time=None,
+            condition: Optional[LogCondition] = None,
+            context=None,
 
     ):
         """Add LogEntry to an entry in the Log
@@ -1538,7 +1538,8 @@ class Log:
         return log_dict
 
     # @tc.typecheck
-    def csv(self, entries=None, owner_name:bool=False, quotes:tc.optional(tc.any(bool, str))="\'", contexts=NotImplemented, exclude_sims=False):
+    def csv(self, entries=None, owner_name: bool = False, quotes: Optional[Union[bool, str]] = "\'",
+            contexts=NotImplemented, exclude_sims=False):
         """
         csv(                           \
             entries=None,              \

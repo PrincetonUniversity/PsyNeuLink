@@ -323,15 +323,15 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
     # @tc.typecheck
     def __init__(self,
-                 default_variable:tc.any(list, np.ndarray),
+                 default_variable: Union[list, np.ndarray],
                  size=None,
                  function: Optional[Callable] = None,
-                 learning_signals:tc.optional(Optional[list]) = None,
-                 modulation:Optional[str]=None,
+                 learning_signals: Optional[list] = None,
+                 modulation: Optional[str] = None,
                  learning_rate: Optional[ValidParamSpecType] = None,
                  params=None,
                  name=None,
-                 prefs:   Optional[ValidPrefSet] = None,
+                 prefs: Optional[ValidPrefSet] = None,
                  **kwargs
                  ):
 

@@ -442,8 +442,8 @@ class LCAMechanism(RecurrentTransferMechanism):
     # @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 size:tc.optional(tc.any(int, list, np.array))=None,
-                 input_ports:Optional[Union[list, dict]]=None,
+                 size: Optional[Union[int, list, np.array]] = None,
+                 input_ports: Optional[Union[list, dict]] = None,
                  function=None,
                  initial_value=None,
                  leak=None,
@@ -454,11 +454,11 @@ class LCAMechanism(RecurrentTransferMechanism):
                  integrator_mode=None,
                  time_step_size=None,
                  clip=None,
-                 output_ports:Optional[Union[str, Iterable]]=None,
+                 output_ports: Optional[Union[str, Iterable]] = None,
                  integrator_function=None,
                  params=None,
                  name=None,
-                 prefs:   Optional[ValidPrefSet] = None,
+                 prefs: Optional[ValidPrefSet] = None,
                  **kwargs):
         """Instantiate LCAMechanism
         """

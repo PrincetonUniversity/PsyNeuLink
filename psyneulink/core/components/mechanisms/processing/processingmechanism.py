@@ -288,7 +288,7 @@ class ProcessingMechanism(ProcessingMechanism_Base):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 input_ports:tc.optional(tc.any(Iterable, Mechanism, OutputPort, InputPort))=None,
+                 input_ports:Optional[Union[Iterable, Mechanism, OutputPort, InputPort]]=None,
                  output_ports:Optional[Union[str, Iterable]]=None,
                  function=None,
                  params=None,

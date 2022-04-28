@@ -870,8 +870,8 @@ def _parse_monitor_specs(monitor_specs):
 # # @tc.typecheck
 # def _instantiate_monitoring_projections(
 #     owner,
-#     sender_list: tc.any(list, ContentAddressableList),
-#     receiver_list: tc.any(list, ContentAddressableList),
+#     sender_list: Union[list, ContentAddressableList],
+#     receiver_list: Union[list, ContentAddressableList],
 #     receiver_projection_specs: Optional[list]=None,
 #     system=None,
 #     context=None

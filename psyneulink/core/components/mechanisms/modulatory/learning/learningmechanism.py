@@ -1003,12 +1003,12 @@ class LearningMechanism(ModulatoryMechanism_Base):
 
     # @tc.typecheck
     def __init__(self,
-                 # default_variable:tc.any(list, np.ndarray),
+                 # default_variable:Union[list, np.ndarray],
                  default_variable=None,
                  size=None,
-                 error_sources: tc.optional(tc.any(Mechanism, list)) = None,
+                 error_sources: Optional[Union[Mechanism, list]] = None,
                  function=None,
-                 learning_signals: tc.optional(Optional[list]) = None,
+                 learning_signals: Optional[list] = None,
                  output_ports=None,
                  modulation: Optional[str] = None,
                  learning_rate: Optional[ValidParamSpecType] = None,

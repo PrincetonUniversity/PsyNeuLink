@@ -1541,9 +1541,9 @@ class StandardOutputPorts():
 
     # @tc.typecheck
     def __init__(self,
-                 owner:Component,
-                 output_port_dicts:list,
-                 indices:tc.optional(tc.any(int, str, list))=None):
+                 owner: Component,
+                 output_port_dicts: list,
+                 indices: Optional[Union[int, str, list]]):
         self.owner = owner
         self.data = self._instantiate_std_port_list(output_port_dicts, indices)
 
@@ -1632,7 +1632,7 @@ class StandardOutputPorts():
         return dict_list
 
     # @tc.typecheck
-    def add_port_dicts(self, output_port_dicts:list, indices:tc.optional(tc.any(int, str, list))=None):
+    def add_port_dicts(self, output_port_dicts: list, indices: Optional[Union[int, str, list]] = None):
         self.data.extend(self._instantiate_std_port_list(output_port_dicts, indices))
         assert True
 

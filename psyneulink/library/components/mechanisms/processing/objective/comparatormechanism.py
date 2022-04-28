@@ -159,7 +159,7 @@ from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.utilities import \
-    is_numeric, is_value_spec, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, recursive_update
+    NumericCollections, is_value_spec, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, recursive_update
 from psyneulink.core.globals.utilities import safe_len
 
 __all__ = [
@@ -328,8 +328,8 @@ class ComparatorMechanism(ObjectiveMechanism):
     # @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 sample: tc.optional(tc.any(OutputPort, Mechanism_Base, dict, is_numeric, str))=None,
-                 target: tc.optional(tc.any(OutputPort, Mechanism_Base, dict, is_numeric, str))=None,
+                 sample: Optional[Union[OutputPort, Mechanism_Base, dict, NumericCollections, str]] = None,
+                 target: Optional[Union[OutputPort, Mechanism_Base, dict, NumericCollections, str]] = None,
                  function=None,
                  output_ports:Optional[Union[str, Iterable]] = None,
                  params=None,

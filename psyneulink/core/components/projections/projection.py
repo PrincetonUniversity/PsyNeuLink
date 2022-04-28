@@ -401,7 +401,7 @@ from collections import namedtuple, defaultdict
 import numpy as np
 import typecheck as tc
 
-from typing import Optional, Union
+from typing import Optional, Union, Type
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import get_matrix
@@ -1166,7 +1166,7 @@ class Projection_Base(Projection):
 
 
 # @tc.typecheck
-def _is_projection_spec(spec, proj_type:tc.optional(type)=None, include_matrix_spec=True):
+def _is_projection_spec(spec, proj_type: Optional[Type] = None, include_matrix_spec=True):
     """Evaluate whether spec is a valid Projection specification
 
     Return `True` if spec is any of the following:
@@ -1845,13 +1845,14 @@ def _parse_connection_specs(connectee_port_type,
 
     return connect_with_ports
 
+
 # @tc.typecheck
 def _validate_connection_request(
-        owner,                                   # Owner of Port seeking connection
-        connect_with_ports:list,                # Port to which connection is being sought
-        projection_spec:_is_projection_spec,     # projection specification
-        projection_socket:str,                   # socket of Projection to be connected to target port
-        connectee_port:tc.optional(type)=None): # Port for which connection is being sought
+        owner,  # Owner of Port seeking connection
+        connect_with_ports: list,  # Port to which connection is being sought
+        projection_spec: _is_projection_spec,  # projection specification
+        projection_socket: str,  # socket of Projection to be connected to target port
+        connectee_port: Optional[Type] = None):  # Port for which connection is being sought
     """Validate that a Projection specification is compatible with the Port to which a connection is specified
 
     Carries out undirected validation (i.e., without knowing whether the connectee is the sender or receiver).

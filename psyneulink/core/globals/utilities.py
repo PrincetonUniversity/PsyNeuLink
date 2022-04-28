@@ -688,7 +688,7 @@ def powerset(iterable):
     return chain.from_iterable(combinations(s, r) for r in range(len(s) + 1))
 
 # @tc.typecheck
-def tensor_power(items, levels:tc.optional(range)=None, flat=False):
+def tensor_power(items, levels: Optional[range] = None, flat=False):
     """return tensor product for all members of powerset of items
 
     levels specifies a range of set levels to return;  1=first order terms, 2=2nd order terms, etc.

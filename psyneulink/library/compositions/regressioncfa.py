@@ -579,7 +579,7 @@ class RegressionCFA(CompositionFunctionApproximator):
 
             self.vector = np.zeros(i)
 
-        def __call__(self, terms:tc.any(PV, list))->tc.any(PV, tuple):
+        def __call__(self, terms: Union[PV, list]) -> Union[PV, tuple]:
             """Return subvector(s) for specified term(s)"""
             if not isinstance(terms, list):
                 return self.idx[terms.value]

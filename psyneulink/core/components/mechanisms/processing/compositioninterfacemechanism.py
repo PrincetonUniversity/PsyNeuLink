@@ -180,7 +180,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 input_ports: tc.optional(tc.any(Iterable, Mechanism, OutputPort, InputPort)) = None,
+                 input_ports: Optional[Union[Iterable, Mechanism, OutputPort, InputPort]] = None,
                  function=None,
                  composition=None,
                  port_map=None,

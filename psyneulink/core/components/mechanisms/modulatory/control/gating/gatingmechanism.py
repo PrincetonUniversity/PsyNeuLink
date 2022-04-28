@@ -441,12 +441,12 @@ class GatingMechanism(ControlMechanism):
                  size=None,
                  monitor_for_gating=None,
                  function=None,
-                 default_allocation:Optional[Union[int, float, list, np.ndarray]]=None,
-                 gate:tc.optional(Optional[list]) = None,
-                 modulation:Optional[str]=None,
+                 default_allocation: Optional[Union[int, float, list, np.ndarray]] = None,
+                 gate: Optional[list] = None,
+                 modulation: Optional[str] = None,
                  params=None,
                  name=None,
-                 prefs:   Optional[ValidPrefSet] = None,
+                 prefs: Optional[ValidPrefSet] = None,
                  **kwargs):
 
         gate = convert_to_list(gate) or []

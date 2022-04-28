@@ -177,7 +177,7 @@ from psyneulink.core.globals.keywords import PREDICTION_ERROR_MECHANISM, SAMPLE,
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PREFERENCE_SET_NAME
-from psyneulink.core.globals.utilities import is_numeric
+from psyneulink.core.globals.utilities import NumericCollections
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism, ComparatorMechanismError
 
 __all__ = [
@@ -287,15 +287,11 @@ class PredictionErrorMechanism(ComparatorMechanism):
 
     # @tc.typecheck
     def __init__(self,
-                 sample: tc.optional(tc.any(OutputPort, Mechanism_Base, dict,
-                                            is_numeric,
-                                            str)) = None,
-                 target: tc.optional(tc.any(OutputPort, Mechanism_Base, dict,
-                                            is_numeric,
-                                            str)) = None,
+                 sample: Optional[Union[OutputPort, Mechanism_Base, dict, NumericCollections, str]] = None,
+                 target: Optional[Union[OutputPort, Mechanism_Base, dict, NumericCollections, str]] = None,
                  function=None,
                  output_ports: Optional[Union[str, Iterable]] = None,
-                 learning_rate: tc.optional(is_numeric) = None,
+                 learning_rate: Optional[NumericCollections] = None,
                  params=None,
                  name=None,
                  prefs:  Optional[ValidPrefSet] = None,

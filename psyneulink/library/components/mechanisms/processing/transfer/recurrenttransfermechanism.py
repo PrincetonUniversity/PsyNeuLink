@@ -1107,7 +1107,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION WHEN THAT IS IMPLEMENTED
     def _instantiate_learning_mechanism(self,
-                                        activity_vector:tc.any(list, np.array),
+                                        activity_vector: Union[list, np.array],
                                         learning_function,
                                         learning_rate,
                                         learning_condition,

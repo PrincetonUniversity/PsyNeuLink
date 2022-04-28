@@ -2617,7 +2617,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         return ret_val
 
     # @tc.typecheck
-    def _validate_memory(self, memory:tc.any(list, np.ndarray), context):
+    def _validate_memory(self, memory: Union[list, np.ndarray], context):
 
         # memory must be list or 2d array with 2 items
         if len(memory) != 2 and not all(np.array(i).ndim == 1 for i in memory):
@@ -2627,7 +2627,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         self._validate_key(memory[KEYS], context)
 
     # @tc.typecheck
-    def _validate_key(self, key:tc.any(list, np.ndarray), context):
+    def _validate_key(self, key: Union[list, np.ndarray], context):
         # Length of key must be same as that of existing entries (so it can be matched on retrieval)
         if len(key) != self.parameters.key_size._get(context):
             raise FunctionError(f"Length of 'key' ({key}) to store in {self.__class__.__name__} ({len(key)}) "
@@ -2635,7 +2635,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
 
     # @tc.typecheck
     @handle_external_context()
-    def get_memory(self, query_key:tc.any(list, np.ndarray), context=None):
+    def get_memory(self, query_key:Union[list, np.ndarray], context=None):
         """get_memory(query_key, context=None)
 
         Retrieve memory from `memory <DictionaryMemory.memory>` based on `distance_function
@@ -2705,7 +2705,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         return [list(best_match_key), list(best_match_val)]
 
     # @tc.typecheck
-    def _store_memory(self, memory:tc.any(list, np.ndarray), context):
+    def _store_memory(self, memory:Union[list, np.ndarray], context):
         """Save an key-value pair to `memory <DictionaryMemory.memory>`
 
         Arguments
@@ -2765,7 +2765,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
 
     # @tc.typecheck
     @handle_external_context()
-    def add_to_memory(self, memories:tc.any(list, np.ndarray), context=None):
+    def add_to_memory(self, memories:Union[list, np.ndarray], context=None):
         """Add one or more key-value pairs into `memory <ContentAddressableMemory.memory>`
 
         Arguments
@@ -2784,7 +2784,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
 
     # @tc.typecheck
     @handle_external_context()
-    def delete_from_memory(self, memories:tc.any(list, np.ndarray), key_only:bool= True, context=None):
+    def delete_from_memory(self, memories:Union[list, np.ndarray], key_only:bool= True, context=None):
         """Delete one or more key-value pairs from `memory <ContentAddressableMememory.memory>`
 
         Arguments

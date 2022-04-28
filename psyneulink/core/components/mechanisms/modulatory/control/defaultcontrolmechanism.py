@@ -91,11 +91,11 @@ class DefaultControlMechanism(ControlMechanism):
 
     # @tc.typecheck
     def __init__(self,
-                 objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
-                 control_signals:Optional[list]=None,
+                 objective_mechanism: Optional[Union[ObjectiveMechanism, list]] = None,
+                 control_signals: Optional[list] = None,
                  params=None,
                  name=None,
-                 prefs:   Optional[ValidPrefSet] = None,
+                 prefs: Optional[ValidPrefSet] = None,
                  function=None,
                  **kwargs
                  ):

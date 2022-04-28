@@ -298,7 +298,7 @@ Class Reference
 """
 import typecheck as tc
 
-from typing import Optional, Union
+from typing import Optional, Union, Iterable
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.stateful.integratorfunctions import FitzHughNagumoIntegrator
@@ -667,35 +667,34 @@ class LCControlMechanism(ControlMechanism):
     # @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
-                 monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputPort))=None,
-                 # modulated_mechanisms:tc.optional(tc.any(list,str)) = None,
+                 objective_mechanism: Optional[Union[ObjectiveMechanism, list]] = None,
+                 monitor_for_control: Optional[Union[Iterable, Mechanism, OutputPort]] = None,
                  modulated_mechanisms=None,
-                 modulation:Optional[str]=None,
+                 modulation: Optional[str] = None,
                  integration_method="RK4",
                  initial_w_FitzHughNagumo=0.0,
                  initial_v_FitzHughNagumo=0.0,
                  time_step_size_FitzHughNagumo=0.05,
-                 t_0_FitzHughNagumo=0.0,
-                 a_v_FitzHughNagumo=-1 / 3,
-                 b_v_FitzHughNagumo=0.0,
-                 c_v_FitzHughNagumo=1.0,
-                 d_v_FitzHughNagumo=0.0,
-                 e_v_FitzHughNagumo=-1.0,
-                 f_v_FitzHughNagumo=1.0,
-                 time_constant_v_FitzHughNagumo=1.0,
-                 a_w_FitzHughNagumo=1.0,
-                 b_w_FitzHughNagumo=-0.8,
-                 c_w_FitzHughNagumo=0.7,
-                 threshold_FitzHughNagumo=-1.0,
-                 time_constant_w_FitzHughNagumo=12.5,
-                 mode_FitzHughNagumo=1.0,
-                 uncorrelated_activity_FitzHughNagumo=0.0,
+                 t_0_FitzHughNagumo: float = 0.0,
+                 a_v_FitzHughNagumo: float = -1 / 3,
+                 b_v_FitzHughNagumo: float = 0.0,
+                 c_v_FitzHughNagumo: float = 1.0,
+                 d_v_FitzHughNagumo: float = 0.0,
+                 e_v_FitzHughNagumo: float = -1.0,
+                 f_v_FitzHughNagumo: float = 1.0,
+                 time_constant_v_FitzHughNagumo:float = 1.0,
+                 a_w_FitzHughNagumo:float = 1.0,
+                 b_w_FitzHughNagumo: float = -0.8,
+                 c_w_FitzHughNagumo: float = 0.7,
+                 threshold_FitzHughNagumo: float = -1.0,
+                 time_constant_w_FitzHughNagumo: float = 12.5,
+                 mode_FitzHughNagumo: float = 1.0,
+                 uncorrelated_activity_FitzHughNagumo: float = 0.0,
                  base_level_gain=None,
                  scaling_factor_gain=None,
                  params=None,
                  name=None,
-                 prefs:   Optional[ValidPrefSet] = None
+                 prefs: Optional[ValidPrefSet] = None
                  ):
 
         super().__init__(

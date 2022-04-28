@@ -3933,15 +3933,15 @@ class TransferWithCosts(TransferFunction):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 transfer_fct:Optional[Callable] = None,
-                 enabled_cost_functions:tc.optional(tc.any(CostFunctions, list))=None,
-                 intensity_cost_fct:Optional[Callable] = None,
-                 adjustment_cost_fct:Optional[Callable] = None,
-                 duration_cost_fct:Optional[Callable] = None,
-                 combine_costs_fct:Optional[Callable] = None,
+                 transfer_fct: Optional[Callable] = None,
+                 enabled_cost_functions: Optional[Union[CostFunctions, list]] = None,
+                 intensity_cost_fct: Optional[Callable] = None,
+                 adjustment_cost_fct: Optional[Callable] = None,
+                 duration_cost_fct: Optional[Callable] = None,
+                 combine_costs_fct: Optional[Callable] = None,
                  params=None,
                  owner=None,
-                 prefs:  Optional[ValidPrefSet] = None):
+                 prefs: Optional[ValidPrefSet] = None):
 
         # if size:
         #     if default_variable is None:
@@ -4143,7 +4143,7 @@ class TransferWithCosts(TransferFunction):
         )
 
     # @tc.typecheck
-    def assign_costs(self, cost_functions: tc.any(CostFunctions, list), execution_context=None):
+    def assign_costs(self, cost_functions: Union[CostFunctions, list], execution_context=None):
         """Assigns specified functions; all others are disabled.
 
         Arguments
@@ -4162,7 +4162,7 @@ class TransferWithCosts(TransferFunction):
         return self.enable_costs(cost_functions, execution_context)
 
     # @tc.typecheck
-    def enable_costs(self, cost_functions: tc.any(CostFunctions, list), execution_context=None):
+    def enable_costs(self, cost_functions: Union[CostFunctions, list], execution_context=None):
         """Enable specified `cost functions <TransferWithCosts_Cost_Functions>`;
         settings for all other cost functions are left intact.
 
@@ -4186,7 +4186,7 @@ class TransferWithCosts(TransferFunction):
         return enabled_cost_functions
 
     # @tc.typecheck
-    def disable_costs(self, cost_functions: tc.any(CostFunctions, list), execution_context=None):
+    def disable_costs(self, cost_functions: Union[CostFunctions, list], execution_context=None):
         """Disable specified `cost functions <TransferWithCosts_Cost_Functions>`;
         settings for all other cost functions are left intact.
 
@@ -4208,9 +4208,9 @@ class TransferWithCosts(TransferFunction):
         self.parameters.enabled_cost_functions.set(enabled_cost_functions, execution_context)
         return enabled_cost_functions
 
-    def toggle_cost(self, cost_function_name:tc.any(str, CostFunctions),
-                             assignment:bool=ON,
-                             execution_context=None):
+    def toggle_cost(self, cost_function_name: Union[str, CostFunctions],
+                    assignment: bool = ON,
+                    execution_context=None):
         """Enable/disable a `cost functions <TransferWithCosts_Cost_Functions>`.
 
         Arguments

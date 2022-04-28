@@ -1073,12 +1073,11 @@ import ast
 import copy
 import warnings
 from collections.abc import Iterable
-from typing import Union
 
 import numpy as np
 import typecheck as tc
 
-from typing import Optional, Union
+from typing import Optional, Union, Callable
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility, Component
@@ -1746,20 +1745,18 @@ class OptimizationControlMechanism(ControlMechanism):
     # @tc.typecheck
     def __init__(self,
                  agent_rep=None,
-                 state_features: tc.optional((tc.any(str, Iterable, InputPort,
-                                                     OutputPort, Mechanism)))=SHADOW_INPUTS,
+                 state_features: Optional[Union[str, Iterable, InputPort, OutputPort, Mechanism]] = SHADOW_INPUTS,
                  # state_feature_default=None,
-                 state_feature_default: tc.optional((tc.any(str, Iterable,
-                                                            InputPort, OutputPort,Mechanism)))=SHADOW_INPUTS,
-                 state_feature_function: tc.optional(tc.any(dict, is_function_type))=None,
+                 state_feature_default: Optional[Union[str, Iterable, InputPort, OutputPort, Mechanism]] = SHADOW_INPUTS,
+                 state_feature_function: Optional[Union[dict, Callable]]=None,
                  function=None,
                  num_estimates=None,
                  random_variables=None,
                  initial_seed=None,
                  same_seed_for_all_allocations=None,
                  num_trials_per_estimate=None,
-                 search_function: tc.optional(tc.any(is_function_type))=None,
-                 search_termination_function: tc.optional(tc.any(is_function_type))=None,
+                 search_function: Optional[Callable]=None,
+                 search_termination_function: Optional[Callable]=None,
                  search_statefulness=None,
                  context=None,
                  **kwargs):

@@ -538,8 +538,9 @@ class Context():
 
         self._change_flags(old, new, operation=replace)
 
+
 # @tc.typecheck
-def _get_context(context:tc.any(ContextFlags, Context, str)):
+def _get_context(context: Union[ContextFlags, Context, str]):
     """Set flags based on a string of ContextFlags keywords
     If context is already a ContextFlags mask, return that
     Otherwise, return mask with flags set corresponding to keywords in context

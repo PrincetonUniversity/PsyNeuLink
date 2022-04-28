@@ -24,7 +24,7 @@ import functools
 import numpy as np
 import typecheck as tc
 
-from typing import Optional, Union, Literal
+from typing import Optional, Union, Literal, Callable
 import types
 
 from psyneulink.core import llvm as pnlvm
@@ -215,7 +215,7 @@ class Stability(ObjectiveFunction):
                  matrix=None,
                  # metric:is_distance_metric=None,
                  metric: Optional[DistanceMetricLiteral] = None,
-                 transfer_fct: tc.optional(tc.any(types.FunctionType, types.MethodType)) = None,
+                 transfer_fct: Optional[Callable] = None,
                  normalize: Optional[bool] = None,
                  params=None,
                  owner=None,
@@ -784,7 +784,7 @@ class Distance(ObjectiveFunction):
     # @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 metric: tc.optional(DistanceMetrics._is_metric) = None,
+                 metric: Optional[DistanceMetricLiteral] = None,
                  normalize: Optional[bool] = None,
                  params=None,
                  owner=None,

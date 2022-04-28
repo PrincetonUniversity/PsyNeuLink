@@ -1959,7 +1959,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
     # @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 gamma: tc.optional(Optional[float]) = None,
+                 gamma: Optional[float] = None,
                  params=None,
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None):

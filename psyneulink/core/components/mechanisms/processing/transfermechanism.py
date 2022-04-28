@@ -826,7 +826,7 @@ from collections.abc import Iterable
 import numpy as np
 import typecheck as tc
 
-from typing import Optional, Union
+from typing import Optional, Union, Literal
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination, SUM
@@ -1289,7 +1289,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 input_ports:tc.optional(tc.any(Iterable, Mechanism, OutputPort, InputPort))=None,
+                 input_ports: Optional[Union[Iterable, Mechanism, OutputPort, InputPort]] = None,
                  function=None,
                  noise=None,
                  clip=None,
@@ -1299,12 +1299,12 @@ class TransferMechanism(ProcessingMechanism_Base):
                  integration_rate=None,
                  on_resume_integrator_mode=None,
                  termination_measure=None,
-                 termination_threshold:Optional[Union[int, float]]=None,
-                 termination_comparison_op: tc.optional(tc.any(str, is_comparison_operator)) = None,
-                 output_ports:Optional[Union[str, Iterable]]=None,
+                 termination_threshold: Optional[Union[int, float]] = None,
+                 termination_comparison_op: Optional[Union[str, Literal['<', '<=', '>', '>=', '==', '!=']]] = None,
+                 output_ports: Optional[Union[str, Iterable]] = None,
                  params=None,
                  name=None,
-                 prefs:  Optional[ValidPrefSet] = None,
+                 prefs: Optional[ValidPrefSet] = None,
                  **kwargs):
         """Assign type-level preferences and call super.__init__
         """

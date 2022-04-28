@@ -191,7 +191,7 @@ from psyneulink.core.components.functions.nonstateful.transferfunctions import L
 from psyneulink.core.globals.keywords import KWTA_MECHANISM, K_VALUE, RATIO, RESULT, THRESHOLD
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
-from psyneulink.core.globals.utilities import is_numeric_or_none
+from psyneulink.core.globals.utilities import NumericCollections
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
 
 __all__ = [
@@ -350,21 +350,21 @@ class KWTAMechanism(RecurrentTransferMechanism):
                  size=None,
                  function=None,
                  matrix=None,
-                 auto: is_numeric_or_none=None,
-                 hetero: is_numeric_or_none=None,
+                 auto: Optional[NumericCollections] = None,
+                 hetero: Optional[NumericCollections] = None,
                  integrator_function=None,
                  initial_value=None,
-                 noise: tc.optional(is_numeric_or_none) = None,
-                 integration_rate: tc.optional(is_numeric_or_none) = None,
+                 noise: Optional[NumericCollections] = None,
+                 integration_rate: Optional[NumericCollections] = None,
                  integrator_mode=None,
-                 k_value: tc.optional(is_numeric_or_none) = None,
-                 threshold: tc.optional(is_numeric_or_none) = None,
-                 ratio: tc.optional(is_numeric_or_none) = None,
+                 k_value: Optional[NumericCollections] = None,
+                 threshold: Optional[NumericCollections] = None,
+                 ratio: Optional[NumericCollections] = None,
                  average_based=None,
                  inhibition_only=None,
                  clip=None,
                  input_ports: Optional[Union[list, dict]] = None,
-                 output_ports:Optional[Union[str, Iterable]]=None,
+                 output_ports:Optional[Union[str, Iterable]] = None,
                  params=None,
                  name=None,
                  prefs:  Optional[ValidPrefSet] = None,

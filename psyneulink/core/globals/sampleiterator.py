@@ -23,7 +23,7 @@ from numbers import Number
 import numpy as np
 import typecheck as tc
 
-from typing import Optional, Union
+from typing import Optional, Union, Callable
 
 __all__ = ['SampleSpec', 'SampleIterator']
 
@@ -152,13 +152,13 @@ class SampleSpec():
 
     # @tc.typecheck
     def __init__(self,
-                 start:Optional[Union[int, float]]=None,
-                 stop:Optional[Union[int, float]]=None,
-                 step:Optional[Union[int, float]]=None,
-                 num:Optional[int]=None,
-                 function:tc.optional(callable)=None,
-                 precision:Optional[int]=None,
-                 custom_spec = None
+                 start: Optional[Union[int, float]] = None,
+                 stop: Optional[Union[int, float]] = None,
+                 step: Optional[Union[int, float]] = None,
+                 num: Optional[int] = None,
+                 function: Optional[Callable] = None,
+                 precision: Optional[int] = None,
+                 custom_spec=None
                  ):
 
         self.custom_spec = custom_spec
