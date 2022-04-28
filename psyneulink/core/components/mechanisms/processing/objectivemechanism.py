@@ -367,7 +367,7 @@ import warnings
 from collections import namedtuple
 from collections.abc import Iterable
 
-import typecheck as tc
+from beartype import beartype
 
 from typing import Optional, Union
 

@@ -204,7 +204,7 @@ import warnings
 from typing import Union
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
 
 from typing import Optional, Union, Literal
 from PIL import Image

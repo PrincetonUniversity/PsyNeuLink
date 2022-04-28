@@ -315,7 +315,7 @@ Class Reference
 import warnings
 from enum import Enum
 
-import typecheck as tc
+from beartype import beartype
 
 from typing import Optional, Union, Literal
 

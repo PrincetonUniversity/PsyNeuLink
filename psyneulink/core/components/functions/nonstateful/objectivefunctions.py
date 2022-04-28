@@ -22,7 +22,7 @@ Functions that return a scalar evaluation of their input.
 import functools
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
 
 from typing import Optional, Union, Literal, Callable
 import types

@@ -91,7 +91,7 @@ from collections import defaultdict, namedtuple
 from queue import Queue
 
 import time as py_time  # "time" is declared below
-import typecheck as tc
+from beartype import beartype
 
 from typing import Optional, Union, Literal
 

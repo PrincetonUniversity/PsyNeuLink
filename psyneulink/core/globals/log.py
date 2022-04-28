@@ -387,7 +387,7 @@ from collections import OrderedDict, namedtuple
 from collections.abc import MutableMapping
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
 
 from typing import Optional, Union, Literal
 

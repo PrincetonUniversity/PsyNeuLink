@@ -1084,7 +1084,7 @@ from inspect import isclass
 from numbers import Number
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
 
 from typing import Optional, Union, Literal, Type
 

@@ -110,7 +110,7 @@ import warnings
 import weakref
 import types
 import typing
-import typecheck as tc
+from beartype import beartype
 
 from numbers import Number
 from typing import Optional, Union, Literal

@@ -10,7 +10,7 @@
 # *****************************************  USER-DEFINED FUNCTION  ****************************************************
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
 
 from typing import Optional, Union
 from inspect import signature, _empty, getsourcelines, getsourcefile, getclosurevars

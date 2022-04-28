@@ -25,7 +25,7 @@ Functions that selects a subset of elements to maintain or transform, while null
 __all__ = ['SelectionFunction', 'OneHot', 'max_vs_avg', 'max_vs_next', 'MAX_VS_NEXT', 'MAX_VS_AVG']
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
 
 from typing import Optional, Union, Literal
 

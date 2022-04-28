@@ -2728,7 +2728,7 @@ import graph_scheduler
 import networkx
 import numpy as np
 import pint
-import typecheck as tc
+from beartype import beartype
 
 from typing import Optional, Union, Literal
 

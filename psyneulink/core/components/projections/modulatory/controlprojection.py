@@ -109,7 +109,7 @@ Class Reference
 
 import inspect
 
-import typecheck as tc
+from beartype import beartype
 
 from typing import Optional, Union
 

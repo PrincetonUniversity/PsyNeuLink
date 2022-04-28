@@ -111,7 +111,7 @@ Class Reference
 import warnings
 from collections.abc import Iterable
 
-import typecheck as tc
+from beartype import beartype
 
 from typing import Optional, Union
 
