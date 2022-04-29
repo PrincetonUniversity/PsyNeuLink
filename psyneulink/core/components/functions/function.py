@@ -1253,6 +1253,7 @@ def get_matrix(specification, rows=1, cols=1, context=None):
     # Specification not recognized
     return None
 
+
 # Valid types for a matrix specification, note this is does not ensure that ND arrays are 1D or 2D like the
 # above code does.
 ValidMatrixSpecType = Union[MatrixKeywordLiteral, Callable, str, NumericCollections, np.matrix]
