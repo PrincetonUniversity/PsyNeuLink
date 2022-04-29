@@ -106,6 +106,12 @@ def test_execute(func, variable, params, prng, llvm_skip, expected, benchmark, f
     benchmark.group = "TransferFunction " + func.componentName
     if func_mode != 'Python':
         precision = pytest.helpers.llvm_current_fp_precision()
+        # PTX needs only one special case, this is not worth adding
+        # it to the mechanism above
+        if func_mode == "PTX" and precision == 'fp32' and expected is dda_expected_negative:
+            expected = (0.4236549735069275, 5.960464477539063e-08,
+                        0.5173678398132324, 0.06942889094352722, 6.303247451782227,
+                        1.4934064149856567, 0.42889145016670227, 1.7737685441970825)
         expected = llvm_expected.get(precision, {}).get(expected, expected)
 
     if expected is None:
