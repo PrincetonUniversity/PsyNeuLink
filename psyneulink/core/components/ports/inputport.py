@@ -577,7 +577,7 @@ import warnings
 import numpy as np
 from beartype import beartype
 
-from beartype.typing import Optional, Union, Literal
+from psyneulink._typing import Optional, Literal
 
 from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import Function

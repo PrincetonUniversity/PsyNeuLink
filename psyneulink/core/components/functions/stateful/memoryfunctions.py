@@ -28,12 +28,12 @@ import warnings
 from collections import deque
 from itertools import combinations, product
 
-from beartype.typing import Optional, Union, Callable
+from psyneulink._typing import Optional, Union, Callable
 
 import numpy as np
 from beartype import beartype
 
-from beartype.typing import Optional, Union, Literal
+from psyneulink._typing import Optional, Union, Literal
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import (

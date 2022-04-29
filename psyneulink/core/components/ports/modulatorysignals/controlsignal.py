@@ -403,7 +403,7 @@ import warnings
 import numpy as np
 from beartype import beartype
 
-from beartype.typing import Optional, Union, Callable
+from psyneulink._typing import Optional, Union, Callable
 
 # FIX: EVCControlMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCControlMechanism
 #            SHOULD THEY BE LIMITED TO EVC??

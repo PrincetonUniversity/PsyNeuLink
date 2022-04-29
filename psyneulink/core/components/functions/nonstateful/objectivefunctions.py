@@ -24,8 +24,7 @@ import functools
 import numpy as np
 from beartype import beartype
 
-from beartype.typing import Optional, Union, Literal, Callable
-import types
+from psyneulink._typing import Optional, Callable
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility

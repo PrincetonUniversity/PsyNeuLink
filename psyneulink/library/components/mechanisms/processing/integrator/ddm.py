@@ -366,7 +366,7 @@ from collections.abc import Iterable
 import numpy as np
 from beartype import beartype
 
-from beartype.typing import Optional, Union, Literal
+from psyneulink._typing import Optional, Union, Literal
 
 from psyneulink.core.components.functions.function import DEFAULT_SEED, _random_state_getter, _seed_setter
 from psyneulink.core.components.functions.stateful.integratorfunctions import \

@@ -369,7 +369,7 @@ from collections.abc import Iterable
 
 from beartype import beartype
 
-from beartype.typing import Optional, Union
+from psyneulink._typing import Optional, Union
 
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base

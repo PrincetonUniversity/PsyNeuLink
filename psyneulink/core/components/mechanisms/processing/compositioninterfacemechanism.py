@@ -113,7 +113,7 @@ from collections.abc import Iterable
 
 from beartype import beartype
 
-from beartype.typing import Optional, Union
+from psyneulink._typing import Optional, Union
 
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity
 from psyneulink.core.components.mechanisms.mechanism import Mechanism

@@ -36,7 +36,7 @@ COMMENT
 import numpy as np
 from beartype import beartype
 
-from beartype.typing import Optional, Union
+from psyneulink._typing import Optional, Union
 
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism

@@ -163,12 +163,12 @@ Class Reference
 ---------------
 
 """
-from beartype.typing import Iterable
+from psyneulink._typing import Iterable
 
 import numpy as np
 from beartype import beartype
 
-from beartype.typing import Optional, Union
+from psyneulink._typing import Optional, Union
 
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import PredictionErrorDeltaFunction
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base

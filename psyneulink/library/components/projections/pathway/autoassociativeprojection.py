@@ -104,7 +104,7 @@ import numbers
 import numpy as np
 from beartype import beartype
 
-from beartype.typing import Optional, Union
+from psyneulink._typing import Optional, Union
 
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.nonstateful.transferfunctions import LinearMatrix

@@ -190,7 +190,7 @@ Class Reference
 import numpy as np
 from beartype import beartype
 
-from beartype.typing import Optional, Union
+from psyneulink._typing import Optional, Union
 
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.core.components.ports.outputport import PRIMARY

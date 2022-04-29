@@ -2722,7 +2722,7 @@ import typing
 import warnings
 from copy import deepcopy, copy
 from inspect import isgenerator, isgeneratorfunction
-from beartype.typing import Union
+from psyneulink._typing import Union
 
 import graph_scheduler
 import networkx
@@ -2730,7 +2730,7 @@ import numpy as np
 import pint
 from beartype import beartype
 
-from beartype.typing import Optional, Union, Literal
+from psyneulink._typing import Optional, Union, Literal
 
 from PIL import Image
 

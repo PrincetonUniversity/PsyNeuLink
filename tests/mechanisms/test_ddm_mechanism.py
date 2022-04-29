@@ -1,6 +1,5 @@
 import numpy as np
 import pytest
-import typecheck
 
 import psyneulink as pnl
 import psyneulink.core.llvm as pnlvm

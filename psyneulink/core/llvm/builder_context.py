@@ -18,7 +18,7 @@ import numpy as np
 import os
 import re
 import time
-from beartype.typing import Set
+from psyneulink._typing import Set
 import weakref
 
 from psyneulink.core.scheduling.time import Time, TimeScale

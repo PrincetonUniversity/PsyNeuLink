@@ -389,7 +389,7 @@ from collections.abc import MutableMapping
 import numpy as np
 from beartype import beartype
 
-from beartype.typing import Optional, Union, Literal
+from psyneulink._typing import Optional, Union, Literal
 
 from psyneulink.core.globals.context import ContextFlags, _get_time, handle_external_context
 from psyneulink.core.globals.context import time as time_object

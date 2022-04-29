@@ -113,7 +113,7 @@ import typing
 from beartype import beartype
 
 from numbers import Number
-from beartype.typing import Optional, Union, Literal, TYPE_CHECKING
+from psyneulink._typing import Optional, Union, Literal, Type, List, Tuple
 
 from enum import Enum, EnumMeta, IntEnum
 from collections.abc import Mapping
@@ -121,7 +121,6 @@ from collections import UserDict, UserList
 from itertools import chain, combinations
 
 import numpy as np
-from numpy.typing import NDArray
 
 from psyneulink.core.globals.keywords import \
     comparison_operators, DISTANCE_METRICS, EXPONENTIAL, GAUSSIAN, LINEAR, MATRIX_KEYWORD_VALUES, NAME, SINUSOID, VALUE
@@ -309,43 +308,43 @@ def parameter_spec(param, numeric_only=None):
     return False
 
 
-NumericCollections = Union[Number, list[list[Number]], list[list[Number]], list[Number],
-                           tuple[Number], tuple[tuple[Number]], NDArray]
+NumericCollections = Union[Number, List[List[Number]], List[Number],
+                           Tuple[Number], Tuple[Tuple[Number]], np.ndarray]
 
 
 # A set of all valid parameter specification types
 ValidParamSpecType = Union[
     numbers.Number,
-    NDArray,
+    np.ndarray,
     list,
     tuple,
     dict,
     types.FunctionType,
     'psyneulink.core.components.shellclasses.Projection',
     'psyneulink.core.components.mechanisms.ControlMechanism',
-    type['psyneulink.core.components.mechanisms.ControlMechanism'],
+    Type['psyneulink.core.components.mechanisms.ControlMechanism'],
     'psyneulink.core.components.projections.ControlProjection',
-    type['psyneulink.core.components.projections.ControlProjection'],
+    Type['psyneulink.core.components.projections.ControlProjection'],
     'psyneulink.core.components.ports.ControlSignal',
-    type['psyneulink.core.components.ports.ControlSignal'],
+    Type['psyneulink.core.components.ports.ControlSignal'],
     'psyneulink.core.components.mechanisms.GatingMechanism',
-    type['psyneulink.core.components.mechanisms.GatingMechanism'],
+    Type['psyneulink.core.components.mechanisms.GatingMechanism'],
     'psyneulink.core.components.projections.GatingProjection',
-    type['psyneulink.core.components.projections.GatingProjection'],
+    Type['psyneulink.core.components.projections.GatingProjection'],
     'psyneulink.core.components.ports.GatingSignal',
-    type['psyneulink.core.components.ports.GatingSignal'],
+    Type['psyneulink.core.components.ports.GatingSignal'],
     'psyneulink.core.components.mechanisms.LearningMechanism',
-    type['psyneulink.core.components.mechanisms.LearningMechanism'],
+    Type['psyneulink.core.components.mechanisms.LearningMechanism'],
     'psyneulink.core.components.projections.LearningProjection',
-    type['psyneulink.core.components.projections.LearningProjection'],
+    Type['psyneulink.core.components.projections.LearningProjection'],
     'psyneulink.core.components.ports.LearningSignal',
-    type['psyneulink.core.components.ports.LearningSignal'],
+    Type['psyneulink.core.components.ports.LearningSignal'],
     'psyneulink.library.components.projections.AutoAssociativeProjection',
-    type['psyneulink.library.components.projections.AutoAssociativeProjection'],
+    Type['psyneulink.library.components.projections.AutoAssociativeProjection'],
     'psyneulink.core.components.projections.MappingProjection',
-    type['psyneulink.core.components.projections.MappingProjection'],
+    Type['psyneulink.core.components.projections.MappingProjection'],
     'psyneulink.library.components.projections.MaskedMappingProjection',
-    type['psyneulink.library.components.projections.MaskedMappingProjection'],
+    Type['psyneulink.library.components.projections.MaskedMappingProjection'],
     Literal['LEARNING', 'bias', 'control', 'gain', 'gate', 'leak', 'offset', 'ControlSignal', 'ControlProjection'],
 ]
 

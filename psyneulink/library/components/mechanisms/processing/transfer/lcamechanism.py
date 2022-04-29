@@ -191,7 +191,7 @@ from collections.abc import Iterable
 import numpy as np
 from beartype import beartype
 
-from beartype.typing import Optional, Union
+from psyneulink._typing import Optional, Union
 
 from psyneulink.core.components.functions.nonstateful.objectivefunctions import Distance, MAX_ABS_DIFF
 from psyneulink.core.components.functions.nonstateful.selectionfunctions import max_vs_avg, max_vs_next, MAX_VS_NEXT, MAX_VS_AVG

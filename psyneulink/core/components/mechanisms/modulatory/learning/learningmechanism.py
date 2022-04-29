@@ -532,7 +532,7 @@ from enum import Enum
 import numpy as np
 from beartype import beartype
 
-from beartype.typing import Optional, Union, Literal, Type
+from psyneulink._typing import Optional, Union, Literal, Type
 
 from psyneulink.core.components.shellclasses import Port
 from psyneulink.core.components.component import parameter_keywords

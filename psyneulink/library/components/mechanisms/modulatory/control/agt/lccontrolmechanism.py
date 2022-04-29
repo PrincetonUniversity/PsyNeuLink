@@ -298,7 +298,7 @@ Class Reference
 """
 from beartype import beartype
 
-from beartype.typing import Optional, Union, Iterable
+from psyneulink._typing import Optional, Union, Iterable
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.stateful.integratorfunctions import FitzHughNagumoIntegrator

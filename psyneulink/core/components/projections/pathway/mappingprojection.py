@@ -287,7 +287,7 @@ import copy
 
 import numpy as np
 
-from beartype.typing import Optional
+from psyneulink._typing import Optional
 
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.stateful.integratorfunctions import AccumulatorIntegrator

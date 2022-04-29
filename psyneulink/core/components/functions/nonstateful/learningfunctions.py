@@ -28,7 +28,7 @@ from collections import namedtuple
 import numpy as np
 from beartype import beartype
 
-from beartype.typing import Optional, Union, Literal, Callable
+from psyneulink._typing import Optional, Union, Literal, Callable
 
 from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.function import (

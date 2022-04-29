@@ -405,7 +405,7 @@ Class Reference
 
 """
 import warnings
-from beartype.typing import Optional, Union
+from psyneulink._typing import Optional, Union
 
 import numpy as np
 

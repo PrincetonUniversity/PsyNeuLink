@@ -38,7 +38,7 @@ from numbers import Number
 import numpy as np
 from beartype import beartype
 
-from beartype.typing import Optional, Union, Callable, Literal
+from psyneulink._typing import Optional, Union, Callable, Literal
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import (

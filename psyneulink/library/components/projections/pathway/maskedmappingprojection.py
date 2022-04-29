@@ -68,7 +68,7 @@ Class Reference
 import numpy as np
 from beartype import beartype
 
-from beartype.typing import Optional, Union, Literal
+from psyneulink._typing import Optional, Union, Literal
 
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.function import get_matrix

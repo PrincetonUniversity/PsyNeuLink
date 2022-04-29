@@ -15,7 +15,7 @@
 import numpy as np
 from beartype import beartype
 
-from beartype.typing import Optional, Union
+from psyneulink._typing import Optional, Union
 
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.globals.defaults import SystemDefaultInputValue

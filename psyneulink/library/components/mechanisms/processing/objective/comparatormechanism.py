@@ -144,7 +144,7 @@ from collections.abc import Iterable
 import numpy as np
 from beartype import beartype
 
-from beartype.typing import Optional, Union
+from psyneulink._typing import Optional, Union
 
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base

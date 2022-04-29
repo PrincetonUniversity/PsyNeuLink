@@ -47,7 +47,7 @@ Compiled code dump:
 """
 
 import os
-from beartype.typing import Any, Dict
+from psyneulink._typing import Any, Dict
 
 debug_env: Dict[str, Any] = dict()
 

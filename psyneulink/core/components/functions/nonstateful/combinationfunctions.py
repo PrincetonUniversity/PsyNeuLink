@@ -36,7 +36,7 @@ import numbers
 import numpy as np
 from beartype import beartype
 
-from beartype.typing import Optional, Union, Literal
+from psyneulink._typing import Optional, Union, Literal
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import Function_Base, FunctionError, FunctionOutputType

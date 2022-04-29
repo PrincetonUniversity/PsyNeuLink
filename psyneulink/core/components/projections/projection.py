@@ -401,7 +401,7 @@ from collections import namedtuple, defaultdict
 import numpy as np
 from beartype import beartype
 
-from beartype.typing import Optional, Union, Type, Literal, Any
+from psyneulink._typing import Optional, Union, Type, Literal, Any, Dict, Tuple
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import get_matrix, ValidMatrixSpecType
@@ -1171,10 +1171,10 @@ ProjSpecType = Union[
     Literal['pathway', 'LEARNING', 'LearningSignal', 'LearningProjection', 'control',
             'ControlSignal', 'ControlProjection', 'gate', 'GatingSignal', 'GatingProjection'],
     ValidMatrixSpecType,
-    dict[Literal['PROJECTION_TYPE', 'sender', 'receiver', 'matrix'], Any],
+    Dict[Literal['PROJECTION_TYPE', 'sender', 'receiver', 'matrix'], Any],
 ]
 
-ProjSpecTypeWithTuple = Union[ProjSpecType, tuple[ProjSpecType, Union[Literal['MappingProjection']]]]
+ProjSpecTypeWithTuple = Union[ProjSpecType, Tuple[ProjSpecType, Union[Literal['MappingProjection']]]]
 
 
 @beartype

@@ -588,7 +588,7 @@ import warnings
 import numpy as np
 from beartype import beartype
 
-from beartype.typing import Optional, Union, Callable, Literal, Iterable
+from psyneulink._typing import Optional, Union, Callable, Literal, Iterable
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import Function_Base, is_function_type

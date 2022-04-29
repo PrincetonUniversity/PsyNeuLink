@@ -1086,7 +1086,7 @@ from numbers import Number
 import numpy as np
 from beartype import beartype
 
-from beartype.typing import Optional, Union, Literal, Type
+from psyneulink._typing import Optional, Union, Literal, Type
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component

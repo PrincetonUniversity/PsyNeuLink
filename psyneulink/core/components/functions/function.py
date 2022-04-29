@@ -150,7 +150,7 @@ from enum import Enum, IntEnum
 import numpy as np
 from beartype import beartype
 
-from beartype.typing import Optional, Union, Callable, Literal
+from psyneulink._typing import Optional, Union, Callable
 
 from psyneulink.core.components.component import Component, ComponentError, DefaultsFlexibility
 from psyneulink.core.components.shellclasses import Function, Mechanism

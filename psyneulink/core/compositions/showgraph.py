@@ -201,12 +201,12 @@ Class Reference
 
 import inspect
 import warnings
-from beartype.typing import Union
+from psyneulink._typing import Union
 
 import numpy as np
 from beartype import beartype
 
-from beartype.typing import Optional, Union, Literal
+from psyneulink._typing import Optional, Union, Literal
 from PIL import Image
 
 from psyneulink.core.components.component import Component

@@ -93,7 +93,7 @@ from queue import Queue
 import time as py_time  # "time" is declared below
 from beartype import beartype
 
-from beartype.typing import Optional, Union, Literal
+from psyneulink._typing import Optional, Union, Literal, Set, List
 
 from psyneulink.core.globals.keywords import CONTEXT, CONTROL, EXECUTING, EXECUTION_PHASE, FLAGS, INITIALIZING, LEARNING, SEPARATOR_BAR, SOURCE, VALIDATE
 from psyneulink.core.globals.utilities import get_deepcopy_with_shared
@@ -190,9 +190,8 @@ class ContextFlags(enum.IntFlag):
     @beartype
     def _get_context_string(cls, condition_flags,
                             fields: Union[Literal['execution_phase', 'source'],
-                                          set[Literal['execution_phase', 'source']],
-                                          list[Literal['execution_phase', 'source']]] = {EXECUTION_PHASE,
-                                                                          SOURCE},
+                                          Set[Literal['execution_phase', 'source']],
+                                          List[Literal['execution_phase', 'source']]] = {EXECUTION_PHASE, SOURCE},
                             string: Optional[str] = None):
         """Return string with the names of flags that are set in **condition_flags**
 

@@ -126,7 +126,7 @@ __all__ = [
 # **********************************************************************************************************************
 import operator
 
-from beartype.typing import Literal
+from psyneulink._typing import Literal
 
 class MatrixKeywords:
     """

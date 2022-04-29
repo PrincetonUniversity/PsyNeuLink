@@ -148,7 +148,7 @@ import types
 import warnings
 from enum import Enum, Flag, auto
 from io import StringIO
-from beartype.typing import Union, Optional
+from psyneulink._typing import Union, Optional
 
 import numpy as np
 from rich import print, box

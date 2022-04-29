@@ -31,7 +31,7 @@ import warnings
 import numpy as np
 from beartype import beartype
 
-from beartype.typing import Optional, Union, Callable
+from psyneulink._typing import Optional, Union, Callable
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility

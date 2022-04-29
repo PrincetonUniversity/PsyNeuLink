@@ -78,7 +78,7 @@ Class Reference
 import numpy as np
 from beartype import beartype
 
-from beartype.typing import Optional, Union
+from psyneulink._typing import Optional, Union
 
 from psyneulink.library.compositions.regressioncfa import RegressionCFA
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BayesGLM
