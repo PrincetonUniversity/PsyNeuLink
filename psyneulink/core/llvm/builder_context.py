@@ -55,8 +55,9 @@ def module_count():
 
 
 _BUILTIN_PREFIX = "__pnl_builtin_"
-_builtin_intrinsics = frozenset(('pow', 'log', 'exp', 'tanh', 'coth', 'csch', 'is_close', 'mt_rand_init',
-                                 'philox_rand_init'))
+_builtin_intrinsics = frozenset(('pow', 'log', 'exp', 'tanh', 'coth', 'csch',
+                                 'is_close_float', 'is_close_double',
+                                 'mt_rand_init', 'philox_rand_init'))
 
 
 class _node_wrapper():
@@ -615,6 +616,10 @@ def _convert_llvm_ir_to_ctype(t: ir.Type):
         return ctypes.c_double
     elif type_t is ir.FloatType:
         return ctypes.c_float
+    elif type_t is ir.HalfType:
+        # There's no half type in ctypes. Use uint16 instead.
+        # User will need to do the necessary casting.
+        return ctypes.c_uint16
     elif type_t is ir.PointerType:
         pointee = _convert_llvm_ir_to_ctype(t.pointee)
         ret_t = ctypes.POINTER(pointee)

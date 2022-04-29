@@ -16,20 +16,27 @@ test_prob /= sum(test_prob)
 test_philox = np.random.rand(SIZE)
 test_philox /= sum(test_philox)
 
+expected_philox_prob = (0., 0.43037873274483895, 0., 0., 0., 0., 0., 0., 0., 0.)
+expected_philox_ind = (0., 1., 0., 0., 0., 0., 0., 0., 0., 0.)
+
+llvm_res = {'fp32': {}, 'fp64': {}}
+llvm_res['fp32'][expected_philox_prob] = (0.09762700647115707, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+llvm_res['fp32'][expected_philox_ind] = (1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+
 test_data = [
-    (Functions.OneHot, test_var, {'mode':kw.MAX_VAL}, [0., 0., 0., 0., 0., 0., 0., 0., 0.92732552, 0.]),
-    (Functions.OneHot, test_var, {'mode':kw.MAX_ABS_VAL}, [0., 0., 0., 0., 0., 0., 0., 0., 0.92732552, 0.]),
-    (Functions.OneHot, -test_var, {'mode':kw.MAX_ABS_VAL}, [0., 0., 0., 0., 0., 0., 0., 0., 0.92732552, 0.]),
-    (Functions.OneHot, test_var, {'mode':kw.MAX_INDICATOR}, [0., 0., 0., 0., 0., 0., 0., 0., 1., 0.]),
-    (Functions.OneHot, test_var, {'mode':kw.MAX_ABS_INDICATOR}, [0., 0., 0., 0., 0., 0., 0., 0., 1., 0.]),
-    (Functions.OneHot, test_var, {'mode':kw.MIN_VAL}, [0., 0., 0., 0., 0., 0., 0., 0., 0., -0.23311696]),
-    (Functions.OneHot, test_var, {'mode':kw.MIN_ABS_VAL}, [0., 0., 0., 0.08976637, 0., 0., 0., 0., 0., 0.]),
-    (Functions.OneHot, test_var, {'mode':kw.MIN_INDICATOR}, [0., 0., 0., 0., 0., 0., 0., 0., 0., 1.]),
-    (Functions.OneHot, test_var, {'mode':kw.MIN_ABS_INDICATOR}, [0., 0., 0., 1.,0., 0., 0., 0., 0., 0.]),
-    (Functions.OneHot, [test_var, test_prob], {'mode':kw.PROB}, [0., 0., 0., 0.08976636599379373, 0., 0., 0., 0., 0., 0.]),
-    (Functions.OneHot, [test_var, test_prob], {'mode':kw.PROB_INDICATOR}, [0., 0., 0., 1., 0., 0., 0., 0., 0., 0.]),
-    (Functions.OneHot, [test_var, test_philox], {'mode':kw.PROB}, [0., 0.43037873274483895, 0., 0., 0., 0., 0., 0., 0., 0.]),
-    (Functions.OneHot, [test_var, test_philox], {'mode':kw.PROB_INDICATOR}, [0., 1., 0., 0., 0., 0., 0., 0., 0., 0.]),
+    (Functions.OneHot, test_var, {'mode':kw.MAX_VAL}, (0., 0., 0., 0., 0., 0., 0., 0., 0.92732552, 0.)),
+    (Functions.OneHot, test_var, {'mode':kw.MAX_ABS_VAL}, (0., 0., 0., 0., 0., 0., 0., 0., 0.92732552, 0.)),
+    (Functions.OneHot, -test_var, {'mode':kw.MAX_ABS_VAL}, (0., 0., 0., 0., 0., 0., 0., 0., 0.92732552, 0.)),
+    (Functions.OneHot, test_var, {'mode':kw.MAX_INDICATOR}, (0., 0., 0., 0., 0., 0., 0., 0., 1., 0.)),
+    (Functions.OneHot, test_var, {'mode':kw.MAX_ABS_INDICATOR}, (0., 0., 0., 0., 0., 0., 0., 0., 1., 0.)),
+    (Functions.OneHot, test_var, {'mode':kw.MIN_VAL}, (0., 0., 0., 0., 0., 0., 0., 0., 0., -0.23311696)),
+    (Functions.OneHot, test_var, {'mode':kw.MIN_ABS_VAL}, (0., 0., 0., 0.08976637, 0., 0., 0., 0., 0., 0.)),
+    (Functions.OneHot, test_var, {'mode':kw.MIN_INDICATOR}, (0., 0., 0., 0., 0., 0., 0., 0., 0., 1.)),
+    (Functions.OneHot, test_var, {'mode':kw.MIN_ABS_INDICATOR}, (0., 0., 0., 1.,0., 0., 0., 0., 0., 0.)),
+    (Functions.OneHot, [test_var, test_prob], {'mode':kw.PROB}, (0., 0., 0., 0.08976636599379373, 0., 0., 0., 0., 0., 0.)),
+    (Functions.OneHot, [test_var, test_prob], {'mode':kw.PROB_INDICATOR}, (0., 0., 0., 1., 0., 0., 0., 0., 0., 0.)),
+    (Functions.OneHot, [test_var, test_philox], {'mode':kw.PROB}, expected_philox_prob),
+    (Functions.OneHot, [test_var, test_philox], {'mode':kw.PROB_INDICATOR}, expected_philox_ind),
 ]
 
 # use list, naming function produces ugly names
@@ -45,8 +52,8 @@ names = [
     "OneHot MIN_ABS_INDICATOR",
     "OneHot PROB",
     "OneHot PROB_INDICATOR",
-    "OneHot PROB PHILOX",
-    "OneHot PROB_INDICATOR PHILOX",
+    "OneHot PROB Philox",
+    "OneHot PROB_INDICATOR Philox",
 ]
 
 GROUP_PREFIX="SelectionFunction "
@@ -62,10 +69,15 @@ def test_basic(func, variable, params, expected, benchmark, func_mode):
     if len(variable) == 2 and variable[1] is test_philox:
         f.parameters.random_state.set(_SeededPhilox([0]))
 
+    if func_mode != 'Python':
+        precision = pytest.helpers.llvm_current_fp_precision()
+        expected = llvm_res[precision].get(expected, expected)
+
     EX = pytest.helpers.get_func_execution(f, func_mode)
 
     EX(variable)
     res = EX(variable)
+
     assert np.allclose(res, expected)
     if benchmark.enabled:
         benchmark(EX, variable)

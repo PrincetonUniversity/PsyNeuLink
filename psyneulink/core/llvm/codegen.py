@@ -513,7 +513,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         x = self.get_rval(x)
         if helpers.is_scalar(x):
             return x
-        res = self.ctx.float_ty("-Inf")
+        res = self.ctx.float_ty(float("-Inf"))
         def find_max(builder, x):
             nonlocal res
             # to propagate NaNs we use unordered >,

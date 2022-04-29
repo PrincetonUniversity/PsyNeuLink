@@ -193,6 +193,7 @@ from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.utilities import NumericCollections
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
+from psyneulink.library.components.projections.pathway.autoassociativeprojection import get_auto_matrix, get_hetero_matrix
 
 __all__ = [
     'KWTAMechanism', 'KWTAError',
@@ -415,6 +416,17 @@ class KWTAMechanism(RecurrentTransferMechanism):
         # (it will be wrong if the user deletes an InputPort: currently, deleting input ports is not supported,
         # so it shouldn't be a problem)
         self.indexOfInhibitionInputPort = len(self.input_ports) - 1
+
+        # NOTE: this behavior matches what kwta tests assert. Values for
+        # auto and hetero were ALWAYS "user_specified" due to using
+        # values set in KWTAMechanism.__init__. To change this and use
+        # default RecurrentTransferMechanism behavior, the test values
+        # must be changed
+        matrix = (
+            get_auto_matrix(self.defaults.auto, self.recurrent_size)
+            + get_hetero_matrix(self.defaults.hetero, self.recurrent_size)
+        )
+        self.parameters.matrix._set(matrix, context)
 
     def _kwta_scale(self, current_input, context=None):
         k_value = self._get_current_parameter_value(self.parameters.k_value, context)

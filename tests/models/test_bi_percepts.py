@@ -126,7 +126,10 @@ def test_necker_cube(benchmark, comp_mode, n_nodes, n_time_steps, expected):
 
     # run the model
     res = bp_comp.run(input_dict, num_trials=n_time_steps, execution_mode=comp_mode)
-    np.testing.assert_allclose(res, expected)
+    if pytest.helpers.llvm_current_fp_precision() == 'fp32':
+        assert np.allclose(res, expected)
+    else:
+        np.testing.assert_allclose(res, expected)
 
     # Test that order of CIM ports follows order of Nodes in self.nodes
     for i in range(n_nodes):
