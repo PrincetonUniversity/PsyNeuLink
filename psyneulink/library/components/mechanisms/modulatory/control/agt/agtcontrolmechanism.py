@@ -162,7 +162,7 @@ Class Reference
 """
 from beartype import beartype
 
-from typing import Optional, Union
+from beartype.typing import Optional, Union
 
 from psyneulink.core.components.functions.stateful.integratorfunctions import DualAdaptiveIntegrator
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
@@ -246,7 +246,7 @@ class AGTControlMechanism(ControlMechanism):
     #     PREFERENCE_SET_NAME: 'ControlMechanismClassPreferences',
     #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  monitored_output_ports=None,
                  function=None,

@@ -184,7 +184,7 @@ import warnings
 import numpy as np
 from beartype import beartype
 
-from typing import Optional, Union, Callable, Literal
+from beartype.typing import Optional, Union, Callable, Literal
 
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
@@ -442,7 +442,7 @@ class LearningProjection(ModulatoryProjection_Base):
 
     projection_sender = LearningMechanism
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  sender: Optional[Union[LearningSignal, LearningMechanism]] = None,
                  receiver: Optional[Union[ParameterPort, MappingProjection]] = None,

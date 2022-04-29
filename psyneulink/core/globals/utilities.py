@@ -113,7 +113,7 @@ import typing
 from beartype import beartype
 
 from numbers import Number
-from typing import Optional, Union, Literal
+from beartype.typing import Optional, Union, Literal, TYPE_CHECKING
 
 from enum import Enum, EnumMeta, IntEnum
 from collections.abc import Mapping
@@ -309,7 +309,8 @@ def parameter_spec(param, numeric_only=None):
     return False
 
 
-NumericCollections = Union[Number, list[Number], tuple[Number], NDArray]
+NumericCollections = Union[Number, list[list[Number]], list[list[Number]], list[Number],
+                           tuple[Number], tuple[tuple[Number]], NDArray]
 
 
 # A set of all valid parameter specification types
@@ -320,32 +321,32 @@ ValidParamSpecType = Union[
     tuple,
     dict,
     types.FunctionType,
-    'Projection',
-    'ControlMechanism',
-    type['ControlMechanism'],
-    'ControlProjection',
-    type['ControlProjection'],
-    'ControlSignal',
-    type['ControlSignal'],
-    'GatingMechanism',
-    type['GatingMechanism'],
-    'GatingProjection',
-    type['GatingProjection'],
-    'GatingSignal',
-    type['GatingSignal'],
-    'LearningMechanism',
-    type['LearningMechanism'],
-    'LearningProjection',
-    type['LearningProjection'],
-    'LearningSignal',
-    type['LearningSignal'],
-    'AutoAssociativeProjection',
-    type['AutoAssociativeProjection'],
-    'MappingProjection',
-    type['MappingProjection'],
-    'MaskedMappingProjection',
-    type['MaskedMappingProjection'],
-    Literal['LEARNING', 'bias', 'control', 'gain', 'gate', 'leak', 'offset'],
+    'psyneulink.core.components.shellclasses.Projection',
+    'psyneulink.core.components.mechanisms.ControlMechanism',
+    type['psyneulink.core.components.mechanisms.ControlMechanism'],
+    'psyneulink.core.components.projections.ControlProjection',
+    type['psyneulink.core.components.projections.ControlProjection'],
+    'psyneulink.core.components.ports.ControlSignal',
+    type['psyneulink.core.components.ports.ControlSignal'],
+    'psyneulink.core.components.mechanisms.GatingMechanism',
+    type['psyneulink.core.components.mechanisms.GatingMechanism'],
+    'psyneulink.core.components.projections.GatingProjection',
+    type['psyneulink.core.components.projections.GatingProjection'],
+    'psyneulink.core.components.ports.GatingSignal',
+    type['psyneulink.core.components.ports.GatingSignal'],
+    'psyneulink.core.components.mechanisms.LearningMechanism',
+    type['psyneulink.core.components.mechanisms.LearningMechanism'],
+    'psyneulink.core.components.projections.LearningProjection',
+    type['psyneulink.core.components.projections.LearningProjection'],
+    'psyneulink.core.components.ports.LearningSignal',
+    type['psyneulink.core.components.ports.LearningSignal'],
+    'psyneulink.library.components.projections.AutoAssociativeProjection',
+    type['psyneulink.library.components.projections.AutoAssociativeProjection'],
+    'psyneulink.core.components.projections.MappingProjection',
+    type['psyneulink.core.components.projections.MappingProjection'],
+    'psyneulink.library.components.projections.MaskedMappingProjection',
+    type['psyneulink.library.components.projections.MaskedMappingProjection'],
+    Literal['LEARNING', 'bias', 'control', 'gain', 'gate', 'leak', 'offset', 'ControlSignal', 'ControlProjection'],
 ]
 
 
@@ -422,6 +423,7 @@ DistanceMetricLiteral = Literal[
     'angle',
     'correlation',
     'cosine',
+    'entropy',
     'cross-entropy',
     'energy'
 ]
@@ -687,7 +689,7 @@ def powerset(iterable):
     s = list(iterable)
     return chain.from_iterable(combinations(s, r) for r in range(len(s) + 1))
 
-# @tc.typecheck
+@beartype
 def tensor_power(items, levels: Optional[range] = None, flat=False):
     """return tensor product for all members of powerset of items
 
@@ -1702,7 +1704,7 @@ def safe_equals(x, y):
                 )
 
 
-# @tc.typecheck
+@beartype
 def _get_arg_from_stack(arg_name:str):
     # Get arg from the stack
 

@@ -27,13 +27,13 @@ import numbers
 import warnings
 from collections import deque
 from itertools import combinations, product
-# from typing import Optional, Union, Literal, Callable
-from typing import Optional, Union
+
+from beartype.typing import Optional, Union, Callable
 
 import numpy as np
 from beartype import beartype
 
-from typing import Optional, Union, Literal
+from beartype.typing import Optional, Union, Literal
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import (
@@ -217,7 +217,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         changes_shape = Parameter(True, stateful=False, loggable=False, pnl_internal=True)
 
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  # FIX: 12/11/18 JDC - NOT SAFE TO SPECIFY A MUTABLE TYPE AS DEFAULT
                  default_variable=None,
@@ -1154,7 +1154,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                 initializer = ContentAddressableMemory._enforce_memory_shape(initializer)
             return initializer
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  # FIX: REINSTATE WHEN 3.6 IS RETIRED:
                  # default_variable=None,
@@ -2174,16 +2174,16 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         distance_function = Parameter(Distance(metric=COSINE), stateful=False, loggable=False)
         selection_function = Parameter(OneHot(mode=MIN_INDICATOR), stateful=False, loggable=False)
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  retrieval_prob: Optional[Union[int, float]] = None,
                  storage_prob: Optional[Union[int, float]] = None,
-                 noise: Optional[Union[int, float, list, np.ndarray, callable]] = None,
+                 noise: Optional[Union[int, float, list, np.ndarray, Callable]] = None,
                  rate: Optional[Union[int, float, list, np.ndarray]] = None,
                  initializer=None,
-                 distance_function: Optional[Union[Distance, callable]] = None,
-                 selection_function: Optional[Union[OneHot, callable]] = None,
+                 distance_function: Optional[Union[Distance, Callable]] = None,
+                 selection_function: Optional[Union[OneHot, Callable]] = None,
                  duplicate_keys: Optional[Union[bool, Literal['overwrite']]] = None,
                  equidistant_keys_select: Optional[Literal['random', 'oldest', 'newest']] = None,
                  max_entries=None,
@@ -2616,7 +2616,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         ret_val[1] = list(memory[1])
         return ret_val
 
-    # @tc.typecheck
+    @beartype
     def _validate_memory(self, memory: Union[list, np.ndarray], context):
 
         # memory must be list or 2d array with 2 items
@@ -2626,14 +2626,14 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
 
         self._validate_key(memory[KEYS], context)
 
-    # @tc.typecheck
+    @beartype
     def _validate_key(self, key: Union[list, np.ndarray], context):
         # Length of key must be same as that of existing entries (so it can be matched on retrieval)
         if len(key) != self.parameters.key_size._get(context):
             raise FunctionError(f"Length of 'key' ({key}) to store in {self.__class__.__name__} ({len(key)}) "
                                 f"must be same as others in the dict ({self.parameters.key_size._get(context)})")
 
-    # @tc.typecheck
+    @beartype
     @handle_external_context()
     def get_memory(self, query_key:Union[list, np.ndarray], context=None):
         """get_memory(query_key, context=None)
@@ -2704,7 +2704,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         # Return as list of lists
         return [list(best_match_key), list(best_match_val)]
 
-    # @tc.typecheck
+    @beartype
     def _store_memory(self, memory:Union[list, np.ndarray], context):
         """Save an key-value pair to `memory <DictionaryMemory.memory>`
 
@@ -2763,7 +2763,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
 
         return storage_succeeded
 
-    # @tc.typecheck
+    @beartype
     @handle_external_context()
     def add_to_memory(self, memories:Union[list, np.ndarray], context=None):
         """Add one or more key-value pairs into `memory <ContentAddressableMemory.memory>`
@@ -2782,7 +2782,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         for memory in memories:
             self._store_memory(memory, context)
 
-    # @tc.typecheck
+    @beartype
     @handle_external_context()
     def delete_from_memory(self, memories:Union[list, np.ndarray], key_only:bool= True, context=None):
         """Delete one or more key-value pairs from `memory <ContentAddressableMememory.memory>`

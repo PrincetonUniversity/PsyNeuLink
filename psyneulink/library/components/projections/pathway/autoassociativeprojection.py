@@ -104,7 +104,7 @@ import numbers
 import numpy as np
 from beartype import beartype
 
-from typing import Optional, Union
+from beartype.typing import Optional, Union
 
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.nonstateful.transferfunctions import LinearMatrix
@@ -238,7 +238,7 @@ class AutoAssociativeProjection(MappingProjection):
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  owner=None,
                  sender=None,

@@ -24,7 +24,7 @@ import functools
 import numpy as np
 from beartype import beartype
 
-from typing import Optional, Union, Literal, Callable
+from beartype.typing import Optional, Union, Literal, Callable
 import types
 
 from psyneulink.core import llvm as pnlvm
@@ -208,7 +208,7 @@ class Stability(ObjectiveFunction):
         transfer_fct = Parameter(None, stateful=False, loggable=False)
         normalize = Parameter(False, stateful=False)
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  size=None,
@@ -781,7 +781,7 @@ class Distance(ObjectiveFunction):
         variable = Parameter(np.array([[0], [0]]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         metric = Parameter(DIFFERENCE, stateful=False)
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  metric: Optional[DistanceMetricLiteral] = None,

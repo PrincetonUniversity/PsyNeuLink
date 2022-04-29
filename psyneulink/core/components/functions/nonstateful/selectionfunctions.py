@@ -27,7 +27,7 @@ __all__ = ['SelectionFunction', 'OneHot', 'max_vs_avg', 'max_vs_next', 'MAX_VS_N
 import numpy as np
 from beartype import beartype
 
-from typing import Optional, Union, Literal
+from beartype.typing import Optional, Union, Literal
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
@@ -203,7 +203,7 @@ class OneHot(SelectionFunction):
                 # returns error message
                 return 'not one of {0}'.format(options)
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  mode: Optional[Literal['MAX_VAL', 'MAX_ABS_VAL', 'MAX_INDICATOR', 'MAX_ABS_INDICATOR',

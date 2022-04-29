@@ -201,12 +201,12 @@ Class Reference
 
 import inspect
 import warnings
-from typing import Union
+from beartype.typing import Union
 
 import numpy as np
 from beartype import beartype
 
-from typing import Optional, Union, Literal
+from beartype.typing import Optional, Union, Literal
 from PIL import Image
 
 from psyneulink.core.components.component import Component
@@ -474,7 +474,7 @@ class ShowGraph():
         self.learning_rank = learning_rank
         self.output_rank = output_rank
 
-    # @tc.typecheck
+    @beartype
     @handle_external_context(source=ContextFlags.COMPOSITION)
     def show_graph(self,
                    show_all: bool = False,
@@ -491,7 +491,7 @@ class ShowGraph():
                    show_projection_labels: bool = False,
                    show_projections_not_in_composition: bool = False,
                    active_items=None,
-                   output_fmt: Optional[Literal['pdf', 'gv', 'jupyter', 'gif']] = 'pdf',
+                   output_fmt: Optional[Literal['pdf', 'gv', 'jupyter', 'gif', 'source']] = 'pdf',
                    context=None,
                    *args,
                    **kwargs):
@@ -636,6 +636,7 @@ class ShowGraph():
             'jupyter': return the object (for working in jupyter/ipython notebooks);
             'gv': return graphviz object
             'gif': return gif used for animation
+            'source': return the source code for the graphviz object
             None : return None
 
         Returns
@@ -2164,7 +2165,7 @@ class ShowGraph():
                        color=learning_proj_color, penwidth=learning_proj_width)
         return True
 
-    # @tc.typecheck
+    @beartype
     def _assign_incoming_edges(self,
                                g,
                                rcvr,

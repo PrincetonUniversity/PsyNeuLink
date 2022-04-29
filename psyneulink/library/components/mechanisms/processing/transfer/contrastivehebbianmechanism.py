@@ -335,7 +335,7 @@ import copy
 import numpy as np
 from beartype import beartype
 
-from typing import Optional, Union, Callable, Literal
+from beartype.typing import Optional, Union, Callable, Literal
 
 from psyneulink.core.components.functions.function import get_matrix, is_function_type
 from psyneulink.core.components.functions.nonstateful.learningfunctions import ContrastiveHebbian, Hebbian
@@ -347,7 +347,7 @@ from psyneulink.core.globals.keywords import \
     SIZE, SOFT_CLAMP, TARGET, VARIABLE
 from psyneulink.core.globals.parameters import Parameter, SharedParameter
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
-from psyneulink.core.globals.utilities import is_numeric_or_none, ValidParamSpecType
+from psyneulink.core.globals.utilities import ValidParamSpecType, NumericCollections
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
     CONVERGENCE, RECURRENT, RECURRENT_INDEX, RecurrentTransferMechanism
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
@@ -980,7 +980,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     standard_output_port_names = RecurrentTransferMechanism.standard_output_port_names.copy()
     standard_output_port_names = [i['name'] for i in standard_output_ports]
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  input_size: int,
                  hidden_size: Optional[int] = None,
@@ -997,7 +997,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                  integrator_function=None,
                  initial_value=None,
                  noise=None,
-                 integration_rate: is_numeric_or_none = None,
+                 integration_rate: Optional[NumericCollections] = None,
                  integrator_mode: Optional[bool] = None,
                  clip=None,
                  minus_phase_termination_condition: Optional[Literal['CONVERGENCE', 'COUNT']] = None,
@@ -1148,7 +1148,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         if self._target_included:
             self.parameters.output_activity._set(self.input_ports[TARGET].socket_template, context)
 
-    # @tc.typecheck
+    @beartype
     def _instantiate_recurrent_projection(self,
                                           mech: Mechanism,
                                           # this typecheck was failing, I didn't want to fix (7/19/17 CW)

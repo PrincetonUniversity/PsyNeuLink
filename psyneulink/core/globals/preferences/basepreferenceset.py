@@ -12,7 +12,7 @@
 
 import inspect
 
-from typing import Union, Literal, Dict, Any
+from beartype.typing import Union, Literal, Dict, Any
 
 from psyneulink.core.globals.keywords import \
     NAME, DEFAULT_PREFERENCE_SET_OWNER, PREF_LEVEL, PREFERENCE_SET_NAME, PREFS, PREFS_OWNER

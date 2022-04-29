@@ -77,7 +77,7 @@ from collections.abc import Iterable
 import numpy as np
 from beartype import beartype
 
-from typing import Optional, Union, Callable
+from beartype.typing import Optional, Union, Callable
 
 from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.nonstateful.learningfunctions import Kohonen
@@ -276,7 +276,7 @@ class KohonenMechanism(TransferMechanism):
                                     FUNCTION: OneHot(mode=MAX_INDICATOR)}
                                    ])
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  size=None,

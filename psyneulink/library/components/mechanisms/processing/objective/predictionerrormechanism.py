@@ -163,12 +163,12 @@ Class Reference
 ---------------
 
 """
-from typing import Iterable
+from beartype.typing import Iterable
 
 import numpy as np
 from beartype import beartype
 
-from typing import Optional, Union
+from beartype.typing import Optional, Union
 
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import PredictionErrorDeltaFunction
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
@@ -285,7 +285,7 @@ class PredictionErrorMechanism(ComparatorMechanism):
         sample = None
         target = None
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  sample: Optional[Union[OutputPort, Mechanism_Base, dict, NumericCollections, str]] = None,
                  target: Optional[Union[OutputPort, Mechanism_Base, dict, NumericCollections, str]] = None,

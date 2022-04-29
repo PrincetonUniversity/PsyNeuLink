@@ -1086,7 +1086,7 @@ from numbers import Number
 import numpy as np
 from beartype import beartype
 
-from typing import Optional, Union, Literal, Type
+from beartype.typing import Optional, Union, Literal, Type
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component
@@ -1680,7 +1680,7 @@ class Mechanism_Base(Mechanism):
     # def __new__(cls, *args, **kwargs):
     # def __new__(cls, name=NotImplemented, params=NotImplemented, context=None):
 
-    # @tc.typecheck
+    @beartype
     @abc.abstractmethod
     def __init__(self,
                  default_variable=None,
@@ -3259,7 +3259,7 @@ class Mechanism_Base(Mechanism):
 
         return builder
 
-    # @tc.typecheck
+    @beartype
     def _show_structure(self,
                         show_functions: bool = False,
                         show_mech_function_params: bool = False,
@@ -3447,7 +3447,7 @@ class Mechanism_Base(Mechanism):
             return f'<td port="{self.name}" colspan="{cols}">' + \
                    mech_name + mech_roles + mech_condition + mech_function + mech_value + '</td>'
 
-        # @tc.typecheck
+        @beartype
         def port_table(port_list: ContentAddressableList,
                        port_type: Union[Type[InputPort], Type[ParameterPort], Type[OutputPort]]):
             """Return html with table for each port in port_list, including functions and/or values as specified
@@ -3606,7 +3606,7 @@ class Mechanism_Base(Mechanism):
     # def remove_projection(self, projection):
     #     pass
 
-    # @tc.typecheck
+    @beartype
     def _get_port_name(self, port:Port):
         if isinstance(port, InputPort):
             port_type = InputPort.__name__
@@ -3619,7 +3619,7 @@ class Mechanism_Base(Mechanism):
                 f'{InputPort.__name__}, {ParameterPort.__name__} or {OutputPort.__name__}'
         return port_type + '-' + port.name
 
-    # @tc.typecheck
+    @beartype
     @handle_external_context()
     def add_ports(self, ports, update_variable=True, context=None):
         """
@@ -3713,7 +3713,7 @@ class Mechanism_Base(Mechanism):
         return {INPUT_PORTS: instantiated_input_ports,
                 OUTPUT_PORTS: instantiated_output_ports}
 
-    # @tc.typecheck
+    @beartype
     def remove_ports(self, ports, context=REMOVE_PORTS):
         """
         remove_ports(ports)
@@ -3884,7 +3884,7 @@ class Mechanism_Base(Mechanism):
             return self.input_ports.index(port)
         raise MechanismError("{} is not an InputPort of {}.".format(port.name, self.name))
 
-    # # @tc.typecheck
+    # @beartype
     # def _get_port_value_labels(self, port_type: Union[InputPort, OutputPort]):
     def _get_port_value_labels(self, port_type, context=None):
         """Return list of labels for the value of each Port of specified port_type.

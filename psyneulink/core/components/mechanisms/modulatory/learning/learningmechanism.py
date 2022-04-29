@@ -532,8 +532,9 @@ from enum import Enum
 import numpy as np
 from beartype import beartype
 
-from typing import Optional, Union, Literal
+from beartype.typing import Optional, Union, Literal, Type
 
+from psyneulink.core.components.shellclasses import Port
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
@@ -579,6 +580,10 @@ def _is_learning_spec(spec, include_matrix_spec=True):
                                        include_matrix_spec=include_matrix_spec)
     except:
         return False
+
+
+ValidLearningSpecType = Union[Literal['LEARNING', 'ENABLED'], Port, Type[Port]]
+
 
 class LearningType(Enum):
     """
@@ -1001,7 +1006,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
             structural=True,
         )
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  # default_variable:Union[list, np.ndarray],
                  default_variable=None,

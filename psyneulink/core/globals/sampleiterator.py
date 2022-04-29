@@ -23,7 +23,7 @@ from numbers import Number
 import numpy as np
 from beartype import beartype
 
-from typing import Optional, Union, Callable
+from beartype.typing import Optional, Union, Callable
 
 __all__ = ['SampleSpec', 'SampleIterator']
 
@@ -150,7 +150,7 @@ class SampleSpec():
 
     """
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  start: Optional[Union[int, float]] = None,
                  stop: Optional[Union[int, float]] = None,

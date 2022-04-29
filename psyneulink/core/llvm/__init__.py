@@ -14,7 +14,7 @@ import functools
 import numpy as np
 import time
 from math import ceil, log2
-from typing import Set
+from beartype.typing import Set
 
 from llvmlite import ir
 

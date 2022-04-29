@@ -621,7 +621,7 @@ import warnings
 import numpy as np
 from beartype import beartype
 
-from typing import Optional, Union
+from beartype.typing import Optional, Union
 
 from psyneulink.core.components.component import Component, ComponentError
 from psyneulink.core.components.functions.function import Function
@@ -907,7 +907,7 @@ class OutputPort(Port_Base):
 
     #endregion
 
-    # @tc.typecheck
+    @beartype
     @handle_external_context()
     def __init__(self,
                  owner=None,
@@ -1065,7 +1065,7 @@ class OutputPort(Port_Base):
     def _parse_function_variable(self, variable, context=None):
         return _parse_output_port_variable(variable, self.owner)
 
-    # @tc.typecheck
+    @beartype
     def _parse_port_specific_specs(self, owner, port_dict, port_specific_spec):
         """Get variable spec and/or connections specified in an OutputPort specification tuple
 
@@ -1539,7 +1539,7 @@ class StandardOutputPorts():
 
     keywords = {PRIMARY, SEQUENTIAL, ALL}
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  owner: Component,
                  output_port_dicts: list,
@@ -1631,12 +1631,12 @@ class StandardOutputPorts():
 
         return dict_list
 
-    # @tc.typecheck
+    @beartype
     def add_port_dicts(self, output_port_dicts: list, indices: Optional[Union[int, str, list]] = None):
         self.data.extend(self._instantiate_std_port_list(output_port_dicts, indices))
         assert True
 
-    # @tc.typecheck
+    @beartype
     def get_port_dict(self, name:str):
         """Return a copy of the named OutputPort dict
         """
@@ -1647,7 +1647,7 @@ class StandardOutputPorts():
         #                                 format(name, StandardOutputPorts.__class__.__name__, self.owner.name))
         return None
 
-    # # @tc.typecheck
+    # @beartype
     # def get_dict(self, name:str):
     #     return self.data[self.names.index(name)].copy()
     #
@@ -1694,7 +1694,7 @@ def _parse_output_port_function(owner, output_port_name, function, params_dict_a
             return lambda x: function(x[OWNER_VALUE][0])
     return function
 
-# @tc.typecheck
+@beartype
 def _maintain_backward_compatibility(d:dict, name, owner):
     """Maintain compatibility with use of INDEX, ASSIGN and CALCULATE in OutputPort specification"""
 

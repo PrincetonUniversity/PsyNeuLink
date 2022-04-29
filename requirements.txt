@@ -20,3 +20,4 @@ leabra-psyneulink<=0.3.2
 rich>=10.1, <10.13
 pandas<1.4.3
 fastkde==1.0.19
+beartype

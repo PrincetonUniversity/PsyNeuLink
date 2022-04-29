@@ -77,7 +77,7 @@ Class Reference
 import numpy as np
 from beartype import beartype
 
-from typing import Optional, Union
+from beartype.typing import Optional, Union
 
 from enum import Enum
 from itertools import product

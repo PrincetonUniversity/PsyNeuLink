@@ -126,6 +126,8 @@ __all__ = [
 # **********************************************************************************************************************
 import operator
 
+from beartype.typing import Literal
+
 class MatrixKeywords:
     """
     Attributes
@@ -185,6 +187,9 @@ RANDOM_CONNECTIVITY_MATRIX = "RandomConnectivityMatrix"
 AUTO_ASSIGN_MATRIX = 'AutoAssignMatrix'
 DEFAULT_MATRIX = AUTO_ASSIGN_MATRIX
 # DEFAULT_MATRIX = IDENTITY_MATRIX
+
+MatrixKeywordLiteral = Literal["IdentityMatrix", "HollowMatrix", "InverseHollowMatrix", "FullConnectivityMatrix",
+                               "RandomConnectivityMatrix", "AutoAssignMatrix"]
 
 MATRIX_KEYWORDS = MatrixKeywords()
 MATRIX_KEYWORD_SET = MATRIX_KEYWORDS._set()

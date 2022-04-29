@@ -84,7 +84,7 @@ from collections.abc import Iterable
 
 from beartype import beartype
 
-from typing import Optional, Union
+from beartype.typing import Optional, Union
 import numpy as np
 
 from psyneulink.core.components.functions.function import Function
@@ -154,7 +154,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         function = Parameter(AdaptiveIntegrator(rate=0.5), stateful=False, loggable=False)
 
         #
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  size=None,

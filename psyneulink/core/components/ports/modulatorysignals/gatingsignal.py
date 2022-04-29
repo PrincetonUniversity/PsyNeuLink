@@ -246,7 +246,7 @@ Class Reference
 import numpy as np
 from beartype import beartype
 
-from typing import Optional, Union
+from beartype.typing import Optional, Union
 
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.ports.outputport import _output_port_variable_getter
@@ -419,7 +419,7 @@ class GatingSignal(ControlSignal):
 
     #endregion
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  owner=None,
                  reference_value=None,

@@ -47,7 +47,7 @@ Compiled code dump:
 """
 
 import os
-from typing import Any, Dict
+from beartype.typing import Any, Dict
 
 debug_env: Dict[str, Any] = dict()
 

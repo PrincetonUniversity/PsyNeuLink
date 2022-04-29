@@ -90,7 +90,7 @@ from collections.abc import Iterable
 
 from beartype import beartype
 
-from typing import Optional, Union
+from beartype.typing import Optional, Union
 import numpy as np
 
 from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
@@ -284,7 +284,7 @@ class ProcessingMechanism(ProcessingMechanism_Base):
         PREFERENCE_SET_NAME: 'ProcessingMechanismCustomClassPreferences',
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  size=None,

@@ -369,7 +369,7 @@ from collections.abc import Iterable
 
 from beartype import beartype
 
-from typing import Optional, Union
+from beartype.typing import Optional, Union
 
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
@@ -564,7 +564,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     standard_output_port_names.extend([OUTCOME])
 
     # FIX:  TYPECHECK MONITOR TO LIST OR ZIP OBJECT
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  monitor=None,
                  default_variable=None,
@@ -867,7 +867,7 @@ def _parse_monitor_specs(monitor_specs):
 # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
 #                      ??MAYBE INTEGRATE INTO Port MODULE (IN _instantate_port)
 # KAM commented out _instantiate_monitoring_projections 9/28/18 to avoid confusion because it never gets called
-# # @tc.typecheck
+# @beartype
 # def _instantiate_monitoring_projections(
 #     owner,
 #     sender_list: Union[list, ContentAddressableList],

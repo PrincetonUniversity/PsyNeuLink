@@ -577,7 +577,7 @@ import warnings
 import numpy as np
 from beartype import beartype
 
-from typing import Optional, Union, Literal
+from beartype.typing import Optional, Union, Literal
 
 from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import Function
@@ -876,7 +876,7 @@ class InputPort(Port_Base):
     #endregion
 
     @handle_external_context()
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  owner=None,
                  reference_value=None,
@@ -1115,7 +1115,7 @@ class InputPort(Port_Base):
     def _get_all_projections(self):
         return self._get_all_afferents()
 
-    # @tc.typecheck
+    @beartype
     def _parse_port_specific_specs(self, owner, port_dict, port_specific_spec):
         """Get weights, exponents and/or any connections specified in an InputPort specification tuple
 

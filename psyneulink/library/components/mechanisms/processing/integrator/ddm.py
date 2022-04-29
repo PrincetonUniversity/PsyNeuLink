@@ -366,7 +366,7 @@ from collections.abc import Iterable
 import numpy as np
 from beartype import beartype
 
-from typing import Optional, Union, Literal
+from beartype.typing import Optional, Union, Literal
 
 from psyneulink.core.components.functions.function import DEFAULT_SEED, _random_state_getter, _seed_setter
 from psyneulink.core.components.functions.stateful.integratorfunctions import \
@@ -755,7 +755,7 @@ class DDM(ProcessingMechanism):
                             ]
     standard_output_port_names = [i['name'] for i in standard_output_ports]
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  size=None,

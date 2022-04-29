@@ -826,7 +826,7 @@ from collections.abc import Iterable
 import numpy as np
 from beartype import beartype
 
-from typing import Optional, Union, Literal
+from beartype.typing import Optional, Union, Literal
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination, SUM
@@ -1285,7 +1285,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                 return f"must be boolean comparison operator or one of the following strings:" \
                        f" {','.join(comparison_operators.keys())}."
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  size=None,

@@ -36,7 +36,7 @@ COMMENT
 import numpy as np
 from beartype import beartype
 
-from typing import Optional, Union
+from beartype.typing import Optional, Union
 
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -89,7 +89,7 @@ class DefaultControlMechanism(ControlMechanism):
     #     PREFERENCE_SET_NAME: 'DefaultControlMechanismCustomClassPreferences',
     #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  objective_mechanism: Optional[Union[ObjectiveMechanism, list]] = None,
                  control_signals: Optional[list] = None,

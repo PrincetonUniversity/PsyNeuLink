@@ -2722,7 +2722,7 @@ import typing
 import warnings
 from copy import deepcopy, copy
 from inspect import isgenerator, isgeneratorfunction
-from typing import Union
+from beartype.typing import Union
 
 import graph_scheduler
 import networkx
@@ -2730,7 +2730,7 @@ import numpy as np
 import pint
 from beartype import beartype
 
-from typing import Optional, Union, Literal
+from beartype.typing import Optional, Union, Literal
 
 from PIL import Image
 
@@ -5081,7 +5081,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             break
         return external_modulators
 
-    tc.typecheck
+    @beartype
     def _create_CIM_ports(self, context=None):
         """
             - remove the default InputPort and OutputPort from the CIMs if this is the first time that real

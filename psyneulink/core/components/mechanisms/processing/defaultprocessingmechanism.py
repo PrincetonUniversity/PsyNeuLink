@@ -15,7 +15,7 @@
 import numpy as np
 from beartype import beartype
 
-from typing import Optional, Union
+from beartype.typing import Optional, Union
 
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.globals.defaults import SystemDefaultInputValue
@@ -54,7 +54,7 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
     class Parameters(Mechanism_Base.Parameters):
         variable = np.array([SystemDefaultInputValue])
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  size=None,

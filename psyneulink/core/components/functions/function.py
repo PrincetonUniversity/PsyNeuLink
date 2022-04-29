@@ -150,7 +150,7 @@ from enum import Enum, IntEnum
 import numpy as np
 from beartype import beartype
 
-from typing import Optional, Union
+from beartype.typing import Optional, Union, Callable, Literal
 
 from psyneulink.core.components.component import Component, ComponentError, DefaultsFlexibility
 from psyneulink.core.components.shellclasses import Function, Mechanism
@@ -159,7 +159,7 @@ from psyneulink.core.globals.keywords import (
     ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, EXAMPLE_FUNCTION_TYPE, FULL_CONNECTIVITY_MATRIX,
     FUNCTION_COMPONENT_CATEGORY, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, HOLLOW_MATRIX,
     IDENTITY_MATRIX, INVERSE_HOLLOW_MATRIX, NAME, PREFERENCE_SET_NAME, RANDOM_CONNECTIVITY_MATRIX, VALUE, VARIABLE,
-    MODEL_SPEC_ID_METADATA, MODEL_SPEC_ID_MDF_VARIABLE
+    MODEL_SPEC_ID_METADATA, MODEL_SPEC_ID_MDF_VARIABLE, MatrixKeywordLiteral
 )
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import REPORT_OUTPUT_PREF, ValidPrefSet
@@ -167,7 +167,7 @@ from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, P
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import (
     convert_to_np_array, get_global_seed, is_instance_or_subclass, object_has_single_value, parameter_spec, parse_valid_identifier, safe_len,
-    SeededRandomState, contains_type, is_numeric
+    SeededRandomState, contains_type, is_numeric, NumericCollections
 )
 
 __all__ = [
@@ -1147,7 +1147,7 @@ class EVCAuxiliaryFunction(Function_Base):
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
        }
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  function,
                  variable=None,
@@ -1252,3 +1252,7 @@ def get_matrix(specification, rows=1, cols=1, context=None):
 
     # Specification not recognized
     return None
+
+# Valid types for a matrix specification, note this is does not ensure that ND arrays are 1D or 2D like the
+# above code does.
+ValidMatrixSpecType = Union[MatrixKeywordLiteral, Callable, str, NumericCollections, np.matrix]

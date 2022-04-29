@@ -298,7 +298,7 @@ Class Reference
 """
 from beartype import beartype
 
-from typing import Optional, Union, Iterable
+from beartype.typing import Optional, Union, Iterable
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.stateful.integratorfunctions import FitzHughNagumoIntegrator
@@ -664,7 +664,7 @@ class LCControlMechanism(ControlMechanism):
 
         modulated_mechanisms = Parameter(None, stateful=False, loggable=False)
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  objective_mechanism: Optional[Union[ObjectiveMechanism, list]] = None,
@@ -895,14 +895,14 @@ class LCControlMechanism(ControlMechanism):
 
     # 5/8/20: ELIMINATE SYSTEM
     # SEEMS TO STILL BE USED BY SOME MODELS;  DELETE WHEN THOSE ARE UPDATED
-    # # @tc.typecheck
+    # @beartype
     # def _add_system(self, system, role:str):
     #     super()._add_system(system, role)
     #     if isinstance(self.modulated_mechanisms, str) and self.modulated_mechanisms == ALL:
     #         # Call with ContextFlags.COMPONENT so that OutputPorts are replaced rather than added
     #         self._instantiate_output_ports(context=Context(source=ContextFlags.COMPONENT))
 
-    # @tc.typecheck
+    @beartype
     def add_modulated_mechanisms(self, mechanisms:list):
         """Add ControlProjections to the specified Mechanisms.
         """
@@ -921,7 +921,7 @@ class LCControlMechanism(ControlMechanism):
             # self.aux_components.append(ControlProjection(sender=self.control_signals[0],
             #                                              receiver=parameter_port))
 
-    # @tc.typecheck
+    @beartype
     def remove_modulated_mechanisms(self, mechanisms:list):
         """Remove the ControlProjections to the specified Mechanisms.
         """

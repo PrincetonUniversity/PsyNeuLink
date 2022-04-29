@@ -101,7 +101,7 @@ Class Reference
 """
 from beartype import beartype
 
-from typing import Optional, Union
+from beartype.typing import Optional, Union
 
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.function import FunctionOutputType
@@ -240,7 +240,7 @@ class GatingProjection(ModulatoryProjection_Base):
 
     projection_sender = GatingMechanism
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  sender=None,
                  receiver=None,

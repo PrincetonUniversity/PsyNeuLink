@@ -24,7 +24,7 @@ import warnings
 import numpy as np
 from beartype import beartype
 
-from typing import Optional, Union
+from beartype.typing import Optional, Union
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility, _has_initializers_setter, ComponentsMeta
@@ -215,7 +215,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                 return 'functions in a list must be instantiated and have the desired noise variable shape'
 
     @handle_external_context()
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  rate=None,

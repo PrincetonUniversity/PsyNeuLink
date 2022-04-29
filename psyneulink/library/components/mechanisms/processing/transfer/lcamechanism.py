@@ -191,7 +191,7 @@ from collections.abc import Iterable
 import numpy as np
 from beartype import beartype
 
-from typing import Optional, Union
+from beartype.typing import Optional, Union
 
 from psyneulink.core.components.functions.nonstateful.objectivefunctions import Distance, MAX_ABS_DIFF
 from psyneulink.core.components.functions.nonstateful.selectionfunctions import max_vs_avg, max_vs_next, MAX_VS_NEXT, MAX_VS_AVG
@@ -439,10 +439,10 @@ class LCAMechanism(RecurrentTransferMechanism):
                                    {NAME:MAX_VS_AVG,
                                     FUNCTION:max_vs_avg}])
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 size: Optional[Union[int, list, np.array]] = None,
+                 size: Optional[Union[int, list, np.ndarray]] = None,
                  input_ports: Optional[Union[list, dict]] = None,
                  function=None,
                  initial_value=None,

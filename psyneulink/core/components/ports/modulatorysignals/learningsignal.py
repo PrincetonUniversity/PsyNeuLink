@@ -190,7 +190,7 @@ Class Reference
 import numpy as np
 from beartype import beartype
 
-from typing import Optional, Union
+from beartype.typing import Optional, Union
 
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.core.components.ports.outputport import PRIMARY
@@ -335,7 +335,7 @@ class LearningSignal(ModulatorySignal):
         value = Parameter(np.array([0]), read_only=True, aliases=['learning_signal'], pnl_internal=True)
         learning_rate = None
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  owner=None,
                  reference_value=None,

@@ -1077,7 +1077,7 @@ from collections.abc import Iterable
 import numpy as np
 from beartype import beartype
 
-from typing import Optional, Union, Callable
+from beartype.typing import Optional, Union, Callable
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility, Component
@@ -1742,7 +1742,7 @@ class OptimizationControlMechanism(ControlMechanism):
                        f"with a shape appropriate for all of the INPUT Nodes or InputPorts to which it will be applied."
 
     @handle_external_context()
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  agent_rep=None,
                  state_features: Optional[Union[str, Iterable, InputPort, OutputPort, Mechanism]] = SHADOW_INPUTS,

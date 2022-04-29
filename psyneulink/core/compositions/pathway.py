@@ -317,7 +317,7 @@ from enum import Enum
 
 from beartype import beartype
 
-from typing import Optional, Union, Literal
+from beartype.typing import Optional, Union, Literal
 
 from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole

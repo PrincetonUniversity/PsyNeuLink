@@ -777,7 +777,7 @@ from collections.abc import Iterable
 import numpy as np
 from beartype import beartype
 
-from typing import Optional, Union
+from beartype.typing import Optional, Union, Type
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import ComponentError, DefaultsFlexibility, component_keywords
@@ -1006,7 +1006,7 @@ class Port_Base(Port):
 
     classPreferenceLevel = PreferenceLevel.CATEGORY
 
-    # @tc.typecheck
+    @beartype
     @abc.abstractmethod
     def __init__(self,
                  owner: Union[Mechanism, Projection],
@@ -2583,8 +2583,8 @@ def _instantiate_port_list(owner,
 
     return ports
 
-# @tc.typecheck
-def _instantiate_port(port_type: _is_port_class,  # Port's type
+@beartype
+def _instantiate_port(port_type: Type[Port],  # Port's type
                       owner: Union[Mechanism, Projection],  # Port's owner
                       reference_value,  # constraint for Port's value and default for variable
                       name: Optional[str] = None,  # port's name if specified
@@ -2812,7 +2812,7 @@ PORT_SPEC_INDEX = 0
 #          THESE CAN BE USED BY THE InputPort's LinearCombination Function
 #          (AKIN TO HOW THE MECHANISM'S FUNCTION COMBINES InputPort VALUES)
 #          THIS WOULD ALLOW FULLY GENEREAL (HIEARCHICALLY NESTED) ALGEBRAIC COMBINATION OF INPUT VALUES TO A MECHANISM
-# @tc.typecheck
+@beartype
 def _parse_port_spec(port_type=None,
                       owner=None,
                       reference_value=None,
@@ -3356,11 +3356,11 @@ def _parse_port_spec(port_type=None,
 
 # FIX: REPLACE mech_port_attribute WITH DETERMINATION FROM port_type
 # FIX:          ONCE PORT CONNECTION CHARACTERISTICS HAVE BEEN IMPLEMENTED IN REGISTRY
-# @tc.typecheck
+@beartype
 def _get_port_for_socket(owner,
-                         connectee_port_type: Optional[Port] = None,
+                         connectee_port_type: Optional[Type[Port]] = None,
                          port_spec=None,
-                         port_types: Optional[Union[list, Port]] = None,
+                         port_types: Optional[Union[list, Type[Port]]] = None,
                          mech: Optional[Mechanism] = None,
                          mech_port_attribute: Optional[Union[str, list]] = None,
                          projection_socket: Optional[Union[str, set]] = None):

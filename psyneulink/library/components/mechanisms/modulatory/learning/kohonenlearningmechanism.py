@@ -97,7 +97,7 @@ Class Reference
 import numpy as np
 from beartype import beartype
 
-from typing import Optional, Union, Callable
+from beartype.typing import Optional, Union, Callable
 
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.function import is_function_type
@@ -322,7 +322,7 @@ class KohonenLearningMechanism(LearningMechanism):
         learning_timing = LearningTiming.EXECUTION_PHASE
         modulation = ADDITIVE
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable: Union[list, np.ndarray],
                  size=None,

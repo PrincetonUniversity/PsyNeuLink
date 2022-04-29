@@ -403,7 +403,7 @@ import warnings
 import numpy as np
 from beartype import beartype
 
-from typing import Optional, Union, Callable
+from beartype.typing import Optional, Union, Callable
 
 # FIX: EVCControlMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCControlMechanism
 #            SHOULD THEY BE LIMITED TO EVC??
@@ -794,7 +794,7 @@ class ControlSignal(ModulatorySignal):
 
     #endregion
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  owner=None,
                  reference_value=None,

@@ -190,7 +190,7 @@ from collections.abc import Iterable
 import numpy as np
 from beartype import beartype
 
-from typing import Optional, Union, Callable, Literal
+from beartype.typing import Optional, Union, Callable, Literal
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import _get_parametervalue_attr
@@ -216,7 +216,7 @@ from psyneulink.core.globals.parameters import Parameter, SharedParameter
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.registry import register_instance, remove_instance_from_registry
 from psyneulink.core.globals.socket import ConnectionInfo
-from psyneulink.core.globals.utilities import is_numeric_or_none, ValidParamSpecType
+from psyneulink.core.globals.utilities import NumericCollections, ValidParamSpecType
 from psyneulink.core.scheduling.condition import Condition, WhenFinished
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism import \
@@ -646,7 +646,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     standard_output_port_names = TransferMechanism.standard_output_port_names.copy()
     standard_output_port_names.extend([ENERGY_OUTPUT_PORT_NAME, ENTROPY_OUTPUT_PORT_NAME])
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  size=None,
@@ -660,7 +660,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                  integrator_mode=None,
                  integrator_function=None,
                  initial_value=None,
-                 integration_rate: is_numeric_or_none = None,
+                 integration_rate: Optional[NumericCollections] = None,
                  noise=None,
                  clip=None,
                  enable_learning: Optional[bool] = None,
@@ -1063,7 +1063,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             return
 
     # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
-    # @tc.typecheck
+    @beartype
     def _instantiate_recurrent_projection(self,
                                           mech: Mechanism_Base,
                                           # this typecheck was failing, I didn't want to fix (7/19/17 CW)

@@ -36,7 +36,7 @@ import numbers
 import numpy as np
 from beartype import beartype
 
-from typing import Optional, Union, Literal
+from beartype.typing import Optional, Union, Literal
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import Function_Base, FunctionError, FunctionOutputType
@@ -203,7 +203,7 @@ class Concatenate(CombinationFunction):  # -------------------------------------
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         changes_shape = Parameter(True, stateful=False, loggable=False, pnl_internal=True)
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  scale: Optional[ValidParamSpecType] = None,
@@ -422,7 +422,7 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  scale: Optional[ValidParamSpecType] = None,
@@ -725,7 +725,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         changes_shape = Parameter(True, stateful=False, loggable=False, pnl_internal=True)
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  # weights:  Optional[ValidParamSpecType] = None,
                  # exponents:  Optional[ValidParamSpecType] = None,
@@ -1173,7 +1173,7 @@ class LinearCombination(
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  # weights:  Optional[ValidParamSpecType] = None,
@@ -1697,7 +1697,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  # weights: Optional[ValidParamSpecType] = None,
@@ -1956,7 +1956,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
         variable = Parameter(np.array([[1], [1]]), pnl_internal=True, constructor_argument='default_variable')
         gamma = Parameter(1.0, modulable=True)
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  gamma: Optional[float] = None,

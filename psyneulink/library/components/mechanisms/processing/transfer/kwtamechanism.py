@@ -185,7 +185,7 @@ from collections.abc import Iterable
 import numpy as np
 from beartype import beartype
 
-from typing import Optional, Union
+from beartype.typing import Optional, Union
 
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Logistic
 from psyneulink.core.globals.keywords import KWTA_MECHANISM, K_VALUE, RATIO, RESULT, THRESHOLD
@@ -344,7 +344,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
         average_based = False
         inhibition_only = True
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  size=None,
@@ -646,7 +646,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
         # return output_vector
         # #endregion
 
-    # # @tc.typecheck
+    # @beartype
     # def _instantiate_recurrent_projection(self,
     #                                       mech: Mechanism_Base,
     #                                       matrix=FULL_CONNECTIVITY_MATRIX,

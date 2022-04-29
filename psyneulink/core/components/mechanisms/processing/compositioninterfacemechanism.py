@@ -113,7 +113,7 @@ from collections.abc import Iterable
 
 from beartype import beartype
 
-from typing import Optional, Union
+from beartype.typing import Optional, Union
 
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
@@ -176,7 +176,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         """
         function = Parameter(Identity, stateful=False, loggable=False)
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  size=None,

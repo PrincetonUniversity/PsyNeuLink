@@ -372,7 +372,7 @@ from copy import deepcopy
 import numpy as np
 from beartype import beartype
 
-from typing import Optional, Union
+from beartype.typing import Optional, Union
 
 from psyneulink.core.components.component import Component, parameter_keywords
 from psyneulink.core.components.functions.function import FunctionError, get_param_value_for_keyword
@@ -702,7 +702,7 @@ class ParameterPort(Port_Base):
 
     #endregion
 
-    tc.typecheck
+    @beartype
     def __init__(self,
                  owner,
                  reference_value=None,
@@ -804,7 +804,7 @@ class ParameterPort(Port_Base):
     def _get_all_projections(self):
         return self.mod_afferents
 
-    # @tc.typecheck
+    @beartype
     def _parse_port_specific_specs(self, owner, port_dict, port_specific_spec):
         """Get connections specified in a ParameterPort specification tuple
 

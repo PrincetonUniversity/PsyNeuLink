@@ -144,7 +144,7 @@ from collections.abc import Iterable
 import numpy as np
 from beartype import beartype
 
-from typing import Optional, Union
+from beartype.typing import Optional, Union
 
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
@@ -325,7 +325,7 @@ class ComparatorMechanism(ObjectiveMechanism):
     standard_output_port_names = ObjectiveMechanism.standard_output_port_names.copy()
     standard_output_port_names.extend([SSE, MSE])
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  sample: Optional[Union[OutputPort, Mechanism_Base, dict, NumericCollections, str]] = None,

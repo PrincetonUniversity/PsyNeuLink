@@ -111,7 +111,7 @@ import inspect
 
 from beartype import beartype
 
-from typing import Optional, Union
+from beartype.typing import Optional, Union
 
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
@@ -239,7 +239,7 @@ class ControlProjection(ModulatoryProjection_Base):
 
     projection_sender = ControlMechanism
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  sender=None,
                  receiver=None,

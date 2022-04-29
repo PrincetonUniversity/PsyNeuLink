@@ -389,7 +389,7 @@ from collections.abc import MutableMapping
 import numpy as np
 from beartype import beartype
 
-from typing import Optional, Union, Literal
+from beartype.typing import Optional, Union, Literal
 
 from psyneulink.core.globals.context import ContextFlags, _get_time, handle_external_context
 from psyneulink.core.globals.context import time as time_object
@@ -909,7 +909,7 @@ class Log:
             else:
                 assign_delivery_condition(item[0], item[1])
 
-    # @tc.typecheck
+    @beartype
     @handle_external_context()
     def _deliver_values(self, entries, context=None):
         from psyneulink.core.globals.parameters import parse_context
@@ -943,7 +943,7 @@ class Log:
 
         context.source = original_source
 
-    # @tc.typecheck
+    @beartype
     def _log_value(
             self,
             value,
@@ -1002,7 +1002,7 @@ class Log:
                 time = time or _get_time(self.owner, condition)
                 self.entries[self.owner.name] = LogEntry(time, condition_string, value)
 
-    # @tc.typecheck
+    @beartype
     @handle_external_context()
     def log_values(self, entries, context=None):
         from psyneulink.core.globals.parameters import parse_context
@@ -1121,7 +1121,7 @@ class Log:
                     # MODIFIED 6/15/20 END
                 assert True
 
-    # @tc.typecheck
+    @beartype
     def print_entries(self,
                       entries: Optional[Union[str, list, 'Component']] = 'all',
                       width: int = 120,
@@ -1296,7 +1296,7 @@ class Log:
                     if len(datum[eid]) > 1:
                         print("\n")
 
-    # @tc.typecheck
+    @beartype
     def nparray(self,
                 entries=None,
                 header:bool=True,
@@ -1537,7 +1537,7 @@ class Log:
 
         return log_dict
 
-    # @tc.typecheck
+    @beartype
     def csv(self, entries=None, owner_name: bool = False, quotes: Optional[Union[bool, str]] = "\'",
             contexts=NotImplemented, exclude_sims=False):
         """

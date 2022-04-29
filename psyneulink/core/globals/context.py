@@ -93,7 +93,7 @@ from queue import Queue
 import time as py_time  # "time" is declared below
 from beartype import beartype
 
-from typing import Optional, Union, Literal
+from beartype.typing import Optional, Union, Literal
 
 from psyneulink.core.globals.keywords import CONTEXT, CONTROL, EXECUTING, EXECUTION_PHASE, FLAGS, INITIALIZING, LEARNING, SEPARATOR_BAR, SOURCE, VALIDATE
 from psyneulink.core.globals.utilities import get_deepcopy_with_shared
@@ -187,7 +187,7 @@ class ContextFlags(enum.IntFlag):
     ALL_FLAGS = INITIALIZATION_MASK | EXECUTION_PHASE_MASK | SOURCE_MASK | RUN_MODE_MASK
 
     @classmethod
-    # @tc.typecheck
+    @beartype
     def _get_context_string(cls, condition_flags,
                             fields: Union[Literal['execution_phase', 'source'],
                                           set[Literal['execution_phase', 'source']],
@@ -539,7 +539,7 @@ class Context():
         self._change_flags(old, new, operation=replace)
 
 
-# @tc.typecheck
+@beartype
 def _get_context(context: Union[ContextFlags, Context, str]):
     """Set flags based on a string of ContextFlags keywords
     If context is already a ContextFlags mask, return that

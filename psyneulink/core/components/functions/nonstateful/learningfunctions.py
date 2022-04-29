@@ -28,7 +28,7 @@ from collections import namedtuple
 import numpy as np
 from beartype import beartype
 
-from typing import Optional, Union, Literal, Callable
+from beartype.typing import Optional, Union, Literal, Callable
 
 from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.function import (
@@ -1936,7 +1936,7 @@ class BackPropagation(LearningFunction):
 
     default_learning_rate = 1.0
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  activation_derivative_fct: Optional[Union[types.FunctionType, types.MethodType]]=None,

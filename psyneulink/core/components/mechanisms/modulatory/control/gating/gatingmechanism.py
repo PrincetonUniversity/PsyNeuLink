@@ -183,7 +183,7 @@ Class Reference
 import numpy as np
 from beartype import beartype
 
-from typing import Optional, Union
+from beartype.typing import Optional, Union
 
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.ports.modulatorysignals.gatingsignal import GatingSignal
@@ -435,7 +435,7 @@ class GatingMechanism(ControlMechanism):
             constructor_argument='gate'
         )
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  default_gating_allocation=None,
                  size=None,

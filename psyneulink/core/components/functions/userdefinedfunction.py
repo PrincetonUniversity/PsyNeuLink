@@ -12,7 +12,7 @@
 import numpy as np
 from beartype import beartype
 
-from typing import Optional, Union
+from beartype.typing import Optional, Union
 from inspect import signature, _empty, getsourcelines, getsourcefile, getclosurevars
 import ast
 
@@ -452,7 +452,7 @@ class UserDefinedFunction(Function_Base):
             pnl_internal=True,
         )
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  custom_function=None,
                  default_variable=None,

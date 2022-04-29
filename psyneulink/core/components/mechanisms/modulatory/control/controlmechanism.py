@@ -588,7 +588,7 @@ import warnings
 import numpy as np
 from beartype import beartype
 
-from typing import Optional, Union, Callable, Literal, Iterable
+from beartype.typing import Optional, Union, Callable, Literal, Iterable
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import Function_Base, is_function_type
@@ -1215,7 +1215,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
             # method?
             # validate_monitored_port_spec(self._owner, input_ports)
 
-    # @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  size=None,
