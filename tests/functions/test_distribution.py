@@ -56,54 +56,53 @@ llvm_expected['fp32'][normal_expected_philox] = (0.5655658841133118)
 llvm_expected['fp32'][uniform_expected_philox] = (0.6180108785629272)
 
 test_data = [
-    pytest.param(Functions.DriftDiffusionAnalytical, test_var, {}, None,
-                 dda_expected_default,
-                 id="DriftDiffusionAnalytical-DefaultParameters"),
+    pytest.param(Functions.DriftDiffusionAnalytical, test_var, {}, None, None,
+                 dda_expected_default, id="DriftDiffusionAnalytical-DefaultParameters"),
     pytest.param(Functions.DriftDiffusionAnalytical, test_var,
                  {"drift_rate": RAND1, "threshold": RAND2, "starting_value": RAND3,
-                  "non_decision_time":RAND4, "noise": RAND5}, None,
+                  "non_decision_time":RAND4, "noise": RAND5}, None, None,
                  dda_expected_random, id="DriftDiffusionAnalytical-RandomParameters"),
     pytest.param(Functions.DriftDiffusionAnalytical, -test_var,
                  {"drift_rate": RAND1, "threshold": RAND2, "starting_value": RAND3,
-                  "non_decision_time":RAND4, "noise": RAND5}, None,
+                  "non_decision_time":RAND4, "noise": RAND5}, None, None,
                  dda_expected_negative, id="DriftDiffusionAnalytical-NegInput"),
     pytest.param(Functions.DriftDiffusionAnalytical, 1e-4,
                  {"drift_rate": 1e-5, "threshold": RAND2, "starting_value": RAND3,
-                  "non_decision_time":RAND4, "noise": RAND5}, "Rounding Errors",
+                  "non_decision_time":RAND4, "noise": RAND5}, None, "Rounding Errors",
                  dda_expected_small, id="DriftDiffusionAnalytical-SmallDriftRate"),
     pytest.param(Functions.DriftDiffusionAnalytical, -1e-4,
                  {"drift_rate": 1e-5, "threshold": RAND2, "starting_value": RAND3,
-                  "non_decision_time":RAND4, "noise": RAND5}, "Rounding Errors",
+                  "non_decision_time":RAND4, "noise": RAND5}, None, "Rounding Errors",
                  dda_expected_small, id="DriftDiffusionAnalytical-SmallDriftRate-NegInput"),
     pytest.param(Functions.DriftDiffusionAnalytical, 1e-4,
                  {"drift_rate": -1e-5, "threshold": RAND2, "starting_value": RAND3,
-                  "non_decision_time":RAND4, "noise": RAND5}, "Rounding Errors",
+                  "non_decision_time":RAND4, "noise": RAND5}, None, "Rounding Errors",
                  dda_expected_small, id="DriftDiffusionAnalytical-SmallNegDriftRate"),
     # Two tests with different inputs to show that input is ignored.
-    pytest.param(Functions.NormalDist, 1e14, {"mean": RAND1, "standard_deviation": RAND2}, None, normal_expected_mt,
-                 id="NormalDist"),
-    pytest.param(Functions.NormalDist, 1e-4, {"mean": RAND1, "standard_deviation": RAND2}, None, normal_expected_mt,
-                 id="NormalDist Small Input"),
-    pytest.param(Functions.UniformDist, 1e14, {"low": min(RAND1, RAND2), "high": max(RAND1, RAND2)}, None,
-                 uniform_expected_mt, id="UniformDist"),
-    pytest.param(Functions.UniformDist, 1e-4, {"low": min(RAND1, RAND2), "high": max(RAND1, RAND2)}, None,
-                 uniform_expected_mt, id="UniformDist"),
+    pytest.param(Functions.NormalDist, 1e14, {"mean": RAND1, "standard_deviation": RAND2},
+                 None, None, normal_expected_mt, id="NormalDist"),
+    pytest.param(Functions.NormalDist, 1e-4, {"mean": RAND1, "standard_deviation": RAND2},
+                 None, None, normal_expected_mt, id="NormalDist Small Input"),
+    pytest.param(Functions.UniformDist, 1e14, {"low": min(RAND1, RAND2), "high": max(RAND1, RAND2)},
+                 None, None, uniform_expected_mt, id="UniformDist"),
+    pytest.param(Functions.UniformDist, 1e-4, {"low": min(RAND1, RAND2), "high": max(RAND1, RAND2)},
+                 None, None, uniform_expected_mt, id="UniformDist"),
     # Inf inputs select Philox PRNG, test_var should never be inf
-    pytest.param(Functions.NormalDist, np.inf, {"mean": RAND1, "standard_deviation": RAND2}, None,
-                 normal_expected_philox, id="NormalDist Philox"),
-    pytest.param(Functions.NormalDist, -np.inf, {"mean": RAND1, "standard_deviation": RAND2}, None,
-                 normal_expected_philox, id="NormalDist Philox"),
-    pytest.param(Functions.UniformDist, np.inf, {"low": min(RAND1, RAND2), "high": max(RAND1, RAND2)}, None,
-                 uniform_expected_philox, id="UniformDist Philox"),
-    pytest.param(Functions.UniformDist, -np.inf, {"low": min(RAND1, RAND2), "high": max(RAND1, RAND2)}, None,
-                 uniform_expected_philox, id="UniformDist Philox"),
+    pytest.param(Functions.NormalDist, 1e14, {"mean": RAND1, "standard_deviation": RAND2},
+                 _SeededPhilox, None, normal_expected_philox, id="NormalDist Philox"),
+    pytest.param(Functions.NormalDist, 1e-4, {"mean": RAND1, "standard_deviation": RAND2},
+                 _SeededPhilox, None, normal_expected_philox, id="NormalDist Philox"),
+    pytest.param(Functions.UniformDist, 1e14, {"low": min(RAND1, RAND2), "high": max(RAND1, RAND2)},
+                 _SeededPhilox, None, uniform_expected_philox, id="UniformDist Philox"),
+    pytest.param(Functions.UniformDist, 1e-4, {"low": min(RAND1, RAND2), "high": max(RAND1, RAND2)},
+                 _SeededPhilox, None, uniform_expected_philox, id="UniformDist Philox"),
 ]
 
 @pytest.mark.function
 @pytest.mark.transfer_function
 @pytest.mark.benchmark
-@pytest.mark.parametrize("func, variable, params, llvm_skip, expected", test_data)
-def test_execute(func, variable, params, llvm_skip, expected, benchmark, func_mode):
+@pytest.mark.parametrize("func, variable, params, prng, llvm_skip, expected", test_data)
+def test_execute(func, variable, params, prng, llvm_skip, expected, benchmark, func_mode):
     benchmark.group = "TransferFunction " + func.componentName
     if func_mode != 'Python':
         precision = pytest.helpers.llvm_current_fp_precision()
@@ -113,8 +112,8 @@ def test_execute(func, variable, params, llvm_skip, expected, benchmark, func_mo
         pytest.skip(llvm_skip)
 
     f = func(default_variable=variable, **params)
-    if np.isinf(variable):
-        f.parameters.random_state.set(_SeededPhilox([0]))
+    if prng is not None:
+        f.parameters.random_state.set(prng([0]))
 
     ex = pytest.helpers.get_func_execution(f, func_mode)
     res = ex(variable)
