@@ -389,24 +389,27 @@ def setup_mat_add(ctx):
 
 
 def setup_is_close(ctx):
-    builder = _setup_builtin_func_builder(ctx, "is_close", [ctx.float_ty,
-                                                            ctx.float_ty,
-                                                            ctx.float_ty,
-                                                            ctx.float_ty],
-                                          return_type=ctx.bool_ty)
-    val1, val2, rtol, atol = builder.function.args
+    # Make sure we always have fp64 variant
+    for float_ty in {ctx.float_ty, ir.DoubleType()}:
+        name = "is_close_{}".format(float_ty)
+        builder = _setup_builtin_func_builder(ctx, name, [float_ty,
+                                                          float_ty,
+                                                          float_ty,
+                                                          float_ty],
+                                              return_type=ctx.bool_ty)
+        val1, val2, rtol, atol = builder.function.args
 
-    fabs_f = ctx.get_builtin("fabs", [val2.type])
+        fabs_f = ctx.get_builtin("fabs", [val2.type])
 
-    diff = builder.fsub(val1, val2, "is_close_diff")
-    abs_diff = builder.call(fabs_f, [diff], "is_close_abs")
+        diff = builder.fsub(val1, val2, "is_close_diff")
+        abs_diff = builder.call(fabs_f, [diff], "is_close_abs")
 
-    abs2 = builder.call(fabs_f, [val2], "abs_val2")
+        abs2 = builder.call(fabs_f, [val2], "abs_val2")
 
-    rtol = builder.fmul(rtol, abs2, "is_close_rtol")
-    tol = builder.fadd(rtol, atol, "is_close_atol")
-    res  = builder.fcmp_ordered("<=", abs_diff, tol, "is_close_cmp")
-    builder.ret(res)
+        rtol = builder.fmul(rtol, abs2, "is_close_rtol")
+        tol = builder.fadd(rtol, atol, "is_close_atol")
+        res  = builder.fcmp_ordered("<=", abs_diff, tol, "is_close_cmp")
+        builder.ret(res)
 
 
 def setup_csch(ctx):
@@ -415,11 +418,14 @@ def setup_csch(ctx):
     x = builder.function.args[0]
     exp_f = ctx.get_builtin("exp", [x.type])
     # (2e**x)/(e**2x - 1)
+    # 2/(e**x - e**-x)
     ex = builder.call(exp_f, [x])
-    num = builder.fmul(ex.type(2), ex)
-    _2x = builder.fmul(x.type(2), x)
-    e2x = builder.call(exp_f, [_2x])
-    den = builder.fsub(e2x, e2x.type(1))
+
+    nx = helpers.fneg(builder, x)
+    enx = builder.call(exp_f, [nx])
+    den = builder.fsub(ex, enx)
+    num = den.type(2)
+
     res = builder.fdiv(num, den)
     builder.ret(res)
 
@@ -429,12 +435,13 @@ def setup_tanh(ctx):
                                           return_type=ctx.float_ty)
     x = builder.function.args[0]
     exp_f = ctx.get_builtin("exp", [x.type])
-    # (e**2x - 1)/(e**2x + 1)
+    # (e**2x - 1)/(e**2x + 1) is faster but doesn't handle large inputs (exp -> Inf) well (Inf/Inf = NaN)
+    # (1 - (2/(exp(2*x) + 1))) is a bit slower but handles large inputs better
     _2x = builder.fmul(x.type(2), x)
     e2x = builder.call(exp_f, [_2x])
-    num = builder.fsub(e2x, e2x.type(1))
     den = builder.fadd(e2x, e2x.type(1))
-    res = builder.fdiv(num, den)
+    res = builder.fdiv(den.type(2), den)
+    res = builder.fsub(res.type(1), res)
     builder.ret(res)
 
 
@@ -443,12 +450,14 @@ def setup_coth(ctx):
                                           return_type=ctx.float_ty)
     x = builder.function.args[0]
     exp_f = ctx.get_builtin("exp", [x.type])
+    # (e**2x + 1)/(e**2x - 1) is faster but doesn't handle large inputs (exp -> Inf) well (Inf/Inf = NaN)
+    # (1 + (2/(exp(2*x) - 1))) is a bit slower but handles large inputs better
     # (e**2x + 1)/(e**2x - 1)
     _2x = builder.fmul(x.type(2), x)
     e2x = builder.call(exp_f, [_2x])
-    num = builder.fadd(e2x, e2x.type(1))
     den = builder.fsub(e2x, e2x.type(1))
-    res = builder.fdiv(num, den)
+    res = builder.fdiv(den.type(2), den)
+    res = builder.fadd(res.type(1), res)
     builder.ret(res)
 
 

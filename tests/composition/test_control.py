@@ -2464,10 +2464,15 @@ class TestControlMechanisms:
 
         if prng == 'Default':
             prngs = {s:np.random.RandomState([s]) for s in seeds}
+            def get_val(s, dty):
+                return prngs[s].uniform()
         elif prng == 'Philox':
             prngs = {s:_SeededPhilox([s]) for s in seeds}
+            def get_val(s, dty):
+                return prngs[s].random(dtype=dty)
 
-        expected = [prngs[s].uniform() for s in seeds] * 2
+        dty = np.float32 if pytest.helpers.llvm_current_fp_precision() == 'fp32' else np.float64
+        expected = [get_val(s, dty) for s in seeds] * 2
         assert np.allclose(np.squeeze(comp.results[:len(seeds) * 2]), expected)
 
     @pytest.mark.benchmark
@@ -2496,10 +2501,15 @@ class TestControlMechanisms:
         # cycle over the seeds twice setting and resetting the random state
         benchmark(comp.run, inputs={ctl_mech:seeds, mech:5.0}, num_trials=len(seeds) * 2, execution_mode=comp_mode)
 
+        precision = pytest.helpers.llvm_current_fp_precision()
         if prng == 'Default':
             assert np.allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[100, 21], [100, 23], [100, 20]] * 2)
-        elif prng == 'Philox':
+        elif prng == 'Philox' and precision == 'fp64':
             assert np.allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[100, 19], [100, 21], [100, 21]] * 2)
+        elif prng == 'Philox' and precision == 'fp32':
+            assert np.allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[100, 17], [100, 22], [100, 20]] * 2)
+        else:
+            assert False, "Unknown PRNG!"
 
     @pytest.mark.benchmark
     @pytest.mark.control
@@ -2525,10 +2535,15 @@ class TestControlMechanisms:
         # cycle over the seeds twice setting and resetting the random state
         benchmark(comp.run, inputs={ctl_mech:seeds, mech:0.1}, num_trials=len(seeds) * 2, execution_mode=comp_mode)
 
+        precision = pytest.helpers.llvm_current_fp_precision()
         if prng == 'Default':
             assert np.allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[-1, 3.99948962], [1, 3.99948962], [-1, 3.99948962]] * 2)
-        elif prng == 'Philox':
+        elif prng == 'Philox' and precision == 'fp64':
             assert np.allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[-1, 3.99948962], [-1, 3.99948962], [1, 3.99948962]] * 2)
+        elif prng == 'Philox' and precision == 'fp32':
+            assert np.allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[1, 3.99948978], [-1, 3.99948978], [1, 3.99948978]] * 2)
+        else:
+            assert False, "Unknown PRNG!"
 
     @pytest.mark.control
     @pytest.mark.composition
