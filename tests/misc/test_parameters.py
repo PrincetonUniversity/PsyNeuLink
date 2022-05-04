@@ -83,6 +83,19 @@ def test_parameter_values_overriding(ancestor, child, should_override, reset_var
         assert child.parameters.variable.default_value == original_child_variable
 
 
+def test_unspecified_inheritance():
+    class NewTM(pnl.TransferMechanism):
+        class Parameters(pnl.TransferMechanism.Parameters):
+            pass
+
+    assert NewTM.parameters.variable._inherited
+    NewTM.parameters.variable.default_value = -1
+    assert not NewTM.parameters.variable._inherited
+
+    NewTM.parameters.variable.reset()
+    assert NewTM.parameters.variable._inherited
+
+
 @pytest.mark.parametrize('obj, param_name, alias_name', param_alias_data)
 def test_aliases(obj, param_name, alias_name):
     obj = obj()

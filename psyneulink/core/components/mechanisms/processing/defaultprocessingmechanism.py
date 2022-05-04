@@ -20,6 +20,7 @@ from psyneulink._typing import Optional, Union
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.globals.defaults import SystemDefaultInputValue
 from psyneulink.core.globals.keywords import DEFAULT_PROCESSING_MECHANISM
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
@@ -52,7 +53,7 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
     #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
     class Parameters(Mechanism_Base.Parameters):
-        variable = np.array([SystemDefaultInputValue])
+        variable = Parameter(np.array([SystemDefaultInputValue]), constructor_argument='default_variable')
 
     @beartype
     def __init__(self,

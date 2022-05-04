@@ -2454,7 +2454,7 @@ class ParamEstimationFunction(OptimizationFunction):
                     :default value: True
                     :type: ``bool``
         """
-        variable = Parameter([[0], [0]], read_only=True)
+        variable = Parameter([[0], [0]], read_only=True, constructor_argument='default_variable')
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
         save_samples = True
