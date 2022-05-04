@@ -144,7 +144,6 @@ __all__ = [
 ]
 
 logger = logging.getLogger(__name__)
-# TODO: consider combining with _unused_args_sig_cache
 _signature_cache = weakref.WeakKeyDictionary()
 
 
@@ -1674,9 +1673,6 @@ def _get_arg_from_stack(arg_name:str):
     return arg_val
 
 
-_unused_args_sig_cache = weakref.WeakKeyDictionary()
-
-
 def prune_unused_args(func, args=None, kwargs=None):
     """
         Arguments
@@ -1697,10 +1693,10 @@ def prune_unused_args(func, args=None, kwargs=None):
     """
     # use the func signature to filter out arguments that aren't compatible
     try:
-        sig = _unused_args_sig_cache[func]
+        sig = _signature_cache[func]
     except KeyError:
         sig = inspect.signature(func)
-        _unused_args_sig_cache[func] = sig
+        _signature_cache[func] = sig
 
     has_args_param = False
     has_kwargs_param = False
