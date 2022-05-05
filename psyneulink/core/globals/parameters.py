@@ -814,6 +814,12 @@ class Parameter(ParameterBase):
 
             :default: None
 
+        specify_none
+            if True, a user-specified value of None for this Parameter
+            will set the _user_specified flag to True
+
+            :default: False
+
     """
     # The values of these attributes will never be inherited from parent Parameters
     # KDM 7/12/18: consider inheriting ONLY default_value?
@@ -878,6 +884,7 @@ class Parameter(ParameterBase):
         initializer=None,
         port=None,
         mdf_name=None,
+        specify_none=False,
         _owner=None,
         _inherited=False,
         # this stores a reference to the Parameter object that is the
@@ -942,6 +949,7 @@ class Parameter(ParameterBase):
             initializer=initializer,
             port=port,
             mdf_name=mdf_name,
+            specify_none=specify_none,
             _inherited=_inherited,
             _inherited_source=_inherited_source,
             _user_specified=_user_specified,
