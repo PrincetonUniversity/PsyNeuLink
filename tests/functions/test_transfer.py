@@ -35,25 +35,43 @@ def gaussian_distort_helper(seed):
 
 
 test_data = [
-    (Functions.Linear, test_var, {'slope':RAND1, 'intercept':RAND2}, None, test_var * RAND1 + RAND2),
-    (Functions.Exponential, test_var, {'scale':RAND1, 'rate':RAND2}, None, RAND1 * np.exp(RAND2 * test_var)),
-    (Functions.Logistic, test_var, {'gain':RAND1, 'x_0':RAND2, 'offset':RAND3, 'scale':RAND4}, None, RAND4 / (1 + np.exp(-(RAND1 * (test_var - RAND2)) + RAND3))),
-    (Functions.Tanh, test_var, {'gain':RAND1, 'bias':RAND2, 'x_0':RAND3, 'offset':RAND4}, None, tanh_helper),
-    (Functions.ReLU, test_var, {'gain':RAND1, 'bias':RAND2, 'leak':RAND3}, None, np.maximum(RAND1 * (test_var - RAND2), RAND3 * RAND1 *(test_var - RAND2))),
-    (Functions.Angle, [0.5488135,  0.71518937, 0.60276338, 0.54488318, 0.4236548,
-                       0.64589411, 0.43758721, 0.891773, 0.96366276, 0.38344152], {}, None,
-     [0.85314409, 0.00556188, 0.01070476, 0.0214405,  0.05559454,
-      0.08091079, 0.21657281, 0.19296643, 0.21343805, 0.92738261, 0.00483101]),
-    (Functions.Gaussian, test_var, {'standard_deviation':RAND1, 'bias':RAND2, 'scale':RAND3, 'offset':RAND4}, None, gaussian_helper),
-    (Functions.GaussianDistort, test_var.tolist(), {'bias': RAND1, 'variance':RAND2, 'offset':RAND3, 'scale':RAND4 }, None, gaussian_distort_helper(0)),
-    (Functions.GaussianDistort, test_var.tolist(), {'bias': RAND1, 'variance':RAND2, 'offset':RAND3, 'scale':RAND4, 'seed':0 }, None, gaussian_distort_helper(0)),
-    (Functions.SoftMax, test_var, {'gain':RAND1, 'per_item': False}, None, softmax_helper),
-    (Functions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_VAL}, 'per_item': False}, None, np.where(softmax_helper == np.max(softmax_helper), np.max(softmax_helper), 0)),
-    (Functions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_INDICATOR}, 'per_item': False}, None, np.where(softmax_helper == np.max(softmax_helper), 1, 0)),
-    (Functions.LinearMatrix, test_var.tolist(), {'matrix':test_matrix.tolist()}, None, np.dot(test_var, test_matrix)),
-    (Functions.LinearMatrix, test_var.tolist(), {'matrix':test_matrix_l.tolist()}, None, np.dot(test_var, test_matrix_l)),
-    (Functions.LinearMatrix, test_var.tolist(), {'matrix':test_matrix_s.tolist()}, None, np.dot(test_var, test_matrix_s)),
+    pytest.param(Functions.Linear, test_var, {'slope':RAND1, 'intercept':RAND2}, test_var * RAND1 + RAND2, id="LINEAR"),
+    pytest.param(Functions.Exponential, test_var, {'scale':RAND1, 'rate':RAND2}, RAND1 * np.exp(RAND2 * test_var), id="EXPONENTIAL"),
+    pytest.param(Functions.Logistic, test_var, {'gain':RAND1, 'x_0':RAND2, 'offset':RAND3, 'scale':RAND4}, RAND4 / (1 + np.exp(-(RAND1 * (test_var - RAND2)) + RAND3)), id="LOGISTIC"),
+    pytest.param(Functions.Tanh, test_var, {'gain':RAND1, 'bias':RAND2, 'x_0':RAND3, 'offset':RAND4}, tanh_helper, id="TANH"),
+    pytest.param(Functions.ReLU, test_var, {'gain':RAND1, 'bias':RAND2, 'leak':RAND3}, np.maximum(RAND1 * (test_var - RAND2), RAND3 * RAND1 *(test_var - RAND2)), id="RELU"),
+    pytest.param(Functions.Angle, [0.5488135,  0.71518937, 0.60276338, 0.54488318, 0.4236548,
+                                   0.64589411, 0.43758721, 0.891773, 0.96366276, 0.38344152], {},
+                 [0.85314409, 0.00556188, 0.01070476, 0.0214405,  0.05559454,
+                  0.08091079, 0.21657281, 0.19296643, 0.21343805, 0.92738261, 0.00483101],
+                 id="ANGLE"),
+    pytest.param(Functions.Gaussian, test_var, {'standard_deviation':RAND1, 'bias':RAND2, 'scale':RAND3, 'offset':RAND4}, gaussian_helper, id="GAUSSIAN"),
+    pytest.param(Functions.GaussianDistort, test_var.tolist(), {'bias': RAND1, 'variance':RAND2, 'offset':RAND3, 'scale':RAND4 }, gaussian_distort_helper(0), id="GAUSSIAN DISTORT GLOBAL SEED"),
+    pytest.param(Functions.GaussianDistort, test_var.tolist(), {'bias': RAND1, 'variance':RAND2, 'offset':RAND3, 'scale':RAND4, 'seed':0 }, gaussian_distort_helper(0), id="GAUSSIAN DISTORT"),
+    pytest.param(Functions.SoftMax, test_var, {'gain':RAND1, 'per_item': False}, softmax_helper, id="SOFT_MAX ALL"),
+    pytest.param(Functions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_VAL}, 'per_item': False}, np.where(softmax_helper == np.max(softmax_helper), np.max(softmax_helper), 0), id="SOFT_MAX MAX_VAL"),
+    pytest.param(Functions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_INDICATOR}, 'per_item': False}, np.where(softmax_helper == np.max(softmax_helper), 1, 0), id="SOFT_MAX MAX_INDICATOR"),
+    pytest.param(Functions.LinearMatrix, test_var.tolist(), {'matrix':test_matrix.tolist()}, np.dot(test_var, test_matrix), id="LINEAR_MATRIX SQUARE"),
+    pytest.param(Functions.LinearMatrix, test_var.tolist(), {'matrix':test_matrix_l.tolist()}, np.dot(test_var, test_matrix_l), id="LINEAR_MATRIX WIDE"),
+    pytest.param(Functions.LinearMatrix, test_var.tolist(), {'matrix':test_matrix_s.tolist()}, np.dot(test_var, test_matrix_s), id="LINEAR_MATRIX TALL"),
 ]
+
+@pytest.mark.function
+@pytest.mark.transfer_function
+@pytest.mark.benchmark
+@pytest.mark.parametrize("func, variable, params, expected", test_data)
+def test_execute(func, variable, params, expected, benchmark, func_mode):
+    if 'Angle' in func.componentName and func_mode != 'Python':
+        pytest.skip('Angle not yet supported by LLVM or PTX')
+    benchmark.group = "TransferFunction " + func.componentName
+    f = func(default_variable=variable, **params)
+    ex = pytest.helpers.get_func_execution(f, func_mode)
+
+    res = ex(variable)
+    assert np.allclose(res, expected)
+    if benchmark.enabled:
+        benchmark(ex, variable)
+
 
 relu_derivative_helper = lambda x : RAND1 if x > 0 else RAND1 * RAND3
 logistic_helper = RAND4 / (1 + np.exp(-(RAND1 * (test_var - RAND2)) + RAND3))
@@ -67,25 +85,6 @@ derivative_test_data = [
     (Functions.Tanh, test_var, {'gain':RAND1, 'bias':RAND2, 'offset':RAND3, 'scale':RAND4}, tanh_derivative_helper),
 ]
 
-# use list, naming function produces ugly names
-names = [
-    "LINEAR",
-    "EXPONENTIAL",
-    "LOGISTIC",
-    "TANH",
-    "RELU",
-    "ANGLE",
-    "GAUSIAN",
-    "GAUSSIAN DISTORT GLOBAL SEED",
-    "GAUSSIAN DISTORT",
-    "SOFT_MAX ALL",
-    "SOFT_MAX MAX_VAL",
-    "SOFT_MAX MAX_INDICATOR",
-    "LINEAR_MATRIX SQUARE",
-    "LINEAR_MATRIX WIDE",
-    "LINEAR_MATRIX TALL",
-]
-
 derivative_names = [
     "LINEAR_DERIVATIVE",
     "EXPONENTIAL_DERIVATIVE",
@@ -93,23 +92,6 @@ derivative_names = [
     "RELU_DERIVATIVE",
     "TANH_DERIVATIVE",
 ]
-
-@pytest.mark.function
-@pytest.mark.transfer_function
-@pytest.mark.benchmark
-@pytest.mark.parametrize("func, variable, params, fail, expected", test_data, ids=names)
-def test_execute(func, variable, params, fail, expected, benchmark, func_mode):
-    if 'Angle' in func.componentName and func_mode != 'Python':
-        pytest.skip('Angle not yet supported by LLVM or PTX')
-    benchmark.group = "TransferFunction " + func.componentName
-    f = func(default_variable=variable, **params)
-    ex = pytest.helpers.get_func_execution(f, func_mode)
-
-    res = ex(variable)
-    assert np.allclose(res, expected)
-    if benchmark.enabled:
-        benchmark(ex, variable)
-
 
 @pytest.mark.function
 @pytest.mark.transfer_function
