@@ -2578,7 +2578,7 @@ class SoftMax(TransferFunction):
 
         return np.asarray(variable)
 
-    def __gen_llvm_exp_sum_max(self, builder, index, ctx, vi, gain, max_ptr, exp_sum_ptr, max_ind_ptr):
+    def __gen_llvm_exp_sum(self, builder, index, ctx, vi, gain, exp_sum_ptr):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
 
         exp_f = ctx.get_builtin("exp", [ctx.float_ty])
@@ -2590,17 +2590,7 @@ class SoftMax(TransferFunction):
         new_exp_sum = builder.fadd(exp_sum, exp_val)
         builder.store(new_exp_sum, exp_sum_ptr)
 
-        old_max = builder.load(max_ptr)
-        gt = builder.fcmp_ordered(">", exp_val, old_max)
-        new_max = builder.select(gt, exp_val, old_max)
-        builder.store(new_max, max_ptr)
-
-        old_index = builder.load(max_ind_ptr)
-        new_index = builder.select(gt, index, old_index)
-        builder.store(new_index, max_ind_ptr)
-
     def __gen_llvm_exp_div(self, builder, index, ctx, vi, vo, gain, exp_sum):
-        assert self.output == ALL or self.output == PROB
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         exp_f = ctx.get_builtin("exp", [ctx.float_ty])
@@ -2615,55 +2605,37 @@ class SoftMax(TransferFunction):
         exp_sum_ptr = builder.alloca(ctx.float_ty)
         builder.store(exp_sum_ptr.type.pointee(0), exp_sum_ptr)
 
-        max_ptr = builder.alloca(ctx.float_ty)
-        builder.store(max_ptr.type.pointee(float('-inf')), max_ptr)
-
-        max_ind_ptr = builder.alloca(ctx.int32_ty)
-        builder.store(max_ind_ptr.type.pointee(-1), max_ind_ptr)
-
         gain_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, GAIN)
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
 
         with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_sum_max") as args:
-            self.__gen_llvm_exp_sum_max(*args, ctx=ctx, vi=arg_in,
-                                        max_ptr=max_ptr, gain=gain,
-                                        max_ind_ptr=max_ind_ptr,
-                                        exp_sum_ptr=exp_sum_ptr)
+            self.__gen_llvm_exp_sum(*args, ctx=ctx, vi=arg_in, gain=gain,
+                                    exp_sum_ptr=exp_sum_ptr)
 
         exp_sum = builder.load(exp_sum_ptr)
-        index = builder.load(max_ind_ptr)
-        ptro = builder.gep(arg_out, [ctx.int32_ty(0), index])
 
         if self.output == ALL:
             with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_div") as args:
                 self.__gen_llvm_exp_div(ctx=ctx, vi=arg_in, vo=arg_out,
                                         gain=gain, exp_sum=exp_sum, *args)
-        elif self.output == MAX_VAL:
-            # zero out the output array
-            with pnlvm.helpers.array_ptr_loop(builder, arg_in, "zero_output") as (b,i):
-                b.store(ctx.float_ty(0), b.gep(arg_out, [ctx.int32_ty(0), i]))
+            return builder
 
-            ptri = builder.gep(arg_in, [ctx.int32_ty(0), index])
-            exp_f = ctx.get_builtin("exp", [ctx.float_ty])
-            orig_val = builder.load(ptri)
-            val = builder.fmul(orig_val, gain)
-            val = builder.call(exp_f, [val])
-            val = builder.fdiv(val, exp_sum)
-            builder.store(val, ptro)
-        elif self.output == MAX_INDICATOR:
-            # zero out the output array
-            with pnlvm.helpers.array_ptr_loop(builder, arg_in, "zero_output") as (b,i):
-                b.store(ctx.float_ty(0), b.gep(arg_out, [ctx.int32_ty(0), i]))
-            builder.store(ctx.float_ty(1), ptro)
+        one_hot_f = ctx.import_llvm_function(self.one_hot_function, tags=tags)
+        one_hot_p = pnlvm.helpers.get_param_ptr(builder, self, params, 'one_hot_function')
+        one_hot_s = pnlvm.helpers.get_state_ptr(builder, self, state, 'one_hot_function')
+
+        assert one_hot_f.args[3].type == arg_out.type
+        one_hot_out = arg_out
+        one_hot_in = builder.alloca(one_hot_f.args[2].type.pointee)
+
+        if self.output in {MAX_VAL, MAX_INDICATOR}:
+            with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_div") as (b, i):
+                self.__gen_llvm_exp_div(ctx=ctx, vi=arg_in, vo=one_hot_in,
+                                        gain=gain, exp_sum=exp_sum, builder=b, index=i)
+
+            builder.call(one_hot_f, [one_hot_p, one_hot_s, one_hot_in, one_hot_out])
+
         elif self.output == PROB:
-            one_hot_f = ctx.import_llvm_function(self.one_hot_function, tags=tags)
-            one_hot_p = pnlvm.helpers.get_param_ptr(builder, self, params, 'one_hot_function')
-            one_hot_s = pnlvm.helpers.get_state_ptr(builder, self, state, 'one_hot_function')
-
-            assert one_hot_f.args[3].type == arg_out.type
-            one_hot_out = arg_out
-            one_hot_in = builder.alloca(one_hot_f.args[2].type.pointee)
-
             one_hot_in_data = builder.gep(one_hot_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
             one_hot_in_dist = builder.gep(one_hot_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
 
