@@ -2630,16 +2630,15 @@ class SoftMax(TransferFunction):
                                         max_ind_ptr=max_ind_ptr,
                                         exp_sum_ptr=exp_sum_ptr)
 
-        output_type = self.output
         exp_sum = builder.load(exp_sum_ptr)
         index = builder.load(max_ind_ptr)
         ptro = builder.gep(arg_out, [ctx.int32_ty(0), index])
 
-        if output_type == ALL:
+        if self.output == ALL:
             with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_div") as args:
                 self.__gen_llvm_exp_div(ctx=ctx, vi=arg_in, vo=arg_out,
                                         gain=gain, exp_sum=exp_sum, *args)
-        elif output_type == MAX_VAL:
+        elif self.output == MAX_VAL:
             # zero out the output array
             with pnlvm.helpers.array_ptr_loop(builder, arg_in, "zero_output") as (b,i):
                 b.store(ctx.float_ty(0), b.gep(arg_out, [ctx.int32_ty(0), i]))
@@ -2651,11 +2650,13 @@ class SoftMax(TransferFunction):
             val = builder.call(exp_f, [val])
             val = builder.fdiv(val, exp_sum)
             builder.store(val, ptro)
-        elif output_type == MAX_INDICATOR:
+        elif self.output == MAX_INDICATOR:
             # zero out the output array
             with pnlvm.helpers.array_ptr_loop(builder, arg_in, "zero_output") as (b,i):
                 b.store(ctx.float_ty(0), b.gep(arg_out, [ctx.int32_ty(0), i]))
             builder.store(ctx.float_ty(1), ptro)
+        else:
+            assert False, "Unsupported output in {}: {}".format(self, self.output)
 
         return builder
 
