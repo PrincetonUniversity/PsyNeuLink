@@ -2600,7 +2600,7 @@ class SoftMax(TransferFunction):
         builder.store(new_index, max_ind_ptr)
 
     def __gen_llvm_exp_div(self, builder, index, ctx, vi, vo, gain, exp_sum):
-        assert self.output == ALL
+        assert self.output == ALL or self.output == PROB
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         exp_f = ctx.get_builtin("exp", [ctx.float_ty])
@@ -2611,7 +2611,7 @@ class SoftMax(TransferFunction):
 
         builder.store(val, ptro)
 
-    def __gen_llvm_apply(self, ctx, builder, params, _, arg_in, arg_out):
+    def __gen_llvm_apply(self, ctx, builder, params, state, arg_in, arg_out, tags:frozenset):
         exp_sum_ptr = builder.alloca(ctx.float_ty)
         builder.store(exp_sum_ptr.type.pointee(0), exp_sum_ptr)
 
@@ -2655,22 +2655,44 @@ class SoftMax(TransferFunction):
             with pnlvm.helpers.array_ptr_loop(builder, arg_in, "zero_output") as (b,i):
                 b.store(ctx.float_ty(0), b.gep(arg_out, [ctx.int32_ty(0), i]))
             builder.store(ctx.float_ty(1), ptro)
+        elif self.output == PROB:
+            one_hot_f = ctx.import_llvm_function(self.one_hot_function, tags=tags)
+            one_hot_p = pnlvm.helpers.get_param_ptr(builder, self, params, 'one_hot_function')
+            one_hot_s = pnlvm.helpers.get_state_ptr(builder, self, state, 'one_hot_function')
+
+            assert one_hot_f.args[3].type == arg_out.type
+            one_hot_out = arg_out
+            one_hot_in = builder.alloca(one_hot_f.args[2].type.pointee)
+
+            one_hot_in_data = builder.gep(one_hot_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            one_hot_in_dist = builder.gep(one_hot_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
+
+            with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_div") as (b, i):
+                self.__gen_llvm_exp_div(ctx=ctx, vi=arg_in, vo=one_hot_in_dist,
+                                        gain=gain, exp_sum=exp_sum, builder=b, index=i)
+
+                dist_in = b.gep(arg_in, [ctx.int32_ty(0), i])
+                dist_out = b.gep(one_hot_in_data, [ctx.int32_ty(0), i])
+                b.store(b.load(dist_in), dist_out)
+
+
+            builder.call(one_hot_f, [one_hot_p, one_hot_s, one_hot_in, one_hot_out])
         else:
             assert False, "Unsupported output in {}: {}".format(self, self.output)
 
         return builder
 
-    def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out, *, tags:frozenset):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         if self.parameters.per_item.get():
             assert isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType)
             assert isinstance(arg_out.type.pointee.element, pnlvm.ir.ArrayType)
             for i in range(arg_in.type.pointee.count):
                 inner_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(i)])
                 inner_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
-                builder = self.__gen_llvm_apply(ctx, builder, params, _, inner_in, inner_out)
+                builder = self.__gen_llvm_apply(ctx, builder, params, state, inner_in, inner_out, tags=tags)
             return builder
         else:
-            return self.__gen_llvm_apply(ctx, builder, params, _, arg_in, arg_out)
+            return self.__gen_llvm_apply(ctx, builder, params, state, arg_in, arg_out, tags=tags)
 
     def apply_softmax(self, input_value, gain, output_type):
         # Modulate input_value by gain

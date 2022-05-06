@@ -7,6 +7,7 @@ import pytest
 from math import e, pi, sqrt
 
 SIZE=10
+np.random.seed(0)
 test_var = np.random.rand(SIZE)
 test_matrix = np.random.rand(SIZE, SIZE)
 test_matrix_s = np.random.rand(SIZE, SIZE // 4)
@@ -51,6 +52,8 @@ test_data = [
     pytest.param(Functions.SoftMax, test_var, {'gain':RAND1, 'per_item': False}, softmax_helper, id="SOFT_MAX ALL"),
     pytest.param(Functions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_VAL}, 'per_item': False}, np.where(softmax_helper == np.max(softmax_helper), np.max(softmax_helper), 0), id="SOFT_MAX MAX_VAL"),
     pytest.param(Functions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_INDICATOR}, 'per_item': False}, np.where(softmax_helper == np.max(softmax_helper), 1, 0), id="SOFT_MAX MAX_INDICATOR"),
+    pytest.param(Functions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.PROB}, 'per_item': False},
+                 [0.0, 0.0, 0.0, 0.0, test_var[4], 0.0, 0.0, 0.0, 0.0, 0.0], id="SOFT_MAX PROB"),
     pytest.param(Functions.LinearMatrix, test_var.tolist(), {'matrix':test_matrix.tolist()}, np.dot(test_var, test_matrix), id="LINEAR_MATRIX SQUARE"),
     pytest.param(Functions.LinearMatrix, test_var.tolist(), {'matrix':test_matrix_l.tolist()}, np.dot(test_var, test_matrix_l), id="LINEAR_MATRIX WIDE"),
     pytest.param(Functions.LinearMatrix, test_var.tolist(), {'matrix':test_matrix_s.tolist()}, np.dot(test_var, test_matrix_s), id="LINEAR_MATRIX TALL"),
