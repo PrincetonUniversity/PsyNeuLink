@@ -277,7 +277,7 @@ ANGLE = 'angle'
 CORRELATION = 'correlation'
 COSINE = 'cosine'
 PEARSON = 'Pearson'
-ENTROPY = 'cross-entropy'
+ENTROPY = 'entropy'
 CROSS_ENTROPY = 'cross-entropy'
 ENERGY = 'energy'
 
@@ -285,11 +285,6 @@ DISTANCE_METRICS = DistanceMetrics()
 DISTANCE_METRICS_SET = DISTANCE_METRICS._set()
 DISTANCE_METRICS_VALUES = DISTANCE_METRICS._values()
 DISTANCE_METRICS_NAMES = DISTANCE_METRICS._names()
-
-
-ENERGY = 'energy'
-ENTROPY = 'entropy'
-CONVERGENCE = 'CONVERGENCE'
 
 
 # **********************************************************************************************************************
