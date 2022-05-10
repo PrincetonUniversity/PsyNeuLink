@@ -1606,7 +1606,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                 # Note: if greater ndim>2, item in each field is >1d
                 shape = (1, num_fields, entry.shape[1])
             else:
-                raise ContentAddressableMemory(f"Unrecognized format for entry to be stored in {self.name}: {entry}.")
+                raise ValueError(f"Unrecognized format for entry to be stored in {self.name}: {entry}.")
             return np.atleast_3d(entry).reshape(shape)
 
         if existing_entries is not None:

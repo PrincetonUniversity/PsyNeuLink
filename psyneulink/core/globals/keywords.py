@@ -926,7 +926,6 @@ COMBINE = 'combine'
 CONCATENATE = 'concatenate'
 SEPARATE = 'separate'
 SUM = 'sum'
-DIFFERENCE = DIFFERENCE # Defined above for DISTANCE_METRICS
 PRODUCT = 'product'
 QUOTIENT = 'quotient'
 SUBTRACTION = 'subtraction'

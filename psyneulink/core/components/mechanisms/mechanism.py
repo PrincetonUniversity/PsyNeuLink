@@ -4291,7 +4291,7 @@ class MechanismList(UserList):
         return self.mechs[item]
 
     def __setitem__(self, key, value):
-        raise ("MechanismList is read only ")
+        raise RuntimeError("MechanismList is read only ")
 
     def __len__(self):
         return (len(self.mechs))

@@ -470,10 +470,10 @@ class RegressionCFA(CompositionFunctionApproximator):
                 return list([s for s in powerset(x) if len(s)>1])
 
             def error_for_too_few_terms(term):
-                spec_type = {'FF':'state_feature_values', 'CC':'control_signals'}
-                raise RegressionCFAError("Specification of {} for {} arg of {} "
-                                                "requires at least two {} be specified".
-                                                format('PV.' + term, repr(PREDICTION_TERMS), self.name, spec_type(term)))
+                spec_type = {'FF': 'state_feature_values', 'CC': 'control_signals'}
+                raise RegressionCFAError(f"Specification of {'PV.' + term} for {repr(PREDICTION_TERMS)} arg of "
+                                         f"{self.name} requires at least two {spec_type[term]} be specified")
+
 
             F = PV.F.value
             C = PV.C.value

@@ -9796,9 +9796,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         inputs, num_inputs_sets = self._parse_run_inputs(inputs, context)
 
-        if num_trials is not None:
-            num_trials = num_trials
-        else:
+        if num_trials is None:
             num_trials = num_inputs_sets
 
         scheduler._reset_counts_total(TimeScale.RUN, context.execution_id)

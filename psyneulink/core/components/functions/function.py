@@ -783,7 +783,7 @@ class Function_Base(Function):
                     raise FunctionError(f"Can't convert value ({value}: 2D np.ndarray object "
                                         f"with more than one array) to 1D array.")
             elif value.ndim == 1:
-                value = value
+                pass
             elif value.ndim == 0:
                 value = np.atleast_1d(value)
             else:

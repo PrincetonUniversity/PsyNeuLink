@@ -1607,9 +1607,7 @@ class Report:
                         # params_string = (f"params:")
                         params_string = ''
                     param_value_str = str(param_value).__str__().strip('[]')
-                    if isinstance(qualification, str):
-                        qualification = qualification
-                    else:
+                    if not isinstance(qualification, str):
                         qualification = ''
                     if params_string:
                         params_string += '\n'
@@ -1640,9 +1638,7 @@ class Report:
                             if not params_string:
                                 # params_string = (f"params:")
                                 params_string = ''
-                            if isinstance(qualification, str):
-                                qualification = qualification
-                            else:
+                            if not isinstance(qualification, str):
                                 qualification = ''
                             if function_params_string:
                                 function_params_string += '\n'
