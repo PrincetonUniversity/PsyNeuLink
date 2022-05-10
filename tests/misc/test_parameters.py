@@ -643,6 +643,7 @@ class TestSpecificationType:
             (NO_PARAMETERS, 0),
             (NO_VALUE, None),
             (NO_VALUE, 0),
+            (NO_VALUE, 1),
         ],
     )
     @pytest.mark.parametrize(
