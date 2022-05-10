@@ -128,6 +128,7 @@ import operator
 
 from psyneulink._typing import Literal
 
+
 class MatrixKeywords:
     """
     Attributes
