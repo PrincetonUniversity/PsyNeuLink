@@ -79,7 +79,6 @@ from beartype import beartype
 
 from psyneulink._typing import Optional, Union, Callable
 
-from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.nonstateful.learningfunctions import Kohonen
 from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \

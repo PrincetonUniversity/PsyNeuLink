@@ -33,7 +33,6 @@ from psyneulink._typing import Optional, Union, Literal, Callable
 from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.function import (
     DEFAULT_SEED, Function_Base, FunctionError, _random_state_getter, _seed_setter,
-    is_function_type,
 )
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Logistic, SoftMax
 from psyneulink.core.globals.context import handle_external_context

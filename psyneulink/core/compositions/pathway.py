@@ -315,9 +315,7 @@ Class Reference
 import warnings
 from enum import Enum
 
-from beartype import beartype
-
-from psyneulink._typing import Optional, Union, Literal
+from psyneulink._typing import Literal
 
 from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole

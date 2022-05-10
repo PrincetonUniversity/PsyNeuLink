@@ -101,7 +101,7 @@ Class Reference
 """
 from beartype import beartype
 
-from psyneulink._typing import Optional, Union
+from psyneulink._typing import Optional
 
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.function import FunctionOutputType

@@ -394,7 +394,7 @@ from psyneulink._typing import Optional, Union, Literal
 from psyneulink.core.globals.context import ContextFlags, _get_time, handle_external_context
 from psyneulink.core.globals.context import time as time_object
 from psyneulink.core.globals.keywords import ALL, CONTEXT, EID_SIMULATION, FUNCTION_PARAMETER_PREFIX, MODULATED_PARAMETER_PREFIX, TIME, VALUE
-from psyneulink.core.globals.utilities import AutoNumber, ContentAddressableList, is_component
+from psyneulink.core.globals.utilities import AutoNumber, ContentAddressableList
 
 __all__ = [
     'EntriesDict', 'Log', 'LogEntry', 'LogError', 'LogCondition'

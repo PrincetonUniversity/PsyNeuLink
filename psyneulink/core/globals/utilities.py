@@ -102,7 +102,6 @@ import collections
 import copy
 import inspect
 import logging
-import numbers
 import psyneulink
 import re
 import time
@@ -292,7 +291,7 @@ def parameter_spec(param, numeric_only=None):
         param = param.__name__
     elif isinstance(param, Component):
         param = param.__class__.__name__
-    if (isinstance(param, (numbers.Number,
+    if (isinstance(param, (Number,
                            np.ndarray,
                            list,
                            tuple,
@@ -314,7 +313,7 @@ NumericCollections = Union[Number, List[List[Number]], List[Number],
 
 # A set of all valid parameter specification types
 ValidParamSpecType = Union[
-    numbers.Number,
+    Number,
     np.ndarray,
     list,
     tuple,
@@ -375,7 +374,7 @@ def is_numeric(x):
 
 def is_number(x):
     return (
-        isinstance(x, numbers.Number)
+        isinstance(x, Number)
         and not isinstance(x, (bool, Enum))
     )
 
@@ -540,7 +539,7 @@ def iscompatible(candidate, reference=None, **kargs):
         else:
             match_length = 0
         # If reference is not a number, then don't require the candidate to be one
-        if not isinstance(reference, numbers.Number):
+        if not isinstance(reference, Number):
             number_only = False
         else:
             number_only = kargs[kwCompatibilityNumeric]
@@ -569,7 +568,7 @@ def iscompatible(candidate, reference=None, **kargs):
     #   should be added as option in future (i.e., to disallow it)
     if (isinstance(candidate, match_type) or
             (isinstance(candidate, (list, np.ndarray)) and (issubclass(match_type, (list, np.ndarray)))) or
-            (is_number(candidate) and issubclass(match_type,numbers.Number)) or
+            (is_number(candidate) and issubclass(match_type, Number)) or
             # IMPLEMENTATION NOTE: Allow UserDict types to match dict (make this an option in the future)
             (isinstance(candidate, UserDict) and match_type is dict) or
             # IMPLEMENTATION NOTE: Allow UserList types to match list (make this an option in the future)
@@ -618,7 +617,7 @@ def iscompatible(candidate, reference=None, **kargs):
                     if not is_number(value):
                         try:
                             # True for autograd ArrayBox (and maybe other types?)
-                            # if isinstance(value._value, numbers.Number):
+                            # if isinstance(value._value, Number):
                             from autograd.numpy.numpy_boxes import ArrayBox
                             if isinstance(value, ArrayBox):
                                 return True
@@ -651,7 +650,7 @@ def iscompatible(candidate, reference=None, **kargs):
                         return True
                     # IMPLEMENTATION NOTE:  ??No longer needed given recursive call above
                     # Deal with ints in one and floats in the other
-                    # # elif all((isinstance(c, numbers.Number) and isinstance(r, numbers.Number))
+                    # # elif all((isinstance(c, Number) and isinstance(r, Number))
                     # #          for c, r in cr):
                     # #     return True
                 else:
@@ -1472,7 +1471,7 @@ class ContentAddressableList(UserList):
 def is_value_spec(spec):
     from psyneulink.core.components.component import Component
 
-    if isinstance(spec, (numbers.Number, np.ndarray)):
+    if isinstance(spec, (Number, np.ndarray)):
         return True
     elif (
         isinstance(spec, list)

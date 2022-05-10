@@ -12,7 +12,7 @@
 import numpy as np
 from beartype import beartype
 
-from psyneulink._typing import Optional, Union
+from psyneulink._typing import Optional
 from inspect import signature, _empty, getsourcelines, getsourcefile, getclosurevars
 import ast
 

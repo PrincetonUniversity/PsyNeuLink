@@ -246,7 +246,7 @@ Class Reference
 import numpy as np
 from beartype import beartype
 
-from psyneulink._typing import Optional, Union
+from psyneulink._typing import Optional
 
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.ports.outputport import _output_port_variable_getter

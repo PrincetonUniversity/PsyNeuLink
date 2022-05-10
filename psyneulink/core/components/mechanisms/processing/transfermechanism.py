@@ -854,7 +854,7 @@ from psyneulink.core.globals.parameters import Parameter, FunctionParameter
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
-    all_within_range, append_type_to_name, iscompatible, is_comparison_operator, convert_to_np_array, safe_equals, parse_valid_identifier
+    all_within_range, append_type_to_name, iscompatible, convert_to_np_array, safe_equals, parse_valid_identifier
 from psyneulink.core.scheduling.time import TimeScale
 
 __all__ = [

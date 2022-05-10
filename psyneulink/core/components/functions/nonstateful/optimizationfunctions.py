@@ -49,7 +49,7 @@ from psyneulink.core.globals.context import ContextFlags, handle_external_contex
 from psyneulink.core.globals.defaults import MPI_IMPLEMENTATION
 from psyneulink.core.globals.keywords import \
     BOUNDS, GRADIENT_OPTIMIZATION_FUNCTION, GRID_SEARCH_FUNCTION, GAUSSIAN_PROCESS_FUNCTION, \
-    OPTIMIZATION_FUNCTION_TYPE, OWNER, VALUE, VARIABLE
+    OPTIMIZATION_FUNCTION_TYPE, OWNER, VALUE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.utilities import call_with_pruned_args

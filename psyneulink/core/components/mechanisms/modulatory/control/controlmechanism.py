@@ -590,8 +590,6 @@ from beartype import beartype
 
 from psyneulink._typing import Optional, Union, Callable, Literal, Iterable
 
-from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.functions.function import Function_Base, is_function_type
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import Concatenate
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
@@ -612,7 +610,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import ContentAddressableList, convert_to_list, convert_to_np_array, is_iterable
+from psyneulink.core.globals.utilities import ContentAddressableList, convert_to_list, convert_to_np_array
 
 __all__ = [
     'CONTROL_ALLOCATION', 'GATING_ALLOCATION', 'ControlMechanism', 'ControlMechanismError', 'ControlMechanismRegistry',

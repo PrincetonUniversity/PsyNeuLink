@@ -188,7 +188,6 @@ from psyneulink._typing import Optional, Union, Callable, Literal
 
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
-from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation, Reinforcement
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import LearningMechanism
@@ -203,7 +202,7 @@ from psyneulink.core.components.shellclasses import ShellClass
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, \
-    MATRIX, PARAMETER_PORT, PROJECTION_SENDER, ONLINE, AFTER
+    MATRIX, PARAMETER_PORT, PROJECTION_SENDER
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel

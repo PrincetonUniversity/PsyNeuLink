@@ -100,7 +100,6 @@ from beartype import beartype
 from psyneulink._typing import Optional, Union, Callable
 
 from psyneulink.core.components.component import parameter_keywords
-from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.nonstateful.learningfunctions import Hebbian
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
     ACTIVATION_INPUT, ACTIVATION_OUTPUT, LearningMechanism, LearningTiming, LearningType

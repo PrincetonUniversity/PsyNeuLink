@@ -24,7 +24,7 @@ import warnings
 import numpy as np
 from beartype import beartype
 
-from psyneulink._typing import Optional, Union
+from psyneulink._typing import Optional
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility, _has_initializers_setter, ComponentsMeta

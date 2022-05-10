@@ -162,7 +162,7 @@ Class Reference
 """
 from beartype import beartype
 
-from psyneulink._typing import Optional, Union
+from psyneulink._typing import Optional
 
 from psyneulink.core.components.functions.stateful.integratorfunctions import DualAdaptiveIntegrator
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism

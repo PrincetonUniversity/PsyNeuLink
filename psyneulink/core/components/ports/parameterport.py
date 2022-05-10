@@ -372,7 +372,7 @@ from copy import deepcopy
 import numpy as np
 from beartype import beartype
 
-from psyneulink._typing import Optional, Union
+from psyneulink._typing import Optional
 
 from psyneulink.core.components.component import Component, parameter_keywords
 from psyneulink.core.components.functions.function import FunctionError, get_param_value_for_keyword

@@ -27,7 +27,7 @@ Functions that return one or more samples from a distribution.
 import numpy as np
 from beartype import beartype
 
-from psyneulink._typing import Optional, Union
+from psyneulink._typing import Optional
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import (

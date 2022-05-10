@@ -37,7 +37,7 @@ from psyneulink._typing import Optional, Union, Literal
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import (
-    DEFAULT_SEED, FunctionError, _random_state_getter, _seed_setter, is_function_type, EPSILON, _noise_setter
+    DEFAULT_SEED, FunctionError, _random_state_getter, _seed_setter, EPSILON, _noise_setter
 )
 from psyneulink.core.components.functions.nonstateful.objectivefunctions import Distance
 from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot
