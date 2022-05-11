@@ -418,7 +418,7 @@ class MaxLikelihoodEstimator(OptimizationFunction):
 
                 self.parameters.search_space._set(search_space, context)
 
-                all_values, num_evals = self._grid_evaluate(self.owner, context, return_results=True)
+                all_values, num_evals = self._grid_evaluate(self.owner, context)
                 all_values = np.ctypeslib.as_array(all_values)
 
                 return all_values, num_evals

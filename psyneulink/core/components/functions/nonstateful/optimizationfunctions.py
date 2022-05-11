@@ -754,7 +754,7 @@ class OptimizationFunction(Function_Base):
         # return current_sample, current_value, evaluated_samples, estimated_values
         return current_sample, current_value, evaluated_samples, estimated_values
 
-    def _grid_evaluate(self, ocm, context, return_results=False):
+    def _grid_evaluate(self, ocm, context):
         """Helper method for evaluation of a grid of samples from search space via LLVM backends."""
         # assert ocm is ocm.agent_rep.controller
         # Compiled evaluate expects the same variable as mech function
@@ -767,7 +767,7 @@ class OptimizationFunction(Function_Base):
         if execution_mode == "PTX":
             outcomes = comp_exec.cuda_evaluate(variable, num_evals)
         elif execution_mode == "LLVM":
-            outcomes = comp_exec.thread_evaluate(variable, num_evals, return_results=return_results)
+            outcomes = comp_exec.thread_evaluate(variable, num_evals)
         else:
             assert False, f"Unknown execution mode for {ocm.name}: {execution_mode}."
 

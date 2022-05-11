@@ -663,16 +663,11 @@ class CompExecution(CUDAExecution):
             assert runs_np[0] <= runs, "Composition ran more times than allowed!"
             return _convert_ctype_to_python(ct_out)[0:runs_np[0]]
 
-    def _prepare_evaluate(self, variable, num_evaluations, return_results=False):
+    def _prepare_evaluate(self, variable, num_evaluations):
         ocm = self._composition.controller
         assert len(self._execution_contexts) == 1
 
         ocm_tags = {"evaluate", "alloc_range"}
-
-        # If we need to return trial by trial results from each simulation, add the
-        # "return_results" tag for compilation.
-        if return_results:
-            ocm_tags.add("simulation_return_results")
 
         ocm_tags = frozenset(ocm_tags)
         bin_func = pnlvm.LLVMBinaryFunction.from_obj(ocm, tags=ocm_tags)
@@ -717,9 +712,9 @@ class CompExecution(CUDAExecution):
 
         return ct_results
 
-    def thread_evaluate(self, variable, num_evaluations, return_results=False):
+    def thread_evaluate(self, variable, num_evaluations):
         ct_param, ct_state, ct_data, converted_variale, out_ty = \
-            self._prepare_evaluate(variable, num_evaluations, return_results)
+            self._prepare_evaluate(variable, num_evaluations)
 
         ct_results = out_ty()
         ct_variable = converted_variale.ctypes.data_as(self.__bin_func.c_func.argtypes[5])
