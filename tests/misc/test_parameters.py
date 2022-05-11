@@ -551,7 +551,8 @@ class TestSpecificationType:
         ],
     )
     @pytest.mark.parametrize(
-        "parent_cls_param, parent_init_param", [(1, 1), (1, None), (None, 1), (pnl.Parameter, 1)]
+        "parent_cls_param, parent_init_param",
+        [(1, 1), (1, None), (None, 1), (pnl.Parameter, 1)],
     )
     def test_inheritance(
         self,
@@ -629,3 +630,54 @@ class TestSpecificationType:
         assert TestParent.defaults.p == 0
         assert TestChild.defaults.p == 1
         assert TestGrandchild.defaults.p == 20
+
+    @pytest.mark.parametrize(
+        "child_cls_param, child_init_param",
+        [
+            (None, NO_INIT),
+            (0, NO_INIT),
+            (NO_PARAMETERS, None),
+            (NO_PARAMETERS, 0),
+            (NO_VALUE, None),
+            (NO_VALUE, 0),
+        ],
+    )
+    @pytest.mark.parametrize(
+        "parent_cls_param, parent_init_param",
+        [(1, 1), (1, None), (None, 1), (pnl.Parameter, 1)],
+    )
+    @pytest.mark.parametrize("construct_param", [0, None, NO_VALUE])
+    @pytest.mark.parametrize("specify_none", [True, False])
+    def test_specify_none(
+        self,
+        parent_cls_param,
+        parent_init_param,
+        child_cls_param,
+        child_init_param,
+        construct_param,
+        specify_none,
+    ):
+        if child_cls_param not in {NO_PARAMETERS, NO_VALUE}:
+            child_cls_param = pnl.Parameter(child_cls_param, specify_none=specify_none)
+
+        TestParent = TestSpecificationType._create_params_class_variant(
+            parent_cls_param, parent_init_param, parent_class=pnl.TransferMechanism
+        )
+        TestChild = TestSpecificationType._create_params_class_variant(
+            child_cls_param, child_init_param, parent_class=TestParent
+        )
+
+        if construct_param is NO_VALUE:
+            kwargs = {}
+        else:
+            kwargs = {"p": construct_param}
+
+        c = TestChild(**kwargs)
+
+        if "p" not in kwargs:
+            assert not c.parameters.p._user_specified
+        else:
+            if c.parameters.p.specify_none:
+                assert c.parameters.p._user_specified
+            else:
+                assert c.parameters.p._user_specified is (kwargs["p"] is not None)
