@@ -761,15 +761,19 @@ class Logistic(TransferFunction):  # -------------------------------------------
     `function <Logistic._function>` returns logistic transform of `variable <Logistic.variable>`:
 
     .. math::
-        \\frac{1}{1 + e^{ - gain ( variable + bias  - x_{0}) + offset}}
+         scale * \\frac{1}{1 + e^{ - gain ( variable + bias - x_{0} ) + offset}}
 
-    (this is an offset and scaled version of the `Tanh`, which is centered on origin).
+    (this is a vertically offset and scaled version of `Tanh`, which is centered on origin).
+
+    .. _Logistic_Note:
 
     .. note::
-        The **bias** and **x_0** arguments are identical, apart from opposite signs: **bias** is included to
-        accomodate the convention in the machine learning community; **x_0** is included to match the `standard
+        The **bias** and **x_0** arguments are identical, apart from having opposite signs: **bias** is included to
+        accommodate the convention in the machine learning community; **x_0** is included to match the `standard
         form of the Logistic Function <https://en.wikipedia.org/wiki/Logistic_function>`_ (in which **gain**
-        corresponds to the *k* parameter and **scale** corresponds to the *L* parameter).
+        corresponds to the *k* parameter and **scale** corresponds to the *L* parameter); **offset** implements a
+        form of bias that is not modulated by gain (i.e., it produces an offset of the function along the horizontal
+        axis).
 
     `derivative <Logistic.derivative>` returns the derivative of the Logistic using its **output**:
 
@@ -783,22 +787,26 @@ class Logistic(TransferFunction):  # -------------------------------------------
         specifies a template for the value to be transformed.
 
     gain : float : default 1.0
-        specifies value by which to multiply `variable <Logistic.variable>` before logistic transformation
+        specifies value by which to multiply each element of `variable <Logistic.variable>` after it is adjusted by
+        `bias <Logistic.bias>` and/or `x_0 <Logistic.x_0>`, but before adjustment by `offset <Logistic.offset>` and
+        logistic transformation (see `note <Logistic_Note>` above).
 
     bias : float : default 0.0
-        specifies value to add to each element of `variable <Logistic.variable>` before applying `gain <Logistic.gain>`
-        and before logistic transformation. This argument is identical to x_0, with the opposite sign.
+        specifies value to add to each element of `variable <Logistic.variable>` before applying `gain <Logistic.gain>`;
+        this argument has an effect identical to x_0, but with the opposite sign (see `note <Logistic_Note>` above).
 
     x_0 : float : default 0.0
-        specifies value to subtract from each element of `variable <Logistic.variable>` before applying `gain <Logistic.gain>`
-        and before logistic transformation. This argument is identical to bias, with the opposite sign.
+        specifies value to add to each element of `variable <Logistic.variable>` before applying `gain <Logistic.gain>`;
+        this argument has an effect identical to bias, but with the opposite sign (see `note <Logistic_Note>` above).
 
     offset : float : default 0.0
-        specifies value to add to each element of `variable <Logistic.variable>` after applying `gain <Logistic.gain>`
-        but before logistic transformation.
+        specifies value to add to each element of `variable <Logistic.variable>` after adjusting by `bias
+        <Logistic.bias>` and/or `x_0 <Logistic.x_0>` and applying `gain <Logistic.gain>`, but before logistic
+        transformation (see `note <Logistic_Note>` above).
 
     scale : float : default 0.0
-        specifies value by which each element is multiplied after applying the logistic transformation.
+        specifies value by which to multiply each element of `variable <Logistic.variable>` after all other parameters
+        and logistic transformation have been applied (see `note <Logistic_Note>` above).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -820,26 +828,33 @@ class Logistic(TransferFunction):  # -------------------------------------------
     variable : number or array
         contains value to be transformed.
 
-    gain : float : default 1.0
-        value by which each element of `variable <Logistic.variable>` is multiplied before applying the
-        `bias <Logistic.bias>` (if it is specified).
+    gain : float
+        value by which to multiply each element of `variable <Logistic.variable>` after it is adjusted by `bias
+        <Logistic.bias>` and/or `x_0 <Logistic.x_0>`, but before adjustment by `offset <Logistic.offset>` and
+        logistic transformation (see `note <Logistic_Note>` above).
 
-    bias : float : default 0.0
-        value added to each element of `variable <Logistic.variable>` before applying the `gain <Logistic.gain>`
-        (if it is specified). This attribute is identical to x_0, with the opposite sign.
+    bias : float
+        value to add to each element of `variable <Logistic.variable>` before applying `gain <Logistic.gain>`;
+        this argument has an effect identical to x_0, but with the opposite sign (see `note <Logistic_Note>` above).
 
-    x_0 : float : default 0.0
-        value subtracted from each element of `variable <Logistic.variable>` before applying the `gain <Logistic.gain>`
-        (if it is specified). This attribute is identical to bias, with the opposite sign.
+    x_0 : float
+        value to add to each element of `variable <Logistic.variable>` before applying `gain <Logistic.gain>`;
+        this argument has an effect identical to bias, but with the opposite sign (see `note <Logistic_Note>` above).
 
-    offset : float : default 0.0
-        value to added to each element of `variable <Logistic.variable>` after applying `gain <Logistic.gain>`
-        but before logistic transformation.
+    offset : float
+        value to add to each element of `variable <Logistic.variable>` after adjusting by `bias <Logistic.bias>`
+        and/or `x_0 <Logistic.x_0>` and applying `gain <Logistic.gain>`, but before logistic transformation
+        (see `note <Logistic_Note>` above).
 
-    scale : float : default 0.0
-        value by which each element is multiplied after applying the Logistic transform.
+    scale : float
+        value by which to multiply each element of `variable <Logistic.variable>` after all other parameters and
+        logistic transformation have been applied (see `note <Logistic_Note>` above).
 
     bounds : (0,1)
+        COMMENT:
+        the lower and upper limits of the result which, in the case of the `Logistic`, is determined by the function
+        itself.
+        COMMENT
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -3827,8 +3842,7 @@ class TransferWithCosts(TransferFunction):
                     :default value: None
                     :type:
         """
-        variable = Parameter(np.array([0]),
-                             history_min_length=1)
+        variable = Parameter(np.array([0]), history_min_length=1, constructor_argument='default_variable')
 
         intensity = Parameter(np.zeros_like(variable.default_value),
                               history_min_length=1)

@@ -78,7 +78,7 @@ jobs:
 
     steps:
     - name: Download dist files
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
       with:
         name: Python-dist-files
         path: dist/
@@ -141,7 +141,7 @@ jobs:
 
     steps:
     - name: Download dist files
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
       with:
         name: Python-dist-files
         path: dist/
@@ -175,13 +175,13 @@ jobs:
 
     steps:
     - name: Download dist files
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
       with:
         name: Python-dist-files
         path: dist/
 
     - name: Upload dist files to release
-      uses: actions/github-script@v5
+      uses: actions/github-script@v6
       with:
         script: |
           const fs = require('fs')

@@ -28,14 +28,15 @@ class TestProjectionSpecificationFormats:
         M3_M4_matrix_A = (np.arange(4 * 3).reshape((4, 3)) + 1) / (4 * 5)
         M3_M4_matrix_B = (np.arange(4 * 3).reshape((4, 3)) + 1) / (4 * 3)
 
-        M1_M2_proj = pnl.MappingProjection(matrix=M1_M2_matrix)
+        M1_M2_proj = pnl.MappingProjection(matrix=M1_M2_matrix, name='M1_M2_matrix')
         M2_M3_proj = pnl.MappingProjection(sender=M2,
                                            receiver=M3,
                                            matrix={pnl.VALUE: M2_M3_matrix,
                                                    pnl.FUNCTION: pnl.AccumulatorIntegrator,
                                                    pnl.FUNCTION_PARAMS: {pnl.DEFAULT_VARIABLE: M2_M3_matrix,
-                                                                         pnl.INITIALIZER: M2_M3_matrix}})
-        M3_M4_proj_A = pnl.MappingProjection(sender=M3, receiver=M4, matrix=M3_M4_matrix_A)
+                                                                         pnl.INITIALIZER: M2_M3_matrix}},
+                                           name='M2_M3_proj')
+        M3_M4_proj_A = pnl.MappingProjection(sender=M3, receiver=M4, matrix=M3_M4_matrix_A, name='M3_M4_proj_A')
         c = pnl.Composition()
         c.add_linear_processing_pathway(pathway=[M1,
                                                  M1_M2_proj,

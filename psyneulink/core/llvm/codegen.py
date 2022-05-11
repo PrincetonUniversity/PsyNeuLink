@@ -513,7 +513,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         x = self.get_rval(x)
         if helpers.is_scalar(x):
             return x
-        res = self.ctx.float_ty("-Inf")
+        res = self.ctx.float_ty(float("-Inf"))
         def find_max(builder, x):
             nonlocal res
             # to propagate NaNs we use unordered >,
@@ -773,6 +773,8 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
 
 
         # Reset internal TRIAL/PASS/TIME_STEP clock for each node
+        # This also resets TIME_STEP counter for input_CIM and parameter_CIM
+        # executed above
         for time_loc in num_exec_locs.values():
             for scale in (TimeScale.TRIAL, TimeScale.PASS, TimeScale.TIME_STEP):
                 num_exec_time_ptr = builder.gep(time_loc, [ctx.int32_ty(0),
@@ -833,6 +835,8 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
         # Generate loop body
         builder.position_at_end(loop_body)
 
+        previous_step = builder.load(run_set_ptr)
+
         zero = ctx.int32_ty(0)
         any_cond = ctx.bool_ty(0)
         # Calculate execution set before running the mechanisms
@@ -850,12 +854,15 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
             builder.store(node_cond, run_set_node_ptr)
 
         # Reset internal TIME_STEP clock for each node
-        # NOTE: This is done _after_ condition evluation, otherwise
+        # NOTE: This is done _after_ condition evaluation, otherwise
         #       TIME_STEP related conditions will only see 0 executions
-        for time_loc in num_exec_locs.values():
-            num_exec_time_ptr = builder.gep(time_loc, [ctx.int32_ty(0),
-                                                       ctx.int32_ty(TimeScale.TIME_STEP.value)])
-            builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
+        for idx, node in enumerate(composition.nodes):
+            ran_prev_step = builder.extract_value(previous_step, [idx])
+            time_loc = num_exec_locs[node]
+            with builder.if_then(ran_prev_step):
+                num_exec_time_ptr = builder.gep(time_loc, [ctx.int32_ty(0),
+                                                           ctx.int32_ty(TimeScale.TIME_STEP.value)])
+                builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
 
         for idx, node in enumerate(composition.nodes):
 
@@ -989,6 +996,13 @@ def gen_composition_run(ctx, composition, *, tags:frozenset):
         builder.store(data_in.type.pointee(input_init), data_in)
         builder.store(inputs_ptr.type.pointee(1), inputs_ptr)
 
+    # Reset internal 'RUN' clocks of each node
+    for idx, node in enumerate(composition._all_nodes):
+        node_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
+        num_executions_ptr = helpers.get_state_ptr(builder, node, node_state, "num_executions")
+        num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(TimeScale.RUN.value)])
+        builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
+
     # Allocate and initialize condition structure
     cond_gen = helpers.ConditionGenerator(ctx, composition)
     cond_type = cond_gen.get_condition_struct_type()
@@ -1032,13 +1046,6 @@ def gen_composition_run(ctx, composition, *, tags:frozenset):
     # Get the right input stimulus
     input_idx = builder.urem(iters, builder.load(inputs_ptr))
     data_in_ptr = builder.gep(data_in, [input_idx])
-
-    # Reset internal 'RUN' clocks of each node
-    for idx, node in enumerate(composition._all_nodes):
-        node_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
-        num_executions_ptr = helpers.get_state_ptr(builder, node, node_state, "num_executions")
-        num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(TimeScale.RUN.value)])
-        builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
 
     # Call execution
     exec_tags = tags.difference({"run"})

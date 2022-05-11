@@ -572,7 +572,6 @@ class Defaults(ParametersTemplate):
     def __setattr__(self, attr, value):
         if (attr[:1] != '_'):
             param = getattr(self._owner.parameters, attr)
-            param._inherited = False
             param.default_value = value
         else:
             super().__setattr__(attr, value)
@@ -823,7 +822,6 @@ class Parameter(ParameterBase):
         'default_value',
         'history_max_length',
         'log_condition',
-        'delivery_condition',
         'spec',
     }
 
@@ -928,6 +926,7 @@ class Parameter(ParameterBase):
             _inherited=_inherited,
             _inherited_source=_inherited_source,
             _user_specified=_user_specified,
+            _temp_uninherited=set(),
             **kwargs
         )
 
@@ -1012,10 +1011,15 @@ class Parameter(ParameterBase):
 
     def __setattr__(self, attr, value):
         if attr in self._additional_param_attr_properties:
+            self._temp_uninherited.add(attr)
+            self._inherited = False
+
             try:
                 getattr(self, '_set_{0}'.format(attr))(value)
             except AttributeError:
                 super().__setattr__(attr, value)
+
+            self._temp_uninherited.remove(attr)
         else:
             super().__setattr__(attr, value)
 
@@ -1054,6 +1058,7 @@ class Parameter(ParameterBase):
         if value is not self._inherited:
             # invalid if set to inherited
             self._is_invalid_source = value
+            self.__inherited = value
 
             if value:
                 self._cache_inherited_attrs()
@@ -1079,14 +1084,14 @@ class Parameter(ParameterBase):
 
                 self._restore_inherited_attrs()
 
-            self.__inherited = value
-
     def _inherit_from(self, parent):
         self._inherited_source = weakref.ref(parent)
 
     def _cache_inherited_attrs(self, exclusions=None):
         if exclusions is None:
-            exclusions = self._uninherited_attrs
+            exclusions = set()
+
+        exclusions = self._uninherited_attrs.union(self._temp_uninherited).union(exclusions)
 
         for attr in self._param_attrs:
             if attr not in exclusions:
@@ -1095,7 +1100,9 @@ class Parameter(ParameterBase):
 
     def _restore_inherited_attrs(self, exclusions=None):
         if exclusions is None:
-            exclusions = self._uninherited_attrs
+            exclusions = set()
+
+        exclusions = self._uninherited_attrs.union(self._temp_uninherited).union(exclusions)
 
         for attr in self._param_attrs:
             if (
@@ -1787,12 +1794,12 @@ class SharedParameter(Parameter):
 
     def _cache_inherited_attrs(self):
         super()._cache_inherited_attrs(
-            exclusions=self._uninherited_attrs.union(self._sourced_attrs)
+            exclusions=self._sourced_attrs
         )
 
     def _restore_inherited_attrs(self):
         super()._restore_inherited_attrs(
-            exclusions=self._uninherited_attrs.union(self._sourced_attrs)
+            exclusions=self._sourced_attrs
         )
 
     def _set_name(self, name):

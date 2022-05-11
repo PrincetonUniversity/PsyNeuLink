@@ -1084,9 +1084,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     #                      insuring that assignment by one instance will not affect the value of others.
     name = None
 
-    _deepcopy_shared_keys = frozenset([
-        '_init_args',
-    ])
+    _deepcopy_shared_keys = frozenset([])
 
     def __init__(self,
                  default_variable,
@@ -1303,6 +1301,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             newone.parameters._owner = newone
             newone.defaults._owner = newone
 
+            for p in newone.parameters:
+                p._owner = newone.parameters
+
         # by copying, this instance is no longer "inherent" to a single
         # 'import psyneulink' call
         newone._is_pnl_inherent = False
@@ -1325,8 +1326,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # and need to track executions
         if hasattr(self, 'ports'):
             whitelist.update({"value", "num_executions_before_finished",
-                              "num_executions", "is_finished_flag",
-                              "execution_count"})
+                              "num_executions", "is_finished_flag"})
 
         # Only mechanisms and compositions need 'num_executions'
         if hasattr(self, 'nodes'):
@@ -1363,7 +1363,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                                        state['buffer'], state['uinteger'], state['buffer_pos'],
                                        state['has_uint32'], x.used_seed[0]))
             elif isinstance(x, Time):
-                val = tuple(getattr(x, graph_scheduler.time._time_scale_to_attr_str(t)) for t in TimeScale)
+                val = tuple(x._get_by_time_scale(t) for t in TimeScale)
             elif isinstance(x, Component):
                 return x._get_state_initializer(context)
             elif isinstance(x, ContentAddressableList):
@@ -1400,7 +1400,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                      "allocation_samples", "control_allocation_search_space",
                      # not used in computation
                      "auto", "hetero", "cost", "costs", "combined_costs",
-                     "control_signal", "intensity",
+                     "control_signal", "intensity", "competition",
                      "has_recurrent_input_port", "enable_learning",
                      "enable_output_type_conversion", "changes_shape",
                      "output_type", "bounds", "internal_only",
@@ -1411,7 +1411,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                      "enabled_cost_functions", "control_signal_costs",
                      "default_allocation", "same_seed_for_all_allocations",
                      "search_statefulness", "initial_seed", "combine",
-                     "random_variables",
+                     "random_variables", "smoothing_factor"
                      }
         # Mechanism's need few extra entires:
         # * matrix -- is never used directly, and is flatened below
@@ -3121,7 +3121,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 self._update_current_execution_time(context=context)
                 self._increment_num_executions(
                     context,
-                    [TimeScale.TIME_STEP, TimeScale.PASS, TimeScale.TRIAL, TimeScale.RUN]
+                    [TimeScale.TIME_STEP, TimeScale.PASS, TimeScale.TRIAL, TimeScale.RUN, TimeScale.LIFE]
                 )
 
         value = None

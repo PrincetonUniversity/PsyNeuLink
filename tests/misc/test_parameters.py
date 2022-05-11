@@ -83,6 +83,19 @@ def test_parameter_values_overriding(ancestor, child, should_override, reset_var
         assert child.parameters.variable.default_value == original_child_variable
 
 
+def test_unspecified_inheritance():
+    class NewTM(pnl.TransferMechanism):
+        class Parameters(pnl.TransferMechanism.Parameters):
+            pass
+
+    assert NewTM.parameters.variable._inherited
+    NewTM.parameters.variable.default_value = -1
+    assert not NewTM.parameters.variable._inherited
+
+    NewTM.parameters.variable.reset()
+    assert NewTM.parameters.variable._inherited
+
+
 @pytest.mark.parametrize('obj, param_name, alias_name', param_alias_data)
 def test_aliases(obj, param_name, alias_name):
     obj = obj()
@@ -267,6 +280,17 @@ def test_user_specified(cls_, kwargs, parameter, is_user_specified):
 def test_function_user_specified(kwargs, parameter, is_user_specified):
     t = pnl.TransferMechanism(**kwargs)
     assert getattr(t.function.parameters, parameter)._user_specified == is_user_specified
+
+
+# sort param names or pytest-xdist may cause failure
+# see https://github.com/pytest-dev/pytest/issues/4101
+@pytest.mark.parametrize('attr', sorted(pnl.Parameter._additional_param_attr_properties))
+def test_additional_param_attrs(attr):
+    assert hasattr(pnl.Parameter, f'_set_{attr}'), (
+        f'To include {attr} in Parameter._additional_param_attr_properties, you'
+        f' must add a _set_{attr} method on Parameter. If this is unneeded,'
+        ' remove it from Parameter._additional_param_attr_properties.'
+    )
 
 
 class TestSharedParameters:

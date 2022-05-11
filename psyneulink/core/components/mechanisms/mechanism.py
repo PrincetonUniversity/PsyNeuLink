@@ -2406,11 +2406,10 @@ class Mechanism_Base(Mechanism):
         """
 
         if self.initialization_status == ContextFlags.INITIALIZED:
-            context.string = "{} EXECUTING {}: {}".format(context.source.name,self.name,
-                                                               ContextFlags._get_context_string(
-                                                                       context.flags, EXECUTION_PHASE))
+            context.string = f"{context.source.name} EXECUTING {self.name}: " \
+                             f"{ContextFlags._get_context_string(context.flags, EXECUTION_PHASE)}."
         else:
-            context.string = "{} INITIALIZING {}".format(context.source.name, self.name)
+            context.string = f"{context.source.name} INITIALIZING {self.name}."
 
         if context.source is ContextFlags.COMMAND_LINE:
             self._initialize_from_context(context, override=False)
@@ -2916,9 +2915,12 @@ class Mechanism_Base(Mechanism):
                     # the function result can result in 1d structure or scalar
                     # Casting the pointer is LLVM way of adding dimensions
                     array_1d = pnlvm.ir.ArrayType(p_input_data.type.pointee, 1)
-                    array_2d = pnlvm.ir.ArrayType(array_1d, 1)
-                    assert array_1d == p_function.args[2].type.pointee or array_2d == p_function.args[2].type.pointee, \
-                        "{} vs.{}".format(p_function.args[2].type.pointee, p_input_data.type.pointee)
+                    assert array_1d == p_function.args[2].type.pointee, \
+                        "{} vs. {}".format(p_function.args[2].type.pointee, p_input_data.type.pointee)
+                    # restrict shape matching to casting 1d values to 2d arrays
+                    # for Control/Gating signals
+                    assert len(p_function.args[2].type.pointee) == 1
+                    assert str(port).startswith("(ControlSignal") or str(port).startswith("(GatingSignal")
                     p_input = builder.bitcast(p_input_data, p_function.args[2].type)
 
             else:
@@ -3021,16 +3023,41 @@ class Mechanism_Base(Mechanism):
         if port_spec == OWNER_VALUE:
             return value
         elif port_spec == OWNER_EXECUTION_COUNT:
-            execution_count = pnlvm.helpers.get_state_ptr(builder, self, mech_state, EXECUTION_COUNT)
-            return execution_count
-        elif isinstance(port_spec, tuple) and port_spec[0] == OWNER_VALUE:
-            index = port_spec[1]() if callable(port_spec[1]) else port_spec[1]
+            # Convert execution count to (num_executions, TimeScale.LIFE)
+            # The difference in Python PNL is that the former counts across
+            # all contexts. This is not possible in compiled code, thus
+            # the two are identical.
+            port_spec = ("num_executions", TimeScale.LIFE)
 
-            assert index < len(value.type.pointee)
-            return builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(index)])
+        try:
+            name = port_spec[0]
+            ids = (x() if callable(x) else getattr(x, 'value', x) for x in port_spec[1:])
+        except TypeError as e:
+            # TypeError means we can't index.
+            # Convert this to assertion failure below
+            data = None
         else:
             #TODO: support more spec options
-            assert False, "Unsupported OutputPort spec: {} ({})".format(port_spec, value.type)
+            if name == OWNER_VALUE:
+                data = value
+            elif name in self.llvm_state_ids:
+                data = pnlvm.helpers.get_state_ptr(builder, self, mech_state, name)
+            else:
+                data = None
+
+        assert data is not None, "Unsupported OutputPort spec: {} ({})".format(port_spec, value.type)
+
+        parsed = builder.gep(data, [ctx.int32_ty(0), *(ctx.int32_ty(i) for i in ids)])
+        # "num_executions" are kept as int64, we need to convert the value to float first
+        # port inputs are also expected to be 1d arrays
+        if name == "num_executions":
+            count = builder.load(parsed)
+            count_fp = builder.uitofp(count, ctx.float_ty)
+            parsed = builder.alloca(pnlvm.ir.ArrayType(count_fp.type, 1))
+            ptr = builder.gep(parsed, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            builder.store(count_fp, ptr)
+
+        return parsed
 
     def _gen_llvm_output_ports(self, ctx, builder, value,
                                mech_params, mech_state, mech_in, mech_out):
@@ -3048,29 +3075,34 @@ class Mechanism_Base(Mechanism):
                                        mech_params, mech_state, mech_in)
         return builder
 
-    def _gen_llvm_invoke_function(self, ctx, builder, function, f_params, f_state, variable, *, tags:frozenset):
+    def _gen_llvm_invoke_function(self, ctx, builder, function, f_params, f_state,
+                                  variable, out, *, tags:frozenset):
+
         fun = ctx.import_llvm_function(function, tags=tags)
-        fun_out = builder.alloca(fun.args[3].type.pointee, name=function.name + "_output")
+        if out is None:
+            f_out = builder.alloca(fun.args[3].type.pointee, name=function.name + "_output")
+        else:
+            f_out = out
 
-        builder.call(fun, [f_params, f_state, variable, fun_out])
+        builder.call(fun, [f_params, f_state, variable, f_out])
 
-        return fun_out, builder
+        return f_out, builder
 
     def _gen_llvm_is_finished_cond(self, ctx, builder, m_params, m_state):
         return ctx.bool_ty(1)
 
-    def _gen_llvm_mechanism_functions(self, ctx, builder, m_base_params, m_params, m_state, arg_in,
-                                      ip_output, *, tags:frozenset):
+    def _gen_llvm_mechanism_functions(self, ctx, builder, m_base_params, m_params, m_state, m_in,
+                                      m_val, ip_output, *, tags:frozenset):
 
         # Default mechanism runs only the main function
         f_base_params = pnlvm.helpers.get_param_ptr(builder, self, m_base_params, "function")
         f_params, builder = self._gen_llvm_param_ports_for_obj(
-                self.function, f_base_params, ctx, builder, m_base_params, m_state, arg_in)
+                self.function, f_base_params, ctx, builder, m_base_params, m_state, m_in)
         f_state = pnlvm.helpers.get_state_ptr(builder, self, m_state, "function")
 
         return self._gen_llvm_invoke_function(ctx, builder, self.function,
                                               f_params, f_state, ip_output,
-                                              tags=tags)
+                                              m_val, tags=tags)
 
     def _gen_llvm_function_internal(self, ctx, builder, m_params, m_state, arg_in,
                                     arg_out, m_base_params, *, tags:frozenset):
@@ -3078,32 +3110,34 @@ class Mechanism_Base(Mechanism):
         ip_output, builder = self._gen_llvm_input_ports(ctx, builder,
                                                         m_base_params, m_state, arg_in)
 
+        # This will move history items around to make space for a new entry
+        mech_val_ptr = pnlvm.helpers.get_state_space(builder, self, m_state, "value")
+
         value, builder = self._gen_llvm_mechanism_functions(ctx, builder, m_base_params,
                                                             m_params, m_state, arg_in,
+                                                            mech_val_ptr,
                                                             ip_output, tags=tags)
 
-        # Update execution counter
-        exec_count_ptr = pnlvm.helpers.get_state_ptr(builder, self, m_state, "execution_count")
-        exec_count = builder.load(exec_count_ptr)
-        exec_count = builder.fadd(exec_count, exec_count.type(1))
-        builder.store(exec_count, exec_count_ptr)
 
-        # Update internal clock (i.e. num_executions parameter)
+        if mech_val_ptr.type.pointee == value.type.pointee:
+            assert value is mech_val_ptr
+        else:
+            # FIXME: Does this need some sort of parsing?
+            warnings.warn("Shape mismatch: function result does not match mechanism value param: {} vs. {}".format(value.type.pointee, mech_val_ptr.type.pointee))
+
+        # Update  num_executions parameter
         num_executions_ptr = pnlvm.helpers.get_state_ptr(builder, self, m_state, "num_executions")
-        for scale in [TimeScale.TIME_STEP, TimeScale.PASS, TimeScale.TRIAL, TimeScale.RUN]:
-            num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(scale.value)])
+        for scale in TimeScale:
+            assert scale.value < len(num_executions_ptr.type.pointee)
+            num_exec_time_ptr = builder.gep(num_executions_ptr,
+                                            [ctx.int32_ty(0), ctx.int32_ty(scale.value)],
+                                            name="num_executions_{}_ptr".format(scale))
             new_val = builder.load(num_exec_time_ptr)
             new_val = builder.add(new_val, new_val.type(1))
             builder.store(new_val, num_exec_time_ptr)
 
+        # Run output ports after updating the mech state (num_executions and value)
         builder = self._gen_llvm_output_ports(ctx, builder, value, m_base_params, m_state, arg_in, arg_out)
-
-        val_ptr = pnlvm.helpers.get_state_ptr(builder, self, m_state, "value")
-        if val_ptr.type.pointee == value.type.pointee:
-            pnlvm.helpers.push_state_val(builder, self, m_state, "value", value)
-        else:
-            # FIXME: Does this need some sort of parsing?
-            warnings.warn("Shape mismatch: function result does not match mechanism value param: {} vs. {}".format(value.type.pointee, val_ptr.type.pointee))
 
         # is_finished should be checked after output ports ran
         is_finished_f = ctx.import_llvm_function(self, tags=tags.union({"is_finished"}))
@@ -3442,7 +3476,7 @@ class Mechanism_Base(Mechanism):
                     if use_label and not isinstance(port, ParameterPort):
                         value = f'<br/>={port.labeled_value}'
                     else:
-                        value = f'<br/>={port.labeled_value}'
+                        value = f'<br/>={port.value}'
                 return f'<td port="{self._get_port_name(port)}"><b>{port.name}</b>{function}{value}</td>'
 
 

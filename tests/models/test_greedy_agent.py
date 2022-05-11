@@ -119,7 +119,8 @@ def test_simplified_greedy_agent_random(benchmark, comp_mode):
     pytest.param([a / 10.0 for a in range(0, 101)], marks=pytest.mark.stress),
 ], ids=lambda x: len(x))
 @pytest.mark.parametrize('prng', ['Default', 'Philox'])
-def test_predator_prey(benchmark, mode, prng, samples):
+@pytest.mark.parametrize('fp_type', [pnl.core.llvm.ir.DoubleType, pnl.core.llvm.ir.FloatType])
+def test_predator_prey(benchmark, mode, prng, samples, fp_type):
     if len(samples) > 10 and mode not in {pnl.ExecutionMode.LLVM,
                                           pnl.ExecutionMode.LLVMExec,
                                           pnl.ExecutionMode.LLVMRun,
@@ -131,6 +132,9 @@ def test_predator_prey(benchmark, mode, prng, samples):
     else:
         # OCM default mode is Python
         ocm_mode = 'Python'
+
+    # Instantiate LLVMBuilderContext using the preferred fp type
+    pnl.core.llvm.builder_context.LLVMBuilderContext(fp_type())
 
     benchmark.group = "Predator-Prey " + str(len(samples))
     obs_len = 3
@@ -234,11 +238,16 @@ def test_predator_prey(benchmark, mode, prng, samples):
         if prng == 'Default':
             assert np.allclose(run_results[0], [[0.9705216285127504, -0.1343332460369043]])
         elif prng == 'Philox':
-            assert np.allclose(run_results[0], [[-0.16882940384606543, -0.07280074899749223]])
+            if mode == pnl.ExecutionMode.Python or pytest.helpers.llvm_current_fp_precision() == 'fp64':
+                assert np.allclose(run_results[0], [[-0.16882940384606543, -0.07280074899749223]])
+            elif pytest.helpers.llvm_current_fp_precision() == 'fp32':
+                assert np.allclose(run_results[0], [[-0.8639436960220337, 0.4983368515968323]])
+            else:
+                assert False, "Unkown FP type!"
         else:
             assert False, "Unknown PRNG!"
 
-        if mode is pnl.ExecutionMode.Python:
+        if mode == pnl.ExecutionMode.Python:
             # FIXEM: The results are 'close' for both Philox and MT,
             #        because they're dominated by costs
             assert np.allclose(np.asfarray(ocm.function.saved_values).flatten(),

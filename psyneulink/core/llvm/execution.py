@@ -48,10 +48,23 @@ def _tupleize(x):
         return x if x is not None else tuple()
 
 def _element_dtype(x):
+    """
+    Extract base builtin type from aggregate type.
+
+    Throws assertion failure if the aggregate type includes more than one base type.
+    The assumption is that array of builtin type has the same binary layout as
+    the original aggregate and it's easier to construct
+    """
     dt = np.dtype(x)
     while dt.subdtype is not None:
         dt = dt.subdtype[0]
 
+    if not dt.isbuiltin:
+        fdts = (_element_dtype(f[0]) for f in dt.fields.values())
+        dt = next(fdts)
+        assert all(dt == fdt for fdt in fdts)
+
+    assert dt.isbuiltin, "Element type is not builtin: {} from {}".format(dt, np.dtype(x))
     return dt
 
 def _pretty_size(size):
@@ -686,7 +699,7 @@ class CompExecution(CUDAExecution):
 
         # Construct input variable
         var_dty = _element_dtype(bin_func.byref_arg_types[5])
-        converted_variable = np.asfarray(np.concatenate(variable), dtype=var_dty)
+        converted_variable = np.concatenate(variable, dtype=var_dty)
 
         # Output ctype
         out_ty = bin_func.byref_arg_types[4] * num_evaluations

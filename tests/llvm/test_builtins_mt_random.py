@@ -10,7 +10,7 @@ SEED = 0
 @pytest.mark.benchmark(group="Mersenne Twister integer PRNG")
 @pytest.mark.parametrize('mode', ['Python', 'numpy',
                                   pytest.param('LLVM', marks=pytest.mark.llvm),
-                                  pytest.param('PTX', marks=pytest.mark.cuda)])
+                                  pytest.helpers.cuda_param('PTX')])
 def test_random_int(benchmark, mode):
     res = []
     if mode == 'Python':
@@ -53,7 +53,7 @@ def test_random_int(benchmark, mode):
 @pytest.mark.benchmark(group="Mersenne Twister floating point PRNG")
 @pytest.mark.parametrize('mode', ['Python', 'numpy',
                                   pytest.param('LLVM', marks=pytest.mark.llvm),
-                                  pytest.param('PTX', marks=pytest.mark.cuda)])
+                                  pytest.helpers.cuda_param('PTX')])
 def test_random_float(benchmark, mode):
     res = []
     if mode == 'Python':
@@ -72,7 +72,7 @@ def test_random_float(benchmark, mode):
         init_fun(state, SEED)
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_double')
-        out = ctypes.c_double()
+        out = gen_fun.byref_arg_types[1]()
         def f():
             gen_fun(state, out)
             return out.value
@@ -83,7 +83,7 @@ def test_random_float(benchmark, mode):
         init_fun.cuda_call(gpu_state, np.int32(SEED))
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_double')
-        out = np.asfarray([0.0], dtype=np.float64)
+        out = np.asfarray([0.0], dtype=np.dtype(gen_fun.byref_arg_types[1]))
         gpu_out = pnlvm.jit_engine.pycuda.driver.Out(out)
         def f():
             gen_fun.cuda_call(gpu_state, gpu_out)
@@ -97,7 +97,7 @@ def test_random_float(benchmark, mode):
 @pytest.mark.benchmark(group="Marsenne Twister Normal distribution")
 @pytest.mark.parametrize('mode', ['numpy',
                                   pytest.param('LLVM', marks=pytest.mark.llvm),
-                                  pytest.param('PTX', marks=pytest.mark.cuda)])
+                                  pytest.helpers.cuda_param('PTX')])
 # Python uses different algorithm so skip it in this test
 def test_random_normal(benchmark, mode):
     if mode == 'numpy':
@@ -111,7 +111,7 @@ def test_random_normal(benchmark, mode):
         init_fun(state, SEED)
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_normal')
-        out = ctypes.c_double()
+        out = gen_fun.byref_arg_types[1]()
         def f():
             gen_fun(state, out)
             return out.value
@@ -122,7 +122,7 @@ def test_random_normal(benchmark, mode):
         init_fun.cuda_call(gpu_state, np.int32(SEED))
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_normal')
-        out = np.asfarray([0.0], dtype=np.float64)
+        out = np.asfarray([0.0], dtype=np.dtype(gen_fun.byref_arg_types[1]))
         gpu_out = pnlvm.jit_engine.pycuda.driver.Out(out)
         def f():
             gen_fun.cuda_call(gpu_state, gpu_out)
