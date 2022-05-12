@@ -380,7 +380,7 @@ from psyneulink.core.globals.context import ContextFlags, handle_external_contex
 from psyneulink.core.globals.keywords import \
     ALLOCATION_SAMPLES, FUNCTION, FUNCTION_PARAMS, INPUT_PORT_VARIABLES, NAME, OWNER_VALUE, \
     THRESHOLD, VARIABLE, PREFERENCE_SET_NAME
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, is_numeric, is_same_function_spec, object_has_single_value, get_global_seed
@@ -753,6 +753,7 @@ class DDM(ProcessingMechanism):
                             ]
     standard_output_port_names = [i['name'] for i in standard_output_ports]
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,

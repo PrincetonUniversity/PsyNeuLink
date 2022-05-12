@@ -150,7 +150,7 @@ from psyneulink.core.compositions.report \
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import AUTODIFF_COMPOSITION, SOFT_CLAMP
 from psyneulink.core.scheduling.scheduler import Scheduler
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.core import llvm as pnlvm
 
@@ -222,6 +222,7 @@ class AutodiffComposition(Composition):
         pytorch_representation = None
 
     # TODO (CW 9/28/18): add compositions to registry so default arg for name is no longer needed
+    @check_user_specified
     def __init__(self,
                  learning_rate=None,
                  optimizer_type='sgd',

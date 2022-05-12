@@ -18,7 +18,7 @@ import typecheck as tc
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.globals.defaults import SystemDefaultInputValue
 from psyneulink.core.globals.keywords import DEFAULT_PROCESSING_MECHANISM
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
@@ -53,6 +53,7 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
     class Parameters(Mechanism_Base.Parameters):
         variable = Parameter(np.array([SystemDefaultInputValue]), constructor_argument='default_variable')
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,

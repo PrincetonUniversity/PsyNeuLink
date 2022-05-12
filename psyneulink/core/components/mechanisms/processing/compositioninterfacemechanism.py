@@ -122,7 +122,7 @@ from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import COMPOSITION_INTERFACE_MECHANISM, INPUT_PORTS, OUTPUT_PORTS, \
     PREFERENCE_SET_NAME
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
@@ -174,6 +174,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         """
         function = Parameter(Identity, stateful=False, loggable=False)
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,

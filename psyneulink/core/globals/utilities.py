@@ -144,6 +144,7 @@ __all__ = [
 ]
 
 logger = logging.getLogger(__name__)
+_signature_cache = weakref.WeakKeyDictionary()
 
 
 class UtilitiesError(Exception):
@@ -1672,9 +1673,6 @@ def _get_arg_from_stack(arg_name:str):
     return arg_val
 
 
-_unused_args_sig_cache = weakref.WeakKeyDictionary()
-
-
 def prune_unused_args(func, args=None, kwargs=None):
     """
         Arguments
@@ -1695,10 +1693,10 @@ def prune_unused_args(func, args=None, kwargs=None):
     """
     # use the func signature to filter out arguments that aren't compatible
     try:
-        sig = _unused_args_sig_cache[func]
+        sig = _signature_cache[func]
     except KeyError:
         sig = inspect.signature(func)
-        _unused_args_sig_cache[func] = sig
+        _signature_cache[func] = sig
 
     has_args_param = False
     has_kwargs_param = False
@@ -1943,3 +1941,24 @@ def _is_module_class(class_: type, module: types.ModuleType) -> bool:
             pass
 
     return False
+
+
+def get_function_sig_default_value(
+    function: typing.Union[types.FunctionType, types.MethodType],
+    parameter: str
+):
+    """
+        Returns:
+            the default value of the **parameter** argument of
+            **function** if it exists, or inspect._empty
+    """
+    try:
+        sig = _signature_cache[function]
+    except KeyError:
+        sig = inspect.signature(function)
+        _signature_cache[function] = sig
+
+    try:
+        return sig.parameters[parameter].default
+    except KeyError:
+        return inspect._empty

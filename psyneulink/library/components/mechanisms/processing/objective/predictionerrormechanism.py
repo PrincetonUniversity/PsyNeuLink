@@ -172,7 +172,7 @@ from psyneulink.core.components.functions.nonstateful.combinationfunctions impor
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.keywords import PREDICTION_ERROR_MECHANISM, SAMPLE, TARGET
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PREFERENCE_SET_NAME
 from psyneulink.core.globals.utilities import is_numeric
@@ -283,6 +283,7 @@ class PredictionErrorMechanism(ComparatorMechanism):
         sample = None
         target = None
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  sample: tc.optional(tc.any(OutputPort, Mechanism_Base, dict,

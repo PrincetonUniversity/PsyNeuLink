@@ -28,6 +28,7 @@ TBI:
 """
 
 from psyneulink.core.components.component import Component
+from psyneulink.core.globals.parameters import check_user_specified
 
 __all__ = [
     'Function', 'Mechanism', 'Process_Base', 'Projection', 'ShellClass', 'ShellClassError', 'Port', 'System_Base',
@@ -73,6 +74,7 @@ class Process_Base(ShellClass):
 
 class Mechanism(ShellClass):
 
+    @check_user_specified
     def __init__(self,
                  default_variable=None,
                  size=None,

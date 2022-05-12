@@ -120,7 +120,7 @@ from psyneulink.core.components.shellclasses import Mechanism, Process_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, INPUT_PORT, OUTPUT_PORT, PARAMETER_PORT
-from psyneulink.core.globals.parameters import Parameter, SharedParameter
+from psyneulink.core.globals.parameters import Parameter, SharedParameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
@@ -237,6 +237,7 @@ class ControlProjection(ModulatoryProjection_Base):
 
     projection_sender = ControlMechanism
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  sender=None,

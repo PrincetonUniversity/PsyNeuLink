@@ -299,7 +299,7 @@ from psyneulink.core.globals.keywords import \
     MAPPING_PROJECTION, MATRIX, \
     OUTPUT_PORT, VALUE
 from psyneulink.core.globals.log import ContextFlags
-from psyneulink.core.globals.parameters import FunctionParameter, Parameter
+from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
@@ -442,6 +442,7 @@ class MappingProjection(PathwayProjection_Base):
 
     projection_sender = OutputPort
 
+    @check_user_specified
     def __init__(self,
                  sender=None,
                  receiver=None,

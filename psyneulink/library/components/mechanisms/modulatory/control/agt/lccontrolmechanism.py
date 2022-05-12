@@ -307,7 +307,7 @@ from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.keywords import \
     INIT_EXECUTE_METHOD_ONLY, MULTIPLICATIVE_PARAM, PROJECTIONS
-from psyneulink.core.globals.parameters import Parameter, ParameterAlias
+from psyneulink.core.globals.parameters import Parameter, ParameterAlias, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_iterable, convert_to_list
@@ -662,6 +662,7 @@ class LCControlMechanism(ControlMechanism):
 
         modulated_mechanisms = Parameter(None, stateful=False, loggable=False)
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
