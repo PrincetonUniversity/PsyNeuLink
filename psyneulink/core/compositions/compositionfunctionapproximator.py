@@ -59,6 +59,8 @@ from psyneulink.core.globals.keywords import COMPOSITION_FUNCTION_APPROXIMATOR
 
 __all__ = ['CompositionFunctionApproximator']
 
+from psyneulink.core.globals.parameters import check_user_specified
+
 
 class CompositionFunctionApproximatorError(Exception):
     def __init__(self, error_value):
@@ -105,6 +107,7 @@ class CompositionFunctionApproximator(Composition):
 
     componentCategory = COMPOSITION_FUNCTION_APPROXIMATOR
 
+    @check_user_specified
     def __init__(self, name=None, **param_defaults):
        # self.function = function
         super().__init__(name=name, **param_defaults)

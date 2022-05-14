@@ -92,7 +92,7 @@ from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.globals.json import _substitute_expression_args
 from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, INTEGRATOR_MECHANISM, VARIABLE, PREFERENCE_SET_NAME
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.utilities import parse_valid_identifier
@@ -152,6 +152,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         function = Parameter(AdaptiveIntegrator(rate=0.5), stateful=False, loggable=False)
 
         #
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,

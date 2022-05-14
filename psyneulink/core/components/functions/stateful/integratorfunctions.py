@@ -48,7 +48,7 @@ from psyneulink.core.globals.keywords import \
     INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION, LEAKY_COMPETING_INTEGRATOR_FUNCTION, \
     MULTIPLICATIVE_PARAM, NOISE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_PORTS, PRODUCT, \
     RATE, REST, SIMPLE_INTEGRATOR_FUNCTION, SUM, TIME_STEP_SIZE, THRESHOLD, VARIABLE, MODEL_SPEC_ID_MDF_VARIABLE
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import parameter_spec, all_within_range, \
     convert_all_elements_to_np_array
@@ -220,6 +220,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         previous_value = Parameter(np.array([0]), initializer='initializer')
         initializer = Parameter(np.array([0]), pnl_internal=True)
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -550,6 +551,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM], function_arg=True)
         increment = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -826,6 +828,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
         rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM], function_arg=True)
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -1061,6 +1064,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM], function_arg=True)
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -1573,6 +1577,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
         long_term_logistic = None
 
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -2014,6 +2019,7 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
         max_val = Parameter(1.0, function_arg=True)
         min_val = Parameter(-1.0, function_arg=True)
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -2418,6 +2424,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
             else:
                 return initializer
 
+    @check_user_specified
     @tc.typecheck
     def __init__(
         self,
@@ -2933,6 +2940,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
                 noise = np.array(noise)
             return noise
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -3439,6 +3447,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
             read_only=True
         )
 
+    @check_user_specified
     @tc.typecheck
     def __init__(
         self,
@@ -3733,6 +3742,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
         time_step_size = Parameter(0.1, modulable=True, function_arg=True)
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -4414,6 +4424,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
             read_only=True
         )
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,

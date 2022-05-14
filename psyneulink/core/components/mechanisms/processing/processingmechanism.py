@@ -99,6 +99,7 @@ from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.keywords import \
     FUNCTION, MAX_ABS_INDICATOR, MAX_ABS_ONE_HOT, MAX_ABS_VAL, MAX_INDICATOR, MAX_ONE_HOT, MAX_VAL, MEAN, MEDIAN, \
     NAME, PROB, PROCESSING_MECHANISM, PREFERENCE_SET_NAME, STANDARD_DEVIATION, VARIANCE, VARIABLE, OWNER_VALUE
+from psyneulink.core.globals.parameters import check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
@@ -169,6 +170,7 @@ class ProcessingMechanism_Base(Mechanism_Base):
                                    FUNCTION: SoftMax(output=PROB)}])
     standard_output_port_names = [i['name'] for i in standard_output_ports]
 
+    @check_user_specified
     def __init__(self,
                  default_variable=None,
                  size=None,
@@ -283,6 +285,7 @@ class ProcessingMechanism(ProcessingMechanism_Base):
         PREFERENCE_SET_NAME: 'ProcessingMechanismCustomClassPreferences',
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,

@@ -187,7 +187,7 @@ import typecheck as tc
 
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Logistic
 from psyneulink.core.globals.keywords import KWTA_MECHANISM, K_VALUE, RATIO, RESULT, THRESHOLD
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import is_numeric_or_none
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
@@ -343,6 +343,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
         average_based = False
         inhibition_only = True
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,

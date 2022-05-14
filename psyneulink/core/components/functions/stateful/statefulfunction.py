@@ -30,7 +30,7 @@ from psyneulink.core.components.functions.nonstateful.distributionfunctions impo
 from psyneulink.core.components.functions.function import Function_Base, FunctionError, _noise_setter
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import STATEFUL_FUNCTION_TYPE, STATEFUL_FUNCTION, NOISE, RATE
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import iscompatible, convert_to_np_array, contains_type
 
@@ -213,6 +213,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                 return 'functions in a list must be instantiated and have the desired noise variable shape'
 
     @handle_external_context()
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,

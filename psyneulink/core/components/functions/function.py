@@ -159,7 +159,7 @@ from psyneulink.core.globals.keywords import (
     IDENTITY_MATRIX, INVERSE_HOLLOW_MATRIX, NAME, PREFERENCE_SET_NAME, RANDOM_CONNECTIVITY_MATRIX, VALUE, VARIABLE,
     MODEL_SPEC_ID_METADATA, MODEL_SPEC_ID_MDF_VARIABLE
 )
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import REPORT_OUTPUT_PREF, is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.registry import register_category
@@ -605,6 +605,7 @@ class Function_Base(Function):
     # Note: the following enforce encoding as 1D np.ndarrays (one array per variable)
     variableEncodingDim = 1
 
+    @check_user_specified
     @abc.abstractmethod
     def __init__(
         self,
@@ -995,6 +996,7 @@ class ArgumentTherapy(Function_Base):
     # These are used both to type-cast the params, and as defaults if none are assigned
     #  in the initialization call or later (using either _instantiate_defaults or during a function call)
 
+    @check_user_specified
     def __init__(self,
                  default_variable=None,
                  propensity=10.0,
@@ -1145,6 +1147,7 @@ class EVCAuxiliaryFunction(Function_Base):
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
        }
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  function,
