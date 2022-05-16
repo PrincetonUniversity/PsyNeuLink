@@ -1341,6 +1341,8 @@ class RecurrentTransferMechanism(TransferMechanism):
             # input
             builder.call(recurrent_f, [recurrent_params, recurrent_state, recurrent_in, recurrent_out])
 
+        assert not self.has_recurrent_input_port, "Configuration using combination function is not supported!"
+
         return super()._gen_llvm_input_ports(ctx, builder, params, state, arg_in)
 
     def _gen_llvm_output_ports(self, ctx, builder, value,

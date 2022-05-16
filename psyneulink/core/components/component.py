@@ -1333,6 +1333,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         if hasattr(self, 'nodes'):
             whitelist.add("num_executions")
 
+        # Drop combination function params from RTM if not needed
+        if getattr(self.parameters, 'has_recurrent_input_port', False):
+            blacklist.update(['combination_function'])
+
         def _is_compilation_state(p):
             #FIXME: This should use defaults instead of 'p.get'
             return p.name not in blacklist and \
@@ -1424,6 +1428,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             blacklist.update(["execute_until_finished", "max_executions_before_finished"])
             # "has_initializers" is only used by RTM
             blacklist.update(["has_initializers"])
+
+        # Drop combination function params from RTM if not needed
+        if getattr(self.parameters, 'has_recurrent_input_port', False):
+            blacklist.update(['combination_function'])
 
         def _is_compilation_param(p):
             if p.name not in blacklist and not isinstance(p, (ParameterAlias, SharedParameter)):

@@ -11,12 +11,8 @@
 from llvmlite import ir
 
 
-from . import debug
 from . import helpers
 from .builder_context import LLVMBuilderContext, _BUILTIN_PREFIX
-
-
-debug_env = debug.debug_env
 
 
 def _setup_builtin_func_builder(ctx, name, args, *, return_type=ir.VoidType()):

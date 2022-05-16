@@ -199,7 +199,7 @@ class LLVMBuilderContext:
         if name in _builtin_intrinsics:
             return self.import_llvm_function(_BUILTIN_PREFIX + name)
         if name in ('maxnum'):
-            function_type = pnlvm.ir.FunctionType(args[0], [args[0], args[0]])
+            function_type = ir.FunctionType(args[0], [args[0], args[0]])
         return self.module.declare_intrinsic("llvm." + name, args, function_type)
 
     def create_llvm_function(self, args, component, name=None, *, return_type=ir.VoidType(), tags:frozenset=frozenset()):
@@ -207,8 +207,8 @@ class LLVMBuilderContext:
 
         # Builtins are already unique and need to keep their special name
         func_name = name if name.startswith(_BUILTIN_PREFIX) else self.get_unique_name(name)
-        func_ty = pnlvm.ir.FunctionType(return_type, args)
-        llvm_func = pnlvm.ir.Function(self.module, func_ty, name=func_name)
+        func_ty = ir.FunctionType(return_type, args)
+        llvm_func = ir.Function(self.module, func_ty, name=func_name)
         llvm_func.attributes.add('argmemonly')
         for a in llvm_func.args:
             if isinstance(a.type, ir.PointerType):
@@ -221,7 +221,7 @@ class LLVMBuilderContext:
 
         # Create entry block
         block = llvm_func.append_basic_block(name="entry")
-        builder = pnlvm.ir.IRBuilder(block)
+        builder = ir.IRBuilder(block)
         builder.debug_metadata = metadata
 
         return builder
