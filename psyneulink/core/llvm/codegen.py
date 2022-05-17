@@ -108,6 +108,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         # Create a new basic block to house the generated code
         udf_block = self.builder.append_basic_block(name="udf_body")
         self.builder = ir.IRBuilder(udf_block)
+        self.builder.debug_metadata = self.var_builder.debug_metadata
 
         super().generic_visit(node)
 
