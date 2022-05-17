@@ -10,7 +10,7 @@ from psyneulink.core.components.mechanisms.processing.transfermechanism import T
 from psyneulink.core.compositions.composition import Composition
 
 debug_options=["const_input=[[[7]]]", "const_input", "const_data", "const_params", "const_data", "const_state", "stat", "time_stat", "unaligned_copy"]
-options_combinations = (";".join(("debug_info", *c)) for i in range(len(debug_options) + 1) for c in combinations(debug_options, i))
+options_combinations = (";".join(("", *c)) for i in range(len(debug_options) + 1) for c in combinations(debug_options, i))
 
 @pytest.mark.composition
 @pytest.mark.parametrize("mode", [pytest.param(pnlvm.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),

@@ -287,9 +287,6 @@ class LLVMBuilderContext:
 
     @staticmethod
     def get_debug_location(func: ir.Function, component):
-        if "debug_info" not in debug_env:
-            return
-
         mod = func.module
         path = inspect.getfile(component.__class__) if component is not None else "<pnl_builtin>"
         d_version = mod.add_metadata([ir.IntType(32)(2), "Dwarf Version", ir.IntType(32)(4)])
@@ -327,6 +324,16 @@ class LLVMBuilderContext:
             "line": 0, "column": 0, "scope": di_func,
         })
         return di_loc
+
+    @staticmethod
+    def update_debug_loc_position(di_loc: ir.DIValue, line:int, column:int):
+        subprogram_operand = di_loc.operands[2]
+        assert subprogram_operand[0] == 'scope'
+        di_func = subprogram_operand[1]
+
+        return di_loc.parent.add_debug_info("DILocation", {
+            "line": line, "column": column, "scope": di_func,
+        })
 
     @_comp_cached
     def get_input_struct_type(self, component):
