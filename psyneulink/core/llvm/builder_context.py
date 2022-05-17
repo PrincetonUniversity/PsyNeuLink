@@ -325,6 +325,16 @@ class LLVMBuilderContext:
         })
         return di_loc
 
+    @staticmethod
+    def update_debug_loc_position(di_loc: ir.DIValue, line:int, column:int):
+        subprogram_operand = di_loc.operands[2]
+        assert subprogram_operand[0] == 'scope'
+        di_func = subprogram_operand[1]
+
+        return di_loc.parent.add_debug_info("DILocation", {
+            "line": line, "column": column, "scope": di_func,
+        })
+
     @_comp_cached
     def get_input_struct_type(self, component):
         self._stats["input_structs_generated"] += 1
