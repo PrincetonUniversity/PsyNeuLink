@@ -287,9 +287,6 @@ class LLVMBuilderContext:
 
     @staticmethod
     def get_debug_location(func: ir.Function, component):
-        if "debug_info" not in debug_env:
-            return
-
         mod = func.module
         path = inspect.getfile(component.__class__) if component is not None else "<pnl_builtin>"
         d_version = mod.add_metadata([ir.IntType(32)(2), "Dwarf Version", ir.IntType(32)(4)])
