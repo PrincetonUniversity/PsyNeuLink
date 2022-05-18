@@ -66,6 +66,17 @@ JSON/MDF Model Specification
 See https://github.com/ModECI/MDF/blob/main/docs/README.md#model
 
 
+.. _MDF_Simple_Edge_Format:
+
+MDF Simple Edge Format
+----------------------
+
+Models may be output as they are in PsyNeuLink or in "simple edge"
+format. In simple edge format, PsyNeuLink Projections are written as a
+combination of two Edges and an intermediate Node, because the generic
+MDF execution engine does not support using Functions on Edges.
+PsyNeuLink is capable of re-importing models exported by PsyNeuLink in
+either form.
 """
 
 import ast
@@ -79,10 +90,12 @@ import json
 import math
 import numbers
 import numpy
+import os
 import pickle
 import pint
 import psyneulink
 import re
+import tempfile
 import types
 import time
 import warnings
@@ -99,8 +112,16 @@ from psyneulink.core.globals.utilities import convert_to_list, gen_friendly_comm
 __all__ = [
     'PNLJSONError', 'JSONDumpable', 'PNLJSONEncoder',
     'generate_json', 'generate_script_from_json', 'generate_script_from_mdf',
-    'write_json_file'
+    'write_json_file', 'get_mdf_model', 'get_mdf_serialized', 'write_mdf_file'
 ]
+
+
+# file extension to mdf common name
+supported_formats = {
+    'json': 'json',
+    'yml': 'yaml',
+    'yaml': 'yaml',
+}
 
 
 class PNLJSONError(Exception):
@@ -1328,7 +1349,14 @@ def generate_script_from_mdf(model_input, outfile=None):
     try:
         model = load_mdf(model_input)
     except (FileNotFoundError, OSError, ValueError):
-        model = mdf.Model.from_json(model_input)
+        try:
+            model = mdf.Model.from_json(model_input)
+        except json.decoder.JSONDecodeError:
+            # assume yaml
+            # delete=False because of problems with reading file on windows
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.yml', delete=False) as f:
+                f.write(model_input)
+                model = load_mdf(f.name)
 
     imports_str = ''
     comp_strs = []
@@ -1431,26 +1459,45 @@ def generate_json(*compositions, simple_edge_format=True):
                 specifies `Composition` or iterable of ones to be output
                 in JSON
     """
-    import modeci_mdf
-    import modeci_mdf.mdf as mdf
-    from psyneulink.core.compositions.composition import Composition
-
-    model_name = "_".join([c.name for c in compositions])
-
-    model = mdf.Model(
-        id=model_name,
-        format=f'ModECI MDF v{modeci_mdf.__version__}',
-        generating_application=f'PsyNeuLink v{psyneulink.__version__}',
+    warnings.warn(
+        'generate_json is replaced by get_mdf_serialized and will be removed in a future version',
+        FutureWarning
     )
+    return get_mdf_serialized(*compositions, fmt='json', simple_edge_format=simple_edge_format)
 
-    for c in compositions:
-        if not isinstance(c, Composition):
-            raise PNLJSONError(
-                f'Item in compositions arg of {__name__}() is not a Composition: {c}.'
-            )
-        model.graphs.append(c.as_mdf_model(simple_edge_format=simple_edge_format))
 
-    return model.to_json()
+def get_mdf_serialized(*compositions, fmt='json', simple_edge_format=True):
+    """
+        Generate the `general MDF serialized format <JSON_Model_Specification>`
+        for one or more `Compositions <Composition>` and associated
+        objects.
+
+        .. note::
+           At present, if more than one Composition is specified, all
+           must be fully disjoint;  that is, they must not share any
+           `Components <Component>` (e.g., `Mechanism`, `Projections`
+           etc.). This limitation will be addressed in a future update.
+
+        Arguments:
+            *compositions : Composition
+                specifies `Composition` or iterable of ones to be output
+                in **fmt**
+
+            fmt : str
+                specifies file format of output. Current options ('json', 'yml'/'yaml')
+
+            simple_edge_format : bool
+                specifies use of
+                `simple edge format <MDF_Simple_Edge_Format>` or not
+    """
+    model = get_mdf_model(*compositions, simple_edge_format=simple_edge_format)
+
+    try:
+        return getattr(model, f'to_{supported_formats[fmt]}')()
+    except AttributeError as e:
+        raise ValueError(
+            f'Unsupported MDF output format "{fmt}". Supported formats: {gen_friendly_comma_str(supported_formats.keys())}'
+        ) from e
 
 
 def write_json_file(compositions, filename:str, path:str=None, simple_edge_format=True):
@@ -1478,8 +1525,103 @@ def write_json_file(compositions, filename:str, path:str=None, simple_edge_forma
              specifies path of file for JSON specification;  if it is not specified then the current directory is used.
 
     """
+    warnings.warn(
+        'write_json_file is replaced by write_mdf_file and will be removed in a future version',
+        FutureWarning
+    )
+    write_mdf_file(compositions, filename, path, 'json', simple_edge_format)
 
+
+def write_mdf_file(compositions, filename: str, path: str = None, fmt: str = None, simple_edge_format: bool = True):
+    """
+        Write the `general MDF serialized format <JSON_Model_Specification>`
+        for one or more `Compositions <Composition>` and associated
+        objects to file.
+
+        .. note::
+           At present, if more than one Composition is specified, all
+           must be fully disjoint;  that is, they must not share any
+           `Components <Component>` (e.g., `Mechanism`, `Projections`
+           etc.). This limitation will be addressed in a future update.
+
+        Arguments:
+            compositions : Composition or list
+                specifies `Composition` or list of ones to be written to
+                **filename**
+
+            filename : str
+                specifies name of file in which to write JSON
+                specification of `Composition(s) <Composition>` and
+                associated objects.
+
+            path : str : default None
+                specifies path of file for JSON specification; if it is
+                not specified then the current directory is used.
+
+            fmt : str
+                specifies file format of output. Current options ('json', 'yml'/'yaml')
+
+            simple_edge_format : bool
+                specifies use of
+                `simple edge format <MDF_Simple_Edge_Format>` or not
+    """
     compositions = convert_to_list(compositions)
+    model = get_mdf_model(*compositions, simple_edge_format=simple_edge_format)
 
-    with open(filename, 'w') as json_file:
-        json_file.write(generate_json(*compositions, simple_edge_format=simple_edge_format))
+    if fmt is None:
+        try:
+            fmt = re.match(r'(.*)\.(.*)$', filename).groups(1)
+        except AttributeError:
+            fmt = 'json'
+
+    if path is not None:
+        filename = os.path.join(path, filename)
+
+    try:
+        return getattr(model, f'to_{supported_formats[fmt]}_file')(filename)
+    except AttributeError as e:
+        raise ValueError(
+            f'Unsupported MDF output format "{fmt}". Supported formats: {gen_friendly_comma_str(supported_formats.keys())}'
+        ) from e
+
+
+def get_mdf_model(*compositions, simple_edge_format=True):
+    """
+        Generate the MDF Model object for one or more
+        `Compositions <Composition>` and associated objects.
+
+        .. note::
+           At present, if more than one Composition is specified, all
+           must be fully disjoint;  that is, they must not share any
+           `Components <Component>` (e.g., `Mechanism`, `Projections`
+           etc.). This limitation will be addressed in a future update.
+
+        Arguments:
+            *compositions : Composition
+                specifies `Composition` or iterable of ones to be output
+                in the Model
+
+            simple_edge_format : bool
+                specifies use of
+                `simple edge format <MDF_Simple_Edge_Format>` or not
+    """
+    import modeci_mdf
+    import modeci_mdf.mdf as mdf
+    from psyneulink.core.compositions.composition import Composition
+
+    model_name = "_".join([c.name for c in compositions])
+
+    model = mdf.Model(
+        id=model_name,
+        format=f'ModECI MDF v{modeci_mdf.__version__}',
+        generating_application=f'PsyNeuLink v{psyneulink.__version__}',
+    )
+
+    for c in compositions:
+        if not isinstance(c, Composition):
+            raise PNLJSONError(
+                f'Item in compositions arg of {__name__}() is not a Composition: {c}.'
+            )
+        model.graphs.append(c.as_mdf_model(simple_edge_format=simple_edge_format))
+
+    return model
