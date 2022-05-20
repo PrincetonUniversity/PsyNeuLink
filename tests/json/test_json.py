@@ -7,7 +7,7 @@ import sys
 
 pytest.importorskip(
     'modeci_mdf',
-    reason='JSON methods require modeci_mdf package'
+    reason='MDF methods require modeci_mdf package'
 )
 
 # stroop stimuli
