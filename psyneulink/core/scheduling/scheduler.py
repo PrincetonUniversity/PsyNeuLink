@@ -16,7 +16,7 @@ import pint
 
 from psyneulink import _unit_registry
 from psyneulink.core.globals.context import Context, handle_external_context
-from psyneulink.core.globals.json import JSONDumpable
+from psyneulink.core.globals.json import MDFSerializable
 from psyneulink.core.globals.utilities import parse_valid_identifier
 from psyneulink.core.scheduling.condition import _create_as_pnl_condition
 
@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 SchedulingMode = graph_scheduler.scheduler.SchedulingMode
 
 
-class Scheduler(graph_scheduler.Scheduler, JSONDumpable):
+class Scheduler(graph_scheduler.Scheduler, MDFSerializable):
     def __init__(
         self,
         composition=None,

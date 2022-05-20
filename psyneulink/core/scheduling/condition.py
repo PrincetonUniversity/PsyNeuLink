@@ -20,7 +20,7 @@ import graph_scheduler
 import numpy as np
 
 from psyneulink.core.globals.context import handle_external_context
-from psyneulink.core.globals.json import JSONDumpable
+from psyneulink.core.globals.json import MDFSerializable
 from psyneulink.core.globals.keywords import MODEL_SPEC_ID_TYPE, comparison_operators
 from psyneulink.core.globals.parameters import parse_context
 from psyneulink.core.globals.utilities import parse_valid_identifier
@@ -58,7 +58,7 @@ def _create_as_pnl_condition(condition):
     return res
 
 
-class Condition(graph_scheduler.Condition, JSONDumpable):
+class Condition(graph_scheduler.Condition, MDFSerializable):
     @handle_external_context()
     def is_satisfied(self, *args, context=None, execution_id=None, **kwargs):
         if execution_id is None:
