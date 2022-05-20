@@ -50,7 +50,7 @@ and its output in JSON. Running `generate_script_from_json` on the output will p
 that will give the same results when run on the same input as the original.
 
 :download:`Download stroop_conflict_monitoring.py
-<../../tests/json/stroop_conflict_monitoring.py>`
+<../../tests/mdf/stroop_conflict_monitoring.py>`
 
 :download:`Download stroop_conflict_monitoring.json
 <../../docs/source/_static/stroop_conflict_monitoring.json>`

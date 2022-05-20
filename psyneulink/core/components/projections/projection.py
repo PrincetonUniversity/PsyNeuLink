@@ -409,7 +409,7 @@ from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import 
 from psyneulink.core.components.ports.port import PortError
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base, Projection, Port
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.json import _get_variable_parameter_name
+from psyneulink.core.globals.mdf import _get_variable_parameter_name
 from psyneulink.core.globals.keywords import \
     CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, EXPONENT, FUNCTION_PARAMS, GATE, GATING_PROJECTION, GATING_SIGNAL, \
     INPUT_PORT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, \

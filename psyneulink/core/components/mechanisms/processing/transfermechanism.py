@@ -842,7 +842,7 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
-from psyneulink.core.globals.json import _get_variable_parameter_name, _substitute_expression_args
+from psyneulink.core.globals.mdf import _get_variable_parameter_name, _substitute_expression_args
 from psyneulink.core.globals.keywords import \
     COMBINE, comparison_operators, EXECUTION_COUNT, FUNCTION, GREATER_THAN_OR_EQUAL, \
     CURRENT_VALUE, LESS_THAN_OR_EQUAL, MAX_ABS_DIFF, \

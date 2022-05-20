@@ -1098,7 +1098,7 @@ from psyneulink.core.components.ports.port import \
     REMOVE_PORTS, PORT_SPEC, _parse_port_spec, PORT_SPECIFIC_PARAMS, PROJECTION_SPECIFIC_PARAMS
 from psyneulink.core.components.shellclasses import Mechanism, Projection, Port
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
-from psyneulink.core.globals.json import _get_variable_parameter_name, _substitute_expression_args
+from psyneulink.core.globals.mdf import _get_variable_parameter_name, _substitute_expression_args
 # TODO: remove unused keywords
 from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, EXECUTION_PHASE, EXPONENT, FUNCTION_PARAMS, \
