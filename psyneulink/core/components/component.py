@@ -909,7 +909,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
     standard_constructor_args = [RESET_STATEFUL_FUNCTION_WHEN, EXECUTE_UNTIL_FINISHED, MAX_EXECUTIONS_BEFORE_FINISHED]
 
-    # helper attributes for JSON model spec
+    # helper attributes for MDF model spec
     _model_spec_id_parameters = 'parameters'
     _model_spec_id_stateful_parameters = 'stateful_parameters'
 

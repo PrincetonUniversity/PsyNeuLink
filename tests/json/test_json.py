@@ -6,7 +6,7 @@ import pytest
 
 pytest.importorskip(
     'modeci_mdf',
-    reason='JSON methods require modeci_mdf package'
+    reason='MDF methods require modeci_mdf package'
 )
 from modeci_mdf.execution_engine import evaluate_onnx_expr  # noqa: E402
 
