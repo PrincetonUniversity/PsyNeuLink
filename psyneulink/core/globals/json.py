@@ -110,7 +110,7 @@ from psyneulink.core.globals.utilities import convert_to_list, gen_friendly_comm
     parse_string_to_psyneulink_object_string, parse_valid_identifier, safe_equals, convert_to_np_array
 
 __all__ = [
-    'PNLJSONError', 'JSONDumpable', 'PNLJSONEncoder',
+    'PNLJSONError', 'MDFSerializable', 'PNLJSONEncoder',
     'generate_json', 'generate_script_from_json', 'generate_script_from_mdf',
     'write_json_file', 'get_mdf_model', 'get_mdf_serialized', 'write_mdf_file'
 ]
@@ -128,7 +128,7 @@ class PNLJSONError(Exception):
     pass
 
 
-class JSONDumpable:
+class MDFSerializable:
     @property
     def json_summary(self):
         return self.as_mdf_model().to_json()

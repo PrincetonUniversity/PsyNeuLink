@@ -513,7 +513,7 @@ import numpy as np
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.globals.context import \
     Context, ContextError, ContextFlags, INITIALIZATION_STATUS_FLAGS, _get_time, handle_external_context
-from psyneulink.core.globals.json import JSONDumpable
+from psyneulink.core.globals.json import MDFSerializable
 from psyneulink.core.globals.keywords import \
     CONTEXT, CONTROL_PROJECTION, DEFERRED_INITIALIZATION, EXECUTE_UNTIL_FINISHED, \
     FUNCTION, FUNCTION_PARAMS, INIT_FULL_EXECUTE_METHOD, INPUT_PORTS, \
@@ -724,7 +724,7 @@ class ComponentsMeta(ABCMeta):
         return self.defaults
 
 
-class Component(JSONDumpable, metaclass=ComponentsMeta):
+class Component(MDFSerializable, metaclass=ComponentsMeta):
     """
     Component(                 \
         default_variable=None, \
