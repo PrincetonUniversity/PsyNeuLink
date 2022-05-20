@@ -133,6 +133,10 @@ class JSONDumpable:
     def json_summary(self):
         return self.as_mdf_model().to_json()
 
+    @property
+    def yaml_summary(self):
+        return self.as_mdf_model().to_yaml()
+
 
 # leaving this due to instructions in test_documentation_models
 # (useful for exporting Composition results to JSON)
