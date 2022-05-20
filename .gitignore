@@ -1,9 +1,9 @@
 
 # Created by https://www.gitignore.io/api/osx,python,pycharm
 
-# Ignore JSON files created in tests/json/
+# Ignore JSON files created in tests/mdf/
 # Maybe these should be generated in tmpdir instead
-tests/json/*.json
+tests/mdf/*.json
 
 # Log files created by SLURM jobs in this directory
 Scripts/Debug/predator_prey_opt/logs/

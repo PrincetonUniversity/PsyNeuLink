@@ -20,7 +20,7 @@ import graph_scheduler
 import numpy as np
 
 from psyneulink.core.globals.context import handle_external_context
-from psyneulink.core.globals.json import MDFSerializable
+from psyneulink.core.globals.mdf import MDFSerializable
 from psyneulink.core.globals.keywords import MODEL_SPEC_ID_TYPE, comparison_operators
 from psyneulink.core.globals.parameters import parse_context
 from psyneulink.core.globals.utilities import parse_valid_identifier

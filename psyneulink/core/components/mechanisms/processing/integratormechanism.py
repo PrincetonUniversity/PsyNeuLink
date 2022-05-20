@@ -89,7 +89,7 @@ from psyneulink.core.components.functions.function import Function
 from psyneulink.core.components.functions.stateful.integratorfunctions import AdaptiveIntegrator
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
-from psyneulink.core.globals.json import _substitute_expression_args
+from psyneulink.core.globals.mdf import _substitute_expression_args
 from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, INTEGRATOR_MECHANISM, VARIABLE, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
