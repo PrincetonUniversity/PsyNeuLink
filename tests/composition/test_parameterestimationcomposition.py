@@ -120,49 +120,55 @@ def test_parameter_estimation_composition(objective_function_arg, expected_input
 def test_parameter_estimation_mle():
     """Test parameter estimation of a DDM in integrator mode with MLE."""
 
+    # High-level parameters the impact performance of the test
+    num_estimates = 10
+    num_trials = 20
+    time_step_size = 0.1
+
     ddm_params = dict(starting_value=0.0, rate=0.3, noise=1.0,
-                      threshold=0.6, non_decision_time=0.15, time_step_size=0.01)
+                      threshold=0.6, non_decision_time=0.15, time_step_size=time_step_size)
 
     # Create a simple one mechanism composition containing a DDM in integrator mode.
     decision = pnl.DDM(function=pnl.DriftDiffusionIntegrator(**ddm_params),
                        output_ports=[pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME],
                        name='DDM')
 
-    # comp = pnl.Composition(pathways=decision)
+    comp = pnl.Composition(pathways=decision)
 
-    # Lets generate an "experimental" dataset to fit. This is a parameter recovery test
-    # The input will be 250 trials of the same constant stimulus drift rate of 1
-    input = np.ones((250, 1))
+    # Let's generate an "experimental" dataset to fit. This is a parameter recovery test
+    # The input will be 20 trials of the same constant stimulus drift rate of 1
+    input = np.array([[1, 1, 0.3, 0.3, 1, 1, 0.3, 1, 0.3, 1, 0.3, 0.3, 0.3, 1, 1, 0.3, 0.3, 1, 1, 1]]).transpose()
     inputs_dict = {decision: input}
 
-    # # Run the composition to generate some data to fit
-    # comp.run(inputs=inputs_dict,
-    #          num_trials=len(input),
-    #          execution_mode=pnl.ExecutionMode.LLVMRun)
-    #
-    # # Store the results of this "experiment" as a numpy array. This should be a
-    # # 2D array of shape (len(input), 2). The first column being a discrete variable
-    # # specifying the upper or lower decision boundary and the second column is the
-    # # reaction time. We will put the data into a pandas DataFrame, this makes it
-    # # easier to specify which columns in the data are categorical or not.
-    # data_to_fit = pd.DataFrame(np.squeeze(np.array(comp.results)),
-    #                            columns=['decision', 'rt'])
-    # data_to_fit['decision'] = pd.Categorical(data_to_fit['decision'])
+    # Run the composition to generate some data to fit
+    comp.run(inputs=inputs_dict,
+             num_trials=len(input))
 
+    # Store the results of this "experiment" as a numpy array. This should be a
+    # 2D array of shape (len(input), 2). The first column being a discrete variable
+    # specifying the upper or lower decision boundary and the second column is the
+    # reaction time. We will put the data into a pandas DataFrame, this makes it
+    # easier to specify which columns in the data are categorical or not.
+    data_to_fit = pd.DataFrame(np.squeeze(np.array(comp.results)),
+                               columns=['decision', 'rt'])
+    data_to_fit['decision'] = pd.Categorical(data_to_fit['decision'])
 
+    # Create a parameter estimation composition to fit the data we just generated and hopefully recover the
+    # parameters of the DDM.
     pec = pnl.ParameterEstimationComposition(name='pec',
-                                             nodes=[decision],
+                                             nodes=[comp],
                                              parameters={('rate', decision): [1, 2],
                                                          ('threshold', decision): [1, 2], },
                                              outcome_variables=[decision.output_ports[DECISION_VARIABLE],
                                                                 decision.output_ports[RESPONSE_TIME]],
-                                             # data=data_to_fit,
-                                             objective_function=LinearCombination,
+                                             data=data_to_fit,
+                                             # objective_function=LinearCombination,
                                              optimization_function=MaxLikelihoodEstimator,
-                                             num_estimates=10000,
-                                             num_trials_per_estimate=len(input)
+                                             num_estimates=num_estimates,
+                                             num_trials_per_estimate=len(input),
                                              )
 
-    pec.run(inputs=inputs_dict,
-            num_trials=len(input))
+
+    pec.run(inputs=inputs_dict, num_trials=len(input))
+
 

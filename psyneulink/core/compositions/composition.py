@@ -8691,8 +8691,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Compute net outcome based on the cost of the simulated control allocation (usually, net = outcome - cost)
             net_outcome = controller.compute_net_outcome(outcome, total_cost)
 
+        # If we are doing data fitting, we need to return the full simulation results (result for each trial)
         if return_results:
-            return net_outcome, result
+            return net_outcome, self.results
         else:
             return net_outcome
 
@@ -9978,20 +9979,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 else:
                     result_copy = trial_output
 
-                if ContextFlags.SIMULATION_MODE not in context.runmode:
-                    results.append(result_copy)
-                    self.parameters.results._set(results, context)
+                results.append(result_copy)
+                self.parameters.results._set(results, context)
 
-                    if not self.parameters.retain_old_simulation_data._get():
-                        if self.controller is not None:
-                            # if any other special parameters store simulation info that needs to be cleaned up
-                            # consider dedicating a function to it here
-                            # this will not be caught above because it resides in the base context (context)
-                            if not self.parameters.simulation_results.retain_old_simulation_data:
-                                self.parameters.simulation_results._get(context).clear()
+                if not self.parameters.retain_old_simulation_data._get():
+                    if self.controller is not None:
+                        # if any other special parameters store simulation info that needs to be cleaned up
+                        # consider dedicating a function to it here
+                        # this will not be caught above because it resides in the base context (context)
+                        if not self.parameters.simulation_results.retain_old_simulation_data:
+                            self.parameters.simulation_results._get(context).clear()
 
-                            if not self.controller.parameters.simulation_ids.retain_old_simulation_data:
-                                self.controller.parameters.simulation_ids._get(context).clear()
+                        if not self.controller.parameters.simulation_ids.retain_old_simulation_data:
+                            self.controller.parameters.simulation_ids._get(context).clear()
 
                 if call_after_trial:
                     call_with_pruned_args(call_after_trial, context=context)
@@ -10235,13 +10235,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # Report controller engagement before executing simulations
                 #    so it appears before them for ReportOutput.TERSE
-                report(self,
-                       EXECUTE_REPORT,
-                       report_num=report_num,
-                       scheduler=execution_scheduler,
-                       content='controller_start',
-                       context=context,
-                       node=self.controller)
+                if report is not None:
+                    report(self,
+                           EXECUTE_REPORT,
+                           report_num=report_num,
+                           scheduler=execution_scheduler,
+                           content='controller_start',
+                           context=context,
+                           node=self.controller)
 
                 if self.controller and not execution_mode:
                     context.execution_phase = ContextFlags.PROCESSING
@@ -10260,13 +10261,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # Report controller execution after executing simulations
                 #    so it includes the results for ReportOutput.FULL
-                report(self,
-                       CONTROLLER_REPORT,
-                       report_num=report_num,
-                       scheduler=execution_scheduler,
-                       content='controller_end',
-                       context=context,
-                       node=self.controller)
+                if report is not None:
+                    report(self,
+                           CONTROLLER_REPORT,
+                           report_num=report_num,
+                           scheduler=execution_scheduler,
+                           content='controller_end',
+                           context=context,
+                           node=self.controller)
 
     @handle_external_context(execution_phase=ContextFlags.PROCESSING)
     def execute(

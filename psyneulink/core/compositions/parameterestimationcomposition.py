@@ -142,6 +142,7 @@ Class Reference
 ---------------
 
 """
+import numpy as np
 
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \
     OptimizationControlMechanism
@@ -150,7 +151,9 @@ from psyneulink.core.components.ports.modulatorysignals.controlsignal import Con
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import BEFORE
+from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core import llvm as pnlvm
 
 
 __all__ = ['ParameterEstimationComposition']
@@ -237,7 +240,7 @@ class ParameterEstimationComposition(Composition):
         `model <ParameterEstimationComposition_Model>` for additional information).
 
     data : array : default None
-        specifies the data to to be fit when the ParameterEstimationComposition is used for
+        specifies the data to be fit when the ParameterEstimationComposition is used for
         `ParameterEstimationComposition_Data_Fitting`;  structure must conform to format of
         **outcome_variables** (see `data <ParameterEstimationComposition.data>` for additional information).
 
@@ -460,12 +463,25 @@ class ParameterEstimationComposition(Composition):
 
         self.optimized_parameter_values = []
 
+        controller_mode = BEFORE
+        controller_time_scale = TimeScale.TRIAL
+
         super().__init__(name=name,
-                         controller_mode=BEFORE,
+                         controller_mode=controller_mode,
+                         controller_time_scale=controller_time_scale,
                          enable_controller=True,
                          **kwargs)
 
         context = Context(source=ContextFlags.COMPOSITION, execution_id=None)
+
+        self.data = data
+
+        # If there is data being passed, then we are in data fitting mode and we need the OCM to return the full results
+        # from a simulation of a composition.
+        if self.data is not None:
+            return_results = True
+        else:
+            return_results = False
 
         # Implement OptimizationControlMechanism and assign as PEC controller
         # (Note: Implement after Composition itself, so that:
@@ -474,16 +490,21 @@ class ParameterEstimationComposition(Composition):
         ocm = self._instantiate_ocm(agent_rep=self.model,
                                     parameters=parameters,
                                     outcome_variables=outcome_variables,
-                                    data=data,
+                                    data=self.data,
                                     objective_function=objective_function,
                                     optimization_function=optimization_function,
                                     num_estimates=num_estimates,
                                     num_trials_per_estimate=num_trials_per_estimate,
                                     initial_seed=initial_seed,
                                     same_seed_for_all_parameter_combinations=same_seed_for_all_parameter_combinations,
+                                    return_results=return_results,
                                     context=context)
 
         self.add_controller(ocm, context)
+
+        # The call run on PEC might lead to the run method again recursively for simulation. We need to keep track of
+        # this to avoid infinite recursion.
+        self._run_called = False
 
     def _validate_params(self, args):
 
@@ -535,6 +556,7 @@ class ParameterEstimationComposition(Composition):
                          num_trials_per_estimate,
                          initial_seed,
                          same_seed_for_all_parameter_combinations,
+                         return_results,
                          context=None
                          ):
 
@@ -564,46 +586,74 @@ class ParameterEstimationComposition(Composition):
             initial_seed=initial_seed,
             same_seed_for_all_allocations=same_seed_for_all_parameter_combinations,
             context=context,
-            comp_execution_mode="LLVM",
+            return_results=return_results
+            # comp_execution_mode="LLVM",
         )
 
-    # def run(self):
-    #     # FIX: IF DATA WAS SPECIFIED, CHECK THAT INPUTS ARE APPROPRIATE FOR THOSE DATA.
-    #     # FIX: THESE ARE THE PARAMS THAT SHOULD PROBABLY BE PASSED TO THE model COMP FOR ITS RUN:
-    #     #     inputs=None,
-    #     #     initialize_cycle_values=None,
-    #     #     reset_stateful_functions_to=None,
-    #     #     reset_stateful_functions_when=Never(),
-    #     #     skip_initialization=False,
-    #     #     clamp_input=SOFT_CLAMP,
-    #     #     runtime_params=None,
-    #     #     call_before_time_step=None,
-    #     #     call_after_time_step=None,
-    #     #     call_before_pass=None,
-    #     #     call_after_pass=None,
-    #     #     call_before_trial=None,
-    #     #     call_after_trial=None,
-    #     #     termination_processing=None,
-    #     #     scheduler=None,
-    #     #     scheduling_mode: typing.Optional[SchedulingMode] = None,
-    #     #     execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
-    #     #     default_absolute_time_unit: typing.Optional[pint.Quantity] = None,
-    #     # FIX: ADD DOCSTRING THAT EXPLAINS HOW TO RUN FOR DATA FITTING VS. OPTIMIZATION
-    #     pass
+    @handle_external_context()
+    def run(self, *args, **kwargs):
+        """
+        Runs the ParameterEstimationComposition.
 
-    # def evaluate(self,
-    #              feature_values,
-    #              control_allocation,
-    #              num_estimates,
-    #              num_trials_per_estimate,
-    #              execution_mode=None,
-    #              base_context=Context(execution_id=None),
-    #              context=None):
-    #     """Return `model <FunctionAppproximator.model>` predicted by `function <FunctionAppproximator.function> for
-    #     **input**, using current set of `prediction_parameters <FunctionAppproximator.prediction_parameters>`.
-    #     """
-    #     # FIX: THE FOLLOWING MOSTLY NEEDS TO BE HANDLED BY OptimizationFunction.evaluate_agent_rep AND/OR grid_evaluate
-    #     # FIX:   THIS NEEDS TO BE A DEQUE THAT TRACKS ALL THE CONTROL_SIGNAL VALUES OVER num_estimates FOR PARAM DISTRIB
-    #     # FIX:   AUGMENT TO USE num_estimates and num_trials_per_estimate
-    #     # FIX:   AUGMENT TO USE same_seed_for_all_parameter_combinations PARAMETER
-    #     return self.function(feature_values, control_allocation, context=context)
+        Parameters
+        ----------
+        *args : positional arguments
+            positional arguments to be passed to the ParameterEstimationComposition's
+            `run` method.
+        **kwargs : keyword arguments
+            keyword arguments to be passed to the ParameterEstimationComposition's
+            `run` method.
+
+        Returns
+        -------
+        results : dict
+            dictionary of results from the ParameterEstimationComposition's `run` method.
+        """
+
+        # If we are running in data fitting mode, there is no need to run the composition traditionally. Instead, we
+        # just need to execute the controller (OptimizationControlMechanism), passing it the input data, and return the
+        # results. Don't invoke the controller again if run has been called already, use the base run method instead.
+        if self.data is not None:
+
+            self.controller_mode = BEFORE
+            self.controller_time_scale = TimeScale.RUN
+
+            if len(args) > 0:
+                inputs = args[0]
+            elif 'inputs' in kwargs:
+                inputs = kwargs['inputs']
+            else:
+                raise ValueError("Missing required argument: 'inputs'")
+
+            # Parse the inputs
+            # input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
+            # inputs, num_inputs_sets = self._parse_run_inputs(inputs, context=kwargs.get('context', None))
+
+            # When in data fitting mode, we really only need inputs.
+            # input_array = list(inputs.values())[0]
+            # self.controller.input_ports[1].defaults.value = np.zeros_like(input_array)
+
+            # Get the context, it should never be None
+            try:
+                context = kwargs['context']
+            except KeyError:
+                raise ValueError("Missing required argument to run: 'context'")
+
+            self._run_called = True
+
+            context.source = ContextFlags.COMPOSITION
+            context.composition = self
+
+            self._execute_controller(
+                relative_order=BEFORE,
+                execution_mode=kwargs.get('execution_mode',  pnlvm.ExecutionMode.Python),
+                _comp_ex=None,
+                context=context,
+            )
+
+            self._run_called = False
+
+        # Otherwise, we need to pass things to the base class Composition run
+        else:
+            return super().run(*args, **kwargs)
+

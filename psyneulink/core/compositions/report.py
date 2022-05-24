@@ -849,7 +849,7 @@ class Report:
         self._context = context
 
         # Generate space before beginning of output
-        if self._use_rich and not self.output_reports:
+        if self._use_rich and not self.output_reports and self._report_output != ReportOutput.OFF:
             print()
 
         if comp not in self.output_reports:

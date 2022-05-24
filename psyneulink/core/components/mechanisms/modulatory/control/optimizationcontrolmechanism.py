@@ -1078,6 +1078,8 @@ from typing import Union
 import numpy as np
 import typecheck as tc
 
+from functools import partial
+
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility, Component
 from psyneulink.core.components.functions.function import is_function_type
@@ -1573,6 +1575,11 @@ class OptimizationControlMechanism(ControlMechanism):
         `execution contexts <Composition_Execution_Context>`.  If *search_statefulness* is False, calls for each
         `control_allocation <ControlMechanism.control_allocation>` will not be executed as independent simulations;
         rather, all will be run in the same (original) execution context.
+
+    return_results: bool : False
+        if True, the complete simulation results are returned when invoking
+        `evaluate_agent_rep <OptimizationControlMechanism.evaluate_agent_rep>` calls. This is nescessary when using a
+        ParameterEstimationCompostion for parameter estimation via data fitting.
     """
 
     componentType = OPTIMIZATION_CONTROL_MECHANISM
@@ -1760,6 +1767,7 @@ class OptimizationControlMechanism(ControlMechanism):
                  search_function: tc.optional(tc.optional(tc.any(is_function_type)))=None,
                  search_termination_function: tc.optional(tc.optional(tc.any(is_function_type)))=None,
                  search_statefulness=None,
+                 return_results: bool = False,
                  context=None,
                  **kwargs):
         """Implement OptimizationControlMechanism"""
@@ -1826,6 +1834,8 @@ class OptimizationControlMechanism(ControlMechanism):
                 # Flag for deferred initialization
                 self.initialization_status = ContextFlags.DEFERRED_INIT
                 return
+
+        self.return_results = return_results
 
         super().__init__(
             agent_rep=agent_rep,
@@ -3014,7 +3024,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # num_estimates of function
         self.function.reset(**{
             DEFAULT_VARIABLE: self.parameters.control_allocation._get(context),
-            OBJECTIVE_FUNCTION: self.evaluate_agent_rep,
+            OBJECTIVE_FUNCTION: partial(self.evaluate_agent_rep, return_results=self.return_results),
             # SEARCH_FUNCTION: self.search_function,
             # SEARCH_TERMINATION_FUNCTION: self.search_termination_function,
             SEARCH_SPACE: self.parameters.control_allocation_search_space._get(context),

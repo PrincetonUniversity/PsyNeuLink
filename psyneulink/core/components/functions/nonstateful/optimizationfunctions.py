@@ -149,7 +149,7 @@ class OptimizationFunction(Function_Base):
     .. note::
 
         An OptimizationFunction or any of its subclasses can be created by calling its constructor.  This provides
-        runnable defaults for all of its arguments (see below). However these do not yield useful results, and are
+        runnable defaults for all of its arguments (see below). However, these do not yield useful results, and are
         meant simply to allow the  constructor of the OptimziationFunction to be used to specify some but not all of
         its parameters when specifying the OptimizationFunction in the constructor for another Component. For
         example, an OptimizationFunction may use for its `objective_function <OptimizationFunction.objective_function>`
@@ -722,6 +722,12 @@ class OptimizationFunction(Function_Base):
             # Get value of sample
             current_value = call_with_pruned_args(self.objective_function, current_sample, context=context)
 
+            # If the value returned by the objective function is a tuple, then we are data fitting and the
+            # evaluate_agent_rep function is returning the net_outcome, results tuple. We want the results
+            # in this case.
+            if type(current_value) is tuple:
+                current_value = np.squeeze(np.array(current_value[1]))
+
             # Convert the sample and values to numpy arrays even if they are scalars
             current_sample = np.atleast_1d(current_sample)
             current_value = np.atleast_1d(current_value)
@@ -729,7 +735,7 @@ class OptimizationFunction(Function_Base):
             evaluated_samples.append(current_sample)
             estimated_values.append(current_value)
 
-            self._report_value(current_value)
+            # self._report_value(current_value)
             iteration += 1
             max_iterations = self.parameters.max_iterations._get(context)
             if max_iterations and iteration > max_iterations:

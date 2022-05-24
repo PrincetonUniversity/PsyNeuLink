@@ -390,6 +390,66 @@ class MaxLikelihoodEstimator(OptimizationFunction):
             **kwargs
         )
 
+    def _run_simulations(self, variable, context, params, *args):
+        """
+        Run the simulations we need for estimating the likelihood for given control allocation.
+        This function has side effects as it sets the search_space parameter of the
+        OptimizationFunction to the control allocation.
+        """
+
+        # Set the search space to the control allocation. The only thing evaluate is actually "searching" over is the
+        # randomization dimension, which should be the last sample iterator in the search space list.
+        search_space = self.parameters.search_space._get(context)
+        for i, arg in enumerate(args):
+
+            # Make sure we don't try to set the sample iterator in the search space, this should be the randomization
+            # dimension.
+            if i < len(search_space)-1:
+                search_space[i] = SampleIterator(np.array([arg]))
+            else:
+                raise ValueError("Too many arguments passed to run_simulations")
+
+        # Reset the randomization dimension sample iterator
+        search_space[self.randomization_dimension].reset()
+
+        # We also need to set the search_function and search_termination_function, this is a degenerate case where
+        # the search space is just iterating over the randomization dimension and the search_termination_function
+        # stops the search when the randomization dimension is exhausted.
+        search_function = lambda variable, sample_num, context: \
+            [[arg] for arg in args] + [[next(search_space[self.randomization_dimension])]]
+        search_termination_function = lambda sample, value, iter, context: \
+            iter > search_space[self.randomization_dimension].num - 1
+
+        self.parameters.search_space._set(search_space, context)
+        self.parameters.search_function._set(search_function, context)
+        self.parameters.search_termination_function._set(search_termination_function, context)
+
+        # We need to set the aggregation function to None so that calls to evaluate do not aggregate results
+        # of simulations. We want all results for all simulations so we can compute the likelihood ourselves.
+        self.parameters.aggregation_function._set(None, context)
+
+        # FIXME: This is a hack to make sure that state_features gets all trials worth of inputs.
+        # We need to set the inputs for the composition during simulation, override the state features with the
+        # inputs dict passed to the PEC constructor. This assumes that the inputs dict has the same order as the
+        # state features.
+        # for state_input_port, value in zip(self.owner.state_input_ports, self.inputs.values()):
+        #     state_input_port.parameters.value._set(value, context)
+
+        # Clear any previous results from the composition
+
+        # Evaluate objective_function for each sample
+        last_sample, last_value, all_samples, all_values = self._evaluate(
+            variable=variable,
+            context=context,
+            params=params,
+        )
+
+        # We need to swap the simulation (randomization dimension) with the control allocation dimension so things
+        # are in the right order for the likelihood computation.
+        all_values = np.transpose(all_values, (0, 2, 1))
+
+        return all_values
+
     def _function(self,
                  variable=None,
                  context=None,
@@ -408,29 +468,24 @@ class MaxLikelihoodEstimator(OptimizationFunction):
                 raise ValueError("MaximumLikelihoodEstimator must be assigned to an OptimizationControlMechanism, "
                                  "self.owner is None")
 
-            def run_simulations(*args):
-                search_space = self.parameters.search_space._get(context)
-                for i, arg in enumerate(args):
-                    if i < len(search_space):
-                        search_space[i] = SampleIterator(np.array([arg]))
-                    else:
-                        raise ValueError("Too many arguments passed to run_simulations")
+            ocm = getattr(self.objective_function, '__self__', None)
 
-                self.parameters.search_space._set(search_space, context)
+            # If we are running in compiled mode
+            if ocm is not None and ocm.parameters.comp_execution_mode._get(context) in {"PTX", "LLVM"}:
+                raise NotImplementedError("MaximumLikelihoodEstimator is not supported in compiled mode currently.")
 
-                all_values, num_evals = self._grid_evaluate(self.owner, context)
-                all_values = np.ctypeslib.as_array(all_values)
+            # If we are running in compiled mode
+            # Otherwise, we are running in Python mode
+            else:
 
-                return all_values, num_evals
+                all_values = self._run_simulations(variable, context, params, 1, 1)
+                print(f"{all_values.shape=}")
+                all_values = self._run_simulations(variable, context, params, 1, 1)
+                print(f"{all_values.shape=}")
 
-            t0 = time.time()
-            all_values, num_evals = run_simulations(1, 1)
-            t1 = time.time()
-
-            print(f"Number of evaluations: {num_evals}, Elapsed time: {t1 - t0}")
+            # print(f"Number of evaluations: {num_evals}, Elapsed time: {t1 - t0}")
 
         return optimal_sample, optimal_value, saved_samples, saved_values
-
 
     def fit(self, display_iter: bool = False, save_iterations: bool = False):
 
