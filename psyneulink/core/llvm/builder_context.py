@@ -215,9 +215,8 @@ class LLVMBuilderContext:
                 a.attributes.add('nonnull')
 
         metadata = self.get_debug_location(llvm_func, component)
-        if metadata is not None:
-            scope = dict(metadata.operands)["scope"]
-            llvm_func.set_metadata("dbg", scope)
+        scope = dict(metadata.operands)["scope"]
+        llvm_func.set_metadata("dbg", scope)
 
         # Create entry block
         block = llvm_func.append_basic_block(name="entry")
@@ -327,9 +326,7 @@ class LLVMBuilderContext:
 
     @staticmethod
     def update_debug_loc_position(di_loc: ir.DIValue, line:int, column:int):
-        subprogram_operand = di_loc.operands[2]
-        assert subprogram_operand[0] == 'scope'
-        di_func = subprogram_operand[1]
+        di_func = dict(di_loc.operands)["scope"]
 
         return di_loc.parent.add_debug_info("DILocation", {
             "line": line, "column": column, "scope": di_func,
