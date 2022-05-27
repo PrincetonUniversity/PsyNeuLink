@@ -1148,28 +1148,51 @@ class DDM(ProcessingMechanism):
                                                         params, THRESHOLD)
             threshold = pnlvm.helpers.load_extract_scalar_array_one(builder,
                                                                     threshold_ptr)
-            # Load mechanism state to generate random numbers
-            mech_params = builder.function.args[0]
-            mech_state = builder.function.args[1]
-            random_state = ctx.get_random_state_ptr(builder, self, mech_state, mech_params)
+            # store threshold as decision variable output
+            # this will be used by the mechanism to return the right decision
+            decision_ptr = builder.gep(mech_out, [ctx.int32_ty(0),
+                                                  ctx.int32_ty(self.DECISION_VARIABLE_INDEX),
+                                                  ctx.int32_ty(0)])
+            builder.store(threshold, decision_ptr)
+        else:
+            assert False, "Unknown mode in compiled DDM!"
+
+        return mech_out, builder
+
+    def _gen_llvm_mechanism_functions(self, ctx, builder, m_base_params, m_params, m_state, m_in,
+                                      m_val, ip_output, *, tags:frozenset):
+
+        mf_out, builder = super()._gen_llvm_mechanism_functions(ctx, builder, m_base_params,
+                                                                m_params, m_state, m_in, m_val,
+                                                                ip_output, tags=tags)
+        assert mf_out is m_val
+
+        if isinstance(self.function, DriftDiffusionAnalytical):
+            random_state = ctx.get_random_state_ptr(builder, self, m_state, m_params)
             random_f = ctx.get_uniform_dist_function_by_state(random_state)
             random_val_ptr = builder.alloca(random_f.args[1].type.pointee, name="random_out")
             builder.call(random_f, [random_state, random_val_ptr])
             random_val = builder.load(random_val_ptr)
 
             # Convert ER to decision variable:
-            dst = builder.gep(mech_out, [ctx.int32_ty(0),
-                ctx.int32_ty(self.DECISION_VARIABLE_INDEX),
-                ctx.int32_ty(0)])
+            prob_lthr_ptr = builder.gep(m_val, [ctx.int32_ty(0),
+                                                ctx.int32_ty(self.PROBABILITY_LOWER_THRESHOLD_INDEX),
+                                                ctx.int32_ty(0)])
+            prob_lower_thr = builder.load(prob_lthr_ptr)
             thr_cmp = builder.fcmp_ordered("<", random_val, prob_lower_thr)
+
+            # The correct (modulated) threshold value is passed as
+            # decision variable output
+            decision_ptr = builder.gep(m_val, [ctx.int32_ty(0),
+                                               ctx.int32_ty(self.DECISION_VARIABLE_INDEX),
+                                               ctx.int32_ty(0)])
+            threshold = builder.load(decision_ptr)
             neg_threshold = pnlvm.helpers.fneg(builder, threshold)
             res = builder.select(thr_cmp, neg_threshold, threshold)
 
-            builder.store(res, dst)
-        else:
-            assert False, "Unknown mode in compiled DDM!"
+            builder.store(res, decision_ptr)
 
-        return mech_out, builder
+        return m_val, builder
 
     @handle_external_context(fallback_most_recent=True)
     def reset(self, *args, force=False, context=None, **kwargs):
