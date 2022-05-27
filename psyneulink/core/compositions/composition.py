@@ -2733,7 +2733,6 @@ from PIL import Image
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentsMeta
-from psyneulink.core.components.functions.fitfunctions import make_likelihood_function
 from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination, \
     PredictionErrorDeltaFunction
@@ -5078,7 +5077,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             break
         return external_modulators
 
-    tc.typecheck
+    @tc.typecheck
     def _create_CIM_ports(self, context=None):
         """
             - remove the default InputPort and OutputPort from the CIMs if this is the first time that real
@@ -12122,13 +12121,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._show_graph._animate_execution(active_items, context)
 
     # endregion SHOW_GRAPH
-
-    def make_likelihood_function(self, *args, **kwargs):
-        """
-        This method invokes :func:`~psyneulink.core.components.functions.fitfunctions.make_likelihood_function`
-        on the composition.
-        """
-        return make_likelihood_function(composition=self, *args, **kwargs)
 
 
 def get_compositions():

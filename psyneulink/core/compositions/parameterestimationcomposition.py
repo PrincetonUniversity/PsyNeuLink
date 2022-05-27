@@ -143,6 +143,7 @@ Class Reference
 
 """
 import numpy as np
+import pandas as pd
 
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \
     OptimizationControlMechanism
@@ -243,6 +244,12 @@ class ParameterEstimationComposition(Composition):
         specifies the data to be fit when the ParameterEstimationComposition is used for
         `ParameterEstimationComposition_Data_Fitting`;  structure must conform to format of
         **outcome_variables** (see `data <ParameterEstimationComposition.data>` for additional information).
+
+    data_categorical_dims : Union[Iterable] : default None
+        specifies the dimensions of the data that are categorical. If a list of boolean values is provided, it is
+        assumed to be a mask for the categorical data dimensions and must have the same length as columns in data. If
+        it is an iterable of integers, it is assumed to be a list of the categorical dimensions indices. If it is None,
+        all data dimensions are assumed to be continuous.
 
     objective_function : ObjectiveFunction, function or method
         specifies the function used to evaluate the `net_outcome <ControlMechanism.net_outcome>` of the `model
@@ -440,7 +447,8 @@ class ParameterEstimationComposition(Composition):
                  outcome_variables,  # OCM monitor_for_control
                  optimization_function, # function of OCM
                  model=None,
-                 data=None, # arg of OCM function
+                 data=None,
+                 data_categorical_dims=None,
                  objective_function=None, # function of OCM ObjectiveMechanism
                  num_estimates=1, # num seeds per parameter combination (i.e., of OCM allocation_samples)
                  num_trials_per_estimate=None, # num trials per run of model for each combination of parameters
@@ -464,7 +472,7 @@ class ParameterEstimationComposition(Composition):
         self.optimized_parameter_values = []
 
         controller_mode = BEFORE
-        controller_time_scale = TimeScale.TRIAL
+        controller_time_scale = TimeScale.RUN
 
         super().__init__(name=name,
                          controller_mode=controller_mode,
@@ -474,7 +482,14 @@ class ParameterEstimationComposition(Composition):
 
         context = Context(source=ContextFlags.COMPOSITION, execution_id=None)
 
+        # Assign parameters
+
+        # Store the data used to fit the model, None if in OptimizationMode (the default)
         self.data = data
+        self.data_categorical_dims = data_categorical_dims
+
+        if self.data is not None:
+            self._validate_data()
 
         # If there is data being passed, then we are in data fitting mode and we need the OCM to return the full results
         # from a simulation of a composition.
@@ -482,6 +497,9 @@ class ParameterEstimationComposition(Composition):
             return_results = True
         else:
             return_results = False
+
+        # Store the parameters specified for fitting
+        self.fit_parameters = parameters
 
         # Implement OptimizationControlMechanism and assign as PEC controller
         # (Note: Implement after Composition itself, so that:
@@ -505,6 +523,35 @@ class ParameterEstimationComposition(Composition):
         # The call run on PEC might lead to the run method again recursively for simulation. We need to keep track of
         # this to avoid infinite recursion.
         self._run_called = False
+
+    def _validate_data(self):
+        """Check if user supplied data to fit is valid for data fitting mode."""
+
+        # If the data is not in numpy format (could be a pandas dataframe) convert it to numpy. Cast all values to
+        # floats and keep track of categorical dimensions with a mask
+        if isinstance(self.data, pd.DataFrame):
+            self._data_numpy = self.data.to_numpy().astype(float)
+
+            # Get which dimensions are categorical, and store the mask
+            self.data_categorical_dims = [True if isinstance(t, pd.CategoricalDtype) or t == bool else False
+                                          for t in self.data.dtypes]
+        elif isinstance(self.data, np.ndarray) and self.data.ndim == 2:
+            self._data_numpy = self.data
+
+            # If no categorical dimensions are specified, assume all dimensions are continuous
+            if self.data_categorical_dims is None:
+                self.data_categorical_dims = [False for _ in range(self.data.shape[1])]
+            else:
+                # If the user specified a list of categorical dimensions, turn it into a mask
+                x = np.array(self.data_categorical_dims)
+                if x.dtype == int:
+                    self.data_categorical_dims = np.arange(self.data.shape[1]).astype(bool)
+                    self.data_categorical_dims[x] = True
+
+        else:
+            raise ValueError("Invalid format for data passed to OptimizationControlMechanism. Please ensure data is "
+                             "either a 2D numpy array or a pandas dataframe. Each row represents a single experimental "
+                             "trial.")
 
     def _validate_params(self, args):
 
@@ -572,7 +619,8 @@ class ParameterEstimationComposition(Composition):
 
         # FIX: NEED TO BE SURE CONSTRUCTOR FOR MLE optimization_function HAS data ATTRIBUTE
         if data is not None:
-            optimization_function.data = data
+            optimization_function.data = self._data_numpy
+            optimization_function.data_categorical_dims = self.data_categorical_dims
 
         return OptimizationControlMechanism(
             agent_rep=agent_rep,
@@ -591,69 +639,114 @@ class ParameterEstimationComposition(Composition):
         )
 
     @handle_external_context()
-    def run(self, *args, **kwargs):
+    def log_likelihood(self, *args, context=None) -> float:
         """
-        Runs the ParameterEstimationComposition.
+        Compute the log-likelihood of the data given the specified parameters of the model.
 
-        Parameters
-        ----------
-        *args : positional arguments
-            positional arguments to be passed to the ParameterEstimationComposition's
-            `run` method.
-        **kwargs : keyword arguments
-            keyword arguments to be passed to the ParameterEstimationComposition's
-            `run` method.
+        Arguments
+        ---------
+        *args :
+            Positional args, one for each paramter of the model. These must correspond directly to the parameters that
+            have been specified in the `parameters` argument of the constructor.
 
         Returns
         -------
-        results : dict
-            dictionary of results from the ParameterEstimationComposition's `run` method.
+        The sum of the log-likelihoods of the data given the specified parameters of the model.
+
         """
 
-        # If we are running in data fitting mode, there is no need to run the composition traditionally. Instead, we
-        # just need to execute the controller (OptimizationControlMechanism), passing it the input data, and return the
-        # results. Don't invoke the controller again if run has been called already, use the base run method instead.
-        if self.data is not None:
+        if self.controller is None:
+            raise ParameterEstimationCompositionError(f"The controller for ParameterEstimationComposition {self.name} "
+                                                      f"has not been instantiated yet. Cannot compute log-likelihood.")
 
-            self.controller_mode = BEFORE
-            self.controller_time_scale = TimeScale.RUN
+        if self.controller.function is None:
+            raise ParameterEstimationCompositionError(f"The function of the controller for "
+                                                      f"ParameterEstimationComposition {self.name} has not been "
+                                                      f"instantiated yet. Cannot compute log-likelihood.")
 
-            if len(args) > 0:
-                inputs = args[0]
-            elif 'inputs' in kwargs:
-                inputs = kwargs['inputs']
-            else:
-                raise ValueError("Missing required argument: 'inputs'")
+        if self.data is None:
+            raise ParameterEstimationCompositionError(f"The data for ParameterEstimationComposition {self.name} "
+                                                      f"has not been defined. Cannot compute log-likelihood.")
 
-            # Parse the inputs
-            # input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
-            # inputs, num_inputs_sets = self._parse_run_inputs(inputs, context=kwargs.get('context', None))
+        if len(args) != len(self.fit_parameters):
+            raise ParameterEstimationCompositionError(f"The number of parameters specified in the call to "
+                                                      f"log_likelihood does not match the number of parameters "
+                                                      f"specified in the constructor of ParameterEstimationComposition.")
 
-            # When in data fitting mode, we really only need inputs.
-            # input_array = list(inputs.values())[0]
-            # self.controller.input_ports[1].defaults.value = np.zeros_like(input_array)
+        # Try to get the log-likelihood from controllers optimization_function, if it hasn't defined this function yet
+        # then it will raise an error.
+        try:
+            return self.controller.function.log_likelihood(*args, context=context)
+        except AttributeError:
+            of = self.controller.function
+            raise ParameterEstimationCompositionError(f"The function ({of}) for the controller of "
+                                                      f"ParameterEstimationComposition {self.name} does not appear to " 
+                                                      f"have a log_likelihood function.")
 
-            # Get the context, it should never be None
-            try:
-                context = kwargs['context']
-            except KeyError:
-                raise ValueError("Missing required argument to run: 'context'")
-
-            self._run_called = True
-
-            context.source = ContextFlags.COMPOSITION
-            context.composition = self
-
-            self._execute_controller(
-                relative_order=BEFORE,
-                execution_mode=kwargs.get('execution_mode',  pnlvm.ExecutionMode.Python),
-                _comp_ex=None,
-                context=context,
-            )
-
-            self._run_called = False
-
-        # Otherwise, we need to pass things to the base class Composition run
-        else:
-            return super().run(*args, **kwargs)
-
+    # @handle_external_context()
+    # def run(self, *args, **kwargs):
+    #     """
+    #     Runs the ParameterEstimationComposition.
+    #
+    #     Parameters
+    #     ----------
+    #     *args : positional arguments
+    #         positional arguments to be passed to the ParameterEstimationComposition's
+    #         `run` method.
+    #     **kwargs : keyword arguments
+    #         keyword arguments to be passed to the ParameterEstimationComposition's
+    #         `run` method.
+    #
+    #     Returns
+    #     -------
+    #     results : dict
+    #         dictionary of results from the ParameterEstimationComposition's `run` method.
+    #     """
+    #
+    #     # If we are running in data fitting mode, there is no need to run the composition traditionally. Instead, we
+    #     # just need to execute the controller (OptimizationControlMechanism), passing it the input data, and return the
+    #     # results. Don't invoke the controller again if run has been called already, use the base run method instead.
+    #     if self.data is not None:
+    #
+    #         self.controller_mode = BEFORE
+    #         self.controller_time_scale = TimeScale.RUN
+    #
+    #         if len(args) > 0:
+    #             inputs = args[0]
+    #         elif 'inputs' in kwargs:
+    #             inputs = kwargs['inputs']
+    #         else:
+    #             raise ValueError("Missing required argument: 'inputs'")
+    #
+    #         # Parse the inputs
+    #         # input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
+    #         # inputs, num_inputs_sets = self._parse_run_inputs(inputs, context=kwargs.get('context', None))
+    #
+    #         # When in data fitting mode, we really only need inputs.
+    #         # input_array = list(inputs.values())[0]
+    #         # self.controller.input_ports[1].defaults.value = np.zeros_like(input_array)
+    #
+    #         # Get the context, it should never be None
+    #         try:
+    #             context = kwargs['context']
+    #         except KeyError:
+    #             raise ValueError("Missing required argument to run: 'context'")
+    #
+    #         self._run_called = True
+    #
+    #         context.source = ContextFlags.COMPOSITION
+    #         context.composition = self
+    #
+    #         self._execute_controller(
+    #             relative_order=BEFORE,
+    #             execution_mode=kwargs.get('execution_mode',  pnlvm.ExecutionMode.Python),
+    #             _comp_ex=None,
+    #             context=context,
+    #         )
+    #
+    #         self._run_called = False
+    #
+    #     # Otherwise, we need to pass things to the base class Composition run
+    #     else:
+    #         return super().run(*args, **kwargs)
+    #

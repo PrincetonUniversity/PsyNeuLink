@@ -700,7 +700,7 @@ class ParameterPort(Port_Base):
 
     #endregion
 
-    tc.typecheck
+    @tc.typecheck
     def __init__(self,
                  owner,
                  reference_value=None,

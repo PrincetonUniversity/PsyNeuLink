@@ -1,5 +1,3 @@
-import logging
-
 import numpy as np
 import pandas as pd
 import pytest
@@ -13,8 +11,6 @@ from psyneulink.core.components.functions.fitfunctions import MaxLikelihoodEstim
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.library.components.mechanisms.processing.integrator.ddm import \
     DDM, DECISION_VARIABLE, RESPONSE_TIME, PROBABILITY_UPPER_THRESHOLD
-
-logger = logging.getLogger(__name__)
 
 
 # All tests are set to run. If you need to skip certain tests,
@@ -155,20 +151,29 @@ def test_parameter_estimation_mle():
 
     # Create a parameter estimation composition to fit the data we just generated and hopefully recover the
     # parameters of the DDM.
+
+    fit_parameters = {
+        ('rate', decision): np.linspace(0.0, 1.0, 1000),
+        # ('starting_value', decision): np.linspace(0.0, 0.9, 1000),
+        ('non_decision_time', decision): np.linspace(0.0, 1.0),
+    }
+
     pec = pnl.ParameterEstimationComposition(name='pec',
                                              nodes=[comp],
-                                             parameters={('rate', decision): [1, 2],
-                                                         ('threshold', decision): [1, 2], },
+                                             parameters=fit_parameters,
                                              outcome_variables=[decision.output_ports[DECISION_VARIABLE],
                                                                 decision.output_ports[RESPONSE_TIME]],
                                              data=data_to_fit,
-                                             # objective_function=LinearCombination,
                                              optimization_function=MaxLikelihoodEstimator,
                                              num_estimates=num_estimates,
                                              num_trials_per_estimate=len(input),
                                              )
 
-
     pec.run(inputs=inputs_dict, num_trials=len(input))
 
+    # Check that the parameters are recovered and that the log-likelihood is correct
+    assert np.allclose(pec.controller.optimal_parameters, [0.3, 0.15])
+    assert np.allclose(pec.controller.optimal_value, -460.51701)
+
+    # assert pec.log_likelihood(ddm_params['rate'], ddm_params['non_decision_time'])
 

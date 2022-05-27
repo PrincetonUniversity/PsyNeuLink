@@ -1076,6 +1076,7 @@ from collections.abc import Iterable
 from typing import Union
 
 import numpy as np
+import pandas as pd
 import typecheck as tc
 
 from functools import partial
@@ -1580,6 +1581,7 @@ class OptimizationControlMechanism(ControlMechanism):
         if True, the complete simulation results are returned when invoking
         `evaluate_agent_rep <OptimizationControlMechanism.evaluate_agent_rep>` calls. This is nescessary when using a
         ParameterEstimationCompostion for parameter estimation via data fitting.
+
     """
 
     componentType = OPTIMIZATION_CONTROL_MECHANISM
@@ -1753,21 +1755,22 @@ class OptimizationControlMechanism(ControlMechanism):
     def __init__(self,
                  agent_rep=None,
                  state_features: tc.optional((tc.any(str, Iterable, InputPort,
-                                                     OutputPort, Mechanism)))=SHADOW_INPUTS,
+                                                     OutputPort, Mechanism))) = SHADOW_INPUTS,
                  # state_feature_default=None,
                  state_feature_default: tc.optional((tc.any(str, Iterable,
-                                                            InputPort, OutputPort,Mechanism)))=SHADOW_INPUTS,
-                 state_feature_function: tc.optional(tc.optional(tc.any(dict, is_function_type)))=None,
+                                                            InputPort, OutputPort, Mechanism))) = SHADOW_INPUTS,
+                 state_feature_function: tc.optional(tc.optional(tc.any(dict, is_function_type))) = None,
                  function=None,
                  num_estimates=None,
                  random_variables=None,
                  initial_seed=None,
                  same_seed_for_all_allocations=None,
                  num_trials_per_estimate=None,
-                 search_function: tc.optional(tc.optional(tc.any(is_function_type)))=None,
-                 search_termination_function: tc.optional(tc.optional(tc.any(is_function_type)))=None,
+                 search_function: tc.optional(tc.optional(tc.any(is_function_type))) = None,
+                 search_termination_function: tc.optional(tc.optional(tc.any(is_function_type))) = None,
                  search_statefulness=None,
                  return_results: bool = False,
+                 data=None,
                  context=None,
                  **kwargs):
         """Implement OptimizationControlMechanism"""
