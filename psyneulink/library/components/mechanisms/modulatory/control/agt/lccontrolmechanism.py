@@ -853,35 +853,27 @@ class LCControlMechanism(ControlMechanism):
             out = builder.alloca(mech_out_ty, name="mechanism_out")
 
         # Load mechanism parameters
-        params = builder.function.args[0]
-        scaling_factor_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
+        m_params = builder.function.args[0]
+        scaling_factor_ptr = pnlvm.helpers.get_param_ptr(builder, self, m_params,
                                                          "scaling_factor_gain")
-        base_factor_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
+        base_factor_ptr = pnlvm.helpers.get_param_ptr(builder, self, m_params,
                                                       "base_level_gain")
-        # If modulated, scaling factor is a single element array
-        if isinstance(scaling_factor_ptr.type.pointee, pnlvm.ir.ArrayType):
-            assert len(scaling_factor_ptr.type.pointee) == 1
-            scaling_factor_ptr = builder.gep(scaling_factor_ptr,
-                                             [ctx.int32_ty(0), ctx.int32_ty(0)])
-        # If modulated, base factor is a single element array
-        if isinstance(base_factor_ptr.type.pointee, pnlvm.ir.ArrayType):
-            assert len(base_factor_ptr.type.pointee) == 1
-            base_factor_ptr = builder.gep(base_factor_ptr,
-                                          [ctx.int32_ty(0), ctx.int32_ty(0)])
-        scaling_factor = builder.load(scaling_factor_ptr)
-        base_factor = builder.load(base_factor_ptr)
+        # If modulated, parameters are single element array
+        scaling_factor = pnlvm.helpers.load_extract_scalar_array_one(builder, scaling_factor_ptr)
+        base_factor = pnlvm.helpers.load_extract_scalar_array_one(builder, base_factor_ptr)
 
-        # Apply to the entire vector
+        # Apply to the entire first subvector
         vi = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(1)])
         vo = builder.gep(out, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
         with pnlvm.helpers.array_ptr_loop(builder, vi, "LC_gain") as (b1, index):
             in_ptr = b1.gep(vi, [ctx.int32_ty(0), index])
+            out_ptr = b1.gep(vo, [ctx.int32_ty(0), index])
+
             val = b1.load(in_ptr)
             val = b1.fmul(val, scaling_factor)
             val = b1.fadd(val, base_factor)
 
-            out_ptr = b1.gep(vo, [ctx.int32_ty(0), index])
             b1.store(val, out_ptr)
 
         # copy the main function return value
