@@ -1132,15 +1132,15 @@ class DDM(ProcessingMechanism):
                 dst = builder.gep(mech_out, [ctx.int32_ty(0), ctx.int32_ty(idx)])
                 builder.store(builder.load(src), dst)
 
-            # Handle upper threshold probability
-            src = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(1),
-                                       ctx.int32_ty(0)])
+            # Handle upper threshold probability (1 - Lower Threshold)
+            src = builder.gep(mech_out, [ctx.int32_ty(0),
+                                         ctx.int32_ty(self.PROBABILITY_LOWER_THRESHOLD_INDEX),
+                                         ctx.int32_ty(0)])
             dst = builder.gep(mech_out, [ctx.int32_ty(0),
-                ctx.int32_ty(self.PROBABILITY_UPPER_THRESHOLD_INDEX),
-                ctx.int32_ty(0)])
+                                         ctx.int32_ty(self.PROBABILITY_UPPER_THRESHOLD_INDEX),
+                                         ctx.int32_ty(0)])
             prob_lower_thr = builder.load(src)
-            prob_upper_thr = builder.fsub(prob_lower_thr.type(1),
-                                          prob_lower_thr)
+            prob_upper_thr = builder.fsub(prob_lower_thr.type(1), prob_lower_thr)
             builder.store(prob_upper_thr, dst)
 
             # Load function threshold
