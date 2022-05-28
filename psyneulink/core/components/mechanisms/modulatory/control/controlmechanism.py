@@ -588,7 +588,6 @@ import warnings
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import Function_Base, is_function_type
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import Concatenate
