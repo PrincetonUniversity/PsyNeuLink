@@ -1101,25 +1101,19 @@ class DDM(ProcessingMechanism):
             return return_value
 
     def _gen_llvm_invoke_function(self, ctx, builder, function, params, state,
-                                  variable, out, *, tags:frozenset):
-
-        mf_out, builder = super()._gen_llvm_invoke_function(ctx, builder, function,
-                                                            params, state, variable,
-                                                            None, tags=tags)
-        mech_out = out
+                                  variable, m_val, *, tags:frozenset):
 
         if isinstance(self.function, IntegratorFunction):
-            # Integrator version of the DDM mechanism converts the
-            # second element to a 2d array
-            builder.store(builder.load(builder.gep(mf_out, [ctx.int32_ty(0),
-                                                            ctx.int32_ty(0)])),
-                          builder.gep(mech_out, [ctx.int32_ty(0),
-                                                 ctx.int32_ty(0)]))
-            builder.store(builder.load(builder.gep(mf_out, [ctx.int32_ty(0),
-                                                            ctx.int32_ty(1)])),
-                          builder.gep(mech_out, [ctx.int32_ty(0),
-                                                 ctx.int32_ty(1)]))
+            # Integrator based DDM works like other mechanisms
+            return super()._gen_llvm_invoke_function(ctx, builder, function,
+                                                     params, state, variable,
+                                                     m_val, tags=tags)
+
         elif isinstance(self.function, DriftDiffusionAnalytical):
+            mf_out, builder = super()._gen_llvm_invoke_function(ctx, builder, function,
+                                                                params, state, variable,
+                                                                None, tags=tags)
+            # The order and number of returned values is different for DDA
             for res_idx, idx in enumerate((self.RESPONSE_TIME_INDEX,
                                            self.PROBABILITY_LOWER_THRESHOLD_INDEX,
                                            self.RT_CORRECT_MEAN_INDEX,
@@ -1129,35 +1123,33 @@ class DDM(ProcessingMechanism):
                                            self.RT_INCORRECT_VARIANCE_INDEX,
                                            self.RT_INCORRECT_SKEW_INDEX)):
                 src = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(res_idx)])
-                dst = builder.gep(mech_out, [ctx.int32_ty(0), ctx.int32_ty(idx)])
+                dst = builder.gep(m_val, [ctx.int32_ty(0), ctx.int32_ty(idx)])
                 builder.store(builder.load(src), dst)
 
             # Handle upper threshold probability (1 - Lower Threshold)
-            src = builder.gep(mech_out, [ctx.int32_ty(0),
-                                         ctx.int32_ty(self.PROBABILITY_LOWER_THRESHOLD_INDEX),
-                                         ctx.int32_ty(0)])
-            dst = builder.gep(mech_out, [ctx.int32_ty(0),
-                                         ctx.int32_ty(self.PROBABILITY_UPPER_THRESHOLD_INDEX),
-                                         ctx.int32_ty(0)])
+            src = builder.gep(m_val, [ctx.int32_ty(0),
+                                      ctx.int32_ty(self.PROBABILITY_LOWER_THRESHOLD_INDEX),
+                                      ctx.int32_ty(0)])
+            dst = builder.gep(m_val, [ctx.int32_ty(0),
+                                      ctx.int32_ty(self.PROBABILITY_UPPER_THRESHOLD_INDEX),
+                                      ctx.int32_ty(0)])
             prob_lower_thr = builder.load(src)
             prob_upper_thr = builder.fsub(prob_lower_thr.type(1), prob_lower_thr)
             builder.store(prob_upper_thr, dst)
 
-            # Load function threshold
+            # Store threshold as decision variable output
+            # this will be used by the mechanism to return the right decision
             threshold_ptr = pnlvm.helpers.get_param_ptr(builder, self.function,
                                                         params, THRESHOLD)
-            threshold = pnlvm.helpers.load_extract_scalar_array_one(builder,
-                                                                    threshold_ptr)
-            # store threshold as decision variable output
-            # this will be used by the mechanism to return the right decision
-            decision_ptr = builder.gep(mech_out, [ctx.int32_ty(0),
-                                                  ctx.int32_ty(self.DECISION_VARIABLE_INDEX),
-                                                  ctx.int32_ty(0)])
+            threshold = pnlvm.helpers.load_extract_scalar_array_one(builder, threshold_ptr)
+            decision_ptr = builder.gep(m_val, [ctx.int32_ty(0),
+                                               ctx.int32_ty(self.DECISION_VARIABLE_INDEX),
+                                               ctx.int32_ty(0)])
             builder.store(threshold, decision_ptr)
         else:
             assert False, "Unknown mode in compiled DDM!"
 
-        return mech_out, builder
+        return m_val, builder
 
     def _gen_llvm_mechanism_functions(self, ctx, builder, m_base_params, m_params, m_state, m_in,
                                       m_val, ip_output, *, tags:frozenset):
