@@ -262,12 +262,9 @@ class LLVMBuilderContext:
         used_seed = builder.load(used_seed_ptr)
 
         seed_ptr = helpers.get_param_ptr(builder, component, params, "seed")
-        if isinstance(seed_ptr.type.pointee, ir.ArrayType):
-            # Modulated params are usually single element arrays
-            seed_ptr = builder.gep(seed_ptr, [self.int32_ty(0), self.int32_ty(0)])
-        new_seed = builder.load(seed_ptr)
+        new_seed = pnlvm.helpers.load_extract_scalar_array_one(builder, seed_ptr)
         # FIXME: The seed should ideally be integer already.
-        #        However, it can be modulated and we don't support,
+        #        However, it can be modulated and we don't support
         #        passing integer values as computed results.
         new_seed = builder.fptoui(new_seed, used_seed.type)
 
