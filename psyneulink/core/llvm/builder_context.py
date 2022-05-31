@@ -215,9 +215,8 @@ class LLVMBuilderContext:
                 a.attributes.add('nonnull')
 
         metadata = self.get_debug_location(llvm_func, component)
-        if metadata is not None:
-            scope = dict(metadata.operands)["scope"]
-            llvm_func.set_metadata("dbg", scope)
+        scope = dict(metadata.operands)["scope"]
+        llvm_func.set_metadata("dbg", scope)
 
         # Create entry block
         block = llvm_func.append_basic_block(name="entry")
@@ -263,12 +262,9 @@ class LLVMBuilderContext:
         used_seed = builder.load(used_seed_ptr)
 
         seed_ptr = helpers.get_param_ptr(builder, component, params, "seed")
-        if isinstance(seed_ptr.type.pointee, ir.ArrayType):
-            # Modulated params are usually single element arrays
-            seed_ptr = builder.gep(seed_ptr, [self.int32_ty(0), self.int32_ty(0)])
-        new_seed = builder.load(seed_ptr)
+        new_seed = pnlvm.helpers.load_extract_scalar_array_one(builder, seed_ptr)
         # FIXME: The seed should ideally be integer already.
-        #        However, it can be modulated and we don't support,
+        #        However, it can be modulated and we don't support
         #        passing integer values as computed results.
         new_seed = builder.fptoui(new_seed, used_seed.type)
 
@@ -327,9 +323,7 @@ class LLVMBuilderContext:
 
     @staticmethod
     def update_debug_loc_position(di_loc: ir.DIValue, line:int, column:int):
-        subprogram_operand = di_loc.operands[2]
-        assert subprogram_operand[0] == 'scope'
-        di_func = subprogram_operand[1]
+        di_func = dict(di_loc.operands)["scope"]
 
         return di_loc.parent.add_debug_info("DILocation", {
             "line": line, "column": column, "scope": di_func,
