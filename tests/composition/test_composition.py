@@ -7362,6 +7362,20 @@ class TestNodeRoles:
 
         assert comp.nodes_to_roles[A] == {NodeRole.INPUT, NodeRole.OUTPUT, NodeRole.SINGLETON, NodeRole.ORIGIN, NodeRole.TERMINAL}
 
+    def test_feedback_projection_added_by_pathway(self):
+        A = pnl.ProcessingMechanism(name='A')
+        B = pnl.ProcessingMechanism(name='B')
+        C = pnl.ProcessingMechanism(name='C')
+
+        icomp = pnl.Composition(pathways=[C])
+        ocomp = pnl.Composition(pathways=[A, icomp, (B, pnl.NodeRole.FEEDBACK_SENDER), A])
+
+        assert ocomp.nodes_to_roles == {
+            A: {NodeRole.ORIGIN, NodeRole.INPUT, NodeRole.FEEDBACK_RECEIVER},
+            icomp: {NodeRole.INTERNAL},
+            B: {NodeRole.TERMINAL, NodeRole.OUTPUT, NodeRole.FEEDBACK_SENDER},
+        }
+
 
 class TestMisc:
 
