@@ -2895,7 +2895,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         # threshold = Parameter(100.0, modulable=True)
         time_step_size = Parameter(1.0, modulable=True)
         previous_time = Parameter(None, initializer='starting_point', pnl_internal=True)
-        dimension = Parameter(2, stateful=False, read_only=True)
+        dimension = Parameter(3, stateful=False, read_only=True)
         initializer = Parameter([0], initalizer='variable', stateful=True)
         angle_function = Parameter(None, stateful=False, loggable=False)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
