@@ -198,13 +198,6 @@ def _get_variable_parameter_name(obj):
     return MODEL_SPEC_ID_MDF_VARIABLE
 
 
-def _substitute_expression_args(model):
-    # currently cannot use args with value expressions
-    if model.value is not None:
-        for arg, val in model.args.items():
-            model.value = model.value.replace(arg, str(val))
-
-
 def _mdf_obj_from_dict(d):
     import modeci_mdf.mdf as mdf
 

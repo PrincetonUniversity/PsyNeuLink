@@ -842,7 +842,7 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
-from psyneulink.core.globals.mdf import _get_variable_parameter_name, _substitute_expression_args
+from psyneulink.core.globals.mdf import _get_variable_parameter_name
 from psyneulink.core.globals.keywords import \
     COMBINE, comparison_operators, EXECUTION_COUNT, FUNCTION, GREATER_THAN_OR_EQUAL, \
     CURRENT_VALUE, LESS_THAN_OR_EQUAL, MAX_ABS_DIFF, \
@@ -1853,8 +1853,5 @@ class TransferMechanism(ProcessingMechanism_Base):
                 self.integrator_function._set_mdf_arg(
                     integrator_function_model, 'noise', main_noise_function.id
                 )
-
-            for func_model in model.functions:
-                _substitute_expression_args(func_model)
 
         return model
