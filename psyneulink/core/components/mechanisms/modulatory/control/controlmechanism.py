@@ -588,7 +588,6 @@ import warnings
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import Function_Base, is_function_type
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import Concatenate
@@ -607,7 +606,7 @@ from psyneulink.core.globals.keywords import \
     MECHANISM, MULTIPLICATIVE, MODULATORY_SIGNALS, MONITOR_FOR_CONTROL, MONITOR_FOR_MODULATION, \
     OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PARAMS, PORT_TYPE, PRODUCT, PROJECTION_TYPE, PROJECTIONS, \
     SEPARATE, SIZE
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import ContentAddressableList, convert_to_list, convert_to_np_array, is_iterable
@@ -1213,6 +1212,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
             # method?
             # validate_monitored_port_spec(self._owner, input_ports)
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,

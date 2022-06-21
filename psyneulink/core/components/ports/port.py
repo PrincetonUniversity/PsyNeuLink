@@ -797,7 +797,7 @@ from psyneulink.core.globals.keywords import \
     RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, SENDER, STANDARD_OUTPUT_PORTS, \
     PORT, PORT_COMPONENT_CATEGORY, PORT_CONTEXT, Port_Name, port_params, PORT_PREFS, PORT_TYPE, port_value, \
     VALUE, VARIABLE, WEIGHT
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import VERBOSE_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category
@@ -1004,6 +1004,7 @@ class Port_Base(Port):
 
     classPreferenceLevel = PreferenceLevel.CATEGORY
 
+    @check_user_specified
     @tc.typecheck
     @abc.abstractmethod
     def __init__(self,

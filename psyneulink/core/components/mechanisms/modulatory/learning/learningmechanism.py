@@ -545,7 +545,7 @@ from psyneulink.core.globals.keywords import \
     ADDITIVE, AFTER, ASSERT, ENABLED, INPUT_PORTS, \
     LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \
     MATRIX, NAME, ONLINE, OUTPUT_PORT, OWNER_VALUE, PARAMS, PROJECTIONS, SAMPLE, PORT_TYPE, VARIABLE
-from psyneulink.core.globals.parameters import FunctionParameter, Parameter
+from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import ContentAddressableList, convert_to_np_array, is_numeric, parameter_spec, \
@@ -999,6 +999,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
             structural=True,
         )
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  # default_variable:tc.any(list, np.ndarray),

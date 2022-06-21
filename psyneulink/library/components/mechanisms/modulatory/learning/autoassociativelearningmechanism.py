@@ -104,7 +104,7 @@ from psyneulink.core.components.projections.projection import projection_keyword
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     ADDITIVE, AUTOASSOCIATIVE_LEARNING_MECHANISM, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, NAME, OWNER_VALUE, VARIABLE
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_numeric, parameter_spec
@@ -319,6 +319,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable:tc.any(list, np.ndarray),

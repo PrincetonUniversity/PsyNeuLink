@@ -418,7 +418,7 @@ from psyneulink.core.globals.keywords import \
     NAME, OUTPUT_PORT, OUTPUT_PORTS, PARAMS, PATHWAY, PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, \
     RECEIVER, SENDER, STANDARD_ARGS, PORT, PORTS, WEIGHT, ADD_INPUT_PORT, ADD_OUTPUT_PORT, \
     PROJECTION_COMPONENT_CATEGORY
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
 from psyneulink.core.globals.socket import ConnectionInfo
@@ -631,6 +631,7 @@ class Projection_Base(Projection):
 
     classPreferenceLevel = PreferenceLevel.CATEGORY
 
+    @check_user_specified
     @abc.abstractmethod
     def __init__(self,
                  receiver,

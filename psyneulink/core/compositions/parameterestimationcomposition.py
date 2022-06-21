@@ -152,9 +152,8 @@ from psyneulink.core.components.ports.modulatorysignals.controlsignal import Con
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import BEFORE
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.scheduling.time import TimeScale
-from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core import llvm as pnlvm
 
 
 __all__ = ['ParameterEstimationComposition']
@@ -442,6 +441,7 @@ class ParameterEstimationComposition(Composition):
                                                              setter=_same_seed_for_all_parameter_combinations_setter)
 
     @handle_external_context()
+    @check_user_specified
     def __init__(self,
                  parameters, # OCM control_signals
                  outcome_variables,  # OCM monitor_for_control

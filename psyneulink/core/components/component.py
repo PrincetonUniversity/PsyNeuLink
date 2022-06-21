@@ -525,7 +525,7 @@ from psyneulink.core.globals.keywords import \
     RESET_STATEFUL_FUNCTION_WHEN, VALUE, VARIABLE
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.globals.parameters import \
-    Defaults, SharedParameter, Parameter, ParameterAlias, ParameterError, ParametersBase, copy_parameter_value
+    Defaults, SharedParameter, Parameter, ParameterAlias, ParameterError, ParametersBase, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet, VERBOSE_PREF
 from psyneulink.core.globals.preferences.preferenceset import \
     PreferenceLevel, PreferenceSet, _assign_prefs
@@ -1086,6 +1086,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
     _deepcopy_shared_keys = frozenset([])
 
+    @check_user_specified
     def __init__(self,
                  default_variable,
                  param_defaults,
@@ -1332,6 +1333,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         if hasattr(self, 'nodes'):
             whitelist.add("num_executions")
 
+        # Drop combination function params from RTM if not needed
+        if getattr(self.parameters, 'has_recurrent_input_port', False):
+            blacklist.update(['combination_function'])
+
         def _is_compilation_state(p):
             #FIXME: This should use defaults instead of 'p.get'
             return p.name not in blacklist and \
@@ -1423,6 +1428,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             blacklist.update(["execute_until_finished", "max_executions_before_finished"])
             # "has_initializers" is only used by RTM
             blacklist.update(["has_initializers"])
+
+        # Drop combination function params from RTM if not needed
+        if getattr(self.parameters, 'has_recurrent_input_port', False):
+            blacklist.update(['combination_function'])
 
         def _is_compilation_param(p):
             if p.name not in blacklist and not isinstance(p, (ParameterAlias, SharedParameter)):
@@ -2016,32 +2025,30 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         }
 
         if param_defaults is not None:
-            # Exclude any function_params from the items to set on this Component
-            # because these should just be pointers to the parameters of the same
-            # name on this Component's function
-            # Exclude any pass parameters whose value is None (assume this means "use the normal default")
-            d = {
-                k: v for (k, v) in param_defaults.items()
-                if (
-                    (
-                        k not in defaults
-                        and k not in alias_names
-                    )
-                    or v is not None
-                )
-            }
-            for p in d:
+            for name, value in copy.copy(param_defaults).items():
                 try:
-                    parameter_obj = getattr(self.parameters, p)
+                    parameter_obj = getattr(self.parameters, name)
                 except AttributeError:
-                    # p in param_defaults does not correspond to a Parameter
+                    # name in param_defaults does not correspond to a Parameter
                     continue
 
-                if d[p] is not None:
+                if (
+                    name not in self._user_specified_args
+                    and parameter_obj.constructor_argument not in self._user_specified_args
+                ):
+                    continue
+
+                if (
+                    (
+                        name in self._user_specified_args
+                        or parameter_obj.constructor_argument in self._user_specified_args
+                    )
+                    and (value is not None or parameter_obj.specify_none)
+                ):
                     parameter_obj._user_specified = True
 
                 if parameter_obj.structural:
-                    parameter_obj.spec = d[p]
+                    parameter_obj.spec = value
 
                 if parameter_obj.modulable:
                     # later, validate this
@@ -2050,17 +2057,18 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                             parse=True,
                             modulable=True
                         )
-                        parsed = modulable_param_parser(p, d[p])
+                        parsed = modulable_param_parser(name, value)
 
-                        if parsed is not d[p]:
+                        if parsed is not value:
                             # we have a modulable param spec
-                            parameter_obj.spec = d[p]
-                            d[p] = parsed
-                            param_defaults[p] = parsed
+                            parameter_obj.spec = value
+                            value = parsed
+                            param_defaults[name] = parsed
                     except AttributeError:
                         pass
 
-            defaults.update(d)
+                if value is not None or parameter_obj.specify_none:
+                    defaults[name] = value
 
         for k in defaults:
             defaults[k] = copy_parameter_value(

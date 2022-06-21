@@ -112,7 +112,7 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     FUNCTION_OUTPUT_TYPE, GATE, GATING_MECHANISM, GATING_PROJECTION, GATING_SIGNAL, \
     INPUT_PORT, OUTPUT_PORT
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
@@ -238,6 +238,7 @@ class GatingProjection(ModulatoryProjection_Base):
 
     projection_sender = GatingMechanism
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  sender=None,

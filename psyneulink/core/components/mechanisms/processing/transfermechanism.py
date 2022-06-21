@@ -848,7 +848,7 @@ from psyneulink.core.globals.keywords import \
     CURRENT_VALUE, LESS_THAN_OR_EQUAL, MAX_ABS_DIFF, \
     NAME, NOISE, NUM_EXECUTIONS_BEFORE_FINISHED, OWNER_VALUE, RESET, RESULT, RESULTS, \
     SELECTION_FUNCTION_TYPE, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE
-from psyneulink.core.globals.parameters import Parameter, FunctionParameter
+from psyneulink.core.globals.parameters import Parameter, FunctionParameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
@@ -1283,6 +1283,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                 return f"must be boolean comparison operator or one of the following strings:" \
                        f" {','.join(comparison_operators.keys())}."
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -1543,13 +1544,11 @@ class TransferMechanism(ProcessingMechanism_Base):
             return builder.fcmp_ordered("!=", is_finished_flag,
                                               is_finished_flag.type(0))
 
-        # If modulated, termination threshold is single element array
-        if isinstance(threshold_ptr.type.pointee, pnlvm.ir.ArrayType):
-            assert len(threshold_ptr.type.pointee) == 1
-            threshold_ptr = builder.gep(threshold_ptr, [ctx.int32_ty(0),
-                                                        ctx.int32_ty(0)])
+        # If modulated, termination threshold is single element array.
+        # Otherwise, it is scalar
+        threshold = pnlvm.helpers.load_extract_scalar_array_one(builder,
+                                                                threshold_ptr)
 
-        threshold = builder.load(threshold_ptr)
         cmp_val_ptr = builder.alloca(threshold.type, name="is_finished_value")
         if self.termination_measure is max:
             assert self._termination_measure_num_items_expected == 1

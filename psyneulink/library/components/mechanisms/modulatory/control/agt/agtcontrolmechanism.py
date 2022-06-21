@@ -169,6 +169,7 @@ from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.keywords import \
     INIT_EXECUTE_METHOD_ONLY, MECHANISM, OBJECTIVE_MECHANISM
+from psyneulink.core.globals.parameters import check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
@@ -244,6 +245,7 @@ class AGTControlMechanism(ControlMechanism):
     #     PREFERENCE_SET_NAME: 'ControlMechanismClassPreferences',
     #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  monitored_output_ports=None,

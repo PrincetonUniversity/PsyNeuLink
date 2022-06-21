@@ -1102,7 +1102,7 @@ from psyneulink.core.globals.keywords import \
     ALL, COMPOSITION, COMPOSITION_FUNCTION_APPROXIMATOR, CONCATENATE, DEFAULT_INPUT, DEFAULT_VARIABLE, EID_FROZEN, \
     FUNCTION, INPUT_PORT, INTERNAL_ONLY, NAME, OPTIMIZATION_CONTROL_MECHANISM, NODE, OWNER_VALUE, PARAMS, PORT, PROJECTIONS, \
     PROJECTIONS, SHADOW_INPUTS, VALUE, OVERRIDE
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import rename_instance_in_registry
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleSpec
@@ -1751,6 +1751,7 @@ class OptimizationControlMechanism(ControlMechanism):
                        f"with a shape appropriate for all of the INPUT Nodes or InputPorts to which it will be applied."
 
     @handle_external_context()
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  agent_rep=None,
