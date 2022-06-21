@@ -680,10 +680,7 @@ class CompExecution(CUDAExecution):
         ocm = self._composition.controller
         assert len(self._execution_contexts) == 1
 
-        ocm_tags = {"evaluate", "alloc_range"}
-
-        ocm_tags = frozenset(ocm_tags)
-        bin_func = pnlvm.LLVMBinaryFunction.from_obj(ocm, tags=ocm_tags)
+        bin_func = pnlvm.LLVMBinaryFunction.from_obj(ocm, tags=frozenset({"evaluate", "alloc_range"}))
         self.__bin_func = bin_func
 
         # There are 7 arguments to evaluate_alloc_range:

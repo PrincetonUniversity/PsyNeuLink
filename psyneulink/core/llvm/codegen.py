@@ -989,10 +989,6 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
 def gen_composition_run(ctx, composition, *, tags:frozenset):
     assert "run" in tags
     simulation = "simulation" in tags
-
-    # Do we need to generate a simulation that returns results?
-    simulation_return_results = "simulation_return_results" in tags
-
     name = "_".join(("wrap",  *tags, composition.name))
     args = [ctx.get_state_struct_type(composition).as_pointer(),
             ctx.get_param_struct_type(composition).as_pointer(),
@@ -1011,9 +1007,8 @@ def gen_composition_run(ctx, composition, *, tags:frozenset):
     nodes_states = helpers.get_state_ptr(builder, composition, state, "nodes")
 
     # simulation does not care about the output
-    # it extracts results of the controller objective mechanism. This is unless
-    # we are running paramter estimation and we need to return the results.
-    if simulation and not simulation_return_results:
+    # it extracts results of the controller objective mechanism
+    if simulation:
         data_out.attributes.remove('nonnull')
 
     if not simulation and "const_data" in debug_env:
@@ -1094,7 +1089,7 @@ def gen_composition_run(ctx, composition, *, tags:frozenset):
     exec_f = ctx.import_llvm_function(composition, tags=exec_tags)
     builder.call(exec_f, [state, params, data_in_ptr, data, cond])
 
-    if not simulation or simulation_return_results:
+    if not simulation:
         # Extract output_CIM result
         idx = composition._get_node_index(composition.output_CIM)
         result_ptr = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(0),

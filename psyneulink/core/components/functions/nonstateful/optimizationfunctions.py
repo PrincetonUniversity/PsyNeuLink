@@ -763,7 +763,7 @@ class OptimizationFunction(Function_Base):
 
     def _grid_evaluate(self, ocm, context):
         """Helper method for evaluation of a grid of samples from search space via LLVM backends."""
-        # assert ocm is ocm.agent_rep.controller
+        assert ocm is ocm.agent_rep.controller
         # Compiled evaluate expects the same variable as mech function
         variable = [input_port.parameters.value.get(context) for input_port in ocm.input_ports]
         num_evals = np.prod([d.num for d in self.search_space])

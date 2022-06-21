@@ -3390,12 +3390,8 @@ class OptimizationControlMechanism(ControlMechanism):
                                                        ctx.int32_ty(controller_idx)])
 
         # Get simulation function
-        sim_tags = {"run", "simulation"}
-        if 'simulation_return_results' in tags:
-            sim_tags.add('simulation_return_results')
-
         sim_f = ctx.import_llvm_function(self.agent_rep,
-                                         tags=frozenset(sim_tags))
+                                         tags=frozenset({"run", "simulation"}))
 
         # Apply allocation sample to simulation data
         assert len(self.output_ports) == len(allocation_sample.type.pointee)
@@ -3420,7 +3416,7 @@ class OptimizationControlMechanism(ControlMechanism):
             if ip.shadow_inputs is None:
                 continue
 
-            # shadow inputs point to an input port of a node.
+            # shadow inputs point to an input port of of a node.
             # If that node takes direct input, it will have an associated
             # (input_port, output_port) in the input_CIM.
             # Take the former as an index to composition input variable.
@@ -3473,13 +3469,8 @@ class OptimizationControlMechanism(ControlMechanism):
         num_inputs = builder.alloca(ctx.int32_ty, name="num_sim_inputs")
         builder.store(num_inputs.type.pointee(1), num_inputs)
 
-        # Simulations don't store output unless they are requested by simulation_return_results tag
-        if "simulation_return_results" not in sim_tags:
-            comp_output = sim_f.args[4].type(None)
-        else:
-            ct_vo = _convert_llvm_ir_to_ctype(sim_f.args[4].type) * self.num_trials_per_estimate
-            comp_output = ct_vo()
-
+        # Simulations don't store output
+        comp_output = sim_f.args[4].type(None)
         builder.call(sim_f, [comp_state, comp_params, comp_data, comp_input,
                              comp_output, num_trials, num_inputs])
 
