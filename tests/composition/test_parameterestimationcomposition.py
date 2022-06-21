@@ -176,4 +176,3 @@ def test_parameter_estimation_mle():
     assert np.allclose(pec.controller.optimal_value, -460.51701)
 
     # assert pec.log_likelihood(ddm_params['rate'], ddm_params['non_decision_time'])
-

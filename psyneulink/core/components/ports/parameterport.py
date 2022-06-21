@@ -701,6 +701,7 @@ class ParameterPort(Port_Base):
     #endregion
 
     @tc.typecheck
+    @check_user_specified
     def __init__(self,
                  owner,
                  reference_value=None,

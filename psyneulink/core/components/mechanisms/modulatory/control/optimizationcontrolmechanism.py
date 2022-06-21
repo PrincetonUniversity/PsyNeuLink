@@ -1076,10 +1076,7 @@ from collections.abc import Iterable
 from typing import Union
 
 import numpy as np
-import pandas as pd
 import typecheck as tc
-
-from functools import partial
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility, Component
@@ -1776,6 +1773,8 @@ class OptimizationControlMechanism(ControlMechanism):
                  **kwargs):
         """Implement OptimizationControlMechanism"""
 
+        self.return_results = return_results
+
         # Legacy warnings and conversions
         for k in kwargs.copy():
             if k == 'features':
@@ -1838,8 +1837,6 @@ class OptimizationControlMechanism(ControlMechanism):
                 # Flag for deferred initialization
                 self.initialization_status = ContextFlags.DEFERRED_INIT
                 return
-
-        self.return_results = return_results
 
         super().__init__(
             agent_rep=agent_rep,
@@ -3028,7 +3025,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # num_estimates of function
         self.function.reset(**{
             DEFAULT_VARIABLE: self.parameters.control_allocation._get(context),
-            OBJECTIVE_FUNCTION: partial(self.evaluate_agent_rep, return_results=self.return_results),
+            OBJECTIVE_FUNCTION: self.evaluate_agent_rep,
             # SEARCH_FUNCTION: self.search_function,
             # SEARCH_TERMINATION_FUNCTION: self.search_termination_function,
             SEARCH_SPACE: self.parameters.control_allocation_search_space._get(context),
@@ -3131,7 +3128,7 @@ class OptimizationControlMechanism(ControlMechanism):
         if not self.agent_rep.parameters.retain_old_simulation_data._get():
             self.agent_rep._clean_up_as_agent_rep(sim_context, alt_controller=alt_controller)
 
-    def evaluate_agent_rep(self, control_allocation, context=None, return_results=False):
+    def evaluate_agent_rep(self, control_allocation, context=None):
         """Call `evaluate <Composition.evaluate>` method of `agent_rep <OptimizationControlMechanism.agent_rep>`
 
         Assigned as the `objective_function <OptimizationFunction.objective_function>` for the
@@ -3189,7 +3186,7 @@ class OptimizationControlMechanism(ControlMechanism):
                                               base_context=context,
                                               context=new_context,
                                               execution_mode=exec_mode,
-                                              return_results=return_results)
+                                              return_results=self.return_results)
             context.composition = old_composition
             if self.defaults.search_statefulness:
                 self._tear_down_simulation(new_context, alt_controller)
@@ -3198,7 +3195,7 @@ class OptimizationControlMechanism(ControlMechanism):
             # If results of the simulation should be returned then, do so. agent_rep's evaluate method will
             # return a tuple in this case in which the first element is the outcome as usual and the second
             # is the results of the composition run.
-            if return_results:
+            if self.return_results:
                 return ret_val[0], ret_val[1]
             else:
                 return ret_val
