@@ -481,18 +481,24 @@ class ConditionGenerator:
         return ((0, 0, 0),
                 tuple((0, (-1, -1, -1)) for _ in composition.nodes))
 
-    def get_condition_struct_type(self, composition=None):
-        composition = self.composition if composition is None else composition
-        structs = [self.get_private_condition_struct_type(composition)]
-        for node in composition.nodes:
-            structs.append(self.get_condition_struct_type(node) if isinstance(node, type(self.composition)) else ir.LiteralStructType([]))
+    def get_condition_struct_type(self, node=None):
+        node = self.composition if node is None else node
+
+        subnodes = getattr(node, 'nodes', [])
+        structs = [self.get_condition_struct_type(n) for n in subnodes]
+        if len(structs) != 0:
+            structs.insert(0, self.get_private_condition_struct_type(node))
+
         return ir.LiteralStructType(structs)
 
-    def get_condition_initializer(self, composition=None):
-        composition = self.composition if composition is None else composition
-        data = [self.get_private_condition_initializer(composition)]
-        for node in composition.nodes:
-            data.append(self.get_condition_initializer(node) if isinstance(node, type(self.composition)) else tuple())
+    def get_condition_initializer(self, node=None):
+        node = self.composition if node is None else node
+
+        subnodes = getattr(node, 'nodes', [])
+        data = [self.get_condition_initializer(n) for n in subnodes]
+        if len(data) != 0:
+            data.insert(0, self.get_private_condition_initializer(node))
+
         return tuple(data)
 
     def bump_ts(self, builder, cond_ptr, count=(0, 0, 1)):
