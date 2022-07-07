@@ -5816,6 +5816,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             projection.is_processing = False
             # KDM 5/24/19: removing below rename because it results in several existing_projections
             # projection.name = f'{sender} to {receiver}'
+
+            # check for required role specification of feedback projections
+            for node, role in self.required_node_roles:
+                if (
+                    (node == projection.sender.owner and role == NodeRole.FEEDBACK_SENDER)
+                    or (node == projection.receiver.owner and role == NodeRole.FEEDBACK_RECEIVER)
+                ):
+                    feedback = True
+
             self.graph.add_component(projection, feedback=feedback)
 
             try:
