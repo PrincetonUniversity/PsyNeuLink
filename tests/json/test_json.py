@@ -76,7 +76,7 @@ def test_json_results_equivalence(
     simple_edge_format,
 ):
     # Get python script from file and execute
-    filename = f'{os.path.dirname(__file__)}/{filename}'
+    filename = os.path.join(os.path.dirname(__file__), filename)
     with open(filename, 'r') as orig_file:
         exec(orig_file.read())
         exec(f'{composition_name}.run(inputs={input_dict_str})')
@@ -103,7 +103,7 @@ def test_write_json_file(
     simple_edge_format,
 ):
     # Get python script from file and execute
-    filename = f'{os.path.dirname(__file__)}/{filename}'
+    filename = os.path.join(os.path.dirname(__file__), filename)
     with open(filename, 'r') as orig_file:
         exec(orig_file.read())
         exec(f'{composition_name}.run(inputs={input_dict_str})')
@@ -140,7 +140,7 @@ def test_write_json_file_multiple_comps(
     orig_results = {}
 
     # Get python script from file and execute
-    filename = f'{os.path.dirname(__file__)}/{filename}'
+    filename = os.path.join(os.path.dirname(__file__), filename)
     with open(filename, 'r') as orig_file:
         exec(orig_file.read())
 
@@ -219,7 +219,7 @@ def test_mdf_equivalence(filename, composition_name, input_dict, simple_edge_for
     import modeci_mdf.execution_engine as ee
 
     # Get python script from file and execute
-    filename = f'{os.path.dirname(__file__)}/{filename}'
+    filename = os.path.join(os.path.dirname(__file__), filename)
     with open(filename, 'r') as orig_file:
         exec(orig_file.read())
         inputs_str = str(input_dict).replace("'", '')
