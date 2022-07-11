@@ -1788,7 +1788,7 @@ class GridSearch(OptimizationFunction):
         controller = self._get_optimized_controller()
         if controller is not None:
             assert controller.function is self
-            obj_func = ctx.import_llvm_function(controller, tags=tags.union({"evaluate"}))
+            obj_func = ctx.import_llvm_function(controller, tags=tags.union({"evaluate", "evaluate_type_objective"}))
             comp_args = builder.function.args[-3:]
             obj_param_ptr = comp_args[0]
             obj_state_ptr = comp_args[1]
