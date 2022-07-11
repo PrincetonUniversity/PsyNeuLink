@@ -1808,7 +1808,7 @@ class GridSearch(OptimizationFunction):
         builder.store(builder.load(min_value_ptr), out_value_ptr)
         return builder
 
-    def _run_grid(self, ocm, variable, context):
+    def _search_grid(self, ocm, variable, context):
 
         # "ct" => c-type variables
         ct_values, num_evals = self._grid_evaluate(ocm, context)
@@ -1960,7 +1960,7 @@ class GridSearch(OptimizationFunction):
 
             # Compiled version
             if ocm is not None and ocm.parameters.comp_execution_mode._get(context) in {"PTX", "LLVM"}:
-                opt_sample, opt_value, all_values = self._run_grid(ocm, variable, context)
+                opt_sample, opt_value, all_values = self._search_grid(ocm, variable, context)
                 # This should not be evaluated unless needed
                 all_samples = [s for s in itertools.product(*self.search_space)]
                 value_optimal = opt_value
