@@ -634,10 +634,9 @@ class OptimizationFunction(Function_Base):
         # EVALUATE ALL SAMPLES IN SEARCH SPACE
         # Evaluate all estimates of all samples in search_space
 
-        # If execution mode is not Python and search_space is static, use parallelized evaluation:
-        if (self.owner and self.owner.parameters.comp_execution_mode._get(context) != 'Python' and
-                all(isinstance(sample_iterator.start, Number) and isinstance(sample_iterator.stop, Number)
-                    for sample_iterator in self.search_space)):
+        # Run compiled mode if requested by parameter and everything is initialized
+        if self.owner and self.owner.parameters.comp_execution_mode._get(context) != 'Python' and \
+          ContextFlags.PROCESSING in context.flags:
             # FIX: NEED TO FIX THIS ONCE _grid_evaluate RETURNS all_samples
             all_samples = []
             all_values, num_evals = self._grid_evaluate(self.owner, context)
@@ -753,6 +752,17 @@ class OptimizationFunction(Function_Base):
 
     def _grid_evaluate(self, ocm, context):
         """Helper method for evaluation of a grid of samples from search space via LLVM backends."""
+        # If execution mode is not Python, the search space has to be static
+        def _is_static(it:SampleIterator):
+            if isinstance(it.start, Number) and isinstance(it.stop, Number):
+                return True
+
+            if isinstance(it.generator, list):
+                return True
+
+            return False
+
+        assert all(_is_static(sample_iterator) for sample_iterator in self.search_space)
         assert ocm is ocm.agent_rep.controller
         # Compiled evaluate expects the same variable as mech function
         variable = [input_port.parameters.value.get(context) for input_port in ocm.input_ports]
