@@ -728,17 +728,18 @@ class CompExecution(CUDAExecution):
 
         ct_results = out_ty()
         ct_variable = converted_variale.ctypes.data_as(self.__bin_func.c_func.argtypes[5])
-        # There are 7 arguments to evaluate_alloc_range:
-        # comp_param, comp_state, from, to, results, input, comp_data
         jobs = min(os.cpu_count(), num_evaluations)
         evals_per_job = (num_evaluations + jobs - 1) // jobs
-        executor = concurrent.futures.ThreadPoolExecutor(max_workers=jobs)
-        for i in range(jobs):
-            start = i * evals_per_job
-            stop = min((i + 1) * evals_per_job, num_evaluations)
-            executor.submit(self.__bin_func, ct_param, ct_state, int(start),
-                            int(stop), ct_results, ct_variable, ct_data)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as ex:
+            # There are 7 arguments to evaluate_alloc_range:
+            # comp_param, comp_state, from, to, results, input, comp_data
+            results = [ex.submit(self.__bin_func, ct_param, ct_state,
+                                 int(i * evals_per_job),
+                                 min((i + 1) * evals_per_job, num_evaluations),
+                                 ct_results, ct_variable, ct_data)
+                       for i in range(jobs)]
 
-        executor.shutdown()
+        exceptions = [r.exception() for r in results]
+        assert all(e is None for e in exceptions), "Not all jobs finished sucessfully: {}".format(exceptions)
 
         return ct_results
