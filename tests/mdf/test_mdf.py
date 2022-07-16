@@ -11,6 +11,15 @@ pytest.importorskip(
 from modeci_mdf.execution_engine import evaluate_onnx_expr  # noqa: E402
 
 
+def get_onnx_fixed_noise_str(onnx_op, **kwargs):
+    # high precision printing needed because script will be executed from string
+    # 16 is insufficient on windows
+    with np.printoptions(precision=32):
+        return str(
+            evaluate_onnx_expr(f'onnx_ops.{onnx_op}', base_parameters=kwargs, evaluated_parameters=kwargs)
+        )
+
+
 # stroop stimuli
 red = [1, 0]
 green = [0, 1]
@@ -170,12 +179,12 @@ def test_write_json_file_multiple_comps(
 # RandomNormal with parameters used in model_integrators.py (seed 0).
 # RandomNormal values are different on mac versus linux and windows
 onnx_noise_data = {
-    'onnx_ops.randomuniform': {
+    'randomuniform': {
         'A': {'low': -1.0, 'high': 1.0, 'seed': 0, 'shape': (1, 1)},
         'D': {'low': -0.5, 'high': 0.5, 'seed': 0, 'shape': (1, 1)},
         'E': {'low': -0.25, 'high': 0.5, 'seed': 0, 'shape': (1, 1)}
     },
-    'onnx_ops.randomnormal': {
+    'randomnormal': {
         'B': {'mean': -1.0, 'scale': 0.5, 'seed': 0, 'shape': (1, 1)},
         'C': {'mean': 0.0, 'scale': 0.25, 'seed': 0, 'shape': (1, 1)},
     }
@@ -187,18 +196,13 @@ for func_type in onnx_noise_data:
     for node, args in onnx_noise_data[func_type].items():
         # generates output from onnx noise functions with seed 0 to be
         # passed in in runtime_params during psyneulink execution
-        onnx_integrators_fixed_seeded_noise[node] = evaluate_onnx_expr(
-            func_type, base_parameters=args, evaluated_parameters=args
-        )
+        onnx_integrators_fixed_seeded_noise[node] = get_onnx_fixed_noise_str(func_type, **args)
 
-# high precision printing needed because script will be executed from string
-# 16 is insufficient on windows
-with np.printoptions(precision=32):
-    integrators_runtime_params = (
-        'runtime_params={'
-        + ','.join([f'{k}: {{ "noise": {v} }}' for k, v in onnx_integrators_fixed_seeded_noise.items()])
-        + '}'
-    )
+integrators_runtime_params = (
+    'runtime_params={'
+    + ','.join([f'{k}: {{ "noise": {v} }}' for k, v in onnx_integrators_fixed_seeded_noise.items()])
+    + '}'
+)
 
 
 @pytest.mark.parametrize(
