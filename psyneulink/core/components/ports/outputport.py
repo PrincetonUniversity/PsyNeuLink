@@ -1302,6 +1302,8 @@ class OutputPort(Port_Base):
         return mdf.OutputPort(
             id=parse_valid_identifier(self.name),
             value=value,
+            shape=str(self.defaults.value.shape),
+            type=str(self.defaults.value.dtype),
             **self._mdf_metadata
         )
 
