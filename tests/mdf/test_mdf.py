@@ -6,7 +6,7 @@ import pytest
 
 pytest.importorskip(
     'modeci_mdf',
-    reason='JSON methods require modeci_mdf package'
+    reason='MDF methods require modeci_mdf package'
 )
 from modeci_mdf.execution_engine import evaluate_onnx_expr  # noqa: E402
 
@@ -77,7 +77,7 @@ def test_json_results_equivalence(
     simple_edge_format,
 ):
     # Get python script from file and execute
-    filename = f'{os.path.dirname(__file__)}/{filename}'
+    filename = os.path.join(os.path.dirname(__file__), filename)
     with open(filename, 'r') as orig_file:
         exec(orig_file.read())
         exec(f'{composition_name}.run(inputs={input_dict_str})')
@@ -104,7 +104,7 @@ def test_write_json_file(
     simple_edge_format,
 ):
     # Get python script from file and execute
-    filename = f'{os.path.dirname(__file__)}/{filename}'
+    filename = os.path.join(os.path.dirname(__file__), filename)
     with open(filename, 'r') as orig_file:
         exec(orig_file.read())
         exec(f'{composition_name}.run(inputs={input_dict_str})')
@@ -141,7 +141,7 @@ def test_write_json_file_multiple_comps(
     orig_results = {}
 
     # Get python script from file and execute
-    filename = f'{os.path.dirname(__file__)}/{filename}'
+    filename = os.path.join(os.path.dirname(__file__), filename)
     with open(filename, 'r') as orig_file:
         exec(orig_file.read())
 
@@ -219,7 +219,7 @@ def test_mdf_equivalence(filename, composition_name, input_dict, simple_edge_for
     import modeci_mdf.execution_engine as ee
 
     # Get python script from file and execute
-    filename = f'{os.path.dirname(__file__)}/{filename}'
+    filename = os.path.join(os.path.dirname(__file__), filename)
     with open(filename, 'r') as orig_file:
         exec(orig_file.read())
         inputs_str = str(input_dict).replace("'", '')
@@ -240,3 +240,20 @@ def test_mdf_equivalence(filename, composition_name, input_dict, simple_edge_for
     ]
 
     assert pnl.safe_equals(orig_results, mdf_results)
+
+
+@pytest.mark.parametrize('filename', ['model_basic.py'])
+@pytest.mark.parametrize('fmt', ['json', 'yml'])
+def test_generate_script_from_mdf(filename, fmt):
+    filename = os.path.join(os.path.dirname(__file__), filename)
+    outfi = filename.replace('.py', f'.{fmt}')
+
+    with open(filename, 'r') as orig_file:
+        exec(orig_file.read())
+        serialized = eval(f'pnl.get_mdf_serialized(comp, fmt="{fmt}")')
+
+    with open(outfi, 'w') as f:
+        f.write(serialized)
+
+    with open(outfi, 'r') as f:
+        assert pnl.generate_script_from_mdf(f.read()) == pnl.generate_script_from_mdf(outfi)

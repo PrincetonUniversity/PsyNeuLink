@@ -89,7 +89,6 @@ from psyneulink.core.components.functions.function import Function
 from psyneulink.core.components.functions.stateful.integratorfunctions import AdaptiveIntegrator
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
-from psyneulink.core.globals.json import _substitute_expression_args
 from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, INTEGRATOR_MECHANISM, VARIABLE, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
@@ -255,8 +254,5 @@ class IntegratorMechanism(ProcessingMechanism_Base):
             model.functions.append(main_noise_function)
             model.functions.extend(extra_noise_functions)
             function_model.args['noise'] = main_noise_function.id
-
-        for func_model in model.functions:
-            _substitute_expression_args(func_model)
 
         return model
