@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Basics and Primer &mdash; PsyNeuLink 0.9.0.0+614.g9c9185140 documentation</title>
+  <title>Basics and Primer &mdash; PsyNeuLink 0.9.0.0+623.g6e7a9b9d5 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.9.0.0+614
+                  0.9.0.0+623
                 </div>
               
             
@@ -305,7 +305,7 @@ Mechanism is colored Red (to designate it at a <a class="reference internal" hre
 <p>As the name of the <code class="docutils literal notranslate"><span class="pre">show_graph()</span></code> method suggests, Compositions are represented in PsyNeuLink as graphs, using a
 standard dependency dictionary format, so that they can also be submitted to other graph theoretic packages for
 display and/or analysis (such as <a class="reference external" href="https://networkx.github.io">NetworkX</a> and <a class="reference external" href="http://igraph.org/redirect.html">igraph</a>).  They can also be exported as a JSON file, in a format that is currently being developed for the exchange
-of computational models in neuroscience and psychology (see <a class="reference internal" href="mdf.html#module-psyneulink.core.globals.json" title="psyneulink.core.globals.json"><code class="xref any py py-mod docutils literal notranslate"><span class="pre">json</span></code></a>)</p>
+of computational models in neuroscience and psychology (see <code class="xref any docutils literal notranslate"><span class="pre">json</span></code>)</p>
 <p>The Composition can be run by calling its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> method, with an input array appropriately sized for
 the first Mechanism in the pathway (in this case, the input_layer):</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_encoder</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mf">4.7</span><span class="p">,</span> <span class="mf">3.2</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
