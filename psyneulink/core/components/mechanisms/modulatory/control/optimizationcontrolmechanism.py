@@ -3210,7 +3210,10 @@ class OptimizationControlMechanism(ControlMechanism):
                                            context=context
                                            )
 
-    def _get_evaluate_output_struct_type(self, ctx):
+    def _get_evaluate_output_struct_type(self, ctx, tags):
+        if "evaluate_type_all_results" in tags:
+            return ctx.get_output_struct_type(self.agent_rep)
+        assert "evaluate_type_objective" in tags
         # Returns a scalar that is the predicted net_outcome
         return ctx.float_ty
 
@@ -3314,6 +3317,8 @@ class OptimizationControlMechanism(ControlMechanism):
         my_idx = self.composition._get_node_index(self)
         my_params = builder.gep(nodes_params, [ctx.int32_ty(0),
                                                ctx.int32_ty(my_idx)])
+        num_trials_per_estimate_ptr = pnlvm.helpers.get_param_ptr(builder, self,
+                                                                  my_params, "num_trials_per_estimate")
         func_params = pnlvm.helpers.get_param_ptr(builder, self,
                                                   my_params, "function")
         search_space = pnlvm.helpers.get_param_ptr(builder, self.function,
@@ -3324,6 +3329,8 @@ class OptimizationControlMechanism(ControlMechanism):
 
             if "evaluate_type_objective" in tags:
                 out_idx = idx
+            elif "evaluate_type_all_results" in tags:
+                out_idx = builder.mul(idx, builder.load(num_trials_per_estimate_ptr))
             else:
                 assert False, "Evaluation type not detected in tags, or unknown: {}".format(tags)
 
@@ -3340,7 +3347,7 @@ class OptimizationControlMechanism(ControlMechanism):
         args = [ctx.get_param_struct_type(self.agent_rep).as_pointer(),
                 ctx.get_state_struct_type(self.agent_rep).as_pointer(),
                 self._get_evaluate_alloc_struct_type(ctx).as_pointer(),
-                self._get_evaluate_output_struct_type(ctx).as_pointer(),
+                self._get_evaluate_output_struct_type(ctx, tags).as_pointer(),
                 ctx.get_input_struct_type(self.agent_rep).as_pointer(),
                 ctx.get_data_struct_type(self.agent_rep).as_pointer()]
 
@@ -3387,8 +3394,10 @@ class OptimizationControlMechanism(ControlMechanism):
                                                        ctx.int32_ty(controller_idx)])
 
         # Get simulation function
-        sim_f = ctx.import_llvm_function(self.agent_rep,
-                                         tags=frozenset({"run", "simulation"}))
+        agent_tags = {"run", "simulation"}
+        if "evaluate_type_all_results" in tags:
+            agent_tags.add("simulation_results")
+        sim_f = ctx.import_llvm_function(self.agent_rep, tags=frozenset(agent_tags))
 
         # Apply allocation sample to simulation data
         assert len(self.output_ports) == len(allocation_sample.type.pointee)
@@ -3437,9 +3446,11 @@ class OptimizationControlMechanism(ControlMechanism):
         num_inputs = builder.alloca(ctx.int32_ty, name="num_sim_inputs")
         builder.store(num_inputs.type.pointee(1), num_inputs)
 
-        # Simulations don't store output
-        if "evaluate_type_objective" in tags:
+        # Simulations don't store output unless we run parameter fitting
+        if 'evaluate_type_objective' in tags:
             comp_output = sim_f.args[4].type(None)
+        elif 'evaluate_type_all_results' in tags:
+            comp_output = arg_out
         else:
             assert False, "Evaluation type not detected in tags, or unknown: {}".format(tags)
 
@@ -3462,6 +3473,8 @@ class OptimizationControlMechanism(ControlMechanism):
             builder.call(net_outcome_f, [controller_params, controller_state,
                                          allocation_sample, objective_val_ptr,
                                          arg_out])
+        elif "evaluate_type_all_results" in tags:
+            pass
         else:
             assert False, "Evaluation type not detected in tags, or unknown: {}".format(tags)
 
