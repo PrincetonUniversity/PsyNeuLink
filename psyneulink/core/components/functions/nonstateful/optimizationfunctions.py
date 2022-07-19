@@ -624,13 +624,6 @@ class OptimizationFunction(Function_Base):
             assert all([not getattr(self.parameters, x)._user_specified for x in self._unspecified_args])
             self._unspecified_args = []
 
-        # Get initial sample in case it is needed by _search_space_evaluate (e.g., for gradient initialization)
-        initial_sample = self._check_args(variable=variable, context=context, params=params)
-        try:
-            initial_value = self.owner.objective_mechanism.parameters.value._get(context)
-        except AttributeError:
-            initial_value = 0
-
         # EVALUATE ALL SAMPLES IN SEARCH SPACE
         # Evaluate all estimates of all samples in search_space
 
@@ -643,6 +636,13 @@ class OptimizationFunction(Function_Base):
             last_sample = last_value = None
         # Otherwise, default sequential sampling
         else:
+            # Get initial sample in case it is needed by _search_space_evaluate (e.g., for gradient initialization)
+            initial_sample = self._check_args(variable=variable, context=context, params=params)
+            try:
+                initial_value = self.owner.objective_mechanism.parameters.value._get(context)
+            except AttributeError:
+                initial_value = 0
+
             last_sample, last_value, all_samples, all_values = self._sequential_evaluate(initial_sample,
                                                                                          initial_value,
                                                                                          context)
