@@ -730,6 +730,8 @@ class CompExecution(CUDAExecution):
         ct_variable = converted_variale.ctypes.data_as(self.__bin_func.c_func.argtypes[5])
         jobs = min(os.cpu_count(), num_evaluations)
         evals_per_job = (num_evaluations + jobs - 1) // jobs
+
+        parallel_start = time.time()
         with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as ex:
             # There are 7 arguments to evaluate_alloc_range:
             # comp_param, comp_state, from, to, results, input, comp_data
@@ -738,6 +740,13 @@ class CompExecution(CUDAExecution):
                                  min((i + 1) * evals_per_job, num_evaluations),
                                  ct_results, ct_variable, ct_data)
                        for i in range(jobs)]
+
+        parallel_stop = time.time()
+        if "time_stat" in self._debug_env:
+            print("Time to run {} executions of '{}' in {} threads: {}".format(
+                      num_evaluations, self.__bin_func.name, jobs,
+                      parallel_stop - parallel_start))
+
 
         exceptions = [r.exception() for r in results]
         assert all(e is None for e in exceptions), "Not all jobs finished sucessfully: {}".format(exceptions)
