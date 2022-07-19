@@ -1,5 +1,5 @@
 autograd<1.5
-graph-scheduler>=0.2.0, <1.1.1
+graph-scheduler>=0.2.0, <1.1.2
 dill<=0.32
 elfi<0.8.4
 graphviz<0.21.0
