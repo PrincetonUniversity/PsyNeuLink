@@ -654,6 +654,11 @@ class OptimizationFunction(Function_Base):
                 self.parameters.randomization_dimension._get(context) and \
                 self.parameters.num_estimates._get(context) is not None:
 
+            # FIXME: This is easy to support in hybrid mode. We just need to convert ctype results
+            #        returned from _grid_evaluate to numpy
+            assert not self.owner or self.owner.parameters.comp_execution_mode._get(context) == 'Python', \
+                   "Aggregation function not supported in compiled mode!"
+
             # Reshape all the values we encountered to group those that correspond to the same parameter values
             # can be aggregated.
             all_values = np.reshape(all_values, (-1, self.parameters.num_estimates._get(context)))
