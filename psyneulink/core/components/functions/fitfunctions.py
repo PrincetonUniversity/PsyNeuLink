@@ -371,7 +371,7 @@ class MaxLikelihoodEstimator(OptimizationFunction):
             # Make 0 densities very small so log doesn't explode
             like[like == 0.0] = 1.0e-10
 
-            return np.sum(np.log(like))
+            return np.sum(np.log(like)), sim_data
 
         return ll
 
@@ -441,7 +441,7 @@ class MaxLikelihoodEstimator(OptimizationFunction):
 
                 # FIXME: This should be found with fitting but it is too slow!
                 # We can at least return the evaluation of the log-likelihood function for testing purposes
-                self.owner.optimal_value = ll_func(0.3, 0.15)
+                self.owner.optimal_value, saved_values = ll_func(0.3, 0.15)
                 self.owner.optimal_parameters = np.array([[0.3, 0.15]])
 
                 # Run the MLE optimization

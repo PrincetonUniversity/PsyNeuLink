@@ -118,7 +118,8 @@ def test_parameter_estimation_composition(objective_function_arg, expected_outco
     pec.run()
 
 
-def test_parameter_estimation_mle():
+@pytest.mark.benchmark
+def test_parameter_estimation_mle(benchmark):
     """Test parameter estimation of a DDM in integrator mode with MLE."""
 
     # High-level parameters the impact performance of the test
@@ -142,15 +143,18 @@ def test_parameter_estimation_mle():
     inputs_dict = {decision: input}
 
     # Run the composition to generate some data to fit
-    comp.run(inputs=inputs_dict,
-             num_trials=len(input))
-
+    #  comp.run(inputs=inputs_dict,
+    #           num_trials=len(input))
+    #
     # Store the results of this "experiment" as a numpy array. This should be a
     # 2D array of shape (len(input), 2). The first column being a discrete variable
     # specifying the upper or lower decision boundary and the second column is the
     # reaction time. We will put the data into a pandas DataFrame, this makes it
     # easier to specify which columns in the data are categorical or not.
-    data_to_fit = pd.DataFrame(np.squeeze(np.array(comp.results)),
+    #
+    # The above composition produces the following data
+    results = [[[-0.6], [0.25]], [[0.6], [0.5499999999999999]], [[0.6], [1.5500000000000003]], [[0.6], [1.25]], [[0.6], [1.5500000000000003]], [[0.6], [0.6499999999999999]], [[0.6], [0.44999999999999996]], [[0.6], [1.15]], [[-0.6], [0.6499999999999999]], [[0.6], [0.6499999999999999]], [[0.6], [0.5499999999999999]], [[0.6], [0.25]], [[0.6], [0.5499999999999999]], [[0.6], [1.5500000000000003]], [[-0.6], [1.9500000000000006]], [[-0.6], [1.5500000000000003]], [[0.6], [0.44999999999999996]], [[-0.6], [0.35]], [[0.6], [1.35]], [[0.6], [0.44999999999999996]]]
+    data_to_fit = pd.DataFrame(np.squeeze(np.array(results)),
                                columns=['decision', 'rt'])
     data_to_fit['decision'] = pd.Categorical(data_to_fit['decision'])
 
@@ -174,10 +178,72 @@ def test_parameter_estimation_mle():
                                              num_trials_per_estimate=len(input),
                                              )
 
-    pec.run(inputs=inputs_dict, num_trials=len(input))
+    pec.controller.function.parameters.save_values.set(True)
+    ret = benchmark(pec.run, inputs=inputs_dict, num_trials=len(input))
 
     # Check that the parameters are recovered and that the log-likelihood is correct
     assert np.allclose(pec.controller.optimal_parameters, [0.3, 0.15])
     assert np.allclose(pec.controller.optimal_value, -69.4937458)
+    assert np.allclose(ret, [[0.6], [0.3]])
 
+    np.testing.assert_allclose(pec.controller.saved_values,
+      [[[-0.6, 0.45], [ 0.6, 0.65], [-0.6, 0.85], [-0.6, 0.75], [ 0.6, 0.35],
+        [ 0.6, 0.85], [-0.6, 0.65], [-0.6, 0.95], [-0.6, 0.25], [-0.6, 1.55]],
+
+       [[ 0.6, 0.65], [-0.6, 0.65], [ 0.6, 1.05], [ 0.6, 1.45], [ 0.6, 1.05],
+        [ 0.6, 0.75], [ 0.6, 1.75], [ 0.6, 1.65], [ 0.6, 0.65], [ 0.6, 0.45]],
+
+       [[ 0.6, 0.75], [-0.6, 0.65], [ 0.6, 0.35], [-0.6, 0.75], [ 0.6, 0.35],
+        [ 0.6, 1.05], [-0.6, 0.55], [ 0.6, 0.65], [ 0.6, 1.25], [ 0.6, 0.95]],
+
+       [[-0.6, 0.55], [ 0.6, 0.55], [ 0.6, 0.55], [-0.6, 1.45], [-0.6, 2.05],
+        [ 0.6, 0.85], [ 0.6, 0.65], [ 0.6, 0.35], [ 0.6, 0.35], [-0.6, 0.55]],
+
+       [[-0.6, 0.55], [ 0.6, 1.35], [ 0.6, 0.45], [-0.6, 0.25], [ 0.6, 1.05],
+        [ 0.6, 0.75], [-0.6, 0.45], [ 0.6, 1.35], [-0.6, 1.65], [ 0.6, 1.05]],
+
+       [[ 0.6, 0.95], [ 0.6, 0.45], [ 0.6, 0.55], [-0.6, 0.55], [-0.6, 0.55],
+        [-0.6, 2.15], [ 0.6, 0.55], [ 0.6, 0.55], [-0.6, 1.35], [ 0.6, 0.35]],
+
+       [[ 0.6, 0.55], [ 0.6, 0.25], [-0.6, 1.15], [ 0.6, 0.35], [ 0.6, 1.25],
+        [-0.6, 0.65], [ 0.6, 1.45], [ 0.6, 0.25], [ 0.6, 2.25], [-0.6, 1.75]],
+
+       [[ 0.6, 0.45], [-0.6, 0.25], [ 0.6, 1.25], [-0.6, 1.05], [-0.6, 0.75],
+        [ 0.6, 0.55], [ 0.6, 0.55], [-0.6, 0.65], [-0.6, 1.45], [ 0.6, 0.95]],
+
+       [[ 0.6, 0.85], [ 0.6, 0.45], [-0.6, 2.45], [ 0.6, 0.65], [-0.6, 0.95],
+        [ 0.6, 0.55], [ 0.6, 0.45], [-0.6, 1.35], [ 0.6, 1.15], [-0.6, 0.35]],
+
+       [[-0.6, 0.35], [ 0.6, 0.75], [ 0.6, 0.75], [-0.6, 2.05], [-0.6, 2.25],
+        [ 0.6, 0.25], [ 0.6, 0.75], [-0.6, 0.25], [-0.6, 0.35], [-0.6, 0.35]],
+
+       [[ 0.6, 2.05], [ 0.6, 0.45], [-0.6, 0.25], [ 0.6, 2.15], [ 0.6, 0.95],
+        [-0.6, 1.65], [-0.6, 0.65], [-0.6, 0.35], [-0.6, 1.95], [-0.6, 0.45]],
+
+       [[ 0.6, 0.95], [-0.6, 0.45], [ 0.6, 0.35], [ 0.6, 0.85], [ 0.6, 0.35],
+        [-0.6, 0.85], [ 0.6, 0.95], [ 0.6, 0.75], [ 0.6, 0.75], [ 0.6, 0.35]],
+
+       [[ 0.6, 0.45], [ 0.6, 0.75], [ 0.6, 0.25], [ 0.6, 0.65], [ 0.6, 0.35],
+        [-0.6, 1.25], [-0.6, 0.35], [ 0.6, 1.45], [ 0.6, 0.45], [-0.6, 0.95]],
+
+       [[-0.6, 0.65], [ 0.6, 0.35], [ 0.6, 0.45], [ 0.6, 0.35], [-0.6, 0.45],
+        [ 0.6, 1.15], [-0.6, 0.85], [-0.6, 0.65], [ 0.6, 0.95], [-0.6, 0.35]],
+
+       [[ 0.6, 0.85], [ 0.6, 1.05], [ 0.6, 1.05], [ 0.6, 0.95], [ 0.6, 0.35],
+        [-0.6, 0.25], [ 0.6, 0.75], [ 0.6, 0.65], [-0.6, 0.35], [-0.6, 1.85]],
+
+       [[ 0.6, 0.85], [ 0.6, 2.75], [-0.6, 0.55], [ 0.6, 0.65], [ 0.6, 0.55],
+        [-0.6, 0.65], [-0.6, 1.35], [-0.6, 0.35], [ 0.6, 0.85], [-0.6, 0.25]],
+
+       [[-0.6, 1.25], [ 0.6, 1.15], [ 0.6, 0.45], [ 0.6, 0.75], [ 0.6, 0.85],
+        [ 0.6, 1.15], [-0.6, 0.75], [-0.6, 0.45], [ 0.6, 0.25], [ 0.6, 0.65]],
+
+       [[-0.6, 1.05], [-0.6, 0.45], [ 0.6, 0.55], [ 0.6, 0.35], [ 0.6, 0.35],
+        [ 0.6, 0.85], [-0.6, 0.55], [ 0.6, 0.45], [ 0.6, 0.35], [ 0.6, 0.75]],
+
+       [[ 0.6, 1.25], [-0.6, 0.95], [-0.6, 0.65], [-0.6, 0.25], [ 0.6, 0.85],
+        [ 0.6, 0.65], [-0.6, 0.45], [-0.6, 0.55], [ 0.6, 0.25], [ 0.6, 0.35]],
+
+       [[ 0.6, 0.45], [ 0.6, 0.25], [-0.6, 0.75], [ 0.6, 0.35], [ 0.6, 0.25],
+        [ 0.6, 0.95], [-0.6, 0.35], [ 0.6, 0.65], [ 0.6, 0.85], [ 0.6, 0.45]]])
     # assert pec.log_likelihood(ddm_params['rate'], ddm_params['non_decision_time'])
