@@ -345,6 +345,7 @@ class MaxLikelihoodEstimator(OptimizationFunction):
             variable=variable,
             context=context,
             params=None,
+            fit_evaluate=True,
         )
 
         # We need to swap the simulation (randomization dimension) with the output dimension so things
@@ -429,23 +430,16 @@ class MaxLikelihoodEstimator(OptimizationFunction):
                 raise ValueError("MaximumLikelihoodEstimator must be assigned to an OptimizationControlMechanism, "
                                  "self.owner is None")
 
-            # If we are running in compiled mode
-            if ocm is not None and ocm.parameters.comp_execution_mode._get(context) in {"PTX", "LLVM"}:
-                raise NotImplementedError("MaximumLikelihoodEstimator is not supported in compiled mode currently.")
+            # Get a log likelihood function that can be used to compute the log likelihood of the simulation results
+            ll_func = self._make_loglikelihood_func(context=context)
 
-            # If we are running in compiled mode
-            # Otherwise, we are running in Python mode
-            else:
-                # Get a log likelihood function that can be used to compute the log likelihood of the simulation results
-                ll_func = self._make_loglikelihood_func(context=context)
+            # FIXME: This should be found with fitting but it is too slow!
+            # We can at least return the evaluation of the log-likelihood function for testing purposes
+            self.owner.optimal_value, saved_values = ll_func(0.3, 0.15)
+            self.owner.optimal_parameters = np.array([[0.3, 0.15]])
 
-                # FIXME: This should be found with fitting but it is too slow!
-                # We can at least return the evaluation of the log-likelihood function for testing purposes
-                self.owner.optimal_value, saved_values = ll_func(0.3, 0.15)
-                self.owner.optimal_parameters = np.array([[0.3, 0.15]])
-
-                # Run the MLE optimization
-                # results = self._fit(ll_func=ll_func)
+            # Run the MLE optimization
+            # results = self._fit(ll_func=ll_func)
 
         return optimal_sample, optimal_value, saved_samples, saved_values
 

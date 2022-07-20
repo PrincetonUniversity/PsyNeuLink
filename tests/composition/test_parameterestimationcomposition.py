@@ -118,8 +118,9 @@ def test_parameter_estimation_composition(objective_function_arg, expected_outco
     pec.run()
 
 
+# func_mode is a hacky wa to get properly marked; Python, LLVM, and CUDA
 @pytest.mark.benchmark
-def test_parameter_estimation_mle(benchmark):
+def test_parameter_estimation_mle(benchmark, func_mode):
     """Test parameter estimation of a DDM in integrator mode with MLE."""
 
     # High-level parameters the impact performance of the test
@@ -178,6 +179,7 @@ def test_parameter_estimation_mle(benchmark):
                                              num_trials_per_estimate=len(input),
                                              )
 
+    pec.controller.parameters.comp_execution_mode.set(func_mode)
     pec.controller.function.parameters.save_values.set(True)
     ret = benchmark(pec.run, inputs=inputs_dict, num_trials=len(input))
 

@@ -597,7 +597,7 @@ class OptimizationFunction(Function_Base):
         raise NotImplementedError("OptimizationFunction._function is not implemented and "
                                   "should be overridden by subclasses.")
 
-    def _evaluate(self, variable=None, context=None, params=None):
+    def _evaluate(self, variable=None, context=None, params=None, fit_evaluate=False):
         """
         Evaluate all the sample in a `search_space <OptimizationFunction.search_space>` with the agent_rep. The
         evaluation is done either serially (_sequential_evaluate) or in parallel (_grid_evaluate). This method should
@@ -631,9 +631,37 @@ class OptimizationFunction(Function_Base):
         if self.owner and self.owner.parameters.comp_execution_mode._get(context) != 'Python' and \
           ContextFlags.PROCESSING in context.flags:
             all_samples = [s for s in itertools.product(*self.search_space)]
-            all_values, num_evals = self._grid_evaluate(self.owner, context)
+            all_values, num_evals = self._grid_evaluate(self.owner, context, fit_evaluate)
             assert len(all_values) == num_evals
             assert len(all_samples) == num_evals
+
+            if fit_evaluate:
+                all_values = np.ctypeslib.as_array(all_values)
+                print("OLD DTYPE:", all_values.dtype)
+                print("OLD SHAPE:", all_values.shape)
+
+                def _get_builtin_dtype(dtype):
+    #                print("CHECKING:", dtype, "FIELDS:", dtype.names, "SUBDTYPE:", dtype.subdtype, "BASE:", dtype.base)
+                    if dtype.isbuiltin:
+                        return dtype
+
+                    if dtype.subdtype is not None:
+                        return dtype.base
+
+                    subdtypes = (v[0] for v in dtype.fields.values())
+                    first_builtin = _get_builtin_dtype(next(subdtypes))
+                    assert all(_get_builtin_dtype(sdt) is first_builtin for sdt in subdtypes)
+                    return first_builtin
+
+                dtype = _get_builtin_dtype(all_values.dtype)
+                # Ignore the shape of the output structure
+                all_values = all_values.view(dtype=dtype).reshape((*all_values.shape[0:2], -1))
+                print("NEW DTYPE:", all_values.dtype)
+                print("NEW SHAPE:", all_values.shape)
+
+                # Re-arrange dimensions to match Python
+                all_values = np.transpose(all_values, (1, 2, 0))
+
             last_sample = last_value = None
         # Otherwise, default sequential sampling
         else:
@@ -768,7 +796,7 @@ class OptimizationFunction(Function_Base):
         # return current_sample, current_value, evaluated_samples, estimated_values
         return current_sample, current_value, evaluated_samples, estimated_values
 
-    def _grid_evaluate(self, ocm, context):
+    def _grid_evaluate(self, ocm, context, get_results:bool):
         """Helper method for evaluation of a grid of samples from search space via LLVM backends."""
         # If execution mode is not Python, the search space has to be static
         def _is_static(it:SampleIterator):
@@ -794,9 +822,9 @@ class OptimizationFunction(Function_Base):
         comp_exec = pnlvm.execution.CompExecution(ocm.agent_rep, [context.execution_id])
         execution_mode = ocm.parameters.comp_execution_mode._get(context)
         if execution_mode == "PTX":
-            outcomes = comp_exec.cuda_evaluate(inputs, num_inputs_sets, num_evals)
+            outcomes = comp_exec.cuda_evaluate(inputs, num_inputs_sets, num_evals, get_results)
         elif execution_mode == "LLVM":
-            outcomes = comp_exec.thread_evaluate(inputs, num_inputs_sets, num_evals)
+            outcomes = comp_exec.thread_evaluate(inputs, num_inputs_sets, num_evals, get_results)
         else:
             assert False, f"Unknown execution mode for {ocm.name}: {execution_mode}."
 
