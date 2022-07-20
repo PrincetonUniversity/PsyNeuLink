@@ -53,6 +53,7 @@ runs:
       shell: bash
       id: new_package
       run: |
+        python -m pip install --upgrade pip wheel
         export NEW_PACKAGE=`echo '${{ github.head_ref }}' | cut -f 4 -d/ | sed 's/-gt.*//' | sed 's/-lt.*//'`
         echo "::set-output name=new_package::$NEW_PACKAGE"
         pip install "`echo $NEW_PACKAGE | sed 's/[-_]/./g' | xargs grep *requirements.txt -h -e | head -n1`"
