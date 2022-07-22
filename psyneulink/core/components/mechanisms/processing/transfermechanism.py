@@ -1811,47 +1811,21 @@ class TransferMechanism(ProcessingMechanism_Base):
         super()._update_default_variable(new_default_variable, context=context)
 
     def as_mdf_model(self):
-        import modeci_mdf.mdf as mdf
-
         model = super().as_mdf_model()
         function_model = [
             f for f in model.functions
-            if f.id == parse_valid_identifier(self.function.name)
+            if f.id == f'{model.id}_{parse_valid_identifier(self.function.name)}'
         ][0]
-        assert function_model.id == parse_valid_identifier(self.function.name), (function_model.id, parse_valid_identifier(self.function.name))
+        assert function_model.id == f'{model.id}_{parse_valid_identifier(self.function.name)}', (function_model.id, parse_valid_identifier(self.function.name))
 
         if self.defaults.integrator_mode:
-            integrator_function_model = self.integrator_function.as_mdf_model()
-
             primary_input = function_model.args[_get_variable_parameter_name(self.function)]
-            self.integrator_function._set_mdf_arg(
-                integrator_function_model,
-                _get_variable_parameter_name(self.integrator_function),
-                primary_input
-            )
+            integrator_function_id = self.integrator_function._assign_to_mdf_model(model, primary_input)
+
             self.function._set_mdf_arg(
                 function_model,
                 _get_variable_parameter_name(self.function),
-                integrator_function_model.id
+                integrator_function_id
             )
-
-            for _, func_param in integrator_function_model.metadata['function_stateful_params'].items():
-                model.parameters.append(mdf.Parameter(**func_param))
-
-            model.functions.append(integrator_function_model)
-
-            res = self.integrator_function._get_mdf_noise_function()
-            try:
-                main_noise_function, extra_noise_functions = res
-            except TypeError:
-                pass
-            else:
-                main_noise_function.id = f'{model.id}_{main_noise_function.id}'
-                model.functions.append(main_noise_function)
-                model.functions.extend(extra_noise_functions)
-
-                self.integrator_function._set_mdf_arg(
-                    integrator_function_model, 'noise', main_noise_function.id
-                )
 
         return model

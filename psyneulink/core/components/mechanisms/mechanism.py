@@ -1098,7 +1098,6 @@ from psyneulink.core.components.ports.port import \
     REMOVE_PORTS, PORT_SPEC, _parse_port_spec, PORT_SPECIFIC_PARAMS, PROJECTION_SPECIFIC_PARAMS
 from psyneulink.core.components.shellclasses import Mechanism, Projection, Port
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
-from psyneulink.core.globals.mdf import _get_variable_parameter_name
 # TODO: remove unused keywords
 from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, EXECUTION_PHASE, EXPONENT, FUNCTION_PARAMS, \
@@ -4194,20 +4193,12 @@ class Mechanism_Base(Mechanism):
 
             model.output_ports.append(op_model)
 
-        function_model = self.function.as_mdf_model()
-
-        for _, func_param in function_model.metadata['function_stateful_params'].items():
-            model.parameters.append(mdf.Parameter(**func_param))
-
         if len(ip.path_afferents) > 1:
             primary_function_input_name = combination_function_dimreduce_id
         else:
             primary_function_input_name = model.input_ports[0].id
 
-        self.function._set_mdf_arg(
-            function_model, _get_variable_parameter_name(self.function), primary_function_input_name
-        )
-        model.functions.append(function_model)
+        self.function._assign_to_mdf_model(model, primary_function_input_name)
 
         return model
 
