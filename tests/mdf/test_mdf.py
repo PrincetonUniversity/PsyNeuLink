@@ -1,3 +1,4 @@
+import copy
 import numpy as np
 import os
 import psyneulink as pnl
@@ -173,6 +174,13 @@ def test_write_json_file_multiple_comps(
         assert orig_results[composition_name] == final_results, f'{composition_name}:'
 
 
+def _get_mdf_model_results(evaluable_graph):
+    return [
+        [eo.curr_value for _, eo in evaluable_graph.enodes[node.id].evaluable_outputs.items()]
+        for node in evaluable_graph.scheduler.consideration_queue[-1]
+    ]
+
+
 # These runtime_params are necessary because noise seeding is not
 # replicable between numpy and onnx.
 # Values are generated from running onnx function RandomUniform and
@@ -238,12 +246,56 @@ def test_mdf_equivalence(filename, composition_name, input_dict, simple_edge_for
     eg = ee.EvaluableGraph(m.graphs[0], verbose=True)
     eg.evaluate(initializer={f'{node}_InputPort_0': i for node, i in input_dict.items()})
 
-    mdf_results = [
-        [eo.curr_value for _, eo in eg.enodes[node.id].evaluable_outputs.items()]
-        for node in eg.scheduler.consideration_queue[-1]
-    ]
+    assert pnl.safe_equals(orig_results, _get_mdf_model_results(eg))
 
-    assert pnl.safe_equals(orig_results, mdf_results)
+
+ddi_termination_conds = [
+    None,
+    (
+        "pnl.Or("
+        "pnl.Threshold(A, parameter='value', threshold=A.function.defaults.threshold, comparator='>=', indices=(0,)),"
+        "pnl.Threshold(A, parameter='value', threshold=-1 * A.function.defaults.threshold, comparator='<=', indices=(0,))"
+        ")"
+    ),
+    'pnl.AfterNCalls(A, 10)',
+]
+
+# construct test data manually instead of with multiple @pytest.mark.parametrize
+# so that other functions can use more appropriate termination conds
+individual_functions_test_data = [
+    (
+        pnl.IntegratorMechanism,
+        pnl.DriftDiffusionIntegrator(rate=0.5, offset=1, non_decision_time=1, seed=0),
+        "{{A: {{'random_draw': {0} }} }}".format(get_onnx_fixed_noise_str('randomnormal', mean=0, scale=1, seed=0, shape=(1,)))
+    ) + (x,)
+    for x in ddi_termination_conds
+]
+
+
+@pytest.mark.parametrize(
+    'mech_type, function, runtime_params, trial_termination_cond',
+    individual_functions_test_data
+)
+def test_mdf_equivalence_individual_functions(mech_type, function, runtime_params, trial_termination_cond):
+    import modeci_mdf.execution_engine as ee
+
+    A = mech_type(name='A', function=copy.deepcopy(function))
+    comp = pnl.Composition(pathways=[A])
+
+    try:
+        trial_termination_cond = eval(trial_termination_cond)
+    except TypeError:
+        pass
+    comp.scheduler.termination_conds = {pnl.TimeScale.TRIAL: trial_termination_cond}
+
+    comp.run(inputs={A: [[1.0]]}, runtime_params=eval(runtime_params))
+
+    model = pnl.get_mdf_model(comp)
+
+    eg = ee.EvaluableGraph(model.graphs[0], verbose=True)
+    eg.evaluate(initializer={'A_InputPort_0': 1.0})
+
+    assert pnl.safe_equals(comp.results, _get_mdf_model_results(eg))
 
 
 @pytest.mark.parametrize('filename', ['model_basic.py'])
