@@ -2407,7 +2407,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         non_decision_time = Parameter(0.0, modulable=True)
         threshold = Parameter(100.0, modulable=True)
         time_step_size = Parameter(1.0, modulable=True)
-        previous_time = Parameter(None, initializer='non_decision_time', pnl_internal=True)
+        previous_time = Parameter(0.0, initializer='non_decision_time', pnl_internal=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
         enable_output_type_conversion = Parameter(
@@ -2894,7 +2894,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         starting_point = 0.0
         # threshold = Parameter(100.0, modulable=True)
         time_step_size = Parameter(1.0, modulable=True)
-        previous_time = Parameter(None, initializer='starting_point', pnl_internal=True)
+        previous_time = Parameter(0.0, initializer='starting_point', pnl_internal=True)
         dimension = Parameter(3, stateful=False, read_only=True)
         initializer = Parameter([0], initalizer='variable', stateful=True)
         angle_function = Parameter(None, stateful=False, loggable=False)
