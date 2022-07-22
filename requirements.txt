@@ -12,7 +12,7 @@ modelspec<0.2.6
 networkx<2.9
 numpy<1.21.4, >=1.17.0
 pillow<9.3.0
-pint<0.18
+pint<0.20.0
 toposort<1.8
 torch>=1.8.0, <1.12.0; (platform_machine == 'AMD64' or platform_machine == 'x86_64') and platform_python_implementation == 'CPython' and implementation_name == 'cpython'
 typecheck-decorator<=1.2
