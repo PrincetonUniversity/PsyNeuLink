@@ -781,6 +781,37 @@ class OptimizationFunction(Function_Base):
         # FIX: RETURN SHOULD BE: outcomes, all_samples (THEN FIX CALL IN _function)
         return outcomes, num_evals
 
+    def reset_grid(self):
+        """Reset iterators in `search_space <GridSearch.search_space>"""
+        for s in self.search_space:
+            s.reset()
+        self.grid = itertools.product(*[s for s in self.search_space])
+
+    def _traverse_grid(self, variable, sample_num, context=None):
+        """Get next sample from grid.
+        This is assigned as the `search_function <OptimizationFunction.search_function>` of the `OptimizationFunction`.
+        """
+        if self.is_initializing:
+            return [signal.start for signal in self.search_space]
+        try:
+            sample = next(self.grid)
+        except StopIteration:
+            raise OptimizationFunctionError("Expired grid in {} run from {} "
+                                            "(execution_count: {}; num_iterations: {})".
+                format(self.__class__.__name__, self.owner.name,
+                       self.owner.parameters.execution_count.get(), self.num_iterations))
+        return sample
+
+    def _grid_complete(self, variable, value, iteration, context=None):
+        """Return False when search of grid is complete
+        This is assigned as the `search_termination_function <OptimizationFunction.search_termination_function>`
+        of the `OptimizationFunction`.
+        """
+        try:
+            return iteration == self.num_iterations
+        except AttributeError:
+            return True
+
     def _report_value(self, new_value):
         """Report value returned by `objective_function <OptimizationFunction.objective_function>` for sample."""
         pass
@@ -1583,12 +1614,6 @@ class GridSearch(OptimizationFunction):
 
         self.num_iterations = np.product([i.num for i in sample_iterators])
 
-    def reset_grid(self):
-        """Reset iterators in `search_space <GridSearch.search_space>"""
-        for s in self.search_space:
-            s.reset()
-        self.grid = itertools.product(*[s for s in self.search_space])
-
     def _get_optimized_controller(self):
         # self.objective_function may be a bound method of
         # OptimizationControlMechanism
@@ -2032,31 +2057,6 @@ class GridSearch(OptimizationFunction):
                 return_all_values = all_values
 
         return sample_optimal, value_optimal, return_all_samples, return_all_values
-
-    def _traverse_grid(self, variable, sample_num, context=None):
-        """Get next sample from grid.
-        This is assigned as the `search_function <OptimizationFunction.search_function>` of the `OptimizationFunction`.
-        """
-        if self.is_initializing:
-            return [signal.start for signal in self.search_space]
-        try:
-            sample = next(self.grid)
-        except StopIteration:
-            raise OptimizationFunctionError("Expired grid in {} run from {} "
-                                            "(execution_count: {}; num_iterations: {})".
-                format(self.__class__.__name__, self.owner.name,
-                       self.owner.parameters.execution_count.get(), self.num_iterations))
-        return sample
-
-    def _grid_complete(self, variable, value, iteration, context=None):
-        """Return False when search of grid is complete
-        This is assigned as the `search_termination_function <OptimizationFunction.search_termination_function>`
-        of the `OptimizationFunction`.
-        """
-        try:
-            return iteration == self.num_iterations
-        except AttributeError:
-            return True
 
 
 class GaussianProcess(OptimizationFunction):

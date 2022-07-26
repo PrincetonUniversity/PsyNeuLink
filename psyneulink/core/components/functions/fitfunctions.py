@@ -1,10 +1,13 @@
+import copy
+
 from fastkde import fastKDE
 from scipy.interpolate import interpn
 from scipy.optimize import differential_evolution
 
 from psyneulink.core.globals import SampleIterator
-from psyneulink.core.llvm import ExecutionMode
-from psyneulink.core.components.functions.nonstateful.optimizationfunctions import OptimizationFunction
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
+from psyneulink.core.components.functions.nonstateful.optimizationfunctions import OptimizationFunction, \
+    OptimizationFunctionError, SEARCH_SPACE
 
 from typing import Union, Optional, List, Dict, Any, Tuple, Callable
 import time
@@ -232,16 +235,62 @@ class MaxLikelihoodEstimator(OptimizationFunction):
         **kwargs,
     ):
 
+        search_function = self._traverse_grid
+        search_termination_function = self._grid_complete
+
         # A cached copy of our log-likelihood function. This can only be created after the function has been assigned
         # to a OptimizationControlMechanism under and ParameterEstimationComposition.
         self._ll_func = None
+
+        # Set num_iterations to a default value of 1, this will be reset in reset() based on the search space
+        self.num_iterations = 1
+
+        # When the OCM passes in the search space, we need to modify it so that the fitting parameters are
+        # set to single values since we want to use SciPy optimize to drive the search for these parameters.
+        # The randomization control signal is not set to a single value so that the composition still uses
+        # the evaluate machinery to get the different simulations for a given setting of parameters chosen
+        # by scipy during optimization. This variable keeps track of the original search space.
+        self._full_search_space = None
 
         super().__init__(
             search_space=search_space,
             save_samples=save_samples,
             save_values=save_values,
+            search_function=search_function,
+            search_termination_function=search_termination_function,
+            aggregation_function=None,
             **kwargs
         )
+
+    @handle_external_context(fallback_most_recent=True)
+    def reset(self, search_space, context=None, **kwargs):
+        """Assign size of `search_space <MaxLikelihoodEstimator.search_space>"""
+
+        # We need to modify the search space
+        self._full_search_space = copy.deepcopy(search_space)
+
+        # Modify all of the search space (except the randomization control signal) so that with each
+        # call to evaluate we only evaluate a single parameter setting. Scipy optimize will direct
+        # the search procedure so we will reset the actual value of these singleton iterators dynamically
+        # on each search iteration executed during the call to _function.
+        randomization_dimension = kwargs.get('randomization_dimension', len(search_space)-1)
+        for i in range(len(search_space)):
+            if i != randomization_dimension:
+                search_space[i] = SampleIterator([next(search_space[i])])
+
+        super(MaxLikelihoodEstimator, self).reset(search_space=search_space, context=context, **kwargs)
+        owner_str = ''
+        if self.owner:
+            owner_str = f' of {self.owner.name}'
+        for i in search_space:
+            if i is None:
+                raise OptimizationFunctionError(f"Invalid {repr(SEARCH_SPACE)} arg for {self.name}{owner_str}; "
+                                                f"every dimension must be assigned a {SampleIterator.__name__}.")
+            if i.num is None:
+                raise OptimizationFunctionError(f"Invalid {repr(SEARCH_SPACE)} arg for {self.name}{owner_str}; each "
+                                                f"{SampleIterator.__name__} must have a value for its 'num' attribute.")
+
+        self.num_iterations = np.product([i.num for i in search_space])
 
     def _run_simulations(self, *args, context=None):
         """
@@ -266,28 +315,21 @@ class MaxLikelihoodEstimator(OptimizationFunction):
 
             # Map the args in order of the fittable parameters
             if i < len(search_space)-1:
-                search_space[i] = SampleIterator(np.array([arg]))
+                assert search_space[i].num == 1, "Search space for this dimension must be a single value, during search " \
+                                                 "we will change the value but not the shape."
+
+                # All of this code is required to set the value of the singleton search space without creating a new
+                # object. It seems cleaner to just use search_space[i] = SampleIterator([arg]) but this seems to cause
+                # problems for Jan in compilation. Need to confirm this, maybe its ok as long as size doesn't change.
+                # We can protect against this with the above assert.
+                search_space[i].specification = [arg]
+                search_space[i].generator = search_space[i].specification
+                search_space[i].start = arg
             else:
                 raise ValueError("Too many arguments passed to run_simulations")
 
-        # Reset the randomization dimension sample iterator
-        search_space[self.randomization_dimension].reset()
-
-        # We also need to set the search_function and search_termination_function, this is a degenerate case where
-        # the search space is just iterating over the randomization dimension and the search_termination_function
-        # stops the search when the randomization dimension is exhausted.
-        search_function = lambda variable, sample_num, context: \
-            [[arg] for arg in args] + [[next(search_space[self.randomization_dimension])]]
-        search_termination_function = lambda sample, value, iter, context: \
-            iter > search_space[self.randomization_dimension].num - 1
-
-        self.parameters.search_space._set(search_space, context)
-        self.parameters.search_function._set(search_function, context)
-        self.parameters.search_termination_function._set(search_termination_function, context)
-
-        # We need to set the aggregation function to None so that calls to evaluate do not aggregate results
-        # of simulations. We want all results for all simulations so we can compute the likelihood ourselves.
-        self.parameters.aggregation_function._set(None, context)
+        # Reset the search grid
+        self.reset_grid()
 
         # FIXME: This is a hack to make sure that state_features gets all trials worth of inputs.
         # We need to set the inputs for the composition during simulation, override the state features with the
@@ -305,7 +347,7 @@ class MaxLikelihoodEstimator(OptimizationFunction):
             params=None,
         )
 
-        # We need to swap the simulation (randomization dimension) with the control allocation dimension so things
+        # We need to swap the simulation (randomization dimension) with the output dimension so things
         # are in the right order for the likelihood computation.
         all_values = np.transpose(all_values, (0, 2, 1))
 
@@ -369,6 +411,10 @@ class MaxLikelihoodEstimator(OptimizationFunction):
                  context=None,
                  params=None,
                  **kwargs):
+
+        # We need to set the aggregation function to None so that calls to evaluate do not aggregate results
+        # of simulations. We want all results for all simulations so we can compute the likelihood ourselves.
+        self.parameters.aggregation_function._set(None, context)
 
         # FIXME: Setting these default values up properly is a pain while initializing, ask Jon
         optimal_sample = np.array([[0.0], [0.0], [0.0]])

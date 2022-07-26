@@ -634,8 +634,7 @@ class ParameterEstimationComposition(Composition):
             initial_seed=initial_seed,
             same_seed_for_all_allocations=same_seed_for_all_parameter_combinations,
             context=context,
-            return_results=return_results
-            # comp_execution_mode="LLVM",
+            return_results=return_results,
         )
 
     @handle_external_context()
