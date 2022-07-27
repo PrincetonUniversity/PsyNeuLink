@@ -4,7 +4,7 @@ dill<=0.32
 elfi<0.8.5
 graphviz<0.21.0
 grpcio<1.43.0
-grpcio-tools<1.43.0
+grpcio-tools<1.48.0
 llvmlite<0.40
 matplotlib<3.5.3
 modeci_mdf>=0.3.4, <0.4.2
