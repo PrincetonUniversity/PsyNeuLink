@@ -39,7 +39,7 @@ from psyneulink.core.globals.keywords import \
     CONTRASTIVE_HEBBIAN_FUNCTION, TDLEARNING_FUNCTION, LEARNING_FUNCTION_TYPE, LEARNING_RATE, \
     KOHONEN_FUNCTION, GAUSSIAN, LINEAR, EXPONENTIAL, HEBBIAN_FUNCTION, RL_FUNCTION, BACKPROPAGATION_FUNCTION, MATRIX, \
     MSE, SSE
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import is_numeric, scalar_distance, convert_to_np_array
 
@@ -448,6 +448,7 @@ class BayesGLM(LearningFunction):
         gamma_size_n = 1
         gamma_size_prior = 1
 
+    @check_user_specified
     def __init__(self,
                  default_variable=None,
                  mu_0=None,
@@ -774,6 +775,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
 
     default_learning_rate = 0.05
 
+    @check_user_specified
     def __init__(self,
                  default_variable=None,
                  # learning_rate: tc.optional(tc.optional(parameter_spec)) = None,
@@ -1045,6 +1047,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
                                   modulable=True)
     default_learning_rate = 0.05
 
+    @check_user_specified
     def __init__(self,
                  default_variable=None,
                  learning_rate=None,
@@ -1278,6 +1281,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
 
     default_learning_rate = 0.05
 
+    @check_user_specified
     def __init__(self,
                  default_variable=None,
                  # learning_rate: tc.optional(tc.optional(parameter_spec)) = None,
@@ -1585,6 +1589,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
             read_only=True
         )
 
+    @check_user_specified
     def __init__(self,
                  default_variable=None,
                  # learning_rate: tc.optional(tc.optional(parameter_spec)) = None,
@@ -1934,6 +1939,7 @@ class BackPropagation(LearningFunction):
 
     default_learning_rate = 1.0
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -2175,6 +2181,7 @@ class TDLearning(Reinforcement):
     """
     componentName = TDLEARNING_FUNCTION
 
+    @check_user_specified
     def __init__(self,
                  default_variable=None,
                  learning_rate=None,

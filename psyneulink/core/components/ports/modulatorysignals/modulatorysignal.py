@@ -412,6 +412,7 @@ from psyneulink.core.globals.defaults import defaultModulatoryAllocation
 from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, CONTROL, DISABLE, MAYBE, MECHANISM, MODULATION, MODULATORY_SIGNAL, MULTIPLICATIVE_PARAM, \
     OVERRIDE, PROJECTIONS, VARIABLE
+from psyneulink.core.globals.parameters import check_user_specified
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
 __all__ = [
@@ -562,6 +563,7 @@ class ModulatorySignal(OutputPort):
     #     PREFERENCE_SET_NAME: 'OutputPortCustomClassPreferences',
     #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
+    @check_user_specified
     def __init__(self,
                  owner=None,
                  size=None,

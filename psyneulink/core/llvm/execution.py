@@ -48,10 +48,23 @@ def _tupleize(x):
         return x if x is not None else tuple()
 
 def _element_dtype(x):
+    """
+    Extract base builtin type from aggregate type.
+
+    Throws assertion failure if the aggregate type includes more than one base type.
+    The assumption is that array of builtin type has the same binary layout as
+    the original aggregate and it's easier to construct
+    """
     dt = np.dtype(x)
     while dt.subdtype is not None:
         dt = dt.subdtype[0]
 
+    if not dt.isbuiltin:
+        fdts = (_element_dtype(f[0]) for f in dt.fields.values())
+        dt = next(fdts)
+        assert all(dt == fdt for fdt in fdts)
+
+    assert dt.isbuiltin, "Element type is not builtin: {} from {}".format(dt, np.dtype(x))
     return dt
 
 def _pretty_size(size):
@@ -683,7 +696,7 @@ class CompExecution(CUDAExecution):
 
         # Construct input variable
         var_dty = _element_dtype(bin_func.byref_arg_types[5])
-        converted_variable = np.asfarray(np.concatenate(variable), dtype=var_dty)
+        converted_variable = np.concatenate(variable, dtype=var_dty)
 
         # Output ctype
         out_ty = bin_func.byref_arg_types[4] * num_evaluations
@@ -715,17 +728,27 @@ class CompExecution(CUDAExecution):
 
         ct_results = out_ty()
         ct_variable = converted_variale.ctypes.data_as(self.__bin_func.c_func.argtypes[5])
-        # There are 7 arguments to evaluate_alloc_range:
-        # comp_param, comp_state, from, to, results, input, comp_data
         jobs = min(os.cpu_count(), num_evaluations)
         evals_per_job = (num_evaluations + jobs - 1) // jobs
-        executor = concurrent.futures.ThreadPoolExecutor(max_workers=jobs)
-        for i in range(jobs):
-            start = i * evals_per_job
-            stop = min((i + 1) * evals_per_job, num_evaluations)
-            executor.submit(self.__bin_func, ct_param, ct_state, int(start),
-                            int(stop), ct_results, ct_variable, ct_data)
 
-        executor.shutdown()
+        parallel_start = time.time()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as ex:
+            # There are 7 arguments to evaluate_alloc_range:
+            # comp_param, comp_state, from, to, results, input, comp_data
+            results = [ex.submit(self.__bin_func, ct_param, ct_state,
+                                 int(i * evals_per_job),
+                                 min((i + 1) * evals_per_job, num_evaluations),
+                                 ct_results, ct_variable, ct_data)
+                       for i in range(jobs)]
+
+        parallel_stop = time.time()
+        if "time_stat" in self._debug_env:
+            print("Time to run {} executions of '{}' in {} threads: {}".format(
+                      num_evaluations, self.__bin_func.name, jobs,
+                      parallel_stop - parallel_start))
+
+
+        exceptions = [r.exception() for r in results]
+        assert all(e is None for e in exceptions), "Not all jobs finished sucessfully: {}".format(exceptions)
 
         return ct_results

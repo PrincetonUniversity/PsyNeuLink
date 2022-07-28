@@ -307,7 +307,7 @@ from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.keywords import \
     INIT_EXECUTE_METHOD_ONLY, MULTIPLICATIVE_PARAM, PROJECTIONS
-from psyneulink.core.globals.parameters import Parameter, ParameterAlias
+from psyneulink.core.globals.parameters import Parameter, ParameterAlias, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_iterable, convert_to_list
@@ -662,6 +662,7 @@ class LCControlMechanism(ControlMechanism):
 
         modulated_mechanisms = Parameter(None, stateful=False, loggable=False)
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -821,8 +822,7 @@ class LCControlMechanism(ControlMechanism):
     ):
         """Updates LCControlMechanism's ControlSignal based on input and mode parameter value
         """
-        # IMPLEMENTATION NOTE:  skip ControlMechanism._execute since it is a stub method that returns input_values
-        output_values = super(ControlMechanism, self)._execute(
+        output_values = super()._execute(
             variable=variable,
             context=context,
             runtime_params=runtime_params,
@@ -834,58 +834,54 @@ class LCControlMechanism(ControlMechanism):
 
         return gain_t, output_values[0], output_values[1], output_values[2]
 
-    def _gen_llvm_invoke_function(self, ctx, builder, function, params, state, variable, *, tags:frozenset):
-        assert function is self.function
-        mf_out, builder = super()._gen_llvm_invoke_function(ctx, builder, function, params, state, variable, tags=tags)
+    def _gen_llvm_mechanism_functions(self, ctx, builder, m_base_params, m_params, m_state, m_in,
+                                      m_val, ip_output, *, tags:frozenset):
+        mf_out, builder = super()._gen_llvm_mechanism_functions(ctx, builder, m_base_params,
+                                                                m_params, m_state, m_in,
+                                                                None, ip_output, tags=tags)
 
         # prepend gain type (matches output[1] type)
         gain_ty = mf_out.type.pointee.elements[1]
-        elements = gain_ty, *mf_out.type.pointee.elements
-        elements_ty = pnlvm.ir.LiteralStructType(elements)
 
-        # allocate new output type
-        new_out = builder.alloca(elements_ty, name="function_out")
+        assert all(e == gain_ty for e in mf_out.type.pointee.elements)
+        mech_out_ty = pnlvm.ir.ArrayType(gain_ty, len(mf_out.type.pointee.elements) + 1)
+
+        # allocate a new output location if the type doesn't match the one
+        # provided by the caller.
+        if mech_out_ty != m_val.type.pointee:
+            m_val = builder.alloca(mech_out_ty, name="mechanism_out")
 
         # Load mechanism parameters
-        params = builder.function.args[0]
-        scaling_factor_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
+        scaling_factor_ptr = pnlvm.helpers.get_param_ptr(builder, self, m_params,
                                                          "scaling_factor_gain")
-        base_factor_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
+        base_factor_ptr = pnlvm.helpers.get_param_ptr(builder, self, m_params,
                                                       "base_level_gain")
-        # If modulated, scaling factor is a single element array
-        if isinstance(scaling_factor_ptr.type.pointee, pnlvm.ir.ArrayType):
-            assert len(scaling_factor_ptr.type.pointee) == 1
-            scaling_factor_ptr = builder.gep(scaling_factor_ptr,
-                                             [ctx.int32_ty(0), ctx.int32_ty(0)])
-        # If modulated, base factor is a single element array
-        if isinstance(base_factor_ptr.type.pointee, pnlvm.ir.ArrayType):
-            assert len(base_factor_ptr.type.pointee) == 1
-            base_factor_ptr = builder.gep(base_factor_ptr,
-                                          [ctx.int32_ty(0), ctx.int32_ty(0)])
-        scaling_factor = builder.load(scaling_factor_ptr)
-        base_factor = builder.load(base_factor_ptr)
+        # If modulated, parameters are single element array
+        scaling_factor = pnlvm.helpers.load_extract_scalar_array_one(builder, scaling_factor_ptr)
+        base_factor = pnlvm.helpers.load_extract_scalar_array_one(builder, base_factor_ptr)
 
-        # Apply to the entire vector
+        # Apply to the entire first subvector
         vi = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(1)])
-        vo = builder.gep(new_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        vo = builder.gep(m_val, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
         with pnlvm.helpers.array_ptr_loop(builder, vi, "LC_gain") as (b1, index):
             in_ptr = b1.gep(vi, [ctx.int32_ty(0), index])
+            out_ptr = b1.gep(vo, [ctx.int32_ty(0), index])
+
             val = b1.load(in_ptr)
             val = b1.fmul(val, scaling_factor)
             val = b1.fadd(val, base_factor)
 
-            out_ptr = b1.gep(vo, [ctx.int32_ty(0), index])
             b1.store(val, out_ptr)
 
         # copy the main function return value
         for i, _ in enumerate(mf_out.type.pointee.elements):
             ptr = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
-            out_ptr = builder.gep(new_out, [ctx.int32_ty(0), ctx.int32_ty(i + 1)])
+            out_ptr = builder.gep(m_val, [ctx.int32_ty(0), ctx.int32_ty(i + 1)])
             val = builder.load(ptr)
             builder.store(val, out_ptr)
 
-        return new_out, builder
+        return m_val, builder
 
     # 5/8/20: ELIMINATE SYSTEM
     # SEEMS TO STILL BE USED BY SOME MODELS;  DELETE WHEN THOSE ARE UPDATED

@@ -33,7 +33,22 @@ marks_default_skip = [mark_stress_tests]
 def pytest_addoption(parser):
     parser.addoption('--{0}'.format(mark_stress_tests), action='store_true', default=False, help='Run {0} tests (long)'.format(mark_stress_tests))
 
+    parser.addoption('--fp-precision', action='store', default='fp64', choices=['fp32', 'fp64'],
+                     help='Set default fp precision for the runtime compiler. Default: fp64')
+
+def pytest_sessionstart(session):
+    precision = session.config.getvalue("--fp-precision")
+    if precision == 'fp64':
+        pnlvm.LLVMBuilderContext.default_float_ty = pnlvm.ir.DoubleType()
+    elif precision == 'fp32':
+        pnlvm.LLVMBuilderContext.default_float_ty = pnlvm.ir.FloatType()
+    else:
+        assert False, "Unsupported precision parameter: {}".format(precision)
+
 def pytest_runtest_setup(item):
+    # Check that all 'cuda' tests are also marked 'llvm'
+    assert 'llvm' in item.keywords or 'cuda' not in item.keywords
+
     for m in marks_default_skip:
         if m in item.keywords and not item.config.getvalue(m):
             pytest.skip('{0} tests not requested'.format(m))
@@ -96,6 +111,16 @@ def pytest_runtest_teardown(item):
 def comp_mode_no_llvm():
     # dummy fixture to allow 'comp_mode' filtering
     pass
+
+@pytest.helpers.register
+def llvm_current_fp_precision():
+    float_ty = pnlvm.LLVMBuilderContext.get_current().float_ty
+    if float_ty == pnlvm.ir.DoubleType():
+        return 'fp64'
+    elif float_ty == pnlvm.ir.FloatType():
+        return 'fp32'
+    else:
+        assert False, "Unknown floating point type: {}".format(float_ty)
 
 @pytest.helpers.register
 def get_comp_execution_modes():

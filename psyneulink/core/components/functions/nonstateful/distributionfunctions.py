@@ -39,7 +39,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.utilities import convert_to_np_array, parameter_spec
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 
 __all__ = [
     'DistributionFunction', 'DRIFT_RATE', 'DRIFT_RATE_VARIABILITY', 'DriftDiffusionAnalytical', 'ExponentialDist',
@@ -159,6 +159,7 @@ class NormalDist(DistributionFunction):
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -341,6 +342,7 @@ class UniformToNormalDist(DistributionFunction):
         mean = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -467,6 +469,7 @@ class ExponentialDist(DistributionFunction):
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -593,6 +596,7 @@ class UniformDist(DistributionFunction):
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -750,6 +754,7 @@ class GammaDist(DistributionFunction):
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         dist_shape = Parameter(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -884,6 +889,7 @@ class WaldDist(DistributionFunction):
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         mean = Parameter(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -1120,6 +1126,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
             read_only=True
         )
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,

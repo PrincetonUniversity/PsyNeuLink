@@ -159,13 +159,13 @@ from psyneulink.core.globals.keywords import (
     IDENTITY_MATRIX, INVERSE_HOLLOW_MATRIX, NAME, PREFERENCE_SET_NAME, RANDOM_CONNECTIVITY_MATRIX, VALUE, VARIABLE,
     MODEL_SPEC_ID_METADATA, MODEL_SPEC_ID_MDF_VARIABLE
 )
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import REPORT_OUTPUT_PREF, is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import (
     convert_to_np_array, get_global_seed, is_instance_or_subclass, object_has_single_value, parameter_spec, parse_valid_identifier, safe_len,
-    SeededRandomState, contains_type
+    SeededRandomState, contains_type, is_numeric
 )
 
 __all__ = [
@@ -605,6 +605,7 @@ class Function_Base(Function):
     # Note: the following enforce encoding as 1D np.ndarrays (one array per variable)
     variableEncodingDim = 1
 
+    @check_user_specified
     @abc.abstractmethod
     def __init__(
         self,
@@ -897,7 +898,7 @@ class Function_Base(Function):
             if typ not in mdf_functions.mdf_functions:
                 warnings.warn(f'{typ} is not an MDF standard function, this is likely to produce an incompatible model.')
 
-            model.function = {typ: parameters[self._model_spec_id_parameters]}
+            model.function = typ
 
         return model
 
@@ -995,6 +996,7 @@ class ArgumentTherapy(Function_Base):
     # These are used both to type-cast the params, and as defaults if none are assigned
     #  in the initialization call or later (using either _instantiate_defaults or during a function call)
 
+    @check_user_specified
     def __init__(self,
                  default_variable=None,
                  propensity=10.0,
@@ -1145,6 +1147,7 @@ class EVCAuxiliaryFunction(Function_Base):
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
        }
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  function,
@@ -1185,7 +1188,14 @@ def get_matrix(specification, rows=1, cols=1, context=None):
 
     # Matrix provided (and validated in _validate_params); convert to array
     if isinstance(specification, (list, np.matrix)):
-        return convert_to_np_array(specification)
+        # # MODIFIED 4/9/22 OLD:
+        # return convert_to_np_array(specification)
+        # MODIFIED 4/9/22 NEW:
+        if is_numeric(specification):
+            return convert_to_np_array(specification)
+        else:
+            return
+        # MODIFIED 4/9/22 END
 
     if isinstance(specification, np.ndarray):
         if specification.ndim == 2:

@@ -8,8 +8,8 @@
 
 # ********************************************* Composition ************************************************************
 
-"""
 
+"""
 Contents
 --------
 
@@ -111,24 +111,36 @@ either arguments of the constructor and/or methods that allow Components to be a
 
 The following arguments of the Composition's constructor can be used to add Compnents when it is constructed:
 
+   .. _Composition_Pathways_Arg:
+
+    - **pathways**
+        adds one or more `Pathways <Composition_Pathways>` to the Composition; this is equivalent to constructing
+        the Composition and then calling its `add_pathways <Composition.add_pathways>` method, and can use the
+        same forms of specification as the **pathways** argument of that method (see `Pathway_Specification` for
+        additonal details). If any `learning Pathways <Composition_Learning_Pathway>` are included, then the
+        constructor's **disable_learning** argument can be used to disable learning on those by default (though it
+        will still allow learning to occur on any other Compositions, either nested within the current one,
+        or within which the current one is nested (see `Composition_Learning` for a full description).
+
+   .. _Composition_Nodes_Arg:
+
     - **nodes**
         adds the specified `Nodes <Composition_Nodes>` to the Composition;  this is equivalent to constructing the
         Composition and then calling its `add_nodes <Composition.add_nodes>` method, and takes the same values as the
-        **nodes** argument of that method.
+        **nodes** argument of that method (note that this does *not* construct `Pathways <Pathway>` for the specified
+        nodes; the **pathways** arg or  `add_pathways <Composition.add_pathways>` method must be used to do so).
+
+   .. _Composition_Projections_Arg:
 
     - **projections**
         adds the specified `Projections <Projection>` to the Composition;  this is equivalent to constructing the
         Composition and then calling its `add_projections <Composition.add_projections>` method, and takes the same
-        values as the **projections** argument of that method.
+        values as the **projections** argument of that method.  In general, this is not neded -- default Projections
+        are created for Pathways and/or Nodes added to the Composition using the methods described above; however
+        it can be useful for custom configurations, including the implementation of specific Projection `matrices
+         <MappingProjection.matrix>`.
 
-    - **pathways**
-        adds one or more `Pathways <Composition_Pathways>` to the Composition; this is equivalent to constructing the
-        Composition and then calling its `add_pathways <Composition.add_pathways>` method, and can use the same forms
-        of specification as the **pathways** argument of that method.  If any `learning Pathways
-        <Composition_Learning_Pathway>` are included, then the constructor's **disable_learning** argument can be
-        used to disable learning on those by default (though it will still allow learning to occur on any other
-        Compositions, either nested within the current one, or within which the current one is nested (see
-        `Composition_Learning` for a full description).
+   .. _Composition_Controller_Arg:
 
     - **controller**
        adds the specified `ControlMechanism` (typically an `OptimizationControlMechanism`) as the `controller
@@ -179,10 +191,10 @@ These methods can be used to add `Pathways <Composition_Pathways>` to an existin
 
     - `add_linear_processing_pathway <Composition.add_linear_processing_pathway>`
 
-        adds and a list of `Nodes <Composition_Nodes>` and `Projections <Projection>` to the Composition,
-        inserting a default Projection between any adjacent pair of Nodes for which one is not otherwise specified
-        (or possibly a set of Projections if either Node is a Composition -- see method documentation for details);
-        returns the `Pathway` added to the Composition.
+        adds and a list of `Nodes <Composition_Nodes>` and `Projections <Projection>` to the Composition, inserting
+        a default Projection between any adjacent set(s) of Nodes for which a Projection is not otherwise specified
+        (see method documentation and `Pathway_Specification` for additonal details); returns the `Pathway` added to
+        the Composition.
 
     COMMENT:
     The following set of `learning methods <Composition_Learning_Methods>` can be used to add `Pathways
@@ -2730,7 +2742,8 @@ from psyneulink.core.components.functions.nonstateful.learningfunctions import \
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError, MechanismList
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
-from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP, OptimizationControlMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP, \
+    OptimizationControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
     LearningMechanism, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
@@ -2747,7 +2760,8 @@ from psyneulink.core.components.projections.modulatory.learningprojection import
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection, MappingError
 from psyneulink.core.components.projections.pathway.pathwayprojection import PathwayProjection_Base
-from psyneulink.core.components.projections.projection import Projection_Base, ProjectionError, DuplicateProjectionError
+from psyneulink.core.components.projections.projection import \
+    Projection_Base, ProjectionError, DuplicateProjectionError
 from psyneulink.core.components.shellclasses import Composition_Base
 from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.compositions.report import Report, \
@@ -2764,16 +2778,16 @@ from psyneulink.core.globals.keywords import \
     MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, NODE, OBJECTIVE_MECHANISM, ONLINE, OUTCOME, \
     OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
     PARAMETER, PARAMETER_CIM_NAME, PORT, \
-    PROCESSING_PATHWAY, PROJECTION, PROJECTION_TYPE, PROJECTION_PARAMS, PULSE_CLAMP, \
-    SAMPLE, SHADOW_INPUTS, SOFT_CLAMP, SSE, \
+    PROCESSING_PATHWAY, PROJECTION, PROJECTION_TYPE, PROJECTION_PARAMS, PULSE_CLAMP, RECEIVER, \
+    SAMPLE, SENDER, SHADOW_INPUTS, SOFT_CLAMP, SSE, \
     TARGET, TARGET_MECHANISM, TEXT, VARIABLE, WEIGHT, OWNER_MECH
 from psyneulink.core.globals.log import CompositionLog, LogCondition
-from psyneulink.core.globals.parameters import Parameter, ParametersBase
+from psyneulink.core.globals.parameters import Parameter, ParametersBase, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, _assign_prefs
 from psyneulink.core.globals.registry import register_category
-from psyneulink.core.globals.utilities import \
-    ContentAddressableList, call_with_pruned_args, convert_to_list, nesting_depth, convert_to_np_array, is_numeric, parse_valid_identifier
+from psyneulink.core.globals.utilities import ContentAddressableList, call_with_pruned_args, convert_to_list, \
+    nesting_depth, convert_to_np_array, is_numeric, is_matrix, parse_valid_identifier
 from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Any, Condition, Never
 from psyneulink.core.scheduling.scheduler import Scheduler, SchedulingMode
 from psyneulink.core.scheduling.time import Time, TimeScale
@@ -3316,12 +3330,30 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     ---------
 
     pathways : Pathway specification or list[Pathway specification...]
-        specifies one or more Pathways to add to the Compositions (see **pathways** argument of `add_pathways
-        `Composition.add_pathways` for specification format).
+        specifies one or more Pathways to add to the Compositions. A list containing `Node <Composition_Nodes>`
+        and possible `Projection` specifications at its top level is treated as a single `Pathway`; a list containing
+        any nested lists or other forms of `Pathway specification <Pathway_Specification_Formats>` is treated as
+        `multiple pathways <Pathway_Specification_Multiple>` (see `pathways <Composition_Pathways_Arg>` as
+        well as `Pathway specification <Pathway_Specification>` for additional details).
+
+        .. technical_note::
+
+           The design pattern for use of sets and lists in specifying the **pathways** argument are:
+             - sets comprise Nodes that all occupy the same (parallel) position within a processing Pathway;
+             - lists comprise *sequences* of Nodes; embedded list are either ignored or a generate an error (see below)
+               (this is because lists of Nodes are interpreted as Pathways and Pathways cannot be nested, which would be
+               redundant since the same can be accomplished by simply including the items "inline" within a single list)
+             - if the Pathway specification contains (in its outer list):
+                 - only a single item or set of items, each is treated as a SINGLETON <NodeRole.SINGLETON> in a Pathway;
+                 - one or more lists, the items in each list are treated as separate (parallel) pathways;
+                 - singly-nested lists ([[[A,B]],[[C,D]]]}), they are collapsed and treated as a Pathway;
+                 - any list with more than one list nested within it ([[[A,B],[C,D]}), an error is generated;
+                 - Pathway objects are treated as a list (if its pathway attribute is a set, it is wrapped in a list)
+             (see `tests <test_various_pathway_configurations_in_constructor>` for examples)
 
     nodes : `Mechanism <Mechanism>`, `Composition` or list[`Mechanism <Mechanism>`, `Composition`] : default None
         specifies one or more `Nodes <Composition_Nodes>` to add to the Composition;  these are each treated as
-        `SINGLETONs <NodeRole.SINGLETON>` unless they are explicitly assigned `Projections <Projection>`.
+        `SINGLETON <NodeRole.SINGLETON>`\\s unless they are explicitly assigned `Projections <Projection>`.
 
     projections : `Projection <Projection>` or list[`Projection <Projection>`] : default None
         specifies one or more `Projections <Projection>` to add to the Composition;  these are not functional
@@ -3449,7 +3481,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         argument of the Composition's constructor and/or one of its `Pathway addition methods
         <Composition_Pathway_Addition_Methods>`; each item is a list of `Nodes <Composition_Nodes>`
         (`Mechanisms <Mechanism>` and/or Compositions) intercolated with the `Projection(s) <Projection>` between each
-        pair of Nodes;  both Nodes are Mechanism, then only a single Projection can be specified;  if either is a
+        pair of Nodes; if both Nodes are Mechanisms, then only a single Projection can be specified;  if either is a
         Composition then, under some circumstances, there can be a set of Projections, specifying how the `INPUT
         <NodeRole.INPUT>` Node(s) of the sender project to the `OUTPUT <NodeRole.OUTPUT>` Node(s) of the receiver
         (see `add_linear_processing_pathway` for additional details).
@@ -3711,6 +3743,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     class _CompilationData(ParametersBase):
         execution = None
 
+    @check_user_specified
     def __init__(
             self,
             pathways=None,
@@ -3954,9 +3987,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._create_CIM_ports(context=context)
         # Call after above so shadow_projections have relevant organization
         self._update_shadow_projections(context=context)
-        # # FIX: 12/29/21 / 3/30/22: MOVE TO _update_shadow_projections
-        # # Call again to accommodate any changes from _update_shadow_projections
-        # self._determine_node_roles(context=context)
         self._check_for_projection_assignments(context=context)
         self.needs_update_graph = False
 
@@ -4553,7 +4583,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #   consideration set.  Identifying these assumes that graph_processing has been called/updated,
         #   which identifies and "breaks" cycles, and assigns FEEDBACK_SENDER to the appropriate consideration set(s).
         for node in self.nodes:
-            if not any([efferent for efferent in node.efferents if efferent.receiver.owner is not self.output_CIM]):
+            if not any([
+                efferent.is_active_in_composition(self) for efferent in node.efferents
+                if efferent.receiver.owner is not self.output_CIM
+            ]):
                 self._add_node_role(node, NodeRole.TERMINAL)
 
     def _add_node_aux_components(self, node, context=None):
@@ -4815,14 +4848,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
               this is currently the case, but is inconsistent with the analog in Control,
               where monitored Mechanisms *are* allowed to be OUTPUT;
               therefore, might be worth allowing TARGET_MECHANISM to be assigned as OUTPUT
-          - all Nodes for which OUTPUT has been assigned as a required_node_role, inculding by user
+          - all Nodes for which OUTPUT has been assigned as a required_node_role, inclUding by user
             (i.e., in self.required_node_roles[NodeRole.OUTPUT]
 
         TERMINAL:
           - all Nodes that
             - are not an ObjectiveMechanism assigned the role CONTROLLER_OBJECTIVE
             - or have *no* efferent projections OR
-            - or for for which any efferent projections are either:
+            - or for which any efferent projections are either:
                 - to output_CIM OR
                 - assigned as feedback (i.e., self.graph.comp_to_vertex[efferent].feedback == EdgeType.FEEDBACK
           .. _note::
@@ -4917,9 +4950,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #    and doesn't project to any Nodes other than its `AutoassociativeLearningMechanism`
                 #    (this is not picked up as a `TERMINAL` since it projects to the `AutoassociativeLearningMechanism`)
                 #    but can (or already does) project to an output_CIM
-                if all((p.receiver.owner is node
+                if all((p.receiver.owner is node # <- recurrence
                         or isinstance(p.receiver.owner, AutoAssociativeLearningMechanism)
-                        or p.receiver.owner is self.output_CIM)
+                        or p.receiver.owner is self.output_CIM) # <- already projects to an output_CIM
                        for p in node.efferents):
                     self._add_node_role(node, NodeRole.OUTPUT)
                     continue
@@ -5746,13 +5779,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 return
             else:
                 # Initialize Projection
-                projection._init_args['sender'] = sender
-                projection._init_args['receiver'] = receiver
-                try:
-                    projection._deferred_init()
-                except DuplicateProjectionError:
-                    # return projection
-                    return
+                projection._init_args[SENDER] = sender
+                projection._init_args[RECEIVER] = receiver
+                projection._deferred_init()
 
         else:
             existing_projections = self._check_for_existing_projections(projection, sender=sender, receiver=receiver)
@@ -5787,6 +5816,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             projection.is_processing = False
             # KDM 5/24/19: removing below rename because it results in several existing_projections
             # projection.name = f'{sender} to {receiver}'
+
+            # check for required role specification of feedback projections
+            for node, role in self.required_node_roles:
+                if (
+                    (node == projection.sender.owner and role == NodeRole.FEEDBACK_SENDER)
+                    or (node == projection.receiver.owner and role == NodeRole.FEEDBACK_RECEIVER)
+                ):
+                    feedback = True
+
             self.graph.add_component(projection, feedback=feedback)
 
             try:
@@ -6339,6 +6377,46 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     # region ----------------------------------  PROCESSING  -----------------------------------------------------------
 
+    def _parse_pathway(self, pathway, name, pathway_arg_str):
+        from psyneulink.core.compositions.pathway import Pathway, _is_pathway_entry_spec
+
+        # Deal with Pathway() or tuple specifications
+        if isinstance(pathway, Pathway):
+            # Give precedence to name specified in call to add_linear_processing_pathway
+            pathway_name = name or pathway.name
+            pathway = pathway.pathway
+        else:
+            pathway_name = name
+
+        if isinstance(pathway, tuple):
+            # If tuple is just a single Node specification for a pathway, return in list:
+            if _is_pathway_entry_spec(pathway, NODE):
+                pathway = [pathway]
+            # If tuple is used to specify a sequence of nodes, convert to list (even though not documented):
+            elif all(_is_pathway_entry_spec(n, ANY) for n in pathway):
+                pathway = list(pathway)
+            # If tuple is (pathway, LearningFunction), get pathway and ignore LearningFunction
+            elif isinstance(pathway[1],type) and issubclass(pathway[1], LearningFunction):
+                warnings.warn(f"{LearningFunction.__name__} found in specification of {pathway_arg_str}: {pathway[1]}; "
+                              f"it will be ignored")
+                pathway = pathway[0]
+            else:
+                raise CompositionError(f"Unrecognized tuple specification in {pathway_arg_str}: {pathway}")
+        elif not isinstance(pathway, collections.abc.Iterable) or all(_is_pathway_entry_spec(n, ANY) for n in pathway):
+            pathway = convert_to_list(pathway)
+        else:
+            bad_entry_error_msg = f"The following entries in a pathway specified for '{self.name}' are not " \
+                                  f"a Node (Mechanism or Composition) or a Projection nor a set of either: "
+            bad_entries = [repr(entry) for entry in pathway if not _is_pathway_entry_spec(entry, ANY)]
+            raise CompositionError(f"{bad_entry_error_msg}{','.join(bad_entries)}")
+            # raise CompositionError(f"Unrecognized specification in {pathway_arg_str}: {pathway}")
+
+        lists = [entry for entry in pathway
+                 if isinstance(entry, list) and all(_is_pathway_entry_spec(node, NODE) for node in entry)]
+        if lists:
+            raise CompositionError(f"Pathway specification for {pathway_arg_str} has embedded list(s): {lists}")
+        return pathway, pathway_name
+
     # FIX: REFACTOR TO TAKE Pathway OBJECT AS ARGUMENT
     def add_pathway(self, pathway):
         """Add an existing `Pathway <Composition_Pathways>` to the Composition
@@ -6371,50 +6449,193 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._analyze_graph()
 
     @handle_external_context()
+    def add_pathways(self, pathways, context=None):
+        """Add pathways to the Composition.
+
+        Arguments
+        ---------
+
+        pathways : Pathway or list[Pathway]
+            specifies one or more `Pathways <Pathway>` to add to the Composition.  Any valid form of `Pathway
+            specification <Pathway_Specification>` can be used.  A set can also be used, all elements of which are
+            `Nodes <Composition_Nodes>`, in which case a separate `Pathway` is constructed for each.
+
+        Returns
+        -------
+
+        list[Pathway] :
+            List of `Pathways <Pathway>` added to the Composition.
+
+        """
+
+        # Possible specifications for **pathways** arg:
+        #  Node specs (single or set):
+        #  0  Single node:  NODE
+        #  1  Set:  {NODE...} -> generate a Pathway for each NODE
+        #  Single pathway spec (list, tuple or dict):
+        #  2   single list:   PWAY = [NODE] or [NODE...] in which *all* are NODES with optional intercolated Projections
+        #  2.5 single with sets: PWAY = [NODE or {NODE...}] or [NODE or {NODE...}, NODE or {NODE...}...]
+        #  3   single tuple:  (PWAY, LearningFunction) = (NODE, LearningFunction) or
+        #                                                 ([NODE...], LearningFunction)
+        #  4   single dict:   {NAME: PWAY} = {NAME: NODE} or
+        #                                    {NAME: [NODE...]} or
+        #                                    {NAME: ([NODE...], LearningFunction)}
+        #  Multiple pathway specs (in outer list):
+        #  5   list with list(s): [PWAY] = [NODE, [NODE]] or [[NODE...]...]
+        #  6   list with tuple(s):  [(PWAY, LearningFunction)...] = [(NODE..., LearningFunction)...] or
+        #                                                       [([NODE...], LearningFunction)...]
+        #  7   list with dict: [{NAME: PWAY}...] = [{NAME: NODE...}...] or
+        #                                          [{NAME: [NODE...]}...] or
+        #                                          [{NAME: (NODE, LearningFunction)}...] or
+        #                                          [{NAME: ([NODE...], LearningFunction)}...]
+
+        from psyneulink.core.compositions.pathway import Pathway, _is_node_spec, _is_pathway_entry_spec
+
+        if context.source == ContextFlags.COMMAND_LINE:
+            pathways_arg_str = f"'pathways' arg for the add_pathways method of {self.name}"
+        elif context.source == ContextFlags.CONSTRUCTOR:
+            pathways_arg_str = f"'pathways' arg of the constructor for {self.name}"
+        else:
+            assert False, f"PROGRAM ERROR:  unrecognized context passed to add_pathways of {self.name}."
+        context.string = pathways_arg_str
+
+        if not pathways:
+            return
+
+        # Possibilities 0, 3 or 4 (single NODE, set of NODESs tuple, dict or Pathway specified, so convert to list
+        if _is_node_spec(pathways) or isinstance(pathways, (tuple, dict, Pathway)):
+            pathways = convert_to_list(pathways)
+
+        # Possibility 1 (set of Nodes): create a Pathway for each Node (since set is in pathways arg)
+        elif isinstance(pathways, set):
+            pathways = [pathways]
+
+        # Possibility 2 (list is a single pathway spec) or 2.5 (includes one or more sets):
+        if (isinstance(pathways, list) and
+                # First item must be a node_spec or set of them
+                ((_is_node_spec(pathways[0])
+                  or (isinstance(pathways[0], set) and all(_is_node_spec(item) for item in pathways[0])))
+                # All other items must be either Nodes, Projections or sets
+                 and all(_is_pathway_entry_spec(p, ANY) for p in pathways))):
+            # Place in outter list (to conform to processing of multiple pathways below)
+            pathways = [pathways]
+            # assert False, f"GOT TO POSSIBILITY 2" # SHOULD HAVE BEEN DONE ABOVE
+
+        # If pathways is not now a list it must be illegitimate
+        if not isinstance(pathways, list):
+            raise CompositionError(f"The {pathways_arg_str} must be a "
+                                   f"Node, list, set, tuple, dict or Pathway object: {pathways}.")
+
+        # pathways should now be a list in which each entry should be *some* form of pathway specification
+        #    (including original spec as possibilities 5, 6, or 7)
+
+        # If there are any lists of Nodes in pathway, or a Pathway or dict with such a list,
+        #     then treat ALL entries as parallel pathways, and embed in lists"
+        if (isinstance(pathways, collections.abc.Iterable)
+                and any(isinstance(pathway, (list, dict, Pathway))) for pathway in pathways):
+            pathways = [pathway if isinstance(pathway, (list, dict, Pathway)) else [pathway] for pathway in pathways]
+        else:
+            # Put single pathway in outer list for consistency of handling below (with specified pathway as pathways[0])
+            pathways = np.atleast_2d(np.array(pathways, dtype=object)).tolist()
+
+        added_pathways = []
+
+        def identify_pway_type_and_parse_tuple_prn(pway, tuple_or_dict_str):
+            """
+            Determine whether pway is PROCESSING_PATHWAY or LEARNING_PATHWAY and, if it is the latter,
+            parse tuple into pathway specification and LearningFunction.
+            Return pathway type, pathway, and learning_function or None
+            """
+            learning_function = None
+
+            if isinstance(pway, Pathway):
+                pway = pway.pathway
+
+            if (_is_node_spec(pway) or isinstance(pway, (list, set)) or
+                    # Forgive use of tuple to specify a pathway, and treat as if it was a list spec
+                    (isinstance(pway, tuple) and all(_is_pathway_entry_spec(n, ANY) for n in pathway))):
+                pway_type = PROCESSING_PATHWAY
+                if isinstance(pway, set):
+                    pway = [pway]
+                return pway_type, pway, None
+            elif isinstance(pway, tuple):
+                pway_type = LEARNING_PATHWAY
+                if len(pway)!=2:
+                    raise CompositionError(f"A tuple specified in the {pathways_arg_str}"
+                                           f" has more than two items: {pway}")
+                pway, learning_function = pway
+                if not (_is_node_spec(pway) or isinstance(pway, (list, Pathway))):
+                    raise CompositionError(f"The 1st item in {tuple_or_dict_str} specified in the "
+                                           f" {pathways_arg_str} must be a node or a list: {pway}")
+                if not (isinstance(learning_function, type) and issubclass(learning_function, LearningFunction)):
+                    raise CompositionError(f"The 2nd item in {tuple_or_dict_str} specified in the "
+                                           f"{pathways_arg_str} must be a LearningFunction: {learning_function}")
+                return pway_type, pway, learning_function
+            else:
+                assert False, f"PROGRAM ERROR: arg to identify_pway_type_and_parse_tuple_prn in {self.name}" \
+                              f"is not a Node, list or tuple: {pway}"
+
+        # Validate items in pathways list and add to Composition using relevant add_linear_<> method.
+        bad_entry_error_msg = f"Every item in the {pathways_arg_str} must be a " \
+                              f"Node, list, set, tuple or dict; the following are not: "
+        for pathway in pathways:
+            pathway = pathway[0] if isinstance(pathway, list) and len(pathway) == 1 else pathway
+            pway_name = None
+            if isinstance(pathway, Pathway):
+                pway_name = pathway.name
+                pathway = pathway.pathway
+            if _is_node_spec(pathway) or isinstance(pathway, (list, set, tuple)):
+                if isinstance(pathway, set):
+                    bad_entries = [repr(entry) for entry in pathway if not _is_node_spec(entry)]
+                    if bad_entries:
+                        raise CompositionError(f"{bad_entry_error_msg}{','.join(bad_entries)}")
+                pway_type, pway, pway_learning_fct = identify_pway_type_and_parse_tuple_prn(pathway, f"a tuple")
+            elif isinstance(pathway, dict):
+                if len(pathway)!=1:
+                    raise CompositionError(f"A dict specified in the {pathways_arg_str} "
+                                           f"contains more than one entry: {pathway}.")
+                pway_name, pway = list(pathway.items())[0]
+                if not isinstance(pway_name, str):
+                    raise CompositionError(f"The key in a dict specified in the {pathways_arg_str} must be a str "
+                                           f"(to be used as its name): {pway_name}.")
+                if _is_node_spec(pway) or isinstance(pway, (list, tuple, Pathway)):
+                    pway_type, pway, pway_learning_fct = identify_pway_type_and_parse_tuple_prn(pway,
+                                                                                                f"the value of a dict")
+                else:
+                    raise CompositionError(f"The value in a dict specified in the {pathways_arg_str} must be "
+                                           f"a pathway specification (Node, list or tuple): {pway}.")
+            else:
+                raise CompositionError(f"{bad_entry_error_msg}{repr(pathway)}")
+
+            context.source = ContextFlags.METHOD
+            if pway_type == PROCESSING_PATHWAY:
+                new_pathway = self.add_linear_processing_pathway(pathway=pway,
+                                                                 name=pway_name,
+                                                                 context=context)
+            elif pway_type == LEARNING_PATHWAY:
+                new_pathway = self.add_linear_learning_pathway(pathway=pway,
+                                                               learning_function=pway_learning_fct,
+                                                               name=pway_name,
+                                                               context=context)
+            else:
+                assert False, f"PROGRAM ERROR: failure to determine pathway_type in add_pathways for {self.name}."
+
+            added_pathways.append(new_pathway)
+
+        return added_pathways
+
+    @handle_external_context()
     def add_linear_processing_pathway(self, pathway, name:str=None, context=None, *args):
-        """Add sequence of `Nodes <Composition_Nodes>` with intercolated Projections.
+        """Add sequence of `Nodes <Composition_Nodes>` with optionally intercolated `Projections <Projection>`.
 
         .. _Composition_Add_Linear_Processing_Pathway:
 
-        Each `Node <Composition_Nodes>` can be either a `Mechanism`, a `Composition`, or a tuple (Mechanism, `NodeRoles
-        <NodeRole>`) that can be used to assign `required_roles` to Mechanisms (see `Composition_Nodes` for additional
-        details).
+        A Pathway is specified as a list, each element of which is either a `Node <Composition_Nodes>` or
+        set of Nodes, possibly intercolated with specifications of `Projections <Projection>` between them.
+        The Node(s) specified in each entry of the list project to the Node(s) specified in the next entry
+        (see `Pathway_Specification` for details).
 
-        `Projections <Projection>` can be intercolated between any pair of `Nodes <Composition_Nodes>`. If both Nodes
-        of a pair are Mechanisms, a single `MappingProjection` can be `specified <MappingProjection_Creation>`.  The
-        same applies if the first Node is a `Composition` with a single `OUTPUT <NodeRole.OUTPUT>` Node and/or the
-        second is a `Composition` with a single `INPUT <NodeRole.INPUT>` Node.  If either has more than one `INPUT
-        <NodeRole.INPUT>` or `OUTPUT <NodeRole.OUTPUT>` Node, respectively, then a list or set of Projections can be
-        specified for each pair of nested Nodes. If no `Projection` is specified between a pair of contiguous Nodes,
-        then default Projection(s) are constructed between them, as follows:
-
-        * *One to one* - if both Nodes are Mechanisms or, if either is a Composition, the first (sender) has
-          only a single `OUTPUT <NodeRole.OUTPUT>` Node and the second (receiver) has only a single `INPUT
-          <NodeRole.INPUT>` Node, then a default `MappingProjection` is created from the `primary OutputPort
-          <OutputPort_Primary>` of the sender (or of its sole `OUTPUT <NodeRole.OUTPUT>` Node if the sener is a
-          Composition) to the `primary InputPort <InputPort_Primary>` of the receiver (or of its sole of `INPUT
-          <NodeRole.INPUT>` Node if the receiver is a Composition).
-
-        * *One to many* - if the first Node (sender) is either a Mechanism or a Composition with a single
-          `OUTPUT <NodeRole.OUTPUT>` Node, but the second (receiver) is a Composition with more than one
-          `INPUT <NodeRole.INPUT>` Node, then a `MappingProjection` is created from the `primary OutputPort
-          <OutputPort_Primary>` of the sender Mechanism (or of its sole `OUTPUT <NodeRole.OUTPUT>` Node if the
-          sender is a Compostion) to each `INPUT <NodeRole.OUTPUT>` Node of the receiver, and a *set*
-          containing the Projections is intercolated between the two Nodes in the `Pathway`.
-
-        * *Many to one* - if the first Node (sender) is a Composition with more than one `OUTPUT <NodeRole.OUTPUT>`
-          Node, and the second (receiver) is either a Mechanism or a Composition with a single `INPUT <NodeRole.INPUT>`
-          Node, then a `MappingProjection` is created from each `OUPUT <NodeRole.OUTPUT>` Node of the sender to the
-          `primary InputPort <InputPort_Primary>` of the receiver Mechanism (or of its sole `INPUT <NodeRole.INPUT>`
-          Node if the receiver is a Composition), and a *set* containing the Projections is intercolated
-          between the two Nodes in the `Pathway`.
-
-        * *Many to many* - if both Nodes are Compositions in which the sender has more than one `INPUT <NodeRole.INPUT>`
-          Node and the receiver has more than one `INPUT <NodeRole.INPUT>` Node, it is not possible to determine
-          the correct configuration automatically, and an error is generated.  In this case, a set of Projections
-          must be explicitly specified.
-
-        .. _note::
+        .. note::
            Any specifications of the **monitor_for_control** `argument <ControlMechanism_Monitor_for_Control_Argument>`
            of a constructor for a `ControlMechanism` or the **monitor** argument in the constructor for an
            `ObjectiveMechanism` in the **objective_mechanism** `argument <ControlMechanism_ObjectiveMechanism>` of a
@@ -6430,9 +6651,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             be used, however if a 2-item (Pathway, LearningFunction) tuple is used, the `LearningFunction` is ignored
             (this should be used with `add_linear_learning_pathway` if a `learning Pathway
             <Composition_Learning_Pathway>` is desired).  A `Pathway` object can also be used;  again, however, any
-            learning-related specifications are ignored, as are its `name <Pathway.name>` if the **name**
-            argument of add_linear_processing_pathway is specified.
-            See `above <Composition_Add_Linear_Processing_Pathway>` for additional details.
+            learning-related specifications are ignored, as are its `name <Pathway.name>` if the **name** argument
+            of add_linear_processing_pathway is specified.
 
         name : str
             species the name used for `Pathway`; supercedes `name <Pathway.name>` of `Pathway` object if it is has one.
@@ -6442,12 +6662,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         `Pathway` :
             `Pathway` added to Composition.
-
         """
 
         from psyneulink.core.compositions.pathway import Pathway, _is_node_spec, _is_pathway_entry_spec
 
+        def _get_spec_if_tuple(spec):
+            return spec[0] if isinstance(spec, tuple) else spec
+
         nodes = []
+        node_entries = []
 
         # If called internally, use its pathway_arg_str in error messages (in context.string)
         if context.source is not ContextFlags.COMMAND_LINE:
@@ -6459,48 +6682,37 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         context.source = ContextFlags.METHOD
         context.string = pathway_arg_str
 
-        # First, deal with Pathway() or tuple specifications
-        if isinstance(pathway, Pathway):
-            # Give precedence to name specified in call to add_linear_processing_pathway
-            pathway_name = name or pathway.name
-            pathway = pathway.pathway
-        else:
-            pathway_name = name
+        pathway, pathway_name = self._parse_pathway(pathway, name, pathway_arg_str)
 
-        if _is_pathway_entry_spec(pathway, ANY):
-            pathway = convert_to_list(pathway)
-        elif isinstance(pathway, tuple):
-            # If tuple is used to specify a sequence of nodes, convert to list (even though not documented):
-            if all(_is_pathway_entry_spec(n, ANY) for n in pathway):
-                pathway = list(pathway)
-            # If tuple is (pathway, LearningFunction), get pathway and ignore LearningFunction
-            elif isinstance(pathway[1],type) and issubclass(pathway[1], LearningFunction):
-                warnings.warn(f"{LearningFunction.__name__} found in specification of {pathway_arg_str}: {pathway[1]}; "
-                              f"it will be ignored")
-                pathway = pathway[0]
-            else:
-                raise CompositionError(f"Unrecognized tuple specification in {pathway_arg_str}: {pathway}")
-        else:
-            raise CompositionError(f"Unrecognized specification in {pathway_arg_str}: {pathway}")
-
-        # Then, verify that the pathway begins with a node
+        # Verify that the pathway begins with a Node or set of Nodes
         if _is_node_spec(pathway[0]):
             # Use add_nodes so that node spec can also be a tuple with required_roles
-            self.add_nodes(nodes=[pathway[0]],
-                           context=context)
+            self.add_nodes(nodes=[pathway[0]], context=context)
             nodes.append(pathway[0])
+            node_entries.append(pathway[0])
+        # Or a set of Nodes
+        elif isinstance(pathway[0], set):
+            self.add_nodes(nodes=pathway[0], context=context)
+            nodes.extend(pathway[0])
+            node_entries.append(pathway[0])
         else:
             # 'MappingProjection has no attribute _name' error is thrown when pathway[0] is passed to the error msg
             raise CompositionError(f"First item in {pathway_arg_str} must be "
                                    f"a Node (Mechanism or Composition): {pathway}.")
 
-        # Next, add all of the remaining nodes in the pathway
+        # Add all of the remaining nodes in the pathway
         for c in range(1, len(pathway)):
-            # if the current item is a Mechanism, Composition or (Mechanism, NodeRole(s)) tuple, add it
+            # if the entry is for a Node (Mechanism, Composition or (Mechanism, NodeRole(s)) tuple), add it
             if _is_node_spec(pathway[c]):
                 self.add_nodes(nodes=[pathway[c]],
                                context=context)
                 nodes.append(pathway[c])
+                node_entries.append(pathway[c])
+            # If the entry is for a set of Nodes, add them
+            elif isinstance(pathway[c], set) and all(_is_node_spec(entry) for entry in pathway[c]):
+                self.add_nodes(nodes=pathway[c], context=context)
+                nodes.extend(pathway[c])
+                node_entries.append(pathway[c])
 
         # Then, delete any ControlMechanism that has its monitor_for_control attribute assigned
         #    and any ObjectiveMechanism that projects to a ControlMechanism,
@@ -6532,146 +6744,271 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         projections = []
         for c in range(1, len(pathway)):
 
-            # if the current item is a Node
-            if _is_node_spec(pathway[c]):
-                if _is_node_spec(pathway[c - 1]):
-                    # if the previous item was also a node, add a MappingProjection between them
-                    if isinstance(pathway[c - 1], tuple):
-                        sender = pathway[c - 1][0]
-                    else:
-                        sender = pathway[c - 1]
-                    if isinstance(pathway[c], tuple):
-                        receiver = pathway[c][0]
-                    else:
-                        receiver = pathway[c]
+            # NODE ENTRY ----------------------------------------------------------------------------------------
+            def _get_node_specs_for_entry(entry, include_roles=None, exclude_roles=None):
+                """Extract Nodes from any tuple specs and replace Compositions with their INPUT Nodes
+                """
+                nodes = []
+                for node in entry:
+                    # Extract Nodes from any tuple specs
+                    node = _get_spec_if_tuple(node)
+                    # Replace any nested Compositions with their INPUT Nodes
+                    node = (self._get_nested_nodes_with_same_roles_at_all_levels(node, include_roles, exclude_roles)
+                                if isinstance(node, Composition) else [node])
+                    nodes.extend(node)
+                return nodes
 
-                    # If sender and/or receiver is a Composition with INPUT or OUTPUT Nodes,
-                    #    replace it with those Nodes
-                    senders = self._get_nested_nodes_with_same_roles_at_all_levels(sender, NodeRole.OUTPUT)
-                    receivers = self._get_nested_nodes_with_same_roles_at_all_levels(receiver,
-                                                                                    NodeRole.INPUT, NodeRole.TARGET)
-                    if senders or receivers:
-                        senders = senders or convert_to_list(sender)
-                        receivers = receivers or convert_to_list(receiver)
-                        if len(senders) > 1 and len(receivers) > 1:
-                            raise CompositionError(f"Pathway specified with two contiguous Compositions, the first of "
-                                                   f"which ({sender.name}) has more than one OUTPUT Node, and second "
-                                                   f"of which ({receiver.name}) has more than one INPUT Node, making "
-                                                   f"the configuration of Projections between them ambiguous; please "
-                                                   f"specify those Projections explicitly.")
-                        proj = {self.add_projection(sender=s, receiver=r, allow_duplicates=False)
-                                for r in receivers for s in senders}
-                    else:
-                        proj = self.add_projection(sender=sender, receiver=receiver)
-                    if proj:
-                        projections.append(proj)
+            # The current entry is a Node or a set of them:
+            #  - if it is a set, list or array, leave as is, else place in set for consistency of processing below
+            current_entry = pathway[c] if isinstance(pathway[c], (set, list, np.ndarray)) else {pathway[c]}
+            if all(_is_node_spec(entry) for entry in current_entry):
+                receivers = _get_node_specs_for_entry(current_entry, NodeRole.INPUT, NodeRole.TARGET)
+                # The preceding entry is a Node or set of them:
+                #  - if it is a set, list or array, leave as is, else place in set for consistnecy of processin below
+                preceding_entry = (pathway[c - 1] if isinstance(pathway[c - 1], (set, list, np.ndarray))
+                                   else {pathway[c - 1]})
+                if all(_is_node_spec(sender) for sender in preceding_entry):
+                    senders = _get_node_specs_for_entry(preceding_entry, NodeRole.OUTPUT)
+                    projs = {self.add_projection(sender=s, receiver=r, allow_duplicates=False)
+                            for r in receivers for s in senders}
+                    if all(projs):
+                        projs = projs.pop() if len(projs) == 1 else projs
+                        projections.append(projs)
 
-            # if the current item is a Projection specification
+            # PROJECTION ENTRY --------------------------------------------------------------------------
+            # Validate that it is between two nodes, then add the Projection;
+            #    note: if Projection is already instantiated and valid, it is used as is;  if it is a set or list:
+            #          - those are implemented between the corresponding pairs of sender and receiver Nodes
+            #          - the list or set has a default Projection or matrix specification,
+            #            that is used between all pairs of Nodes for which a Projection has not been specified
+
+            # The current entry is a Projection specification or a list or set of them
             elif _is_pathway_entry_spec(pathway[c], PROJECTION):
-                # Convert pathway[c] to list (embedding in one if matrix) for consistency of handling below
-                # try:
-                #     proj_specs = set(convert_to_list(pathway[c]))
-                # except TypeError:
-                #     proj_specs = [pathway[c]]
-                if is_numeric(pathway[c]):
-                    proj_specs = [pathway[c]]
+
+                # Validate that Projection specification is not last entry
+                if c == len(pathway) - 1:
+                    raise CompositionError(f"The last item in the {pathway_arg_str} cannot be a Projection: "
+                                           f"{pathway[c]}.")
+
+                # Validate that entry is between two Nodes (or sets of Nodes)
+                #     and get all pairings of sender and receiver nodes
+                prev_entry = pathway[c - 1]
+                next_entry = pathway[c + 1]
+                if ((_is_node_spec(prev_entry) or isinstance(prev_entry, set))
+                        and (_is_node_spec(next_entry) or isinstance(next_entry, set))):
+                    senders = [_get_spec_if_tuple(sender) for sender in convert_to_list(prev_entry)]
+                    receivers = [_get_spec_if_tuple(receiver) for receiver in convert_to_list(next_entry)]
+                    node_pairs = list(itertools.product(senders,receivers))
                 else:
-                    proj_specs = convert_to_list(pathway[c])
+                    raise CompositionError(f"A Projection specified in {pathway_arg_str} "
+                                           f"is not between two Nodes: {pathway[c]}")
+
+                # Convert specs in entry to list (embedding in one if matrix) for consistency of handling below
+                all_proj_specs = [pathway[c]] if is_numeric(pathway[c]) else convert_to_list(pathway[c])
+
+                # Get default Projection specification
+                #  Must be a matrix spec, or a Projection with no sender or receiver specified
+                #  If it is:
+                #    - a single Projection, not in a set or list
+                #    - appears only once in the pathways arg
+                #    - it is preceded by only one sender Node and followed by only one receiver Node
+                #  then treat as an individual Projection specification and not a default projection specification
+                possible_default_proj_spec = [proj_spec for proj_spec in all_proj_specs
+                                              if (is_matrix(proj_spec)
+                                                  or (isinstance(proj_spec, Projection)
+                                                      and proj_spec._initialization_status & ContextFlags.DEFERRED_INIT
+                                                      and proj_spec._init_args[SENDER] is None
+                                                      and proj_spec._init_args[RECEIVER] is None))]
+                # Validate that there is no more than one default Projection specification
+                if len(possible_default_proj_spec) > 1:
+                    raise CompositionError(f"There is more than one matrix specification in the set of Projection "
+                                           f"specifications for entry {c} of the {pathway_arg_str}: "
+                                           f"{possible_default_proj_spec}.")
+                # Get spec from list:
+                spec = possible_default_proj_spec[0] if possible_default_proj_spec else None
+                # If it appears only once on its own in the pathways arg and there is only one sender and one receiver
+                #     consider it an individual Projection specification rather than a specification of the default
+                if sum(isinstance(s, Projection) and s is spec for s in pathway) == len(senders) == len(receivers) == 1:
+                    default_proj_spec = None
+                    proj_specs = all_proj_specs
+                else:
+                    # Unpack if tuple spec, and assign feedback (with False as default)
+                    default_proj_spec, feedback = (spec if isinstance(spec, tuple) else (spec, False))
+                    # Get all specs other than default_proj_spec
+                    # proj_specs = [proj_spec for proj_spec in all_proj_specs if proj_spec not in possible_default_proj_spec]
+                    proj_specs = [proj_spec for proj_spec in all_proj_specs if proj_spec is not spec]
+
+                # Collect all Projection specifications (to add to Composition at end)
                 proj_set = []
-                for proj_spec in proj_specs:
-                    if c == len(pathway) - 1:
-                        raise CompositionError(f"The last item in the {pathway_arg_str} cannot be a Projection: "
-                                               f"{proj_spec}.")
-                    # confirm that it is between two nodes, then add the projection
-                    if isinstance(proj_spec, tuple):
-                        proj = proj_spec[0]
-                        feedback = proj_spec[1]
-                    else:
-                        proj = proj_spec
-                        feedback = False
-                    sender = pathway[c - 1]
-                    receiver = pathway[c + 1]
-                    if _is_node_spec(sender) and _is_node_spec(receiver):
-                        if isinstance(sender, tuple):
-                            sender = sender[0]
-                        if isinstance(receiver, tuple):
-                            receiver = receiver[0]
+
+                def handle_misc_errors(proj, error):
+                    raise CompositionError(f"Bad Projection specification in {pathway_arg_str} ({proj}): "
+                                           f"{str(error.error_value)}")
+
+                def handle_duplicates(sender, receiver):
+                    duplicate = [p for p in receiver.afferents if p in sender.efferents]
+                    assert len(duplicate)==1, \
+                        f"PROGRAM ERROR: Could not identify duplicate on DuplicateProjectionError " \
+                        f"for {Projection.__name__} between {sender.name} and {receiver.name} " \
+                        f"in call to {repr('add_linear_processing_pathway')} for {self.name}."
+                    duplicate = duplicate[0]
+                    warning_msg = f"Projection specified between {sender.name} and {receiver.name} " \
+                                  f"in {pathway_arg_str} is a duplicate of one"
+                    # IMPLEMENTATION NOTE: Version that allows different Projections between same
+                    #                      sender and receiver in different Compositions
+                    # if duplicate in self.projections:
+                    #     warnings.warn(f"{warning_msg} already in the Composition ({duplicate.name}) "
+                    #                   f"and so will be ignored.")
+                    #     proj=duplicate
+                    # else:
+                    #     if self.prefs.verbosePref:
+                    #         warnings.warn(f" that already exists between those nodes ({duplicate.name}). The "
+                    #                       f"new one will be used; delete it if you want to use the existing one")
+                    # Version that forbids *any* duplicate Projections between same sender and receiver
+                    warnings.warn(f"{warning_msg} that already exists between those nodes ({duplicate.name}) "
+                                  f"and so will be ignored.")
+                    proj_set.append(self.add_projection(duplicate))
+
+                # PARSE PROJECTION SPECIFICATIONS AND INSTANTIATE PROJECTIONS
+                # IMPLEMENTATION NOTE:
+                #    self.add_projection is called for each Projection
+                #    to catch any duplicates with exceptions below
+
+                # FIX: 4/9/22 - REFACTOR TO DO ANY SPECIFIED ASSIGNMENTS FIRST, AND THEN DEFAULT ASSIGNMENTS (IF ANY)
+                if default_proj_spec is not None and not proj_specs:
+                    # If there is a default specification and no other Projection specs,
+                    #    use default to construct Projections for all node_pairs
+                    for sender, receiver in node_pairs:
                         try:
-                            if isinstance(proj, (np.ndarray, np.matrix, list)):
-                                # If proj is a matrix specification, use it as the matrix arg
-                                proj = MappingProjection(sender=sender,
-                                                         matrix=proj,
-                                                         receiver=receiver)
+                            # Default is a Projection
+                            if isinstance(default_proj_spec, Projection):
+                                # Copy so that assignments made to instantiated Projection don't affect default
+                                projection = self.add_projection(projection=deepcopy(default_proj_spec),
+                                                                 sender=sender,
+                                                                 receiver=receiver,
+                                                                 allow_duplicates=False,
+                                                                 feedback=feedback)
                             else:
-                                # Otherwise, if it is Port specification, implement default Projection
+                                # Default is a matrix_spec
+                                assert is_matrix(default_proj_spec), \
+                                    f"PROGRAM ERROR: Expected {default_proj_spec} to be " \
+                                    f"a matrix specification in {pathway_arg_str}."
+                                projection = self.add_projection(projection=MappingProjection(sender=sender,
+                                                                                              matrix=default_proj_spec,
+                                                                                              receiver=receiver),
+                                                                 allow_duplicates=False,
+                                                                 feedback=feedback)
+                            proj_set.append(projection)
+
+                        except (InputPortError, ProjectionError, MappingError) as error:
+                            handle_misc_errors(proj, error)
+                        except DuplicateProjectionError:
+                            handle_duplicates(sender, receiver)
+
+                else:
+                    # FIX: 4/9/22 - PUT THIS FIRST (BEFORE BLOCK JUST ABOVE) AND THEN ASSIGN TO ANY LEFT IN node_pairs
+                    # Projections have been specified
+                    for proj_spec in proj_specs:
+                        try:
+                            proj = _get_spec_if_tuple(proj_spec)
+                            feedback = proj_spec[1] if isinstance(proj_spec, tuple) else False
+
+                            if isinstance(proj, Projection):
+                                # FIX 4/9/22 - TEST FOR DEFERRED INIT HERE (THAT IS NOT A default_proj_spec)
+                                #              IF JUST SENDER OR RECEIVER, TREAT AS PER PORTS BELOW
+                                # Validate that Projection is between a Node in senders and one in receivers
+                                if proj._initialization_status & ContextFlags.DEFERRED_INIT:
+                                    sender_node = senders[0]
+                                    receiver_node = receivers[0]
+                                else:
+                                    sender_node = proj.sender.owner
+                                    receiver_node = proj.receiver.owner
+                                proj_set.append(self.add_projection(proj,
+                                                                    sender = sender_node,
+                                                                    receiver = receiver_node,
+                                                                    allow_duplicates=False, feedback=feedback))
+                                if default_proj_spec:
+                                    # If there IS a default Projection specification, remove from node_pairs
+                                    #   only the entry for the sender-receiver pair, so that the sender is assigned
+                                    #   a default Projection to all other receivers (to which a Projection is not
+                                    #   explicitly specified) and the receiver is assigned a default Projection from
+                                    #   all other senders (from which a Projection is not explicitly specified).
+                                    node_pairs = [pair for pair in node_pairs
+                                                  if not all(node in pair for node in {sender_node, receiver_node})]
+                                else:
+                                    # If there is NOT a default Projection specification, remove from node_pairs
+                                    #   all other entries with either the same sender OR receiver, so that neither
+                                    #   the sender nor receiver are assigned any other default Projections.
+                                    node_pairs = [pair for pair in node_pairs
+                                                  if not any(node in pair for node in {sender_node, receiver_node})]
+
+                            # FIX: 4/9/22 - SHOULD INCLUDE MECH SPEC (AND USE PRIMARY PORT) HERE:
+                            elif isinstance(proj, Port):
+                                # Implement default Projection (using matrix if specified) for all remaining specs
                                 try:
+                                    # FIX: 4/9/22 - INCLUDE TEST FOR DEFERRED_INIT WITH ONLY RECEIVER SPECIFIED
                                     if isinstance(proj, InputPort):
-                                        proj = MappingProjection(sender=sender,
-                                                                 receiver=proj)
+                                        for sender in senders:
+                                            proj_set.append(self.add_projection(
+                                                projection=MappingProjection(sender=sender, receiver=proj),
+                                                allow_duplicates=False, feedback=feedback))
+                                    # FIX: 4/9/22 - INCLUDE TEST FOR DEFERRED_INIT WITH ONLY SENDER SPECIFIED
                                     elif isinstance(proj, OutputPort):
-                                        proj = MappingProjection(sender=proj,
-                                                                 receiver=receiver)
+                                        for receiver in receivers:
+                                            proj_set.append(self.add_projection(
+                                                projection=MappingProjection(sender=proj, receiver=receiver),
+                                                allow_duplicates=False, feedback=feedback))
+                                    # Remove from node_pairs all pairs involving the owner of the Port
+                                    #   (since all Projections to or from it have been implemented)
+                                    node_pairs = [pair for pair in node_pairs if (proj.owner not in pair)]
                                 except (InputPortError, ProjectionError) as error:
                                     raise ProjectionError(str(error.error_value))
 
                         except (InputPortError, ProjectionError, MappingError) as error:
-                            raise CompositionError(f"Bad Projection specification in {pathway_arg_str} ({proj}): "
-                                                   f"{str(error.error_value)}")
-
+                            handle_misc_errors(proj, error)
                         except DuplicateProjectionError:
-                            # FIX: 7/22/19 ADD WARNING HERE??
-                            # FIX: 7/22/19 MAKE THIS A METHOD ON Projection??
-                            duplicate = [p for p in receiver.afferents if p in sender.efferents]
-                            assert len(duplicate)==1, \
-                                f"PROGRAM ERROR: Could not identify duplicate on DuplicateProjectionError " \
-                                f"for {Projection.__name__} between {sender.name} and {receiver.name} " \
-                                f"in call to {repr('add_linear_processing_pathway')} for {self.name}."
-                            duplicate = duplicate[0]
-                            warning_msg = f"Projection specified between {sender.name} and {receiver.name} " \
-                                          f"in {pathway_arg_str} is a duplicate of one"
-                            # IMPLEMENTATION NOTE: Version that allows different Projections between same
-                            #                      sender and receiver in different Compositions
-                            # if duplicate in self.projections:
-                            #     warnings.warn(f"{warning_msg} already in the Composition ({duplicate.name}) "
-                            #                   f"and so will be ignored.")
-                            #     proj=duplicate
-                            # else:
-                            #     if self.prefs.verbosePref:
-                            #         warnings.warn(f" that already exists between those nodes ({duplicate.name}). The "
-                            #                       f"new one will be used; delete it if you want to use the existing one")
-                            # Version that forbids *any* duplicate Projections between same sender and receiver
-                            warnings.warn(f"{warning_msg} that already exists between those nodes ({duplicate.name}) "
-                                          f"and so will be ignored.")
-                            proj=duplicate
+                            handle_duplicates(sender, receiver)
 
-                        proj = self.add_projection(projection=proj,
-                                                   sender=sender,
-                                                   receiver=receiver,
-                                                   feedback=feedback,
-                                                   allow_duplicates=False)
-                        if proj:
-                            proj_set.append(proj)
-                    else:
-                        raise CompositionError(f"A Projection specified in {pathway_arg_str} "
-                                               f"is not between two Nodes: {pathway[c]}")
+                    # FIX: 4/9/22 - REPLACE BELOW WITH CALL TO _assign_default_proj_spec(sender, receiver)
+                    # If a default Projection is specified and any sender-receiver pairs remain, assign default
+                    if default_proj_spec and node_pairs:
+                        for sender, receiver in node_pairs:
+                            try:
+                                p = self.add_projection(projection=deepcopy(default_proj_spec),
+                                                        sender=sender,
+                                                        receiver=receiver,
+                                                        allow_duplicates=False,
+                                                        feedback=feedback)
+                                proj_set.append(p)
+                            except (InputPortError, ProjectionError, MappingError) as error:
+                                handle_misc_errors(proj, error)
+                            except DuplicateProjectionError:
+                                handle_duplicates(sender, receiver)
+
+                # If there is a single Projection, extract it from list and append as Projection
+                # IMPLEMENTATION NOTE:
+                #    this is to support calls to add_learing_processing_pathway by add_learning_<> methods
+                #    that do not yet support a list or set of Projection specifications
                 if len(proj_set) == 1:
                     projections.append(proj_set[0])
                 else:
                     projections.append(proj_set)
 
+            # BAD PATHWAY ENTRY: contains neither Node nor Projection specification(s)
             else:
-                raise CompositionError(f"An entry in {pathway_arg_str} is not a Node (Mechanism or Composition) "
-                                       f"or a Projection: {repr(pathway[c])}.")
+                assert False, f"PROGRAM ERROR : An entry in {pathway_arg_str} is not a Node (Mechanism " \
+                              f"or Composition) or a Projection nor a set of either: {repr(pathway[c])}."
 
         # Finally, clean up any tuple specs
-        for i, n in enumerate(nodes):
-            if isinstance(n, tuple):
-                nodes[i] = nodes[i][0]
-        # interleave nodes and projections
-        explicit_pathway = [nodes[0]]
+        for i, n_e in enumerate(node_entries):
+            for n in convert_to_list(n_e):
+                if isinstance(n, tuple):
+                    nodes[i] = nodes[i][0]
+        # interleave (sets of) Nodes and (sets or lists of) Projections
+        explicit_pathway = [node_entries[0]]
         for i in range(len(projections)):
             explicit_pathway.append(projections[i])
-            explicit_pathway.append(nodes[i + 1])
+            explicit_pathway.append(node_entries[i + 1])
 
         # If pathway is an existing one, return that
         existing_pathway = next((p for p in self.pathways if explicit_pathway==p.pathway), None)
@@ -6698,7 +7035,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 pass
             else:
                 # Otherwise, something has gone wrong
-                assert False, f"PROGRAM ERROR: Bad pathway specification for {self.name} in {pathway_arg_str}: {pathway}."
+                assert False, \
+                    f"PROGRAM ERROR: Bad pathway specification for {self.name} in {pathway_arg_str}: {pathway}."
 
         pathway = Pathway(pathway=explicit_pathway,
                           composition=self,
@@ -6709,150 +7047,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._analyze_graph(context)
 
         return pathway
-
-    @handle_external_context()
-    def add_pathways(self, pathways, context=None):
-        """Add pathways to the Composition.
-
-        Arguments
-        ---------
-
-        pathways : Pathway or list[Pathway]
-            specifies one or more `Pathways <Pathway>` to add to the Composition (see `Pathway_Specification`).
-
-        Returns
-        -------
-
-        list[Pathway] :
-            List of `Pathways <Pathway>` added to the Composition.
-
-        """
-
-        # Possible specifications for **pathways** arg:
-        # 1  Single node:  NODE
-        #    Single pathway spec (list, tuple or dict):
-        # 2   single list:   PWAY = [NODE] or [NODE...] in which *all* are NODES with optional intercolated Projections
-        # 3   single tuple:  (PWAY, LearningFunction) = (NODE, LearningFunction) or
-        #                                                ([NODE...], LearningFunction)
-        # 4   single dict:   {NAME: PWAY} = {NAME: NODE} or
-        #                                   {NAME: [NODE...]} or
-        #                                   {NAME: ([NODE...], LearningFunction)}
-        #   Multiple pathway specs (outer list):
-        # 5   list with list: [PWAY] = [NODE, [NODE]] or [[NODE...]...]
-        # 6   list with tuple:  [(PWAY, LearningFunction)...] = [(NODE..., LearningFunction)...] or
-        #                                                      [([NODE...], LearningFunction)...]
-        # 7   list with dict: [{NAME: PWAY}...] = [{NAME: NODE...}...] or
-        #                                         [{NAME: [NODE...]}...] or
-        #                                         [{NAME: (NODE, LearningFunction)}...] or
-        #                                         [{NAME: ([NODE...], LearningFunction)}...]
-
-        from psyneulink.core.compositions.pathway import Pathway, _is_node_spec, _is_pathway_entry_spec
-
-        if context.source == ContextFlags.COMMAND_LINE:
-            pathways_arg_str = f"'pathways' arg for the add_pathways method of {self.name}"
-        elif context.source == ContextFlags.CONSTRUCTOR:
-            pathways_arg_str = f"'pathways' arg of the constructor for {self.name}"
-        else:
-            assert False, f"PROGRAM ERROR:  unrecognized context pass to add_pathways of {self.name}."
-        context.string = pathways_arg_str
-
-        if not pathways:
-            return
-
-        # Possibilities 1, 3 or 4 (single NODE, tuple or dict specified, so convert to list
-        elif _is_node_spec(pathways) or isinstance(pathways, (tuple, dict, Pathway)):
-            pathways = convert_to_list(pathways)
-
-        # Possibility 2 (list is a single pathway spec):
-        if (isinstance(pathways, list)
-                and _is_node_spec(pathways[0]) and all(_is_pathway_entry_spec(p, ANY) for p in pathways)):
-            # Place in outter list (to conform to processing of multiple pathways below)
-            pathways = [pathways]
-        # If pathways is not now a list it must be illegitimate
-        if not isinstance(pathways, list):
-            raise CompositionError(f"The {pathways_arg_str} must be a "
-                                   f"Node, list, tuple, dict or Pathway object: {pathways}.")
-
-        # pathways should now be a list in which each entry should be *some* form of pathway specification
-        #    (including original spec as possibilities 5, 6, or 7)
-
-        added_pathways = []
-
-        def identify_pway_type_and_parse_tuple_prn(pway, tuple_or_dict_str):
-            """
-            Determine whether pway is PROCESSING_PATHWAY or LEARNING_PATHWAY and, if it is the latter,
-            parse tuple into pathway specification and LearningFunction.
-            Return pathway type, pathway, and learning_function or None
-            """
-            learning_function = None
-
-            if isinstance(pway, Pathway):
-                pway = pway.pathway
-
-            if (_is_node_spec(pway) or isinstance(pway, list) or
-                    # Forgive use of tuple to specify a pathway, and treat as if it was a list spec
-                    (isinstance(pway, tuple) and all(_is_pathway_entry_spec(n, ANY) for n in pathway))):
-                pway_type = PROCESSING_PATHWAY
-                return pway_type, pway, None
-            elif isinstance(pway, tuple):
-                pway_type = LEARNING_PATHWAY
-                if len(pway)!=2:
-                    raise CompositionError(f"A tuple specified in the {pathways_arg_str}"
-                                           f" has more than two items: {pway}")
-                pway, learning_function = pway
-                if not (_is_node_spec(pway) or isinstance(pway, (list, Pathway))):
-                    raise CompositionError(f"The 1st item in {tuple_or_dict_str} specified in the "
-                                           f" {pathways_arg_str} must be a node or a list: {pway}")
-                if not (isinstance(learning_function, type) and issubclass(learning_function, LearningFunction)):
-                    raise CompositionError(f"The 2nd item in {tuple_or_dict_str} specified in the "
-                                           f"{pathways_arg_str} must be a LearningFunction: {learning_function}")
-                return pway_type, pway, learning_function
-            else:
-                assert False, f"PROGRAM ERROR: arg to identify_pway_type_and_parse_tuple_prn in {self.name}" \
-                              f"is not a Node, list or tuple: {pway}"
-
-        # Validate items in pathways list and add to Composition using relevant add_linear_XXX method.
-        for pathway in pathways:
-            pway_name = None
-            if isinstance(pathway, Pathway):
-                pway_name = pathway.name
-                pathway = pathway.pathway
-            if _is_node_spec(pathway) or isinstance(pathway, (list, tuple)):
-                pway_type, pway, pway_learning_fct = identify_pway_type_and_parse_tuple_prn(pathway, f"a tuple")
-            elif isinstance(pathway, dict):
-                if len(pathway)!=1:
-                    raise CompositionError(f"A dict specified in the {pathways_arg_str} "
-                                           f"contains more than one entry: {pathway}.")
-                pway_name, pway = list(pathway.items())[0]
-                if not isinstance(pway_name, str):
-                    raise CompositionError(f"The key in a dict specified in the {pathways_arg_str} must be a str "
-                                           f"(to be used as its name): {pway_name}.")
-                if _is_node_spec(pway) or isinstance(pway, (list, tuple, Pathway)):
-                    pway_type, pway, pway_learning_fct = identify_pway_type_and_parse_tuple_prn(pway,
-                                                                                                f"the value of a dict")
-                else:
-                    raise CompositionError(f"The value in a dict specified in the {pathways_arg_str} must be "
-                                           f"a pathway specification (Node, list or tuple): {pway}.")
-            else:
-                raise CompositionError(f"Every item in the {pathways_arg_str} must be "
-                                       f"a Node, list, tuple or dict: {repr(pathway)} is not.")
-
-            context.source = ContextFlags.METHOD
-            if pway_type == PROCESSING_PATHWAY:
-                new_pathway = self.add_linear_processing_pathway(pathway=pway,
-                                                                 name=pway_name,
-                                                                 context=context)
-            elif pway_type == LEARNING_PATHWAY:
-                new_pathway = self.add_linear_learning_pathway(pathway=pway,
-                                                               learning_function=pway_learning_fct,
-                                                               name=pway_name,
-                                                               context=context)
-            else:
-                assert False, f"PROGRAM ERROR: failure to determine pathway_type in add_pathways for {self.name}."
-
-            added_pathways.append(new_pathway)
-
-        return added_pathways
 
     # endregion PROCESSING PATHWAYS
 
@@ -7446,7 +7640,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if path_length >= 3:
             # get the "terminal_sequence" --
             # the last 2 nodes in the back prop pathway and the projection between them
-            # these components are are processed separately because
+            # these components are processed separately because
             # they inform the construction of the Target and Comparator mechs
             terminal_sequence = processing_pathway[path_length - 3: path_length]
         else:

@@ -26,6 +26,9 @@ Contents
       - `Pathway_Assignment_to_Composition`
       - `Pathway_Name`
       - `Pathway_Specification`
+          - `Pathway_Specification_Formats`
+          - `Pathway_Specification_Projections`
+          - `Pathway_Specification_Multiple`
       - `Composition_Add_Nested`
   * `Pathway_Structure`
   * `Pathway_Execution`
@@ -37,9 +40,9 @@ Overview
 --------
 
 A Pathway is a sequence of `Nodes <Composition_Nodes>` and `Projections <Projection>`. Generally, Pathways are assigned
-to `Compositions <Composition>`, but a Pathway object can be created on its and used as a template for specifying a
-Pathway for a Composition, as described below.  See `Pathways  <Composition_Pathways>` for additional information about
-Pathways in Compositions.
+to a `Compositions`, but a Pathway object can also be created on its and used as a template for specifying a Pathway for
+a Composition, as described below (see `Pathways  <Composition_Pathways>` for additional information about Pathways in
+Compositions).
 
 .. _Pathway_Creation:
 
@@ -54,7 +57,7 @@ or automatically when a Pathway is `assigned to a Composition <Pathway_Assignmen
 *Pathway as a Template*
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-A Pathway created on its own, using its constructor, is a **template**, that can be used to `specifiy a Pathway
+A Pathway created on its own, using its constructor, is a **template**, that can be used to `specify a Pathway
 <Pathway_Specification>` for one or more Compositions, as described `below <Pathway_Assignment_to_Composition>`;
 however, it cannot be executed on its own.  When a Pathway object is used to assign a Pathway to a Composition,
 its `pathway <Pathway.pathway>` attribute, and its `name <Pathway.name>` if that is not otherwise specified (see
@@ -82,7 +85,7 @@ All of the Pathways assigned to a Composition are listed in its `pathways <Compo
 If the **name** argument of the Pathway's constructor is used to assign it a name, this is used as the name of the
 Pathway created when it is assigned to a Composition in its constructor, or using its `add_pathways
 <Composition.add_pathways>` method.  This is also the case if one of the Composition's other `Pathway addition methods
-<Compositiion_Pathway_Addition_Methods>` is used, as long as the **name** argument of those methods is not specified.
+<Composition_Pathway_Addition_Methods>` is used, as long as the **name** argument of those methods is not specified.
 However, if the **name** argument is specified in those methods, or `Pathway specification dictionary
 <Pathway_Specification_Dictionary>` is used to specify the Pathway's name, that takes precedence over, and replaces
 one specified in the Pathway `template's <Pathway_Template>` `name <Pathway.name>` attribute.
@@ -93,27 +96,149 @@ one specified in the Pathway `template's <Pathway_Template>` `name <Pathway.name
 *Pathway Specification*
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-The following formats can be used to specify a Pathway in the **pathway** argument of the constructor for the
-Pathway, the **pathways** argument of a the constructor for a `Composition`, or the corresponding argument
+Pathway are specified as a list, each element of which is either a `Node <Composition_Nodes>` or set of Nodes,
+possibly intercolated with specifications of `Projections <Projection>` between them.  `Nodes <Composition_Nodes>`
+can be either a `Mechanism`, a `Composition`, or a tuple (Mechanism or Composition, `NodeRoles <NodeRole>`) that can
+be used to assign `required_roles` to the Nodes in the Composition (see `Composition_Nodes` for additional details).
+The Node(s) specified in each entry of the list project to the Node(s) specified in the next entry.
+
+    .. _Pathway_Projection_List_Note:
+
+    .. note::
+       Only a *set* can be used to specify multiple Nodes for a given entry in a Pathway; a *list* can *not* be used
+       for this purpose, as a list containing Nodes is always interpreted as a Pathway. If a list *is* included in a
+       Pathway specification, then it and all other entries are considered as separate, parallel Pathways (see
+       example *vii* in the `figure <Pathway_Figure>` below).
+
+.. _Pathway_Specification_Projections:
+
+*Pathway Projection Specifications*
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Where no Projections are specified between entries in the list, default Projections (using a `FULL_CONNECTIVITY_MATRIX`;
+see `MappingProjection_Matrix_Specification`) are created from each Node in the first entry, as the sender(s),
+to each Node in the second, as receiver(s) (described further `below <Pathway_Projections>`).  Projections between
+Nodes in the two entries can also be specified explicitly, by intercolating a Projection or set of Projections between
+the two entries in the list.  If the sender and receiver are both a single Mechanism, then a single `MappingProjection`
+can be `specified<MappingProjection_Creation>` between them.  The same applies if the sender is a `Composition` with
+a single `OUTPUT <NodeRole.OUTPUT>` Node and/or the receiver is a `Composition` with a single `INPUT <NodeRole.INPUT>`
+Node.  If either is a set of Nodes, or is a `nested Composition <Composition_Nested>` with more than one `INPUT
+<NodeRole.INPUT>` or `OUTPUT <NodeRole.OUTPUT>` Node, respectively, then a collection of Projections can be specified
+between any or all pairs of the Nodes in the set(s) and/or nested Composition(s), using either a set or list of
+Projections (order of specification does not matter whether a set or a list is used). The collection can contain
+`MappingProjections <MappingProjection>` between a specific pairs of Nodes and/or a single default specification
+(either a `matrix <MappingProjection.matrix>` specification or a MappingProjection without any `sender
+<MappingProjection.sender>` or `receiver <MappingProjection.receiver>` specified).
+
+    .. _Pathway_Projection_Matrix_Note:
+
+    .. note::
+       If a collection of Projection specifications includes a default matrix specification, then a list must be used
+       to specify the collection and *not* a set (since a matrix is unhashable and thus cannot be included in a set).
+
+If a default Projection specification is included in the set, it is used to implement a Projection between any pair
+of Nodes for which no MappingProjection is otherwise specified, whether within the collection or on its own; if no
+Projections are specified for any individual pairs, a default Projection is created for every pairing of senders and
+receivers. If a collection contains Projections for one or more pairs of Nodes, but does not include a default
+projection specification, then no Projection is created between any of the other pairings.
+
+If a pair of entries in a pathway has multiple sender and/or receiver Nodes specified (either in a set and/or belonging
+to `nested Composition <Composition_Nested>`, and either no Projection(s) or only a default Projection is intercollated
+between them, then a default set of Projections is constructed (using the default Projection specification, if provided)
+between each pair of sender and receiver Nodes in the set(s) or nested Composition(s), as follows:
+
+.. _Pathway_Projections:
+
+* *One to one* - if both the sender and receiver entries are Mechanisms, or if either is a Composition and the
+  sender has a single `OUTPUT <NodeRole.OUTPUT>` Node and the receiver has a single `INPUT <NodeRole.INPUT>`
+  Node, then a default `MappingProjection` is created from the `primary OutputPort <OutputPort_Primary>` of the
+  sender (or of its sole `OUTPUT <NodeRole.OUTPUT>` Node, if the sender is a Composition) to the `primary InputPort
+  <InputPort_Primary>` of the receiver (or of its sole of `INPUT <NodeRole.INPUT>` Node, if the receiver is
+  a Composition), and the Projection specification is intercolated between the two entries in the `Pathway`.
+
+* *One to many* - if the sender is either a Mechanism or a Composition with a single `OUTPUT <NodeRole.OUTPUT>` Node,
+  but the receiver is either a Composition with more than one `INPUT <NodeRole.INPUT>` Node or a set of Nodes, then
+  a `MappingProjection` is created from the `primary OutputPort <OutputPort_Primary>` of the sender Mechanism (or of
+  its sole `OUTPUT <NodeRole.OUTPUT>` Node if the sender is a Composition) to the `primary InputPort
+  <InputPort_Primary>` of each `INPUT <NodeRole.OUTPUT>` Node of the receiver Composition and/or Mechanism in the
+  receiver set, and a set containing the Projections is intercolated between the two entries in the `Pathway`.
+
+* *Many to one* - if the sender is a Composition with more than one `OUTPUT <NodeRole.OUTPUT>` Node or a set of
+  Nodes, and the receiver is either a Mechanism or a Composition with a single `INPUT <NodeRole.INPUT>` `OUTPUT
+  <NodeRole.OUTPUT>` Node in the Composition or Mechanism in the set of sender(s), to the `primary InputPort
+  <InputPort_Primary>` of the receiver Mechanism (or of its sole `INPUT <NodeRole.INPUT>` Node if the receiver is
+  a Composition), and a set containing the Projections is intercolated between the two entries in the `Pathway`.
+
+* *Many to many* - if both the sender and receiver entries contain multiple Nodes (i.e., are sets,  and/or the
+  the sender is a Composition that has more than one `INPUT <NodeRole.INPUT>` Node and/or the receiver has more
+  than one `OUTPUT <NodeRole.OutPUT>` Node), then a Projection is constructed for every pairing of Nodes in the
+  sender and receiver entries, using the `primary OutputPort <OutputPort_Primary>` of each sender Node and the
+  `primary InputPort <InputPort_Primary>` of each receiver node.
+
+|
+
+  .. _Pathway_Figure:
+
+  .. figure:: _static/Pathways_fig.svg
+     :scale: 50%
+
+     **Examples of Pathway specifications** (including in the **pathways** argument of a `Composition`. *i)* Set
+     of `Nodes <Composition_Nodes>`: each is treated as a `SINGLETON <NodeRole.SINGLETON>` within a single Pathway.
+     *ii)* List of Nodes: forms a sequential Pathway. *iii)* Single Node followed by a set:  one to many mapping.
+     *iv)* Set followed by a single Node: many to one mapping. *v)* Set followed by a set: many to many mapping.
+     *vi)* Set followed by a list: because there is a list in the specification (``[C,D]``) all other entries are
+     also treated as parallel Pathways (see `note <Pathway_Projection_List_Note>` above), so ``A`` and ``B`` in the
+     set are `SINGLETON <NodeRole.SINGLETON>`\\s. *vii)* Set of Projections intercolated between two sets of Nodes:
+     since the set of Projections does not include any involving ``B`` or ``E`` nor a default Projection specification,
+     they are treated as `SINGLETON <NodeRole.SINGLETON>`\\s (compare with *x*). *viii)* Set followed by a Node and
+     then a set:  many to one to many mapping. *ix)* Node followed by one that is a `nested Composition
+     <Composition_Nested>` then another Node: one to many to one mapping. *x)* Set followed by a list of Projections
+     then another set: since the list of Projections contains a default Projection specification (``matrix``)
+     Projections are created between all pairings of nodes in the sets that precede and follow the list (compare with
+     *vii*); note that the Projections must be specified in a list because the matrix is a list (or array), which
+     cannot be included in a set (see `note <Pathway_Projection_Matrix_Note>` above).
+
+     .. technical_note::
+        The full code for the examples above can be found in `test_pathways_examples`,
+        although some have been graphically rearranged for illustrative purposes.
+
+
+
+.. _Pathway_Specification_Formats:
+
+*Pathway Specification Formats*
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The following formats can be used to specify a Pathway in the **pathway** argument of the constructor for
+the Pathway, the **pathways** argument of the constructor for a `Composition`, or the corresponding argument
 of any of a Composition's `Pathway addition methods <Composition_Pathway_Addition_Methods>`:
 
-    * `Node <Composition_Nodes>`: -- assigns the Node to a `SINGLETON` Pathway.
+    * `Node <Composition_Nodes>`: -- assigns the Node as `SINGLETON <NodeRole.SINGLETON>` in a Pathway.
     ..
     .. _Pathway_Specification_List:
 
     * **list**: [`Node <Composition_Nodes>`, <`Projection(s) <Projection>`,> `Node <Composition_Nodes>`...] --
-      each item of the list must be a `Node <Composition_Nodes>` -- i.e., Mechanism or Composition, or a
-      (`Mechanism <Mechanism>`, `NodeRoles <NodeRole>`) tuple -- or, optionally, a `Projection specification
-      <Projection_Specification>`, a (`Projection specification <Projection_Specification>`, `feedback specification
-      <Composition_Feedback_Designation>`) tuple, or a set of either interposed between a pair of nodes (see
+      each item of the list must be a `Node <Composition_Nodes>` (i.e., Mechanism or Composition, or a
+      (`Mechanism <Mechanism>`, `NodeRoles <NodeRole>`) tuple) or set of Nodes, optionally with a `Projection
+      specification <Projection_Specification>`, a (`Projection specification <Projection_Specification>`,
+      `feedback specification <Composition_Feedback_Designation>`) tuple, or a set of either interposed between
+      a pair of (sets of) Nodes (see `add_linear_processing_pathway <Composition.add_linear_processing_pathway>`
+      for additional details).  The list must begin and end with a (set of) Node(s).
+    ..
+    * **set**: {`Node <Composition_Nodes>`, `Node <Composition_Nodes>`...} --
+      each item of the set must be a `Node <Composition_Nodes>` (i.e., Mechanism or Composition, or a
+      (`Mechanism <Mechanism>`, `NodeRoles <NodeRole>`) tuple);  each Node is treated as a `SINGLETON
+      <NodeRole.SINGLETON>`.  Sets can also be used in a list specification (see above; and see
       `add_linear_processing_pathway <Composition.add_linear_processing_pathway>` for additional details).
-      The list must begin and end with a node.
     ..
     * **2-item tuple**: (Pathway, `LearningFunction`) -- used to specify a `learning Pathway
-      <Composition_Learning_Pathway>`;  the 1st item must be a `Node <Composition_Nodes>` or list, as
-      described above, and the 2nd item be a subclass of `LearningFunction`.
+      <Composition_Learning_Pathway>`;  the 1st item must be one of the forms of Pathway specification
+      described above, and the 2nd item must be a subclass of `LearningFunction`.
 
-.. _Multiple_Pathway_Specification:
+.. _Pathway_Specification_Multiple:
+
+*Multiple Pathway Specifications*
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In addition to the forms of single Pathway specification `above <Pathway_Specification>`, where multiple Pathways
 can be specified (e.g., the **pathways** argument of the constructor for a `Composition` or its `add_pathways
@@ -130,15 +255,15 @@ the forms above, or one of the following:
        If any of the following is used to specify the **pathways** argument:
          * a **standalone** `Node <Composition_Nodes>` (i.e., not in a list), \n
          * a **single Node** alone in a list, \n
+         * a **set** of Nodes, \n
          * one or more Nodes with any other form of `Pathway specification <Pathway_Specification>` in the list \n
-       then each such Node in the list is treated as its own `SINGLETON` pathway (i.e., one containing a single
-       Node that is both the `ORIGIN` and the`TERMINAL` of the Pathway).  However, if the list contains only
-       Nodes, then it is treated as a single Pathway (i.e., the list form of `Pathway specification
-       <Pathway_Specification>`.  Thus:
+       then each such Node in the list is assigned as a `SINGLETON <NodeRole.SINGLETON>` Node in its own Pathway.
+       However, if the list contains only Nodes, then it is treated as a single Pathway (i.e., the list form of
+       `Pathway specification <Pathway_Specification>` described above.  Thus:
          **pathway**: NODE -> single pathway \n
          **pathway**: [NODE] -> single pathway \n
          **pathway**: [NODE, NODE...] -> single pathway \n
-         **pathway**: [NODE, NODE, () or {} or `Pathway`...] -> three or more pathways
+         **pathway**: [NODE, () or {} or `Pathway`...] -> individual Pathways for each specification.
 
 
 .. _Pathway_Structure:
@@ -210,13 +335,13 @@ PathwayRegistry= {}
 def _is_pathway_entry_spec(entry, desired_type:tc.enum(NODE, PROJECTION, ANY)):
     """Test whether pathway entry is specified type (NODE or PROJECTION)"""
     from psyneulink.core.components.projections.projection import _is_projection_spec
-    node_specs = (Mechanism, Composition)
-    is_node = is_proj = False
+    node_types = (Mechanism, Composition)
+    is_node = is_proj = is_set = False
 
     if desired_type in {NODE, ANY}:
-        is_node = (isinstance(entry, node_specs)
+        is_node = (isinstance(entry, node_types)
                    or (isinstance(entry, tuple)
-                       and isinstance(entry[0], node_specs)
+                       and isinstance(entry[0], node_types)
                        and (isinstance(entry[1], NodeRole) or
                             (isinstance(entry[1], list) and all(isinstance(nr, NodeRole) for nr in entry[1])))))
 
@@ -226,9 +351,13 @@ def _is_pathway_entry_spec(entry, desired_type:tc.enum(NODE, PROJECTION, ANY)):
                        and _is_projection_spec(entry[0])
                        and entry[1] in {True, FEEDBACK, False, MAYBE})
                    or (isinstance(entry, (set,list))
+                   # or (isinstance(entry, set)
                        and all(_is_projection_spec(item) for item in entry)))
 
-    if is_node or is_proj:
+    if desired_type in {ANY}:
+        is_set = (isinstance(entry, set) and all(_is_node_spec(item) for item in entry))
+
+    if is_node or is_proj or is_set:
         return True
     else:
         return False

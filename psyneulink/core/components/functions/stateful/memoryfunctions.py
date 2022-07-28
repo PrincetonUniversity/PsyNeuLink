@@ -45,7 +45,7 @@ from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, BUFFER_FUNCTION, MEMORY_FUNCTION, COSINE, \
     ContentAddressableMemory_FUNCTION, DictionaryMemory_FUNCTION, \
     MIN_INDICATOR, MULTIPLICATIVE_PARAM, NEWEST, NOISE, OLDEST, OVERWRITE, RATE, RANDOM, VARIABLE
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import \
     all_within_range, convert_to_np_array, convert_to_list, convert_all_elements_to_np_array
@@ -55,6 +55,16 @@ __all__ = ['MemoryFunction', 'Buffer', 'DictionaryMemory', 'ContentAddressableMe
 
 class MemoryFunction(StatefulFunction):  # -----------------------------------------------------------------------------
     componentType = MEMORY_FUNCTION
+
+    # TODO: refactor to avoid skip of direct super
+    def _update_default_variable(self, new_default_variable, context=None):
+        if not self.parameters.initializer._user_specified:
+            # use * 0 instead of zeros_like to deal with ragged arrays
+            self._initialize_previous_value([new_default_variable * 0], context)
+
+        # bypass the additional _initialize_previous_value call used by
+        # other stateful functions
+        super(StatefulFunction, self)._update_default_variable(new_default_variable, context=context)
 
 
 class Buffer(MemoryFunction):  # ------------------------------------------------------------------------------
@@ -215,6 +225,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         changes_shape = Parameter(True, stateful=False, loggable=False, pnl_internal=True)
 
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  # FIX: 12/11/18 JDC - NOT SAFE TO SPECIFY A MUTABLE TYPE AS DEFAULT
@@ -258,16 +269,6 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         self.parameters.previous_value.set(previous_value, context, override=True)
 
         return previous_value
-
-    # TODO: Buffer variable fix: remove this or refactor to avoid skip
-    # of direct super
-    def _update_default_variable(self, new_default_variable, context=None):
-        if not self.parameters.initializer._user_specified:
-            self._initialize_previous_value([np.zeros_like(new_default_variable)], context)
-
-        # bypass the additional _initialize_previous_value call used by
-        # other stateful functions
-        super(StatefulFunction, self)._update_default_variable(new_default_variable, context=context)
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
         self.parameters.previous_value._set(
@@ -1152,6 +1153,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                 initializer = ContentAddressableMemory._enforce_memory_shape(initializer)
             return initializer
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  # FIX: REINSTATE WHEN 3.6 IS RETIRED:
@@ -2173,6 +2175,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         selection_function = Parameter(OneHot(mode=MIN_INDICATOR), stateful=False, loggable=False)
 
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,

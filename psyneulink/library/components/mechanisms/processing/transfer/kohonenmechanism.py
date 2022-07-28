@@ -90,7 +90,7 @@ from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import \
     DEFAULT_MATRIX, FUNCTION, GAUSSIAN, IDENTITY_MATRIX, KOHONEN_MECHANISM, \
     LEARNING_SIGNAL, MATRIX, MAX_INDICATOR, NAME, OWNER_VALUE, OWNER_VARIABLE, RESULT, VARIABLE
-from psyneulink.core.globals.parameters import Parameter, SharedParameter
+from psyneulink.core.globals.parameters import Parameter, SharedParameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import is_numeric_or_none, parameter_spec
 from psyneulink.library.components.mechanisms.modulatory.learning.kohonenlearningmechanism import KohonenLearningMechanism
@@ -274,6 +274,7 @@ class KohonenMechanism(TransferMechanism):
                                     FUNCTION: OneHot(mode=MAX_INDICATOR)}
                                    ])
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,

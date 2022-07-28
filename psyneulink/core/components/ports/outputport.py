@@ -631,7 +631,7 @@ from psyneulink.core.globals.keywords import \
     OWNER_VALUE, PARAMS, PARAMS_DICT, PROJECTION, PROJECTIONS, RECEIVER, REFERENCE_VALUE, STANDARD_OUTPUT_PORTS, PORT, \
     VALUE, VARIABLE, \
     output_port_spec_to_parameter_name, INPUT_PORT_VARIABLES
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
@@ -905,6 +905,7 @@ class OutputPort(Port_Base):
 
     #endregion
 
+    @check_user_specified
     @tc.typecheck
     @handle_external_context()
     def __init__(self,

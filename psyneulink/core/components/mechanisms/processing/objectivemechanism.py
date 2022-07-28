@@ -378,7 +378,7 @@ from psyneulink.core.globals.context import ContextFlags, handle_external_contex
 from psyneulink.core.globals.keywords import \
     CONTROL, EXPONENT, EXPONENTS, LEARNING, MATRIX, NAME, OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, \
     PARAMS, PREFERENCE_SET_NAME, PROJECTION, PROJECTIONS, PORT_TYPE, VARIABLE, WEIGHT, WEIGHTS
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.utilities import ContentAddressableList
@@ -562,6 +562,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     standard_output_port_names.extend([OUTCOME])
 
     # FIX:  TYPECHECK MONITOR TO LIST OR ZIP OBJECT
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  monitor=None,

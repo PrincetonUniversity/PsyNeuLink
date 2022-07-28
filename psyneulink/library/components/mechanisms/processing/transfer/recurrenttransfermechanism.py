@@ -210,7 +210,7 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import \
     AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_PORT, MATRIX, NAME, RECURRENT_TRANSFER_MECHANISM, RESULT
-from psyneulink.core.globals.parameters import Parameter, SharedParameter
+from psyneulink.core.globals.parameters import Parameter, SharedParameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.registry import register_instance, remove_instance_from_registry
 from psyneulink.core.globals.socket import ConnectionInfo
@@ -644,6 +644,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     standard_output_port_names = TransferMechanism.standard_output_port_names.copy()
     standard_output_port_names.extend([ENERGY_OUTPUT_PORT_NAME, ENTROPY_OUTPUT_PORT_NAME])
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -1339,6 +1340,8 @@ class RecurrentTransferMechanism(TransferMechanism):
             # 'is_finished' inner loop so we always see the most up-to-date
             # input
             builder.call(recurrent_f, [recurrent_params, recurrent_state, recurrent_in, recurrent_out])
+
+        assert not self.has_recurrent_input_port, "Configuration using combination function is not supported!"
 
         return super()._gen_llvm_input_ports(ctx, builder, params, state, arg_in)
 

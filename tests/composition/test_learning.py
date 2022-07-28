@@ -2291,9 +2291,9 @@ class TestBackProp:
 
 
     @pytest.mark.parametrize('order', [
-        'color_full',
-        'word_partial',
-        'word_full',
+        # 'color_full',
+        # 'word_partial',
+        # 'word_full',
         'full_overlap'
     ])
     def test_stroop_model_learning(self, order):

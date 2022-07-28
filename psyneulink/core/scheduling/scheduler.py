@@ -8,6 +8,7 @@
 
 # ********************************************* Scheduler **************************************************************
 import copy
+import logging
 import typing
 
 import graph_scheduler
@@ -15,7 +16,7 @@ import pint
 
 from psyneulink import _unit_registry
 from psyneulink.core.globals.context import Context, handle_external_context
-from psyneulink.core.globals.json import JSONDumpable
+from psyneulink.core.globals.mdf import MDFSerializable
 from psyneulink.core.globals.utilities import parse_valid_identifier
 from psyneulink.core.scheduling.condition import _create_as_pnl_condition
 
@@ -24,10 +25,11 @@ __all__ = [
 ]
 
 
+logger = logging.getLogger(__name__)
 SchedulingMode = graph_scheduler.scheduler.SchedulingMode
 
 
-class Scheduler(graph_scheduler.Scheduler, JSONDumpable):
+class Scheduler(graph_scheduler.Scheduler, MDFSerializable):
     def __init__(
         self,
         composition=None,
@@ -50,7 +52,7 @@ class Scheduler(graph_scheduler.Scheduler, JSONDumpable):
                 default_execution_id = composition.default_execution_id
 
         # TODO: consider integrating something like this into graph-scheduler?
-        self._user_specified_conds = copy.copy(conditions)
+        self._user_specified_conds = copy.copy(conditions) if conditions is not None else {}
 
         super().__init__(
             graph=graph,
@@ -70,19 +72,51 @@ class Scheduler(graph_scheduler.Scheduler, JSONDumpable):
         self.default_termination_conds = replace_term_conds(self.default_termination_conds)
         self.termination_conds = replace_term_conds(self.termination_conds)
 
+    def _validate_conditions(self):
+        unspecified_nodes = []
+        for node in self.nodes:
+            if node not in self.conditions:
+                dependencies = list(self.dependency_dict[node])
+                if len(dependencies) == 0:
+                    cond = graph_scheduler.Always()
+                elif len(dependencies) == 1:
+                    cond = graph_scheduler.EveryNCalls(dependencies[0], 1)
+                else:
+                    cond = graph_scheduler.All(*[graph_scheduler.EveryNCalls(x, 1) for x in dependencies])
+
+                # TODO: replace this call in graph-scheduler if adding _user_specified_conds
+                self._add_condition(node, cond)
+                unspecified_nodes.append(node)
+        if len(unspecified_nodes) > 0:
+            logger.info(
+                'These nodes have no Conditions specified, and will be scheduled with conditions: {0}'.format(
+                    {node: self.conditions[node] for node in unspecified_nodes}
+                )
+            )
+
     def add_condition(self, owner, condition):
-        super().add_condition(owner, _create_as_pnl_condition(condition))
+        self._user_specified_conds[owner] = condition
+        self._add_condition(owner, condition)
+
+    def _add_condition(self, owner, condition):
+        condition = _create_as_pnl_condition(condition)
+        super().add_condition(owner, condition)
 
     def add_condition_set(self, conditions):
+        self._user_specified_conds.update(conditions)
+        self._add_condition_set(conditions)
+
+    def _add_condition_set(self, conditions):
         try:
             conditions = conditions.conditions
         except AttributeError:
             pass
 
-        super().add_condition_set({
+        conditions = {
             node: _create_as_pnl_condition(cond)
             for node, cond in conditions.items()
-        })
+        }
+        super().add_condition_set(conditions)
 
     @handle_external_context(fallback_default=True)
     def run(

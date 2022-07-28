@@ -65,7 +65,7 @@ jobs:
         branch: master
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
         architecture: ${{ matrix.python-architecture }}
@@ -94,17 +94,21 @@ jobs:
     - name: Add git tag
       # The generated docs include PNL version,
       # set it to a fixed value to prevent polluting the diff
+      # This needs to be done after installing PNL
+      # to not interfere with dependency resolution
+      id: add_zero_tag
       if: github.event_name == 'pull_request'
-      run: git tag --force 'v999.999.999.999'
+      run: git tag --force 'v0.0.0.0'
 
     - name: Build Documentation
       run: make -C docs/ html -e SPHINXOPTS="-aE -j auto"
 
     - name: Remove git tag
       # The generated docs include PNL version,
-      # This was set to a fixed value to prevent polluting the diff
-      if: github.event_name == 'pull_request' && always()
-      run: git tag -d 'v999.999.999.999'
+      # A special tag was set to a fixed value
+      # to prevent polluting the diff
+      if: steps.add_zero_tag.outcome != 'skipped'
+      run: git tag -d 'v0.0.0.0'
 
     - name: Upload Documentation
       uses: actions/upload-artifact@v3
@@ -151,7 +155,7 @@ jobs:
         ref: gh-pages
 
     - name: Download branch docs
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
       with:
         name: Documentation-head-${{ matrix.os }}-${{ matrix.python-version }}-x64
         path: _built_docs/${{ github.ref }}
@@ -168,7 +172,7 @@ jobs:
       if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/devel' || github.ref == 'refs/heads/docs'
 
     - name: Download main docs
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
       with:
         name: Documentation-head-${{ matrix.os }}-${{ matrix.python-version }}-x64
         # This overwrites files in current directory

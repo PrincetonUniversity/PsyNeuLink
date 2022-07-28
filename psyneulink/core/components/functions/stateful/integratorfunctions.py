@@ -48,7 +48,7 @@ from psyneulink.core.globals.keywords import \
     INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION, LEAKY_COMPETING_INTEGRATOR_FUNCTION, \
     MULTIPLICATIVE_PARAM, NOISE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_PORTS, PRODUCT, \
     RATE, REST, SIMPLE_INTEGRATOR_FUNCTION, SUM, TIME_STEP_SIZE, THRESHOLD, VARIABLE, MODEL_SPEC_ID_MDF_VARIABLE
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import parameter_spec, all_within_range, \
     convert_all_elements_to_np_array
@@ -220,6 +220,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         previous_value = Parameter(np.array([0]), initializer='initializer')
         initializer = Parameter(np.array([0]), pnl_internal=True)
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -550,6 +551,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM], function_arg=True)
         increment = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -826,6 +828,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
         rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM], function_arg=True)
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -1061,6 +1064,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM], function_arg=True)
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -1573,6 +1577,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
         long_term_logistic = None
 
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -2014,6 +2019,7 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
         max_val = Parameter(1.0, function_arg=True)
         min_val = Parameter(-1.0, function_arg=True)
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -2418,6 +2424,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
             else:
                 return initializer
 
+    @check_user_specified
     @tc.typecheck
     def __init__(
         self,
@@ -2531,10 +2538,6 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         builder.call(rand_f, [random_state, rand_val_ptr])
         rand_val = builder.load(rand_val_ptr)
 
-        if isinstance(rate.type, pnlvm.ir.ArrayType):
-            assert len(rate.type) == 1
-            rate = builder.extract_value(rate, 0)
-
         # Get state pointers
         prev_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "previous_value")
         prev_time_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "previous_time")
@@ -2543,10 +2546,8 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         #       + np.sqrt(time_step_size * noise) * random_state.normal()
         prev_val_ptr = builder.gep(prev_ptr, [ctx.int32_ty(0), index])
         prev_val = builder.load(prev_val_ptr)
+
         val = builder.load(builder.gep(vi, [ctx.int32_ty(0), index]))
-        if isinstance(val.type, pnlvm.ir.ArrayType):
-            assert len(val.type) == 1
-            val = builder.extract_value(val, 0)
         val = builder.fmul(val, rate)
         val = builder.fmul(val, time_step_size)
         val = builder.fadd(val, prev_val)
@@ -2894,7 +2895,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         # threshold = Parameter(100.0, modulable=True)
         time_step_size = Parameter(1.0, modulable=True)
         previous_time = Parameter(None, initializer='starting_point', pnl_internal=True)
-        dimension = Parameter(2, stateful=False, read_only=True)
+        dimension = Parameter(3, stateful=False, read_only=True)
         initializer = Parameter([0], initalizer='variable', stateful=True)
         angle_function = Parameter(None, stateful=False, loggable=False)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
@@ -2933,6 +2934,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
                 noise = np.array(noise)
             return noise
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -3439,6 +3441,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
             read_only=True
         )
 
+    @check_user_specified
     @tc.typecheck
     def __init__(
         self,
@@ -3733,6 +3736,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
         time_step_size = Parameter(0.1, modulable=True, function_arg=True)
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -4414,6 +4418,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
             read_only=True
         )
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,

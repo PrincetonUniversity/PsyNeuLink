@@ -842,13 +842,13 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
-from psyneulink.core.globals.json import _get_variable_parameter_name, _substitute_expression_args
+from psyneulink.core.globals.mdf import _get_variable_parameter_name
 from psyneulink.core.globals.keywords import \
     COMBINE, comparison_operators, EXECUTION_COUNT, FUNCTION, GREATER_THAN_OR_EQUAL, \
     CURRENT_VALUE, LESS_THAN_OR_EQUAL, MAX_ABS_DIFF, \
     NAME, NOISE, NUM_EXECUTIONS_BEFORE_FINISHED, OWNER_VALUE, RESET, RESULT, RESULTS, \
     SELECTION_FUNCTION_TYPE, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE
-from psyneulink.core.globals.parameters import Parameter, FunctionParameter
+from psyneulink.core.globals.parameters import Parameter, FunctionParameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
@@ -1283,6 +1283,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                 return f"must be boolean comparison operator or one of the following strings:" \
                        f" {','.join(comparison_operators.keys())}."
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -1543,13 +1544,11 @@ class TransferMechanism(ProcessingMechanism_Base):
             return builder.fcmp_ordered("!=", is_finished_flag,
                                               is_finished_flag.type(0))
 
-        # If modulated, termination threshold is single element array
-        if isinstance(threshold_ptr.type.pointee, pnlvm.ir.ArrayType):
-            assert len(threshold_ptr.type.pointee) == 1
-            threshold_ptr = builder.gep(threshold_ptr, [ctx.int32_ty(0),
-                                                        ctx.int32_ty(0)])
+        # If modulated, termination threshold is single element array.
+        # Otherwise, it is scalar
+        threshold = pnlvm.helpers.load_extract_scalar_array_one(builder,
+                                                                threshold_ptr)
 
-        threshold = builder.load(threshold_ptr)
         cmp_val_ptr = builder.alloca(threshold.type, name="is_finished_value")
         if self.termination_measure is max:
             assert self._termination_measure_num_items_expected == 1
@@ -1605,7 +1604,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         return builder.fcmp_ordered(cmp_str, cmp_val, threshold)
 
     def _gen_llvm_mechanism_functions(self, ctx, builder, m_base_params, m_params,
-                                      m_state, arg_in, ip_out, *, tags:frozenset):
+                                      m_state, m_in, m_val, ip_out, *, tags:frozenset):
 
         if self.integrator_mode:
             if_state = pnlvm.helpers.get_state_ptr(builder, self, m_state,
@@ -1614,20 +1613,23 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                          "integrator_function")
             if_params, builder = self._gen_llvm_param_ports_for_obj(
                     self.integrator_function, if_base_params, ctx, builder,
-                    m_base_params, m_state, arg_in)
+                    m_base_params, m_state, m_in)
 
             mf_in, builder = self._gen_llvm_invoke_function(
-                    ctx, builder, self.integrator_function, if_params, if_state, ip_out, tags=tags)
+                    ctx, builder, self.integrator_function, if_params,
+                    if_state, ip_out, None, tags=tags)
         else:
             mf_in = ip_out
 
         mf_state = pnlvm.helpers.get_state_ptr(builder, self, m_state, "function")
         mf_base_params = pnlvm.helpers.get_param_ptr(builder, self, m_base_params, "function")
         mf_params, builder = self._gen_llvm_param_ports_for_obj(
-                self.function, mf_base_params, ctx, builder, m_base_params, m_state, arg_in)
+                self.function, mf_base_params, ctx, builder, m_base_params, m_state, m_in)
 
         mf_out, builder = self._gen_llvm_invoke_function(ctx, builder,
-                                                         self.function, mf_params, mf_state, mf_in, tags=tags)
+                                                         self.function, mf_params,
+                                                         mf_state, mf_in, m_val,
+                                                         tags=tags)
 
         clip_ptr = pnlvm.helpers.get_param_ptr(builder, self, m_params, "clip")
         if len(clip_ptr.type.pointee) != 0:
@@ -1851,8 +1853,5 @@ class TransferMechanism(ProcessingMechanism_Base):
                 self.integrator_function._set_mdf_arg(
                     integrator_function_model, 'noise', main_noise_function.id
                 )
-
-            for func_model in model.functions:
-                _substitute_expression_args(func_model)
 
         return model

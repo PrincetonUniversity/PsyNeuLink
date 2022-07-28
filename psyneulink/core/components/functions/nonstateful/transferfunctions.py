@@ -70,7 +70,7 @@ from psyneulink.core.globals.keywords import \
     RATE, RECEIVER, RELU_FUNCTION, SCALE, SLOPE, SOFTMAX_FUNCTION, STANDARD_DEVIATION, SUM, \
     TRANSFER_FUNCTION_TYPE, TRANSFER_WITH_COSTS_FUNCTION, VARIANCE, VARIABLE, X_0, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import \
-    FunctionParameter, Parameter, get_validator_by_function
+    FunctionParameter, Parameter, get_validator_by_function, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, is_pref_set
 from psyneulink.core.globals.utilities import parameter_spec, safe_len
@@ -197,6 +197,7 @@ class Identity(TransferFunction):  # -------------------------------------------
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -364,6 +365,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
         slope = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         intercept = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -625,6 +627,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
         offset = Parameter(0.0, modulable=True)
         bounds = (0, None)
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -915,6 +918,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
         scale = Parameter(1.0, modulable=True)
         bounds = (0, 1)
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -1233,6 +1237,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         scale = Parameter(1.0, modulable=True)
         bounds = (0, 1)
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -1497,6 +1502,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         leak = Parameter(0.0, modulable=True)
         bounds = (None, None)
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -1705,6 +1711,7 @@ class Angle(TransferFunction):  # ----------------------------------------------
             if variable.ndim != 1 or len(variable) < 2:
                 return f"must be list or 1d array of length 2 or greater."
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -1970,6 +1977,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         offset = Parameter(0.0, modulable=True)
         bounds = (None, None)
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -2243,6 +2251,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
         bounds = (None, None)
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -2523,6 +2532,7 @@ class SoftMax(TransferFunction):
             else:
                 return 'not one of {0}'.format(options)
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -2578,7 +2588,7 @@ class SoftMax(TransferFunction):
 
         return np.asarray(variable)
 
-    def __gen_llvm_exp_sum_max(self, builder, index, ctx, vi, gain, max_ptr, exp_sum_ptr, max_ind_ptr):
+    def __gen_llvm_exp_sum(self, builder, index, ctx, vi, gain, exp_sum_ptr):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
 
         exp_f = ctx.get_builtin("exp", [ctx.float_ty])
@@ -2590,17 +2600,7 @@ class SoftMax(TransferFunction):
         new_exp_sum = builder.fadd(exp_sum, exp_val)
         builder.store(new_exp_sum, exp_sum_ptr)
 
-        old_max = builder.load(max_ptr)
-        gt = builder.fcmp_ordered(">", exp_val, old_max)
-        new_max = builder.select(gt, exp_val, old_max)
-        builder.store(new_max, max_ptr)
-
-        old_index = builder.load(max_ind_ptr)
-        new_index = builder.select(gt, index, old_index)
-        builder.store(new_index, max_ind_ptr)
-
     def __gen_llvm_exp_div(self, builder, index, ctx, vi, vo, gain, exp_sum):
-        assert self.output == ALL
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         exp_f = ctx.get_builtin("exp", [ctx.float_ty])
@@ -2611,65 +2611,70 @@ class SoftMax(TransferFunction):
 
         builder.store(val, ptro)
 
-    def __gen_llvm_apply(self, ctx, builder, params, _, arg_in, arg_out):
+    def __gen_llvm_apply(self, ctx, builder, params, state, arg_in, arg_out, tags:frozenset):
         exp_sum_ptr = builder.alloca(ctx.float_ty)
         builder.store(exp_sum_ptr.type.pointee(0), exp_sum_ptr)
-
-        max_ptr = builder.alloca(ctx.float_ty)
-        builder.store(max_ptr.type.pointee(float('-inf')), max_ptr)
-
-        max_ind_ptr = builder.alloca(ctx.int32_ty)
-        builder.store(max_ind_ptr.type.pointee(-1), max_ind_ptr)
 
         gain_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, GAIN)
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
 
         with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_sum_max") as args:
-            self.__gen_llvm_exp_sum_max(*args, ctx=ctx, vi=arg_in,
-                                        max_ptr=max_ptr, gain=gain,
-                                        max_ind_ptr=max_ind_ptr,
-                                        exp_sum_ptr=exp_sum_ptr)
+            self.__gen_llvm_exp_sum(*args, ctx=ctx, vi=arg_in, gain=gain,
+                                    exp_sum_ptr=exp_sum_ptr)
 
-        output_type = self.output
         exp_sum = builder.load(exp_sum_ptr)
-        index = builder.load(max_ind_ptr)
-        ptro = builder.gep(arg_out, [ctx.int32_ty(0), index])
 
-        if output_type == ALL:
+        if self.output == ALL:
             with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_div") as args:
                 self.__gen_llvm_exp_div(ctx=ctx, vi=arg_in, vo=arg_out,
                                         gain=gain, exp_sum=exp_sum, *args)
-        elif output_type == MAX_VAL:
-            # zero out the output array
-            with pnlvm.helpers.array_ptr_loop(builder, arg_in, "zero_output") as (b,i):
-                b.store(ctx.float_ty(0), b.gep(arg_out, [ctx.int32_ty(0), i]))
+            return builder
 
-            ptri = builder.gep(arg_in, [ctx.int32_ty(0), index])
-            exp_f = ctx.get_builtin("exp", [ctx.float_ty])
-            orig_val = builder.load(ptri)
-            val = builder.fmul(orig_val, gain)
-            val = builder.call(exp_f, [val])
-            val = builder.fdiv(val, exp_sum)
-            builder.store(val, ptro)
-        elif output_type == MAX_INDICATOR:
-            # zero out the output array
-            with pnlvm.helpers.array_ptr_loop(builder, arg_in, "zero_output") as (b,i):
-                b.store(ctx.float_ty(0), b.gep(arg_out, [ctx.int32_ty(0), i]))
-            builder.store(ctx.float_ty(1), ptro)
+        one_hot_f = ctx.import_llvm_function(self.one_hot_function, tags=tags)
+        one_hot_p = pnlvm.helpers.get_param_ptr(builder, self, params, 'one_hot_function')
+        one_hot_s = pnlvm.helpers.get_state_ptr(builder, self, state, 'one_hot_function')
+
+        assert one_hot_f.args[3].type == arg_out.type
+        one_hot_out = arg_out
+        one_hot_in = builder.alloca(one_hot_f.args[2].type.pointee)
+
+        if self.output in {MAX_VAL, MAX_INDICATOR}:
+            with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_div") as (b, i):
+                self.__gen_llvm_exp_div(ctx=ctx, vi=arg_in, vo=one_hot_in,
+                                        gain=gain, exp_sum=exp_sum, builder=b, index=i)
+
+            builder.call(one_hot_f, [one_hot_p, one_hot_s, one_hot_in, one_hot_out])
+
+        elif self.output == PROB:
+            one_hot_in_data = builder.gep(one_hot_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            one_hot_in_dist = builder.gep(one_hot_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
+
+            with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_div") as (b, i):
+                self.__gen_llvm_exp_div(ctx=ctx, vi=arg_in, vo=one_hot_in_dist,
+                                        gain=gain, exp_sum=exp_sum, builder=b, index=i)
+
+                dist_in = b.gep(arg_in, [ctx.int32_ty(0), i])
+                dist_out = b.gep(one_hot_in_data, [ctx.int32_ty(0), i])
+                b.store(b.load(dist_in), dist_out)
+
+
+            builder.call(one_hot_f, [one_hot_p, one_hot_s, one_hot_in, one_hot_out])
+        else:
+            assert False, "Unsupported output in {}: {}".format(self, self.output)
 
         return builder
 
-    def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out, *, tags:frozenset):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         if self.parameters.per_item.get():
             assert isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType)
             assert isinstance(arg_out.type.pointee.element, pnlvm.ir.ArrayType)
             for i in range(arg_in.type.pointee.count):
                 inner_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(i)])
                 inner_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
-                builder = self.__gen_llvm_apply(ctx, builder, params, _, inner_in, inner_out)
+                builder = self.__gen_llvm_apply(ctx, builder, params, state, inner_in, inner_out, tags=tags)
             return builder
         else:
-            return self.__gen_llvm_apply(ctx, builder, params, _, arg_in, arg_out)
+            return self.__gen_llvm_apply(ctx, builder, params, state, arg_in, arg_out, tags=tags)
 
     def apply_softmax(self, input_value, gain, output_type):
         # Modulate input_value by gain
@@ -2925,6 +2930,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     #         return True
     #     return False
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -3842,8 +3848,7 @@ class TransferWithCosts(TransferFunction):
                     :default value: None
                     :type:
         """
-        variable = Parameter(np.array([0]),
-                             history_min_length=1)
+        variable = Parameter(np.array([0]), history_min_length=1, constructor_argument='default_variable')
 
         intensity = Parameter(np.zeros_like(variable.default_value),
                               history_min_length=1)
@@ -3927,6 +3932,7 @@ class TransferWithCosts(TransferFunction):
             function_parameter_name=ADDITIVE_PARAM,
         )
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,

@@ -85,7 +85,7 @@ from psyneulink.core.components.ports.modulatorysignals.controlsignal import Con
 from psyneulink.core.components.ports.port import _parse_port_spec
 from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
 from psyneulink.core.globals.keywords import ALL, CONTROL_SIGNALS, DEFAULT_VARIABLE, VARIABLE
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.utilities import get_deepcopy_with_shared, powerset, tensor_power
 
 __all__ = ['PREDICTION_TERMS', 'PV', 'RegressionCFA']
@@ -246,6 +246,7 @@ class RegressionCFA(CompositionFunctionApproximator):
         previous_state = None
         regression_weights = None
 
+    @check_user_specified
     def __init__(self,
                  name=None,
                  update_weights=None,

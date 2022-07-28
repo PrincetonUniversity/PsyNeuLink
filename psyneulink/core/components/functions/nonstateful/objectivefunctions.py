@@ -33,7 +33,7 @@ from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DistanceMetrics, \
     ENERGY, ENTROPY, EUCLIDEAN, HOLLOW_MATRIX, MATRIX, MAX_ABS_DIFF, \
     NORMED_L0_SIMILARITY, OBJECTIVE_FUNCTION_TYPE, SIZE, STABILITY_FUNCTION
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import is_distance_metric, safe_len, convert_to_np_array
 from psyneulink.core.globals.utilities import is_iterable
@@ -206,6 +206,7 @@ class Stability(ObjectiveFunction):
         transfer_fct = Parameter(None, stateful=False, loggable=False)
         normalize = Parameter(False, stateful=False)
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -558,6 +559,7 @@ class Energy(Stability):
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
     """
 
+    @check_user_specified
     def __init__(self,
                  default_variable=None,
                  size=None,
@@ -667,6 +669,7 @@ class Entropy(Stability):
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
     """
 
+    @check_user_specified
     def __init__(self,
                  default_variable=None,
                  normalize:bool=None,
@@ -779,6 +782,7 @@ class Distance(ObjectiveFunction):
         variable = Parameter(np.array([[0], [0]]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         metric = Parameter(DIFFERENCE, stateful=False)
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  default_variable=None,

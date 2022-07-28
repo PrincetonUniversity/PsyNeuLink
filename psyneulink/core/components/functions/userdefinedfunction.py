@@ -18,7 +18,7 @@ from psyneulink.core.components.functions.function import FunctionError, Functio
 from psyneulink.core.globals.keywords import \
     CONTEXT, CUSTOM_FUNCTION, OWNER, PARAMS, \
     SELF, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences import is_pref_set
 from psyneulink.core.globals.utilities import _is_module_class, iscompatible
 
@@ -450,6 +450,7 @@ class UserDefinedFunction(Function_Base):
             pnl_internal=True,
         )
 
+    @check_user_specified
     @tc.typecheck
     def __init__(self,
                  custom_function=None,

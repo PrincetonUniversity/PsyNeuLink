@@ -144,15 +144,14 @@ def get_state_ptr(builder, component, state_ptr, stateful_name, hist_idx=0):
     return ptr
 
 
-def push_state_val(builder, component, state_ptr, name, new_val):
+def get_state_space(builder, component, state_ptr, name):
     val_ptr = get_state_ptr(builder, component, state_ptr, name, None)
     for i in range(len(val_ptr.type.pointee) - 1, 0, -1):
         dest_ptr = get_state_ptr(builder, component, state_ptr, name, i)
         src_ptr = get_state_ptr(builder, component, state_ptr, name, i - 1)
         builder.store(builder.load(src_ptr), dest_ptr)
 
-    dest_ptr = get_state_ptr(builder, component, state_ptr, name)
-    builder.store(builder.load(new_val), dest_ptr)
+    return get_state_ptr(builder, component, state_ptr, name)
 
 
 def unwrap_2d_array(builder, element):
@@ -219,7 +218,8 @@ def csch(ctx, builder, x):
 
 
 def is_close(ctx, builder, val1, val2, rtol=1e-05, atol=1e-08):
-    is_close_f = ctx.get_builtin("is_close")
+    assert val1.type == val2.type
+    is_close_f = ctx.get_builtin("is_close_{}".format(val1.type))
     rtol_val = val1.type(rtol)
     atol_val = val1.type(atol)
     return builder.call(is_close_f, [val1, val2, rtol_val, atol_val])
@@ -303,6 +303,24 @@ def convert_type(builder, val, t):
     if is_floating_point(val) and is_integer(t):
         # Python integers are signed
         return builder.fptosi(val, t)
+
+    if is_floating_point(val) and is_floating_point(t):
+        if isinstance(val.type, ir.HalfType) or isinstance(t, ir.DoubleType):
+            return builder.fpext(val, t)
+        elif isinstance(val.type, ir.DoubleType) or isinstance(t, ir.HalfType):
+            # FIXME: Direct conversion from double to half needs a runtime
+            #        function (__truncdfhf2). llvmlite MCJIT fails to provide
+            #        it and instead generates invocation of a NULL pointer.
+            #        Use double conversion (double->float->half) instead.
+            #        Both steps can be done in one CPU instruction,
+            #        but the result can be slightly different
+            #        see: https://github.com/numba/llvmlite/issues/834
+            if isinstance(val.type, ir.DoubleType) and isinstance(t, ir.HalfType):
+                val = builder.fptrunc(val, ir.FloatType())
+            return builder.fptrunc(val, t)
+        else:
+            assert val.type == t
+            return val
 
     assert False, "Unknown type conversion: {} -> {}".format(val.type, t)
 
@@ -463,18 +481,24 @@ class ConditionGenerator:
         return ((0, 0, 0),
                 tuple((0, (-1, -1, -1)) for _ in composition.nodes))
 
-    def get_condition_struct_type(self, composition=None):
-        composition = self.composition if composition is None else composition
-        structs = [self.get_private_condition_struct_type(composition)]
-        for node in composition.nodes:
-            structs.append(self.get_condition_struct_type(node) if isinstance(node, type(self.composition)) else ir.LiteralStructType([]))
+    def get_condition_struct_type(self, node=None):
+        node = self.composition if node is None else node
+
+        subnodes = getattr(node, 'nodes', [])
+        structs = [self.get_condition_struct_type(n) for n in subnodes]
+        if len(structs) != 0:
+            structs.insert(0, self.get_private_condition_struct_type(node))
+
         return ir.LiteralStructType(structs)
 
-    def get_condition_initializer(self, composition=None):
-        composition = self.composition if composition is None else composition
-        data = [self.get_private_condition_initializer(composition)]
-        for node in composition.nodes:
-            data.append(self.get_condition_initializer(node) if isinstance(node, type(self.composition)) else tuple())
+    def get_condition_initializer(self, node=None):
+        node = self.composition if node is None else node
+
+        subnodes = getattr(node, 'nodes', [])
+        data = [self.get_condition_initializer(n) for n in subnodes]
+        if len(data) != 0:
+            data.insert(0, self.get_private_condition_initializer(node))
+
         return tuple(data)
 
     def bump_ts(self, builder, cond_ptr, count=(0, 0, 1)):
