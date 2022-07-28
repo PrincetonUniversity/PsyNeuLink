@@ -2954,10 +2954,9 @@ class OptimizationControlMechanism(ControlMechanism):
                                                          cost_options=CostFunctions.NONE,
                                                          # FIXME: Hack that Jan found to prevent some LLVM runtime errors
                                                          default_allocation=[self.num_estimates])
+            randomization_control_signal = self._instantiate_control_signal(randomization_control_signal, context)
             randomization_control_signal_index = len(self.output_ports)
             randomization_control_signal._variable_spec = (OWNER_VALUE, randomization_control_signal_index)
-
-            randomization_control_signal = self._instantiate_control_signal(randomization_control_signal, context)
 
             self.output_ports.append(randomization_control_signal)
 

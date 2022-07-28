@@ -129,9 +129,9 @@ def simulation_likelihood(
 
             # If we didn't get enough simulation results for this category, don't do
             # a KDE
-            if len(dsub) < 100:
-                dens_u[category] = (None, None)
-                continue
+            # if len(dsub) < 100:
+            #     dens_u[category] = (None, None)
+            #     continue
 
             # If any dimension of the data has a 0 range (all are same value) then
             # this will cause problems doing the KDE, skip.

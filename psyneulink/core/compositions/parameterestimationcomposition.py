@@ -151,7 +151,7 @@ from psyneulink.core.components.mechanisms.processing.objectivemechanism import 
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
-from psyneulink.core.globals.keywords import BEFORE
+from psyneulink.core.globals.keywords import BEFORE, OVERRIDE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.scheduling.time import TimeScale
 
@@ -611,6 +611,9 @@ class ParameterEstimationComposition(Composition):
         control_signals = []
         for param, allocation in parameters.items():
             control_signals.append(ControlSignal(modulates=param,
+                                                 # In parameter fitting (when data is present) we always want to
+                                                 # override the fitting parameters with the search values.
+                                                 modulation=OVERRIDE if self.data is not None else None,
                                                  allocation_samples=allocation))
 
         # If objective_function has been specified, create and pass ObjectiveMechanism to ocm
@@ -681,71 +684,3 @@ class ParameterEstimationComposition(Composition):
             raise ParameterEstimationCompositionError(f"The function ({of}) for the controller of "
                                                       f"ParameterEstimationComposition {self.name} does not appear to " 
                                                       f"have a log_likelihood function.")
-
-    # @handle_external_context()
-    # def run(self, *args, **kwargs):
-    #     """
-    #     Runs the ParameterEstimationComposition.
-    #
-    #     Parameters
-    #     ----------
-    #     *args : positional arguments
-    #         positional arguments to be passed to the ParameterEstimationComposition's
-    #         `run` method.
-    #     **kwargs : keyword arguments
-    #         keyword arguments to be passed to the ParameterEstimationComposition's
-    #         `run` method.
-    #
-    #     Returns
-    #     -------
-    #     results : dict
-    #         dictionary of results from the ParameterEstimationComposition's `run` method.
-    #     """
-    #
-    #     # If we are running in data fitting mode, there is no need to run the composition traditionally. Instead, we
-    #     # just need to execute the controller (OptimizationControlMechanism), passing it the input data, and return the
-    #     # results. Don't invoke the controller again if run has been called already, use the base run method instead.
-    #     if self.data is not None:
-    #
-    #         self.controller_mode = BEFORE
-    #         self.controller_time_scale = TimeScale.RUN
-    #
-    #         if len(args) > 0:
-    #             inputs = args[0]
-    #         elif 'inputs' in kwargs:
-    #             inputs = kwargs['inputs']
-    #         else:
-    #             raise ValueError("Missing required argument: 'inputs'")
-    #
-    #         # Parse the inputs
-    #         # input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
-    #         # inputs, num_inputs_sets = self._parse_run_inputs(inputs, context=kwargs.get('context', None))
-    #
-    #         # When in data fitting mode, we really only need inputs.
-    #         # input_array = list(inputs.values())[0]
-    #         # self.controller.input_ports[1].defaults.value = np.zeros_like(input_array)
-    #
-    #         # Get the context, it should never be None
-    #         try:
-    #             context = kwargs['context']
-    #         except KeyError:
-    #             raise ValueError("Missing required argument to run: 'context'")
-    #
-    #         self._run_called = True
-    #
-    #         context.source = ContextFlags.COMPOSITION
-    #         context.composition = self
-    #
-    #         self._execute_controller(
-    #             relative_order=BEFORE,
-    #             execution_mode=kwargs.get('execution_mode',  pnlvm.ExecutionMode.Python),
-    #             _comp_ex=None,
-    #             context=context,
-    #         )
-    #
-    #         self._run_called = False
-    #
-    #     # Otherwise, we need to pass things to the base class Composition run
-    #     else:
-    #         return super().run(*args, **kwargs)
-    #
