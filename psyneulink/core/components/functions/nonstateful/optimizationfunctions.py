@@ -660,18 +660,24 @@ class OptimizationFunction(Function_Base):
                 self.parameters.num_estimates._get(context) is not None:
 
             # Reshape all the values we encountered to group those that correspond to the same parameter values
-            # can be aggregated.
-            all_values = np.reshape(all_values, (-1, self.parameters.num_estimates._get(context)))
+            # can be aggregated. After this we should have an array that is of shape
+            # (number of parameter combinations (excluding randomization), num_estimates, number of output values)
+            num_estimates = int(self.parameters.num_estimates._get(context))
+            num_param_combs = all_values.shape[1] // num_estimates
+            num_outputs = all_values.shape[0]
+            all_values = np.reshape(all_values.transpose(), (num_param_combs, num_estimates, num_outputs))
 
             # Since we are aggregating over the randomized value of the control allocation, we also need to drop the
             # randomized dimension from the samples. That is, we don't want to return num_estimates samples for each
             # control allocation. This line below just grabs the first one (seed == 1) for each control allocation.
-            all_samples = all_samples[:, all_samples[1, :] == all_samples[1, 0]]
+            all_samples = all_samples[:, all_samples[self.randomization_dimension, :] == all_samples[self.randomization_dimension, 0]]
 
             # If num_estimates is not None, then one of the control signals is modulating the random seed. We will
-            # groupby this signal and average the values to compute the estimated value.
+            # aggregate over this dimension.
             aggregated_values = np.atleast_2d(self.aggregation_function(all_values))
-            returned_values = aggregated_values
+
+            # Transpose the aggregated values matrix so it is (num_outputs, num_param_combs), this matches all_samples then
+            returned_values = np.transpose(aggregated_values)
 
         else:
             returned_values = all_values
@@ -2019,10 +2025,14 @@ class GridSearch(OptimizationFunction):
                     params=params,
                 )
 
-                if all_values.size != all_samples.shape[-1]:
-                    raise ValueError(f"OptimizationFunction Error: {self}._evaluate returned mismatched sizes for "
+                if all_values.shape[-1] != all_samples.shape[-1]:
+                    raise ValueError(f"GridSearch Error: {self}._evaluate returned mismatched sizes for "
                                      f"samples and values. This is likely due to a bug in the implementation of "
                                      f"{self.__class__} _evaluate method.")
+
+                if all_values.shape[0] > 1:
+                    raise ValueError(f"GridSearch Error: {self}._evaluate returned values with more then one element. "
+                                     "GridSearch currently does not support optimizing over multiple output values.")
 
                 # Find the optimal value(s)
                 optimal_value_count = 1
