@@ -158,12 +158,15 @@ class LLVMBinaryFunction:
     def cuda_call(self, *args, threads=1, block_size=None):
         block_size = self.cuda_max_block_size(block_size)
         grid = ((threads + block_size - 1) // block_size, 1)
-        self._cuda_kernel(*args, np.int32(threads),
-                          block=(block_size, 1, 1), grid=grid)
+        ktime = self._cuda_kernel(*args, np.int32(threads), time_kernel="time_stat" in debug_env,
+                                  block=(block_size, 1, 1), grid=grid)
+        if "time_stat" in debug_env:
+            print("Time to run kernel '{}' using {} threads: {}".format(
+                self.name, threads, ktime))
 
-    def cuda_wrap_call(self, *args, threads=1, block_size=None):
+    def cuda_wrap_call(self, *args, **kwargs):
         wrap_args = (jit_engine.pycuda.driver.InOut(a) if isinstance(a, np.ndarray) else a for a in args)
-        self.cuda_call(*wrap_args, threads=threads, block_size=block_size)
+        self.cuda_call(*wrap_args, **kwargs)
 
     @staticmethod
     @functools.lru_cache(maxsize=32)

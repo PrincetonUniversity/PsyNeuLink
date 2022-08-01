@@ -2623,41 +2623,27 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         assert type(comp.controller.function) == pnl.GridSearch
         assert comp.run([1]) == [10]
 
-    def test_ocm_searchspace_arg(self):
-        a = pnl.ProcessingMechanism()
-        comp = pnl.Composition(
-            controller_mode=pnl.BEFORE,
-            nodes=[a],
-            controller=pnl.OptimizationControlMechanism(
-                control=pnl.ControlSignal(
-                    modulates=(pnl.SLOPE, a),
-                    intensity_cost_function=lambda x: 0,
-                    adjustment_cost_function=lambda x: 0,
-                ),
-                state_features=[a.input_port],
-                objective_mechanism=pnl.ObjectiveMechanism(
-                    monitor=[a.output_port]
-                ),
-                search_space=[pnl.SampleIterator([1, 10])]
-            )
-        )
-        assert type(comp.controller.function) == pnl.GridSearch
-        assert comp.run([1]) == [10]
+    @pytest.mark.parametrize("nested", [True, False])
+    @pytest.mark.parametrize("format", ["list", "tuple", "SampleIterator", "SampleIteratorArray", "SampleSpec", "ndArray"])
+    @pytest.mark.parametrize("mode", pytest.helpers.get_comp_execution_modes() +
+                                     [pytest.helpers.cuda_param('Python-PTX'),
+                                      pytest.param('Python-LLVM', marks=pytest.mark.llvm)])
+    def test_ocm_searchspace_format_equivalence(self, format, nested, mode):
+        if str(mode).startswith('Python-'):
+            ocm_mode = mode.split('-')[1]
+            mode = pnl.ExecutionMode.Python
+        else:
+            # OCM default mode is Python
+            ocm_mode = 'Python'
 
-    @pytest.mark.parametrize("format,nested",
-                             [("list", True), ("list", False),
-                              ("tuple", True), ("tuple", False),
-                              ("SampleIterator", True), ("SampleIterator", False),
-                              ("SampleSpec", True), ("SampleSpec", False),
-                              ("ndArray", True), ("ndArray", False),
-                              ],)
-    def test_ocm_searchspace_format_equivalence(self, format, nested):
         if format == "list":
             search_space = [1, 10]
         elif format == "tuple":
             search_space = (1, 10)
         elif format == "SampleIterator":
-            search_space = SampleIterator((1,10))
+            search_space = SampleIterator((1, 10))
+        elif format == "SampleIteratorArray":
+            search_space = SampleIterator([1, 10])
         elif format == "SampleSpec":
             search_space = SampleSpec(1, 10, 9)
         elif format == "ndArray":
@@ -2673,8 +2659,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
             controller=pnl.OptimizationControlMechanism(
                 control=pnl.ControlSignal(
                     modulates=(pnl.SLOPE, a),
-                    intensity_cost_function=lambda x: 0,
-                    adjustment_cost_function=lambda x: 0,
+                    cost_options=None
                 ),
                 state_features=[a.input_port],
                 objective_mechanism=pnl.ObjectiveMechanism(
@@ -2683,8 +2668,10 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                 search_space=search_space
             )
         )
+        comp.controller.comp_execution_mode = ocm_mode
+
         assert type(comp.controller.function) == pnl.GridSearch
-        assert comp.run([1]) == [10]
+        assert comp.run([1], execution_mode=mode) == [[10]]
 
     def test_evc(self):
         # Mechanisms

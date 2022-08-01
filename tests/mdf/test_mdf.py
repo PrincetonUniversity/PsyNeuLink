@@ -2,13 +2,14 @@ import numpy as np
 import os
 import psyneulink as pnl
 import pytest
-import sys
 
 
 pytest.importorskip(
     'modeci_mdf',
-    reason='JSON methods require modeci_mdf package'
+    reason='MDF methods require modeci_mdf package'
 )
+from modeci_mdf.execution_engine import evaluate_onnx_expr  # noqa: E402
+
 
 # stroop stimuli
 red = [1, 0]
@@ -76,7 +77,7 @@ def test_json_results_equivalence(
     simple_edge_format,
 ):
     # Get python script from file and execute
-    filename = f'{os.path.dirname(__file__)}/{filename}'
+    filename = os.path.join(os.path.dirname(__file__), filename)
     with open(filename, 'r') as orig_file:
         exec(orig_file.read())
         exec(f'{composition_name}.run(inputs={input_dict_str})')
@@ -103,7 +104,7 @@ def test_write_json_file(
     simple_edge_format,
 ):
     # Get python script from file and execute
-    filename = f'{os.path.dirname(__file__)}/{filename}'
+    filename = os.path.join(os.path.dirname(__file__), filename)
     with open(filename, 'r') as orig_file:
         exec(orig_file.read())
         exec(f'{composition_name}.run(inputs={input_dict_str})')
@@ -140,7 +141,7 @@ def test_write_json_file_multiple_comps(
     orig_results = {}
 
     # Get python script from file and execute
-    filename = f'{os.path.dirname(__file__)}/{filename}'
+    filename = os.path.join(os.path.dirname(__file__), filename)
     with open(filename, 'r') as orig_file:
         exec(orig_file.read())
 
@@ -168,37 +169,36 @@ def test_write_json_file_multiple_comps(
 # Values are generated from running onnx function RandomUniform and
 # RandomNormal with parameters used in model_integrators.py (seed 0).
 # RandomNormal values are different on mac versus linux and windows
-if sys.platform == 'linux':
-    onnx_integrators_fixed_seeded_noise = {
-        'A': [[-0.9999843239784241]],
-        'B': [[-1.1295466423034668]],
-        'C': [[-0.0647732987999916]],
-        'D': [[-0.499992161989212]],
-        'E': [[-0.2499941289424896]],
+onnx_noise_data = {
+    'onnx_ops.randomuniform': {
+        'A': {'low': -1.0, 'high': 1.0, 'seed': 0, 'shape': (1, 1)},
+        'D': {'low': -0.5, 'high': 0.5, 'seed': 0, 'shape': (1, 1)},
+        'E': {'low': -0.25, 'high': 0.5, 'seed': 0, 'shape': (1, 1)}
+    },
+    'onnx_ops.randomnormal': {
+        'B': {'mean': -1.0, 'scale': 0.5, 'seed': 0, 'shape': (1, 1)},
+        'C': {'mean': 0.0, 'scale': 0.25, 'seed': 0, 'shape': (1, 1)},
     }
-elif sys.platform == 'win32':
-    onnx_integrators_fixed_seeded_noise = {
-        'A': [[0.0976270437240601]],
-        'B': [[-0.4184607267379761]],
-        'C': [[0.290769636631012]],
-        'D': [[0.04881352186203]],
-        'E': [[0.1616101264953613]],
-    }
-else:
-    assert sys.platform == 'darwin'
-    onnx_integrators_fixed_seeded_noise = {
-        'A': [[-0.9999550580978394]],
-        'B': [[-0.8846577405929565]],
-        'C': [[0.0576711297035217]],
-        'D': [[-0.4999775290489197]],
-        'E': [[-0.2499831467866898]],
-    }
+}
+onnx_integrators_fixed_seeded_noise = {}
+integrators_runtime_params = None
 
-integrators_runtime_params = (
-    'runtime_params={'
-    + ','.join([f'{k}: {{ "noise": {v} }}' for k, v in onnx_integrators_fixed_seeded_noise.items()])
-    + '}'
-)
+for func_type in onnx_noise_data:
+    for node, args in onnx_noise_data[func_type].items():
+        # generates output from onnx noise functions with seed 0 to be
+        # passed in in runtime_params during psyneulink execution
+        onnx_integrators_fixed_seeded_noise[node] = evaluate_onnx_expr(
+            func_type, base_parameters=args, evaluated_parameters=args
+        )
+
+# high precision printing needed because script will be executed from string
+# 16 is insufficient on windows
+with np.printoptions(precision=32):
+    integrators_runtime_params = (
+        'runtime_params={'
+        + ','.join([f'{k}: {{ "noise": {v} }}' for k, v in onnx_integrators_fixed_seeded_noise.items()])
+        + '}'
+    )
 
 
 @pytest.mark.parametrize(
@@ -219,7 +219,7 @@ def test_mdf_equivalence(filename, composition_name, input_dict, simple_edge_for
     import modeci_mdf.execution_engine as ee
 
     # Get python script from file and execute
-    filename = f'{os.path.dirname(__file__)}/{filename}'
+    filename = os.path.join(os.path.dirname(__file__), filename)
     with open(filename, 'r') as orig_file:
         exec(orig_file.read())
         inputs_str = str(input_dict).replace("'", '')
@@ -240,3 +240,20 @@ def test_mdf_equivalence(filename, composition_name, input_dict, simple_edge_for
     ]
 
     assert pnl.safe_equals(orig_results, mdf_results)
+
+
+@pytest.mark.parametrize('filename', ['model_basic.py'])
+@pytest.mark.parametrize('fmt', ['json', 'yml'])
+def test_generate_script_from_mdf(filename, fmt):
+    filename = os.path.join(os.path.dirname(__file__), filename)
+    outfi = filename.replace('.py', f'.{fmt}')
+
+    with open(filename, 'r') as orig_file:
+        exec(orig_file.read())
+        serialized = eval(f'pnl.get_mdf_serialized(comp, fmt="{fmt}")')
+
+    with open(outfi, 'w') as f:
+        f.write(serialized)
+
+    with open(outfi, 'r') as f:
+        assert pnl.generate_script_from_mdf(f.read()) == pnl.generate_script_from_mdf(outfi)

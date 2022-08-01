@@ -624,26 +624,26 @@ class OptimizationFunction(Function_Base):
             assert all([not getattr(self.parameters, x)._user_specified for x in self._unspecified_args])
             self._unspecified_args = []
 
-        # Get initial sample in case it is needed by _search_space_evaluate (e.g., for gradient initialization)
-        initial_sample = self._check_args(variable=variable, context=context, params=params)
-        try:
-            initial_value = self.owner.objective_mechanism.parameters.value._get(context)
-        except AttributeError:
-            initial_value = 0
-
         # EVALUATE ALL SAMPLES IN SEARCH SPACE
         # Evaluate all estimates of all samples in search_space
 
-        # If execution mode is not Python and search_space is static, use parallelized evaluation:
-        if (self.owner and self.owner.parameters.comp_execution_mode._get(context) != 'Python' and
-                all(isinstance(sample_iterator.start, Number) and isinstance(sample_iterator.stop, Number)
-                    for sample_iterator in self.search_space)):
-            # FIX: NEED TO FIX THIS ONCE _grid_evaluate RETURNS all_samples
-            all_samples = []
+        # Run compiled mode if requested by parameter and everything is initialized
+        if self.owner and self.owner.parameters.comp_execution_mode._get(context) != 'Python' and \
+          ContextFlags.PROCESSING in context.flags:
+            all_samples = [s for s in itertools.product(*self.search_space)]
             all_values, num_evals = self._grid_evaluate(self.owner, context)
+            assert len(all_values) == num_evals
+            assert len(all_samples) == num_evals
             last_sample = last_value = None
         # Otherwise, default sequential sampling
         else:
+            # Get initial sample in case it is needed by _search_space_evaluate (e.g., for gradient initialization)
+            initial_sample = self._check_args(variable=variable, context=context, params=params)
+            try:
+                initial_value = self.owner.objective_mechanism.parameters.value._get(context)
+            except AttributeError:
+                initial_value = 0
+
             last_sample, last_value, all_samples, all_values = self._sequential_evaluate(initial_sample,
                                                                                          initial_value,
                                                                                          context)
@@ -654,6 +654,11 @@ class OptimizationFunction(Function_Base):
         if self.aggregation_function and \
                 self.parameters.randomization_dimension._get(context) and \
                 self.parameters.num_estimates._get(context) is not None:
+
+            # FIXME: This is easy to support in hybrid mode. We just need to convert ctype results
+            #        returned from _grid_evaluate to numpy
+            assert not self.owner or self.owner.parameters.comp_execution_mode._get(context) == 'Python', \
+                   "Aggregation function not supported in compiled mode!"
 
             # Reshape all the values we encountered to group those that correspond to the same parameter values
             # can be aggregated. After this we should have an array that is of shape
@@ -765,6 +770,17 @@ class OptimizationFunction(Function_Base):
 
     def _grid_evaluate(self, ocm, context):
         """Helper method for evaluation of a grid of samples from search space via LLVM backends."""
+        # If execution mode is not Python, the search space has to be static
+        def _is_static(it:SampleIterator):
+            if isinstance(it.start, Number) and isinstance(it.stop, Number):
+                return True
+
+            if isinstance(it.generator, list):
+                return True
+
+            return False
+
+        assert all(_is_static(sample_iterator) for sample_iterator in self.search_space)
         assert ocm is ocm.agent_rep.controller
         # Compiled evaluate expects the same variable as mech function
         variable = [input_port.parameters.value.get(context) for input_port in ocm.input_ports]
@@ -780,7 +796,6 @@ class OptimizationFunction(Function_Base):
         else:
             assert False, f"Unknown execution mode for {ocm.name}: {execution_mode}."
 
-        # FIX: RETURN SHOULD BE: outcomes, all_samples (THEN FIX CALL IN _function)
         return outcomes, num_evals
 
     def reset_grid(self):
@@ -1845,30 +1860,6 @@ class GridSearch(OptimizationFunction):
         builder.store(builder.load(min_value_ptr), out_value_ptr)
         return builder
 
-    def _run_grid(self, ocm, variable, context):
-
-        # "ct" => c-type variables
-        ct_values, num_evals = self._grid_evaluate(ocm, context)
-
-        assert len(ct_values) == num_evals
-        # Reduce array of values to min/max
-        # select_min params are:
-        # params, state, min_sample_ptr, sample_ptr, min_value_ptr, value_ptr, opt_count_ptr, count
-        bin_func = pnlvm.LLVMBinaryFunction.from_obj(self, tags=frozenset({"select_min"}))
-        ct_param = bin_func.byref_arg_types[0](*self._get_param_initializer(context))
-        ct_state = bin_func.byref_arg_types[1](*self._get_state_initializer(context))
-        ct_opt_sample = bin_func.byref_arg_types[2](float("NaN"))
-        ct_alloc = None # NULL for samples
-        ct_opt_value = bin_func.byref_arg_types[4]()
-        ct_opt_count = bin_func.byref_arg_types[6](0)
-        ct_start = bin_func.c_func.argtypes[7](0)
-        ct_stop = bin_func.c_func.argtypes[8](len(ct_values))
-
-        bin_func(ct_param, ct_state, ct_opt_sample, ct_alloc, ct_opt_value,
-                 ct_values, ct_opt_count, ct_start, ct_stop)
-
-        return np.ctypeslib.as_array(ct_opt_sample), ct_opt_value.value, np.ctypeslib.as_array(ct_values)
-
     def _function(self,
                  variable=None,
                  context=None,
@@ -1993,15 +1984,37 @@ class GridSearch(OptimizationFunction):
                 "PROGRAM ERROR: bad value for {} arg of {}: {}, {}". \
                     format(repr(DIRECTION), self.name, direction)
 
-            ocm = self._get_optimized_controller()
+            # Evaluate objective_function for each sample
+            last_sample, last_value, all_samples, all_values = self._evaluate(
+                variable=variable,
+                context=context,
+                params=params,
+            )
 
             # Compiled version
+            ocm = self._get_optimized_controller()
             if ocm is not None and ocm.parameters.comp_execution_mode._get(context) in {"PTX", "LLVM"}:
-                opt_sample, opt_value, all_values = self._run_grid(ocm, variable, context)
-                # This should not be evaluated unless needed
-                all_samples = [s for s in itertools.product(*self.search_space)]
-                value_optimal = opt_value
-                sample_optimal = opt_sample
+
+                # Reduce array of values to min/max
+                # select_min params are:
+                # params, state, min_sample_ptr, sample_ptr, min_value_ptr, value_ptr, opt_count_ptr, count
+                bin_func = pnlvm.LLVMBinaryFunction.from_obj(self, tags=frozenset({"select_min"}))
+                ct_param = bin_func.byref_arg_types[0](*self._get_param_initializer(context))
+                ct_state = bin_func.byref_arg_types[1](*self._get_state_initializer(context))
+                ct_opt_sample = bin_func.byref_arg_types[2](float("NaN"))
+                ct_alloc = None # NULL for samples
+                ct_values = all_values
+                ct_opt_value = bin_func.byref_arg_types[4]()
+                ct_opt_count = bin_func.byref_arg_types[6](0)
+                ct_start = bin_func.c_func.argtypes[7](0)
+                ct_stop = bin_func.c_func.argtypes[8](len(ct_values))
+
+                bin_func(ct_param, ct_state, ct_opt_sample, ct_alloc, ct_opt_value,
+                         ct_values, ct_opt_count, ct_start, ct_stop)
+
+                value_optimal = ct_opt_value.value
+                sample_optimal = np.ctypeslib.as_array(ct_opt_sample)
+                all_values = np.ctypeslib.as_array(ct_values)
 
                 # These are normally stored in the parent function (OptimizationFunction).
                 # Since we didn't  call super()._function like the python path,
@@ -2014,12 +2027,6 @@ class GridSearch(OptimizationFunction):
             # Python version
             else:
 
-                # Evaluate objective_function for each sample
-                last_sample, last_value, all_samples, all_values = self._evaluate(
-                    variable=variable,
-                    context=context,
-                    params=params,
-                )
 
                 if all_values.shape[-1] != all_samples.shape[-1]:
                     raise ValueError(f"GridSearch Error: {self}._evaluate returned mismatched sizes for "
