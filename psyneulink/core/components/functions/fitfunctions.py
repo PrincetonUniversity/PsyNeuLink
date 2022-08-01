@@ -273,7 +273,7 @@ class MaxLikelihoodEstimator(OptimizationFunction):
         # call to evaluate we only evaluate a single parameter setting. Scipy optimize will direct
         # the search procedure so we will reset the actual value of these singleton iterators dynamically
         # on each search iteration executed during the call to _function.
-        randomization_dimension = kwargs.get('randomization_dimension', len(search_space)-1)
+        randomization_dimension = kwargs.get('randomization_dimension', len(search_space) - 1)
         for i in range(len(search_space)):
             if i != randomization_dimension:
                 search_space[i] = SampleIterator([next(search_space[i])])
@@ -314,7 +314,7 @@ class MaxLikelihoodEstimator(OptimizationFunction):
         for i, arg in enumerate(args):
 
             # Map the args in order of the fittable parameters
-            if i < len(search_space)-1:
+            if i < len(search_space) - 1:
                 assert search_space[i].num == 1, "Search space for this dimension must be a single value, during search " \
                                                  "we will change the value but not the shape."
 

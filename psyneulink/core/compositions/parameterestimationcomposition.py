@@ -682,5 +682,5 @@ class ParameterEstimationComposition(Composition):
         except AttributeError:
             of = self.controller.function
             raise ParameterEstimationCompositionError(f"The function ({of}) for the controller of "
-                                                      f"ParameterEstimationComposition {self.name} does not appear to " 
+                                                      f"ParameterEstimationComposition {self.name} does not appear to "
                                                       f"have a log_likelihood function.")
