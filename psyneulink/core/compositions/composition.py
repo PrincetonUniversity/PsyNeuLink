@@ -6353,7 +6353,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Get info for nested node
             node, comp = next((item for item in self._get_nested_nodes() if item[0] is port.owner), (None, None))
             if node:
-                return(port, node, comp)
+                return (port, node, comp)
             else:
                 raise CompositionError(f"No source found for {projection.name} in {self.name}.")
 

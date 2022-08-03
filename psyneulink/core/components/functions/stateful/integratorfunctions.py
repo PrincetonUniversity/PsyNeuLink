@@ -2461,7 +2461,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         )
 
     def _validate_noise(self, noise):
-        if noise is not None and not isinstance(noise, float) and not(isinstance(noise, np.ndarray) and np.issubdtype(noise.dtype, np.floating)):
+        if noise is not None and not isinstance(noise, float) and not (isinstance(noise, np.ndarray) and np.issubdtype(noise.dtype, np.floating)):
             raise FunctionError(
                 "Invalid noise parameter for {}: {}. DriftDiffusionIntegrator requires noise parameter to be a float or float array."
                 " Noise parameter is used to construct the standard DDM noise distribution".format(self.name, type(noise)))
@@ -2989,7 +2989,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
             noise = np.array(noise)
         if noise is not None:
             if (not isinstance(noise, float)
-                    and not(isinstance(noise, np.ndarray) and np.issubdtype(noise.dtype, np.floating))):
+                    and not (isinstance(noise, np.ndarray) and np.issubdtype(noise.dtype, np.floating))):
                 raise FunctionError(
                     f"Invalid noise parameter for {self.name}: {type(noise)}. "
                     f"DriftOnASphereIntegrator requires noise parameter to be a float or float array.")

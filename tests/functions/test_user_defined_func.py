@@ -625,7 +625,7 @@ def test_udf_composition_terminal(comp_mode, benchmark):
     T2 = TransferMechanism(size=3, function=Linear)
     c2 = Composition(pathways=[[T2, myMech]])
     benchmark(c2.run, inputs={T2: [[1, 2, 3]]}, execution_mode=comp_mode)
-    assert(np.allclose(c2.results[0][0], [3, 1]))
+    assert np.allclose(c2.results[0][0], [3, 1])
 
 
 def test_udf_with_pnl_func():
