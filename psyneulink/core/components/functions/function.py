@@ -157,7 +157,7 @@ from psyneulink.core.globals.keywords import (
     ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, EXAMPLE_FUNCTION_TYPE, FULL_CONNECTIVITY_MATRIX,
     FUNCTION_COMPONENT_CATEGORY, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, HOLLOW_MATRIX,
     IDENTITY_MATRIX, INVERSE_HOLLOW_MATRIX, NAME, PREFERENCE_SET_NAME, RANDOM_CONNECTIVITY_MATRIX, VALUE, VARIABLE,
-    MODEL_SPEC_ID_METADATA, MODEL_SPEC_ID_MDF_VARIABLE
+    MODEL_SPEC_ID_MDF_VARIABLE
 )
 from psyneulink.core.globals.mdf import _get_variable_parameter_name
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
@@ -553,6 +553,7 @@ class Function_Base(Function):
     classPreferenceLevel = PreferenceLevel.CATEGORY
 
     _model_spec_id_parameters = 'args'
+    _mdf_stateful_parameter_indices = {}
 
     _specified_variable_shape_flexibility = DefaultsFlexibility.INCREASE_DIMENSION
 
@@ -862,12 +863,29 @@ class Function_Base(Function):
             model.functions.extend(extra_noise_functions)
             model.functions.append(noise_func)
 
-        for _, func_param in self_model.metadata['function_stateful_params'].items():
-            model.parameters.append(mdf.Parameter(**func_param))
-
         self_model.id = f'{model.id}_{self_model.id}'
         self._set_mdf_arg(self_model, _get_variable_parameter_name(self), input_id)
         model.functions.append(self_model)
+
+        # assign stateful parameters
+        for param, index in self._mdf_stateful_parameter_indices.items():
+            initializer_name = getattr(self.parameters, param).initializer
+
+            # in this case, parameter gets updated to its function's final value
+            try:
+                initializer_value = self_model.args[initializer_name]
+            except KeyError:
+                initializer_value = self_model.metadata[initializer_name]
+
+            index_str = f'[{index}]' if index is not None else ''
+
+            model.parameters.append(
+                mdf.Parameter(
+                    id=param,
+                    default_initial_value=initializer_value,
+                    value=f'{self_model.id}{index_str}'
+                )
+            )
 
         return self_model.id
 
@@ -877,7 +895,6 @@ class Function_Base(Function):
 
         parameters = self._mdf_model_parameters
         metadata = self._mdf_metadata
-        metadata[MODEL_SPEC_ID_METADATA]['function_stateful_params'] = {}
         stateful_params = set()
 
         # add stateful parameters into metadata for mechanism to get
@@ -888,17 +905,6 @@ class Function_Base(Function):
                 continue
 
             if param.initializer is not None:
-                # in this case, parameter gets updated to its function's final value
-                try:
-                    initializer_value = parameters[self._model_spec_id_parameters][param.initializer]
-                except KeyError:
-                    initializer_value = metadata[MODEL_SPEC_ID_METADATA]['initializer']
-
-                metadata[MODEL_SPEC_ID_METADATA]['function_stateful_params'][name] = {
-                    'id': name,
-                    'default_initial_value': initializer_value,
-                    'value': parse_valid_identifier(f'{self.owner.name}_{self.name}')
-                }
                 stateful_params.add(name)
 
         # stateful parameters cannot show up as args or they will not be
