@@ -1085,7 +1085,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             new_input_port = InputPort(owner=self, name=RECURRENT, variable=self.defaults.variable[0],
                                         internal_only=True)
             assert (len(new_input_port.all_afferents) == 0)  # just a sanity check
-            assert(self.input_port.name != "Recurrent Input Port")
+            assert self.input_port.name != "Recurrent Input Port"
             # Rename existing InputPort as EXTERNAL
             remove_instance_from_registry(registry=self._portRegistry,
                                           category=INPUT_PORT,

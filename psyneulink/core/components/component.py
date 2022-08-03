@@ -2739,7 +2739,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             raise ComponentError("PROGRAM ERROR: got {} instead of string, Component, or Class".format(param_value))
 
         if param_spec not in MODULATORY_SPEC_KEYWORDS:
-            return(param_value)
+            return (param_value)
 
         try:
             param_default_value = getattr(self.defaults, param_name)

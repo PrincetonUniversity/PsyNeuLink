@@ -698,9 +698,9 @@ class TestInputPortSpec:
             # Don't bother to specify anything as the value for each entry in the dict, since doesn't get there
             TransferMechanism(input_ports=[{'MY PORT A':{},
                                              'MY PORT B':{}}])
-        assert ('There is more than one entry of the InputPort specification dictionary' in str(error_text.value)
-                and'that is not a keyword; there should be only one (used to name the Port, with a list of '
-                   'Projection specifications' in str(error_text.value))
+        assert 'There is more than one entry of the InputPort specification dictionary' in str(error_text.value)
+        assert ('that is not a keyword; there should be only one (used to name the Port, with a list of '
+                    'Projection specifications' in str(error_text.value))
 
     # ------------------------------------------------------------------------------------------------
     # TEST 32
