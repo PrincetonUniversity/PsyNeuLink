@@ -16,9 +16,9 @@ class TestKWTAInputs:
     def test_kwta_empty_spec(self):
         K = KWTAMechanism()
         np.testing.assert_allclose(K.value, K.defaults.value)
-        assert(K.defaults.variable == [[0]])
-        assert(K.size == [1])
-        assert(K.matrix.base == [[5]])
+        assert K.defaults.variable == [[0]]
+        assert K.size == [1]
+        assert K.matrix.base == [[5]]
 
     def test_kwta_check_attrs(self):
         K = KWTAMechanism(
@@ -26,11 +26,11 @@ class TestKWTAInputs:
             size=3
         )
         np.testing.assert_allclose(K.value, K.defaults.value)
-        assert(np.allclose(K.defaults.variable, [[0., 0., 0.]]))
-        assert(K.size == [3])
-        assert(np.allclose(K.matrix.base, [[5, 0, 0], [0, 5, 0], [0, 0, 5]]))
-        assert(K.recurrent_projection.sender is K.output_port)
-        assert(K.recurrent_projection.receiver is K.input_port)
+        assert np.allclose(K.defaults.variable, [[0., 0., 0.]])
+        assert K.size == [3]
+        assert np.allclose(K.matrix.base, [[5, 0, 0], [0, 5, 0], [0, 0, 5]])
+        assert K.recurrent_projection.sender is K.output_port
+        assert K.recurrent_projection.receiver is K.input_port
 
     def test_kwta_inputs_list_of_ints(self):
         K = KWTAMechanism(
@@ -38,17 +38,17 @@ class TestKWTAInputs:
             default_variable=[0, 0, 0, 0]
         )
         val = K.execute([10, 12, 0, -1])
-        assert(np.allclose(val, [[0.9933071490757153, 0.9990889488055994, 0.0066928509242848554, 0.0024726231566347743]]))
+        assert np.allclose(val, [[0.9933071490757153, 0.9990889488055994, 0.0066928509242848554, 0.0024726231566347743]])
         val = K.execute([1, 2, 3, 0])
-        assert(np.allclose(val, [[0.3775406687981454, 0.6224593312018546, 0.8175744761936437, 0.18242552380635635]]))
+        assert np.allclose(val, [[0.3775406687981454, 0.6224593312018546, 0.8175744761936437, 0.18242552380635635]])
 
     def test_kwta_no_inputs(self):
         K = KWTAMechanism(
             name='K'
         )
-        assert(K.defaults.variable == [[0]])
+        assert K.defaults.variable == [[0]]
         val = K.execute([10])
-        assert(np.allclose(val, [[0.5]]))
+        assert np.allclose(val, [[0.5]])
 
     def test_kwta_inputs_list_of_strings(self):
         with pytest.raises(MechanismError) as error_text:
@@ -57,8 +57,8 @@ class TestKWTAInputs:
                 size = 4,
             )
             K.execute(["one", "two", "three", "four"])
-        assert('"Input to \'K\' ([\'one\' \'two\' \'three\' \'four\']) is incompatible with its corresponding '
-               'InputPort (K[InputPort-0]): \'cannot perform reduce with flexible type.\'"' in str(error_text.value))
+        assert ('"Input to \'K\' ([\'one\' \'two\' \'three\' \'four\']) is incompatible with its corresponding '
+                'InputPort (K[InputPort-0]): \'cannot perform reduce with flexible type.\'"' in str(error_text.value))
 
     def test_kwta_var_list_of_strings(self):
         with pytest.raises(ParameterError) as error_text:
@@ -67,7 +67,7 @@ class TestKWTAInputs:
                 default_variable=['a', 'b', 'c', 'd'],
                 integrator_mode=True
             )
-        assert("non-numeric entries" in str(error_text.value))
+        assert ("non-numeric entries" in str(error_text.value))
 
     def test_recurrent_mech_inputs_mismatched_with_default_longer(self):
         with pytest.raises(MechanismError) as error_text:
@@ -76,7 +76,7 @@ class TestKWTAInputs:
                 size=4
             )
             K.execute([1, 2, 3, 4, 5])
-        assert("does not match required length" in str(error_text.value))
+        assert ("does not match required length" in str(error_text.value))
 
     def test_recurrent_mech_inputs_mismatched_with_default_shorter(self):
         with pytest.raises(MechanismError) as error_text:
@@ -85,7 +85,7 @@ class TestKWTAInputs:
                 size=6
             )
             K.execute([1, 2, 3, 4, 5])
-        assert("does not match required length" in str(error_text.value))
+        assert ("does not match required length" in str(error_text.value))
 
 
 class TestKWTAFunction:
@@ -174,7 +174,7 @@ class TestKWTAMatrix:
                     matrix=m
                 )
                 val = K.execute([10, 10, 10, 10])
-                assert(np.allclose(val, [[.5, .5, .5, .5]]))
+                assert np.allclose(val, [[.5, .5, .5, .5]])
 
     def test_kwta_matrix_auto_hetero_spec(self):
         K = KWTAMechanism(
@@ -183,7 +183,7 @@ class TestKWTAMatrix:
             auto=3,
             hetero=2
         )
-        assert(np.allclose(K.recurrent_projection.matrix.base, [[3, 2, 2, 2], [2, 3, 2, 2], [2, 2, 3, 2], [2, 2, 2, 3]]))
+        assert np.allclose(K.recurrent_projection.matrix.base, [[3, 2, 2, 2], [2, 3, 2, 2], [2, 2, 3, 2], [2, 2, 2, 3]])
 
     def test_kwta_matrix_hetero_spec(self):
         K = KWTAMechanism(
@@ -191,7 +191,7 @@ class TestKWTAMatrix:
             size=3,
             hetero=-.5,
         )
-        assert(np.allclose(K.recurrent_projection.matrix.base, [[5, -.5, -.5], [-.5, 5, -.5], [-.5, -.5, 5]]))
+        assert np.allclose(K.recurrent_projection.matrix.base, [[5, -.5, -.5], [-.5, 5, -.5], [-.5, -.5, 5]])
 
     def test_kwta_matrix_auto_spec(self):
         K = KWTAMechanism(
@@ -199,7 +199,7 @@ class TestKWTAMatrix:
             size=3,
             auto=-.5,
         )
-        assert(np.allclose(K.recurrent_projection.matrix.base, [[-.5, 0, 0], [0, -.5, 0], [0, 0, -.5]]))
+        assert np.allclose(K.recurrent_projection.matrix.base, [[-.5, 0, 0], [0, -.5, 0], [0, 0, -.5]])
 
 
 class TestKWTARatio:

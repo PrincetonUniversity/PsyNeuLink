@@ -1800,12 +1800,12 @@ class Port_Base(Port):
         try:
             if projection in self.mod_afferents or projection in self.path_afferents:
                 self._remove_projection_to_port(projection, context=context)
-        except(PortError):
+        except PortError:
             pass
         try:
             if projection in self.efferents:
                 self._remove_projection_from_port(projection, context=context)
-        except(PortError):
+        except PortError:
             pass
 
     def _remove_projection_from_port(self, projection, context=None):
