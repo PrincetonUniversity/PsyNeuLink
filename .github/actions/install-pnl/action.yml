@@ -37,6 +37,10 @@ runs:
         echo "VIRTUAL_ENV=$VIRTUAL_ENV" >> $GITHUB_ENV
         echo "$PYTHON_LOC" >> $GITHUB_PATH
 
+    - name: Update pip and wheel
+      shell: bash
+      run: python -m pip install --upgrade pip wheel
+
     - name: Drop pytorch on x86
       shell: bash
       run: |
@@ -53,7 +57,6 @@ runs:
       shell: bash
       id: new_package
       run: |
-        python -m pip install --upgrade pip wheel
         export NEW_PACKAGE=`echo '${{ github.head_ref }}' | cut -f 4 -d/ | sed 's/-gt.*//' | sed 's/-lt.*//'`
         echo "::set-output name=new_package::$NEW_PACKAGE"
         pip install "`echo $NEW_PACKAGE | sed 's/[-_]/./g' | xargs grep *requirements.txt -h -e | head -n1`"
@@ -62,7 +65,6 @@ runs:
     - name: Python dependencies
       shell: bash
       run: |
-        python -m pip install --upgrade pip wheel
         pip install -e .[${{ inputs.features }}]
 
     - name: "Cleanup old wheels"
