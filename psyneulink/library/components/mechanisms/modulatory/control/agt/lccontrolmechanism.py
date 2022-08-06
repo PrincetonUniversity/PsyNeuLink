@@ -930,15 +930,15 @@ class LCControlMechanism(ControlMechanism):
 
             # Delete ControlProjection ControlSignal's list of efferents
             index = self.control_signals[0].efferents[control_projection]
-            del(self.control_signals[0].efferents[index])
+            del self.control_signals[0].efferents[index]
 
             # Delete ControlProjection from recipient ParameterPort
             index = parameter_port.mod_afferents[control_projection]
-            del(parameter_port.mod_afferents[index])
+            del parameter_port.mod_afferents[index]
 
             # Delete Mechanism from self.modulated_mechanisms
             index = self.modulated_mechanisms.index(mech)
-            del(self.modulated_mechanisms[index])
+            del self.modulated_mechanisms[index]
 
     def show(self):
         """Display the `OutputPorts <OutputPort>` monitored by the LCControlMechanism's `objective_mechanism`
