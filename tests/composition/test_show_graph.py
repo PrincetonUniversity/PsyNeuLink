@@ -766,7 +766,7 @@ class TestControl:
                 #    OCM's outcome_input_port.
                 # If the test fails in this condition, it could mean that the bug has been corrected.
                 # The bug may be the same one as in eb61303808ad2a5ba46fdd18d0e583283397915c
-                raise(AssertionError,"FAILURE TO REPLICATE BUGGY SHOW_GRAPH OUTPUT -- SEE COMMENT IN TEST")
+                raise (AssertionError,"FAILURE TO REPLICATE BUGGY SHOW_GRAPH OUTPUT -- SEE COMMENT IN TEST")
             # elif ('show_node_structure' in show_graph_kwargs
             #         and ('show_cim' in show_graph_kwargs
             #              and show_graph_kwargs['show_cim'] is True)
@@ -775,7 +775,7 @@ class TestControl:
             # ):
             #     pass
             else:
-                raise(AssertionError)
+                raise (AssertionError)
 
     # def test_show_graph_for_nested_composition_as_agent_rep(self):
     #     """Note: this is the same as test_control/test_nested_composition_as_agent_rep but with show_graph()"""

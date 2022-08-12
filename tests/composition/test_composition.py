@@ -7629,14 +7629,12 @@ class TestMisc:
         comp.run(inputs={A: [0], B: [0]})
 
         assert type(comp.scheduler.conditions[A]) is pnl.Always
-        assert(
-            type(comp.scheduler.conditions[B]) is pnl.EveryNCalls
-            and comp.scheduler.conditions[B].args == (A, 2)
-        )
-        assert(
-            type(comp.scheduler.conditions[C]) is pnl.EveryNCalls
-            and comp.scheduler.conditions[C].args == (A, 2)
-        )
+        assert type(comp.scheduler.conditions[B]) is pnl.EveryNCalls
+        assert comp.scheduler.conditions[B].args == (A, 2)
+
+        assert type(comp.scheduler.conditions[C]) is pnl.EveryNCalls
+        assert comp.scheduler.conditions[C].args == (A, 2)
+
         assert comp.scheduler.execution_list[comp.default_execution_id] == [{A}, {A, B}, {C}]
         assert set(comp.scheduler._user_specified_conds.keys()) == {B, C}
 
@@ -7654,10 +7652,9 @@ class TestMisc:
 
         assert type(comp.scheduler.conditions[A]) is pnl.Always
         assert B not in comp.scheduler.conditions
-        assert(
-            type(comp.scheduler.conditions[C]) is pnl.EveryNCalls
-            and comp.scheduler.conditions[C].args == (A, 2)
-        )
+        assert type(comp.scheduler.conditions[C]) is pnl.EveryNCalls
+        assert comp.scheduler.conditions[C].args == (A, 2)
+
         assert comp.scheduler.execution_list[comp.default_execution_id] == [{A}, {A}, {C}]
         assert set(comp.scheduler._user_specified_conds.keys()) == {C}
 

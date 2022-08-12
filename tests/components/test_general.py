@@ -126,7 +126,7 @@ def test_all_dependent_parameters(
     params_inner_comp_keys = set(params_inner_comp.keys())
 
     assert params_inner_comp_keys.issubset(params_comp_keys)
-    assert(
+    assert (
         len(params_comp_keys) == 0
         or not params_comp_keys.issubset(params_inner_comp_keys)
     )
