@@ -723,11 +723,11 @@ class CompExecution(CUDAExecution):
         return ct_results
 
     def thread_evaluate(self, variable, num_evaluations):
-        ct_param, ct_state, ct_data, converted_variale, out_ty = \
+        ct_param, ct_state, ct_data, converted_variable, out_ty = \
             self._prepare_evaluate(variable, num_evaluations)
 
         ct_results = out_ty()
-        ct_variable = converted_variale.ctypes.data_as(self.__bin_func.c_func.argtypes[5])
+        ct_variable = converted_variable.ctypes.data_as(self.__bin_func.c_func.argtypes[5])
         jobs = min(os.cpu_count(), num_evaluations)
         evals_per_job = (num_evaluations + jobs - 1) // jobs
 
