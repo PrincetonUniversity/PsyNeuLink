@@ -769,9 +769,13 @@ class OptimizationFunction(Function_Base):
             return False
 
         assert all(_is_static(sample_iterator) for sample_iterator in self.search_space)
+
         assert ocm is ocm.agent_rep.controller
-        # Compiled evaluate expects the same variable as mech function
-        variable = [input_port.parameters.value.get(context) for input_port in ocm.input_ports]
+
+        # Compiled evaluate expects the same variable as composition
+        # FIXME: simplify this
+        variable = [[oip.parameters.value.get(context) for oip in ocm.input_ports if oip.shadow_inputs is not None and ocm.agent_rep.input_CIM_ports[oip.shadow_inputs][0] is input_port][0] for input_port in ocm.agent_rep.input_CIM.input_ports]
+
         num_evals = np.prod([d.num for d in self.search_space])
 
         # Map allocations to values
@@ -1744,14 +1748,46 @@ class GridSearch(OptimizationFunction):
         return builder.function
 
     def _gen_llvm_function_body(self, ctx, builder, params, state_features, arg_in, arg_out, *, tags:frozenset):
-        ocm = self._get_optimized_controller()
-        if ocm is not None:
-            assert ocm.function is self
-            obj_func = ctx.import_llvm_function(ocm, tags=tags.union({"evaluate"}))
+        controller = self._get_optimized_controller()
+        if controller is not None:
+            assert controller.function is self
+            obj_func = ctx.import_llvm_function(controller, tags=tags.union({"evaluate"}))
             comp_args = builder.function.args[-3:]
             obj_param_ptr = comp_args[0]
             obj_state_ptr = comp_args[1]
-            extra_args = [arg_in, comp_args[2]]
+
+            # Construct input
+            comp_input = builder.alloca(obj_func.args[4].type.pointee, name="sim_input")
+
+            input_initialized = [False] * len(comp_input.type.pointee)
+            for src_idx, ip in enumerate(controller.input_ports):
+                if ip.shadow_inputs is None:
+                    continue
+
+                # shadow inputs point to an input port of of a node.
+                # If that node takes direct input, it will have an associated
+                # (input_port, output_port) in the input_CIM.
+                # Take the former as an index to composition input variable.
+                cim_in_port = controller.agent_rep.input_CIM_ports[ip.shadow_inputs][0]
+                dst_idx = controller.agent_rep.input_CIM.input_ports.index(cim_in_port)
+
+                # Check that all inputs are unique
+                assert not input_initialized[dst_idx], "Double initialization of input {}".format(dst_idx)
+                input_initialized[dst_idx] = True
+
+                src = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(src_idx)])
+                # Destination is a struct of 2d arrays
+                dst = builder.gep(comp_input, [ctx.int32_ty(0),
+                                               ctx.int32_ty(dst_idx),
+                                               ctx.int32_ty(0)])
+                builder.store(builder.load(src), dst)
+
+            # Assert that we have populated all inputs
+            assert all(input_initialized), \
+              "Not all inputs to the simulated composition are initialized: {}".format(input_initialized)
+
+            # Extra args: input and data
+            extra_args = [comp_input, comp_args[2]]
         else:
             obj_func = ctx.import_llvm_function(self.objective_function)
             obj_state_ptr = pnlvm.helpers.get_state_ptr(builder, self, state_features,
