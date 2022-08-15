@@ -676,7 +676,7 @@ class CompExecution(CUDAExecution):
             assert runs_np[0] <= runs, "Composition ran more times than allowed!"
             return _convert_ctype_to_python(ct_out)[0:runs_np[0]]
 
-    def _prepare_evaluate(self, variable, num_evaluations):
+    def _prepare_evaluate(self, inputs, num_input_sets, num_evaluations):
         ocm = self._composition.controller
         assert len(self._execution_contexts) == 1
 
@@ -695,25 +695,23 @@ class CompExecution(CUDAExecution):
         ct_comp_data = self._get_compilation_param('_eval_data', '_get_data_initializer', 6)
 
         # Construct input variable
-        var_dty = _element_dtype(bin_func.byref_arg_types[5])
-        converted_variable = np.concatenate(variable, dtype=var_dty)
+        ct_inputs = self._get_run_input_struct(inputs, num_input_sets)
 
         # Output ctype
         out_ty = bin_func.byref_arg_types[4] * num_evaluations
 
         # return variable as numpy array. pycuda can use it directly
-        return ct_comp_param, ct_comp_state, ct_comp_data, converted_variable, out_ty
+        return ct_comp_param, ct_comp_state, ct_comp_data, ct_inputs, out_ty
 
-    def cuda_evaluate(self, variable, num_evaluations):
-        ct_comp_param, ct_comp_state, ct_comp_data, converted_variable, out_ty = \
-            self._prepare_evaluate(variable, num_evaluations)
-        self._uploaded_bytes['input'] += converted_variable.nbytes
+    def cuda_evaluate(self, inputs, num_input_sets, num_evaluations):
+        ct_comp_param, ct_comp_state, ct_comp_data, ct_inputs, out_ty = \
+            self._prepare_evaluate(inputs, num_input_sets, num_evaluations)
 
         # Output is allocated on device, but we need the ctype (out_ty).
         cuda_args = (self.upload_ctype(ct_comp_param, 'params'),
                      self.upload_ctype(ct_comp_state, 'state'),
                      jit_engine.pycuda.driver.mem_alloc(ctypes.sizeof(out_ty)),
-                     jit_engine.pycuda.driver.In(converted_variable),
+                     self.upload_ctype(ct_inputs, 'input'),
                      self.upload_ctype(ct_comp_data, 'data'),
                     )
 
@@ -722,12 +720,11 @@ class CompExecution(CUDAExecution):
 
         return ct_results
 
-    def thread_evaluate(self, variable, num_evaluations):
-        ct_param, ct_state, ct_data, converted_variable, out_ty = \
-            self._prepare_evaluate(variable, num_evaluations)
+    def thread_evaluate(self, inputs, num_input_sets, num_evaluations):
+        ct_param, ct_state, ct_data, ct_inputs, out_ty = \
+            self._prepare_evaluate(inputs, num_input_sets, num_evaluations)
 
         ct_results = out_ty()
-        ct_variable = converted_variable.ctypes.data_as(self.__bin_func.c_func.argtypes[5])
         jobs = min(os.cpu_count(), num_evaluations)
         evals_per_job = (num_evaluations + jobs - 1) // jobs
 
@@ -738,7 +735,9 @@ class CompExecution(CUDAExecution):
             results = [ex.submit(self.__bin_func, ct_param, ct_state,
                                  int(i * evals_per_job),
                                  min((i + 1) * evals_per_job, num_evaluations),
-                                 ct_results, ct_variable, ct_data)
+                                 ct_results,
+                                 ctypes.cast(ctypes.byref(ct_inputs), self.__bin_func.c_func.argtypes[5]),
+                                 ct_data)
                        for i in range(jobs)]
 
         parallel_stop = time.time()

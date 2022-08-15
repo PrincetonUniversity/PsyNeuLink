@@ -773,8 +773,8 @@ class OptimizationFunction(Function_Base):
         assert ocm is ocm.agent_rep.controller
 
         # Compiled evaluate expects the same variable as composition
-        # FIXME: simplify this
-        variable = [[oip.parameters.value.get(context) for oip in ocm.input_ports if oip.shadow_inputs is not None and ocm.agent_rep.input_CIM_ports[oip.shadow_inputs][0] is input_port][0] for input_port in ocm.agent_rep.input_CIM.input_ports]
+        state_features = ocm.parameters.state_feature_values._get(context)
+        inputs, num_inputs_sets = ocm.agent_rep._parse_run_inputs(state_features, context)
 
         num_evals = np.prod([d.num for d in self.search_space])
 
@@ -782,9 +782,9 @@ class OptimizationFunction(Function_Base):
         comp_exec = pnlvm.execution.CompExecution(ocm.agent_rep, [context.execution_id])
         execution_mode = ocm.parameters.comp_execution_mode._get(context)
         if execution_mode == "PTX":
-            outcomes = comp_exec.cuda_evaluate(variable, num_evals)
+            outcomes = comp_exec.cuda_evaluate(inputs, num_inputs_sets, num_evals)
         elif execution_mode == "LLVM":
-            outcomes = comp_exec.thread_evaluate(variable, num_evals)
+            outcomes = comp_exec.thread_evaluate(inputs, num_inputs_sets, num_evals)
         else:
             assert False, f"Unknown execution mode for {ocm.name}: {execution_mode}."
 
