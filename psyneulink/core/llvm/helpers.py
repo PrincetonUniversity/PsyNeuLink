@@ -443,7 +443,7 @@ def printf_float_array(builder, array, prefix="", suffix="\n", override_debug=Fa
     printf(builder, prefix, override_debug=override_debug)
 
     with array_ptr_loop(builder, array, "print_array_loop") as (b1, i):
-        printf(b1, "%lf ", b1.load(b1.gep(array, [ir.IntType(32)(0), i])), override_debug=override_debug)
+        printf(b1, "%lf ", b1.load(b1.gep(array, [i.type(0), i])), override_debug=override_debug)
 
     printf(builder, suffix, override_debug=override_debug)
 
@@ -451,7 +451,7 @@ def printf_float_array(builder, array, prefix="", suffix="\n", override_debug=Fa
 def printf_float_matrix(builder, matrix, prefix="", suffix="\n", override_debug=False):
     printf(builder, prefix, override_debug=override_debug)
     with array_ptr_loop(builder, matrix, "print_row_loop") as (b1, i):
-        row = b1.gep(matrix, [ir.IntType(32)(0), i])
+        row = b1.gep(matrix, [i.type(0), i])
         printf_float_array(b1, row, suffix="\n", override_debug=override_debug)
     printf(builder, suffix, override_debug=override_debug)
 
