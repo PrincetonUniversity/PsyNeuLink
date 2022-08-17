@@ -563,8 +563,11 @@ class CompExecution(CUDAExecution):
 
     # Methods used to accelerate "Run"
 
-    def _get_run_input_struct(self, inputs, num_input_sets):
-        input_type = self._bin_run_func.byref_arg_types[3]
+    def _get_run_input_struct(self, inputs, num_input_sets, arg=3):
+        # Callers that override input arg, should ensure that _bin_func is not None
+        bin_f = self._bin_run_func if arg == 3 else self._bin_func
+
+        input_type = bin_f.byref_arg_types[arg]
         c_input = (input_type * num_input_sets) * len(self._execution_contexts)
         if len(self._execution_contexts) == 1:
             inputs = [inputs]
@@ -694,8 +697,8 @@ class CompExecution(CUDAExecution):
         ct_comp_state = self._get_compilation_param('_eval_state', '_get_state_initializer', 1)
         ct_comp_data = self._get_compilation_param('_eval_data', '_get_data_initializer', 6)
 
-        # Construct input variable
-        ct_inputs = self._get_run_input_struct(inputs, num_input_sets)
+        # Construct input variable, the 5th parameter of the evaluate function
+        ct_inputs = self._get_run_input_struct(inputs, num_input_sets, 5)
 
         # Output ctype
         out_ty = bin_func.byref_arg_types[4] * num_evaluations
