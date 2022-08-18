@@ -3196,10 +3196,6 @@ class OptimizationControlMechanism(ControlMechanism):
                                            context=context
                                            )
 
-    def _get_evaluate_input_struct_type(self, ctx):
-        # We construct input from optimization function input
-        return ctx.get_input_struct_type(self.function)
-
     def _get_evaluate_output_struct_type(self, ctx):
         # Returns a scalar that is the predicted net_outcome
         return ctx.float_ty
@@ -3326,7 +3322,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 ctx.get_state_struct_type(self.agent_rep).as_pointer(),
                 self._get_evaluate_alloc_struct_type(ctx).as_pointer(),
                 self._get_evaluate_output_struct_type(ctx).as_pointer(),
-                self._get_evaluate_input_struct_type(ctx).as_pointer(),
+                ctx.get_input_struct_type(self.agent_rep).as_pointer(),
                 ctx.get_data_struct_type(self.agent_rep).as_pointer()]
 
         builder = ctx.create_llvm_function(args, self, str(self) + "_evaluate")
@@ -3334,7 +3330,7 @@ class OptimizationControlMechanism(ControlMechanism):
         for p in llvm_func.args:
             p.attributes.add('nonnull')
 
-        comp_params, base_comp_state, allocation_sample, arg_out, arg_in, base_comp_data = llvm_func.args
+        comp_params, base_comp_state, allocation_sample, arg_out, comp_input, base_comp_data = llvm_func.args
 
         if "const_params" in debug_env:
             comp_params = builder.alloca(comp_params.type.pointee, name="const_params_loc")
@@ -3390,37 +3386,8 @@ class OptimizationControlMechanism(ControlMechanism):
                                                       ctx.int32_ty(0)])
             builder.store(builder.load(sample_ptr), sample_dst)
 
-        # Construct input
-        comp_input = builder.alloca(sim_f.args[3].type.pointee, name="sim_input")
-
-        input_initialized = [False] * len(comp_input.type.pointee)
-        for src_idx, ip in enumerate(self.input_ports):
-            if ip.shadow_inputs is None:
-                continue
-
-            # shadow inputs point to an input port of of a node.
-            # If that node takes direct input, it will have an associated
-            # (input_port, output_port) in the input_CIM.
-            # Take the former as an index to composition input variable.
-            cim_in_port = self.agent_rep.input_CIM_ports[ip.shadow_inputs][0]
-            dst_idx = self.agent_rep.input_CIM.input_ports.index(cim_in_port)
-
-            # Check that all inputs are unique
-            assert not input_initialized[dst_idx], "Double initialization of input {}".format(dst_idx)
-            input_initialized[dst_idx] = True
-
-            src = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(src_idx)])
-            # Destination is a struct of 2d arrays
-            dst = builder.gep(comp_input, [ctx.int32_ty(0),
-                                           ctx.int32_ty(dst_idx),
-                                           ctx.int32_ty(0)])
-            builder.store(builder.load(src), dst)
-
-        # Assert that we have populated all inputs
-        assert all(input_initialized), \
-          "Not all inputs to the simulated composition are initialized: {}".format(input_initialized)
-
         if "const_input" in debug_env:
+            comp_input = builder.alloca(sim_f.args[3].type.pointee, name="sim_input")
             if not debug_env["const_input"]:
                 input_init = [[os.defaults.variable.tolist()] for os in self.agent_rep.input_CIM.input_ports]
                 print("Setting default input: ", input_init)

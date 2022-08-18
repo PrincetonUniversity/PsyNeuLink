@@ -23,20 +23,19 @@ expected = np.linalg.norm(v1 - v2)
 @pytest.mark.function
 @pytest.mark.distance_function
 @pytest.mark.benchmark
-@pytest.mark.parametrize("executions", [1,10,100])
+@pytest.mark.parametrize("executions", [1, 10, 100])
 def test_function(benchmark, executions, func_mode):
     f = Functions.Distance(default_variable=test_var, metric=kw.EUCLIDEAN)
     benchmark.group = "DistanceFunction multirun {}".format(executions)
     var = [test_var for _ in range(executions)] if executions > 1 else test_var
     if func_mode == 'Python':
-        e = lambda x : [f.function(x[i]) for i in range(executions)]
-        res = benchmark(e if executions > 1 else f.function, var)
+        e = f.function if executions == 1 else lambda x: [f.function(xi) for xi in x]
     elif func_mode == 'LLVM':
-        e = pnlvm.execution.FuncExecution(f, [None for _ in range(executions)])
-        res = benchmark(e.execute, var)
+        e = pnlvm.execution.FuncExecution(f, [None for _ in range(executions)]).execute
     elif func_mode == 'PTX':
-        e = pnlvm.execution.FuncExecution(f, [None for _ in range(executions)])
-        res = benchmark(e.cuda_execute, var)
+        e = pnlvm.execution.FuncExecution(f, [None for _ in range(executions)]).cuda_execute
+
+    res = benchmark(e, var)
     assert np.allclose(res, [expected for _ in range(executions)])
     assert executions == 1 or len(res) == executions
 
@@ -44,7 +43,7 @@ def test_function(benchmark, executions, func_mode):
 @pytest.mark.mechanism
 @pytest.mark.transfer_mechanism
 @pytest.mark.benchmark
-@pytest.mark.parametrize("executions", [1,10,100])
+@pytest.mark.parametrize("executions", [1, 10, 100])
 def test_mechanism(benchmark, executions, mech_mode):
     benchmark.group = "TransferMechanism multirun {}".format(executions)
     variable = [0 for _ in range(SIZE)]
@@ -58,17 +57,16 @@ def test_mechanism(benchmark, executions, mech_mode):
     var = [[10.0 for _ in range(SIZE)] for _ in range(executions)]
     expected = [[8.0 for i in range(SIZE)]]
     if mech_mode == 'Python':
-        f = lambda x : [T.execute(x[i]) for i in range(executions)]
-        res = benchmark(f if executions > 1 else T.execute, var)
+        e = T.execute if executions ==1 else lambda x : [T.execute(x[i]) for i in range(executions)]
     elif mech_mode == 'LLVM':
-        e = pnlvm.execution.MechExecution(T, [None for _ in range(executions)])
-        res = benchmark(e.execute, var)
+        e = pnlvm.execution.MechExecution(T, [None for _ in range(executions)]).execute
     elif mech_mode == 'PTX':
-        e = pnlvm.execution.MechExecution(T, [None for _ in range(executions)])
-        res = benchmark(e.cuda_execute, var)
+        e = pnlvm.execution.MechExecution(T, [None for _ in range(executions)]).cuda_execute
+
     if executions > 1:
         expected = [expected for _ in range(executions)]
 
+    res = benchmark(e, var)
     assert np.allclose(res, expected)
     assert len(res) == executions
 
@@ -77,7 +75,7 @@ def test_mechanism(benchmark, executions, mech_mode):
 @pytest.mark.nested
 @pytest.mark.composition
 @pytest.mark.benchmark
-@pytest.mark.parametrize("executions", [1,10,100])
+@pytest.mark.parametrize("executions", [1, 10, 100])
 @pytest.mark.parametrize("mode", ['Python',
                                   pytest.param('LLVM', marks=pytest.mark.llvm),
                                   pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
@@ -106,10 +104,11 @@ def test_nested_composition_execution(benchmark, executions, mode):
     expected = [[0.52497918747894]]
     if executions > 1:
         var = [var for _ in range(executions)]
+
     if mode == 'Python':
-        f = lambda x : [outer_comp.execute(x[i], context=i) for i in range(executions)]
-        res = f(var) if executions > 1 else outer_comp.execute(var)
-        benchmark(f if executions > 1 else outer_comp.execute, var)
+        e = outer_comp.execute if executions == 1 else lambda x : [outer_comp.execute(x[i], context=i) for i in range(executions)]
+        res = e(var)
+        benchmark(e, var)
     elif mode == 'LLVM':
         e = pnlvm.execution.CompExecution(outer_comp, [None for _ in range(executions)])
         e.execute(var)
@@ -129,7 +128,7 @@ def test_nested_composition_execution(benchmark, executions, mode):
 @pytest.mark.nested
 @pytest.mark.composition
 @pytest.mark.benchmark
-@pytest.mark.parametrize("executions", [1,10,100])
+@pytest.mark.parametrize("executions", [1, 10, 100])
 @pytest.mark.parametrize("mode", ['Python',
                                   pytest.param('LLVM', marks=pytest.mark.llvm),
                                   pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
@@ -159,9 +158,9 @@ def test_nested_composition_run(benchmark, executions, mode):
     if executions > 1:
         var = [var for _ in range(executions)]
     if mode == 'Python':
-        f = lambda x : [outer_comp.run(x[i], context=i) for i in range(executions)]
-        res = f(var) if executions > 1 else outer_comp.run(var)
-        benchmark(f if executions > 1 else outer_comp.run, var)
+        e = outer_comp.run if executions == 1 else lambda x : [outer_comp.run(x[i], context=i) for i in range(executions)]
+        res = e(var)
+        benchmark(e, var)
     elif mode == 'LLVM':
         e = pnlvm.execution.CompExecution(outer_comp, [None for _ in range(executions)])
         res = e.run(var, 1, 1)
@@ -178,7 +177,7 @@ def test_nested_composition_run(benchmark, executions, mode):
 @pytest.mark.nested
 @pytest.mark.composition
 @pytest.mark.benchmark
-@pytest.mark.parametrize("executions", [1,10,100])
+@pytest.mark.parametrize("executions", [1, 10, 100])
 @pytest.mark.parametrize("mode", ['Python',
                                   pytest.param('LLVM', marks=pytest.mark.llvm),
                                   pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
