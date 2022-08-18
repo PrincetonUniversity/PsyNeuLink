@@ -1174,7 +1174,7 @@ class TestStatefulness:
         assert I.has_initializers
         assert hasattr(I, "reset_stateful_function_when")
 
-    @pytest.mark.mechanism
+    @pytest.mark.composition
     @pytest.mark.integrator_mechanism
     @pytest.mark.parametrize('cond0, cond1, expected', [
         (pnl.Never(), pnl.AtTrial(2),
@@ -1218,6 +1218,7 @@ class TestStatefulness:
 
         assert np.allclose(expected, C.results)
 
+    @pytest.mark.composition
     def test_reset_stateful_function_when(self):
         I1 = IntegratorMechanism()
         I2 = IntegratorMechanism()

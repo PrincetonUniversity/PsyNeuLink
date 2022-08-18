@@ -12,7 +12,8 @@ from psyneulink.library.components.mechanisms.processing.transfer.lcamechanism i
     LCAMechanism, MAX_VS_AVG, MAX_VS_NEXT, CONVERGENCE
 
 class TestLCA:
-    @pytest.mark.mechanism
+
+    @pytest.mark.composition
     @pytest.mark.lca_mechanism
     @pytest.mark.benchmark(group="LCAMechanism")
     def test_LCAMechanism_length_1(self, benchmark, comp_mode):
@@ -59,7 +60,7 @@ class TestLCA:
         if benchmark.enabled:
             benchmark(C.run, inputs={T: [1.0]}, num_trials=3, execution_mode=comp_mode)
 
-    @pytest.mark.mechanism
+    @pytest.mark.composition
     @pytest.mark.lca_mechanism
     @pytest.mark.benchmark(group="LCAMechanism")
     def test_LCAMechanism_length_2(self, benchmark, comp_mode):
@@ -120,6 +121,7 @@ class TestLCA:
         if benchmark.enabled:
             benchmark(C.run, inputs={T: [1.0, 2.0]}, num_trials=3, execution_mode=comp_mode)
 
+    @pytest.mark.composition
     def test_equivalance_of_threshold_and_when_finished_condition(self):
         # Note: This tests the equivalence of results when:
         #       execute_until_finished is True for the LCAMechanism (by default)
@@ -152,7 +154,7 @@ class TestLCA:
 
     # Note: In the following tests, since the LCAMechanism's threshold is specified
     #       it executes until the it reaches threshold.
-    @pytest.mark.mechanism
+    @pytest.mark.composition
     @pytest.mark.lca_mechanism
     @pytest.mark.benchmark(group="LCAMechanism")
     def test_LCAMechanism_threshold(self, benchmark, comp_mode):
@@ -164,6 +166,7 @@ class TestLCA:
         if benchmark.enabled:
             benchmark(comp.run, inputs={lca:[1,0]}, execution_mode=comp_mode)
 
+    @pytest.mark.composition
     def test_LCAMechanism_threshold_with_max_vs_next(self):
         lca = LCAMechanism(size=3, leak=0.5, threshold=0.1, threshold_criterion=MAX_VS_NEXT)
         comp = Composition()
@@ -171,6 +174,7 @@ class TestLCA:
         result = comp.run(inputs={lca:[1,0.5,0]})
         assert np.allclose(result, [[0.52490032, 0.42367594, 0.32874867]])
 
+    @pytest.mark.composition
     def test_LCAMechanism_threshold_with_max_vs_avg(self):
         lca = LCAMechanism(size=3, leak=0.5, threshold=0.1, threshold_criterion=MAX_VS_AVG)
         comp = Composition()
@@ -178,7 +182,7 @@ class TestLCA:
         result = comp.run(inputs={lca:[1,0.5,0]})
         assert np.allclose(result, [[0.51180475, 0.44161738, 0.37374946]])
 
-    @pytest.mark.mechanism
+    @pytest.mark.composition
     @pytest.mark.lca_mechanism
     @pytest.mark.benchmark(group="LCAMechanism")
     def test_LCAMechanism_threshold_with_convergence(self, benchmark, comp_mode):
@@ -192,7 +196,7 @@ class TestLCA:
         if benchmark.enabled:
             benchmark(comp.run, inputs={lca:[0,1,2]}, execution_mode=comp_mode)
 
-    @pytest.mark.mechanism
+    @pytest.mark.composition
     @pytest.mark.lca_mechanism
     def test_equivalance_of_threshold_and_termination_specifications_just_threshold(self, comp_mode):
         # Note: This tests the equivalence of using LCAMechanism-specific threshold arguments and
@@ -215,6 +219,7 @@ class TestLCA:
         result2 = comp2.run(inputs={lca_termination:[1,0]}, execution_mode=comp_mode)
         assert np.allclose(result1, result2)
 
+    @pytest.mark.composition
     def test_equivalance_of_threshold_and_termination_specifications_max_vs_next(self):
         # Note: This tests the equivalence of using LCAMechanism-specific threshold arguments and
         #       generic TransferMechanism termination_<*> arguments
@@ -255,7 +260,7 @@ class TestLCA:
     #     result = comp.run(inputs={lca:[1,0]})
     #     assert np.allclose(result, [[0.71463572, 0.28536428]])
 
-    @pytest.mark.mechanism
+    @pytest.mark.composition
     @pytest.mark.lca_mechanism
     def test_LCAMechanism_DDM_equivalent(self, comp_mode):
         lca = LCAMechanism(size=2, leak=0., threshold=1, auto=0, hetero=0,
@@ -268,6 +273,7 @@ class TestLCA:
 
 class TestLCAReset:
 
+    @pytest.mark.composition
     def test_reset_run(self):
 
         L = LCAMechanism(name="L",

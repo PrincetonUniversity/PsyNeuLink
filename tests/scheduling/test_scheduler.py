@@ -1498,7 +1498,7 @@ class TestFeedback:
         }
         assert comp.scheduler.dependency_dict == expected_dependencies
 
-    @pytest.mark.mechanism
+    @pytest.mark.composition
     @pytest.mark.transfer_mechanism
     @pytest.mark.parametrize('timescale, expected',
                              [(TimeScale.TIME_STEP, [[0.5], [0.4375]]),

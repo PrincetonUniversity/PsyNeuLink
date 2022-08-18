@@ -2600,6 +2600,7 @@ class TestControlMechanisms:
         assert np.allclose(best_second, comp.results[1])
 
 
+@pytest.mark.composition
 @pytest.mark.control
 class TestModelBasedOptimizationControlMechanisms_Execution:
     def test_ocm_default_function(self):
@@ -2950,8 +2951,6 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                                # Note: Skip decision variable OutputPort
                                evc_gratton.simulation_results[simulation][1:])
 
-    @pytest.mark.control
-    @pytest.mark.composition
     def test_laming_validation_specify_control_signals(self):
         # Mechanisms
         Input = pnl.TransferMechanism(name='Input')
@@ -3072,8 +3071,6 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                 err_msg='Failed on expected_output[{0}]'.format(trial)
             )
 
-    @pytest.mark.control
-    @pytest.mark.composition
     def test_stateful_mechanism_in_simulation(self):
         # Mechanisms
         Input = pnl.TransferMechanism(name='Input', integrator_mode=True)
@@ -3211,8 +3208,6 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                 err_msg='Failed on expected_output[{0}]'.format(trial)
             )
 
-    @pytest.mark.control
-    @pytest.mark.composition
     @pytest.mark.benchmark(group="Model Based OCM")
     @pytest.mark.parametrize("mode", pytest.helpers.get_comp_execution_modes() +
                                      [pytest.helpers.cuda_param('Python-PTX'),
@@ -3262,8 +3257,6 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         if benchmark.enabled:
             benchmark(comp.run, inputs, execution_mode=mode)
 
-    @pytest.mark.control
-    @pytest.mark.composition
     @pytest.mark.benchmark(group="Model Based OCM")
     @pytest.mark.parametrize("mode", pytest.helpers.get_comp_execution_modes() +
                                      [pytest.helpers.cuda_param('Python-PTX'),
@@ -3652,8 +3645,6 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         # initial 1 + each allocation sample (1, 2, 3) integrated
         assert B.parameters.value.get(comp) == 7
 
-    @pytest.mark.control
-    @pytest.mark.composition
     @pytest.mark.benchmark(group="Multilevel")
     def test_grid_search_random_selection(self, comp_mode, benchmark):
         A = pnl.ProcessingMechanism(name='A')
@@ -3700,8 +3691,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
             benchmark(comp.run, inputs=inputs, num_trials=10, context='bench_outer_comp', execution_mode=comp_mode)
             assert len(A.log.get_logged_entries()) == 0
 
-    @pytest.mark.control
-    @pytest.mark.composition
+
     def test_input_CIM_assignment(self, comp_mode):
         input_a = pnl.ProcessingMechanism(name='oa', function=pnl.Linear(slope=1))
         input_b = pnl.ProcessingMechanism(name='ob', function=pnl.Linear(slope=1))
@@ -3863,6 +3853,7 @@ class TestSampleIterator:
         assert sample_iterator.num == len(sample_list)
 
 
+@pytest.mark.composition
 @pytest.mark.control
 class TestControlTimeScales:
 

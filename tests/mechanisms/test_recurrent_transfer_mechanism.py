@@ -21,6 +21,7 @@ from psyneulink.library.components.mechanisms.processing.transfer.recurrenttrans
     RecurrentTransferError, RecurrentTransferMechanism
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 
+@pytest.mark.composition
 class TestMatrixSpec:
     def test_recurrent_mech_matrix(self):
 
@@ -628,6 +629,7 @@ class TestRecurrentTransferMechanismTimeConstant:
 # won't get executed if we only use the execute() method of Mechanism: thus, to test it we must use a Composition
 
 
+@pytest.mark.composition
 def run_twice_in_composition(mech, input1, input2=None):
     if input2 is None:
         input2 = input1
@@ -637,6 +639,7 @@ def run_twice_in_composition(mech, input1, input2=None):
     return result[0]
 
 
+@pytest.mark.composition
 class TestRecurrentTransferMechanismInProcess:
     simple_prefs = {REPORT_OUTPUT_PREF: False, VERBOSE_PREF: False}
 
@@ -722,6 +725,7 @@ class TestRecurrentTransferMechanismInProcess:
         np.testing.assert_allclose(R.parameters.value.get(c), [[21, 3, 12, 35]])
 
 
+@pytest.mark.composition
 class TestRecurrentTransferMechanismInComposition:
     simple_prefs = {REPORT_OUTPUT_PREF: False, VERBOSE_PREF: False}
 
@@ -957,6 +961,7 @@ class TestRecurrentTransferMechanismInComposition:
         np.testing.assert_allclose(R.output_port.parameters.value.get(C),[0.0, 1.18518086, 0.0, 1.18518086])
 
 
+@pytest.mark.composition
 class TestRecurrentTransferMechanismReset:
 
     def test_reset_run(self):
@@ -1024,6 +1029,7 @@ class TestClip:
         assert np.allclose(R.execute([[-5.0, -1.0, 5.0], [5.0, -5.0, 1.0], [1.0, 5.0, 5.0]]),
                            [[-2.0, -1.0, 2.0], [2.0, -2.0, 1.0], [1.0, 2.0, 2.0]])
 
+@pytest.mark.composition
 class TestRecurrentInputPort:
 
     def test_ris_simple(self):
@@ -1061,6 +1067,7 @@ class TestCustomCombinationFunction:
         result = R2.execute([1,2])
         np.testing.assert_allclose(result, [[0,0]])
 
+    @pytest.mark.composition
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
     @pytest.mark.parametrize('cond0, cond1, expected', [
@@ -1107,6 +1114,7 @@ class TestCustomCombinationFunction:
 
         assert np.allclose(expected, C.results)
 
+    @pytest.mark.composition
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
     @pytest.mark.parametrize('cond0, cond1, expected', [
@@ -1152,7 +1160,7 @@ class TestCustomCombinationFunction:
 
         assert np.allclose(exp, C.results)
 
-    @pytest.mark.mechanism
+    @pytest.mark.composition
     @pytest.mark.integrator_mechanism
     @pytest.mark.parametrize('until_finished, expected', [
         (True, [[[[0.96875]]], [[[0.9990234375]]]]), # The 5th and the 10th iteration
@@ -1177,6 +1185,7 @@ class TestCustomCombinationFunction:
         assert np.allclose(expected[0], results)
         assert np.allclose(expected[1], results2)
 
+@pytest.mark.composition
 class TestDebugProperties:
 
     def test_defaults(self):
