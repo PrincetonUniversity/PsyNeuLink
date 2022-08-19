@@ -903,14 +903,14 @@ class TestTransferMechanismTimeConstant:
         )
         EX = pytest.helpers.get_mech_execution(T, mech_mode)
 
-        val1 = T.execute([1 for i in range(VECTOR_SIZE)])
-        val2 = T.execute([1 for i in range(VECTOR_SIZE)])
+        val1 = EX([1 for i in range(VECTOR_SIZE)])
+        val2 = EX([1 for i in range(VECTOR_SIZE)])
 
         assert np.allclose(val1, [[0.8 for i in range(VECTOR_SIZE)]])
         assert np.allclose(val2, [[0.96 for i in range(VECTOR_SIZE)]])
 
         if benchmark.enabled:
-            benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
+            benchmark(EX, [0 for i in range(VECTOR_SIZE)])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
