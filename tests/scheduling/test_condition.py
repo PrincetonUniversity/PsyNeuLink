@@ -82,6 +82,7 @@ class TestCondition:
         assert not cond.is_satisfied(False, c=False)
         assert not cond.is_satisfied(False, c=False, extra_arg=True)
 
+    @pytest.mark.composition
     class TestGeneric:
         def test_WhileNot_AtPass(self):
             comp = Composition()
@@ -115,6 +116,7 @@ class TestCondition:
             expected_output = [A, A, set(), A, A]
             assert output == pytest.helpers.setify_expected_output(expected_output)
 
+    @pytest.mark.composition
     class TestRelative:
 
         def test_Any_end_before_one_finished(self):
@@ -211,6 +213,7 @@ class TestCondition:
 
             assert output == pytest.helpers.setify_expected_output(expected_output)
 
+    @pytest.mark.composition
     class TestTime:
 
         def test_BeforeTimeStep(self):
@@ -480,6 +483,7 @@ class TestCondition:
             expected_output = [set(), A, A, A, A]
             assert output == pytest.helpers.setify_expected_output(expected_output)
 
+    @pytest.mark.composition
     class TestComponentBased:
 
         def test_BeforeNCalls(self):
@@ -562,6 +566,7 @@ class TestCondition:
 
     class TestConvenience:
 
+        @pytest.mark.composition
         def test_AtTrialStart(self):
             comp = Composition()
             A = TransferMechanism(name='A')
@@ -579,6 +584,7 @@ class TestCondition:
             expected_output = [A, B, A, A]
             assert output == pytest.helpers.setify_expected_output(expected_output)
 
+    @pytest.mark.composition
     def test_composite_condition_multi(self):
         comp = Composition()
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
@@ -613,6 +619,7 @@ class TestCondition:
         ]
         assert output == pytest.helpers.setify_expected_output(expected_output)
 
+    @pytest.mark.composition
     def test_AfterNCallsCombined(self):
         comp = Composition()
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
@@ -640,6 +647,7 @@ class TestCondition:
         ]
         assert output == pytest.helpers.setify_expected_output(expected_output)
 
+    @pytest.mark.composition
     def test_AllHaveRun(self):
         comp = Composition()
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
@@ -667,6 +675,7 @@ class TestCondition:
         ]
         assert output == pytest.helpers.setify_expected_output(expected_output)
 
+    @pytest.mark.composition
     def test_AllHaveRun_2(self):
         comp = Composition()
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
@@ -692,6 +701,7 @@ class TestCondition:
         ]
         assert output == pytest.helpers.setify_expected_output(expected_output)
 
+    @pytest.mark.composition
     @pytest.mark.parametrize(
         'parameter, indices, default_variable, integration_rate, expected_results',
         [
@@ -723,6 +733,7 @@ class TestCondition:
 
         np.testing.assert_array_equal(comp.results, expected_results)
 
+    @pytest.mark.composition
     @pytest.mark.parametrize(
         'comparator, increment, threshold, expected_results',
         [
@@ -755,6 +766,7 @@ class TestCondition:
 
         np.testing.assert_array_equal(comp.results, expected_results)
 
+    @pytest.mark.composition
     @pytest.mark.parametrize(
         'comparator, increment, threshold, atol, rtol, expected_results',
         [
@@ -790,6 +802,7 @@ class TestCondition:
         np.testing.assert_array_equal(comp.results, expected_results)
 
 
+@pytest.mark.composition
 class TestWhenFinished:
 
     @classmethod
@@ -984,6 +997,7 @@ class TestAbsolute:
     B = TransferMechanism(name='scheduler-pytests-B')
     C = TransferMechanism(name='scheduler-pytests-C')
 
+    @pytest.mark.composition
     @pytest.mark.parametrize(
         'conditions, termination_conds',
         [
@@ -1036,6 +1050,7 @@ class TestAbsolute:
             for i in range(1, len(executions)):
                 assert (executions[i] - executions[i - 1]) == cond.repeat
 
+    @pytest.mark.composition
     @pytest.mark.parametrize(
         'conditions, termination_conds',
         [

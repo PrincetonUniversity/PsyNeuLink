@@ -10,6 +10,7 @@ class TestLCControlMechanism:
 
     @pytest.mark.mechanism
     @pytest.mark.control_mechanism
+    @pytest.mark.composition
     @pytest.mark.benchmark(group="LCControlMechanism Default")
     def test_lc_control_mechanism_as_controller(self, benchmark):
         G = 1.0
@@ -93,6 +94,7 @@ class TestLCControlMechanism:
         if benchmark.enabled:
             benchmark(EX, [10.0])
 
+    @pytest.mark.composition
     def test_lc_control_modulated_mechanisms_all(self):
 
         T_1 = pnl.TransferMechanism(name='T_1')
@@ -110,7 +112,9 @@ class TestLCControlMechanism:
         assert T_2.parameter_ports[pnl.SLOPE].mod_afferents[0] in LC.control_signals[0].efferents
 
 
+@pytest.mark.composition
 class TestControlMechanism:
+
     def test_control_modulation(self):
         Tx = pnl.TransferMechanism(name='Tx')
         Ty = pnl.TransferMechanism(name='Ty')
