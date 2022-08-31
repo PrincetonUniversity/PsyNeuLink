@@ -108,8 +108,7 @@ class TestTransferMechanismInputs:
             )
             T.execute(["one", "two", "three", "four"])
         assert '"Input to \'T\' ([\'one\' \'two\' \'three\' \'four\']) is incompatible ' \
-               'with its corresponding InputPort (T[InputPort-0]): ' \
-               '\'cannot perform reduce with flexible type.\'"' in str(error_text.value)
+               'with its corresponding InputPort (T[InputPort-0]): ' in str(error_text.value)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
