@@ -116,6 +116,10 @@ def simulation_likelihood(
     cat_sim_data = sim_data[:, :, categorical_dims]
 
     categories = np.unique(cat_sim_data)
+
+    if len(categories) > 10:
+        raise ValueError("Too many unique values present for a categorical dimension.")
+
     kdes = []
     for trial in range(len(con_sim_data)):
         s = con_sim_data[trial]
@@ -366,7 +370,7 @@ class MaxLikelihoodEstimator(OptimizationFunction):
                 sim_data=sim_data,
                 exp_data=self.data,
                 categorical_dims=self.data_categorical_dims,
-                combine_trials=False,
+                combine_trials=True,
             )
 
             # Make 0 densities very small so log doesn't explode
@@ -376,10 +380,11 @@ class MaxLikelihoodEstimator(OptimizationFunction):
 
         return ll
 
+    @handle_external_context(fallback_most_recent=True)
     def log_likelihood(self, *args, context=None):
         """
         Compute the log-likelihood of the data given the specified parameters of the model. This function will raise
-        aa exeception if the function has not been assigned as the function of and OptimizationControlMechanism. An
+        aa exception if the function has not been assigned as the function of and OptimizationControlMechanism. An
         OCM is required in order to simulate results of the model for computing the likelihood.
 
         Arguments
@@ -413,12 +418,7 @@ class MaxLikelihoodEstimator(OptimizationFunction):
                  params=None,
                  **kwargs):
 
-        # We need to set the aggregation function to None so that calls to evaluate do not aggregate results
-        # of simulations. We want all results for all simulations so we can compute the likelihood ourselves.
-        self.parameters.aggregation_function._set(None, context)
-
-        # FIXME: Setting these default values up properly is a pain while initializing, ask Jon
-        optimal_sample = np.array([[0.0], [0.0], [0.0]])
+        optimal_sample = self.variable
         optimal_value = np.array([1.0])
         saved_samples = []
         saved_values = []
@@ -435,11 +435,11 @@ class MaxLikelihoodEstimator(OptimizationFunction):
 
             # FIXME: This should be found with fitting but it is too slow!
             # We can at least return the evaluation of the log-likelihood function for testing purposes
-            self.owner.optimal_value, saved_values = ll_func(0.3, 0.15)
-            self.owner.optimal_parameters = np.array([[0.3, 0.15]])
+            # self.owner.optimal_value, saved_values = ll_func(0.3, 0.15)
+            # self.owner.optimal_parameters = np.array([[0.3, 0.15]])
 
             # Run the MLE optimization
-            # results = self._fit(ll_func=ll_func)
+            results = self._fit(ll_func=ll_func)
 
         return optimal_sample, optimal_value, saved_samples, saved_values
 
@@ -469,7 +469,7 @@ class MaxLikelihoodEstimator(OptimizationFunction):
                 def neg_log_like(x):
                     params = dict(zip(self.fit_param_names, x))
                     t0 = time.time()
-                    p = -ll_func(*x)
+                    p = -ll_func(*x)[0]
                     elapsed = time.time() - t0
 
                     # Keep a log of warnings and the parameters that caused them

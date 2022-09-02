@@ -637,8 +637,8 @@ class OptimizationFunction(Function_Base):
 
             if fit_evaluate:
                 all_values = np.ctypeslib.as_array(all_values)
-                print("OLD DTYPE:", all_values.dtype)
-                print("OLD SHAPE:", all_values.shape)
+                # print("OLD DTYPE:", all_values.dtype)
+                # print("OLD SHAPE:", all_values.shape)
 
                 def _get_builtin_dtype(dtype):
     #                print("CHECKING:", dtype, "FIELDS:", dtype.names, "SUBDTYPE:", dtype.subdtype, "BASE:", dtype.base)
@@ -656,8 +656,8 @@ class OptimizationFunction(Function_Base):
                 dtype = _get_builtin_dtype(all_values.dtype)
                 # Ignore the shape of the output structure
                 all_values = all_values.view(dtype=dtype).reshape((*all_values.shape[0:2], -1))
-                print("NEW DTYPE:", all_values.dtype)
-                print("NEW SHAPE:", all_values.shape)
+                # print("NEW DTYPE:", all_values.dtype)
+                # print("NEW SHAPE:", all_values.shape)
 
                 # Re-arrange dimensions to match Python
                 all_values = np.transpose(all_values, (1, 2, 0))

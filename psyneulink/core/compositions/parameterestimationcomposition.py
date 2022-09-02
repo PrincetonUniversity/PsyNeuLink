@@ -520,6 +520,13 @@ class ParameterEstimationComposition(Composition):
 
         self.add_controller(ocm, context)
 
+        # If we are using data fitting mode.
+        # We need to ensure the aggregation function is set to None on the OptimizationFunction so that calls to
+        # evaluate do not aggregate results of simulations. We want all results for all simulations so we can compute
+        # the likelihood ourselves.
+        if self.data is not None:
+            ocm.function.parameters.aggregation_function._set(None, context)
+
         # The call run on PEC might lead to the run method again recursively for simulation. We need to keep track of
         # this to avoid infinite recursion.
         self._run_called = False
