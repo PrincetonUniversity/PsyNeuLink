@@ -10,7 +10,7 @@
 # *****************************************  INTEGRATOR FUNCTIONS ******************************************************
 """
 
-Functions that integrate current value of input with previous value.
+Functions that   integrate current value of input with previous value.
 
 * `IntegratorFunction`
 * `AccumulatorIntegrator`

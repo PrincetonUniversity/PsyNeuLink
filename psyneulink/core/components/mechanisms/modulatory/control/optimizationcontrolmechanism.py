@@ -774,7 +774,7 @@ the items specified by `monitor_for_control
 <ControlMechanism.monitor_for_control>` are all assigned `MappingProjections <MappingProjection>` to a single
 *OUTCOME* InputPort.  This is assigned `Concatenate` as it `function <InputPort.function>`, which concatenates the
 `values <Projection_Base.value>` of its Projections into a single array (that is, it is automatically configured
-to use the *CONCATENATE* option of a ControlMechanism's `outcome_input_ports_option
+to use the *CONCATENATE* option of a ControlMechanism's `M
 <ControlMechanism.outcome_input_ports_option>` Parameter). This ensures that the input to the
 OptimizationControlMechanism's `function <OptimizationControlMechanism.function>` has the same format as when an
 `objective_mechanism <ControlMechanism.objective_mechanism>` has been specified, as described below.
@@ -1346,6 +1346,11 @@ class OptimizationControlMechanism(ControlMechanism):
         `control_allocation <ControlMechanism.control_allocation>` contains only one element, then search_space can be
         specified as a single element without an enclosing iterable.
 
+    search_statefulness : bool : True
+        determines whether or not each simulation is run in its own `execution context
+        <Composition_Execution_Context>` or executed in the same (original) execution context as all others
+        (see `search_statefulness <OptimizationControlMechanism.search_statefulness>` for additional details).
+
     function : OptimizationFunction, function or method
         specifies the function used to optimize the `control_allocation <ControlMechanism.control_allocation>`;
         must take as its sole argument an array with the same shape as `control_allocation
@@ -1635,7 +1640,7 @@ class OptimizationControlMechanism(ControlMechanism):
                     :type:
 
                 outcome_input_ports_option
-                    see `outcome_input_ports_option <OptimizationControlMechanism.outcome_input_ports_option>`
+                    see `outcome_input_ports_option <ControlMechanism.outcome_input_ports_option>`
 
                     :default value: None
                     :type:
