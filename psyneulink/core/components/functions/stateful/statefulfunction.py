@@ -487,7 +487,8 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                     initializer_ref = getattr(self.parameters, attr).initializer
                     if initializer_ref:
                         initializer = getattr(self.parameters, initializer_ref)
-                    if initializer and initializer.port and initializer.port.mod_afferents:
+                    # FIX: ?NEED TO HANDLE initializer IF IT IS A NUMBER?
+                    if initializer is not None and initializer.port and initializer.port.mod_afferents:
                         # If the initializer is subject to control, get its control_allocation
                         initializer_mod_proj = initializer.port.mod_afferents[0]
                         mod_parameter_cim = initializer_mod_proj.sender.owner
