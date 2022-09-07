@@ -484,10 +484,6 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                 kwargs[attr] = np.atleast_1d(kwargs[attr])
             else:
                 try:
-                    # MODIFIED 9/6/22 OLD:
-                    # kwargs[attr] = self._get_current_parameter_value(getattr(self.parameters, attr).initializer,
-                    #                                                      context=context)
-                    # MODIFIED 9/6/22 NEW:
                     initializer_ref = getattr(self.parameters, attr).initializer
                     if initializer_ref:
                         initializer = getattr(self.parameters, initializer_ref)
@@ -501,7 +497,6 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                     else:
                         # Otherwise, just use the default (or user-assigned) initializer
                         kwargs[attr] = self._get_current_parameter_value(initializer, context=context)
-                    # MODIFIED 9/6/22 END
 
                 except AttributeError:
                     invalid_args.append(attr)
