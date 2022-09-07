@@ -497,7 +497,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                         mod_parameter_cim = initializer_mod_proj.sender.owner
                         ctl_sig,_,_  = mod_parameter_cim._get_source_of_modulation_for_parameter_CIM(
                             initializer_mod_proj.sender)
-                        kwargs[attr] = ctl_sig.value
+                        kwargs[attr] = ctl_sig.parameters.value.get(context)
                     else:
                         # Otherwise, just use the default (or user-assigned) initializer
                         kwargs[attr] = self._get_current_parameter_value(initializer, context=context)
