@@ -57,10 +57,15 @@ runs:
       shell: bash
       id: new_package
       run: |
-        export NEW_PACKAGE=`echo '${{ github.head_ref }}' | cut -f 4 -d/ | sed 's/-gt.*//' | sed 's/-lt.*//'`
+        export NEW_PACKAGE=$(echo '${{ github.head_ref }}' | cut -f 4 -d/ | sed 's/-gt.*//' | sed 's/-lt.*//')
         echo "::set-output name=new_package::$NEW_PACKAGE"
-        pip install "`echo $NEW_PACKAGE | sed 's/[-_]/./g' | xargs grep *requirements.txt -h -e | head -n1`"
+        # save a list of all installed packages (including pip, wheel; it's never empty)
+        pip freeze --all > orig
+        pip install "$(echo $NEW_PACKAGE | sed 's/[-_]/./g' | xargs grep *requirements.txt -h -e | head -n1)"
         pip show "$NEW_PACKAGE" | grep 'Version' | tee new_version.deps
+        # uninstall new packages but skip those from previous steps (pywinpty, terminado on windows x86)
+        # the 'orig' list is not empty (includes at least pip, wheel)
+        pip uninstall -y $(pip freeze -r orig | sed '1,/## /d')
 
     - name: Python dependencies
       shell: bash
