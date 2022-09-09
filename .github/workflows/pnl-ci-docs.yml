@@ -82,8 +82,8 @@ jobs:
       uses: actions/cache@v3
       with:
         path: ${{ steps.pip_cache.outputs.pip_cache_dir }}/wheels
-        key: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-pip-wheels-v2-${{ github.sha }}
-        restore-keys: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-pip-wheels-v2
+        key: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-pip-wheels-${{ hashFiles('requirements.txt') }}-${{ github.sha }}
+        restore-keys: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-pip-wheels-${{ hashFiles('requirements.txt') }}
 
     # We need to install all PNL deps since docs config imports psyneulink module
     - name: Install local, editable PNL package

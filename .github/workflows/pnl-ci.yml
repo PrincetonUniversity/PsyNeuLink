@@ -67,8 +67,8 @@ jobs:
       uses: actions/cache@v3
       with:
         path: ${{ steps.pip_cache.outputs.pip_cache_dir }}/wheels
-        key: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-pip-wheels-v2-${{ github.sha }}
-        restore-keys: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-pip-wheels-v2
+        key: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-pip-wheels-${{ hashFiles('requirements.txt') }}-${{ github.sha }}
+        restore-keys: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-pip-wheels-${{ hashFiles('requirements.txt') }}
 
     - name: Install local, editable PNL package
       uses: ./.github/actions/install-pnl
