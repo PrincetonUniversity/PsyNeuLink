@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>IntegratorFunctions &mdash; PsyNeuLink 0.12.1.0+9.g6f1bbca95 documentation</title>
+  <title>IntegratorFunctions &mdash; PsyNeuLink 0.12.1.0+16.g46291a3bc documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.12.1.0+9
+                  0.12.1.0+16
                 </div>
               
             
@@ -854,6 +854,24 @@ the reset method sets <a class="reference internal" href="StatefulFunction.html#
 reset) or the current value of <a class="reference internal" href="StatefulFunction.html#psyneulink.core.components.functions.stateful.statefulfunction.StatefulFunction.initializer" title="psyneulink.core.components.functions.stateful.statefulfunction.StatefulFunction.initializer"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initializer</span></code></a>.</p>
 <p>For specific types of StatefulFunction functions, the reset method may carry out other
 reinitialization steps.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.stateful.integratorfunctions.DriftDiffusionIntegrator._assign_to_mdf_model">
+<span class="sig-name descname"><span class="pre">_assign_to_mdf_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftDiffusionIntegrator._assign_to_mdf_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds an MDF representation of this function to MDF object
+<strong>model</strong>, including all necessary auxiliary functions.
+<strong>input_id</strong> is the input to the singular MDF function or first
+function representing this psyneulink Function, if applicable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the identifier of the final MDF function representing
+this psyneulink Function</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
