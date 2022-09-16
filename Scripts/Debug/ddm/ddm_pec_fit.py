@@ -6,9 +6,12 @@ from psyneulink.core.components.functions.fitfunctions import MaxLikelihoodEstim
 
 
 # High-level parameters the impact performance of the test
+# num_estimates = 10000
+# num_trials = 50
+# time_step_size = 0.001
+num_trials = 20
+time_step_size = 0.1
 num_estimates = 100
-num_trials = 50
-time_step_size = 0.01
 
 ddm_params = dict(starting_value=0.0, rate=0.3, noise=1.0,
                   threshold=0.6, non_decision_time=0.15, time_step_size=time_step_size)

@@ -234,28 +234,30 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         self.user_added_ports[OUTPUT_PORTS] = self.user_added_ports[OUTPUT_PORTS] - output_ports_marked_for_deletion
 
     # def _get_source_node_for_input_CIM(self, port, start_comp=None, end_comp=None):
-    #     """Return Port, Node and Composition  for source of projection to input_CIM from (possibly nested) outer comp
-    #     **port** should be an InputPort or OutputPort of the CompositionInterfaceMechanism;
-    #     **comp** specifies the Composition at which to begin the search (or continue it when called recursively;
-    #              assumes the current CompositionInterfaceMechanism's Composition by default
-    #     """
-    #     # Ensure method is being called on an output_CIM
-    #     assert self == self.composition.input_CIM
-    #     #  CIM MAP ENTRIES:  [SENDER PORT,  [output_CIM InputPort,  output_CIM OutputPort]]
-    #     # Get sender to input_port of output_CIM
-    #     comp = start_comp or self.composition
-    #     port_map = port.owner.port_map
-    #     idx = 0 if isinstance(port, InputPort) else 1
-    #     input_port = [port_map[k][0] for k in port_map if port_map[k][idx] is port]
-    #     assert len(input_port)==1, f"PROGRAM ERROR: Expected exactly 1 input_port for {port.name} " \
-    #                                f"in port_map for {port.owner}; found {len(input_port)}."
-    #     # assert len(input_port[0].path_afferents)==1, f"PROGRAM ERROR: Port ({input_port.name}) expected to have " \
-    #     #                                              f"just one path_afferent; has {len(input_port.path_afferents)}."
-    #     if not input_port[0].path_afferents or comp == end_comp:
-    #         return input_port[0], input_port[0].owner, comp
-    #     sender = input_port[0].path_afferents[0].sender
-    #     # if not isinstance(sender.owner, CompositionInterfaceMechanism):
-    #     return self._get_source_node_for_input_CIM(sender, sender.owner.composition)
+    def _get_source_node_for_input_CIM(self, port, comp=None):
+        """Return Port, Node and Composition  for source of projection to input_CIM from (possibly nested) outer comp
+        **port** InputPort or OutputPort of the input_CIM from which the local projection projects;
+        **comp** Composition at which to begin the search (or continue it when called recursively;
+                 assumes the current CompositionInterfaceMechanism's Composition by default
+        """
+        # Ensure method is being called on an output_CIM
+        assert self == self.composition.input_CIM
+        #  CIM MAP ENTRIES:  [RECEIVER InputPort,  [input_CIM InputPort,  input_CIM OutputPort]]
+        # Get sender to input_port of input_CIM
+        comp = start_comp or self.composition
+        port_map = port.owner.port_map
+        idx = 0 if isinstance(port, InputPort) else 1
+        input_port = [port_map[k][0] for k in port_map if port_map[k][idx] is port]
+        assert len(input_port)==1, f"PROGRAM ERROR: Expected exactly 1 input_port for {port.name} " \
+                                   f"in port_map for {port.owner}; found {len(input_port)}."
+        assert len(input_port[0].path_afferents)==1, f"PROGRAM ERROR: Port ({input_port.name}) expected to have " \
+                                                     f"just one path_afferent; has {len(input_port.path_afferents)}."
+        # if not input_port[0].path_afferents or comp == end_comp:
+        #     return input_port[0], input_port[0].owner, comp
+        sender = input_port[0].path_afferents[0].sender
+        if not isinstance(sender.owner, CompositionInterfaceMechanism):
+            return sender, sender.owner, comp
+        return self._get_source_node_for_input_CIM(sender, sender.owner.composition)
 
     def _get_destination_info_from_input_CIM(self, port, comp=None):
         """Return Port, Node and Composition for "ultimate" destination of projection to **port**.
@@ -304,6 +306,30 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         if not isinstance(receiver.owner, CompositionInterfaceMechanism):
             return receiver, receiver.owner, comp
         return self._get_modulated_info_from_parameter_CIM(receiver, receiver.owner.composition)
+
+    def _get_source_of_modulation_for_parameter_CIM(self, port, comp=None):
+        """Return ControlSignal, Node and Composition that projects to a ParameterPort from (possibly nested) outer comp
+        **port**: InputPort or OutputPort of the parameter_CIM from which the local ControlSignal projects;
+                  used to find source (key) in parameter_CIM's port_map.
+        **comp**: Composition at which to begin the search (or continue it when called recursively);
+                 assumes the Composition for the parameter_CIM to which **port** belongs by default.
+        """
+        # Ensure method is being called on a parameter_CIM
+        assert self == self.composition.parameter_CIM
+        #  CIM MAP ENTRIES:  [RECEIVER ParameterPort : (parameter_CIM InputPort,  parameter_CIM ControlSignal)
+        # Get sender to input_port of parameter_CIM
+        comp = comp or self.composition
+        port_map = port.owner.port_map
+        idx = 0 if isinstance(port, InputPort) else 1
+        input_port = [port_map[k][0] for k in port_map if port_map[k][idx] is port]
+        assert len(input_port)==1, f"PROGRAM ERROR: Expected exactly 1 input_port for {port.name} " \
+                                   f"in port_map for {port.owner}; found {len(input_port)}."
+        assert len(input_port[0].path_afferents)==1, f"PROGRAM ERROR: Port ({input_port.name}) expected to have " \
+                                                     f"just one path_afferent; has {len(input_port.path_afferents)}."
+        sender = input_port[0].path_afferents[0].sender
+        if not isinstance(sender.owner, CompositionInterfaceMechanism):
+            return sender, sender.owner, comp
+        return self._get_source_of_modulation_for_parameter_CIM(sender, sender.owner.composition)
 
     def _get_source_info_from_output_CIM(self, port, comp=None):
         """Return Port, Node and Composition for "original" source of projection from **port**.

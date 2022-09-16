@@ -484,11 +484,25 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                 kwargs[attr] = np.atleast_1d(kwargs[attr])
             else:
                 try:
-                    kwargs[attr] = self._get_current_parameter_value(getattr(self.parameters, attr).initializer, context=context)
+                    initializer_ref = getattr(self.parameters, attr).initializer
+                    if initializer_ref:
+                        initializer = getattr(self.parameters, initializer_ref)
+                    # FIX: ?NEED TO HANDLE initializer IF IT IS A NUMBER?
+                    if initializer is not None and initializer.port and initializer.port.mod_afferents:
+                        # If the initializer is subject to control, get its control_allocation
+                        initializer_mod_proj = initializer.port.mod_afferents[0]
+                        mod_parameter_cim = initializer_mod_proj.sender.owner
+                        ctl_sig,_,_  = mod_parameter_cim._get_source_of_modulation_for_parameter_CIM(
+                            initializer_mod_proj.sender)
+                        kwargs[attr] = ctl_sig.parameters.value.get(context)
+                    else:
+                        # Otherwise, just use the default (or user-assigned) initializer
+                        kwargs[attr] = self._get_current_parameter_value(initializer, context=context)
+
                 except AttributeError:
                     invalid_args.append(attr)
 
-        if len(invalid_args) > 0:
+        if len(invalid_args) > 0:
             raise FunctionError(f'Arguments {invalid_args} to reset are invalid because they do'
                                 f" not correspond to any of {self}'s stateful_attributes.")
 
