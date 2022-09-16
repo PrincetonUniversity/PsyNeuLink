@@ -502,7 +502,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                 except AttributeError:
                     invalid_args.append(attr)
 
-        if len(invalid_args) > 0:
+        if len(invalid_args) > 0:
             raise FunctionError(f'Arguments {invalid_args} to reset are invalid because they do'
                                 f" not correspond to any of {self}'s stateful_attributes.")
 
