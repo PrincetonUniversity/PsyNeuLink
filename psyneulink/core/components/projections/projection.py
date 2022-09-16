@@ -1110,7 +1110,7 @@ class Projection_Base(Projection):
             edge_function = edge_node.function
             edge_node = edge_node.as_mdf_model()
 
-            func_model = [f for f in edge_node.functions if f.id == parse_valid_identifier(edge_function.name)][0]
+            func_model = [f for f in edge_node.functions if f.id == parse_valid_identifier(f'{edge_node.id}_{edge_function.name}')][0]
             var_name = _get_variable_parameter_name(edge_function)
 
             # 2d variable on LinearMatrix will be incorrect on import back to psyneulink

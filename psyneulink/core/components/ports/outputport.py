@@ -1288,7 +1288,7 @@ class OutputPort(Port_Base):
     def as_mdf_model(self):
         import modeci_mdf.mdf as mdf
 
-        owner_func_name = parse_valid_identifier(self.owner.function.name)
+        owner_func_name = parse_valid_identifier(f'{self.owner.name}_{self.owner.function.name}')
         if self._variable_spec == OWNER_VALUE:
             value = owner_func_name
         elif isinstance(self._variable_spec, tuple) and self._variable_spec[0] == OWNER_VALUE:
@@ -1302,6 +1302,8 @@ class OutputPort(Port_Base):
         return mdf.OutputPort(
             id=parse_valid_identifier(self.name),
             value=value,
+            shape=str(self.defaults.value.shape),
+            type=str(self.defaults.value.dtype),
             **self._mdf_metadata
         )
 

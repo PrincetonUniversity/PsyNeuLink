@@ -33,7 +33,7 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
-from psyneulink.core.components.functions.nonstateful.distributionfunctions import DistributionFunction
+from psyneulink.core.components.functions.nonstateful.distributionfunctions import DistributionFunction, NormalDist
 from psyneulink.core.components.functions.function import (
     DEFAULT_SEED, FunctionError, _random_state_getter,
     _seed_setter, _noise_setter
@@ -51,7 +51,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import parameter_spec, all_within_range, \
-    convert_all_elements_to_np_array
+    convert_all_elements_to_np_array, parse_valid_identifier
 
 __all__ = ['SimpleIntegrator', 'AdaptiveIntegrator', 'DriftDiffusionIntegrator', 'DriftOnASphereIntegrator',
            'OrnsteinUhlenbeckIntegrator', 'FitzHughNagumoIntegrator', 'AccumulatorIntegrator',
@@ -2339,6 +2339,10 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
     """
 
     componentName = DRIFT_DIFFUSION_INTEGRATOR_FUNCTION
+    _mdf_stateful_parameter_indices = {
+        'previous_value': 0,
+        'previous_time': 1,
+    }
 
     class Parameters(IntegratorFunction.Parameters):
         """
@@ -2407,7 +2411,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         non_decision_time = Parameter(0.0, modulable=True)
         threshold = Parameter(100.0, modulable=True)
         time_step_size = Parameter(1.0, modulable=True)
-        previous_time = Parameter(None, initializer='non_decision_time', pnl_internal=True)
+        previous_time = Parameter(0.0, initializer='non_decision_time')
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
         enable_output_type_conversion = Parameter(
@@ -2417,6 +2421,8 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
             pnl_internal=True,
             read_only=True
         )
+        # used only to allow putting random_draw in runtime_params for MDF tests
+        random_draw = Parameter()
 
         def _parse_initializer(self, initializer):
             if initializer.ndim > 1:
@@ -2504,7 +2510,11 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         variable = self.parameters._parse_initializer(variable)
         previous_value = self.parameters.previous_value._get(context)
 
-        random_draw = np.array([random_state.normal() for _ in list(variable)])
+        try:
+            random_draw = params['random_draw']
+        except (KeyError, TypeError):
+            random_draw = np.array([random_state.normal() for _ in list(variable)])
+
         value = previous_value + rate * variable * time_step_size \
                 + noise * np.sqrt(time_step_size) * random_draw
 
@@ -2584,6 +2594,50 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
             previous_time=previous_time,
             context=context
         )
+
+    def _assign_to_mdf_model(self, model, input_id):
+        import modeci_mdf.mdf as mdf
+
+        self_id = parse_valid_identifier(self.name)
+        parameters = self._mdf_model_parameters
+        parameters[self._model_spec_id_parameters][MODEL_SPEC_ID_MDF_VARIABLE] = input_id
+        threshold = parameters[self._model_spec_id_parameters]['threshold']
+
+        random_draw_func = mdf.Function(
+            id=f'{self_id}_random_draw',
+            function=NormalDist._model_spec_generic_type_name,
+            args={'shape': (len(self.defaults.variable),), 'seed': self.defaults.seed}
+        )
+        unclipped_func = mdf.Function(
+            id=f'{self_id}_unclipped',
+            value=f'(previous_value + rate * {MODEL_SPEC_ID_MDF_VARIABLE} * time_step_size + noise * math.sqrt(time_step_size) * {random_draw_func.id}) + offset',
+            args={
+                k: v for k, v in parameters[self._model_spec_id_parameters].items()
+                if (k not in self.parameters or getattr(self.parameters, k).initializer is None)
+            }
+        )
+        lower_clipped = mdf.Function(
+            id=f'{self_id}_lower_clipped',
+            value=f'max({unclipped_func.id}, -1 * threshold)',
+            args={'threshold': np.full_like(self.defaults.previous_value, threshold)}
+        )
+        result = mdf.Function(
+            id=f'{self_id}_value_result',
+            value=f'min({lower_clipped.id}, threshold)',
+            args={'threshold': np.full_like(self.defaults.previous_value, threshold)}
+        )
+
+        model.functions.extend([
+            random_draw_func,
+            unclipped_func,
+            lower_clipped,
+            result,
+        ])
+
+        return super()._assign_to_mdf_model(model, input_id)
+
+    def as_expression(self):
+        return f'{parse_valid_identifier(self.name)}_value_result, previous_time'
 
 
 class DriftOnASphereIntegrator(IntegratorFunction):  # -----------------------------------------------------------------
@@ -2894,7 +2948,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         starting_point = 0.0
         # threshold = Parameter(100.0, modulable=True)
         time_step_size = Parameter(1.0, modulable=True)
-        previous_time = Parameter(None, initializer='starting_point', pnl_internal=True)
+        previous_time = Parameter(0.0, initializer='starting_point', pnl_internal=True)
         dimension = Parameter(3, stateful=False, read_only=True)
         initializer = Parameter([0], initalizer='variable', stateful=True)
         angle_function = Parameter(None, stateful=False, loggable=False)
