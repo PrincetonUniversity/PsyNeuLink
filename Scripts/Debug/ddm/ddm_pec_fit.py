@@ -6,9 +6,9 @@ from psyneulink.core.components.functions.fitfunctions import MaxLikelihoodEstim
 
 
 # High-level parameters the impact performance of the test
-num_estimates = 10000
+num_estimates = 100
 num_trials = 50
-time_step_size = 0.001
+time_step_size = 0.01
 
 ddm_params = dict(starting_value=0.0, rate=0.3, noise=1.0,
                   threshold=0.6, non_decision_time=0.15, time_step_size=time_step_size)
@@ -49,9 +49,9 @@ data_to_fit['decision'] = pd.Categorical(data_to_fit['decision'])
 
 fit_parameters = {
     ('rate', decision): np.linspace(0.0, 1.0, 1000),
-    # ('threshold', decision): np.linspace(0.0, 1.0, 1000),
+    ('threshold', decision): np.linspace(0.0, 1.0, 1000),
     # ('starting_value', decision): np.linspace(0.0, 0.9, 1000),
-    ('non_decision_time', decision): np.linspace(0.0, 1.0, 1000),
+    # ('non_decision_time', decision): np.linspace(0.0, 1.0, 1000),
 }
 
 pec = pnl.ParameterEstimationComposition(name='pec',
@@ -65,7 +65,7 @@ pec = pnl.ParameterEstimationComposition(name='pec',
                                          num_trials_per_estimate=len(input),
                                          )
 
-# pec.controller.parameters.comp_execution_mode.set("LLVM")
+pec.controller.parameters.comp_execution_mode.set("LLVM")
 pec.controller.function.parameters.save_values.set(True)
 ret = pec.run(inputs=inputs_dict, num_trials=len(input))
 

@@ -3158,7 +3158,6 @@ class OptimizationControlMechanism(ControlMechanism):
         """
 
         # agent_rep is a Composition (since runs_simulations = True)
-        control_allocation = (control_allocation[0], 0.1234, control_allocation[1])
         if self.agent_rep.runs_simulations:
             alt_controller = None
             if self.agent_rep.controller is None:
