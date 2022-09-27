@@ -3158,6 +3158,12 @@ class Mechanism_Base(Mechanism):
         return builder
 
     def _gen_llvm_function(self, *, extra_args=[], ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
+        """
+        Overloaded main function LLVM generation method.
+
+        Mechanisms need to support "is_finished" execution variant (used by scheduling conditions)
+        on top of the variants supported by Component.
+        """
         if "is_finished" not in tags:
             return super()._gen_llvm_function(extra_args=extra_args, ctx=ctx,
                                               tags=tags)
@@ -3176,6 +3182,14 @@ class Mechanism_Base(Mechanism):
         return builder.function
 
     def _gen_llvm_function_body(self, ctx, builder, base_params, state, arg_in, arg_out, *, tags:frozenset):
+        """
+        Overloaded LLVM code generation method.
+
+        Implements main mechanisms loop (while not finished). Calls two other internal Mechanism functions;
+        'is_finished' to terminate the loop, and '_gen_llvm_function_internal' to generate body of the
+        loop (invocation of Ports and Functions).
+        """
+
         assert "reset" not in tags
 
         params, builder = self._gen_llvm_param_ports_for_obj(
@@ -3203,7 +3217,9 @@ class Mechanism_Base(Mechanism):
         builder.branch(loop_block)
         builder.position_at_end(loop_block)
 
-        # Get internal function
+        # Get internal function. Use function call to get proper stack manipulation
+        # inside the body of the execution loop. We could use 'stacksave' and
+        # 'stackrestore', but not all LLVM targets support those ops.
         args_t = [a.type for a in builder.function.args]
         args_t[4:4] = [base_params.type]
         internal_builder = ctx.create_llvm_function(args_t, self,
