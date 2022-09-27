@@ -1230,7 +1230,6 @@ class DDM(ProcessingMechanism):
     def _gen_llvm_is_finished_cond(self, ctx, builder, m_base_params, m_state, m_in):
         # Setup pointers to internal function
         f_state = pnlvm.helpers.get_state_ptr(builder, self, m_state, "function")
-        f_base_params = pnlvm.helpers.get_param_ptr(builder, self, m_base_params, "function")
 
         # Find the single numeric entry in previous_value.
         # This exists only if the 'function' is 'integrator'
@@ -1247,11 +1246,15 @@ class DDM(ProcessingMechanism):
         llvm_fabs = ctx.get_builtin("fabs", [ctx.float_ty])
         prev_val = builder.call(llvm_fabs, [prev_val])
 
+        # Get functions params and apply modulation
+        f_base_params = pnlvm.helpers.get_param_ptr(builder, self, m_base_params, "function")
+        f_params, builder = self._gen_llvm_param_ports_for_obj(
+                self.function, f_base_params, ctx, builder, m_base_params, m_state, m_in)
 
         # Get threshold value
         threshold_ptr = pnlvm.helpers.get_param_ptr(builder,
                                                     self.function,
-                                                    f_base_params,
+                                                    f_params,
                                                     "threshold")
 
         threshold_ptr = builder.gep(threshold_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
