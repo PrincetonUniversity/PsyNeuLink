@@ -3088,7 +3088,7 @@ class Mechanism_Base(Mechanism):
 
         return f_out, builder
 
-    def _gen_llvm_is_finished_cond(self, ctx, builder, m_params, m_state):
+    def _gen_llvm_is_finished_cond(self, ctx, builder, m_base_params, m_state, m_inputs):
         return ctx.bool_ty(1)
 
     def _gen_llvm_mechanism_functions(self, ctx, builder, m_base_params, m_params, m_state, m_in,
@@ -3141,7 +3141,7 @@ class Mechanism_Base(Mechanism):
 
         # is_finished should be checked after output ports ran
         is_finished_f = ctx.import_llvm_function(self, tags=tags.union({"is_finished"}))
-        is_finished_cond = builder.call(is_finished_f, [m_params, m_state, arg_in,
+        is_finished_cond = builder.call(is_finished_f, [m_base_params, m_state, arg_in,
                                                         arg_out])
         return builder, is_finished_cond
 
@@ -3176,8 +3176,8 @@ class Mechanism_Base(Mechanism):
 
         builder = ctx.create_llvm_function(args, self, return_type=ctx.bool_ty,
                                            tags=tags)
-        params, state = builder.function.args[:2]
-        finished = self._gen_llvm_is_finished_cond(ctx, builder, params, state)
+        params, state, inputs = builder.function.args[:3]
+        finished = self._gen_llvm_is_finished_cond(ctx, builder, params, state, inputs)
         builder.ret(finished)
         return builder.function
 
