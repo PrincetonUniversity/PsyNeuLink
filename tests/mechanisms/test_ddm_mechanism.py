@@ -664,33 +664,45 @@ def test_DDM_in_composition(benchmark, comp_mode):
 
 @pytest.mark.composition
 @pytest.mark.ddm_mechanism
-def test_DDM_threshold_modulation(comp_mode):
-    M = pnl.DDM(
-        name='DDM',
-        function=pnl.DriftDiffusionAnalytical(
-            threshold=20.0,
-        ),
-    )
-    monitor = pnl.TransferMechanism(default_variable=[[0.0]],
-                                    size=1,
-                                    function=pnl.Linear(slope=1, intercept=0),
-                                    output_ports=[pnl.RESULT],
-                                    name='monitor')
+def test_DDM_threshold_modulation_analytical(comp_mode):
+    M = pnl.DDM(name='DDM',
+                function=pnl.DriftDiffusionAnalytical(
+                    threshold=20.0,
+                ),
+               )
+
+    control = pnl.ControlMechanism(control_signals=[(pnl.THRESHOLD, M)])
+
+    C = pnl.Composition()
+    C.add_node(M, required_roles=[pnl.NodeRole.ORIGIN, pnl.NodeRole.TERMINAL])
+    C.add_node(control)
+    inputs = {M:[1], control:[3]}
+    val = C.run(inputs, num_trials=1, execution_mode=comp_mode)
+
+    # Default modulation is 'multiplicative so the threshold is 20 * 3
+    assert np.allclose(val[0], [60.0])
+    assert np.allclose(val[1], [60.2])
+
+
+@pytest.mark.composition
+@pytest.mark.ddm_mechanism
+def test_DDM_threshold_modulation_integrator(comp_mode):
+    M = pnl.DDM(name='DDM',
+                execute_until_finished=True,
+                function=pnl.DriftDiffusionIntegrator(threshold=20),
+               )
 
     control = pnl.ControlMechanism(
-            monitor_for_control=monitor,
             control_signals=[(pnl.THRESHOLD, M)])
 
     C = pnl.Composition()
     C.add_node(M, required_roles=[pnl.NodeRole.ORIGIN, pnl.NodeRole.TERMINAL])
-    C.add_node(monitor)
     C.add_node(control)
-    inputs = {M:[1], monitor:[3]}
+    inputs = {M:[1], control:[3]}
     val = C.run(inputs, num_trials=1, execution_mode=comp_mode)
-    # FIXME: Python version returns dtype=object
-    val = np.asfarray(val)
+
     assert np.allclose(val[0], [60.0])
-    assert np.allclose(val[1], [60.2])
+    assert np.allclose(val[1], [60.0])
 
 
 @pytest.mark.composition

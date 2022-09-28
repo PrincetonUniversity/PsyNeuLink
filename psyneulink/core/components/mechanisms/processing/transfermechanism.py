@@ -1531,14 +1531,18 @@ class TransferMechanism(ProcessingMechanism_Base):
             current_input[maxCapIndices] = np.max(clip)
         return current_input
 
-    def _gen_llvm_is_finished_cond(self, ctx, builder, params, state):
-        current = pnlvm.helpers.get_state_ptr(builder, self, state, "value")
-        threshold_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
+    def _gen_llvm_is_finished_cond(self, ctx, builder, m_base_params, m_state, m_in):
+        current = pnlvm.helpers.get_state_ptr(builder, self, m_state, "value")
+
+        m_params, builder = self._gen_llvm_param_ports_for_obj(
+                self, m_base_params, ctx, builder, m_base_params, m_state, m_in)
+        threshold_ptr = pnlvm.helpers.get_param_ptr(builder, self, m_params,
                                                     "termination_threshold")
+
         if isinstance(threshold_ptr.type.pointee, pnlvm.ir.LiteralStructType):
             # Threshold is not defined, return the old value of finished flag
             assert len(threshold_ptr.type.pointee) == 0
-            is_finished_ptr = pnlvm.helpers.get_state_ptr(builder, self, state,
+            is_finished_ptr = pnlvm.helpers.get_state_ptr(builder, self, m_state,
                                                           "is_finished_flag")
             is_finished_flag = builder.load(is_finished_ptr)
             return builder.fcmp_ordered("!=", is_finished_flag,
@@ -1564,7 +1568,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                 b.store(max_val, cmp_val_ptr)
 
         elif isinstance(self.termination_measure, Function):
-            prev_val_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "value", 1)
+            prev_val_ptr = pnlvm.helpers.get_state_ptr(builder, self, m_state, "value", 1)
             prev_val = builder.load(prev_val_ptr)
 
             expected = np.empty_like([self.defaults.value[0], self.defaults.value[0]])
@@ -1576,8 +1580,8 @@ class TransferMechanism(ProcessingMechanism_Base):
                 self.termination_measure.defaults.variable = expected
 
             func = ctx.import_llvm_function(self.termination_measure)
-            func_params = pnlvm.helpers.get_param_ptr(builder, self, params, "termination_measure")
-            func_state = pnlvm.helpers.get_state_ptr(builder, self, state, "termination_measure")
+            func_params = pnlvm.helpers.get_param_ptr(builder, self, m_base_params, "termination_measure")
+            func_state = pnlvm.helpers.get_state_ptr(builder, self, m_state, "termination_measure")
             func_in = builder.alloca(func.args[2].type.pointee, name="is_finished_func_in")
             # Populate input
             func_in_current_ptr = builder.gep(func_in, [ctx.int32_ty(0),
@@ -1591,7 +1595,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
             builder.call(func, [func_params, func_state, func_in, cmp_val_ptr])
         elif isinstance(self.termination_measure, TimeScale):
-            ptr = builder.gep(pnlvm.helpers.get_state_ptr(builder, self, state, "num_executions"),
+            ptr = builder.gep(pnlvm.helpers.get_state_ptr(builder, self, m_state, "num_executions"),
                               [ctx.int32_ty(0), ctx.int32_ty(self.termination_measure.value)])
             ptr_val = builder.sitofp(builder.load(ptr), threshold.type)
             pnlvm.helpers.printf(builder, f"TERM MEASURE {self.termination_measure} %d %d\n",ptr_val, threshold)
