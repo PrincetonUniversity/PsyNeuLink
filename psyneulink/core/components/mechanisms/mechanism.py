@@ -1098,7 +1098,6 @@ from psyneulink.core.components.ports.port import \
     REMOVE_PORTS, PORT_SPEC, _parse_port_spec, PORT_SPECIFIC_PARAMS, PROJECTION_SPECIFIC_PARAMS
 from psyneulink.core.components.shellclasses import Mechanism, Projection, Port
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
-from psyneulink.core.globals.mdf import _get_variable_parameter_name
 # TODO: remove unused keywords
 from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, EXECUTION_PHASE, EXPONENT, FUNCTION_PARAMS, \
@@ -3089,7 +3088,7 @@ class Mechanism_Base(Mechanism):
 
         return f_out, builder
 
-    def _gen_llvm_is_finished_cond(self, ctx, builder, m_params, m_state):
+    def _gen_llvm_is_finished_cond(self, ctx, builder, m_base_params, m_state, m_inputs):
         return ctx.bool_ty(1)
 
     def _gen_llvm_mechanism_functions(self, ctx, builder, m_base_params, m_params, m_state, m_in,
@@ -3142,7 +3141,7 @@ class Mechanism_Base(Mechanism):
 
         # is_finished should be checked after output ports ran
         is_finished_f = ctx.import_llvm_function(self, tags=tags.union({"is_finished"}))
-        is_finished_cond = builder.call(is_finished_f, [m_params, m_state, arg_in,
+        is_finished_cond = builder.call(is_finished_f, [m_base_params, m_state, arg_in,
                                                         arg_out])
         return builder, is_finished_cond
 
@@ -3159,6 +3158,12 @@ class Mechanism_Base(Mechanism):
         return builder
 
     def _gen_llvm_function(self, *, extra_args=[], ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
+        """
+        Overloaded main function LLVM generation method.
+
+        Mechanisms need to support "is_finished" execution variant (used by scheduling conditions)
+        on top of the variants supported by Component.
+        """
         if "is_finished" not in tags:
             return super()._gen_llvm_function(extra_args=extra_args, ctx=ctx,
                                               tags=tags)
@@ -3171,12 +3176,20 @@ class Mechanism_Base(Mechanism):
 
         builder = ctx.create_llvm_function(args, self, return_type=ctx.bool_ty,
                                            tags=tags)
-        params, state = builder.function.args[:2]
-        finished = self._gen_llvm_is_finished_cond(ctx, builder, params, state)
+        params, state, inputs = builder.function.args[:3]
+        finished = self._gen_llvm_is_finished_cond(ctx, builder, params, state, inputs)
         builder.ret(finished)
         return builder.function
 
     def _gen_llvm_function_body(self, ctx, builder, base_params, state, arg_in, arg_out, *, tags:frozenset):
+        """
+        Overloaded LLVM code generation method.
+
+        Implements main mechanisms loop (while not finished). Calls two other internal Mechanism functions;
+        'is_finished' to terminate the loop, and '_gen_llvm_function_internal' to generate body of the
+        loop (invocation of Ports and Functions).
+        """
+
         assert "reset" not in tags
 
         params, builder = self._gen_llvm_param_ports_for_obj(
@@ -3204,7 +3217,9 @@ class Mechanism_Base(Mechanism):
         builder.branch(loop_block)
         builder.position_at_end(loop_block)
 
-        # Get internal function
+        # Get internal function. Use function call to get proper stack manipulation
+        # inside the body of the execution loop. We could use 'stacksave' and
+        # 'stackrestore', but not all LLVM targets support those ops.
         args_t = [a.type for a in builder.function.args]
         args_t[4:4] = [base_params.type]
         internal_builder = ctx.create_llvm_function(args_t, self,
@@ -4194,20 +4209,12 @@ class Mechanism_Base(Mechanism):
 
             model.output_ports.append(op_model)
 
-        function_model = self.function.as_mdf_model()
-
-        for _, func_param in function_model.metadata['function_stateful_params'].items():
-            model.parameters.append(mdf.Parameter(**func_param))
-
         if len(ip.path_afferents) > 1:
             primary_function_input_name = combination_function_dimreduce_id
         else:
             primary_function_input_name = model.input_ports[0].id
 
-        self.function._set_mdf_arg(
-            function_model, _get_variable_parameter_name(self.function), primary_function_input_name
-        )
-        model.functions.append(function_model)
+        self.function._assign_to_mdf_model(model, primary_function_input_name)
 
         return model
 

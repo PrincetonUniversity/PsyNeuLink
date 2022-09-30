@@ -168,6 +168,11 @@ class StatefulFunction(Function_Base): #  --------------------------------------
     componentType = STATEFUL_FUNCTION_TYPE
     componentName = STATEFUL_FUNCTION
 
+    # TODO: consider moving this to a Parameter attribute
+    _mdf_stateful_parameter_indices = {
+        'previous_value': None
+    }
+
     class Parameters(Function_Base.Parameters):
         """
             Attributes

@@ -903,14 +903,14 @@ class TestTransferMechanismTimeConstant:
         )
         EX = pytest.helpers.get_mech_execution(T, mech_mode)
 
-        val1 = T.execute([1 for i in range(VECTOR_SIZE)])
-        val2 = T.execute([1 for i in range(VECTOR_SIZE)])
+        val1 = EX([1 for i in range(VECTOR_SIZE)])
+        val2 = EX([1 for i in range(VECTOR_SIZE)])
 
         assert np.allclose(val1, [[0.8 for i in range(VECTOR_SIZE)]])
         assert np.allclose(val2, [[0.96 for i in range(VECTOR_SIZE)]])
 
         if benchmark.enabled:
-            benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
+            benchmark(EX, [0 for i in range(VECTOR_SIZE)])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -1430,6 +1430,7 @@ class TestIntegratorMode:
         # linear fn: 0.595*1.0 = 0.595
         assert np.allclose(T.integrator_function.previous_value, 0.595)
 
+    @pytest.mark.composition
     def test_previous_value_persistence_run(self):
         T = TransferMechanism(name="T",
                               initial_value=0.5,
@@ -1497,6 +1498,7 @@ class TestIntegratorMode:
         assert np.allclose(T.integrator_function.previous_value, 0.46)  # property that looks at integrator, which updated with mech exec
         assert np.allclose(T.value, 0.46)  # on mechanism, but updates with exec
 
+    @pytest.mark.composition
     def test_reset_run(self):
         T = TransferMechanism(name="T",
                               initial_value=0.5,
@@ -1537,6 +1539,7 @@ class TestIntegratorMode:
         # linear fn: 0.595*1.0 = 0.595
         assert np.allclose(T.integrator_function.parameters.previous_value.get(C), 0.595)
 
+    @pytest.mark.composition
     def test_reset_run_array(self):
         T = TransferMechanism(name="T",
                               default_variable=[0.0, 0.0, 0.0],
@@ -1577,6 +1580,7 @@ class TestIntegratorMode:
         # linear fn: 0.595*1.0 = 0.595
         assert np.allclose(T.integrator_function.parameters.previous_value.get(C), [0.595, 0.595, 0.595])
 
+    @pytest.mark.composition
     def test_reset_run_2darray(self):
 
         initial_val = [[0.5, 0.5, 0.5]]
@@ -1629,6 +1633,7 @@ class TestIntegratorMode:
         assert "not allowed because its `integrator_mode` parameter" in str(err_txt.value)
         assert "is currently set to \'False\'; try setting it to \'True\'" in str(err_txt.value)
 
+    @pytest.mark.composition
     def test_switch_mode(self):
         T = TransferMechanism(integrator_mode=True,
                               on_resume_integrator_mode=LAST_INTEGRATED_VALUE)
@@ -1659,6 +1664,7 @@ class TestIntegratorMode:
         C.run({T: [[1.0], [1.0], [1.0]]})
         assert np.allclose(T.parameters.value.get(C), [[0.984375]])
 
+    @pytest.mark.composition
     def test_initial_values_softmax(self):
         T = TransferMechanism(default_variable=[[0.0, 0.0], [0.0, 0.0]],
                               function=SoftMax(),
@@ -1695,6 +1701,7 @@ class TestIntegratorMode:
         T.execute(1)
 
 
+@pytest.mark.composition
 class TestOnResumeIntegratorMode:
 
     def test_last_integrated_value_spec(self):
@@ -1777,7 +1784,6 @@ class TestOnResumeIntegratorMode:
         # Trial 1: 0.5*0.5 + 0.5*2.0 = 1.25 * 1.0 = 1.25
         assert np.allclose(T.parameters.value.get(C), [[1.25]])
 
-    @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism")
     # 'LLVM' mode is not supported, because synchronization of compiler and

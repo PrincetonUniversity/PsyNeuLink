@@ -159,6 +159,7 @@ class TestThreshold:
     #     assert np.allclose(decision_variables_a, [2.0, 4.0, 5.0, 5.0, 5.0])
 
 
+    @pytest.mark.composition
     def test_is_finished_stops_composition(self):
         D = DDM(name='DDM',
                 function=DriftDiffusionIntegrator(threshold=10.0, time_step_size=1.0),
@@ -183,6 +184,7 @@ class TestThreshold:
     #
     #     sched = Scheduler(system=S)
 
+@pytest.mark.composition
 class TestInputPorts:
 
     def test_regular_input_mode(self):
@@ -631,6 +633,7 @@ def test_WhenFinished_DDM_Analytical():
     c.is_satisfied()
 
 
+@pytest.mark.composition
 @pytest.mark.ddm_mechanism
 @pytest.mark.mechanism
 @pytest.mark.benchmark(group="DDM-comp")
@@ -659,36 +662,50 @@ def test_DDM_in_composition(benchmark, comp_mode):
         benchmark(C.run, inputs, num_trials=2, execution_mode=comp_mode)
 
 
+@pytest.mark.composition
 @pytest.mark.ddm_mechanism
-@pytest.mark.mechanism
-def test_DDM_threshold_modulation(comp_mode):
-    M = pnl.DDM(
-        name='DDM',
-        function=pnl.DriftDiffusionAnalytical(
-            threshold=20.0,
-        ),
-    )
-    monitor = pnl.TransferMechanism(default_variable=[[0.0]],
-                                    size=1,
-                                    function=pnl.Linear(slope=1, intercept=0),
-                                    output_ports=[pnl.RESULT],
-                                    name='monitor')
+def test_DDM_threshold_modulation_analytical(comp_mode):
+    M = pnl.DDM(name='DDM',
+                function=pnl.DriftDiffusionAnalytical(
+                    threshold=20.0,
+                ),
+               )
+
+    control = pnl.ControlMechanism(control_signals=[(pnl.THRESHOLD, M)])
+
+    C = pnl.Composition()
+    C.add_node(M, required_roles=[pnl.NodeRole.ORIGIN, pnl.NodeRole.TERMINAL])
+    C.add_node(control)
+    inputs = {M:[1], control:[3]}
+    val = C.run(inputs, num_trials=1, execution_mode=comp_mode)
+
+    # Default modulation is 'multiplicative so the threshold is 20 * 3
+    assert np.allclose(val[0], [60.0])
+    assert np.allclose(val[1], [60.2])
+
+
+@pytest.mark.composition
+@pytest.mark.ddm_mechanism
+def test_DDM_threshold_modulation_integrator(comp_mode):
+    M = pnl.DDM(name='DDM',
+                execute_until_finished=True,
+                function=pnl.DriftDiffusionIntegrator(threshold=20),
+               )
 
     control = pnl.ControlMechanism(
-            monitor_for_control=monitor,
             control_signals=[(pnl.THRESHOLD, M)])
 
     C = pnl.Composition()
     C.add_node(M, required_roles=[pnl.NodeRole.ORIGIN, pnl.NodeRole.TERMINAL])
-    C.add_node(monitor)
     C.add_node(control)
-    inputs = {M:[1], monitor:[3]}
+    inputs = {M:[1], control:[3]}
     val = C.run(inputs, num_trials=1, execution_mode=comp_mode)
-    # FIXME: Python version returns dtype=object
-    val = np.asfarray(val)
-    assert np.allclose(val[0], [60.0])
-    assert np.allclose(val[1], [60.2])
 
+    assert np.allclose(val[0], [60.0])
+    assert np.allclose(val[1], [60.0])
+
+
+@pytest.mark.composition
 @pytest.mark.parametrize(["noise", "threshold", "expected_results"],[
                             (1.0, 0.0, (0.0, 1.0)),
                             (1.5, 2, (-2.0, 1.0)),
@@ -772,7 +789,7 @@ def test_sequence_of_DDM_mechs_in_Composition_Pathway():
         np.testing.assert_allclose(val, expected, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))
 
 
-@pytest.mark.mechanism
+@pytest.mark.composition
 @pytest.mark.ddm_mechanism
 def test_DDMMechanism_LCA_equivalent(comp_mode):
 
