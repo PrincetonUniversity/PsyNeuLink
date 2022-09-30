@@ -9,7 +9,7 @@ from psyneulink.core.components.functions.fitfunctions import MaxLikelihoodEstim
 # num_estimates = 10000
 # num_trials = 50
 # time_step_size = 0.001
-num_trials = 20
+num_trials = 2
 time_step_size = 0.1
 num_estimates = 100
 
