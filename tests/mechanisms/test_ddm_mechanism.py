@@ -17,7 +17,7 @@ from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.core.globals.keywords import IDENTITY_MATRIX, FULL_CONNECTIVITY_MATRIX
 from psyneulink.core.globals.utilities import _SeededPhilox
 from psyneulink.library.components.mechanisms.processing.integrator.ddm import \
-    ARRAY, DDM, DDMError, DECISION_VARIABLE_ARRAY, SELECTED_INPUT_ARRAY
+    ARRAY, DDM, DDMError, DECISION_VARIABLE_ARRAY, SELECTED_INPUT_ARRAY, DECISION_OUTCOME
 
 class TestReset:
 
@@ -239,6 +239,27 @@ class TestOutputPorts:
         assert 'Length (1) of input ([1.]) does not match required length (2) ' \
                'for input to InputPort \'ARRAY\' of DDM.' in str(error.value)
         action_selection.execute([1.0, 0.0])
+
+    def test_decision_outcome_integrator(self):
+        ddm = DDM(
+            function=DriftDiffusionIntegrator(rate=0.5, threshold=0.5, non_decision_time=0.0, noise=0.0),
+            output_ports=[DECISION_OUTCOME],
+            name='DDM'
+        )
+        assert np.allclose(ddm.execute([10.0]), [[0.5], [1]]) and ddm.output_ports[0].value == [1.0]
+        assert np.allclose(ddm.execute([-10.0]), [[-0.5], [2]]) and ddm.output_ports[0].value == [0.0]
+
+    def test_decision_outcome_analytical(self):
+        ddm = DDM(
+            function=DriftDiffusionAnalytical(drift_rate=0.5, threshold=0.5, non_decision_time=0.0, noise=0.0001),
+            output_ports=[DECISION_OUTCOME],
+            name='DDM'
+        )
+        ddm.execute([10.0])
+        assert ddm.output_ports[0].value == [1.0]
+        ddm.execute([-10.0])
+        assert ddm.output_ports[0].value == [0.0]
+
 
 # ------------------------------------------------------------------------------------------------
 # TEST 2

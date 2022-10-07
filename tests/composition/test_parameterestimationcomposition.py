@@ -119,133 +119,72 @@ def test_parameter_estimation_composition(objective_function_arg, expected_outco
 
 
 # func_mode is a hacky wa to get properly marked; Python, LLVM, and CUDA
-@pytest.mark.benchmark
-def test_parameter_estimation_mle(benchmark, func_mode):
+def test_parameter_estimation_ddm_mle(func_mode):
     """Test parameter estimation of a DDM in integrator mode with MLE."""
 
+    if func_mode == 'Python':
+        pytest.skip("Test not yet implemented for Python. Parameter estimate is too slow.")
+        return
+
     # High-level parameters the impact performance of the test
-    num_estimates = 10
-    num_trials = 20
-    time_step_size = 0.1
+    num_trials = 25
+    time_step_size = 0.01
+    num_estimates = 40000
 
     ddm_params = dict(starting_value=0.0, rate=0.3, noise=1.0,
                       threshold=0.6, non_decision_time=0.15, time_step_size=time_step_size)
 
     # Create a simple one mechanism composition containing a DDM in integrator mode.
     decision = pnl.DDM(function=pnl.DriftDiffusionIntegrator(**ddm_params),
-                       output_ports=[pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME],
+                       output_ports=[pnl.DECISION_OUTCOME, pnl.RESPONSE_TIME],
                        name='DDM')
 
     comp = pnl.Composition(pathways=decision)
 
     # Let's generate an "experimental" dataset to fit. This is a parameter recovery test
-    # The input will be 20 trials of the same constant stimulus drift rate of 1
-    input = np.array([[1, 1, 0.3, 0.3, 1, 1, 0.3, 1, 0.3, 1, 0.3, 0.3, 0.3, 1, 1, 0.3, 0.3, 1, 1, 1]]).transpose()
-    inputs_dict = {decision: input}
+    # The input will be num_trials trials of the same constant stimulus drift rate of 1
+    # input = np.concatenate((np.repeat(-30.0, 30), np.repeat(30.0, 30)))[:, None]
+    trial_inputs = np.ones((num_trials, 1))
+    inputs_dict = {decision: trial_inputs}
 
-    # Run the composition to generate some data to fit
-    #  comp.run(inputs=inputs_dict,
-    #           num_trials=len(input))
-    #
     # Store the results of this "experiment" as a numpy array. This should be a
     # 2D array of shape (len(input), 2). The first column being a discrete variable
-    # specifying the upper or lower decision boundary and the second column is the
+    # specifying whether the upper or lower decision boundary is reached and the second column is the
     # reaction time. We will put the data into a pandas DataFrame, this makes it
     # easier to specify which columns in the data are categorical or not.
-    #
-    # The above composition produces the following data
-    results = [[[-0.6], [0.25]], [[0.6], [0.5499999999999999]], [[0.6], [1.5500000000000003]], [[0.6], [1.25]], [[0.6], [1.5500000000000003]], [[0.6], [0.6499999999999999]], [[0.6], [0.44999999999999996]], [[0.6], [1.15]], [[-0.6], [0.6499999999999999]], [[0.6], [0.6499999999999999]], [[0.6], [0.5499999999999999]], [[0.6], [0.25]], [[0.6], [0.5499999999999999]], [[0.6], [1.5500000000000003]], [[-0.6], [1.9500000000000006]], [[-0.6], [1.5500000000000003]], [[0.6], [0.44999999999999996]], [[-0.6], [0.35]], [[0.6], [1.35]], [[0.6], [0.44999999999999996]]]
-    data_to_fit = pd.DataFrame(np.squeeze(np.array(results)),
-                               columns=['decision', 'rt'])
-    data_to_fit['decision'] = pd.Categorical(data_to_fit['decision'])
+
+    # Run the composition to generate some data to fit
+    comp.run(inputs=inputs_dict)
+    results = comp.results
+
+    data_to_fit = pd.DataFrame(np.squeeze(np.array(results)), columns=['decision', 'response_time'])
+    data_to_fit['decision'] = data_to_fit['decision'].astype('category')
 
     # Create a parameter estimation composition to fit the data we just generated and hopefully recover the
     # parameters of the DDM.
 
     fit_parameters = {
-        ('rate', decision): np.linspace(0.0, 1.0, 1000),
-        # ('starting_value', decision): np.linspace(0.0, 0.9, 1000),
-        ('non_decision_time', decision): np.linspace(0.0, 1.0),
+        ('rate', decision): np.linspace(0.0, 0.4, 1000),
+        ('threshold', decision): np.linspace(0.5, 1.0, 1000),
+        # ('non_decision_time', decision): np.linspace(0.0, 1.0, 1000),
     }
 
     pec = pnl.ParameterEstimationComposition(name='pec',
                                              nodes=[comp],
                                              parameters=fit_parameters,
-                                             outcome_variables=[decision.output_ports[DECISION_VARIABLE],
-                                                                decision.output_ports[RESPONSE_TIME]],
+                                             outcome_variables=[decision.output_ports[pnl.DECISION_OUTCOME],
+                                                                decision.output_ports[pnl.RESPONSE_TIME]],
                                              data=data_to_fit,
-                                             optimization_function=MaxLikelihoodEstimator,
+                                             optimization_function=MaxLikelihoodEstimator(),
                                              num_estimates=num_estimates,
-                                             num_trials_per_estimate=len(input),
+                                             num_trials_per_estimate=len(trial_inputs),
                                              )
 
-    pec.controller.parameters.comp_execution_mode.set(func_mode)
+    pec.controller.parameters.comp_execution_mode.set("LLVM")
     pec.controller.function.parameters.save_values.set(True)
-    ret = benchmark(pec.run, inputs=inputs_dict, num_trials=len(input))
+    ret = pec.run(inputs=inputs_dict, num_trials=len(trial_inputs))
 
-    # Check that the parameters are recovered and that the log-likelihood is correct
-    assert np.allclose(pec.controller.optimal_parameters, [0.3, 0.15])
-    assert np.allclose(pec.controller.optimal_value, -69.4937458)
-    assert np.allclose(ret, [[0.6], [0.3]])
+    # Check that the parameters are recovered and that the log-likelihood is correct, set the tolerance pretty high,
+    # things are noisy because of the low number of trials and estimates.
+    assert np.allclose(pec.controller.optimal_parameters, [0.3, 0.6], atol=0.1)
 
-    np.testing.assert_allclose(pec.controller.saved_values,
-      [[[-0.6, 0.45], [ 0.6, 0.65], [-0.6, 0.85], [-0.6, 0.75], [ 0.6, 0.35],
-        [ 0.6, 0.85], [-0.6, 0.65], [-0.6, 0.95], [-0.6, 0.25], [-0.6, 1.55]],
-
-       [[ 0.6, 0.65], [-0.6, 0.65], [ 0.6, 1.05], [ 0.6, 1.45], [ 0.6, 1.05],
-        [ 0.6, 0.75], [ 0.6, 1.75], [ 0.6, 1.65], [ 0.6, 0.65], [ 0.6, 0.45]],
-
-       [[ 0.6, 0.75], [-0.6, 0.65], [ 0.6, 0.35], [-0.6, 0.75], [ 0.6, 0.35],
-        [ 0.6, 1.05], [-0.6, 0.55], [ 0.6, 0.65], [ 0.6, 1.25], [ 0.6, 0.95]],
-
-       [[-0.6, 0.55], [ 0.6, 0.55], [ 0.6, 0.55], [-0.6, 1.45], [-0.6, 2.05],
-        [ 0.6, 0.85], [ 0.6, 0.65], [ 0.6, 0.35], [ 0.6, 0.35], [-0.6, 0.55]],
-
-       [[-0.6, 0.55], [ 0.6, 1.35], [ 0.6, 0.45], [-0.6, 0.25], [ 0.6, 1.05],
-        [ 0.6, 0.75], [-0.6, 0.45], [ 0.6, 1.35], [-0.6, 1.65], [ 0.6, 1.05]],
-
-       [[ 0.6, 0.95], [ 0.6, 0.45], [ 0.6, 0.55], [-0.6, 0.55], [-0.6, 0.55],
-        [-0.6, 2.15], [ 0.6, 0.55], [ 0.6, 0.55], [-0.6, 1.35], [ 0.6, 0.35]],
-
-       [[ 0.6, 0.55], [ 0.6, 0.25], [-0.6, 1.15], [ 0.6, 0.35], [ 0.6, 1.25],
-        [-0.6, 0.65], [ 0.6, 1.45], [ 0.6, 0.25], [ 0.6, 2.25], [-0.6, 1.75]],
-
-       [[ 0.6, 0.45], [-0.6, 0.25], [ 0.6, 1.25], [-0.6, 1.05], [-0.6, 0.75],
-        [ 0.6, 0.55], [ 0.6, 0.55], [-0.6, 0.65], [-0.6, 1.45], [ 0.6, 0.95]],
-
-       [[ 0.6, 0.85], [ 0.6, 0.45], [-0.6, 2.45], [ 0.6, 0.65], [-0.6, 0.95],
-        [ 0.6, 0.55], [ 0.6, 0.45], [-0.6, 1.35], [ 0.6, 1.15], [-0.6, 0.35]],
-
-       [[-0.6, 0.35], [ 0.6, 0.75], [ 0.6, 0.75], [-0.6, 2.05], [-0.6, 2.25],
-        [ 0.6, 0.25], [ 0.6, 0.75], [-0.6, 0.25], [-0.6, 0.35], [-0.6, 0.35]],
-
-       [[ 0.6, 2.05], [ 0.6, 0.45], [-0.6, 0.25], [ 0.6, 2.15], [ 0.6, 0.95],
-        [-0.6, 1.65], [-0.6, 0.65], [-0.6, 0.35], [-0.6, 1.95], [-0.6, 0.45]],
-
-       [[ 0.6, 0.95], [-0.6, 0.45], [ 0.6, 0.35], [ 0.6, 0.85], [ 0.6, 0.35],
-        [-0.6, 0.85], [ 0.6, 0.95], [ 0.6, 0.75], [ 0.6, 0.75], [ 0.6, 0.35]],
-
-       [[ 0.6, 0.45], [ 0.6, 0.75], [ 0.6, 0.25], [ 0.6, 0.65], [ 0.6, 0.35],
-        [-0.6, 1.25], [-0.6, 0.35], [ 0.6, 1.45], [ 0.6, 0.45], [-0.6, 0.95]],
-
-       [[-0.6, 0.65], [ 0.6, 0.35], [ 0.6, 0.45], [ 0.6, 0.35], [-0.6, 0.45],
-        [ 0.6, 1.15], [-0.6, 0.85], [-0.6, 0.65], [ 0.6, 0.95], [-0.6, 0.35]],
-
-       [[ 0.6, 0.85], [ 0.6, 1.05], [ 0.6, 1.05], [ 0.6, 0.95], [ 0.6, 0.35],
-        [-0.6, 0.25], [ 0.6, 0.75], [ 0.6, 0.65], [-0.6, 0.35], [-0.6, 1.85]],
-
-       [[ 0.6, 0.85], [ 0.6, 2.75], [-0.6, 0.55], [ 0.6, 0.65], [ 0.6, 0.55],
-        [-0.6, 0.65], [-0.6, 1.35], [-0.6, 0.35], [ 0.6, 0.85], [-0.6, 0.25]],
-
-       [[-0.6, 1.25], [ 0.6, 1.15], [ 0.6, 0.45], [ 0.6, 0.75], [ 0.6, 0.85],
-        [ 0.6, 1.15], [-0.6, 0.75], [-0.6, 0.45], [ 0.6, 0.25], [ 0.6, 0.65]],
-
-       [[-0.6, 1.05], [-0.6, 0.45], [ 0.6, 0.55], [ 0.6, 0.35], [ 0.6, 0.35],
-        [ 0.6, 0.85], [-0.6, 0.55], [ 0.6, 0.45], [ 0.6, 0.35], [ 0.6, 0.75]],
-
-       [[ 0.6, 1.25], [-0.6, 0.95], [-0.6, 0.65], [-0.6, 0.25], [ 0.6, 0.85],
-        [ 0.6, 0.65], [-0.6, 0.45], [-0.6, 0.55], [ 0.6, 0.25], [ 0.6, 0.35]],
-
-       [[ 0.6, 0.45], [ 0.6, 0.25], [-0.6, 0.75], [ 0.6, 0.35], [ 0.6, 0.25],
-        [ 0.6, 0.95], [-0.6, 0.35], [ 0.6, 0.65], [ 0.6, 0.85], [ 0.6, 0.45]]])
-    # assert pec.log_likelihood(ddm_params['rate'], ddm_params['non_decision_time'])

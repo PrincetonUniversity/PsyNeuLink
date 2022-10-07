@@ -433,13 +433,10 @@ class MaxLikelihoodEstimator(OptimizationFunction):
             # Get a log likelihood function that can be used to compute the log likelihood of the simulation results
             ll_func = self._make_loglikelihood_func(context=context)
 
-            # FIXME: This should be found with fitting but it is too slow!
-            # We can at least return the evaluation of the log-likelihood function for testing purposes
-            # self.owner.optimal_value, saved_values = ll_func(0.3, 0.15)
-            # self.owner.optimal_parameters = np.array([[0.3, 0.15]])
-
             # Run the MLE optimization
             results = self._fit(ll_func=ll_func)
+            self.owner.optimal_value = results["neg-log-likelihood"]
+            self.owner.optimal_parameters = list(results["fitted_params"].values())
 
         return optimal_sample, optimal_value, saved_samples, saved_values
 
