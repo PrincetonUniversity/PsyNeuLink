@@ -648,7 +648,7 @@ class ParameterEstimationComposition(Composition):
         )
 
     @handle_external_context()
-    def log_likelihood(self, *args, context=None) -> float:
+    def log_likelihood(self, *args, inputs=None, context=None) -> float:
         """
         Compute the log-likelihood of the data given the specified parameters of the model.
 
@@ -682,12 +682,13 @@ class ParameterEstimationComposition(Composition):
                                                       f"log_likelihood does not match the number of parameters "
                                                       f"specified in the constructor of ParameterEstimationComposition.")
 
-        # Try to get the log-likelihood from controllers optimization_function, if it hasn't defined this function yet
-        # then it will raise an error.
-        try:
-            return self.controller.function.log_likelihood(*args, context=context)
-        except AttributeError:
+        if not hasattr(self.controller.function, 'log_likelihood'):
             of = self.controller.function
             raise ParameterEstimationCompositionError(f"The function ({of}) for the controller of "
                                                       f"ParameterEstimationComposition {self.name} does not appear to "
                                                       f"have a log_likelihood function.")
+
+        # Try to get the log-likelihood from controllers optimization_function, if it hasn't defined this function yet
+        # then it will raise an error.
+        return self.controller.function.log_likelihood(*args, inputs=inputs, context=context)
+
