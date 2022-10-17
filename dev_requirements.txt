@@ -1,7 +1,7 @@
 jupyter<=1.0.0
 pytest<7.1.4
 pytest-benchmark<3.4.2
-pytest-cov<3.0.1
+pytest-cov<4.0.1
 pytest-helpers-namespace<2021.12.30
 pytest-profiling<=1.7.0
 pytest-pycodestyle<2.4.0
