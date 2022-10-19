@@ -49,7 +49,7 @@ runs:
           sed -i /modeci_mdf/d requirements.txt
           # pywinpty is a transitive dependency and v1.0+ removed support for x86 wheels
           # terminado >= 0.10.0 pulls in pywinpty >= 1.1.0
-          [[ ${{ runner.os }} = Windows* ]] && pip install "pywinpty<1" "terminado<0.10"
+          [[ ${{ runner.os }} = Windows* ]] && pip install "pywinpty<1" "terminado<0.10" "scipy<1.9.2" -c requirements.txt
         fi
 
     - name: Install updated package
