@@ -52,6 +52,7 @@ def context_nback_fct(outcome):
 
 def n_back_model():
 
+    # Mechanisms:
     stim = TransferMechanism(name='STIM', size=STIM_SIZE)
     context = ProcessingMechanism(name='CONTEXT',
                                   function=DriftOnASphereIntegrator(
@@ -69,7 +70,7 @@ def n_back_model():
                            control=(STORAGE_PROB, em),)
     decision = DDM(name='DECISION')
 
-    # comp = Composition(nodes=[stim, stim_comparator, context, context_comparator, em, (decision, NodeRole.OUTPUT), ctl])
+    # Compositions:
     ffn = Composition(context_comparator, name="WORKING MEMORY (fnn)")
     comp = Composition(nodes=[stim, stim_comparator, context, ffn, em, (decision, NodeRole.OUTPUT), ctl])
     comp.add_projection(MappingProjection(), stim, stim_comparator.input_ports[TARGET])
@@ -80,11 +81,12 @@ def n_back_model():
     comp.add_projection(MappingProjection(), em.output_ports[VALUE_OUTPUT], context_comparator.input_ports[SAMPLE])
     comp.add_projection(MappingProjection(), context_comparator, decision)
     comp.add_projection(MappingProjection(), context_comparator, ctl)
-
     comp.show_graph()
     # comp.show_graph(show_cim=True,
     #                 show_node_structure=ALL,
     #                 show_dimensions=True)
+
+    # Execution:
     input_dict = {#stim:[[1]*STIM_SIZE]*NUM_TRIALS,
                   stim: np.array(list(range(NUM_TRIALS))).reshape(3,1)+1,
                   context:[[CONTEXT_DRIFT_RATE]]*NUM_TRIALS}
