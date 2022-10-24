@@ -62,9 +62,13 @@ def n_back_model():
     em = EpisodicMemoryMechanism(name='EPISODIC MEMORY (dict)',
                                  default_variable=[[0]*STIM_SIZE, [0]*CONTEXT_SIZE],
                                  function=DictionaryMemory(
-                                     initializer=[[[0]*STIM_SIZE,[0]*CONTEXT_SIZE]]))
+                                     initializer=[[[0]*STIM_SIZE, [0]*CONTEXT_SIZE]]))
     stim_comparator = ComparatorMechanism(name='STIM COMPARATOR', sample=STIM_SIZE, target=STIM_SIZE)
-    context_comparator = ComparatorMechanism(name='CONTEXT COMPARATOR', sample=CONTEXT_SIZE, target=CONTEXT_SIZE)
+    context_comparator = ComparatorMechanism(name='CONTEXT COMPARATOR',
+                                             # sample=np.zeros(STIM_SIZE),
+                                             # target=np.zeros(CONTEXT_SIZE)
+                                             input_ports=[{NAME:"CURRENT_CONTEXT", SIZE:CONTEXT_SIZE},
+                                                          {NAME:"RETRIEVED_CONTEXT", SIZE:CONTEXT_SIZE}])
     ctl = ControlMechanism(name="READ/WRITE CONTROLLER",
                            function=context_nback_fct,
                            control=(STORAGE_PROB, em),)
@@ -74,11 +78,13 @@ def n_back_model():
     ffn = Composition(stim_comparator, context_comparator, name="WORKING MEMORY (fnn)")
     comp = Composition(nodes=[stim, context, ffn, em, (decision, NodeRole.OUTPUT), ctl])
     comp.add_projection(MappingProjection(), stim, stim_comparator.input_ports[TARGET])
-    comp.add_projection(MappingProjection(), context, context_comparator.input_ports[TARGET])
+    comp.add_projection(MappingProjection(), context, context_comparator.input_ports["CURRENT_CONTEXT"])
     comp.add_projection(MappingProjection(), stim, em.input_ports[KEY_INPUT])
     comp.add_projection(MappingProjection(), context, em.input_ports[VALUE_INPUT])
     comp.add_projection(MappingProjection(), em.output_ports[KEY_OUTPUT], stim_comparator.input_ports[SAMPLE])
-    comp.add_projection(MappingProjection(), em.output_ports[VALUE_OUTPUT], context_comparator.input_ports[SAMPLE])
+    comp.add_projection(MappingProjection(),
+                        em.output_ports[VALUE_OUTPUT],
+                        context_comparator.input_ports["RETRIEVED_CONTEXT"])
     comp.add_projection(MappingProjection(), context_comparator, decision)
     comp.add_projection(MappingProjection(), context_comparator, ctl)
     comp.show_graph()
