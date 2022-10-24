@@ -2836,8 +2836,8 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         `dimension <DriftOnASphereIntegrator.dimension>`.
 
     angle_function : TransferFunction
-        determines the function used to compute angle (reproted as result) from coordinates on sphere specified by
-        coordinates in `previous_value <DriftOnASphereIntegrator.previous_value>` displace by `variable
+        determines the function used to compute angle (reported as result) from coordinates on sphere specified by
+        coordinates in `previous_value <DriftOnASphereIntegrator.previous_value>` displaced by `variable
         <DriftOnASphereIntegrator.variable>` and possibly `noise <DriftOnASphereIntegrator.noise>`.
 
     previous_time : float
@@ -2876,7 +2876,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
                 dimension
                     see `dimension <DriftOnASphereIntegrator.dimension>`
 
-                    :default value: 2
+                    :default value: 3
                     :type: ``int``
 
                 enable_output_type_conversion

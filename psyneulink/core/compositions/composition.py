@@ -6764,7 +6764,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if all(_is_node_spec(entry) for entry in current_entry):
                 receivers = _get_node_specs_for_entry(current_entry, NodeRole.INPUT, NodeRole.TARGET)
                 # The preceding entry is a Node or set of them:
-                #  - if it is a set, list or array, leave as is, else place in set for consistnecy of processin below
+                #  - if it is a set, list or array, leave as is, else place in set for consistency of processing below
                 preceding_entry = (pathway[c - 1] if isinstance(pathway[c - 1], (set, list, np.ndarray))
                                    else {pathway[c - 1]})
                 if all(_is_node_spec(sender) for sender in preceding_entry):
