@@ -48,7 +48,7 @@ def context_nback_fct(outcome):
     if abs(outcome - NBACK) > TOLERANCE:
         return 1
     else:
-        return 1
+        return 0
 
 def n_back_model():
 
@@ -58,30 +58,27 @@ def n_back_model():
                                       initializer=np.random.random(CONTEXT_SIZE-1),
                                       noise=CONTEXT_DRIFT_NOISE,
                                       dimension=CONTEXT_SIZE))
-    em = EpisodicMemoryMechanism(name='EM', default_variable=[[0]*STIM_SIZE,[0]*CONTEXT_SIZE],
-                                 function=DictionaryMemory(initializer=[[[0]*STIM_SIZE,[0]*CONTEXT_SIZE]])
-                                 )
-    stim_comparator = ComparatorMechanism(name='STIM COMPARATOR',
-                                          sample=STIM_SIZE,
-                                          target=STIM_SIZE
-                                          )
-    context_comparator = ComparatorMechanism(name='CONTEXT COMPARATOR',
-                                             sample=CONTEXT_SIZE,
-                                             target=CONTEXT_SIZE
-                                             )
-    ctl = ControlMechanism(function=context_nback_fct,
+    em = EpisodicMemoryMechanism(name='EPISODIC MEMORY (dict)',
+                                 default_variable=[[0]*STIM_SIZE, [0]*CONTEXT_SIZE],
+                                 function=DictionaryMemory(
+                                     initializer=[[[0]*STIM_SIZE,[0]*CONTEXT_SIZE]]))
+    stim_comparator = ComparatorMechanism(name='STIM COMPARATOR', sample=STIM_SIZE, target=STIM_SIZE)
+    context_comparator = ComparatorMechanism(name='CONTEXT COMPARATOR', sample=CONTEXT_SIZE, target=CONTEXT_SIZE)
+    ctl = ControlMechanism(name="READ/WRITE CONTROLLER",
+                           function=context_nback_fct,
                            control=(STORAGE_PROB, em),)
     decision = DDM(name='DECISION')
 
-    comp = Composition()
-    comp.add_nodes([stim, stim_comparator, context, context_comparator, em, (decision, NodeRole.OUTPUT), ctl])
+    ffn = Composition(context_comparator, name="WORKING MEMORY (fnn)")
+    # comp = Composition(nodes=[stim, stim_comparator, context, context_comparator, em, (decision, NodeRole.OUTPUT), ctl])
+    comp = Composition(nodes=[stim, context, ffn, em, (decision, NodeRole.OUTPUT), ctl])
     comp.add_projection(MappingProjection(), stim, stim_comparator.input_ports[TARGET])
     comp.add_projection(MappingProjection(), context, context_comparator.input_ports[TARGET])
     comp.add_projection(MappingProjection(), stim, em.input_ports[KEY_INPUT])
     comp.add_projection(MappingProjection(), context, em.input_ports[VALUE_INPUT])
     comp.add_projection(MappingProjection(), em.output_ports[KEY_OUTPUT], stim_comparator.input_ports[SAMPLE])
     comp.add_projection(MappingProjection(), em.output_ports[VALUE_OUTPUT], context_comparator.input_ports[SAMPLE])
-    comp.add_projection(MappingProjection(), stim_comparator, decision)
+    comp.add_projection(MappingProjection(), context_comparator, decision)
     comp.add_projection(MappingProjection(), context_comparator, ctl)
 
     comp.show_graph()
