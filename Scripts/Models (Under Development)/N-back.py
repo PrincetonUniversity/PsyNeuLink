@@ -69,9 +69,9 @@ def n_back_model():
                            control=(STORAGE_PROB, em),)
     decision = DDM(name='DECISION')
 
-    ffn = Composition(context_comparator, name="WORKING MEMORY (fnn)")
-    # comp = Composition(nodes=[stim, stim_comparator, context, context_comparator, em, (decision, NodeRole.OUTPUT), ctl])
-    comp = Composition(nodes=[stim, context, ffn, em, (decision, NodeRole.OUTPUT), ctl])
+    comp = Composition(nodes=[stim, stim_comparator, context, context_comparator, em, (decision, NodeRole.OUTPUT), ctl])
+    # ffn = Composition(context_comparator, name="WORKING MEMORY (fnn)")
+    # comp = Composition(nodes=[stim, context, ffn, em, (decision, NodeRole.OUTPUT), ctl])
     comp.add_projection(MappingProjection(), stim, stim_comparator.input_ports[TARGET])
     comp.add_projection(MappingProjection(), context, context_comparator.input_ports[TARGET])
     comp.add_projection(MappingProjection(), stim, em.input_ports[KEY_INPUT])
