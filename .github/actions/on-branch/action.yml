@@ -25,4 +25,4 @@ runs:
         git describe --always --tags
         export ON_BRANCH=$(git branch -a --contains ${{ github.ref }} | grep -q '^  remotes/origin/${{ inputs.branch }}$' && echo "${{ inputs.branch }}" || echo "")
         echo "Found out: ${ON_BRANCH}"
-        echo "::set-output name=on_branch::$ON_BRANCH"
+        echo "{on_branch}={$ON_BRANCH}" >> $GITHUB_OUTPUT

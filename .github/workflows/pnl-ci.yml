@@ -61,7 +61,7 @@ jobs:
       run: |
         python -m pip install -U pip
         python -m pip --version
-        echo ::set-output name=pip_cache_dir::$(python -m pip cache dir)
+        echo "{pip_cache_dir}={$(python -m pip cache dir)}" >> $GITHUB_OUTPUT
 
     - name: Wheels cache
       uses: actions/cache@v3
