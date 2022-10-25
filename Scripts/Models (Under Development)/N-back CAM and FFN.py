@@ -38,6 +38,7 @@ CONTEXT_DRIFT_NOISE=.00000000001
 NUM_TRIALS=20
 NBACK = 2
 TOLERANCE = .5
+STIM_WEIGHT = .05
 
 # # MODEL:
 # STIM_SIZE=25
@@ -62,11 +63,20 @@ context = ProcessingMechanism(name='CONTEXT',
                                   noise=CONTEXT_DRIFT_NOISE,
                                   dimension=CONTEXT_SIZE))
 em = EpisodicMemoryMechanism(name='EPISODIC MEMORY (dict)',
-                             default_variable=[[0]*STIM_SIZE, [0]*CONTEXT_SIZE],
-                             function=DictionaryMemory(
+                             # default_variable=[[0]*STIM_SIZE, [0]*CONTEXT_SIZE],
+                             input_ports=[{NAME:"STIMULUS_FIELD",
+                                           SIZE:STIM_SIZE},
+                                          {NAME:"CONTEXT_FIELD",
+                                           SIZE:CONTEXT_SIZE}],
+                             function=ContentAddressableMemory(
                                  initializer=[[[0]*STIM_SIZE, [0]*CONTEXT_SIZE]],
-                                 equidistant_keys_select=NEWEST))
-stim_comparator = ComparatorMechanism(name='STIM COMPARATOR', sample=STIM_SIZE, target=STIM_SIZE)
+                                 distance_field_weights=[STIM_WEIGHT, 1-STIM_WEIGHT],
+                                 equidistant_entries_select=NEWEST))
+stim_comparator = ComparatorMechanism(name='STIM COMPARATOR',
+                                      # sample=STIM_SIZE, target=STIM_SIZE
+                                      input_ports=[{NAME:"CURRENT_STIMULUS", SIZE:STIM_SIZE},
+                                                   {NAME:"RETRIEVED_STIMULUS", SIZE:STIM_SIZE}],
+                                      )
 context_comparator = ComparatorMechanism(name='CONTEXT COMPARATOR',
                                          # sample=np.zeros(STIM_SIZE),
                                          # target=np.zeros(CONTEXT_SIZE)
@@ -82,14 +92,14 @@ decision = ProcessingMechanism(name='DECISION')
 # Compositions:
 ffn = Composition(stim_comparator, context_comparator, name="WORKING MEMORY (fnn)")
 comp = Composition(nodes=[stim, context, ffn, em, (decision, NodeRole.OUTPUT), ctl])
-comp.add_projection(MappingProjection(), stim, stim_comparator.input_ports[TARGET])
+comp.add_projection(MappingProjection(), stim, stim_comparator.input_ports["CURRENT_STIMULUS"])
 comp.add_projection(MappingProjection(), context, context_comparator.input_ports["CURRENT_CONTEXT"])
-comp.add_projection(MappingProjection(), stim, em.input_ports[KEY_INPUT])
-comp.add_projection(MappingProjection(), context, em.input_ports[VALUE_INPUT])
-comp.add_projection(MappingProjection(), em.output_ports[KEY_OUTPUT], stim_comparator.input_ports[SAMPLE])
+comp.add_projection(MappingProjection(), stim, em.input_ports["STIMULUS_FIELD"])
+comp.add_projection(MappingProjection(), context, em.input_ports["CONTEXT_FIELD"])
 comp.add_projection(MappingProjection(),
-                    em.output_ports[VALUE_OUTPUT],
-                    context_comparator.input_ports["RETRIEVED_CONTEXT"])
+                    em.output_ports["RETRIEVED_STIMULUS_FIELD"], stim_comparator.input_ports["CURRENT_STIMULUS"])
+comp.add_projection(MappingProjection(),
+                    em.output_ports["RETRIEVED_CONTEXT_FIELD"], context_comparator.input_ports["RETRIEVED_CONTEXT"])
 comp.add_projection(MappingProjection(), context_comparator, decision)
 comp.add_projection(MappingProjection(), context_comparator, ctl)
 comp.show_graph()

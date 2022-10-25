@@ -76,7 +76,7 @@ test_data = [
         # expected input_port names
         ['FIELD_0_INPUT'],
         # expected output_port names
-        ['RETREIVED_FIELD_0'],
+        ['RETRIEVED_FIELD_0'],
         # expected output
         [[0,0]]
     ),
@@ -94,7 +94,7 @@ test_data = [
         # expected input_port names
         ['FIELD_0_INPUT', 'FIELD_1_INPUT', 'FIELD_2_INPUT'],
         # expected output_port names
-        ['RETREIVED_FIELD_0', 'RETREIVED_FIELD_1', 'RETREIVED_FIELD_2'],
+        ['RETRIEVED_FIELD_0', 'RETRIEVED_FIELD_1', 'RETRIEVED_FIELD_2'],
         # expected output
         [[0,0],[0,0],[0,0,0]]
     ),
@@ -105,7 +105,7 @@ test_data = [
         {'default_variable': [[0],[0,0],[0,0,0]]},
         [[10.],[20., 30.],[40., 50., 60.]],
         ['FIELD_0_INPUT', 'FIELD_1_INPUT', 'FIELD_2_INPUT'],
-        ['RETREIVED_FIELD_0', 'RETREIVED_FIELD_1', 'RETREIVED_FIELD_2'],
+        ['RETRIEVED_FIELD_0', 'RETRIEVED_FIELD_1', 'RETRIEVED_FIELD_2'],
         [[0],[0,0],[0,0,0]]
     ),
     (
@@ -117,7 +117,7 @@ test_data = [
         {'size':[1,2,3]},
         [[10.],[20., 30.],[40., 50., 60.]],
         ['FIELD_0_INPUT', 'FIELD_1_INPUT', 'FIELD_2_INPUT'],
-        ['RETREIVED_FIELD_0', 'RETREIVED_FIELD_1', 'RETREIVED_FIELD_2'],
+        ['RETRIEVED_FIELD_0', 'RETRIEVED_FIELD_1', 'RETRIEVED_FIELD_2'],
         # [[10.],[20., 30.],[40., 50., 60.]]
         [[1], [2,3], [4,5,6]] # <- distance = 0 to [[10.],[20., 30.],[40., 50., 60.]]
     ),
@@ -130,7 +130,7 @@ test_data = [
         {'default_variable': [[0],[0,0],[0,0,0]], 'input_ports':['hello','world','goodbye']},
         [[10.],[20., 30.],[40., 50., 60.]],
         ['hello', 'world', 'goodbye'],
-        ['RETREIVED_hello', 'RETREIVED_world', 'RETREIVED_goodbye'],
+        ['RETRIEVED_hello', 'RETRIEVED_world', 'RETRIEVED_goodbye'],
         [[1.],[2., 3.],[4., 5., 6.]]
     ),
     (
@@ -142,7 +142,7 @@ test_data = [
         {'size':[2,2,2]},
         [[11,13], [22,23], [34, 35]],
         ['FIELD_0_INPUT', 'FIELD_1_INPUT', 'FIELD_2_INPUT'],
-        ['RETREIVED_FIELD_0', 'RETREIVED_FIELD_1', 'RETREIVED_FIELD_2'],
+        ['RETRIEVED_FIELD_0', 'RETRIEVED_FIELD_1', 'RETRIEVED_FIELD_2'],
         [[11,12], [22,23], [34, 35]],
     ),
     (
@@ -157,7 +157,7 @@ test_data = [
         {'default_variable':[[0,0],[0,0],[0,0]]},
         [[10,20], [30,40], [50, 60]],
         ['FIELD_0_INPUT', 'FIELD_1_INPUT', 'FIELD_2_INPUT'],
-        ['RETREIVED_FIELD_0', 'RETREIVED_FIELD_1', 'RETREIVED_FIELD_2'],
+        ['RETRIEVED_FIELD_0', 'RETRIEVED_FIELD_1', 'RETRIEVED_FIELD_2'],
         [[10,20], [30,40], [50, 60]],
     ),
     (
@@ -168,7 +168,7 @@ test_data = [
          'input_ports':['FIRST','SECOND']},
         [[10,20], [30,40]],
         ['FIRST', 'SECOND'],
-        ['RETREIVED_FIRST', 'RETREIVED_SECOND'],
+        ['RETRIEVED_FIRST', 'RETRIEVED_SECOND'],
         [[0,0], [0,0]],
     ),
     (
@@ -180,7 +180,7 @@ test_data = [
          'input_ports':['FIRST','SECOND']},
         [[10,20], [30,40]],
         ['FIRST', 'SECOND'],
-        ['RETREIVED_FIRST', 'RETREIVED_SECOND'],
+        ['RETRIEVED_FIRST', 'RETRIEVED_SECOND'],
         [[10,20], [30,40]],
     ),
     (
@@ -191,7 +191,7 @@ test_data = [
          'input_ports':['FIRST','SECOND']},
         [[10,20], [30,40]],
         ['FIRST', 'SECOND'],
-        ['RETREIVED_FIRST', 'RETREIVED_SECOND'],
+        ['RETRIEVED_FIRST', 'RETRIEVED_SECOND'],
         [[11,12],[22, 23]],
     )
 ]

@@ -365,7 +365,7 @@ By default, an EpisodicMemoryMechanims also has the same number of `output_ports
 as `input_ports <EpisodicMemoryMechanism.input_ports>`, named correspondingly ``RETRIEVED_FIELD_n``::
 
     >>> my_em.output_ports.names
-    ['RETREIVED_FIELD_0', 'RETREIVED_FIELD_1']
+    ['RETRIEVED_FIELD_0', 'RETRIEVED_FIELD_1']
 
 These are assigned the values of the fields of the entry retrieved from `memory <ContentAddressableMemory.memory>`.
 
@@ -427,7 +427,7 @@ KEY_OUTPUT = 'KEY_OUTPUT'
 VALUE_OUTPUT = 'VALUE_OUTPUT'
 DEFAULT_INPUT_PORT_NAME_PREFIX = 'FIELD_'
 DEFAULT_INPUT_PORT_NAME_SUFFIX = '_INPUT'
-DEFAULT_OUTPUT_PORT_PREFIX = 'RETREIVED_'
+DEFAULT_OUTPUT_PORT_PREFIX = 'RETRIEVED_'
 
 
 class EpisodicMemoryMechanismError(Exception):
