@@ -838,6 +838,9 @@ class Distance(ObjectiveFunction):
         denom = np.sqrt(np.sum(v1 ** 2)) * np.sqrt(np.sum(v2 ** 2)) or EPSILON
         return numer / denom
 
+    def cosine_similarity(v1, v2):
+        return 1 - cosine(v1,v2)
+
     def correlation(v1, v2):
         v1_norm = v1 - np.mean(v1)
         v2_norm = v2 - np.mean(v2)

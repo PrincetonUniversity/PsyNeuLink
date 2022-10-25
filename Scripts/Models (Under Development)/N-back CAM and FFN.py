@@ -1,5 +1,7 @@
 import numpy as np
 from psyneulink import *
+# from psyneulink.core.scheduling.condition import When
+from graph_scheduler import *
 
 # TODO:
 #   Nback::
@@ -28,17 +30,40 @@ from psyneulink import *
 #     - ADD PNL FEATURE:  should be able to use InputPort as spec for a pathway (if there is nothing after it);
 #             same for OutputPort (if there is nothing before it)
 
+
+# FROM Andre's Notebook:
+# 'smtemp':8,
+# 'stim_weight':0.05,
+# 'hrate':0.04
+# SDIM = 20
+# indim = 2 * (CDIM + SDIM)
+# hiddim = SDIM * 4
+
 # TEST:
+# Structural parameters:
+NUM_TASKS=3
+# Test:
 STIM_SIZE=1
+# Replicate model:
+# STIM_SIZE=20
+# ----------
 CONTEXT_SIZE=25
-# CONTEXT_DRIFT_RATE=.25
-# CONTEXT_DRIFT_NOISE=.075
+HIDDEN_SIZE=STIM_SIZE*4
+
+# Execution parameters
+# Test:
 CONTEXT_DRIFT_RATE=.1
 CONTEXT_DRIFT_NOISE=.00000000001
+# Replicate model:
+# CONTEXT_DRIFT_RATE=.25
+# CONTEXT_DRIFT_NOISE=.075
+# ----
 NUM_TRIALS=20
-NBACK = 2
-TOLERANCE = .5
-STIM_WEIGHT = .05
+NBACK=2
+TOLERANCE=.5
+STIM_WEIGHT=.05
+HAZARD_RATE=0.04
+SOFT_MAX_TEMP=8
 
 # # MODEL:
 # STIM_SIZE=25
@@ -47,11 +72,16 @@ STIM_WEIGHT = .05
 # CONTEXT_DRIFT_NOISE=.075
 # NUM_TRIALS = 25
 
-def context_nback_fct(outcome):
-    if abs(outcome - NBACK) > TOLERANCE:
+def control_function(outcome):
+    # Assumes, for outcome:  [1,0]=MATCH, [0,1]=NON-MATCH
+    # Return value is used:
+    # - as value of Mechanism used for termination condition
+    # - to set ControlSignal for EM[store_prob]=
+    if all(outcome[0]==[0,1]): # MATCH
         return 1
-    else:
+    else:                   # NON-MATCH:
         return 0
+    return None
 
 # def n_back_model():
 
@@ -62,6 +92,7 @@ context = ProcessingMechanism(name='CONTEXT',
                                   initializer=np.random.random(CONTEXT_SIZE-1),
                                   noise=CONTEXT_DRIFT_NOISE,
                                   dimension=CONTEXT_SIZE))
+task = ProcessingMechanism(name="TASK", size=NUM_TASKS)
 em = EpisodicMemoryMechanism(name='EPISODIC MEMORY (dict)',
                              # default_variable=[[0]*STIM_SIZE, [0]*CONTEXT_SIZE],
                              input_ports=[{NAME:"STIMULUS_FIELD",
@@ -71,7 +102,9 @@ em = EpisodicMemoryMechanism(name='EPISODIC MEMORY (dict)',
                              function=ContentAddressableMemory(
                                  initializer=[[[0]*STIM_SIZE, [0]*CONTEXT_SIZE]],
                                  distance_field_weights=[STIM_WEIGHT, 1-STIM_WEIGHT],
-                                 equidistant_entries_select=NEWEST))
+                                 equidistant_entries_select=NEWEST,
+                                 selection_function=OneHot(mode=PROB)),
+                             )
 stim_comparator = ComparatorMechanism(name='STIM COMPARATOR',
                                       # sample=STIM_SIZE, target=STIM_SIZE
                                       input_ports=[{NAME:"CURRENT_STIMULUS", SIZE:STIM_SIZE},
@@ -83,35 +116,74 @@ context_comparator = ComparatorMechanism(name='CONTEXT COMPARATOR',
                                          input_ports=[{NAME:"CURRENT_CONTEXT", SIZE:CONTEXT_SIZE},
                                                       {NAME:"RETRIEVED_CONTEXT", SIZE:CONTEXT_SIZE}],
                                          function=Distance(metric=COSINE))
-ctl = ControlMechanism(name="READ/WRITE CONTROLLER",
-                       function=context_nback_fct,
+
+# QUESTION: GET INFO ABOUT INPUT FUNCTIONS FROM ANDRE:
+input_current_stim = TransferMechanism(size=STIM_SIZE, function=Linear, name="CURRENT STIMULUS") # function=Logistic)
+input_current_context = TransferMechanism(size=STIM_SIZE, function=Linear, name="CURRENT CONTEXT") # function=Logistic)
+input_retrieved_stim = TransferMechanism(size=STIM_SIZE, function=Linear, name="RETRIEVED STIMULUS") # function=Logistic)
+input_retrieved_context = TransferMechanism(size=STIM_SIZE, function=Linear, name="RETRIEVED CONTEXT")  # function=Logistic)
+input_task = TransferMechanism(size=NUM_TASKS, function=Linear, name="CURRENT TASK") # function=Logistic)
+hidden = TransferMechanism(size=HIDDEN_SIZE, function=Logistic, name="HIDDEN LAYER")
+decision = ProcessingMechanism(size=2, name="DECISION LAYER")
+
+control = ControlMechanism(name="READ/WRITE CONTROLLER",
+                       function=control_function,
                        control=(STORAGE_PROB, em),)
-# decision = DDM(name='DECISION')
-decision = ProcessingMechanism(name='DECISION')
 
 # Compositions:
-ffn = Composition(stim_comparator, context_comparator, name="WORKING MEMORY (fnn)")
-comp = Composition(nodes=[stim, context, ffn, em, (decision, NodeRole.OUTPUT), ctl])
-comp.add_projection(MappingProjection(), stim, stim_comparator.input_ports["CURRENT_STIMULUS"])
-comp.add_projection(MappingProjection(), context, context_comparator.input_ports["CURRENT_CONTEXT"])
+ffn = Composition([{input_current_stim,
+                    input_current_context,
+                    input_retrieved_stim,
+                    input_retrieved_context,
+                    input_task},
+                   hidden, decision],
+                  name="WORKING MEMORY (fnn)")
+comp = Composition(nodes=[stim, context, task, em, ffn, control],
+                   name="N-Back Model")
+comp.add_projection(MappingProjection(), stim, input_current_stim)
+comp.add_projection(MappingProjection(), context, input_current_context)
+comp.add_projection(MappingProjection(), task, input_task)
+comp.add_projection(MappingProjection(), em.output_ports["RETRIEVED_STIMULUS_FIELD"], input_retrieved_stim)
+comp.add_projection(MappingProjection(), em.output_ports["RETRIEVED_CONTEXT_FIELD"], input_retrieved_context)
 comp.add_projection(MappingProjection(), stim, em.input_ports["STIMULUS_FIELD"])
 comp.add_projection(MappingProjection(), context, em.input_ports["CONTEXT_FIELD"])
-comp.add_projection(MappingProjection(),
-                    em.output_ports["RETRIEVED_STIMULUS_FIELD"], stim_comparator.input_ports["CURRENT_STIMULUS"])
-comp.add_projection(MappingProjection(),
-                    em.output_ports["RETRIEVED_CONTEXT_FIELD"], context_comparator.input_ports["RETRIEVED_CONTEXT"])
-comp.add_projection(MappingProjection(), context_comparator, decision)
-comp.add_projection(MappingProjection(), context_comparator, ctl)
+comp.add_projection(MappingProjection(), decision, control)
+
 comp.show_graph()
 # comp.show_graph(show_cim=True,
 #                 show_node_structure=ALL,
 #                 show_dimensions=True)
 
 # Execution:
+
+# Define a function that detects when the a Mechanism's value has converged, such that the change in all of the
+# elements of its value attribute from the last execution (given by its delta attribute) falls below ``epsilon``
+#
+# def converge(mech, thresh):
+#     return all(abs(v) <= thresh for v in mech.delta)
+#
+# # Add Conditions to the ``color_hidden`` and ``word_hidden`` Mechanisms that depend on the converge function:
+# epsilon = 0.01
+# Stroop_model.scheduler.add_condition(color_hidden, When(converge, task, epsilon)))
+# Stroop_model.scheduler.add_condition(word_hidden, When(converge, task, epsilon)))
+
+
+def terminate():
+    return control.value == 1
+
+termination_condition = Condition(terminate)
+
+# comp.scheduler.add_condition(control, When(terminate))
+
 input_dict = {#stim:[[1]*STIM_SIZE]*NUM_TRIALS,
               stim: np.array(list(range(NUM_TRIALS))).reshape(NUM_TRIALS,1)+1,
-              context:[[CONTEXT_DRIFT_RATE]]*NUM_TRIALS}
+              context:[[CONTEXT_DRIFT_RATE]]*NUM_TRIALS,
+              task: np.array([[0,0,1]]*NUM_TRIALS)}
+
 comp.run(inputs=input_dict,
+         # termination_processing={TimeScale.TRIAL: terminate(control.value)},
+         # termination_processing={TimeScale.TRIAL: (NWhen, terminate, control)},
+         termination_processing={TimeScale.TRIAL: termination_condition},
          report_output=ReportOutput.ON
          )
 assert True
