@@ -3196,7 +3196,8 @@ class OptimizationControlMechanism(ControlMechanism):
                                            context=context
                                            )
 
-    def _get_evaluate_output_struct_type(self, ctx):
+    def _get_evaluate_output_struct_type(self, ctx, *, tags):
+        assert "evaluate_type_objective" in tags, "Unknown evaluate type: {}".format(tags)
         # Returns a scalar that is the predicted net_outcome
         return ctx.float_ty
 
@@ -3210,7 +3211,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 ctx.get_state_struct_type(self).as_pointer(),
                 self._get_evaluate_alloc_struct_type(ctx).as_pointer(),
                 ctx.float_ty.as_pointer(),
-                ctx.float_ty.as_pointer()]
+                self._get_evaluate_output_struct_type(ctx, tags=tags).as_pointer()]
 
         builder = ctx.create_llvm_function(args, self, str(self) + "_net_outcome")
         llvm_func = builder.function
@@ -3308,7 +3309,12 @@ class OptimizationControlMechanism(ControlMechanism):
         allocation = builder.alloca(evaluate_f.args[2].type.pointee, name="allocation")
         with pnlvm.helpers.for_loop(builder, start, stop, stop.type(1), "alloc_loop") as (b, idx):
 
-            func_out = b.gep(arg_out, [idx])
+            if "evaluate_type_objective" in tags:
+                out_idx = idx
+            else:
+                assert False, "Evaluation type not detected in tags, or unknown: {}".format(tags)
+
+            func_out = b.gep(arg_out, [out_idx])
             pnlvm.helpers.create_sample(b, allocation, search_space, idx)
 
             b.call(evaluate_f, [params, state, allocation, func_out, arg_in, data])
@@ -3321,7 +3327,7 @@ class OptimizationControlMechanism(ControlMechanism):
         args = [ctx.get_param_struct_type(self.agent_rep).as_pointer(),
                 ctx.get_state_struct_type(self.agent_rep).as_pointer(),
                 self._get_evaluate_alloc_struct_type(ctx).as_pointer(),
-                self._get_evaluate_output_struct_type(ctx).as_pointer(),
+                self._get_evaluate_output_struct_type(ctx, tags=tags).as_pointer(),
                 ctx.get_input_struct_type(self.agent_rep).as_pointer(),
                 ctx.get_data_struct_type(self.agent_rep).as_pointer()]
 
@@ -3419,25 +3425,32 @@ class OptimizationControlMechanism(ControlMechanism):
         builder.store(num_inputs.type.pointee(1), num_inputs)
 
         # Simulations don't store output
-        comp_output = sim_f.args[4].type(None)
+        if "evaluate_type_objective" in tags:
+            comp_output = sim_f.args[4].type(None)
+        else:
+            assert False, "Evaluation type not detected in tags, or unknown: {}".format(tags)
+
         builder.call(sim_f, [comp_state, comp_params, comp_data, comp_input,
                              comp_output, num_trials, num_inputs])
 
-        # Extract objective mechanism value
-        idx = self.agent_rep._get_node_index(self.objective_mechanism)
-        # Mechanisms' results are stored in the first substructure
-        objective_os_ptr = builder.gep(comp_data, [ctx.int32_ty(0),
-                                                   ctx.int32_ty(0),
-                                                   ctx.int32_ty(idx)])
-        # Objective mech output shape should be 1 single element 2d array
-        objective_val_ptr = builder.gep(objective_os_ptr,
-                                        [ctx.int32_ty(0), ctx.int32_ty(0),
-                                         ctx.int32_ty(0)], "obj_val_ptr")
+        if "evaluate_type_objective" in tags:
+            # Extract objective mechanism value
+            idx = self.agent_rep._get_node_index(self.objective_mechanism)
+            # Mechanisms' results are stored in the first substructure
+            objective_op_ptr = builder.gep(comp_data, [ctx.int32_ty(0),
+                                                       ctx.int32_ty(0),
+                                                       ctx.int32_ty(idx)])
+            # Objective mech output shape should be 1 single element 2d array
+            objective_val_ptr = builder.gep(objective_op_ptr,
+                                            [ctx.int32_ty(0), ctx.int32_ty(0),
+                                             ctx.int32_ty(0)], "obj_val_ptr")
 
-        net_outcome_f = ctx.import_llvm_function(self, tags=tags.union({"net_outcome"}))
-        builder.call(net_outcome_f, [controller_params, controller_state,
-                                     allocation_sample, objective_val_ptr,
-                                     arg_out])
+            net_outcome_f = ctx.import_llvm_function(self, tags=tags.union({"net_outcome"}))
+            builder.call(net_outcome_f, [controller_params, controller_state,
+                                         allocation_sample, objective_val_ptr,
+                                         arg_out])
+        else:
+            assert False, "Evaluation type not detected in tags, or unknown: {}".format(tags)
 
         builder.ret_void()
 
