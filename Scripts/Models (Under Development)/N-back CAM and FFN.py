@@ -4,34 +4,15 @@ from psyneulink import *
 from graph_scheduler import *
 
 # TODO:
-#   Nback::
-#     - separate out stim/context external inputs from those from EM into FFN
-#     - figure out how to specify feedback from DDM to EM:
-#     - figure out how to execute EM/ffn/control:
-#       > At beginning of trial:
-#         - cue with stimulus as key, and retrieve value
-#             (with prob storage = 0;  prob of retrieval = 1)
-#         - use ffn to compare retrieved value with current context, giving yes or no answer
-#         - two alternative evaluation methods:
-#           - repeat per hazard rate, integrating yes/no, report answer (no=<.5; yes=>.5)
-#           - repeat, sending answer as +1/-1 to DDM, continue until DDM crosses threshold
-#       > At end of trial:
-#         - encode current stimulus & context
-#             (with prob storage = 1;  prob of retrieval = 0)
-#         scheduler.add_condition(A, pnl.AfterNCalls(CM, 1))
-#         scheduler.add_condition(CM, pnl.Always())
-#         composition.run(...termination_conds={pnl.TimeScale.TRIAL: pnl.And(pnl.AfterNCalls(CM, 2), pnl.JustRan(CM))})
-#     - Match mechanism(s):
-#       > ComparatorMechanisms, one for current stim vs. retrieved stim, and other for current context vs. retrieved
-#       context
-#       > should compare each sample EM:  context against context, stim against stim, and yield an answer
-#     - ffn:
-#       > should be trained on 1,2,3,4,5 back, with cue as to what the right answer is
-#     - ADD PNL FEATURE:  should be able to use InputPort as spec for a pathway (if there is nothing after it);
-#             same for OutputPort (if there is nothing before it)
+#     - from nback-paper:
+#       - get ffn weights
+#       - import stimulus generation code
+#     - retrain on full set of 1,2,3,4,5 back
+#     - validate against nback-paper results
+#     - DriftOnASphereIntegrator:  fix for noise=0
+#     - write test that compares DriftOnASphereIntegrator with spherical_drift code in nback-paper
 
-
-# FROM Andre's Notebook:
+# FROM nback-paper:
 # 'smtemp':8,
 # 'stim_weight':0.05,
 # 'hrate':0.04
