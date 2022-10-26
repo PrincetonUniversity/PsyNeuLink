@@ -1,7 +1,7 @@
-import numpy as np
-from psyneulink import *
 # from psyneulink.core.scheduling.condition import When
 from graph_scheduler import *
+
+from psyneulink import *
 
 # TODO:
 #     - from nback-paper:
@@ -125,8 +125,6 @@ ffn = Composition([{input_current_stim,
 
 
 HAZARD_RATE=0.8
-global terminate_trial
-terminate_trial = False
 
 # def control_function(outcome=[[0,0]]):
 def control_function(outcome):
@@ -149,14 +147,13 @@ def control_function(outcome):
             to determine whether to end or continue trial
 
     """
-    # if (outcome[0][1] > outcome[0][0]) or (np.random.random() > HAZARD_RATE):
+    # return (outcome[0][1] > outcome[0][0]) or (np.random.random() > HAZARD_RATE)
     # if bool(outcome) or (np.random.random() > HAZARD_RATE):
-    #     # terminate_trial = True
     #     return 1
     # else:                   # NON-MATCH:
-    #     # terminate_trial = False
     #     return 0
     # return None
+
     return int(bool(outcome) or (np.random.random() > HAZARD_RATE))
 
 
@@ -226,9 +223,9 @@ def reset_control_signal():
     control.value = 1
 
 comp.run(inputs=input_dict,
-         # termination_processing={TimeScale.TRIAL:
-         #                             All(AllHaveRun(control) and Condition(lambda: terminate_trial))}, # function arg
-         termination_processing={TimeScale.TRIAL: Condition(lambda: not(control.value))}, # function arg
+         # termination_processing={TimeScale.TRIAL: Condition(lambda: terminate_trial)}, # function arg
+         termination_processing={TimeScale.TRIAL: And(Condition(lambda: control.value),
+                                                      AfterPass(0, TimeScale.TRIAL))}, # function arg
          report_output=ReportOutput.ON,
          call_before_trial=reset_control_signal
          )

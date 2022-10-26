@@ -1,7 +1,7 @@
-import numpy as np
-from psyneulink import *
 # from psyneulink.core.scheduling.condition import When
 from graph_scheduler import *
+
+from psyneulink import *
 
 # TODO:
 #     - from nback-paper:
@@ -129,7 +129,7 @@ global terminate_trial
 terminate_trial = 0
 
 # def control_function(outcome=[[0,0]]):
-def control_function(outcome):
+def control_function(outcome=[[0,0]]):
     """Evaluate response and set ControlSignal for EM[store_prob] accordingly.
 
     outcome[0] = ffn output
@@ -165,8 +165,8 @@ def control_function(outcome):
 #     - ensures current stimulus and context are only encoded in EM once (at beginning of trial)
 control = ControlMechanism(name="READ/WRITE CONTROLLER",
                            monitor_for_control=decision,
-                           # default_variable=[[0,0]],
-                           # input_ports=[{SIZE:2}],
+                           default_variable=[[0,0]],
+                           input_ports=[{SIZE:2}],
                            function=control_function,
                            # function=lambda outcome: True if outcome[0][1] > outcome[0][0] else False,
                            control=(STORAGE_PROB, em),)
