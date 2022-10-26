@@ -124,9 +124,9 @@ ffn = Composition([{input_current_stim,
 #     return None
 
 
-HAZARD_RATE=0.5
+HAZARD_RATE=0.8
 global terminate_trial
-terminate_trial = 0
+terminate_trial = False
 
 # def control_function(outcome=[[0,0]]):
 def control_function(outcome):
@@ -150,28 +150,26 @@ def control_function(outcome):
 
     """
     # if (outcome[0][1] > outcome[0][0]) or (np.random.random() > HAZARD_RATE):
-    if outcome or (np.random.random() > HAZARD_RATE):
-        terminate_trial = True
-        return 1
-    else:                   # NON-MATCH:
-        terminate_trial = False
-        return 0
-    return None
+    # if bool(outcome) or (np.random.random() > HAZARD_RATE):
+    #     # terminate_trial = True
+    #     return 1
+    # else:                   # NON-MATCH:
+    #     # terminate_trial = False
+    #     return 0
+    # return None
+    return int(bool(outcome) or (np.random.random() > HAZARD_RATE))
 
 
 # Control Mechanism
 #     - determines whether or not to end trial,
 #     - ensures current stimulus and context are only encoded in EM once (at beginning of trial)
 control = ControlMechanism(name="READ/WRITE CONTROLLER",
+                           default_variable=[[0]],
                            objective_mechanism=ObjectiveMechanism(name="OBJECTIVE MECHANISM",
                                                                   monitor=decision,
                                                                   function=lambda x: int(x[0][1]>x[0][0])),
-                           # default_variable=[[0,0]],
-                           # input_ports=[{SIZE:2}],
                            function=control_function,
-                           # function=lambda outcome: True if outcome[0][1] > outcome[0][0] else False,
-                           control=(STORAGE_PROB, em),)
-
+                           control=(STORAGE_PROB, em))
 
 comp = Composition(nodes=[stim, context, task, em, ffn, control],
                    name="N-Back Model")
@@ -223,11 +221,18 @@ input_dict = {stim: np.array(list(range(NUM_TRIALS))).reshape(NUM_TRIALS,1)+1,
 
 # terminate_trial = 0
 
-comp.run(inputs=input_dict,
-         termination_processing={TimeScale.TRIAL: Condition(lambda: terminate_trial)}, # function arg
-         report_output=ReportOutput.ON
-         )
+def reset_control_signal():
+    # control.parameters.value.set(1)
+    control.value = 1
 
+comp.run(inputs=input_dict,
+         # termination_processing={TimeScale.TRIAL:
+         #                             All(AllHaveRun(control) and Condition(lambda: terminate_trial))}, # function arg
+         termination_processing={TimeScale.TRIAL: Condition(lambda: not(control.value))}, # function arg
+         report_output=ReportOutput.ON,
+         call_before_trial=reset_control_signal
+         )
+print(len(em.memory))
 # ---------------------------------------------------------------------------------------------
 
 # TEST OF SPHERICAL DRIFT:
