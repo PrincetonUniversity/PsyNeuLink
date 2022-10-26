@@ -63,7 +63,7 @@ NBACK=2
 TOLERANCE=.5
 STIM_WEIGHT=.05
 HAZARD_RATE=0.04
-SOFT_MAX_TEMP=8
+SOFT_MAX_TEMP=1/8
 
 # # MODEL:
 # STIM_SIZE=25
@@ -103,7 +103,8 @@ em = EpisodicMemoryMechanism(name='EPISODIC MEMORY (dict)',
                                  initializer=[[[0]*STIM_SIZE, [0]*CONTEXT_SIZE]],
                                  distance_field_weights=[STIM_WEIGHT, 1-STIM_WEIGHT],
                                  equidistant_entries_select=NEWEST,
-                                 selection_function=OneHot(mode=PROB)),
+                                 selection_function=SoftMax(output=MAX_INDICATOR,
+                                                            gain=SOFT_MAX_TEMP)),
                              )
 stim_comparator = ComparatorMechanism(name='STIM COMPARATOR',
                                       # sample=STIM_SIZE, target=STIM_SIZE
@@ -167,56 +168,55 @@ comp.show_graph()
 # Stroop_model.scheduler.add_condition(color_hidden, When(converge, task, epsilon)))
 # Stroop_model.scheduler.add_condition(word_hidden, When(converge, task, epsilon)))
 
-
-def terminate():
-    return control.value == 1
-
-termination_condition = Condition(terminate)
-
-# comp.scheduler.add_condition(control, When(terminate))
-
 input_dict = {#stim:[[1]*STIM_SIZE]*NUM_TRIALS,
               stim: np.array(list(range(NUM_TRIALS))).reshape(NUM_TRIALS,1)+1,
               context:[[CONTEXT_DRIFT_RATE]]*NUM_TRIALS,
               task: np.array([[0,0,1]]*NUM_TRIALS)}
 
+def termination_trial():
+    if control.value==1 or np.random.random() > HAZARD_RATE:
+        return 1
+    else:
+        return 0
+
 comp.run(inputs=input_dict,
          # termination_processing={TimeScale.TRIAL: terminate(control.value)},
          # termination_processing={TimeScale.TRIAL: (NWhen, terminate, control)},
-         termination_processing={TimeScale.TRIAL: termination_condition},
+         # termination_processing={TimeScale.TRIAL: termination_condition},
+         termination_processing={TimeScale.TRIAL: Condition(termination_trial)},
          report_output=ReportOutput.ON
          )
 assert True
 
 # TEST OF SPHERICAL DRIFT:
-stims = np.array([x[0] for x in em.memory])
-contexts = np.array([x[1] for x in em.memory])
-cos = Distance(metric=COSINE)
-dist = Distance(metric=EUCLIDEAN)
-diffs = [np.sum([contexts[i+1] - contexts[1]]) for i in range(NUM_TRIALS)]
-diffs_1 = [np.sum([contexts[i+1] - contexts[i]]) for i in range(NUM_TRIALS)]
-diffs_2 = [np.sum([contexts[i+2] - contexts[i]]) for i in range(NUM_TRIALS-1)]
-dots = [[contexts[i+1] @ contexts[1]] for i in range(NUM_TRIALS)]
-dot_diffs_1 = [[contexts[i+1] @ contexts[i]] for i in range(NUM_TRIALS)]
-dot_diffs_2 = [[contexts[i+2] @ contexts[i]] for i in range(NUM_TRIALS-1)]
-angle = [cos([contexts[i+1], contexts[1]]) for i in range(NUM_TRIALS)]
-angle_1 = [cos([contexts[i+1], contexts[i]]) for i in range(NUM_TRIALS)]
-angle_2 = [cos([contexts[i+2], contexts[i]]) for i in range(NUM_TRIALS-1)]
-euclidean = [dist([contexts[i+1], contexts[1]]) for i in range(NUM_TRIALS)]
-euclidean_1 = [dist([contexts[i+1], contexts[i]]) for i in range(NUM_TRIALS)]
-euclidean_2 = [dist([contexts[i+2], contexts[i]]) for i in range(NUM_TRIALS-1)]
-print("STIMS:", stims, "\n")
-print("DIFFS:", diffs, "\n")
-print("DIFFS 1:", diffs_1, "\n")
-print("DIFFS 2:", diffs_2, "\n")
-print("DOT PRODUCTS:", dots, "\n")
-print("DOT DIFFS 1:", dot_diffs_1, "\n")
-print("DOT DIFFS 2:", dot_diffs_2, "\n")
-print("ANGLE: ", angle, "\n")
-print("ANGLE_1: ", angle_1, "\n")
-print("ANGLE_2: ", angle_2, "\n")
-print("EUCILDEAN: ", euclidean, "\n")
-print("EUCILDEAN 1: ", euclidean_1, "\n")
-print("EUCILDEAN 2: ", euclidean_2, "\n")
+# stims = np.array([x[0] for x in em.memory])
+# contexts = np.array([x[1] for x in em.memory])
+# cos = Distance(metric=COSINE)
+# dist = Distance(metric=EUCLIDEAN)
+# diffs = [np.sum([contexts[i+1] - contexts[1]]) for i in range(NUM_TRIALS)]
+# diffs_1 = [np.sum([contexts[i+1] - contexts[i]]) for i in range(NUM_TRIALS)]
+# diffs_2 = [np.sum([contexts[i+2] - contexts[i]]) for i in range(NUM_TRIALS-1)]
+# dots = [[contexts[i+1] @ contexts[1]] for i in range(NUM_TRIALS)]
+# dot_diffs_1 = [[contexts[i+1] @ contexts[i]] for i in range(NUM_TRIALS)]
+# dot_diffs_2 = [[contexts[i+2] @ contexts[i]] for i in range(NUM_TRIALS-1)]
+# angle = [cos([contexts[i+1], contexts[1]]) for i in range(NUM_TRIALS)]
+# angle_1 = [cos([contexts[i+1], contexts[i]]) for i in range(NUM_TRIALS)]
+# angle_2 = [cos([contexts[i+2], contexts[i]]) for i in range(NUM_TRIALS-1)]
+# euclidean = [dist([contexts[i+1], contexts[1]]) for i in range(NUM_TRIALS)]
+# euclidean_1 = [dist([contexts[i+1], contexts[i]]) for i in range(NUM_TRIALS)]
+# euclidean_2 = [dist([contexts[i+2], contexts[i]]) for i in range(NUM_TRIALS-1)]
+# print("STIMS:", stims, "\n")
+# print("DIFFS:", diffs, "\n")
+# print("DIFFS 1:", diffs_1, "\n")
+# print("DIFFS 2:", diffs_2, "\n")
+# print("DOT PRODUCTS:", dots, "\n")
+# print("DOT DIFFS 1:", dot_diffs_1, "\n")
+# print("DOT DIFFS 2:", dot_diffs_2, "\n")
+# print("ANGLE: ", angle, "\n")
+# print("ANGLE_1: ", angle_1, "\n")
+# print("ANGLE_2: ", angle_2, "\n")
+# print("EUCILDEAN: ", euclidean, "\n")
+# print("EUCILDEAN 1: ", euclidean_1, "\n")
+# print("EUCILDEAN 2: ", euclidean_2, "\n")
 
 # n_back_model()

@@ -29,7 +29,7 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import EPSILON, FunctionError, Function_Base, get_matrix
 from psyneulink.core.globals.keywords import \
-    CORRELATION, COSINE, CROSS_ENTROPY, \
+    CORRELATION, COSINE, COSINE_SIMILARITY, CROSS_ENTROPY, \
     DEFAULT_VARIABLE, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DistanceMetrics, \
     ENERGY, ENTROPY, EUCLIDEAN, HOLLOW_MATRIX, MATRIX, MAX_ABS_DIFF, \
     NORMED_L0_SIMILARITY, OBJECTIVE_FUNCTION_TYPE, SIZE, STABILITY_FUNCTION
@@ -838,9 +838,6 @@ class Distance(ObjectiveFunction):
         denom = np.sqrt(np.sum(v1 ** 2)) * np.sqrt(np.sum(v2 ** 2)) or EPSILON
         return numer / denom
 
-    def cosine_similarity(v1, v2):
-        return 1 - cosine(v1,v2)
-
     def correlation(v1, v2):
         v1_norm = v1 - np.mean(v1)
         v2_norm = v2 - np.mean(v2)
@@ -995,7 +992,7 @@ class Distance(ObjectiveFunction):
             inner = functools.partial(self.__gen_llvm_sum_product, **kwargs)
         elif self.metric == CROSS_ENTROPY:
             inner = functools.partial(self.__gen_llvm_cross_entropy, **kwargs)
-        elif self.metric == COSINE:
+        elif self.metric in {COSINE, COSINE_SIMILARITY}:
             del kwargs['acc']
             numer_acc = builder.alloca(ctx.float_ty)
             denom1_acc = builder.alloca(ctx.float_ty)
@@ -1047,7 +1044,7 @@ class Distance(ObjectiveFunction):
             ret = builder.call(sqrt, [ret])
         elif self.metric == MAX_ABS_DIFF:
             ret = builder.load(max_diff_ptr)
-        elif self.metric == COSINE:
+        elif self.metric in {COSINE, COSINE_SIMILARITY}:
             numer = builder.load(numer_acc)
             denom1 = builder.load(denom1_acc)
             denom1 = builder.call(sqrt, [denom1])
@@ -1114,7 +1111,7 @@ class Distance(ObjectiveFunction):
             ret = builder.fsub(ctx.float_ty(1), ret)
 
         # MAX_ABS_DIFF, CORRELATION, and COSINE ignore normalization
-        ignores = frozenset((MAX_ABS_DIFF, CORRELATION, COSINE))
+        ignores = frozenset((MAX_ABS_DIFF, CORRELATION, COSINE, COSINE_SIMILARITY))
         if self.normalize and self.metric not in ignores:
             norm_factor = input_length
             if self.metric == ENERGY:
@@ -1173,7 +1170,7 @@ class Distance(ObjectiveFunction):
             result = np.linalg.norm(v2 - v1)
 
         # Cosine similarity of v1 and v2
-        elif self.metric == COSINE:
+        elif self.metric in {COSINE, COSINE_SIMILARITY}:
             # result = np.correlate(v1, v2)
             result = 1.0 - np.fabs(Distance.cosine(v1, v2))
             return self.convert_output_type(result)

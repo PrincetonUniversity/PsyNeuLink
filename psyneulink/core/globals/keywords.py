@@ -240,6 +240,7 @@ class DistanceMetrics:
         self.CORRELATION = CORRELATION
         # self.PEARSON = PEARSON
         self.COSINE = COSINE
+        self.COSINE_SIMILARITY = COSINE
         self.ENTROPY = CROSS_ENTROPY
         self.CROSS_ENTROPY = CROSS_ENTROPY
         self.ENERGY = ENERGY
@@ -270,7 +271,7 @@ L1 = EUCLIDEAN
 ANGLE = 'angle'
 CORRELATION = 'correlation'
 COSINE = 'cosine'
-COSINE_SIMILARITY = 'cosine_similarity'
+COSINE_SIMILARITY = 'cosine'
 PEARSON = 'Pearson'
 ENTROPY = 'cross-entropy'
 CROSS_ENTROPY = 'cross-entropy'
