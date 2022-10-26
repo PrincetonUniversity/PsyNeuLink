@@ -1,7 +1,7 @@
 # from psyneulink.core.scheduling.condition import When
 from graph_scheduler import *
-
 from psyneulink import *
+import numpy as np
 
 # TODO:
 #     - from nback-paper:
@@ -126,7 +126,6 @@ ffn = Composition([{input_current_stim,
 
 HAZARD_RATE=0.8
 
-# def control_function(outcome=[[0,0]]):
 def control_function(outcome):
     """Evaluate response and set ControlSignal for EM[store_prob] accordingly.
 
@@ -145,17 +144,8 @@ def control_function(outcome):
         - control Mechanism to set ControlSignal for EM[store_prob] (per above)
         - terminate_trial(), which is used by Condition specified as termination_processing for comp.run(),
             to determine whether to end or continue trial
-
     """
-    # return (outcome[0][1] > outcome[0][0]) or (np.random.random() > HAZARD_RATE)
-    # if bool(outcome) or (np.random.random() > HAZARD_RATE):
-    #     return 1
-    # else:                   # NON-MATCH:
-    #     return 0
-    # return None
-
     return int(bool(outcome) or (np.random.random() > HAZARD_RATE))
-
 
 # Control Mechanism
 #     - determines whether or not to end trial,
@@ -199,35 +189,11 @@ input_dict = {stim: np.array(list(range(NUM_TRIALS))).reshape(NUM_TRIALS,1)+1,
               context:[[CONTEXT_DRIFT_RATE]]*NUM_TRIALS,
               task: np.array([[0,0,1]]*NUM_TRIALS)}
 
-# def terminate_trial():
-#     """Determine whether to continue or terminate trial.
-#     Determination is made in control_function (assigned as function of control Mechanism):
-#     - terminate if match or hazard rate is realized
-#     - continue if non-match or hazard rate is not realized
-#     """
-#     print("CONTROL VALUE: ",control.value)
-#     if control.value==1 or np.random.random() > HAZARD_RATE:
-#         return 1 # terminate
-#     else:
-#         return 0 # continue
-#
-# comp.run(inputs=input_dict,
-#          termination_processing={TimeScale.TRIAL: Condition(terminate_trial)}, # function arg
-#          report_output=ReportOutput.ON
-#          )
-
-# terminate_trial = 0
-
-def reset_control_signal():
-    # control.parameters.value.set(1)
-    control.value = 1
-
 comp.run(inputs=input_dict,
          # termination_processing={TimeScale.TRIAL: Condition(lambda: terminate_trial)}, # function arg
          termination_processing={TimeScale.TRIAL: And(Condition(lambda: control.value),
                                                       AfterPass(0, TimeScale.TRIAL))}, # function arg
          report_output=ReportOutput.ON,
-         call_before_trial=reset_control_signal
          )
 print(len(em.memory))
 # ---------------------------------------------------------------------------------------------
