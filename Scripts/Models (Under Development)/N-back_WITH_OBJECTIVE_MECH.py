@@ -27,6 +27,7 @@ import numpy as np
 # CONTEXT_DRIFT_NOISE=.075
 # 'stim_weight':0.05,
 # 'smtemp':8,
+# HAZARD_RATE=0.04
 
 # TEST:
 NUM_TASKS=3
@@ -37,8 +38,9 @@ CONTEXT_DRIFT_RATE=.1
 CONTEXT_DRIFT_NOISE=.00000000001
 STIM_WEIGHT=.05
 SOFT_MAX_TEMP=1/8 # express as gain
+HAZARD_RATE=0.4
 
-DISPLAY = True
+DISPLAY = False
 
 # MECHANISMS:
 
@@ -123,9 +125,6 @@ ffn = Composition([{input_current_stim,
 #         return 0
 #     return None
 
-
-HAZARD_RATE=0.8
-
 def control_function(outcome):
     """Evaluate response and set ControlSignal for EM[store_prob] accordingly.
 
@@ -151,7 +150,7 @@ def control_function(outcome):
 #     - determines whether or not to end trial,
 #     - ensures current stimulus and context are only encoded in EM once (at beginning of trial)
 control = ControlMechanism(name="READ/WRITE CONTROLLER",
-                           default_variable=[[0]],
+                           default_variable=[[1]],
                            objective_mechanism=ObjectiveMechanism(name="OBJECTIVE MECHANISM",
                                                                   monitor=decision,
                                                                   function=lambda x: int(x[0][1]>x[0][0])),
@@ -179,7 +178,6 @@ if DISPLAY:
 # EXECUTION ---------------------------------------------------------------------------------------------------
 
 # # nback-paper:
-# HAZARD_RATE=0.04
 # NUM_TRIALS = 45
 
 # Test:
