@@ -12,9 +12,9 @@ np.random.seed(seed)
 set_global_seed(seed)
 
 # High-level parameters the impact performance of the test
-num_trials = 2
+num_trials = 4
 time_step_size = 0.01
-num_estimates = 4
+num_estimates = 40
 
 ddm_params = dict(starting_value=0.0, rate=0.3, noise=1.0,
                   threshold=0.6, non_decision_time=0.15, time_step_size=time_step_size)
@@ -28,7 +28,8 @@ comp = pnl.Composition(pathways=decision)
 
 # Let's generate an "experimental" dataset to fit. This is a parameter recovery test
 # The input will be num_trials trials of the same constant stimulus drift rate of 1
-# input = np.concatenate((np.repeat(-30.0, 30), np.repeat(30.0, 30)))[:, None]
+# trial_inputs = np.concatenate((np.repeat(-30.0, 30), np.repeat(30.0, 30)))[:, None]
+# trial_inputs = np.concatenate((np.repeat(-30.0, 2), np.repeat(30.0, 2)))[:, None]
 trial_inputs = np.ones((num_trials, 1))
 inputs_dict = {decision: trial_inputs}
 
@@ -55,7 +56,7 @@ fit_parameters = {
 }
 
 pec = pnl.ParameterEstimationComposition(name='pec',
-                                         nodes=[comp],
+                                         nodes=comp,
                                          parameters=fit_parameters,
                                          outcome_variables=[decision.output_ports[pnl.DECISION_OUTCOME],
                                                             decision.output_ports[pnl.RESPONSE_TIME]],
@@ -67,8 +68,8 @@ pec = pnl.ParameterEstimationComposition(name='pec',
 
 # pec.controller.parameters.comp_execution_mode.set("LLVM")
 pec.controller.function.parameters.save_values.set(True)
-ll, sim_data = pec.log_likelihood(0.3, 0.6, inputs=inputs_dict)
-# ret = pec.run(inputs=inputs_dict, num_trials=len(trial_inputs))
+# ll, sim_data = pec.log_likelihood(0.3, 0.6, inputs=inputs_dict)
+ret = pec.run(inputs={comp: trial_inputs}, num_trials=len(trial_inputs))
 
 # Check that the parameters are recovered and that the log-likelihood is correct
 # assert np.allclose(pec.controller.optimal_parameters, [0.3, 0.6], atol=0.1)

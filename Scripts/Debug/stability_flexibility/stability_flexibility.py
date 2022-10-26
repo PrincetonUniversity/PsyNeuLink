@@ -6,10 +6,11 @@ import pandas as pd
 
 
 # Define function to generate a counterbalanced trial sequence with a specified switch trial frequency
-def generateTrialSequence(N, Frequency):
+def generate_trial_sequence(n, frequency):
+
     # Compute trial number
-    nTotalTrials = N
-    switchFrequency = Frequency
+    nTotalTrials = n
+    switchFrequency = frequency
 
     nSwitchTrials = int(nTotalTrials * switchFrequency)
     nRepeatTrials = int(nTotalTrials - nSwitchTrials)
@@ -79,7 +80,7 @@ def run_stab_flex(taskTrain, stimulusTrain, cueTrain,
                   lca_time_step_size=0.1,
                   non_decision_time=0.0,
                   automaticity=.15,
-                  starting_point=0.0,
+                  starting_value=0.0,
                   threshold=0.2,
                   ddm_noise=0.1,
                   lca_noise=0.0,
@@ -88,6 +89,7 @@ def run_stab_flex(taskTrain, stimulusTrain, cueTrain,
                   scale=1,
                   ddm_time_step_size=0.001,
                   rng_seed=None):
+
     # If the user has specified a short_csi and delta_csi as parameters, modify cueTrain
     # such that its min is replaced with short_csi and its max (short_csi + delta_csi)
     if delta_csi and short_csi:
@@ -100,7 +102,7 @@ def run_stab_flex(taskTrain, stimulusTrain, cueTrain,
     COMP = competition
     AUTOMATICITY = automaticity  # Automaticity Weight
 
-    STARTING_POINT = starting_point  # Starting Point
+    STARTING_POINT = starting_value  # Starting Point
     THRESHOLD = threshold  # Threshold
     NOISE = ddm_noise  # Noise
     SCALE = scale  # Scales DDM inputs so threshold can be set to 1
@@ -252,16 +254,10 @@ def run_stab_flex(taskTrain, stimulusTrain, cueTrain,
               stimulusInfo: stimulusTrain,
               cueInterval: cueTrain}
 
-    stabilityFlexibility.run(inputs, execution_mode=pnl.ExecutionMode.LLVMRun)
+    stabilityFlexibility.run(inputs)
 
     return stabilityFlexibility
 
-
-tasks, stimuli, CSI, correctResponse = generateTrialSequence(256, 0.5)
-
-comp = run_stab_flex(taskTrain=tasks, stimulusTrain=stimuli, cueTrain=CSI)
-
-#comp.show_graph()
 
 # taskLayer.log.print_entries()
 # stimulusInfo.log.print_entries()
@@ -274,3 +270,12 @@ comp = run_stab_flex(taskTrain=tasks, stimulusTrain=stimuli, cueTrain=CSI)
 # ddmRecodeDrift.log.print_entries()
 # ddmInputScale.log.print_entries()
 # decisionMaker.log.print_entries()
+
+if __name__ == "__main__":
+
+    taskTrain, stimulusTrain, cueTrain, switch = generate_trial_sequence(240, 0.5)
+    taskTrain = taskTrain[0:3]
+    stimulusTrain = stimulusTrain[0:3]
+    cueTrain = cueTrain[0:3]
+
+    comp = run_stab_flex(taskTrain, stimulusTrain, cueTrain, ddm_time_step_size=0.01, lca_time_step_size=0.01)

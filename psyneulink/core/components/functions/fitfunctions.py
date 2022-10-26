@@ -335,11 +335,15 @@ class MaxLikelihoodEstimator(OptimizationFunction):
         # Reset the search grid
         self.reset_grid()
 
+        # Clear any old results from the composition
+        if context.composition.results is not None:
+            context.composition.results.clear()
+
         # FIXME: This is a hack to make sure that state_features gets all trials worth of inputs.
         # We need to set the inputs for the composition during simulation, override the state features with the
         # inputs dict passed to the PEC constructor. This assumes that the inputs dict has the same order as the
         # state features.
-        for state_input_port, value in zip(self.owner.state_input_ports, self.inputs.values()):
+        for state_input_port, value in zip(self.owner.state_input_ports, self.owner.get_inputs().values()):
             state_input_port.parameters.value._set(value, context)
 
         # Evaluate objective_function for each sample
@@ -379,7 +383,7 @@ class MaxLikelihoodEstimator(OptimizationFunction):
         return ll
 
     @handle_external_context(fallback_most_recent=True)
-    def log_likelihood(self, *args, inputs=None, context=None):
+    def log_likelihood(self, *args, context=None):
         """
         Compute the log-likelihood of the data given the specified parameters of the model. This function will raise
         aa exception if the function has not been assigned as the function of and OptimizationControlMechanism. An
@@ -404,8 +408,6 @@ class MaxLikelihoodEstimator(OptimizationFunction):
                              "OptimizationControlMechanism. See the documentation for the "
                              "ParameterEstimationControlMechanism for more information.")
 
-        self.inputs = inputs
-
         # Make sure we have instantiated the log-likelihood function.
         if self._ll_func is None:
             self._ll_func = self._make_loglikelihood_func(context=context)
@@ -415,8 +417,6 @@ class MaxLikelihoodEstimator(OptimizationFunction):
         context.remove_flag(ContextFlags.PROCESSING)
 
         return ll, sim_data
-
-
 
     def _function(self,
                  variable=None,
@@ -446,7 +446,7 @@ class MaxLikelihoodEstimator(OptimizationFunction):
 
         return optimal_sample, optimal_value, saved_samples, saved_values
 
-    def _fit(self, ll_func: Callable, display_iter: bool = False, save_iterations: bool = False):
+    def _fit(self, ll_func: Callable, display_iter: bool = True, save_iterations: bool = False):
 
         bounds = list(self.fit_param_bounds.values())
 

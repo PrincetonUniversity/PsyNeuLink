@@ -648,6 +648,16 @@ class ParameterEstimationComposition(Composition):
         )
 
     @handle_external_context()
+    def run(self, *args, **kwargs):
+
+        # Capture the input passed to run and pass it on to the OCM
+        assert self.controller is not None
+        self.controller.set_inputs(kwargs.get('inputs', None if not args else args[0]))
+
+        # Run the composition as normal
+        return super(ParameterEstimationComposition, self).run(*args, **kwargs)
+
+    @handle_external_context()
     def log_likelihood(self, *args, inputs=None, context=None) -> float:
         """
         Compute the log-likelihood of the data given the specified parameters of the model.
@@ -688,7 +698,13 @@ class ParameterEstimationComposition(Composition):
                                                       f"ParameterEstimationComposition {self.name} does not appear to "
                                                       f"have a log_likelihood function.")
 
+        context.composition = self
+
+        # Capture the inputs and pass it on to the OCM
+        assert self.controller is not None
+        self.controller.set_inputs(inputs)
+
         # Try to get the log-likelihood from controllers optimization_function, if it hasn't defined this function yet
         # then it will raise an error.
-        return self.controller.function.log_likelihood(*args, inputs=inputs, context=context)
+        return self.controller.function.log_likelihood(*args, context=context)
 

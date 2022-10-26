@@ -1838,6 +1838,8 @@ class OptimizationControlMechanism(ControlMechanism):
                 self.initialization_status = ContextFlags.DEFERRED_INIT
                 return
 
+        self._input_values = None
+
         super().__init__(
             agent_rep=agent_rep,
             state_feature_specs=state_features,
@@ -3708,3 +3710,19 @@ class OptimizationControlMechanism(ControlMechanism):
         self.agent_rep.initialize(features_array=np.array(self.defaults.variable[1:]),
                                   control_signals = self.control_signals,
                                   context=context)
+
+
+    def set_inputs(self, inputs):
+        """
+        A method that allows caching the complete input values passed to the last call of run for the composition that
+        this OCM controls. This method is used by the ParamterEstimationComposition in its run method.
+        """
+        self._input_values = inputs
+
+    def get_inputs(self):
+        """
+        A method that returns the complete input values passed to the last call of run for the composition that
+        this OCM controls. This method is used by the OCM to get the complete input dictionary for all trials in
+        order to pass them on to the agent_rep during simulation.
+        """
+        return self._input_values
