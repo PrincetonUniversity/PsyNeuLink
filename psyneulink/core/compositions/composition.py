@@ -9583,12 +9583,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies fuction to call after each `TRIAL <TimeScale.TRIAL>` is executed.
 
         termination_processing : Condition  : default None
-            specifies
-            `termination Conditions <Scheduler_Termination_Conditions>`
-            to be used for the current `RUN <TimeScale.RUN>`. To change
-            these conditions for all future runs, use
-            `Composition.termination_processing` (or
-            `Scheduler.termination_conds`)
+            specifies `termination Conditions <Scheduler_Termination_Conditions>`
+            to be used for the current `RUN <TimeScale.RUN>`. To change these conditions for all future runs,
+            use `Composition.termination_processing` (or `Scheduler.termination_conds`)
 
         skip_analyze_graph : bool : default False
             setting to True suppresses call to _analyze_graph()

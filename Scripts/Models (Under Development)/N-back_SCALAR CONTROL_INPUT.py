@@ -150,8 +150,7 @@ def control_function(outcome):
 
     """
     # if (outcome[0][1] > outcome[0][0]) or (np.random.random() > HAZARD_RATE):
-    ffn_output = outcome[0]
-    if (ffn_output[1] > ffn_output[0]) or (np.random.random() > HAZARD_RATE):
+    if outcome or (np.random.random() > HAZARD_RATE):
         terminate_trial = True
         return 1
     else:                   # NON-MATCH:
@@ -164,7 +163,9 @@ def control_function(outcome):
 #     - determines whether or not to end trial,
 #     - ensures current stimulus and context are only encoded in EM once (at beginning of trial)
 control = ControlMechanism(name="READ/WRITE CONTROLLER",
-                           monitor_for_control=decision,
+                           objective_mechanism=ObjectiveMechanism(name="OBJECTIVE MECHANISM",
+                                                                  monitor=decision,
+                                                                  function=lambda x: int(x[0][1]>x[0][0])),
                            # default_variable=[[0,0]],
                            # input_ports=[{SIZE:2}],
                            function=control_function,
