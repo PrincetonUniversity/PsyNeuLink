@@ -1,23 +1,27 @@
+"""
+Note:
+    - due to a bug, this version is based on N-back_WITH_OBJECTIVE_MECHANISM in PNL Models (Under Development)
+    - once the bug is fixed, switch to simpler N-back (objective function is incorporated directly in ControlMechanism)
+
+TODO:
+    - from nback-paper:
+      - get ffn weights
+      - import stimulus generation code
+      - do input layers use logistic (as suggested in figure)?
+    - retrain on full set of 1,2,3,4,5 back
+    - validate against nback-paper results
+    - DriftOnASphereIntegrator:  fix for noise=0
+    - write test that compares DriftOnASphereIntegrator with spherical_drift code in nback-paper
+
+"""
+
 from graph_scheduler import *
 from psyneulink import *
 import numpy as np
 
-# TODO:
-# - fix control input formatting bug (per Katherine)
-#   - for now, use N-back_WITH_OBJECTIVE_MECH.py
-# - from nback-paper:
-#   - get ffn weights
-#   - import stimulus generation code
-#   - do input layers use logistic (as suggested in figure)?
-# - validate against nback-paper results
-# - DriftOnASphereIntegrator:
-#   - fix for noise=0, validate
-#   - write test that compares DriftOnASphereIntegrator with spherical_drift code in nback-paper
-# - train on full set of 1,2,3,4,5 back
+# ==============================================CONSTRUCTION =======================================================
 
-# CONSTRUCTION ---------------------------------------------------------------------------------------------------
-
-# Parameters:
+# PARAMETERS -------------------------------------------------------------------------------------------------------
 
 # FROM nback-paper:
 # SDIM = 20
@@ -42,44 +46,11 @@ HAZARD_RATE=0.04
 
 DISPLAY = False
 
-# MECHANISMS:
-
-# Outer composition (including input, EM and control Mechanisms):
-
-# Stimulus: takes STIM_SIZE vector as input
-stim = TransferMechanism(name='STIM', size=STIM_SIZE)
-
-# Context: takes scalar as drift step for current trial
-context = ProcessingMechanism(name='CONTEXT',
-                              function=DriftOnASphereIntegrator(
-                                  initializer=np.random.random(CONTEXT_SIZE-1),
-                                  noise=CONTEXT_DRIFT_NOISE,
-                                  dimension=CONTEXT_SIZE))
-
-# Task: task one-hot indicating n-back (1, 2, 3 etc.) - must correspond to what ffn has been trained to do
-task = ProcessingMechanism(name="TASK", size=NUM_TASKS)
-
-# Episodic memory:
-#    - entries: stimulus (field[0]) and context (field[1]); randomly initialized
-#    - uses Softmax to retrieve best matching input, subject to weighting of stimulus and context by STIM_WEIGHT
-em = EpisodicMemoryMechanism(name='EPISODIC MEMORY (dict)',
-                             input_ports=[{NAME:"STIMULUS_FIELD",
-                                           SIZE:STIM_SIZE},
-                                          {NAME:"CONTEXT_FIELD",
-                                           SIZE:CONTEXT_SIZE}],
-                             function=ContentAddressableMemory(
-                                 initializer=[[[0]*STIM_SIZE, [0]*CONTEXT_SIZE]],
-                                 distance_field_weights=[STIM_WEIGHT, 1-STIM_WEIGHT],
-                                 # equidistant_entries_select=NEWEST,
-                                 selection_function=SoftMax(output=MAX_INDICATOR,
-                                                            gain=SOFT_MAX_TEMP)),
-                             )
-
-# Feedforward Neural Network (WM) Composition:
+# FEEDFORWARD NEURAL NETWORK COMPOSITION (WM)  --------------------------------------------------------------------
 #     - inputs:
 #        encoding of current stimulus and context, retrieved stimulus and retrieved context,
 #     - output:
-#        decsion: match [1,0] or non-match [0,1]
+#        decIsion: match [1,0] or non-match [0,1]
 #     - must be trained to detect match for specified task (1-back, 2-back, etc.)
 input_current_stim = TransferMechanism(size=STIM_SIZE, function=Linear, name="CURRENT STIMULUS") # function=Logistic)
 input_current_context = TransferMechanism(size=STIM_SIZE, function=Linear, name="CURRENT CONTEXT") # function=Logistic)
@@ -96,7 +67,36 @@ ffn = Composition([{input_current_stim,
                    hidden, decision],
                   name="WORKING MEMORY (fnn)")
 
-# Full model (outer) Composition:
+# FULL MODEL (Outer Composition, including input, EM and control Mechanisms) -----------------------------------------
+
+# Stimulus Encoding: takes STIM_SIZE vector as input
+stim = TransferMechanism(name='STIM', size=STIM_SIZE)
+
+# Context Encoding: takes scalar as drift step for current trial
+context = ProcessingMechanism(name='CONTEXT',
+                              function=DriftOnASphereIntegrator(
+                                  initializer=np.random.random(CONTEXT_SIZE-1),
+                                  noise=CONTEXT_DRIFT_NOISE,
+                                  dimension=CONTEXT_SIZE))
+
+# Task: task one-hot indicating n-back (1, 2, 3 etc.) - must correspond to what ffn has been trained to do
+task = ProcessingMechanism(name="TASK", size=NUM_TASKS)
+
+# Episodic Memory:
+#    - entries: stimulus (field[0]) and context (field[1]); randomly initialized
+#    - uses Softmax to retrieve best matching input, subject to weighting of stimulus and context by STIM_WEIGHT
+em = EpisodicMemoryMechanism(name='EPISODIC MEMORY (dict)',
+                             input_ports=[{NAME:"STIMULUS_FIELD",
+                                           SIZE:STIM_SIZE},
+                                          {NAME:"CONTEXT_FIELD",
+                                           SIZE:CONTEXT_SIZE}],
+                             function=ContentAddressableMemory(
+                                 initializer=[[[0]*STIM_SIZE, [0]*CONTEXT_SIZE]],
+                                 distance_field_weights=[STIM_WEIGHT, 1-STIM_WEIGHT],
+                                 # equidistant_entries_select=NEWEST,
+                                 selection_function=SoftMax(output=MAX_INDICATOR,
+                                                            gain=SOFT_MAX_TEMP)),
+                             )
 
 # Control Mechanism
 #  Ensures current stimulus and context are only encoded in EM once (at beginning of trial)
@@ -137,7 +137,7 @@ if DISPLAY:
         # show_dimensions=True)
 )
 
-# EXECUTION ---------------------------------------------------------------------------------------------------
+# ==============================================EXECUTION ===========================================================
 
 # # nback-paper:
 # NUM_TRIALS = 45
