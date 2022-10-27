@@ -11,8 +11,6 @@ import numpy as np
 #     - validate against nback-paper results
 #     - DriftOnASphereIntegrator:  fix for noise=0
 #     - write test that compares DriftOnASphereIntegrator with spherical_drift code in nback-paper
-#     - Why is ReportOutput being written only if it executes more than once per Trial?
-
 
 # CONSTRUCTION ---------------------------------------------------------------------------------------------------
 
