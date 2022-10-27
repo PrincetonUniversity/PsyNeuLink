@@ -1,4 +1,3 @@
-# from psyneulink.core.scheduling.condition import When
 from graph_scheduler import *
 from psyneulink import *
 import numpy as np
@@ -38,7 +37,7 @@ CONTEXT_DRIFT_RATE=.1
 CONTEXT_DRIFT_NOISE=.00000000001
 STIM_WEIGHT=.05
 SOFT_MAX_TEMP=1/8 # express as gain
-HAZARD_RATE=0.4
+HAZARD_RATE=0.04
 
 DISPLAY = False
 
@@ -98,67 +97,26 @@ ffn = Composition([{input_current_stim,
 
 # Full model (outer) Composition:
 
-# def control_function(outcome):
-#     """Evaluate response and set ControlSignal for EM[store_prob] accordingly.
-#
-#     outcome[0] = ffn output
-#     If ffn_output signifies a MATCH:
-#        set  EM[store_prob]=1 (as prep encoding stimulus in EM on next trial)
-#        terminate trial
-#     If ffn_output signifies a NON-MATCH:
-#        set  EM[store_prob]=0 (as prep for another retrieval from EM without storage)
-#        continue trial
-#
-#     Notes:
-#     - outcome is passed as 2d array with a single 1d length 2 entry, such that output[0] = ffn output
-#     - ffn output: [1,0]=MATCH, [0,1]=NON-MATCH
-#     - return value is used by:
-#         - control Mechanism to set ControlSignal for EM[store_prob] (per above)
-#         - terminate_trial(), which is used by Condition specified as termination_processing for comp.run(),
-#             to determine whether to end or continue trial
-#
-#     """
-#     ffn_output = outcome[0]
-#     if ffn_output[1] > ffn_output[0]:
-#         return 1
-#     else:                   # NON-MATCH:
-#         return 0
-#     return None
-
-def control_function(outcome):
-    """Evaluate response and set ControlSignal for EM[store_prob] accordingly.
-
-    outcome[0] = ffn output
-    If ffn_output signifies a MATCH:
-       set  EM[store_prob]=1 (as prep encoding stimulus in EM on next trial)
-       terminate trial
-    If ffn_output signifies a NON-MATCH:
-       set  EM[store_prob]=0 (as prep for another retrieval from EM without storage)
-       continue trial
-
-    Notes:
-    - outcome is passed as 2d array with a single 1d length 2 entry, such that output[0] = ffn output
-    - ffn output: [1,0]=MATCH, [0,1]=NON-MATCH
-    - return value is used by:
-        - control Mechanism to set ControlSignal for EM[store_prob] (per above)
-        - terminate_trial(), which is used by Condition specified as termination_processing for comp.run(),
-            to determine whether to end or continue trial
-    """
-    return int(bool(outcome) or (np.random.random() > HAZARD_RATE))
-
 # Control Mechanism
-#     - determines whether or not to end trial,
-#     - ensures current stimulus and context are only encoded in EM once (at beginning of trial)
+#  Ensures current stimulus and context are only encoded in EM once (at beginning of trial)
+#    by controlling the storage_prob parameter of em:
+#      - if outcome of decision signifies a match or hazard rate is realized:
+#        - set  EM[store_prob]=1 (as prep encoding stimulus in EM on next trial)
+#        - this also serves to terminate trial (see comp.run(termination_processing condition)
+#      - if outcome of decision signifies a non-match
+#        - set  EM[store_prob]=0 (as prep for another retrieval from EM without storage)
+#        - continue trial
 control = ControlMechanism(name="READ/WRITE CONTROLLER",
-                           default_variable=[[1]],
+                           default_variable=[[1]],  # Ensure EM[store_prob]=1 at beginning of first trial
                            objective_mechanism=ObjectiveMechanism(name="OBJECTIVE MECHANISM",
                                                                   monitor=decision,
+                                                                  # Outcome=1 if match, else 0
                                                                   function=lambda x: int(x[0][1]>x[0][0])),
-                           function=control_function,
+                           # Set ControlSignal for EM[store_prob]
+                           function=lambda outcome: int(bool(outcome) or (np.random.random() > HAZARD_RATE)),
                            control=(STORAGE_PROB, em))
 
-comp = Composition(nodes=[stim, context, task, em, ffn, control],
-                   name="N-Back Model")
+comp = Composition(nodes=[stim, context, task, em, ffn, control], name="N-Back Model")
 comp.add_projection(MappingProjection(), stim, input_current_stim)
 comp.add_projection(MappingProjection(), context, input_current_context)
 comp.add_projection(MappingProjection(), task, input_task)
@@ -188,7 +146,7 @@ input_dict = {stim: np.array(list(range(NUM_TRIALS))).reshape(NUM_TRIALS,1)+1,
               task: np.array([[0,0,1]]*NUM_TRIALS)}
 
 comp.run(inputs=input_dict,
-         # termination_processing={TimeScale.TRIAL: Condition(lambda: terminate_trial)}, # function arg
+         # Terminate trial if value of control is still 1 after first pass through execution
          termination_processing={TimeScale.TRIAL: And(Condition(lambda: control.value),
                                                       AfterPass(0, TimeScale.TRIAL))}, # function arg
          report_output=ReportOutput.ON,
