@@ -34,8 +34,8 @@ jobs:
         python setup.py sdist
         python setup.py bdist_wheel
         cd dist
-        echo "{sdist}={$(ls *.tar.gz)}" >> $GITHUB_OUTPUT
-        echo "{wheel}={$(ls *.whl)}" >> $GITHUB_OUTPUT
+        echo "sdist=$(ls *.tar.gz)" >> $GITHUB_OUTPUT
+        echo "wheel=$(ls *.whl)" >> $GITHUB_OUTPUT
 
     - name: Upload Python dist files
       uses: actions/upload-artifact@v3
