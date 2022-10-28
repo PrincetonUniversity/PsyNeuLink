@@ -7,6 +7,7 @@ TODO:
       - do input layers use logistic (as suggested in figure)?
     - construct training set and train in ffn using Autodiff
     - validate against nback-paper results
+    - replace get_input_sequence and get_training_set with generators passed to nback_model.run() and ffn.learn
 
 """
 
@@ -112,7 +113,7 @@ em = EpisodicMemoryMechanism(name='EPISODIC MEMORY (dict)',
 #    by controlling the storage_prob parameter of em:
 #      - if outcome of decision signifies a match or hazard rate is realized:
 #        - set  EM[store_prob]=1 (as prep encoding stimulus in EM on next trial)
-#        - this also serves to terminate trial (see comp.run(termination_processing condition)
+#        - this also serves to terminate trial (see nback_model.run(termination_processing condition)
 #      - if outcome of decision signifies a non-match
 #        - set  EM[store_prob]=0 (as prep for another retrieval from EM without storage)
 #        - continue trial
@@ -133,21 +134,21 @@ control = ControlMechanism(name="READ/WRITE CONTROLLER",
                            #                              or (np.random.random() > HAZARD_RATE)),
                            control=(STORAGE_PROB, em))
 
-comp = Composition(nodes=[stim, context, task, em, ffn, control], name="N-Back Model")
-comp.add_projection(MappingProjection(), stim, input_current_stim)
-comp.add_projection(MappingProjection(), context, input_current_context)
-comp.add_projection(MappingProjection(), task, input_task)
-comp.add_projection(MappingProjection(), em.output_ports["RETRIEVED_STIMULUS_FIELD"], input_retrieved_stim)
-comp.add_projection(MappingProjection(), em.output_ports["RETRIEVED_CONTEXT_FIELD"], input_retrieved_context)
-comp.add_projection(MappingProjection(), stim, em.input_ports["STIMULUS_FIELD"])
-comp.add_projection(MappingProjection(), context, em.input_ports["CONTEXT_FIELD"])
+nback_model = Composition(nodes=[stim, context, task, em, ffn, control], name="N-Back Model")
+nback_model.add_projection(MappingProjection(), stim, input_current_stim)
+nback_model.add_projection(MappingProjection(), context, input_current_context)
+nback_model.add_projection(MappingProjection(), task, input_task)
+nback_model.add_projection(MappingProjection(), em.output_ports["RETRIEVED_STIMULUS_FIELD"], input_retrieved_stim)
+nback_model.add_projection(MappingProjection(), em.output_ports["RETRIEVED_CONTEXT_FIELD"], input_retrieved_context)
+nback_model.add_projection(MappingProjection(), stim, em.input_ports["STIMULUS_FIELD"])
+nback_model.add_projection(MappingProjection(), context, em.input_ports["CONTEXT_FIELD"])
 
 if DISPLAY:
-    comp.show_graph(
+    nback_model.show_graph(
         # show_cim=True,
         # show_node_structure=ALL,
         # show_dimensions=True)
-)
+    )
 
 # ==========================================STIMULUS GENERATION =======================================================
 # Based on nback-paper
@@ -228,14 +229,22 @@ def stim_set_generation(nback,trials):
     for seq_int,trial in itertools.product(range(4),[trials]): # This generates only longest seq (45)
         return stim_sequence.append(generate_stim_sequence(nback,trial,stype=seq_int,trials=trials))
 
+def stim_set():
+    """Construct an array of stimuli for use an experiment"""
+    # For now, use one-hots
+    return np.eye(STIM_SIZE)
+
 def get_input_sequence(trials):
     """Get sequence of inputs for a run"""
-    # Construct array of one hot input vectors as inputs
-    input_set = np.eye(20)
+    input_set = stim_set()
     # Construct sequence of stimulus indices
     trial_seq = generate_stim_sequence(2,trials)
     # Return list of corresponding stimulus input vectors
     return [input_set[trial_seq[i]] for i in range(trials)]
+
+def get_training_set():
+    """Construct set of training stimuli for ffn"""
+
 
 
 # ==============================================EXECUTION ===========================================================
@@ -244,11 +253,11 @@ input_dict = {stim:get_input_sequence(NUM_TRIALS),
               context:[[CONTEXT_DRIFT_RATE]]*NUM_TRIALS,
               task: np.array([[0]*NUM_TASKS]*NUM_TRIALS)}
 
-comp.run(inputs=input_dict,
-         # Terminate trial if value of control is still 1 after first pass through execution
-         termination_processing={TimeScale.TRIAL: And(Condition(lambda: control.value),
-                                                      AfterPass(0, TimeScale.TRIAL))}, # function arg
-         report_output=REPORTING_OPTIONS)
+nback_model.run(inputs=input_dict,
+                # Terminate trial if value of control is still 1 after first pass through execution
+                termination_processing={TimeScale.TRIAL: And(Condition(lambda: control.value),
+                                                             AfterPass(0, TimeScale.TRIAL))}, # function arg
+                report_output=REPORTING_OPTIONS)
 assert len(em.memory) == NUM_TRIALS + 1
 
 
