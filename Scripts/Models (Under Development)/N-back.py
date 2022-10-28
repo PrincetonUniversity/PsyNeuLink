@@ -18,7 +18,8 @@ import itertools
 DISPLAY = False # show visual of model
 REPORTING_OPTIONS = ReportOutput.ON # Console output during run
 
-# ==============================================CONSTRUCTION =======================================================
+
+# ======================================== MODEL CONSTRUCTION =========================================================
 
 # PARAMETERS -------------------------------------------------------------------------------------------------------
 
@@ -100,7 +101,7 @@ em = EpisodicMemoryMechanism(name='EPISODIC MEMORY (dict)',
                                            SIZE:CONTEXT_SIZE}],
                              function=ContentAddressableMemory(
                                  initializer=[[[0]*STIM_SIZE, [0]*CONTEXT_SIZE]],
-                                 distance_field_weights=[STIM_WEIGHT, 1-STIM_WEIGHT],
+                                 distance_field_weights=[STIM_WEIGHT, CONTEXT_WEIGHT],
                                  # equidistant_entries_select=NEWEST,
                                  selection_function=SoftMax(output=MAX_INDICATOR,
                                                             gain=SOFT_MAX_TEMP)),
@@ -151,7 +152,7 @@ if DISPLAY:
 # ==========================================STIMULUS GENERATION =======================================================
 # Based on nback-paper
 
-def generate_stim_sequence(nback,tstep, stype=0, num_stim=NUM_STIM, tsteps=NUM_TRIALS):
+def generate_stim_sequence(nback,trial, stype=0, num_stim=NUM_STIM, trials=NUM_TRIALS):
 
     def gen_subseq_stim():
         A = np.random.randint(0,num_stim)
@@ -166,75 +167,76 @@ def generate_stim_sequence(nback,tstep, stype=0, num_stim=NUM_STIM, tsteps=NUM_T
             )
         return A,B,C,X
 
-    def genseqCT(nback,tstep):
+    def genseqCT(nback,trial):
         # ABXA / AXA
-        seq = np.random.randint(0,num_stim,tsteps)
+        seq = np.random.randint(0,num_stim,trials)
         A,B,C,X = gen_subseq_stim()
         #
         if nback==3:
             subseq = [A,B,X,A]
         elif nback==2:
             subseq = [A,X,A]
-        seq[tstep-(nback+1):tstep] = subseq
-        return seq[:tstep]
+        seq[trial-(nback+1):trial] = subseq
+        return seq[:trial]
 
-    def genseqCF(nback,tstep):
+    def genseqCF(nback,trial):
         # ABXC
-        seq = np.random.randint(0,num_stim,tsteps)
+        seq = np.random.randint(0,num_stim,trials)
         A,B,C,X = gen_subseq_stim()
         #
         if nback==3:
             subseq = [A,B,X,C]
         elif nback==2:
             subseq = [A,X,B]
-        seq[tstep-(nback+1):tstep] = subseq
-        return seq[:tstep]
+        seq[trial-(nback+1):trial] = subseq
+        return seq[:trial]
 
-    def genseqLT(nback,tstep):
+    def genseqLT(nback,trial):
         # AAXA
-        seq = np.random.randint(0,num_stim,tsteps)
+        seq = np.random.randint(0,num_stim,trials)
         A,B,C,X = gen_subseq_stim()
         #
         if nback==3:
             subseq = [A,A,X,A]
         elif nback==2:
             subseq = [A,A,A]
-        seq[tstep-(nback+1):tstep] = subseq
-        return seq[:tstep]
+        seq[trial-(nback+1):trial] = subseq
+        return seq[:trial]
 
-    def genseqLF(nback,tstep):
+    def genseqLF(nback,trial):
         # ABXB
-        seq = np.random.randint(0,num_stim,tsteps)
+        seq = np.random.randint(0,num_stim,trials)
         A,B,C,X = gen_subseq_stim()
         #
         if nback==3:
             subseq = [A,B,X,B]
         elif nback==2:
             subseq = [X,A,A]
-        seq[tstep-(nback+1):tstep] = subseq
-        return seq[:tstep]
+        seq[trial-(nback+1):trial] = subseq
+        return seq[:trial]
 
     genseqL = [genseqCT,genseqLT,genseqCF,genseqLF]
-    stim = genseqL[stype](nback,tstep)
+    stim = genseqL[stype](nback,trial)
     # ytarget = [1,1,0,0][stype]
-    # ctxt = spherical_drift(tstep)
+    # ctxt = spherical_drift(trial)
     # return stim,ctxt,ytarget
     return stim
 
-def stim_set_generation(nback,tsteps):
-    # for seq_int,tstep in itertools.product(range(4),np.arange(5,tsteps)): # This generates all length sequences
+def stim_set_generation(nback,trials):
+    # for seq_int,trial in itertools.product(range(4),np.arange(5,trials)): # This generates all length sequences
     stim_sequence = []
-    for seq_int,tstep in itertools.product(range(4),[tsteps]): # This generates only longest seq (45)
-        return stim_sequence.append(generate_stim_sequence(nback,tstep,stype=seq_int,tsteps=tsteps))
+    for seq_int,trial in itertools.product(range(4),[trials]): # This generates only longest seq (45)
+        return stim_sequence.append(generate_stim_sequence(nback,trial,stype=seq_int,trials=trials))
 
-def get_input_sequence(tsteps):
+def get_input_sequence(trials):
     """Get sequence of inputs for a run"""
     # Construct array of one hot input vectors as inputs
     input_set = np.eye(20)
     # Construct sequence of stimulus indices
-    trial_seq = generate_stim_sequence(2,tsteps)
+    trial_seq = generate_stim_sequence(2,trials)
     # Return list of corresponding stimulus input vectors
-    return [input_set[trial_seq[i]] for i in range(tsteps)]
+    return [input_set[trial_seq[i]] for i in range(trials)]
+
 
 # ==============================================EXECUTION ===========================================================
 
