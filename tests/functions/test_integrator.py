@@ -262,9 +262,7 @@ names = [
 ]
 
 
-
-
-def test_DriftOnASphere_correctness_against_reference_implementation():
+def test_DriftOnASphere_identicalness_against_reference_implementation():
     """Compare against reference implementation in nback-paper model (https://github.com/andrebeu/nback-paper)."""
 
     # PNL DriftOnASphere
