@@ -248,9 +248,8 @@ comp.run(inputs=input_dict,
          # Terminate trial if value of control is still 1 after first pass through execution
          termination_processing={TimeScale.TRIAL: And(Condition(lambda: control.value),
                                                       AfterPass(0, TimeScale.TRIAL))}, # function arg
-         report_output=REPORTING_OPTIONS
-         )
-print(len(em.memory))
+         report_output=REPORTING_OPTIONS)
+assert len(em.memory) == NUM_TRIALS + 1
 
 
 # ===========================================================================
