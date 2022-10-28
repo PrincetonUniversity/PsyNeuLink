@@ -187,4 +187,3 @@ def test_parameter_estimation_ddm_mle(func_mode):
     # Check that the parameters are recovered and that the log-likelihood is correct, set the tolerance pretty high,
     # things are noisy because of the low number of trials and estimates.
     assert np.allclose(pec.controller.optimal_parameters, [0.3, 0.6], atol=0.1)
-
