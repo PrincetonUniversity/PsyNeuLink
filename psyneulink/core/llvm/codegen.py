@@ -1008,7 +1008,7 @@ def gen_composition_run(ctx, composition, *, tags:frozenset):
 
     # simulation does not care about the output
     # it extracts results of the controller objective mechanism
-    if simulation and not "simulation_results" in tags:
+    if simulation and "simulation_results" not in tags:
         data_out.attributes.remove('nonnull')
 
     if not simulation and "const_data" in debug_env:
