@@ -1851,8 +1851,11 @@ class GridSearch(OptimizationFunction):
             assert all(input_initialized), \
               "Not all inputs to the simulated composition are initialized: {}".format(input_initialized)
 
-            # Extra args: input and data
-            extra_args = [comp_input, comp_args[2]]
+            num_inputs = builder.alloca(obj_func.args[6].type.pointee, name="num_sim_inputs")
+            builder.store(num_inputs.type.pointee(1), num_inputs)
+
+            # Extra args: input, data, number of inputs
+            extra_args = [comp_input, comp_args[2], num_inputs]
         else:
             obj_func = ctx.import_llvm_function(self.objective_function)
             obj_state_ptr = pnlvm.helpers.get_state_ptr(builder, self, state_features,

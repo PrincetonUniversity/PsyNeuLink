@@ -688,10 +688,10 @@ class CompExecution(CUDAExecution):
         bin_func = pnlvm.LLVMBinaryFunction.from_obj(ocm, tags=frozenset(tags))
         self.__bin_func = bin_func
 
-        # There are 7 arguments to evaluate_alloc_range:
-        # comp_param, comp_state, from, to, results, input, comp_data
+        # There are 8 arguments to evaluate_alloc_range:
+        # comp_param, comp_state, from, to, results, input, comp_data, num_inputs
         # all but #4 are shared
-        assert len(bin_func.byref_arg_types) == 7
+        assert len(bin_func.byref_arg_types) == 8
 
         # Directly initialized structures
         assert ocm.agent_rep is self._composition
@@ -708,12 +708,13 @@ class CompExecution(CUDAExecution):
             out_el_ty *= ocm.parameters.num_trials_per_estimate.get(self._execution_contexts[0])
         out_ty = out_el_ty * num_evaluations
 
+        ct_num_inputs = bin_func.byref_arg_types[7](num_input_sets)
 
         # return variable as numpy array. pycuda can use it directly
-        return ct_comp_param, ct_comp_state, ct_comp_data, ct_inputs, out_ty
+        return ct_comp_param, ct_comp_state, ct_comp_data, ct_inputs, out_ty, ct_num_inputs
 
     def cuda_evaluate(self, inputs, num_input_sets, num_evaluations, all_results:bool=False):
-        ct_comp_param, ct_comp_state, ct_comp_data, ct_inputs, out_ty = \
+        ct_comp_param, ct_comp_state, ct_comp_data, ct_inputs, out_ty, ct_num_inputs = \
             self._prepare_evaluate(inputs, num_input_sets, num_evaluations, all_results)
 
         # Output is allocated on device, but we need the ctype (out_ty).
@@ -722,6 +723,7 @@ class CompExecution(CUDAExecution):
                      jit_engine.pycuda.driver.mem_alloc(ctypes.sizeof(out_ty)),
                      self.upload_ctype(ct_inputs, 'input'),
                      self.upload_ctype(ct_comp_data, 'data'),
+                     self.upload_ctype(ct_num_inputs, 'input'),
                     )
 
         self.__bin_func.cuda_call(*cuda_args, threads=int(num_evaluations))
@@ -730,7 +732,7 @@ class CompExecution(CUDAExecution):
         return ct_results
 
     def thread_evaluate(self, inputs, num_input_sets, num_evaluations, all_results:bool=False):
-        ct_param, ct_state, ct_data, ct_inputs, out_ty = \
+        ct_param, ct_state, ct_data, ct_inputs, out_ty, ct_num_inputs = \
             self._prepare_evaluate(inputs, num_input_sets, num_evaluations, all_results)
 
         ct_results = out_ty()
@@ -746,7 +748,8 @@ class CompExecution(CUDAExecution):
                                  min((i + 1) * evals_per_job, num_evaluations),
                                  ctypes.cast(ct_results, self.__bin_func.c_func.argtypes[4]),
                                  ctypes.cast(ctypes.byref(ct_inputs), self.__bin_func.c_func.argtypes[5]),
-                                 ct_data)
+                                 ct_data,
+                                 ct_num_inputs)
                        for i in range(jobs)]
 
         parallel_stop = time.time()
