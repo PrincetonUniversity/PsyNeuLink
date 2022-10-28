@@ -17,7 +17,8 @@ import numpy as np
 import itertools
 
 DISPLAY = False # show visual of model
-REPORTING_OPTIONS = ReportOutput.ON # Console output during run
+# REPORTING_OPTIONS = ReportOutput.ON # Console output during run
+REPORTING_OPTIONS = ReportOutput.OFF
 
 
 # ======================================== MODEL CONSTRUCTION =========================================================
@@ -217,11 +218,11 @@ def generate_stim_sequence(nback,trial, stype=0, num_stim=NUM_STIM, trials=NUM_T
         return seq[:trial]
 
     genseqL = [genseqCT,genseqLT,genseqCF,genseqLF]
-    stim = genseqL[stype](nback,trial)
+    stim_seq = genseqL[stype](nback,trial)
     # ytarget = [1,1,0,0][stype]
     # ctxt = spherical_drift(trial)
     # return stim,ctxt,ytarget
-    return stim
+    return stim_seq
 
 def stim_set_generation(nback,trials):
     # for seq_int,trial in itertools.product(range(4),np.arange(5,trials)): # This generates all length sequences
@@ -242,12 +243,56 @@ def get_input_sequence(trials):
     # Return list of corresponding stimulus input vectors
     return [input_set[trial_seq[i]] for i in range(trials)]
 
-def get_training_set():
-    """Construct set of training stimuli for ffn"""
+def get_training_set(num_epochs, nback):
+    """Construct set of training stimuli for ffn
+    Construct one example of each condition:
+     match:  stim_current = stim_retrieved  and context_current = context_retrieved
+     stim_lure:  stim_current = stim_retrieved  and context_current != context_retrieved
+     context_lure:  stim_current != stim_retrieved  and context_current == context_retrieved
+     non_lure:  stim_current != stim_retrieved  and context_current != context_retrieved
+    """
+    stimuli = stim_set()
+    context_fct =  DriftOnASphereIntegrator(initializer=np.random.random(CONTEXT_SIZE-1),
+                                            noise=CONTEXT_DRIFT_NOISE,
+                                            dimension=CONTEXT_SIZE)
+    trial_types = ['match', 'stim_lure', 'context_lure', 'non_lure']
 
+    stim_current = []
+    context_current = []
+    stim_retrieved = []
+    context_retrieved = []
+    task = []
+    target = []
+
+    # for i in range(num_epochs):
+    #     for trial_type in trial_types:
+    #         stim = stimuli[np.random.randint(0,len(stimuli))]
+    #         context = contxt_fct()
+    #         stim_current.append(stim)
+    #         context_current.append(context)
+    #
+    #         if trial_type in {'match','stim_lure'}:
+    #             stim_retrieved.append(stim)
+    #         if trial_type in {'match','context_lure'}:
+    #             context_retrieved.append(context)
+    #         if trial_type in {'non_match, stim_lure}:
+    #
+    #
+    #         if stype XXX
+    #
+    # training_set = {input_current_stim: stim_current,
+    #                 input_current_context: context_current,
+    #                 input_retrieved_stim: stim_retrieved,
+    #                 input_retrieved_context: context_retrieved,
+    #                 input_task: task,
+    #                 decision: target
+    #                 }
+    #
 
 
 # ==============================================EXECUTION ===========================================================
+
+get_training_set()
 
 input_dict = {stim:get_input_sequence(NUM_TRIALS),
               context:[[CONTEXT_DRIFT_RATE]]*NUM_TRIALS,
