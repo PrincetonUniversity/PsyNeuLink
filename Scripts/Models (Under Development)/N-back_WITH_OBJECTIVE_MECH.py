@@ -187,3 +187,86 @@ print(len(em.memory))
 # print("EUCILDEAN 2: ", euclidean_2, "\n")
 
 # n_back_model()
+
+#=====================================
+
+# STIMULUS GENERATION FROM nback-paper:
+import itertools
+NSTIM = 8
+EXPLEN = 48
+nbackL = [2,3]
+
+def generate_trial(nback,tstep,stype=0):
+
+    def gen_subseq_stim():
+        A = np.random.randint(0,NSTIM)
+        B = np.random.choice(
+             np.setdiff1d(np.arange(NSTIM),[A])
+            )
+        C = np.random.choice(
+             np.setdiff1d(np.arange(NSTIM),[A,B])
+            )
+        X = np.random.choice(
+             np.setdiff1d(np.arange(NSTIM),[A,B])
+            )
+        return A,B,C,X
+
+    def genseqCT(nback,tstep):
+        # ABXA / AXA
+        seq = np.random.randint(0,NSTIM,EXPLEN)
+        A,B,C,X = gen_subseq_stim()
+        #
+        if nback==3:
+            subseq = [A,B,X,A]
+        elif nback==2:
+            subseq = [A,X,A]
+        seq[tstep-(nback+1):tstep] = subseq
+        return seq[:tstep]
+
+    def genseqCF(nback,tstep):
+        # ABXC
+        seq = np.random.randint(0,NSTIM,EXPLEN)
+        A,B,C,X = gen_subseq_stim()
+        #
+        if nback==3:
+            subseq = [A,B,X,C]
+        elif nback==2:
+            subseq = [A,X,B]
+        seq[tstep-(nback+1):tstep] = subseq
+        return seq[:tstep]
+
+    def genseqLT(nback,tstep):
+        # AAXA
+        seq = np.random.randint(0,NSTIM,EXPLEN)
+        A,B,C,X = gen_subseq_stim()
+        #
+        if nback==3:
+            subseq = [A,A,X,A]
+        elif nback==2:
+            subseq = [A,A,A]
+        seq[tstep-(nback+1):tstep] = subseq
+        return seq[:tstep]
+
+    def genseqLF(nback,tstep):
+        # ABXB
+        seq = np.random.randint(0,NSTIM,EXPLEN)
+        A,B,C,X = gen_subseq_stim()
+        #
+        if nback==3:
+            subseq = [A,B,X,B]
+        elif nback==2:
+            subseq = [X,A,A]
+        seq[tstep-(nback+1):tstep] = subseq
+        return seq[:tstep]
+
+    genseqL = [genseqCT,genseqLT,genseqCF,genseqLF]
+    stim = genseqL[stype](nback,tstep)
+    # ytarget = [1,1,0,0][stype]
+    # ctxt = spherical_drift(tstep)
+    # return stim,ctxt,ytarget
+    return stim
+
+def stim_set_generation(nback,tsteps):
+  for seq_int,tstep in itertools.product(range(4),np.arange(5,tsteps)):
+    stim_set = generate_trial(nback,tstep,stype=seq_int)
+
