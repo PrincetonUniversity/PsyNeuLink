@@ -37,6 +37,8 @@ REPORTING_OPTIONS = ReportOutput.OFF
 # HAZARD_RATE=0.04
 
 # TEST:
+MAX_NBACK_LEVELS = 5
+NBACK_LEVELS = [2,3]
 NUM_TASKS=2 # number of different variants of n-back tasks (set sizes)
 NUM_STIM = 8 # number of different stimuli in stimulus set -  QUESTION: WHY ISN"T THIS EQUAL TO STIM_SIZE OR VICE VERSA?
 NUM_TRIALS = 48 # number of stimuli presented in a sequence
@@ -243,7 +245,7 @@ def get_input_sequence(trials):
     # Return list of corresponding stimulus input vectors
     return [input_set[trial_seq[i]] for i in range(trials)]
 
-def get_training_set(num_epochs, nback):
+def get_training_set(num_epochs, nback_levels):
     """Construct set of training stimuli for ffn
     Construct one example of each condition:
      match:  stim_current = stim_retrieved  and context_current = context_retrieved
@@ -251,48 +253,74 @@ def get_training_set(num_epochs, nback):
      context_lure:  stim_current != stim_retrieved  and context_current == context_retrieved
      non_lure:  stim_current != stim_retrieved  and context_current != context_retrieved
     """
+    assert is_iterable(nback_levels) and all([0<i<MAX_NBACK_LEVELS for i in nback_levels])
     stimuli = stim_set()
     context_fct =  DriftOnASphereIntegrator(initializer=np.random.random(CONTEXT_SIZE-1),
                                             noise=CONTEXT_DRIFT_NOISE,
                                             dimension=CONTEXT_SIZE)
+    contexts = []
     trial_types = ['match', 'stim_lure', 'context_lure', 'non_lure']
 
     stim_current = []
     context_current = []
     stim_retrieved = []
     context_retrieved = []
-    task = []
     target = []
+    num_nback_levels = len(nback_levels)
+    current_task = []
 
-    # for i in range(num_epochs):
-    #     for trial_type in trial_types:
-    #         stim = stimuli[np.random.randint(0,len(stimuli))]
-    #         context = contxt_fct()
-    #         stim_current.append(stim)
-    #         context_current.append(context)
-    #
-    #         if trial_type in {'match','stim_lure'}:
-    #             stim_retrieved.append(stim)
-    #         if trial_type in {'match','context_lure'}:
-    #             context_retrieved.append(context)
-    #         if trial_type in {'non_match, stim_lure}:
-    #
-    #
-    #         if stype XXX
-    #
-    # training_set = {input_current_stim: stim_current,
-    #                 input_current_context: context_current,
-    #                 input_retrieved_stim: stim_retrieved,
-    #                 input_retrieved_context: context_retrieved,
-    #                 input_task: task,
-    #                 decision: target
-    #                 }
-    #
+    for i in range(num_epochs):
+        for nback_level in nback_levels:
+            # Construct one hot encoding for nback level
+            task_input = list(np.zeros(num_nback_levels))
+            task_input[nback_level-nback_levels[0]] = 1
+            for i in range(len(stimuli)):
+                # Get current stimulus and distractor
+                stims = list(stimuli.copy())
+                # Get stim, and remove from stims so distractor can be picked randomly from remaining ones
+                current_stim = stims.pop(i)
+                # Pick distractor randomly from stimuli remaining in set
+                distractor_stim = stims[np.random.randint(0,len(stims))]
 
+                # Get current context, nback context, and distractor
+                # Get nback+1 contexts (to bracket correct one)
+                for i in range(num_nback_levels+1):
+                    contexts.append(context_fct(CONTEXT_DRIFT_RATE))
+                # Get current context as one that is next to last from list (leaving last one as potential lure)
+                current_context = contexts.pop(num_nback_levels-1)
+                context_nback = contexts.pop(0)
+                context_distractor = contexts[np.random.randint(0,len(contexts))]
+
+                # Assign retrieved stimulus and context accordingly to trial_type
+                for trial_type in trial_types:
+                    stim_current.append(current_stim)
+                    context_current.append(current_context)
+                    if trial_type in {'match','stim_lure'}:
+                        stim_retrieved.append(stim_current)
+                    else:
+                        stim_retrieved.append(distractor_stim)
+                    if trial_type in {'match','context_lure'}:
+                        context_retrieved.append(context_nback)
+                    else:
+                        context_retrieved.append(context_distractor)
+                    if trial_type == 'match':
+                        target.append([1,0])
+                    else:
+                        target.append([0,1])
+                    current_task.append([task_input])
+
+        training_set = {input_current_stim: stim_current,
+                        input_current_context: context_current,
+                        input_retrieved_stim: stim_retrieved,
+                        input_retrieved_context: context_retrieved,
+                        input_task: current_task,
+                        decision: target
+                        }
+    return training_set
 
 # ==============================================EXECUTION ===========================================================
 
-get_training_set()
+get_training_set(1,NBACK_LEVELS)
 
 input_dict = {stim:get_input_sequence(NUM_TRIALS),
               context:[[CONTEXT_DRIFT_RATE]]*NUM_TRIALS,
