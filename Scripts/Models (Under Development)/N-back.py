@@ -2,10 +2,10 @@
 TODO:
     - get rid of objective_mechanism (see "VERSION *WITHOUT* ObjectiveMechanism" under control(...)
     - from nback-paper:
-      - get ffn weights or train in PNL using Autodiff
-      - import stimulus generation code
+      - get ffn weights?
+      - why SDIM=20 if it is a one-hot encoding (np.eye), and NSTIM=8? (i.e., SHOULDN'T NUM_STIM == STIM_SIZE)?
       - do input layers use logistic (as suggested in figure)?
-    - retrain on full set of 1,2,3,4,5 back
+    - construct training set and train in ffn using Autodiff
     - validate against nback-paper results
 
 """
@@ -13,6 +13,10 @@ TODO:
 from graph_scheduler import *
 from psyneulink import *
 import numpy as np
+import itertools
+
+DISPLAY = False # show visual of model
+REPORTING_OPTIONS = ReportOutput.ON # Console output during run
 
 # ==============================================CONSTRUCTION =======================================================
 
@@ -30,17 +34,18 @@ import numpy as np
 # HAZARD_RATE=0.04
 
 # TEST:
-NUM_TASKS=2
-STIM_SIZE=20
-CONTEXT_SIZE=25
-HIDDEN_SIZE=STIM_SIZE*4
-CONTEXT_DRIFT_RATE=.1
-CONTEXT_DRIFT_NOISE=0.0
-STIM_WEIGHT=.05
-SOFT_MAX_TEMP=1/8 # express as gain
-HAZARD_RATE=0.04
-
-DISPLAY = False
+NUM_TASKS=2 # number of different variants of n-back tasks (set sizes)
+NUM_STIM = 8 # number of different stimuli in stimulus set -  QUESTION: WHY ISN"T THIS EQUAL TO STIM_SIZE OR VICE VERSA?
+NUM_TRIALS = 48 # number of stimuli presented in a sequence
+STIM_SIZE=20 # length of stimulus vector
+CONTEXT_SIZE=25 # length of context vector
+HIDDEN_SIZE=STIM_SIZE*4 # dimension of hidden units in ff
+CONTEXT_DRIFT_RATE=.1 # drift rate used for DriftOnASphereIntegrator (function of Context mech) on each trial
+CONTEXT_DRIFT_NOISE=0.0  # noise used by DriftOnASphereIntegrator (function of Context mech)
+STIM_WEIGHT=.05 # weighting of stimulus field in retrieval from em
+CONTEXT_WEIGHT = 1-STIM_WEIGHT # weighting of context field in retrieval from em
+SOFT_MAX_TEMP=1/8 # express as gain # precision of retrieval process
+HAZARD_RATE=0.04 # rate of re=sampling of em following non-match determination in a pass through ffn
 
 # FEEDFORWARD NEURAL NETWORK COMPOSITION (WM)  --------------------------------------------------------------------
 #     - inputs:
@@ -143,16 +148,98 @@ if DISPLAY:
         # show_dimensions=True)
 )
 
+# ==========================================STIMULUS GENERATION =======================================================
+# Based on nback-paper
+
+def generate_stim_sequence(nback,tstep, stype=0, num_stim=NUM_STIM, tsteps=NUM_TRIALS):
+
+    def gen_subseq_stim():
+        A = np.random.randint(0,num_stim)
+        B = np.random.choice(
+             np.setdiff1d(np.arange(num_stim),[A])
+            )
+        C = np.random.choice(
+             np.setdiff1d(np.arange(num_stim),[A,B])
+            )
+        X = np.random.choice(
+             np.setdiff1d(np.arange(num_stim),[A,B])
+            )
+        return A,B,C,X
+
+    def genseqCT(nback,tstep):
+        # ABXA / AXA
+        seq = np.random.randint(0,num_stim,tsteps)
+        A,B,C,X = gen_subseq_stim()
+        #
+        if nback==3:
+            subseq = [A,B,X,A]
+        elif nback==2:
+            subseq = [A,X,A]
+        seq[tstep-(nback+1):tstep] = subseq
+        return seq[:tstep]
+
+    def genseqCF(nback,tstep):
+        # ABXC
+        seq = np.random.randint(0,num_stim,tsteps)
+        A,B,C,X = gen_subseq_stim()
+        #
+        if nback==3:
+            subseq = [A,B,X,C]
+        elif nback==2:
+            subseq = [A,X,B]
+        seq[tstep-(nback+1):tstep] = subseq
+        return seq[:tstep]
+
+    def genseqLT(nback,tstep):
+        # AAXA
+        seq = np.random.randint(0,num_stim,tsteps)
+        A,B,C,X = gen_subseq_stim()
+        #
+        if nback==3:
+            subseq = [A,A,X,A]
+        elif nback==2:
+            subseq = [A,A,A]
+        seq[tstep-(nback+1):tstep] = subseq
+        return seq[:tstep]
+
+    def genseqLF(nback,tstep):
+        # ABXB
+        seq = np.random.randint(0,num_stim,tsteps)
+        A,B,C,X = gen_subseq_stim()
+        #
+        if nback==3:
+            subseq = [A,B,X,B]
+        elif nback==2:
+            subseq = [X,A,A]
+        seq[tstep-(nback+1):tstep] = subseq
+        return seq[:tstep]
+
+    genseqL = [genseqCT,genseqLT,genseqCF,genseqLF]
+    stim = genseqL[stype](nback,tstep)
+    # ytarget = [1,1,0,0][stype]
+    # ctxt = spherical_drift(tstep)
+    # return stim,ctxt,ytarget
+    return stim
+
+def stim_set_generation(nback,tsteps):
+    # for seq_int,tstep in itertools.product(range(4),np.arange(5,tsteps)): # This generates all length sequences
+    stim_sequence = []
+    for seq_int,tstep in itertools.product(range(4),[tsteps]): # This generates only longest seq (45)
+        return stim_sequence.append(generate_stim_sequence(nback,tstep,stype=seq_int,tsteps=tsteps))
+
+def get_input_sequence(tsteps):
+    """Get sequence of inputs for a run"""
+    # Construct array of one hot input vectors as inputs
+    input_set = np.eye(20)
+    # Construct sequence of stimulus indices
+    trial_seq = generate_stim_sequence(2,tsteps)
+    # Return list of corresponding stimulus input vectors
+    return [input_set[trial_seq[i]] for i in range(tsteps)]
+
 # ==============================================EXECUTION ===========================================================
 
-# # nback-paper:
-# NUM_TRIALS = 45
-
-# Test:
-NUM_TRIALS=20
-
-# TODO: This needs to be replaced with stimulus sequences generated using generate_trial() below
-input_dict = {stim:[[0]*STIM_SIZE]*NUM_TRIALS,
+input_dict = {# stim:[[0]*STIM_SIZE]*NUM_TRIALS,
+              stim:get_input_sequence(NUM_TRIALS),
               context:[[CONTEXT_DRIFT_RATE]]*NUM_TRIALS,
               task: np.array([[0]*NUM_TASKS]*NUM_TRIALS)}
 
@@ -160,10 +247,12 @@ comp.run(inputs=input_dict,
          # Terminate trial if value of control is still 1 after first pass through execution
          termination_processing={TimeScale.TRIAL: And(Condition(lambda: control.value),
                                                       AfterPass(0, TimeScale.TRIAL))}, # function arg
-         report_output=ReportOutput.ON,
+         report_output=REPORTING_OPTIONS
          )
 print(len(em.memory))
-# ---------------------------------------------------------------------------------------------
+
+
+# ===========================================================================
 
 # TEST OF SPHERICAL DRIFT:
 # stims = np.array([x[0] for x in em.memory])
@@ -197,88 +286,3 @@ print(len(em.memory))
 # print("EUCILDEAN 2: ", euclidean_2, "\n")
 
 # n_back_model()
-
-#=====================================
-
-# STIMULUS GENERATION FROM nback-paper:
-import itertools
-NSTIM = 8
-EXPLEN = 48
-nbackL = [2,3]
-
-def generate_trial(nback,tstep,stype=0):
-
-    def gen_subseq_stim():
-        A = np.random.randint(0,NSTIM)
-        B = np.random.choice(
-             np.setdiff1d(np.arange(NSTIM),[A])
-            )
-        C = np.random.choice(
-             np.setdiff1d(np.arange(NSTIM),[A,B])
-            )
-        X = np.random.choice(
-             np.setdiff1d(np.arange(NSTIM),[A,B])
-            )
-        return A,B,C,X
-
-    def genseqCT(nback,tstep):
-        # ABXA / AXA
-        seq = np.random.randint(0,NSTIM,EXPLEN)
-        A,B,C,X = gen_subseq_stim()
-        #
-        if nback==3:
-            subseq = [A,B,X,A]
-        elif nback==2:
-            subseq = [A,X,A]
-        seq[tstep-(nback+1):tstep] = subseq
-        return seq[:tstep]
-
-    def genseqCF(nback,tstep):
-        # ABXC
-        seq = np.random.randint(0,NSTIM,EXPLEN)
-        A,B,C,X = gen_subseq_stim()
-        #
-        if nback==3:
-            subseq = [A,B,X,C]
-        elif nback==2:
-            subseq = [A,X,B]
-        seq[tstep-(nback+1):tstep] = subseq
-        return seq[:tstep]
-
-    def genseqLT(nback,tstep):
-        # AAXA
-        seq = np.random.randint(0,NSTIM,EXPLEN)
-        A,B,C,X = gen_subseq_stim()
-        #
-        if nback==3:
-            subseq = [A,A,X,A]
-        elif nback==2:
-            subseq = [A,A,A]
-        seq[tstep-(nback+1):tstep] = subseq
-        return seq[:tstep]
-
-    def genseqLF(nback,tstep):
-        # ABXB
-        seq = np.random.randint(0,NSTIM,EXPLEN)
-        A,B,C,X = gen_subseq_stim()
-        #
-        if nback==3:
-            subseq = [A,B,X,B]
-        elif nback==2:
-            subseq = [X,A,A]
-        seq[tstep-(nback+1):tstep] = subseq
-        return seq[:tstep]
-
-    genseqL = [genseqCT,genseqLT,genseqCF,genseqLF]
-    stim = genseqL[stype](nback,tstep)
-    # ytarget = [1,1,0,0][stype]
-    # ctxt = spherical_drift(tstep)
-    # return stim,ctxt,ytarget
-    return stim
-
-def stim_set_generation(nback,tsteps):
-    # for seq_int,tstep in itertools.product(range(4),np.arange(5,tsteps)): # This generates all length sequences
-    for seq_int,tstep in itertools.product(range(4),[tsteps]): # This generates only longest seq (45)
-        stim_set = generate_trial(nback,tstep,stype=seq_int)
-        # return stim_sequence.append(generate_trial(nback,tstep,stype=seq_int))
-
