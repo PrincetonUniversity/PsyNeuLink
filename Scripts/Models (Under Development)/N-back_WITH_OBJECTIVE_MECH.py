@@ -20,6 +20,7 @@ import numpy as np
 
 # FROM nback-paper:
 # SDIM = 20
+# CDIM = 25
 # indim = 2 * (CDIM + SDIM)
 # hiddim = SDIM * 4
 # CONTEXT_DRIFT_RATE=.25
@@ -29,12 +30,12 @@ import numpy as np
 # HAZARD_RATE=0.04
 
 # TEST:
-NUM_TASKS=3
-STIM_SIZE=1
+NUM_TASKS=2
+STIM_SIZE=20
 CONTEXT_SIZE=25
 HIDDEN_SIZE=STIM_SIZE*4
 CONTEXT_DRIFT_RATE=.1
-CONTEXT_DRIFT_NOISE=.00000000001
+CONTEXT_DRIFT_NOISE=0.0
 STIM_WEIGHT=.05
 SOFT_MAX_TEMP=1/8 # express as gain
 HAZARD_RATE=0.04
@@ -54,6 +55,12 @@ input_retrieved_context = TransferMechanism(size=STIM_SIZE, function=Linear, nam
 input_task = TransferMechanism(size=NUM_TASKS, function=Linear, name="CURRENT TASK") # function=Logistic)
 hidden = TransferMechanism(size=HIDDEN_SIZE, function=Logistic, name="HIDDEN LAYER")
 decision = ProcessingMechanism(size=2, name="DECISION LAYER")
+# TODO: THIS NEEDS TO BE REPLACED BY (OR AT LEAST TRAINED AS) AutodiffComposition
+#       TRAINING:
+#       - 50% matches and 50% non-matches
+#       - all possible stimuli
+#       - 2back and 3back
+#       - contexts of various distances
 ffn = Composition([{input_current_stim,
                     input_current_context,
                     input_retrieved_stim,
@@ -61,6 +68,7 @@ ffn = Composition([{input_current_stim,
                     input_task},
                    hidden, decision],
                   name="WORKING MEMORY (fnn)")
+# ffn.learn()
 
 # FULL MODEL (Outer Composition, including input, EM and control Mechanisms) -----------------------------------------
 
@@ -104,12 +112,19 @@ em = EpisodicMemoryMechanism(name='EPISODIC MEMORY (dict)',
 #        - continue trial
 control = ControlMechanism(name="READ/WRITE CONTROLLER",
                            default_variable=[[1]],  # Ensure EM[store_prob]=1 at beginning of first trial
+                           # # VERSION *WITH* ObjectiveMechanism:
                            objective_mechanism=ObjectiveMechanism(name="OBJECTIVE MECHANISM",
                                                                   monitor=decision,
                                                                   # Outcome=1 if match, else 0
                                                                   function=lambda x: int(x[0][1]>x[0][0])),
                            # Set ControlSignal for EM[store_prob]
                            function=lambda outcome: int(bool(outcome) or (np.random.random() > HAZARD_RATE)),
+                           # # VERSION *WITHOUT* ObjectiveMechanism:
+                           # monitor_for_control=decision,
+                           # # Set Evaluate outcome and set ControlSignal for EM[store_prob]
+                           # #   - outcome is received from decision as one hot in the form: [[match, no-match]]
+                           # function=lambda outcome: int(int(outcome[0][1]>outcome[0][0])
+                           #                              or (np.random.random() > HAZARD_RATE)),
                            control=(STORAGE_PROB, em))
 
 comp = Composition(nodes=[stim, context, task, em, ffn, control], name="N-Back Model")
@@ -120,7 +135,6 @@ comp.add_projection(MappingProjection(), em.output_ports["RETRIEVED_STIMULUS_FIE
 comp.add_projection(MappingProjection(), em.output_ports["RETRIEVED_CONTEXT_FIELD"], input_retrieved_context)
 comp.add_projection(MappingProjection(), stim, em.input_ports["STIMULUS_FIELD"])
 comp.add_projection(MappingProjection(), context, em.input_ports["CONTEXT_FIELD"])
-# comp.add_projection(MappingProjection(), decision, control)
 
 if DISPLAY:
     comp.show_graph(
@@ -137,9 +151,10 @@ if DISPLAY:
 # Test:
 NUM_TRIALS=20
 
-input_dict = {stim: np.array(list(range(NUM_TRIALS))).reshape(NUM_TRIALS,1)+1,
+# TODO: This needs to be replaced with stimulus sequences generated using generate_trial() below
+input_dict = {stim:[[0]*STIM_SIZE]*NUM_TRIALS,
               context:[[CONTEXT_DRIFT_RATE]]*NUM_TRIALS,
-              task: np.array([[0,0,1]]*NUM_TRIALS)}
+              task: np.array([[0]*NUM_TASKS]*NUM_TRIALS)}
 
 comp.run(inputs=input_dict,
          # Terminate trial if value of control is still 1 after first pass through execution
@@ -262,6 +277,8 @@ def generate_trial(nback,tstep,stype=0):
     return stim
 
 def stim_set_generation(nback,tsteps):
-  for seq_int,tstep in itertools.product(range(4),np.arange(5,tsteps)):
-    stim_set = generate_trial(nback,tstep,stype=seq_int)
+    # for seq_int,tstep in itertools.product(range(4),np.arange(5,tsteps)): # This generates all length sequences
+    for seq_int,tstep in itertools.product(range(4),[tsteps]): # This generates only longest seq (45)
+        stim_set = generate_trial(nback,tstep,stype=seq_int)
+        # return stim_sequence.append(generate_trial(nback,tstep,stype=seq_int))
 
