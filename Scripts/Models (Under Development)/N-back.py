@@ -1,13 +1,12 @@
 """
 TODO:
+    - fix bug in input shape of control mech
     - from nback-paper:
-      - get ffn weights
+      - get ffn weights or train in PNL using Autodiff
       - import stimulus generation code
       - do input layers use logistic (as suggested in figure)?
     - retrain on full set of 1,2,3,4,5 back
     - validate against nback-paper results
-    - DriftOnASphereIntegrator:  fix for noise=0
-    - write test that compares DriftOnASphereIntegrator with spherical_drift code in nback-paper
 
 """
 
