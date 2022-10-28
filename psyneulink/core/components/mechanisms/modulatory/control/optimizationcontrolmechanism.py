@@ -3213,7 +3213,7 @@ class OptimizationControlMechanism(ControlMechanism):
     def _get_evaluate_output_struct_type(self, ctx, tags):
         if "evaluate_type_all_results" in tags:
             return ctx.get_output_struct_type(self.agent_rep)
-        assert "evaluate_type_objective" in tags
+        assert "evaluate_type_objective" in tags, "Unknown evaluate type: {}".format(tags)
         # Returns a scalar that is the predicted net_outcome
         return ctx.float_ty
 
@@ -3227,7 +3227,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 ctx.get_state_struct_type(self).as_pointer(),
                 self._get_evaluate_alloc_struct_type(ctx).as_pointer(),
                 ctx.float_ty.as_pointer(),
-                ctx.float_ty.as_pointer()]
+                self._get_evaluate_output_struct_type(ctx, tags=tags).as_pointer()]
 
         builder = ctx.create_llvm_function(args, self, str(self) + "_net_outcome")
         llvm_func = builder.function
@@ -3347,7 +3347,7 @@ class OptimizationControlMechanism(ControlMechanism):
         args = [ctx.get_param_struct_type(self.agent_rep).as_pointer(),
                 ctx.get_state_struct_type(self.agent_rep).as_pointer(),
                 self._get_evaluate_alloc_struct_type(ctx).as_pointer(),
-                self._get_evaluate_output_struct_type(ctx, tags).as_pointer(),
+                self._get_evaluate_output_struct_type(ctx, tags=tags).as_pointer(),
                 ctx.get_input_struct_type(self.agent_rep).as_pointer(),
                 ctx.get_data_struct_type(self.agent_rep).as_pointer()]
 
@@ -3461,11 +3461,11 @@ class OptimizationControlMechanism(ControlMechanism):
             # Extract objective mechanism value
             idx = self.agent_rep._get_node_index(self.objective_mechanism)
             # Mechanisms' results are stored in the first substructure
-            objective_os_ptr = builder.gep(comp_data, [ctx.int32_ty(0),
+            objective_op_ptr = builder.gep(comp_data, [ctx.int32_ty(0),
                                                        ctx.int32_ty(0),
                                                        ctx.int32_ty(idx)])
             # Objective mech output shape should be 1 single element 2d array
-            objective_val_ptr = builder.gep(objective_os_ptr,
+            objective_val_ptr = builder.gep(objective_op_ptr,
                                             [ctx.int32_ty(0), ctx.int32_ty(0),
                                              ctx.int32_ty(0)], "obj_val_ptr")
 

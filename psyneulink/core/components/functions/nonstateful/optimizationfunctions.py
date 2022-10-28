@@ -1717,7 +1717,7 @@ class GridSearch(OptimizationFunction):
         if ocm is not None:
             assert ocm.function is self
             sample_t = ocm._get_evaluate_alloc_struct_type(ctx)
-            value_t = ocm._get_evaluate_output_struct_type(ctx, tags)
+            value_t = ocm._get_evaluate_output_struct_type(ctx, tags=tags)
         else:
             obj_func = ctx.import_llvm_function(self.objective_function)
             sample_t = obj_func.args[2].type.pointee
@@ -1910,7 +1910,8 @@ class GridSearch(OptimizationFunction):
 
             # Check if smaller than current best.
             # the argument pointers are already offset, so use range <0,1)
-            select_min_f = ctx.import_llvm_function(self, tags=tags.union({"select_min"}))
+            min_tags = tags.union({"select_min", "evaluate_type_objective"})
+            select_min_f = ctx.import_llvm_function(self, tags=min_tags)
             b.call(select_min_f, [params, state_features, min_sample_ptr, sample_ptr,
                                   min_value_ptr, value_ptr, opt_count_ptr,
                                   ctx.int32_ty(0), ctx.int32_ty(1)])
@@ -2062,7 +2063,8 @@ class GridSearch(OptimizationFunction):
                 # Reduce array of values to min/max
                 # select_min params are:
                 # params, state, min_sample_ptr, sample_ptr, min_value_ptr, value_ptr, opt_count_ptr, count
-                bin_func = pnlvm.LLVMBinaryFunction.from_obj(self, tags=frozenset({"select_min"}))
+                min_tags = frozenset({"select_min", "evaluate_type_objective"})
+                bin_func = pnlvm.LLVMBinaryFunction.from_obj(self, tags=min_tags)
                 ct_param = bin_func.byref_arg_types[0](*self._get_param_initializer(context))
                 ct_state = bin_func.byref_arg_types[1](*self._get_state_initializer(context))
                 ct_opt_sample = bin_func.byref_arg_types[2](float("NaN"))

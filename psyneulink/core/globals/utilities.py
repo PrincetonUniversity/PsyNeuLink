@@ -780,7 +780,14 @@ def get_deepcopy_with_shared(shared_keys=frozenset(), shared_types=()):
         result = cls.__new__(cls)
         memo[id(self)] = result
 
-        for k, v in self.__dict__.items():
+        try:
+            # follow dependency order for Parameters to allow validation involving other parameters
+            ordered_dict_keys = sorted(self.__dict__, key=self._dependency_order_key(names=True))
+        except AttributeError:
+            ordered_dict_keys = self.__dict__
+
+        for k in ordered_dict_keys:
+            v = self.__dict__[k]
             if k in shared_keys or isinstance(v, shared_types):
                 res_val = v
             else:

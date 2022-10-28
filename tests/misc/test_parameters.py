@@ -633,3 +633,41 @@ class TestSpecificationType:
         assert TestParent.defaults.p == 0
         assert TestChild.defaults.p == 1
         assert TestGrandchild.defaults.p == 20
+
+
+def test_dependent_parameter_validate():
+    # using 3 parameters to reduce chance of random success
+    class NewF(pnl.Function_Base):
+        class Parameters(pnl.Function_Base.Parameters):
+            a = pnl.Parameter(1)
+            b = pnl.Parameter(2, dependencies='a')
+            c = pnl.Parameter(3, dependencies='b')
+            d = pnl.Parameter(4, dependencies='c')
+
+            def _validate_b(self, b):
+                if b != self.a.default_value + 1:
+                    return 'invalid'
+
+            def _validate_c(self, c):
+                if c != self.b.default_value + 1:
+                    return 'invalid'
+
+            def _validate_d(self, d):
+                if d != self.c.default_value + 1:
+                    return 'invalid'
+
+        def __init__(self, **kwargs):
+            return super().__init__(0, {}, **kwargs)
+
+        def _function(self, variable=None, context=None, params=None):
+            return 0
+
+    pnl.ProcessingMechanism(function=NewF(a=2, b=3, c=4, d=5))
+
+    with pytest.raises(pnl.ParameterError) as err:
+        # b should be first error to occur
+        pnl.ProcessingMechanism(function=NewF(b=3, c=5, d=7))
+    assert re.match(
+        r"Value \(3\) assigned to parameter 'b'.*is not valid: invalid",
+        str(err.value)
+    )
