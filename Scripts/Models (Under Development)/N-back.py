@@ -240,8 +240,7 @@ def get_input_sequence(trials):
 
 # ==============================================EXECUTION ===========================================================
 
-input_dict = {# stim:[[0]*STIM_SIZE]*NUM_TRIALS,
-              stim:get_input_sequence(NUM_TRIALS),
+input_dict = {stim:get_input_sequence(NUM_TRIALS),
               context:[[CONTEXT_DRIFT_RATE]]*NUM_TRIALS,
               task: np.array([[0]*NUM_TASKS]*NUM_TRIALS)}
 
