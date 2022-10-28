@@ -1,8 +1,4 @@
 """
-Note:
-    - due to a bug, this version is based on N-back_WITH_OBJECTIVE_MECHANISM in PNL Models (Under Development)
-    - once the bug is fixed, switch to simpler N-back (objective function is incorporated directly in ControlMechanism)
-
 TODO:
     - from nback-paper:
       - get ffn weights
