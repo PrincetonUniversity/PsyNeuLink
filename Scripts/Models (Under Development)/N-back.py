@@ -378,14 +378,14 @@ def get_training_inputs(network, num_epochs, nback_levels):
 def train_model():
     get_training_inputs(num_epochs=1, nback_levels=NBACK_LEVELS)
 
-def run_model(model, num_trials=NUM_TRIALS):
+def run_model(model, num_trials=NUM_TRIALS, reporting_options=REPORTING_OPTIONS):
     for nback_level in NBACK_LEVELS:
         model.run(inputs=get_run_inputs(model, nback_level, num_trials),
                   # FIX: MOVE THIS TO MODEL CONSTRUCTION ONCE THAT WORKS
                   # Terminate trial if value of control is still 1 after first pass through execution
                   termination_processing={TimeScale.TRIAL: And(Condition(lambda: model.nodes[CONTROLLER].value),
                                                                AfterPass(0, TimeScale.TRIAL))}, # function arg
-                  report_output=REPORTING_OPTIONS)
+                  report_output=reporting_options)
         # FIX: RESET MEMORY HERE?
     print("Number of entries in EM: ", len(model.nodes[EM].memory))
     assert len(model.nodes[EM].memory) == NUM_TRIALS*NUM_NBACK_LEVELS + 1
