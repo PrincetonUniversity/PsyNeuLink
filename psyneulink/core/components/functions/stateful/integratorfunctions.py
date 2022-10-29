@@ -2836,8 +2836,8 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         `dimension <DriftOnASphereIntegrator.dimension>`.
 
     angle_function : TransferFunction
-        determines the function used to compute angle (reproted as result) from coordinates on sphere specified by
-        coordinates in `previous_value <DriftOnASphereIntegrator.previous_value>` displace by `variable
+        determines the function used to compute angle (reported as result) from coordinates on sphere specified by
+        coordinates in `previous_value <DriftOnASphereIntegrator.previous_value>` displaced by `variable
         <DriftOnASphereIntegrator.variable>` and possibly `noise <DriftOnASphereIntegrator.noise>`.
 
     previous_time : float
@@ -2876,7 +2876,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
                 dimension
                     see `dimension <DriftOnASphereIntegrator.dimension>`
 
-                    :default value: 2
+                    :default value: 3
                     :type: ``int``
 
                 enable_output_type_conversion
@@ -2950,7 +2950,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         time_step_size = Parameter(1.0, modulable=True)
         previous_time = Parameter(0.0, initializer='starting_point', pnl_internal=True)
         dimension = Parameter(3, stateful=False, read_only=True)
-        initializer = Parameter([0], initalizer='variable', stateful=True)
+        initializer = Parameter([0], initalizer='variable', dependencies=dimension, stateful=True)
         angle_function = Parameter(None, stateful=False, loggable=False)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)

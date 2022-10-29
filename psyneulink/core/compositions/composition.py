@@ -6764,7 +6764,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if all(_is_node_spec(entry) for entry in current_entry):
                 receivers = _get_node_specs_for_entry(current_entry, NodeRole.INPUT, NodeRole.TARGET)
                 # The preceding entry is a Node or set of them:
-                #  - if it is a set, list or array, leave as is, else place in set for consistnecy of processin below
+                #  - if it is a set, list or array, leave as is, else place in set for consistency of processing below
                 preceding_entry = (pathway[c - 1] if isinstance(pathway[c - 1], (set, list, np.ndarray))
                                    else {pathway[c - 1]})
                 if all(_is_node_spec(sender) for sender in preceding_entry):
@@ -9583,12 +9583,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies fuction to call after each `TRIAL <TimeScale.TRIAL>` is executed.
 
         termination_processing : Condition  : default None
-            specifies
-            `termination Conditions <Scheduler_Termination_Conditions>`
-            to be used for the current `RUN <TimeScale.RUN>`. To change
-            these conditions for all future runs, use
-            `Composition.termination_processing` (or
-            `Scheduler.termination_conds`)
+            specifies `termination Conditions <Scheduler_Termination_Conditions>`
+            to be used for the current `RUN <TimeScale.RUN>`. To change these conditions for all future runs,
+            use `Composition.termination_processing` (or `Scheduler.termination_conds`)
 
         skip_analyze_graph : bool : default False
             setting to True suppresses call to _analyze_graph()
