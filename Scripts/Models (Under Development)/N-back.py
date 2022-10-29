@@ -334,7 +334,7 @@ for nback_level in NBACK_LEVELS:
 
     input_dict = {stim: get_input_sequence(nback_level, NUM_TRIALS),
                   context: [[CONTEXT_DRIFT_RATE]]*NUM_TRIALS,
-                  task: np.array([get_task_input(nback_level)]*NUM_TRIALS)}
+                  task: [get_task_input(nback_level)]*NUM_TRIALS}
     
     nback_model.run(inputs=input_dict,
                     # Terminate trial if value of control is still 1 after first pass through execution
