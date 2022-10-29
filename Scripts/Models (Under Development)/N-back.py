@@ -7,7 +7,7 @@ TODO:
       - do input layers use logistic (as suggested in figure)?
     - construct training set and train in ffn using Autodiff
     - validate against nback-paper results
-    - replace get_input_sequence and get_training_set with generators passed to nback_model.run() and ffn.learn
+    - replace get_input_sequence and get_training_inputs with generators passed to nback_model.run() and ffn.learn
     - make termination processing part of the Comopsition definition?
 
 """
@@ -21,8 +21,6 @@ DISPLAY = False # show visual of model
 # REPORTING_OPTIONS = ReportOutput.ON # Console output during run
 REPORTING_OPTIONS = ReportOutput.OFF
 
-
-# ======================================== MODEL CONSTRUCTION =========================================================
 
 # PARAMETERS -------------------------------------------------------------------------------------------------------
 
@@ -69,7 +67,7 @@ MODEL_TASK_INPUT = "TASK"
 EM = "EPISODIC MEMORY (dict)"
 CONTROLLER = "READ/WRITE CONTROLLER"
 
-# FEEDFORWARD NEURAL NETWORK COMPOSITION (WM)  --------------------------------------------------------------------
+# ======================================== MODEL CONSTRUCTION =========================================================
 
 def construct_model(stim_size = STIM_SIZE,
                     context_size = CONTEXT_SIZE,
@@ -83,6 +81,7 @@ def construct_model(stim_size = STIM_SIZE,
     """Construct nback_model"""
 
     # FEED FORWARD NETWORK -----------------------------------------
+
     #     inputs: encoding of current stimulus and context, retrieved stimulus and retrieved context,
     #     output: decIsion: match [1,0] or non-match [0,1]
     # Must be trained to detect match for specified task (1-back, 2-back, etc.)
@@ -106,9 +105,8 @@ def construct_model(stim_size = STIM_SIZE,
                         input_task},
                        hidden, decision],
                       name=FFN_COMPOSITION)
-    # ffn.learn()
 
-    # FULL MODEL (Outer Composition, including input, EM and control Mechanisms) -----------------------------------------
+    # FULL MODEL (Outer Composition, including input, EM and control Mechanisms) ------------------------
 
     # Stimulus Encoding: takes STIM_SIZE vector as input
     stim = TransferMechanism(name=MODEL_STIMULUS_INPUT, size=STIM_SIZE)
@@ -198,12 +196,18 @@ def construct_model(stim_size = STIM_SIZE,
 # ==========================================STIMULUS GENERATION =======================================================
 # Based on nback-paper
 
-def stim_set(num_stim=STIM_SIZE):
+def get_stim_set(num_stim=STIM_SIZE):
     """Construct an array of stimuli for use an experiment"""
     # For now, use one-hots
     return np.eye(num_stim)
 
-def get_inputs(model, nback_level, num_trials):
+def get_task_input(nback_level):
+    """Construct input to task Mechanism for a given nback_level, used by run_model() and train_model()"""
+    task_input = list(np.zeros_like(NBACK_LEVELS))
+    task_input[nback_level-NBACK_LEVELS[0]] = 1
+    return task_input
+
+def get_run_inputs(model, nback_level, num_trials):
     """Construct set of stimulus inputs for run_model()"""
 
     def generate_stim_sequence(nback_level, trial_num, stype=0, num_stim=NUM_STIM, num_trials=NUM_TRIALS):
@@ -285,7 +289,7 @@ def get_inputs(model, nback_level, num_trials):
 
     def get_input_sequence(nback_level, num_trials=NUM_TRIALS):
         """Get sequence of inputs for a run"""
-        input_set = stim_set()
+        input_set = get_stim_set()
         # Construct sequence of stimulus indices
         trial_seq = generate_stim_sequence(nback_level, num_trials)
         # Return list of corresponding stimulus input vectors
@@ -295,13 +299,7 @@ def get_inputs(model, nback_level, num_trials):
             model.nodes[MODEL_CONTEXT_INPUT]: [[CONTEXT_DRIFT_RATE]]*num_trials,
             model.nodes[MODEL_TASK_INPUT]: [get_task_input(nback_level)]*num_trials}
 
-def get_task_input(nback_level):
-    """Construct input to task Mechanism for a given nback_level, used by run_model() and train_model()"""
-    task_input = list(np.zeros_like(NBACK_LEVELS))
-    task_input[nback_level-NBACK_LEVELS[0]] = 1
-    return task_input
-
-def get_training_set(network, num_epochs, nback_levels):
+def get_training_inputs(network, num_epochs, nback_levels):
     """Construct set of training stimuli for ffn.learn(), used by train_model()
     Construct one example of each condition:
      match:  stim_current = stim_retrieved  and context_current = context_retrieved
@@ -310,7 +308,7 @@ def get_training_set(network, num_epochs, nback_levels):
      non_lure:  stim_current != stim_retrieved  and context_current != context_retrieved
     """
     assert is_iterable(nback_levels) and all([0<i<MAX_NBACK_LEVELS for i in nback_levels])
-    stimuli = stim_set()
+    stimuli = get_stim_set()
     context_fct =  DriftOnASphereIntegrator(initializer=np.random.random(CONTEXT_SIZE-1),
                                             noise=CONTEXT_DRIFT_NOISE,
                                             dimension=CONTEXT_SIZE)
@@ -375,14 +373,14 @@ def get_training_set(network, num_epochs, nback_levels):
                         }
     return training_set
 
-# ==============================================EXECUTION ===========================================================
+# ======================================== MODEL EXECUTION ============================================================
 
 def train_model():
-    get_training_set(num_epochs=1, nback_levels=NBACK_LEVELS)
+    get_training_inputs(num_epochs=1, nback_levels=NBACK_LEVELS)
 
 def run_model(model, num_trials=NUM_TRIALS):
     for nback_level in NBACK_LEVELS:
-        model.run(inputs=get_inputs(model, nback_level, num_trials),
+        model.run(inputs=get_run_inputs(model, nback_level, num_trials),
                   # FIX: MOVE THIS TO MODEL CONSTRUCTION ONCE THAT WORKS
                   # Terminate trial if value of control is still 1 after first pass through execution
                   termination_processing={TimeScale.TRIAL: And(Condition(lambda: model.nodes[CONTROLLER].value),
