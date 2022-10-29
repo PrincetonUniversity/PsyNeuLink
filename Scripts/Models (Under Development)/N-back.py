@@ -1,4 +1,9 @@
 """
+This implements a model of the `N-back task <https://en.wikipedia.org/wiki/N-back#Neurobiology_of_n-back_task>_`
+described in `Beukers et al. <https://psyarxiv.com/jtw5p>`_.  The model uses a simple implementation of episodic
+memory (i.e., content-retrieval memory) to store previous stimuli and the temporal context in which they occured,
+and a feedforward neural network to evaluate whether the current stimulus is a match to the n'th preceding stimulus.
+
 TODO:
     - get rid of objective_mechanism (see "VERSION *WITHOUT* ObjectiveMechanism" under control(...)
     - from nback-paper:

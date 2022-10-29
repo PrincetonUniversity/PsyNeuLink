@@ -266,7 +266,7 @@ def test_DriftOnASphere_identicalness_against_reference_implementation():
     """Compare against reference implementation in nback-paper model (https://github.com/andrebeu/nback-paper)."""
 
     # PNL DriftOnASphere
-    DoS = Functions.DriftOnASphereIntegrator(dimension=5, initializer=np.array([.2]*(4)), noise=0.0)
+    DoS = Functions.DriftOnASphereIntegrator(dimension=5, initializer=np.array([.2] * (4)), noise=0.0)
     results_dos = []
     for i in range(3):
         results_dos.append(DoS(.1))
@@ -285,7 +285,7 @@ def test_DriftOnASphere_identicalness_against_reference_implementation():
             ct[dim - 1] = prod
             return ct
         # initialize the spherical coordinates to ensure each context run begins in a new random location on the unit sphere
-        ros = np.array([.2]*(dim-1))
+        ros = np.array([.2] *(dim - 1))
         slen = n_steps
         ctxt = np.zeros((slen, dim))
         for i in range(slen):
