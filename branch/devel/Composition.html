@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.12.1.0+40.g912968095 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.12.1.0+41.gdfdee1f0f documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.12.1.0+40
+                  0.12.1.0+41
                 </div>
               
             
@@ -4559,12 +4559,9 @@ additional informaton).</p></li>
 <li><p><strong>call_after_pass</strong> (<em>callable  : default None</em>) – specifies fuction to call after each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">PASS</span></code></a> is executed.</p></li>
 <li><p><strong>call_before_trial</strong> (<em>callable  : default None</em>) – specifies fuction to call before each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> is executed.</p></li>
 <li><p><strong>call_after_trial</strong> (<em>callable  : default None</em>) – specifies fuction to call after each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> is executed.</p></li>
-<li><p><strong>termination_processing</strong> (<em>Condition  : default None</em>) – specifies
-<a class="reference internal" href="Scheduler.html#scheduler-termination-conditions"><span class="std std-ref">termination Conditions</span></a>
-to be used for the current <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>. To change
-these conditions for all future runs, use
-<code class="xref any docutils literal notranslate"><span class="pre">Composition.termination_processing</span></code> (or
-<a class="reference internal" href="Scheduler.html#psyneulink.core.scheduling.scheduler.Scheduler.termination_conds" title="psyneulink.core.scheduling.scheduler.Scheduler.termination_conds"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">Scheduler.termination_conds</span></code></a>)</p></li>
+<li><p><strong>termination_processing</strong> (<em>Condition  : default None</em>) – specifies <a class="reference internal" href="Scheduler.html#scheduler-termination-conditions"><span class="std std-ref">termination Conditions</span></a>
+to be used for the current <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>. To change these conditions for all future runs,
+use <code class="xref any docutils literal notranslate"><span class="pre">Composition.termination_processing</span></code> (or <a class="reference internal" href="Scheduler.html#psyneulink.core.scheduling.scheduler.Scheduler.termination_conds" title="psyneulink.core.scheduling.scheduler.Scheduler.termination_conds"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">Scheduler.termination_conds</span></code></a>)</p></li>
 <li><p><strong>skip_analyze_graph</strong> (<em>bool : default False</em>) – setting to True suppresses call to _analyze_graph()</p></li>
 <li><p><strong>report_output</strong> (<em>ReportOutput : default ReportOutput.OFF</em>) – specifies whether to show output of the Composition and its <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Nodes</span></a> trial-by-trial as
 it is generated; see <a class="reference internal" href="Report.html#report-output"><span class="std std-ref">Output Reporting</span></a> for additional details and <a class="reference internal" href="Report.html#psyneulink.core.compositions.report.ReportOutput" title="psyneulink.core.compositions.report.ReportOutput"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ReportOutput</span></code></a> for options.</p></li>
