@@ -13,10 +13,14 @@ retrieved from episodic memory.
 
 .. _nback_Fig:
 
-.. figure:: _static/N-Back-Model_fig.svg
-   :figwidth: 45 %
+.. .. figure:: _static/N-Back-Model_fig.svg
+    :align: left
+    :alt: N-Back Model Figure
+
+.. figure:: _static/N-Back_Model_movie.gif
    :align: left
-   :alt: N-Back Model
+   :alt: N-Back Model Animation
+
 
 The Model
 ---------
