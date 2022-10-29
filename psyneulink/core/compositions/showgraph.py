@@ -107,6 +107,22 @@ Nodes
   - `CONTROLLER` : purple
   - `LEARNING` : orange
 
+.. _ShowGraph_Animation:
+
+*Animation*
+-----------
+
+An animation can be generated of the execution of a Composition by using the **animate** argument of the Composition's
+`run <Composition.run>` method.  The animation show a graphical display of the Composition, with each of its
+the Components highlighted in the sequence that they are executed.  The **animate** can be passed a dict containing
+any of the options described above to customize the display, as well as several others used to customize the animation
+(see **animate** argument under `run <Composition.run>`).
+
+  .. note::
+     At present, animation of the Components within a `nested Composition <Composition_Nested>` is not supported;
+     the box surrounding the nested Composition is highlighted when it is executed, followed by the next Component(s)
+     to execute.
+
 .. _ShowGraph_Examples_Visualization:
 
 *Examples*
