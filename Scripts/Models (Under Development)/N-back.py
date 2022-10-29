@@ -39,7 +39,8 @@ REPORTING_OPTIONS = ReportOutput.OFF
 # TEST:
 MAX_NBACK_LEVELS = 5
 NBACK_LEVELS = [2,3]
-NUM_TASKS=2 # number of different variants of n-back tasks (set sizes)
+NUM_NBACK_LEVELS = len(NBACK_LEVELS)
+# NUM_TASKS=2 # number of different variants of n-back tasks (set sizes)
 NUM_STIM = 8 # number of different stimuli in stimulus set -  QUESTION: WHY ISN"T THIS EQUAL TO STIM_SIZE OR VICE VERSA?
 NUM_TRIALS = 48 # number of stimuli presented in a sequence
 STIM_SIZE=20 # length of stimulus vector
@@ -62,7 +63,7 @@ input_current_stim = TransferMechanism(size=STIM_SIZE, function=Linear, name="CU
 input_current_context = TransferMechanism(size=STIM_SIZE, function=Linear, name="CURRENT CONTEXT") # function=Logistic)
 input_retrieved_stim = TransferMechanism(size=STIM_SIZE, function=Linear, name="RETRIEVED STIMULUS") # function=Logistic)
 input_retrieved_context = TransferMechanism(size=STIM_SIZE, function=Linear, name="RETRIEVED CONTEXT")  # function=Logistic)
-input_task = TransferMechanism(size=NUM_TASKS, function=Linear, name="CURRENT TASK") # function=Logistic)
+input_task = TransferMechanism(size=NUM_NBACK_LEVELS, function=Linear, name="CURRENT TASK") # function=Logistic)
 hidden = TransferMechanism(size=HIDDEN_SIZE, function=Logistic, name="HIDDEN LAYER")
 decision = ProcessingMechanism(size=2, name="DECISION LAYER")
 # TODO: THIS NEEDS TO BE REPLACED BY (OR AT LEAST TRAINED AS) AutodiffComposition
@@ -93,7 +94,7 @@ context = ProcessingMechanism(name='CONTEXT',
                                   dimension=CONTEXT_SIZE))
 
 # Task: task one-hot indicating n-back (1, 2, 3 etc.) - must correspond to what ffn has been trained to do
-task = ProcessingMechanism(name="TASK", size=NUM_TASKS)
+task = ProcessingMechanism(name="TASK", size=NUM_NBACK_LEVELS)
 
 # Episodic Memory:
 #    - entries: stimulus (field[0]) and context (field[1]); randomly initialized
@@ -156,7 +157,7 @@ if DISPLAY:
 # ==========================================STIMULUS GENERATION =======================================================
 # Based on nback-paper
 
-def generate_stim_sequence(nback,trial, stype=0, num_stim=NUM_STIM, trials=NUM_TRIALS):
+def generate_stim_sequence(nback_level, trial_num, stype=0, num_stim=NUM_STIM, num_trials=NUM_TRIALS):
 
     def gen_subseq_stim():
         A = np.random.randint(0,num_stim)
@@ -171,79 +172,85 @@ def generate_stim_sequence(nback,trial, stype=0, num_stim=NUM_STIM, trials=NUM_T
             )
         return A,B,C,X
 
-    def genseqCT(nback,trial):
+    def genseqCT(nback_level,trial_num):
+        assert nback_level in {2,3}
         # ABXA / AXA
-        seq = np.random.randint(0,num_stim,trials)
+        seq = np.random.randint(0,num_stim,num_trials)
         A,B,C,X = gen_subseq_stim()
         #
-        if nback==3:
+        if nback_level==3:
             subseq = [A,B,X,A]
-        elif nback==2:
+        elif nback_level==2:
             subseq = [A,X,A]
-        seq[trial-(nback+1):trial] = subseq
-        return seq[:trial]
+        seq[trial_num-(nback_level+1):trial_num] = subseq
+        return seq[:trial_num]
 
-    def genseqCF(nback,trial):
+    def genseqCF(nback_level,trial_num):
         # ABXC
-        seq = np.random.randint(0,num_stim,trials)
+        seq = np.random.randint(0,num_stim,num_trials)
         A,B,C,X = gen_subseq_stim()
         #
-        if nback==3:
+        if nback_level==3:
             subseq = [A,B,X,C]
-        elif nback==2:
+        elif nback_level==2:
             subseq = [A,X,B]
-        seq[trial-(nback+1):trial] = subseq
-        return seq[:trial]
+        seq[trial_num-(nback_level+1):trial_num] = subseq
+        return seq[:trial_num]
 
-    def genseqLT(nback,trial):
+    def genseqLT(nback_level,trial_num):
         # AAXA
-        seq = np.random.randint(0,num_stim,trials)
+        seq = np.random.randint(0,num_stim,num_trials)
         A,B,C,X = gen_subseq_stim()
         #
-        if nback==3:
+        if nback_level==3:
             subseq = [A,A,X,A]
-        elif nback==2:
+        elif nback_level==2:
             subseq = [A,A,A]
-        seq[trial-(nback+1):trial] = subseq
-        return seq[:trial]
+        seq[trial_num-(nback_level+1):trial_num] = subseq
+        return seq[:trial_num]
 
-    def genseqLF(nback,trial):
+    def genseqLF(nback_level,trial_num):
         # ABXB
-        seq = np.random.randint(0,num_stim,trials)
+        seq = np.random.randint(0,num_stim,num_trials)
         A,B,C,X = gen_subseq_stim()
         #
-        if nback==3:
+        if nback_level==3:
             subseq = [A,B,X,B]
-        elif nback==2:
+        elif nback_level==2:
             subseq = [X,A,A]
-        seq[trial-(nback+1):trial] = subseq
-        return seq[:trial]
+        seq[trial_num-(nback_level+1):trial_num] = subseq
+        return seq[:trial_num]
 
     genseqL = [genseqCT,genseqLT,genseqCF,genseqLF]
-    stim_seq = genseqL[stype](nback,trial)
+    stim_seq = genseqL[stype](nback_level,trial_num)
     # ytarget = [1,1,0,0][stype]
-    # ctxt = spherical_drift(trial)
+    # ctxt = spherical_drift(trial_num)
     # return stim,ctxt,ytarget
     return stim_seq
 
-def stim_set_generation(nback,trials):
-    # for seq_int,trial in itertools.product(range(4),np.arange(5,trials)): # This generates all length sequences
+def stim_set_generation(nback_level, num_trials):
     stim_sequence = []
-    for seq_int,trial in itertools.product(range(4),[trials]): # This generates only longest seq (45)
-        return stim_sequence.append(generate_stim_sequence(nback,trial,stype=seq_int,trials=trials))
+    # for seq_int, trial in itertools.product(range(4),np.arange(5,trials)): # This generates all length sequences
+    for seq_int, trial_num in itertools.product(range(4),[num_trials]):  # This generates only longest seq (num_trials)
+        return stim_sequence.append(generate_stim_sequence(nback_level, trial_num, stype=seq_int, trials=num_trials))
 
-def stim_set():
+def stim_set(num_stim=STIM_SIZE):
     """Construct an array of stimuli for use an experiment"""
     # For now, use one-hots
-    return np.eye(STIM_SIZE)
+    return np.eye(num_stim)
 
-def get_input_sequence(trials):
+def get_input_sequence(nback_level, num_trials=NUM_TRIALS):
     """Get sequence of inputs for a run"""
     input_set = stim_set()
     # Construct sequence of stimulus indices
-    trial_seq = generate_stim_sequence(2,trials)
+    trial_seq = generate_stim_sequence(nback_level, num_trials)
     # Return list of corresponding stimulus input vectors
-    return [input_set[trial_seq[i]] for i in range(trials)]
+    return [input_set[trial_seq[i]] for i in range(num_trials)]
+
+def get_task_input(nback_level):
+    task_input = list(np.zeros_like(NBACK_LEVELS))
+    task_input[nback_level-NBACK_LEVELS[0]] = 1
+    return task_input
 
 def get_training_set(num_epochs, nback_levels):
     """Construct set of training stimuli for ffn
@@ -272,8 +279,9 @@ def get_training_set(num_epochs, nback_levels):
     for i in range(num_epochs):
         for nback_level in nback_levels:
             # Construct one hot encoding for nback level
-            task_input = list(np.zeros(num_nback_levels))
-            task_input[nback_level-nback_levels[0]] = 1
+            # task_input = list(np.zeros(num_nback_levels))
+            # task_input[nback_level-nback_levels[0]] = 1
+            task_input = get_task_input(nback_level)
             for i in range(len(stimuli)):
                 # Get current stimulus and distractor
                 stims = list(stimuli.copy())
@@ -320,18 +328,22 @@ def get_training_set(num_epochs, nback_levels):
 
 # ==============================================EXECUTION ===========================================================
 
-get_training_set(1,NBACK_LEVELS)
+get_training_set(num_epochs=1, nback_levels=NBACK_LEVELS)
 
-input_dict = {stim:get_input_sequence(NUM_TRIALS),
-              context:[[CONTEXT_DRIFT_RATE]]*NUM_TRIALS,
-              task: np.array([[0]*NUM_TASKS]*NUM_TRIALS)}
+for nback_level in NBACK_LEVELS:
 
-nback_model.run(inputs=input_dict,
-                # Terminate trial if value of control is still 1 after first pass through execution
-                termination_processing={TimeScale.TRIAL: And(Condition(lambda: control.value),
-                                                             AfterPass(0, TimeScale.TRIAL))}, # function arg
-                report_output=REPORTING_OPTIONS)
-assert len(em.memory) == NUM_TRIALS + 1
+    input_dict = {stim: get_input_sequence(nback_level, NUM_TRIALS),
+                  context: [[CONTEXT_DRIFT_RATE]]*NUM_TRIALS,
+                  task: np.array([get_task_input(nback_level)]*NUM_TRIALS)}
+    
+    nback_model.run(inputs=input_dict,
+                    # Terminate trial if value of control is still 1 after first pass through execution
+                    termination_processing={TimeScale.TRIAL: And(Condition(lambda: control.value),
+                                                                 AfterPass(0, TimeScale.TRIAL))}, # function arg
+                    report_output=REPORTING_OPTIONS)
+    # FIX: RESET MEMORY HERE?
+
+assert len(em.memory) == NUM_TRIALS*NUM_NBACK_LEVELS + 1
 
 
 # ===========================================================================
