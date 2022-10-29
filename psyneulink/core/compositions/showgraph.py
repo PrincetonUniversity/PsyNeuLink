@@ -828,7 +828,8 @@ class ShowGraph():
                                                show_dimensions,
                                                show_projection_labels,
                                                show_projections_not_in_composition,
-                                               nested_args)
+                                               nested_args,
+                                               context)
 
         # Add cim Components to graph if show_cim
         if show_cim:
@@ -907,7 +908,8 @@ class ShowGraph():
                                       show_dimensions,
                                       show_projection_labels,
                                       show_projections_not_in_composition,
-                                      nested_args):
+                                      nested_args,
+                                      context):
         """Assign nodes to graph"""
 
         from psyneulink.core.compositions.composition import Composition, NodeRole
@@ -922,23 +924,41 @@ class ShowGraph():
                                     COMP_HIERARCHY:comp_hierarchy,
                                     # 'composition': rcvr,
                                     ENCLOSING_COMP:composition,
-                                    NESTING_LEVEL:nesting_level + 1})
+                                    NESTING_LEVEL:nesting_level + 1,
+                                    })
                 # Get subgraph for nested Composition
+                # # MODIFIED 10/29/22 NEW: FIX: HACK SO NESTED COMPOSITIONS DON'T CRASH ANIMATION (BUT NOT SHOWN)
+                rcvr._animate = composition._animate
+                rcvr._set_up_animation(context)
+                rcvr._animate_num_trials = composition._animate_num_trials + 1
+                # MODIFIED 10/29/22 END
                 nested_comp_graph = rcvr._show_graph.show_graph(**nested_args)
 
                 nested_comp_graph.name = "cluster_" + rcvr.name
                 rcvr_label = rcvr.name
+
+                # Assign color to nested_comp, including highlighting if it is the active_item
                 # if rcvr in composition.get_nodes_by_role(NodeRole.FEEDBACK_SENDER):
                 #     nested_comp_graph.attr(color=feedback_color)
                 if rcvr in composition.get_nodes_by_role(NodeRole.INPUT) and \
                         rcvr in composition.get_nodes_by_role(NodeRole.OUTPUT):
-                    nested_comp_graph.attr(color=self.input_and_output_color)
+                    nested_comp_graph_color = self.input_and_output_color
                 elif rcvr in composition.get_nodes_by_role(NodeRole.INPUT):
-                    nested_comp_graph.attr(color=self.input_color)
+                    nested_comp_graph_color = self.input_color
                 elif rcvr in composition.get_nodes_by_role(NodeRole.PROBE):
-                    nested_comp_graph.attr(color=self.probe_color)
+                    nested_comp_graph_color = self.probe_color
                 elif rcvr in composition.get_nodes_by_role(NodeRole.OUTPUT):
-                    nested_comp_graph.attr(color=self.output_color)
+                    nested_comp_graph_color = self.output_color
+                else:
+                    nested_comp_graph_color = self.output_color
+                nested_comp_graph_penwidth = str(self.default_width)
+                if rcvr in active_items:
+                    if self.active_color != BOLD:
+                        nested_comp_graph_color = self.active_color
+                    nested_comp_graph_penwidth = str(self.default_width + self.active_thicker_by)
+                    composition.active_item_rendered = True
+                nested_comp_graph.attr(color=nested_comp_graph_color,
+                                       penwidth=nested_comp_graph_penwidth)
                 nested_comp_graph.attr(label=rcvr_label)
                 g.subgraph(nested_comp_graph)
 
@@ -2722,6 +2742,16 @@ class ShowGraph():
             if not isinstance(composition._show_animation, bool):
                 raise ShowGraphError(f"{repr(SHOW)} entry of {repr('animate')} argument for {repr('run')} "
                                        f"method of {composition.name} ({composition._show_animation}) must be a boolean.")
+
+            # # MODIFIED 10/29/22 NEW:
+            # # Recursively set up all nested Compositions for animation:
+            # from psyneulink.core.compositions.composition import Composition
+            # for node in composition.nodes:
+            #     if isinstance(node, Composition):
+            #         node._animate = composition._animate
+            #         node._set_up_animation(context)
+            # # MODIFIED 10/29/22 END
+
         elif composition._animate:
             # composition._animate should now be False or a dict
             raise ShowGraphError("{} argument for {} method of {} ({}) must be a boolean or "
@@ -2737,10 +2767,10 @@ class ShowGraph():
         else:
             composition._component_animation_execution_count += 1
         composition.show_graph(active_items=active_items,
-                        **composition._animate,
-                        output_fmt='gif',
-                        context=context,
-                        )
+                               **composition._animate,
+                               output_fmt='gif',
+                               context=context,
+                               )
 
     def _generate_gifs(self, G, active_items, context):
 

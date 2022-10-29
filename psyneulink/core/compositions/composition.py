@@ -8649,9 +8649,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             buffer_animate_state = self._animate
 
         # Run Composition in "SIMULATION" context
-        # # MODIFIED 3/28/22 NEW:
-        # context.source = ContextFlags.COMPOSITION
-        # MODIFIED 3/28/22 END
         context.add_flag(ContextFlags.SIMULATION_MODE)
         context.remove_flag(ContextFlags.CONTROL)
 
@@ -9616,7 +9613,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             details and `ReportDevices` for options.
 
         animate : dict or bool : default False
-            specifies use of the `show_graph`show_graph <ShowGraph.show_graph>` method to generate
+            specifies use of the `show_graph <ShowGraph.show_graph>` method to generate
             a gif movie showing the sequence of Components executed in a run (see `example
             <BasicsAndPrimer_Stroop_Example_Animation_Figure>`). A dict can be specified containing
             options to pass to the `show_graph <ShowGraph.show_graph>` method; each key must be a legal
@@ -9648,7 +9645,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             * *MOVIE_NAME*: str (default=\\ `name <Composition.name>` + 'movie') -- specifies the name to be used
               for the movie file; it is automatically appended with '.gif'.
-
+_
             * *SAVE_IMAGES*: bool (default=\\ `False`\\ ) -- specifies whether to save each of the images used to
               construct the animation in separate gif files, in addition to the file containing the animation.
 
@@ -9660,7 +9657,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             `projection <Composition.projections>` in the Composition, if it is not already set.
 
             .. note::
-               as when setting the `log_condition <Parameter.log_condition>` directly, a value of `True` will
+               As when setting the `log_condition <Parameter.log_condition>` directly, a value of `True` will
                correspond to the `EXECUTION` `LogCondition <LogCondition.EXECUTION>`.
 
         scheduler : Scheduler : default None

@@ -1,8 +1,9 @@
 """
-This implements a model of the `N-back task <https://en.wikipedia.org/wiki/N-back#Neurobiology_of_n-back_task>_`
-described in `Beukers et al. <https://psyarxiv.com/jtw5p>`_.  The model uses a simple implementation of episodic
+This implements a model of the `N-back task <https://en.wikipedia.org/wiki/N-back#Neurobiology_of_n-back_task>`_
+described in `Beukers et al. (2022) <https://psyarxiv.com/jtw5p>`_.  The model uses a simple implementation of episodic
 memory (i.e., content-retrieval memory) to store previous stimuli and the temporal context in which they occured,
 and a feedforward neural network to evaluate whether the current stimulus is a match to the n'th preceding stimulus.
+See
 
 TODO:
     - get rid of objective_mechanism (see "VERSION *WITHOUT* ObjectiveMechanism" under control(...)
@@ -25,7 +26,6 @@ import itertools
 DISPLAY = False # show visual of model
 # REPORTING_OPTIONS = ReportOutput.ON # Console output during run
 REPORTING_OPTIONS = ReportOutput.OFF
-
 
 # PARAMETERS -------------------------------------------------------------------------------------------------------
 
@@ -57,7 +57,7 @@ CONTEXT_WEIGHT = 1-STIM_WEIGHT # weighting of context field in retrieval from em
 SOFT_MAX_TEMP=1/8 # express as gain # precision of retrieval process
 HAZARD_RATE=0.04 # rate of re=sampling of em following non-match determination in a pass through ffn
 
-# MECHANISM AND COMPOSITION NAMES:
+# NAMES of MECHANISM AND COMPOSITIONS:
 FFN_COMPOSITION = "WORKING MEMORY (fnn)"
 FFN_STIMULUS_INPUT = "CURRENT STIMULUS"
 FFN_CONTEXT_INPUT = "CURRENT CONTEXT"
@@ -390,7 +390,8 @@ def run_model(model, num_trials=NUM_TRIALS, reporting_options=REPORTING_OPTIONS)
                   # Terminate trial if value of control is still 1 after first pass through execution
                   termination_processing={TimeScale.TRIAL: And(Condition(lambda: model.nodes[CONTROLLER].value),
                                                                AfterPass(0, TimeScale.TRIAL))}, # function arg
-                  report_output=reporting_options)
+                  report_output=reporting_options,
+                  animate={UNIT:EXECUTION_SET})
         # FIX: RESET MEMORY HERE?
     print("Number of entries in EM: ", len(model.nodes[EM].memory))
     assert len(model.nodes[EM].memory) == NUM_TRIALS*NUM_NBACK_LEVELS + 1
