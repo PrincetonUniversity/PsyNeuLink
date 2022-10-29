@@ -301,7 +301,7 @@ def get_task_input(nback_level):
     task_input[nback_level-NBACK_LEVELS[0]] = 1
     return task_input
 
-def get_training_set(num_epochs, nback_levels):
+def get_training_set(network, num_epochs, nback_levels):
     """Construct set of training stimuli for ffn.learn(), used by train_model()
     Construct one example of each condition:
      match:  stim_current = stim_retrieved  and context_current = context_retrieved
@@ -366,12 +366,12 @@ def get_training_set(num_epochs, nback_levels):
                         target.append([0,1])
                     current_task.append([task_input])
 
-        training_set = {input_current_stim: stim_current,
-                        input_current_context: context_current,
-                        input_retrieved_stim: stim_retrieved,
-                        input_retrieved_context: context_retrieved,
-                        input_task: current_task,
-                        decision: target
+        training_set = {network.nodes[FFN_STIMULUS_INPUT]: stim_current,
+                        network.nodes[FFN_CONTEXT_INPUT]: context_current,
+                        network.nodes[FFN_STIMULUS_RETRIEVED]: stim_retrieved,
+                        network.nodes[FFN_CONTEXT_RETRIEVED]: context_retrieved,
+                        network.nodes[FFN_TASK]: current_task,
+                        network.nodes[FFN_OUTPUT]: target
                         }
     return training_set
 
@@ -389,7 +389,6 @@ def run_model(model, num_trials=NUM_TRIALS):
                                                                AfterPass(0, TimeScale.TRIAL))}, # function arg
                   report_output=REPORTING_OPTIONS)
         # FIX: RESET MEMORY HERE?
-
     print("Number of entries in EM: ", len(model.nodes[EM].memory))
     assert len(model.nodes[EM].memory) == NUM_TRIALS*NUM_NBACK_LEVELS + 1
 
