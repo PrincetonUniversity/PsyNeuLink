@@ -2759,15 +2759,6 @@ class ShowGraph():
                 raise ShowGraphError(f"{repr(SHOW)} entry of {repr('animate')} argument for {repr('run')} "
                                        f"method of {composition.name} ({composition._show_animation}) must be a boolean.")
 
-            # # MODIFIED 10/29/22 NEW:
-            # # Recursively set up all nested Compositions for animation:
-            # from psyneulink.core.compositions.composition import Composition
-            # for node in composition.nodes:
-            #     if isinstance(node, Composition):
-            #         node._animate = composition._animate
-            #         node._set_up_animation(context)
-            # # MODIFIED 10/29/22 END
-
         elif composition._animate:
             # composition._animate should now be False or a dict
             raise ShowGraphError("{} argument for {} method of {} ({}) must be a boolean or "
