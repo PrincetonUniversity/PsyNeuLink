@@ -359,7 +359,11 @@ def is_matrix(m):
         try:
             return is_matrix(m())
         except:
-            return False
+            try:
+                # random_matrix and RandomMatrix are allowable functions, but require num_rows and num_cols parameters
+                return is_matrix(1,2)
+            except:
+                return False
     return False
 
 

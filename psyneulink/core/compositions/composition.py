@@ -6560,18 +6560,42 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 return pway_type, pway, None
             elif isinstance(pway, tuple):
                 # FIX: ADD SUPPORT FOR 3-ITEM TUPLE AND SPECIFCATION OF DEFAULT MATRIX HERE 10/29/22
-                pway_type = LEARNING_PATHWAY
-                if len(pway)!=2:
+                # # MODIFIED 10/29/22 OLD:
+                # pway_type = LEARNING_PATHWAY
+                # if len(pway)!=2:
+                #     raise CompositionError(f"A tuple specified in the {pathways_arg_str}"
+                #                            f" has more than two items: {pway}")
+                # pway, learning_function = pway
+                # if not (_is_node_spec(pway) or isinstance(pway, (list, Pathway))):
+                #     raise CompositionError(f"The 1st item in {tuple_or_dict_str} specified in the "
+                #                            f" {pathways_arg_str} must be a node or a list: {pway}")
+                # if not (isinstance(learning_function, type) and issubclass(learning_function, LearningFunction)):
+                #     raise CompositionError(f"The 2nd item in {tuple_or_dict_str} specified in the "
+                #                            f"{pathways_arg_str} must be a LearningFunction: {learning_function}")
+                # return pway_type, pway, learning_function
+                # MODIFIED 10/29/22 NEW:
+                if len(pway) not in {2,3}:
                     raise CompositionError(f"A tuple specified in the {pathways_arg_str}"
-                                           f" has more than two items: {pway}")
-                pway, learning_function = pway
+                                           f" must have either two or three items: {pway}")
+                pway, item1, item2 = pway
+                # Ensure that first item is a Pathway spec
                 if not (_is_node_spec(pway) or isinstance(pway, (list, Pathway))):
                     raise CompositionError(f"The 1st item in {tuple_or_dict_str} specified in the "
                                            f" {pathways_arg_str} must be a node or a list: {pway}")
-                if not (isinstance(learning_function, type) and issubclass(learning_function, LearningFunction)):
+                for item in [item1, item2]:
+                    if (isinstance(item, type) and issubclass(item, LearningFunction)):
+                        pway_type = LEARNING_PATHWAY
+                        learning_function = item
+                    elif is_matrix(item):
+                        pway_type = LEARNING_PATHWAY
+                        learning_function = item
+
                     raise CompositionError(f"The 2nd item in {tuple_or_dict_str} specified in the "
                                            f"{pathways_arg_str} must be a LearningFunction: {learning_function}")
+
+
                 return pway_type, pway, learning_function
+                # MODIFIED 10/29/22 END
             else:
                 assert False, f"PROGRAM ERROR: arg to identify_pway_type_and_parse_tuple_prn in {self.name}" \
                               f"is not a Node, list or tuple: {pway}"
