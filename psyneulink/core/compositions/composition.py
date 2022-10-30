@@ -10115,7 +10115,7 @@ _
                 specifies the number of training epochs (that is, repetitions of the batched input set) to run with
 
             minibatch_size : int (default=1)
-                specifies the size of the minibatches to use. The input trials will be batched and ran, after which
+                specifies the size of the minibatches to use. The input trials will be batched and run, after which
                 learning mechanisms with learning mode TRIAL will update weights
 
             randomize_minibatch: bool (default=False)

@@ -56,8 +56,10 @@ STIM_WEIGHT=.05 # weighting of stimulus field in retrieval from em
 CONTEXT_WEIGHT = 1-STIM_WEIGHT # weighting of context field in retrieval from em
 SOFT_MAX_TEMP=1/8 # express as gain # precision of retrieval process
 HAZARD_RATE=0.04 # rate of re=sampling of em following non-match determination in a pass through ffn
+NUM_EPOCHS=1000
 
 # NAMES of MECHANISM AND COMPOSITIONS:
+NBACK_MODEL = "N-Back Model"
 FFN_COMPOSITION = "WORKING MEMORY (fnn)"
 FFN_STIMULUS_INPUT = "CURRENT STIMULUS"
 FFN_CONTEXT_INPUT = "CURRENT CONTEXT"
@@ -91,25 +93,21 @@ def construct_model(stim_size = STIM_SIZE,
     #     output: decIsion: match [1,0] or non-match [0,1]
     # Must be trained to detect match for specified task (1-back, 2-back, etc.)
     input_current_stim = TransferMechanism(size=STIM_SIZE, function=Linear, name=FFN_STIMULUS_INPUT) # function=Logistic)
-    input_current_context = TransferMechanism(size=STIM_SIZE, function=Linear, name=FFN_CONTEXT_INPUT) # function=Logistic)
+    input_current_context = TransferMechanism(size=CONTEXT_SIZE, function=Linear, name=FFN_CONTEXT_INPUT) # function=Logistic)
     input_retrieved_stim = TransferMechanism(size=STIM_SIZE, function=Linear, name=FFN_STIMULUS_RETRIEVED) # function=Logistic)
-    input_retrieved_context = TransferMechanism(size=STIM_SIZE, function=Linear, name=FFN_CONTEXT_RETRIEVED)  # function=Logistic)
+    input_retrieved_context = TransferMechanism(size=CONTEXT_SIZE, function=Linear, name=FFN_CONTEXT_RETRIEVED)  # function=Logistic)
     input_task = TransferMechanism(size=NUM_NBACK_LEVELS, function=Linear, name=FFN_TASK) # function=Logistic)
     hidden = TransferMechanism(size=HIDDEN_SIZE, function=Logistic, name=FFN_HIDDEN)
     decision = ProcessingMechanism(size=2, name=FFN_OUTPUT)
     # TODO: THIS NEEDS TO BE REPLACED BY (OR AT LEAST TRAINED AS) AutodiffComposition
-    #       TRAINING:
-    #       - 50% matches and 50% non-matches
-    #       - all possible stimuli
-    #       - 2back and 3back
-    #       - contexts of various distances
-    ffn = Composition([{input_current_stim,
-                        input_current_context,
-                        input_retrieved_stim,
-                        input_retrieved_context,
-                        input_task},
-                       hidden, decision],
-                      name=FFN_COMPOSITION)
+    # ffn = Composition([{input_current_stim,
+    ffn = AutodiffComposition([{input_current_stim,
+                                input_current_context,
+                                input_retrieved_stim,
+                                input_retrieved_context,
+                                input_task},
+                               hidden, decision],
+                              name=FFN_COMPOSITION)
 
     # FULL MODEL (Outer Composition, including input, EM and control Mechanisms) ------------------------
 
@@ -173,7 +171,7 @@ def construct_model(stim_size = STIM_SIZE,
                               # # FIX: STOPS AFTER ~ NUMBER OF TRIALS (?90+); SHOULD BE: NUM_TRIALS*NUM_NBACK_LEVELS + 1
                               # termination_processing={TimeScale.TRIAL: And(Condition(lambda: control.value),
                               #                                              AfterPass(0, TimeScale.TRIAL))},
-                              name="N-Back Model")
+                              name=NBACK_MODEL)
     # # Terminate trial if value of control is still 1 after first pass through execution
     # # FIX: ALL OF THE FOLLOWING STOP AFTER ~ NUMBER OF TRIALS (?90+); SHOULD BE: NUM_TRIALS*NUM_NBACK_LEVELS + 1
     # nback_model.scheduler.add_condition(nback_model, And(Condition(lambda: control.value), AfterPass(0, TimeScale.TRIAL)))
@@ -207,7 +205,7 @@ def get_stim_set(num_stim=STIM_SIZE):
     return np.eye(num_stim)
 
 def get_task_input(nback_level):
-    """Construct input to task Mechanism for a given nback_level, used by run_model() and train_model()"""
+    """Construct input to task Mechanism for a given nback_level, used by run_model() and train_network()"""
     task_input = list(np.zeros_like(NBACK_LEVELS))
     task_input[nback_level-NBACK_LEVELS[0]] = 1
     return task_input
@@ -305,7 +303,7 @@ def get_run_inputs(model, nback_level, num_trials):
             model.nodes[MODEL_TASK_INPUT]: [get_task_input(nback_level)]*num_trials}
 
 def get_training_inputs(network, num_epochs, nback_levels):
-    """Construct set of training stimuli for ffn.learn(), used by train_model()
+    """Construct set of training stimuli used by ffn.learn() in train_network()
     Construct one example of each condition:
      match:  stim_current = stim_retrieved  and context_current = context_retrieved
      stim_lure:  stim_current = stim_retrieved  and context_current != context_retrieved
@@ -348,40 +346,48 @@ def get_training_inputs(network, num_epochs, nback_levels):
                     contexts.append(context_fct(CONTEXT_DRIFT_RATE))
                 # Get current context as one that is next to last from list (leaving last one as potential lure)
                 current_context = contexts.pop(num_nback_levels-1)
-                context_nback = contexts.pop(0)
-                context_distractor = contexts[np.random.randint(0,len(contexts))]
+                #
+                nback_context = contexts.pop(0)
+                distractor_context = contexts[np.random.randint(0,len(contexts))]
 
                 # Assign retrieved stimulus and context accordingly to trial_type
                 for trial_type in trial_types:
                     stim_current.append(current_stim)
                     context_current.append(current_context)
+                    # Assign retrieved stimulus
                     if trial_type in {'match','stim_lure'}:
-                        stim_retrieved.append(stim_current)
-                    else:
+                        stim_retrieved.append(current_stim)
+                    else: # context_lure or non_lure
                         stim_retrieved.append(distractor_stim)
+                    # Assign retrieved context
                     if trial_type in {'match','context_lure'}:
-                        context_retrieved.append(context_nback)
-                    else:
-                        context_retrieved.append(context_distractor)
+                        context_retrieved.append(nback_context)
+                    else: # stimulus_lure or non_lure
+                        context_retrieved.append(distractor_context)
+                    # Assign target
                     if trial_type == 'match':
                         target.append([1,0])
                     else:
                         target.append([0,1])
                     current_task.append([task_input])
 
-        training_set = {network.nodes[FFN_STIMULUS_INPUT]: stim_current,
-                        network.nodes[FFN_CONTEXT_INPUT]: context_current,
-                        network.nodes[FFN_STIMULUS_RETRIEVED]: stim_retrieved,
-                        network.nodes[FFN_CONTEXT_RETRIEVED]: context_retrieved,
-                        network.nodes[FFN_TASK]: current_task,
-                        network.nodes[FFN_OUTPUT]: target
-                        }
+    training_set = {INPUTS: {network.nodes[FFN_STIMULUS_INPUT]: stim_current,
+                             network.nodes[FFN_CONTEXT_INPUT]: context_current,
+                             network.nodes[FFN_STIMULUS_RETRIEVED]: stim_retrieved,
+                             network.nodes[FFN_CONTEXT_RETRIEVED]: context_retrieved,
+                             network.nodes[FFN_TASK]: current_task},
+                    TARGETS: {network.nodes[FFN_OUTPUT]:  target},
+                    EPOCHS: num_epochs}
+
     return training_set
 
 # ======================================== MODEL EXECUTION ============================================================
 
-def train_model():
-    get_training_inputs(num_epochs=1, nback_levels=NBACK_LEVELS)
+def train_network(network, num_epochs=NUM_EPOCHS):
+    training_set = get_training_inputs(network=network, num_epochs=num_epochs, nback_levels=NBACK_LEVELS)
+    network.learn(inputs=training_set,
+                  minibatch_size=NUM_TRIALS,
+                  execution_mode=ExecutionMode.LLVMRun)
 
 def run_model(model, num_trials=NUM_TRIALS, reporting_options=REPORTING_OPTIONS):
     for nback_level in NBACK_LEVELS:
@@ -396,8 +402,11 @@ def run_model(model, num_trials=NUM_TRIALS, reporting_options=REPORTING_OPTIONS)
     print("Number of entries in EM: ", len(model.nodes[EM].memory))
     assert len(model.nodes[EM].memory) == NUM_TRIALS*NUM_NBACK_LEVELS + 1
 
+
 nback_model = construct_model()
-run_model(nback_model)
+train_network(nback_model.nodes[FFN_COMPOSITION])
+assert True
+# run_model(nback_model)
 
 # ===========================================================================
 
