@@ -15,6 +15,8 @@ TODO:
     - validate against nback-paper results
     - replace get_input_sequence and get_training_inputs with generators passed to nback_model.run() and ffn.learn
     - make termination processing part of the Comopsition definition?
+    - assign small random initial weights to ffn
+    - fix warnings on run
 
 """
 
@@ -404,9 +406,9 @@ def run_model(model, num_trials=NUM_TRIALS, reporting_options=REPORTING_OPTIONS)
 
 
 nback_model = construct_model()
-train_network(nback_model.nodes[FFN_COMPOSITION])
+# train_network(nback_model.nodes[FFN_COMPOSITION])
 assert True
-# run_model(nback_model)
+run_model(nback_model)
 
 # ===========================================================================
 
