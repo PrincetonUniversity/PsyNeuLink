@@ -1035,11 +1035,10 @@ def get_value_from_array(array):
     :return:
     """
 
-def random_matrix(sender_size, receiver_size, offset=0.0, scale=1.0):
+def random_matrix(num_rows, num_cols, offset=0.0, scale=1.0):
     """Generate a random matrix
 
-    Calls np.random.rand to generate a 2d np.array with random values,
-    with number of rows = **sender_size** and number of columns = receiever_size:
+    Calls np.random.rand to generate a 2d np.array with random values and shape (num_rows, num_cols):
 
         :math:`matrix = (random[0.0:1.0] + offset) * scale
 
@@ -1050,17 +1049,17 @@ def random_matrix(sender_size, receiver_size, offset=0.0, scale=1.0):
 
     Arguments
     ----------
-    sender_size : int
+    num_rows : int
         specifies number of rows.
 
-    receiver_size : int
-        spcifies number of columns.
+    num_cols : int
+        specifies number of columns.
+
+    offset : float or 'zero_center'
+        specifies amount added to each entry of the matrix before it is scaled.
 
     scale : float
-        specifies upper limit (lower limit = 0).
-
-    offset : float
-        specifies amount added to each entry of the matrix.
+        specifies amount by which random value + **offset** is multiplicatively scaled.
 
     Returns
     -------
@@ -1071,7 +1070,7 @@ def random_matrix(sender_size, receiver_size, offset=0.0, scale=1.0):
             offset = -0.5
         else:
             raise UtilitiesError(f"'offset' arg of random_matrix must be a number of 'zero_center'")
-    return (np.random.rand(sender_size, receiver_size) + offset) * scale
+    return (np.random.rand(num_rows, num_cols) + offset) * scale
 
 def underscore_to_camelCase(item):
     item = item[1:]

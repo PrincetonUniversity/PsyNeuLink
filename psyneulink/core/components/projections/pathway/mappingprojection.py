@@ -98,10 +98,10 @@ following ways:
     <Keywords.MatrixKeywords>` can be used.
 
   ..
-  * **Random matrix function** (`random_matrix <Utilities.random_matrix>`) -- a convenience function
-    that provides more flexibility than `RANDOM_CONNECTIVITY_MATRIX`.  It generates a random matrix sized for a
-    **sender** and **receiver**, with random numbers drawn from a uniform distribution within a specified **range** and
-    with a specified **offset**.
+  * **RandomMatrix function** (`RandomMatrix <Projection.RandomMatrix>`) -- a convenience function
+    that provides more flexibility than `RANDOM_CONNECTIVITY_MATRIX`.  It generates a random matrix sized
+    appropriately for the **sender** and **receiver**, with random numbers drawn from a uniform distribution around a
+    specified **center** and with a specified **range**.
 
   .. _MappingProjection_Tuple_Specification:
 
@@ -286,6 +286,7 @@ Class Reference
 import copy
 
 import numpy as np
+from typing import Union
 
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.stateful.integratorfunctions import AccumulatorIntegrator
@@ -304,7 +305,7 @@ from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
 __all__ = [
-    'MappingError', 'MappingProjection',
+    'MappingError', 'MappingProjection'
 ]
 
 parameter_keywords.update({MAPPING_PROJECTION})

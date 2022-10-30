@@ -422,12 +422,13 @@ from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
 from psyneulink.core.globals.socket import ConnectionInfo
-from psyneulink.core.globals.utilities import ContentAddressableList, is_matrix, is_numeric, parse_valid_identifier
+from psyneulink.core.globals.utilities import \
+    ContentAddressableList, is_matrix, is_numeric, parse_valid_identifier, random_matrix
 
 __all__ = [
     'Projection_Base', 'projection_keywords', 'PROJECTION_SPEC_KEYWORDS',
     'ProjectionError', 'DuplicateProjectionError', 'ProjectionRegistry',
-    'kpProjectionTimeScaleLogEntry'
+    'kpProjectionTimeScaleLogEntry', 'RandomMatrix'
 ]
 
 ProjectionRegistry = {}
@@ -1159,6 +1160,41 @@ class Projection_Base(Projection):
                 **parameters,
                 **metadata
             )
+
+
+class RandomMatrix():
+    """Function that calls `random_matrix <Utilities.random_matrix>` with specified offset and scale parameters.
+    Generate a function that returns a matrix with random elements uniformly distributed across an interval,
+    specified by the **center** and **range** arguments of the constructor. Once constructed, a call to the class
+    calls `random_matrix <Utilities.random_matrix>` with **sender_size** and **receiver_size** passed to
+    `random_matrix <Utilities.random_matrix>` as its **num_rows** and **num_cols** arguments respectively,
+    along with the `center <RandomMatrix.offset>` and `range <RandomMatrix.scale>` attributes specified at
+    construction, passed to `random_matrix <Utilities.random_matrix>` as its **offset** (center-0.5) and **scale**
+    arguments, respectively.
+
+    Arguments
+    ----------
+    center : float
+        specifies the value around which the matrix elements are distributed.
+    range : float
+        specifies range of matrix elements' values.
+
+    Attributes
+    ----------
+    center : float
+        determines the center of the distribution of matrix element values;
+        passed to `random_matrix <Utilities.random_matrix>` as its **offset** parameter - 0.5
+    range : float
+        determines the range of the distribution of matrix element values;
+        passed to `random_matrix <Utilities.random_matrix>` as its **scale** parameter.
+    """
+
+    def __init__(self, center:float=0.0, range:float=1.0):
+        self.center=center
+        self.range=range
+
+    def __call__(self, sender_size:int, receiver_size:int):
+        return random_matrix(sender_size, receiver_size, offset=self.center-0.5, scale=self.range)
 
 
 @tc.typecheck

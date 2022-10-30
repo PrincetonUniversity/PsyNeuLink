@@ -1215,6 +1215,7 @@ def get_matrix(specification, rows=1, cols=1, context=None):
             + INVERSE_HOLLOW_MATRIX: 0's on diagonal, -1's elsewhere (must be square matrix), otherwise generates error
             + FULL_CONNECTIVITY_MATRIX: all 1's
             + RANDOM_CONNECTIVITY_MATRIX (random floats uniformly distributed between 0 and 1)
+            + RandomMatrix (random floats uniformly distributed around a specified center value with a specified range)
         + 2D list or np.ndarray of numbers
 
      Returns 2D array with length=rows in dim 0 and length=cols in dim 1, or none if specification is not recognized
