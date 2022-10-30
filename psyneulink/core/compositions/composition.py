@@ -6559,7 +6559,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     pway = [pway]
                 return pway_type, pway, None
             elif isinstance(pway, tuple):
-                # FIX: ADD SUPPORT FOR 3-ITEM TUPLE AND SPECIFCATION OF DEFAULT MATRIX HERE
+                # FIX: ADD SUPPORT FOR 3-ITEM TUPLE AND SPECIFCATION OF DEFAULT MATRIX HERE 10/29/22
                 pway_type = LEARNING_PATHWAY
                 if len(pway)!=2:
                     raise CompositionError(f"A tuple specified in the {pathways_arg_str}"

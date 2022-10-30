@@ -2950,14 +2950,14 @@ def _parse_port_spec(port_type=None,
     #    and validate that it is consistent with any standard_args specified in call to _instantiate_port
 
     # function; try to resolve to a value
-    if isinstance(port_specification, (types.FunctionType, RandomMatrix)):
-        # # MODIFIED 10/29/22 OLD:
-        # port_specification = port_specification()
-        # MODIFIED 10/29/22 NEW:
+    if isinstance(port_specification, types.FunctionType):
+        port_specification = port_specification()
+
+    # RandomMatrix (used for Projection); try to resolve to a matrix
+    if isinstance(port_specification, RandomMatrix):
         rows = len(owner.sender.value)
         cols = len(owner.receiver.value)
         port_specification = port_specification(rows,cols)
-        # MODIFIED 10/29/22 END
 
     # ModulatorySpecification of some kind
     if _is_modulatory_spec(port_specification):
