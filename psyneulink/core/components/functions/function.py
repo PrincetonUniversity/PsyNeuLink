@@ -166,7 +166,7 @@ from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, P
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import (
     convert_to_np_array, get_global_seed, is_instance_or_subclass, object_has_single_value, parameter_spec, parse_valid_identifier, safe_len,
-    SeededRandomState, contains_type, is_numeric
+    SeededRandomState, contains_type, is_numeric, RandomMatrix
 )
 
 __all__ = [
@@ -1223,9 +1223,6 @@ def get_matrix(specification, rows=1, cols=1, context=None):
 
     # Matrix provided (and validated in _validate_params); convert to array
     if isinstance(specification, (list, np.matrix)):
-        # # MODIFIED 4/9/22 OLD:
-        # return convert_to_np_array(specification)
-        # MODIFIED 4/9/22 NEW:
         if is_numeric(specification):
             return convert_to_np_array(specification)
         else:
@@ -1273,7 +1270,7 @@ def get_matrix(specification, rows=1, cols=1, context=None):
         return np.random.rand(rows, cols)
 
     # Function is specified, so assume it uses random.rand() and call with sender_len and receiver_len
-    if isinstance(specification, types.FunctionType):
+    if isinstance(specification, (types.FunctionType, RandomMatrix)):
         return specification(rows, cols)
 
     # (7/12/17 CW) this is a PATCH (like the one in MappingProjection) to allow users to

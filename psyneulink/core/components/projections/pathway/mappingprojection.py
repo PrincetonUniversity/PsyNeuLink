@@ -98,10 +98,10 @@ following ways:
     <Keywords.MatrixKeywords>` can be used.
 
   ..
-  * **RandomMatrix function** (`RandomMatrix <Projection.RandomMatrix>`) -- a convenience function
-    that provides more flexibility than `RANDOM_CONNECTIVITY_MATRIX`.  It generates a random matrix sized
-    appropriately for the **sender** and **receiver**, with random numbers drawn from a uniform distribution around a
-    specified **center** and with a specified **range**.
+  * **RandomMatrix function** (`RandomMatrix <Projection.RandomMatrix>`) -- a convenience class,
+    that provides more flexibility than `RANDOM_CONNECTIVITY_MATRIX`. It generates a function that returns a
+    random matrix sized appropriately for the **sender** and **receiver**, with random values drawn from a uniform
+    distribution with a specified **center** and **range**.
 
   .. _MappingProjection_Tuple_Specification:
 
