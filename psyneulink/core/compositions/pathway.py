@@ -115,20 +115,22 @@ The Node(s) specified in each entry of the list project to the Node(s) specified
 *Pathway Projection Specifications*
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Where no Projections are specified between entries in the list, default Projections (using a `FULL_CONNECTIVITY_MATRIX`;
-see `MappingProjection_Matrix_Specification`) are created from each Node in the first entry, as the sender(s),
-to each Node in the second, as receiver(s) (described further `below <Pathway_Projections>`).  Projections between
-Nodes in the two entries can also be specified explicitly, by intercolating a Projection or set of Projections between
-the two entries in the list.  If the sender and receiver are both a single Mechanism, then a single `MappingProjection`
-can be `specified<MappingProjection_Creation>` between them.  The same applies if the sender is a `Composition` with
-a single `OUTPUT <NodeRole.OUTPUT>` Node and/or the receiver is a `Composition` with a single `INPUT <NodeRole.INPUT>`
-Node.  If either is a set of Nodes, or is a `nested Composition <Composition_Nested>` with more than one `INPUT
-<NodeRole.INPUT>` or `OUTPUT <NodeRole.OUTPUT>` Node, respectively, then a collection of Projections can be specified
-between any or all pairs of the Nodes in the set(s) and/or nested Composition(s), using either a set or list of
-Projections (order of specification does not matter whether a set or a list is used). The collection can contain
-`MappingProjections <MappingProjection>` between a specific pairs of Nodes and/or a single default specification
-(either a `matrix <MappingProjection.matrix>` specification or a MappingProjection without any `sender
-<MappingProjection.sender>` or `receiver <MappingProjection.receiver>` specified).
+Where no Projections are specified between entries in the list, default Projections are created
+(using a `FULL_CONNECTIVITY_MATRIX`, or the Pathway's `default_projection <Pathway.default_projection>` if specified)
+from each Node in the first entry, as the sender(s), to each Node in the second, as receiver(s) (described further
+`below <Pathway_Projections>`).  Projections between Nodes in the two entries can also be specified explicitly,
+by intercolating a Projection or set of Projections between the two entries in the list.  If the sender and receiver
+are both a single Mechanism, then a single `MappingProjection` can be `specified<MappingProjection_Creation>` between
+them.  The same applies if the sender is a `Composition` with a single `OUTPUT <NodeRole.OUTPUT>` Node and/or the
+receiver is a `Composition` with a single `INPUT <NodeRole.INPUT>` Node.  If either is a set of Nodes, or is a
+`nested Composition <Composition_Nested>` with more than one `INPUT <NodeRole.INPUT>` or `OUTPUT <NodeRole.OUTPUT>`
+Node, respectively, then a collection of Projections can be specified between any or all pairs of the Nodes in the
+set(s) and/or nested Composition(s), using either a set or list of Projections (order of specification does not matter
+whether a set or a list is used). The collection can contain `MappingProjections <MappingProjection>` between specific
+pairs of Nodes and/or a single default specification (either a `matrix <MappingProjection.matrix>` specification or a
+MappingProjection without any `sender <MappingProjection.sender>` or `receiver <MappingProjection.receiver>`
+specified; see MappingProject  MappingProjection_Matrix_Specification
+).
 
     .. _Pathway_Projection_Matrix_Note:
 
@@ -432,9 +434,9 @@ class Pathway(object):
         created for the Pathway.
 
     default_projection_matrix : list, array, matrix or MATRIX_KEYWORD
-        specifies matrix to assign to any Projections for which it is not otherwise specified
-        (see `MappingProjection_Matrix_Specification` for details of specification,  and `default_projection_matrix
-        <Pathway.default_projection_matrix>` for additional information regarding use in Pathway construction).
+        specifies matrix to use for any unspecified Projections or default Projections (see
+        `Pathway_Specification_Projections`; see `MappingProjection_Matrix_Specification` for
+        details of specification.
 
     name : str : default see `name <Pathway.name>`
         specifies the name of the Pathway (see `name <Pathway.name>` for additional information).
@@ -458,8 +460,8 @@ class Pathway(object):
         and None if the Pathway is a `tempalte <Pathway_Template>` (i.e., not assigned to a Composition).
 
     default_projection_matrix : list, array, matrix or MATRIX_KEYWORD
-        matrix assigned to any unspecified Projections (overrides default matrix for `MappingProjection`;
-        see `MappingProjection_Matrix_Specification` for details of specification.
+        matrix assigned to any unspecified Projections or specified default projections
+        (see Pathway_Specification_Projections); overrides default matrix for `MappingProjection`.
 
     learning_function : `LearningFunction` or None
         `LearningFunction` used by `LearningMechanism(s) <LearningMechanism>` associated with Pathway if

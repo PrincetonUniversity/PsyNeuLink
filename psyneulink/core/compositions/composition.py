@@ -6683,7 +6683,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             of add_linear_processing_pathway is specified.
 
         default_matrix : list, np.ndarray, np.matrix, function, `RandomMatrix` or keyword : default None
-            specifies matrix to assign to any unspecified Projections (overrides default matrix for
+            specifies matrix to use for any unspecified Projections (overrides default matrix for
             `MappingProjection`); see `MappingProjection_Matrix_Specification` for details of specification.
 
         name : str

@@ -406,9 +406,8 @@ def run_model(model, num_trials=NUM_TRIALS, reporting_options=REPORTING_OPTIONS)
 
 
 nback_model = construct_model()
-# train_network(nback_model.nodes[FFN_COMPOSITION])
-assert True
-run_model(nback_model)
+train_network(nback_model.nodes[FFN_COMPOSITION])
+# run_model(nback_model)
 
 # ===========================================================================
 
