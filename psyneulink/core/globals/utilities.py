@@ -1035,30 +1035,43 @@ def get_value_from_array(array):
     :return:
     """
 
-def random_matrix(sender, receiver, clip=1, offset=0):
+def random_matrix(sender_size, receiver_size, offset=0.0, scale=1.0):
     """Generate a random matrix
 
-    Calls np.random.rand to generate a 2d np.array with random values.
+    Calls np.random.rand to generate a 2d np.array with random values,
+    with number of rows = **sender_size** and number of columns = receiever_size:
+
+        :math:`matrix = (random[0.0:1.0] + offset) * scale
+
+    With the default values of **offset** and **scale**, values of matrix are floats between 0 and 1.
+    However, **offset** can be used to center the range on other values (e.g., **offset**=-0.5 centers values on 0),
+    and **scale** can be used to narrow or widen the range.  As a conveniuence the keyword 'ZERO_CENTER' can be used
+    in place of -.05.
 
     Arguments
     ----------
-    sender : int
+    sender_size : int
         specifies number of rows.
 
-    receiver : int
+    receiver_size : int
         spcifies number of columns.
 
-    range : int
+    scale : float
         specifies upper limit (lower limit = 0).
 
-    offset : int
+    offset : float
         specifies amount added to each entry of the matrix.
 
     Returns
     -------
     2d np.array
     """
-    return (clip * np.random.rand(sender, receiver)) + offset
+    if isinstance(offset,str):
+        if offset.upper() == 'ZERO_CENTER':
+            offset = -0.5
+        else:
+            raise UtilitiesError(f"'offset' arg of random_matrix must be a number of 'zero_center'")
+    return (np.random.rand(sender_size, receiver_size) + offset) * scale
 
 def underscore_to_camelCase(item):
     item = item[1:]
