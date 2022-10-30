@@ -804,7 +804,7 @@ from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.socket import ConnectionInfo
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, convert_to_np_array, get_args, is_value_spec, iscompatible, \
-    MODULATION_OVERRIDE, type_match
+    MODULATION_OVERRIDE, RandomMatrix, type_match
 
 __all__ = [
     'Port_Base', 'port_keywords', 'port_type_keywords', 'PortError', 'PortRegistry', 'PORT_SPEC'
@@ -2950,8 +2950,14 @@ def _parse_port_spec(port_type=None,
     #    and validate that it is consistent with any standard_args specified in call to _instantiate_port
 
     # function; try to resolve to a value
-    if isinstance(port_specification, types.FunctionType):
-        port_specification = port_specification()
+    if isinstance(port_specification, (types.FunctionType, RandomMatrix)):
+        # # MODIFIED 10/29/22 OLD:
+        # port_specification = port_specification()
+        # MODIFIED 10/29/22 NEW:
+        rows = len(owner.sender.value)
+        cols = len(owner.receiver.value)
+        port_specification = port_specification(rows,cols)
+        # MODIFIED 10/29/22 END
 
     # ModulatorySpecification of some kind
     if _is_modulatory_spec(port_specification):

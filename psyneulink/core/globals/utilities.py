@@ -1104,7 +1104,7 @@ class RandomMatrix():
         self.range=range
 
     def __call__(self, sender_size:int, receiver_size:int):
-        return random_matrix(sender_size, receiver_size, offset=self.center-0.5, scale=self.range)
+        return random_matrix(sender_size, receiver_size, offset=self.center - 0.5, scale=self.range)
 
 def underscore_to_camelCase(item):
     item = item[1:]
