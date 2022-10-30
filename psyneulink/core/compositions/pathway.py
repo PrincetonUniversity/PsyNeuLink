@@ -431,12 +431,13 @@ class Pathway(object):
         specifies list of `Nodes <Composition_Nodes>` and intercolated `Projections <Projection>` to be
         created for the Pathway.
 
-    default_matrix : list, array, matrix or MATRIX_KEYWORD
-        specifies matrix to assign to any Projections for which it is not otherwise specified;
-        see `default_matrix <Pathway.default_matrix>` for additional information.
+    default_projection_matrix : list, array, matrix or MATRIX_KEYWORD
+        specifies matrix to assign to any Projections for which it is not otherwise specified
+        (see `MappingProjection_Matrix_Specification` for details of specification,  and `default_projection_matrix
+        <Pathway.default_projection_matrix>` for additional information regarding use in Pathway construction).
 
     name : str : default see `name <Pathway.name>`
-        specifies the name of the Pathway;  see `name <Pathway.name>` for additional information.
+        specifies the name of the Pathway (see `name <Pathway.name>` for additional information).
 
     Attributes
     ----------
@@ -456,9 +457,9 @@ class Pathway(object):
         Returns an empty list if belongs to a Composition but no `PathwayRoles <PathwayRole>` have been assigned,
         and None if the Pathway is a `tempalte <Pathway_Template>` (i.e., not assigned to a Composition).
 
-    default_matrix : list, array, matrix or MATRIX_KEYWORD
+    default_projection_matrix : list, array, matrix or MATRIX_KEYWORD
         matrix assigned to any Projections for which it is not otherwise specified;  supercedes default
-        matrix for `MappingProjection`;  see `MappingProjection_Matrix_Specification` for details of specificadtion.
+        matrix for `MappingProjection` (see `MappingProjection_Matrix_Specification` for details).
 
     learning_function : `LearningFunction` or None
         `LearningFunction` used by `LearningMechanism(s) <LearningMechanism>` associated with Pathway if
@@ -508,7 +509,7 @@ class Pathway(object):
     def __init__(
             self,
             pathway:list,
-            default_matrix=None,
+            default_projection_matrix=None,
             name=None,
             **kwargs
     ):
@@ -556,7 +557,7 @@ class Pathway(object):
             self.learning_components = None
             self.roles = None
 
-        self.default_matrix = default_matrix
+        self.default_projection_matrix = default_projection_matrix
 
     def _assign_roles(self, composition):
         """Assign `PathwayRoles <PathwayRole>` to Pathway based `NodeRoles <NodeRole>` assigned to its `Nodes
