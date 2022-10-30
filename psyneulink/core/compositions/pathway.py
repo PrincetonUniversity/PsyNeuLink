@@ -458,8 +458,8 @@ class Pathway(object):
         and None if the Pathway is a `tempalte <Pathway_Template>` (i.e., not assigned to a Composition).
 
     default_projection_matrix : list, array, matrix or MATRIX_KEYWORD
-        matrix assigned to any Projections for which it is not otherwise specified;  supercedes default
-        matrix for `MappingProjection` (see `MappingProjection_Matrix_Specification` for details).
+        matrix assigned to any unspecified Projections (overrides default matrix for `MappingProjection`;
+        see `MappingProjection_Matrix_Specification` for details of specification.
 
     learning_function : `LearningFunction` or None
         `LearningFunction` used by `LearningMechanism(s) <LearningMechanism>` associated with Pathway if

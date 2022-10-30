@@ -1607,7 +1607,9 @@ class TestCompositionPathwaysArg:
         C = ProcessingMechanism(name='C')
         with pytest.raises(pnl.CompositionError) as error_text:
             c = Composition(pathways=[{'P1': ([A,B],C)}])
-        assert ("The 2nd item" in str(error_text.value) and "must be a LearningFunction" in str(error_text.value))
+        assert ("Bad spec for one of the items in the value of a dict specified for the \'pathways\' arg "
+                "of the constructor for Composition-0: (ProcessingMechanism C); "
+                "its item(s) must be a matrix specification and/or a LearningFunction" in str(error_text.value))
 
 
 class TestProperties:

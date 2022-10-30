@@ -6557,7 +6557,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 pway_type = PROCESSING_PATHWAY
                 if isinstance(pway, set):
                     pway = [pway]
-                return pway_type, pway, None
+                return pway_type, pway, None, None
             elif isinstance(pway, tuple):
                 # FIX: ADD SUPPORT FOR 3-ITEM TUPLE AND SPECIFCATION OF DEFAULT MATRIX HERE 10/29/22
                 # # MODIFIED 10/29/22 OLD:
@@ -6577,24 +6577,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if len(pway) not in {2,3}:
                     raise CompositionError(f"A tuple specified in the {pathways_arg_str}"
                                            f" must have either two or three items: {pway}")
-                pway, item1, item2 = pway
-                # Ensure that first item is a Pathway spec
-                if not (_is_node_spec(pway) or isinstance(pway, (list, Pathway))):
-                    raise CompositionError(f"The 1st item in {tuple_or_dict_str} specified in the "
-                                           f" {pathways_arg_str} must be a node or a list: {pway}")
-                for item in [item1, item2]:
-                    if (isinstance(item, type) and issubclass(item, LearningFunction)):
+                pway_type = PROCESSING_PATHWAY
+                matrix_item = None
+                learning_function_item = None
+                for i, item in enumerate(pway):
+                    # Ensure that first item is a Pathway spec
+                    if i==0:
+                        if not (_is_node_spec(item) or isinstance(item, (list, Pathway))):
+                            raise CompositionError(f"The 1st item in {tuple_or_dict_str} specified in the "
+                                                   f" {pathways_arg_str} must be a node or a list: {pway}")
+                        pathway_item = item
+                    elif (isinstance(item, type) and issubclass(item, LearningFunction)):
                         pway_type = LEARNING_PATHWAY
-                        learning_function = item
+                        learning_function_item = item
                     elif is_matrix(item):
-                        pway_type = LEARNING_PATHWAY
-                        learning_function = item
-
-                    raise CompositionError(f"The 2nd item in {tuple_or_dict_str} specified in the "
-                                           f"{pathways_arg_str} must be a LearningFunction: {learning_function}")
-
-
-                return pway_type, pway, learning_function
+                        matrix_item = item
+                    else:
+                        raise CompositionError(f"Bad spec for one of the items in {tuple_or_dict_str} "
+                                               f"specified for the {pathways_arg_str}: {item}; "
+                                               f"its item(s) must be a matrix specification and/or a LearningFunction")
+                return pway_type, pathway_item, matrix_item, learning_function_item
                 # MODIFIED 10/29/22 END
             else:
                 assert False, f"PROGRAM ERROR: arg to identify_pway_type_and_parse_tuple_prn in {self.name}" \
@@ -6614,7 +6616,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     bad_entries = [repr(entry) for entry in pathway if not _is_node_spec(entry)]
                     if bad_entries:
                         raise CompositionError(f"{bad_entry_error_msg}{','.join(bad_entries)}")
-                pway_type, pway, pway_learning_fct = identify_pway_type_and_parse_tuple_prn(pathway, f"a tuple")
+                pway_type, pway, matrix, pway_learning_fct = identify_pway_type_and_parse_tuple_prn(pathway,
+                                                                                                    f"the tuple")
             elif isinstance(pathway, dict):
                 if len(pathway)!=1:
                     raise CompositionError(f"A dict specified in the {pathways_arg_str} "
@@ -6624,8 +6627,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     raise CompositionError(f"The key in a dict specified in the {pathways_arg_str} must be a str "
                                            f"(to be used as its name): {pway_name}.")
                 if _is_node_spec(pway) or isinstance(pway, (list, tuple, Pathway)):
-                    pway_type, pway, pway_learning_fct = identify_pway_type_and_parse_tuple_prn(pway,
-                                                                                                f"the value of a dict")
+                    pway_type, pway, matrix, pway_learning_fct = identify_pway_type_and_parse_tuple_prn(pway,
+                                                                                                        f"the value of a dict")
                 else:
                     raise CompositionError(f"The value in a dict specified in the {pathways_arg_str} must be "
                                            f"a pathway specification (Node, list or tuple): {pway}.")
@@ -6650,7 +6653,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return added_pathways
 
     @handle_external_context()
-    def add_linear_processing_pathway(self, pathway, name:str=None, context=None, *args):
+    def add_linear_processing_pathway(self, pathway, default_matrix=None, name:str=None, context=None, *args):
         """Add sequence of `Nodes <Composition_Nodes>` with optionally intercolated `Projections <Projection>`.
 
         .. _Composition_Add_Linear_Processing_Pathway:
@@ -6678,6 +6681,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             <Composition_Learning_Pathway>` is desired).  A `Pathway` object can also be used;  again, however, any
             learning-related specifications are ignored, as are its `name <Pathway.name>` if the **name** argument
             of add_linear_processing_pathway is specified.
+
+        default_matrix : list, np.ndarray, np.matrix, function, `RandomMatrix` or keyword : default None
+            specifies matrix to assign to any unspecified Projections (overrides default matrix for
+            `MappingProjection`); see `MappingProjection_Matrix_Specification` for details of specification.
 
         name : str
             species the name used for `Pathway`; supercedes `name <Pathway.name>` of `Pathway` object if it is has one.
@@ -7656,7 +7663,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Pass ContextFlags.INITIALIZING so that it can be passed on to _analyze_graph() and then
         #    _check_for_projection_assignments() in order to ignore checks for require_projection_in_composition
         context.string = f"'pathway' arg for add_backpropagation_learning_pathway method of {self.name}"
-        learning_pathway = self.add_linear_processing_pathway(pathway, name, context)
+        learning_pathway = self.add_linear_processing_pathway(pathway=pathway, name=name, context=context)
         processing_pathway = learning_pathway.pathway
 
         path_length = len(processing_pathway)

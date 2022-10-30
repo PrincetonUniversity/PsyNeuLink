@@ -356,10 +356,11 @@ class MappingProjection(PathwayProjection_Base):
         the context in which the Projection is used, or its initialization will be `deferred
         <MappingProjection_Deferred_Initialization>`.
 
-    matrix : list, np.ndarray, np.matrix, function or keyword : default DEFAULT_MATRIX
+    matrix : list, np.ndarray, np.matrix, function, `RandomMatrix` or keyword : default DEFAULT_MATRIX
         specifies the matrix used by `function <Projection_Base.function>` (default: `LinearCombination`) to
         transform the `value <Projection_Base.value>` of the `sender <MappingProjection.sender>` into a form suitable
-        for the `variable <InputPort.variable>` of its `receiver <MappingProjection.receiver>` `InputPort`.
+        for the `variable <InputPort.variable>` of its `receiver <MappingProjection.receiver>` `InputPort`
+        (see `MappingProjection_Matrix_Specification` for additional details).
 
     Attributes
     ----------

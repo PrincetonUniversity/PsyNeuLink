@@ -107,8 +107,8 @@ def construct_model(stim_size = STIM_SIZE,
                                 input_current_context,
                                 input_retrieved_stim,
                                 input_retrieved_context,
-                                input_task},
-                               hidden, decision],
+                                input_task}, RandomMatrix(center=0.0, range=0.1),
+                               hidden, RandomMatrix(center=0.0, range=0.1), decision],
                               name=FFN_COMPOSITION)
 
     # FULL MODEL (Outer Composition, including input, EM and control Mechanisms) ------------------------
