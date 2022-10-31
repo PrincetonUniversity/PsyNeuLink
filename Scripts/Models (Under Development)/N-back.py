@@ -109,7 +109,9 @@ def construct_model(stim_size = STIM_SIZE,
                                 input_retrieved_context,
                                 input_task}, RandomMatrix(center=0.0, range=0.1),
                                hidden, RandomMatrix(center=0.0, range=0.1), decision],
-                              name=FFN_COMPOSITION)
+                              name=FFN_COMPOSITION,
+                              learning_rate=.1
+                              )
 
     # FULL MODEL (Outer Composition, including input, EM and control Mechanisms) ------------------------
 
@@ -407,7 +409,7 @@ def run_model(model, num_trials=NUM_TRIALS, reporting_options=REPORTING_OPTIONS)
 
 nback_model = construct_model()
 train_network(nback_model.nodes[FFN_COMPOSITION])
-# run_model(nback_model)
+run_model(nback_model)
 
 # ===========================================================================
 
@@ -443,5 +445,3 @@ train_network(nback_model.nodes[FFN_COMPOSITION])
 # print("EUCILDEAN 2: ", euclidean_2, "\n")
 
 # n_back_model()
-
-
