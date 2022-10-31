@@ -19,6 +19,10 @@ FFN to evaluate whether it is an n-back match.  The model responds "match" if th
 either responds "non-match" or, with a fixed probability (hazard rate), it uses the current stimulus and temporal
 context to retrieve another sample from EM and repeat the evaluation.
 
+The script has three methods used, respectively to XXX
+The model can be constructed calling the construct_model() function in the script, trained by calling the
+train_model() function, and executed by calling the
+
 Performance of the model has been fit to empirical data concerning human performance from `Kane et al., 2007
 <https://psycnet.apa.org/record/2007-06096-010?doi=1>`_.
 
@@ -32,6 +36,8 @@ Performance of the model has been fit to empirical data concerning human perform
 The Model
 ---------
 
+The models is composed of an outer `Composition` (nback_model) and a nested `AutodiffComposition` that implements the
+feedforward neural network (ffn).
 
 Training
 --------
