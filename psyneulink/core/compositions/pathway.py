@@ -115,12 +115,12 @@ The Node(s) specified in each entry of the list project to the Node(s) specified
 *Pathway Projection Specifications*
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Where no Projections are specified between entries in the list, default Projections are created
-(using a `FULL_CONNECTIVITY_MATRIX`, or the Pathway's `default_projection <Pathway.default_projection>` if specified)
+Where no Projections are specified between entries in the list, default Projections are created (using a
+`FULL_CONNECTIVITY_MATRIX`, or the Pathway's `default_projection <Pathway.default_projection_matrix>` if specified)
 from each Node in the first entry, as the sender(s), to each Node in the second, as receiver(s) (described further
-`below <Pathway_Projections>`).  Projections between Nodes in the two entries can also be specified explicitly,
-by intercolating a Projection or set of Projections between the two entries in the list.  If the sender and receiver
-are both a single Mechanism, then a single `MappingProjection` can be `specified<MappingProjection_Creation>` between
+`below <Pathway_Projections>`).  Projections between Nodes in the two entries can also be specified explicitly, by
+intercolating a Projection or set of Projections between the two entries in the list. If the sender and receiver are
+both a single Mechanism, then a single `MappingProjection` can be `specified<MappingProjection_Creation>` between
 them.  The same applies if the sender is a `Composition` with a single `OUTPUT <NodeRole.OUTPUT>` Node and/or the
 receiver is a `Composition` with a single `INPUT <NodeRole.INPUT>` Node.  If either is a set of Nodes, or is a
 `nested Composition <Composition_Nested>` with more than one `INPUT <NodeRole.INPUT>` or `OUTPUT <NodeRole.OUTPUT>`
@@ -461,7 +461,7 @@ class Pathway(object):
 
     default_projection_matrix : list, array, matrix or MATRIX_KEYWORD
         matrix assigned to any unspecified Projections or specified default projections
-        (see Pathway_Specification_Projections); overrides default matrix for `MappingProjection`.
+        (see `Pathway_Specification_Projections`); overrides default matrix for `MappingProjection`.
 
     learning_function : `LearningFunction` or None
         `LearningFunction` used by `LearningMechanism(s) <LearningMechanism>` associated with Pathway if

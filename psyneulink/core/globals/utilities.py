@@ -136,7 +136,7 @@ __all__ = [
     'Modulation', 'MODULATION_ADD', 'MODULATION_MULTIPLY','MODULATION_OVERRIDE',
     'multi_getattr', 'np_array_less_than_2d', 'object_has_single_value', 'optional_parameter_spec', 'normpdf',
     'parse_valid_identifier', 'parse_string_to_psyneulink_object_string', 'parameter_spec', 'powerset',
-    'random_matrix', 'RandomMatrix', 'ReadOnlyOrderedDict', 'safe_equals', 'safe_len',
+    'random_matrix', 'ReadOnlyOrderedDict', 'safe_equals', 'safe_len',
     'scalar_distance', 'sinusoid',
     'tensor_power', 'TEST_CONDTION', 'type_match',
     'underscore_to_camelCase', 'UtilitiesError', 'unproxy_weakproxy', 'create_union_set', 'merge_dictionaries',
@@ -1075,40 +1075,6 @@ def random_matrix(num_rows, num_cols, offset=0.0, scale=1.0):
         else:
             raise UtilitiesError(f"'offset' arg of random_matrix must be a number of 'zero_center'")
     return (np.random.rand(num_rows, num_cols) + offset) * scale
-
-class RandomMatrix():
-    """Function that calls `random_matrix <Utilities.random_matrix>` with specified offset and scale parameters.
-    Generate a function that returns a matrix with random elements uniformly distributed across an interval,
-    specified by the **center** and **range** arguments of the constructor. Once constructed, a call to the class
-    calls `random_matrix <Utilities.random_matrix>` with **sender_size** and **receiver_size** passed to
-    `random_matrix <Utilities.random_matrix>` as its **num_rows** and **num_cols** arguments respectively,
-    along with the `center <RandomMatrix.offset>` and `range <RandomMatrix.scale>` attributes specified at
-    construction, passed to `random_matrix <Utilities.random_matrix>` as its **offset** (center-0.5) and **scale**
-    arguments, respectively.
-
-    Arguments
-    ----------
-    center : float
-        specifies the value around which the matrix elements are distributed.
-    range : float
-        specifies range of matrix elements' values.
-
-    Attributes
-    ----------
-    center : float
-        determines the center of the distribution of matrix element values;
-        passed to `random_matrix <Utilities.random_matrix>` as its **offset** parameter - 0.5
-    range : float
-        determines the range of the distribution of matrix element values;
-        passed to `random_matrix <Utilities.random_matrix>` as its **scale** parameter.
-    """
-
-    def __init__(self, center:float=0.0, range:float=1.0):
-        self.center=center
-        self.range=range
-
-    def __call__(self, sender_size:int, receiver_size:int):
-        return random_matrix(sender_size, receiver_size, offset=self.center - 0.5, scale=self.range)
 
 def underscore_to_camelCase(item):
     item = item[1:]

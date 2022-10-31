@@ -779,7 +779,8 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import ComponentError, DefaultsFlexibility, component_keywords
-from psyneulink.core.components.functions.function import Function, get_param_value_for_keyword, is_function_type
+from psyneulink.core.components.functions.function import \
+    Function, get_param_value_for_keyword, is_function_type, RandomMatrix
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import CombinationFunction, LinearCombination
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
 from psyneulink.core.components.shellclasses import Mechanism, Projection, Port
@@ -804,7 +805,7 @@ from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.socket import ConnectionInfo
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, convert_to_np_array, get_args, is_value_spec, iscompatible, \
-    MODULATION_OVERRIDE, RandomMatrix, type_match
+    MODULATION_OVERRIDE, type_match
 
 __all__ = [
     'Port_Base', 'port_keywords', 'port_type_keywords', 'PortError', 'PortRegistry', 'PORT_SPEC'

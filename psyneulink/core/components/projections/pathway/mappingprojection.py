@@ -19,7 +19,7 @@ Contents
       - `MappingProjection_Deferred_Initialization`
   * `MappingProjection_Structure`
       - `MappingProjection_Matrix`
-      - `Mapping_Matrix_ParameterPort`
+      - `MappingProjection_Matrix_ParameterPort`
   * `MappingProjection_Execution`
       - `MappingProjection_Learning`
   * `MappingProjection_Class_Reference`
@@ -98,10 +98,8 @@ following ways:
     <Keywords.MatrixKeywords>` can be used.
 
   ..
-  * **RandomMatrix function** (`RandomMatrix <Projection.RandomMatrix>`) -- a convenience class,
-    that provides more flexibility than `RANDOM_CONNECTIVITY_MATRIX`. It generates a function that returns a
-    random matrix sized appropriately for the **sender** and **receiver**, with random values drawn from a uniform
-    distribution with a specified **center** and **range**.
+  * `RandomMatrix` -- assigns a matrix sized appropriately for the **sender** and **receiver**, with random values
+    drawn from a uniform distribution with a specified **center** and **range**.
 
   .. _MappingProjection_Tuple_Specification:
 
@@ -185,14 +183,14 @@ Structure
 In addition to its `sender <MappingProjection.sender>`, `receiver <MappingProjection.receiver>`, and `function
 <Projection_Base.function>`, a MappingProjection has the following characteristic attributes:
 
-.. _Mapping_Matrix:
+.. _MappingProjection_Matrix:
 
 * `matrix <MappingProjection.matrix>` parameter - used by the MappingProjection's `function <Projection_Base.function>`
   to carry out a matrix transformation of its input, that is then provided to its `receiver
   <MappingProjection.receiver>`. It can be specified in a variety of ways, as described `above
   <MappingProjection_Matrix_Specification>`.
 
-  .. _Mapping_Matrix_Dimensionality
+  .. _MappingProjection_Matrix_Dimensionality
 
   * **Matrix Dimensionality** -- this must match the dimensionality of the MappingProjection's `sender
     <MappingProjection.sender>` and `receiver <MappingProjection.receiver>`.  For a standard 2d "weight" matrix (i.e.,
@@ -204,7 +202,7 @@ In addition to its `sender <MappingProjection.sender>`, `receiver <MappingProjec
     `receiver <MappingProjection.receiver>`'s `variable <Projection_Base.variable>` (equal to the dimensionality of the
     matrix minus its sender dimensionality).
 
-.. _Mapping_Matrix_ParameterPort:
+.. _MappingProjection_Matrix_ParameterPort:
 
 * *MATRIX* `ParameterPort` - this receives any `LearningProjections <LearningProjection>` that are assigned to the
   MappingProjection (see `MappingProjection_Learning_Specification` above), and updates the current value of the

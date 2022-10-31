@@ -166,13 +166,13 @@ from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, P
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import (
     convert_to_np_array, get_global_seed, is_instance_or_subclass, object_has_single_value, parameter_spec, parse_valid_identifier, safe_len,
-    SeededRandomState, contains_type, is_numeric, RandomMatrix
+    SeededRandomState, contains_type, is_numeric, random_matrix
 )
 
 __all__ = [
     'ArgumentTherapy', 'EPSILON', 'Function_Base', 'function_keywords', 'FunctionError', 'FunctionOutputType',
     'FunctionRegistry', 'get_param_value_for_function', 'get_param_value_for_keyword', 'is_Function',
-    'is_function_type', 'PERTINACITY', 'PROPENSITY'
+    'is_function_type', 'PERTINACITY', 'PROPENSITY', 'RandomMatrix'
 ]
 
 EPSILON = np.finfo(float).eps
@@ -1199,6 +1199,48 @@ class EVCAuxiliaryFunction(Function_Base):
                          context=context,
                          function=function,
                          )
+
+
+class RandomMatrix():
+    """Function that returns matrix with random elements distributed uniformly around **center** across **range**.
+
+    The **center** and **range** arguments are passed at construction, and used for all subsequent calls.
+    Once constructed, the function must be called with two floats, **sender_size** and **receiver_size**,
+    that specify the number of rows and columns of the matrix, respectively.
+
+    Can be used to specify the `matrix <MappingProjection.matrix>` parameter of a `MappingProjection
+    <MappingProjection_Matrix_Specification>`, and to specify a default matrix for Projections in the
+    construction of a `Pathway` (see `Pathway_Specification_Projections`) or in a call to a Composition's
+    `add_linear_processing_pathway<Composition.add_linear_processing_pathway>` method.
+
+    .. _technical_note::
+       A call to the class calls `random_matrix <Utilities.random_matrix>`, passing **sender_size** and
+       **receiver_size** to `random_matrix <Utilities.random_matrix>` as its **num_rows** and **num_cols**
+       arguments, respectively, and passing the `center <RandomMatrix.offset>` and `range <RandomMatrix.scale>`
+       attributes specified at construction to `random_matrix <Utilities.random_matrix>` as its **offset** (center-0.5)
+       and **scale** arguments, respectively.
+
+    Arguments
+    ----------
+    center : float
+        specifies the value around which the matrix elements are distributed in all calls to the function.
+    range : float
+        specifies range over which all matrix elements are distributed in all calls to the function.
+
+    Attributes
+    ----------
+    center : float
+        determines the center of the distribution of the matrix elements;
+    range : float
+        determines the range of the distribution of the matrix elements;
+    """
+
+    def __init__(self, center:float=0.0, range:float=1.0):
+        self.center=center
+        self.range=range
+
+    def __call__(self, sender_size:int, receiver_size:int):
+        return random_matrix(sender_size, receiver_size, offset=self.center - 0.5, scale=self.range)
 
 
 def get_matrix(specification, rows=1, cols=1, context=None):

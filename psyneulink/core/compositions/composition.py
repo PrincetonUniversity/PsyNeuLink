@@ -6682,7 +6682,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             learning-related specifications are ignored, as are its `name <Pathway.name>` if the **name** argument
             of add_linear_processing_pathway is specified.
 
-        default_matrix : list, np.ndarray, np.matrix, function, `RandomMatrix` or keyword : default None
+        default_matrix : list, np.ndarray, np.matrix, function, `RandomMatrix` or keyword :
+        default None
             specifies matrix to use for any unspecified Projections (overrides default matrix for
             `MappingProjection`); see `MappingProjection_Matrix_Specification` for details of specification.
 
