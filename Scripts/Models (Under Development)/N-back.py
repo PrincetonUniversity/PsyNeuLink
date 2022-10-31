@@ -27,7 +27,7 @@ TODO:
     - from/to nback-paper:
       - why SDIM=20 if it is a one-hot encoding (np.eye), and NSTIM=8? (i.e., SHOULDN'T NUM_STIM == STIM_SIZE)?
       - do input layers use logistic (as suggested in figure)?
-      - put N-back script (with pointer to latest version on PNL) in nback-paper repoa
+      - put N-back script (with pointer to latest version on PNL) in nback-paper repo
     - validate against nback-paper results
     - replace get_input_sequence and get_training_inputs with generators passed to nback_model.run() and ffn.learn
     - make termination processing part of the Composition definition (fix bug)
