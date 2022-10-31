@@ -443,3 +443,5 @@ train_network(nback_model.nodes[FFN_COMPOSITION])
 # print("EUCILDEAN 2: ", euclidean_2, "\n")
 
 # n_back_model()
+
+
