@@ -12,12 +12,15 @@ There are three primary methods:
   (under "Construction parameters")
 
 * train_network(args)
-  takes as arguments the feedforward neural network (ffn) Composition (FFN_COMPOSITION) and number of epochs to train.
+  takes as arguments the feedforward neural network Composition (FFN_COMPOSITION) and number of epochs to train.
   Note: learning_rate is set at construction (can specify using LEARNING_RATE under "Training parameters" below).
 
 * run_model()
   takes the context drift rate to be applied on each trial and the number of trials to execute as args, as well as
   reporting and animation specifications (see "Execution parameters" below).
+
+See "Settings for running the script" to specify whether the model is trained and/or executed when the script is run,
+and whether a graphic display of the network is generated when it is constructed.
 
 TODO:
     - get rid of objective_mechanism (see "VERSION *WITHOUT* ObjectiveMechanism" under control(...)
