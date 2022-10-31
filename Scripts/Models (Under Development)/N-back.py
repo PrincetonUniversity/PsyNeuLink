@@ -25,9 +25,11 @@ from psyneulink import *
 import numpy as np
 import itertools
 
+TRAIN = True
+RUN = False
 DISPLAY = False # show visual of model
-# REPORTING_OPTIONS = ReportOutput.ON # Console output during run
-REPORTING_OPTIONS = ReportOutput.OFF
+REPORT_OUTPUT = ReportOutput.OFF   # Sets console output during run
+REPORT_PROGRESS = ReportProgress.ON  # Sets console progress bar during run
 
 # PARAMETERS -------------------------------------------------------------------------------------------------------
 
@@ -58,6 +60,7 @@ STIM_WEIGHT=.05 # weighting of stimulus field in retrieval from em
 CONTEXT_WEIGHT = 1-STIM_WEIGHT # weighting of context field in retrieval from em
 SOFT_MAX_TEMP=1/8 # express as gain # precision of retrieval process
 HAZARD_RATE=0.04 # rate of re=sampling of em following non-match determination in a pass through ffn
+LEARNING_RATE=0.1
 NUM_EPOCHS=1000
 
 # NAMES of MECHANISM AND COMPOSITIONS:
@@ -110,7 +113,7 @@ def construct_model(stim_size = STIM_SIZE,
                                 input_task}, RandomMatrix(center=0.0, range=0.1),
                                hidden, RandomMatrix(center=0.0, range=0.1), decision],
                               name=FFN_COMPOSITION,
-                              learning_rate=.1
+                              learning_rate=LEARNING_RATE
                               )
 
     # FULL MODEL (Outer Composition, including input, EM and control Mechanisms) ------------------------
@@ -217,7 +220,8 @@ def get_task_input(nback_level):
 def get_run_inputs(model, nback_level, num_trials):
     """Construct set of stimulus inputs for run_model()"""
 
-    def generate_stim_sequence(nback_level, trial_num, stype=0, num_stim=NUM_STIM, num_trials=NUM_TRIALS):
+    def generate_stim_sequence(nback_level, trial_num, trial_type=0, num_stim=NUM_STIM, num_trials=NUM_TRIALS):
+        assert nback_level in {2,3} # At present, only 2- and 3-back levels are supported
 
         def gen_subseq_stim():
             A = np.random.randint(0,num_stim)
@@ -232,67 +236,70 @@ def get_run_inputs(model, nback_level, num_trials):
                 )
             return A,B,C,X
 
-        def genseqCT(nback_level,trial_num):
-            assert nback_level in {2,3}
-            # ABXA / AXA
+        def generate_match_no_foils_sequence(nback_level,trial_num):
+            # AXA (2-back) or ABXA (3-back)
             seq = np.random.randint(0,num_stim,num_trials)
             A,B,C,X = gen_subseq_stim()
             #
-            if nback_level==3:
-                subseq = [A,B,X,A]
-            elif nback_level==2:
+            if nback_level==2:
                 subseq = [A,X,A]
+            elif nback_level==3:
+                subseq = [A,B,X,A]
             seq[trial_num-(nback_level+1):trial_num] = subseq
             return seq[:trial_num]
 
-        def genseqCF(nback_level,trial_num):
-            # ABXC
+        def generate_non_match_no_foils_sequence(nback_level,trial_num):
+            # AXB (2-back) or ABXC (3-back)
             seq = np.random.randint(0,num_stim,num_trials)
             A,B,C,X = gen_subseq_stim()
             #
-            if nback_level==3:
-                subseq = [A,B,X,C]
-            elif nback_level==2:
+            if nback_level==2:
                 subseq = [A,X,B]
+            elif nback_level==3:
+                subseq = [A,B,X,C]
             seq[trial_num-(nback_level+1):trial_num] = subseq
             return seq[:trial_num]
 
-        def genseqLT(nback_level,trial_num):
-            # AAXA
+        def generate_match_with_foil_sequence(nback_level,trial_num):
+            # AAA (2-back) or AAXA (3-back)
             seq = np.random.randint(0,num_stim,num_trials)
             A,B,C,X = gen_subseq_stim()
             #
-            if nback_level==3:
-                subseq = [A,A,X,A]
-            elif nback_level==2:
+            if nback_level==2:
                 subseq = [A,A,A]
+            elif nback_level==3:
+                subseq = [A,A,X,A]
             seq[trial_num-(nback_level+1):trial_num] = subseq
             return seq[:trial_num]
 
-        def genseqLF(nback_level,trial_num):
-            # ABXB
+        def generate_non_match_with_foil_sequence(nback_level,trial_num):
+            # XAA (2-back) or ABXB (3-back)
             seq = np.random.randint(0,num_stim,num_trials)
             A,B,C,X = gen_subseq_stim()
             #
-            if nback_level==3:
-                subseq = [A,B,X,B]
-            elif nback_level==2:
+            if nback_level==2:
                 subseq = [X,A,A]
+            elif nback_level==3:
+                subseq = [A,B,X,B]
             seq[trial_num-(nback_level+1):trial_num] = subseq
             return seq[:trial_num]
 
-        genseqL = [genseqCT,genseqLT,genseqCF,genseqLF]
-        stim_seq = genseqL[stype](nback_level,trial_num)
-        # ytarget = [1,1,0,0][stype]
+        trial_types = [generate_match_no_foils_sequence,
+                       generate_match_with_foil_sequence,
+                       generate_non_match_no_foils_sequence,
+                       generate_non_match_with_foil_sequence]
+        stim_seq = trial_types[trial_type](nback_level,trial_num)
+        # ytarget = [1,1,0,0][trial_type]
         # ctxt = spherical_drift(trial_num)
         # return stim,ctxt,ytarget
         return stim_seq
 
-    def stim_set_generation(nback_level, num_trials):
-        stim_sequence = []
-        # for seq_int, trial in itertools.product(range(4),np.arange(5,trials)): # This generates all length sequences
-        for seq_int, trial_num in itertools.product(range(4),[num_trials]):  # This generates only longest seq (num_trials)
-            return stim_sequence.append(generate_stim_sequence(nback_level, trial_num, stype=seq_int, trials=num_trials))
+    # def stim_set_generation(nback_level, num_trials):
+    #     stim_sequence = []
+    #     # for seq_int, trial in itertools.product(range(4),np.arange(5,trials)): # This generates all length sequences
+    #     for trial_type, trial_num in itertools.product(range(4),[num_trials]):  # This generates only longest seq (
+    #         # num_trials)
+    #         return stim_sequence.append(generate_stim_sequence(nback_level, trial_num, trial_type=trial_type, trials=num_trials))
 
     def get_input_sequence(nback_level, num_trials=NUM_TRIALS):
         """Get sequence of inputs for a run"""
@@ -393,23 +400,34 @@ def train_network(network, num_epochs=NUM_EPOCHS):
                   minibatch_size=NUM_TRIALS,
                   execution_mode=ExecutionMode.LLVMRun)
 
-def run_model(model, num_trials=NUM_TRIALS, reporting_options=REPORTING_OPTIONS):
+def run_model(model, num_trials=NUM_TRIALS, report_output=REPORT_OUTPUT, report_progress=REPORT_PROGRESS):
     for nback_level in NBACK_LEVELS:
         model.run(inputs=get_run_inputs(model, nback_level, num_trials),
                   # FIX: MOVE THIS TO MODEL CONSTRUCTION ONCE THAT WORKS
                   # Terminate trial if value of control is still 1 after first pass through execution
                   termination_processing={TimeScale.TRIAL: And(Condition(lambda: model.nodes[CONTROLLER].value),
                                                                AfterPass(0, TimeScale.TRIAL))}, # function arg
-                  report_output=reporting_options,
-                  animate={UNIT:EXECUTION_SET})
+                  report_output=report_output,
+                  report_progress=REPORT_PROGRESS,
+                  # animate={UNIT:EXECUTION_SET}
+                  )
         # FIX: RESET MEMORY HERE?
-    print("Number of entries in EM: ", len(model.nodes[EM].memory))
+    # print("Number of entries in EM: ", len(model.nodes[EM].memory))
     assert len(model.nodes[EM].memory) == NUM_TRIALS*NUM_NBACK_LEVELS + 1
 
 
 nback_model = construct_model()
-train_network(nback_model.nodes[FFN_COMPOSITION])
-run_model(nback_model)
+print('nback_model constructed')
+if TRAIN:
+    print('nback_model training...')
+    train_network(nback_model.nodes[FFN_COMPOSITION])
+    print('nback_model trained')
+if RUN:
+    print('nback_model executing...')
+    run_model(nback_model)
+    if REPORT_PROGRESS == ReportProgress.ON:
+        print('\n')
+print(f'nback_model done: {len(nback_model.results)} trials executed')
 
 # ===========================================================================
 
