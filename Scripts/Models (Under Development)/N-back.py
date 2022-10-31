@@ -1,9 +1,23 @@
 """
 This implements a model of the `N-back task <https://en.wikipedia.org/wiki/N-back#Neurobiology_of_n-back_task>`_
 described in `Beukers et al. (2022) <https://psyarxiv.com/jtw5p>`_.  The model uses a simple implementation of episodic
-memory (i.e., content-retrieval memory) to store previous stimuli and the temporal context in which they occured,
-and a feedforward neural network to evaluate whether the current stimulus is a match to the n'th preceding stimulus.
-See
+(content-addressable) memory to store previous stimuli and the temporal context in which they occured,
+and a feedforward neural network to evaluate whether the current stimulus is a match to the n'th preceding stimulus (
+n-back level).
+
+There are three primary methods:
+
+* construct_model(args):
+  takes as arguments parameters used to construct the model;  for convenience, defaults are defined below,
+  (under "Construction parameters")
+
+* train_network(args)
+  takes as arguments the feedforward neural network (ffn) Composition (FFN_COMPOSITION) and number of epochs to train.
+  Note: learning_rate is set at construction (can specify using LEARNING_RATE under "Training parameters" below).
+
+* run_model()
+  takes the context drift rate to be applied on each trial and the number of trials to execute as args, as well as
+  reporting and animation specifications (see "Execution parameters" below).
 
 TODO:
     - get rid of objective_mechanism (see "VERSION *WITHOUT* ObjectiveMechanism" under control(...)
@@ -25,45 +39,41 @@ from psyneulink import *
 import numpy as np
 import itertools
 
+# Settings for running script:
 TRAIN = True
 RUN = False
-DISPLAY = False # show visual of model
-REPORT_OUTPUT = ReportOutput.OFF   # Sets console output during run
-REPORT_PROGRESS = ReportProgress.ON  # Sets console progress bar during run
+DISPLAY = False # show visual graphic of model
 
 # PARAMETERS -------------------------------------------------------------------------------------------------------
 
-# FROM nback-paper:
-# SDIM = 20
-# CDIM = 25
-# indim = 2 * (CDIM + SDIM)
-# hiddim = SDIM * 4
-# CONTEXT_DRIFT_RATE=.25
-# CONTEXT_DRIFT_NOISE=.075
-# 'stim_weight':0.05,
-# 'smtemp':8,
-# HAZARD_RATE=0.04
+MAX_NBACK_LEVELS = 3
 
-# TEST:
-MAX_NBACK_LEVELS = 5
+# Construction parameters:  (values are from nback-paper)
+STIM_SIZE=20 # length of stimulus vector
+CONTEXT_SIZE=25 # length of context vector
+HIDDEN_SIZE=STIM_SIZE*4 # dimension of hidden units in ff
 NBACK_LEVELS = [2,3]
 NUM_NBACK_LEVELS = len(NBACK_LEVELS)
 # NUM_TASKS=2 # number of different variants of n-back tasks (set sizes)
 NUM_STIM = 8 # number of different stimuli in stimulus set -  QUESTION: WHY ISN"T THIS EQUAL TO STIM_SIZE OR VICE VERSA?
-NUM_TRIALS = 48 # number of stimuli presented in a sequence
-STIM_SIZE=20 # length of stimulus vector
-CONTEXT_SIZE=25 # length of context vector
-HIDDEN_SIZE=STIM_SIZE*4 # dimension of hidden units in ff
-CONTEXT_DRIFT_RATE=.1 # drift rate used for DriftOnASphereIntegrator (function of Context mech) on each trial
 CONTEXT_DRIFT_NOISE=0.0  # noise used by DriftOnASphereIntegrator (function of Context mech)
-STIM_WEIGHT=.05 # weighting of stimulus field in retrieval from em
-CONTEXT_WEIGHT = 1-STIM_WEIGHT # weighting of context field in retrieval from em
 SOFT_MAX_TEMP=1/8 # express as gain # precision of retrieval process
 HAZARD_RATE=0.04 # rate of re=sampling of em following non-match determination in a pass through ffn
+STIM_WEIGHT=.05 # weighting of stimulus field in retrieval from em
+CONTEXT_WEIGHT = 1-STIM_WEIGHT # weighting of context field in retrieval from em
+
+# Training parameters:
 LEARNING_RATE=0.1
 NUM_EPOCHS=1000
 
-# NAMES of MECHANISM AND COMPOSITIONS:
+# Execution parameters:
+CONTEXT_DRIFT_RATE=.1 # drift rate used for DriftOnASphereIntegrator (function of Context mech) on each trial
+NUM_TRIALS = 48 # number of stimuli presented in a trial sequence
+REPORT_OUTPUT = ReportOutput.OFF   # Sets console output during run
+REPORT_PROGRESS = ReportProgress.ON  # Sets console progress bar during run
+ANIMATE = None # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
+
+# Names of Compositions and Mechanisms:
 NBACK_MODEL = "N-Back Model"
 FFN_COMPOSITION = "WORKING MEMORY (fnn)"
 FFN_STIMULUS_INPUT = "CURRENT STIMULUS"
@@ -211,13 +221,13 @@ def get_stim_set(num_stim=STIM_SIZE):
     # For now, use one-hots
     return np.eye(num_stim)
 
-def get_task_input(nback_level):
+def get_task_iAnput(nback_level):
     """Construct input to task Mechanism for a given nback_level, used by run_model() and train_network()"""
     task_input = list(np.zeros_like(NBACK_LEVELS))
     task_input[nback_level-NBACK_LEVELS[0]] = 1
     return task_input
 
-def get_run_inputs(model, nback_level, num_trials):
+def get_run_inputs(model, nback_level, context_drift_rate, num_trials):
     """Construct set of stimulus inputs for run_model()"""
 
     def generate_stim_sequence(nback_level, trial_num, trial_type=0, num_stim=NUM_STIM, num_trials=NUM_TRIALS):
@@ -310,7 +320,7 @@ def get_run_inputs(model, nback_level, num_trials):
         return [input_set[trial_seq[i]] for i in range(num_trials)]
 
     return {model.nodes[MODEL_STIMULUS_INPUT]: get_input_sequence(nback_level, num_trials),
-            model.nodes[MODEL_CONTEXT_INPUT]: [[CONTEXT_DRIFT_RATE]]*num_trials,
+            model.nodes[MODEL_CONTEXT_INPUT]: [[context_drift_rate]]*num_trials,
             model.nodes[MODEL_TASK_INPUT]: [get_task_input(nback_level)]*num_trials}
 
 def get_training_inputs(network, num_epochs, nback_levels):
@@ -400,16 +410,21 @@ def train_network(network, num_epochs=NUM_EPOCHS):
                   minibatch_size=NUM_TRIALS,
                   execution_mode=ExecutionMode.LLVMRun)
 
-def run_model(model, num_trials=NUM_TRIALS, report_output=REPORT_OUTPUT, report_progress=REPORT_PROGRESS):
+def run_model(model,
+              context_drift_rate=CONTEXT_DRIFT_RATE,
+              num_trials=NUM_TRIALS,
+              report_output=REPORT_OUTPUT,
+              report_progress=REPORT_PROGRESS,
+              animate=ANIMATE):
     for nback_level in NBACK_LEVELS:
-        model.run(inputs=get_run_inputs(model, nback_level, num_trials),
+        model.run(inputs=get_run_inputs(model, nback_level, context_drift_rate, num_trials),
                   # FIX: MOVE THIS TO MODEL CONSTRUCTION ONCE THAT WORKS
                   # Terminate trial if value of control is still 1 after first pass through execution
                   termination_processing={TimeScale.TRIAL: And(Condition(lambda: model.nodes[CONTROLLER].value),
                                                                AfterPass(0, TimeScale.TRIAL))}, # function arg
                   report_output=report_output,
-                  report_progress=REPORT_PROGRESS,
-                  # animate={UNIT:EXECUTION_SET}
+                  report_progress=report_progress,
+                  animate=animate
                   )
         # FIX: RESET MEMORY HERE?
     # print("Number of entries in EM: ", len(model.nodes[EM].memory))
