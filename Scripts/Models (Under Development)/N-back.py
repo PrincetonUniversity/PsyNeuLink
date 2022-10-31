@@ -24,9 +24,10 @@ and whether a graphic display of the network is generated when it is constructed
 
 TODO:
     - get rid of objective_mechanism (see "VERSION *WITHOUT* ObjectiveMechanism" under control(...)
-    - from nback-paper:
+    - from/to nback-paper:
       - why SDIM=20 if it is a one-hot encoding (np.eye), and NSTIM=8? (i.e., SHOULDN'T NUM_STIM == STIM_SIZE)?
       - do input layers use logistic (as suggested in figure)?
+      - put N-back script (with pointer to latest version on PNL) in nback-paper repoa
     - validate against nback-paper results
     - replace get_input_sequence and get_training_inputs with generators passed to nback_model.run() and ffn.learn
     - make termination processing part of the Composition definition (fix bug)
