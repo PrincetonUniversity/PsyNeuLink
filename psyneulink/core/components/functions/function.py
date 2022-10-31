@@ -1213,11 +1213,11 @@ class RandomMatrix():
     construction of a `Pathway` (see `Pathway_Specification_Projections`) or in a call to a Composition's
     `add_linear_processing_pathway<Composition.add_linear_processing_pathway>` method.
 
-    .. _technical_note::
+    .. technical_note::
        A call to the class calls `random_matrix <Utilities.random_matrix>`, passing **sender_size** and
        **receiver_size** to `random_matrix <Utilities.random_matrix>` as its **num_rows** and **num_cols**
-       arguments, respectively, and passing the `center <RandomMatrix.offset>` and `range <RandomMatrix.scale>`
-       attributes specified at construction to `random_matrix <Utilities.random_matrix>` as its **offset** (center-0.5)
+       arguments, respectively, and passing the `center <RandomMatrix.offset>`\-0.5 and `range <RandomMatrix.scale>`
+       attributes specified at construction to `random_matrix <Utilities.random_matrix>` as its **offset**
        and **scale** arguments, respectively.
 
     Arguments
