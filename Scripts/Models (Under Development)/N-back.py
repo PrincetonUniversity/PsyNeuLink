@@ -22,14 +22,11 @@ There are three primary methods:
 TODO:
     - get rid of objective_mechanism (see "VERSION *WITHOUT* ObjectiveMechanism" under control(...)
     - from nback-paper:
-      - get ffn weights?
       - why SDIM=20 if it is a one-hot encoding (np.eye), and NSTIM=8? (i.e., SHOULDN'T NUM_STIM == STIM_SIZE)?
       - do input layers use logistic (as suggested in figure)?
-    - construct training set and train in ffn using Autodiff
     - validate against nback-paper results
     - replace get_input_sequence and get_training_inputs with generators passed to nback_model.run() and ffn.learn
-    - make termination processing part of the Comopsition definition?
-    - assign small random initial weights to ffn
+    - make termination processing part of the Composition definition (fix bug)
     - fix warnings on run
 
 """
