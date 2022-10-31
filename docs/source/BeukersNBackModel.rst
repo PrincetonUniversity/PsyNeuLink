@@ -19,12 +19,39 @@ FFN to evaluate whether it is an n-back match.  The model responds "match" if th
 either responds "non-match" or, with a fixed probability (hazard rate), it uses the current stimulus and temporal
 context to retrieve another sample from EM and repeat the evaluation.
 
-The script has three methods used, respectively to XXX
-The model can be constructed calling the construct_model() function in the script, trained by calling the
-train_model() function, and executed by calling the
+The script has three methods used, respectively, to construct, train and run the model:
 
-Performance of the model has been fit to empirical data concerning human performance from `Kane et al., 2007
-<https://psycnet.apa.org/record/2007-06096-010?doi=1>`_.
+* construct_model(args):
+  takes as arguments parameters used to construct the model; for convenience, defaults are defined toward the top
+  of the script (see "Construction parameters").
+
+* train_network(args)
+  takes as arguments the feedforward neural network Composition (FFN_COMPOSITION) and number of epochs to train.
+  Note: learning_rate is set at construction (which can be specified using LEARNING_RATE under "Training parameters").
+
+* run_model()
+  takes as arguments the drift rate in the temporal context vector to be applied on each trial,
+  and the number of trials to execute, as well as reporting and animation specifications
+  (see "Execution parameters").
+
+The default parameters are ones that have been fit to empirical data concerning human performance
+(taken from `Kane et al., 2007 <https://psycnet.apa.org/record/2007-06096-010?doi=1>`_).
+
+
+The Model
+---------
+
+The models is composed of two `Compositions <Composition>`: an outer one that contains the full model (nback_model),
+and an `AutodiffComposition` (ffn), nested within nback_model (see red box in Figure), that implements the
+feedforward neural network (ffn).
+
+nback_model
+~~~~~~~~~~~
+
+This contains three input Mechanisms (
+
+Both of these are constructed in the construct_model function.
+The ffn Composition is trained use
 
 .. _nback_Fig:
 
@@ -32,12 +59,6 @@ Performance of the model has been fit to empirical data concerning human perform
    :align: left
    :alt: N-Back Model Animation
 
-
-The Model
----------
-
-The models is composed of an outer `Composition` (nback_model) and a nested `AutodiffComposition` that implements the
-feedforward neural network (ffn).
 
 Training
 --------

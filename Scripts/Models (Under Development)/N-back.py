@@ -27,6 +27,13 @@ TODO:
     - from/to nback-paper:
       - why SDIM=20 if it is a one-hot encoding (np.eye), and NSTIM=8? (i.e., SHOULDN'T NUM_STIM == STIM_SIZE)?
       - do input layers use logistic (as suggested in figure)?
+         - input layer: 92
+         - hidden layer? GET FROM ANDRE
+         - both f's are ReLUs with 0 thresholds and unit slope;  k is one hot task identity
+         - output is softmax with temp = ?
+      - how many training epochs?  400,000 per n-back; lrate: ?? 0.001
+      - epoch: 1 trial per epoch
+      - in gen* methods, is it only ever the last stimulus that is a target sequence?
       - put N-back script (with pointer to latest version on PNL) in nback-paper repo
     - validate against nback-paper results
     - replace get_input_sequence and get_training_inputs with generators passed to nback_model.run() and ffn.learn
@@ -222,7 +229,7 @@ def get_stim_set(num_stim=STIM_SIZE):
     # For now, use one-hots
     return np.eye(num_stim)
 
-def get_task_iAnput(nback_level):
+def get_task_input(nback_level):
     """Construct input to task Mechanism for a given nback_level, used by run_model() and train_network()"""
     task_input = list(np.zeros_like(NBACK_LEVELS))
     task_input[nback_level-NBACK_LEVELS[0]] = 1
