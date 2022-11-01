@@ -30,21 +30,22 @@ See "Settings for running the script" to specify whether the model is trained an
 and whether a graphic display of the network is generated when it is constructed.
 
 TODO:
+    - from Andre
+             - network architecture;  in particular, size of hidden layer and projection patterns to and from it
+             - softmax temp on output/decision layer?
+             - confirm that ReLUs all use 0 thresholds and unit slope
+          - training:
+              - confirm learning rate: ?? 0.001
+              - epoch: 1 trial per epoch of training
+          - get empirical stimulus sequences
+          - put N-back script (with pointer to latest version on PNL) in nback-paper repo
     - get rid of objective_mechanism (see "VERSION *WITHOUT* ObjectiveMechanism" under control(...)
-    - from/to nback-paper:
-      - why SDIM=20 if it is a one-hot encoding (np.eye), and NSTIM=8? (i.e., SHOULDN'T NUM_STIM == STIM_SIZE)?
-      - do input layers use logistic (as suggested in figure)?
-         - input layer: 92
-         - hidden layer? GET FROM ANDRE
-         - both f's are ReLUs with 0 thresholds and unit slope;  k is one hot task identity
-         - output is softmax with temp = ?
-      - how many training epochs?  400,000 per n-back; lrate: ?? 0.001
-      - epoch: 1 trial per epoch
-      - in gen* methods, is it only ever the last stimulus that is a target sequence?
-      - need stimulus sequences
-      - put N-back script (with pointer to latest version on PNL) in nback-paper repo
+    - pass learning_rate as parameter to train_network()
     - validate against nback-paper results
-    - replace get_input_sequence and get_training_inputs with generators passed to nback_model.run() and ffn.learn
+    - after validation:
+        - try with STIM_SIZE = NUM_STIMS rather than 20 (as in nback-paper)
+        - refactor generate_stim_sequence() to use actual empirical stimulus sequences
+        - replace get_input_sequence and get_training_inputs with generators passed to nback_model.run() and ffn.learn
     - make termination processing part of the Composition definition (fix bug)
     - fix warnings on run
 
@@ -62,25 +63,27 @@ DISPLAY = False # show visual graphic of model
 
 # PARAMETERS -------------------------------------------------------------------------------------------------------
 
+# Fixed (structural) parameters:
 MAX_NBACK_LEVELS = 3
+NUM_STIM = 8 # number of different stimuli in stimulus set -  QUESTION: WHY ISN"T THIS EQUAL TO STIM_SIZE OR VICE VERSA?
+FFN_TRANSFER_FUNCTION = ReLU
 
-# Construction parameters:  (values are from nback-paper)
+# Constructor parameters:  (values are from nback-paper)
 STIM_SIZE=20 # length of stimulus vector
 CONTEXT_SIZE=25 # length of context vector
 HIDDEN_SIZE=STIM_SIZE*4 # dimension of hidden units in ff
-NBACK_LEVELS = [2,3]
+NBACK_LEVELS = [2,3] # Currently restricted to these
 NUM_NBACK_LEVELS = len(NBACK_LEVELS)
-# NUM_TASKS=2 # number of different variants of n-back tasks (set sizes)
-NUM_STIM = 8 # number of different stimuli in stimulus set -  QUESTION: WHY ISN"T THIS EQUAL TO STIM_SIZE OR VICE VERSA?
 CONTEXT_DRIFT_NOISE=0.0  # noise used by DriftOnASphereIntegrator (function of Context mech)
-SOFT_MAX_TEMP=1/8 # express as gain # precision of retrieval process
-HAZARD_RATE=0.04 # rate of re=sampling of em following non-match determination in a pass through ffn
-STIM_WEIGHT=.05 # weighting of stimulus field in retrieval from em
-CONTEXT_WEIGHT = 1-STIM_WEIGHT # weighting of context field in retrieval from em
+RETRIEVAL_SOFTMAX_TEMP=1/8 # express as gain # precision of retrieval process
+RETRIEVAL_HAZARD_RATE=0.04 # rate of re=sampling of em following non-match determination in a pass through ffn
+RETRIEVAL_STIM_WEIGHT=.05 # weighting of stimulus field in retrieval from em
+RETRIEVAL_CONTEXT_WEIGHT = 1-RETRIEVAL_STIM_WEIGHT # weighting of context field in retrieval from em
+DECISION_SOFTMAX_TEMP=1/8 # express as gain # binarity of decision process
 
 # Training parameters:
-LEARNING_RATE=0.1
-NUM_EPOCHS=1000
+NUM_EPOCHS=1000    # nback-paper: 400,000, one trial per epoch
+LEARNING_RATE=0.1  # nback-paper: .001
 
 # Execution parameters:
 CONTEXT_DRIFT_RATE=.1 # drift rate used for DriftOnASphereIntegrator (function of Context mech) on each trial
@@ -112,10 +115,11 @@ def construct_model(stim_size = STIM_SIZE,
                     hidden_size = HIDDEN_SIZE,
                     num_nback_levels = NUM_NBACK_LEVELS,
                     context_drift_noise = CONTEXT_DRIFT_NOISE,
-                    retrievel_softmax_temp = SOFT_MAX_TEMP,
-                    retrieval_hazard_rate = HAZARD_RATE,
-                    retrieval_stimulus_weight = STIM_WEIGHT,
-                    context_stimulus_weight = CONTEXT_WEIGHT):
+                    retrievel_softmax_temp = RETRIEVAL_SOFTMAX_TEMP,
+                    retrieval_hazard_rate = RETRIEVAL_HAZARD_RATE,
+                    retrieval_stimulus_weight = RETRIEVAL_STIM_WEIGHT,
+                    retrieval_context_weight = RETRIEVAL_CONTEXT_WEIGHT,
+                    decision_softmax_temp = DECISION_SOFTMAX_TEMP):
     """Construct nback_model"""
 
     # FEED FORWARD NETWORK -----------------------------------------
@@ -123,13 +127,27 @@ def construct_model(stim_size = STIM_SIZE,
     #     inputs: encoding of current stimulus and context, retrieved stimulus and retrieved context,
     #     output: decIsion: match [1,0] or non-match [0,1]
     # Must be trained to detect match for specified task (1-back, 2-back, etc.)
-    input_current_stim = TransferMechanism(size=STIM_SIZE, function=Linear, name=FFN_STIMULUS_INPUT) # function=Logistic)
-    input_current_context = TransferMechanism(size=CONTEXT_SIZE, function=Linear, name=FFN_CONTEXT_INPUT) # function=Logistic)
-    input_retrieved_stim = TransferMechanism(size=STIM_SIZE, function=Linear, name=FFN_STIMULUS_RETRIEVED) # function=Logistic)
-    input_retrieved_context = TransferMechanism(size=CONTEXT_SIZE, function=Linear, name=FFN_CONTEXT_RETRIEVED)  # function=Logistic)
-    input_task = TransferMechanism(size=NUM_NBACK_LEVELS, function=Linear, name=FFN_TASK) # function=Logistic)
-    hidden = TransferMechanism(size=HIDDEN_SIZE, function=Logistic, name=FFN_HIDDEN)
-    decision = ProcessingMechanism(size=2, name=FFN_OUTPUT)
+    input_current_stim = TransferMechanism(name=FFN_STIMULUS_INPUT,
+                                           size=stim_size,
+                                           function=FFN_TRANSFER_FUNCTION)
+    input_current_context = TransferMechanism(name=FFN_CONTEXT_INPUT,
+                                              size=context_size,
+                                              function=FFN_TRANSFER_FUNCTION)
+    input_retrieved_stim = TransferMechanism(name=FFN_STIMULUS_RETRIEVED,
+                                             size=stim_size,
+                                             function=FFN_TRANSFER_FUNCTION)
+    input_retrieved_context = TransferMechanism(name=FFN_CONTEXT_RETRIEVED,
+                                                size=context_size,
+                                                function=FFN_TRANSFER_FUNCTION)
+    input_task = TransferMechanism(name=FFN_TASK,
+                                   size=num_nback_levels,
+                                   function=FFN_TRANSFER_FUNCTION)
+    hidden = TransferMechanism(name=FFN_HIDDEN,
+                               size=hidden_size,
+                               function=FFN_TRANSFER_FUNCTION)
+    decision = ProcessingMechanism(name=FFN_OUTPUT,
+                                   size=2, function=SoftMax(output=MAX_INDICATOR,
+                                                            gain=decision_softmax_temp))
     # TODO: THIS NEEDS TO BE REPLACED BY (OR AT LEAST TRAINED AS) AutodiffComposition
     # ffn = Composition([{input_current_stim,
     ffn = AutodiffComposition([{input_current_stim,
@@ -151,11 +169,12 @@ def construct_model(stim_size = STIM_SIZE,
     context = ProcessingMechanism(name=MODEL_CONTEXT_INPUT,
                                   function=DriftOnASphereIntegrator(
                                       initializer=np.random.random(CONTEXT_SIZE-1),
-                                      noise=CONTEXT_DRIFT_NOISE,
+                                      noise=context_drift_noise,
                                       dimension=CONTEXT_SIZE))
 
     # Task: task one-hot indicating n-back (1, 2, 3 etc.) - must correspond to what ffn has been trained to do
-    task = ProcessingMechanism(name=MODEL_TASK_INPUT, size=NUM_NBACK_LEVELS)
+    task = ProcessingMechanism(name=MODEL_TASK_INPUT,
+                               size=NUM_NBACK_LEVELS)
 
     # Episodic Memory:
     #    - entries: stimulus (field[0]) and context (field[1]); randomly initialized
@@ -167,10 +186,11 @@ def construct_model(stim_size = STIM_SIZE,
                                                SIZE:CONTEXT_SIZE}],
                                  function=ContentAddressableMemory(
                                      initializer=[[[0]*STIM_SIZE, [0]*CONTEXT_SIZE]],
-                                     distance_field_weights=[STIM_WEIGHT, CONTEXT_WEIGHT],
+                                     distance_field_weights=[retrieval_stimulus_weight,
+                                                             retrieval_context_weight],
                                      # equidistant_entries_select=NEWEST,
                                      selection_function=SoftMax(output=MAX_INDICATOR,
-                                                                gain=SOFT_MAX_TEMP)),
+                                                                gain=retrievel_softmax_temp)),
                                  )
 
     # Control Mechanism
@@ -190,7 +210,8 @@ def construct_model(stim_size = STIM_SIZE,
                                                                       # Outcome=1 if match, else 0
                                                                       function=lambda x: int(x[0][1]>x[0][0])),
                                # Set ControlSignal for EM[store_prob]
-                               function=lambda outcome: int(bool(outcome) or (np.random.random() > HAZARD_RATE)),
+                               function=lambda outcome: int(bool(outcome)
+                                                            or (np.random.random() > retrieval_hazard_rate)),
                                # # VERSION *WITHOUT* ObjectiveMechanism:
                                # monitor_for_control=decision,
                                # # Set Evaluate outcome and set ControlSignal for EM[store_prob]
@@ -199,12 +220,13 @@ def construct_model(stim_size = STIM_SIZE,
                                #                              or (np.random.random() > HAZARD_RATE)),
                                control=(STORAGE_PROB, em))
 
-    nback_model = Composition(nodes=[stim, context, task, em, ffn, control],
+    nback_model = Composition(name=NBACK_MODEL,
+                              nodes=[stim, context, task, em, ffn, control],
                               # # # Terminate trial if value of control is still 1 after first pass through execution
                               # # FIX: STOPS AFTER ~ NUMBER OF TRIALS (?90+); SHOULD BE: NUM_TRIALS*NUM_NBACK_LEVELS + 1
                               # termination_processing={TimeScale.TRIAL: And(Condition(lambda: control.value),
                               #                                              AfterPass(0, TimeScale.TRIAL))},
-                              name=NBACK_MODEL)
+                              )
     # # Terminate trial if value of control is still 1 after first pass through execution
     # # FIX: ALL OF THE FOLLOWING STOP AFTER ~ NUMBER OF TRIALS (?90+); SHOULD BE: NUM_TRIALS*NUM_NBACK_LEVELS + 1
     # nback_model.scheduler.add_condition(nback_model, And(Condition(lambda: control.value), AfterPass(0, TimeScale.TRIAL)))
@@ -420,7 +442,9 @@ def get_training_inputs(network, num_epochs, nback_levels):
 
 # ======================================== MODEL EXECUTION ============================================================
 
-def train_network(network, num_epochs=NUM_EPOCHS):
+def train_network(network,
+                  learning_rate=LEARNING_RATE,
+                  num_epochs=NUM_EPOCHS):
     training_set = get_training_inputs(network=network, num_epochs=num_epochs, nback_levels=NBACK_LEVELS)
     network.learn(inputs=training_set,
                   minibatch_size=NUM_TRIALS,
