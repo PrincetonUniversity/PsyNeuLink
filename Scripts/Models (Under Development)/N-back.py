@@ -12,7 +12,7 @@ rapid storage and content-based retrieval, such as the Neural Turing Machine (NT
 <https://arxiv.org/abs/2006.03662>`_), and Emergent Symbols through Binding Networks (ESBN; `Webb et al., 2021
 <https://arxiv.org/abs/2012.14601>`_).
 
-There are three primary methods:
+There are three primary methods in the script:
 
 * construct_model(args):
   takes as arguments parameters used to construct the model;  for convenience, defaults are defined below,
@@ -52,9 +52,8 @@ TODO:
 """
 
 from graph_scheduler import *
+
 from psyneulink import *
-import numpy as np
-import itertools
 
 # Settings for running script:
 TRAIN = False
