@@ -1,9 +1,16 @@
 """
 This implements a model of the `N-back task <https://en.wikipedia.org/wiki/N-back#Neurobiology_of_n-back_task>`_
-described in `Beukers et al. (2022) <https://psyarxiv.com/jtw5p>`_.  The model uses a simple implementation of episodic
-(content-addressable) memory to store previous stimuli and the temporal context in which they occured,
-and a feedforward neural network to evaluate whether the current stimulus is a match to the n'th preceding stimulus (
-n-back level).
+described in "When Working Memory is Just Working, not Memory (`Beukers et al. (2022) <https://psyarxiv.com/jtw5p>`_).
+The model uses a simple implementation of episodic (content-addressable) memory to store previous stimuli and the
+temporal context in which they occurred, and a feedforward neural network to evaluate whether the current stimulus is
+a match to the n'th preceding stimulus (n-back level).  This model is an example of proposed interactions between
+working memory (e.g., in neocortex) and episodic memory (e.g., in hippocampus and/or cerebellum) in the performance of
+tasks demanding of sequential processing and control, and along the lines of models emerging machine learning that
+augment the use of recurrent neural networks (e.g., long short-term memory mechanisms; LSTMs) for active memory and
+control with an external memory capable of rapid storage and content-based retrieval, such as the Neural Turing
+Machine (NTN; `Graves et al., 2016 <https://arxiv.org/abs/1410.5401>`_), Episodic Planning Networks
+(EPN; `Ritter et al., 2020 <https://arxiv.org/abs/2006.03662>_), and Emergent Symbols through Binding Networks
+(ESBN; `Webb et al., 2021 <https://arxiv.org/abs/2012.14601>`_).
 
 There are three primary methods:
 
@@ -42,10 +49,10 @@ TODO:
 
 """
 
-from graph_scheduler import *
-from psyneulink import *
 import numpy as np
-import itertools
+from graph_scheduler import *
+
+from psyneulink import *
 
 # Settings for running script:
 TRAIN = True
