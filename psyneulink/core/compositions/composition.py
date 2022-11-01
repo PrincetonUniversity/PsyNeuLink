@@ -9812,6 +9812,8 @@ _
         # Set animation attributes
         if animate is True:
             animate = {}
+        if animate is None:
+            animate = False
         self._animate = animate
         if self._animate is not False:
             self._set_up_animation(context)

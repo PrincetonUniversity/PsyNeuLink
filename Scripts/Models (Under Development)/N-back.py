@@ -57,8 +57,8 @@ import numpy as np
 import itertools
 
 # Settings for running script:
-TRAIN = True
-RUN = False
+TRAIN = False
+RUN = True
 DISPLAY = False # show visual graphic of model
 
 # PARAMETERS -------------------------------------------------------------------------------------------------------
@@ -90,7 +90,7 @@ CONTEXT_DRIFT_RATE=.1 # drift rate used for DriftOnASphereIntegrator (function o
 NUM_TRIALS = 48 # number of stimuli presented in a trial sequence
 REPORT_OUTPUT = ReportOutput.OFF   # Sets console output during run
 REPORT_PROGRESS = ReportProgress.ON  # Sets console progress bar during run
-ANIMATE = None # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
+ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
 
 # Names of Compositions and Mechanisms:
 NBACK_MODEL = "N-Back Model"
@@ -455,7 +455,8 @@ def run_model(model,
               num_trials=NUM_TRIALS,
               report_output=REPORT_OUTPUT,
               report_progress=REPORT_PROGRESS,
-              animate=ANIMATE):
+              animate=ANIMATE
+              ):
     for nback_level in NBACK_LEVELS:
         model.run(inputs=get_run_inputs(model, nback_level, context_drift_rate, num_trials),
                   # FIX: MOVE THIS TO MODEL CONSTRUCTION ONCE THAT WORKS
