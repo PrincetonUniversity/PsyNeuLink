@@ -4,8 +4,6 @@ import psyneulink.core.components.functions.nonstateful.transferfunctions as Fun
 import psyneulink.core.globals.keywords as kw
 import pytest
 
-from math import e, pi, sqrt
-
 SIZE=10
 np.random.seed(0)
 test_var = np.random.rand(SIZE)
@@ -25,7 +23,7 @@ softmax_helper = np.exp(softmax_helper) / np.sum(np.exp(softmax_helper))
 tanh_helper = (RAND1 * (test_var + RAND2 - RAND3) + RAND4)
 tanh_helper = np.tanh(tanh_helper)
 
-gaussian_helper = e**(-(test_var - RAND2)**2 / (2 * RAND1**2)) / sqrt(2 * pi * RAND1)
+gaussian_helper = np.e**(-(test_var - RAND2)**2 / (2 * RAND1**2)) / np.sqrt(2 * np.pi * RAND1)
 gaussian_helper = RAND3 * gaussian_helper + RAND4
 
 def gaussian_distort_helper(seed):
