@@ -34,6 +34,7 @@ TODO:
       - how many training epochs?  400,000 per n-back; lrate: ?? 0.001
       - epoch: 1 trial per epoch
       - in gen* methods, is it only ever the last stimulus that is a target sequence?
+      - need stimulus sequences
       - put N-back script (with pointer to latest version on PNL) in nback-paper repo
     - validate against nback-paper results
     - replace get_input_sequence and get_training_inputs with generators passed to nback_model.run() and ffn.learn
