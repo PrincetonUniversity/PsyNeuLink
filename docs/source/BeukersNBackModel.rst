@@ -19,16 +19,25 @@ FFN to evaluate whether it is an n-back match.  The model responds "match" if th
 either responds "non-match" or, with a fixed probability (hazard rate), it uses the current stimulus and temporal
 context to retrieve another sample from EM and repeat the evaluation.
 
-The script has three methods used, respectively, to construct, train and run the model:
+This model is an example of proposed interactions between working memory (e.g., in neocortex) and episodic memory
+e.g., in hippocampus and/or cerebellum) in the performance of tasks demanding of sequential processing and control,
+and along the lines of models emerging machine learning that augment the use of recurrent neural networks (e.g., long
+short-term memory mechanisms; LSTMs) for active memory and control with an external memory capable of rapid storage
+and content-based retrieval, such as the Neural Turing Machine (NTN;
+`Graves et al., 2016 <https://arxiv.org/abs/1410.5401>`_), Episodic Planning Networks (EPN;
+`Ritter et al., 2020 <https://arxiv.org/abs/2006.03662>`_), and Emergent Symbols through Binding Networks (ESBN;
+`Webb et al., 2021 <https://arxiv.org/abs/2012.14601>`_).
+
+The script respectively, to construct, train and run the model:
 
 * construct_model(args):
   takes as arguments parameters used to construct the model; for convenience, defaults are defined toward the top
   of the script (see "Construction parameters").
-
+..
 * train_network(args)
   takes as arguments the feedforward neural network Composition (FFN_COMPOSITION) and number of epochs to train.
   Note: learning_rate is set at construction (which can be specified using LEARNING_RATE under "Training parameters").
-
+..
 * run_model()
   takes as arguments the drift rate in the temporal context vector to be applied on each trial,
   and the number of trials to execute, as well as reporting and animation specifications
