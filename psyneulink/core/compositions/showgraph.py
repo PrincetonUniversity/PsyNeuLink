@@ -943,10 +943,11 @@ class ShowGraph():
                                     NESTING_LEVEL:nesting_level + 1,
                                     })
                 # Get subgraph for nested Composition
-                # # MODIFIED 10/29/22 NEW: FIX: HACK SO NESTED COMPOSITIONS DON'T CRASH ANIMATION (BUT NOT SHOWN)
-                rcvr._animate = composition._animate
-                rcvr._set_up_animation(context)
-                rcvr._animate_num_trials = composition._animate_num_trials + 1
+                # # MODIFIED 10/29/22 NEW: FIX: HACK SO NESTED COMPOSITIONS DON'T CRASH ANIMATION (THOUGH STILL NOT SHOWN)
+                if hasattr(composition, '_animate') and composition._animate:
+                    rcvr._animate = composition._animate
+                    rcvr._set_up_animation(context)
+                    rcvr._animate_num_trials = composition._animate_num_trials + 1
                 # MODIFIED 10/29/22 END
                 nested_comp_graph = rcvr._show_graph.show_graph(**nested_args)
 
