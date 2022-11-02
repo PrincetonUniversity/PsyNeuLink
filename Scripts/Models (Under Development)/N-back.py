@@ -54,6 +54,7 @@ TODO:
 from graph_scheduler import *
 
 from psyneulink import *
+import numpy as np
 
 # Settings for running script:
 TRAIN = False
@@ -89,7 +90,7 @@ CONTEXT_DRIFT_RATE=.1 # drift rate used for DriftOnASphereIntegrator (function o
 NUM_TRIALS = 48 # number of stimuli presented in a trial sequence
 REPORT_OUTPUT = ReportOutput.OFF   # Sets console output during run
 REPORT_PROGRESS = ReportProgress.ON  # Sets console progress bar during run
-ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
+ANIMATE = True # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
 
 # Names of Compositions and Mechanisms:
 NBACK_MODEL = "N-Back Model"

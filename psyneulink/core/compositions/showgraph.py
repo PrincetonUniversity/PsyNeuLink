@@ -944,7 +944,7 @@ class ShowGraph():
                                     })
                 # Get subgraph for nested Composition
                 # # MODIFIED 10/29/22 NEW: FIX: HACK SO NESTED COMPOSITIONS DON'T CRASH ANIMATION (THOUGH STILL NOT SHOWN)
-                if hasattr(composition, '_animate') and composition._animate:
+                if hasattr(composition, '_animate') and composition._animate is not False:
                     rcvr._animate = composition._animate
                     rcvr._set_up_animation(context)
                     rcvr._animate_num_trials = composition._animate_num_trials + 1
@@ -974,8 +974,8 @@ class ShowGraph():
                         nested_comp_graph_color = self.active_color
                     nested_comp_graph_penwidth = str(self.default_width + self.active_thicker_by)
                     composition.active_item_rendered = True
-                nested_comp_graph.attr(color=nested_comp_graph_color,
-                                       penwidth=nested_comp_graph_penwidth)
+                    nested_comp_graph.attr(color=nested_comp_graph_color,
+                                           penwidth=nested_comp_graph_penwidth)
                 nested_comp_graph.attr(label=rcvr_label)
                 g.subgraph(nested_comp_graph)
 
