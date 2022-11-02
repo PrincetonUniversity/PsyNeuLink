@@ -40,7 +40,7 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import (
-    DEFAULT_SEED, Function_Base, _random_state_getter,
+    DEFAULT_SEED, Function_Base, FunctionError, _random_state_getter,
     _seed_setter, is_function_type,
 )
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
@@ -66,9 +66,8 @@ SEARCH_TERMINATION_FUNCTION = 'search_termination_function'
 DIRECTION = 'direction'
 SIMULATION_PROGRESS = 'simulation_progress'
 
-class OptimizationFunctionError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
+class OptimizationFunctionError(FunctionError):
+    pass
 
 
 def _num_estimates_getter(owning_component, context):

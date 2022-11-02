@@ -370,6 +370,7 @@ from collections.abc import Iterable
 import typecheck as tc
 
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
+from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.ports.inputport import InputPort, INPUT_PORT
 from psyneulink.core.components.ports.outputport import OutputPort
@@ -400,12 +401,8 @@ DEFAULT_MONITORED_PORT_EXPONENT = None
 DEFAULT_MONITORED_PORT_MATRIX = None
 
 
-class ObjectiveMechanismError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class ObjectiveMechanismError(MechanismError):
+    pass
 
 
 class ObjectiveMechanism(ProcessingMechanism_Base):

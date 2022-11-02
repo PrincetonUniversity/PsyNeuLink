@@ -57,7 +57,7 @@ class TestKWTAInputs:
                 size = 4,
             )
             K.execute(["one", "two", "three", "four"])
-        assert ('"Input to \'K\' ([\'one\' \'two\' \'three\' \'four\']) is incompatible with its corresponding '
+        assert ('Input to \'K\' ([\'one\' \'two\' \'three\' \'four\']) is incompatible with its corresponding '
                 'InputPort (K[InputPort-0]):' in str(error_text.value))
 
     def test_kwta_var_list_of_strings(self):

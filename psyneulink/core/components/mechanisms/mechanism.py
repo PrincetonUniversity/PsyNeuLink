@@ -1087,7 +1087,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.component import Component
+from psyneulink.core.components.component import Component, ComponentError
 from psyneulink.core.components.functions.function import FunctionOutputType
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
 from psyneulink.core.components.ports.inputport import DEFER_VARIABLE_SPEC_TO_MECH_MSG, InputPort
@@ -1125,12 +1125,8 @@ logger = logging.getLogger(__name__)
 MechanismRegistry = {}
 
 
-class MechanismError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class MechanismError(ComponentError):
+    pass
 
 
 class MechParamsDict(UserDict):

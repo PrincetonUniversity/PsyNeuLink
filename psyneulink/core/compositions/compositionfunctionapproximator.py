@@ -53,7 +53,7 @@ Class Reference
 
 """
 
-from psyneulink.core.compositions.composition import Composition
+from psyneulink.core.compositions.composition import Composition, CompositionError
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.keywords import COMPOSITION_FUNCTION_APPROXIMATOR
 
@@ -62,9 +62,8 @@ __all__ = ['CompositionFunctionApproximator']
 from psyneulink.core.globals.parameters import check_user_specified
 
 
-class CompositionFunctionApproximatorError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
+class CompositionFunctionApproximatorError(CompositionError):
+    pass
 
 
 class CompositionFunctionApproximator(Composition):

@@ -412,6 +412,7 @@ import numpy as np
 from psyneulink.core.components.functions.function import Function
 from psyneulink.core.components.functions.stateful.memoryfunctions import \
     DictionaryMemory, ContentAddressableMemory
+from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.globals.keywords import EPISODIC_MEMORY_MECHANISM, INITIALIZER, NAME, OWNER_VALUE, VARIABLE
@@ -430,12 +431,8 @@ DEFAULT_INPUT_PORT_NAME_SUFFIX = '_INPUT'
 DEFAULT_OUTPUT_PORT_PREFIX = 'RETRIEVED_'
 
 
-class EpisodicMemoryMechanismError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class EpisodicMemoryMechanismError(MechanismError):
+    pass
 
 
 class EpisodicMemoryMechanism(ProcessingMechanism_Base):

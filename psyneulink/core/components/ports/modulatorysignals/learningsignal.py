@@ -190,7 +190,7 @@ Class Reference
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal
+from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal, ModulatorySignalError
 from psyneulink.core.components.ports.outputport import PRIMARY
 from psyneulink.core.globals.keywords import \
     LEARNING_PROJECTION, LEARNING_SIGNAL, OUTPUT_PORT_PARAMS, PARAMETER_PORT, PARAMETER_PORTS, RECEIVER
@@ -204,13 +204,8 @@ __all__ = [
 ]
 
 
-class LearningSignalError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-
-    def __str__(self):
-        return repr(self.error_value)
+class LearningSignalError(ModulatorySignalError):
+    pass
 
 
 class LearningSignal(ModulatorySignal):

@@ -107,7 +107,7 @@ class TestTransferMechanismInputs:
                 integrator_mode=True
             )
             T.execute(["one", "two", "three", "four"])
-        assert '"Input to \'T\' ([\'one\' \'two\' \'three\' \'four\']) is incompatible ' \
+        assert 'Input to \'T\' ([\'one\' \'two\' \'three\' \'four\']) is incompatible ' \
                'with its corresponding InputPort (T[InputPort-0]): ' in str(error_text.value)
 
     @pytest.mark.mechanism

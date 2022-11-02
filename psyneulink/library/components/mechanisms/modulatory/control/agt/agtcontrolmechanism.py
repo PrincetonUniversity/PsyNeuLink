@@ -163,7 +163,7 @@ Class Reference
 import typecheck as tc
 
 from psyneulink.core.components.functions.stateful.integratorfunctions import DualAdaptiveIntegrator
-from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism, ControlMechanismError
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import MONITORED_OUTPUT_PORTS, ObjectiveMechanism
 from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.components.ports.outputport import OutputPort
@@ -179,9 +179,8 @@ __all__ = [
 
 MONITORED_OUTPUT_PORT_NAME_SUFFIX = '_Monitor'
 
-class AGTControlMechanismError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
+class AGTControlMechanismError(ControlMechanismError):
+    pass
 
 
 class AGTControlMechanism(ControlMechanism):

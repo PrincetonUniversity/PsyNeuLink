@@ -183,7 +183,7 @@ Class Reference
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism, ControlMechanismError
 from psyneulink.core.components.ports.modulatorysignals.gatingsignal import GatingSignal
 from psyneulink.core.components.ports.port import _parse_port_spec
 from psyneulink.core.globals.defaults import defaultGatingAllocation
@@ -222,9 +222,8 @@ def _is_gating_spec(spec):
         return False
 
 
-class GatingMechanismError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
+class GatingMechanismError(ControlMechanismError):
+    pass
 
 
 class GatingMechanism(ControlMechanism):

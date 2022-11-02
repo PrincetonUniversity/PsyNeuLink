@@ -82,7 +82,7 @@ from psyneulink.core.components.functions.nonstateful.learningfunctions import K
 from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
     ACTIVATION_INPUT, ACTIVATION_OUTPUT, LearningMechanism
-from psyneulink.core.components.mechanisms.mechanism import Mechanism
+from psyneulink.core.components.mechanisms.mechanism import Mechanism, MechanismError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
@@ -102,12 +102,8 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 
-class KohonenError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class KohonenError(MechanismError):
+    pass
 
 
 MAXIMUM_ACTIVITY = 'MAXIMUM_ACTIVITY'

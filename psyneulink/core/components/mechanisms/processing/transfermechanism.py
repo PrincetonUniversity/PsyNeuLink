@@ -883,12 +883,8 @@ Transfer_DEFAULT_OFFSET = 0
 logger = logging.getLogger(__name__)
 
 
-class TransferError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class TransferError(MechanismError):
+    pass
 
 
 def _integrator_mode_setter(value, owning_component=None, context=None):

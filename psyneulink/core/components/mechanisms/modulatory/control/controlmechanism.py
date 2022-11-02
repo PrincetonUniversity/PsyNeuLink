@@ -592,7 +592,7 @@ from psyneulink.core.components.functions.function import Function_Base, is_func
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import Concatenate
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
-from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base
+from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base, MechanismError
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
@@ -640,10 +640,10 @@ def _is_control_spec(spec):
         return False
 
 
-class ControlMechanismError(Exception):
-    def __init__(self, error_value, data=None):
-        self.error_value = error_value
+class ControlMechanismError(MechanismError):
+    def __init__(self, message, data=None):
         self.data = data
+        return super().__init__(message)
 
 
 def validate_monitored_port_spec(owner, spec_list):

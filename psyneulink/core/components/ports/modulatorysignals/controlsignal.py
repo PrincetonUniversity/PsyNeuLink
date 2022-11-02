@@ -411,7 +411,7 @@ from psyneulink.core.components.functions.nonstateful.combinationfunctions impor
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Exponential, Linear, CostFunctions, \
     TransferWithCosts
 from psyneulink.core.components.functions.stateful.integratorfunctions import SimpleIntegrator
-from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal
+from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal, ModulatorySignalError
 from psyneulink.core.components.ports.outputport import _output_port_variable_getter
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
@@ -440,13 +440,8 @@ from psyneulink.core.components.functions.nonstateful.transferfunctions import \
 COST_OPTIONS = 'cost_options'
 
 
-class ControlSignalError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-
-    def __str__(self):
-        return repr(self.error_value)
+class ControlSignalError(ModulatorySignalError):
+    pass
 
 
 class ControlSignal(ModulatorySignal):
