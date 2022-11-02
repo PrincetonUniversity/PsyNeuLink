@@ -957,25 +957,23 @@ class ShowGraph():
                 # Assign color to nested_comp, including highlighting if it is the active_item
                 # if rcvr in composition.get_nodes_by_role(NodeRole.FEEDBACK_SENDER):
                 #     nested_comp_graph.attr(color=feedback_color)
+                # nested_comp_attributes = {"label":rcvr_label}
+                nested_comp_attributes = {}
                 if rcvr in composition.get_nodes_by_role(NodeRole.INPUT) and \
                         rcvr in composition.get_nodes_by_role(NodeRole.OUTPUT):
-                    nested_comp_graph_color = self.input_and_output_color
+                    nested_comp_attributes.update({"color": self.input_and_output_color})
                 elif rcvr in composition.get_nodes_by_role(NodeRole.INPUT):
-                    nested_comp_graph_color = self.input_color
+                    nested_comp_attributes.update({"color": self.input_color})
                 elif rcvr in composition.get_nodes_by_role(NodeRole.PROBE):
-                    nested_comp_graph_color = self.probe_color
+                    nested_comp_attributes.update({"color": self.probe_color})
                 elif rcvr in composition.get_nodes_by_role(NodeRole.OUTPUT):
-                    nested_comp_graph_color = self.output_color
-                else:
-                    nested_comp_graph_color = self.default_node_color
-                nested_comp_graph_penwidth = str(self.default_width)
+                    nested_comp_attributes.update({"color": self.output_color})
                 if rcvr in active_items:
                     if self.active_color != BOLD:
-                        nested_comp_graph_color = self.active_color
-                    nested_comp_graph_penwidth = str(self.default_width + self.active_thicker_by)
+                        nested_comp_attributes.update({"color": self.active_color})
+                    nested_comp_attributes.update({"penwidth": str(self.default_width + self.active_thicker_by)})
                     composition.active_item_rendered = True
-                    nested_comp_graph.attr(color=nested_comp_graph_color,
-                                           penwidth=nested_comp_graph_penwidth)
+                nested_comp_graph.attr(**nested_comp_attributes)
                 nested_comp_graph.attr(label=rcvr_label)
                 g.subgraph(nested_comp_graph)
 
