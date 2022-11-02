@@ -967,7 +967,7 @@ class ShowGraph():
                 elif rcvr in composition.get_nodes_by_role(NodeRole.OUTPUT):
                     nested_comp_graph_color = self.output_color
                 else:
-                    nested_comp_graph_color = self.output_color
+                    nested_comp_graph_color = self.default_node_color
                 nested_comp_graph_penwidth = str(self.default_width)
                 if rcvr in active_items:
                     if self.active_color != BOLD:
