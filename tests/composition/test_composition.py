@@ -1013,10 +1013,10 @@ class TestCompositionPathwayArgsAndAdditionMethods:
             assert all(node in comp.get_nodes_by_role(NodeRole.OUTPUT) for node in {B,D})
 
     config = [
-        ('([{A,B,C},D,E],Proj)', 'a'),
-        ('([{A,B,C},Proj_1,D,E],Proj_2)', 'b'),
-        ('([{A,B,C},D,Proj_1,E],Proj_2)', 'c'),
-        # ('Pathway(default_matrix)', 'd'),
+        # ('([{A,B,C},D,E],Proj)', 'a'),
+        # ('([{A,B,C},Proj_1,D,E],Proj_2)', 'b'),
+        # ('([{A,B,C},D,Proj_1,E],Proj_2)', 'c'),
+        ('Pathway(default_matrix)', 'd'),
         ('([{A,B,C},D,Proj_1,E],Proj_2,learning_fct)', 'e'),
         ('([{A,B,C},D,Proj_1,E],learning_fct,Proj_2)', 'f'),
     ]
