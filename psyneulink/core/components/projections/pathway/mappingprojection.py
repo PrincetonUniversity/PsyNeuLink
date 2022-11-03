@@ -19,7 +19,7 @@ Contents
       - `MappingProjection_Deferred_Initialization`
   * `MappingProjection_Structure`
       - `MappingProjection_Matrix`
-      - `Mapping_Matrix_ParameterPort`
+      - `MappingProjection_Matrix_ParameterPort`
   * `MappingProjection_Execution`
       - `MappingProjection_Learning`
   * `MappingProjection_Class_Reference`
@@ -98,10 +98,8 @@ following ways:
     <Keywords.MatrixKeywords>` can be used.
 
   ..
-  * **Random matrix function** (`random_matrix <Utilities.random_matrix>`) -- a convenience function
-    that provides more flexibility than `RANDOM_CONNECTIVITY_MATRIX`.  It generates a random matrix sized for a
-    **sender** and **receiver**, with random numbers drawn from a uniform distribution within a specified **range** and
-    with a specified **offset**.
+  * `RandomMatrix` -- assigns a matrix sized appropriately for the **sender** and **receiver**, with random values
+    drawn from a uniform distribution with a specified **center** and **range**.
 
   .. _MappingProjection_Tuple_Specification:
 
@@ -185,14 +183,14 @@ Structure
 In addition to its `sender <MappingProjection.sender>`, `receiver <MappingProjection.receiver>`, and `function
 <Projection_Base.function>`, a MappingProjection has the following characteristic attributes:
 
-.. _Mapping_Matrix:
+.. _MappingProjection_Matrix:
 
 * `matrix <MappingProjection.matrix>` parameter - used by the MappingProjection's `function <Projection_Base.function>`
   to carry out a matrix transformation of its input, that is then provided to its `receiver
   <MappingProjection.receiver>`. It can be specified in a variety of ways, as described `above
   <MappingProjection_Matrix_Specification>`.
 
-  .. _Mapping_Matrix_Dimensionality
+  .. _MappingProjection_Matrix_Dimensionality
 
   * **Matrix Dimensionality** -- this must match the dimensionality of the MappingProjection's `sender
     <MappingProjection.sender>` and `receiver <MappingProjection.receiver>`.  For a standard 2d "weight" matrix (i.e.,
@@ -204,7 +202,7 @@ In addition to its `sender <MappingProjection.sender>`, `receiver <MappingProjec
     `receiver <MappingProjection.receiver>`'s `variable <Projection_Base.variable>` (equal to the dimensionality of the
     matrix minus its sender dimensionality).
 
-.. _Mapping_Matrix_ParameterPort:
+.. _MappingProjection_Matrix_ParameterPort:
 
 * *MATRIX* `ParameterPort` - this receives any `LearningProjections <LearningProjection>` that are assigned to the
   MappingProjection (see `MappingProjection_Learning_Specification` above), and updates the current value of the
@@ -286,6 +284,7 @@ Class Reference
 import copy
 
 import numpy as np
+from typing import Union
 
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.stateful.integratorfunctions import AccumulatorIntegrator
@@ -304,7 +303,7 @@ from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
 __all__ = [
-    'MappingError', 'MappingProjection',
+    'MappingError', 'MappingProjection'
 ]
 
 parameter_keywords.update({MAPPING_PROJECTION})
@@ -355,10 +354,11 @@ class MappingProjection(PathwayProjection_Base):
         the context in which the Projection is used, or its initialization will be `deferred
         <MappingProjection_Deferred_Initialization>`.
 
-    matrix : list, np.ndarray, np.matrix, function or keyword : default DEFAULT_MATRIX
+    matrix : list, np.ndarray, np.matrix, function, `RandomMatrix` or keyword : default DEFAULT_MATRIX
         specifies the matrix used by `function <Projection_Base.function>` (default: `LinearCombination`) to
         transform the `value <Projection_Base.value>` of the `sender <MappingProjection.sender>` into a form suitable
-        for the `variable <InputPort.variable>` of its `receiver <MappingProjection.receiver>` `InputPort`.
+        for the `variable <InputPort.variable>` of its `receiver <MappingProjection.receiver>` `InputPort`
+        (see `MappingProjection_Matrix_Specification` for additional details).
 
     Attributes
     ----------

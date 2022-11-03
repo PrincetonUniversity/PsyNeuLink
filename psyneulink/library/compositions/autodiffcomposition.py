@@ -26,10 +26,11 @@ Contents
 Overview
 --------
 
-.. warning:: As of PsyNeuLink 0.7.5, the API for using AutodiffCompositions has been slightly changed! Please see `this link <RefactoredLearningGuide>` for more details!
+.. warning:: As of PsyNeuLink 0.7.5, the API for using AutodiffCompositions has been slightly changed!
+   Please see `this link <RefactoredLearningGuide>` for more details!
 
 AutodiffComposition is a subclass of `Composition` used to train feedforward neural network models through integration
-with `PyTorch <https://pytorch.org/>`_, a popular machine learning library, which executes considerably more quickly
+with `PyTorch <https://pytorch.org/>`_, a machine learning library that executes considerably more quickly
 than using the `standard implementation of learning <Composition_Learning_Standard>` in a Composition, using its
 `learning methods <Composition_Learning_Methods>`. An AutodiffComposition is configured and run similarly to a standard
 Composition, with some exceptions that are described below.
@@ -44,14 +45,16 @@ Creating an AutodiffComposition
 
 An AutodiffComposition can be created by calling its constructor, and then adding `Components <Component>` using the
 standard `Composition methods <Composition_Creation>` for doing so.  The constructor also includes an number of
-parameters that are specific to the AutodiffComposition. See the <class reference `AutodiffComposition`> for a list of these parameters.
+parameters that are specific to the AutodiffComposition. See `AutodiffComposition_Class_Reference` for a list of
+these parameters.
 
 .. warning:: Mechanisms or Projections should not be added to or deleted from an AutodiffComposition after it has
    been run for the first time. Unlike an ordinary Composition, AutodiffComposition does not support this
    functionality.
 
 .. warning:: When comparing models built in PyTorch to those using AutodiffComposition,
-   the `bias <https://www.pytorch.org/docs/stable/nn.html#torch.nn.Module>` parameter of PyTorch modules should be set to `False`, as AutodiffComposition does not currently support trainable biases.
+   the `bias <https://www.pytorch.org/docs/stable/nn.html#torch.nn.Module>` parameter of PyTorch modules
+   should be set to `False`, as AutodiffComposition does not currently support trainable biases.
 
 
 .. _AutodiffComposition_Execution:
@@ -59,7 +62,8 @@ parameters that are specific to the AutodiffComposition. See the <class referenc
 Execution
 ---------
 
-An AutodiffComposition's `run <Composition.run>`, `execute <Composition.execute>`, and `learn <Composition.learn>` methods are the same as for a `Composition`.
+An AutodiffComposition's `run <Composition.run>`, `execute <Composition.execute>`, and `learn <Composition.learn>`
+methods are the same as for a `Composition`.
 
 The following is an example showing how to create a
 simple AutodiffComposition, specify its inputs and targets, and run it with learning enabled and disabled.
@@ -224,6 +228,7 @@ class AutodiffComposition(Composition):
     # TODO (CW 9/28/18): add compositions to registry so default arg for name is no longer needed
     @check_user_specified
     def __init__(self,
+                 pathways=None,
                  learning_rate=None,
                  optimizer_type='sgd',
                  weight_decay=0,
@@ -233,7 +238,6 @@ class AutodiffComposition(Composition):
                  disable_cuda=True,
                  cuda_index=None,
                  force_no_retain_graph=False,
-                 pathways=None,
                  name="autodiff_composition"):
 
         if not torch_available:

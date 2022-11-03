@@ -779,7 +779,8 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import ComponentError, DefaultsFlexibility, component_keywords
-from psyneulink.core.components.functions.function import Function, get_param_value_for_keyword, is_function_type
+from psyneulink.core.components.functions.function import \
+    Function, get_param_value_for_keyword, is_function_type, RandomMatrix
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import CombinationFunction, LinearCombination
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
 from psyneulink.core.components.shellclasses import Mechanism, Projection, Port
@@ -2952,6 +2953,12 @@ def _parse_port_spec(port_type=None,
     # function; try to resolve to a value
     if isinstance(port_specification, types.FunctionType):
         port_specification = port_specification()
+
+    # RandomMatrix (used for Projection); try to resolve to a matrix
+    if isinstance(port_specification, RandomMatrix):
+        rows = len(owner.sender.value)
+        cols = len(owner.receiver.value)
+        port_specification = port_specification(rows,cols)
 
     # ModulatorySpecification of some kind
     if _is_modulatory_spec(port_specification):

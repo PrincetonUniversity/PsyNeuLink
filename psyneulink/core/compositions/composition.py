@@ -2734,7 +2734,7 @@ from PIL import Image
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentsMeta
 from psyneulink.core.components.functions.fitfunctions import make_likelihood_function
-from psyneulink.core.components.functions.function import is_function_type
+from psyneulink.core.components.functions.function import is_function_type, RandomMatrix
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination, \
     PredictionErrorDeltaFunction
 from psyneulink.core.components.functions.nonstateful.learningfunctions import \
@@ -5591,6 +5591,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                        projection=None,
                        sender=None,
                        receiver=None,
+                       default_matrix=None,
                        feedback=False,
                        learning_projection=False,
                        name=None,
@@ -5599,7 +5600,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                        ):
         """Add **projection** to the Composition.
 
-        If **projection** is not specified, create a default `MappingProjection` using **sender** and **receiver**.
+        If **projection** is not specified, and one does not already exist between **sender** and **receiver**
+        create a default `MappingProjection` between them, using **default_projection_matrix** if specified
+        (otherwise default for MappingProjection is used).
 
         If **projection** is specified:
 
@@ -5648,14 +5651,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Arguments
         ---------
 
+        projection : Projection, list, array, matrix, RandomMatrix, MATRIX_KEYWORD
+            the projection to add.
+
         sender : Mechanism, Composition, or OutputPort
             the sender of **projection**.
 
-        projection : Projection, matrix
-            the projection to add.
-
         receiver : Mechanism, Composition, or InputPort
             the receiver of **projection**.
+
+        default_projection_matrix : list, array, matrix, RandomMatrix, MATRIX_KEYWORD
+            matrix to use in creating default; overrides default for MappingProjection.
+
+        default_projection_matrix : list, array, function, `RandomMatrix` or MATRIX_KEYWORD : default None
+            specifies matrix to use in creating default Projection if none is specifed in **projection**
+            and one does not already exist between **sender** and **receive**
+            (see `MappingProjection_Matrix_Specification` for details of specification).
 
         feedback : bool or FEEDBACK : False
             if False, the Projection is *never* designated as a `feedback Projection
@@ -5733,6 +5744,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 return self.add_projection(proj_spec, sender=projection.sender, receiver=projection.receiver)
 
         # Create Projection if it doesn't exist
+        projection = projection or default_matrix
         try:
             # Note: this does NOT initialize the Projection if it is in deferred_init
             projection = self._instantiate_projection_from_spec(projection, name)
@@ -5918,7 +5930,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             proj_type = projection.pop(PROJECTION_TYPE, None) or MappingProjection
             params = projection.pop(PROJECTION_PARAMS, None)
             projection = MappingProjection(params=params)
-        elif isinstance(projection, (np.ndarray, np.matrix, list)):
+        elif isinstance(projection, (np.ndarray, np.matrix, list, RandomMatrix)):
             return MappingProjection(matrix=projection, sender=sender, receiver=receiver, name=name)
         elif isinstance(projection, str):
             if projection in MATRIX_KEYWORD_VALUES:
@@ -5930,8 +5942,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         elif projection is None:
             return MappingProjection(sender=sender, receiver=receiver, name=name)
         elif not isinstance(projection, Projection):
-            raise CompositionError("Invalid projection ({}) specified for {}. Must be a Projection."
-                                   .format(projection, self.name))
+            raise CompositionError(f"Invalid projection ({projection}) specified for {self.name}. "
+                                   f"Must be a Projection.")
         return projection
 
     def _parse_sender_spec(self, projection, sender):
@@ -6384,7 +6396,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if isinstance(pathway, Pathway):
             # Give precedence to name specified in call to add_linear_processing_pathway
             pathway_name = name or pathway.name
+            # MODIFIED 11/3/22 OLD:
             pathway = pathway.pathway
+            # # MODIFIED 11/3/22 NEW:
+            # # If Pathway has default_projection_matrix, use tuple_spec to specify for handling below
+            # if pathway.default_projection_matrix:
+            #     pathway = (pathway.pathway, pathway. default_projection_matrix)
+            # else:
+            #     pathway = pathway.pathway
+            # MODIFIED 11/3/22 END
         else:
             pathway_name = name
 
@@ -6557,20 +6577,47 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 pway_type = PROCESSING_PATHWAY
                 if isinstance(pway, set):
                     pway = [pway]
-                return pway_type, pway, None
+                return pway_type, pway, None, None
             elif isinstance(pway, tuple):
-                pway_type = LEARNING_PATHWAY
-                if len(pway)!=2:
+                # FIX: ADD SUPPORT FOR 3-ITEM TUPLE AND SPECIFCATION OF DEFAULT MATRIX HERE 10/29/22
+                # # MODIFIED 10/29/22 OLD:
+                # pway_type = LEARNING_PATHWAY
+                # if len(pway)!=2:
+                #     raise CompositionError(f"A tuple specified in the {pathways_arg_str}"
+                #                            f" has more than two items: {pway}")
+                # pway, learning_function = pway
+                # if not (_is_node_spec(pway) or isinstance(pway, (list, Pathway))):
+                #     raise CompositionError(f"The 1st item in {tuple_or_dict_str} specified in the "
+                #                            f" {pathways_arg_str} must be a node or a list: {pway}")
+                # if not (isinstance(learning_function, type) and issubclass(learning_function, LearningFunction)):
+                #     raise CompositionError(f"The 2nd item in {tuple_or_dict_str} specified in the "
+                #                            f"{pathways_arg_str} must be a LearningFunction: {learning_function}")
+                # return pway_type, pway, learning_function
+                # MODIFIED 10/29/22 NEW:
+                if len(pway) not in {2,3}:
                     raise CompositionError(f"A tuple specified in the {pathways_arg_str}"
-                                           f" has more than two items: {pway}")
-                pway, learning_function = pway
-                if not (_is_node_spec(pway) or isinstance(pway, (list, Pathway))):
-                    raise CompositionError(f"The 1st item in {tuple_or_dict_str} specified in the "
-                                           f" {pathways_arg_str} must be a node or a list: {pway}")
-                if not (isinstance(learning_function, type) and issubclass(learning_function, LearningFunction)):
-                    raise CompositionError(f"The 2nd item in {tuple_or_dict_str} specified in the "
-                                           f"{pathways_arg_str} must be a LearningFunction: {learning_function}")
-                return pway_type, pway, learning_function
+                                           f" must have either two or three items: {pway}")
+                pway_type = PROCESSING_PATHWAY
+                matrix_item = None
+                learning_function_item = None
+                for i, item in enumerate(pway):
+                    # Ensure that first item is a Pathway spec
+                    if i==0:
+                        if not (_is_node_spec(item) or isinstance(item, (list, Pathway))):
+                            raise CompositionError(f"The 1st item in {tuple_or_dict_str} specified in the "
+                                                   f" {pathways_arg_str} must be a node or a list: {pway}")
+                        pathway_item = item
+                    elif (isinstance(item, type) and issubclass(item, LearningFunction)):
+                        pway_type = LEARNING_PATHWAY
+                        learning_function_item = item
+                    elif is_matrix(item):
+                        matrix_item = item
+                    else:
+                        raise CompositionError(f"Bad spec for one of the items in {tuple_or_dict_str} "
+                                               f"specified for the {pathways_arg_str}: {item}; "
+                                               f"its item(s) must be a matrix specification and/or a LearningFunction")
+                return pway_type, pathway_item, matrix_item, learning_function_item
+                # MODIFIED 10/29/22 END
             else:
                 assert False, f"PROGRAM ERROR: arg to identify_pway_type_and_parse_tuple_prn in {self.name}" \
                               f"is not a Node, list or tuple: {pway}"
@@ -6583,13 +6630,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pway_name = None
             if isinstance(pathway, Pathway):
                 pway_name = pathway.name
+                # MODIFIED 11/3/22 OLD:
                 pathway = pathway.pathway
+                # # MODIFIED 11/3/22 NEW:
+                # # If Pathway has default_projection_matrix, use tuple_spec to specify for later handling
+                # if pathway.default_projection_matrix:
+                #     pathway = (pathway.pathway, pathway.default_projection_matrix)
+                # else:
+                #     pathway = pathway.pathway
+                # MODIFIED 11/3/22 END
             if _is_node_spec(pathway) or isinstance(pathway, (list, set, tuple)):
                 if isinstance(pathway, set):
                     bad_entries = [repr(entry) for entry in pathway if not _is_node_spec(entry)]
                     if bad_entries:
                         raise CompositionError(f"{bad_entry_error_msg}{','.join(bad_entries)}")
-                pway_type, pway, pway_learning_fct = identify_pway_type_and_parse_tuple_prn(pathway, f"a tuple")
+                pway_type, pway, matrix, pway_learning_fct = identify_pway_type_and_parse_tuple_prn(pathway,
+                                                                                                    f"the tuple")
             elif isinstance(pathway, dict):
                 if len(pathway)!=1:
                     raise CompositionError(f"A dict specified in the {pathways_arg_str} "
@@ -6599,8 +6655,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     raise CompositionError(f"The key in a dict specified in the {pathways_arg_str} must be a str "
                                            f"(to be used as its name): {pway_name}.")
                 if _is_node_spec(pway) or isinstance(pway, (list, tuple, Pathway)):
-                    pway_type, pway, pway_learning_fct = identify_pway_type_and_parse_tuple_prn(pway,
-                                                                                                f"the value of a dict")
+                    pway_type, pway, matrix, pway_learning_fct = identify_pway_type_and_parse_tuple_prn(pway,
+                                                                                                        f"the value of a dict")
                 else:
                     raise CompositionError(f"The value in a dict specified in the {pathways_arg_str} must be "
                                            f"a pathway specification (Node, list or tuple): {pway}.")
@@ -6610,11 +6666,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             context.source = ContextFlags.METHOD
             if pway_type == PROCESSING_PATHWAY:
                 new_pathway = self.add_linear_processing_pathway(pathway=pway,
+                                                                 default_projection_matrix=matrix,
                                                                  name=pway_name,
                                                                  context=context)
             elif pway_type == LEARNING_PATHWAY:
                 new_pathway = self.add_linear_learning_pathway(pathway=pway,
                                                                learning_function=pway_learning_fct,
+                                                               default_projection_matrix=matrix,
                                                                name=pway_name,
                                                                context=context)
             else:
@@ -6625,7 +6683,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return added_pathways
 
     @handle_external_context()
-    def add_linear_processing_pathway(self, pathway, name:str=None, context=None, *args):
+    def add_linear_processing_pathway(self, pathway, default_projection_matrix=None, name:str=None, context=None, *args):
         """Add sequence of `Nodes <Composition_Nodes>` with optionally intercolated `Projections <Projection>`.
 
         .. _Composition_Add_Linear_Processing_Pathway:
@@ -6653,6 +6711,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             <Composition_Learning_Pathway>` is desired).  A `Pathway` object can also be used;  again, however, any
             learning-related specifications are ignored, as are its `name <Pathway.name>` if the **name** argument
             of add_linear_processing_pathway is specified.
+
+        default_projection_matrix : list, array, function, `RandomMatrix` or MATRIX_KEYWORD : default None
+            specifies matrix to use for any unspecified Projections (overrides default matrix for `MappingProjection`)
+            if a default projection is not otherwise specified (see `Pathway_Specification_Projections`;
+            see `MappingProjection_Matrix_Specification` for details of specification)
 
         name : str
             species the name used for `Pathway`; supercedes `name <Pathway.name>` of `Pathway` object if it is has one.
@@ -6769,8 +6832,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    else {pathway[c - 1]})
                 if all(_is_node_spec(sender) for sender in preceding_entry):
                     senders = _get_node_specs_for_entry(preceding_entry, NodeRole.OUTPUT)
-                    projs = {self.add_projection(sender=s, receiver=r, allow_duplicates=False)
+                    projs = {self.add_projection(sender=s, receiver=r,
+                                                 default_matrix=default_projection_matrix,
+                                                 allow_duplicates=False)
                             for r in receivers for s in senders}
+                    # MODIFIED 11/2/22 END
                     if all(projs):
                         projs = projs.pop() if len(projs) == 1 else projs
                         projections.append(projs)
@@ -6835,8 +6901,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # Unpack if tuple spec, and assign feedback (with False as default)
                     default_proj_spec, feedback = (spec if isinstance(spec, tuple) else (spec, False))
                     # Get all specs other than default_proj_spec
-                    # proj_specs = [proj_spec for proj_spec in all_proj_specs if proj_spec not in possible_default_proj_spec]
                     proj_specs = [proj_spec for proj_spec in all_proj_specs if proj_spec is not spec]
+                # If default matrix is not specified within the pathway, use default_projection_matrix if specified
+                if default_proj_spec is None:
+                    default_proj_spec = default_projection_matrix
 
                 # Collect all Projection specifications (to add to Composition at end)
                 proj_set = []
@@ -7040,6 +7108,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         pathway = Pathway(pathway=explicit_pathway,
                           composition=self,
+                          # default_projection_matrix=default_projection_matrix,
                           name=pathway_name,
                           context=context)
         self.pathways.append(pathway)
@@ -7060,6 +7129,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     learning_rate:tc.any(int,float)=0.05,
                                     error_function=LinearCombination,
                                     learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=AFTER,
+                                    default_projection_matrix=None,
                                     name:str=None,
                                     context=None):
         """Implement learning pathway (including necessary `learning components <Composition_Learning_Components>`.
@@ -7130,6 +7200,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             <LearningMechanism>` in the pathway, and its `LearningProjection` (see `learning_enabled
             <LearningMechanism.learning_enabled>` for meaning of values).
 
+        default_projection_matrix : list, array, function, `RandomMatrix` or MATRIX_KEYWORD : default None
+            specifies matrix to use for any unspecified Projections (overrides default matrix for `MappingProjection`)
+            if a default projection is not otherwise specified (see `Pathway_Specification_Projections`;
+            see `MappingProjection_Matrix_Specification` for details of specification)
+
         name : str :
             species the name used for `Pathway`; supercedes `name <Pathway.name>` of `Pathway` object if it is has one.
 
@@ -7179,6 +7254,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                  loss_function,
                                                                  learning_update,
                                                                  name=pathway_name,
+                                                                 default_projection_matrix=default_projection_matrix,
                                                                  context=context)
 
         # If BackPropagation is not specified, then the learning pathway is "one-layered"
@@ -7196,6 +7272,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._add_required_node_role(output_source, NodeRole.OUTPUT, context)
 
         learning_pathway = self.add_linear_processing_pathway(pathway=[input_source, learned_projection, output_source],
+                                                              default_projection_matrix=default_projection_matrix,
                                                               name=pathway_name,
                                                               # context=context)
                                                               context=context)
@@ -7251,6 +7328,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                            learning_rate=0.05,
                                            error_function=None,
                                            learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE,
+                                           default_projection_matrix=None,
                                            name:str=None):
         """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`Reinforcement`
 
@@ -7261,6 +7339,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             list containing either [Node1, Node2] or [Node1, MappingProjection, Node2]. If a projection is
             specified, that projection is the learned projection. Otherwise, a default MappingProjection is
             automatically generated for the learned projection.
+
+        default_projection_matrix : list, array, function, `RandomMatrix` or MATRIX_KEYWORD : default None
+            specifies matrix to use for any unspecified Projections (overrides default matrix for `MappingProjection`)
+            if a default projection is not otherwise specified (see `Pathway_Specification_Projections`;
+            see `MappingProjection_Matrix_Specification` for details of specification)
 
         learning_rate : float : default 0.05
             specifies the `learning_rate <ReinforcementLearning.learning_rate>` used for the `ReinforcementLearning`
@@ -7292,6 +7375,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                 learning_function=Reinforcement,
                                                 error_function=error_function,
                                                 learning_update=learning_update,
+                                                default_projection_matrix=default_projection_matrix,
                                                 name=name)
 
     def add_td_learning_pathway(self,
@@ -7299,6 +7383,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 learning_rate=0.05,
                                 error_function=None,
                                 learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE,
+                                default_projection_matrix=None,
                                 name:str=None):
         """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`TDLearning`
 
@@ -7325,6 +7410,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             <LearningMechanism>` in the pathway, and its `LearningProjection` (see `learning_enabled
             <LearningMechanism.learning_enabled>` for meaning of values).
 
+        default_projection_matrix : list, array, function, `RandomMatrix` or MATRIX_KEYWORD : default None
+            specifies matrix to use for any unspecified Projections (overrides default matrix for `MappingProjection`)
+            if a default projection is not otherwise specified (see `Pathway_Specification_Projections`;
+            see `MappingProjection_Matrix_Specification` for details of specification)
+
         name : str :
             species the name used for `Pathway`; supercedes `name <Pathway.name>` of `Pathway` object if it is has one.
 
@@ -7339,6 +7429,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                 learning_rate=learning_rate,
                                                 learning_function=TDLearning,
                                                 learning_update=learning_update,
+                                                default_projection_matrix=default_projection_matrix,
                                                 name=name)
 
     def add_backpropagation_learning_pathway(self,
@@ -7347,6 +7438,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                              error_function=None,
                                              loss_function:tc.enum(MSE,SSE)=MSE,
                                              learning_update:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=AFTER,
+                                             default_projection_matrix=None,
                                              name:str=None):
         """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`Backpropagation`
 
@@ -7376,6 +7468,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             <LearningMechanism>` in the pathway, and their `LearningProjections <LearningProjection>`
             (see `learning_enabled <LearningMechanism.learning_enabled>` for meaning of values).
 
+        default_projection_matrix : list, array, function, `RandomMatrix` or MATRIX_KEYWORD : default None
+            specifies matrix to use for any unspecified Projections (overrides default matrix for `MappingProjection`)
+            if a default projection is not otherwise specified (see `Pathway_Specification_Projections`;
+            see `MappingProjection_Matrix_Specification` for details of specification)
+
         name : str :
             species the name used for `Pathway`; supercedes `name <Pathway.name>` of `Pathway` object if it is has one.
 
@@ -7392,6 +7489,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                 loss_function=loss_function,
                                                 error_function=error_function,
                                                 learning_update=learning_update,
+                                                default_projection_matrix=default_projection_matrix,
                                                 name=name)
 
     # NOTES:
@@ -7618,6 +7716,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                  error_function=None,
                                                  loss_function=MSE,
                                                  learning_update=AFTER,
+                                                 default_projection_matrix=None,
                                                  name=None,
                                                  context=None):
 
@@ -7631,7 +7730,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Pass ContextFlags.INITIALIZING so that it can be passed on to _analyze_graph() and then
         #    _check_for_projection_assignments() in order to ignore checks for require_projection_in_composition
         context.string = f"'pathway' arg for add_backpropagation_learning_pathway method of {self.name}"
-        learning_pathway = self.add_linear_processing_pathway(pathway, name, context)
+        learning_pathway = self.add_linear_processing_pathway(pathway=pathway,
+                                                              name=name,
+                                                              default_projection_matrix=default_projection_matrix,
+                                                              context=context)
         processing_pathway = learning_pathway.pathway
 
         path_length = len(processing_pathway)
@@ -8649,9 +8751,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             buffer_animate_state = self._animate
 
         # Run Composition in "SIMULATION" context
-        # # MODIFIED 3/28/22 NEW:
-        # context.source = ContextFlags.COMPOSITION
-        # MODIFIED 3/28/22 END
         context.add_flag(ContextFlags.SIMULATION_MODE)
         context.remove_flag(ContextFlags.CONTROL)
 
@@ -9616,14 +9715,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             details and `ReportDevices` for options.
 
         animate : dict or bool : default False
-            specifies use of the `show_graph`show_graph <ShowGraph.show_graph>` method to generate
-            a gif movie showing the sequence of Components executed in a run (see `example
-            <BasicsAndPrimer_Stroop_Example_Animation_Figure>`). A dict can be specified containing
-            options to pass to the `show_graph <ShowGraph.show_graph>` method; each key must be a legal
-            argument for the `show_graph <ShowGraph.show_graph>` method, and its value a specification for that
-            argument.  The entries listed below can also be included in the dict to specify parameters of the
-            animation.  If the **animate** argument is specified simply as `True`, defaults are used for all
-            arguments of `show_graph <ShowGraph.show_graph>` and the options below:
+            specifies use of the `show_graph <ShowGraph.show_graph>` method to generate a gif movie showing the
+            sequence of Components executed in a run (see `example <BasicsAndPrimer_Stroop_Example_Animation_Figure>`).
+            A dict can be specified containing options to pass to the `show_graph <ShowGraph.show_graph>` method in
+            order to customize the display of the graph in the animation. Each key of the dict must be a legal argument
+            for the `show_graph <ShowGraph.show_graph>` method, and its value a specification for that argument.
+            The entries listed below can also be included in the dict to specify parameters of the animation.
+            If the **animate** argument is specified simply as `True`, defaults are used for all arguments
+            of `show_graph <ShowGraph.show_graph>` and the options below.  See `Animation <ShowGraph_Animation>`
+            for additional information.
 
             * *UNIT*: *EXECUTION_SET* or *COMPONENT* (default=\\ *EXECUTION_SET*\\ ) -- specifies which Components
               to treat as active in each call to `show_graph() <ShowGraph.show_graph>`. *COMPONENT* generates an
@@ -9648,7 +9748,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             * *MOVIE_NAME*: str (default=\\ `name <Composition.name>` + 'movie') -- specifies the name to be used
               for the movie file; it is automatically appended with '.gif'.
-
+_
             * *SAVE_IMAGES*: bool (default=\\ `False`\\ ) -- specifies whether to save each of the images used to
               construct the animation in separate gif files, in addition to the file containing the animation.
 
@@ -9660,7 +9760,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             `projection <Composition.projections>` in the Composition, if it is not already set.
 
             .. note::
-               as when setting the `log_condition <Parameter.log_condition>` directly, a value of `True` will
+               As when setting the `log_condition <Parameter.log_condition>` directly, a value of `True` will
                correspond to the `EXECUTION` `LogCondition <LogCondition.EXECUTION>`.
 
         scheduler : Scheduler : default None
@@ -9781,6 +9881,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Set animation attributes
         if animate is True:
             animate = {}
+        if animate is None:
+            animate = False
         self._animate = animate
         if self._animate is not False:
             self._set_up_animation(context)
@@ -10117,7 +10219,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 specifies the number of training epochs (that is, repetitions of the batched input set) to run with
 
             minibatch_size : int (default=1)
-                specifies the size of the minibatches to use. The input trials will be batched and ran, after which
+                specifies the size of the minibatches to use. The input trials will be batched and run, after which
                 learning mechanisms with learning mode TRIAL will update weights
 
             randomize_minibatch: bool (default=False)
