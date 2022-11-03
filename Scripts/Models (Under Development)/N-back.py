@@ -58,8 +58,8 @@ import numpy as np
 
 # Settings for running script:
 TRAIN = False
-RUN = False
-DISPLAY = True # show visual graphic of model
+RUN = True
+DISPLAY = False # show visual graphic of model
 
 # PARAMETERS -------------------------------------------------------------------------------------------------------
 
@@ -75,6 +75,7 @@ HIDDEN_SIZE=STIM_SIZE*4 # dimension of hidden units in ff
 NBACK_LEVELS = [2,3] # Currently restricted to these
 NUM_NBACK_LEVELS = len(NBACK_LEVELS)
 CONTEXT_DRIFT_NOISE=0.0  # noise used by DriftOnASphereIntegrator (function of Context mech)
+RANDOM_WEIGHTS_INITIALIZATION=RandomMatrix(center=0.0, range=0.1)  # Matrix spec used to initialize all Projections
 RETRIEVAL_SOFTMAX_TEMP=1/8 # express as gain # precision of retrieval process
 RETRIEVAL_HAZARD_RATE=0.04 # rate of re=sampling of em following non-match determination in a pass through ffn
 RETRIEVAL_STIM_WEIGHT=.05 # weighting of stimulus field in retrieval from em
@@ -154,7 +155,7 @@ def construct_model(stim_size = STIM_SIZE,
                                 input_retrieved_context,
                                 input_task},
                                hidden, decision],
-                               RandomMatrix(center=0.0, range=0.1)  # Matrix spec used to initialize all Projections
+                               RANDOM_WEIGHTS_INITIALIZATION,
                                ),
                               name=FFN_COMPOSITION,
                               learning_rate=LEARNING_RATE
@@ -244,9 +245,9 @@ def construct_model(stim_size = STIM_SIZE,
 
     if DISPLAY:
         nback_model.show_graph(
-            show_cim=True,
-            show_node_structure=ALL,
-            show_dimensions=True
+            # show_cim=True,
+            # show_node_structure=ALL,
+            # show_dimensions=True
         )
 
     return nback_model

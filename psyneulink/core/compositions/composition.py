@@ -6903,7 +6903,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # Get all specs other than default_proj_spec
                     proj_specs = [proj_spec for proj_spec in all_proj_specs if proj_spec is not spec]
                 # If default matrix is not specified within the pathway, use default_projection_matrix if specified
-                if default_proj_spec == None:
+                if default_proj_spec is None:
                     default_proj_spec = default_projection_matrix
 
                 # Collect all Projection specifications (to add to Composition at end)
