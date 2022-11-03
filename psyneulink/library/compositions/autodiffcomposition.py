@@ -561,8 +561,8 @@ class AutodiffComposition(Composition):
 
     @handle_external_context()
     def save(self, path:str, context=None):
-        '''Saves all parameters to the specified path (e.g. save('my_model.pt'))'''
-        assert(str, "Must provide a path to save the model to!")
+        """Saves all parameters to the specified path (e.g. save('my_model.pt'))"""
+        assert (str, "Must provide a path to save the model to!")
         proj_state = {
             p.name: p.parameters.matrix.get(context=context) for p in self.projections
         }
@@ -579,7 +579,7 @@ class AutodiffComposition(Composition):
                 matrix, context=context, override=True)
         self._build_pytorch_representation(context=context, refresh=True)
 
-    
+
     def _get_state_ids(self):
         return super()._get_state_ids() + ["optimizer"]
 
