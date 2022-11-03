@@ -89,7 +89,7 @@ def test_autodiff_saveload(tmp_path):
     xor1 = create_xor()
     xor1_outputs = xor1.run(inputs=[0,0])
 
-    # save 
+    # save
     xor1.save(tmp_path / 'xor_1.pnl')
 
     del xor1
@@ -106,7 +106,7 @@ def test_autodiff_saveload(tmp_path):
     # sanity check - make sure xor2 weights differ
     assert not np.allclose(xor2_outputs_pre, xor2_outputs_post, atol=1e-9)
 
-    # make sure loaded model is identical, and used during run  
+    # make sure loaded model is identical, and used during run
     assert np.allclose(xor1_outputs, xor2_outputs_post, atol=1e-9)
 
 @pytest.mark.pytorch
