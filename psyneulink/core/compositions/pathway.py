@@ -418,9 +418,10 @@ class PathwayRole(Enum):
 
 class Pathway(object):
     """
-    Pathway(      \
-        pathway,  \
-        name=None \
+    Pathway(                       \
+        pathway,                   \
+        default_projection_matrix, \
+        name=None                  \
         )
 
     A sequence of `Nodes <Composition_Nodes>` and `Projections <Projection>` in a `Composition`, or a template

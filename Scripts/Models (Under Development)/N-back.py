@@ -148,14 +148,14 @@ def construct_model(stim_size = STIM_SIZE,
     decision = ProcessingMechanism(name=FFN_OUTPUT,
                                    size=2, function=SoftMax(output=MAX_INDICATOR,
                                                             gain=decision_softmax_temp))
-    # TODO: THIS NEEDS TO BE REPLACED BY (OR AT LEAST TRAINED AS) AutodiffComposition
-    # ffn = Composition([{input_current_stim,
-    ffn = AutodiffComposition([{input_current_stim,
+    ffn = AutodiffComposition(([{input_current_stim,
                                 input_current_context,
                                 input_retrieved_stim,
                                 input_retrieved_context,
-                                input_task}, RandomMatrix(center=0.0, range=0.1),
-                               hidden, RandomMatrix(center=0.0, range=0.1), decision],
+                                input_task},
+                               hidden, decision],
+                               RandomMatrix(center=0.0, range=0.1)  # Matrix spec used to initialize all Projections
+                               ),
                               name=FFN_COMPOSITION,
                               learning_rate=LEARNING_RATE
                               )

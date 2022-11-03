@@ -2734,7 +2734,7 @@ from PIL import Image
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentsMeta
 from psyneulink.core.components.functions.fitfunctions import make_likelihood_function
-from psyneulink.core.components.functions.function import is_function_type
+from psyneulink.core.components.functions.function import is_function_type, RandomMatrix
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination, \
     PredictionErrorDeltaFunction
 from psyneulink.core.components.functions.nonstateful.learningfunctions import \
@@ -5591,6 +5591,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                        projection=None,
                        sender=None,
                        receiver=None,
+                       default_matrix=None,
                        feedback=False,
                        learning_projection=False,
                        name=None,
@@ -5599,7 +5600,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                        ):
         """Add **projection** to the Composition.
 
-        If **projection** is not specified, create a default `MappingProjection` using **sender** and **receiver**.
+        If **projection** is not specified, and one does not already exist between **sender** and **receiver**
+        create a default `MappingProjection` between them, using **default_projection_matrix** if specified
+        (otherwise default for MappingProjection is used).
 
         If **projection** is specified:
 
@@ -5648,14 +5651,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Arguments
         ---------
 
+        projection : Projection, list, array, matrix, RandomMatrix, MATRIX_KEYWORD
+            the projection to add.
+
         sender : Mechanism, Composition, or OutputPort
             the sender of **projection**.
 
-        projection : Projection, matrix
-            the projection to add.
-
         receiver : Mechanism, Composition, or InputPort
             the receiver of **projection**.
+
+        default_projection_matrix : list, array, matrix, RandomMatrix, MATRIX_KEYWORD
+            matrix to use in creating default; overrides default for MappingProjection.
+
+        default_projection_matrix : list, array, function, `RandomMatrix` or MATRIX_KEYWORD : default None
+            specifies matrix to use in creating default Projection if none is specifed in **projection**
+            and one does not already exist between **sender** and **receive**
+            (see `MappingProjection_Matrix_Specification` for details of specification).
 
         feedback : bool or FEEDBACK : False
             if False, the Projection is *never* designated as a `feedback Projection
@@ -5733,6 +5744,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 return self.add_projection(proj_spec, sender=projection.sender, receiver=projection.receiver)
 
         # Create Projection if it doesn't exist
+        projection = projection or default_matrix
         try:
             # Note: this does NOT initialize the Projection if it is in deferred_init
             projection = self._instantiate_projection_from_spec(projection, name)
@@ -5918,7 +5930,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             proj_type = projection.pop(PROJECTION_TYPE, None) or MappingProjection
             params = projection.pop(PROJECTION_PARAMS, None)
             projection = MappingProjection(params=params)
-        elif isinstance(projection, (np.ndarray, np.matrix, list)):
+        elif isinstance(projection, (np.ndarray, np.matrix, list, RandomMatrix)):
             return MappingProjection(matrix=projection, sender=sender, receiver=receiver, name=name)
         elif isinstance(projection, str):
             if projection in MATRIX_KEYWORD_VALUES:
@@ -5930,8 +5942,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         elif projection is None:
             return MappingProjection(sender=sender, receiver=receiver, name=name)
         elif not isinstance(projection, Projection):
-            raise CompositionError("Invalid projection ({}) specified for {}. Must be a Projection."
-                                   .format(projection, self.name))
+            raise CompositionError(f"Invalid projection ({projection}) specified for {self.name}. "
+                                   f"Must be a Projection.")
         return projection
 
     def _parse_sender_spec(self, projection, sender):
@@ -6804,8 +6816,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    else {pathway[c - 1]})
                 if all(_is_node_spec(sender) for sender in preceding_entry):
                     senders = _get_node_specs_for_entry(preceding_entry, NodeRole.OUTPUT)
-                    projs = {self.add_projection(sender=s, receiver=r, allow_duplicates=False)
+                    projs = {self.add_projection(sender=s, receiver=r,
+                                                 default_matrix=default_projection_matrix,
+                                                 allow_duplicates=False)
                             for r in receivers for s in senders}
+                    # MODIFIED 11/2/22 END
                     if all(projs):
                         projs = projs.pop() if len(projs) == 1 else projs
                         projections.append(projs)
