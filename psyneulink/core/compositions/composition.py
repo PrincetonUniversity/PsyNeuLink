@@ -6656,7 +6656,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             elif pway_type == LEARNING_PATHWAY:
                 new_pathway = self.add_linear_learning_pathway(pathway=pway,
                                                                learning_function=pway_learning_fct,
-                                                               deault_matrix=matrix,
+                                                               default_projection_matrix=matrix,
                                                                name=pway_name,
                                                                context=context)
             else:
@@ -7236,7 +7236,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                  error_function,
                                                                  loss_function,
                                                                  learning_update,
-                                                                 default_projection_matrix=default_projection_matrix,
                                                                  name=pathway_name,
                                                                  context=context)
 

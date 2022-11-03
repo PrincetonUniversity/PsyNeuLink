@@ -1012,12 +1012,13 @@ class TestCompositionPathwayArgsAndAdditionMethods:
             assert all(node in comp.get_nodes_by_role(NodeRole.INPUT) for node in {A,C})
             assert all(node in comp.get_nodes_by_role(NodeRole.OUTPUT) for node in {B,D})
 
-
     config = [
         ('([{A,B,C},D,E],Proj)', 'a'),
         ('([{A,B,C},Proj_1,D,E],Proj_2)', 'b'),
-        ('([{A,B,C},D,Proj_1,E],Proj_2)', 'b'),
-        ('Pathway(default_matrix)', 'd')
+        ('([{A,B,C},D,Proj_1,E],Proj_2)', 'c'),
+        # ('Pathway(default_matrix)', 'd'),
+        ('([{A,B,C},D,Proj_1,E],Proj_2,learning_fct)', 'e'),
+        ('([{A,B,C},D,Proj_1,E],learning_fct,Proj_2)', 'f'),
     ]
     @pytest.mark.parametrize('config', config, ids=[x[0] for x in config])
     def test_pathway_tuple_specs(self, config):
@@ -1028,23 +1029,33 @@ class TestCompositionPathwayArgsAndAdditionMethods:
         D = ProcessingMechanism(name='D')
         E = ProcessingMechanism(name='E')
         F = ProcessingMechanism(name='F')
-        if config[0]=='a':
+        if config[1]=='a':
             comp = Composition(([{A,B,C},D,E],[2.9]))
             assert all([p.matrix.base==2.9 for p in D.path_afferents])
             assert E.path_afferents[0].matrix.base==2.9
-        if config[0]=='b':
+        if config[1]=='b':
             comp = Composition(([{A,B,C},[1.6],D,E],[2.9]))
             assert all([p.matrix.base==1.6 for p in D.path_afferents])
             assert E.path_afferents[0].matrix.base==2.9
-        if config[0]=='c':
+        if config[1]=='c':
             comp = Composition(([{A,B,C},D,[1.6],E],[2.9]))
             assert all([p.matrix.base==2.9 for p in D.path_afferents])
             assert E.path_afferents[0].matrix.base==1.6
-        if config[0]=='d':
+        if config[1]=='d':
             pway=Pathway([{A,B,C},[1.6],D,E], default_projection_matrix=[2.9])
             comp = Composition(pway)
             assert all([p.matrix.base==1.6 for p in D.path_afferents])
             assert E.path_afferents[0].matrix.base==2.9
+        if config[1]=='e':
+            comp = Composition(([{A,B,C},D,[1.6],E],BackPropagation,[2.9]))
+            assert all([p.matrix.base==2.9 for p in D.path_afferents])
+            assert E.path_afferents[0].matrix.base==1.6
+            assert comp.pathways[0].learning_function == BackPropagation
+        if config[1]=='f':
+            comp = Composition(([{A,B,C},D,[1.6],E],[2.9],BackPropagation))
+            assert all([p.matrix.base==2.9 for p in D.path_afferents])
+            assert E.path_afferents[0].matrix.base==1.6
+            assert comp.pathways[0].learning_function == BackPropagation
 
     def test_add_pathways_bad_arg_error(self):
         I = InputPort(name='I')
