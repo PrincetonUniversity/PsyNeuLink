@@ -1042,7 +1042,8 @@ class TestCompositionPathwayArgsAndAdditionMethods:
             assert all([p.matrix.base==2.9 for p in D.path_afferents])
             assert E.path_afferents[0].matrix.base==1.6
         if config[1]=='d':
-            pway=Pathway([{A,B,C},[1.6],D,E], default_projection_matrix=[2.9])
+            # pway=Pathway([{A,B,C},[1.6],D,E], default_projection_matrix=[2.9])
+            pway=Pathway(([{A,B,C},[1.6],D,E], [2.9]))
             comp = Composition(pway)
             assert all([p.matrix.base==1.6 for p in D.path_afferents])
             assert E.path_afferents[0].matrix.base==2.9

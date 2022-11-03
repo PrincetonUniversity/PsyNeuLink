@@ -6396,7 +6396,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if isinstance(pathway, Pathway):
             # Give precedence to name specified in call to add_linear_processing_pathway
             pathway_name = name or pathway.name
+            # MODIFIED 11/3/22 OLD:
             pathway = pathway.pathway
+            # # MODIFIED 11/3/22 NEW:
+            # # If Pathway has default_projection_matrix, use tuple_spec to specify for handling below
+            # if pathway.default_projection_matrix:
+            #     pathway = (pathway.pathway, pathway. default_projection_matrix)
+            # else:
+            #     pathway = pathway.pathway
+            # MODIFIED 11/3/22 END
         else:
             pathway_name = name
 
@@ -6622,7 +6630,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pway_name = None
             if isinstance(pathway, Pathway):
                 pway_name = pathway.name
+                # MODIFIED 11/3/22 OLD:
                 pathway = pathway.pathway
+                # # MODIFIED 11/3/22 NEW:
+                # # If Pathway has default_projection_matrix, use tuple_spec to specify for later handling
+                # if pathway.default_projection_matrix:
+                #     pathway = (pathway.pathway, pathway.default_projection_matrix)
+                # else:
+                #     pathway = pathway.pathway
+                # MODIFIED 11/3/22 END
             if _is_node_spec(pathway) or isinstance(pathway, (list, set, tuple)):
                 if isinstance(pathway, set):
                     bad_entries = [repr(entry) for entry in pathway if not _is_node_spec(entry)]
@@ -7092,6 +7108,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         pathway = Pathway(pathway=explicit_pathway,
                           composition=self,
+                          default_projection_matrix=default_projection_matrix,
                           name=pathway_name,
                           context=context)
         self.pathways.append(pathway)

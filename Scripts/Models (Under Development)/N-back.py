@@ -58,8 +58,8 @@ import numpy as np
 
 # Settings for running script:
 TRAIN = False
-RUN = True
-DISPLAY = False # show visual graphic of model
+RUN = False
+DISPLAY = True # show visual graphic of model
 
 # PARAMETERS -------------------------------------------------------------------------------------------------------
 
@@ -244,9 +244,9 @@ def construct_model(stim_size = STIM_SIZE,
 
     if DISPLAY:
         nback_model.show_graph(
-            # show_cim=True,
-            # show_node_structure=ALL,
-            # show_dimensions=True)
+            show_cim=True,
+            show_node_structure=ALL,
+            show_dimensions=True
         )
 
     return nback_model

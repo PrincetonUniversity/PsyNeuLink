@@ -233,9 +233,13 @@ of any of a Composition's `Pathway addition methods <Composition_Pathway_Additio
       <NodeRole.SINGLETON>`.  Sets can also be used in a list specification (see above; and see
       `add_linear_processing_pathway <Composition.add_linear_processing_pathway>` for additional details).
     ..
-    * **2-item tuple**: (Pathway, `LearningFunction`) -- used to specify a `learning Pathway
-      <Composition_Learning_Pathway>`;  the 1st item must be one of the forms of Pathway specification
-      described above, and the 2nd item must be a subclass of `LearningFunction`.
+    # FIX: add default matrix spec
+    * **2 or 3-item tuple**: (Pathway, <learning_function>, <default_matrix_specification>) --
+      used to specify a `learning  Pathway <Composition_Learning_Pathway>` and/or a matrix to use for any unspecified
+      Projections (overrides default matrix for `MappingProjection`) if a default projection is not otherwise specified
+      (see `Pathway_Specification_Projections.  The 1st item of the tuple must be one of the forms of Pathway
+      specification described above.  The other items must be a subclass of `LearningFunction` and/or a `matrix
+      specification <MappingProjection_Matrix_Specification>`.
 
 .. _Pathway_Specification_Multiple:
 
@@ -420,9 +424,15 @@ class Pathway(object):
     """
     Pathway(                       \
         pathway,                   \
+        name=None                  \
+        )
+    COMMENT:
+    Pathway(                       \
+        pathway,                   \
         default_projection_matrix, \
         name=None                  \
         )
+    COMMENT
 
     A sequence of `Nodes <Composition_Nodes>` and `Projections <Projection>` in a `Composition`, or a template
     for one that can be assigned to one or more Compositions.
@@ -434,10 +444,12 @@ class Pathway(object):
         specifies list of `Nodes <Composition_Nodes>` and intercolated `Projections <Projection>` to be
         created for the Pathway.
 
+    COMMENT:
     default_projection_matrix : list, array, function, `RandomMatrix` or MATRIX_KEYWORD : default None
         specifies matrix to use for any unspecified Projections (overrides default matrix for `MappingProjection`)
         if a default projection is not otherwise specified (see `Pathway_Specification_Projections`;
         see `MappingProjection_Matrix_Specification` for details of specification)
+    COMMENT
 
     name : str : default see `name <Pathway.name>`
         specifies the name of the Pathway (see `name <Pathway.name>` for additional information).
@@ -460,10 +472,12 @@ class Pathway(object):
         Returns an empty list if belongs to a Composition but no `PathwayRoles <PathwayRole>` have been assigned,
         and None if the Pathway is a `tempalte <Pathway_Template>` (i.e., not assigned to a Composition).
 
+    COMMENT:
     default_projection_matrix : list, array, function, `RandomMatrix` or MATRIX_KEYWORD : default None
         matrix used for any unspecified Projections (overrides default matrix for `MappingProjection`)
         if a default projection is not otherwise specified (see `Pathway_Specification_Projections`;
         see `MappingProjection_Matrix_Specification` for details of specification)
+    COMMENT
 
     learning_function : `LearningFunction` or None
         `LearningFunction` used by `LearningMechanism(s) <LearningMechanism>` associated with Pathway if
@@ -513,7 +527,7 @@ class Pathway(object):
     def __init__(
             self,
             pathway:list,
-            default_projection_matrix=None,
+            # default_projection_matrix=None,
             name=None,
             **kwargs
     ):
@@ -561,7 +575,7 @@ class Pathway(object):
             self.learning_components = None
             self.roles = None
 
-        self.default_projection_matrix = default_projection_matrix
+        # self.default_projection_matrix = default_projection_matrix
 
     def _assign_roles(self, composition):
         """Assign `PathwayRoles <PathwayRole>` to Pathway based `NodeRoles <NodeRole>` assigned to its `Nodes
