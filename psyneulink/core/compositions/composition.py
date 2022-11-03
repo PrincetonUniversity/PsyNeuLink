@@ -7108,7 +7108,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         pathway = Pathway(pathway=explicit_pathway,
                           composition=self,
-                          default_projection_matrix=default_projection_matrix,
+                          # default_projection_matrix=default_projection_matrix,
                           name=pathway_name,
                           context=context)
         self.pathways.append(pathway)

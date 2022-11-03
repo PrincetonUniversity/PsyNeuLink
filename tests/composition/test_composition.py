@@ -1017,8 +1017,8 @@ class TestCompositionPathwayArgsAndAdditionMethods:
         # ('([{A,B,C},Proj_1,D,E],Proj_2)', 'b'),
         # ('([{A,B,C},D,Proj_1,E],Proj_2)', 'c'),
         ('Pathway(default_matrix)', 'd'),
-        ('([{A,B,C},D,Proj_1,E],Proj_2,learning_fct)', 'e'),
-        ('([{A,B,C},D,Proj_1,E],learning_fct,Proj_2)', 'f'),
+        # ('([{A,B,C},D,Proj_1,E],Proj_2,learning_fct)', 'e'),
+        # ('([{A,B,C},D,Proj_1,E],learning_fct,Proj_2)', 'f'),
     ]
     @pytest.mark.parametrize('config', config, ids=[x[0] for x in config])
     def test_pathway_tuple_specs(self, config):

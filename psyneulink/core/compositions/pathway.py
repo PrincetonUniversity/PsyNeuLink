@@ -233,7 +233,8 @@ of any of a Composition's `Pathway addition methods <Composition_Pathway_Additio
       <NodeRole.SINGLETON>`.  Sets can also be used in a list specification (see above; and see
       `add_linear_processing_pathway <Composition.add_linear_processing_pathway>` for additional details).
     ..
-    # FIX: add default matrix spec
+    .. _Pathway_Specification_Tuple:
+
     * **2 or 3-item tuple**: (Pathway, <learning_function>, <default_matrix_specification>) --
       used to specify a `learning  Pathway <Composition_Learning_Pathway>` and/or a matrix to use for any unspecified
       Projections (overrides default matrix for `MappingProjection`) if a default projection is not otherwise specified
@@ -299,6 +300,9 @@ A Pathway has the following primary attributes:
   those `NodeRoles <NodeRole>` is assigned to a corresponding attribute on the Pathway.  If the Pathway does not belong
   to a Composition (i.e., it is a `template <Pathway_Template>`), then these attributes return None.
 
+* `default_projection_matrix <Pathway.default_projection_matrix>` - matrix used as default for Projections that are
+  not explicitly specified and for which no default is otherwise specified (see `Pathway_Specification_Projections`).
+
 * `learning_function <Pathway.learning_function>` - the LearningFunction assigned to the Pathway if it is a
   `learning Pathway <Composition_Learning_Pathway>` that belongs to a Composition; otherwise it is None.
 
@@ -328,6 +332,7 @@ from psyneulink.core.compositions.composition import Composition, CompositionErr
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ANY, CONTEXT, FEEDBACK, MAYBE, NODE, LEARNING_FUNCTION, OBJECTIVE_MECHANISM, PROJECTION, TARGET_MECHANISM
+from psyneulink.core.globals.utilities import is_matrix
 from psyneulink.core.globals.registry import register_category
 
 __all__ = [
@@ -472,12 +477,12 @@ class Pathway(object):
         Returns an empty list if belongs to a Composition but no `PathwayRoles <PathwayRole>` have been assigned,
         and None if the Pathway is a `tempalte <Pathway_Template>` (i.e., not assigned to a Composition).
 
-    COMMENT:
     default_projection_matrix : list, array, function, `RandomMatrix` or MATRIX_KEYWORD : default None
         matrix used for any unspecified Projections (overrides default matrix for `MappingProjection`)
         if a default projection is not otherwise specified (see `Pathway_Specification_Projections`;
-        see `MappingProjection_Matrix_Specification` for details of specification)
-    COMMENT
+        see `MappingProjection_Matrix_Specification` for details of specification).  A default_projection_matrix
+        is specified by including it in a tuple specification in the **pathways** argument of the Pathway's
+        constructor (see `2 or 3-item tuple <Pathway_Specification_Tuple>`).
 
     learning_function : `LearningFunction` or None
         `LearningFunction` used by `LearningMechanism(s) <LearningMechanism>` associated with Pathway if
@@ -575,7 +580,15 @@ class Pathway(object):
             self.learning_components = None
             self.roles = None
 
+        # Assign default_projection_matrix attribute
         # self.default_projection_matrix = default_projection_matrix
+        # Parse from tuple spec in **pathway** arg:
+        self.default_projection_matrix = None
+        if isinstance(self.pathway, tuple):
+            for item in self.pathway:
+                if is_matrix(item):
+                    self.default_projection_matrix = item
+        assert True
 
     def _assign_roles(self, composition):
         """Assign `PathwayRoles <PathwayRole>` to Pathway based `NodeRoles <NodeRole>` assigned to its `Nodes
