@@ -1012,6 +1012,64 @@ class TestCompositionPathwayArgsAndAdditionMethods:
             assert all(node in comp.get_nodes_by_role(NodeRole.INPUT) for node in {A,C})
             assert all(node in comp.get_nodes_by_role(NodeRole.OUTPUT) for node in {B,D})
 
+    config = [
+        ('([{A,B,C},D,E],Proj)', 'a'),
+        ('([{A,B,C},Proj_1,D,E],Proj_2)', 'b'),
+        ('([{A,B,C},D,Proj_1,E],Proj_2)', 'c'),
+        ('Pathway(default_matrix)', 'd'),
+        ('([A,B,C],Proj_2,learning_fct)', 'e'),
+        ('([A,B,C],Proj_2,learning_fct)', 'f'),
+        # ('([{A,B,C},D,Proj_1,E],Proj_2,learning_fct)', 'g'),  # set spec for Projections
+        # ('([{A,B,C},D,Proj_1,E],learning_fct,Proj_2)', 'h'),  # not yet supported for learning Pathways
+    ]
+    @pytest.mark.parametrize('config', config, ids=[x[0] for x in config])
+    def test_pathway_tuple_specs(self, config):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        # B_comparator = ComparatorMechanism(name='B COMPARATOR')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        E = ProcessingMechanism(name='E')
+        F = ProcessingMechanism(name='F')
+        if config[1]=='a':
+            comp = Composition(([{A,B,C},D,E],[2.9]))
+            assert all([p.matrix.base==2.9 for p in D.path_afferents])
+            assert E.path_afferents[0].matrix.base==2.9
+        if config[1]=='b':
+            comp = Composition(([{A,B,C},[1.6],D,E],[2.9]))
+            assert all([p.matrix.base==1.6 for p in D.path_afferents])
+            assert E.path_afferents[0].matrix.base==2.9
+        if config[1]=='c':
+            comp = Composition(([{A,B,C},D,[1.6],E],[2.9]))
+            assert all([p.matrix.base==2.9 for p in D.path_afferents])
+            assert E.path_afferents[0].matrix.base==1.6
+        if config[1]=='d':
+            # pway=Pathway([{A,B,C},[1.6],D,E], default_projection_matrix=[2.9])
+            pway=Pathway(([{A,B,C},[1.6],D,E], [2.9]))
+            comp = Composition(pway)
+            assert all([p.matrix.base==1.6 for p in D.path_afferents])
+            assert E.path_afferents[0].matrix.base==2.9
+        if config[1]=='e':
+            comp = Composition(([A,B,C],BackPropagation,[2.9]))
+            assert B.path_afferents[0].matrix.base==2.9
+            assert C.path_afferents[0].matrix.base==2.9
+            assert comp.pathways[0].learning_function == BackPropagation
+        if config[1]=='f':
+            comp = Composition(([A,B,C],[2.9],BackPropagation))
+            assert B.path_afferents[0].matrix.base==2.9
+            assert C.path_afferents[0].matrix.base==2.9
+            assert comp.pathways[0].learning_function == BackPropagation
+        if config[1]=='g':
+            comp = Composition(([{A,B,C},D,[1.6],E],BackPropagation,[2.9]))
+            assert all([p.matrix.base==2.9 for p in D.path_afferents])
+            assert E.path_afferents[0].matrix.base==1.6
+            assert comp.pathways[0].learning_function == BackPropagation
+        if config[1]=='h':
+            comp = Composition(([{A,B,C},D,[1.6],E],[2.9],BackPropagation))
+            assert all([p.matrix.base==2.9 for p in D.path_afferents])
+            assert E.path_afferents[0].matrix.base==1.6
+            assert comp.pathways[0].learning_function == BackPropagation
+
     def test_add_pathways_bad_arg_error(self):
         I = InputPort(name='I')
         c = Composition()
@@ -1607,7 +1665,9 @@ class TestCompositionPathwaysArg:
         C = ProcessingMechanism(name='C')
         with pytest.raises(pnl.CompositionError) as error_text:
             c = Composition(pathways=[{'P1': ([A,B],C)}])
-        assert ("The 2nd item" in str(error_text.value) and "must be a LearningFunction" in str(error_text.value))
+        assert ("Bad spec for one of the items in the value of a dict specified for the \'pathways\' arg "
+                "of the constructor for Composition-0: (ProcessingMechanism C); "
+                "its item(s) must be a matrix specification and/or a LearningFunction" in str(error_text.value))
 
 
 class TestProperties:
