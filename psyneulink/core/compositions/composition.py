@@ -6638,11 +6638,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             context.source = ContextFlags.METHOD
             if pway_type == PROCESSING_PATHWAY:
                 new_pathway = self.add_linear_processing_pathway(pathway=pway,
+                                                                 default_projection_matrix=matrix,
                                                                  name=pway_name,
                                                                  context=context)
             elif pway_type == LEARNING_PATHWAY:
                 new_pathway = self.add_linear_learning_pathway(pathway=pway,
                                                                learning_function=pway_learning_fct,
+                                                               deault_matrix=matrix,
                                                                name=pway_name,
                                                                context=context)
             else:
@@ -6653,7 +6655,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return added_pathways
 
     @handle_external_context()
-    def add_linear_processing_pathway(self, pathway, default_matrix=None, name:str=None, context=None, *args):
+    def add_linear_processing_pathway(self, pathway, default_projection_matrix=None, name:str=None, context=None, *args):
         """Add sequence of `Nodes <Composition_Nodes>` with optionally intercolated `Projections <Projection>`.
 
         .. _Composition_Add_Linear_Processing_Pathway:
@@ -6682,10 +6684,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             learning-related specifications are ignored, as are its `name <Pathway.name>` if the **name** argument
             of add_linear_processing_pathway is specified.
 
-        default_matrix : list, np.ndarray, np.matrix, function, `RandomMatrix` or keyword :
-        default None
-            specifies matrix to use for any unspecified Projections (overrides default matrix for
-            `MappingProjection`); see `MappingProjection_Matrix_Specification` for details of specification.
+        default_projection_matrix : list, array, function, `RandomMatrix` or MATRIX_KEYWORD : default None
+            specifies matrix to use for any unspecified Projections (overrides default matrix for `MappingProjection`)
+            if a default projection is not otherwise specified (see `Pathway_Specification_Projections`;
+            see `MappingProjection_Matrix_Specification` for details of specification)
 
         name : str
             species the name used for `Pathway`; supercedes `name <Pathway.name>` of `Pathway` object if it is has one.
@@ -6868,8 +6870,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # Unpack if tuple spec, and assign feedback (with False as default)
                     default_proj_spec, feedback = (spec if isinstance(spec, tuple) else (spec, False))
                     # Get all specs other than default_proj_spec
-                    # proj_specs = [proj_spec for proj_spec in all_proj_specs if proj_spec not in possible_default_proj_spec]
                     proj_specs = [proj_spec for proj_spec in all_proj_specs if proj_spec is not spec]
+                # If default matrix is not specified within the pathway, use default_projection_matrix if specified
+                if default_proj_spec == None:
+                    default_proj_spec = default_projection_matrix
 
                 # Collect all Projection specifications (to add to Composition at end)
                 proj_set = []
@@ -7093,6 +7097,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     learning_rate:tc.any(int,float)=0.05,
                                     error_function=LinearCombination,
                                     learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=AFTER,
+                                    default_projection_matrix=None,
                                     name:str=None,
                                     context=None):
         """Implement learning pathway (including necessary `learning components <Composition_Learning_Components>`.
@@ -7163,6 +7168,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             <LearningMechanism>` in the pathway, and its `LearningProjection` (see `learning_enabled
             <LearningMechanism.learning_enabled>` for meaning of values).
 
+        default_projection_matrix : list, array, function, `RandomMatrix` or MATRIX_KEYWORD : default None
+            specifies matrix to use for any unspecified Projections (overrides default matrix for `MappingProjection`)
+            if a default projection is not otherwise specified (see `Pathway_Specification_Projections`;
+            see `MappingProjection_Matrix_Specification` for details of specification)
+
         name : str :
             species the name used for `Pathway`; supercedes `name <Pathway.name>` of `Pathway` object if it is has one.
 
@@ -7211,6 +7221,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                  error_function,
                                                                  loss_function,
                                                                  learning_update,
+                                                                 default_projection_matrix=default_projection_matrix,
                                                                  name=pathway_name,
                                                                  context=context)
 
@@ -7229,6 +7240,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._add_required_node_role(output_source, NodeRole.OUTPUT, context)
 
         learning_pathway = self.add_linear_processing_pathway(pathway=[input_source, learned_projection, output_source],
+                                                              default_projection_matrix=default_projection_matrix,
                                                               name=pathway_name,
                                                               # context=context)
                                                               context=context)
@@ -7284,6 +7296,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                            learning_rate=0.05,
                                            error_function=None,
                                            learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE,
+                                           default_projection_matrix=None,
                                            name:str=None):
         """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`Reinforcement`
 
@@ -7294,6 +7307,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             list containing either [Node1, Node2] or [Node1, MappingProjection, Node2]. If a projection is
             specified, that projection is the learned projection. Otherwise, a default MappingProjection is
             automatically generated for the learned projection.
+
+        default_projection_matrix : list, array, function, `RandomMatrix` or MATRIX_KEYWORD : default None
+            specifies matrix to use for any unspecified Projections (overrides default matrix for `MappingProjection`)
+            if a default projection is not otherwise specified (see `Pathway_Specification_Projections`;
+            see `MappingProjection_Matrix_Specification` for details of specification)
 
         learning_rate : float : default 0.05
             specifies the `learning_rate <ReinforcementLearning.learning_rate>` used for the `ReinforcementLearning`
@@ -7325,6 +7343,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                 learning_function=Reinforcement,
                                                 error_function=error_function,
                                                 learning_update=learning_update,
+                                                default_projection_matrix=default_projection_matrix,
                                                 name=name)
 
     def add_td_learning_pathway(self,
@@ -7332,6 +7351,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 learning_rate=0.05,
                                 error_function=None,
                                 learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE,
+                                default_projection_matrix=None,
                                 name:str=None):
         """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`TDLearning`
 
@@ -7358,6 +7378,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             <LearningMechanism>` in the pathway, and its `LearningProjection` (see `learning_enabled
             <LearningMechanism.learning_enabled>` for meaning of values).
 
+        default_projection_matrix : list, array, function, `RandomMatrix` or MATRIX_KEYWORD : default None
+            specifies matrix to use for any unspecified Projections (overrides default matrix for `MappingProjection`)
+            if a default projection is not otherwise specified (see `Pathway_Specification_Projections`;
+            see `MappingProjection_Matrix_Specification` for details of specification)
+
         name : str :
             species the name used for `Pathway`; supercedes `name <Pathway.name>` of `Pathway` object if it is has one.
 
@@ -7372,6 +7397,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                 learning_rate=learning_rate,
                                                 learning_function=TDLearning,
                                                 learning_update=learning_update,
+                                                default_projection_matrix=default_projection_matrix,
                                                 name=name)
 
     def add_backpropagation_learning_pathway(self,
@@ -7380,6 +7406,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                              error_function=None,
                                              loss_function:tc.enum(MSE,SSE)=MSE,
                                              learning_update:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=AFTER,
+                                             default_projection_matrix=None,
                                              name:str=None):
         """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`Backpropagation`
 
@@ -7409,6 +7436,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             <LearningMechanism>` in the pathway, and their `LearningProjections <LearningProjection>`
             (see `learning_enabled <LearningMechanism.learning_enabled>` for meaning of values).
 
+        default_projection_matrix : list, array, function, `RandomMatrix` or MATRIX_KEYWORD : default None
+            specifies matrix to use for any unspecified Projections (overrides default matrix for `MappingProjection`)
+            if a default projection is not otherwise specified (see `Pathway_Specification_Projections`;
+            see `MappingProjection_Matrix_Specification` for details of specification)
+
         name : str :
             species the name used for `Pathway`; supercedes `name <Pathway.name>` of `Pathway` object if it is has one.
 
@@ -7425,6 +7457,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                 loss_function=loss_function,
                                                 error_function=error_function,
                                                 learning_update=learning_update,
+                                                default_projection_matrix=default_projection_matrix,
                                                 name=name)
 
     # NOTES:

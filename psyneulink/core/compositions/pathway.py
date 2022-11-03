@@ -433,10 +433,10 @@ class Pathway(object):
         specifies list of `Nodes <Composition_Nodes>` and intercolated `Projections <Projection>` to be
         created for the Pathway.
 
-    default_projection_matrix : list, array, matrix or MATRIX_KEYWORD
-        specifies matrix to use for any unspecified Projections or default Projections (see
-        `Pathway_Specification_Projections`; see `MappingProjection_Matrix_Specification` for
-        details of specification.
+    default_projection_matrix : list, array, function, `RandomMatrix` or MATRIX_KEYWORD : default None
+        specifies matrix to use for any unspecified Projections (overrides default matrix for `MappingProjection`)
+        if a default projection is not otherwise specified (see `Pathway_Specification_Projections`;
+        see `MappingProjection_Matrix_Specification` for details of specification)
 
     name : str : default see `name <Pathway.name>`
         specifies the name of the Pathway (see `name <Pathway.name>` for additional information).
@@ -459,9 +459,10 @@ class Pathway(object):
         Returns an empty list if belongs to a Composition but no `PathwayRoles <PathwayRole>` have been assigned,
         and None if the Pathway is a `tempalte <Pathway_Template>` (i.e., not assigned to a Composition).
 
-    default_projection_matrix : list, array, matrix or MATRIX_KEYWORD
-        matrix assigned to any unspecified Projections or specified default projections
-        (see `Pathway_Specification_Projections`); overrides default matrix for `MappingProjection`.
+    default_projection_matrix : list, array, function, `RandomMatrix` or MATRIX_KEYWORD : default None
+        matrix used for any unspecified Projections (overrides default matrix for `MappingProjection`)
+        if a default projection is not otherwise specified (see `Pathway_Specification_Projections`;
+        see `MappingProjection_Matrix_Specification` for details of specification)
 
     learning_function : `LearningFunction` or None
         `LearningFunction` used by `LearningMechanism(s) <LearningMechanism>` associated with Pathway if
