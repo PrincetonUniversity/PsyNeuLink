@@ -1013,12 +1013,14 @@ class TestCompositionPathwayArgsAndAdditionMethods:
             assert all(node in comp.get_nodes_by_role(NodeRole.OUTPUT) for node in {B,D})
 
     config = [
-        # ('([{A,B,C},D,E],Proj)', 'a'),
-        # ('([{A,B,C},Proj_1,D,E],Proj_2)', 'b'),
-        # ('([{A,B,C},D,Proj_1,E],Proj_2)', 'c'),
+        ('([{A,B,C},D,E],Proj)', 'a'),
+        ('([{A,B,C},Proj_1,D,E],Proj_2)', 'b'),
+        ('([{A,B,C},D,Proj_1,E],Proj_2)', 'c'),
         ('Pathway(default_matrix)', 'd'),
-        # ('([{A,B,C},D,Proj_1,E],Proj_2,learning_fct)', 'e'),
-        # ('([{A,B,C},D,Proj_1,E],learning_fct,Proj_2)', 'f'),
+        ('([A,B,C],Proj_2,learning_fct)', 'e'),
+        ('([A,B,C],Proj_2,learning_fct)', 'f'),
+        # ('([{A,B,C},D,Proj_1,E],Proj_2,learning_fct)', 'g'),  # set spec for Projections
+        # ('([{A,B,C},D,Proj_1,E],learning_fct,Proj_2)', 'h'),  # not yet supported for learning Pathways
     ]
     @pytest.mark.parametrize('config', config, ids=[x[0] for x in config])
     def test_pathway_tuple_specs(self, config):
@@ -1048,11 +1050,21 @@ class TestCompositionPathwayArgsAndAdditionMethods:
             assert all([p.matrix.base==1.6 for p in D.path_afferents])
             assert E.path_afferents[0].matrix.base==2.9
         if config[1]=='e':
+            comp = Composition(([A,B,C],BackPropagation,[2.9]))
+            assert B.path_afferents[0].matrix.base==2.9
+            assert C.path_afferents[0].matrix.base==2.9
+            assert comp.pathways[0].learning_function == BackPropagation
+        if config[1]=='f':
+            comp = Composition(([A,B,C],[2.9],BackPropagation))
+            assert B.path_afferents[0].matrix.base==2.9
+            assert C.path_afferents[0].matrix.base==2.9
+            assert comp.pathways[0].learning_function == BackPropagation
+        if config[1]=='g':
             comp = Composition(([{A,B,C},D,[1.6],E],BackPropagation,[2.9]))
             assert all([p.matrix.base==2.9 for p in D.path_afferents])
             assert E.path_afferents[0].matrix.base==1.6
             assert comp.pathways[0].learning_function == BackPropagation
-        if config[1]=='f':
+        if config[1]=='h':
             comp = Composition(([{A,B,C},D,[1.6],E],[2.9],BackPropagation))
             assert all([p.matrix.base==2.9 for p in D.path_afferents])
             assert E.path_afferents[0].matrix.base==1.6

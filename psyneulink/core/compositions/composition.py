@@ -7254,6 +7254,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                  loss_function,
                                                                  learning_update,
                                                                  name=pathway_name,
+                                                                 default_projection_matrix=default_projection_matrix,
                                                                  context=context)
 
         # If BackPropagation is not specified, then the learning pathway is "one-layered"
@@ -7715,6 +7716,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                  error_function=None,
                                                  loss_function=MSE,
                                                  learning_update=AFTER,
+                                                 default_projection_matrix=None,
                                                  name=None,
                                                  context=None):
 
@@ -7728,7 +7730,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Pass ContextFlags.INITIALIZING so that it can be passed on to _analyze_graph() and then
         #    _check_for_projection_assignments() in order to ignore checks for require_projection_in_composition
         context.string = f"'pathway' arg for add_backpropagation_learning_pathway method of {self.name}"
-        learning_pathway = self.add_linear_processing_pathway(pathway=pathway, name=name, context=context)
+        learning_pathway = self.add_linear_processing_pathway(pathway=pathway,
+                                                              name=name,
+                                                              default_projection_matrix=default_projection_matrix,
+                                                              context=context)
         processing_pathway = learning_pathway.pathway
 
         path_length = len(processing_pathway)
