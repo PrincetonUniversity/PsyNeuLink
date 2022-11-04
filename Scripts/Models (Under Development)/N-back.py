@@ -155,8 +155,6 @@ def construct_model(stim_size = STIM_SIZE,
                                 input_retrieved_context,
                                 input_task},
                                hidden, decision],
-                               RandomMatrix(center=0.0, range=0.1)  # Matrix spec used to initialize all Projections
-                               ),
                               RANDOM_WEIGHTS_INITIALIZATION,
                                ),
                               name=FFN_COMPOSITION,
