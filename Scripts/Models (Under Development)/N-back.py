@@ -39,15 +39,15 @@ TODO:
               - epoch: 1 trial per epoch of training
           - get empirical stimulus sequences
           - put N-back script (with pointer to latest version on PNL) in nback-paper repo
-    - get rid of objective_mechanism (see "VERSION *WITHOUT* ObjectiveMechanism" under control(...)
-    - pass learning_rate as parameter to train_network()
+    - get rid of objective_mechanism (see "VERSION *WITHOUT* ObjectiveMechanism" under control(...) (fix bug)
+    - make termination processing part of the Composition definition (fix bug)
+    - pass learning_rate as parameter to train_network() (add feature)
+    - fix warnings on run
     - validate against nback-paper results
     - after validation:
         - try with STIM_SIZE = NUM_STIMS rather than 20 (as in nback-paper)
         - refactor generate_stim_sequence() to use actual empirical stimulus sequences
         - replace get_input_sequence and get_training_inputs with generators passed to nback_model.run() and ffn.learn
-    - make termination processing part of the Composition definition (fix bug)
-    - fix warnings on run
 
 """
 
@@ -58,7 +58,7 @@ import numpy as np
 
 # Settings for running script:
 TRAIN = False
-RUN = True
+RUN = False
 DISPLAY = False # show visual graphic of model
 
 # PARAMETERS -------------------------------------------------------------------------------------------------------
@@ -151,13 +151,11 @@ def construct_model(stim_size = STIM_SIZE,
                                                             gain=decision_softmax_temp))
     ffn = AutodiffComposition(([{input_current_stim,
                                 input_current_context,
-                                input_retrieved_stim,
-                                input_retrieved_context,
-                                input_task},
-                               hidden, decision],
-                               RandomMatrix(center=0.0, range=0.1)  # Matrix spec used to initialize all Projections
-                               ),
-                              RANDOM_WEIGHTS_INITIALIZATION,
+                                 input_retrieved_stim,
+                                 input_retrieved_context,
+                                 input_task},
+                                hidden, decision],
+                               RANDOM_WEIGHTS_INITIALIZATION,
                                ),
                               name=FFN_COMPOSITION,
                               learning_rate=LEARNING_RATE
@@ -224,7 +222,7 @@ def construct_model(stim_size = STIM_SIZE,
                                control=(STORAGE_PROB, em))
 
     nback_model = Composition(name=NBACK_MODEL,
-                              nodes=[stim, context, task, em, ffn, control],
+                              nodes=[stim, context, task, ffn, em, control],
                               # # # Terminate trial if value of control is still 1 after first pass through execution
                               # # FIX: STOPS AFTER ~ NUMBER OF TRIALS (?90+); SHOULD BE: NUM_TRIALS*NUM_NBACK_LEVELS + 1
                               # termination_processing={TimeScale.TRIAL: And(Condition(lambda: control.value),
@@ -486,7 +484,7 @@ if RUN:
     run_model(nback_model)
     if REPORT_PROGRESS == ReportProgress.ON:
         print('\n')
-print(f'nback_model done: {len(nback_model.results)} trials executed')
+    print(f'nback_model done: {len(nback_model.results)} trials executed')
 
 # ===========================================================================
 
