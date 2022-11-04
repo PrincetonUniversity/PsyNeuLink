@@ -151,13 +151,11 @@ def construct_model(stim_size = STIM_SIZE,
                                                             gain=decision_softmax_temp))
     ffn = AutodiffComposition(([{input_current_stim,
                                 input_current_context,
-                                input_retrieved_stim,
-                                input_retrieved_context,
-                                input_task},
-                               hidden, decision],
-                               RandomMatrix(center=0.0, range=0.1)  # Matrix spec used to initialize all Projections
-                               ),
-                              RANDOM_WEIGHTS_INITIALIZATION,
+                                 input_retrieved_stim,
+                                 input_retrieved_context,
+                                 input_task},
+                                hidden, decision],
+                               RANDOM_WEIGHTS_INITIALIZATION,
                                ),
                               name=FFN_COMPOSITION,
                               learning_rate=LEARNING_RATE
