@@ -155,7 +155,9 @@ def construct_model(stim_size = STIM_SIZE,
                                 input_retrieved_context,
                                 input_task},
                                hidden, decision],
-                               RANDOM_WEIGHTS_INITIALIZATION,
+                               RandomMatrix(center=0.0, range=0.1)  # Matrix spec used to initialize all Projections
+                               ),
+                              RANDOM_WEIGHTS_INITIALIZATION,
                                ),
                               name=FFN_COMPOSITION,
                               learning_rate=LEARNING_RATE
@@ -245,9 +247,9 @@ def construct_model(stim_size = STIM_SIZE,
 
     if DISPLAY:
         nback_model.show_graph(
-            # show_cim=True,
-            # show_node_structure=ALL,
-            # show_dimensions=True
+            show_cim=True,
+            show_node_structure=ALL,
+            show_dimensions=True
         )
 
     return nback_model
