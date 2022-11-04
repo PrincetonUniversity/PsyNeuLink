@@ -6198,7 +6198,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 projections.append(node)
                 continue
 
-            if context.source != ContextFlags.INITIALIZING and context.string != 'IGNORE_NO_AFFERENTS_WARNING':
+            if context.flags & ContextFlags.PREPARING and context.string != 'IGNORE_NO_AFFERENTS_WARNING':
                 for input_port in node.input_ports:
                     if input_port.require_projection_in_composition \
                             and not input_port.path_afferents and not input_port.default_input:
