@@ -8,7 +8,8 @@ import pytest
 
 import psyneulink as pnl
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
-from psyneulink.core.components.functions.nonstateful.learningfunctions import Reinforcement, BackPropagation
+from psyneulink.core.components.functions.nonstateful.learningfunctions import \
+    LearningFunction, Reinforcement, BackPropagation, TDLearning
 from psyneulink.core.components.functions.nonstateful.optimizationfunctions import GridSearch
 from psyneulink.core.components.functions.nonstateful.transferfunctions import \
     Linear, Logistic, INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM
@@ -1017,17 +1018,20 @@ class TestCompositionPathwayArgsAndAdditionMethods:
         ('([{A,B,C},Proj_1,D,E],Proj_2)', 'b'),
         ('([{A,B,C},D,Proj_1,E],Proj_2)', 'c'),
         ('Pathway(default_matrix)', 'd'),
-        ('([A,B,C],Proj_2,learning_fct)', 'e'),
-        ('([A,B,C],Proj_2,learning_fct)', 'f'),
-        # ('([{A,B,C},D,Proj_1,E],Proj_2,learning_fct)', 'g'),  # set spec for Projections
-        # ('([{A,B,C},D,Proj_1,E],learning_fct,Proj_2)', 'h'),  # not yet supported for learning Pathways
+        ('([A,B,C],BackProp,Proj)', 'e'),
+        ('([A,B,C],Proj,BackProp)', 'f'),
+        ('([A,B],RL,Proj)', 'g'),
+        ('([A,B],TD,Proj)', 'h'),
+        # FIX: Set specification not yet supported for learning pathway:
+        # ('([{A,B,C},D,Proj_1,E],Proj_2,learning_fct)', 'i'),  # set spec for Projections
+        # ('([{A,B,C},D,Proj_1,E],learning_fct,Proj_2)', 'j'),  # not yet supported for learning Pathways
     ]
     @pytest.mark.parametrize('config', config, ids=[x[0] for x in config])
     def test_pathway_tuple_specs(self, config):
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
-        # B_comparator = ComparatorMechanism(name='B COMPARATOR')
         C = ProcessingMechanism(name='C')
+        # if config[1] not in {'g','h'}:
         D = ProcessingMechanism(name='D')
         E = ProcessingMechanism(name='E')
         F = ProcessingMechanism(name='F')
@@ -1044,7 +1048,6 @@ class TestCompositionPathwayArgsAndAdditionMethods:
             assert all([p.matrix.base==2.9 for p in D.path_afferents])
             assert E.path_afferents[0].matrix.base==1.6
         if config[1]=='d':
-            # pway=Pathway([{A,B,C},[1.6],D,E], default_projection_matrix=[2.9])
             pway=Pathway(([{A,B,C},[1.6],D,E], [2.9]))
             comp = Composition(pway)
             assert all([p.matrix.base==1.6 for p in D.path_afferents])
@@ -1060,15 +1063,24 @@ class TestCompositionPathwayArgsAndAdditionMethods:
             assert C.path_afferents[0].matrix.base==2.9
             assert comp.pathways[0].learning_function == BackPropagation
         if config[1]=='g':
-            comp = Composition(([{A,B,C},D,[1.6],E],BackPropagation,[2.9]))
-            assert all([p.matrix.base==2.9 for p in D.path_afferents])
-            assert E.path_afferents[0].matrix.base==1.6
-            assert comp.pathways[0].learning_function == BackPropagation
+            comp = Composition(([A,B],Reinforcement,[2.9]))
+            assert B.path_afferents[0].matrix.base==2.9
+            assert comp.pathways[0].learning_function == Reinforcement
         if config[1]=='h':
-            comp = Composition(([{A,B,C},D,[1.6],E],[2.9],BackPropagation))
-            assert all([p.matrix.base==2.9 for p in D.path_afferents])
-            assert E.path_afferents[0].matrix.base==1.6
-            assert comp.pathways[0].learning_function == BackPropagation
+            comp = Composition(([A,B],[2.9],TDLearning))
+            assert B.path_afferents[0].matrix.base==2.9
+            assert comp.pathways[0].learning_function == TDLearning
+        # FIX: Set specification not yet supported for learning pathway:
+        # if config[1]=='i':
+        #     comp = Composition(([{A,B,C},D,[1.6],E],BackPropagation,[2.9]))
+        #     assert all([p.matrix.base==2.9 for p in D.path_afferents])
+        #     assert E.path_afferents[0].matrix.base==1.6
+        #     assert comp.pathways[0].learning_function == BackPropagation
+        # if config[1]=='j':
+        #     comp = Composition(([{A,B,C},D,[1.6],E],[2.9],BackPropagation))
+        #     assert all([p.matrix.base==2.9 for p in D.path_afferents])
+        #     assert E.path_afferents[0].matrix.base==1.6
+        #     assert comp.pathways[0].learning_function == BackPropagation
 
     def test_add_pathways_bad_arg_error(self):
         I = InputPort(name='I')
