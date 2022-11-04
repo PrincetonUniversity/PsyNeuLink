@@ -32,12 +32,17 @@ and whether a graphic display of the network is generated when it is constructed
 TODO:
     - from Andre
              - network architecture;  in particular, size of hidden layer and projection patterns to and from it
-             - softmax temp on output/decision layer?
+                - the stim+context input vector (length 90) projects to a hidden layer (length 80);
+                - the task input vector (length 2) projects to a different hidden layer (length 80);
+                - those two hidden layers project (over fixed, nonlearnable, one-one-projections?) to a third hidden layer (length 80) that simply sums them;
+                - the third hidden layer projections to the length 2 output layer;
+                - a softmax is taken over the output layer to determine the response.
+             - softmax temp on output/decision layer: 1
              - confirm that ReLUs all use 0 thresholds and unit slope
           - training:
-              - confirm learning rate: ?? 0.001
-              - epoch: 1 trial per epoch of training
-          - get empirical stimulus sequences
+              - learning rate: 0.001; epoch: 1 trial per epoch of training
+              - state_dict with weights (still needed)
+          - get empirical stimulus sequences (still needed)
           - put N-back script (with pointer to latest version on PNL) in nback-paper repo
     - get rid of objective_mechanism (see "VERSION *WITHOUT* ObjectiveMechanism" under control(...)
     - pass learning_rate as parameter to train_network()
