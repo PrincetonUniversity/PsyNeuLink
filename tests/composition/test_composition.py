@@ -1022,23 +1022,12 @@ class TestCompositionPathwayArgsAndAdditionMethods:
         ('([A,B,C],Proj,BackProp)', 'f'),
         ('([A,B],RL,Proj)', 'g'),
         ('([A,B],TD,Proj)', 'h'),
+        # FIX: Set specification not yet supported for learning pathway:
         # ('([{A,B,C},D,Proj_1,E],Proj_2,learning_fct)', 'i'),  # set spec for Projections
         # ('([{A,B,C},D,Proj_1,E],learning_fct,Proj_2)', 'j'),  # not yet supported for learning Pathways
     ]
-    # learning_fct = [#'No Learning function',
-    #                 # BackPropagation,
-    #                 Reinforcement,
-    #                 TDLearning]
     @pytest.mark.parametrize('config', config, ids=[x[0] for x in config])
-    # @pytest.mark.parametrize('learning_fct', learning_fct,
-    #                          ids=[x.componentName for x in learning_fct if isinstance(x,LearningFunction)])
-    # @pytest.mark.skipif((config[1] in {'a','b','c','d'} and isinstance(learning_fct,type))
-    #                     or ((config[1] in {'e','f','g','h'} and not isinstance(learning_fct,type))),
-    #                     reason="Learning function not relevant")
     def test_pathway_tuple_specs(self, config):
-        # if ((config[1] in {'a','b','c','d'} and isinstance(learning_fct,type))
-        #     or ((config[1] in {'e','f','g','h'} and not isinstance(learning_fct,type)))):
-        #     pytest.skip("Learning function not relevant")
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
