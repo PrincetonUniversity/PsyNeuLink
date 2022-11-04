@@ -40,9 +40,12 @@ from psyneulink.core.scheduling.condition import AtTimeStep, AtTrial, Never, Tim
 from psyneulink.core.scheduling.condition import EveryNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler, SchedulingMode
 from psyneulink.core.scheduling.time import TimeScale
+from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 from psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism import LCControlMechanism
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
     RecurrentTransferMechanism
+from psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism import \
+    EpisodicMemoryMechanism
 
 logger = logging.getLogger(__name__)
 
@@ -4100,6 +4103,30 @@ class TestRun:
 
         comp.run({t: [1]}, context=context)
         assert comp.results == [[[2]]]
+
+    def test_missing_afferent_at_run_time(self):
+        A = ProcessingMechanism()
+        B = ProcessingMechanism(input_ports=['OCCUPIED', 'UNOCCUPIED'])
+        comp = Composition([A,B])
+        warning_type = UserWarning
+        warning_msg = '"InputPort (\'UNOCCUPIED\') of \'ProcessingMechanism-1\' ' \
+                      'doesn\'t have any afferent Projections."'
+        with pytest.raises(TypeError): # Caused by error on B at construction (with only one InputPort "occupied")
+            with pytest.warns(warning_type) as warning:
+                comp.run()
+        assert repr(warning[0].message.args[0]) == warning_msg
+
+    def test_missing_efferent_at_run_time(self):
+        A = ProcessingMechanism()
+        B = ProcessingMechanism(output_ports=['OCCUPIED','UNOCCUPIED'])  # Comparator Mech has two inputports,
+        C = ProcessingMechanism(name='C')
+        comp = Composition([A,B,C])
+        warning_type = UserWarning
+        warning_msg = '"OutputPort (\'UNOCCUPIED\') of \'ProcessingMechanism-1\' ' \
+                      'doesn\'t have any efferent Projections in \'Composition-0\'."'
+        with pytest.warns(warning_type) as warning:
+            comp.run()
+        assert repr(warning[0].message.args[0]) == warning_msg
 
 
 class TestCallBeforeAfterTimescale:
