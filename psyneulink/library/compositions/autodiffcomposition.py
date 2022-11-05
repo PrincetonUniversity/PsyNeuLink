@@ -276,10 +276,10 @@ class AutodiffComposition(Composition):
 
     # CLEANUP: move some of what's done in the methods below to a "validate_params" type of method
     @handle_external_context()
-    def _build_pytorch_representation(self, context=None):
+    def _build_pytorch_representation(self, context=None, refresh=False):
         if self.scheduler is None:
             self.scheduler = Scheduler(graph=self.graph_processing)
-        if self.parameters.pytorch_representation._get(context=context) is None:
+        if self.parameters.pytorch_representation._get(context=context) is None or refresh:
             model = PytorchModelCreator(composition=self,
                                         device=self.device,
                                         context=context)
@@ -288,7 +288,7 @@ class AutodiffComposition(Composition):
 
         # Set up optimizer function
         old_opt = self.parameters.optimizer._get(context)
-        if old_opt is None:
+        if old_opt is None or refresh:
             opt = self._make_optimizer(self.optimizer_type, self.learning_rate, self.weight_decay, context)
             self.parameters.optimizer._set(opt, context, skip_history=True, skip_log=True)
 
@@ -562,6 +562,27 @@ class AutodiffComposition(Composition):
                                                         report=report,
                                                         report_num=report_num
                                                         )
+
+    @handle_external_context()
+    def save(self, path:str, context=None):
+        """Saves all parameters to the specified path (e.g. save('my_model.pt'))"""
+        assert (str, "Must provide a path to save the model to!")
+        proj_state = {
+            p.name: p.parameters.matrix.get(context=context) for p in self.projections
+        }
+        torch.save(proj_state, path)
+
+    @handle_external_context()
+    def load(self, path:str, context=None):
+        state = torch.load(path)
+        for projection in self.projections:
+            matrix = state[projection.name]
+            projection.parameters.matrix.set(
+                matrix, context=context, override=True)
+            projection.parameter_ports['matrix'].parameters.value.set(
+                matrix, context=context, override=True)
+        self._build_pytorch_representation(context=context, refresh=True)
+
 
     def _get_state_ids(self):
         return super()._get_state_ids() + ["optimizer"]
