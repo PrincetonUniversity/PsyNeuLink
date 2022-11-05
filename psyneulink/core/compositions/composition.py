@@ -6198,7 +6198,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 projections.append(node)
                 continue
 
-            if context.source != ContextFlags.INITIALIZING and context.string != 'IGNORE_NO_AFFERENTS_WARNING':
+            if context.flags & ContextFlags.PREPARING and context.string != 'IGNORE_NO_AFFERENTS_WARNING':
                 for input_port in node.input_ports:
                     if input_port.require_projection_in_composition \
                             and not input_port.path_afferents and not input_port.default_input:
@@ -7263,7 +7263,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Processing Components
         try:
             input_source, output_source, learned_projection = \
-                self._unpack_processing_components_of_learning_pathway(pathway)
+                self._unpack_processing_components_of_learning_pathway(pathway, default_projection_matrix)
         except CompositionError as e:
             raise CompositionError(e.error_value.replace('this method',
                                                          f'{learning_function.__name__} {LearningFunction.__name__}'))
@@ -7509,13 +7509,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # Move creation of LearningProjections and learning-related projections (MappingProjections) here
     # ?Do add_nodes and add_projections here or in Learning-type-specific creation methods
 
-    def _unpack_processing_components_of_learning_pathway(self, processing_pathway):
+    def _unpack_processing_components_of_learning_pathway(self, processing_pathway, default_projection_matrix=None):
         # unpack processing components and add to composition
         if len(processing_pathway) == 3 and isinstance(processing_pathway[1], MappingProjection):
             input_source, learned_projection, output_source = processing_pathway
         elif len(processing_pathway) == 2:
             input_source, output_source = processing_pathway
-            learned_projection = MappingProjection(sender=input_source, receiver=output_source)
+            learned_projection = MappingProjection(sender=input_source,
+                                                   receiver=output_source,
+                                                   matrix=default_projection_matrix)
         else:
             raise CompositionError(f"Too many Nodes in learning pathway: {processing_pathway}. "
                                    f"Only single-layer learning is supported by this method. "
