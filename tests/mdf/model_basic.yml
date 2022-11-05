@@ -1,19 +1,19 @@
 comp:
     format: ModECI MDF v0.4.3
-    generating_application: PsyNeuLink v0.12.1.0+52.gc8cdaf69a8
+    generating_application: PsyNeuLink v0.12.1.0+52.gf060301a26.dirty
     graphs:
         comp:
             metadata:
                 type: Composition
-                execute_until_finished: true
-                simulation_results: []
-                results: []
-                has_initializers: false
-                input_specification: null
                 retain_old_simulation_data: false
-                max_executions_before_finished: 1000
+                input_specification: null
+                simulation_results: []
+                has_initializers: false
                 variable:
                 - 0
+                execute_until_finished: true
+                results: []
+                max_executions_before_finished: 1000
                 node_ordering:
                 - A
                 - B
@@ -23,78 +23,78 @@ comp:
                 A:
                     metadata:
                         type: TransferMechanism
-                        input_labels_dict: {}
-                        execute_until_finished: true
                         output_labels_dict: {}
-                        has_initializers: false
-                        max_executions_before_finished: 1000
                         variable:
                         -   - 0
-                        termination_measure_value: 0.0
                         input_port_variables: null
-                        integrator_mode: false
-                        integrator_function_value:
-                        -   - 0
+                        input_labels_dict: {}
+                        has_initializers: false
+                        execute_until_finished: true
+                        max_executions_before_finished: 1000
+                        termination_measure_value: 0.0
                         termination_comparison_op: <=
+                        on_resume_integrator_mode: current_value
                         termination_measure:
                             id: Distance_Function_2_1
                             metadata:
                                 type: Distance
-                                output_type: FunctionOutputType.DEFAULT
-                                enable_output_type_conversion: false
-                                execute_until_finished: true
-                                has_initializers: false
                                 changes_shape: false
-                                max_executions_before_finished: 1000
+                                has_initializers: false
                                 variable:
                                 -   -   - 0
                                 -   -   - 0
+                                execute_until_finished: true
+                                enable_output_type_conversion: false
+                                output_type: FunctionOutputType.DEFAULT
+                                max_executions_before_finished: 1000
                                 metric: max_abs_diff
                                 normalize: false
                             function: distance
                             args: {}
-                        output_ports:
-                        - RESULTS
+                        clip: null
                         integrator_function:
                             id: AdaptiveIntegrator_Function_0
                             metadata:
                                 type: AdaptiveIntegrator
-                                execute_until_finished: true
-                                has_initializers: true
-                                output_type: FunctionOutputType.DEFAULT
-                                enable_output_type_conversion: false
-                                changes_shape: false
-                                max_executions_before_finished: 1000
                                 variable:
                                 -   - 0
+                                enable_output_type_conversion: false
+                                changes_shape: false
+                                has_initializers: true
+                                execute_until_finished: true
                                 initializer:
                                 -   - 0
+                                max_executions_before_finished: 1000
+                                output_type: FunctionOutputType.DEFAULT
                             args:
-                                offset: 0.0
                                 rate: 0.5
                                 noise: 0.0
+                                offset: 0.0
                             value: (1 - rate) * previous_value + rate * variable0
                                 + noise + offset
-                        clip: null
+                        integrator_mode: false
                         termination_threshold: null
-                        on_resume_integrator_mode: current_value
+                        integrator_function_value:
+                        -   - 0
+                        output_ports:
+                        - RESULTS
                         input_ports: null
                     input_ports:
                         A_InputPort_0:
                             metadata:
                                 type: InputPort
                                 require_projection_in_composition: true
-                                execute_until_finished: true
-                                shadow_inputs: null
                                 has_initializers: false
                                 internal_only: false
-                                max_executions_before_finished: 1000
+                                shadow_inputs: null
+                                execute_until_finished: true
                                 variable:
                                 - 0
-                                default_input: null
-                                projections: null
+                                max_executions_before_finished: 1000
                                 combine: null
                                 exponent: null
+                                projections: null
+                                default_input: null
                                 weight: null
                             shape:
                             - 1
@@ -103,30 +103,30 @@ comp:
                         A_Linear_Function_6:
                             metadata:
                                 type: Linear
-                                output_type: FunctionOutputType.NP_2D_ARRAY
-                                enable_output_type_conversion: true
-                                execute_until_finished: true
-                                has_initializers: false
                                 changes_shape: false
-                                max_executions_before_finished: 1000
+                                has_initializers: false
                                 variable:
                                 -   - 0
+                                execute_until_finished: true
+                                enable_output_type_conversion: true
+                                output_type: FunctionOutputType.NP_2D_ARRAY
+                                max_executions_before_finished: 1000
                                 bounds: null
                             function: linear
                             args:
-                                slope: 5.0
                                 intercept: 2.0
+                                slope: 5.0
                                 variable0: A_InputPort_0
                     output_ports:
                         A_RESULT:
                             metadata:
                                 type: OutputPort
                                 require_projection_in_composition: true
-                                execute_until_finished: true
                                 has_initializers: false
-                                max_executions_before_finished: 1000
                                 variable:
                                 - 2.0
+                                execute_until_finished: true
+                                max_executions_before_finished: 1000
                                 projections: null
                             value: A_Linear_Function_6
                             shape:
@@ -135,78 +135,78 @@ comp:
                 B:
                     metadata:
                         type: TransferMechanism
-                        input_labels_dict: {}
-                        execute_until_finished: true
                         output_labels_dict: {}
-                        has_initializers: false
-                        max_executions_before_finished: 1000
                         variable:
                         -   - 0
-                        termination_measure_value: 0.0
                         input_port_variables: null
-                        integrator_mode: false
-                        integrator_function_value:
-                        -   - 0
+                        input_labels_dict: {}
+                        has_initializers: false
+                        execute_until_finished: true
+                        max_executions_before_finished: 1000
+                        termination_measure_value: 0.0
                         termination_comparison_op: <=
+                        on_resume_integrator_mode: current_value
                         termination_measure:
                             id: Distance_Function_2_3
                             metadata:
                                 type: Distance
-                                output_type: FunctionOutputType.DEFAULT
-                                enable_output_type_conversion: false
-                                execute_until_finished: true
-                                has_initializers: false
                                 changes_shape: false
-                                max_executions_before_finished: 1000
+                                has_initializers: false
                                 variable:
                                 -   -   - 0
                                 -   -   - 0
+                                execute_until_finished: true
+                                enable_output_type_conversion: false
+                                output_type: FunctionOutputType.DEFAULT
+                                max_executions_before_finished: 1000
                                 metric: max_abs_diff
                                 normalize: false
                             function: distance
                             args: {}
-                        output_ports:
-                        - RESULTS
+                        clip: null
                         integrator_function:
                             id: AdaptiveIntegrator_Function_1
                             metadata:
                                 type: AdaptiveIntegrator
-                                execute_until_finished: true
-                                has_initializers: true
-                                output_type: FunctionOutputType.DEFAULT
-                                enable_output_type_conversion: false
-                                changes_shape: false
-                                max_executions_before_finished: 1000
                                 variable:
                                 -   - 0
+                                enable_output_type_conversion: false
+                                changes_shape: false
+                                has_initializers: true
+                                execute_until_finished: true
                                 initializer:
                                 -   - 0
+                                max_executions_before_finished: 1000
+                                output_type: FunctionOutputType.DEFAULT
                             args:
-                                offset: 0.0
                                 rate: 0.5
                                 noise: 0.0
+                                offset: 0.0
                             value: (1 - rate) * previous_value + rate * variable0
                                 + noise + offset
-                        clip: null
+                        integrator_mode: false
                         termination_threshold: null
-                        on_resume_integrator_mode: current_value
+                        integrator_function_value:
+                        -   - 0
+                        output_ports:
+                        - RESULTS
                         input_ports: null
                     input_ports:
                         B_InputPort_0:
                             metadata:
                                 type: InputPort
                                 require_projection_in_composition: true
-                                execute_until_finished: true
-                                shadow_inputs: null
                                 has_initializers: false
                                 internal_only: false
-                                max_executions_before_finished: 1000
+                                shadow_inputs: null
+                                execute_until_finished: true
                                 variable:
                                 - 0
-                                default_input: null
-                                projections: null
+                                max_executions_before_finished: 1000
                                 combine: null
                                 exponent: null
+                                projections: null
+                                default_input: null
                                 weight: null
                             shape:
                             - 1
@@ -215,35 +215,35 @@ comp:
                         B_Logistic_Function_0:
                             metadata:
                                 type: Logistic
-                                execute_until_finished: true
-                                has_initializers: false
-                                output_type: FunctionOutputType.NP_2D_ARRAY
-                                enable_output_type_conversion: true
-                                changes_shape: false
-                                max_executions_before_finished: 1000
                                 variable:
                                 -   - 0
+                                enable_output_type_conversion: true
+                                changes_shape: false
+                                has_initializers: false
+                                execute_until_finished: true
+                                max_executions_before_finished: 1000
+                                output_type: FunctionOutputType.NP_2D_ARRAY
                                 bounds:
                                 - 0
                                 - 1
                             function: logistic
                             args:
-                                x_0: 0
-                                scale: 1.0
                                 bias: 0.0
+                                scale: 1.0
                                 offset: 0.0
                                 gain: 1.0
+                                x_0: 0
                                 variable0: B_InputPort_0
                     output_ports:
                         B_RESULT:
                             metadata:
                                 type: OutputPort
                                 require_projection_in_composition: true
-                                execute_until_finished: true
                                 has_initializers: false
-                                max_executions_before_finished: 1000
                                 variable:
                                 - 0.5
+                                execute_until_finished: true
+                                max_executions_before_finished: 1000
                                 projections: null
                             value: B_Logistic_Function_0
                             shape:
@@ -257,8 +257,8 @@ comp:
                     receiver_port: B_InputPort_0
                     metadata:
                         type: MappingProjection
-                        execute_until_finished: true
                         has_initializers: false
+                        execute_until_finished: true
                         max_executions_before_finished: 1000
                         exponent: null
                         weight: null
@@ -266,14 +266,14 @@ comp:
                             LinearMatrix_Function_0:
                                 metadata:
                                     type: LinearMatrix
-                                    output_type: FunctionOutputType.DEFAULT
-                                    enable_output_type_conversion: false
-                                    execute_until_finished: true
-                                    has_initializers: false
                                     changes_shape: false
-                                    max_executions_before_finished: 1000
+                                    has_initializers: false
                                     A:
                                     - 2.0
+                                    execute_until_finished: true
+                                    enable_output_type_conversion: false
+                                    output_type: FunctionOutputType.DEFAULT
+                                    max_executions_before_finished: 1000
                                     bounds: null
                                 function: onnx::MatMul
                                 args:

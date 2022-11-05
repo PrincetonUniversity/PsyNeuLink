@@ -88,7 +88,7 @@ RETRIEVAL_CONTEXT_WEIGHT = 1-RETRIEVAL_STIM_WEIGHT # weighting of context field 
 DECISION_SOFTMAX_TEMP=1/8 # express as gain # binarity of decision process
 
 # Training parameters:
-NUM_EPOCHS=1000    # nback-paper: 400,000, one trial per epoch
+NUM_EPOCHS=10    # nback-paper: 400,000, one trial per epoch
 LEARNING_RATE=0.1  # nback-paper: .001
 
 # Execution parameters:
@@ -455,7 +455,7 @@ def train_network(network,
     training_set = get_training_inputs(network=network, num_epochs=num_epochs, nback_levels=NBACK_LEVELS)
     network.learn(inputs=training_set,
                   minibatch_size=NUM_TRIALS,
-                  report_learning=REPORT_LEARNING,
+                  # report_learning=REPORT_LEARNING,
                   execution_mode=ExecutionMode.LLVMRun)
 
 def run_model(model,

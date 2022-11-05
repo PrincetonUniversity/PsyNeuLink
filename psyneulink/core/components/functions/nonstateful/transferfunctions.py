@@ -1582,18 +1582,49 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
         builder.store(val, ptro)
 
+    # # MODIFIED 11/4/22 OLD:
+    # @handle_external_context()
+    # def derivative(self, input, output=None, context=None):
+    #     """
+    #     derivative(input)
+    #
+    #     Derivative of `function <ReLU._function>` at **input**.
+    #
+    #     Arguments
+    #     ---------
+    #
+    #     input : number
+    #         value of the input to the ReLU transform at which derivative is to be taken.
+    #
+    #     Returns
+    #     -------
+    #
+    #     derivative :  number or array
+    #
+    #     """
+    #     gain = self._get_current_parameter_value(GAIN, context)
+    #     leak = self._get_current_parameter_value(LEAK, context)
+    #
+    #     input = np.asarray(input).copy()
+    #     input[input>0] = gain
+    #     input[input<=0] = gain * leak
+    #
+    #     return input
+    # MODIFIED 11/4/22 NEW:
     @handle_external_context()
-    def derivative(self, input, output=None, context=None):
+    def derivative(self, output, input=None, context=None):
         """
-        derivative(input)
+        derivative(output)
 
-        Derivative of `function <ReLU._function>` at **input**.
+        Derivative of `function <ReLU._function>` at **output**.
+
+        .. technical_note:: NOTE:  Taken at output to match handlining of derivatives of Logistic and SoftMax
 
         Arguments
         ---------
 
         input : number
-            value of the input to the ReLU transform at which derivative is to be taken.
+            value of the output of the ReLU transform at which derivative is to be taken.
 
         Returns
         -------
@@ -1604,11 +1635,12 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         gain = self._get_current_parameter_value(GAIN, context)
         leak = self._get_current_parameter_value(LEAK, context)
 
-        input = np.asarray(input).copy()
-        input[input>0] = gain
-        input[input<=0] = gain * leak
+        input = np.asarray(output).copy()
+        output[output>0] = gain
+        output[output<=0] = gain * leak
 
-        return input
+        return output
+    # MODIFIED 11/4/22 END
 
 
 # **********************************************************************************************************************
@@ -2745,9 +2777,10 @@ class SoftMax(TransferFunction):
         derivative of values returned by SoftMax :  1d or 2d array (depending on *OUTPUT_TYPE* of SoftMax)
         """
 
-        output_type = self.output_type
+        output_type = self._get_current_parameter_value(OUTPUT_TYPE, context)
         size = len(output)
         sm = self.function(output, params={OUTPUT_TYPE: ALL}, context=context)
+        sm = np.squeeze(sm)
 
         if output_type == ALL:
             # Return full Jacobian matrix of derivatives
@@ -2764,7 +2797,7 @@ class SoftMax(TransferFunction):
             # Return 1d array of derivatives for max element (i.e., the one chosen by SoftMax)
             derivative = np.empty(size)
             # Get the element of output returned as non-zero when output_type is not ALL
-            index_of_max = int(np.where(output == np.max(output))[0])
+            index_of_max = int(np.where(output == np.max(output))[0][0])
             max_val = sm[index_of_max]
             for i in range(size):
                 if i == index_of_max:
