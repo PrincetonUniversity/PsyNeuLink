@@ -89,7 +89,7 @@ RETRIEVAL_CONTEXT_WEIGHT = 1-RETRIEVAL_STIM_WEIGHT # weighting of context field 
 DECISION_SOFTMAX_TEMP=1/8 # express as gain # binarity of decision process
 
 # Training parameters:
-NUM_EPOCHS=10    # nback-paper: 400,000, one trial per epoch
+NUM_EPOCHS=1000    # nback-paper: 400,000, one trial per epoch
 LEARNING_RATE=0.1  # nback-paper: .001
 
 # Execution parameters:
@@ -130,6 +130,8 @@ def construct_model(stim_size = STIM_SIZE,
                     decision_softmax_temp = DECISION_SOFTMAX_TEMP):
     """Construct nback_model"""
 
+    print(f'constructing {FFN_COMPOSITION}...')
+
     # FEED FORWARD NETWORK -----------------------------------------
 
     #     inputs: encoding of current stimulus and context, retrieved stimulus and retrieved context,
@@ -169,6 +171,8 @@ def construct_model(stim_size = STIM_SIZE,
                               )
 
     # FULL MODEL (Outer Composition, including input, EM and control Mechanisms) ------------------------
+
+    print(f'constructing {NBACK_MODEL}...')
 
     # Stimulus Encoding: takes STIM_SIZE vector as input
     stim = TransferMechanism(name=MODEL_STIMULUS_INPUT, size=STIM_SIZE)
@@ -257,6 +261,7 @@ def construct_model(stim_size = STIM_SIZE,
             # show_dimensions=True
         )
 
+    print(f'full model constructed')
     return nback_model
 
 # ==========================================STIMULUS GENERATION =======================================================
@@ -453,11 +458,15 @@ def get_training_inputs(network, num_epochs, nback_levels):
 def train_network(network,
                   learning_rate=LEARNING_RATE,
                   num_epochs=NUM_EPOCHS):
+    print(f'constructing training_set for {network.name}...')
     training_set = get_training_inputs(network=network, num_epochs=num_epochs, nback_levels=NBACK_LEVELS)
+    print(f'training_set constructed: {len(training_set)}')
+    print(f'\ntraining {network.name}...')
     network.learn(inputs=training_set,
                   minibatch_size=NUM_TRIALS,
                   # report_learning=REPORT_LEARNING,
                   execution_mode=ExecutionMode.LLVMRun)
+    print(f'{network.name} trained')
 
 def run_model(model,
               context_drift_rate=CONTEXT_DRIFT_RATE,
@@ -466,6 +475,7 @@ def run_model(model,
               report_progress=REPORT_PROGRESS,
               animate=ANIMATE
               ):
+    print('nback_model executing...')
     for nback_level in NBACK_LEVELS:
         model.run(inputs=get_run_inputs(model, nback_level, context_drift_rate, num_trials),
                   # FIX: MOVE THIS TO MODEL CONSTRUCTION ONCE THAT WORKS
@@ -479,20 +489,16 @@ def run_model(model,
         # FIX: RESET MEMORY HERE?
     # print("Number of entries in EM: ", len(model.nodes[EM].memory))
     assert len(model.nodes[EM].memory) == NUM_TRIALS*NUM_NBACK_LEVELS + 1
-
-
-nback_model = construct_model()
-print('nback_model constructed')
-if TRAIN:
-    print('nback_model training...')
-    train_network(nback_model.nodes[FFN_COMPOSITION])
-    print('nback_model trained')
-if RUN:
-    print('nback_model executing...')
-    run_model(nback_model)
     if REPORT_PROGRESS == ReportProgress.ON:
         print('\n')
     print(f'nback_model done: {len(nback_model.results)} trials executed')
+
+
+nback_model = construct_model()
+if TRAIN:
+    train_network(nback_model.nodes[FFN_COMPOSITION])
+if RUN:
+    run_model(nback_model)
 
 # ===========================================================================
 
