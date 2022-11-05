@@ -3761,6 +3761,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             show_graph_attributes=None,
             name=None,
             prefs=None,
+            termination_processing=None,
             **param_defaults
     ):
 
@@ -3890,6 +3891,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         show_graph_attributes = show_graph_attributes or {}
         self._show_graph = ShowGraph(self, **show_graph_attributes)
+
+        if termination_processing is not None:
+            self.termination_processing = termination_processing
 
     @property
     def graph_processing(self):
