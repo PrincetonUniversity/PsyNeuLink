@@ -32,12 +32,17 @@ and whether a graphic display of the network is generated when it is constructed
 TODO:
     - from Andre
              - network architecture;  in particular, size of hidden layer and projection patterns to and from it
-             - softmax temp on output/decision layer?
+                - the stim+context input vector (length 90) projects to a hidden layer (length 80);
+                - the task input vector (length 2) projects to a different hidden layer (length 80);
+                - those two hidden layers project (over fixed, nonlearnable, one-one-projections?) to a third hidden layer (length 80) that simply sums them;
+                - the third hidden layer projections to the length 2 output layer;
+                - a softmax is taken over the output layer to determine the response.
+             - softmax temp on output/decision layer: 1
              - confirm that ReLUs all use 0 thresholds and unit slope
           - training:
-              - confirm learning rate: ?? 0.001
-              - epoch: 1 trial per epoch of training
-          - get empirical stimulus sequences
+              - learning rate: 0.001; epoch: 1 trial per epoch of training
+              - state_dict with weights (still needed)
+          - get empirical stimulus sequences (still needed)
           - put N-back script (with pointer to latest version on PNL) in nback-paper repo
     - get rid of objective_mechanism (see "VERSION *WITHOUT* ObjectiveMechanism" under control(...) (fix bug)
     - make termination processing part of the Composition definition (fix bug)
@@ -57,9 +62,9 @@ from psyneulink import *
 import numpy as np
 
 # Settings for running script:
-TRAIN = False
+TRAIN = True
 RUN = False
-DISPLAY = False # show visual graphic of model
+DISPLAY_MODEL = False # show visual graphic of model
 
 # PARAMETERS -------------------------------------------------------------------------------------------------------
 
@@ -83,7 +88,7 @@ RETRIEVAL_CONTEXT_WEIGHT = 1-RETRIEVAL_STIM_WEIGHT # weighting of context field 
 DECISION_SOFTMAX_TEMP=1/8 # express as gain # binarity of decision process
 
 # Training parameters:
-NUM_EPOCHS=1000    # nback-paper: 400,000, one trial per epoch
+NUM_EPOCHS=10    # nback-paper: 400,000, one trial per epoch
 LEARNING_RATE=0.1  # nback-paper: .001
 
 # Execution parameters:
@@ -91,6 +96,7 @@ CONTEXT_DRIFT_RATE=.1 # drift rate used for DriftOnASphereIntegrator (function o
 NUM_TRIALS = 48 # number of stimuli presented in a trial sequence
 REPORT_OUTPUT = ReportOutput.OFF   # Sets console output during run
 REPORT_PROGRESS = ReportProgress.ON  # Sets console progress bar during run
+REPORT_LEARNING = ReportLearning.ON  # Sets console progress bar during training
 ANIMATE = True # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
 
 # Names of Compositions and Mechanisms:
@@ -155,7 +161,7 @@ def construct_model(stim_size = STIM_SIZE,
                                 input_retrieved_context,
                                 input_task},
                                hidden, decision],
-                              RANDOM_WEIGHTS_INITIALIZATION,
+                               RANDOM_WEIGHTS_INITIALIZATION,
                                ),
                               name=FFN_COMPOSITION,
                               learning_rate=LEARNING_RATE
@@ -243,11 +249,11 @@ def construct_model(stim_size = STIM_SIZE,
     nback_model.add_projection(MappingProjection(), stim, em.input_ports["STIMULUS_FIELD"])
     nback_model.add_projection(MappingProjection(), context, em.input_ports["CONTEXT_FIELD"])
 
-    if DISPLAY:
+    if DISPLAY_MODEL:
         nback_model.show_graph(
-            show_cim=True,
-            show_node_structure=ALL,
-            show_dimensions=True
+            # show_cim=True,
+            # show_node_structure=ALL,
+            # show_dimensions=True
         )
 
     return nback_model
@@ -370,7 +376,7 @@ def get_training_inputs(network, num_epochs, nback_levels):
      context_lure:  stim_current != stim_retrieved  and context_current == context_retrieved
      non_lure:  stim_current != stim_retrieved  and context_current != context_retrieved
     """
-    assert is_iterable(nback_levels) and all([0<i<MAX_NBACK_LEVELS for i in nback_levels])
+    assert is_iterable(nback_levels) and all([0<i<=MAX_NBACK_LEVELS for i in nback_levels])
     stimuli = get_stim_set()
     context_fct =  DriftOnASphereIntegrator(initializer=np.random.random(CONTEXT_SIZE-1),
                                             noise=CONTEXT_DRIFT_NOISE,
@@ -449,6 +455,7 @@ def train_network(network,
     training_set = get_training_inputs(network=network, num_epochs=num_epochs, nback_levels=NBACK_LEVELS)
     network.learn(inputs=training_set,
                   minibatch_size=NUM_TRIALS,
+                  # report_learning=REPORT_LEARNING,
                   execution_mode=ExecutionMode.LLVMRun)
 
 def run_model(model,
