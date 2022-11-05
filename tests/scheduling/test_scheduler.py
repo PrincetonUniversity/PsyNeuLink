@@ -1209,6 +1209,19 @@ class TestTermination:
         # two executions of B
         assert output == [.75]
 
+    def test_termination_conditions_after_recreating_scheduler(self):
+        comp = Composition()
+        A = TransferMechanism()
+        comp.scheduler.termination_conds = {TimeScale.TRIAL: AfterNCalls(A, 3)}
+        B = TransferMechanism()
+        for m in [A, B]:
+            comp.add_node(m)
+
+        comp.run(inputs={A: 1, B: 1})
+
+        expected_output = [{A, B}, {A, B}, {A, B}]
+        assert comp.scheduler.execution_list[comp.default_execution_id] == expected_output
+
 
 def _get_vertex_feedback_type(graph, sender_port, receiver_mech):
     # there is only one projection per pair

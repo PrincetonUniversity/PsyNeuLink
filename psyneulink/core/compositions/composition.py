@@ -3915,10 +3915,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             old_scheduler = self._scheduler
             if old_scheduler is not None:
                 orig_conds = old_scheduler._user_specified_conds
+                orig_term_conds = old_scheduler._user_specified_termination_conds
             else:
                 orig_conds = None
+                orig_term_conds = None
 
-            self._scheduler = Scheduler(composition=self, conditions=orig_conds)
+            self._scheduler = Scheduler(composition=self, conditions=orig_conds, termination_conds=orig_term_conds)
             self.needs_update_scheduler = False
 
         return self._scheduler
