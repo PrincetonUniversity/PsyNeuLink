@@ -1023,9 +1023,18 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
         Derivative of `function <Exponential._function>` at either **input** or **output**.
 
-        Either **input** or **ouput** must be specified.  If **output** is not specified, it is computed from **input**.
+        COMMENT:  RESTORE WHEN TEST IN DERIVATIVE IS RESTORED
+        Either **input** or **output** must be specified.
+        If **output** is not specified, it is computed from  **input**.
         If both are specified, **input** is ignored unless paramValidationPref is set, in which case
         an error is generated if **output** does not correspond to `function <Logistic._function>`\\(**input**).
+        COMMENT
+        Either **input** or **output** must be specified.
+        If **output** is not specified, derivative is computed from **input**.
+        If both are specified, **input** is ignored and derivative is computed from **output**
+        .. technical_note::
+           allowing both to be specified is supported for consistency with `BackPropagation` `LearningFunction`
+           which uses output to compute Logistic
 
         Arguments
         ---------
@@ -1042,17 +1051,18 @@ class Logistic(TransferFunction):  # -------------------------------------------
         Deriviative of logistic transform at output:  number or array
 
         """
-        if output is not None and input is not None and self.prefs.paramValidationPref:
-            if isinstance(input, numbers.Number):
-                valid = output == self.function(input, context=context)
-            else:
-                valid = all(output[i] == self.function(input, context=context)[i] for i in range(len(input)))
-            if not valid:
-                raise FunctionError("Value of {} arg passed to {} ({}) "
-                                    "does not match the value expected for specified {} ({})".
-                                    format(repr('output'), self.__class__.__name__ + '.' + 'derivative', output,
-                                           repr('input'), input))
-
+        # FIX: BackPropagation PASSES IN SAME INPUT AND OUTPUT
+        # if (output is not None and input is not None and self.prefs.paramValidationPref):
+        #     if isinstance(input, numbers.Number):
+        #         valid = output == self.function(input, context=context)
+        #     else:
+        #         valid = all(output[i] == self.function(input, context=context)[i] for i in range(len(input)))
+        #     if not valid:
+        #         raise FunctionError("Value of {} arg passed to {} ({}) "
+        #                             "does not match the value expected for specified {} ({})".
+        #                             format(repr('output'), self.__class__.__name__ + '.' + 'derivative', output,
+        #                                    repr('input'), input))
+        #
         gain = self._get_current_parameter_value(GAIN, context)
         scale = self._get_current_parameter_value(SCALE, context)
 
@@ -1426,7 +1436,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         specifies a value by which to multiply `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted
         from it.
     bias : float : default 0.0
-        specifies a value to subtract from each element of `variable <ReLU.variable>`.
+        specifies a value to subtract from each element of `variable <ReLU.variable>`; functions as threshold.
     leak : float : default 0.0
         specifies a scaling factor between 0 and 1 when (variable - bias) is less than or equal to 0.
     params : Dict[param keyword: param value] : default None
@@ -1451,7 +1461,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         from it.
 
     bias : float : default 0.0
-        value to subtract from each element of `variable <ReLU.variable>`.
+        value to subtract from each element of `variable <ReLU.variable>`; functions as threshold.
 
     leak : float : default 0.0
         scaling factor between 0 and 1 when (variable - bias) is less than or equal to 0.
@@ -1582,49 +1592,18 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
         builder.store(val, ptro)
 
-    # # MODIFIED 11/4/22 OLD:
-    # @handle_external_context()
-    # def derivative(self, input, output=None, context=None):
-    #     """
-    #     derivative(input)
-    #
-    #     Derivative of `function <ReLU._function>` at **input**.
-    #
-    #     Arguments
-    #     ---------
-    #
-    #     input : number
-    #         value of the input to the ReLU transform at which derivative is to be taken.
-    #
-    #     Returns
-    #     -------
-    #
-    #     derivative :  number or array
-    #
-    #     """
-    #     gain = self._get_current_parameter_value(GAIN, context)
-    #     leak = self._get_current_parameter_value(LEAK, context)
-    #
-    #     input = np.asarray(input).copy()
-    #     input[input>0] = gain
-    #     input[input<=0] = gain * leak
-    #
-    #     return input
-    # MODIFIED 11/4/22 NEW:
     @handle_external_context()
-    def derivative(self, output, input=None, context=None):
+    def derivative(self, input, output=None, context=None):
         """
-        derivative(output)
+        derivative(input)
 
-        Derivative of `function <ReLU._function>` at **output**.
-
-        .. technical_note:: NOTE:  Taken at output to match handlining of derivatives of Logistic and SoftMax
+        Derivative of `function <ReLU._function>` at **input**.
 
         Arguments
         ---------
 
         input : number
-            value of the output of the ReLU transform at which derivative is to be taken.
+            value of the input to the ReLU transform at which derivative is to be taken.
 
         Returns
         -------
@@ -1634,14 +1613,18 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         """
         gain = self._get_current_parameter_value(GAIN, context)
         leak = self._get_current_parameter_value(LEAK, context)
+        # MODIFIED 11/5/22 OLD:
+        input = np.asarray(input).copy()
+        input[input>0] = gain
+        input[input<=0] = gain * leak
+        # # MODIFIED 11/5/22 NEW:
+        # bias = self._get_current_parameter_value(BIAS, context)
+        # input = np.asarray(input).copy()
+        # input[(input-bias)>0] = gain
+        # input[(input-bias)<=0] = gain * leak
+        # MODIFIED 11/5/22 END
 
-        input = np.asarray(output).copy()
-        output[output>0] = gain
-        output[output<=0] = gain * leak
-
-        return output
-    # MODIFIED 11/4/22 END
-
+        return input
 
 # **********************************************************************************************************************
 #                                                    Angle
@@ -2767,7 +2750,7 @@ class SoftMax(TransferFunction):
         return self.convert_output_type(output)
 
     @handle_external_context()
-    def derivative(self, output, input=None, context=None):
+    def derivative(self, input=None, output=None, context=None):
         """
         derivative(output)
 
