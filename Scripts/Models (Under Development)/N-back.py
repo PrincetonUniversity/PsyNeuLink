@@ -63,8 +63,8 @@ from psyneulink import *
 import numpy as np
 
 # Settings for running script:
-TRAIN = True
-RUN = False
+TRAIN = False
+RUN = True
 DISPLAY_MODEL = False # show visual graphic of model
 
 # PARAMETERS -------------------------------------------------------------------------------------------------------
@@ -216,7 +216,8 @@ def construct_model(stim_size = STIM_SIZE,
     #        - continue trial
     control = ControlMechanism(name=CONTROLLER,
                                default_variable=[[1]],  # Ensure EM[store_prob]=1 at beginning of first trial
-                               # # VERSION *WITH* ObjectiveMechanism:
+                               # ---------
+                               # VERSION *WITH* ObjectiveMechanism:
                                objective_mechanism=ObjectiveMechanism(name="OBJECTIVE MECHANISM",
                                                                       monitor=decision,
                                                                       # Outcome=1 if match, else 0
@@ -224,20 +225,21 @@ def construct_model(stim_size = STIM_SIZE,
                                # Set ControlSignal for EM[store_prob]
                                function=lambda outcome: int(bool(outcome)
                                                             or (np.random.random() > retrieval_hazard_rate)),
+                               # ---------
                                # # VERSION *WITHOUT* ObjectiveMechanism:
                                # monitor_for_control=decision,
                                # # Set Evaluate outcome and set ControlSignal for EM[store_prob]
                                # #   - outcome is received from decision as one hot in the form: [[match, no-match]]
                                # function=lambda outcome: int(int(outcome[0][1]>outcome[0][0])
-                               #                              or (np.random.random() > HAZARD_RATE)),
+                               #                              or (np.random.random() > retrieval_hazard_rate)),
+                               # ---------
                                control=(STORAGE_PROB, em))
 
     nback_model = Composition(name=NBACK_MODEL,
                               nodes=[stim, context, task, ffn, em, control],
-                              # # # Terminate trial if value of control is still 1 after first pass through execution
-                              # # FIX: STOPS AFTER ~ NUMBER OF TRIALS (?90+); SHOULD BE: NUM_TRIALS*NUM_NBACK_LEVELS + 1
-                              # termination_processing={TimeScale.TRIAL: And(Condition(lambda: control.value),
-                              #                                              AfterPass(0, TimeScale.TRIAL))},
+                              # Terminate trial if value of control is still 1 after first pass through execution
+                              termination_processing={TimeScale.TRIAL: And(Condition(lambda: control.value),
+                                                                           AfterPass(0, TimeScale.TRIAL))},
                               )
     # # Terminate trial if value of control is still 1 after first pass through execution
     # # FIX: ALL OF THE FOLLOWING STOP AFTER ~ NUMBER OF TRIALS (?90+); SHOULD BE: NUM_TRIALS*NUM_NBACK_LEVELS + 1
@@ -478,10 +480,6 @@ def run_model(model,
     print('nback_model executing...')
     for nback_level in NBACK_LEVELS:
         model.run(inputs=get_run_inputs(model, nback_level, context_drift_rate, num_trials),
-                  # FIX: MOVE THIS TO MODEL CONSTRUCTION ONCE THAT WORKS
-                  # Terminate trial if value of control is still 1 after first pass through execution
-                  termination_processing={TimeScale.TRIAL: And(Condition(lambda: model.nodes[CONTROLLER].value),
-                                                               AfterPass(0, TimeScale.TRIAL))}, # function arg
                   report_output=report_output,
                   report_progress=report_progress,
                   animate=animate
