@@ -1023,9 +1023,18 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
         Derivative of `function <Exponential._function>` at either **input** or **output**.
 
-        Either **input** or **ouput** must be specified.  If **output** is not specified, it is computed from **input**.
+        COMMENT:  RESTORE WHEN TEST IN DERIVATIVE IS RESTORED
+        Either **input** or **output** must be specified.
+        If **output** is not specified, it is computed from  **input**.
         If both are specified, **input** is ignored unless paramValidationPref is set, in which case
         an error is generated if **output** does not correspond to `function <Logistic._function>`\\(**input**).
+        COMMENT
+        Either **input** or **output** must be specified.
+        If **output** is not specified, derivative is computed from **input**.
+        If both are specified, **input** is ignored and derivative is computed from **output**
+        .. technical_note::
+           allowing both to be specified is supported for consistency with `BackPropagation` `LearningFunction`
+           which uses output to compute Logistic
 
         Arguments
         ---------
@@ -1042,17 +1051,18 @@ class Logistic(TransferFunction):  # -------------------------------------------
         Deriviative of logistic transform at output:  number or array
 
         """
-        if output is not None and input is not None and self.prefs.paramValidationPref:
-            if isinstance(input, numbers.Number):
-                valid = output == self.function(input, context=context)
-            else:
-                valid = all(output[i] == self.function(input, context=context)[i] for i in range(len(input)))
-            if not valid:
-                raise FunctionError("Value of {} arg passed to {} ({}) "
-                                    "does not match the value expected for specified {} ({})".
-                                    format(repr('output'), self.__class__.__name__ + '.' + 'derivative', output,
-                                           repr('input'), input))
-
+        # FIX: BackPropagation PASSES IN SAME INPUT AND OUTPUT
+        # if (output is not None and input is not None and self.prefs.paramValidationPref):
+        #     if isinstance(input, numbers.Number):
+        #         valid = output == self.function(input, context=context)
+        #     else:
+        #         valid = all(output[i] == self.function(input, context=context)[i] for i in range(len(input)))
+        #     if not valid:
+        #         raise FunctionError("Value of {} arg passed to {} ({}) "
+        #                             "does not match the value expected for specified {} ({})".
+        #                             format(repr('output'), self.__class__.__name__ + '.' + 'derivative', output,
+        #                                    repr('input'), input))
+        #
         gain = self._get_current_parameter_value(GAIN, context)
         scale = self._get_current_parameter_value(SCALE, context)
 
@@ -1426,7 +1436,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         specifies a value by which to multiply `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted
         from it.
     bias : float : default 0.0
-        specifies a value to subtract from each element of `variable <ReLU.variable>`.
+        specifies a value to subtract from each element of `variable <ReLU.variable>`; functions as threshold.
     leak : float : default 0.0
         specifies a scaling factor between 0 and 1 when (variable - bias) is less than or equal to 0.
     params : Dict[param keyword: param value] : default None
@@ -1451,7 +1461,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         from it.
 
     bias : float : default 0.0
-        value to subtract from each element of `variable <ReLU.variable>`.
+        value to subtract from each element of `variable <ReLU.variable>`; functions as threshold.
 
     leak : float : default 0.0
         scaling factor between 0 and 1 when (variable - bias) is less than or equal to 0.
@@ -1603,13 +1613,18 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         """
         gain = self._get_current_parameter_value(GAIN, context)
         leak = self._get_current_parameter_value(LEAK, context)
-
+        # MODIFIED 11/5/22 OLD:
         input = np.asarray(input).copy()
         input[input>0] = gain
         input[input<=0] = gain * leak
+        # # MODIFIED 11/5/22 NEW:
+        # bias = self._get_current_parameter_value(BIAS, context)
+        # input = np.asarray(input).copy()
+        # input[(input-bias)>0] = gain
+        # input[(input-bias)<=0] = gain * leak
+        # MODIFIED 11/5/22 END
 
         return input
-
 
 # **********************************************************************************************************************
 #                                                    Angle
@@ -2735,7 +2750,7 @@ class SoftMax(TransferFunction):
         return self.convert_output_type(output)
 
     @handle_external_context()
-    def derivative(self, output, input=None, context=None):
+    def derivative(self, input=None, output=None, context=None):
         """
         derivative(output)
 
@@ -2745,9 +2760,10 @@ class SoftMax(TransferFunction):
         derivative of values returned by SoftMax :  1d or 2d array (depending on *OUTPUT_TYPE* of SoftMax)
         """
 
-        output_type = self.output_type
+        output_type = self._get_current_parameter_value(OUTPUT_TYPE, context)
         size = len(output)
         sm = self.function(output, params={OUTPUT_TYPE: ALL}, context=context)
+        sm = np.squeeze(sm)
 
         if output_type == ALL:
             # Return full Jacobian matrix of derivatives
@@ -2764,7 +2780,7 @@ class SoftMax(TransferFunction):
             # Return 1d array of derivatives for max element (i.e., the one chosen by SoftMax)
             derivative = np.empty(size)
             # Get the element of output returned as non-zero when output_type is not ALL
-            index_of_max = int(np.where(output == np.max(output))[0])
+            index_of_max = int(np.where(output == np.max(output))[0][0])
             max_val = sm[index_of_max]
             for i in range(size):
                 if i == index_of_max:
