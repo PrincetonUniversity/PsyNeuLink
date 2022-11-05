@@ -63,8 +63,8 @@ from psyneulink import *
 import numpy as np
 
 # Settings for running script:
-TRAIN = False
-RUN = True
+TRAIN = True
+RUN = False
 DISPLAY_MODEL = False # show visual graphic of model
 
 # PARAMETERS -------------------------------------------------------------------------------------------------------
@@ -89,7 +89,7 @@ RETRIEVAL_CONTEXT_WEIGHT = 1-RETRIEVAL_STIM_WEIGHT # weighting of context field 
 DECISION_SOFTMAX_TEMP=1/8 # express as gain # binarity of decision process
 
 # Training parameters:
-NUM_EPOCHS=1000    # nback-paper: 400,000, one trial per epoch
+NUM_EPOCHS=1000    # nback-paper: 400,000 @ one trial per epoch = 2,500 @ 160 trials per epoch
 LEARNING_RATE=0.1  # nback-paper: .001
 
 # Execution parameters:
@@ -453,7 +453,9 @@ def get_training_inputs(network, num_epochs, nback_levels):
                     TARGETS: {network.nodes[FFN_OUTPUT]:  target},
                     EPOCHS: num_epochs}
 
-    return training_set
+    batch_size = len(target)
+    print(f'num trials (batch_size): {len(target)}')
+    return training_set, batch_size
 
 # ======================================== MODEL EXECUTION ============================================================
 
@@ -461,14 +463,20 @@ def train_network(network,
                   learning_rate=LEARNING_RATE,
                   num_epochs=NUM_EPOCHS):
     print(f'constructing training_set for {network.name}...')
-    training_set = get_training_inputs(network=network, num_epochs=num_epochs, nback_levels=NBACK_LEVELS)
+    training_set, batch_size = get_training_inputs(network=network,
+                                                   num_epochs=num_epochs,
+                                                   nback_levels=NBACK_LEVELS)
     print(f'training_set constructed: {len(training_set)}')
     print(f'\ntraining {network.name}...')
+    import timeit
+    start_time = timeit.default_timer()
     network.learn(inputs=training_set,
-                  minibatch_size=NUM_TRIALS,
+                  minibatch_size=batch_size,
                   # report_learning=REPORT_LEARNING,
                   execution_mode=ExecutionMode.LLVMRun)
+    stop_time = timeit.default_timer()
     print(f'{network.name} trained')
+    print(f'training time: {stop_time-start_time}')
 
 def run_model(model,
               context_drift_rate=CONTEXT_DRIFT_RATE,
