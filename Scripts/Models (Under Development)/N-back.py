@@ -62,9 +62,9 @@ from psyneulink import *
 import numpy as np
 
 # Settings for running script:
-TRAIN = False
-RUN = True
-DISPLAY = False # show visual graphic of model
+TRAIN = True
+RUN = False
+DISPLAY_MODEL = False # show visual graphic of model
 
 # PARAMETERS -------------------------------------------------------------------------------------------------------
 
@@ -96,6 +96,7 @@ CONTEXT_DRIFT_RATE=.1 # drift rate used for DriftOnASphereIntegrator (function o
 NUM_TRIALS = 48 # number of stimuli presented in a trial sequence
 REPORT_OUTPUT = ReportOutput.OFF   # Sets console output during run
 REPORT_PROGRESS = ReportProgress.ON  # Sets console progress bar during run
+REPORT_LEARNING = ReportLearning.ON  # Sets console progress bar during training
 ANIMATE = True # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
 
 # Names of Compositions and Mechanisms:
@@ -248,7 +249,7 @@ def construct_model(stim_size = STIM_SIZE,
     nback_model.add_projection(MappingProjection(), stim, em.input_ports["STIMULUS_FIELD"])
     nback_model.add_projection(MappingProjection(), context, em.input_ports["CONTEXT_FIELD"])
 
-    if DISPLAY:
+    if DISPLAY_MODEL:
         nback_model.show_graph(
             # show_cim=True,
             # show_node_structure=ALL,
@@ -375,7 +376,7 @@ def get_training_inputs(network, num_epochs, nback_levels):
      context_lure:  stim_current != stim_retrieved  and context_current == context_retrieved
      non_lure:  stim_current != stim_retrieved  and context_current != context_retrieved
     """
-    assert is_iterable(nback_levels) and all([0<i<MAX_NBACK_LEVELS for i in nback_levels])
+    assert is_iterable(nback_levels) and all([0<i<=MAX_NBACK_LEVELS for i in nback_levels])
     stimuli = get_stim_set()
     context_fct =  DriftOnASphereIntegrator(initializer=np.random.random(CONTEXT_SIZE-1),
                                             noise=CONTEXT_DRIFT_NOISE,
@@ -454,6 +455,7 @@ def train_network(network,
     training_set = get_training_inputs(network=network, num_epochs=num_epochs, nback_levels=NBACK_LEVELS)
     network.learn(inputs=training_set,
                   minibatch_size=NUM_TRIALS,
+                  report_learning=REPORT_LEARNING,
                   execution_mode=ExecutionMode.LLVMRun)
 
 def run_model(model,
