@@ -48,6 +48,7 @@ TODO:
     - make termination processing part of the Composition definition (fix bug)
     - pass learning_rate as parameter to train_network() (add feature)
     - fix warnings on run
+    - complete documentation in BeukersNbackModel.rst
     - validate against nback-paper results
     - after validation:
         - try with STIM_SIZE = NUM_STIMS rather than 20 (as in nback-paper)
