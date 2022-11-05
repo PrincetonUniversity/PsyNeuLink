@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferFunctions &mdash; PsyNeuLink 0.12.1.0+44.g05eb311cb documentation</title>
+  <title>TransferFunctions &mdash; PsyNeuLink 0.12.1.0+48.g5cd211504 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.12.1.0+44
+                  0.12.1.0+48
                 </div>
               
             
@@ -1410,9 +1410,14 @@ arguments of the constructor.</p></li>
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.Logistic.derivative">
 <span class="sig-name descname"><span class="pre">derivative</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Logistic.derivative" title="Permalink to this definition">¶</a></dt>
 <dd><p>Derivative of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Exponential._function" title="psyneulink.core.components.functions.transferfunctions.Exponential._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a> at either <strong>input</strong> or <strong>output</strong>.</p>
-<p>Either <strong>input</strong> or <strong>ouput</strong> must be specified.  If <strong>output</strong> is not specified, it is computed from <strong>input</strong>.
-If both are specified, <strong>input</strong> is ignored unless paramValidationPref is set, in which case
-an error is generated if <strong>output</strong> does not correspond to <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic._function" title="psyneulink.core.components.functions.transferfunctions.Logistic._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a>(<strong>input</strong>).</p>
+<p>Either <strong>input</strong> or <strong>output</strong> must be specified.
+If <strong>output</strong> is not specified, derivative is computed from <strong>input</strong>.
+If both are specified, <strong>input</strong> is ignored and derivative is computed from <strong>output</strong>
+.. technical_note:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>allowing both to be specified is supported for consistency with `BackPropagation` `LearningFunction`
+which uses output to compute Logistic
+</pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1449,7 +1454,7 @@ an error is generated if <strong>output</strong> does not correspond to <a class
 <li><p><strong>default_variable</strong> (<em>number</em><em> or </em><em>array : default class_defaults.variable</em>) – specifies a template for the value to be transformed.</p></li>
 <li><p><strong>gain</strong> (<em>float : default 1.0</em>) – specifies a value by which to multiply <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.ReLU.variable" title="psyneulink.core.components.functions.transferfunctions.ReLU.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> after <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.ReLU.bias" title="psyneulink.core.components.functions.transferfunctions.ReLU.bias"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">bias</span></code></a> is subtracted
 from it.</p></li>
-<li><p><strong>bias</strong> (<em>float : default 0.0</em>) – specifies a value to subtract from each element of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.ReLU.variable" title="psyneulink.core.components.functions.transferfunctions.ReLU.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p></li>
+<li><p><strong>bias</strong> (<em>float : default 0.0</em>) – specifies a value to subtract from each element of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.ReLU.variable" title="psyneulink.core.components.functions.transferfunctions.ReLU.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>; functions as threshold.</p></li>
 <li><p><strong>leak</strong> (<em>float : default 0.0</em>) – specifies a scaling factor between 0 and 1 when (variable - bias) is less than or equal to 0.</p></li>
 <li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -1486,7 +1491,7 @@ from it.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.ReLU.bias">
 <span class="sig-name descname"><span class="pre">bias</span></span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.ReLU.bias" title="Permalink to this definition">¶</a></dt>
-<dd><p>value to subtract from each element of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.ReLU.variable" title="psyneulink.core.components.functions.transferfunctions.ReLU.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p>
+<dd><p>value to subtract from each element of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.ReLU.variable" title="psyneulink.core.components.functions.transferfunctions.ReLU.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>; functions as threshold.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>float : default 0.0</p>

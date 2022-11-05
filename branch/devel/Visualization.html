@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Visualization &mdash; PsyNeuLink 0.12.1.0+44.g05eb311cb documentation</title>
+  <title>Visualization &mdash; PsyNeuLink 0.12.1.0+48.g5cd211504 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.12.1.0+44
+                  0.12.1.0+48
                 </div>
               
             
@@ -295,6 +295,22 @@ that are any supported by <a class="reference external" href="https://www.graphv
 </div></blockquote>
 </section>
 </section>
+</section>
+<section id="animation">
+<span id="showgraph-animation"></span><h2><em>Animation</em><a class="headerlink" href="#animation" title="Permalink to this headline">¶</a></h2>
+<p>An animation can be generated of the execution of a Composition by using the <strong>animate</strong> argument of the Composition’s
+<a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> method.  The animation show a graphical display of the Composition, with each of its
+the Components highlighted in the sequence that they are executed.  The <strong>animate</strong> can be passed a dict containing
+any of the options described above to customize the display, as well as several others used to customize the animation
+(see <strong>animate</strong> argument under <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a>).</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>At present, animation of the Components within a <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested Composition</span></a> is not supported;
+the box surrounding the nested Composition is highlighted when it is executed, followed by the next Component(s)
+to execute.</p>
+</div>
+</div></blockquote>
 </section>
 <section id="examples">
 <span id="showgraph-examples-visualization"></span><h2><em>Examples</em><a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
@@ -592,6 +608,7 @@ None : return None</p></li>
 </li>
 </ul>
 </li>
+<li><a class="reference internal" href="#animation"><em>Animation</em></a></li>
 <li><a class="reference internal" href="#examples"><em>Examples</em></a></li>
 <li><a class="reference internal" href="#class-reference">Class Reference</a></li>
 </ul>
