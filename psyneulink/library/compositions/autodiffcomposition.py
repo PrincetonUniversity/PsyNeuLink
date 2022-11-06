@@ -577,6 +577,9 @@ class AutodiffComposition(Composition):
         filename: str : default ``<name of AutodiffComposition>_matrix_wts.pnl``
             filename in which `matrices <MappingProjection.matrix>` for all MappingProjections
             in the AutodiffComposition are saved.
+        .. note::
+           Matrices are saved in
+           `PyTorch state_dict <https://pytorch.org/tutorials/beginner/saving_loading_models.html>`_ format.
         """
         try:
             if directory:
@@ -606,6 +609,10 @@ class AutodiffComposition(Composition):
             directory where `MappingProjection` `matrices <MappingProjection.matrix>` are stored.
         filename: str : default ``<name of AutodiffComposition>_matrix_wts.pnl``
             name of file in which `MappingProjection` `matrices <MappingProjection.matrix>` are stored.
+
+        .. note::
+           Matrices must be stored in
+           `PyTorch state_dict <https://pytorch.org/tutorials/beginner/saving_loading_models.html>`_ format.
         """
         try:
             if directory:
@@ -619,7 +626,6 @@ class AutodiffComposition(Composition):
         except IsADirectoryError:
             raise AutodiffCompositionError(f"'{path}' (for saving weight matrices of ({self.name}) "
                                            f"is not a legal path.")
-
         state = torch.load(path)
         for projection in [p for p in self.projections if not isinstance(p, ModulatoryProjection_Base)]:
             matrix = state[projection.name]
