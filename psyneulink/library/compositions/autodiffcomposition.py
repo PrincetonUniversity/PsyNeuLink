@@ -643,10 +643,8 @@ class AutodiffComposition(Composition):
         for projection in [p for p in self.projections if not isinstance(p, ModulatoryProjection_Base)]:
             matrix = state[projection.name]
             projection.matrix.base = matrix
-            projection.parameters.matrix.set(
-                matrix, context=context, override=True)
-            projection.parameter_ports['matrix'].parameters.value.set(
-                matrix, context=context, override=True)
+            projection.parameters.matrix.set(matrix, context=context, override=True)
+            projection.parameter_ports['matrix'].parameters.value.set(matrix, context=context, override=True)
         self._build_pytorch_representation(context=context, refresh=True)
 
     def _get_state_ids(self):
