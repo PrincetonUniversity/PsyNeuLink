@@ -132,8 +132,9 @@ Class Reference
 
 """
 import logging
-
+import os
 import numpy as np
+from pathlib import Path
 
 try:
     import torch
@@ -146,6 +147,7 @@ else:
     from psyneulink.library.compositions.pytorchmodelcreator import PytorchModelCreator
 
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
+from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.compositions.composition import Composition, NodeRole
 from psyneulink.core.compositions.composition import CompositionError
 from psyneulink.core.compositions.report \
@@ -157,6 +159,7 @@ from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.core import llvm as pnlvm
+
 
 
 logger = logging.getLogger(__name__)
@@ -564,25 +567,67 @@ class AutodiffComposition(Composition):
                                                         )
 
     @handle_external_context()
-    def save(self, path:str, context=None):
-        """Saves all parameters to the specified path (e.g. save('my_model.pt'))"""
-        assert (str, "Must provide a path to save the model to!")
+    def save(self, directory:str=None, filename:str=None, context=None):
+        """Saves all weight matrices for all MappingProjections in the AutodiffComposition
+        Arguments
+        ---------
+        directory: str : default ``current working directory``
+            directory where `matrices <MappingProjection.matrix>` for all MappingProjections
+            in the AutodiffComposition are saved.
+        filename: str : default ``<name of AutodiffComposition>_matrix_wts.pnl``
+            filename in which `matrices <MappingProjection.matrix>` for all MappingProjections
+            in the AutodiffComposition are saved.
+        """
+        try:
+            if directory:
+                path = Path(directory)
+            else:
+                path = Path(os.getcwd())
+            if filename:
+                path = Path(path/filename)
+            else:
+                path = Path(path/f'{self.name}_matrix_wts.pnl')
+        except IsADirectoryError:
+            raise AutodiffCompositionError(f"'{path}' (for saving weight matrices of ({self.name}) "
+                                           f"is not a legal path.")
         proj_state = {
-            p.name: p.parameters.matrix.get(context=context) for p in self.projections
+            p.name: p.parameters.matrix.get(context=context)
+            for p in self.projections
+            if not isinstance(p, ModulatoryProjection_Base)
         }
         torch.save(proj_state, path)
 
     @handle_external_context()
-    def load(self, path:str, context=None):
+    def load(self, directory:str=None, filename:str=None, context=None):
+        """Loads all weights matrices for all MappingProjections in the AutodiffComposition from file
+        Arguments
+        ---------
+        directory: str : default ``current working directory``
+            directory where `MappingProjection` `matrices <MappingProjection.matrix>` are stored.
+        filename: str : default ``<name of AutodiffComposition>_matrix_wts.pnl``
+            name of file in which `MappingProjection` `matrices <MappingProjection.matrix>` are stored.
+        """
+        try:
+            if directory:
+                path = Path(directory)
+            else:
+                path = Path(os.getcwd())
+            if filename:
+                path = Path(path/filename)
+            else:
+                path = Path(path/f'{self.name}_matrix_wts.pnl')
+        except IsADirectoryError:
+            raise AutodiffCompositionError(f"'{path}' (for saving weight matrices of ({self.name}) "
+                                           f"is not a legal path.")
+
         state = torch.load(path)
-        for projection in self.projections:
+        for projection in [p for p in self.projections if not isinstance(p, ModulatoryProjection_Base)]:
             matrix = state[projection.name]
             projection.parameters.matrix.set(
                 matrix, context=context, override=True)
             projection.parameter_ports['matrix'].parameters.value.set(
                 matrix, context=context, override=True)
         self._build_pytorch_representation(context=context, refresh=True)
-
 
     def _get_state_ids(self):
         return super()._get_state_ids() + ["optimizer"]

@@ -89,7 +89,7 @@ RETRIEVAL_CONTEXT_WEIGHT = 1-RETRIEVAL_STIM_WEIGHT # weighting of context field 
 DECISION_SOFTMAX_TEMP=1/8 # express as gain # binarity of decision process
 
 # Training parameters:
-NUM_EPOCHS=1000    # nback-paper: 400,000 @ one trial per epoch = 2,500 @ 160 trials per epoch
+NUM_EPOCHS=1    # nback-paper: 400,000 @ one trial per epoch = 2,500 @ 160 trials per epoch
 LEARNING_RATE=0.1  # nback-paper: .001
 
 # Execution parameters:
@@ -477,6 +477,8 @@ def train_network(network,
     stop_time = timeit.default_timer()
     print(f'{network.name} trained')
     print(f'training time: {stop_time-start_time}')
+    # network.save('.')
+    network.save()
 
 def run_model(model,
               context_drift_rate=CONTEXT_DRIFT_RATE,
