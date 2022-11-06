@@ -147,6 +147,8 @@ else:
     from psyneulink.library.compositions.pytorchmodelcreator import PytorchModelCreator
 
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
+from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
+from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.compositions.composition import Composition, NodeRole
 from psyneulink.core.compositions.composition import CompositionError
@@ -601,8 +603,14 @@ class AutodiffComposition(Composition):
         proj_state = {
             p.name: p.parameters.matrix.get(context=context)
             for p in self.projections
-            if not isinstance(p, ModulatoryProjection_Base)
-        }
+            if not (isinstance(p, ModulatoryProjection_Base)
+                    or isinstance(p.sender.owner, CompositionInterfaceMechanism)
+                    or isinstance(p.receiver.owner, CompositionInterfaceMechanism)
+                    or isinstance(p.sender.owner, ModulatoryMechanism_Base)
+                    or isinstance(p.receiver.owner, ModulatoryMechanism_Base)
+                    or p.sender.owner in self.get_nodes_by_role(NodeRole.LEARNING)
+                    or p.receiver.owner in self.get_nodes_by_role(NodeRole.LEARNING)
+                )}
         torch.save(proj_state, path)
         return path
 
@@ -640,7 +648,15 @@ class AutodiffComposition(Composition):
                 raise AutodiffCompositionError(f"'{path}' (for saving weight matrices of ({self.name}) "
                                                f"is not a legal path.")
         state = torch.load(path)
-        for projection in [p for p in self.projections if not isinstance(p, ModulatoryProjection_Base)]:
+        for projection in [p for p in self.projections
+                           if not (isinstance(p, ModulatoryProjection_Base)
+                                   or isinstance(p.sender.owner, CompositionInterfaceMechanism)
+                                   or isinstance(p.receiver.owner, CompositionInterfaceMechanism)
+                                   or isinstance(p.sender.owner, ModulatoryMechanism_Base)
+                                   or isinstance(p.receiver.owner, ModulatoryMechanism_Base)
+                                   or p.sender.owner in self.get_nodes_by_role(NodeRole.LEARNING)
+                                   or p.receiver.owner in self.get_nodes_by_role(NodeRole.LEARNING)
+            )]:
             matrix = state[projection.name]
             projection.matrix.base = matrix
             projection.parameters.matrix.set(matrix, context=context, override=True)
