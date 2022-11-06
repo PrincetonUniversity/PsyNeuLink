@@ -567,7 +567,7 @@ class AutodiffComposition(Composition):
                                                         )
 
     @handle_external_context()
-    def save(self, directory:str=None, filename:str=None, context=None):
+    def save(self, path:PosixPath=None, directory:str=None, filename:str=None, context=None):
         """Saves all weight matrices for all MappingProjections in the AutodiffComposition
         Arguments
         ---------
@@ -581,18 +581,23 @@ class AutodiffComposition(Composition):
            Matrices are saved in
            `PyTorch state_dict <https://pytorch.org/tutorials/beginner/saving_loading_models.html>`_ format.
         """
-        try:
-            if directory:
-                path = Path(directory)
-            else:
-                path = Path(os.getcwd())
-            if filename:
-                path = Path(path/filename)
-            else:
-                path = Path(path/f'{self.name}_matrix_wts.pnl')
-        except IsADirectoryError:
-            raise AutodiffCompositionError(f"'{path}' (for saving weight matrices of ({self.name}) "
-                                           f"is not a legal path.")
+        if path:
+            if not isinstance(path,PosixPath):
+                raise AutodiffCompositionError(f"'{path}' (for saving weight matrices of ({self.name}) "
+                                               f"is not a legal path.")
+        else:
+            try:
+                if directory:
+                    path = Path(directory)
+                else:
+                    path = Path(os.getcwd())
+                if filename:
+                    path = Path(path/filename)
+                else:
+                    path = Path(path/f'{self.name}_matrix_wts.pnl')
+            except IsADirectoryError:
+                raise AutodiffCompositionError(f"'{path}' (for saving weight matrices of ({self.name}) "
+                                               f"is not a legal path.")
         proj_state = {
             p.name: p.parameters.matrix.get(context=context)
             for p in self.projections
@@ -602,7 +607,7 @@ class AutodiffComposition(Composition):
         return path
 
     @handle_external_context()
-    def load(self, path:Path=None, directory:str=None, filename:str=None, context=None):
+    def load(self, path:PosixPath=None, directory:str=None, filename:str=None, context=None):
         """Loads all weights matrices for all MappingProjections in the AutodiffComposition from file
         Arguments
         ---------
@@ -637,6 +642,7 @@ class AutodiffComposition(Composition):
         state = torch.load(path)
         for projection in [p for p in self.projections if not isinstance(p, ModulatoryProjection_Base)]:
             matrix = state[projection.name]
+            projection.matrix.base = matrix
             projection.parameters.matrix.set(
                 matrix, context=context, override=True)
             projection.parameter_ports['matrix'].parameters.value.set(
