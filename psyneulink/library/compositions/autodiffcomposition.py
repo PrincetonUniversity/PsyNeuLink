@@ -94,9 +94,10 @@ simple AutodiffComposition, specify its inputs and targets, and run it with lear
 Logging
 ~~~~~~~
 
-Logging in AutodiffCompositions follows the same procedure as `logging in a Composition <Log>`. However, since an AutodiffComposition internally converts all of its mechanisms to an equivalent PyTorch model,
-then its inner components are not actually executed. This means that there is limited support for logging parameters of components inside an AutodiffComposition;
-Currently, the only supported parameters are:
+Logging in AutodiffCompositions follows the same procedure as `logging in a Composition <Log>`.
+However, since an AutodiffComposition internally converts all of its mechanisms to an equivalent PyTorch model,
+then its inner components are not actually executed. This means that there is limited support for
+logging parameters of components inside an AutodiffComposition; Currently, the only supported parameters are:
 
 1) the `matrix` parameter of Projections
 
@@ -264,6 +265,7 @@ class AutodiffComposition(Composition):
         self.force_no_retain_graph = force_no_retain_graph
         self.loss = None
         self.disable_learning = disable_learning
+        self._runtime_learning_rate = None
 
         # keeps track of average loss per epoch
         self.losses = []
@@ -293,8 +295,9 @@ class AutodiffComposition(Composition):
 
         # Set up optimizer function
         old_opt = self.parameters.optimizer._get(context)
+        learning_rate = self._runtime_learning_rate or self.learning_rate
         if old_opt is None or refresh:
-            opt = self._make_optimizer(self.optimizer_type, self.learning_rate, self.weight_decay, context)
+            opt = self._make_optimizer(self.optimizer_type, learning_rate, self.weight_decay, context)
             self.parameters.optimizer._set(opt, context, skip_history=True, skip_log=True)
 
         # Set up loss function
@@ -360,7 +363,10 @@ class AutodiffComposition(Composition):
         # compute total loss across output neurons for current trial
         tracked_loss = self.parameters.tracked_loss._get(context)
         if tracked_loss is None:
-            self.parameters.tracked_loss._set(torch.zeros(1, device=self.device).double(), context=context, skip_history=True, skip_log=True)
+            self.parameters.tracked_loss._set(torch.zeros(1, device=self.device).double(),
+                                              context=context,
+                                              skip_history=True,
+                                              skip_log=True)
             tracked_loss = self.parameters.tracked_loss._get(context)
 
         curr_tensor_inputs = {}
@@ -373,10 +379,9 @@ class AutodiffComposition(Composition):
             curr_tensor_targets[component] = torch.tensor(target, device=self.device).double()
 
         # do forward computation on current inputs
-        curr_tensor_outputs = self.parameters.pytorch_representation._get(context).forward(
-            curr_tensor_inputs,
-            context,
-        )
+        curr_tensor_outputs = self.parameters.pytorch_representation._get(context).forward(curr_tensor_inputs,
+                                                                                           context,
+                                                                                           )
 
         for component in curr_tensor_outputs.keys():
             # possibly add custom loss option, which is a loss function that takes many args
@@ -390,7 +395,10 @@ class AutodiffComposition(Composition):
             component = input_port.all_afferents[0].sender.owner
             outputs.append(curr_tensor_outputs[component].detach().cpu().numpy().copy())
 
-        self.parameters.tracked_loss_count._set(self.parameters.tracked_loss_count._get(context=context) + 1, context=context, skip_history=True, skip_log=True)
+        self.parameters.tracked_loss_count._set(self.parameters.tracked_loss_count._get(context=context) + 1,
+                                                context=context,
+                                                skip_history=True,
+                                                skip_log=True)
         return outputs
 
     def clear_losses(self, context=None):
@@ -399,7 +407,7 @@ class AutodiffComposition(Composition):
 
     def _update_learning_parameters(self, context):
         """
-        Updates parameters based on trials ran since last update.
+        Updates parameters based on trials run since last update.
         """
         optimizer = self.parameters.optimizer._get(context=context)
         optimizer.zero_grad()

@@ -129,6 +129,7 @@ class CompositionRunner():
                      targets: dict = None,
                      num_trials: int = None,
                      epochs: int = 1,
+                     learning_rate = None,
                      minibatch_size: int = 1,
                      patience: int = None,
                      min_delta: int = 0,
@@ -149,6 +150,8 @@ class CompositionRunner():
             self._is_llvm_mode = False
         else:
             self._is_llvm_mode = True
+
+        self._composition._runtime_learning_rate = learning_rate or None
 
         # Handle function and generator inputs
         if isgeneratorfunction(inputs):

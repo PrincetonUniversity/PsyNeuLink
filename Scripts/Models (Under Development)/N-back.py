@@ -473,6 +473,7 @@ def train_network(network,
     network.learn(inputs=training_set,
                   minibatch_size=batch_size,
                   # report_learning=REPORT_LEARNING,
+                  learning_rate=.001,
                   execution_mode=ExecutionMode.LLVMRun)
     stop_time = timeit.default_timer()
     print(f'{network.name} trained')
