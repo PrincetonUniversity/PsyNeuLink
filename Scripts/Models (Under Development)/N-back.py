@@ -478,7 +478,9 @@ def train_network(network,
     print(f'{network.name} trained')
     print(f'training time: {stop_time-start_time}')
     path = network.save()
+    print(f'saved weights sample: {network.nodes[FFN_HIDDEN].path_afferents[0].matrix.base[0][:3]}...')
     network.load(path)
+    print(f'loaded weights sample: {network.nodes[FFN_HIDDEN].path_afferents[0].matrix.base[0][:3]}...')
 
 def run_model(model,
               context_drift_rate=CONTEXT_DRIFT_RATE,
