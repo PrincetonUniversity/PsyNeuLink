@@ -594,9 +594,9 @@ class AutodiffComposition(Composition):
                 else:
                     path = Path(os.getcwd())
                 if filename:
-                    path = Path(path/filename)
+                    path = Path(path / filename)
                 else:
-                    path = Path(path/f'{self.name}_matrix_wts.pnl')
+                    path = Path(path / f'{self.name}_matrix_wts.pnl')
             except IsADirectoryError:
                 raise AutodiffCompositionError(f"'{path}' (for saving weight matrices of ({self.name}) "
                                                f"is not a legal path.")
@@ -631,7 +631,7 @@ class AutodiffComposition(Composition):
            `PyTorch state_dict <https://pytorch.org/tutorials/beginner/saving_loading_models.html>`_ format.
         """
         if path:
-            if not isinstance(path,PosixPath):
+            if not isinstance(path,Path):
                 raise AutodiffCompositionError(f"'{path}' (for saving weight matrices of ({self.name}) "
                                                f"is not a legal path.")
         else:
@@ -641,9 +641,9 @@ class AutodiffComposition(Composition):
                 else:
                     path = Path(os.getcwd())
                 if filename:
-                    path = Path(path/filename)
+                    path = Path(path / filename)
                 else:
-                    path = Path(path/f'{self.name}_matrix_wts.pnl')
+                    path = Path(path / f'{self.name}_matrix_wts.pnl')
             except IsADirectoryError:
                 raise AutodiffCompositionError(f"'{path}' (for saving weight matrices of ({self.name}) "
                                                f"is not a legal path.")
