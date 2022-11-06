@@ -477,8 +477,8 @@ def train_network(network,
     stop_time = timeit.default_timer()
     print(f'{network.name} trained')
     print(f'training time: {stop_time-start_time}')
-    # network.save('.')
-    network.save()
+    path = network.save()
+    network.load(path)
 
 def run_model(model,
               context_drift_rate=CONTEXT_DRIFT_RATE,

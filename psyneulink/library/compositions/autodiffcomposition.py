@@ -134,7 +134,7 @@ Class Reference
 import logging
 import os
 import numpy as np
-from pathlib import Path
+from pathlib import Path, PosixPath
 
 try:
     import torch
@@ -599,33 +599,41 @@ class AutodiffComposition(Composition):
             if not isinstance(p, ModulatoryProjection_Base)
         }
         torch.save(proj_state, path)
+        return path
 
     @handle_external_context()
-    def load(self, directory:str=None, filename:str=None, context=None):
+    def load(self, path:Path=None, directory:str=None, filename:str=None, context=None):
         """Loads all weights matrices for all MappingProjections in the AutodiffComposition from file
         Arguments
         ---------
+        path: Path : default None
+            Path for file in which `MappingProjection` `matrices <MappingProjection.matrix>` are stored.
+            This must be a legal PosixPath object; if it is specified **directory** and **filename** are ignored.
         directory: str : default ``current working directory``
             directory where `MappingProjection` `matrices <MappingProjection.matrix>` are stored.
         filename: str : default ``<name of AutodiffComposition>_matrix_wts.pnl``
             name of file in which `MappingProjection` `matrices <MappingProjection.matrix>` are stored.
-
         .. note::
            Matrices must be stored in
            `PyTorch state_dict <https://pytorch.org/tutorials/beginner/saving_loading_models.html>`_ format.
         """
-        try:
-            if directory:
-                path = Path(directory)
-            else:
-                path = Path(os.getcwd())
-            if filename:
-                path = Path(path/filename)
-            else:
-                path = Path(path/f'{self.name}_matrix_wts.pnl')
-        except IsADirectoryError:
-            raise AutodiffCompositionError(f"'{path}' (for saving weight matrices of ({self.name}) "
-                                           f"is not a legal path.")
+        if path:
+            if not isinstance(path,PosixPath):
+                raise AutodiffCompositionError(f"'{path}' (for saving weight matrices of ({self.name}) "
+                                               f"is not a legal path.")
+        else:
+            try:
+                if directory:
+                    path = Path(directory)
+                else:
+                    path = Path(os.getcwd())
+                if filename:
+                    path = Path(path/filename)
+                else:
+                    path = Path(path/f'{self.name}_matrix_wts.pnl')
+            except IsADirectoryError:
+                raise AutodiffCompositionError(f"'{path}' (for saving weight matrices of ({self.name}) "
+                                               f"is not a legal path.")
         state = torch.load(path)
         for projection in [p for p in self.projections if not isinstance(p, ModulatoryProjection_Base)]:
             matrix = state[projection.name]
