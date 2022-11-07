@@ -140,7 +140,7 @@ class CompositionRunner():
                      execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
                      **kwargs):
         """
-        Runs the composition repeatedly with the specified parameters
+        Runs the composition repeatedly with the specified parameters.
 
         Returns
         ---------
@@ -151,6 +151,7 @@ class CompositionRunner():
         else:
             self._is_llvm_mode = True
 
+        # This is used by local learning-related methods to override the default learning_rate set at construction.
         self._composition._runtime_learning_rate = learning_rate
 
         # Handle function and generator inputs

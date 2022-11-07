@@ -191,7 +191,7 @@ class AutodiffComposition(Composition):
     ---------
 
     learning_rate : float : default 0.001
-        the learning rate, which is passed to the optimizer.
+        the learning rate passed to the optimizer if none is specified in the learn method of the AutodiffComposition.
 
     disable_learning : bool: default False
         specifies whether the AutodiffComposition should disable learning when run in `learning mode
