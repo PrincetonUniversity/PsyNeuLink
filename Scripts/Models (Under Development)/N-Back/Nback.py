@@ -35,19 +35,16 @@ TODO:
                 - the stim+context input vector (length 90) projects to a hidden layer (length 80);
                 - the task input vector (length 2) projects to a different hidden layer (length 80);
                 - those two hidden layers project (over fixed, nonlearnable, one-one-projections?) to a third hidden layer (length 80) that simply sums them;
-                - the third hidden layer projections to the length 2 output layer;
+                - the third hidden layer projects to the length 2 output layer;
                 - a softmax is taken over the output layer to determine the response.
-             - softmax temp on output/decision layer: 1
-             - confirm that ReLUs all use 0 thresholds and unit slope
+                - fix: were biases trained?
           - training:
               - learning rate: 0.001; epoch: 1 trial per epoch of training
-              - state_dict with weights (still needed)
+              - fix: state_dict with weights (still needed)
           - get empirical stimulus sequences (still needed)
           - put N-back script (with pointer to latest version on PNL) in nback-paper repo
-    - get rid of objective_mechanism (see "VERSION *WITHOUT* ObjectiveMechanism" under control(...) (fix bug)
-    - make termination processing part of the Composition definition (fix bug)
-    - pass learning_rate as parameter to train_network() (add feature)
-    - fix warnings on run
+    - fix: get rid of objective_mechanism (see "VERSION *WITHOUT* ObjectiveMechanism" under control(...)
+    - fix: warnings on run
     - complete documentation in BeukersNbackModel.rst
     - validate against nback-paper results
     - after validation:
@@ -63,8 +60,6 @@ from psyneulink import *
 import numpy as np
 
 # Settings for running script:
-TRAIN = True
-RUN = False
 DISPLAY_MODEL = False # show visual graphic of model
 
 # PARAMETERS -------------------------------------------------------------------------------------------------------
@@ -86,10 +81,10 @@ RETRIEVAL_SOFTMAX_TEMP=1/8 # express as gain # precision of retrieval process
 RETRIEVAL_HAZARD_RATE=0.04 # rate of re=sampling of em following non-match determination in a pass through ffn
 RETRIEVAL_STIM_WEIGHT=.05 # weighting of stimulus field in retrieval from em
 RETRIEVAL_CONTEXT_WEIGHT = 1-RETRIEVAL_STIM_WEIGHT # weighting of context field in retrieval from em
-DECISION_SOFTMAX_TEMP=1/8 # express as gain # binarity of decision process
+DECISION_SOFTMAX_TEMP=1
 
 # Training parameters:
-NUM_EPOCHS=1    # nback-paper: 400,000 @ one trial per epoch = 2,500 @ 160 trials per epoch
+NUM_EPOCHS=3    # nback-paper: 400,000 @ one trial per epoch = 2,500 @ 160 trials per epoch
 LEARNING_RATE=0.1  # nback-paper: .001
 
 # Execution parameters:
@@ -175,14 +170,14 @@ def construct_model(stim_size = STIM_SIZE,
     print(f'constructing {NBACK_MODEL}...')
 
     # Stimulus Encoding: takes STIM_SIZE vector as input
-    stim = TransferMechanism(name=MODEL_STIMULUS_INPUT, size=STIM_SIZE)
+    stim = TransferMechanism(name=MODEL_STIMULUS_INPUT, size=stim_size)
 
     # Context Encoding: takes scalar as drift step for current trial
     context = ProcessingMechanism(name=MODEL_CONTEXT_INPUT,
                                   function=DriftOnASphereIntegrator(
-                                      initializer=np.random.random(CONTEXT_SIZE-1),
+                                      initializer=np.random.random(context_size-1),
                                       noise=context_drift_noise,
-                                      dimension=CONTEXT_SIZE))
+                                      dimension=context_size))
 
     # Task: task one-hot indicating n-back (1, 2, 3 etc.) - must correspond to what ffn has been trained to do
     task = ProcessingMechanism(name=MODEL_TASK_INPUT,
@@ -193,11 +188,11 @@ def construct_model(stim_size = STIM_SIZE,
     #    - uses Softmax to retrieve best matching input, subject to weighting of stimulus and context by STIM_WEIGHT
     em = EpisodicMemoryMechanism(name=EM,
                                  input_ports=[{NAME:"STIMULUS_FIELD",
-                                               SIZE:STIM_SIZE},
+                                               SIZE:stim_size},
                                               {NAME:"CONTEXT_FIELD",
-                                               SIZE:CONTEXT_SIZE}],
+                                               SIZE:context_size}],
                                  function=ContentAddressableMemory(
-                                     initializer=[[[0]*STIM_SIZE, [0]*CONTEXT_SIZE]],
+                                     initializer=[[[0]*stim_size, [0]*context_size]],
                                      distance_field_weights=[retrieval_stimulus_weight,
                                                              retrieval_context_weight],
                                      # equidistant_entries_select=NEWEST,
@@ -472,16 +467,22 @@ def train_network(network,
     start_time = timeit.default_timer()
     network.learn(inputs=training_set,
                   minibatch_size=batch_size,
+                  report_progress=REPORT_PROGRESS,
                   # report_learning=REPORT_LEARNING,
-                  learning_rate=.001,
+                  learning_rate=learning_rate,
                   execution_mode=ExecutionMode.LLVMRun)
     stop_time = timeit.default_timer()
     print(f'{network.name} trained')
-    print(f'training time: {stop_time-start_time}')
-    path = network.save()
-    print(f'saved weights sample: {network.nodes[FFN_HIDDEN].path_afferents[0].matrix.base[0][:3]}...')
-    network.load(path)
-    print(f'loaded weights sample: {network.nodes[FFN_HIDDEN].path_afferents[0].matrix.base[0][:3]}...')
+    training_time = int(stop_time-start_time)
+    if training_time <= 60:
+        training_time_str = f'{training_time} seconds'
+    else:
+        training_time_str = f'{training_time/60} minutes'
+    print(f'training time: {training_time_str} for {num_epochs} epochs')
+    # path = network.save()
+    # print(f'saved weights sample: {network.nodes[FFN_HIDDEN].path_afferents[0].matrix.base[0][:3]}...')
+    # network.load(path)
+    # print(f'loaded weights sample: {network.nodes[FFN_HIDDEN].path_afferents[0].matrix.base[0][:3]}...')
 
 def run_model(model,
               context_drift_rate=CONTEXT_DRIFT_RATE,
@@ -503,13 +504,6 @@ def run_model(model,
     if REPORT_PROGRESS == ReportProgress.ON:
         print('\n')
     print(f'nback_model done: {len(nback_model.results)} trials executed')
-
-
-nback_model = construct_model()
-if TRAIN:
-    train_network(nback_model.nodes[FFN_COMPOSITION])
-if RUN:
-    run_model(nback_model)
 
 # ===========================================================================
 

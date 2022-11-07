@@ -609,7 +609,8 @@ class AutodiffComposition(Composition):
                 raise AutodiffCompositionError(f"'{path}' (for saving weight matrices of ({self.name}) "
                                                f"is not a legal path.")
         proj_state = {
-            p.name: p.parameters.matrix.get(context=context)
+            # p.name: p.parameters.matrix.get(context=context)
+            p.name: p.matrix.base
             for p in self.projections
             if not (isinstance(p, ModulatoryProjection_Base)
                     or isinstance(p.sender.owner, CompositionInterfaceMechanism)
