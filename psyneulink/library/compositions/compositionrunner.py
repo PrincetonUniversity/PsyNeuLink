@@ -151,7 +151,7 @@ class CompositionRunner():
         else:
             self._is_llvm_mode = True
 
-        self._composition._runtime_learning_rate = learning_rate or None
+        self._composition._runtime_learning_rate = learning_rate
 
         # Handle function and generator inputs
         if isgeneratorfunction(inputs):
