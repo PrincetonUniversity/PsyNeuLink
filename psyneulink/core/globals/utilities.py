@@ -442,6 +442,16 @@ def iscompatible(candidate, reference=None, **kargs):
             warnings.simplefilter(action='ignore', category=FutureWarning)
             if reference is not None and (candidate == reference):
                 return True
+            # if reference is not None:
+            #     if (isinstance(reference, (bool, int, float))
+            #             and isinstance(candidate, (bool, int, float))
+            #             and candidate == reference):
+            #         return True
+            #     elif (isinstance(reference, (list, np.ndarray))
+            #           and isinstance(candidate, (list, np.ndarray)) and (candidate == reference).all()):
+            #         return True
+            #     elif is_iterable(reference) and is_iterable(candidate) and (candidate == reference):
+            #         return True
     except ValueError:
         # raise UtilitiesError("Could not compare {0} and {1}".format(candidate, reference))
         # IMPLEMENTATION NOTE: np.array generates the following error:

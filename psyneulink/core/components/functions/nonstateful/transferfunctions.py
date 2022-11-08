@@ -1620,8 +1620,8 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         # # MODIFIED 11/5/22 NEW:
         # bias = self._get_current_parameter_value(BIAS, context)
         # input = np.asarray(input).copy()
-        # input[(input-bias)>0] = gain
-        # input[(input-bias)<=0] = gain * leak
+        # input[(input - bias) > 0] = gain
+        # input[(input - bias) <= 0] = gain * leak
         # MODIFIED 11/5/22 END
 
         return input

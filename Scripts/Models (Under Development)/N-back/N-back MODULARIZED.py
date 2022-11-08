@@ -151,7 +151,7 @@ def construct_model(num_tasks, stim_size, context_size, hidden_size, display=Fal
                        hidden, decision],
                       name="WORKING MEMORY (fnn)")
     comp = Composition(nodes=[stim, context, task, em, ffn, control],
-                       name="N-Back Model")
+                       name="N-back Model")
     comp.add_projection(MappingProjection(), stim, input_current_stim)
     comp.add_projection(MappingProjection(), context, input_current_context)
     comp.add_projection(MappingProjection(), task, input_task)

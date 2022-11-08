@@ -90,16 +90,18 @@ def test_autodiff_saveload(tmp_path):
     xor1_outputs = xor1.run(inputs=[0,0])
 
     # save
-    xor1.save(os.path.join(tmp_path, 'xor_1.pnl'))
+    # path = xor1.save()
+    path = xor1.save(os.path.join(tmp_path, 'xor_1.pnl'))
 
-    del xor1
+    # del xor1
     pnl.clear_registry()
 
     # load
     np.random.seed(1)
     xor2 = create_xor()
     xor2_outputs_pre = xor2.run(inputs=[0,0])
-    xor2.load(os.path.join(tmp_path, 'xor_1.pnl'))
+    # xor2.load(os.path.join(tmp_path, 'xor_1.pnl'))
+    xor2.load(path)
     xor2_outputs_post = xor2.run(inputs=[0,0])
 
 

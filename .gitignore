@@ -197,3 +197,5 @@ tests/*.pdf
 .mypy_cache
 
 /tests/json/*.json
+
+/tests/mdf/model_basic.yml

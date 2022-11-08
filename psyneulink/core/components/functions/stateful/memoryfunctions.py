@@ -466,7 +466,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     An entry is stored and retrieved as an array containing a set of `fields <EpisodicMemoryMechanism_Memory_Fields>`
     each of which is a 1d array.  An array containing such entries can be used to initialize the contents of `memory
     <ContentAddressableMemory.memory>` by providing it in the **initializer** argument of the ContentAddressableMemory's
-    constructor, or in a call to its  `reset  <ContentAddressableMemory.reset>` method.  The current contents of `memory
+    constructor, or in a call to its `reset  <ContentAddressableMemory.reset>` method.  The current contents of `memory
     <ContentAddressableMemory.memory>` can be inspected using the `memory <ContentAddressableMemory.memory>` attribute,
     which returns a list containing the current entries, each as a list containing all fields for that entry.  The
     `memory_num_fields <ContentAddressableMemory.memory_num_fields>` contains the number of fields expected for each

@@ -94,9 +94,10 @@ simple AutodiffComposition, specify its inputs and targets, and run it with lear
 Logging
 ~~~~~~~
 
-Logging in AutodiffCompositions follows the same procedure as `logging in a Composition <Log>`. However, since an AutodiffComposition internally converts all of its mechanisms to an equivalent PyTorch model,
-then its inner components are not actually executed. This means that there is limited support for logging parameters of components inside an AutodiffComposition;
-Currently, the only supported parameters are:
+Logging in AutodiffCompositions follows the same procedure as `logging in a Composition <Log>`.
+However, since an AutodiffComposition internally converts all of its mechanisms to an equivalent PyTorch model,
+then its inner components are not actually executed. This means that there is limited support for
+logging parameters of components inside an AutodiffComposition; Currently, the only supported parameters are:
 
 1) the `matrix` parameter of Projections
 
@@ -132,8 +133,9 @@ Class Reference
 
 """
 import logging
-
+import os
 import numpy as np
+from pathlib import Path, PosixPath
 
 try:
     import torch
@@ -146,6 +148,9 @@ else:
     from psyneulink.library.compositions.pytorchmodelcreator import PytorchModelCreator
 
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
+from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
+from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
+from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.compositions.composition import Composition, NodeRole
 from psyneulink.core.compositions.composition import CompositionError
 from psyneulink.core.compositions.report \
@@ -157,6 +162,7 @@ from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.core import llvm as pnlvm
+
 
 
 logger = logging.getLogger(__name__)
@@ -185,7 +191,7 @@ class AutodiffComposition(Composition):
     ---------
 
     learning_rate : float : default 0.001
-        the learning rate, which is passed to the optimizer.
+        the learning rate passed to the optimizer if none is specified in the learn method of the AutodiffComposition.
 
     disable_learning : bool: default False
         specifies whether the AutodiffComposition should disable learning when run in `learning mode
@@ -259,6 +265,7 @@ class AutodiffComposition(Composition):
         self.force_no_retain_graph = force_no_retain_graph
         self.loss = None
         self.disable_learning = disable_learning
+        self._runtime_learning_rate = None
 
         # keeps track of average loss per epoch
         self.losses = []
@@ -288,8 +295,9 @@ class AutodiffComposition(Composition):
 
         # Set up optimizer function
         old_opt = self.parameters.optimizer._get(context)
+        learning_rate = self._runtime_learning_rate or self.learning_rate
         if old_opt is None or refresh:
-            opt = self._make_optimizer(self.optimizer_type, self.learning_rate, self.weight_decay, context)
+            opt = self._make_optimizer(self.optimizer_type, learning_rate, self.weight_decay, context)
             self.parameters.optimizer._set(opt, context, skip_history=True, skip_log=True)
 
         # Set up loss function
@@ -355,7 +363,10 @@ class AutodiffComposition(Composition):
         # compute total loss across output neurons for current trial
         tracked_loss = self.parameters.tracked_loss._get(context)
         if tracked_loss is None:
-            self.parameters.tracked_loss._set(torch.zeros(1, device=self.device).double(), context=context, skip_history=True, skip_log=True)
+            self.parameters.tracked_loss._set(torch.zeros(1, device=self.device).double(),
+                                              context=context,
+                                              skip_history=True,
+                                              skip_log=True)
             tracked_loss = self.parameters.tracked_loss._get(context)
 
         curr_tensor_inputs = {}
@@ -368,10 +379,9 @@ class AutodiffComposition(Composition):
             curr_tensor_targets[component] = torch.tensor(target, device=self.device).double()
 
         # do forward computation on current inputs
-        curr_tensor_outputs = self.parameters.pytorch_representation._get(context).forward(
-            curr_tensor_inputs,
-            context,
-        )
+        curr_tensor_outputs = self.parameters.pytorch_representation._get(context).forward(curr_tensor_inputs,
+                                                                                           context,
+                                                                                           )
 
         for component in curr_tensor_outputs.keys():
             # possibly add custom loss option, which is a loss function that takes many args
@@ -385,7 +395,10 @@ class AutodiffComposition(Composition):
             component = input_port.all_afferents[0].sender.owner
             outputs.append(curr_tensor_outputs[component].detach().cpu().numpy().copy())
 
-        self.parameters.tracked_loss_count._set(self.parameters.tracked_loss_count._get(context=context) + 1, context=context, skip_history=True, skip_log=True)
+        self.parameters.tracked_loss_count._set(self.parameters.tracked_loss_count._get(context=context) + 1,
+                                                context=context,
+                                                skip_history=True,
+                                                skip_log=True)
         return outputs
 
     def clear_losses(self, context=None):
@@ -394,7 +407,7 @@ class AutodiffComposition(Composition):
 
     def _update_learning_parameters(self, context):
         """
-        Updates parameters based on trials ran since last update.
+        Updates parameters based on trials run since last update.
         """
         optimizer = self.parameters.optimizer._get(context=context)
         optimizer.zero_grad()
@@ -563,27 +576,132 @@ class AutodiffComposition(Composition):
                                                         report_num=report_num
                                                         )
 
+    # # MODIFIED 11/8/22 OLD:
+    # @handle_external_context(fallback_most_recent=True)
+    # def save(self, path:str, context=None):
+    #     """Saves all parameters to the specified path (e.g. save('my_model.pt'))"""
+    #     assert path, "Must provide a path to save the model to!"
+    #     proj_state = {
+    #         p.name: p.parameters.matrix.get(context=context) for p in self.projections
+    #     }
+    #     torch.save(proj_state, path)
+    # MODIFIED 11/8/22 NEW:  [JDC]
     @handle_external_context(fallback_most_recent=True)
-    def save(self, path:str, context=None):
-        """Saves all parameters to the specified path (e.g. save('my_model.pt'))"""
-        assert path, "Must provide a path to save the model to!"
+    def save(self, path:PosixPath=None, directory:str=None, filename:str=None, context=None):
+        """Saves all weight matrices for all MappingProjections in the AutodiffComposition
+        Arguments
+        ---------
+        directory: str : default ``current working directory``
+            directory where `matrices <MappingProjection.matrix>` for all MappingProjections
+            in the AutodiffComposition are saved.
+        filename: str : default ``<name of AutodiffComposition>_matrix_wts.pnl``
+            filename in which `matrices <MappingProjection.matrix>` for all MappingProjections
+            in the AutodiffComposition are saved.
+        .. note::
+           Matrices are saved in
+           `PyTorch state_dict <https://pytorch.org/tutorials/beginner/saving_loading_models.html>`_ format.
+        """
+        if path:
+            if not isinstance(path,PosixPath):
+                raise AutodiffCompositionError(f"'{path}' (for saving weight matrices of ({self.name}) "
+                                               f"is not a legal path.")
+        else:
+            try:
+                if directory:
+                    path = Path(directory)
+                else:
+                    path = Path(os.getcwd())
+                if filename:
+                    path = Path(path / filename)
+                else:
+                    path = Path(path / f'{self.name}_matrix_wts.pnl')
+            except IsADirectoryError:
+                raise AutodiffCompositionError(f"'{path}' (for saving weight matrices of ({self.name}) "
+                                               f"is not a legal path.")
         proj_state = {
-            p.name: p.parameters.matrix.get(context=context) for p in self.projections
-        }
+            # p.name: p.parameters.matrix.get(context=context)
+            p.name: p.matrix.base
+            for p in self.projections
+            if not (isinstance(p, ModulatoryProjection_Base)
+                    or isinstance(p.sender.owner, CompositionInterfaceMechanism)
+                    or isinstance(p.receiver.owner, CompositionInterfaceMechanism)
+                    or isinstance(p.sender.owner, ModulatoryMechanism_Base)
+                    or isinstance(p.receiver.owner, ModulatoryMechanism_Base)
+                    or p.sender.owner in self.get_nodes_by_role(NodeRole.LEARNING)
+                    or p.receiver.owner in self.get_nodes_by_role(NodeRole.LEARNING)
+                )}
         torch.save(proj_state, path)
+        return path
+    # MODIFIED 11/8/22 END
 
+
+    # # MODIFIED 11/8/22 OLD:
+    # @handle_external_context(fallback_most_recent=True)
+    # def load(self, path:str, context=None):
+    #     assert path, "Must provide a path to load parameters from!"
+    #     state = torch.load(path)
+    #     for projection in self.projections:
+    #         matrix = state[projection.name]
+    #         projection.parameters.matrix.set(
+    #             matrix, context=context, override=True)
+    #         projection.parameter_ports['matrix'].parameters.value.set(
+    #             matrix, context=context, override=True)
+    #     self._build_pytorch_representation(context=context, refresh=True)
+    # MODIFIED 11/8/22 NEW: [JDC]
     @handle_external_context(fallback_most_recent=True)
-    def load(self, path:str, context=None):
-        assert path, "Must provide a path to load parameters from!"
+    @handle_external_context()
+    def load(self, path:PosixPath=None, directory:str=None, filename:str=None, context=None):
+        """Loads all weights matrices for all MappingProjections in the AutodiffComposition from file
+        Arguments
+        ---------
+        path: Path : default None
+            Path for file in which `MappingProjection` `matrices <MappingProjection.matrix>` are stored.
+            This must be a legal PosixPath object; if it is specified **directory** and **filename** are ignored.
+        directory: str : default ``current working directory``
+            directory where `MappingProjection` `matrices <MappingProjection.matrix>` are stored.
+        filename: str : default ``<name of AutodiffComposition>_matrix_wts.pnl``
+            name of file in which `MappingProjection` `matrices <MappingProjection.matrix>` are stored.
+        .. note::
+           Matrices must be stored in
+           `PyTorch state_dict <https://pytorch.org/tutorials/beginner/saving_loading_models.html>`_ format.
+        """
+        if path:
+            if not isinstance(path,Path):
+                raise AutodiffCompositionError(f"'{path}' (for saving weight matrices of ({self.name}) "
+                                               f"is not a legal path.")
+        else:
+            try:
+                if directory:
+                    path = Path(directory)
+                else:
+                    path = Path(os.getcwd())
+                if filename:
+                    path = Path(path / filename)
+                else:
+                    path = Path(path / f'{self.name}_matrix_wts.pnl')
+            except IsADirectoryError:
+                raise AutodiffCompositionError(f"'{path}' (for saving weight matrices of ({self.name}) "
+                                               f"is not a legal path.")
         state = torch.load(path)
-        for projection in self.projections:
+        for projection in [p for p in self.projections
+                           if not (isinstance(p, ModulatoryProjection_Base)
+                                   or isinstance(p.sender.owner, CompositionInterfaceMechanism)
+                                   or isinstance(p.receiver.owner, CompositionInterfaceMechanism)
+                                   or isinstance(p.sender.owner, ModulatoryMechanism_Base)
+                                   or isinstance(p.receiver.owner, ModulatoryMechanism_Base)
+                                   or p.sender.owner in self.get_nodes_by_role(NodeRole.LEARNING)
+                                   or p.receiver.owner in self.get_nodes_by_role(NodeRole.LEARNING)
+            )]:
             matrix = state[projection.name]
-            projection.parameters.matrix.set(
-                matrix, context=context, override=True)
-            projection.parameter_ports['matrix'].parameters.value.set(
-                matrix, context=context, override=True)
+            if np.array(matrix).shape != projection.matrix.base.shape:
+                raise AutodiffCompositionError(f"Shape of matrix loaded for '{projection.name}' "
+                                               f"({np.array(matrix).shape}) "
+                                               f"does not match its shape ({projection.matrix.base.shape})")
+            projection.matrix.base = matrix
+            projection.parameters.matrix.set(matrix, context=context, override=True)
+            projection.parameter_ports['matrix'].parameters.value.set(matrix, context=context, override=True)
         self._build_pytorch_representation(context=context, refresh=True)
-
+    # MODIFIED 11/8/22 END
 
     def _get_state_ids(self):
         return super()._get_state_ids() + ["optimizer"]
