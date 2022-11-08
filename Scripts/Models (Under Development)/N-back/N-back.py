@@ -490,7 +490,6 @@ def train_network(network,
     # network.load(path)
     # print(f'loaded weights sample: {network.nodes[FFN_HIDDEN].path_afferents[0].matrix.base[0][:3]}...')
 
-
 def run_model(model,
               load_weights_from=None,
               context_drift_rate=CONTEXT_DRIFT_RATE,
@@ -520,7 +519,7 @@ def run_model(model,
     print(f'nback_model done: {len(nback_model.results)} trials executed')
     saved_results = None
     if save_results_to:
-        saved_results = np.save(save_results_to, model.results)
+        saved_resulats = np.save(save_results_to, model.results)
     print(f'results: \n{model.results}')
     return saved_results
 
