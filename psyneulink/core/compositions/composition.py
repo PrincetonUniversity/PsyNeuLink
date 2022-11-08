@@ -3761,6 +3761,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             show_graph_attributes=None,
             name=None,
             prefs=None,
+            termination_processing=None,
             **param_defaults
     ):
 
@@ -3891,6 +3892,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         show_graph_attributes = show_graph_attributes or {}
         self._show_graph = ShowGraph(self, **show_graph_attributes)
 
+        if termination_processing is not None:
+            self.termination_processing = termination_processing
+
     @property
     def graph_processing(self):
         """
@@ -3915,10 +3919,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             old_scheduler = self._scheduler
             if old_scheduler is not None:
                 orig_conds = old_scheduler._user_specified_conds
+                orig_term_conds = old_scheduler._user_specified_termination_conds
             else:
                 orig_conds = None
+                orig_term_conds = None
 
-            self._scheduler = Scheduler(composition=self, conditions=orig_conds)
+            self._scheduler = Scheduler(composition=self, conditions=orig_conds, termination_conds=orig_term_conds)
             self.needs_update_scheduler = False
 
         return self._scheduler
@@ -6198,7 +6204,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 projections.append(node)
                 continue
 
-            if context.source != ContextFlags.INITIALIZING and context.string != 'IGNORE_NO_AFFERENTS_WARNING':
+            if context.flags & ContextFlags.PREPARING and context.string != 'IGNORE_NO_AFFERENTS_WARNING':
                 for input_port in node.input_ports:
                     if input_port.require_projection_in_composition \
                             and not input_port.path_afferents and not input_port.default_input:
