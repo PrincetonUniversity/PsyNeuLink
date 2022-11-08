@@ -86,16 +86,16 @@ RETRIEVAL_CONTEXT_WEIGHT = 1-RETRIEVAL_STIM_WEIGHT # weighting of context field 
 DECISION_SOFTMAX_TEMP=1
 
 # Training parameters:
-NUM_EPOCHS= 6250    # nback-paper: 400,000 @ one trial per epoch = 6,250 @ 64 trials per epoch
+NUM_EPOCHS= 1 # 6250    # nback-paper: 400,000 @ one trial per epoch = 6,250 @ 64 trials per epoch
 LEARNING_RATE=0.01  # nback-paper: .001
 
 # Execution parameters:
 CONTEXT_DRIFT_RATE=.1 # drift rate used for DriftOnASphereIntegrator (function of Context mech) on each trial
 NUM_TRIALS = 48 # number of stimuli presented in a trial sequence
 REPORT_OUTPUT = ReportOutput.OFF   # Sets console output during run
-REPORT_PROGRESS = ReportProgress.ON  # Sets console progress bar during run
-REPORT_LEARNING = ReportLearning.ON  # Sets console progress bar during training
-ANIMATE = True # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
+REPORT_PROGRESS = ReportProgress.OFF  # Sets console progress bar during run
+REPORT_LEARNING = ReportLearning.OFF  # Sets console progress bar during training
+ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
 
 # Names of Compositions and Mechanisms:
 NBACK_MODEL = "N-back Model"
@@ -169,7 +169,7 @@ def construct_model(stim_size = STIM_SIZE,
 
     # FULL MODEL (Outer Composition, including input, EM and control Mechanisms) ------------------------
 
-    print(f'constructing {NBACK_MODEL}...')
+    print(f"'constructing {NBACK_MODEL}'...")
 
     # Stimulus Encoding: takes STIM_SIZE vector as input
     stim = TransferMechanism(name=MODEL_STIMULUS_INPUT, size=stim_size)
@@ -516,12 +516,14 @@ def run_model(model,
     if REPORT_PROGRESS == ReportProgress.ON:
         print('\n')
     print(f'nback_model done: {len(nback_model.results)} trials executed')
+    print(f'results: \n{model.results}')
 
 
 nback_model = construct_model()
 if TRAIN:
+    weights_filename = f'ffn.wts_nep_{NUM_EPOCHS}_lr_{str(LEARNING_RATE).split(".")[1]}.pnl'
     saved_weights = train_network(nback_model.nodes[FFN_COMPOSITION],
-                                  save_weights_to='ffn.wts_001.pnl')
+                                  save_weights_to=weights_filename)
 if RUN:
     run_model(nback_model,
               # load_weights_from='ffn.wts.pnl'
