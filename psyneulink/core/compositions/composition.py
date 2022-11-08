@@ -9796,7 +9796,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.rich_diverted_reports = None
         self.recorded_reports = None
 
-        self._assign_execution_ids(context)
+        if context.execution_id is None:
+            self._assign_execution_ids(context)
 
         scheduler._init_counts(execution_id=context.execution_id)
 

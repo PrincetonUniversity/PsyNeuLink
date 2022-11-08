@@ -335,17 +335,6 @@ class MaxLikelihoodEstimator(OptimizationFunction):
         # Reset the search grid
         self.reset_grid()
 
-        # Clear any old results from the composition
-        if context.composition.results is not None:
-            context.composition.results.clear()
-
-        # FIXME: This is a hack to make sure that state_features gets all trials worth of inputs.
-        # We need to set the inputs for the composition during simulation, override the state features with the
-        # inputs dict passed to the PEC constructor. This assumes that the inputs dict has the same order as the
-        # state features.
-        for state_input_port, value in zip(self.owner.state_input_ports, self.owner.get_inputs().values()):
-            state_input_port.parameters.value._set(value, context)
-
         # Evaluate objective_function for each sample
         last_sample, last_value, all_samples, all_values = self._evaluate(
             variable=variable,

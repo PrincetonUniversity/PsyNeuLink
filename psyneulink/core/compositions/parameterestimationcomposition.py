@@ -654,6 +654,19 @@ class ParameterEstimationComposition(Composition):
         assert self.controller is not None
         self.controller.set_inputs(kwargs.get('inputs', None if not args else args[0]))
 
+        # Clear any old results from the composition
+        if self.results is not None:
+            self.results.clear()
+
+        context = kwargs.get('context', None)
+        self._assign_execution_ids(context)
+
+        # We need to set the inputs for the composition during simulation, override the state features with the
+        # inputs dict passed to the PEC run. This assumes that the inputs dict has the same order as the
+        # state features.
+        for state_input_port, value in zip(self.controller.state_input_ports, self.controller.get_inputs().values()):
+            state_input_port.parameters.value._set(value, context)
+
         # Run the composition as normal
         return super(ParameterEstimationComposition, self).run(*args, **kwargs)
 

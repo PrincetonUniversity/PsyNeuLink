@@ -12,7 +12,7 @@ np.random.seed(seed)
 set_global_seed(seed)
 
 # High-level parameters the impact performance of the test
-num_trials = 4
+num_trials = 40
 time_step_size = 0.01
 num_estimates = 40
 
@@ -29,8 +29,8 @@ comp = pnl.Composition(pathways=decision)
 # Let's generate an "experimental" dataset to fit. This is a parameter recovery test
 # The input will be num_trials trials of the same constant stimulus drift rate of 1
 # trial_inputs = np.concatenate((np.repeat(-30.0, 30), np.repeat(30.0, 30)))[:, None]
-# trial_inputs = np.concatenate((np.repeat(-30.0, 2), np.repeat(30.0, 2)))[:, None]
-trial_inputs = np.ones((num_trials, 1))
+trial_inputs = np.concatenate((np.repeat(-30.0, 2), np.repeat(30.0, 2)))[:, None]
+# trial_inputs = np.ones((num_trials, 1))
 inputs_dict = {decision: trial_inputs}
 
 # Store the results of this "experiment" as a numpy array. This should be a
