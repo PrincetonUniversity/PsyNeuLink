@@ -496,7 +496,8 @@ def run_model(model,
               num_trials=NUM_TRIALS,
               report_output=REPORT_OUTPUT,
               report_progress=REPORT_PROGRESS,
-              animate=ANIMATE
+              animate=ANIMATE,
+              save_results_to=None
               ):
     ffn = nback_model.nodes[FFN_COMPOSITION]
     em = model.nodes[EM]
@@ -516,8 +517,9 @@ def run_model(model,
     if REPORT_PROGRESS == ReportProgress.ON:
         print('\n')
     print(f'nback_model done: {len(nback_model.results)} trials executed')
+    if save_results_to:
+        np.save(model.results)
     print(f'results: \n{model.results}')
-
 
 nback_model = construct_model()
 if TRAIN:
@@ -525,7 +527,9 @@ if TRAIN:
     saved_weights = train_network(nback_model.nodes[FFN_COMPOSITION],
                                   save_weights_to=weights_filename)
 if RUN:
+    results_filename = f'nback.results_nep_{NUM_EPOCHS}_lr_{str(LEARNING_RATE).split(".")[1]}.pnl'
     run_model(nback_model,
               # load_weights_from='ffn.wts.pnl'
               # load_weights_from=INITIALIZER
+              save_results_to= results_filename
               )
