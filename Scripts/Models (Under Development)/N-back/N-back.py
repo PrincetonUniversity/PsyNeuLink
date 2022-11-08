@@ -86,8 +86,8 @@ RETRIEVAL_CONTEXT_WEIGHT = 1-RETRIEVAL_STIM_WEIGHT # weighting of context field 
 DECISION_SOFTMAX_TEMP=1
 
 # Training parameters:
-NUM_EPOCHS= 1  #6250    # nback-paper: 400,000 @ one trial per epoch = 6,250 @ 64 trials per epoch
-LEARNING_RATE=0.1  # nback-paper: .001
+NUM_EPOCHS= 6250    # nback-paper: 400,000 @ one trial per epoch = 6,250 @ 64 trials per epoch
+LEARNING_RATE=0.001  # nback-paper: .001
 
 # Execution parameters:
 CONTEXT_DRIFT_RATE=.1 # drift rate used for DriftOnASphereIntegrator (function of Context mech) on each trial
@@ -132,7 +132,7 @@ def construct_model(stim_size = STIM_SIZE,
     # FEED FORWARD NETWORK -----------------------------------------
 
     #     inputs: encoding of current stimulus and context, retrieved stimulus and retrieved context,
-    #     output: decIsion: match [1,0] or non-match [0,1]
+    #     output: decision: match [1,0] or non-match [0,1]
     # Must be trained to detect match for specified task (1-back, 2-back, etc.)
     input_current_stim = TransferMechanism(name=FFN_STIMULUS_INPUT,
                                            size=stim_size,
@@ -516,7 +516,7 @@ def run_model(model,
 nback_model = construct_model()
 if TRAIN:
     saved_weights = train_network(nback_model.nodes[FFN_COMPOSITION],
-                                  save_weights_to='ffn.wts.pnl')
+                                  save_weights_to='ffn.wts_001.pnl')
 if RUN:
     run_model(nback_model,
               # load_weights_from='ffn.wts.pnl'
