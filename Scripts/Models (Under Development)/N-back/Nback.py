@@ -96,7 +96,7 @@ REPORT_LEARNING = ReportLearning.ON  # Sets console progress bar during training
 ANIMATE = True # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
 
 # Names of Compositions and Mechanisms:
-NBACK_MODEL = "N-Back Model"
+NBACK_MODEL = "N-back Model"
 FFN_COMPOSITION = "WORKING MEMORY (fnn)"
 FFN_STIMULUS_INPUT = "CURRENT STIMULUS"
 FFN_CONTEXT_INPUT = "CURRENT CONTEXT"

@@ -98,7 +98,7 @@ REPORT_LEARNING = ReportLearning.ON  # Sets console progress bar during training
 ANIMATE = True # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
 
 # Names of Compositions and Mechanisms:
-NBACK_MODEL = "N-Back Model"
+NBACK_MODEL = "N-back Model"
 FFN_COMPOSITION = "WORKING MEMORY (fnn)"
 FFN_STIMULUS_INPUT = "CURRENT STIMULUS"
 FFN_CONTEXT_INPUT = "CURRENT CONTEXT"
@@ -495,10 +495,7 @@ def run_model(model,
               ):
     ffn = nback_model.nodes[FFN_COMPOSITION]
     em = model.nodes[EM]
-    # if load_weights_from is None:  # Load weights from default file
-    #     print(f"nback_model loading '{FFN_COMPOSITION}' weights from {FFN_COMPOSITION}_matrix_wts.pnl (default)...")
-    #     nback_model.nodes[FFN_COMPOSITION].load()
-    if load_weights_from:  # Path for weights file provided in call
+    if load_weights_from:
         print(f"nback_model loading '{FFN_COMPOSITION}' weights from {load_weights_from}...")
         ffn.load(load_weights_from)
     print('nback_model executing...')
