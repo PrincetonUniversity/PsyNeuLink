@@ -612,9 +612,10 @@ class AutodiffComposition(Composition):
                 else:
                     path = Path(os.getcwd())
                 if filename:
-                    path = Path(path / filename)
+                    # path = Path(path / filename)
+                    path = Path(os.path.join(path / filename))
                 else:
-                    path = Path(path / f'{self.name}_matrix_wts.pnl')
+                    path = Path(os.path.join(path / f'{self.name}_matrix_wts.pnl'))
             except IsADirectoryError:
                 raise AutodiffCompositionError(f"'{path}' (for saving weight matrices of ({self.name}) "
                                                f"is not a legal path.")
@@ -675,9 +676,11 @@ class AutodiffComposition(Composition):
                 else:
                     path = Path(os.getcwd())
                 if filename:
-                    path = Path(path / filename)
+                    # path = Path(path / filename)
+                    path = Path(os.path.join(path / filename))
                 else:
-                    path = Path(path / f'{self.name}_matrix_wts.pnl')
+                    # path = Path(path / f'{self.name}_matrix_wts.pnl')
+                    path = Path(os.path.join(path , f'{self.name}_matrix_wts.pnl'))
             except IsADirectoryError:
                 raise AutodiffCompositionError(f"'{path}' (for saving weight matrices of ({self.name}) "
                                                f"is not a legal path.")
