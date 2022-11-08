@@ -589,8 +589,11 @@ class AutodiffComposition(Composition):
     @handle_external_context(fallback_most_recent=True)
     def save(self, path:PosixPath=None, directory:str=None, filename:str=None, context=None):
         """Saves all weight matrices for all MappingProjections in the AutodiffComposition
+
         Arguments
         ---------
+        path: Path, PosixPath or str : default None
+            path specification; must be a legal path specification in the filesystem.
         directory: str : default ``current working directory``
             directory where `matrices <MappingProjection.matrix>` for all MappingProjections
             in the AutodiffComposition are saved.
@@ -600,9 +603,16 @@ class AutodiffComposition(Composition):
         .. note::
            Matrices are saved in
            `PyTorch state_dict <https://pytorch.org/tutorials/beginner/saving_loading_models.html>`_ format.
+
+        Return
+        ------
+        Path
+
         """
         if path:
-            if not isinstance(path,PosixPath):
+            try:
+                path = Path(path)
+            except:
                 raise AutodiffCompositionError(f"'{path}' (for saving weight matrices of ({self.name}) "
                                                f"is not a legal path.")
         else:
