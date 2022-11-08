@@ -3217,7 +3217,7 @@ class OptimizationControlMechanism(ControlMechanism):
     def _get_evaluate_output_struct_type(self, ctx, tags):
         if "evaluate_type_all_results" in tags:
             return ctx.get_output_struct_type(self.agent_rep)
-        assert "evaluate_type_objective" in tags
+        assert "evaluate_type_objective" in tags, "Unknown evaluate type: {}".format(tags)
         # Returns a scalar that is the predicted net_outcome
         return ctx.float_ty
 
@@ -3231,7 +3231,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 ctx.get_state_struct_type(self).as_pointer(),
                 self._get_evaluate_alloc_struct_type(ctx).as_pointer(),
                 ctx.float_ty.as_pointer(),
-                ctx.float_ty.as_pointer()]
+                self._get_evaluate_output_struct_type(ctx, tags=tags).as_pointer()]
 
         builder = ctx.create_llvm_function(args, self, str(self) + "_net_outcome")
         llvm_func = builder.function
@@ -3311,7 +3311,7 @@ class OptimizationControlMechanism(ControlMechanism):
         builder = ctx.create_llvm_function(args, self, str(self) + "_evaluate_range")
         llvm_func = builder.function
 
-        params, state, start, stop, arg_out, arg_in, data = llvm_func.args
+        params, state, start, stop, arg_out, arg_in, data, num_inputs = llvm_func.args
         for p in llvm_func.args:
             if isinstance(p.type, (pnlvm.ir.PointerType)):
                 p.attributes.add('nonnull')
@@ -3341,7 +3341,7 @@ class OptimizationControlMechanism(ControlMechanism):
             func_out = b.gep(arg_out, [out_idx])
             pnlvm.helpers.create_sample(b, allocation, search_space, idx)
 
-            b.call(evaluate_f, [params, state, allocation, func_out, arg_in, data])
+            b.call(evaluate_f, [params, state, allocation, func_out, arg_in, data, num_inputs])
 
         builder.ret_void()
         return llvm_func
@@ -3351,16 +3351,17 @@ class OptimizationControlMechanism(ControlMechanism):
         args = [ctx.get_param_struct_type(self.agent_rep).as_pointer(),
                 ctx.get_state_struct_type(self.agent_rep).as_pointer(),
                 self._get_evaluate_alloc_struct_type(ctx).as_pointer(),
-                self._get_evaluate_output_struct_type(ctx, tags).as_pointer(),
+                self._get_evaluate_output_struct_type(ctx, tags=tags).as_pointer(),
                 ctx.get_input_struct_type(self.agent_rep).as_pointer(),
-                ctx.get_data_struct_type(self.agent_rep).as_pointer()]
+                ctx.get_data_struct_type(self.agent_rep).as_pointer(),
+                ctx.int32_ty.as_pointer()]
 
         builder = ctx.create_llvm_function(args, self, str(self) + "_evaluate")
         llvm_func = builder.function
         for p in llvm_func.args:
             p.attributes.add('nonnull')
 
-        comp_params, base_comp_state, allocation_sample, arg_out, comp_input, base_comp_data = llvm_func.args
+        comp_params, base_comp_state, allocation_sample, arg_out, comp_input, base_comp_data, num_inputs = llvm_func.args
 
         if "const_params" in debug_env:
             comp_params = builder.alloca(comp_params.type.pointee, name="const_params_loc")
@@ -3397,12 +3398,6 @@ class OptimizationControlMechanism(ControlMechanism):
         controller_params = builder.gep(nodes_params, [ctx.int32_ty(0),
                                                        ctx.int32_ty(controller_idx)])
 
-        # Get simulation function
-        agent_tags = {"run", "simulation"}
-        if "evaluate_type_all_results" in tags:
-            agent_tags.add("simulation_results")
-        sim_f = ctx.import_llvm_function(self.agent_rep, tags=frozenset(agent_tags))
-
         # Apply allocation sample to simulation data
         assert len(self.output_ports) == len(allocation_sample.type.pointee)
         idx = self.agent_rep._get_node_index(self)
@@ -3417,6 +3412,12 @@ class OptimizationControlMechanism(ControlMechanism):
                 sample_dst = builder.gep(sample_dst, [ctx.int32_ty(0),
                                                       ctx.int32_ty(0)])
             builder.store(builder.load(sample_ptr), sample_dst)
+
+        # Get simulation function
+        agent_tags = {"run", "simulation"}
+        if "evaluate_type_all_results" in tags:
+            agent_tags.add("simulation_results")
+        sim_f = ctx.import_llvm_function(self.agent_rep, tags=frozenset(agent_tags))
 
         if "const_input" in debug_env:
             comp_input = builder.alloca(sim_f.args[3].type.pointee, name="sim_input")
@@ -3446,10 +3447,6 @@ class OptimizationControlMechanism(ControlMechanism):
         num_trials = builder.alloca(ctx.int32_ty, name="num_sim_trials")
         builder.store(num_sims, num_trials)
 
-        # We only provide one input
-        num_inputs = builder.alloca(ctx.int32_ty, name="num_sim_inputs")
-        builder.store(num_inputs.type.pointee(1), num_inputs)
-
         # Simulations don't store output unless we run parameter fitting
         if 'evaluate_type_objective' in tags:
             comp_output = sim_f.args[4].type(None)
@@ -3465,11 +3462,11 @@ class OptimizationControlMechanism(ControlMechanism):
             # Extract objective mechanism value
             idx = self.agent_rep._get_node_index(self.objective_mechanism)
             # Mechanisms' results are stored in the first substructure
-            objective_os_ptr = builder.gep(comp_data, [ctx.int32_ty(0),
+            objective_op_ptr = builder.gep(comp_data, [ctx.int32_ty(0),
                                                        ctx.int32_ty(0),
                                                        ctx.int32_ty(idx)])
             # Objective mech output shape should be 1 single element 2d array
-            objective_val_ptr = builder.gep(objective_os_ptr,
+            objective_val_ptr = builder.gep(objective_op_ptr,
                                             [ctx.int32_ty(0), ctx.int32_ty(0),
                                              ctx.int32_ty(0)], "obj_val_ptr")
 
