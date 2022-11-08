@@ -649,7 +649,6 @@ class AutodiffComposition(Composition):
     #     self._build_pytorch_representation(context=context, refresh=True)
     # MODIFIED 11/8/22 NEW: [JDC]
     @handle_external_context(fallback_most_recent=True)
-    @handle_external_context()
     def load(self, path:PosixPath=None, directory:str=None, filename:str=None, context=None):
         """Loads all weights matrices for all MappingProjections in the AutodiffComposition from file
         Arguments
