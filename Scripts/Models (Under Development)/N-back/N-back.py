@@ -87,7 +87,7 @@ DECISION_SOFTMAX_TEMP=1
 
 # Training parameters:
 NUM_EPOCHS= 6250    # nback-paper: 400,000 @ one trial per epoch = 6,250 @ 64 trials per epoch
-LEARNING_RATE=0.001  # nback-paper: .001
+LEARNING_RATE=0.01  # nback-paper: .001
 
 # Execution parameters:
 CONTEXT_DRIFT_RATE=.1 # drift rate used for DriftOnASphereIntegrator (function of Context mech) on each trial
@@ -459,7 +459,7 @@ def train_network(network,
                   learning_rate=LEARNING_RATE,
                   num_epochs=NUM_EPOCHS,
                   save_weights_to=None):
-    print(f'constructing training set for {network.name}...')
+    print(f"constructing training set for '{network.name}'...")
     training_set, batch_size = get_training_inputs(network=network,
                                                    num_epochs=num_epochs,
                                                    nback_levels=NBACK_LEVELS)
@@ -476,8 +476,13 @@ def train_network(network,
                   learning_rate=learning_rate,
                   execution_mode=ExecutionMode.LLVMRun)
     stop_time = timeit.default_timer()
-    print(f'{network.name} trained')
-    print(f'training time: {stop_time-start_time}')
+    print(f"'{network.name}' trained")
+    training_time = stop_time-start_time
+    if training_time <= 60:
+        training_time_str = f'{int(training_time)} seconds'
+    else:
+        training_time_str = f'{int(training_time/60)} minutes'
+    print(f'training time: {training_time_str} for {num_epochs} epochs')
     path = network.save(filename=save_weights_to)
     print(f'saved weights to: {save_weights_to}')
     return path

@@ -85,15 +85,15 @@ DECISION_SOFTMAX_TEMP=1
 
 # Training parameters:
 NUM_EPOCHS=3    # nback-paper: 400,000 @ one trial per epoch = 2,500 @ 160 trials per epoch
-LEARNING_RATE=0.1  # nback-paper: .001
+LEARNING_RATE=0.01  # nback-paper: .001
 
 # Execution parameters:
 CONTEXT_DRIFT_RATE=.1 # drift rate used for DriftOnASphereIntegrator (function of Context mech) on each trial
-NUM_TRIALS = 48 # number of stimuli presented in a trial sequence
+NUM_TRIALS = 48 # number of stimuli presented in a trial sequence for a given nback_level during run
 REPORT_OUTPUT = ReportOutput.OFF   # Sets console output during run
-REPORT_PROGRESS = ReportProgress.ON  # Sets console progress bar during run
-REPORT_LEARNING = ReportLearning.ON  # Sets console progress bar during training
-ANIMATE = True # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
+REPORT_PROGRESS = ReportProgress.OFF  # Sets console progress bar during run
+REPORT_LEARNING = ReportLearning.OFF  # Sets console progress bar during training
+ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
 
 # Names of Compositions and Mechanisms:
 NBACK_MODEL = "N-back Model"
@@ -457,12 +457,12 @@ def get_training_inputs(network, num_epochs, nback_levels):
 def train_network(network,
                   learning_rate=LEARNING_RATE,
                   num_epochs=NUM_EPOCHS):
-    print(f'constructing training_set for {network.name}...')
+    print(f"constructing training_set for '{network.name}'...")
     training_set, batch_size = get_training_inputs(network=network,
                                                    num_epochs=num_epochs,
                                                    nback_levels=NBACK_LEVELS)
     print(f'training_set constructed: {len(training_set)}')
-    print(f'\ntraining {network.name}...')
+    print(f"\ntraining '{network.name}'...")
     import timeit
     start_time = timeit.default_timer()
     network.learn(inputs=training_set,
@@ -472,12 +472,12 @@ def train_network(network,
                   learning_rate=learning_rate,
                   execution_mode=ExecutionMode.LLVMRun)
     stop_time = timeit.default_timer()
-    print(f'{network.name} trained')
-    training_time = int(stop_time-start_time)
+    print(f"'{network.name}' trained")
+    training_time = stop_time-start_time
     if training_time <= 60:
-        training_time_str = f'{training_time} seconds'
+        training_time_str = f'{int(training_time)} seconds'
     else:
-        training_time_str = f'{training_time/60} minutes'
+        training_time_str = f'{int(training_time/60)} minutes'
     print(f'training time: {training_time_str} for {num_epochs} epochs')
     # path = network.save()
     # print(f'saved weights sample: {network.nodes[FFN_HIDDEN].path_afferents[0].matrix.base[0][:3]}...')
@@ -504,3 +504,4 @@ def run_model(model,
     if REPORT_PROGRESS == ReportProgress.ON:
         print('\n')
     print(f'nback_model done: {len(nback_model.results)} trials executed')
+    print(f'results: \n{model.results}')
