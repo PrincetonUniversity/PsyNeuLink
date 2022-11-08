@@ -86,7 +86,7 @@ RETRIEVAL_CONTEXT_WEIGHT = 1-RETRIEVAL_STIM_WEIGHT # weighting of context field 
 DECISION_SOFTMAX_TEMP=1
 
 # Training parameters:
-NUM_EPOCHS=6250    # nback-paper: 400,000 @ one trial per epoch = 6,250 @ 64 trials per epoch
+NUM_EPOCHS= 1  #6250    # nback-paper: 400,000 @ one trial per epoch = 6,250 @ 64 trials per epoch
 LEARNING_RATE=0.1  # nback-paper: .001
 
 # Execution parameters:
@@ -480,6 +480,7 @@ def train_network(network,
     print(f'training time: {stop_time-start_time}')
     path = network.save(filename=save_weights_to)
     print(f'saved weights to: {save_weights_to}')
+    return path
     # print(f'saved weights sample: {network.nodes[FFN_HIDDEN].path_afferents[0].matrix.base[0][:3]}...')
     # network.load(path)
     # print(f'loaded weights sample: {network.nodes[FFN_HIDDEN].path_afferents[0].matrix.base[0][:3]}...')
@@ -494,25 +495,22 @@ def run_model(model,
               ):
     ffn = nback_model.nodes[FFN_COMPOSITION]
     em = model.nodes[EM]
-    if load_weights_from is None:  # Load weights from default file
-        print(f"nback_model loading '{FFN_COMPOSITION}' weights from {FFN_COMPOSITION}_matrix_wts.pnl (default)...")
-        nback_model.nodes[FFN_COMPOSITION].load()
-    elif load_weights_from == INITIALIZER or not load_weights_from:  # Use weights initialized at construction
-        pass
-    else:  # Path for weights file provided in call
+    # if load_weights_from is None:  # Load weights from default file
+    #     print(f"nback_model loading '{FFN_COMPOSITION}' weights from {FFN_COMPOSITION}_matrix_wts.pnl (default)...")
+    #     nback_model.nodes[FFN_COMPOSITION].load()
+    if load_weights_from:  # Path for weights file provided in call
         print(f"nback_model loading '{FFN_COMPOSITION}' weights from {load_weights_from}...")
         ffn.load(load_weights_from)
     print('nback_model executing...')
     for nback_level in NBACK_LEVELS:
+        em.function.reset(em.memory[0]) # Reset episodic memory for new task using first entry (original initializer)
         model.run(inputs=get_run_inputs(model, nback_level, context_drift_rate, num_trials),
                   report_output=report_output,
                   report_progress=report_progress,
                   animate=animate
                   )
-        em.function.reset(np.zeros_like(em.memory[0])) # Reset episodic memory for new task
     # print("Number of entries in EM: ", len(model.nodes[EM].memory))
-    assert len(model.nodes[EM].memory) == NUM_TRIALS*NUM_NBACK_LEVELS + 1 # extra one is for initializer
-    # assert len(model.nodes[EM].memory) == NUM_TRIALS
+    assert len(model.nodes[EM].memory) == NUM_TRIALS + 1 # extra one is for initializer
     if REPORT_PROGRESS == ReportProgress.ON:
         print('\n')
     print(f'nback_model done: {len(nback_model.results)} trials executed')
@@ -520,10 +518,10 @@ def run_model(model,
 
 nback_model = construct_model()
 if TRAIN:
-    train_network(nback_model.nodes[FFN_COMPOSITION],
-                  save_weights_to='ffn.wts.pnl')
+    saved_weights = train_network(nback_model.nodes[FFN_COMPOSITION],
+                                  save_weights_to='ffn.wts.pnl')
 if RUN:
     run_model(nback_model,
-              load_weights_from='ffn.wts.pnl'
+              # load_weights_from='ffn.wts.pnl'
               # load_weights_from=INITIALIZER
               )
