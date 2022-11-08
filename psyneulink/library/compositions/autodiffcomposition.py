@@ -667,6 +667,10 @@ class AutodiffComposition(Composition):
                                    or p.receiver.owner in self.get_nodes_by_role(NodeRole.LEARNING)
             )]:
             matrix = state[projection.name]
+            if np.array(matrix).shape != projection.matrix.base.shape:
+                raise AutodiffCompositionError(f"Shape of matrix loaded for '{projection.name}' "
+                                               f"({np.array(matrix).shape}) "
+                                               f"does not match its shape ({projection.matrix.base.shape})")
             projection.matrix.base = matrix
             projection.parameters.matrix.set(matrix, context=context, override=True)
             projection.parameter_ports['matrix'].parameters.value.set(matrix, context=context, override=True)

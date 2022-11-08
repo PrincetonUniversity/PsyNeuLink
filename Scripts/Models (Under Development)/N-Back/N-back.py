@@ -60,8 +60,8 @@ from psyneulink import *
 import numpy as np
 
 # Settings for running script:
-TRAIN = True
-RUN = False
+TRAIN = False
+RUN = True
 DISPLAY_MODEL = False # show visual graphic of model
 
 # PARAMETERS -------------------------------------------------------------------------------------------------------
@@ -72,7 +72,7 @@ NUM_STIM = 8 # number of different stimuli in stimulus set -  QUESTION: WHY ISN"
 FFN_TRANSFER_FUNCTION = ReLU
 
 # Constructor parameters:  (values are from nback-paper)
-STIM_SIZE=20 # length of stimulus vector
+STIM_SIZE=8 # length of stimulus vector
 CONTEXT_SIZE=25 # length of context vector
 HIDDEN_SIZE=STIM_SIZE*4 # dimension of hidden units in ff
 NBACK_LEVELS = [2,3] # Currently restricted to these
@@ -482,12 +482,21 @@ def train_network(network,
     print(f'loaded weights sample: {network.nodes[FFN_HIDDEN].path_afferents[0].matrix.base[0][:3]}...')
 
 def run_model(model,
+              weights=None,
               context_drift_rate=CONTEXT_DRIFT_RATE,
               num_trials=NUM_TRIALS,
               report_output=REPORT_OUTPUT,
               report_progress=REPORT_PROGRESS,
               animate=ANIMATE
               ):
+    ffn = nback_model.nodes[FFN_COMPOSITION]
+    em = model.nodes[EM]
+    if weights:
+        print(f'nback_model loading {FFN_COMPOSITION} weights from {weights}...')
+        ffn.load(weights)
+    else:
+        print(f'nback_model loading {FFN_COMPOSITION} weights from {FFN_COMPOSITION}_matrix_wts.pnl (default)...')
+        nback_model.nodes[FFN_COMPOSITION].load()
     print('nback_model executing...')
     for nback_level in NBACK_LEVELS:
         model.run(inputs=get_run_inputs(model, nback_level, context_drift_rate, num_trials),
@@ -495,9 +504,10 @@ def run_model(model,
                   report_progress=report_progress,
                   animate=animate
                   )
-        # FIX: RESET MEMORY HERE?
+        # em.function.reset(np.zeros_like(em.memory)) # Reset episodic memory for new task
     # print("Number of entries in EM: ", len(model.nodes[EM].memory))
-    assert len(model.nodes[EM].memory) == NUM_TRIALS*NUM_NBACK_LEVELS + 1
+    assert len(model.nodes[EM].memory) == NUM_TRIALS*NUM_NBACK_LEVELS + 1 # extra one is for initializer
+    # assert len(model.nodes[EM].memory) == NUM_TRIALS
     if REPORT_PROGRESS == ReportProgress.ON:
         print('\n')
     print(f'nback_model done: {len(nback_model.results)} trials executed')
@@ -508,37 +518,3 @@ if TRAIN:
     train_network(nback_model.nodes[FFN_COMPOSITION])
 if RUN:
     run_model(nback_model)
-# ===========================================================================
-
-# TEST OF SPHERICAL DRIFT:
-# stims = np.array([x[0] for x in em.memory])
-# contexts = np.array([x[1] for x in em.memory])
-# cos = Distance(metric=COSINE)
-# dist = Distance(metric=EUCLIDEAN)
-# diffs = [np.sum([contexts[i+1] - contexts[1]]) for i in range(NUM_TRIALS)]
-# diffs_1 = [np.sum([contexts[i+1] - contexts[i]]) for i in range(NUM_TRIALS)]
-# diffs_2 = [np.sum([contexts[i+2] - contexts[i]]) for i in range(NUM_TRIALS-1)]
-# dots = [[contexts[i+1] @ contexts[1]] for i in range(NUM_TRIALS)]
-# dot_diffs_1 = [[contexts[i+1] @ contexts[i]] for i in range(NUM_TRIALS)]
-# dot_diffs_2 = [[contexts[i+2] @ contexts[i]] for i in range(NUM_TRIALS-1)]
-# angle = [cos([contexts[i+1], contexts[1]]) for i in range(NUM_TRIALS)]
-# angle_1 = [cos([contexts[i+1], contexts[i]]) for i in range(NUM_TRIALS)]
-# angle_2 = [cos([contexts[i+2], contexts[i]]) for i in range(NUM_TRIALS-1)]
-# euclidean = [dist([contexts[i+1], contexts[1]]) for i in range(NUM_TRIALS)]
-# euclidean_1 = [dist([contexts[i+1], contexts[i]]) for i in range(NUM_TRIALS)]
-# euclidean_2 = [dist([contexts[i+2], contexts[i]]) for i in range(NUM_TRIALS-1)]
-# print("STIMS:", stims, "\n")
-# print("DIFFS:", diffs, "\n")
-# print("DIFFS 1:", diffs_1, "\n")
-# print("DIFFS 2:", diffs_2, "\n")
-# print("DOT PRODUCTS:", dots, "\n")
-# print("DOT DIFFS 1:", dot_diffs_1, "\n")
-# print("DOT DIFFS 2:", dot_diffs_2, "\n")
-# print("ANGLE: ", angle, "\n")
-# print("ANGLE_1: ", angle_1, "\n")
-# print("ANGLE_2: ", angle_2, "\n")
-# print("EUCILDEAN: ", euclidean, "\n")
-# print("EUCILDEAN 1: ", euclidean_1, "\n")
-# print("EUCILDEAN 2: ", euclidean_2, "\n")
-
-# n_back_model()
