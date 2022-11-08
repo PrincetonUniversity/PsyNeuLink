@@ -576,16 +576,6 @@ class AutodiffComposition(Composition):
                                                         report_num=report_num
                                                         )
 
-    # # MODIFIED 11/8/22 OLD:
-    # @handle_external_context(fallback_most_recent=True)
-    # def save(self, path:str, context=None):
-    #     """Saves all parameters to the specified path (e.g. save('my_model.pt'))"""
-    #     assert path, "Must provide a path to save the model to!"
-    #     proj_state = {
-    #         p.name: p.parameters.matrix.get(context=context) for p in self.projections
-    #     }
-    #     torch.save(proj_state, path)
-    # MODIFIED 11/8/22 NEW:  [JDC]
     @handle_external_context(fallback_most_recent=True)
     def save(self, path:PosixPath=None, directory:str=None, filename:str=None, context=None):
         """Saves all weight matrices for all MappingProjections in the AutodiffComposition
@@ -643,22 +633,7 @@ class AutodiffComposition(Composition):
                 )}
         torch.save(proj_state, path)
         return path
-    # MODIFIED 11/8/22 END
 
-
-    # # MODIFIED 11/8/22 OLD:
-    # @handle_external_context(fallback_most_recent=True)
-    # def load(self, path:str, context=None):
-    #     assert path, "Must provide a path to load parameters from!"
-    #     state = torch.load(path)
-    #     for projection in self.projections:
-    #         matrix = state[projection.name]
-    #         projection.parameters.matrix.set(
-    #             matrix, context=context, override=True)
-    #         projection.parameter_ports['matrix'].parameters.value.set(
-    #             matrix, context=context, override=True)
-    #     self._build_pytorch_representation(context=context, refresh=True)
-    # MODIFIED 11/8/22 NEW: [JDC]
     @handle_external_context(fallback_most_recent=True)
     def load(self, path:PosixPath=None, directory:str=None, filename:str=None, context=None):
         """Loads all weights matrices for all MappingProjections in the AutodiffComposition from file
