@@ -60,7 +60,7 @@ from psyneulink import *
 import numpy as np
 
 # Settings for running script:
-TRAIN = False
+TRAIN = True
 RUN = True
 DISPLAY_MODEL = False # show visual graphic of model
 
@@ -86,7 +86,7 @@ RETRIEVAL_CONTEXT_WEIGHT = 1-RETRIEVAL_STIM_WEIGHT # weighting of context field 
 DECISION_SOFTMAX_TEMP=1
 
 # Training parameters:
-NUM_EPOCHS=2500    # nback-paper: 400,000 @ one trial per epoch = 2,500 @ 160 trials per epoch
+NUM_EPOCHS=6250    # nback-paper: 400,000 @ one trial per epoch = 6,250 @ 64 trials per epoch
 LEARNING_RATE=0.1  # nback-paper: .001
 
 # Execution parameters:
@@ -127,7 +127,7 @@ def construct_model(stim_size = STIM_SIZE,
                     decision_softmax_temp = DECISION_SOFTMAX_TEMP):
     """Construct nback_model"""
 
-    print(f'constructing {FFN_COMPOSITION}...')
+    print(f"constructing '{FFN_COMPOSITION}'...")
 
     # FEED FORWARD NETWORK -----------------------------------------
 
@@ -397,74 +397,76 @@ def get_training_inputs(network, num_epochs, nback_levels):
     num_nback_levels = len(nback_levels)
     current_task = []
 
-    for i in range(num_epochs):
-        for nback_level in nback_levels:
-            # Construct one hot encoding for nback level
-            # task_input = list(np.zeros(num_nback_levels))
-            # task_input[nback_level-nback_levels[0]] = 1
-            task_input = get_task_input(nback_level)
-            for i in range(len(stimuli)):
-                # Get current stimulus and distractor
-                stims = list(stimuli.copy())
-                # Get stim, and remove from stims so distractor can be picked randomly from remaining ones
-                current_stim = stims.pop(i)
-                # Pick distractor randomly from stimuli remaining in set
-                distractor_stim = stims[np.random.randint(0,len(stims))]
+    # for i in range(num_epochs):
+    for nback_level in nback_levels:
+        # Construct one hot encoding for nback level
+        # task_input = list(np.zeros(num_nback_levels))
+        # task_input[nback_level-nback_levels[0]] = 1
+        task_input = get_task_input(nback_level)
+        for i in range(len(stimuli)):
+            # Get current stimulus and distractor
+            stims = list(stimuli.copy())
+            # Get stim, and remove from stims so distractor can be picked randomly from remaining ones
+            current_stim = stims.pop(i)
+            # Pick distractor randomly from stimuli remaining in set
+            distractor_stim = stims[np.random.randint(0,len(stims))]
 
-                # Get current context, nback context, and distractor
-                # Get nback+1 contexts (to bracket correct one)
-                for i in range(num_nback_levels+1):
-                    contexts.append(context_fct(CONTEXT_DRIFT_RATE))
-                # Get current context as one that is next to last from list (leaving last one as potential lure)
-                current_context = contexts.pop(num_nback_levels-1)
-                #
-                nback_context = contexts.pop(0)
-                distractor_context = contexts[np.random.randint(0,len(contexts))]
+            # Get current context, nback context, and distractor
+            # Get nback+1 contexts (to bracket correct one)
+            for i in range(num_nback_levels+1):
+                contexts.append(context_fct(CONTEXT_DRIFT_RATE))
+            # Get current context as one that is next to last from list (leaving last one as potential lure)
+            current_context = contexts.pop(num_nback_levels-1)
+            #
+            nback_context = contexts.pop(0)
+            distractor_context = contexts[np.random.randint(0,len(contexts))]
 
-                # Assign retrieved stimulus and context accordingly to trial_type
-                for trial_type in trial_types:
-                    stim_current.append(current_stim)
-                    context_current.append(current_context)
-                    # Assign retrieved stimulus
-                    if trial_type in {'match','stim_lure'}:
-                        stim_retrieved.append(current_stim)
-                    else: # context_lure or non_lure
-                        stim_retrieved.append(distractor_stim)
-                    # Assign retrieved context
-                    if trial_type in {'match','context_lure'}:
-                        context_retrieved.append(nback_context)
-                    else: # stimulus_lure or non_lure
-                        context_retrieved.append(distractor_context)
-                    # Assign target
-                    if trial_type == 'match':
-                        target.append([1,0])
-                    else:
-                        target.append([0,1])
-                    current_task.append([task_input])
+            # Assign retrieved stimulus and context accordingly to trial_type
+            for trial_type in trial_types:
+                stim_current.append(current_stim)
+                context_current.append(current_context)
+                # Assign retrieved stimulus
+                if trial_type in {'match','stim_lure'}:
+                    stim_retrieved.append(current_stim)
+                else: # context_lure or non_lure
+                    stim_retrieved.append(distractor_stim)
+                # Assign retrieved context
+                if trial_type in {'match','context_lure'}:
+                    context_retrieved.append(nback_context)
+                else: # stimulus_lure or non_lure
+                    context_retrieved.append(distractor_context)
+                # Assign target
+                if trial_type == 'match':
+                    target.append([1,0])
+                else:
+                    target.append([0,1])
+                current_task.append([task_input])
 
+    batch_size = len(target)
     training_set = {INPUTS: {network.nodes[FFN_STIMULUS_INPUT]: stim_current,
                              network.nodes[FFN_CONTEXT_INPUT]: context_current,
                              network.nodes[FFN_STIMULUS_RETRIEVED]: stim_retrieved,
                              network.nodes[FFN_CONTEXT_RETRIEVED]: context_retrieved,
                              network.nodes[FFN_TASK]: current_task},
                     TARGETS: {network.nodes[FFN_OUTPUT]:  target},
-                    EPOCHS: num_epochs}
+                    EPOCHS: num_epochs*batch_size}
 
-    batch_size = len(target)
-    print(f'num trials (batch_size): {len(target)}')
     return training_set, batch_size
 
 # ======================================== MODEL EXECUTION ============================================================
 
 def train_network(network,
                   learning_rate=LEARNING_RATE,
-                  num_epochs=NUM_EPOCHS):
-    print(f'constructing training_set for {network.name}...')
+                  num_epochs=NUM_EPOCHS,
+                  save_weights_to=None):
+    print(f'constructing training set for {network.name}...')
     training_set, batch_size = get_training_inputs(network=network,
                                                    num_epochs=num_epochs,
                                                    nback_levels=NBACK_LEVELS)
-    print(f'training_set constructed: {len(training_set)}')
-    print(f'\ntraining {network.name}...')
+    print(f'num training stimuli per training set (batch size): {batch_size}')
+    print(f'num training sets (num_epochs): {num_epochs}')
+    print(f'total num trials: {num_epochs*batch_size}')
+    print(f"\ntraining '{network.name}'...")
     import timeit
     start_time = timeit.default_timer()
     network.learn(inputs=training_set,
@@ -476,13 +478,14 @@ def train_network(network,
     stop_time = timeit.default_timer()
     print(f'{network.name} trained')
     print(f'training time: {stop_time-start_time}')
-    path = network.save()
-    print(f'saved weights sample: {network.nodes[FFN_HIDDEN].path_afferents[0].matrix.base[0][:3]}...')
-    network.load(path)
-    print(f'loaded weights sample: {network.nodes[FFN_HIDDEN].path_afferents[0].matrix.base[0][:3]}...')
+    path = network.save(filename=save_weights_to)
+    print(f'saved weights to: {save_weights_to}')
+    # print(f'saved weights sample: {network.nodes[FFN_HIDDEN].path_afferents[0].matrix.base[0][:3]}...')
+    # network.load(path)
+    # print(f'loaded weights sample: {network.nodes[FFN_HIDDEN].path_afferents[0].matrix.base[0][:3]}...')
 
 def run_model(model,
-              weights=None,
+              load_weights_from=None,
               context_drift_rate=CONTEXT_DRIFT_RATE,
               num_trials=NUM_TRIALS,
               report_output=REPORT_OUTPUT,
@@ -491,12 +494,14 @@ def run_model(model,
               ):
     ffn = nback_model.nodes[FFN_COMPOSITION]
     em = model.nodes[EM]
-    if weights:
-        print(f'nback_model loading {FFN_COMPOSITION} weights from {weights}...')
-        ffn.load(weights)
-    else:
-        print(f'nback_model loading {FFN_COMPOSITION} weights from {FFN_COMPOSITION}_matrix_wts.pnl (default)...')
+    if load_weights_from is None:  # Load weights from default file
+        print(f"nback_model loading '{FFN_COMPOSITION}' weights from {FFN_COMPOSITION}_matrix_wts.pnl (default)...")
         nback_model.nodes[FFN_COMPOSITION].load()
+    elif load_weights_from == INITIALIZER or not load_weights_from:  # Use weights initialized at construction
+        pass
+    else:  # Path for weights file provided in call
+        print(f"nback_model loading '{FFN_COMPOSITION}' weights from {load_weights_from}...")
+        ffn.load(load_weights_from)
     print('nback_model executing...')
     for nback_level in NBACK_LEVELS:
         model.run(inputs=get_run_inputs(model, nback_level, context_drift_rate, num_trials),
@@ -504,7 +509,7 @@ def run_model(model,
                   report_progress=report_progress,
                   animate=animate
                   )
-        # em.function.reset(np.zeros_like(em.memory)) # Reset episodic memory for new task
+        em.function.reset(np.zeros_like(em.memory[0])) # Reset episodic memory for new task
     # print("Number of entries in EM: ", len(model.nodes[EM].memory))
     assert len(model.nodes[EM].memory) == NUM_TRIALS*NUM_NBACK_LEVELS + 1 # extra one is for initializer
     # assert len(model.nodes[EM].memory) == NUM_TRIALS
@@ -515,6 +520,10 @@ def run_model(model,
 
 nback_model = construct_model()
 if TRAIN:
-    train_network(nback_model.nodes[FFN_COMPOSITION])
+    train_network(nback_model.nodes[FFN_COMPOSITION],
+                  save_weights_to='ffn.wts.pnl')
 if RUN:
-    run_model(nback_model)
+    run_model(nback_model,
+              load_weights_from='ffn.wts.pnl'
+              # load_weights_from=INITIALIZER
+              )
