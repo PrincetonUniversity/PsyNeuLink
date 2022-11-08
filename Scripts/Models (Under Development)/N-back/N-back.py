@@ -86,7 +86,7 @@ RETRIEVAL_CONTEXT_WEIGHT = 1-RETRIEVAL_STIM_WEIGHT # weighting of context field 
 DECISION_SOFTMAX_TEMP=1
 
 # Training parameters:
-NUM_EPOCHS= 1 # 6250    # nback-paper: 400,000 @ one trial per epoch = 6,250 @ 64 trials per epoch
+NUM_EPOCHS= 6250    # nback-paper: 400,000 @ one trial per epoch = 6,250 @ 64 trials per epoch
 LEARNING_RATE=0.01  # nback-paper: .001
 
 # Execution parameters:
@@ -518,8 +518,9 @@ def run_model(model,
         print('\n')
     print(f'nback_model done: {len(nback_model.results)} trials executed')
     if save_results_to:
-        np.save(model.results)
+        saved_results = np.save(save_results_to, model.results)
     print(f'results: \n{model.results}')
+    return saved_results
 
 nback_model = construct_model()
 if TRAIN:
@@ -528,8 +529,8 @@ if TRAIN:
                                   save_weights_to=weights_filename)
 if RUN:
     results_filename = f'nback.results_nep_{NUM_EPOCHS}_lr_{str(LEARNING_RATE).split(".")[1]}.pnl'
-    run_model(nback_model,
-              # load_weights_from='ffn.wts.pnl'
-              # load_weights_from=INITIALIZER
-              save_results_to= results_filename
-              )
+    saved_results = run_model(nback_model,
+                              # load_weights_from='ffn.wts.pnl'
+                              # load_weights_from=INITIALIZER
+                              save_results_to= results_filename
+                              )
