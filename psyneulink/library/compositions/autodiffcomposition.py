@@ -563,7 +563,7 @@ class AutodiffComposition(Composition):
                                                         report_num=report_num
                                                         )
 
-    @handle_external_context()
+    @handle_external_context(fallback_most_recent=True)
     def save(self, path:str, context=None):
         """Saves all parameters to the specified path (e.g. save('my_model.pt'))"""
         assert (str, "Must provide a path to save the model to!")
@@ -572,7 +572,7 @@ class AutodiffComposition(Composition):
         }
         torch.save(proj_state, path)
 
-    @handle_external_context()
+    @handle_external_context(fallback_most_recent=True)
     def load(self, path:str, context=None):
         state = torch.load(path)
         for projection in self.projections:
