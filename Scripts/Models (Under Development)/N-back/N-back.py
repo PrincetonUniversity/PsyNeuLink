@@ -517,8 +517,9 @@ def run_model(model,
     if REPORT_PROGRESS == ReportProgress.ON:
         print('\n')
     print(f'nback_model done: {len(nback_model.results)} trials executed')
+    saved_results = None
     if save_results_to:
-        saved_results = np.save(save_results_to, model.results)
+        saved_resulats = np.save(save_results_to, model.results)
     print(f'results: \n{model.results}')
     return saved_results
 
