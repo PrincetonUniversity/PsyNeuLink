@@ -55,10 +55,10 @@ TODO:
 """
 import enum
 
+import numpy as np
 from graph_scheduler import *
 
 from psyneulink import *
-import numpy as np
 
 # Settings for running script:
 TRAIN = False
@@ -465,39 +465,48 @@ def get_training_inputs(network, num_epochs, nback_levels):
 
 
 # BALANCED / SEQUENTIAL
-def get_run_inputs_balanced(model, nback_level,
-                            context_drift_rate=CONTEXT_DRIFT_RATE,
-                            num_stim=NUM_STIM,
-                            num_trials=NUM_TRIALS):
+def get_run_inputs(model, nback_level,
+                   context_drift_rate=CONTEXT_DRIFT_RATE,
+                   num_stim=NUM_STIM,
+                   num_trials=NUM_TRIALS,
+                   mini_block=True):
     """Construct set of stimulus inputs for run_model(), balancing across four conditions.
+    Trial_type assignments:
+      - trial_types are assigned to subseqs of nback_level+1 stimuli that are concatenated to form the full trial seq
+      - trial_type subseqs are constructed in get_stim_subseq_for_trial_type(), by randomly picking a target stimulus,
+          and then assigning the preceding stimuli in the subseq to conform the trial_type
+      - the balancing of trial_types is enforced *only* for the last stimulus in each set;
+          the others are inferred and may not be fully balanced across conditions
+          (depending on number of stimuli, this may be impossible).
+    Mini_blocks:
+      - if True (default) trials are sequenced in mini-blocks each of which contains one set of trials
+          for each trial_type; total num trials in a mini-block = nback_level+1 * num_trial_types
+      - if False, sampling of trial_types is balanced,
+          but order of presentation is randomized over the entire sequence
     """
+
     import random
     from enum import IntEnum
     assert nback_level in {2,3} # At present, only 2- and 3-back levels are supported
 
     stim_set = get_stim_set()
-    # trial_types = ['MATCH_NO_FOIL',
-    #                'MATCH_WITH_FOIL',
-    #                'NO_MATCH_NO_FOIL',
-    #                'NO_MATCH_WITH_FOIL']
-    # num_trial_types = len(trial_types)
     class trial_types(IntEnum):
         MATCH_NO_FOIL = enum.auto()       # AXA (2-back) or ABXA (3-back)
         MATCH_WITH_FOIL = enum.auto()     # AAA (2-back) or AAXA (3-back)
         NO_MATCH_NO_FOIL = enum.auto()    # AXB (2-back) or ABXC (3-back)
         NO_MATCH_WITH_FOIL = enum.auto()  # XAA (2-back) or ABXB (3-back)
-        NUM = enum.auto()
+    num_trial_types = len(trial_types)
 
-    def get_stim_seq_for_trial_type(trial_type):
+    def get_stim_subseq_for_trial_type(trial_type):
         if trial_type == trial_types.MATCH_NO_FOIL:
-            curr_stim = nback_preceding_stims[0]
+            return
         elif trial_type == trial_types.MATCH_WITH_FOIL:
             pass
         elif trial_type == trial_types.NO_MATCH_NO_FOIL:
             pass
         elif trial_type == trial_types.NO_MATCH_WITH_FOIL:
             pass
-        return curr_stim
+        return # FIX: XXX
 
     def get_trial_type_for_stim(trial_num, subseq, trial_type_seq):
         assert len(subseq) == nback_level+1, \
@@ -514,20 +523,28 @@ def get_run_inputs_balanced(model, nback_level,
             # Note: for 3back, this includes: BAXA, BXAA, and BAAA
             return trial_types.NO_MATCH_WITH_FOIL
 
-    num_sub_seqs = int(num_trials / trial_types.NUM)
-    extra_trials = num_trials % trial_types.NUM
+    num_sub_seqs = int(num_trials / num_trial_types)
+    extra_trials = num_trials % num_trial_types
 
-    # Construct balanced set of subseqs across conditions for num_trials / num_trial_types (may be short of num_trials)
-    seq_of_trial_type_subseqs = random.sample(range(trial_types.NUM)) * int(num_trials / trial_types.NUM)
+    # Construct seq of mini-blocks (subseqs) each containing one sample of each trial_type in a random order
+    #    note: this is done over number of mini-blocks that fit into num_trials;
+    #          remaining trials are randomly assigned trial_types below
+    seq_of_trial_type_subseqs = random.sample(range(num_trial_types),num_trial_types) \
+                                * (int(num_trials / (num_trial_types * (nback_level+1))))
+    if not mini_block:
+        # Randomize the order of trial types across the entire sequence:
+        random.shuffle(seq_of_trial_type_subseqs)
+
     stim_seq = [] = [None] * num_trials
     trial_type_seq = [None] * num_trials
     # Construct actual stimulus sequence by getting stimuli for each subseq, up to num_sub_seqs
-    #   note: the trial type only applies to the last trial of each subsequence;  trial_type of preceding ones set below
+    #   note: the trial type only applies (and a trial_type is only assigned) to the last trial of each subsequence;
+    #         trial_type of preceding ones set below on the full sequence of stimuli is assigned
     # stim_seq.append(get_stim_seq_for_trial_type(i) for i in seq_of_trial_type_subseqs) # <- CONDENSED VERSION
-    for i in range(num_sub_seqs):  # <- LOOP VERSION
-        stim_seq[i-nback_level:i] = get_stim_seq_for_trial_type(i)
+    for trial_type in seq_of_trial_type_subseqs:  # <- LOOP VERSION
+        stim_seq[i-nback_level:i] = get_stim_subseq_for_trial_type(trial_type)
     # Pad remainder to get to num_trials with randomly selected stimuli
-    stim_seq.append(random.sample(range(trial_types.NUM),extra_trials))
+    stim_seq.append(random.sample(range(num_trial_types),extra_trials))
     # Assign trial_types to first nback_level trials in each subseq (should be marked as None)
     for i in range(num_trials):
         if trial_type_seq[i] is None:
