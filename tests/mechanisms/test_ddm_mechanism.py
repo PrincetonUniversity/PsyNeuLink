@@ -258,6 +258,7 @@ def test_DDM_Integrator_Bogacz(benchmark, mech_mode, prng):
         T.parameters.random_state.set(_SeededPhilox([0]))
     ex = pytest.helpers.get_mech_execution(T, mech_mode)
 
+    ex(stim)
     val = ex(stim)[0]
     assert np.allclose(val, [1.0])
     if benchmark.enabled:
@@ -291,9 +292,9 @@ def test_DDM_Integrator_Bogacz(benchmark, mech_mode, prng):
 @pytest.mark.mechanism
 @pytest.mark.benchmark(group="DDM")
 @pytest.mark.parametrize("noise, expected", [
-    (0., 10),
-    (np.sqrt(0.5), 8.194383551861414),
-    (np.sqrt(2.0), 6.388767103722829),
+    (0., 20),
+    (np.sqrt(0.5), 18.40852795454561),
+    (np.sqrt(2.0), 16.817055909091223),
     ], ids=["0", "0.5", "2.0"])
 def test_DDM_noise(mech_mode, benchmark, noise, expected):
     T = DDM(
@@ -307,6 +308,7 @@ def test_DDM_noise(mech_mode, benchmark, noise, expected):
     )
     ex = pytest.helpers.get_mech_execution(T, mech_mode)
 
+    ex([10])
     val = ex([10])
     assert np.allclose(val[0][0], expected)
     if benchmark.enabled:
@@ -421,7 +423,7 @@ def test_DDM_input_fn():
 @pytest.mark.mechanism
 @pytest.mark.benchmark(group="DDM")
 @pytest.mark.parametrize("rate, expected", [
-    (5, 50), (5., 50), ([5], 50), (-5.0, -50),
+    (5, 100), (5., 100), ([5], 100), (-5.0, -100),
     ], ids=["int", "float", "list", "negative"])
 # ******
 # Should negative pass?
@@ -439,6 +441,7 @@ def test_DDM_rate(benchmark, rate, expected, mech_mode):
     )
     ex = pytest.helpers.get_mech_execution(T, mech_mode)
 
+    ex(stim)
     val = float(ex(stim)[0][0])
     assert val == expected
     if benchmark.enabled:
