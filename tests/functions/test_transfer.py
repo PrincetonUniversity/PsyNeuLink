@@ -70,10 +70,8 @@ def test_execute(func, variable, params, expected, benchmark, func_mode):
     f = func(default_variable=variable, **params)
     ex = pytest.helpers.get_func_execution(f, func_mode)
 
-    res = ex(variable)
+    res = benchmark(ex, variable)
     assert np.allclose(res, expected)
-    if benchmark.enabled:
-        benchmark(ex, variable)
 
 
 logistic_helper = RAND4 / (1 + np.exp(-(RAND1 * (test_var - RAND2)) + RAND3))
