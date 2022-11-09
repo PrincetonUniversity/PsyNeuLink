@@ -442,8 +442,9 @@ class TestIntegratorFunctions:
                                 function=FitzHughNagumoIntegrator())
         ex = pytest.helpers.get_mech_execution(I, mech_mode)
 
+        ex(var)
         val = ex(var)
-        assert np.allclose(val[0], [0.05127053])
+        assert np.allclose(val, [[0.10501801629915011], [0.10501801629915011], [0.10501801629915011]])
         if benchmark.enabled:
             benchmark(ex, var)
 
@@ -457,8 +458,11 @@ class TestIntegratorFunctions:
                                 function=FitzHughNagumoIntegrator)
         ex = pytest.helpers.get_mech_execution(I, mech_mode)
 
+        ex(var)
         val = ex(var)
-        assert np.allclose(val[0], [0.05127053, 0.15379818])
+        assert np.allclose(val, [[[0.10501801629915011, 0.3151109244983909]],
+                                 [[0.10501801629915011, 0.3151109244983909]],
+                                 [[0.10501801629915011, 0.3151109244983909]]])
         if benchmark.enabled:
             benchmark(ex, var)
 
@@ -602,8 +606,9 @@ class TestIntegratorFunctions:
         I = IntegratorMechanism()
         ex = pytest.helpers.get_mech_execution(I, mech_mode)
 
+        ex([10])
         val = ex([10])
-        assert np.allclose(val, [[5.0]])
+        assert np.allclose(val, [[7.5]])
         if benchmark.enabled:
             benchmark(ex, [10])
 
