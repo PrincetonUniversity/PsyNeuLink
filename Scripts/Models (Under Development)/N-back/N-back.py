@@ -463,7 +463,7 @@ def get_run_inputs(model, nback_level, context_drift_rate, num_trials):
 
 
 
-
+# BALANCED / SEQUENTIAL
 # def get_run_inputs_balanced(model, nback_level,
 #                             context_drift_rate=CONTEXT_DRIFT_RATE,
 #                             num_stim=NUM_STIM,
@@ -611,8 +611,7 @@ def get_run_inputs(model, nback_level, context_drift_rate, num_trials):
 
 
 
-
-
+# BASED BLOCKED
 
 # def FULL_get_run_inputs(model, nback_level, context_drift_rate, num_trials):
 #     """Construct set of stimulus inputs for run_model()
