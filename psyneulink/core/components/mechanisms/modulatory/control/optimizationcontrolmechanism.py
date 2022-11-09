@@ -3182,7 +3182,7 @@ class OptimizationControlMechanism(ControlMechanism):
             assert self.parameters.comp_execution_mode._get(context) == "Python"
             exec_mode = pnlvm.ExecutionMode.Python
 
-            predicted_input = self.parameters.state_feature_values._get(context)
+            predicted_input = state_features = self.get_inputs() if self.get_inputs() else self.parameters.state_feature_values._get(context)
             ret_val = self.agent_rep.evaluate(predicted_input,
                                               control_allocation,
                                               self.parameters.num_trials_per_estimate._get(context),
