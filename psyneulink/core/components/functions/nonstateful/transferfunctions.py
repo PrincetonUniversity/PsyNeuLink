@@ -2697,8 +2697,47 @@ class SoftMax(TransferFunction):
 
         return builder
 
+    def _gen_llvm_function_derivative_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+        assert "derivative" in tags
+        forward_tags = tags.difference({"derivative"})
+        all_out = builder.alloca(arg_out.type.pointee)
+        builder = self._gen_llvm_function_body(ctx, builder, params, state, arg_in, all_out, output_type=ALL, tags=forward_tags)
+
+        max_pos_ptr = builder.alloca(ctx.int32_ty)
+        builder.store(max_pos_ptr.type.pointee(-1), max_pos_ptr)
+        max_val_ptr = builder.alloca(arg_out.type.pointee.element)
+        builder.store(max_val_ptr.type.pointee(float("NaN")), max_val_ptr)
+
+        with pnlvm.helpers.array_ptr_loop(builder, all_out, id="max") as (b, idx):
+            val_ptr = b.gep(all_out, [ctx.int32_ty(0), idx])
+            val = b.load(val_ptr)
+            max_val = b.load(max_val_ptr)
+            new_max = b.fcmp_unordered(">", val, max_val)
+            with b.if_then(new_max):
+                b.store(val, max_val_ptr)
+                b.store(idx, max_pos_ptr)
+
+        max_val = builder.load(max_val_ptr)
+        max_pos = builder.load(max_pos_ptr)
+
+        with pnlvm.helpers.array_ptr_loop(builder, all_out, id="derivative") as (b, idx):
+            val_ptr = b.gep(all_out, [ctx.int32_ty(0), idx])
+            val = b.load(val_ptr)
+            is_max_pos = b.icmp_unsigned("==", idx, max_pos)
+
+            d = b.select(is_max_pos, val.type(1), val.type(0))
+            dv = b.fsub(d, max_val)
+            val = b.fmul(val, dv)
+
+            out_ptr = b.gep(arg_out, [ctx.int32_ty(0), idx])
+            b.store(val, out_ptr)
+
+        return builder
+
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, output_type=None, *, tags:frozenset):
         output_type = self.output if output_type is None else output_type
+        if "derivative" in tags:
+            return self._gen_llvm_function_derivative_body(ctx, builder, params, state, arg_in, arg_out, tags=tags)
 
         if self.parameters.per_item.get():
             assert isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType)
@@ -2781,8 +2820,8 @@ class SoftMax(TransferFunction):
         """
 
         output_type = self._get_current_parameter_value(OUTPUT_TYPE, context)
-        size = len(output)
-        sm = self.function(output, params={OUTPUT_TYPE: ALL}, context=context)
+        size = len(input)
+        sm = self.function(input, params={OUTPUT_TYPE: ALL}, context=context)
         sm = np.squeeze(sm)
 
         if output_type == ALL:
@@ -2800,7 +2839,7 @@ class SoftMax(TransferFunction):
             # Return 1d array of derivatives for max element (i.e., the one chosen by SoftMax)
             derivative = np.empty(size)
             # Get the element of output returned as non-zero when output_type is not ALL
-            index_of_max = int(np.where(output == np.max(output))[0][0])
+            index_of_max = int(np.where(sm == np.max(sm))[0])
             max_val = sm[index_of_max]
             for i in range(size):
                 if i == index_of_max:
