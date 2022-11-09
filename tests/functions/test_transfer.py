@@ -86,19 +86,11 @@ derivative_test_data = [
     (Functions.Tanh, test_var, {'gain':RAND1, 'bias':RAND2, 'offset':RAND3, 'scale':RAND4}, tanh_derivative_helper),
 ]
 
-derivative_names = [
-    "LINEAR_DERIVATIVE",
-    "EXPONENTIAL_DERIVATIVE",
-    "LOGISTIC_DERIVATIVE",
-    "RELU_DERIVATIVE",
-    "TANH_DERIVATIVE",
-]
-
 @pytest.mark.function
 @pytest.mark.transfer_function
 @pytest.mark.benchmark
-@pytest.mark.parametrize("func, variable, params, expected", derivative_test_data, ids=derivative_names)
-def test_execute_derivative(func, variable, params, expected, benchmark, func_mode):
+@pytest.mark.parametrize("func, variable, params, expected", derivative_test_data, ids=lambda x: getattr(x, 'name', None))
+def test_transfer_derivative(func, variable, params, expected, benchmark, func_mode):
     f = func(default_variable=variable, **params)
     benchmark.group = "TransferFunction " + func.componentName + " Derivative"
     if func_mode == 'Python':
