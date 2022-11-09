@@ -62,8 +62,6 @@ test_data = [
 @pytest.mark.benchmark
 @pytest.mark.parametrize("func, variable, params, expected", test_data)
 def test_execute(func, variable, params, expected, benchmark, func_mode):
-    if 'Angle' in func.componentName and func_mode != 'Python':
-        pytest.skip('Angle not yet supported by LLVM or PTX')
     benchmark.group = "TransferFunction " + func.componentName
     f = func(default_variable=variable, **params)
     ex = pytest.helpers.get_func_execution(f, func_mode)

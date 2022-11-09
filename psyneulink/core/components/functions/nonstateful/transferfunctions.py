@@ -1741,27 +1741,6 @@ class Angle(TransferFunction):  # ----------------------------------------------
             prefs=prefs,
         )
 
-    # def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
-    #     ptri = builder.gep(vi, [ctx.int32_ty(0), index])
-    #     ptro = builder.gep(vo, [ctx.int32_ty(0), index])
-    #     slope_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SLOPE)
-    #     intercept_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, INTERCEPT)
-    #
-    #     slope = pnlvm.helpers.load_extract_scalar_array_one(builder, slope_ptr)
-    #     intercept = pnlvm.helpers.load_extract_scalar_array_one(builder, intercept_ptr)
-    #
-    #
-    #     if "derivative" in tags:
-    #         # f'(x) = m
-    #         val = slope
-    #     else:
-    #         # f(x) = mx + b
-    #         val = builder.load(ptri)
-    #         val = builder.fmul(val, slope)
-    #         val = builder.fadd(val, intercept)
-    #
-    #     builder.store(val, ptro)
-
     def _function(self,
                  variable=None,
                  context=None,
@@ -1818,12 +1797,56 @@ class Angle(TransferFunction):  # ----------------------------------------------
         angle[0] = np.cos(value[0])
         prod = np.product([np.sin(value[k]) for k in range(1, dim - 1)])
         n_prod = prod
-        for j in range(dim - 2):
-            n_prod /= np.sin(value[j + 1])
-            amt = n_prod * np.cos(value[j + 1])
-            angle[j + 1] = amt
+        for j in range(1, dim - 1):
+            n_prod /= np.sin(value[j])
+            amt = n_prod * np.cos(value[j])
+            angle[j] = amt
         angle[dim - 1] = prod
         return angle
+
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+        assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
+        assert isinstance(arg_out.type.pointee, pnlvm.ir.ArrayType)
+        assert len(arg_in.type.pointee) + 1 == len(arg_out.type.pointee)
+
+        # The first cos
+        res0_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        val0_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        val0 = builder.load(val0_ptr)
+        cos_f = ctx.get_builtin("cos", [val0.type])
+        cos_val0 = builder.call(cos_f, [val0])
+        builder.store(cos_val0, res0_ptr)
+
+        # calculate suffix product
+        sin_f = ctx.get_builtin("sin", [val0.type])
+        prod_ptr = builder.alloca(val0.type)
+        builder.store(prod_ptr.type.pointee(1.0), prod_ptr)
+
+        dim_m1 = ctx.int32_ty(len(arg_out.type.pointee) - 1)
+        with pnlvm.helpers.for_loop(builder, dim_m1.type(1), dim_m1, dim_m1.type(1), id="suff_prod") as (b, idx):
+            #revert the index to go from the end
+            idx = b.sub(dim_m1, idx)
+
+            prod = b.load(prod_ptr)
+            val_ptr = b.gep(arg_in, [ctx.int32_ty(0), idx])
+            val = b.load(val_ptr)
+
+            # calculate suffix product of sin(input)
+            val_sin = b.call(sin_f, [val])
+            new_prod = b.fmul(prod, val_sin)
+            b.store(new_prod, prod_ptr)
+
+            # output value is suffix product * cos(val)
+            val_cos = b.call(cos_f, [val])
+            res = b.fmul(prod, val_cos)
+            res_ptr = b.gep(arg_out, [ctx.int32_ty(0), idx])
+            b.store(res, res_ptr)
+
+        # The last element is just the suffix product * 1
+        last_ptr = builder.gep(arg_out, [ctx.int32_ty(0), dim_m1])
+        builder.store(builder.load(prod_ptr), last_ptr)
+
+        return builder
 
     # @handle_external_context()
     # def derivative(self, input=None, output=None, context=None):
