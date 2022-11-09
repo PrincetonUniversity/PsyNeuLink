@@ -1123,7 +1123,6 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         #                          then need to assign it to the default value
         # If learning_rate was not specified for instance or composition, use default value
         learning_rate = self._get_current_parameter_value(LEARNING_RATE, context)
-        # learning_rate = self.learning_rate
         if learning_rate is None:
             learning_rate = self.defaults.learning_rate
         #

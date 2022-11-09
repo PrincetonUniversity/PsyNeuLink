@@ -3813,6 +3813,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._partially_added_nodes = []
 
         self.disable_learning = disable_learning
+        self._runtime_learning_rate = None
 
         # graph and scheduler status attributes
         self.graph_consistent = True  # Tracks if Composition is in runnable state (no dangling projections (what else?)
@@ -10178,6 +10179,7 @@ _
             targets: tc.optional(dict) = None,
             num_trials: tc.optional(int) = None,
             epochs: int = 1,
+            learning_rate = None,
             minibatch_size: int = 1,
             patience: tc.optional(int) = None,
             min_delta: int = 0,
@@ -10225,6 +10227,12 @@ _
 
             epochs : int (default=1)
                 specifies the number of training epochs (that is, repetitions of the batched input set) to run with
+
+            learning_rate : float : default None
+                specifies the learning_rate used by all `learning pathways <Composition_Learning_Pathway>`
+                when the Composition's learn method is called.  This overrides the `learning_rate specified
+                for any individual Pathways at construction, but only applies for the current execution of
+                the learn method.
 
             minibatch_size : int (default=1)
                 specifies the size of the minibatches to use. The input trials will be batched and run, after which
@@ -10315,6 +10323,7 @@ _
             targets=targets,
             num_trials=num_trials,
             epochs=epochs,
+            learning_rate=learning_rate,
             minibatch_size=minibatch_size,
             patience=patience,
             min_delta=min_delta,
@@ -11210,7 +11219,7 @@ _
             return self.get_output_values(context)
 
     def __call__(self, *args, **kwargs):
-        """Execute Composition of any args are provided;  else simply return results of last execution.
+        """Execute Composition if any args are provided; else simply return results of last execution.
         This allows Composition, after it has been constructed, to be run simply by calling it directly.
         """
         if not args and not kwargs:

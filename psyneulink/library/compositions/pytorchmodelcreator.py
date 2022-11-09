@@ -60,7 +60,8 @@ class PytorchModelCreator(torch.nn.Module):
                 proj_recv.add_afferent(new_proj)
                 self.projection_map[projection] = new_proj
                 self.projections.append(new_proj)
-                self.params.append(new_proj.matrix)
+
+        self._regenerate_paramlist()
 
         c = Context()
         try:
@@ -80,6 +81,11 @@ class PytorchModelCreator(torch.nn.Module):
         composition.scheduler._delete_counts(c.execution_id)
 
     __deepcopy__ = get_deepcopy_with_shared(shared_types=(Component, ComponentsMeta))
+
+    def _regenerate_paramlist(self):
+        self.params = nn.ParameterList()
+        for proj in self.projections:
+            self.params.append(proj.matrix)
 
     # generates llvm function for self.forward
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
