@@ -1579,12 +1579,12 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         # Maxnum for some reason needs full function prototype
         max_f = ctx.get_builtin("maxnum", [ctx.float_ty])
         var = builder.load(ptri)
+        val = builder.fsub(var, bias)
 
         if "derivative" in tags:
-            predicate = builder.fcmp_ordered('>', var, var.type(0))
+            predicate = builder.fcmp_ordered('>', val, val.type(0))
             val = builder.select(predicate, gain, builder.fmul(gain, leak))
         else:
-            val = builder.fsub(var, bias)
             val1 = builder.fmul(val, gain)
             val2 = builder.fmul(val1, leak)
 
@@ -1593,7 +1593,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         builder.store(val, ptro)
 
     @handle_external_context()
-    def derivative(self, input, output=None, context=None):
+    def derivative(self, variable, output=None, context=None):
         """
         derivative(input)
 
@@ -1613,18 +1613,13 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         """
         gain = self._get_current_parameter_value(GAIN, context)
         leak = self._get_current_parameter_value(LEAK, context)
-        # MODIFIED 11/5/22 OLD:
-        input = np.asarray(input).copy()
-        input[input>0] = gain
-        input[input<=0] = gain * leak
-        # # MODIFIED 11/5/22 NEW:
-        # bias = self._get_current_parameter_value(BIAS, context)
-        # input = np.asarray(input).copy()
-        # input[(input - bias) > 0] = gain
-        # input[(input - bias) <= 0] = gain * leak
-        # MODIFIED 11/5/22 END
+        bias = self._get_current_parameter_value(BIAS, context)
 
-        return input
+        value = np.empty_like(variable)
+        value[(variable - bias) > 0] = gain
+        value[(variable - bias) <= 0] = gain * leak
+
+        return value
 
 # **********************************************************************************************************************
 #                                                    Angle
