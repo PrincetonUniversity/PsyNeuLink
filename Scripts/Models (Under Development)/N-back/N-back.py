@@ -508,24 +508,11 @@ def get_run_inputs_balanced(model, nback_level,
             return trial_types.MATCH_NO_FOIL
         elif subseq[-1] == subseq[0] and subseq[-1] in subseq[0:-1]:
             return trial_types.MATCH_WITH_FOIL
-        FIX THESE:
-        elif trial_type == trial_types.NO_MATCH_NO_FOIL:
-            pass
-        elif trial_type == trial_types.NO_MATCH_WITH_FOIL:
-            pass
-        return curr_stim
-
-
-
-    # # Construct random but balanced seqeuence of conditions of length num_trials
-    # # - first construct fully balanced sets of num_trial_types
-    # trial_type_seq = list(range(0,num_trials) * int(num_trials / num_trial_types))
-    # # - then pad remainder with randomly selected trial_types
-    # trial_type_seq.append(random.sample(range(0,num_trial_types), num_trials % num_trial_types))
-    # # - then fully randomize the list (note: no blocking)
-    # random.shuffle(trial_type_seq)
-    # # - finally, mark the initial nback_level-1 trials for padding
-    # trial_type_seq[:nback_level-1] = [None] * nback_level-1
+        elif subseq[-1] not in subseq[0:-1]:
+            return trial_types.NO_MATCH_NO_FOIL
+        if subseq[-1] != subseq[0] and subseq[-1] in subseq[0:-1]:
+            # Note: for 3back, this includes: BAXA, BXAA, and BAAA
+            return trial_types.NO_MATCH_WITH_FOIL
 
     num_sub_seqs = int(num_trials / trial_types.NUM)
     extra_trials = num_trials % trial_types.NUM
@@ -536,19 +523,15 @@ def get_run_inputs_balanced(model, nback_level,
     trial_type_seq = [None] * num_trials
     # Construct actual stimulus sequence by getting stimuli for each subseq, up to num_sub_seqs
     #   note: the trial type only applies to the last trial of each subsequence;  trial_type of preceding ones set below
-    # stim_seq.append(get_stim_seq_for_trial_type(i) for i in seq_of_trial_type_subseqs) # <- FIX: CONDENSED VERSION
-    for i in range(num_sub_seqs):  # <- FIX: LOOP VERSION
+    # stim_seq.append(get_stim_seq_for_trial_type(i) for i in seq_of_trial_type_subseqs) # <- CONDENSED VERSION
+    for i in range(num_sub_seqs):  # <- LOOP VERSION
         stim_seq[i-nback_level:i] = get_stim_seq_for_trial_type(i)
     # Pad remainder to get to num_trials with randomly selected stimuli
     stim_seq.append(random.sample(range(trial_types.NUM),extra_trials))
     # Assign trial_types to first nback_level trials in each subseq (should be marked as None)
     for i in range(num_trials):
-        stim_seq[i] = stim_seq[i] or get_trial_type_for_stim(i,
-                                                             stim_seq[i-nback_level,i],
-                                                             trial_type_seq)
-
-
-    # FIX: ASSIGN TRIAL TYPES FOR INITIAL NBACK_LEVEL IN EACH SUBSEQ
+        if trial_type_seq[i] is None:
+            trial_type_seq[i] = get_trial_type_for_stim(i, stim_seq[i-nback_level,i], trial_type_seq)
 
     # -------------------
 
