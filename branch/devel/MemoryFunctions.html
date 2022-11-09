@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MemoryFunctions &mdash; PsyNeuLink 0.12.1.0+51.ge74105590 documentation</title>
+  <title>MemoryFunctions &mdash; PsyNeuLink 0.12.1.0+60.g1be8e5d83 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.12.1.0+51
+                  0.12.1.0+60
                 </div>
               
             
@@ -805,7 +805,7 @@ and deleting (<a class="reference internal" href="#psyneulink.core.components.fu
 <p id="contentaddressablememory-structure"><strong>Structure</strong></p>
 <p>An entry is stored and retrieved as an array containing a set of <a class="reference internal" href="EpisodicMemoryMechanism.html#episodicmemorymechanism-memory-fields"><span class="std std-ref">fields</span></a>
 each of which is a 1d array.  An array containing such entries can be used to initialize the contents of <a class="reference internal" href="#id0" title="psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> by providing it in the <strong>initializer</strong> argument of the ContentAddressableMemory’s
-constructor, or in a call to its  <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.reset" title="psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.reset"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">reset</span></code></a> method.  The current contents of <a class="reference internal" href="#id0" title="psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> can be inspected using the <a class="reference internal" href="#id0" title="psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> attribute,
+constructor, or in a call to its <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.reset" title="psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.reset"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">reset</span></code></a> method.  The current contents of <a class="reference internal" href="#id0" title="psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> can be inspected using the <a class="reference internal" href="#id0" title="psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> attribute,
 which returns a list containing the current entries, each as a list containing all fields for that entry.  The
 <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.memory_num_fields" title="psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.memory_num_fields"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory_num_fields</span></code></a> contains the number of fields expected for each
 entry, <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.memory_field_shapes" title="psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.memory_field_shapes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory_field_shapes</span></code></a> their shapes, and <a class="reference internal" href="#id11" title="psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.memory_num_entries"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory_num_entries</span></code></a> the total number of entries in <a class="reference internal" href="#id0" title="psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>.</p>

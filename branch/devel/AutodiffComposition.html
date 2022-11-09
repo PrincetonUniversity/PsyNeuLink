@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutodiffComposition &mdash; PsyNeuLink 0.12.1.0+51.ge74105590 documentation</title>
+  <title>AutodiffComposition &mdash; PsyNeuLink 0.12.1.0+60.g1be8e5d83 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.12.1.0+51
+                  0.12.1.0+60
                 </div>
               
             
@@ -291,9 +291,10 @@ simple AutodiffComposition, specify its inputs and targets, and run it with lear
 </div>
 <section id="logging">
 <span id="autodiffcomposition-logging"></span><h3>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h3>
-<p>Logging in AutodiffCompositions follows the same procedure as <a class="reference internal" href="Log.html"><span class="doc">logging in a Composition</span></a>. However, since an AutodiffComposition internally converts all of its mechanisms to an equivalent PyTorch model,
-then its inner components are not actually executed. This means that there is limited support for logging parameters of components inside an AutodiffComposition;
-Currently, the only supported parameters are:</p>
+<p>Logging in AutodiffCompositions follows the same procedure as <a class="reference internal" href="Log.html"><span class="doc">logging in a Composition</span></a>.
+However, since an AutodiffComposition internally converts all of its mechanisms to an equivalent PyTorch model,
+then its inner components are not actually executed. This means that there is limited support for
+logging parameters of components inside an AutodiffComposition; Currently, the only supported parameters are:</p>
 <ol class="arabic simple">
 <li><p>the <a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter of Projections</p></li>
 <li><p>the <a class="reference internal" href="ControlProjection.html#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.value" title="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> parameter of its inner components</p></li>
@@ -325,7 +326,7 @@ See <a class="reference internal" href="Composition.html#composition-class-refer
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>learning_rate</strong> (<em>float : default 0.001</em>) – the learning rate, which is passed to the optimizer.</p></li>
+<li><p><strong>learning_rate</strong> (<em>float : default 0.001</em>) – the learning rate passed to the optimizer if none is specified in the learn method of the AutodiffComposition.</p></li>
 <li><p><strong>disable_learning</strong> (<em>bool: default False</em>) – specifies whether the AutodiffComposition should disable learning when run in <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learning</span> <span class="pre">mode</span></code></a>.</p></li>
 <li><p><strong>optimizer_type</strong> (<em>str : default 'sgd'</em>) – the kind of optimizer used in training. The current options are ‘sgd’ or ‘adam’.</p></li>
 <li><p><strong>weight_decay</strong> (<em>float : default 0</em>) – specifies the L2 penalty (which discourages large weights) used by the optimizer.</p></li>
@@ -342,7 +343,7 @@ arguments from initialization.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._update_learning_parameters">
 <span class="sig-name descname"><span class="pre">_update_learning_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._update_learning_parameters" title="Permalink to this definition">¶</a></dt>
-<dd><p>Updates parameters based on trials ran since last update.</p>
+<dd><p>Updates parameters based on trials run since last update.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -401,6 +402,10 @@ specification.  However, <strong>num_trials</strong> can be used to enforce an e
 if it is greater than there are inputs then inputs will be repeated (see <a class="reference internal" href="Composition.html#composition-execution-inputs"><span class="std std-ref">Composition Inputs</span></a>
 for additional information).</p></li>
 <li><p><strong>epochs</strong> (<em>int</em><em> (</em><em>default=1</em><em>)</em>) – specifies the number of training epochs (that is, repetitions of the batched input set) to run with</p></li>
+<li><p><strong>learning_rate</strong> (<em>float : default None</em>) – specifies the learning_rate used by all <a class="reference internal" href="Composition.html#composition-learning-pathway"><span class="std std-ref">learning pathways</span></a>
+when the Composition’s learn method is called.  This overrides the <a href="#id2"><span class="problematic" id="id3">`</span></a>learning_rate specified
+for any individual Pathways at construction, but only applies for the current execution of
+the learn method.</p></li>
 <li><p><strong>minibatch_size</strong> (<em>int</em><em> (</em><em>default=1</em><em>)</em>) – specifies the size of the minibatches to use. The input trials will be batched and run, after which
 learning mechanisms with learning mode TRIAL will update weights</p></li>
 <li><p><strong>randomize_minibatch</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – specifies whether the order of the input trials should be randomized on each epoch</p></li>
@@ -485,6 +490,53 @@ details and <a class="reference internal" href="Report.html#psyneulink.core.comp
 <li><p><em>are from a (potentially nested) Node with NodeRole.PROBE in its enclosing Composition.</em></p></li>
 </ul>
 </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves all weight matrices for all MappingProjections in the AutodiffComposition</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>Path</em><em>, </em><em>PosixPath</em><em> or </em><em>str : default None</em>) – path specification; must be a legal path specification in the filesystem.</p></li>
+<li><p><strong>directory</strong> (str : default <code class="docutils literal notranslate"><span class="pre">current</span> <span class="pre">working</span> <span class="pre">directory</span></code>) – directory where <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrices</span></code></a> for all MappingProjections
+in the AutodiffComposition are saved.</p></li>
+<li><p><strong>filename</strong> (str : default <code class="docutils literal notranslate"><span class="pre">&lt;name</span> <span class="pre">of</span> <span class="pre">AutodiffComposition&gt;_matrix_wts.pnl</span></code>) – filename in which <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrices</span></code></a> for all MappingProjections
+in the AutodiffComposition are saved.</p></li>
+<li><p><strong>note::</strong> (<em>.</em>) – Matrices are saved in
+<a class="reference external" href="https://pytorch.org/tutorials/beginner/saving_loading_models.html">PyTorch state_dict</a> format.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Path</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.load">
+<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads all weights matrices for all MappingProjections in the AutodiffComposition from file
+:type path: <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">PosixPath</span></code>]
+:param path: Path for file in which <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrices</span></code></a> are stored.</p>
+<blockquote>
+<div><p>This must be a legal PosixPath object; if it is specified <strong>directory</strong> and <strong>filename</strong> are ignored.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>directory</strong> (str : default <code class="docutils literal notranslate"><span class="pre">current</span> <span class="pre">working</span> <span class="pre">directory</span></code>) – directory where <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrices</span></code></a> are stored.</p></li>
+<li><p><strong>filename</strong> (str : default <code class="docutils literal notranslate"><span class="pre">&lt;name</span> <span class="pre">of</span> <span class="pre">AutodiffComposition&gt;_matrix_wts.pnl</span></code>) – name of file in which <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrices</span></code></a> are stored.</p></li>
+<li><p><strong>note::</strong> (<em>.</em>) – <p>Matrices must be stored in
+<a class="reference external" href="https://pytorch.org/tutorials/beginner/saving_loading_models.html">PyTorch state_dict</a> format.</p>
+</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
