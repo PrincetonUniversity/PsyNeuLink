@@ -43,6 +43,7 @@ TODO:
               - fix: state_dict with weights (still needed)
           - get empirical stimulus sequences (still needed)
           - put N-back script (with pointer to latest version on PNL) in nback-paper repo
+    - train_network() and run_model(): refactor to take inputs and trial_types, and training_set, respectively
     - fix: get rid of objective_mechanism (see "VERSION *WITHOUT* ObjectiveMechanism" under control(...)
     - fix: warnings on run
     - complete documentation in BeukersNbackModel.rst
@@ -520,21 +521,51 @@ def get_run_inputs(model, nback_level,
 # ======================================== MODEL EXECUTION ============================================================
 
 def train_network(network,
+                  training_set=None,
+                  minibatch_size=None,
                   learning_rate=LEARNING_RATE,
                   num_epochs=NUM_EPOCHS,
                   save_weights_to=None):
+    """Trains the network on trarining set.
+
+    Arguments
+    ---------
+    network: AutodiffComposition
+        specified the network to be trained;  this must be an `AutodiffComposition`.
+    training_set: dict : default None,
+        specifies inputs (see `Composition_Input_Dictionary`), including targets (`Composition_Target_Inputs`)
+        to use for training;  these are constructed in a call to get_training_inputs() if not specified here.
+    minibatch_size: int : default None,
+        specified number of inputs that will be presented within a single training epoch
+        (i.e. over which weight changes are aggregated and applied);  this is determined by the call to
+        get_training_inputs() if **training_set** is not specified explicitly.
+    learning_rate: float : default LEARNING_RATE
+        specifies learning_rate to use for current training;  this overrides the value of `learning_rate
+        <AutodiffComposition.learning_rate>` specified in construction of the network.  If None is specified
+         here, either the value specified at construction, or the default for `AutodiffComposition
+         <AutodiffComposition.learning_rate>` is used.
+    num_epochs: int : default NUM_EPOCHS,
+        specifies number of training epochs (i.e., sets of minibatchs) to execute during training.
+    save_weights_to: Path : default None
+        specifies location to store weights at end of training.
+
+    Returns
+    -------
+    Path containing saved weights for matrices of feedforward Projections in network.
+    """
     print(f"constructing training set for '{network.name}'...")
-    training_set, batch_size = get_training_inputs(network=network,
-                                                   num_epochs=num_epochs,
-                                                   nback_levels=NBACK_LEVELS)
-    print(f'num training stimuli per training set (batch size): {batch_size}')
+    if training_set == None:
+        training_set, minibatch_size = get_training_inputs(network=network,
+                                                           num_epochs=num_epochs,
+                                                           nback_levels=NBACK_LEVELS)
+    print(f'num training stimuli per training set (minibatch size): {minibatch_size}')
     print(f'num training sets (num_epochs): {num_epochs}')
-    print(f'total num trials: {num_epochs*batch_size}')
+    print(f'total num trials: {num_epochs*minibatch_size}')
     print(f"\ntraining '{network.name}'...")
     import timeit
     start_time = timeit.default_timer()
     network.learn(inputs=training_set,
-                  minibatch_size=batch_size,
+                  minibatch_size=minibatch_size,
                   report_progress=REPORT_PROGRESS,
                   # report_learning=REPORT_LEARNING,
                   learning_rate=learning_rate,
