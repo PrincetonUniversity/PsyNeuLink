@@ -694,9 +694,11 @@ if TRAIN:
     saved_weights = train_network(nback_model.nodes[FFN_COMPOSITION],
                                   save_weights_to=weights_filename)
 if RUN:
+    from pathlib import Path
+    import os
     results_filename = f'nback.results_nep_{NUM_EPOCHS}_lr_{str(LEARNING_RATE).split(".")[1]}.pnl'
     results = run_model(nback_model,
-                        # load_weights_from='ffn.wts.pnl'
+                        load_weights_from=Path(os.getcwd().join('ffn.wts_nep_6250.lr_01.pnl')),
                         # load_weights_from=INITIALIZER
                         save_results_to= results_filename)
 if ANALYZE:
