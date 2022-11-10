@@ -504,6 +504,11 @@ def get_run_inputs(model, nback_level,
                 assert trial_type_seq[j]==None, f"trial_type should still be None for trial {j}."
                 trial_type_seq[j] = get_trial_type_for_stim(stim_seq[i-subseq_size:i])
                 assert True
+
+        trial_type_counts = [None] * num_trial_types
+        for i in range(num_trial_types):
+            trial_type_counts[i] = trial_type_seq.count(i)
+
         return(stim_seq, trial_type_seq)
 
     def get_input_sequence(nback_level, num_trials=NUM_TRIALS):

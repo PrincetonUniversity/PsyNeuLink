@@ -82,13 +82,10 @@ def test_grid_search(obj_func, metric, normalize, direction, selection, benchmar
                                 seed=0, save_values=False)
     EX = pytest.helpers.get_func_execution(f, func_mode)
 
-    res = EX(variable)
+    res = benchmark(EX, variable)
 
     assert np.allclose(res[0], result[0])
     assert np.allclose(res[1], result[1])
     if func_mode == 'Python':
         assert np.allclose(res[2], result[2])
         assert np.allclose(res[3], result[3])
-
-    if benchmark.enabled:
-        benchmark(EX, variable)

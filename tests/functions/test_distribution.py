@@ -122,12 +122,9 @@ def test_execute(func, variable, params, prng, llvm_skip, expected, benchmark, f
         f.parameters.random_state.set(prng([0]))
 
     ex = pytest.helpers.get_func_execution(f, func_mode)
-    res = ex(variable)
+    res = benchmark(ex, variable)
 
     if pytest.helpers.llvm_current_fp_precision() == 'fp32':
         assert np.allclose(res, expected)
     else:
         np.testing.assert_allclose(res, expected)
-
-    if benchmark.enabled:
-        benchmark(ex, variable)

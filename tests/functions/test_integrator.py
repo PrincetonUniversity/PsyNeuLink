@@ -191,13 +191,10 @@ def test_execute(func, func_mode, variable, noise, params, benchmark):
 
     ex(variable)
     ex(variable)
-    res = ex(variable)
+    res = benchmark(ex, variable)
     expected = func[1](f.initializer, variable, 3, noise, **params)
     for r, e in zip(res, expected):
         assert np.allclose(r, e)
-
-    if benchmark.enabled:
-        benchmark(ex, variable)
 
 
 def test_integrator_function_no_default_variable_and_params_len_more_than_1():

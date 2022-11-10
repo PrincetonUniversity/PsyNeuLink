@@ -52,11 +52,9 @@ def test_with_dictionary_memory(variable, func, params, expected, benchmark, mec
     EX = pytest.helpers.get_mech_execution(m, mech_mode)
 
     EX(variable)
-    res = EX(variable)
+    res = benchmark(EX, variable)
     assert np.allclose(res[0], expected[0])
     assert np.allclose(res[1], expected[1])
-    if benchmark.enabled:
-        benchmark(EX, variable)
 
 
 # TEST WITH ContentAddressableMemory ***********************************************************************************

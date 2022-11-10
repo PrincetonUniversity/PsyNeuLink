@@ -39,7 +39,7 @@ class TestLCA:
 
         #  - - - - - - - - - - - - - -  - - - - - - - - - - - -
 
-        C.run(inputs={T: [1.0]}, num_trials=3, execution_mode=comp_mode)
+        benchmark(C.run, inputs={T: [1.0]}, num_trials=3, execution_mode=comp_mode)
 
         # - - - - - - - TRIAL 1 - - - - - - -
 
@@ -56,9 +56,7 @@ class TestLCA:
         # new_transfer_input = 0.265 + ( 0.5 * 0.265 + 3.0 * 0.53 + 0.0 + 1.0)*0.1 + 0.0    =    0.53725
         # f(new_transfer_input) = 0.53725 * 2.0 = 1.0745
 
-        assert np.allclose(C.results, [[[0.2]], [[0.51]], [[0.9905]]])
-        if benchmark.enabled:
-            benchmark(C.run, inputs={T: [1.0]}, num_trials=3, execution_mode=comp_mode)
+        assert np.allclose(C.results[:3], [[[0.2]], [[0.51]], [[0.9905]]])
 
     @pytest.mark.composition
     @pytest.mark.lca_mechanism
@@ -91,7 +89,7 @@ class TestLCA:
 
         #  - - - - - - - - - - - - - -  - - - - - - - - - - - -
 
-        C.run(inputs={T: [1.0, 2.0]}, num_trials=3, execution_mode=comp_mode)
+        benchmark(C.run, inputs={T: [1.0, 2.0]}, num_trials=3, execution_mode=comp_mode)
 
         # - - - - - - - TRIAL 1 - - - - - - -
 
@@ -117,9 +115,7 @@ class TestLCA:
         # new_transfer_input_2 = 0.51 + ( 0.5 * 0.51 + 3.0 * 1.02 - 1.0*0.45 + 2.0)*0.1 + 0.0    =    0.9965
         # f(new_transfer_input_2) = 0.9965 * 2.0 = 1.463
 
-        assert np.allclose(C.results, [[[0.2, 0.4]], [[0.43, 0.98]], [[0.6705, 1.833]]])
-        if benchmark.enabled:
-            benchmark(C.run, inputs={T: [1.0, 2.0]}, num_trials=3, execution_mode=comp_mode)
+        assert np.allclose(C.results[:3], [[[0.2, 0.4]], [[0.43, 0.98]], [[0.6705, 1.833]]])
 
     @pytest.mark.composition
     def test_equivalance_of_threshold_and_when_finished_condition(self):
@@ -161,10 +157,9 @@ class TestLCA:
         lca = LCAMechanism(size=2, leak=0.5, threshold=0.7)
         comp = Composition()
         comp.add_node(lca)
-        result = comp.run(inputs={lca:[1,0]}, execution_mode=comp_mode)
+
+        result = benchmark(comp.run, inputs={lca:[1,0]}, execution_mode=comp_mode)
         assert np.allclose(result, [0.70005431, 0.29994569])
-        if benchmark.enabled:
-            benchmark(comp.run, inputs={lca:[1,0]}, execution_mode=comp_mode)
 
     @pytest.mark.composition
     def test_LCAMechanism_threshold_with_max_vs_next(self):
@@ -189,6 +184,7 @@ class TestLCA:
         lca = LCAMechanism(size=3, leak=0.5, threshold=0.01, threshold_criterion=CONVERGENCE)
         comp = Composition()
         comp.add_node(lca)
+
         result = comp.run(inputs={lca:[0,1,2]}, execution_mode=comp_mode)
         assert np.allclose(result, [[0.19153799, 0.5, 0.80846201]])
         if comp_mode is pnl.ExecutionMode.Python:
