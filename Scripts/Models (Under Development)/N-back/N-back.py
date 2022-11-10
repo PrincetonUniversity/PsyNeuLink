@@ -653,7 +653,6 @@ def analyze_results(results, num_trials=NUM_TRIALS, nback_levels=NBACK_LEVELS):
     for i, nback_level in enumerate(nback_levels):
         relevant_responses = results[0][i*num_trials:i*num_trials+num_trials]
         responses_and_trial_types[i] = list(zip(relevant_responses, results[1][i]))
-    assert True
 
 nback_model = construct_model()
 if TRAIN:
