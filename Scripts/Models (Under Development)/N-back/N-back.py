@@ -135,15 +135,15 @@ def construct_model(stim_size = STIM_SIZE,
     """Construct nback_model
     Arguments
     ---------
-    context_size: int : default CONTEXT_SIZE,
-    hidden_size: int : default HIDDEN_SIZE,
-    num_nback_levels: int : default NUM_NBACK_LEVELS,
-    context_drift_noise: float : default CONTEXT_DRIFT_NOISE,
-    retrievel_softmax_temp: float : default RETRIEVAL_SOFTMAX_TEMP,
-    retrieval_hazard_rate: float : default RETRIEVAL_HAZARD_RATE,
-    retrieval_stimulus_weight: float : default RETRIEVAL_STIM_WEIGHT,
-    retrieval_context_weight: float : default RETRIEVAL_CONTEXT_WEIGHT,
-    decision_softmax_temp: float : default DECISION_SOFTMAX_TEMP):
+    context_size: int : default CONTEXT_SIZE
+    hidden_size: int : default HIDDEN_SIZE
+    num_nback_levels: int : default NUM_NBACK_LEVELS
+    context_drift_noise: float : default CONTEXT_DRIFT_NOISE
+    retrievel_softmax_temp: float : default RETRIEVAL_SOFTMAX_TEMP
+    retrieval_hazard_rate: float : default RETRIEVAL_HAZARD_RATE
+    retrieval_stimulus_weight: float : default RETRIEVAL_STIM_WEIGHT
+    retrieval_context_weight: float : default RETRIEVAL_CONTEXT_WEIGHT
+    decision_softmax_temp: float : default DECISION_SOFTMAX_TEMP)
 
     Returns
     -------
