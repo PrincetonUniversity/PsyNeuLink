@@ -448,7 +448,7 @@ def setup_coth(ctx):
     exp_f = ctx.get_builtin("exp", [x.type])
     # (e**2x + 1)/(e**2x - 1) is faster but doesn't handle large inputs (exp -> Inf) well (Inf/Inf = NaN)
     # (1 + (2/(exp(2*x) - 1))) is a bit slower but handles large inputs better
-    # (e**2x + 1)/(e**2x - 1)
+
     _2x = builder.fmul(x.type(2), x)
     e2x = builder.call(exp_f, [_2x])
     den = builder.fsub(e2x, e2x.type(1))
@@ -463,6 +463,8 @@ def setup_pnl_intrinsics(ctx):
     double_intr_ty = ir.FunctionType(ctx.float_ty, (ctx.float_ty, ctx.float_ty))
 
     # Create function declarations
+    ir.Function(ctx.module, single_intr_ty, name=_BUILTIN_PREFIX + "cos")
+    ir.Function(ctx.module, single_intr_ty, name=_BUILTIN_PREFIX + "sin")
     ir.Function(ctx.module, single_intr_ty, name=_BUILTIN_PREFIX + "exp")
     ir.Function(ctx.module, single_intr_ty, name=_BUILTIN_PREFIX + "log")
     ir.Function(ctx.module, double_intr_ty, name=_BUILTIN_PREFIX + "pow")
@@ -483,7 +485,7 @@ def _generate_intrinsic_wrapper(module, name, ret, args):
 def _generate_cpu_builtins_module(_float_ty):
     """Generate function wrappers for log, exp, and pow intrinsics."""
     module = ir.Module(name="cpu_builtins")
-    for intrinsic in ('exp', 'log'):
+    for intrinsic in ('sin', 'cos', 'exp', 'log'):
         _generate_intrinsic_wrapper(module, intrinsic, _float_ty, [_float_ty])
 
     _generate_intrinsic_wrapper(module, "pow", _float_ty, [_float_ty, _float_ty])

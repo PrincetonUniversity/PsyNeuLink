@@ -1579,12 +1579,12 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         # Maxnum for some reason needs full function prototype
         max_f = ctx.get_builtin("maxnum", [ctx.float_ty])
         var = builder.load(ptri)
+        val = builder.fsub(var, bias)
 
         if "derivative" in tags:
-            predicate = builder.fcmp_ordered('>', var, var.type(0))
+            predicate = builder.fcmp_ordered('>', val, val.type(0))
             val = builder.select(predicate, gain, builder.fmul(gain, leak))
         else:
-            val = builder.fsub(var, bias)
             val1 = builder.fmul(val, gain)
             val2 = builder.fmul(val1, leak)
 
@@ -1593,7 +1593,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         builder.store(val, ptro)
 
     @handle_external_context()
-    def derivative(self, input, output=None, context=None):
+    def derivative(self, variable, output=None, context=None):
         """
         derivative(input)
 
@@ -1613,18 +1613,13 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         """
         gain = self._get_current_parameter_value(GAIN, context)
         leak = self._get_current_parameter_value(LEAK, context)
-        # MODIFIED 11/5/22 OLD:
-        input = np.asarray(input).copy()
-        input[input>0] = gain
-        input[input<=0] = gain * leak
-        # # MODIFIED 11/5/22 NEW:
-        # bias = self._get_current_parameter_value(BIAS, context)
-        # input = np.asarray(input).copy()
-        # input[(input-bias)>0] = gain
-        # input[(input-bias)<=0] = gain * leak
-        # MODIFIED 11/5/22 END
+        bias = self._get_current_parameter_value(BIAS, context)
 
-        return input
+        value = np.empty_like(variable)
+        value[(variable - bias) > 0] = gain
+        value[(variable - bias) <= 0] = gain * leak
+
+        return value
 
 # **********************************************************************************************************************
 #                                                    Angle
@@ -1741,27 +1736,6 @@ class Angle(TransferFunction):  # ----------------------------------------------
             prefs=prefs,
         )
 
-    # def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
-    #     ptri = builder.gep(vi, [ctx.int32_ty(0), index])
-    #     ptro = builder.gep(vo, [ctx.int32_ty(0), index])
-    #     slope_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SLOPE)
-    #     intercept_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, INTERCEPT)
-    #
-    #     slope = pnlvm.helpers.load_extract_scalar_array_one(builder, slope_ptr)
-    #     intercept = pnlvm.helpers.load_extract_scalar_array_one(builder, intercept_ptr)
-    #
-    #
-    #     if "derivative" in tags:
-    #         # f'(x) = m
-    #         val = slope
-    #     else:
-    #         # f(x) = mx + b
-    #         val = builder.load(ptri)
-    #         val = builder.fmul(val, slope)
-    #         val = builder.fadd(val, intercept)
-    #
-    #     builder.store(val, ptro)
-
     def _function(self,
                  variable=None,
                  context=None,
@@ -1818,12 +1792,56 @@ class Angle(TransferFunction):  # ----------------------------------------------
         angle[0] = np.cos(value[0])
         prod = np.product([np.sin(value[k]) for k in range(1, dim - 1)])
         n_prod = prod
-        for j in range(dim - 2):
-            n_prod /= np.sin(value[j + 1])
-            amt = n_prod * np.cos(value[j + 1])
-            angle[j + 1] = amt
+        for j in range(1, dim - 1):
+            n_prod /= np.sin(value[j])
+            amt = n_prod * np.cos(value[j])
+            angle[j] = amt
         angle[dim - 1] = prod
         return angle
+
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+        assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
+        assert isinstance(arg_out.type.pointee, pnlvm.ir.ArrayType)
+        assert len(arg_in.type.pointee) + 1 == len(arg_out.type.pointee)
+
+        # The first cos
+        res0_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        val0_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        val0 = builder.load(val0_ptr)
+        cos_f = ctx.get_builtin("cos", [val0.type])
+        cos_val0 = builder.call(cos_f, [val0])
+        builder.store(cos_val0, res0_ptr)
+
+        # calculate suffix product
+        sin_f = ctx.get_builtin("sin", [val0.type])
+        prod_ptr = builder.alloca(val0.type)
+        builder.store(prod_ptr.type.pointee(1.0), prod_ptr)
+
+        dim_m1 = ctx.int32_ty(len(arg_out.type.pointee) - 1)
+        with pnlvm.helpers.for_loop(builder, dim_m1.type(1), dim_m1, dim_m1.type(1), id="suff_prod") as (b, idx):
+            #revert the index to go from the end
+            idx = b.sub(dim_m1, idx)
+
+            prod = b.load(prod_ptr)
+            val_ptr = b.gep(arg_in, [ctx.int32_ty(0), idx])
+            val = b.load(val_ptr)
+
+            # calculate suffix product of sin(input)
+            val_sin = b.call(sin_f, [val])
+            new_prod = b.fmul(prod, val_sin)
+            b.store(new_prod, prod_ptr)
+
+            # output value is suffix product * cos(val)
+            val_cos = b.call(cos_f, [val])
+            res = b.fmul(prod, val_cos)
+            res_ptr = b.gep(arg_out, [ctx.int32_ty(0), idx])
+            b.store(res, res_ptr)
+
+        # The last element is just the suffix product * 1
+        last_ptr = builder.gep(arg_out, [ctx.int32_ty(0), dim_m1])
+        builder.store(builder.load(prod_ptr), last_ptr)
+
+        return builder
 
     # @handle_external_context()
     # def derivative(self, input=None, output=None, context=None):
@@ -2626,7 +2644,7 @@ class SoftMax(TransferFunction):
 
         builder.store(val, ptro)
 
-    def __gen_llvm_apply(self, ctx, builder, params, state, arg_in, arg_out, tags:frozenset):
+    def __gen_llvm_apply(self, ctx, builder, params, state, arg_in, arg_out, output_type, tags:frozenset):
         exp_sum_ptr = builder.alloca(ctx.float_ty)
         builder.store(exp_sum_ptr.type.pointee(0), exp_sum_ptr)
 
@@ -2639,7 +2657,7 @@ class SoftMax(TransferFunction):
 
         exp_sum = builder.load(exp_sum_ptr)
 
-        if self.output == ALL:
+        if output_type == ALL:
             with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_div") as args:
                 self.__gen_llvm_exp_div(ctx=ctx, vi=arg_in, vo=arg_out,
                                         gain=gain, exp_sum=exp_sum, *args)
@@ -2653,14 +2671,14 @@ class SoftMax(TransferFunction):
         one_hot_out = arg_out
         one_hot_in = builder.alloca(one_hot_f.args[2].type.pointee)
 
-        if self.output in {MAX_VAL, MAX_INDICATOR}:
+        if output_type in {MAX_VAL, MAX_INDICATOR}:
             with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_div") as (b, i):
                 self.__gen_llvm_exp_div(ctx=ctx, vi=arg_in, vo=one_hot_in,
                                         gain=gain, exp_sum=exp_sum, builder=b, index=i)
 
             builder.call(one_hot_f, [one_hot_p, one_hot_s, one_hot_in, one_hot_out])
 
-        elif self.output == PROB:
+        elif output_type in PROB:
             one_hot_in_data = builder.gep(one_hot_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
             one_hot_in_dist = builder.gep(one_hot_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
 
@@ -2675,21 +2693,62 @@ class SoftMax(TransferFunction):
 
             builder.call(one_hot_f, [one_hot_p, one_hot_s, one_hot_in, one_hot_out])
         else:
-            assert False, "Unsupported output in {}: {}".format(self, self.output)
+            assert False, "Unsupported output in {}: {}".format(self, out_type)
 
         return builder
 
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+    def _gen_llvm_function_derivative_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+        assert "derivative" in tags
+        forward_tags = tags.difference({"derivative"})
+        all_out = builder.alloca(arg_out.type.pointee)
+        builder = self._gen_llvm_function_body(ctx, builder, params, state, arg_in, all_out, output_type=ALL, tags=forward_tags)
+
+        max_pos_ptr = builder.alloca(ctx.int32_ty)
+        builder.store(max_pos_ptr.type.pointee(-1), max_pos_ptr)
+        max_val_ptr = builder.alloca(arg_out.type.pointee.element)
+        builder.store(max_val_ptr.type.pointee(float("NaN")), max_val_ptr)
+
+        with pnlvm.helpers.array_ptr_loop(builder, all_out, id="max") as (b, idx):
+            val_ptr = b.gep(all_out, [ctx.int32_ty(0), idx])
+            val = b.load(val_ptr)
+            max_val = b.load(max_val_ptr)
+            new_max = b.fcmp_unordered(">", val, max_val)
+            with b.if_then(new_max):
+                b.store(val, max_val_ptr)
+                b.store(idx, max_pos_ptr)
+
+        max_val = builder.load(max_val_ptr)
+        max_pos = builder.load(max_pos_ptr)
+
+        with pnlvm.helpers.array_ptr_loop(builder, all_out, id="derivative") as (b, idx):
+            val_ptr = b.gep(all_out, [ctx.int32_ty(0), idx])
+            val = b.load(val_ptr)
+            is_max_pos = b.icmp_unsigned("==", idx, max_pos)
+
+            d = b.select(is_max_pos, val.type(1), val.type(0))
+            dv = b.fsub(d, max_val)
+            val = b.fmul(val, dv)
+
+            out_ptr = b.gep(arg_out, [ctx.int32_ty(0), idx])
+            b.store(val, out_ptr)
+
+        return builder
+
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, output_type=None, *, tags:frozenset):
+        output_type = self.output if output_type is None else output_type
+        if "derivative" in tags:
+            return self._gen_llvm_function_derivative_body(ctx, builder, params, state, arg_in, arg_out, tags=tags)
+
         if self.parameters.per_item.get():
             assert isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType)
             assert isinstance(arg_out.type.pointee.element, pnlvm.ir.ArrayType)
             for i in range(arg_in.type.pointee.count):
                 inner_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(i)])
                 inner_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
-                builder = self.__gen_llvm_apply(ctx, builder, params, state, inner_in, inner_out, tags=tags)
+                builder = self.__gen_llvm_apply(ctx, builder, params, state, inner_in, inner_out, output_type, tags=tags)
             return builder
         else:
-            return self.__gen_llvm_apply(ctx, builder, params, state, arg_in, arg_out, tags=tags)
+            return self.__gen_llvm_apply(ctx, builder, params, state, arg_in, arg_out, output_type, tags=tags)
 
     def apply_softmax(self, input_value, gain, output_type):
         # Modulate input_value by gain
@@ -2761,8 +2820,8 @@ class SoftMax(TransferFunction):
         """
 
         output_type = self._get_current_parameter_value(OUTPUT_TYPE, context)
-        size = len(output)
-        sm = self.function(output, params={OUTPUT_TYPE: ALL}, context=context)
+        size = len(input)
+        sm = self.function(input, params={OUTPUT_TYPE: ALL}, context=context)
         sm = np.squeeze(sm)
 
         if output_type == ALL:
@@ -2780,7 +2839,7 @@ class SoftMax(TransferFunction):
             # Return 1d array of derivatives for max element (i.e., the one chosen by SoftMax)
             derivative = np.empty(size)
             # Get the element of output returned as non-zero when output_type is not ALL
-            index_of_max = int(np.where(output == np.max(output))[0][0])
+            index_of_max = int(np.where(sm == np.max(sm))[0])
             max_val = sm[index_of_max]
             for i in range(size):
                 if i == index_of_max:

@@ -1313,7 +1313,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         # Get error_signals (from ERROR_SIGNAL InputPorts) and error_matrices relevant for the current execution:
         error_signal_indices = self.error_signal_indices
         error_signal_inputs = variable[error_signal_indices]
-        # FIX 7/22/19 [JDC]: MOVE THIS TO ITS OWN METHOD CALLED ON INITALIZATION AND UPDTATED AS NECESSARY
+        # FIX 7/22/19 [JDC]: MOVE THIS TO ITS OWN METHOD CALLED ON INITALIZATION AND UPDATED AS NECESSARY
         if self.error_matrices is None:
             # KAM 6/28/19 Hack to get the correct shape and contents for initial error matrix in backprop
             if self.function is BackPropagation or isinstance(self.function, BackPropagation):
@@ -1354,7 +1354,6 @@ class LearningMechanism(ModulatoryMechanism_Base):
                 ]
             )
             learning_signal, error_signal = super()._execute(variable=function_variable,
-            # MODIFIED CROSS_PATHWAYS 7/22/19 END
                                                              context=context,
                                                              error_matrix=error_matrix,
                                                              runtime_params=runtime_params,
@@ -1368,7 +1367,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
                 and self.initialization_status != ContextFlags.INITIALIZING):
             print("\n{} weight change matrix: \n{}\n".format(self.name, summed_learning_signal))
 
-        # Durning initialization return zeros so that the first "real" trial for Backprop does not start
+        # During initialization return zeros so that the first "real" trial for Backprop does not start
         # with the error computed during initialization
         if (self.in_composition and
                 isinstance(self.function, BackPropagation) and
