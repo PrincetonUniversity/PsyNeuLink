@@ -16,6 +16,7 @@ All experimental foils are designated with 2\2\0 and there are 6 of them
 *** There should not be any 3-back lures
 
 """
+
 2_back_a = ['Q', 'F', 'B', 'R', 'X', 'X', 'X', 'M', 'M', 'K', 'B', 'B', 'M', 'Q', 'M', 'X',
             'H', 'B', 'H', 'X', 'K', 'Q', 'F', 'F', 'F', 'K', 'K', 'M', 'R', 'H', 'H', 'M',
             'B', 'R', 'B', 'F', 'Q', 'H', 'Q', 'R', 'F', 'R', 'H', 'K', 'X', 'K', 'R', 'Q']
