@@ -14,8 +14,6 @@ import psyneulink as pnl
 # Note that this script implements a slightly different Figure than in the original Figure in the paper.
 # However, this implementation is identical with a plot we created with an old MATLAB code which was used for the
 # conflict monitoring simulations.
-import psyneulink.core.components.functions.nonstateful.objectivefunctions
-import psyneulink.core.components.functions.nonstateful.transferfunctions
 
 
 @pytest.mark.model
@@ -30,20 +28,20 @@ def test_botvinick_model(benchmark, comp_mode, reps):
     # Linear input layer
     # colors: ('red', 'green'), words: ('RED','GREEN')
     colors_input_layer = pnl.TransferMechanism(size=3,
-                                               function=psyneulink.core.components.Linear,
+                                               function=pnl.Linear,
                                                name='COLORS_INPUT')
 
     words_input_layer = pnl.TransferMechanism(size=3,
-                                              function=psyneulink.core.components.Linear,
+                                              function=pnl.Linear,
                                               name='WORDS_INPUT')
 
     task_input_layer = pnl.TransferMechanism(size=2,
-                                             function=psyneulink.core.components.Linear,
+                                             function=pnl.Linear,
                                              name='TASK_INPUT')
 
     #   Task layer, tasks: ('name the color', 'read the word')
     task_layer = pnl.RecurrentTransferMechanism(size=2,
-                                                function=psyneulink.core.components.Logistic,
+                                                function=pnl.Logistic,
                                                 hetero=-2,
                                                 integrator_mode=True,
                                                 integration_rate=0.01,
@@ -52,14 +50,14 @@ def test_botvinick_model(benchmark, comp_mode, reps):
     # Hidden layer
     # colors: ('red','green', 'neutral') words: ('RED','GREEN', 'NEUTRAL')
     colors_hidden_layer = pnl.RecurrentTransferMechanism(size=3,
-                                                         function=psyneulink.core.components.Logistic(x_0=4.0),  # bias 4.0 is -4.0 in the paper see Docs for description
+                                                         function=pnl.Logistic(x_0=4.0),  # bias 4.0 is -4.0 in the paper see Docs for description
                                                          integrator_mode=True,
                                                          hetero=-2,
                                                          integration_rate=0.01,  # cohen-huston text says 0.01
                                                          name='COLORS_HIDDEN')
 
     words_hidden_layer = pnl.RecurrentTransferMechanism(size=3,
-                                                        function=psyneulink.core.components.Logistic(x_0=4.0),
+                                                        function=pnl.Logistic(x_0=4.0),
                                                         integrator_mode=True,
                                                         hetero=-2,
                                                         integration_rate=0.01,
@@ -67,14 +65,14 @@ def test_botvinick_model(benchmark, comp_mode, reps):
 
     #   Response layer, responses: ('red', 'green')
     response_layer = pnl.RecurrentTransferMechanism(size=2,
-                                                    function=psyneulink.core.components.Logistic,
+                                                    function=pnl.Logistic,
                                                     hetero=-2.0,
                                                     integrator_mode=True,
                                                     integration_rate=0.01,
                                                     output_ports = [pnl.RESULT,
                                                                      {pnl.NAME: 'DECISION_ENERGY',
                                                                       pnl.VARIABLE: (pnl.OWNER_VALUE,0),
-                                                                      pnl.FUNCTION: psyneulink.core.components.Stability(
+                                                                      pnl.FUNCTION: pnl.Stability(
                                                                           default_variable = np.array([0.0, 0.0]),
                                                                           metric = pnl.ENERGY,
                                                                           matrix = np.array([[0.0, -4.0],
@@ -189,10 +187,12 @@ def test_botvinick_model(benchmark, comp_mode, reps):
 
             # Comp results include concatenation of both the above runs
             results.append(comp.results)
+            # cleanup the results of the most recently used context id
+            comp.results = []
 
         return results
 
-    res = run(comp_mode)
+    res = benchmark(run, comp_mode)
     # the corresponding output port indices in composition results
     # these were 0 and 1 in the prior version of the test
     response_results_index = 3
@@ -283,5 +283,3 @@ def test_botvinick_model(benchmark, comp_mode, reps):
         assert np.allclose(res[1][-1][response_decision_energy_index], [1.87232903])
         assert np.allclose(res[2][ntrials0 - 1][response_decision_energy_index], [0.94440397])
         assert np.allclose(res[2][-1][response_decision_energy_index], [0.90033387])
-    if benchmark.enabled:
-        benchmark(run, comp_mode)
