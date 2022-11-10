@@ -1216,7 +1216,7 @@ class RandomMatrix():
     .. technical_note::
        A call to the class calls `random_matrix <Utilities.random_matrix>`, passing **sender_size** and
        **receiver_size** to `random_matrix <Utilities.random_matrix>` as its **num_rows** and **num_cols**
-       arguments, respectively, and passing the `center <RandomMatrix.offset>`\-0.5 and `range <RandomMatrix.scale>`
+       arguments, respectively, and passing the `center <RandomMatrix.offset>`-0.5 and `range <RandomMatrix.scale>`
        attributes specified at construction to `random_matrix <Utilities.random_matrix>` as its **offset**
        and **scale** arguments, respectively.
 

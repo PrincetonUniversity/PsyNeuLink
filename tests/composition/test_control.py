@@ -3566,7 +3566,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         warning_msg = f'"\'OptimizationControlMechanism-0\' has \'num_estimates = {num_estimates}\' specified, ' \
                       f'but its \'agent_rep\' (\'comp\') has no random variables: ' \
                       f'\'RANDOMIZATION_CONTROL_SIGNAL\' will not be created, and num_estimates set to None."'
-        with pytest.warns(warning_type) as warning:
+        with pytest.warns(warning_type) as warnings:
             ocm = pnl.OptimizationControlMechanism(agent_rep=comp,
                                                    state_features=[A.input_port],
                                                    objective_mechanism=objective_mech,
@@ -3574,7 +3574,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                                                    num_estimates=num_estimates,
                                                    control_signals=[control_signal])
             if warning_type:
-                assert repr(warning[5].message.args[0]) == warning_msg
+                assert any(warning_msg == repr(w.message.args[0]) for w in warnings)
 
         comp.add_controller(ocm)
         inputs = {A: [[[1.0]]]}

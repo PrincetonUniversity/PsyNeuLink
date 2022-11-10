@@ -252,7 +252,7 @@ can be specified (e.g., the **pathways** argument of the constructor for a `Comp
 <Composition.add_pathways>` method), they can be specified in a list, in which each item of the list can be any of
 the forms above, or one of the following:
 
-    * **Pathway** object or constructor: Pathway(pathway=\ `Pathway specification <Pathway_Specification>`,...).
+    * **Pathway** object or constructor: Pathway(pathway=\\ `Pathway specification <Pathway_Specification>`,...).
     ..
     .. _Pathway_Specification_Dictionary:
     * **dict**: {name : Pathway) -- in which **name** is a str and **Pathway** is a Pathway object or constuctor,

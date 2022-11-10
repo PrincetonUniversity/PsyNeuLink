@@ -429,7 +429,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
     so that, with each call to `function <AccumulatorIntegrator._function>`, the accumulated value increases by:
 
     .. math::
-        increment \\cdot rate^{time\\ step}.
+        increment \\cdot rate^{time\\_step}.
 
     Thus, accumulation increases lineary in steps of `increment <AccumulatorIntegrator.increment>`
     if `rate <AccumulatorIntegrator.rate>`\\=1.0, and exponentially otherwise.
@@ -2216,7 +2216,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
 
     offset : float, list or 1d array : default 0.0
         specifies constant value added to integral in each call to `function <DriftDiffusionIntegrator._function>`
-        if it's absolute value is below `threshold <DriftDiffusionIntegrator.threshold>`\;
+        if it's absolute value is below `threshold <DriftDiffusionIntegrator.threshold>`;
         if it is a list or array, it must be the same length as `variable <DriftDiffusionIntegrator.variable>`
         (see `offset <DriftDiffusionIntegrator.offset>` for details).
 
