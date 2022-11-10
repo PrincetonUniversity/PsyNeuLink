@@ -67,9 +67,10 @@ from graph_scheduler import *
 from psyneulink import *
 
 # Settings for running script:
+DISPLAY_MODEL = False # show visual graphic of model
 TRAIN = False
 RUN = True
-DISPLAY_MODEL = False # show visual graphic of model
+ANALYZE = True # Analyze results of run
 
 # PARAMETERS -------------------------------------------------------------------------------------------------------
 
@@ -647,6 +648,13 @@ def run_model(model,
     print(f'results: \n{model.results}')
     return results
 
+def analyze_results(results, num_trials=NUM_TRIALS, nback_levels=NBACK_LEVELS):
+    responses_and_trial_types = [None] * len(nback_levels)
+    for i, nback_level in enumerate(nback_levels):
+        relevant_responses = results[0][i*num_trials:i*num_trials+num_trials]
+        responses_and_trial_types[i] = list(zip(relevant_responses, results[1][i]))
+    assert True
+
 nback_model = construct_model()
 if TRAIN:
     weights_filename = f'ffn.wts_nep_{NUM_EPOCHS}_lr_{str(LEARNING_RATE).split(".")[1]}.pnl'
@@ -659,3 +667,5 @@ if RUN:
                         # load_weights_from=INITIALIZER
                         save_results_to= results_filename
                         )
+if ANALYZE:
+    analyze_results(results, num_trials=NUM_TRIALS, nback_levels=NBACK_LEVELS)
