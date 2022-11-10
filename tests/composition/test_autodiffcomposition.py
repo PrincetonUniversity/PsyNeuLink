@@ -384,9 +384,9 @@ class TestMiscTrainingFunctionality:
         # results_before_proc = xor.run(inputs={xor_in:xor_inputs},
         #                               targets={xor_out:xor_targets},
         #                               epochs=10)
-        results_before_proc = xor.learn(inputs={"inputs": {xor_in:xor_inputs},
-                                                "targets": {xor_out:xor_targets},
-                                                "epochs": 10}, execution_mode=autodiff_mode)
+        results_before_proc = benchmark(xor.learn, inputs={"inputs": {xor_in:xor_inputs},
+                                                           "targets": {xor_out:xor_targets},
+                                                           "epochs": 10}, execution_mode=autodiff_mode)
 
         # fp32 results are different due to rounding
         if pytest.helpers.llvm_current_fp_precision() == 'fp32' and \
@@ -397,11 +397,6 @@ class TestMiscTrainingFunctionality:
         # FIXME: LLVM version is broken with learning rate == 1.5
         if learning_rate != 1.5 or autodiff_mode == pnl.ExecutionMode.Python:
             assert np.allclose(results_before_proc, expected)
-
-        if benchmark.enabled:
-            benchmark(xor.learn, inputs={"inputs": {xor_in:xor_inputs},
-                                         "targets": {xor_out:xor_targets},
-                                         "epochs": 10}, execution_mode=autodiff_mode)
 
 
     # test whether pytorch parameters and projections are kept separate (at diff. places in memory)
@@ -511,7 +506,7 @@ class TestTrainingCorrectness:
             [[0], [1], [1], [0]])
 
         if calls == 'single':
-            results = xor.learn(inputs={"inputs": {xor_in:xor_inputs},
+            results = benchmark(xor.learn, inputs={"inputs": {xor_in:xor_inputs},
                                         "targets": {xor_out:xor_targets},
                                         "epochs": eps}, execution_mode=autodiff_mode)
 
@@ -519,17 +514,13 @@ class TestTrainingCorrectness:
             input_dict = {"inputs": {xor_in: xor_inputs},
                           "targets": {xor_out: xor_targets},
                           "epochs": 1}
-            for i in range(eps):
-                results = xor.learn(inputs=input_dict, execution_mode=autodiff_mode)
+            for i in range(eps - 1):
+                xor.learn(inputs=input_dict, execution_mode=autodiff_mode)
+            results = benchmark(xor.learn, inputs=input_dict, execution_mode=autodiff_mode)
 
         assert len(results) == len(expected)
         for r, t in zip(results, expected):
             assert np.allclose(r[0], t)
-
-        if benchmark.enabled:
-            benchmark(xor.learn, inputs={"inputs": {xor_in: xor_inputs},
-                                         "targets": {xor_out: xor_targets},
-                                         "epochs": eps}, execution_mode=autodiff_mode)
 
 
     # tests whether semantic network created as autodiff composition learns properly
@@ -700,9 +691,9 @@ class TestTrainingCorrectness:
                 targets_dict[out_sig_can].append(truth_can[i])
 
         # TRAIN THE MODEL
-        results = sem_net.learn(inputs={'inputs': inputs_dict,
-                                        'targets': targets_dict,
-                                        'epochs': eps}, execution_mode=autodiff_mode)
+        results = benchmark(sem_net.learn, inputs={'inputs': inputs_dict,
+                                                   'targets': targets_dict,
+                                                   'epochs': eps}, execution_mode=autodiff_mode)
 
         # CHECK CORRECTNESS
         expected = [[[0.13455769, 0.12924714, 0.13288172, 0.1404659 , 0.14305814,
@@ -830,10 +821,6 @@ class TestTrainingCorrectness:
         for res, exp in zip(results, expected):
             for r, e in zip(res, exp):
                 assert np.allclose(r, e)
-        if benchmark.enabled:
-            benchmark(sem_net.learn, inputs={'inputs': inputs_dict,
-                                             'targets': targets_dict,
-                                             'epochs': eps}, execution_mode=autodiff_mode)
 
     def test_pytorch_equivalence_with_autodiff_composition(self, autodiff_mode):
         iSs = np.array(

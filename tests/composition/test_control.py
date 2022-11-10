@@ -1914,11 +1914,8 @@ class TestControlMechanisms:
                                                    intensity_cost_function=pnl.Linear(slope=0.0),
                                                    allocation_samples=pnl.SampleSpec(start=1.0, stop=5.0, num=5))])
         )
-        results = ocomp.run([5], execution_mode=mode)
-        assert np.allclose(results, [[50]])
-
-        if benchmark.enabled:
-            benchmark(ocomp.run, [5], execution_mode=mode)
+        result = benchmark(ocomp.run, [5], execution_mode=mode)
+        assert np.allclose(result, [[50]])
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -1981,11 +1978,8 @@ class TestControlMechanisms:
                                                                                      stop=5.0,
                                                                                      num=5))])
         )
-        results = ocomp.run([5], execution_mode=mode)
-        assert np.allclose(results, [[70]])
-
-        if benchmark.enabled:
-            benchmark(ocomp.run, [5], execution_mode=mode)
+        result = benchmark(ocomp.run, [5], execution_mode=mode)
+        assert np.allclose(result, [[70]])
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2048,11 +2042,8 @@ class TestControlMechanisms:
                                                                                      stop=5.0,
                                                                                      num=5))])
         )
-        results = ocomp.run([5], execution_mode=mode)
-        assert np.allclose(results, [[5]])
-
-        if benchmark.enabled:
-            benchmark(ocomp.run, [5], execution_mode=mode)
+        result = benchmark(ocomp.run, [5], execution_mode=mode)
+        assert np.allclose(result, [[5]])
 
     def test_two_tier_ocm(self):
         integrationConstant = 0.8  # Time Constant
@@ -2275,11 +2266,8 @@ class TestControlMechanisms:
         iComp.add_controller(iController)
         assert iComp.controller == iController
         assert oComp.controller == oController
-        res = oComp.run(inputs=[5], execution_mode=comp_mode)
+        res = benchmark(oComp.run, inputs=[5], execution_mode=comp_mode)
         assert np.allclose(res, [40])
-
-        if benchmark.enabled:
-            benchmark(oComp.run, [5], execution_mode=comp_mode)
 
     @pytest.mark.control
     @pytest.mark.composition
