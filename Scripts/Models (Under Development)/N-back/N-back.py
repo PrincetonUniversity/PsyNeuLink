@@ -54,6 +54,7 @@ TODO:
 
 """
 import enum
+import numpy as np
 
 from graph_scheduler import *
 
@@ -480,7 +481,9 @@ def get_run_inputs(model, nback_level,
     Mini_blocks:
       - if True (default) trials are sequenced in mini-blocks each of which contains one set of trials
           for each trial_type; order of trial_type subseq within each mini_block is randomized across them;
-          number of trials in a mini-block = nback_level+1 * num_trial_types
+          number of trials in a mini-block = nback_level+1 * num_trial_types; trials not assigned to
+          mini_blocks (i.e., modulus of num_trial % (num_mini_blocks * mini_block_size) are assigned random
+          stimuli and trial_type is inferred posthoc).
       - if False, sampling of trial_types is balanced,
           but order of presentation is randomized over the entire sequence
     """
@@ -494,54 +497,57 @@ def get_run_inputs(model, nback_level,
         """Trial types explicitly assigned and counter-balanced
         In notation below, "A" is always current stimulus.
         Foils are only explicitly assigned to items immediately following nback item.
-        Subseq noted as "not explicitly assigned" may still appear in the overall stimulus seq,
+        Subseq designated below as "not explicitly assigned" may still appear in the overall stimulus seq,
             either within the subseq through random assignment,
             and/or through cross-subseq relationships that are not controlled in this design
         """
-        MATCH_NO_FOIL = enum.auto()       # ABA (2-back) or ABCA (3-back); not explicitly assigned: ABBA
-        MATCH_WITH_FOIL = enum.auto()     # AAA (2-back) or AABA (3-back); not explicitly assigned: ABAA or AAAA
-        NO_MATCH_NO_FOIL = enum.auto()    # ABB (2-back) or BCDA (3-back); not explicitly assigned: BBCA, BCCA or BBBA
-        NO_MATCH_WITH_FOIL = enum.auto()  # BAA (2-back) or BACA (3-back); not explicitly assigned: BCAA or BAAA
+        MATCH_NO_FOIL = 0       # ABA (2-back) or ABCA (3-back); not explicitly assigned: ABBA
+        MATCH_WITH_FOIL = 1     # AAA (2-back) or AABA (3-back); not explicitly assigned: ABAA or AAAA
+        NO_MATCH_NO_FOIL = 2    # ABB (2-back) or BCDA (3-back); not explicitly assigned: BBCA, BCCA or BBBA
+        NO_MATCH_WITH_FOIL = 3  # BAA (2-back) or BACA (3-back); not explicitly assigned: BCAA or BAAA
     num_trial_types = len(trial_types)
 
     def get_stim_subseq_for_trial_type(trial_type):
-        num_stims = nback_level+1
-        subseq = [None] * num_stims
-        curr_stim = subseq[nback_level] = random.choice(stim_set)
-        if trial_type == trial_types.MATCH_NO_FOIL:
+        """Return stimulus seq (as indices into stim_set) for the specified trial_type."""
+        subseq_size = nback_level+1
+        subseq = [None] * subseq_size
+        curr_stim = subseq[nback_level] = random.choice(np.arange(len(stim_set)))
+        other_stims = np.setdiff1d(np.arange(len(stim_set)),curr_stim).tolist()
+
+        if trial_type == trial_types.MATCH_NO_FOIL:           # ABA (2-back) or ABCA (3-back)
             subseq[0] = curr_stim  # Assign nback stim to match
             # Assign remaining items in sequence to anything stimuli than curr_stim
-            subseq[1:nback_level] = random.sample(list(set(stim_set)-set(curr_stim)), nback_level-1)
-        elif trial_type == trial_types.MATCH_WITH_FOIL:
+            subseq[1:nback_level] = random.sample(other_stims, nback_level-1)
+        elif trial_type == trial_types.MATCH_WITH_FOIL:        # AAA (2-back) or AABA (3-back)
             subseq[0] = curr_stim  # Assign nback stim to match current stim
-            subseq[1] = curr_stim  # Also current to stim next to nback as foil
+            subseq[1] = curr_stim  # Assign curr_stim to stim next to nback as foil
             # Assign any remaining items in sequence to any stimuli other than curr_stim
-            subseq[2:nback_level] = random.sample(list(set(stim_set)-set(curr_stim)), nback_level-2)
-        elif trial_type == trial_types.NO_MATCH_NO_FOIL:
-            # Assign remaining items in sequence to anything stimuli than curr_stim
-            subseq[0:nback_level] = random.sample(list(set(stim_set)-set(curr_stim)), nback_level)
-        elif trial_type == trial_types.NO_MATCH_WITH_FOIL:
-            # Assign remaining items in sequence to anything stimuli than curr_stim
-            subseq[1] = curr_stim  # Also current to stim next to nback as foil
-            subseq[0] = random.sample(list(set(stim_set)-set(curr_stim)), 1)
-            subseq[2:nback_level] = random.sample(list(set(stim_set)-set(curr_stim)), nback_level-2)
-        assert all(subseq), "Failed to assign all stims for subseq in get_stim_subseq_for_trial_type."
+            subseq[2:nback_level] = random.sample(other_stims, nback_level-2)
+        elif trial_type == trial_types.NO_MATCH_NO_FOIL:       # ABB (2-back) or BCDA (3-back)
+            # Assign remaining items in sequence to any stimuli than curr_stim
+            subseq[0:nback_level] = random.sample(other_stims, nback_level)
+        elif trial_type == trial_types.NO_MATCH_WITH_FOIL:     # BAA (2-back) or BACA (3-back)
+            # Assign remaining items in sequence to any stimuli than curr_stim
+            subseq[1] = curr_stim  # Assign curr_stim to stim next to nback as foil
+            subseq[0:1] = random.sample(other_stims, 1)
+            subseq[2:nback_level] = random.sample(other_stims, nback_level-2)
+        assert not None in subseq, "Failed to assign all stims for subseq in get_stim_subseq_for_trial_type."
         return subseq
 
-    def get_trial_type_for_stim(trial_num, subseq, trial_type_seq):
-        assert len(subseq) == nback_level+1, \
-            f"Bad subseq len ({len(subseq)}) for nback_level ({nback_level})."
-        assert all(trial_type==None for trial_type in trial_type_seq[trial_num - nback_level:trial_num - 1]), \
-            f"trial_type should still be None for trials {trial_num - nback_level} to {trial_num - 1}."
-        if subseq[-1] == subseq[0] and not subseq[-1] in subseq[0:-1]:
-            return trial_types.MATCH_NO_FOIL
+    def get_trial_type_for_stim(subseq):
+        # assert len(subseq) == nback_level+1, \
+        #     f"Bad subseq len ({len(subseq)}) for nback_level ({nback_level})."
+        # assert all(trial_type==None for trial_type in trial_type_seq[trial_num:trial_num + nback_level]), \
+        #     f"trial_type should still be None for trials {trial_num - nback_level} to {trial_num - 1}."
+        if subseq[-1] == subseq[0] and not subseq[-1] in subseq[1:-1]:
+            return trial_types.MATCH_NO_FOIL.value
         elif subseq[-1] == subseq[0] and subseq[-1] in subseq[0:-1]:
-            return trial_types.MATCH_WITH_FOIL
+            return trial_types.MATCH_WITH_FOIL.value
         elif subseq[-1] not in subseq[0:-1]:
-            return trial_types.NO_MATCH_NO_FOIL
-        if subseq[-1] != subseq[0] and subseq[-1] in subseq[0:-1]:
+            return trial_types.NO_MATCH_NO_FOIL.value
+        elif subseq[-1] != subseq[0] and subseq[-1] in subseq[0:-1]:
             # Note: for 3back, this includes: BAXA, BXAA, and BAAA
-            return trial_types.NO_MATCH_WITH_FOIL
+            return trial_types.NO_MATCH_WITH_FOIL.value
 
     subseq_size = nback_level+1
     num_sub_seqs = int(num_trials / num_trial_types)
@@ -553,11 +559,13 @@ def get_run_inputs(model, nback_level,
 
     num_mini_blocks = int(num_trials / (num_trial_types * (nback_level+1)))
     mini_block_size = subseq_size * num_trial_types # Number of trials in a mini_block
-    seq_of_trial_type_subseqs = [None] * num_sub_seqs
-    # Generate randomly ordered trial_type assignments over subseqs in each mini_block
+    # seq_of_trial_type_subseqs = [None] * num_mini_blocks * num_trial_types
+    seq_of_trial_type_subseqs = []
+    # Generate randomly ordered trial_type assignments for subseqs in each mini_block
     for i in range(num_mini_blocks):
-        seq_of_trial_type_subseqs[i*num_trial_types:i+num_trial_types] = \
-            random.sample(range(num_trial_types), num_trial_types)
+        # seq_of_trial_type_subseqs[i*num_trial_types:i+num_trial_types] = \
+        #     random.sample(range(num_trial_types), num_trial_types)
+        seq_of_trial_type_subseqs.extend(random.sample(range(num_trial_types), num_trial_types))
     # seq_of_trial_type_subseqs = random.sample(range(num_trial_types), num_trial_types) * mini_block_size
     if not mini_blocks:
         # Randomize the order of trial types across the entire sequence:
@@ -571,16 +579,22 @@ def get_run_inputs(model, nback_level,
     # stim_seq.append(get_stim_seq_for_trial_type(i) for i in seq_of_trial_type_subseqs) # <- CONDENSED VERSION
     for i, trial_type in enumerate(seq_of_trial_type_subseqs):  # <- LOOP VERSION
         idx = i * subseq_size
-        stim_seq[idx:nback_level+idx] = get_stim_subseq_for_trial_type(trial_type)
+        # Get seq of stimuli for subseq of specified trial_type
+        stim_seq[idx:idx+nback_level+1] = get_stim_subseq_for_trial_type(trial_type)
+        # Assign trial_type to last stim in subseq (since it was constructed specifically for that trial_type)
+        trial_type_seq[idx+nback_level] = trial_type
     # Pad remainder to get to num_trials with randomly selected stimuli
-    stim_seq.append(random.sample(range(num_trial_types),extra_trials))
-    # Assign trial_types to first nback_level trials in each subseq (should be marked as None)
-    for i in range(num_trials):
-        if trial_type_seq[i] is None:
-            trial_type_seq[i] = get_trial_type_for_stim(i, stim_seq[i-nback_level,i], trial_type_seq)
+    stim_seq.extend(random.sample(range(num_trial_types),extra_trials))
+    # Infer trial_types for all remaining stimuli (which should currently be marked as None)
+    for i in range(subseq_size,num_trials,subseq_size):
+        for j in range(i,i+nback_level):
+            assert trial_type_seq[j]==None, f"trial_type should still be None for trial {j}."
+            trial_type_seq[j] = get_trial_type_for_stim(stim_seq[i-subseq_size:i])
+            assert True
 
-    # -------------------
+    # FIX: GET ACTUAL STIMULI FROM stim_set HERE
 
+    # -----------------------------------------------
     # Construct stimulus sequence from trial_type_seq:
     # - first, pad initial nback_level-1 trials
     stim_seq = [None] * num_trials
