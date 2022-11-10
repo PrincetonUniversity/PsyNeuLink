@@ -54,15 +54,16 @@ class TestTransferMechanismInputs:
         T = TransferMechanism(
             name='T',
             default_variable=[0 for i in range(VECTOR_SIZE)],
-            integration_rate=1.0,
+            integration_rate=0.5,
             integrator_mode=True
         )
         T.reset_stateful_function_when = Never()
         var = [10.0 for i in range(VECTOR_SIZE)]
         EX = pytest.helpers.get_mech_execution(T, mech_mode)
 
+        EX(var)
         val = EX(var)
-        assert np.allclose(val, [[10.0 for i in range(VECTOR_SIZE)]])
+        assert np.allclose(val, [[7.5 for i in range(VECTOR_SIZE)]])
         if benchmark.enabled:
             benchmark(EX, var)
 
@@ -149,15 +150,16 @@ class TestTransferMechanismNoise:
             default_variable=[0 for i in range(VECTOR_SIZE)],
             function=Linear(),
             noise=5.0,
-            integration_rate=1.0,
+            integration_rate=0.5,
             integrator_mode=True
         )
         T.reset_stateful_function_when = Never()
         EX = pytest.helpers.get_mech_execution(T, mech_mode)
 
-        var = [0 for i in range(VECTOR_SIZE)]
+        var = [1 for i in range(VECTOR_SIZE)]
+        EX(var)
         val = EX(var)
-        assert np.allclose(val, [[5.0 for i in range(VECTOR_SIZE)]])
+        assert np.allclose(val, [[8.25 for i in range(VECTOR_SIZE)]])
         if benchmark.enabled:
             benchmark(EX, var)
 
@@ -203,16 +205,17 @@ class TestTransferMechanismNoise:
             name='T',
             default_variable=[0 for i in range(VECTOR_SIZE)],
             function=Linear(),
-            noise=[5.0 for i in range(VECTOR_SIZE)],
-            integration_rate=1.0,
+            noise=[5.0 + i for i in range(VECTOR_SIZE)],
+            integration_rate=0.3,
             integrator_mode=True
         )
         T.reset_stateful_function_when = Never()
         EX = pytest.helpers.get_mech_execution(T, mech_mode)
 
         var = [0 for i in range(VECTOR_SIZE)]
+        EX(var)
         val = EX(var)
-        assert np.allclose(val, [[5.0 for i in range(VECTOR_SIZE)]])
+        assert np.allclose(val, [[8.5 + (i * 1.7) for i in range(VECTOR_SIZE)]])
         if benchmark.enabled:
             benchmark(EX, var)
 
