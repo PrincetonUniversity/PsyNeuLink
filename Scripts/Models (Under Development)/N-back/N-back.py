@@ -614,7 +614,7 @@ def get_run_inputs(model, nback_level,
         stim_seq, trial_type_seq = generate_stim_sequence(nback_level, num_trials)
         # Return list of corresponding stimulus input vectors
 
-        input_set = [get_stim_set(num_trials)[i] for i in stim_seq]
+        input_set = [get_stim_set()[i] for i in stim_seq]
         return input_set, trial_type_seq
 
     input_set, trial_type_seq = get_input_sequence(nback_level, num_trials)
@@ -709,11 +709,11 @@ def run_model(model,
     if REPORT_PROGRESS == ReportProgress.ON:
         print('\n')
     print(f'nback_model done: {len(nback_model.results)} trials executed')
-    saved_results = None
+    results = np.array([model.results, trial_type_seqs])
     if save_results_to:
-        saved_results = np.save(save_results_to, np.array([model.results, trial_type_seqs]))
+        np.save(save_results_to, results)
     print(f'results: \n{model.results}')
-    return saved_results
+    return results
 
 nback_model = construct_model()
 if TRAIN:
@@ -722,8 +722,8 @@ if TRAIN:
                                   save_weights_to=weights_filename)
 if RUN:
     results_filename = f'nback.results_nep_{NUM_EPOCHS}_lr_{str(LEARNING_RATE).split(".")[1]}.pnl'
-    saved_results = run_model(nback_model,
-                              # load_weights_from='ffn.wts.pnl'
-                              # load_weights_from=INITIALIZER
-                              save_results_to= results_filename
-                              )
+    results = run_model(nback_model,
+                        # load_weights_from='ffn.wts.pnl'
+                        # load_weights_from=INITIALIZER
+                        save_results_to= results_filename
+                        )

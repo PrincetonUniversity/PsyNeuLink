@@ -4,8 +4,6 @@ import psyneulink.core.components.functions.nonstateful.transferfunctions as Fun
 import psyneulink.core.globals.keywords as kw
 import pytest
 
-from math import e, pi, sqrt
-
 SIZE=10
 np.random.seed(0)
 test_var = np.random.rand(SIZE)
@@ -25,7 +23,7 @@ softmax_helper = np.exp(softmax_helper) / np.sum(np.exp(softmax_helper))
 tanh_helper = (RAND1 * (test_var + RAND2 - RAND3) + RAND4)
 tanh_helper = np.tanh(tanh_helper)
 
-gaussian_helper = e**(-(test_var - RAND2)**2 / (2 * RAND1**2)) / sqrt(2 * pi * RAND1)
+gaussian_helper = np.e**(-(test_var - RAND2)**2 / (2 * RAND1**2)) / np.sqrt(2 * np.pi * RAND1)
 gaussian_helper = RAND3 * gaussian_helper + RAND4
 
 def gaussian_distort_helper(seed):
@@ -64,8 +62,6 @@ test_data = [
 @pytest.mark.benchmark
 @pytest.mark.parametrize("func, variable, params, expected", test_data)
 def test_execute(func, variable, params, expected, benchmark, func_mode):
-    if 'Angle' in func.componentName and func_mode != 'Python':
-        pytest.skip('Angle not yet supported by LLVM or PTX')
     benchmark.group = "TransferFunction " + func.componentName
     f = func(default_variable=variable, **params)
     ex = pytest.helpers.get_func_execution(f, func_mode)
@@ -84,23 +80,21 @@ derivative_test_data = [
     (Functions.Linear, test_var, {'slope':RAND1, 'intercept':RAND2}, RAND1),
     (Functions.Exponential, test_var, {'scale':RAND1, 'rate':RAND2}, RAND1 * RAND2 * np.exp(RAND2 * test_var)),
     (Functions.Logistic, test_var, {'gain':RAND1, 'x_0':RAND2, 'offset':RAND3, 'scale':RAND4}, RAND1 * RAND4 * logistic_helper * (1 - logistic_helper)),
-    (Functions.ReLU, test_var, {'gain':RAND1, 'bias':RAND2, 'leak':RAND3}, np.where(test_var > 0, RAND1, RAND1 * RAND3)),
+    (Functions.ReLU, test_var, {'gain':RAND1, 'bias':RAND2, 'leak':RAND3}, np.where((test_var - RAND2) > 0, RAND1, RAND1 * RAND3)),
     (Functions.Tanh, test_var, {'gain':RAND1, 'bias':RAND2, 'offset':RAND3, 'scale':RAND4}, tanh_derivative_helper),
-]
-
-derivative_names = [
-    "LINEAR_DERIVATIVE",
-    "EXPONENTIAL_DERIVATIVE",
-    "LOGISTIC_DERIVATIVE",
-    "RELU_DERIVATIVE",
-    "TANH_DERIVATIVE",
+    (Functions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_VAL}, 'per_item': False},
+     [-0.010680386821751537, -0.011118109698906909, -0.01082040340318878, -0.010670257514724047, -0.010362498859374309,
+      -0.010933660158663306, -0.010397412260182806, -0.011602329078808718, 0.09684744183944892, -0.010262384043848513]),
+    (Functions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_INDICATOR}, 'per_item': False},
+     [-0.010680386821751537, -0.011118109698906909, -0.01082040340318878, -0.010670257514724047, -0.010362498859374309,
+      -0.010933660158663306, -0.010397412260182806, -0.011602329078808718, 0.09684744183944892, -0.010262384043848513]),
 ]
 
 @pytest.mark.function
 @pytest.mark.transfer_function
 @pytest.mark.benchmark
-@pytest.mark.parametrize("func, variable, params, expected", derivative_test_data, ids=derivative_names)
-def test_execute_derivative(func, variable, params, expected, benchmark, func_mode):
+@pytest.mark.parametrize("func, variable, params, expected", derivative_test_data, ids=lambda x: getattr(x, 'name', None))
+def test_transfer_derivative(func, variable, params, expected, benchmark, func_mode):
     f = func(default_variable=variable, **params)
     benchmark.group = "TransferFunction " + func.componentName + " Derivative"
     if func_mode == 'Python':
