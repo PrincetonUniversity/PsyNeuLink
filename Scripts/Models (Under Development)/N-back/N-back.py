@@ -121,6 +121,21 @@ MODEL_TASK_INPUT = "TASK"
 EM = "EPISODIC MEMORY (dict)"
 CONTROLLER = "READ/WRITE CONTROLLER"
 
+class trial_types(IntEnum):
+    """Trial types explicitly assigned and counter-balanced in get_run_inputs()
+    In notation below, "A" is always current stimulus.
+    Foils are only explicitly assigned to items immediately following nback item.
+    Subseq designated below as "not explicitly assigned" may still appear in the overall stimulus seq,
+        either within the subseq through random assignment,
+        and/or through cross-subseq relationships that are not controlled in this design
+    """
+    MATCH_NO_FOIL = 0       # ABA (2-back) or ABCA (3-back); not explicitly assigned: ABBA
+    MATCH_WITH_FOIL = 1     # AAA (2-back) or AABA (3-back); not explicitly assigned: ABAA or AAAA
+    NO_MATCH_NO_FOIL = 2    # ABB (2-back) or BCDA (3-back); not explicitly assigned: BBCA, BCCA or BBBA
+    NO_MATCH_WITH_FOIL = 3  # BAA (2-back) or BACA (3-back); not explicitly assigned: BCAA or BAAA
+num_trial_types = len(trial_types)
+
+
 # ======================================== MODEL CONSTRUCTION =========================================================
 
 def construct_model(stim_size = STIM_SIZE,
@@ -404,19 +419,6 @@ def get_run_inputs(model, nback_level,
         assert nback_level in {2,3} # At present, only 2- and 3-back levels are supported
 
         stim_set = get_stim_set()
-        class trial_types(IntEnum):
-            """Trial types explicitly assigned and counter-balanced
-            In notation below, "A" is always current stimulus.
-            Foils are only explicitly assigned to items immediately following nback item.
-            Subseq designated below as "not explicitly assigned" may still appear in the overall stimulus seq,
-                either within the subseq through random assignment,
-                and/or through cross-subseq relationships that are not controlled in this design
-            """
-            MATCH_NO_FOIL = 0       # ABA (2-back) or ABCA (3-back); not explicitly assigned: ABBA
-            MATCH_WITH_FOIL = 1     # AAA (2-back) or AABA (3-back); not explicitly assigned: ABAA or AAAA
-            NO_MATCH_NO_FOIL = 2    # ABB (2-back) or BCDA (3-back); not explicitly assigned: BBCA, BCCA or BBBA
-            NO_MATCH_WITH_FOIL = 3  # BAA (2-back) or BACA (3-back); not explicitly assigned: BCAA or BAAA
-        num_trial_types = len(trial_types)
 
         def get_stim_subseq_for_trial_type(trial_type):
             """Return stimulus seq (as indices into stim_set) for the specified trial_type."""
@@ -526,7 +528,7 @@ def get_run_inputs(model, nback_level,
             model.nodes[MODEL_TASK_INPUT]: [get_task_input(nback_level)]*num_trials}, \
            trial_type_seq
 
-# ======================================== MODEL EXECUTION ============================================================
+# ==================================== MODEL EXECUTION METHODS ========================================================
 
 def train_network(network,
                   training_set=None,
@@ -645,16 +647,48 @@ def run_model(model,
     results = np.array([model.results, trial_type_seqs])
     if save_results_to:
         np.save(save_results_to, results)
-    print(f'results: \n{model.results}')
+    # print(f'results: \n{model.results}')
     return results
 
 def analyze_results(results, num_trials=NUM_TRIALS, nback_levels=NBACK_LEVELS):
     responses_and_trial_types = [None] * len(nback_levels)
+    stats = np.zeros((len(nback_levels),num_trial_types))
+    MATCH = 'match'
+    NON_MATCH = 'non-match'
+
     for i, nback_level in enumerate(nback_levels):
-        relevant_responses = results[0][i*num_trials:i*num_trials+num_trials]
+        # Code responses for given nback_level as 1 (match) or 0 (non-match)
+        relevant_responses = [int(r[0][0]) for r in results[0][i*num_trials:i*num_trials+num_trials]]
+        relevant_responses = [MATCH if r == 1 else NON_MATCH for r in relevant_responses]
         responses_and_trial_types[i] = list(zip(relevant_responses, results[1][i]))
+        # x = zip(relevant_responses, results[1][i])
+        for trial_type in trial_types:
+            # relevant_data = [[response,condition] for response,condition in x if condition == trial_type]
+            relevant_data = [[response,condition] for response,condition in zip(relevant_responses, results[1][i])
+                             if condition == trial_type]
+            if trial_type in {trial_types.MATCH_NO_FOIL, trial_types.MATCH_WITH_FOIL}:
+                #  is the correct response for a match trial
+                stats[i][trial_type] = [d[0] for d in relevant_data
+                                        if d[0] is not None].count(MATCH) / (len(relevant_data))
+            else:
+                # [0,1] is the correct response for a match trial
+                stats[i][trial_type] = [d[0] for d in relevant_data
+                                        if d[0] is not None].count(NON_MATCH) / (len(relevant_data))
+    for i, nback_level in enumerate(nback_levels):
+        print(f"nback level {nback_level}:")
+        for j, performance in enumerate(stats[i]):
+            print(f"\t{list(trial_types)[j].name}: {performance:.1f}")
+
+    return responses_and_trial_types, stats
+
+
+
+
+# ======================================== SCRIPT EXECUTION ============================================================
+# Construct, train and/or run model based on settings at top of script
 
 nback_model = construct_model()
+
 if TRAIN:
     weights_filename = f'ffn.wts_nep_{NUM_EPOCHS}_lr_{str(LEARNING_RATE).split(".")[1]}.pnl'
     saved_weights = train_network(nback_model.nodes[FFN_COMPOSITION],
@@ -664,7 +698,8 @@ if RUN:
     results = run_model(nback_model,
                         # load_weights_from='ffn.wts.pnl'
                         # load_weights_from=INITIALIZER
-                        save_results_to= results_filename
-                        )
+                        save_results_to= results_filename)
 if ANALYZE:
-    analyze_results(results, num_trials=NUM_TRIALS, nback_levels=NBACK_LEVELS)
+    coded_responses, stats = analyze_results(results,
+                                             num_trials=NUM_TRIALS,
+                                             nback_levels=NBACK_LEVELS)
