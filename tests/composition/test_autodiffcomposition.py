@@ -56,59 +56,6 @@ def test_autodiff_forward(autodiff_mode):
     outputs = xor.run(inputs=[0,0], execution_mode=autodiff_mode)
     assert np.allclose(outputs, [[0.9479085241082691]])
 
-# @pytest.mark.pytorch
-# def test_autodiff_saveload(tmp_path):
-#     def create_xor():
-#         # create xor model mechanisms and projections
-#         xor_in = TransferMechanism(name='xor_in',
-#                                    default_variable=np.zeros(2))
-#
-#         xor_hid = TransferMechanism(name='xor_hid',
-#                                     default_variable=np.zeros(10),
-#                                     function=Logistic())
-#
-#         xor_out = TransferMechanism(name='xor_out',
-#                                     default_variable=np.zeros(1),
-#                                     function=Logistic())
-#
-#         hid_map = MappingProjection(matrix=np.random.rand(2,10), name='hid_map')
-#         out_map = MappingProjection(matrix=np.random.rand(10,1), name='out_map')
-#
-#         # put the mechanisms and projections together in an autodiff composition (AC)
-#         xor = AutodiffComposition()
-#
-#         xor.add_node(xor_in)
-#         xor.add_node(xor_hid)
-#         xor.add_node(xor_out)
-#
-#         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
-#         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
-#         return xor
-#
-#     np.random.seed(0)
-#     xor1 = create_xor()
-#     xor1_outputs = xor1.run(inputs=[0,0])
-#
-#     # save
-#     xor1.save(tmp_path / 'xor_1.pnl')
-#
-#     del xor1
-#     pnl.clear_registry()
-#
-#     # load
-#     np.random.seed(1)
-#     xor2 = create_xor()
-#     xor2_outputs_pre = xor2.run(inputs=[0,0])
-#     xor2.load(tmp_path / 'xor_1.pnl')
-#     xor2_outputs_post = xor2.run(inputs=[0,0])
-#
-#
-#     # sanity check - make sure xor2 weights differ
-#     assert not np.allclose(xor2_outputs_pre, xor2_outputs_post, atol=1e-9)
-#
-#     # make sure loaded model is identical, and used during run
-#     assert np.allclose(xor1_outputs, xor2_outputs_post, atol=1e-9)
-
 @pytest.mark.pytorch
 def test_autodiff_saveload(tmp_path):
     def create_xor():

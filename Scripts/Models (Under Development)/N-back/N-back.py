@@ -53,14 +53,15 @@ TODO:
         - replace get_input_sequence and get_training_inputs with generators passed to nback_model.run() and ffn.learn
 
 """
+import enum
+import numpy as np
 
 from graph_scheduler import *
 
 from psyneulink import *
-import numpy as np
 
 # Settings for running script:
-TRAIN = True
+TRAIN = False
 RUN = True
 DISPLAY_MODEL = False # show visual graphic of model
 
@@ -125,7 +126,23 @@ def construct_model(stim_size = STIM_SIZE,
                     retrieval_stimulus_weight = RETRIEVAL_STIM_WEIGHT,
                     retrieval_context_weight = RETRIEVAL_CONTEXT_WEIGHT,
                     decision_softmax_temp = DECISION_SOFTMAX_TEMP):
-    """Construct nback_model"""
+    """Construct nback_model
+    Arguments
+    ---------
+    context_size: int : default CONTEXT_SIZE,
+    hidden_size: int : default HIDDEN_SIZE,
+    num_nback_levels: int : default NUM_NBACK_LEVELS,
+    context_drift_noise: float : default CONTEXT_DRIFT_NOISE,
+    retrievel_softmax_temp: float : default RETRIEVAL_SOFTMAX_TEMP,
+    retrieval_hazard_rate: float : default RETRIEVAL_HAZARD_RATE,
+    retrieval_stimulus_weight: float : default RETRIEVAL_STIM_WEIGHT,
+    retrieval_context_weight: float : default RETRIEVAL_CONTEXT_WEIGHT,
+    decision_softmax_temp: float : default DECISION_SOFTMAX_TEMP):
+
+    Returns
+    -------
+    Composition implementing N-back model
+    """
 
     print(f"constructing '{FFN_COMPOSITION}'...")
 
@@ -239,12 +256,6 @@ def construct_model(stim_size = STIM_SIZE,
                                                                            AfterPass(0, TimeScale.TRIAL))},
                               )
     # # Terminate trial if value of control is still 1 after first pass through execution
-    # # FIX: ALL OF THE FOLLOWING STOP AFTER ~ NUMBER OF TRIALS (?90+); SHOULD BE: NUM_TRIALS*NUM_NBACK_LEVELS + 1
-    # nback_model.scheduler.add_condition(nback_model, And(Condition(lambda: control.value), AfterPass(0, TimeScale.TRIAL)))
-    # nback_model.scheduler.termination_conds = ({TimeScale.TRIAL: And(Condition(lambda: control.value),
-    #                                                                      AfterPass(0, TimeScale.TRIAL))})
-    # nback_model.scheduler.termination_conds.update({TimeScale.TRIAL: And(Condition(lambda: control.value),
-    #                                                                      AfterPass(0, TimeScale.TRIAL))})
     nback_model.add_projection(MappingProjection(), stim, input_current_stim)
     nback_model.add_projection(MappingProjection(), context, input_current_context)
     nback_model.add_projection(MappingProjection(), task, input_task)
@@ -264,114 +275,17 @@ def construct_model(stim_size = STIM_SIZE,
     return nback_model
 
 # ==========================================STIMULUS GENERATION =======================================================
-# Based on nback-paper
 
 def get_stim_set(num_stim=STIM_SIZE):
-    """Construct an array of stimuli for use an experiment"""
+    """Construct an array of unique stimuli for use in an experiment, used by train_network() and run_model()"""
     # For now, use one-hots
     return np.eye(num_stim)
 
 def get_task_input(nback_level):
-    """Construct input to task Mechanism for a given nback_level, used by run_model() and train_network()"""
+    """Construct input to task Mechanism for a given nback_level, used by train_network() and run_model()"""
     task_input = list(np.zeros_like(NBACK_LEVELS))
     task_input[nback_level-NBACK_LEVELS[0]] = 1
     return task_input
-
-def get_run_inputs(model, nback_level, context_drift_rate, num_trials):
-    """Construct set of stimulus inputs for run_model()"""
-
-    def generate_stim_sequence(nback_level, trial_num, trial_type=0, num_stim=NUM_STIM, num_trials=NUM_TRIALS):
-        assert nback_level in {2,3} # At present, only 2- and 3-back levels are supported
-
-        def gen_subseq_stim():
-            A = np.random.randint(0,num_stim)
-            B = np.random.choice(
-                 np.setdiff1d(np.arange(num_stim),[A])
-                )
-            C = np.random.choice(
-                 np.setdiff1d(np.arange(num_stim),[A,B])
-                )
-            X = np.random.choice(
-                 np.setdiff1d(np.arange(num_stim),[A,B])
-                )
-            return A,B,C,X
-
-        def generate_match_no_foils_sequence(nback_level,trial_num):
-            # AXA (2-back) or ABXA (3-back)
-            seq = np.random.randint(0,num_stim,num_trials)
-            A,B,C,X = gen_subseq_stim()
-            #
-            if nback_level==2:
-                subseq = [A,X,A]
-            elif nback_level==3:
-                subseq = [A,B,X,A]
-            seq[trial_num-(nback_level+1):trial_num] = subseq
-            return seq[:trial_num]
-
-        def generate_non_match_no_foils_sequence(nback_level,trial_num):
-            # AXB (2-back) or ABXC (3-back)
-            seq = np.random.randint(0,num_stim,num_trials)
-            A,B,C,X = gen_subseq_stim()
-            #
-            if nback_level==2:
-                subseq = [A,X,B]
-            elif nback_level==3:
-                subseq = [A,B,X,C]
-            seq[trial_num-(nback_level+1):trial_num] = subseq
-            return seq[:trial_num]
-
-        def generate_match_with_foil_sequence(nback_level,trial_num):
-            # AAA (2-back) or AAXA (3-back)
-            seq = np.random.randint(0,num_stim,num_trials)
-            A,B,C,X = gen_subseq_stim()
-            #
-            if nback_level==2:
-                subseq = [A,A,A]
-            elif nback_level==3:
-                subseq = [A,A,X,A]
-            seq[trial_num-(nback_level+1):trial_num] = subseq
-            return seq[:trial_num]
-
-        def generate_non_match_with_foil_sequence(nback_level,trial_num):
-            # XAA (2-back) or ABXB (3-back)
-            seq = np.random.randint(0,num_stim,num_trials)
-            A,B,C,X = gen_subseq_stim()
-            #
-            if nback_level==2:
-                subseq = [X,A,A]
-            elif nback_level==3:
-                subseq = [A,B,X,B]
-            seq[trial_num-(nback_level+1):trial_num] = subseq
-            return seq[:trial_num]
-
-        trial_types = [generate_match_no_foils_sequence,
-                       generate_match_with_foil_sequence,
-                       generate_non_match_no_foils_sequence,
-                       generate_non_match_with_foil_sequence]
-        stim_seq = trial_types[trial_type](nback_level,trial_num)
-        # ytarget = [1,1,0,0][trial_type]
-        # ctxt = spherical_drift(trial_num)
-        # return stim,ctxt,ytarget
-        return stim_seq
-
-    # def stim_set_generation(nback_level, num_trials):
-    #     stim_sequence = []
-    #     # for seq_int, trial in itertools.product(range(4),np.arange(5,trials)): # This generates all length sequences
-    #     for trial_type, trial_num in itertools.product(range(4),[num_trials]):  # This generates only longest seq (
-    #         # num_trials)
-    #         return stim_sequence.append(generate_stim_sequence(nback_level, trial_num, trial_type=trial_type, trials=num_trials))
-
-    def get_input_sequence(nback_level, num_trials=NUM_TRIALS):
-        """Get sequence of inputs for a run"""
-        input_set = get_stim_set()
-        # Construct sequence of stimulus indices
-        trial_seq = generate_stim_sequence(nback_level, num_trials)
-        # Return list of corresponding stimulus input vectors
-        return [input_set[trial_seq[i]] for i in range(num_trials)]
-
-    return {model.nodes[MODEL_STIMULUS_INPUT]: get_input_sequence(nback_level, num_trials),
-            model.nodes[MODEL_CONTEXT_INPUT]: [[context_drift_rate]]*num_trials,
-            model.nodes[MODEL_TASK_INPUT]: [get_task_input(nback_level)]*num_trials}
 
 def get_training_inputs(network, num_epochs, nback_levels):
     """Construct set of training stimuli used by ffn.learn() in train_network()
@@ -453,6 +367,262 @@ def get_training_inputs(network, num_epochs, nback_levels):
 
     return training_set, batch_size
 
+# # BASED ON nback-paper
+# def get_run_inputs(model, nback_level, context_drift_rate, num_trials):
+#     """Construct set of stimulus inputs for run_model()
+#     Pad sequence of trials with random stimuli up to the last nback_level+1 trials.
+#     Assign condition-specific sequence to the last nback_level_1 trials.
+#     NOTE: THIS IS CARRYOVER FROM THE nback-paper IMPLEMENTATION, AND SHOULD BE REPLACED WITH
+#           A SEQUENCE THAT BALANCES THE FOUR CONDITIONS THROUGH THE FULL LENGTH OF THE RUN.
+#     """
+#
+#     def generate_stim_sequence(nback_level, trial_num, trial_type=0, num_stim=NUM_STIM, num_trials=NUM_TRIALS):
+#         assert nback_level in {2,3} # At present, only 2- and 3-back levels are supported
+#
+#         def gen_subseq_stim():
+#             A = np.random.randint(0,num_stim)
+#             B = np.random.choice(
+#                  np.setdiff1d(np.arange(num_stim),[A])
+#                 )
+#             C = np.random.choice(
+#                  np.setdiff1d(np.arange(num_stim),[A,B])
+#                 )
+#             X = np.random.choice(
+#                  np.setdiff1d(np.arange(num_stim),[A,B])
+#                 )
+#             return A,B,C,X
+#
+#         def generate_match_no_foils_sequence(nback_level,trial_num):
+#             # AXA (2-back) or ABXA (3-back)
+#             # Pad sequence of trials up to the last nback_level+1 trials with random stimuli
+#             seq = np.random.randint(0,num_stim,num_trials)
+#             A,B,C,X = gen_subseq_stim()
+#             # Generate nback_level+1 stimuli for this condition
+#             if nback_level==2:
+#                 subseq = [A,X,A]
+#             elif nback_level==3:
+#                 subseq = [A,B,X,A]
+#             # Assign sequence for condition to last nback_level+1 trials
+#             seq[trial_num-(nback_level+1):trial_num] = subseq
+#             return seq[:trial_num]
+#
+#         def generate_non_match_no_foils_sequence(nback_level,trial_num):
+#             # AXB (2-back) or ABXC (3-back)
+#             seq = np.random.randint(0,num_stim,num_trials)
+#             A,B,C,X = gen_subseq_stim()
+#             #
+#             if nback_level==2:
+#                 subseq = [A,X,B]
+#             elif nback_level==3:
+#                 subseq = [A,B,X,C]
+#             seq[trial_num-(nback_level+1):trial_num] = subseq
+#             return seq[:trial_num]
+#
+#         def generate_match_with_foil_sequence(nback_level,trial_num):
+#             # AAA (2-back) or AAXA (3-back)
+#             seq = np.random.randint(0,num_stim,num_trials)
+#             A,B,C,X = gen_subseq_stim()
+#             #
+#             if nback_level==2:
+#                 subseq = [A,A,A]
+#             elif nback_level==3:
+#                 subseq = [A,A,X,A]
+#             seq[trial_num-(nback_level+1):trial_num] = subseq
+#             return seq[:trial_num]
+#
+#         def generate_non_match_with_foil_sequence(nback_level,trial_num):
+#             # XAA (2-back) or ABXB (3-back)
+#             seq = np.random.randint(0,num_stim,num_trials)
+#             A,B,C,X = gen_subseq_stim()
+#             #
+#             if nback_level==2:
+#                 subseq = [X,A,A]
+#             elif nback_level==3:
+#                 subseq = [A,B,X,B]
+#             seq[trial_num-(nback_level+1):trial_num] = subseq
+#             return seq[:trial_num]
+#
+#         trial_types = [generate_match_no_foils_sequence,
+#                        generate_match_with_foil_sequence,
+#                        generate_non_match_no_foils_sequence,
+#                        generate_non_match_with_foil_sequence]
+#         stim_seq = trial_types[trial_type](nback_level,trial_num)
+#         # ytarget = [1,1,0,0][trial_type]
+#         # ctxt = spherical_drift(trial_num)
+#         # return stim,ctxt,ytarget
+#         return stim_seq
+#
+#     # def stim_set_generation(nback_level, num_trials):
+#     #     stim_sequence = []
+#     #     # for seq_int, trial in itertools.product(range(4),np.arange(5,trials)): # This generates all length sequences
+#     #     for trial_type, trial_num in itertools.product(range(4),[num_trials]):  # This generates only longest seq (
+#     #         # num_trials)
+#     #         return stim_sequence.append(generate_stim_sequence(nback_level, trial_num, trial_type=trial_type, trials=num_trials))
+#
+#     def get_input_sequence(nback_level, num_trials=NUM_TRIALS):
+#         """Get sequence of inputs for a run"""
+#         input_set = get_stim_set()
+#         # Construct sequence of stimulus indices
+#         trial_seq = generate_stim_sequence(nback_level, num_trials)
+#         # Return list of corresponding stimulus input vectors
+#         return [input_set[trial_seq[i]] for i in range(num_trials)]
+#
+#     return {model.nodes[MODEL_STIMULUS_INPUT]: get_input_sequence(nback_level, num_trials),
+#             model.nodes[MODEL_CONTEXT_INPUT]: [[context_drift_rate]]*num_trials,
+#             model.nodes[MODEL_TASK_INPUT]: [get_task_input(nback_level)]*num_trials}
+
+
+
+
+
+# BALANCED / SEQUENTIAL
+def get_run_inputs(model, nback_level,
+                   context_drift_rate=CONTEXT_DRIFT_RATE,
+                   num_stim=NUM_STIM,
+                   num_trials=NUM_TRIALS,
+                   mini_blocks=True):
+    """Construct set of stimulus inputs for run_model(), balancing across four conditions.
+    Trial_type assignments:
+      - trial_types are assigned to subseqs of nback_level+1 stimuli that are concatenated to form the full trial seq
+      - trial_type subseqs are constructed in get_stim_subseq_for_trial_type(), by randomly picking a target stimulus,
+          and then assigning the preceding stimuli in the subseq to conform the trial_type
+      - the balancing of trial_types is enforced *only* for the last stimulus in each set;
+          the others are inferred and may not be fully balanced across conditions
+          (depending on number of stimuli, this may be impossible).
+    Mini_blocks:
+      - if True (default) trials are sequenced in mini-blocks each of which contains one set of trials
+          for each trial_type; order of trial_type subseq within each mini_block is randomized across them;
+          number of trials in a mini-block = nback_level+1 * num_trial_types; trials not assigned to
+          mini_blocks (i.e., modulus of num_trial % (num_mini_blocks * mini_block_size) are assigned random
+          stimuli and trial_type is inferred posthoc).
+      - if False, sampling of trial_types is balanced,
+          but order of presentation is randomized over the entire sequence
+    """
+
+    def generate_stim_sequence(nback_level, num_trials):
+        import random
+        from enum import IntEnum
+        import warnings
+        assert nback_level in {2,3} # At present, only 2- and 3-back levels are supported
+
+        stim_set = get_stim_set()
+        class trial_types(IntEnum):
+            """Trial types explicitly assigned and counter-balanced
+            In notation below, "A" is always current stimulus.
+            Foils are only explicitly assigned to items immediately following nback item.
+            Subseq designated below as "not explicitly assigned" may still appear in the overall stimulus seq,
+                either within the subseq through random assignment,
+                and/or through cross-subseq relationships that are not controlled in this design
+            """
+            MATCH_NO_FOIL = 0       # ABA (2-back) or ABCA (3-back); not explicitly assigned: ABBA
+            MATCH_WITH_FOIL = 1     # AAA (2-back) or AABA (3-back); not explicitly assigned: ABAA or AAAA
+            NO_MATCH_NO_FOIL = 2    # ABB (2-back) or BCDA (3-back); not explicitly assigned: BBCA, BCCA or BBBA
+            NO_MATCH_WITH_FOIL = 3  # BAA (2-back) or BACA (3-back); not explicitly assigned: BCAA or BAAA
+        num_trial_types = len(trial_types)
+
+        def get_stim_subseq_for_trial_type(trial_type):
+            """Return stimulus seq (as indices into stim_set) for the specified trial_type."""
+            subseq_size = nback_level+1
+            subseq = [None] * subseq_size
+            curr_stim = subseq[nback_level] = random.choice(np.arange(len(stim_set)))
+            other_stims = np.setdiff1d(np.arange(len(stim_set)),curr_stim).tolist()
+
+            if trial_type == trial_types.MATCH_NO_FOIL:           # ABA (2-back) or ABCA (3-back)
+                subseq[0] = curr_stim  # Assign nback stim to match
+                # Assign remaining items in sequence to anything stimuli than curr_stim
+                subseq[1:nback_level] = random.sample(other_stims, nback_level-1)
+            elif trial_type == trial_types.MATCH_WITH_FOIL:        # AAA (2-back) or AABA (3-back)
+                subseq[0] = curr_stim  # Assign nback stim to match current stim
+                subseq[1] = curr_stim  # Assign curr_stim to stim next to nback as foil
+                # Assign any remaining items in sequence to any stimuli other than curr_stim
+                subseq[2:nback_level] = random.sample(other_stims, nback_level-2)
+            elif trial_type == trial_types.NO_MATCH_NO_FOIL:       # ABB (2-back) or BCDA (3-back)
+                # Assign remaining items in sequence to any stimuli than curr_stim
+                subseq[0:nback_level] = random.sample(other_stims, nback_level)
+            elif trial_type == trial_types.NO_MATCH_WITH_FOIL:     # BAA (2-back) or BACA (3-back)
+                # Assign remaining items in sequence to any stimuli than curr_stim
+                subseq[1] = curr_stim  # Assign curr_stim to stim next to nback as foil
+                subseq[0:1] = random.sample(other_stims, 1)
+                subseq[2:nback_level] = random.sample(other_stims, nback_level-2)
+            assert not None in subseq, "Failed to assign all stims for subseq in get_stim_subseq_for_trial_type."
+            return subseq
+
+        def get_trial_type_for_stim(subseq):
+            # assert len(subseq) == nback_level+1, \
+            #     f"Bad subseq len ({len(subseq)}) for nback_level ({nback_level})."
+            # assert all(trial_type==None for trial_type in trial_type_seq[trial_num:trial_num + nback_level]), \
+            #     f"trial_type should still be None for trials {trial_num - nback_level} to {trial_num - 1}."
+            if subseq[-1] == subseq[0] and not subseq[-1] in subseq[1:-1]:
+                return trial_types.MATCH_NO_FOIL.value
+            elif subseq[-1] == subseq[0] and subseq[-1] in subseq[0:-1]:
+                return trial_types.MATCH_WITH_FOIL.value
+            elif subseq[-1] not in subseq[0:-1]:
+                return trial_types.NO_MATCH_NO_FOIL.value
+            elif subseq[-1] != subseq[0] and subseq[-1] in subseq[0:-1]:
+                # Note: for 3back, this includes: BAXA, BXAA, and BAAA
+                return trial_types.NO_MATCH_WITH_FOIL.value
+
+        subseq_size = nback_level+1
+        num_sub_seqs = int(num_trials / num_trial_types)
+        extra_trials = num_trials % num_trial_types
+
+        # Construct seq of mini-blocks (subseqs) each containing one sample of each trial_type in a random order
+        #    note: this is done over number of mini-blocks that fit into num_trials;
+        #          remaining trials are randomly assigned trial_types below
+
+        num_mini_blocks = int(num_trials / (num_trial_types * (nback_level+1)))
+        mini_block_size = subseq_size * num_trial_types # Number of trials in a mini_block
+        # seq_of_trial_type_subseqs = [None] * num_mini_blocks * num_trial_types
+        seq_of_trial_type_subseqs = []
+        # Generate randomly ordered trial_type assignments for subseqs in each mini_block
+        for i in range(num_mini_blocks):
+            # seq_of_trial_type_subseqs[i*num_trial_types:i+num_trial_types] = \
+            #     random.sample(range(num_trial_types), num_trial_types)
+            seq_of_trial_type_subseqs.extend(random.sample(range(num_trial_types), num_trial_types))
+        # seq_of_trial_type_subseqs = random.sample(range(num_trial_types), num_trial_types) * mini_block_size
+        if not mini_blocks:
+            # Randomize the order of trial types across the entire sequence:
+            random.shuffle(seq_of_trial_type_subseqs)
+
+        if extra_trials:  # Warn if conditions can't be fully balanced
+            warnings.warn(f"Number of trials ({num_trials}) precludes fully balancing across all five trial types")
+
+        stim_seq = [None] * num_trials
+        trial_type_seq = [None] * num_trials
+        # Construct actual stimulus sequence by getting stimuli for each subseq, up to num_sub_seqs
+        #   note: the trial type only applies (and a trial_type is only assigned) to the last trial of each subsequence;
+        #         trial_type of preceding ones set below on the full sequence of stimuli is assigned
+        # stim_seq.append(get_stim_seq_for_trial_type(i) for i in seq_of_trial_type_subseqs) # <- CONDENSED VERSION
+        for i, trial_type in enumerate(seq_of_trial_type_subseqs):  # <- LOOP VERSION
+            idx = i * subseq_size
+            # Get seq of stimuli for subseq of specified trial_type
+            stim_seq[idx:idx+nback_level+1] = get_stim_subseq_for_trial_type(trial_type)
+            # Assign trial_type to last stim in subseq (since it was constructed specifically for that trial_type)
+            trial_type_seq[idx+nback_level] = trial_type
+        # Pad remainder to get to num_trials with randomly selected stimuli
+        stim_seq.extend(random.sample(range(num_trial_types),extra_trials))
+        # Infer trial_types for all remaining stimuli (which should currently be marked as None)
+        for i in range(subseq_size,num_trials,subseq_size):
+            for j in range(i,i+nback_level):
+                assert trial_type_seq[j]==None, f"trial_type should still be None for trial {j}."
+                trial_type_seq[j] = get_trial_type_for_stim(stim_seq[i-subseq_size:i])
+                assert True
+        return(stim_seq, trial_type_seq)
+
+    def get_input_sequence(nback_level, num_trials=NUM_TRIALS):
+        # Construct sequence of stimulus and trial_type indices
+        stim_seq, trial_type_seq = generate_stim_sequence(nback_level, num_trials)
+        # Return list of corresponding stimulus input vectors
+
+        input_set = [get_stim_set()[i] for i in stim_seq]
+        return input_set, trial_type_seq
+
+    input_set, trial_type_seq = get_input_sequence(nback_level, num_trials)
+    return {model.nodes[MODEL_STIMULUS_INPUT]: input_set,
+            model.nodes[MODEL_CONTEXT_INPUT]: [[context_drift_rate]]*num_trials,
+            model.nodes[MODEL_TASK_INPUT]: [get_task_input(nback_level)]*num_trials}, \
+           trial_type_seq
+
 # ======================================== MODEL EXECUTION ============================================================
 
 def train_network(network,
@@ -499,15 +669,37 @@ def run_model(model,
               animate=ANIMATE,
               save_results_to=None
               ):
+    """Run model for all nback levels with a specified context drift rate and number of trials
+    Arguments
+    --------
+    load_weights_from:  Path : default None
+        specifies file from which to load pre-trained weights for matrices of FFN_COMPOSITION.
+    context_drift_rate: float : CONTEXT_DRIFT_RATE
+        specifies drift rate as input to CONTEXT_INPUT, used by DriftOnASphere function of FFN_CONTEXT_INPUT.
+    num_trials: int : default 48
+        number of trials (stimuli) to run.
+    report_output: REPORT_OUTPUT : default REPORT_OUTPUT.OFF
+        specifies whether to report results during execution of run (see `Report_Output` for additional details).
+    report_progress: REPORT_PROGRESS : default REPORT_PROGRESS.OFF
+        specifies whether to report progress of execution during run (see `Report_Progress` for additional details).
+    animate: dict or bool : default False
+        specifies whether to generate animation of execution (see `ShowGraph_Animation` for additional details).
+    save_results_to: Path : default None
+        specifies location to save results of the run along with trial_type_sequences for each nback level;
+        if None, those are returned by call but not saved.
+    """
     ffn = nback_model.nodes[FFN_COMPOSITION]
     em = model.nodes[EM]
     if load_weights_from:
         print(f"nback_model loading '{FFN_COMPOSITION}' weights from {load_weights_from}...")
         ffn.load(load_weights_from)
     print('nback_model executing...')
-    for nback_level in NBACK_LEVELS:
-        em.function.reset(em.memory[0]) # Reset episodic memory for new task using first entry (original initializer)
-        model.run(inputs=get_run_inputs(model, nback_level, context_drift_rate, num_trials),
+    trial_type_seqs = [None] * NUM_NBACK_LEVELS
+    for i, nback_level in enumerate(NBACK_LEVELS):
+        # Reset episodic memory for new task using first entry (original initializer)
+        em.function.reset(em.memory[0])
+        inputs, trial_type_seqs[i] = get_run_inputs(model, nback_level, context_drift_rate, num_trials)
+        model.run(inputs=inputs,
                   report_output=report_output,
                   report_progress=report_progress,
                   animate=animate
@@ -517,11 +709,11 @@ def run_model(model,
     if REPORT_PROGRESS == ReportProgress.ON:
         print('\n')
     print(f'nback_model done: {len(nback_model.results)} trials executed')
-    saved_results = None
+    results = np.array([model.results, trial_type_seqs])
     if save_results_to:
-        saved_resulats = np.save(save_results_to, model.results)
+        np.save(save_results_to, results)
     print(f'results: \n{model.results}')
-    return saved_results
+    return results
 
 nback_model = construct_model()
 if TRAIN:
@@ -530,8 +722,8 @@ if TRAIN:
                                   save_weights_to=weights_filename)
 if RUN:
     results_filename = f'nback.results_nep_{NUM_EPOCHS}_lr_{str(LEARNING_RATE).split(".")[1]}.pnl'
-    saved_results = run_model(nback_model,
-                              # load_weights_from='ffn.wts.pnl'
-                              # load_weights_from=INITIALIZER
-                              save_results_to= results_filename
-                              )
+    results = run_model(nback_model,
+                        # load_weights_from='ffn.wts.pnl'
+                        # load_weights_from=INITIALIZER
+                        save_results_to= results_filename
+                        )
