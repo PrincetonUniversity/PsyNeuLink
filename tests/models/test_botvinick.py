@@ -189,10 +189,12 @@ def test_botvinick_model(benchmark, comp_mode, reps):
 
             # Comp results include concatenation of both the above runs
             results.append(comp.results)
+            # cleanup the results of the most recently used context id
+            comp.results = []
 
         return results
 
-    res = run(comp_mode)
+    res = benchmark(run, comp_mode)
     # the corresponding output port indices in composition results
     # these were 0 and 1 in the prior version of the test
     response_results_index = 3
@@ -283,5 +285,3 @@ def test_botvinick_model(benchmark, comp_mode, reps):
         assert np.allclose(res[1][-1][response_decision_energy_index], [1.87232903])
         assert np.allclose(res[2][ntrials0 - 1][response_decision_energy_index], [0.94440397])
         assert np.allclose(res[2][-1][response_decision_energy_index], [0.90033387])
-    if benchmark.enabled:
-        benchmark(run, comp_mode)
