@@ -1,5 +1,20 @@
 """
 Stimuli from `Kane et al., 2007 <https://psycnet.apa.org/record/2007-06096-010?doi=1>`_
+Constructed from unique stimuli:  B, F, H, K, M, Q, R, X
+
+From Kane et al:
+Control targets are designated with 1\1\0 and there are 6 of them
+Experimental targets are designated with 1\2\0 and there are 2 of them
+Control foils are designated with 2\1\0 and there are 34 of them
+All experimental foils are designated with 2\2\0 and there are 6 of them
+
+*** 48 trials per block
+*** Each letter should appear as a target once (i.e., 8 targets; 6 control, 2 experimental)
+*** The 2 experimental target letters should not be used as experimental target letters in lists b, c, or d (the 2 experimental target letters in this list are B and F)
+*** Each letter should appear as an experimental foil once if possible (the 6 in this list are B, F, H, K,M, R, and X)
+*** Each letter should appear in the list 6 times
+*** There should not be any 3-back lures
+
 """
 2_back_a = ['Q', 'F', 'B', 'R', 'X', 'X', 'X', 'M', 'M', 'K', 'B', 'B', 'M', 'Q', 'M', 'X',
             'H', 'B', 'H', 'X', 'K', 'Q', 'F', 'F', 'F', 'K', 'K', 'M', 'R', 'H', 'H', 'M',
