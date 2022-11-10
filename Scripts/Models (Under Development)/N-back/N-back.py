@@ -290,10 +290,10 @@ def get_task_input(nback_level):
 def get_training_inputs(network, num_epochs, nback_levels):
     """Construct set of training stimuli used by ffn.learn() in train_network()
     Construct one example of each condition:
-     match:  stim_current = stim_retrieved  and context_current = context_retrieved
-     stim_lure:  stim_current = stim_retrieved  and context_current != context_retrieved
-     context_lure:  stim_current != stim_retrieved  and context_current == context_retrieved
-     non_lure:  stim_current != stim_retrieved  and context_current != context_retrieved
+        match:  stim_current = stim_retrieved  and context_current = context_retrieved
+        stim_lure:  stim_current = stim_retrieved  and context_current != context_retrieved
+        context_lure:  stim_current != stim_retrieved  and context_current == context_retrieved
+        non_lure:  stim_current != stim_retrieved  and context_current != context_retrieved
     """
     assert is_iterable(nback_levels) and all([0<i<=MAX_NBACK_LEVELS for i in nback_levels])
     stimuli = get_stim_set()
