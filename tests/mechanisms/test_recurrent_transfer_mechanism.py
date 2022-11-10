@@ -133,15 +133,16 @@ class TestRecurrentTransferMechanismInputs:
 
         val1 = EX([[1.0, 2.0]])
         val2 = EX([[1.0, 2.0]])
+
         # execute 10 times
-        for i in range(10):
-            val10 = EX([[1.0, 2.0]])
+        for i in range(9):
+            EX([[1.0, 2.0]])
+
+        val10 = benchmark(EX, [[1.0, 2.0]])
 
         assert np.allclose(val1, [[0.50249998, 0.50499983]])
         assert np.allclose(val2, [[0.50497484, 0.50994869]])
         assert np.allclose(val10, [[0.52837327, 0.55656439]])
-        if benchmark.enabled:
-            benchmark(EX, [[1.0, 2.0]])
 
     @pytest.mark.mechanism
     @pytest.mark.recurrent_transfer_mechanism
@@ -158,14 +159,14 @@ class TestRecurrentTransferMechanismInputs:
         val1 = EX([[1.0, 2.0]])
         val2 = EX([[1.0, 2.0]])
         # execute 10 times
-        for i in range(10):
-            val10 = EX([[1.0, 2.0]])
+        for i in range(9):
+            EX([[1.0, 2.0]])
+
+        val10 = benchmark(EX, [[1.0, 2.0]])
 
         assert np.allclose(val1, [[0.1, 0.2]])
         assert np.allclose(val2, [[0.196, 0.392]])
         assert np.allclose(val10, [[0.96822561, 1.93645121]])
-        if benchmark.enabled:
-            benchmark(EX, [[1.0, 2.0]])
 
     # def test_recurrent_mech_inputs_list_of_fns(self):
     #     R = RecurrentTransferMechanism(

@@ -62,10 +62,8 @@ class TestTransferMechanismInputs:
         EX = pytest.helpers.get_mech_execution(T, mech_mode)
 
         EX(var)
-        val = EX(var)
+        val = benchmark(EX, var)
         assert np.allclose(val, [[7.5 for i in range(VECTOR_SIZE)]])
-        if benchmark.enabled:
-            benchmark(EX, var)
 
     #@pytest.mark.mechanism
     #@pytest.mark.transfer_mechanism
@@ -158,10 +156,8 @@ class TestTransferMechanismNoise:
 
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
-        val = EX(var)
+        val = benchmark(EX, var)
         assert np.allclose(val, [[8.25 for i in range(VECTOR_SIZE)]])
-        if benchmark.enabled:
-            benchmark(EX, var)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -214,10 +210,8 @@ class TestTransferMechanismNoise:
 
         var = [0 for i in range(VECTOR_SIZE)]
         EX(var)
-        val = EX(var)
+        val = benchmark(EX, var)
         assert np.allclose(val, [[8.5 + (i * 1.7) for i in range(VECTOR_SIZE)]])
-        if benchmark.enabled:
-            benchmark(EX, var)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -437,13 +431,11 @@ class TestTransferMechanismFunctions:
         vals = []
         for var in variables[:-1]:
             vals.append(EX([var] * VECTOR_SIZE))
-        vals.append(EX([variables[-1]] * VECTOR_SIZE))
+        vals.append(benchmark(EX, [variables[-1]] * VECTOR_SIZE))
 
         assert len(vals) == len(expected)
         for val, exp in zip(vals, expected):
             assert np.allclose(val, [[exp]] * VECTOR_SIZE)
-        if benchmark.enabled:
-            benchmark(EX, variables[0])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -528,10 +520,8 @@ class TestTransferMechanismIntegratorFunctionParams:
 
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
-        val = EX(var)
+        val = benchmark(EX, var)
         assert np.allclose(val, [[ 0., 0.19, 0.36, 0.51]])
-        if benchmark.enabled:
-            benchmark(EX, var)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -548,10 +538,8 @@ class TestTransferMechanismIntegratorFunctionParams:
 
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
-        val = EX(var)
+        val = benchmark(EX, var)
         assert np.allclose(val, [[ 0., 0.19, 0.36, 0.51]])
-        if benchmark.enabled:
-            benchmark(EX, var)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -569,10 +557,8 @@ class TestTransferMechanismIntegratorFunctionParams:
 
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
-        val = EX(var)
+        val = benchmark(EX, var)
         assert np.allclose(val, [[ 0., 0.0975, 0.19, 0.2775]])
-        if benchmark.enabled:
-            benchmark(EX, var)
 
     def test_transfer_mech_array_assignments_wrong_size_mech_rate(self):
 
@@ -618,10 +604,8 @@ class TestTransferMechanismIntegratorFunctionParams:
 
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
-        val = EX(var)
+        val = benchmark(EX, var)
         assert np.allclose(val, [[ 0.75,  0.775,  0.8, 0.825]])
-        if benchmark.enabled:
-            benchmark(EX, var)
 
 
     @pytest.mark.mechanism
@@ -641,10 +625,8 @@ class TestTransferMechanismIntegratorFunctionParams:
 
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
-        val = EX(var)
+        val = benchmark(EX, var)
         assert np.allclose(val, [[ 0.75,  0.775,  0.8, 0.825]])
-        if benchmark.enabled:
-            benchmark(EX, var)
 
 
     @pytest.mark.mechanism
@@ -665,10 +647,9 @@ class TestTransferMechanismIntegratorFunctionParams:
 
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
-        val = EX(var)
+        val = benchmark(EX, var)
         assert np.allclose(val, [[ 0.75,  0.775,  0.8, 0.825]])
-        if benchmark.enabled:
-            benchmark(EX, var)
+
 
     def test_transfer_mech_array_assignments_wrong_size_mech_init_val(self):
 
@@ -757,10 +738,9 @@ class TestTransferMechanismIntegratorFunctionParams:
 
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
-        val = EX(var)
+        val = benchmark(EX, var)
         assert np.allclose(val, [[ 0.75, 0.9, 1.05, 1.2 ]])
-        if benchmark.enabled:
-            benchmark(EX, var)
+
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -778,10 +758,9 @@ class TestTransferMechanismIntegratorFunctionParams:
 
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
-        val = EX(var)
+        val = benchmark(EX, var)
         assert np.allclose(val, [[ 0.75, 0.9, 1.05, 1.2 ]])
-        if benchmark.enabled:
-            benchmark(EX, var)
+
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -800,10 +779,9 @@ class TestTransferMechanismIntegratorFunctionParams:
 
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
-        val = EX(var)
+        val = benchmark(EX, var)
         assert np.allclose(val, [[ 0.75, 0.825, 0.9, 0.975]])
-        if benchmark.enabled:
-            benchmark(EX, var)
+
 
     # def test_transfer_mech_array_assignments_wrong_size_mech_noise(self, benchmark, mode):
     def test_transfer_mech_array_assignments_wrong_size_mech_noise(self):
@@ -855,13 +833,10 @@ class TestTransferMechanismTimeConstant:
         EX = pytest.helpers.get_mech_execution(T, mech_mode)
 
         val1 = EX([1 for i in range(VECTOR_SIZE)])
-        val2 = EX([1 for i in range(VECTOR_SIZE)])
+        val2 = benchmark(EX, [1 for i in range(VECTOR_SIZE)])
 
         assert np.allclose(val1, [[0.8 for i in range(VECTOR_SIZE)]])
         assert np.allclose(val2, [[0.96 for i in range(VECTOR_SIZE)]])
-
-        if benchmark.enabled:
-            benchmark(EX, [0 for i in range(VECTOR_SIZE)])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism

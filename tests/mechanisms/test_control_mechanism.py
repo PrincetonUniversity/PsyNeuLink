@@ -84,15 +84,12 @@ class TestLCControlMechanism:
         )
         EX = pytest.helpers.get_mech_execution(LC, mech_mode)
 
-        val = EX([10.0])
+        val = benchmark(EX, [10.0])
         # All values are the same because LCControlMechanism assigns all of its ControlSignals to the same value
         # (the 1st item of its function's value).
         # FIX: 6/6/19 - Python returns 3d array but LLVM returns 2d array
         #               (np.allclose bizarrely passes for LLVM because all the values are the same)
         assert np.allclose(val, [[[3.00139776]], [[3.00139776]], [[3.00139776]], [[3.00139776]]])
-
-        if benchmark.enabled:
-            benchmark(EX, [10.0])
 
     @pytest.mark.composition
     def test_lc_control_modulated_mechanisms_all(self):
