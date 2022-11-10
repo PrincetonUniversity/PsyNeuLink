@@ -29,6 +29,10 @@ There are three primary methods in the script:
 See "Settings for running the script" to specify whether the model is trained and/or executed when the script is run,
 and whether a graphic display of the network is generated when it is constructed.
 
+Sequences of stimuli are constructed to match those used in the study by `Kane et al.,
+2007 <https://psycnet.apa.org/record/2007-06096-010?doi=1>`_
+
+
 TODO:
     - from Andre
              - network architecture;  in particular, size of hidden layer and projection patterns to and from it
@@ -52,13 +56,14 @@ TODO:
         - try with STIM_SIZE = NUM_STIMS rather than 20 (as in nback-paper)
         - refactor generate_stim_sequence() to use actual empirical stimulus sequences
         - replace get_input_sequence and get_training_inputs with generators passed to nback_model.run() and ffn.learn
-
 """
-import enum
+
+from enum import IntEnum
+import random
+import warnings
+
 import numpy as np
-
 from graph_scheduler import *
-
 from psyneulink import *
 
 # Settings for running script:
@@ -395,9 +400,6 @@ def get_run_inputs(model, nback_level,
     """
 
     def generate_stim_sequence(nback_level, num_trials):
-        import random
-        from enum import IntEnum
-        import warnings
         assert nback_level in {2,3} # At present, only 2- and 3-back levels are supported
 
         stim_set = get_stim_set()
