@@ -682,8 +682,6 @@ def analyze_results(results, num_trials=NUM_TRIALS, nback_levels=NBACK_LEVELS):
     return responses_and_trial_types, stats
 
 
-
-
 # ======================================== SCRIPT EXECUTION ============================================================
 # Construct, train and/or run model based on settings at top of script
 
@@ -698,7 +696,7 @@ if RUN:
     import os
     results_filename = f'nback.results_nep_{NUM_EPOCHS}_lr_{str(LEARNING_RATE).split(".")[1]}.pnl'
     results = run_model(nback_model,
-                        load_weights_from=Path(os.getcwd().join('ffn.wts_nep_6250.lr_01.pnl')),
+                        load_weights_from=Path(os.path.join(os.getcwd(),'ffn.wts_nep_6250_lr_01.pnl')),
                         # load_weights_from=INITIALIZER
                         save_results_to= results_filename)
 if ANALYZE:
