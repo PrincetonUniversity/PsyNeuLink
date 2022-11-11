@@ -2166,6 +2166,7 @@ class BackPropagation(LearningFunction):
 
         # Chain rule to get the derivative of the error with respect to the weights
         dE_dW = dE_dA * dA_dW
+        # dE_dW = np.matmul(dE_dA,dA_dW)
 
         # Weight changes = delta rule (learning rate * activity * error)
         weight_change_matrix = learning_rate * activation_input * dE_dW

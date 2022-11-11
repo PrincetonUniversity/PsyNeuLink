@@ -2841,7 +2841,7 @@ class SoftMax(TransferFunction):
         if output_type == ALL:
             # Return full Jacobian matrix of derivatives
             # assert size == len(input), f"PROGRAM ERROR: SoftMax using outputype=ALL but size of output != size of input"
-            # # MODIFIED 11/11/22 OLD:
+            # # # MODIFIED 11/11/22 OLD:
             # derivative = np.empty([output_size, output_size])
             # for j in range(output_size):
             #     for i, val in zip(range(output_size), output):
@@ -2850,23 +2850,31 @@ class SoftMax(TransferFunction):
             #         else:
             #             d = 0
             #         derivative[j, i] = sm[i] * (d - sm[j])
-            assert True
-            # # MODIFIED 11/11/22 NEW: [FULL DIMENSIONALITY USING INPUTS]
-            # input_size = len(input)
-            # sm = self.function(output, params={OUTPUT_TYPE: ALL}, context=context)
-            # sm = np.squeeze(sm)
-            # derivative = np.empty((output_size, input_size))
+            # # # MODIFIED 11/11/22 NEW: [FULL DIMENSIONALITY USING INPUTS]
+            # # otput_s = len(input)
+            # # sm = self.function(output, params={OUTPUT_TYPE: ALL}, context=context)
+            # # sm = np.squeeze(sm)
+            # derivative = np.empty((output_size, output_size))
             # for o in range(output_size):
-            #     for i, val in zip(range(input_size), input):
+            #     for i, val in zip(range(output_size), input):
             #         if i == o:
             #             d = 1
             #         else:
             #             d = 0
             #         derivative[o, i] = input[i] * (d - output[o])
-            # MODIFIED 11/11/22 NEWER: COMPUTED JUST OVER BOTH OUTPUTS
-            derivative = np.empty(output_size)
-            for i in range(output_size):
-                derivative[i] = sm[i] * (1 - sm[i])
+            # # MODIFIED 11/11/22 NEWER: COMPUTED JUST OVER BOTH OUTPUTS
+            # derivative = np.empty(output_size)
+            # for i in range(output_size):
+            #     derivative[i] = sm[i] * (1 - sm[i])
+            # # MODIFIED 11/11/22 FINAL:
+            derivative = np.empty([output_size, output_size])
+            for j in range(output_size):
+                for i, val in zip(range(output_size), output):
+                    if i == j:
+                        d = 1
+                    else:
+                        d = 0
+                    derivative[j, i] = output[i] * (d - output[j])
             # MODIFIED 11/11/22 END
 
         elif output_type in {MAX_VAL, MAX_INDICATOR}:
