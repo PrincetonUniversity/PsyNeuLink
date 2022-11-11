@@ -1593,7 +1593,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         builder.store(val, ptro)
 
     @handle_external_context()
-    def derivative(self, variable, output=None, context=None):
+    def derivative(self, input, output=None, context=None):
         """
         derivative(input)
 
@@ -1615,9 +1615,9 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         leak = self._get_current_parameter_value(LEAK, context)
         bias = self._get_current_parameter_value(BIAS, context)
 
-        value = np.empty_like(variable)
-        value[(variable - bias) > 0] = gain
-        value[(variable - bias) <= 0] = gain * leak
+        value = np.empty_like(input)
+        value[(input - bias) > 0] = gain
+        value[(input - bias) <= 0] = gain * leak
 
         return value
 
@@ -2820,8 +2820,14 @@ class SoftMax(TransferFunction):
         """
 
         output_type = self._get_current_parameter_value(OUTPUT_TYPE, context)
-        size = len(input)
-        sm = self.function(input, params={OUTPUT_TYPE: ALL}, context=context)
+
+        # MODIFIED 11/10/22 OLD: [JDC]
+        size = len(output)
+        sm = self.function(output, params={OUTPUT_TYPE: ALL}, context=context)
+        # # MODIFIED 11/10/22 NEW: [JAN]
+        # size = len(input)
+        # sm = self.function(input, params={OUTPUT_TYPE: ALL}, context=context)
+        # MODIFIED 11/10/22 END
         sm = np.squeeze(sm)
 
         if output_type == ALL:
@@ -2839,7 +2845,11 @@ class SoftMax(TransferFunction):
             # Return 1d array of derivatives for max element (i.e., the one chosen by SoftMax)
             derivative = np.empty(size)
             # Get the element of output returned as non-zero when output_type is not ALL
-            index_of_max = int(np.where(sm == np.max(sm))[0][0])
+            # MODIFIED 11/10/22 OLD: [JDC]
+            index_of_max = int(np.where(output == np.max(output))[0][0])
+            # # MODIFIED 11/10/22 NEW: [JAN]
+            # index_of_max = int(np.where(sm == np.max(sm))[0])
+            # MODIFIED 11/10/22 END
             max_val = sm[index_of_max]
             for i in range(size):
                 if i == index_of_max:
