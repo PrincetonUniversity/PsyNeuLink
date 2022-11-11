@@ -2700,8 +2700,18 @@ class SoftMax(TransferFunction):
     def _gen_llvm_function_derivative_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert "derivative" in tags
         forward_tags = tags.difference({"derivative"})
+
+        # SoftMax derivative is calculated from the results. Recalculate them here
+        base_out = builder.alloca(arg_out.type.pointee)
+        builder = self._gen_llvm_function_body(ctx, builder, params, state, arg_in, base_out, output_type=self.output, tags=forward_tags)
+
+
         all_out = builder.alloca(arg_out.type.pointee)
-        builder = self._gen_llvm_function_body(ctx, builder, params, state, arg_in, all_out, output_type=ALL, tags=forward_tags)
+        builder = self._gen_llvm_function_body(ctx, builder, params, state, base_out, all_out, output_type=ALL, tags=forward_tags)
+
+        # The rest of the algorithm is for MAX_VAL and MAX_INDICATOR only
+        assert self.output in {MAX_VAL, MAX_INDICATOR}, \
+            "Derivative of SoftMax is only implemented for MAX_VAL and MAX_INDICATOR! ({})".format(self.output)
 
         max_pos_ptr = builder.alloca(ctx.int32_ty)
         builder.store(max_pos_ptr.type.pointee(-1), max_pos_ptr)
@@ -2819,9 +2829,12 @@ class SoftMax(TransferFunction):
         derivative of values returned by SoftMax :  1d or 2d array (depending on *OUTPUT_TYPE* of SoftMax)
         """
 
+        if output is None:
+            output = self.function(input, context=context)
+
         output_type = self._get_current_parameter_value(OUTPUT_TYPE, context)
-        size = len(input)
-        sm = self.function(input, params={OUTPUT_TYPE: ALL}, context=context)
+        size = len(output)
+        sm = self.function(output, params={OUTPUT_TYPE: ALL}, context=context)
         sm = np.squeeze(sm)
 
         if output_type == ALL:
@@ -2839,7 +2852,7 @@ class SoftMax(TransferFunction):
             # Return 1d array of derivatives for max element (i.e., the one chosen by SoftMax)
             derivative = np.empty(size)
             # Get the element of output returned as non-zero when output_type is not ALL
-            index_of_max = int(np.where(sm == np.max(sm))[0])
+            index_of_max = int(np.where(output == np.max(output))[0][0])
             max_val = sm[index_of_max]
             for i in range(size):
                 if i == index_of_max:
