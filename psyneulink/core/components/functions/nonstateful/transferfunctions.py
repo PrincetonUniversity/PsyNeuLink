@@ -2839,7 +2839,7 @@ class SoftMax(TransferFunction):
             # Return 1d array of derivatives for max element (i.e., the one chosen by SoftMax)
             derivative = np.empty(size)
             # Get the element of output returned as non-zero when output_type is not ALL
-            index_of_max = int(np.where(sm == np.max(sm))[0])
+            index_of_max = int(np.where(sm == np.max(sm))[0][0])
             max_val = sm[index_of_max]
             for i in range(size):
                 if i == index_of_max:

@@ -68,7 +68,7 @@ from psyneulink import *
 
 # Settings for running script:
 DISPLAY_MODEL = False # show visual graphic of model
-TRAIN = False
+TRAIN = True
 RUN = True
 ANALYZE = True # Analyze results of run
 
