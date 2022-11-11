@@ -2822,10 +2822,9 @@ class SoftMax(TransferFunction):
     def derivative(self, input=None, output=None, context=None):
         """
         derivative(output)
-
+        # FIX: ADD SUPPORT FOR TARGET (INSTEAD OF MAX) FOR PARTIAL DERIVATIVE; MAY NEED ADDITIONAL ARGUMENT
         Returns
         -------
-
         derivative of values returned by SoftMax :  1d or 2d array (depending on *OUTPUT_TYPE* of SoftMax)
         """
 
@@ -2835,9 +2834,11 @@ class SoftMax(TransferFunction):
 
         output_type = self._get_current_parameter_value(OUTPUT_TYPE, context)
         output_size = len(output)
+        # FIX: GET RID OF sm
         sm = self.function(output, params={OUTPUT_TYPE: ALL}, context=context)
         sm = np.squeeze(sm)
 
+        # FIX: KEEP FOR GENERALITY, SHOULD *NOT* BE USED IN CONTEXT OF LEARNING;  THAT SHOULD ALWAYS BE MAX OR TARGET
         if output_type == ALL:
             # Return full Jacobian matrix of derivatives
             # assert size == len(input), f"PROGRAM ERROR: SoftMax using outputype=ALL but size of output != size of input"
@@ -2881,18 +2882,21 @@ class SoftMax(TransferFunction):
             # Return 1d array of derivatives for max element (i.e., the one chosen by SoftMax)
             derivative = np.empty(output_size)
             # Get the element of output returned as non-zero when output_type is not ALL
-            index_of_max = int(np.where(output == np.max(output))[0][0])
             # MODIFIED 11/10/22 OLD: [JDC]
+            # FIX: SUPPORT USE OF TARGET INSTEAD OF MAX:
+            # FIX: IS [0][0]] STILL NEEDED IF sm IS NOT USED?
             index_of_max = int(np.where(output == np.max(output))[0][0])
             # # MODIFIED 11/10/22 NEW: [JAN]
             # index_of_max = int(np.where(sm == np.max(sm))[0])
             # MODIFIED 11/10/22 END
+            # FIX: SHOULD USE output INSTEAD OF sm
             max_val = sm[index_of_max]
             for i in range(output_size):
                 if i == index_of_max:
                     d = 1
                 else:
                     d = 0
+                # FIX: SHOULD USE output
                 derivative[i] = sm[i] * (d - max_val)
 
         else:
