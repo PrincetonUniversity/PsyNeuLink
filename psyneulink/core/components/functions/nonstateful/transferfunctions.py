@@ -1593,7 +1593,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         builder.store(val, ptro)
 
     @handle_external_context()
-    def derivative(self, variable, output=None, context=None):
+    def derivative(self, input=None, output=None, context=None):
         """
         derivative(input)
 
@@ -1615,9 +1615,9 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         leak = self._get_current_parameter_value(LEAK, context)
         bias = self._get_current_parameter_value(BIAS, context)
 
-        value = np.empty_like(variable)
-        value[(variable - bias) > 0] = gain
-        value[(variable - bias) <= 0] = gain * leak
+        value = np.empty_like(input)
+        value[(input - bias) > 0] = gain
+        value[(input - bias) <= 0] = gain * leak
 
         return value
 
