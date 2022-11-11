@@ -501,7 +501,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
       the entry closest to `variable <ContentAddressableMemory.variable>` is retrieved from is retrieved from `memory
       <ContentAddressableMemory.memory>`.  The entry is chosen by calling, in order:
 
-        * `distance_function <ContentAddressableMemory.distance_function>`\: generates a list of and compares
+        * `distance_function <ContentAddressableMemory.distance_function>`: generates a list of and compares
           `distances <ContentAddressableMemory.distances>` between `variable <ContentAddressableMemory.variable>`
           and each entry in `memory <ContentAddressableMemory.memory>`, possibly weighted by `distance_field_weights
           <ContentAddressableMemory.distance_field_weights>`, as follows:
@@ -528,7 +528,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                between `variable <ContentAddressableMemory.variable>` and entries for those fields are not included
                in the averaging of distances by field.
 
-        * `selection_function <ContentAddressableMemory.selection_function>`\: called with the list of distances
+        * `selection_function <ContentAddressableMemory.selection_function>`: called with the list of distances
           to determine which entries to select for consideration. If more than on entry from `memory
           <ContentAddressableMemory.memory>` is identified, `equidistant_entries_select
           <ContentAddressableMemory.equidistant_entries_select>` is used to determine which to retrieve.  If no
@@ -765,7 +765,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
     noise : float, list, 2d array, or Function : default 0.0
         specifies random value(s) added to `variable <ContentAddressableMemory.variable>` before storing in
-        `memory <ContentAddressableMemory.memory>`\;  if a list or 2d array, it must be the same shape as `variable
+        `memory <ContentAddressableMemory.memory>`;  if a list or 2d array, it must be the same shape as `variable
          ContentAddressableMemory.variable>` (see `noise <ContentAddressableMemory.noise>` for details).
 
     initializer : 3d array or list : default None
