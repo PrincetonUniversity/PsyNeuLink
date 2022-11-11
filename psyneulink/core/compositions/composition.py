@@ -9828,7 +9828,7 @@ _
         2d list of values of OUTPUT Nodes at end of last trial : list[list]
           each item in the list is the `output_values <Mechanism_Base.output_values>` for an `OUTPUT` `Node
           <Composition_Nodes>` of the Composition, listed in the order listed in `get_nodes_by_role
-          <Composition.get_nodes_by_role>`\(`NodeRole.OUTPUT <OUTPUT>`).
+          <Composition.get_nodes_by_role>`\\ (`NodeRole.OUTPUT <OUTPUT>`).
 
           .. note::
             The `results <Composition.results>` attribute of the Composition contains a list of the outputs for all

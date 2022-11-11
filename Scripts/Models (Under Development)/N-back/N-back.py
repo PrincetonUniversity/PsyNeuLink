@@ -68,7 +68,7 @@ from psyneulink import *
 
 # Settings for running script:
 DISPLAY_MODEL = False # show visual graphic of model
-TRAIN = False
+TRAIN = True
 RUN = True
 ANALYZE = True # Analyze results of run
 
@@ -95,7 +95,7 @@ DECISION_SOFTMAX_TEMP=1
 
 # Training parameters:
 NUM_EPOCHS= 6250    # nback-paper: 400,000 @ one trial per epoch = 6,250 @ 64 trials per epoch
-LEARNING_RATE=0.01  # nback-paper: .001
+LEARNING_RATE=0.001  # nback-paper: .001
 
 # Execution parameters:
 CONTEXT_DRIFT_RATE=.1 # drift rate used for DriftOnASphereIntegrator (function of Context mech) on each trial
@@ -192,8 +192,10 @@ def construct_model(stim_size = STIM_SIZE,
                                size=hidden_size,
                                function=FFN_TRANSFER_FUNCTION)
     decision = ProcessingMechanism(name=FFN_OUTPUT,
-                                   size=2, function=SoftMax(output=MAX_INDICATOR,
-                                                            gain=decision_softmax_temp))
+                                   size=2,
+                                   function=SoftMax(output=ALL,
+                                                    gain=decision_softmax_temp))
+
     ffn = AutodiffComposition(([{input_current_stim,
                                 input_current_context,
                                 input_retrieved_stim,
@@ -579,7 +581,8 @@ def train_network(network,
                   report_progress=REPORT_PROGRESS,
                   # report_learning=REPORT_LEARNING,
                   learning_rate=learning_rate,
-                  execution_mode=ExecutionMode.LLVMRun)
+                  execution_mode=ExecutionMode.LLVMRun
+                  )
     stop_time = timeit.default_timer()
     print(f"'{network.name}' trained")
     training_time = stop_time-start_time
@@ -681,7 +684,6 @@ def analyze_results(results, num_trials=NUM_TRIALS, nback_levels=NBACK_LEVELS):
 
     return responses_and_trial_types, stats
 
-
 # ======================================== SCRIPT EXECUTION ============================================================
 # Construct, train and/or run model based on settings at top of script
 
@@ -696,7 +698,8 @@ if RUN:
     import os
     results_filename = f'nback.results_nep_{NUM_EPOCHS}_lr_{str(LEARNING_RATE).split(".")[1]}.pnl'
     results = run_model(nback_model,
-                        load_weights_from=Path(os.path.join(os.getcwd(),'ffn.wts_nep_6250_lr_01.pnl')),
+                        # load_weights_from=Path(os.path.join(os.getcwd(),'ffn.wts_nep_1_lr_01.pnl')),
+                        # load_weights_from=Path(os.path.join(os.getcwd(),'ffn.wts_nep_6250_lr_01.pnl')),
                         # load_weights_from=INITIALIZER
                         save_results_to= results_filename)
 if ANALYZE:

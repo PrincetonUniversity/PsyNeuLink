@@ -1593,7 +1593,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         builder.store(val, ptro)
 
     @handle_external_context()
-    def derivative(self, input, output=None, context=None):
+    def derivative(self, input=None, output=None, context=None):
         """
         derivative(input)
 
@@ -2700,8 +2700,18 @@ class SoftMax(TransferFunction):
     def _gen_llvm_function_derivative_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert "derivative" in tags
         forward_tags = tags.difference({"derivative"})
+
+        # SoftMax derivative is calculated from the results. Recalculate them here
+        base_out = builder.alloca(arg_out.type.pointee)
+        builder = self._gen_llvm_function_body(ctx, builder, params, state, arg_in, base_out, output_type=self.output, tags=forward_tags)
+
+
         all_out = builder.alloca(arg_out.type.pointee)
-        builder = self._gen_llvm_function_body(ctx, builder, params, state, arg_in, all_out, output_type=ALL, tags=forward_tags)
+        builder = self._gen_llvm_function_body(ctx, builder, params, state, base_out, all_out, output_type=ALL, tags=forward_tags)
+
+        # The rest of the algorithm is for MAX_VAL and MAX_INDICATOR only
+        assert self.output in {MAX_VAL, MAX_INDICATOR}, \
+            "Derivative of SoftMax is only implemented for MAX_VAL and MAX_INDICATOR! ({})".format(self.output)
 
         max_pos_ptr = builder.alloca(ctx.int32_ty)
         builder.store(max_pos_ptr.type.pointee(-1), max_pos_ptr)
@@ -2819,39 +2829,58 @@ class SoftMax(TransferFunction):
         derivative of values returned by SoftMax :  1d or 2d array (depending on *OUTPUT_TYPE* of SoftMax)
         """
 
-        output_type = self._get_current_parameter_value(OUTPUT_TYPE, context)
+        if output is None:
+            # If output is not specified, calculate over all inputs (i.e., full Jacobian)
+            output = self.function(input, context=context)
 
-        # MODIFIED 11/10/22 OLD: [JDC]
-        size = len(output)
+        output_type = self._get_current_parameter_value(OUTPUT_TYPE, context)
+        output_size = len(output)
         sm = self.function(output, params={OUTPUT_TYPE: ALL}, context=context)
-        # # MODIFIED 11/10/22 NEW: [JAN]
-        # size = len(input)
-        # sm = self.function(input, params={OUTPUT_TYPE: ALL}, context=context)
-        # MODIFIED 11/10/22 END
         sm = np.squeeze(sm)
 
         if output_type == ALL:
             # Return full Jacobian matrix of derivatives
-            derivative = np.empty([size, size])
-            for j in range(size):
-                for i, val in zip(range(size), output):
-                    if i == j:
-                        d = 1
-                    else:
-                        d = 0
-                    derivative[j, i] = sm[i] * (d - sm[j])
+            # assert size == len(input), f"PROGRAM ERROR: SoftMax using outputype=ALL but size of output != size of input"
+            # # MODIFIED 11/11/22 OLD:
+            # derivative = np.empty([output_size, output_size])
+            # for j in range(output_size):
+            #     for i, val in zip(range(output_size), output):
+            #         if i == j:
+            #             d = 1
+            #         else:
+            #             d = 0
+            #         derivative[j, i] = sm[i] * (d - sm[j])
+            assert True
+            # # MODIFIED 11/11/22 NEW: [FULL DIMENSIONALITY USING INPUTS]
+            # input_size = len(input)
+            # sm = self.function(output, params={OUTPUT_TYPE: ALL}, context=context)
+            # sm = np.squeeze(sm)
+            # derivative = np.empty((output_size, input_size))
+            # for o in range(output_size):
+            #     for i, val in zip(range(input_size), input):
+            #         if i == o:
+            #             d = 1
+            #         else:
+            #             d = 0
+            #         derivative[o, i] = input[i] * (d - output[o])
+            # MODIFIED 11/11/22 NEWER: COMPUTED JUST OVER BOTH OUTPUTS
+            derivative = np.empty(output_size)
+            for i in range(output_size):
+                derivative[i] = sm[i] * (1 - sm[i])
+            # MODIFIED 11/11/22 END
 
         elif output_type in {MAX_VAL, MAX_INDICATOR}:
             # Return 1d array of derivatives for max element (i.e., the one chosen by SoftMax)
-            derivative = np.empty(size)
+            derivative = np.empty(output_size)
             # Get the element of output returned as non-zero when output_type is not ALL
+            index_of_max = int(np.where(output == np.max(output))[0][0])
             # MODIFIED 11/10/22 OLD: [JDC]
             index_of_max = int(np.where(output == np.max(output))[0][0])
             # # MODIFIED 11/10/22 NEW: [JAN]
             # index_of_max = int(np.where(sm == np.max(sm))[0])
             # MODIFIED 11/10/22 END
             max_val = sm[index_of_max]
-            for i in range(size):
+            for i in range(output_size):
                 if i == index_of_max:
                     d = 1
                 else:
