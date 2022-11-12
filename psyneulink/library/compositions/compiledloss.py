@@ -118,4 +118,29 @@ class CROSS_ENTROPYLoss(Loss):
 
     # inserts the computation for dC/da
     def _gen_inject_loss_differential(self, ctx, builder, value, target, output=None, sum_loss=False):
+
         raise Exception(f"Differential for CROSS_ENTROPYLoss() not yet supported")
+
+        # # FIX: FROM MSE_LOSS -- HERE JUST AS FILLER TO GET PAST THIS METHOD DURING DEBUGGING;
+        # #                       NEEDS TO BE PROPERLY IMPLEMENTED
+        # dim = len(value.type.pointee)
+        # assert len(target.type.pointee) == dim
+        # if output is None:
+        #     output = builder.alloca(pnlvm.ir.types.ArrayType(ctx.float_ty, dim))
+        #     # zero output vector
+        #     builder.store(output.type.pointee(None), output)
+        # assert len(output.type.pointee) == dim
+        #
+        # if sum_loss is False:
+        #     # we take mean
+        #     gen_inject_vec_sub(ctx, builder, value, target, output)
+        #     # multiply each element i by 2/n to get dC/da_i
+        #     scalar_mult = builder.fdiv(ctx.float_ty(2), ctx.float_ty(dim))
+        #     with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(dim), "mse_mean_mult_loop") as (b1, index):
+        #         element_ptr = b1.gep(output, [ctx.int32_ty(0), index])
+        #         b1.store(b1.fmul(b1.load(element_ptr),scalar_mult),element_ptr)
+        # else:
+        #     # in this case, we add the loss
+        #     tmp = gen_inject_vec_sub(ctx, builder, value, target)
+        #     gen_inject_vec_add(ctx, builder, output, tmp, output)
+        # return output
