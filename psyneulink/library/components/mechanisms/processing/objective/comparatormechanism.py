@@ -152,7 +152,8 @@ from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.port import _parse_port_spec
 from psyneulink.core.globals.keywords import \
-    COMPARATOR_MECHANISM, FUNCTION, INPUT_PORTS, NAME, OUTCOME, SAMPLE, TARGET, VARIABLE, PREFERENCE_SET_NAME, MSE, SSE
+    COMPARATOR_MECHANISM, FUNCTION, INPUT_PORTS, NAME, OUTCOME, SAMPLE, TARGET, \
+    VARIABLE, PREFERENCE_SET_NAME, MSE, SSE, CROSS_ENTROPY
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -319,9 +320,12 @@ class ComparatorMechanism(ObjectiveMechanism):
     standard_output_ports.extend([{NAME: SSE,
                                    FUNCTION: lambda x: np.sum(x * x)},
                                   {NAME: MSE,
-                                   FUNCTION: lambda x: np.sum(x * x) / safe_len(x)}])
+                                   FUNCTION: lambda x: np.sum(x * x) / safe_len(x)},
+                                  {NAME: CROSS_ENTROPY,
+                                   FUNCTION: lambda x: np.sum(x)}],
+                                 )
     standard_output_port_names = ObjectiveMechanism.standard_output_port_names.copy()
-    standard_output_port_names.extend([SSE, MSE])
+    standard_output_port_names.extend([SSE, MSE, CROSS_ENTROPY])
 
     @check_user_specified
     @tc.typecheck

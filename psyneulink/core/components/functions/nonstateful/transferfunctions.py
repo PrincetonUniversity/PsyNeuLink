@@ -1581,6 +1581,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         var = builder.load(ptri)
         val = builder.fsub(var, bias)
 
+        # FIX: THESE NEEDS TO BE CHANGED TO COMPORT WITH PYTHON BELOW
         if "derivative" in tags:
             predicate = builder.fcmp_ordered('>', val, val.type(0))
             val = builder.select(predicate, gain, builder.fmul(gain, leak))
@@ -1595,9 +1596,9 @@ class ReLU(TransferFunction):  # -----------------------------------------------
     @handle_external_context()
     def derivative(self, input=None, output=None, context=None):
         """
-        derivative(input)
+        derivative(input or else output)
 
-        Derivative of `function <ReLU._function>` at **input**.
+        Derivative of `function <ReLU._function>` at **input** or **output**.
 
         Arguments
         ---------
@@ -1609,15 +1610,23 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         -------
 
         derivative :  number or array
-
         """
+
         gain = self._get_current_parameter_value(GAIN, context)
         leak = self._get_current_parameter_value(LEAK, context)
         bias = self._get_current_parameter_value(BIAS, context)
 
-        value = np.empty_like(input)
-        value[(input - bias) > 0] = gain
-        value[(input - bias) <= 0] = gain * leak
+        if input is not None:
+            # Use input if provided
+            value = np.empty_like(input)
+            value[(input - bias) > 0] = gain
+            value[(input - bias) <= 0] = gain * leak
+
+        else:
+            # Infer input from output
+            value = np.empty_like(input)
+            value[(output / gain + bias) > 0] = gain
+            value[(output / gain + bias) <= 0] = gain * leak
 
         return value
 

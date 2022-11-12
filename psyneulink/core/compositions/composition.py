@@ -2780,7 +2780,7 @@ from psyneulink.core.globals.keywords import \
     OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
     PARAMETER, PARAMETER_CIM_NAME, PORT, \
     PROCESSING_PATHWAY, PROJECTION, PROJECTION_TYPE, PROJECTION_PARAMS, PULSE_CLAMP, RECEIVER, \
-    SAMPLE, SENDER, SHADOW_INPUTS, SIZE, SOFT_CLAMP, SSE, \
+    SAMPLE, SENDER, SHADOW_INPUTS, SOFT_CLAMP, SSE, SUM, \
     TARGET, TARGET_MECHANISM, TEXT, VARIABLE, WEIGHT, OWNER_MECH
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase, check_user_specified
@@ -7976,40 +7976,33 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #                                           function=error_function,
             #                                           output_ports=[OUTCOME, MSE],
             #                                           )
-            # MODIFIED 11/12/22 NEW:
-            # Set up defaults for MSE loss function
-            target_mechanism_function = Linear
-            if loss_function == CROSS_ENTROPY:
-                target_mechanism_function = Logistic
+            # # MODIFIED 11/12/22 NEW:
             target_mechanism = ProcessingMechanism(name='Target',
-                                                   default_variable=output_source.output_ports[0].value,
-                                                   function=target_mechanism_function)
+                                                   default_variable=output_source.output_ports[0].value)
+            # Base for object_mechanism output_ports:
             sample={NAME: SAMPLE,
                     VARIABLE: output_source.output_ports[0].value,
                     WEIGHT: -1}
             target={NAME: TARGET,
                     VARIABLE: target_mechanism.output_ports[0].value}
-            output_ports = [OUTCOME, MSE]
             # For CROSS_ENTROPY loss, need some customization:
-            if loss_function == CROSS_ENTROPY:
-                # output_source_size = len(output_source.output_ports[0].value)
-                # target_size = len(target_mechanism.output_ports[0].value)
-                # assert output_source_size == target_size, \
-                #     f"PROGRAM ERROR:  output_source_size ({output_source_size}) != target_size ({target_size})."
-                # if not isinstance(output_source.function, Logistic):
-                #     raise CompositionError(f"Last node of learning pathway must use Logistic as its function "
-                #                            f"CROSS_ENTROPY is used at loss_spec.")
-                sample.update({# SIZE: output_source_size,
-                               FUNCTION: SoftMax(output=ALL)})
-                target.update({# SIZE: target_size,
-                               FUNCTION: SoftMax(output=ALL)})
+            if loss_function == MSE:
+                # error_function (uses default for Comparator):  target - sample
+                output_ports = [OUTCOME, MSE]
+            elif loss_function == CROSS_ENTROPY:
+                # error function:  uses LinearCombination to implement cross_entropy: (SoftMax(sample), SoftMax(target))
+                sample.update({FUNCTION: SoftMax(output=ALL)})
+                target.update({FUNCTION: SoftMax(output=ALL)})
                 error_function = LinearCombination(operation=CROSS_ENTROPY)
                 output_ports = [OUTCOME, CROSS_ENTROPY]
+            else:
+                raise CompositionError(f"Unsupported loss function for '{self.name}': {loss_function}.")
             objective_mechanism = ComparatorMechanism(name='Comparator',
                                                       sample=sample,
                                                       target=target,
                                                       function=error_function,
                                                       output_ports=output_ports)
+            assert True
             # MODIFIED 11/12/22 END
 
         learning_function = BackPropagation(default_variable=[input_source.output_ports[0].value,
