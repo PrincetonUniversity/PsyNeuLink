@@ -79,3 +79,43 @@ class MSELoss(Loss):
             tmp = gen_inject_vec_sub(ctx, builder, value, target)
             gen_inject_vec_add(ctx, builder, output, tmp, output)
         return output
+
+
+class CROSS_ENTROPYLoss(Loss):
+    """Implements compiled CROSS_ENTROPY Loss"""
+    def __init__(self, reduction='cross_entropy'):
+        if reduction not in ['cross_entropy']:
+            raise Exception("Unsupported compiled reduction type " + reduction)
+
+        super().__init__()
+        self.reduction = reduction
+
+    def _gen_loss_function(self, ctx):
+        name = "LEARNING_CROSS_ENTROPY_CALL"
+
+        # args:
+        # 1) pointer to network output
+        # 2) pointer to target
+        # 3) dimensionality
+        args = [ctx.float_ty.as_pointer(), ctx.int32_ty, ctx.float_ty.as_pointer()]
+        builder = ctx.create_llvm_function(args, self, name, return_type=ctx.float_ty)
+        value, dim, target = builder.function.args
+
+        sum = builder.alloca(ctx.float_ty)
+        builder.store(ctx.float_ty(-0.0), sum)
+
+        with pnlvm.helpers.for_loop_zero_inc(builder, dim, "cross_entropy_sum_loop") as (b1, index):
+            value_ptr = b1.gep(value,[index])
+            target_ptr = b1.gep(target,[index])
+            log_f = ctx.get_builtin("log", [ctx.float_ty])
+            log = builder.call(log_f, [target_ptr])
+            diff = builder.fmul(value_ptr, log)
+            b1.store(b1.fadd(b1.load(sum),diff),sum)
+
+        builder.ret(builder.load(sum))
+
+        return builder.function
+
+    # inserts the computation for dC/da
+    def _gen_inject_loss_differential(self, ctx, builder, value, target, output=None, sum_loss=False):
+        raise Exception(f"Differential for CROSS_ENTROPYLoss() not yet supported")
