@@ -2841,15 +2841,15 @@ class SoftMax(TransferFunction):
         # FIX: KEEP FOR GENERALITY, SHOULD *NOT* BE USED IN CONTEXT OF GRADIENT-BASED LEARNING;
         #      THAT SHOULD ALWAYS BE MAX [OR TBI: TARGET]
         if output_type == ALL:
-            # Return full Jacobian matrix of derivatives
+            # Return full Jacobian matrix of derivatives using Kronecker's delta method:
             derivative = np.empty([output_size, output_size])
             for j in range(output_size):
                 for i, val in zip(range(output_size), output):
                     if i == j:
-                        d = 1
+                        delta = 1
                     else:
-                        d = 0
-                    derivative[j, i] = output[i] * (d - output[j])
+                        delta = 0
+                    derivative[j, i] = output[i] * (delta - output[j])
 
         elif output_type in {MAX_VAL, MAX_INDICATOR}:
             # Return 1d array of derivatives for max element (i.e., the one chosen by SoftMax)
