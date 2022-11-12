@@ -1618,15 +1618,14 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
         if input is not None:
             # Use input if provided
-            value = np.empty_like(input)
-            value[(input - bias) > 0] = gain
-            value[(input - bias) <= 0] = gain * leak
-
+            variable = input - bias
         else:
             # Infer input from output
-            value = np.empty_like(input)
-            value[(output / gain + bias) > 0] = gain
-            value[(output / gain + bias) <= 0] = gain * leak
+            variable = output / gain + bias
+
+        value = np.empty_like(variable)
+        value[(variable / gain + bias) > 0] = gain
+        value[(variable / gain + bias) <= 0] = gain * leak
 
         return value
 
