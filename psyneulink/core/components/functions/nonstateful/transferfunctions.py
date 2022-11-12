@@ -51,8 +51,14 @@ Derivatives
 
 Most TransferFunctions have a derivative method.  These take both an **input** and **output** argument.  In general,
 the **input** is used to compute the derivative of the function at that value. If that is not provided, some
-Functions can compute the derivative using the function's output, either directly (such as `Logistic`) or by inferring
-the input from the **output** and then computing the derivative for that value.
+Functions can compute the derivative using the function's output, either directly (such as `Logistic.derivative`) or by
+inferring
+the input from the **output** and then computing the derivative for that value (such as `ReLU.derivative`)
+
+
+TranferFunction Class References
+--------------------------------
+
 
 """
 
@@ -1603,7 +1609,9 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         """
         derivative(input or else output)
 
-        Derivative of `function <ReLU._function>` at **input** or **output**.
+        Derivative of `function <ReLU._function>` at **input** or **output**.  If **input** is specified, that
+        is used to compute the derivative;  if **input** is not specified, it is inferred from the **output**
+        and then used to compute the derivative.
 
         Arguments
         ---------
