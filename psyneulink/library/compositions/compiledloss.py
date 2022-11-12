@@ -1,7 +1,7 @@
 from psyneulink.core import llvm as pnlvm
 from psyneulink.library.compositions.pytorchllvmhelper import *
 
-__all__ = ['MSELoss']
+__all__ = ['MSELoss', "CROSS_ENTROPYLoss"]
 
 
 class Loss():

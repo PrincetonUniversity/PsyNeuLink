@@ -1,5 +1,5 @@
 """
-This implements a model of the `N-back task <https://en.wikipedia.org/wiki/N-back#Neurobiology_of_n-back_task>`_
+This implements a model of the `Nback task <https://en.wikipedia.org/wiki/N-back#Neurobiology_of_n-back_task>`_
 described in `Beukers et al. (2022) <https://psyarxiv.com/jtw5p>`_.  The model uses a simple implementation of episodic
 (content-addressable) memory to store previous stimuli and the temporal context in which they occured,
 and a feedforward neural network to evaluate whether the current stimulus is a match to the n'th preceding stimulus
@@ -46,7 +46,7 @@ TODO:
               - learning rate: 0.001; epoch: 1 trial per epoch of training
               - fix: state_dict with weights (still needed)
           - get empirical stimulus sequences (still needed)
-          - put N-back script (with pointer to latest version on PNL) in nback-paper repo
+          - put Nback script (with pointer to latest version on PNL) in nback-paper repo
     - train_network() and run_model(): refactor to take inputs and trial_types, and training_set, respectively
     - fix: get rid of objective_mechanism (see "VERSION *WITHOUT* ObjectiveMechanism" under control(...)
     - fix: warnings on run
@@ -91,6 +91,7 @@ RETRIEVAL_SOFTMAX_TEMP=1/8 # express as gain # precision of retrieval process
 RETRIEVAL_HAZARD_RATE=0.04 # rate of re=sampling of em following non-match determination in a pass through ffn
 RETRIEVAL_STIM_WEIGHT=.05 # weighting of stimulus field in retrieval from em
 RETRIEVAL_CONTEXT_WEIGHT = 1-RETRIEVAL_STIM_WEIGHT # weighting of context field in retrieval from em
+DECISION_SOFTMAX_TEMP=1
 
 # Training parameters:
 NUM_EPOCHS= 6250    # nback-paper: 400,000 @ one trial per epoch = 6,250 @ 64 trials per epoch
@@ -105,7 +106,7 @@ REPORT_LEARNING = ReportLearning.OFF  # Sets console progress bar during trainin
 ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
 
 # Names of Compositions and Mechanisms:
-NBACK_MODEL = "N-back Model"
+NBACK_MODEL = "Nback Model"
 FFN_COMPOSITION = "WORKING MEMORY (fnn)"
 FFN_STIMULUS_INPUT = "CURRENT STIMULUS"
 FFN_CONTEXT_INPUT = "CURRENT CONTEXT"
@@ -145,7 +146,8 @@ def construct_model(stim_size = STIM_SIZE,
                     retrievel_softmax_temp = RETRIEVAL_SOFTMAX_TEMP,
                     retrieval_hazard_rate = RETRIEVAL_HAZARD_RATE,
                     retrieval_stimulus_weight = RETRIEVAL_STIM_WEIGHT,
-                    retrieval_context_weight = RETRIEVAL_CONTEXT_WEIGHT):
+                    retrieval_context_weight = RETRIEVAL_CONTEXT_WEIGHT,
+                    decision_softmax_temp = DECISION_SOFTMAX_TEMP):
     """Construct nback_model
     Arguments
     ---------
@@ -157,10 +159,11 @@ def construct_model(stim_size = STIM_SIZE,
     retrieval_hazard_rate: float : default RETRIEVAL_HAZARD_RATE
     retrieval_stimulus_weight: float : default RETRIEVAL_STIM_WEIGHT
     retrieval_context_weight: float : default RETRIEVAL_CONTEXT_WEIGHT
+    decision_softmax_temp: float : default DECISION_SOFTMAX_TEMP)
 
     Returns
     -------
-    Composition implementing N-back model
+    Composition implementing Nback model
     """
 
     print(f"constructing '{FFN_COMPOSITION}'...")
@@ -190,9 +193,9 @@ def construct_model(stim_size = STIM_SIZE,
                                function=FFN_TRANSFER_FUNCTION)
     decision = ProcessingMechanism(name=FFN_OUTPUT,
                                    size=2,
-                                   function=Logistic)
-                                   # function=SoftMax(output=ALL,
-                                   #                  gain=decision_softmax_temp))
+                                   # function=Logistic)
+                                   function=SoftMax(output=MAX_INDICATOR,
+                                                    gain=decision_softmax_temp))
 
     ffn = AutodiffComposition(([{input_current_stim,
                                  input_current_context,
