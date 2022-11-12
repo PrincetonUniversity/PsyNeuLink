@@ -28,6 +28,11 @@ Overview
 
 Functions that transform their variable but maintain its shape.
 
+.. _TransferFunction_StandardAttributes:
+
+Standard Attributes
+~~~~~~~~~~~~~~~~~~~
+
 All TransferFunctions have the following attributes:
 
 * **bounds**:  specifies the lower and upper limits of the result;  if there are none, the attribute is set to
@@ -38,6 +43,16 @@ All TransferFunctions have the following attributes:
   each of these is assigned the name of one of the function's
   parameters and used by `ModulatoryProjections <ModulatoryProjection>` to modulate the output of the
   TransferFunction's function (see `Function_Modulatory_Params`).
+
+.. _TransferFunction_Derivative:
+
+Derivatives
+~~~~~~~~~~~
+
+Most TransferFunctions have a derivative method.  These take both an **input** and **output** argument.  In general,
+the **input** is used to compute the derivative of the function at that value. If that is not provided, some
+Functions can compute the derivative using the function's output, either directly (such as `Logistic`) or by inferring
+the input from the **output** and then computing the derivative for that value.
 
 """
 
@@ -1051,21 +1066,11 @@ class Logistic(TransferFunction):  # -------------------------------------------
         Deriviative of logistic transform at output:  number or array
 
         """
-        # FIX: BackPropagation PASSES IN SAME INPUT AND OUTPUT
-        # if (output is not None and input is not None and self.prefs.paramValidationPref):
-        #     if isinstance(input, numbers.Number):
-        #         valid = output == self.function(input, context=context)
-        #     else:
-        #         valid = all(output[i] == self.function(input, context=context)[i] for i in range(len(input)))
-        #     if not valid:
-        #         raise FunctionError("Value of {} arg passed to {} ({}) "
-        #                             "does not match the value expected for specified {} ({})".
-        #                             format(repr('output'), self.__class__.__name__ + '.' + 'derivative', output,
-        #                                    repr('input'), input))
-        #
+
         gain = self._get_current_parameter_value(GAIN, context)
         scale = self._get_current_parameter_value(SCALE, context)
 
+        # Favor use of output: compute it from input if it is not provided
         if output is None:
             output = self.function(input, context=context)
 

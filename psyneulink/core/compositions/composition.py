@@ -7985,10 +7985,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     WEIGHT: -1}
             target={NAME: TARGET,
                     VARIABLE: target_mechanism.output_ports[0].value}
+
             # For CROSS_ENTROPY loss, need some customization:
             if loss_function == MSE:
                 # error_function (uses default for Comparator):  target - sample
                 output_ports = [OUTCOME, MSE]
+
             elif loss_function == CROSS_ENTROPY:
                 # error function:  uses LinearCombination to implement cross_entropy: (SoftMax(sample), SoftMax(target))
                 sample.update({FUNCTION: SoftMax(output=ALL)})
@@ -8002,7 +8004,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                       target=target,
                                                       function=error_function,
                                                       output_ports=output_ports)
-            assert True
             # MODIFIED 11/12/22 END
 
         learning_function = BackPropagation(default_variable=[input_source.output_ports[0].value,
