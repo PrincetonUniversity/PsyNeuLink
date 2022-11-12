@@ -33,8 +33,8 @@ class MSELoss(Loss):
 
         # args:
         # 1) pointer to network output
-        # 2) pointer to target
-        # 3) dimensionality
+        # 2) dimensionality
+        # 3) pointer to target
         args = [ctx.float_ty.as_pointer(), ctx.int32_ty, ctx.float_ty.as_pointer()]
         builder = ctx.create_llvm_function(args, self, name, return_type=ctx.float_ty)
         value, dim, target = builder.function.args
@@ -95,8 +95,8 @@ class CROSS_ENTROPYLoss(Loss):
 
         # args:
         # 1) pointer to network output
-        # 2) pointer to target
-        # 3) dimensionality
+        # 2) dimensionality
+        # 3) pointer to target
         args = [ctx.float_ty.as_pointer(), ctx.int32_ty, ctx.float_ty.as_pointer()]
         builder = ctx.create_llvm_function(args, self, name, return_type=ctx.float_ty)
         value, dim, target = builder.function.args
@@ -108,8 +108,10 @@ class CROSS_ENTROPYLoss(Loss):
             value_ptr = b1.gep(value,[index])
             target_ptr = b1.gep(target,[index])
             log_f = ctx.get_builtin("log", [ctx.float_ty])
-            log = builder.call(log_f, [target_ptr])
-            diff = builder.fmul(value_ptr, log)
+            # log = builder.call(log_f, [target_ptr])
+            # diff = builder.fmul(b1.load(value_ptr), log)
+            log = b1.call(log_f, target_ptr)
+            diff = b1.fmul(b1.load(value_ptr), log)
             b1.store(b1.fadd(b1.load(sum),diff),sum)
 
         builder.ret(builder.load(sum))

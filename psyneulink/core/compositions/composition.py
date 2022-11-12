@@ -7996,9 +7996,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # target_size = len(target_mechanism.output_ports[0].value)
                 # assert output_source_size == target_size, \
                 #     f"PROGRAM ERROR:  output_source_size ({output_source_size}) != target_size ({target_size})."
-                if not isinstance(output_source.function, Logistic):
-                    raise CompositionError(f"Last node of learning pathway must use Logistic as its function "
-                                           f"CROSS_ENTROPY is used at loss_spec.")
+                # if not isinstance(output_source.function, Logistic):
+                #     raise CompositionError(f"Last node of learning pathway must use Logistic as its function "
+                #                            f"CROSS_ENTROPY is used at loss_spec.")
                 sample.update({# SIZE: output_source_size,
                                FUNCTION: SoftMax(output=ALL)})
                 target.update({# SIZE: target_size,

@@ -194,6 +194,7 @@ def construct_model(stim_size = STIM_SIZE,
                                function=FFN_TRANSFER_FUNCTION)
     decision = ProcessingMechanism(name=FFN_OUTPUT,
                                    size=2,
+                                   # function=ReLU)
                                    function=Logistic)
                                    # function=SoftMax(output=ALL,
                                    #                  gain=decision_softmax_temp))
