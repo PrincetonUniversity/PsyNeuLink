@@ -50,12 +50,21 @@ test_data = [
     pytest.param(Functions.GaussianDistort, test_var, {'bias': RAND1, 'variance':RAND2, 'offset':RAND3, 'scale':RAND4 }, gaussian_distort_helper(0), id="GAUSSIAN DISTORT GLOBAL SEED"),
     pytest.param(Functions.GaussianDistort, test_var, {'bias': RAND1, 'variance':RAND2, 'offset':RAND3, 'scale':RAND4, 'seed':0 }, gaussian_distort_helper(0), id="GAUSSIAN DISTORT"),
 
+    # SoftMax 1D input
     pytest.param(Functions.SoftMax, test_var, {'gain':RAND1, 'per_item': False}, softmax_helper, id="SOFT_MAX ALL"),
     pytest.param(Functions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_VAL}, 'per_item': False}, np.where(softmax_helper == np.max(softmax_helper), softmax_helper, 0), id="SOFT_MAX MAX_VAL"),
     pytest.param(Functions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_INDICATOR}, 'per_item': False}, np.where(softmax_helper == np.max(softmax_helper), 1, 0), id="SOFT_MAX MAX_INDICATOR"),
     pytest.param(Functions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.PROB}, 'per_item': False},
                  [0.0, 0.0, 0.0, 0.0, test_var[4], 0.0, 0.0, 0.0, 0.0, 0.0], id="SOFT_MAX PROB"),
 
+    # SoftMax 2D testing per-item
+    pytest.param(Functions.SoftMax, [test_var], {'gain':RAND1, 'per_item': True}, [softmax_helper], id="SOFT_MAX ALL 2D"),
+    pytest.param(Functions.SoftMax, [test_var], {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_VAL}, 'per_item': True}, [np.where(softmax_helper == np.max(softmax_helper), softmax_helper, 0)], id="SOFT_MAX MAX_VAL 2D"),
+    pytest.param(Functions.SoftMax, [test_var], {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_INDICATOR}, 'per_item': True}, [np.where(softmax_helper == np.max(softmax_helper), 1, 0)], id="SOFT_MAX MAX_INDICATOR 2D"),
+    pytest.param(Functions.SoftMax, [test_var], {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.PROB}, 'per_item': True},
+                 [[0.0, 0.0, 0.0, 0.0, test_var[4], 0.0, 0.0, 0.0, 0.0, 0.0]], id="SOFT_MAX PROB 2D"),
+
+    # SoftMax per-item with 2 elements in input
     pytest.param(Functions.SoftMax, [test_var, test_var], {'gain':RAND1, 'per_item': True}, softmax_helper2, id="SOFT_MAX ALL PER_ITEM"),
     pytest.param(Functions.SoftMax, [test_var, test_var], {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_VAL}, 'per_item': True},
                  np.where(softmax_helper2 == np.max(softmax_helper2), softmax_helper2, 0), id="SOFT_MAX MAX_VAL PER_ITEM"),
