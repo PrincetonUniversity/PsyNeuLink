@@ -1437,6 +1437,7 @@ class LinearCombination(
             comb_op = "fmul"
         elif operation == CROSS_ENTROPY:
             raise FunctionError(f"LinearCombination Function does not (yet) support CROSS_ENTROPY operation.")
+            # FROM objectivefunctions.py:
             # def __gen_llvm_cross_entropy(self, builder, index, ctx, v1, v2, acc):
             #     ptr1 = builder.gep(v1, [index])
             #     ptr2 = builder.gep(v2, [index])
