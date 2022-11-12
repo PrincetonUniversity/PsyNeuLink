@@ -195,9 +195,6 @@ def construct_model(stim_size = STIM_SIZE,
     decision = ProcessingMechanism(name=FFN_OUTPUT,
                                    size=2,
                                    function=ReLU)
-                                   # function=Logistic)
-                                   # function=SoftMax(output=ALL,
-                                   #                  gain=decision_softmax_temp))
 
     ffn = AutodiffComposition(([{input_current_stim,
                                  input_current_context,
