@@ -7,7 +7,7 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer, SGDOptimizer
 from psyneulink.library.compositions.compiledloss import MSELoss
 from psyneulink.library.compositions.pytorchllvmhelper import *
-from psyneulink.core.globals.keywords import TARGET_MECHANISM
+from psyneulink.core.globals.keywords import TARGET_MECHANISM, MSE
 from psyneulink.core.globals.utilities import get_deepcopy_with_shared
 from .pytorchcomponents import *
 
@@ -274,7 +274,7 @@ class PytorchModelCreator(torch.nn.Module):
         optimizer = self._get_compiled_optimizer()
         # setup loss
         loss_type = self._composition.loss_spec
-        if loss_type == 'mse':
+        if loss_type == MSE:
             loss = MSELoss()
         else:
             raise Exception("LOSS TYPE", loss_type, "NOT SUPPORTED")

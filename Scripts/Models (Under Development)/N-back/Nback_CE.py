@@ -91,7 +91,6 @@ RETRIEVAL_SOFTMAX_TEMP=1/8 # express as gain # precision of retrieval process
 RETRIEVAL_HAZARD_RATE=0.04 # rate of re=sampling of em following non-match determination in a pass through ffn
 RETRIEVAL_STIM_WEIGHT=.05 # weighting of stimulus field in retrieval from em
 RETRIEVAL_CONTEXT_WEIGHT = 1-RETRIEVAL_STIM_WEIGHT # weighting of context field in retrieval from em
-DECISION_SOFTMAX_TEMP=1
 
 # Training parameters:
 NUM_EPOCHS= 6250    # nback-paper: 400,000 @ one trial per epoch = 6,250 @ 64 trials per epoch
@@ -146,8 +145,7 @@ def construct_model(stim_size = STIM_SIZE,
                     retrievel_softmax_temp = RETRIEVAL_SOFTMAX_TEMP,
                     retrieval_hazard_rate = RETRIEVAL_HAZARD_RATE,
                     retrieval_stimulus_weight = RETRIEVAL_STIM_WEIGHT,
-                    retrieval_context_weight = RETRIEVAL_CONTEXT_WEIGHT,
-                    decision_softmax_temp = DECISION_SOFTMAX_TEMP):
+                    retrieval_context_weight = RETRIEVAL_CONTEXT_WEIGHT):
     """Construct nback_model
     Arguments
     ---------
@@ -159,7 +157,6 @@ def construct_model(stim_size = STIM_SIZE,
     retrieval_hazard_rate: float : default RETRIEVAL_HAZARD_RATE
     retrieval_stimulus_weight: float : default RETRIEVAL_STIM_WEIGHT
     retrieval_context_weight: float : default RETRIEVAL_CONTEXT_WEIGHT
-    decision_softmax_temp: float : default DECISION_SOFTMAX_TEMP)
 
     Returns
     -------
@@ -193,9 +190,9 @@ def construct_model(stim_size = STIM_SIZE,
                                function=FFN_TRANSFER_FUNCTION)
     decision = ProcessingMechanism(name=FFN_OUTPUT,
                                    size=2,
-                                   # function=Logistic)
-                                   function=SoftMax(output=MAX_INDICATOR,
-                                                    gain=decision_softmax_temp))
+                                   function=Logistic)
+                                   # function=SoftMax(output=ALL,
+                                   #                  gain=decision_softmax_temp))
 
     ffn = AutodiffComposition(([{input_current_stim,
                                  input_current_context,

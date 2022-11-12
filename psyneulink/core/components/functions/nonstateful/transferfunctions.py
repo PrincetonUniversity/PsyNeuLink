@@ -2834,40 +2834,14 @@ class SoftMax(TransferFunction):
 
         output_type = self._get_current_parameter_value(OUTPUT_TYPE, context)
         output_size = len(output)
-        # FIX: GET RID OF sm
-        sm = self.function(output, params={OUTPUT_TYPE: ALL}, context=context)
-        sm = np.squeeze(sm)
+        # # FIX: GET RID OF sm
+        # sm = self.function(output, params={OUTPUT_TYPE: ALL}, context=context)
+        # sm = np.squeeze(sm)
 
-        # FIX: KEEP FOR GENERALITY, SHOULD *NOT* BE USED IN CONTEXT OF LEARNING;  THAT SHOULD ALWAYS BE MAX OR TARGET
+        # FIX: KEEP FOR GENERALITY, SHOULD *NOT* BE USED IN CONTEXT OF GRADIENT-BASED LEARNING;
+        #      THAT SHOULD ALWAYS BE MAX [OR TBI: TARGET]
         if output_type == ALL:
             # Return full Jacobian matrix of derivatives
-            # assert size == len(input), f"PROGRAM ERROR: SoftMax using outputype=ALL but size of output != size of input"
-            # # # MODIFIED 11/11/22 OLD:
-            # derivative = np.empty([output_size, output_size])
-            # for j in range(output_size):
-            #     for i, val in zip(range(output_size), output):
-            #         if i == j:
-            #             d = 1
-            #         else:
-            #             d = 0
-            #         derivative[j, i] = sm[i] * (d - sm[j])
-            # # # MODIFIED 11/11/22 NEW: [FULL DIMENSIONALITY USING INPUTS]
-            # # otput_s = len(input)
-            # # sm = self.function(output, params={OUTPUT_TYPE: ALL}, context=context)
-            # # sm = np.squeeze(sm)
-            # derivative = np.empty((output_size, output_size))
-            # for o in range(output_size):
-            #     for i, val in zip(range(output_size), input):
-            #         if i == o:
-            #             d = 1
-            #         else:
-            #             d = 0
-            #         derivative[o, i] = input[i] * (d - output[o])
-            # # MODIFIED 11/11/22 NEWER: COMPUTED JUST OVER BOTH OUTPUTS
-            # derivative = np.empty(output_size)
-            # for i in range(output_size):
-            #     derivative[i] = sm[i] * (1 - sm[i])
-            # # MODIFIED 11/11/22 FINAL:
             derivative = np.empty([output_size, output_size])
             for j in range(output_size):
                 for i, val in zip(range(output_size), output):
@@ -2876,28 +2850,25 @@ class SoftMax(TransferFunction):
                     else:
                         d = 0
                     derivative[j, i] = output[i] * (d - output[j])
-            # MODIFIED 11/11/22 END
 
         elif output_type in {MAX_VAL, MAX_INDICATOR}:
             # Return 1d array of derivatives for max element (i.e., the one chosen by SoftMax)
             derivative = np.empty(output_size)
             # Get the element of output returned as non-zero when output_type is not ALL
-            # MODIFIED 11/10/22 OLD: [JDC]
             # FIX: SUPPORT USE OF TARGET INSTEAD OF MAX:
             # FIX: IS [0][0]] STILL NEEDED IF sm IS NOT USED?
             index_of_max = int(np.where(output == np.max(output))[0][0])
-            # # MODIFIED 11/10/22 NEW: [JAN]
-            # index_of_max = int(np.where(sm == np.max(sm))[0])
-            # MODIFIED 11/10/22 END
             # FIX: SHOULD USE output INSTEAD OF sm
-            max_val = sm[index_of_max]
+            # max_val = sm[index_of_max]
+            max_val = output[index_of_max]
             for i in range(output_size):
                 if i == index_of_max:
                     d = 1
                 else:
                     d = 0
                 # FIX: SHOULD USE output
-                derivative[i] = sm[i] * (d - max_val)
+                # derivative[i] = sm[i] * (d - max_val)
+                derivative[i] = output[i] * (d - max_val)
 
         else:
             raise FunctionError("Can't assign derivative for SoftMax function{} since OUTPUT_TYPE is PROB "

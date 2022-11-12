@@ -2770,8 +2770,8 @@ from psyneulink.core.compositions.report import Report, \
 from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHOW_CIM, EXECUTION_SET, SHOW_CONTROLLER
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    AFTER, ALL, ALLOW_PROBES, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROL, CONTROL_SIGNAL, CONTROLLER, DEFAULT, \
-    DICT, FEEDBACK, FULL, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
+    AFTER, ALL, ALLOW_PROBES, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROL, CONTROL_SIGNAL, CONTROLLER, CROSS_ENTROPY, \
+    DEFAULT, DICT, FEEDBACK, FULL, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
     LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, \
     MODEL_SPEC_ID_METADATA, \
@@ -7443,7 +7443,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                              pathway,
                                              learning_rate=0.05,
                                              error_function=None,
-                                             loss_function:tc.enum(MSE,SSE)=MSE,
+                                             loss_function:tc.enum(MSE,SSE,CROSS_ENTROPY)=MSE,
                                              learning_update:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=AFTER,
                                              default_projection_matrix=None,
                                              name:str=None):
@@ -7938,7 +7938,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         pathways = [p for n in self.get_nodes_by_role(NodeRole.INPUT) if
                     NodeRole.TARGET not in self.get_roles_by_node(n) for p in bfs(n)]
         for pathway in pathways:
-            self.add_backpropagation_learning_pathway(pathway=pathway)
+            self.add_backpropagation_learning_pathway(pathway=pathway,
+                                                      loss_function=self.loss_spec)
 
     def _create_terminal_backprop_learning_components(self,
                                                       input_source,

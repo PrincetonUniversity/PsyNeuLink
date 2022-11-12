@@ -157,7 +157,8 @@ from psyneulink.core.compositions.report \
     import ReportOutput, ReportParams, ReportProgress, ReportSimulations, ReportDevices, \
     LEARN_REPORT, EXECUTE_REPORT, PROGRESS_REPORT
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
-from psyneulink.core.globals.keywords import AUTODIFF_COMPOSITION, SOFT_CLAMP
+from psyneulink.core.globals.keywords import \
+    AUTODIFF_COMPOSITION, SOFT_CLAMP, CROSS_ENTROPY, MSE, SSE, KL_DIV, NLL, POISSON_NLL, L1
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.scheduling.time import TimeScale
@@ -203,9 +204,9 @@ class AutodiffComposition(Composition):
     weight_decay : float : default 0
         specifies the L2 penalty (which discourages large weights) used by the optimizer.
 
-    loss_spec : str or PyTorch loss function : default 'mse'
-        specifies the loss function for training. The current string options are 'mse' (the default), 'crossentropy',
-        'l1', 'nll', 'poissonnll', and 'kldiv'. Any PyTorch loss function can work here, such as ones from
+    loss_spec : str or PyTorch loss function : default MSE
+        specifies the loss function for training. The current string options are *MSE* (the default), *CROSS_ENTRY*,
+        *l1*, *NLL*, *POISSON_NLL*, and *KL_DIV*. Any PyTorch loss function can work here, such as ones from
         https://pytorch.org/docs/stable/nn.html#loss-functions
 
     losses : list of floats
@@ -238,7 +239,7 @@ class AutodiffComposition(Composition):
                  learning_rate=None,
                  optimizer_type='sgd',
                  weight_decay=0,
-                 loss_spec='mse',
+                 loss_spec=MSE,
                  disable_learning=False,
                  refresh_losses=False,
                  disable_cuda=True,
@@ -327,11 +328,11 @@ class AutodiffComposition(Composition):
     def _get_loss(self, loss_spec):
         if not isinstance(self.loss_spec, str):
             return self.loss_spec
-        elif loss_spec == 'mse':
+        elif loss_spec == MSE:
             return nn.MSELoss(reduction='mean')
-        elif loss_spec == 'sse':
+        elif loss_spec == SSE:
             return nn.MSELoss(reduction='sum')
-        elif loss_spec == 'crossentropy':
+        elif loss_spec == CROSS_ENTROPY:
             # Cross entropy loss is used for multiclass categorization and needs inputs in shape
             # ((# minibatch_size, C), targets) where C is a 1-d vector of probabilities for each potential category
             # and where target is a 1d vector of type long specifying the index to the target category. This
@@ -342,20 +343,20 @@ class AutodiffComposition(Composition):
                     x.unsqueeze(0),
                     y.type(torch.LongTensor)
             )
-        elif loss_spec == 'l1':
+        elif loss_spec == L1:
             return nn.L1Loss(reduction='sum')
-        elif loss_spec == 'nll':
+        elif loss_spec == NLL:
             return nn.NLLLoss(reduction='sum')
-        elif loss_spec == 'poissonnll':
+        elif loss_spec == POISSON_NLL:
             return nn.PoissonNLLLoss(reduction='sum')
-        elif loss_spec == 'kldiv':
+        elif loss_spec == KL_DIV:
             return nn.KLDivLoss(reduction='sum')
         else:
             raise AutodiffCompositionError("Loss type {} not recognized. Loss argument must be a string or function. "
                                            "Currently, the recognized loss types are Mean Squared Error, Cross Entropy,"
                                            " L1 loss, Negative Log Likelihood loss, Poisson Negative Log Likelihood, "
-                                           "and KL Divergence. These are specified as 'mse', 'crossentropy', 'l1', "
-                                           "'nll', 'poissonnll', and 'kldiv' respectively.".format(loss_spec))
+                                           "and KL Divergence. These are specified as MSE, CROSS_ENTROPY, 'l1', "
+                                           "NLL, POISSONNLL, and KL_DIV respectively.".format(loss_spec))
 
     # performs learning/training on all input-target pairs it recieves for given number of epochs
     def autodiff_training(self, inputs, targets, context=None, scheduler=None):
