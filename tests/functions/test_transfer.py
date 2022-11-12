@@ -16,9 +16,10 @@ RAND2 = np.random.rand()
 RAND3 = np.random.rand()
 RAND4 = np.random.rand()
 
-softmax_helper = RAND1 * test_var
-softmax_helper = softmax_helper - np.max(softmax_helper)
-softmax_helper = np.exp(softmax_helper) / np.sum(np.exp(softmax_helper))
+softmax_helper  = RAND1 * test_var
+softmax_helper  = softmax_helper - np.max(softmax_helper)
+softmax_helper  = np.exp(softmax_helper) / np.sum(np.exp(softmax_helper))
+softmax_helper2 = np.array((softmax_helper, softmax_helper)).reshape(2, -1)
 
 tanh_helper = (RAND1 * (test_var + RAND2 - RAND3) + RAND4)
 tanh_helper = np.tanh(tanh_helper)
@@ -44,14 +45,23 @@ test_data = [
                  [0.85314409, 0.00556188, 0.01070476, 0.0214405,  0.05559454,
                   0.08091079, 0.21657281, 0.19296643, 0.21343805, 0.92738261, 0.00483101],
                  id="ANGLE"),
+
     pytest.param(Functions.Gaussian, test_var, {'standard_deviation':RAND1, 'bias':RAND2, 'scale':RAND3, 'offset':RAND4}, gaussian_helper, id="GAUSSIAN"),
     pytest.param(Functions.GaussianDistort, test_var, {'bias': RAND1, 'variance':RAND2, 'offset':RAND3, 'scale':RAND4 }, gaussian_distort_helper(0), id="GAUSSIAN DISTORT GLOBAL SEED"),
     pytest.param(Functions.GaussianDistort, test_var, {'bias': RAND1, 'variance':RAND2, 'offset':RAND3, 'scale':RAND4, 'seed':0 }, gaussian_distort_helper(0), id="GAUSSIAN DISTORT"),
+
     pytest.param(Functions.SoftMax, test_var, {'gain':RAND1, 'per_item': False}, softmax_helper, id="SOFT_MAX ALL"),
-    pytest.param(Functions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_VAL}, 'per_item': False}, np.where(softmax_helper == np.max(softmax_helper), np.max(softmax_helper), 0), id="SOFT_MAX MAX_VAL"),
+    pytest.param(Functions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_VAL}, 'per_item': False}, np.where(softmax_helper == np.max(softmax_helper), softmax_helper, 0), id="SOFT_MAX MAX_VAL"),
     pytest.param(Functions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_INDICATOR}, 'per_item': False}, np.where(softmax_helper == np.max(softmax_helper), 1, 0), id="SOFT_MAX MAX_INDICATOR"),
     pytest.param(Functions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.PROB}, 'per_item': False},
                  [0.0, 0.0, 0.0, 0.0, test_var[4], 0.0, 0.0, 0.0, 0.0, 0.0], id="SOFT_MAX PROB"),
+
+    pytest.param(Functions.SoftMax, [test_var, test_var], {'gain':RAND1, 'per_item': True}, softmax_helper2, id="SOFT_MAX ALL PER_ITEM"),
+    pytest.param(Functions.SoftMax, [test_var, test_var], {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_VAL}, 'per_item': True},
+                 np.where(softmax_helper2 == np.max(softmax_helper2), softmax_helper2, 0), id="SOFT_MAX MAX_VAL PER_ITEM"),
+    pytest.param(Functions.SoftMax, [test_var, test_var], {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_INDICATOR}, 'per_item': True},
+                 np.where(softmax_helper2 == np.max(softmax_helper2), 1, 0), id="SOFT_MAX MAX_INDICATOR PER_ITEM"),
+
     pytest.param(Functions.LinearMatrix, test_var, {'matrix':test_matrix}, np.dot(test_var, test_matrix), id="LINEAR_MATRIX SQUARE"),
     pytest.param(Functions.LinearMatrix, test_var, {'matrix':test_matrix_l}, np.dot(test_var, test_matrix_l), id="LINEAR_MATRIX WIDE"),
     pytest.param(Functions.LinearMatrix, test_var, {'matrix':test_matrix_s}, np.dot(test_var, test_matrix_s), id="LINEAR_MATRIX TALL"),
