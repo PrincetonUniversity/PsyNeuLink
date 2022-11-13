@@ -56,6 +56,8 @@ TODO:
         - try with STIM_SIZE = NUM_STIMS rather than 20 (as in nback-paper)
         - refactor generate_stim_sequence() to use actual empirical stimulus sequences
         - replace get_input_sequence and get_training_inputs with generators passed to nback_model.run() and ffn.learn
+        - build version that *can* maintain in WM, and uses EVC to decide which would be easier:
+           maintenance in WM vs. storage/retrieval from EM (and the fit to Jarrod's data)
 """
 
 import random
@@ -68,12 +70,12 @@ from psyneulink import *
 
 # Settings for running script:
 DISPLAY_MODEL = False # show visual graphic of model
-TRAIN = True
-RUN = False
-ANALYZE = False # Analyze results of run
-REPORT_OUTPUT = ReportOutput.OFF   # Sets console output during run
-REPORT_PROGRESS = ReportProgress.ON  # Sets console progress bar during run
-REPORT_LEARNING = ReportLearning.OFF  # Sets console progress bar during training
+TRAIN = False
+RUN = True
+ANALYZE = True # Analyze results of run
+REPORT_OUTPUT = ReportOutput.OFF       # Sets console output during run
+REPORT_PROGRESS = ReportProgress.OFF   # Sets console progress bar during run
+REPORT_LEARNING = ReportLearning.OFF   # Sets console progress bar during training
 ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
 
 #region ========================================= PARAMETERS ===========================================================
@@ -689,8 +691,98 @@ def analyze_results(results, num_trials=NUM_TRIALS, nback_levels=NBACK_LEVELS):
         for j, performance in enumerate(stats[i]):
             print(f"\t{list(trial_types)[j].name}: {performance:.1f}")
 
-    return responses_and_trial_types, stats
+    data_dict = {k:v for k,v in zip(nback_levels, responses_and_trial_types)}
+    stats_dict = {}
+    for i, nback_level in enumerate(nback_levels):
+        stats_dict.update({nback_level: {trial_type.name:stat for trial_type,stat in zip (trial_types, stats[i])}})
+
+    return data_dict, stats_dict
+
+
+def compute_dprime(hit_rate, fa_rate):
+    """ returns dprime and sensitivity
+    """
+    def clamp(n, minn, maxn):
+        return max(min(maxn, n), minn)
+    # hit_rate = clamp(hit_rate, 0.01, 0.99)
+    # fa_rate = clamp(fa_rate, 0.01, 0.99)
+
+    dl = np.log(hit_rate * (1 - fa_rate) / ((1 - hit_rate) * fa_rate))
+    c = 0.5 * np.log((1 - hit_rate) * (1 - fa_rate) / (hit_rate * fa_rate))
+    return dl, c
+
+
+def plot_results(response_and_trial_types, stats):
+    hits_stderr = np.concatenate((score.mean(2).std(-1)/np.sqrt(neps))[:,(0,1)])
+    correj_stderr = np.concatenate((score.mean(2).std(-1)/np.sqrt(neps))[:,(2,3)])
+    d,s = compute_dprime(
+      np.concatenate(score.mean(2)[:,(0,1)]),
+      np.concatenate(score.mean(2)[:,(2,3)])
+    )
+    print(d.shape,s.shape)
+    dprime_stderr = d.std(-1)/np.sqrt(neps)
+    bias_stderr = s.std(-1)/np.sqrt(neps)
+    #%%
+    # 2back-target, 2back-lure, 3back-target, 3back-lure
+    hits = np.concatenate(acc[:,(0,1)])
+    correj = np.concatenate(acc[:,(2,3)])
+    dprime = np.zeros(4)
+    bias = np.zeros(4)
+    for i in range(4):
+      d,s = compute_dprime(hits[i], 1-correj[i])
+      dprime[i]=d
+      bias[i]=s
+
+    #%%
+    f,axar = plt.subplots(2,2,figsize=(15,8));axar=axar.reshape(-1)
+    cL = ['blue','darkblue','lightgreen','forestgreen']
+    labL = ['2b,ctrl','2b,lure','3b,ctrl','3b,lure']
+
+    # correct reject
+    ax = axar[0]
+    ax.set_title('correct rejection')
+    ax.bar(range(4),correj,color=cL,yerr=correj_stderr)
+
+    # hits
+    ax = axar[1]
+    ax.set_title('hits')
+    ax.bar(range(4),hits,color=cL,yerr=hits_stderr)
+
+    #
+    ax = axar[2]
+    ax.set_title('dprime')
+    ax.bar(range(4),dprime,color=cL,yerr=dprime_stderr)
+
+    #
+    ax = axar[3]
+    ax.set_title('bias')
+    ax.bar(range(4),bias,color=cL,yerr=bias_stderr)
+
+    ##
+    for ax in axar[:2]:
+      ax.set_xticks(np.arange(4))
+      ax.set_xticklabels(labL)
+      ax.set_ylim(0,1)
+
+    plt.savefig('figures/EMmetrics-%s-t%i.jpg'%(mtag,tstamp))
+    plt.savefig('figures/EMmetrics_yerr-%s-t%i.svg'%(mtag,tstamp))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #endregion
+
 
 #region ===================================== SCRIPT EXECUTION =========================================================
 # Construct, train and/or run model based on settings at top of script
