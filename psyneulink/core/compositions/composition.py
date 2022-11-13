@@ -10050,33 +10050,65 @@ _
             # There's no mode to run simulations.
             # Simulations are run as part of the controller node wrapper.
             assert not is_simulation
-            try:
-                comp_ex_tags = frozenset({"learning"}) if self._is_learning(context) else frozenset()
-                _comp_ex = pnlvm.CompExecution.get(self, context, additional_tags=comp_ex_tags)
-                if execution_mode & pnlvm.ExecutionMode.LLVM:
-                    results += _comp_ex.run(inputs, num_trials, num_inputs_sets)
-                elif execution_mode & pnlvm.ExecutionMode.PTX:
-                    results += _comp_ex.cuda_run(inputs, num_trials, num_inputs_sets)
-                else:
-                    assert False, "Unknown execution mode: {}".format(execution_mode)
 
-                # Update the parameter for results
-                self.parameters.results._set(results, context)
+            # MODIFIED 11/12/22 NEW:
+            with Report(self,
+                        report_output=report_output,
+                        report_params=report_params,
+                        report_progress=report_progress,
+                        report_simulations=report_simulations,
+                        report_to_devices=report_to_devices,
+                        context=context) as report:
 
-                if self._is_learning(context):
-                    # copies back matrix to pnl from param struct (after learning)
-                    _comp_ex._copy_params_to_pnl(context=context)
+                report_num = report.start_report(self, num_trials, context)
 
-                self._propagate_most_recent_context(context)
-                # KAM added the [-1] index after changing Composition run()
-                # behavior to return only last trial of run (11/7/18)
-                return results[-1]
+                report(self,
+                       EXECUTE_REPORT,
+                       report_num=report_num,
+                       scheduler=scheduler,
+                       content='run_start',
+                       context=context)
+            # MODIFIED 11/12/22 END
 
-            except Exception as e:
-                if not execution_mode & pnlvm.ExecutionMode._Fallback:
-                    raise e from None
+                try:
+                    comp_ex_tags = frozenset({"learning"}) if self._is_learning(context) else frozenset()
+                    _comp_ex = pnlvm.CompExecution.get(self, context, additional_tags=comp_ex_tags)
+                    if execution_mode & pnlvm.ExecutionMode.LLVM:
+                        results += _comp_ex.run(inputs, num_trials, num_inputs_sets)
+                    elif execution_mode & pnlvm.ExecutionMode.PTX:
+                        results += _comp_ex.cuda_run(inputs, num_trials, num_inputs_sets)
+                    else:
+                        assert False, "Unknown execution mode: {}".format(execution_mode)
 
-                warnings.warn("Failed to run `{}': {}".format(self.name, str(e)))
+                    # Update the parameter for results
+                    self.parameters.results._set(results, context)
+
+                    if self._is_learning(context):
+                        # copies back matrix to pnl from param struct (after learning)
+                        _comp_ex._copy_params_to_pnl(context=context)
+
+                    self._propagate_most_recent_context(context)
+
+                    # MODIFIED 11/12/22 NEW:
+                    report(self,
+                           [RUN_REPORT, PROGRESS_REPORT],
+                           report_num=report_num,
+                           scheduler=scheduler,
+                           content='run_end',
+                           context=context,
+                           node=self)
+                    # MODIFIED 11/12/22 END
+
+                    # KAM added the [-1] index after changing Composition run()
+                    # behavior to return only last trial of run (11/7/18)
+                    return results[-1]
+
+                except Exception as e:
+                    if not execution_mode & pnlvm.ExecutionMode._Fallback:
+                        raise e from None
+
+                    warnings.warn("Failed to run `{}': {}".format(self.name, str(e)))
+
 
         # Reset gym forager environment for the current trial
         if self.env:
