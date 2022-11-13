@@ -2702,13 +2702,10 @@ class SoftMax(TransferFunction):
         assert arg_in.type == arg_out.type
         forward_tags = tags.difference({"derivative"})
 
-        # SoftMax derivative is calculated from the results. Recalculate them here
-        base_out = builder.alloca(arg_out.type.pointee)
-        builder = self._gen_llvm_function_body(ctx, builder, params, state, arg_in, base_out, output_type=self.output, tags=forward_tags)
-
-
+        # SoftMax derivative is calculated from the "ALL" results.
+        # Those can provided from outside, but we don't support receiving data in arg_out
         all_out = builder.alloca(arg_out.type.pointee)
-        builder = self._gen_llvm_function_body(ctx, builder, params, state, base_out, all_out, output_type=ALL, tags=forward_tags)
+        builder = self._gen_llvm_function_body(ctx, builder, params, state, arg_in, all_out, output_type=ALL, tags=forward_tags)
 
         # The rest of the algorithm is for MAX_VAL and MAX_INDICATOR only
         assert self.output in {MAX_VAL, MAX_INDICATOR}, \
@@ -2836,14 +2833,15 @@ class SoftMax(TransferFunction):
         """
 
         if output is None:
-            output = self.function(input, context=context)
+            output = self.function(input, params={OUTPUT_TYPE: ALL}, context=context)
+        else:
+            assert not any(o == 0 for o in output)
 
-        output_type = self._get_current_parameter_value(OUTPUT_TYPE, context)
-        sm = self.function(output, params={OUTPUT_TYPE: ALL}, context=context)
-        sm = np.squeeze(sm)
+        sm = np.squeeze(output)
         size = len(sm)
         assert (len(output) == 1 and len(output[0]) == size) or len(output) == size
 
+        output_type = self._get_current_parameter_value(OUTPUT_TYPE, context)
         if output_type == ALL:
             # Return full Jacobian matrix of derivatives
             derivative = np.empty([size, size])
