@@ -2699,6 +2699,7 @@ class SoftMax(TransferFunction):
 
     def _gen_llvm_function_derivative_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert "derivative" in tags
+        assert arg_in.type == arg_out.type
         forward_tags = tags.difference({"derivative"})
 
         # SoftMax derivative is calculated from the results. Recalculate them here
@@ -2712,6 +2713,11 @@ class SoftMax(TransferFunction):
         # The rest of the algorithm is for MAX_VAL and MAX_INDICATOR only
         assert self.output in {MAX_VAL, MAX_INDICATOR}, \
             "Derivative of SoftMax is only implemented for MAX_VAL and MAX_INDICATOR! ({})".format(self.output)
+
+        if not pnlvm.helpers.is_scalar(arg_out.type.pointee.element):
+            assert len(arg_out.type.pointee) == 1
+            arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            all_out = builder.gep(all_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
         max_pos_ptr = builder.alloca(ctx.int32_ty)
         builder.store(max_pos_ptr.type.pointee(-1), max_pos_ptr)
@@ -2833,9 +2839,10 @@ class SoftMax(TransferFunction):
             output = self.function(input, context=context)
 
         output_type = self._get_current_parameter_value(OUTPUT_TYPE, context)
-        size = len(output)
         sm = self.function(output, params={OUTPUT_TYPE: ALL}, context=context)
         sm = np.squeeze(sm)
+        size = len(sm)
+        assert (len(output) == 1 and len(output[0]) == size) or len(output) == size
 
         if output_type == ALL:
             # Return full Jacobian matrix of derivatives
@@ -2852,7 +2859,7 @@ class SoftMax(TransferFunction):
             # Return 1d array of derivatives for max element (i.e., the one chosen by SoftMax)
             derivative = np.empty(size)
             # Get the element of output returned as non-zero when output_type is not ALL
-            index_of_max = int(np.where(output == np.max(output))[0][0])
+            index_of_max = int(np.where(output == np.max(output))[-1][0])
             max_val = sm[index_of_max]
             for i in range(size):
                 if i == index_of_max:
