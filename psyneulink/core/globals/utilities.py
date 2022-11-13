@@ -440,7 +440,8 @@ def iscompatible(candidate, reference=None, **kargs):
     try:
         with warnings.catch_warnings():
             warnings.simplefilter(action='ignore', category=FutureWarning)
-            if reference is not None and (candidate == reference):
+            # np.array(...).size > 0 checks for empty list. Everything else create single element (dtype=obejct) array
+            if reference is not None and np.array(candidate, dtype=object).size > 0 and (candidate == reference):
                 return True
             # if reference is not None:
             #     if (isinstance(reference, (bool, int, float))

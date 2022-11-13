@@ -480,8 +480,7 @@ class TestProjectionSpecificationFormats:
             )
             c.add_linear_processing_pathway([m0, p0, m1])
             for warn in w:
-                if r'elementwise comparison failed; returning scalar instead' in warn.message.args[0]:
-                    raise
+                assert 'elementwise comparison failed; returning scalar instead' not in warn.message.args[0]
 
     # KDM: this is a good candidate for pytest.parametrize
     def test_masked_mapping_projection(self):
