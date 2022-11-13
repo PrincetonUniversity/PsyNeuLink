@@ -104,6 +104,8 @@ class CROSS_ENTROPYLoss(Loss):
         sum = builder.alloca(ctx.float_ty)
         builder.store(ctx.float_ty(-0.0), sum)
 
+        # MODIFIED 11/12/22 NEW:
+        #  FIX: double != double* BUG
         with pnlvm.helpers.for_loop_zero_inc(builder, dim, "cross_entropy_sum_loop") as (b1, index):
             value_ptr = b1.gep(value,[index])
             target_ptr = b1.gep(target,[index])
@@ -113,6 +115,7 @@ class CROSS_ENTROPYLoss(Loss):
             # log = b1.call(log_f, target_ptr)
             # diff = b1.fmul(b1.load(value_ptr), log)
             b1.store(b1.fadd(b1.load(sum),diff),sum)
+        # MODIFIED 11/12/22 END
 
         builder.ret(builder.load(sum))
 
@@ -122,6 +125,7 @@ class CROSS_ENTROPYLoss(Loss):
     def _gen_inject_loss_differential(self, ctx, builder, value, target, output=None, sum_loss=False):
 
         raise Exception(f"Differential for CROSS_ENTROPYLoss() not yet supported")
+        # pass
 
         # # FIX: FROM MSE_LOSS -- HERE JUST AS FILLER TO GET PAST THIS METHOD DURING DEBUGGING;
         # #                       NEEDS TO BE PROPERLY IMPLEMENTED

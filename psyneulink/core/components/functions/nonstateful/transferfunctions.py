@@ -2720,6 +2720,7 @@ class SoftMax(TransferFunction):
 
     def _gen_llvm_function_derivative_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert "derivative" in tags
+        assert arg_in.type == arg_out.type
         forward_tags = tags.difference({"derivative"})
 
         # SoftMax derivative is calculated from the results. Recalculate them here
@@ -2733,6 +2734,11 @@ class SoftMax(TransferFunction):
         # The rest of the algorithm is for MAX_VAL and MAX_INDICATOR only
         assert self.output in {MAX_VAL, MAX_INDICATOR}, \
             "Derivative of SoftMax is only implemented for MAX_VAL and MAX_INDICATOR! ({})".format(self.output)
+
+        if not pnlvm.helpers.is_scalar(arg_out.type.pointee.element):
+            assert len(arg_out.type.pointee) == 1
+            arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            all_out = builder.gep(all_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
         max_pos_ptr = builder.alloca(ctx.int32_ty)
         builder.store(max_pos_ptr.type.pointee(-1), max_pos_ptr)
@@ -2846,6 +2852,7 @@ class SoftMax(TransferFunction):
         # FIX: ADD SUPPORT FOR TARGET (INSTEAD OF MAX) FOR PARTIAL DERIVATIVE; MAY NEED ADDITIONAL ARGUMENT
         Returns
         -------
+
         derivative of values returned by SoftMax :  1d or 2d array (depending on *OUTPUT_TYPE* of SoftMax)
         """
 
@@ -2855,9 +2862,9 @@ class SoftMax(TransferFunction):
 
         output_type = self._get_current_parameter_value(OUTPUT_TYPE, context)
         output_size = len(output)
-        # # FIX: GET RID OF sm
         # sm = self.function(output, params={OUTPUT_TYPE: ALL}, context=context)
         # sm = np.squeeze(sm)
+        assert (len(output) == 1 and len(output[0]) == size) or len(output) == size
 
         # FIX: KEEP FOR GENERALITY, SHOULD *NOT* BE USED IN CONTEXT OF GRADIENT-BASED LEARNING;
         #      THAT SHOULD ALWAYS BE MAX [OR TBI: TARGET]
@@ -2877,8 +2884,7 @@ class SoftMax(TransferFunction):
             derivative = np.empty(output_size)
             # Get the element of output returned as non-zero when output_type is not ALL
             # FIX: SUPPORT USE OF TARGET INSTEAD OF MAX:
-            # FIX: IS [0][0]] STILL NEEDED IF sm IS NOT USED?
-            index_of_max = int(np.where(output == np.max(output))[0][0])
+            index_of_max = int(np.where(output == np.max(output))[-1][0])
             # FIX: SHOULD USE output INSTEAD OF sm
             # max_val = sm[index_of_max]
             max_val = output[index_of_max]

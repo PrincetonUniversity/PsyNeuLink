@@ -2772,13 +2772,14 @@ from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHO
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     AFTER, ALL, ALLOW_PROBES, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROL, CONTROL_SIGNAL, CONTROLLER, CROSS_ENTROPY, \
-    DEFAULT, DICT, FEEDBACK, FULL, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
+    DEFAULT, DICT, EUCLIDEAN, FEEDBACK, FULL, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX, \
+    INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, KL_DIV, \
     LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, \
     MODEL_SPEC_ID_METADATA, \
     MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, NODE, OBJECTIVE_MECHANISM, ONLINE, OUTCOME, \
     OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
-    PARAMETER, PARAMETER_CIM_NAME, PORT, \
+    PARAMETER, PARAMETER_CIM_NAME, POISSON_NLL, PORT, \
     PROCESSING_PATHWAY, PROJECTION, PROJECTION_TYPE, PROJECTION_PARAMS, PULSE_CLAMP, RECEIVER, \
     SAMPLE, SENDER, SHADOW_INPUTS, SOFT_CLAMP, SSE, SUM, \
     TARGET, TARGET_MECHANISM, TEXT, VARIABLE, WEIGHT, OWNER_MECH
@@ -7987,7 +7988,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     VARIABLE: target_mechanism.output_ports[0].value}
 
             # For CROSS_ENTROPY loss, need some customization:
-            if loss_function == MSE:
+            if loss_function in {MSE, SSE, EUCLIDEAN, POISSON_NLL, KL_DIV}:
                 # error_function (uses default for Comparator):  target - sample
                 output_ports = [OUTCOME, MSE]
 
