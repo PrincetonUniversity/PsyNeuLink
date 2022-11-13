@@ -99,10 +99,10 @@ Creating a Composition
 A Composition can be created by calling the constructor and specifying `Components <Component>` to be added, using
 either arguments of the constructor and/or methods that allow Components to be added once it has been constructed.
 
-.. hint::
-    Although Components (Nodes and Projections) can be added individually to a Composition, it is often easier to use
-    `Pathways <Composition_Pathways>` to construct a Composition, which in many cases can automaticially construct the
-    Projections needed without having to specify those explicitly.
+    .. hint::
+        Although Components (Nodes and Projections) can be added individually to a Composition, it is often easier
+        to use `Pathways <Composition_Pathways>` to construct a Composition, which in many cases can automaticially
+        construct the Projections needed without having to specify those explicitly.
 
 .. _Composition_Constructor:
 
@@ -228,9 +228,9 @@ These methods can be used to add `Pathways <Composition_Pathways>` to an existin
         <BackPropagation>` in the specified pathway; returns the `learning Pathway <Composition_Learning_Pathway>`
         added to the Composition.
 
-.. note::
-  Only Mechanisms and Projections added to a Composition using the methods above belong to a Composition, even if
-  other Mechanism and/or Projections are constructed in the same Python script.
+    .. note::
+      Only Mechanisms and Projections added to a Composition using the methods above belong to a Composition, even if
+      other Mechanism and/or Projections are constructed in the same Python script.
 
 A `Node <Composition_Nodes>` can be removed from a Composition using the `remove_node <Composition.remove_node>` method.
 
@@ -951,12 +951,12 @@ ProcessingMechanisms for a pathway are executed first, and then its `learning co
        Animation of XOR Composition in example above when it is executed by calling its `learn <Composition.learn>`
        method with the argument ``animate={'show_learning':True}``.
 
-.. note::
-    Since the `learning components <Composition_Learning_Components>` are not executed until after the
-    processing components, the change to the weights of the MappingProjections in a learning pathway are not
-    made until after it has executed.  Thus, as with `execution of a Projection <Projection_Execution>`, those
-    changes will not be observed in the values of their `matrix <MappingProjection.matrix>` parameters until after
-    they are next executed (see `Lazy Evaluation <Component_Lazy_Updating>` for an explanation of "lazy" updating).
+    .. note::
+        Since the `learning components <Composition_Learning_Components>` are not executed until after the
+        processing components, the change to the weights of the MappingProjections in a learning pathway are not
+        made until after it has executed.  Thus, as with `execution of a Projection <Projection_Execution>`, those
+        changes will not be observed in the values of their `matrix <MappingProjection.matrix>` parameters until after
+        they are next executed (see `Lazy Evaluation <Component_Lazy_Updating>` for an explanation of "lazy" updating).
 
 .. _Composition_Learning_AutodiffComposition:
 
@@ -972,9 +972,21 @@ COMMENT
 AutodiffComposition constructor provides arguments for configuring the PyTorch implementation in various ways; the
 Composition is then built using the same methods (e.g., `add_node`, `add_projection`, `add_linear_processing_pathway`,
 etc.) as any other Composition. Note that there is no need to use any `learning methods <Composition_Learning_Methods>`
-— AutodiffCompositions automatically creates backpropagation learning pathways <Composition_Learning_Pathway>` between
-all input - output `Node <Composition_Nodes>` paths. It can be run just as a standard Composition would - using `learn
-<AutodiffComposition.learn>` for learning mode, and `run <AutodiffComposition.run>` for test mode.
+— AutodiffCompositions automatically creates backpropagation `learning pathways <Composition_Learning_Pathway>` between
+all input - output `Node <Composition_Nodes>` paths; and, in fact, they should *not* be used nor any Learning
+Components explicitly added to the Composition (see `warning <Autodiff_Learning_Components_Warning>` below)
+
+It can be run just as a standard Composition would - using `learn <AutodiffComposition.learn>` for learning mode,
+and `run <AutodiffComposition.run>` for test mode.
+COMMENT:
+FIX: CHECK WITH SAMYAK THAT THIS IS CORRECT
+COMMENT
+
+    .. hint::
+        To execute the `learn <Composition.learn>` method of an AutodiffComposition using PyTorch,
+        the **execution_mode** argument of the method must be set to `LLVMRun`;  if the argument is not specified,
+        the AutodiffComposition executes in standard Python mode, which can be useful for debugging, but is
+        several orders of magnitude slower than using PyTorch.
 
 The advantage of this approach is that it allows the Composition to be implemented in PsyNeuLink, while exploiting
 the efficiency of execution in PyTorch (which can yield as much as three orders of magnitude improvement).  However,
@@ -982,17 +994,31 @@ a disadvantage is that there are restrictions on the kinds of Compositions that 
 First, because it relies on PyTorch, it is best suited for use with `supervised
 learning <Composition_Learning_Supervised>`, although it can be used for some forms of `unsupervised learning
 <Composition_Learning_Unsupervised>` that are supported in PyTorch (e.g., `self-organized maps
-<https://github.com/giannisnik/som>`_).  Second, all of the Components in the Composition are be subject to and must
-be with compatible with learning.   This means that it cannot be used with a Composition that contains any
-`modulatory components <ModulatorySignal_Anatomy_Figure>` or that are subject to modulation, whether by
-ControlMechanisms within or outside the Composition;  this includes a `controller <Composition_Controller>`
-or any LearningMechanisms.  An AutodiffComposition can be `nested in a Composition <Composition_Nested>`
-that has such other Components.  During learning, none of the internal Components of the AutodiffComposition (e.g.,
-intermediate layers of a neural network model) are accessible to the other Components of the outer Composition,
-(e.g., as sources of information, or for modulation).  However, when learning turned off, then the  AutodiffComposition
-functions like any other, and all of its internal  Components accessible to other Components of the outer Composition.
-Thus, as long as access to its internal Components is not needed during learning, an `AutodiffComposition` can be
-trained, and then used to execute the trained Composition like any other.
+<https://github.com/giannisnik/som>`_).  Second, all of the Components in an AutodiffComposition must
+be with compatible with learning.
+COMMENT:
+FIX: IS THIS STILL TRUE? SEEMS TO CONTRADICT STATEMENT BELOW:
+This means that it cannot be used with a Composition that contains any `modulatory components
+<ModulatorySignal_Anatomy_Figure>` or ones that are subject to modulation, whether by ModulatoryMechanisms within or
+outside the Composition;
+?MAYBE THE FOLLOWING IS BETTER:
+COMMENT
+This means that it cannot contain any `ModulatoryMechanisms <ModulatoryMechanism>`;  this includes a `controller
+<Composition_Controller>` or any LearningMechanisms, although it can include Components subject to `modulation
+<ModulatorySignal_Modulation>` (see `Figure <ModulatorySignal_Anatomy_Figure>`), as noted below.
+
+    .. _Autodiff_Learning_Components_Warning:
+    .. warning::
+        When an AutodiffComposition is constructed, it creates all of the learning Components
+        that are needed, and thus **cannot include** any that are prespecified.
+
+An AutodiffComposition can be `nested in a Composition <Composition_Nested>` that has such other Components. During
+learning, none of the internal Components of the AutodiffComposition (e.g., intermediate layers of a neural network
+model) are accessible to the other Components of the outer Composition, (e.g., as sources of information,
+or for modulation).  However, when learning turned off, then the  AutodiffComposition functions like any other,
+and all of its internal Components are accessible to other Components of the outer Composition. Thus, as long as access
+to its internal Components is not needed during learning, an `AutodiffComposition` can be trained, and then used to
+execute the trained Composition like any other.
 
 .. _Composition_Learning_UDF:
 
@@ -1045,15 +1071,15 @@ can execute multiple trials (specified in their **num_trials** argument), callin
 <Composition.execute>` method for each `TRIAL <TimeScale.TRIAL>`.  The `execute <Composition.execute>` method
 can also be called directly, but this is useful mostly for debugging.
 
-.. hint::
-   Once a Composition has been constructed, it can be called directly. If it is called with no arguments, and
-   has executed previously, the `result <Composition_Execution_Results>` of the last `TRIAL <TimeScale.TRIAL>`
-   of execution is returned; otherwise None is returned.  If it is called with arguments, then either `run
-   <Composition.run>` or `learn <Composition.learn>` is called, based on the arguments provided:  If the
-   Composition has any `learning_pathways <Composition_Learning_Pathway>`, and the relevant `TARGET_MECHANISM
-   <Composition_Learning_Components>`\\s are specified in the `inputs argument <Composition_Execution_Inputs>`,
-   then `learn <Composition.learn>` is called;  otherwise, `run <Composition.run>` is called.  In either case,
-   the return value of the corresponding method is returned.
+    .. hint::
+       Once a Composition has been constructed, it can be called directly. If it is called with no arguments, and
+       has executed previously, the `result <Composition_Execution_Results>` of the last `TRIAL <TimeScale.TRIAL>`
+       of execution is returned; otherwise None is returned.  If it is called with arguments, then either `run
+       <Composition.run>` or `learn <Composition.learn>` is called, based on the arguments provided:  If the
+       Composition has any `learning_pathways <Composition_Learning_Pathway>`, and the relevant `TARGET_MECHANISM
+       <Composition_Learning_Components>`\\s are specified in the `inputs argument <Composition_Execution_Inputs>`,
+       then `learn <Composition.learn>` is called;  otherwise, `run <Composition.run>` is called.  In either case,
+       the return value of the corresponding method is returned.
 
 .. _Composition_Execution_Num_Trials:
 
@@ -1137,17 +1163,18 @@ The format required can also be seen using the  `get_input_format() <Composition
 
 .. _Composition_Input_Internal_Only:
 
-.. note::
-   Most Mechanisms have only a single `InputPort`, and thus require only a single input to be specified for
-   them for each `TRIAL <TimeScale.TRIAL>`. However some Mechanisms have more than one InputPort (for example,
-   a `ComparatorMechanism`), in which case inputs can be specified for some or all of them (see `below
-   <Composition_Input_Dictionary_InputPort_Entries>`). Conversely, some Mechanisms have InputPorts that are designated
-   as `internal_only <InputPort.internal_only>` (for example, the `input_port <Mechanism_Base.input_port>` for a
-   `RecurrentTransferMechanism`, if its `has_recurrent_input_port <RecurrentTransferMechanism.has_recurrent_input_port>`
-   attribute is True), in which case no input should be specified for those input_ports. Similar considerations
-   extend to the `external_input_ports_of_all_input_nodes <Composition.external_input_ports_of_all_input_nodes>` of a
-   `nested Composition <Composition_Nested>`, based on the Mechanisms (and/or additionally nested Compositions) that
-   comprise its set of `INPUT` `Nodes <Composition_Nodes>`.
+    .. note::
+       Most Mechanisms have only a single `InputPort`, and thus require only a single input to be specified for
+       them for each `TRIAL <TimeScale.TRIAL>`. However some Mechanisms have more than one InputPort (for example,
+       a `ComparatorMechanism`), in which case inputs can be specified for some or all of them (see `below
+       <Composition_Input_Dictionary_InputPort_Entries>`). Conversely, some Mechanisms have InputPorts that
+       are designated as `internal_only <InputPort.internal_only>` (for example, the `input_port
+       <Mechanism_Base.input_port>` for a `RecurrentTransferMechanism`, if its `has_recurrent_input_port
+       <RecurrentTransferMechanism.has_recurrent_input_port>` attribute is True), in which case no input should be
+       specified for those input_ports. Similar considerations extend to the `external_input_ports_of_all_input_nodes
+       <Composition.external_input_ports_of_all_input_nodes>` of a `nested Composition <Composition_Nested>`,
+       based on the Mechanisms (and/or additionally nested Compositions) thatcomprise its set of `INPUT` `Nodes
+       <Composition_Nodes>`.
 
 The factors above determine the format of each entry in an `inputs dictionary <Composition_Input_Dictionary>`, or the
 return value of the function or generator used for `programmatic specification <Composition_Programmatic_Inputs>` of
@@ -1333,10 +1360,10 @@ value that satisfies all rules above for standard input specification. The only 
 the function must return the input values for each `INPUT` `Node <Composition_Nodes>` for a single `TRIAL
 <TimeScale.TRIAL>`.
 
-.. note::
-    Default behavior when passing a function as input to a Composition is to execute for only one `TRIAL
-    <TimeScale.TRIAL>`. Remember to set the num_trials argument of Composition.run if you intend to cycle through
-    multiple `TRIAL <TimeScale.TRIAL>`\\s.
+    .. note::
+        Default behavior when passing a function as input to a Composition is to execute for only one `TRIAL
+        <TimeScale.TRIAL>`. Remember to set the num_trials argument of Composition.run if you intend to cycle through
+        multiple `TRIAL <TimeScale.TRIAL>`\\s.
 
 Complete input specification:
 
@@ -1370,10 +1397,10 @@ A generator can also be used as input. On each yield, it should return a value t
 standard input specification. The only difference is that on each execution, the generator must yield the input values
 for each `INPUT` `Node <Composition_Nodes>` for a single `TRIAL <TimeScale.TRIAL>`.
 
-.. note::
-    Default behavior when passing a generator is to execute until the generator is exhausted. If the num_trials
-    argument of Composition.run is set, the Composition will execute EITHER until exhaustion, or until num_trials has
-    been reached - whichever comes first.
+    .. note::
+        Default behavior when passing a generator is to execute until the generator is exhausted. If the num_trials
+        argument of Composition.run is set, the Composition will execute EITHER until exhaustion, or until num_trials
+        has been reached - whichever comes first.
 
 Complete input specification:
 
@@ -1566,10 +1593,10 @@ of the Projections is designated as a `feedback Projection <Composition_Feedback
 within another is added to the one in which it is nested, and all are treated as part of the same cycle. All Nodes
 within a cycle are assigned the `NodeRole` `CYCLE`.
 
-.. note::
-   A `RecurrentTransferMechanism` (and its subclaseses) are treated as single-Node cylces, formed by their
-   `AutoAssociativeProjection` (since the latter is subclass of MappingProjection and thus not designated as feedback
-   (see `below <Composition_Feedback_Designation>`).
+    .. note::
+       A `RecurrentTransferMechanism` (and its subclaseses) are treated as single-Node cylces, formed by their
+       `AutoAssociativeProjection` (since the latter is subclass of MappingProjection and thus not designated as
+       feedback (see `below <Composition_Feedback_Designation>`).
 
 .. _Composition_Cycle_Synchronous_Execution:
 
@@ -1587,13 +1614,13 @@ COMMENT:
  FIGURE HERE
 COMMENT
 
-.. note::
-   Although all the Nodes in a cycle receive either the initial value or previous value of other Nodes in the cycle,
-   they receive the *current* value of any Nodes that project to them from *outisde* the cycle, and pass their current
-   value (i.e., the ones computed in the current execution of the cycle) to any Nodes to which they project outside of
-   the cycle.  The former means that any Nodes within the cycle that receive such input are "a step ahead" of those
-   within the cycle and also, unless the use a `StatefulFunction`, others within the cycle will not see the effects of
-   that input within or across `TRIALS <TimeScale.TRIAL>`.
+    .. note::
+       Although all the Nodes in a cycle receive either the initial value or previous value of other Nodes in the cycle,
+       they receive the *current* value of any Nodes that project to them from *outisde* the cycle, and pass their
+       current value (i.e., the ones computed in the current execution of the cycle) to any Nodes to which they project
+       outside of the cycle.  The former means that any Nodes within the cycle that receive such input are "a step
+       ahead" of those within the cycle and also, unless the use a `StatefulFunction`, others within the cycle will
+       not see the effects of that input within or across `TRIALS <TimeScale.TRIAL>`.
 
 .. _Composition_Cycle_Initialization:
 
@@ -1607,18 +1634,18 @@ specified in **initialize_cycle_values** will be re-initialized to the assigned 
 cycle in that run, whereas any Nodes not specified will retain the last `value <Component.value>` they were assigned
 in the uprevious call to `run <Composition.run>` or `learn <Composition.learn>`.
 
-Nodes in a cycle can also be initialized outside of a call to `run <Composition.run>` or `learn <Composition.run>` using
-the `initialize <Composition.initialize>` method.
+Nodes in a cycle can also be initialized outside of a call to `run <Composition.run>` or `learn <Composition.run>`
+using the `initialize <Composition.initialize>` method.
 
-.. note::
-   If a `Mechanism` belonging to a cycle in a Composition is first executed on its own (i.e., using its own `execute
-   <Mechanism_Base.execute>` method), the value it is assigned will be used as its initial value when it is executed
-   within the Composition, unless an `execution_id <Context.execution_id>` is assigned to the **context** argument
-   of the Mechanism's `execute <Mechanism_Base.execute>` method when it is called.  This is because the first time
-   a Mechanism is executed in a Composition, its initial value is copied from the `value <Mechanism_Base.value>`
-   last assigned in the None context.  As described aove, this can be overridden by specifying an initial value for
-   the Mechanism in the **initialize_cycle_values** argument of the call to the Composition's `run <Composition.run>`
-   or `learn  <Composition.learn>` methods.
+    .. note::
+       If a `Mechanism` belonging to a cycle in a Composition is first executed on its own (i.e., using its own `execute
+       <Mechanism_Base.execute>` method), the value it is assigned will be used as its initial value when it is executed
+       within the Composition, unless an `execution_id <Context.execution_id>` is assigned to the **context** argument
+       of the Mechanism's `execute <Mechanism_Base.execute>` method when it is called.  This is because the first time
+       a Mechanism is executed in a Composition, its initial value is copied from the `value <Mechanism_Base.value>`
+       last assigned in the None context.  As described aove, this can be overridden by specifying an initial value for
+       the Mechanism in the **initialize_cycle_values** argument of the call to the Composition's `run <Composition.run>`
+       or `learn  <Composition.learn>` methods.
 
 .. _Composition_Feedback:
 
@@ -2153,29 +2180,32 @@ COMMENT: MODIFIED 2/4/22 OLD:
                 AS SOME InputPorts CAN HAVE FUNCTIONS THAT CHANGE THE SHAPE OF variable->value (e.g., Reduce)
  # Furthermore, Mechanisms can also have InputPorts with a `function <InputPort.function>` that changes
  #    the size of its input when generatings its `value <InputPort.value>`, in which case its `e
-.. note::
-    A `Node's <Composition_Nodes>` `external_input_values` attribute is always a 2d list in which the index i
-    element is the variable of the i'th element of the Node's `external_input_ports` attribute.  For Mechanisms,
-    the `external_input_values <Mechanism_Base.external_input_values>` is often the same as its `variable
-    <Mechanism_Base.variable>`.  However, some Mechanisms may have InputPorts marked as `internal_only
-    <InputPort.internal_only>` which are excluded from its `external_input_ports <Mechanism_Base.external_input_ports>`
-    and therefore its `external_input_values <Mechanism_Base.external_input_values>`, and so should not receive an
-    input value.  The same considerations extend to the `external_input_ports <Composition.external_input_ports>`
-    and `external_input_values <Composition.external_input_values>` of a Composition, based on the Mechanisms and/or
-    `nested Compositions <Composition_Nested>` that comprise its `INPUT` Nodes.
+    .. note::
+        A `Node's <Composition_Nodes>` `external_input_values` attribute is always a 2d list in which the index i
+        element is the variable of the i'th element of the Node's `external_input_ports` attribute.  For Mechanisms,
+        the `external_input_values <Mechanism_Base.external_input_values>` is often the same as its `variable
+        <Mechanism_Base.variable>`.  However, some Mechanisms may have InputPorts marked as `internal_only
+        <InputPort.internal_only>` which are excluded from its `external_input_ports
+        <Mechanism_Base.external_input_ports>` and therefore its `external_input_values
+        <Mechanism_Base.external_input_values>`, and so should not receive an
+        input value.  The same considerations extend to the `external_input_ports
+        <Composition.external_input_ports>` and `external_input_values <Composition.external_input_values>`
+        of a Composition, based on the Mechanisms and/or `nested Compositions <Composition_Nested>`
+        that comprise its `INPUT` Nodes.
 MODIFIED 2/4/22 NEW:
 COMMENT
-.. note::
-    A `Node's <Composition_Nodes>` `external_input_variables` attribute is always a 2d list in which the index i
-    element is the variable of the i'th element of the Node's `external_input_ports` attribute.  For Mechanisms,
-    the `external_input_variables <Mechanism_Base.external_input_variables>` is often the same as its `variable
-    <Mechanism_Base.variable>`.  However, some Mechanisms may have InputPorts marked as `internal_only
-    <InputPort.internal_only>` which are excluded from its `external_input_ports <Mechanism_Base.external_input_ports>`
-    and therefore its `external_input_variables <Mechanism_Base.external_input_variables>`, and so should not receive
-    an input value.  The same considerations extend to the `external_input_ports_of_all_input_nodes
-    <Composition.external_input_ports_of_all_input_nodes>` and `external_input_variables
-    <Composition.external_input_variables>` of a Composition, based on the Mechanisms and/or `nested Compositions
-    <Composition_Nested>` that comprise its `INPUT` Nodes.
+    .. note::
+        A `Node's <Composition_Nodes>` `external_input_variables` attribute is always a 2d list in which the index i
+        element is the variable of the i'th element of the Node's `external_input_ports` attribute.  For Mechanisms,
+        the `external_input_variables <Mechanism_Base.external_input_variables>` is often the same as its `variable
+        <Mechanism_Base.variable>`.  However, some Mechanisms may have InputPorts marked as `internal_only
+        <InputPort.internal_only>` which are excluded from its `external_input_ports
+        <Mechanism_Base.external_input_ports>` and therefore its `external_input_variables
+        <Mechanism_Base.external_input_variables>`, and so should not receive
+        an input value.  The same considerations extend to the `external_input_ports_of_all_input_nodes
+        <Composition.external_input_ports_of_all_input_nodes>` and `external_input_variables
+        <Composition.external_input_variables>` of a Composition, based on the Mechanisms and/or
+        `nested Compositions <Composition_Nested>` that comprise its `INPUT` Nodes.
 
 If num_trials is not in use, the number of inputs provided determines the number of `TRIAL <TimeScale.TRIAL>`\\s in
 the run. For example, if five inputs are provided for each `INPUT` `Node <Composition_Nodes>`, and num_trials is not
@@ -2520,9 +2550,9 @@ example above.
 as indicated by the results of S.run(), the original parameter values were used on trials 0 and 1,
 the runtime intercept was used on trials 2, 3, and 4, and the runtime slope was used on trial 3.
 
-.. note::
-    Runtime parameter values are subject to the same type, value, and shape requirements as the original parameter
-    value.
+    .. note::
+        Runtime parameter values are subject to the same type, value, and shape requirements as the original parameter
+        value.
 
 
 .. _Composition_Examples_Execution_Context:
@@ -2739,8 +2769,7 @@ from psyneulink.core.components.functions.nonstateful.combinationfunctions impor
     PredictionErrorDeltaFunction
 from psyneulink.core.components.functions.nonstateful.learningfunctions import \
     LearningFunction, Reinforcement, BackPropagation, TDLearning
-from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity, Linear, Logistic, SoftMax
-from psyneulink.core.components.functions.nonstateful.objectivefunctions import Distance
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity, Logistic, SoftMax
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError, MechanismList
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP, \
