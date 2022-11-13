@@ -72,7 +72,7 @@ TRAIN = True
 RUN = False
 ANALYZE = False # Analyze results of run
 REPORT_OUTPUT = ReportOutput.OFF   # Sets console output during run
-REPORT_PROGRESS = ReportProgress.OFF  # Sets console progress bar during run
+REPORT_PROGRESS = ReportProgress.ON  # Sets console progress bar during run
 REPORT_LEARNING = ReportLearning.OFF  # Sets console progress bar during training
 ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
 
@@ -579,10 +579,12 @@ def train_network(network,
     start_time = timeit.default_timer()
     network.learn(inputs=training_set,
                   minibatch_size=minibatch_size,
+                  report_output=REPORT_OUTPUT,
                   report_progress=REPORT_PROGRESS,
                   # report_learning=REPORT_LEARNING,
                   learning_rate=learning_rate,
-                  execution_mode=ExecutionMode.LLVMRun
+                  # execution_mode=ExecutionMode.LLVMRun
+                  # execution_mode=ExecutionMode.LLVMRun
                   )
     stop_time = timeit.default_timer()
     print(f"'{network.name}' trained")
