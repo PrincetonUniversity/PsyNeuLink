@@ -1789,14 +1789,16 @@ class Angle(TransferFunction):  # ----------------------------------------------
         value = np.squeeze(value)
         dim = len(value) + 1
         angle = np.zeros(dim)
-        angle[0] = np.cos(value[0])
-        prod = np.product([np.sin(value[k]) for k in range(1, dim - 1)])
-        n_prod = prod
+        sin_value = np.sin(value)
+        cos_value = np.cos(value)
+        angle[0] = cos_value[0]
+        prod_a = np.cumprod(np.flip(sin_value))[:-1]
+        angle[dim - 1] = prod_a[-1]
+        prod_a[-1] = 1.
+
+        # going down from the top of cumprod we skip: 2 edge values +1 extra for output size
         for j in range(1, dim - 1):
-            n_prod /= np.sin(value[j])
-            amt = n_prod * np.cos(value[j])
-            angle[j] = amt
-        angle[dim - 1] = prod
+            angle[j] = prod_a[dim -3 -j] * cos_value[j]
         return angle
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
