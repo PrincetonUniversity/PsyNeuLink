@@ -71,6 +71,10 @@ DISPLAY_MODEL = False # show visual graphic of model
 TRAIN = True
 RUN = False
 ANALYZE = False # Analyze results of run
+REPORT_OUTPUT = ReportOutput.OFF   # Sets console output during run
+REPORT_PROGRESS = ReportProgress.OFF  # Sets console progress bar during run
+REPORT_LEARNING = ReportLearning.OFF  # Sets console progress bar during training
+ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
 
 # PARAMETERS -------------------------------------------------------------------------------------------------------
 
@@ -100,10 +104,6 @@ LEARNING_RATE=0.001  # nback-paper: .001
 # Execution parameters:
 CONTEXT_DRIFT_RATE=.1 # drift rate used for DriftOnASphereIntegrator (function of Context mech) on each trial
 NUM_TRIALS = 48 # number of stimuli presented in a trial sequence
-REPORT_OUTPUT = ReportOutput.OFF   # Sets console output during run
-REPORT_PROGRESS = ReportProgress.OFF  # Sets console progress bar during run
-REPORT_LEARNING = ReportLearning.OFF  # Sets console progress bar during training
-ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
 
 # Names of Compositions and Mechanisms:
 NBACK_MODEL = "Nback Model"
@@ -205,8 +205,8 @@ def construct_model(stim_size = STIM_SIZE,
                                RANDOM_WEIGHTS_INITIALIZATION),
                               name=FFN_COMPOSITION,
                               learning_rate=LEARNING_RATE,
-                              loss_spec=CROSS_ENTROPY
-                              # loss_spec=MSE
+                              # loss_spec=CROSS_ENTROPY
+                              loss_spec=MSE
                               )
 
     # FULL MODEL (Outer Composition, including input, EM and control Mechanisms) ------------------------
