@@ -1631,14 +1631,14 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
         if input is not None:
             # Use input if provided
-            variable = input - bias
+            variable = np.array(input) - bias
         else:
             # Infer input from output
-            variable = output / gain + bias
+            variable = np.array(output) / gain + bias
 
         value = np.empty_like(variable)
-        value[(variable / gain + bias) > 0] = gain
-        value[(variable / gain + bias) <= 0] = gain * leak
+        value[variable > 0] = gain
+        value[variable <= 0] = gain * leak
 
         return value
 
@@ -2856,23 +2856,29 @@ class SoftMax(TransferFunction):
         derivative of values returned by SoftMax :  1d or 2d array (depending on *OUTPUT_TYPE* of SoftMax)
         """
 
+        # output_type = self._get_current_parameter_value(OUTPUT_TYPE, context)
+        output_type = self._get_current_parameter_value(OUTPUT_TYPE, context)
+
         if output is None:
             # If output is not specified, calculate over all inputs (i.e., full Jacobian)
-            output = self.function(input, context=context)
-
-        output_type = self._get_current_parameter_value(OUTPUT_TYPE, context)
-        output_size = len(output)
-        # sm = self.function(output, params={OUTPUT_TYPE: ALL}, context=context)
-        # sm = np.squeeze(sm)
-        assert (len(output) == 1 and len(output[0]) == size) or len(output) == size
+            # # # MODIFIED 11/12/22 OLD:
+            # sm = self.function(input, context=context)
+            # MODIFIED 11/12/22 NEW:   RECONCILE W/ JAN'S VERSION?
+            sm = self.function(input, params={OUTPUT_TYPE: output_type}, context=context)
+            sm = np.squeeze(sm)
+            # MODIFIED 11/12/22 END
+        else:
+            sm = output
+        size = len(sm)
+        assert (len(output) == 1 and len(output[0]) == output_size) or len(output) == output_size
 
         # FIX: KEEP FOR GENERALITY, SHOULD *NOT* BE USED IN CONTEXT OF GRADIENT-BASED LEARNING;
         #      THAT SHOULD ALWAYS BE MAX [OR TBI: TARGET]
         if output_type == ALL:
             # Return full Jacobian matrix of derivatives using Kronecker's delta method:
-            derivative = np.empty([output_size, output_size])
-            for j in range(output_size):
-                for i, val in zip(range(output_size), output):
+            derivative = np.empty([size, size])
+            for j in range(size):
+                for i, val in zip(range(size), output):
                     if i == j:
                         delta = 1
                     else:
@@ -2881,21 +2887,18 @@ class SoftMax(TransferFunction):
 
         elif output_type in {MAX_VAL, MAX_INDICATOR}:
             # Return 1d array of derivatives for max element (i.e., the one chosen by SoftMax)
-            derivative = np.empty(output_size)
+            derivative = np.empty(size)
             # Get the element of output returned as non-zero when output_type is not ALL
             # FIX: SUPPORT USE OF TARGET INSTEAD OF MAX:
-            index_of_max = int(np.where(output == np.max(output))[-1][0])
-            # FIX: SHOULD USE output INSTEAD OF sm
-            # max_val = sm[index_of_max]
-            max_val = output[index_of_max]
-            for i in range(output_size):
+            index_of_max = int(np.where(sm == np.max(sm))[-1][0])
+            max_val = sm[index_of_max]
+            for i in range(size):
                 if i == index_of_max:
                     d = 1
                 else:
                     d = 0
                 # FIX: SHOULD USE output
-                # derivative[i] = sm[i] * (d - max_val)
-                derivative[i] = output[i] * (d - max_val)
+                derivative[i] = sm[i] * (d - max_val)
 
         else:
             raise FunctionError("Can't assign derivative for SoftMax function{} since OUTPUT_TYPE is PROB "

@@ -7466,7 +7466,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies the function assigned to `ComparatorMechanism` used to compute the error from the target and the
             output (`value <Mechanism_Base.value>`) of the `TARGET` (last) Mechanism in the **pathway**).
 
-        loss_function : MSE or SSE : default MSE
+        loss_function : MSE, SSE or CROSS_ENTROPY : default MSE
             specifies the loss function used in computing the error term;
             MSE = mean squared error, and SSE = sum squared error.
 
@@ -7982,22 +7982,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                    default_variable=output_source.output_ports[0].value)
             # Base for object_mechanism output_ports:
             sample={NAME: SAMPLE,
-                    VARIABLE: output_source.output_ports[0].value,
-                    WEIGHT: -1}
+                    VARIABLE: output_source.output_ports[0].value}
             target={NAME: TARGET,
                     VARIABLE: target_mechanism.output_ports[0].value}
-
-            # For CROSS_ENTROPY loss, need some customization:
             if loss_function in {MSE, SSE, EUCLIDEAN, POISSON_NLL, KL_DIV}:
-                # error_function (uses default for Comparator):  target - sample
-                output_ports = [OUTCOME, MSE]
-
+                # error_function = default for Comparator (LinearCombination) =>  target - sample
+                sample.update({WEIGHT: -1})
+                if loss_function == SSE:
+                    output_ports = [OUTCOME, SSE]
+                else:
+                    output_ports = [OUTCOME, MSE]
             elif loss_function == CROSS_ENTROPY:
                 # error function:  uses LinearCombination to implement cross_entropy: (SoftMax(sample), SoftMax(target))
                 sample.update({FUNCTION: SoftMax(output=ALL)})
                 target.update({FUNCTION: SoftMax(output=ALL)})
                 error_function = LinearCombination(operation=CROSS_ENTROPY)
-                output_ports = [OUTCOME, CROSS_ENTROPY]
+                output_ports = [OUTCOME, SUM]
             else:
                 raise CompositionError(f"Unsupported loss function for '{self.name}': {loss_function}.")
             objective_mechanism = ComparatorMechanism(name='Comparator',
