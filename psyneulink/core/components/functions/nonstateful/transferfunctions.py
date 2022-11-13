@@ -2856,21 +2856,31 @@ class SoftMax(TransferFunction):
         derivative of values returned by SoftMax :  1d or 2d array (depending on *OUTPUT_TYPE* of SoftMax)
         """
 
-        # output_type = self._get_current_parameter_value(OUTPUT_TYPE, context)
-        output_type = self._get_current_parameter_value(OUTPUT_TYPE, context)
-
-        if output is None:
-            # If output is not specified, calculate over all inputs (i.e., full Jacobian)
-            # # # MODIFIED 11/12/22 OLD:
-            # sm = self.function(input, context=context)
-            # MODIFIED 11/12/22 NEW:   RECONCILE W/ JAN'S VERSION?
-            sm = self.function(input, params={OUTPUT_TYPE: output_type}, context=context)
-            sm = np.squeeze(sm)
-            # MODIFIED 11/12/22 END
-        else:
+        if output is not None:
+            # Use output as SoftMax values
             sm = output
+            arg_passed_in = output
+        else:
+            # If output is not specified, calculate it from input (to find maximum value below)
+            # # MODIFIED 11/12/22 DEVEL: FIX: DOES USE output_type SO CAN GENERATE 0's
+            # output = self.function(input, context=context)
+            # MODIFIED 11/12/22 JDC:
+            # Get SoftMax for input over ALL units (needed even for cases of MAX_ACT and MAX_INDICATOR)
+            sm = self.function(input, params={OUTPUT_TYPE: ALL}, context=context)
+            sm = np.squeeze(sm)
+            # Do this for size assert below
+            arg_passed_in = input
+            # MODIFIED 11/12/22 END
+
+        output_type = self._get_current_parameter_value(OUTPUT_TYPE, context)
+        # # MODIFIED 11/12/22 DEVEL:
+        # # FIX: THIS IS NOT GOOD, SINCE IT COMPUTES SOFTMAX *TWICE*
+        # #      HANDLE input ABOVE (UNDER ouput IS None CONDITION)
+        # sm = self.function(output, params={OUTPUT_TYPE: ALL}, context=context)
+        # sm = np.squeeze(sm)
+        # MODIFIED 11/12/22 END
         size = len(sm)
-        assert (len(output) == 1 and len(output[0]) == output_size) or len(output) == output_size
+        assert (len(arg_passed_in) == 1 and len(arg_passed_in[0]) == size) or len(arg_passed_in) == size
 
         # FIX: KEEP FOR GENERALITY, SHOULD *NOT* BE USED IN CONTEXT OF GRADIENT-BASED LEARNING;
         #      THAT SHOULD ALWAYS BE MAX [OR TBI: TARGET]
@@ -2878,12 +2888,12 @@ class SoftMax(TransferFunction):
             # Return full Jacobian matrix of derivatives using Kronecker's delta method:
             derivative = np.empty([size, size])
             for j in range(size):
-                for i, val in zip(range(size), output):
+                for i, val in zip(range(size), sm):
                     if i == j:
                         delta = 1
                     else:
                         delta = 0
-                    derivative[j, i] = output[i] * (delta - output[j])
+                    derivative[j, i] = sm[i] * (delta - sm[j])
 
         elif output_type in {MAX_VAL, MAX_INDICATOR}:
             # Return 1d array of derivatives for max element (i.e., the one chosen by SoftMax)
@@ -2903,7 +2913,6 @@ class SoftMax(TransferFunction):
         else:
             raise FunctionError("Can't assign derivative for SoftMax function{} since OUTPUT_TYPE is PROB "
                                 "(and therefore the relevant element is ambiguous)".format(self.owner_name))
-
         return derivative
 
 
