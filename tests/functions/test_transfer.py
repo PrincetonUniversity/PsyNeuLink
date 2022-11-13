@@ -99,7 +99,17 @@ derivative_test_data = [
     (Functions.Logistic, test_var, {'gain':RAND1, 'x_0':RAND2, 'offset':RAND3, 'scale':RAND4}, RAND1 * RAND4 * logistic_helper * (1 - logistic_helper)),
     (Functions.ReLU, test_var, {'gain':RAND1, 'bias':RAND2, 'leak':RAND3}, np.where((test_var - RAND2) > 0, RAND1, RAND1 * RAND3)),
     (Functions.Tanh, test_var, {'gain':RAND1, 'bias':RAND2, 'offset':RAND3, 'scale':RAND4}, tanh_derivative_helper),
+
+    # SoftMax per-item=False
     (Functions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_VAL}, 'per_item': False},
+     [-0.010211427111966652, -0.010211427111966652, -0.010211427111966652, -0.010211427111966652, -0.010211427111966652,
+      -0.010211427111966652, -0.010211427111966652, -0.010211427111966652, 0.09190284400769985, -0.010211427111966652]),
+    (Functions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_INDICATOR}, 'per_item': False},
+     [-0.012062786611097685, -0.012062786611097685, -0.012062786611097685, -0.012062786611097685, -0.012062786611097685,
+      -0.012062786611097685, -0.012062786611097685, -0.012062786611097685, 0.10856507949987917, -0.012062786611097685]),
+
+      # SoftMax per-tem=True 2D single element
+    (Functions.SoftMax, [test_var], {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_VAL}, 'per_item': True},
      [-0.010211427111966652, -0.010211427111966652, -0.010211427111966652, -0.010211427111966652, -0.010211427111966652,
       -0.010211427111966652, -0.010211427111966652, -0.010211427111966652, 0.09190284400769985, -0.010211427111966652]),
     (Functions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_INDICATOR}, 'per_item': False},
