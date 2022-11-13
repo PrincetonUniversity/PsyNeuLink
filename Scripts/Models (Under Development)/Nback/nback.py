@@ -58,12 +58,11 @@ TODO:
         - replace get_input_sequence and get_training_inputs with generators passed to nback_model.run() and ffn.learn
 """
 
-from enum import IntEnum
 import random
-import warnings
+from enum import IntEnum
 
-import numpy as np
 from graph_scheduler import *
+
 from psyneulink import *
 
 # Settings for running script:
@@ -76,7 +75,7 @@ REPORT_PROGRESS = ReportProgress.OFF  # Sets console progress bar during run
 REPORT_LEARNING = ReportLearning.OFF  # Sets console progress bar during training
 ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
 
-# PARAMETERS -------------------------------------------------------------------------------------------------------
+#region ========================================= PARAMETERS ===========================================================
 
 # Fixed (structural) parameters:
 MAX_NBACK_LEVELS = 3
@@ -134,9 +133,9 @@ class trial_types(IntEnum):
     NO_MATCH_NO_FOIL = 2    # ABB (2-back) or BCDA (3-back); not explicitly assigned: BBCA, BCCA or BBBA
     NO_MATCH_WITH_FOIL = 3  # BAA (2-back) or BACA (3-back); not explicitly assigned: BCAA or BAAA
 num_trial_types = len(trial_types)
+#endregion
 
-
-# ======================================== MODEL CONSTRUCTION =========================================================
+#region ===================================== MODEL CONSTRUCTION =======================================================
 
 def construct_model(stim_size = STIM_SIZE,
                     context_size = CONTEXT_SIZE,
@@ -298,8 +297,9 @@ def construct_model(stim_size = STIM_SIZE,
 
     print(f'full model constructed')
     return nback_model
+#endregion
 
-# ==========================================STIMULUS GENERATION =======================================================
+#region =====================================STIMULUS GENERATION =======================================================
 
 def get_stim_set(num_stim=STIM_SIZE):
     """Construct an array of unique stimuli for use in an experiment, used by train_network() and run_model()"""
@@ -530,8 +530,9 @@ def get_run_inputs(model, nback_level,
             model.nodes[MODEL_CONTEXT_INPUT]: [[context_drift_rate]]*num_trials,
             model.nodes[MODEL_TASK_INPUT]: [get_task_input(nback_level)]*num_trials}, \
            trial_type_seq
+#endregion
 
-# ==================================== MODEL EXECUTION METHODS ========================================================
+#region ================================== MODEL EXECUTION METHODS =====================================================
 
 def train_network(network,
                   training_set=None,
@@ -539,7 +540,7 @@ def train_network(network,
                   learning_rate=LEARNING_RATE,
                   num_epochs=NUM_EPOCHS,
                   save_weights_to=None):
-    """Trains the network on trarining set.
+    """Train the network on trarining set.
 
     Arguments
     ---------
@@ -653,6 +654,9 @@ def run_model(model,
         np.save(save_results_to, results)
     # print(f'results: \n{model.results}')
     return results
+#endregion
+
+#region ================================= MODEL PERFORMANCE ANALYSIS ===================================================
 
 def analyze_results(results, num_trials=NUM_TRIALS, nback_levels=NBACK_LEVELS):
     responses_and_trial_types = [None] * len(nback_levels)
@@ -684,8 +688,9 @@ def analyze_results(results, num_trials=NUM_TRIALS, nback_levels=NBACK_LEVELS):
             print(f"\t{list(trial_types)[j].name}: {performance:.1f}")
 
     return responses_and_trial_types, stats
+#endregion
 
-# ======================================== SCRIPT EXECUTION ============================================================
+#region ===================================== SCRIPT EXECUTION =========================================================
 # Construct, train and/or run model based on settings at top of script
 
 nback_model = construct_model()
@@ -695,8 +700,6 @@ if TRAIN:
     saved_weights = train_network(nback_model.nodes[FFN_COMPOSITION],
                                   save_weights_to=weights_filename)
 if RUN:
-    from pathlib import Path
-    import os
     results_filename = f'nback.results_nep_{NUM_EPOCHS}_lr_{str(LEARNING_RATE).split(".")[1]}.pnl'
     results = run_model(nback_model,
                         # load_weights_from=Path(os.path.join(os.getcwd(),'ffn.wts_nep_1_lr_01.pnl')),
@@ -707,3 +710,4 @@ if ANALYZE:
     coded_responses, stats = analyze_results(results,
                                              num_trials=NUM_TRIALS,
                                              nback_levels=NBACK_LEVELS)
+#endregion
