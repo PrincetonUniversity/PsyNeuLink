@@ -204,8 +204,8 @@ def construct_model(stim_size = STIM_SIZE,
                                RANDOM_WEIGHTS_INITIALIZATION),
                               name=FFN_COMPOSITION,
                               learning_rate=LEARNING_RATE,
-                              # loss_spec=CROSS_ENTROPY
-                              loss_spec=MSE
+                              loss_spec=CROSS_ENTROPY
+                              # loss_spec=MSE
                               )
 
     # FULL MODEL (Outer Composition, including input, EM and control Mechanisms) ------------------------
@@ -583,7 +583,7 @@ def train_network(network,
                   report_progress=REPORT_PROGRESS,
                   # report_learning=REPORT_LEARNING,
                   learning_rate=learning_rate,
-                  # execution_mode=ExecutionMode.LLVMRun
+                  execution_mode=ExecutionMode.LLVMRun
                   )
     stop_time = timeit.default_timer()
     print(f"'{network.name}' trained")

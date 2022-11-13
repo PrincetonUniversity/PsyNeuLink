@@ -52,8 +52,7 @@ Derivatives
 Most TransferFunctions have a derivative method.  These take both an **input** and **output** argument.  In general,
 the **input** is used to compute the derivative of the function at that value. If that is not provided, some
 Functions can compute the derivative using the function's output, either directly (such as `Logistic.derivative`) or by
-inferring
-the input from the **output** and then computing the derivative for that value (such as `ReLU.derivative`)
+inferring the input from the **output** and then computing the derivative for that value (such as `ReLU.derivative`)
 
 
 TranferFunction Class References
@@ -73,11 +72,11 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import parameter_keywords
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.function import (
     DEFAULT_SEED, Function, Function_Base, FunctionError, _random_state_getter, _seed_setter, function_keywords,
     get_matrix, is_function_type,
 )
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot
 from psyneulink.core.components.functions.stateful.integratorfunctions import SimpleIntegrator
 from psyneulink.core.components.shellclasses import Projection
@@ -1590,13 +1589,19 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         # Maxnum for some reason needs full function prototype
         max_f = ctx.get_builtin("maxnum", [ctx.float_ty])
         var = builder.load(ptri)
-        val = builder.fsub(var, bias)
 
         # FIX: THESE NEEDS TO BE CHANGED TO COMPORT WITH PYTHON BELOW
         if "derivative" in tags:
+            val = builder.fsub(var, bias)
+            predicate = builder.fcmp_ordered('>', val, val.type(0))
+            val = builder.select(predicate, gain, builder.fmul(gain, leak))
+        if "derivative_out" in tags:
+            val = builder.fdiv(var, gain)
+            val = builder.fadd(val, bias)
             predicate = builder.fcmp_ordered('>', val, val.type(0))
             val = builder.select(predicate, gain, builder.fmul(gain, leak))
         else:
+            val = builder.fsub(var, bias)
             val1 = builder.fmul(val, gain)
             val2 = builder.fmul(val1, leak)
 
