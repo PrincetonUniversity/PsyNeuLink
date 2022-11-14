@@ -160,6 +160,8 @@ def test_transfer_derivative(func, variable, params, expected, benchmark, func_m
         ex = pnlvm.execution.FuncExecution(f, tags=frozenset({"derivative"})).execute
     elif func_mode == 'PTX':
         ex = pnlvm.execution.FuncExecution(f, tags=frozenset({"derivative"})).cuda_execute
+    else:
+        assert False, "unknown function mode: {}".format(func_mode)
 
     res = benchmark(ex, variable)
     assert np.allclose(res, expected)
@@ -192,6 +194,8 @@ def test_transfer_derivative_out(func, variable, params, expected, benchmark, fu
         ex = pnlvm.execution.FuncExecution(f, tags=frozenset({"derivative_out"})).execute
     elif func_mode == 'PTX':
         ex = pnlvm.execution.FuncExecution(f, tags=frozenset({"derivative_out"})).cuda_execute
+    else:
+        assert False, "unknown function mode: {}".format(func_mode)
 
     res = benchmark(ex, variable)
     assert np.allclose(res, expected)
