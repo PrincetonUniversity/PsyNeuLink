@@ -38,7 +38,7 @@ from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import \
     CONTRASTIVE_HEBBIAN_FUNCTION, TDLEARNING_FUNCTION, LEARNING_FUNCTION_TYPE, LEARNING_RATE, \
     KOHONEN_FUNCTION, GAUSSIAN, LINEAR, EXPONENTIAL, HEBBIAN_FUNCTION, RL_FUNCTION, BACKPROPAGATION_FUNCTION, MATRIX, \
-    MSE, SSE
+    MSE, SSE, CROSS_ENTROPY
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import is_numeric, scalar_distance, convert_to_np_array
@@ -1980,8 +1980,8 @@ class BackPropagation(LearningFunction):
         variable = super()._validate_variable(variable, context)
 
         if len(variable) != 3:
-            raise ComponentError("Variable for {} ({}) must have three items: {}, {}, and {})".
-                                 format(self.name, variable, ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL))
+            raise ComponentError(f"Variable for '{self.name}' ({variable}) must have three items: "
+                                 f"{ACTIVATION_INPUT}, {ACTIVATION_OUTPUT}, and {ERROR_SIGNAL}).")
 
         return variable
 
@@ -2005,13 +2005,6 @@ class BackPropagation(LearningFunction):
               or MappingProjection, its current value can be accessed at runtime (i.e., it can be used as a "pointer")
         """
 
-        # # MODIFIED 3/22/17 OLD:
-        # # This allows callers to specify None as learning_rate (e.g., _instantiate_learning_components)
-        # if request_set[LEARNING_RATE] is None:
-        #     request_set[LEARNING_RATE] = 1.0
-        # # request_set[LEARNING_RATE] = request_set[LEARNING_RATE] or 1.0
-        # # MODIFIED 3/22/17 END
-
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
         if LEARNING_RATE in target_set and target_set[LEARNING_RATE] is not None:
@@ -2025,26 +2018,25 @@ class BackPropagation(LearningFunction):
             from psyneulink.core.components.ports.parameterport import ParameterPort
             from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
             if not isinstance(error_matrix, (list, np.ndarray, np.matrix, ParameterPort, MappingProjection)):
-                raise FunctionError("The {} arg for {} ({}) must be a list, 2d np.array, ParamaterState or "
-                                    "MappingProjection".format(ERROR_MATRIX, self.__class__.__name__, error_matrix))
+                raise FunctionError(f"The '{ERROR_MATRIX}' arg for {self.__class__.__name__} ({error_matrix}) "
+                                    f"must be a list, 2d np.array, ParamaterPort or MappingProjection.")
 
             if isinstance(error_matrix, MappingProjection):
                 try:
                     error_matrix = error_matrix._parameter_ports[MATRIX].value
                     param_type_string = "MappingProjection's ParameterPort"
                 except KeyError:
-                    raise FunctionError("The MappingProjection specified for the {} arg of {} ({}) must have a {} "
-                                        "paramaterState that has been assigned a 2d array or matrix".
-                                        format(ERROR_MATRIX, self.__class__.__name__, error_matrix.shape, MATRIX))
+                    raise FunctionError(f"The MappingProjection specified for the '{ERROR_MATRIX}' arg of "
+                                        f"of {self.__class__.__name__} ({error_matrix.shape}) must have a "
+                                        f"{MATRIX} ParamaterPort that has been assigned a 2d array or matrix.")
 
             elif isinstance(error_matrix, ParameterPort):
                 try:
                     error_matrix = error_matrix.value
                     param_type_string = "ParameterPort"
                 except KeyError:
-                    raise FunctionError("The value of the {} parameterPort specified for the {} arg of {} ({}) "
-                                        "must be a 2d array or matrix".
-                                        format(MATRIX, ERROR_MATRIX, self.__class__.__name__, error_matrix.shape))
+                    raise FunctionError(f"The value of the {MATRIX} ParameterPort specified for the '{ERROR_MATRIX}' "
+                                        f"arg of {self.__class__.__name__} ({error_matrix.shape}).")
 
             else:
                 param_type_string = "array or matrix"
@@ -2056,24 +2048,24 @@ class BackPropagation(LearningFunction):
             error_signal_len = len(self.defaults.variable[LEARNING_ERROR_OUTPUT])
 
             if error_matrix.ndim != 2:
-                raise FunctionError("The value of the {} specified for the {} arg of {} ({}) "
-                                    "must be a 2d array or matrix".
-                                    format(param_type_string, ERROR_MATRIX, self.name, error_matrix))
+                raise FunctionError(f"The value of the {param_type_string} specified for the '{ERROR_MATRIX}' arg "
+                                    f"of '{self.name}' ({error_matrix}) must be a 2d array or matrix.")
 
             # The length of the sender outputPort.value (the error signal) must be the
             #     same as the width (# columns) of the MappingProjection's weight matrix (# of receivers)
 
             # Validate that columns (number of receiver elements) of error_matrix equals length of error_signal
             if cols != error_signal_len:
-                raise FunctionError("The width (number of columns, {}) of the \'{}\' arg ({}) specified for {} "
-                                    "must match the length of the error signal ({}) it receives".
-                                    format(cols, MATRIX, error_matrix.shape, self.name, error_signal_len))
+                raise FunctionError(f"The width (number of columns, {cols}) of the '{MATRIX}' arg "
+                                    f"({error_matrix.shape}) specified for '{self.name}' must match "
+                                    f"the length of the error signal ({error_signal_len}) it receives.")
 
             # Validate that rows (number of sender elements) of error_matrix equals length of activity_output,
             if rows != activity_output_len:
-                raise FunctionError("The height (number of rows, {}) of \'{}\' arg specified for {} must match the "
-                                    "length of the output {} of the activity vector being monitored ({})".
-                                    format(rows, MATRIX, self.name, activity_output_len))
+                activation_input = self._get_current_parameter_value(ACTIVATION_INPUT, context)
+                raise FunctionError(f"The height (number of rows, {rows}) of '{MATRIX}' arg specified for "
+                                    f"'{self.name}' must match the length of the output {activity_output_len} "
+                                    f"of the activity vector being monitored ({activation_input}).")
 
     def _function(self,
                  variable=None,
@@ -2129,8 +2121,8 @@ class BackPropagation(LearningFunction):
                 owner_string = ""
                 if self.owner:
                     owner_string = " of " + self.owner.name
-                raise FunctionError("Call to {} function{} must include \'ERROR_MATRIX\' in params arg".
-                                    format(self.__class__.__name__, owner_string))
+                raise FunctionError(f"Call to {self.__class__.__name__} function {owner_string} "
+                                    f"must include '{ERROR_MATRIX}' in params arg.")
 
         self.parameters.error_matrix._set(error_matrix, context)
         # self._check_args(variable=variable, context=context, params=params, context=context)
@@ -2163,7 +2155,8 @@ class BackPropagation(LearningFunction):
 
         # Derivative of the output activity
         activation_output = self._get_current_parameter_value(ACTIVATION_OUTPUT, context)
-        dA_dW = self.activation_derivative_fct(input=activation_input, output=activation_output, context=context)
+        # dA_dW = self.activation_derivative_fct(input=activation_input, output=activation_output, context=context)
+        dA_dW = self.activation_derivative_fct(input=None, output=activation_output, context=context)
 
         # Chain rule to get the derivative of the error with respect to the weights
         dE_dW = dE_dA * dA_dW

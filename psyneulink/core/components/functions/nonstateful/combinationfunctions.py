@@ -35,12 +35,13 @@ import numbers
 
 import numpy as np
 import typecheck as tc
+from typing import Union
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import Function_Base, FunctionError, FunctionOutputType
 from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, ARRANGEMENT, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONCATENATE_FUNCTION, \
-    DEFAULT_VARIABLE, EXPONENTS, LINEAR_COMBINATION_FUNCTION, MULTIPLICATIVE_PARAM, OFFSET, OPERATION, \
+    CROSS_ENTROPY, DEFAULT_VARIABLE, EXPONENTS, LINEAR_COMBINATION_FUNCTION, MULTIPLICATIVE_PARAM, OFFSET, OPERATION, \
     PREDICTION_ERROR_DELTA_FUNCTION, PRODUCT, REARRANGE_FUNCTION, REDUCE_FUNCTION, SCALE, SUM, WEIGHTS, \
     PREFERENCE_SET_NAME, VARIABLE
 from psyneulink.core.globals.utilities import convert_to_np_array, is_numeric, np_array_less_than_2d, parameter_spec
@@ -1026,7 +1027,7 @@ class LinearCombination(
         and there must be the same number of items as there are in `variable <LinearCombination.variable>`
         (see `exponents <LinearCombination.exponents>` for details of how exponents are applied).
 
-    operation : SUM or PRODUCT : default SUM
+    operation : SUM, PRODUCT or CROSS_ENTROPY : default SUM
         specifies whether the `function <LinearCombination.function>` takes the elementwise (Hadamarad)
         sum or product of the arrays in `variable  <LinearCombination.variable>`.
 
@@ -1176,7 +1177,8 @@ class LinearCombination(
                  # exponents: tc.optional(parameter_spec)=None,
                  weights=None,
                  exponents=None,
-                 operation: tc.optional(tc.enum(SUM, PRODUCT)) = None,
+                 operation: tc.optional(tc.enum(SUM, PRODUCT, CROSS_ENTROPY)) = None,
+                 # operation: Union[SUM, PRODUCT, CROSS_ENTROPY] = None,
                  scale=None,
                  offset=None,
                  params=None,
@@ -1391,6 +1393,10 @@ class LinearCombination(
             combination = np.sum(variable, axis=0)
         elif operation == PRODUCT:
             combination = np.product(variable, axis=0)
+        elif operation == CROSS_ENTROPY:
+            v1 = variable[0]
+            v2 = variable[1]
+            combination = np.where(np.logical_and(v1 == 0, v2 == 0), 0.0, v1 * np.log(v2))
         else:
             raise FunctionError("Unrecognized operator ({0}) for LinearCombination function".
                                 format(operation.self.Operation.SUM))
@@ -1429,6 +1435,22 @@ class LinearCombination(
         elif operation == PRODUCT:
             val = ctx.float_ty(1.0)
             comb_op = "fmul"
+        elif operation == CROSS_ENTROPY:
+            raise FunctionError(f"LinearCombination Function does not (yet) support CROSS_ENTROPY operation.")
+            # FROM objectivefunctions.py:
+            # def __gen_llvm_cross_entropy(self, builder, index, ctx, v1, v2, acc):
+            #     ptr1 = builder.gep(v1, [index])
+            #     ptr2 = builder.gep(v2, [index])
+            #     val1 = builder.load(ptr1)
+            #     val2 = builder.load(ptr2)
+            #
+            #     log_f = ctx.get_builtin("log", [ctx.float_ty])
+            #     log = builder.call(log_f, [val2])
+            #     prod = builder.fmul(val1, log)
+            #
+            #     acc_val = builder.load(acc)
+            #     new_acc = builder.fsub(acc_val, prod)
+            #     builder.store(new_acc, acc)
         else:
             assert False, "Unknown operation: {}".format(operation)
 

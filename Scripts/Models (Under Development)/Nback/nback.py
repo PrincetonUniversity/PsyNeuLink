@@ -1,5 +1,5 @@
 """
-This implements a model of the `N-back task <https://en.wikipedia.org/wiki/N-back#Neurobiology_of_n-back_task>`_
+This implements a model of the `Nback task <https://en.wikipedia.org/wiki/N-back#Neurobiology_of_n-back_task>`_
 described in `Beukers et al. (2022) <https://psyarxiv.com/jtw5p>`_.  The model uses a simple implementation of episodic
 (content-addressable) memory to store previous stimuli and the temporal context in which they occured,
 and a feedforward neural network to evaluate whether the current stimulus is a match to the n'th preceding stimulus
@@ -46,7 +46,7 @@ TODO:
               - learning rate: 0.001; epoch: 1 trial per epoch of training
               - fix: state_dict with weights (still needed)
           - get empirical stimulus sequences (still needed)
-          - put N-back script (with pointer to latest version on PNL) in nback-paper repo
+          - put Nback script (with pointer to latest version on PNL) in nback-paper repo
     - train_network() and run_model(): refactor to take inputs and trial_types, and training_set, respectively
     - fix: get rid of objective_mechanism (see "VERSION *WITHOUT* ObjectiveMechanism" under control(...)
     - fix: warnings on run
@@ -56,10 +56,13 @@ TODO:
         - try with STIM_SIZE = NUM_STIMS rather than 20 (as in nback-paper)
         - refactor generate_stim_sequence() to use actual empirical stimulus sequences
         - replace get_input_sequence and get_training_inputs with generators passed to nback_model.run() and ffn.learn
+        - build version that *can* maintain in WM, and uses EVC to decide which would be easier:
+           maintenance in WM vs. storage/retrieval from EM (and the fit to Jarrod's data)
 """
 
-from enum import IntEnum
 import random
+import timeit
+from enum import IntEnum
 import warnings
 
 import numpy as np
@@ -69,10 +72,14 @@ from psyneulink import *
 # Settings for running script:
 DISPLAY_MODEL = False # show visual graphic of model
 TRAIN = True
-RUN = False
-ANALYZE = False # Analyze results of run
+RUN = True
+ANALYZE = True # Analyze results of run
+REPORT_OUTPUT = ReportOutput.OFF       # Sets console output during run
+REPORT_PROGRESS = ReportProgress.ON   # Sets console progress bar during run
+REPORT_LEARNING = ReportLearning.OFF   # Sets console progress bar during training
+ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
 
-# PARAMETERS -------------------------------------------------------------------------------------------------------
+#region ========================================= PARAMETERS ===========================================================
 
 # Fixed (structural) parameters:
 MAX_NBACK_LEVELS = 3
@@ -91,7 +98,7 @@ RETRIEVAL_SOFTMAX_TEMP=1/8 # express as gain # precision of retrieval process
 RETRIEVAL_HAZARD_RATE=0.04 # rate of re=sampling of em following non-match determination in a pass through ffn
 RETRIEVAL_STIM_WEIGHT=.05 # weighting of stimulus field in retrieval from em
 RETRIEVAL_CONTEXT_WEIGHT = 1-RETRIEVAL_STIM_WEIGHT # weighting of context field in retrieval from em
-DECISION_SOFTMAX_TEMP=1
+# DECISION_SOFTMAX_TEMP=1
 
 # Training parameters:
 NUM_EPOCHS= 6250    # nback-paper: 400,000 @ one trial per epoch = 6,250 @ 64 trials per epoch
@@ -100,13 +107,9 @@ LEARNING_RATE=0.001  # nback-paper: .001
 # Execution parameters:
 CONTEXT_DRIFT_RATE=.1 # drift rate used for DriftOnASphereIntegrator (function of Context mech) on each trial
 NUM_TRIALS = 48 # number of stimuli presented in a trial sequence
-REPORT_OUTPUT = ReportOutput.OFF   # Sets console output during run
-REPORT_PROGRESS = ReportProgress.OFF  # Sets console progress bar during run
-REPORT_LEARNING = ReportLearning.OFF  # Sets console progress bar during training
-ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
 
 # Names of Compositions and Mechanisms:
-NBACK_MODEL = "N-back Model"
+NBACK_MODEL = "Nback Model"
 FFN_COMPOSITION = "WORKING MEMORY (fnn)"
 FFN_STIMULUS_INPUT = "CURRENT STIMULUS"
 FFN_CONTEXT_INPUT = "CURRENT CONTEXT"
@@ -134,9 +137,9 @@ class trial_types(IntEnum):
     NO_MATCH_NO_FOIL = 2    # ABB (2-back) or BCDA (3-back); not explicitly assigned: BBCA, BCCA or BBBA
     NO_MATCH_WITH_FOIL = 3  # BAA (2-back) or BACA (3-back); not explicitly assigned: BCAA or BAAA
 num_trial_types = len(trial_types)
+#endregion
 
-
-# ======================================== MODEL CONSTRUCTION =========================================================
+#region ===================================== MODEL CONSTRUCTION =======================================================
 
 def construct_model(stim_size = STIM_SIZE,
                     context_size = CONTEXT_SIZE,
@@ -147,7 +150,8 @@ def construct_model(stim_size = STIM_SIZE,
                     retrieval_hazard_rate = RETRIEVAL_HAZARD_RATE,
                     retrieval_stimulus_weight = RETRIEVAL_STIM_WEIGHT,
                     retrieval_context_weight = RETRIEVAL_CONTEXT_WEIGHT,
-                    decision_softmax_temp = DECISION_SOFTMAX_TEMP):
+                    # decision_softmax_temp = DECISION_SOFTMAX_TEMP
+                    ):
     """Construct nback_model
     Arguments
     ---------
@@ -159,11 +163,11 @@ def construct_model(stim_size = STIM_SIZE,
     retrieval_hazard_rate: float : default RETRIEVAL_HAZARD_RATE
     retrieval_stimulus_weight: float : default RETRIEVAL_STIM_WEIGHT
     retrieval_context_weight: float : default RETRIEVAL_CONTEXT_WEIGHT
-    decision_softmax_temp: float : default DECISION_SOFTMAX_TEMP)
+    # decision_softmax_temp: float : default DECISION_SOFTMAX_TEMP)
 
     Returns
     -------
-    Composition implementing N-back model
+    Composition implementing Nback model
     """
 
     print(f"constructing '{FFN_COMPOSITION}'...")
@@ -193,25 +197,24 @@ def construct_model(stim_size = STIM_SIZE,
                                function=FFN_TRANSFER_FUNCTION)
     decision = ProcessingMechanism(name=FFN_OUTPUT,
                                    size=2,
-                                   function=Logistic)
-                                   # function=SoftMax(output=ALL,
-                                   #                  gain=decision_softmax_temp))
+                                   function=ReLU)
 
     ffn = AutodiffComposition(([{input_current_stim,
-                                input_current_context,
-                                input_retrieved_stim,
-                                input_retrieved_context,
-                                input_task},
-                               hidden, decision],
-                              RANDOM_WEIGHTS_INITIALIZATION,
-                               ),
+                                 input_current_context,
+                                 input_retrieved_stim,
+                                 input_retrieved_context,
+                                 input_task},
+                                hidden, decision],
+                               RANDOM_WEIGHTS_INITIALIZATION),
                               name=FFN_COMPOSITION,
-                              learning_rate=LEARNING_RATE
+                              learning_rate=LEARNING_RATE,
+                              loss_spec=CROSS_ENTROPY
+                              # loss_spec=MSE
                               )
 
     # FULL MODEL (Outer Composition, including input, EM and control Mechanisms) ------------------------
 
-    print(f"'constructing {NBACK_MODEL}'...")
+    print(f"constructing '{NBACK_MODEL}'...")
 
     # Stimulus Encoding: takes STIM_SIZE vector as input
     stim = TransferMechanism(name=MODEL_STIMULUS_INPUT, size=stim_size)
@@ -260,7 +263,7 @@ def construct_model(stim_size = STIM_SIZE,
                                objective_mechanism=ObjectiveMechanism(name="OBJECTIVE MECHANISM",
                                                                       monitor=decision,
                                                                       # Outcome=1 if match, else 0
-                                                                      function=lambda x: int(x[0][1]>x[0][0])),
+                                                                      function=lambda x: int(x[0][0]>x[0][1])),
                                # Set ControlSignal for EM[store_prob]
                                function=lambda outcome: int(bool(outcome)
                                                             or (np.random.random() > retrieval_hazard_rate)),
@@ -298,8 +301,9 @@ def construct_model(stim_size = STIM_SIZE,
 
     print(f'full model constructed')
     return nback_model
+#endregion
 
-# ==========================================STIMULUS GENERATION =======================================================
+#region =====================================STIMULUS GENERATION =======================================================
 
 def get_stim_set(num_stim=STIM_SIZE):
     """Construct an array of unique stimuli for use in an experiment, used by train_network() and run_model()"""
@@ -530,8 +534,9 @@ def get_run_inputs(model, nback_level,
             model.nodes[MODEL_CONTEXT_INPUT]: [[context_drift_rate]]*num_trials,
             model.nodes[MODEL_TASK_INPUT]: [get_task_input(nback_level)]*num_trials}, \
            trial_type_seq
+#endregion
 
-# ==================================== MODEL EXECUTION METHODS ========================================================
+#region ================================== MODEL EXECUTION METHODS =====================================================
 
 def train_network(network,
                   training_set=None,
@@ -539,7 +544,7 @@ def train_network(network,
                   learning_rate=LEARNING_RATE,
                   num_epochs=NUM_EPOCHS,
                   save_weights_to=None):
-    """Trains the network on trarining set.
+    """Train the network on trarining set.
 
     Arguments
     ---------
@@ -575,10 +580,10 @@ def train_network(network,
     print(f'num training sets (num_epochs): {num_epochs}')
     print(f'total num trials: {num_epochs*minibatch_size}')
     print(f"\ntraining '{network.name}'...")
-    import timeit
     start_time = timeit.default_timer()
     network.learn(inputs=training_set,
                   minibatch_size=minibatch_size,
+                  report_output=REPORT_OUTPUT,
                   report_progress=REPORT_PROGRESS,
                   # report_learning=REPORT_LEARNING,
                   learning_rate=learning_rate,
@@ -590,9 +595,10 @@ def train_network(network,
     if training_time <= 60:
         training_time_str = f'{int(training_time)} seconds'
     else:
-        training_time_str = f'{int(training_time/60)} minutes'
+        training_time_str = f'{int(training_time/60)} minutes {int(training_time%60)} seconds'
     print(f'training time: {training_time_str} for {num_epochs} epochs')
     path = network.save(filename=save_weights_to)
+    print(f'max weight: {np.max(nback_model.nodes[FFN_COMPOSITION].nodes[FFN_HIDDEN].efferents[0].matrix.base)}')
     print(f'saved weights to: {save_weights_to}')
     return path
     # print(f'saved weights sample: {network.nodes[FFN_HIDDEN].path_afferents[0].matrix.base[0][:3]}...')
@@ -600,7 +606,8 @@ def train_network(network,
     # print(f'loaded weights sample: {network.nodes[FFN_HIDDEN].path_afferents[0].matrix.base[0][:3]}...')
 
 def run_model(model,
-              load_weights_from=None,
+              # load_weights_from=None,
+              load_weights_from='ffn.wts_nep_6250_lr_001.pnl',
               context_drift_rate=CONTEXT_DRIFT_RATE,
               num_trials=NUM_TRIALS,
               report_output=REPORT_OUTPUT,
@@ -627,13 +634,15 @@ def run_model(model,
         specifies location to save results of the run along with trial_type_sequences for each nback level;
         if None, those are returned by call but not saved.
     """
-    ffn = nback_model.nodes[FFN_COMPOSITION]
+    ffn = model.nodes[FFN_COMPOSITION]
     em = model.nodes[EM]
     if load_weights_from:
         print(f"nback_model loading '{FFN_COMPOSITION}' weights from {load_weights_from}...")
-        ffn.load(load_weights_from)
-    print('nback_model executing...')
+        ffn.load(filename=load_weights_from)
+    print(f'max weight: {np.max(nback_model.nodes[FFN_COMPOSITION].nodes[FFN_HIDDEN].efferents[0].matrix.base)}')
+    print(f"'{model.name}' executing...")
     trial_type_seqs = [None] * NUM_NBACK_LEVELS
+    start_time = timeit.default_timer()
     for i, nback_level in enumerate(NBACK_LEVELS):
         # Reset episodic memory for new task using first entry (original initializer)
         em.function.reset(em.memory[0])
@@ -644,15 +653,25 @@ def run_model(model,
                   animate=animate
                   )
     # print("Number of entries in EM: ", len(model.nodes[EM].memory))
+    stop_time = timeit.default_timer()
     assert len(model.nodes[EM].memory) == NUM_TRIALS + 1 # extra one is for initializer
     if REPORT_PROGRESS == ReportProgress.ON:
         print('\n')
-    print(f'nback_model done: {len(nback_model.results)} trials executed')
+    print(f"'{model.name}' done: {len(model.results)} trials executed")
+    execution_time = stop_time - start_time
+    if execution_time <= 60:
+        execution_time_str = f'{int(execution_time)} seconds'
+    else:
+        execution_time_str = f'{int(execution_time/60)} minutes {int(execution_time%60)} seconds'
+    print(f'execution time: {execution_time_str}')
     results = np.array([model.results, trial_type_seqs])
     if save_results_to:
         np.save(save_results_to, results)
     # print(f'results: \n{model.results}')
     return results
+#endregion
+
+#region ================================= MODEL PERFORMANCE ANALYSIS ===================================================
 
 def analyze_results(results, num_trials=NUM_TRIALS, nback_levels=NBACK_LEVELS):
     responses_and_trial_types = [None] * len(nback_levels)
@@ -683,9 +702,99 @@ def analyze_results(results, num_trials=NUM_TRIALS, nback_levels=NBACK_LEVELS):
         for j, performance in enumerate(stats[i]):
             print(f"\t{list(trial_types)[j].name}: {performance:.1f}")
 
-    return responses_and_trial_types, stats
+    data_dict = {k:v for k,v in zip(nback_levels, responses_and_trial_types)}
+    stats_dict = {}
+    for i, nback_level in enumerate(nback_levels):
+        stats_dict.update({nback_level: {trial_type.name:stat for trial_type,stat in zip (trial_types, stats[i])}})
 
-# ======================================== SCRIPT EXECUTION ============================================================
+    return data_dict, stats_dict
+
+
+
+
+
+
+
+
+def compute_dprime(hit_rate, fa_rate):
+    """ returns dprime and sensitivity
+    """
+    def clamp(n, minn, maxn):
+        return max(min(maxn, n), minn)
+    # hit_rate = clamp(hit_rate, 0.01, 0.99)
+    # fa_rate = clamp(fa_rate, 0.01, 0.99)
+
+    dl = np.log(hit_rate * (1 - fa_rate) / ((1 - hit_rate) * fa_rate))
+    c = 0.5 * np.log((1 - hit_rate) * (1 - fa_rate) / (hit_rate * fa_rate))
+    return dl, c
+
+
+def plot_results(response_and_trial_types, stats):
+    hits_stderr = np.concatenate((score.mean(2).std(-1)/np.sqrt(neps))[:,(0,1)])
+    correj_stderr = np.concatenate((score.mean(2).std(-1)/np.sqrt(neps))[:,(2,3)])
+    d,s = compute_dprime(
+      np.concatenate(score.mean(2)[:,(0,1)]),
+      np.concatenate(score.mean(2)[:,(2,3)])
+    )
+    print(d.shape,s.shape)
+    dprime_stderr = d.std(-1)/np.sqrt(neps)
+    bias_stderr = s.std(-1)/np.sqrt(neps)
+    #%%
+    # 2back-target, 2back-lure, 3back-target, 3back-lure
+    hits = np.concatenate(acc[:,(0,1)])
+    correj = np.concatenate(acc[:,(2,3)])
+    dprime = np.zeros(4)
+    bias = np.zeros(4)
+    for i in range(4):
+      d,s = compute_dprime(hits[i], 1-correj[i])
+      dprime[i]=d
+      bias[i]=s
+
+    #%%
+    f,axar = plt.subplots(2,2,figsize=(15,8));axar=axar.reshape(-1)
+    cL = ['blue','darkblue','lightgreen','forestgreen']
+    labL = ['2b,ctrl','2b,lure','3b,ctrl','3b,lure']
+
+    # correct reject
+    ax = axar[0]
+    ax.set_title('correct rejection')
+    ax.bar(range(4),correj,color=cL,yerr=correj_stderr)
+
+    # hits
+    ax = axar[1]
+    ax.set_title('hits')
+    ax.bar(range(4),hits,color=cL,yerr=hits_stderr)
+
+    #
+    ax = axar[2]
+    ax.set_title('dprime')
+    ax.bar(range(4),dprime,color=cL,yerr=dprime_stderr)
+
+    #
+    ax = axar[3]
+    ax.set_title('bias')
+    ax.bar(range(4),bias,color=cL,yerr=bias_stderr)
+
+    ##
+    for ax in axar[:2]:
+      ax.set_xticks(np.arange(4))
+      ax.set_xticklabels(labL)
+      ax.set_ylim(0,1)
+
+    plt.savefig('figures/EMmetrics-%s-t%i.jpg'%(mtag,tstamp))
+    plt.savefig('figures/EMmetrics_yerr-%s-t%i.svg'%(mtag,tstamp))
+
+
+
+
+
+
+
+
+#endregion
+
+
+#region ===================================== SCRIPT EXECUTION =========================================================
 # Construct, train and/or run model based on settings at top of script
 
 nback_model = construct_model()
@@ -707,3 +816,4 @@ if ANALYZE:
     coded_responses, stats = analyze_results(results,
                                              num_trials=NUM_TRIALS,
                                              nback_levels=NBACK_LEVELS)
+#endregion

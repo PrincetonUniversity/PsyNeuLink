@@ -11,6 +11,13 @@ on:
       - 'v**'
   pull_request:
 
+# run only the latest instance of this workflow job for the current branch/PR
+# cancel older runs
+# fall back to run id if not available (run id is unique -> no cancellations)
+concurrency:
+  group: ci-${{ github.ref || github.run_id }}-${{ github.workflow }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}

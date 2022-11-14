@@ -28,6 +28,11 @@ Overview
 
 Functions that transform their variable but maintain its shape.
 
+.. _TransferFunction_StandardAttributes:
+
+Standard Attributes
+~~~~~~~~~~~~~~~~~~~
+
 All TransferFunctions have the following attributes:
 
 * **bounds**:  specifies the lower and upper limits of the result;  if there are none, the attribute is set to
@@ -38,6 +43,21 @@ All TransferFunctions have the following attributes:
   each of these is assigned the name of one of the function's
   parameters and used by `ModulatoryProjections <ModulatoryProjection>` to modulate the output of the
   TransferFunction's function (see `Function_Modulatory_Params`).
+
+.. _TransferFunction_Derivative:
+
+Derivatives
+~~~~~~~~~~~
+
+Most TransferFunctions have a derivative method.  These take both an **input** and **output** argument.  In general,
+the **input** is used to compute the derivative of the function at that value. If that is not provided, some
+Functions can compute the derivative using the function's output, either directly (such as `Logistic.derivative`) or by
+inferring the input from the **output** and then computing the derivative for that value (such as `ReLU.derivative`)
+
+
+TranferFunction Class References
+--------------------------------
+
 
 """
 
@@ -52,11 +72,11 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import parameter_keywords
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.function import (
     DEFAULT_SEED, Function, Function_Base, FunctionError, _random_state_getter, _seed_setter, function_keywords,
     get_matrix, is_function_type,
 )
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot
 from psyneulink.core.components.functions.stateful.integratorfunctions import SimpleIntegrator
 from psyneulink.core.components.shellclasses import Projection
@@ -961,16 +981,17 @@ class Logistic(TransferFunction):  # -------------------------------------------
         exp_f = ctx.get_builtin("exp", [ctx.float_ty])
         val = builder.load(ptri)
 
-        val = builder.fadd(val, bias)
-        val = builder.fsub(val, x_0)
-        val = builder.fmul(val, gain)
-        val = builder.fsub(offset, val)
-        val = builder.call(exp_f, [val])
-        val = builder.fadd(ctx.float_ty(1), val)
-        val = builder.fdiv(ctx.float_ty(1), val)
-        val = builder.fmul(val, scale)
+        if "derivative_out" not in tags:
+            val = builder.fadd(val, bias)
+            val = builder.fsub(val, x_0)
+            val = builder.fmul(val, gain)
+            val = builder.fsub(offset, val)
+            val = builder.call(exp_f, [val])
+            val = builder.fadd(ctx.float_ty(1), val)
+            val = builder.fdiv(ctx.float_ty(1), val)
+            val = builder.fmul(val, scale)
 
-        if "derivative" in tags:
+        if "derivative" in tags or "derivative_out" in tags:
             # f(x) = g * s * o * (1-o)
             function_val = val
             val = builder.fsub(ctx.float_ty(1), function_val)
@@ -1051,21 +1072,11 @@ class Logistic(TransferFunction):  # -------------------------------------------
         Deriviative of logistic transform at output:  number or array
 
         """
-        # FIX: BackPropagation PASSES IN SAME INPUT AND OUTPUT
-        # if (output is not None and input is not None and self.prefs.paramValidationPref):
-        #     if isinstance(input, numbers.Number):
-        #         valid = output == self.function(input, context=context)
-        #     else:
-        #         valid = all(output[i] == self.function(input, context=context)[i] for i in range(len(input)))
-        #     if not valid:
-        #         raise FunctionError("Value of {} arg passed to {} ({}) "
-        #                             "does not match the value expected for specified {} ({})".
-        #                             format(repr('output'), self.__class__.__name__ + '.' + 'derivative', output,
-        #                                    repr('input'), input))
-        #
+
         gain = self._get_current_parameter_value(GAIN, context)
         scale = self._get_current_parameter_value(SCALE, context)
 
+        # Favor use of output: compute it from input if it is not provided
         if output is None:
             output = self.function(input, context=context)
 
@@ -1579,9 +1590,12 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         # Maxnum for some reason needs full function prototype
         max_f = ctx.get_builtin("maxnum", [ctx.float_ty])
         var = builder.load(ptri)
-        val = builder.fsub(var, bias)
+        if "derivative_out" in tags:
+            val = builder.fdiv(var, gain)
+        else:
+            val = builder.fsub(var, bias)
 
-        if "derivative" in tags:
+        if "derivative" in tags or "derivative_out" in tags:
             predicate = builder.fcmp_ordered('>', val, val.type(0))
             val = builder.select(predicate, gain, builder.fmul(gain, leak))
         else:
@@ -1595,9 +1609,11 @@ class ReLU(TransferFunction):  # -----------------------------------------------
     @handle_external_context()
     def derivative(self, input=None, output=None, context=None):
         """
-        derivative(input)
+        derivative(input or else output)
 
-        Derivative of `function <ReLU._function>` at **input**.
+        Derivative of `function <ReLU._function>` at **input** or **output**.  If **input** is specified, that
+        is used to compute the derivative;  if **input** is not specified, it is inferred from the **output**
+        and then used to compute the derivative.
 
         Arguments
         ---------
@@ -1609,16 +1625,20 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         -------
 
         derivative :  number or array
-
         """
+
         gain = self._get_current_parameter_value(GAIN, context)
         leak = self._get_current_parameter_value(LEAK, context)
         bias = self._get_current_parameter_value(BIAS, context)
 
-        value = np.empty_like(input)
-        value[(input - bias) > 0] = gain
-        value[(input - bias) <= 0] = gain * leak
+        if input is not None:
+            # Use input if provided
+            variable = np.array(input) - bias
+        else:
+            # Infer input from output
+            variable = np.array(output) / gain
 
+        value = np.where(variable > 0, gain, gain * leak)
         return value
 
 # **********************************************************************************************************************
@@ -2698,20 +2718,26 @@ class SoftMax(TransferFunction):
         return builder
 
     def _gen_llvm_function_derivative_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
-        assert "derivative" in tags
-        forward_tags = tags.difference({"derivative"})
+        assert "derivative" in tags or "derivative_out" in tags
+        assert arg_in.type == arg_out.type
+        forward_tags = tags.difference({"derivative", "derivative_out"})
 
-        # SoftMax derivative is calculated from the results. Recalculate them here
-        base_out = builder.alloca(arg_out.type.pointee)
-        builder = self._gen_llvm_function_body(ctx, builder, params, state, arg_in, base_out, output_type=self.output, tags=forward_tags)
-
-
-        all_out = builder.alloca(arg_out.type.pointee)
-        builder = self._gen_llvm_function_body(ctx, builder, params, state, base_out, all_out, output_type=ALL, tags=forward_tags)
+        # SoftMax derivative is calculated from the "ALL" results.
+        # Those can provided from outside, but we don't support receiving data in arg_out
+        if "derivative_out" in tags:
+            all_out = arg_in
+        else:
+            all_out = builder.alloca(arg_out.type.pointee)
+            builder = self._gen_llvm_function_body(ctx, builder, params, state, arg_in, all_out, output_type=ALL, tags=forward_tags)
 
         # The rest of the algorithm is for MAX_VAL and MAX_INDICATOR only
         assert self.output in {MAX_VAL, MAX_INDICATOR}, \
             "Derivative of SoftMax is only implemented for MAX_VAL and MAX_INDICATOR! ({})".format(self.output)
+
+        if not pnlvm.helpers.is_scalar(arg_out.type.pointee.element):
+            assert len(arg_out.type.pointee) == 1
+            arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            all_out = builder.gep(all_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
         max_pos_ptr = builder.alloca(ctx.int32_ty)
         builder.store(max_pos_ptr.type.pointee(-1), max_pos_ptr)
@@ -2746,7 +2772,7 @@ class SoftMax(TransferFunction):
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, output_type=None, *, tags:frozenset):
         output_type = self.output if output_type is None else output_type
-        if "derivative" in tags:
+        if "derivative" in tags or "derivative_out" in tags:
             return self._gen_llvm_function_derivative_body(ctx, builder, params, state, arg_in, arg_out, tags=tags)
 
         if self.parameters.per_item.get():
@@ -2822,81 +2848,49 @@ class SoftMax(TransferFunction):
     def derivative(self, input=None, output=None, context=None):
         """
         derivative(output)
-        # FIX: ADD SUPPORT FOR TARGET (INSTEAD OF MAX) FOR PARTIAL DERIVATIVE; MAY NEED ADDITIONAL ARGUMENT
+
         Returns
         -------
+
         derivative of values returned by SoftMax :  1d or 2d array (depending on *OUTPUT_TYPE* of SoftMax)
         """
 
         if output is None:
-            # If output is not specified, calculate over all inputs (i.e., full Jacobian)
-            output = self.function(input, context=context)
+            output = self.function(input, params={OUTPUT_TYPE: ALL}, context=context)
+        else:
+            assert not np.any(np.equal(0, output))
+
+        sm = np.squeeze(output)
+        size = len(sm)
+        assert (len(output) == 1 and len(output[0]) == size) or len(output) == size
 
         output_type = self._get_current_parameter_value(OUTPUT_TYPE, context)
-        output_size = len(output)
-        # FIX: GET RID OF sm
-        sm = self.function(output, params={OUTPUT_TYPE: ALL}, context=context)
-        sm = np.squeeze(sm)
-
-        # FIX: KEEP FOR GENERALITY, SHOULD *NOT* BE USED IN CONTEXT OF LEARNING;  THAT SHOULD ALWAYS BE MAX OR TARGET
         if output_type == ALL:
-            # Return full Jacobian matrix of derivatives
-            # assert size == len(input), f"PROGRAM ERROR: SoftMax using outputype=ALL but size of output != size of input"
-            # # # MODIFIED 11/11/22 OLD:
-            # derivative = np.empty([output_size, output_size])
-            # for j in range(output_size):
-            #     for i, val in zip(range(output_size), output):
-            #         if i == j:
-            #             d = 1
-            #         else:
-            #             d = 0
-            #         derivative[j, i] = sm[i] * (d - sm[j])
-            # # # MODIFIED 11/11/22 NEW: [FULL DIMENSIONALITY USING INPUTS]
-            # # otput_s = len(input)
-            # # sm = self.function(output, params={OUTPUT_TYPE: ALL}, context=context)
-            # # sm = np.squeeze(sm)
-            # derivative = np.empty((output_size, output_size))
-            # for o in range(output_size):
-            #     for i, val in zip(range(output_size), input):
-            #         if i == o:
-            #             d = 1
-            #         else:
-            #             d = 0
-            #         derivative[o, i] = input[i] * (d - output[o])
-            # # MODIFIED 11/11/22 NEWER: COMPUTED JUST OVER BOTH OUTPUTS
-            # derivative = np.empty(output_size)
-            # for i in range(output_size):
-            #     derivative[i] = sm[i] * (1 - sm[i])
-            # # MODIFIED 11/11/22 FINAL:
-            derivative = np.empty([output_size, output_size])
-            for j in range(output_size):
-                for i, val in zip(range(output_size), output):
+            # Return full Jacobian matrix of derivatives using Kronecker's delta method:
+            derivative = np.empty([size, size])
+            for j in range(size):
+                # FIX: ZIP SEEMS POINTLESS HERE  (SUGGESTED BELOW)
+                # for i in range(size):
+                for i, val in zip(range(size), output):
                     if i == j:
-                        d = 1
+                        delta = 1
                     else:
-                        d = 0
-                    derivative[j, i] = output[i] * (d - output[j])
-            # MODIFIED 11/11/22 END
+                        delta = 0
+                    derivative[j, i] = sm[i] * (delta - sm[j])
 
         elif output_type in {MAX_VAL, MAX_INDICATOR}:
             # Return 1d array of derivatives for max element (i.e., the one chosen by SoftMax)
-            derivative = np.empty(output_size)
+            derivative = np.empty(size)
             # Get the element of output returned as non-zero when output_type is not ALL
-            # MODIFIED 11/10/22 OLD: [JDC]
-            # FIX: SUPPORT USE OF TARGET INSTEAD OF MAX:
-            # FIX: IS [0][0]] STILL NEEDED IF sm IS NOT USED?
-            index_of_max = int(np.where(output == np.max(output))[0][0])
-            # # MODIFIED 11/10/22 NEW: [JAN]
-            # index_of_max = int(np.where(sm == np.max(sm))[0])
-            # MODIFIED 11/10/22 END
-            # FIX: SHOULD USE output INSTEAD OF sm
+            # FIX: SHOULDN'T THIS USE sm RATHER THAN output? (SUGGESTED BELOW, THOUGH INDEX MAY NEED TO BE MODIFIED?)
+            # index_of_max = int(np.where(sm == np.max(sm))[-1][0])
+            index_of_max = int(np.where(output == np.max(output))[-1][0])
             max_val = sm[index_of_max]
-            for i in range(output_size):
+            for i in range(size):
                 if i == index_of_max:
                     d = 1
                 else:
                     d = 0
-                # FIX: SHOULD USE output
                 derivative[i] = sm[i] * (d - max_val)
 
         else:
