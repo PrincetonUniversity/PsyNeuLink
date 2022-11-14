@@ -961,16 +961,17 @@ class Logistic(TransferFunction):  # -------------------------------------------
         exp_f = ctx.get_builtin("exp", [ctx.float_ty])
         val = builder.load(ptri)
 
-        val = builder.fadd(val, bias)
-        val = builder.fsub(val, x_0)
-        val = builder.fmul(val, gain)
-        val = builder.fsub(offset, val)
-        val = builder.call(exp_f, [val])
-        val = builder.fadd(ctx.float_ty(1), val)
-        val = builder.fdiv(ctx.float_ty(1), val)
-        val = builder.fmul(val, scale)
+        if "derivative_out" not in tags:
+            val = builder.fadd(val, bias)
+            val = builder.fsub(val, x_0)
+            val = builder.fmul(val, gain)
+            val = builder.fsub(offset, val)
+            val = builder.call(exp_f, [val])
+            val = builder.fadd(ctx.float_ty(1), val)
+            val = builder.fdiv(ctx.float_ty(1), val)
+            val = builder.fmul(val, scale)
 
-        if "derivative" in tags:
+        if "derivative" in tags or "derivative_out" in tags:
             # f(x) = g * s * o * (1-o)
             function_val = val
             val = builder.fsub(ctx.float_ty(1), function_val)
@@ -1579,9 +1580,12 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         # Maxnum for some reason needs full function prototype
         max_f = ctx.get_builtin("maxnum", [ctx.float_ty])
         var = builder.load(ptri)
-        val = builder.fsub(var, bias)
+        if "derivative_out" in tags:
+            val = builder.fdiv(var, gain)
+        else:
+            val = builder.fsub(var, bias)
 
-        if "derivative" in tags:
+        if "derivative" in tags or "derivative_out" in tags:
             predicate = builder.fcmp_ordered('>', val, val.type(0))
             val = builder.select(predicate, gain, builder.fmul(gain, leak))
         else:
@@ -1615,10 +1619,14 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         leak = self._get_current_parameter_value(LEAK, context)
         bias = self._get_current_parameter_value(BIAS, context)
 
-        value = np.empty_like(input)
-        value[(input - bias) > 0] = gain
-        value[(input - bias) <= 0] = gain * leak
+        if input is not None:
+            # Use input if provided
+            variable = np.array(input) - bias
+        else:
+            # Infer input from output
+            variable = np.array(output) / gain
 
+        value = np.where(variable > 0, gain, gain * leak)
         return value
 
 # **********************************************************************************************************************
@@ -2700,17 +2708,17 @@ class SoftMax(TransferFunction):
         return builder
 
     def _gen_llvm_function_derivative_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
-        assert "derivative" in tags
+        assert "derivative" in tags or "derivative_out" in tags
         assert arg_in.type == arg_out.type
-        forward_tags = tags.difference({"derivative"})
+        forward_tags = tags.difference({"derivative", "derivative_out"})
 
-        # SoftMax derivative is calculated from the results. Recalculate them here
-        base_out = builder.alloca(arg_out.type.pointee)
-        builder = self._gen_llvm_function_body(ctx, builder, params, state, arg_in, base_out, output_type=self.output, tags=forward_tags)
-
-
-        all_out = builder.alloca(arg_out.type.pointee)
-        builder = self._gen_llvm_function_body(ctx, builder, params, state, base_out, all_out, output_type=ALL, tags=forward_tags)
+        # SoftMax derivative is calculated from the "ALL" results.
+        # Those can provided from outside, but we don't support receiving data in arg_out
+        if "derivative_out" in tags:
+            all_out = arg_in
+        else:
+            all_out = builder.alloca(arg_out.type.pointee)
+            builder = self._gen_llvm_function_body(ctx, builder, params, state, arg_in, all_out, output_type=ALL, tags=forward_tags)
 
         # The rest of the algorithm is for MAX_VAL and MAX_INDICATOR only
         assert self.output in {MAX_VAL, MAX_INDICATOR}, \
@@ -2754,7 +2762,7 @@ class SoftMax(TransferFunction):
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, output_type=None, *, tags:frozenset):
         output_type = self.output if output_type is None else output_type
-        if "derivative" in tags:
+        if "derivative" in tags or "derivative_out" in tags:
             return self._gen_llvm_function_derivative_body(ctx, builder, params, state, arg_in, arg_out, tags=tags)
 
         if self.parameters.per_item.get():
@@ -2838,24 +2846,24 @@ class SoftMax(TransferFunction):
         """
 
         if output is None:
-            output = self.function(input, context=context)
+            output = self.function(input, params={OUTPUT_TYPE: ALL}, context=context)
+        else:
+            assert not np.any(np.equal(0, output))
 
-        output_type = self._get_current_parameter_value(OUTPUT_TYPE, context)
-        sm = self.function(output, params={OUTPUT_TYPE: ALL}, context=context)
-        sm = np.squeeze(sm)
+        sm = np.squeeze(output)
         size = len(sm)
         assert (len(output) == 1 and len(output[0]) == size) or len(output) == size
 
+        output_type = self._get_current_parameter_value(OUTPUT_TYPE, context)
         if output_type == ALL:
             # Return full Jacobian matrix of derivatives
             derivative = np.empty([size, size])
-            for j in range(size):
-                for i, val in zip(range(size), output):
-                    if i == j:
-                        d = 1
-                    else:
-                        d = 0
-                    derivative[j, i] = sm[i] * (d - sm[j])
+            for i, j in np.ndindex(size, size):
+                if i == j:
+                    d = 1
+                else:
+                    d = 0
+                derivative[j, i] = sm[i] * (d - sm[j])
 
         elif output_type in {MAX_VAL, MAX_INDICATOR}:
             # Return 1d array of derivatives for max element (i.e., the one chosen by SoftMax)
