@@ -1,8 +1,9 @@
 import numpy as np
-import psyneulink.core.llvm as pnlvm
+import pytest
+
 import psyneulink.core.components.functions.nonstateful.transferfunctions as Functions
 import psyneulink.core.globals.keywords as kw
-import pytest
+import psyneulink.core.llvm as pnlvm
 
 SIZE=10
 np.random.seed(0)
@@ -93,22 +94,19 @@ logistic_helper = RAND4 / (1 + np.exp(-(RAND1 * (test_var - RAND2)) + RAND3))
 tanh_derivative_helper = (RAND1 * (test_var + RAND2) + RAND3)
 tanh_derivative_helper = (1 - np.tanh(tanh_derivative_helper)**2) * RAND4 * RAND1
 
+
 derivative_test_data = [
-    # (Functions.Linear, test_var, {'slope':RAND1, 'intercept':RAND2}, RAND1),
-    # (Functions.Exponential, test_var, {'scale':RAND1, 'rate':RAND2}, RAND1 * RAND2 * np.exp(RAND2 * test_var)),
-    # (Functions.Logistic, test_var, {'gain':RAND1, 'x_0':RAND2, 'offset':RAND3, 'scale':RAND4}, RAND1 * RAND4 * logistic_helper * (1 - logistic_helper)),
-    # (Functions.ReLU, test_var, {'gain':RAND1, 'bias':RAND2, 'leak':RAND3}, np.where((test_var - RAND2) > 0, RAND1, RAND1 * RAND3)),
-    # (Functions.Tanh, test_var, {'gain':RAND1, 'bias':RAND2, 'offset':RAND3, 'scale':RAND4}, tanh_derivative_helper),
+    (Functions.Linear, test_var, {'slope':RAND1, 'intercept':RAND2}, RAND1),
+    (Functions.Exponential, test_var, {'scale':RAND1, 'rate':RAND2}, RAND1 * RAND2 * np.exp(RAND2 * test_var)),
+    (Functions.Logistic, test_var, {'gain':RAND1, 'x_0':RAND2, 'offset':RAND3, 'scale':RAND4}, RAND1 * RAND4 * logistic_helper * (1 - logistic_helper)),
+    (Functions.ReLU, test_var, {'gain':RAND1, 'bias':RAND2, 'leak':RAND3}, np.where((test_var - RAND2) > 0, RAND1, RAND1 * RAND3)),
+    (Functions.Tanh, test_var, {'gain':RAND1, 'bias':RAND2, 'offset':RAND3, 'scale':RAND4}, tanh_derivative_helper),
 
     # SoftMax per-item=False
     (Functions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_VAL}, 'per_item': False},
-     # [-0.010211427111966652, -0.010211427111966652, -0.010211427111966652, -0.010211427111966652, -0.010211427111966652,
-     #  -0.010211427111966652, -0.010211427111966652, -0.010211427111966652, 0.09190284400769985, -0.010211427111966652]),
      [-0.01068039, -0.01111811, -0.0108204, -0.01067026, -0.0103625,
       -0.01093366, -0.01039741, -0.01160233,  0.09684744, -0.01026238]),
     (Functions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_INDICATOR}, 'per_item': False},
-     # [-0.012062786611097685, -0.012062786611097685, -0.012062786611097685, -0.012062786611097685, -0.012062786611097685,
-     #  -0.012062786611097685, -0.012062786611097685, -0.012062786611097685, 0.10856507949987917, -0.012062786611097685]),
      [-0.01068039, -0.01111811, -0.0108204, -0.01067026, -0.0103625,
       -0.01093366, -0.01039741, -0.01160233,  0.09684744, -0.01026238]),
     (Functions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.ALL}, 'per_item': False},
@@ -135,13 +133,9 @@ derivative_test_data = [
 
       # SoftMax per-tem=True 2D single element
     (Functions.SoftMax, [test_var], {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_VAL}, 'per_item': True},
-     # [-0.010211427111966652, -0.010211427111966652, -0.010211427111966652, -0.010211427111966652, -0.010211427111966652,
-     #  -0.010211427111966652, -0.010211427111966652, -0.010211427111966652, 0.09190284400769985, -0.010211427111966652]),
      [-0.01068039, -0.01111811, -0.0108204, -0.01067026, -0.0103625,
       -0.01093366, -0.01039741, -0.01160233,  0.09684744, -0.01026238]),
     (Functions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_INDICATOR}, 'per_item': False},
-     # [-0.012062786611097685, -0.012062786611097685, -0.012062786611097685, -0.012062786611097685, -0.012062786611097685,
-     #  -0.012062786611097685, -0.012062786611097685, -0.012062786611097685, 0.10856507949987917, -0.012062786611097685]),
      [-0.01068039, -0.01111811, -0.0108204, -0.01067026, -0.0103625,
       -0.01093366, -0.01039741, -0.01160233,  0.09684744, -0.01026238]),
     (Functions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.ALL}, 'per_item': True},
@@ -180,6 +174,31 @@ def test_transfer_derivative(func, variable, params, expected, benchmark, func_m
         ex = pnlvm.execution.FuncExecution(f, tags=frozenset({"derivative"})).execute
     elif func_mode == 'PTX':
         ex = pnlvm.execution.FuncExecution(f, tags=frozenset({"derivative"})).cuda_execute
+
+    res = benchmark(ex, variable)
+    assert np.allclose(res, expected)
+
+derivative_test_data_out = [
+    (Functions.ReLU, test_var, {'gain':RAND1, 'bias':RAND2, 'leak':RAND3}, 0.241418620076574),
+    (Functions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_VAL}, 'per_item': False},
+     [-0.01068039, -0.01111811, -0.0108204, -0.01067026, -0.0103625,
+      -0.01093366, -0.01039741, -0.01160233,  0.09684744, -0.01026238]),
+]
+@pytest.mark.function
+@pytest.mark.transfer_function
+@pytest.mark.benchmark
+@pytest.mark.parametrize("func, variable, params, expected", derivative_test_data_out,
+                         ids=lambda x: getattr(x, 'name', None))
+def test_transfer_derivative_out(func, variable, params, expected, benchmark, func_mode):
+    f = func(default_variable=variable, **params)
+    benchmark.group = "TransferFunction " + func.componentName + " Derivative"
+    if func_mode == 'Python':
+        def ex(data):
+            return f.derivative(input=None, output=data)
+    elif func_mode == 'LLVM':
+        ex = pnlvm.execution.FuncExecution(f, tags=frozenset({"derivative_out"})).execute
+    elif func_mode == 'PTX':
+        ex = pnlvm.execution.FuncExecution(f, tags=frozenset({"derivative_out"})).cuda_execute
 
     res = benchmark(ex, variable)
     assert np.allclose(res, expected)

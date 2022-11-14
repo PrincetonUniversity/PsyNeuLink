@@ -61,6 +61,7 @@ TODO:
 """
 
 import random
+import timeit
 from enum import IntEnum
 import warnings
 
@@ -70,11 +71,11 @@ from psyneulink import *
 
 # Settings for running script:
 DISPLAY_MODEL = False # show visual graphic of model
-TRAIN = False
+TRAIN = True
 RUN = True
 ANALYZE = True # Analyze results of run
 REPORT_OUTPUT = ReportOutput.OFF       # Sets console output during run
-REPORT_PROGRESS = ReportProgress.OFF   # Sets console progress bar during run
+REPORT_PROGRESS = ReportProgress.ON   # Sets console progress bar during run
 REPORT_LEARNING = ReportLearning.OFF   # Sets console progress bar during training
 ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
 
@@ -207,13 +208,13 @@ def construct_model(stim_size = STIM_SIZE,
                                RANDOM_WEIGHTS_INITIALIZATION),
                               name=FFN_COMPOSITION,
                               learning_rate=LEARNING_RATE,
-                              # loss_spec=CROSS_ENTROPY
-                              loss_spec=MSE
+                              loss_spec=CROSS_ENTROPY
+                              # loss_spec=MSE
                               )
 
     # FULL MODEL (Outer Composition, including input, EM and control Mechanisms) ------------------------
 
-    print(f"'constructing {NBACK_MODEL}'...")
+    print(f"constructing '{NBACK_MODEL}'...")
 
     # Stimulus Encoding: takes STIM_SIZE vector as input
     stim = TransferMechanism(name=MODEL_STIMULUS_INPUT, size=stim_size)
@@ -262,7 +263,7 @@ def construct_model(stim_size = STIM_SIZE,
                                objective_mechanism=ObjectiveMechanism(name="OBJECTIVE MECHANISM",
                                                                       monitor=decision,
                                                                       # Outcome=1 if match, else 0
-                                                                      function=lambda x: int(x[0][1]>x[0][0])),
+                                                                      function=lambda x: int(x[0][0]>x[0][1])),
                                # Set ControlSignal for EM[store_prob]
                                function=lambda outcome: int(bool(outcome)
                                                             or (np.random.random() > retrieval_hazard_rate)),
@@ -579,7 +580,6 @@ def train_network(network,
     print(f'num training sets (num_epochs): {num_epochs}')
     print(f'total num trials: {num_epochs*minibatch_size}')
     print(f"\ntraining '{network.name}'...")
-    import timeit
     start_time = timeit.default_timer()
     network.learn(inputs=training_set,
                   minibatch_size=minibatch_size,
@@ -595,9 +595,10 @@ def train_network(network,
     if training_time <= 60:
         training_time_str = f'{int(training_time)} seconds'
     else:
-        training_time_str = f'{int(training_time/60)} minutes'
+        training_time_str = f'{int(training_time/60)} minutes {int(training_time%60)} seconds'
     print(f'training time: {training_time_str} for {num_epochs} epochs')
     path = network.save(filename=save_weights_to)
+    print(f'max weight: {np.max(nback_model.nodes[FFN_COMPOSITION].nodes[FFN_HIDDEN].efferents[0].matrix.base)}')
     print(f'saved weights to: {save_weights_to}')
     return path
     # print(f'saved weights sample: {network.nodes[FFN_HIDDEN].path_afferents[0].matrix.base[0][:3]}...')
@@ -605,7 +606,8 @@ def train_network(network,
     # print(f'loaded weights sample: {network.nodes[FFN_HIDDEN].path_afferents[0].matrix.base[0][:3]}...')
 
 def run_model(model,
-              load_weights_from=None,
+              # load_weights_from=None,
+              load_weights_from='ffn.wts_nep_6250_lr_001.pnl',
               context_drift_rate=CONTEXT_DRIFT_RATE,
               num_trials=NUM_TRIALS,
               report_output=REPORT_OUTPUT,
@@ -632,13 +634,15 @@ def run_model(model,
         specifies location to save results of the run along with trial_type_sequences for each nback level;
         if None, those are returned by call but not saved.
     """
-    ffn = nback_model.nodes[FFN_COMPOSITION]
+    ffn = model.nodes[FFN_COMPOSITION]
     em = model.nodes[EM]
     if load_weights_from:
         print(f"nback_model loading '{FFN_COMPOSITION}' weights from {load_weights_from}...")
-        ffn.load(load_weights_from)
-    print('nback_model executing...')
+        ffn.load(filename=load_weights_from)
+    print(f'max weight: {np.max(nback_model.nodes[FFN_COMPOSITION].nodes[FFN_HIDDEN].efferents[0].matrix.base)}')
+    print(f"'{model.name}' executing...")
     trial_type_seqs = [None] * NUM_NBACK_LEVELS
+    start_time = timeit.default_timer()
     for i, nback_level in enumerate(NBACK_LEVELS):
         # Reset episodic memory for new task using first entry (original initializer)
         em.function.reset(em.memory[0])
@@ -649,10 +653,17 @@ def run_model(model,
                   animate=animate
                   )
     # print("Number of entries in EM: ", len(model.nodes[EM].memory))
+    stop_time = timeit.default_timer()
     assert len(model.nodes[EM].memory) == NUM_TRIALS + 1 # extra one is for initializer
     if REPORT_PROGRESS == ReportProgress.ON:
         print('\n')
-    print(f'nback_model done: {len(nback_model.results)} trials executed')
+    print(f"'{model.name}' done: {len(model.results)} trials executed")
+    execution_time = stop_time - start_time
+    if execution_time <= 60:
+        execution_time_str = f'{int(execution_time)} seconds'
+    else:
+        execution_time_str = f'{int(execution_time/60)} minutes {int(execution_time%60)} seconds'
+    print(f'execution time: {execution_time_str}')
     results = np.array([model.results, trial_type_seqs])
     if save_results_to:
         np.save(save_results_to, results)
@@ -697,6 +708,12 @@ def analyze_results(results, num_trials=NUM_TRIALS, nback_levels=NBACK_LEVELS):
         stats_dict.update({nback_level: {trial_type.name:stat for trial_type,stat in zip (trial_types, stats[i])}})
 
     return data_dict, stats_dict
+
+
+
+
+
+
 
 
 def compute_dprime(hit_rate, fa_rate):
@@ -766,13 +783,6 @@ def plot_results(response_and_trial_types, stats):
 
     plt.savefig('figures/EMmetrics-%s-t%i.jpg'%(mtag,tstamp))
     plt.savefig('figures/EMmetrics_yerr-%s-t%i.svg'%(mtag,tstamp))
-
-
-
-
-
-
-
 
 
 
