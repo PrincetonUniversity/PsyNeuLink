@@ -35,45 +35,48 @@ def gaussian_distort_helper(seed):
 
 
 test_data = [
-    pytest.param(Functions.Linear, test_var, {'slope':RAND1, 'intercept':RAND2}, test_var * RAND1 + RAND2, id="LINEAR"),
-    pytest.param(Functions.Exponential, test_var, {'scale':RAND1, 'rate':RAND2}, RAND1 * np.exp(RAND2 * test_var), id="EXPONENTIAL"),
-    pytest.param(Functions.Logistic, test_var, {'gain':RAND1, 'x_0':RAND2, 'offset':RAND3, 'scale':RAND4}, RAND4 / (1 + np.exp(-(RAND1 * (test_var - RAND2)) + RAND3)), id="LOGISTIC"),
-    pytest.param(Functions.Tanh, test_var, {'gain':RAND1, 'bias':RAND2, 'x_0':RAND3, 'offset':RAND4}, tanh_helper, id="TANH"),
-    pytest.param(Functions.ReLU, test_var, {'gain':RAND1, 'bias':RAND2, 'leak':RAND3}, np.maximum(RAND1 * (test_var - RAND2), RAND3 * RAND1 *(test_var - RAND2)), id="RELU"),
+    pytest.param(Functions.Linear, test_var, {kw.SLOPE:RAND1, kw.INTERCEPT:RAND2}, test_var * RAND1 + RAND2, id="LINEAR"),
+    pytest.param(Functions.Exponential, test_var, {kw.SCALE:RAND1, kw.RATE:RAND2}, RAND1 * np.exp(RAND2 * test_var), id="EXPONENTIAL"),
+    pytest.param(Functions.Logistic, test_var, {kw.GAIN:RAND1, kw.X_0:RAND2, kw.OFFSET:RAND3, kw.SCALE:RAND4}, RAND4 / (1 + np.exp(-(RAND1 * (test_var - RAND2)) + RAND3)), id="LOGISTIC"),
+    pytest.param(Functions.Tanh, test_var, {kw.GAIN:RAND1, kw.BIAS:RAND2, kw.X_0:RAND3, kw.OFFSET:RAND4}, tanh_helper, id="TANH"),
+    pytest.param(Functions.ReLU, test_var, {kw.GAIN:RAND1, kw.BIAS:RAND2, kw.LEAK:RAND3}, np.maximum(RAND1 * (test_var - RAND2), RAND3 * RAND1 *(test_var - RAND2)), id="RELU"),
+    # Angle doesn't have a helper using 'test_var', hardcode the input as well
     pytest.param(Functions.Angle, [0.5488135,  0.71518937, 0.60276338, 0.54488318, 0.4236548,
                                    0.64589411, 0.43758721, 0.891773, 0.96366276, 0.38344152], {},
                  [0.85314409, 0.00556188, 0.01070476, 0.0214405,  0.05559454,
                   0.08091079, 0.21657281, 0.19296643, 0.21343805, 0.92738261, 0.00483101],
                  id="ANGLE"),
 
-    pytest.param(Functions.Gaussian, test_var, {'standard_deviation':RAND1, 'bias':RAND2, 'scale':RAND3, 'offset':RAND4}, gaussian_helper, id="GAUSSIAN"),
-    pytest.param(Functions.GaussianDistort, test_var, {'bias': RAND1, 'variance':RAND2, 'offset':RAND3, 'scale':RAND4 }, gaussian_distort_helper(0), id="GAUSSIAN DISTORT GLOBAL SEED"),
-    pytest.param(Functions.GaussianDistort, test_var, {'bias': RAND1, 'variance':RAND2, 'offset':RAND3, 'scale':RAND4, 'seed':0 }, gaussian_distort_helper(0), id="GAUSSIAN DISTORT"),
+    pytest.param(Functions.Gaussian, test_var, {kw.STANDARD_DEVIATION:RAND1, kw.BIAS:RAND2, kw.SCALE:RAND3, kw.OFFSET:RAND4}, gaussian_helper, id="GAUSSIAN"),
+    pytest.param(Functions.GaussianDistort, test_var, {kw.BIAS: RAND1, kw.VARIANCE:RAND2, kw.OFFSET:RAND3, kw.SCALE:RAND4 }, gaussian_distort_helper(0), id="GAUSSIAN DISTORT GLOBAL SEED"),
+    pytest.param(Functions.GaussianDistort, test_var, {kw.BIAS: RAND1, kw.VARIANCE:RAND2, kw.OFFSET:RAND3, kw.SCALE:RAND4, 'seed':0 }, gaussian_distort_helper(0), id="GAUSSIAN DISTORT"),
 
     # SoftMax 1D input
-    pytest.param(Functions.SoftMax, test_var, {'gain':RAND1, 'per_item': False}, softmax_helper, id="SOFT_MAX ALL"),
-    pytest.param(Functions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_VAL}, 'per_item': False}, np.where(softmax_helper == np.max(softmax_helper), softmax_helper, 0), id="SOFT_MAX MAX_VAL"),
-    pytest.param(Functions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_INDICATOR}, 'per_item': False}, np.where(softmax_helper == np.max(softmax_helper), 1, 0), id="SOFT_MAX MAX_INDICATOR"),
-    pytest.param(Functions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.PROB}, 'per_item': False},
+    pytest.param(Functions.SoftMax, test_var, {kw.GAIN:RAND1, kw.PER_ITEM:False}, softmax_helper, id="SOFT_MAX ALL"),
+    pytest.param(Functions.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM:False}, np.where(softmax_helper == np.max(softmax_helper), softmax_helper, 0), id="SOFT_MAX MAX_VAL"),
+    pytest.param(Functions.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_INDICATOR, kw.PER_ITEM:False}, np.where(softmax_helper == np.max(softmax_helper), 1, 0), id="SOFT_MAX MAX_INDICATOR"),
+    pytest.param(Functions.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.PROB, kw.PER_ITEM:False},
                  [0.0, 0.0, 0.0, 0.0, test_var[4], 0.0, 0.0, 0.0, 0.0, 0.0], id="SOFT_MAX PROB"),
 
     # SoftMax 2D testing per-item
-    pytest.param(Functions.SoftMax, [test_var], {'gain':RAND1, 'per_item': True}, [softmax_helper], id="SOFT_MAX ALL 2D"),
-    pytest.param(Functions.SoftMax, [test_var], {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_VAL}, 'per_item': True}, [np.where(softmax_helper == np.max(softmax_helper), softmax_helper, 0)], id="SOFT_MAX MAX_VAL 2D"),
-    pytest.param(Functions.SoftMax, [test_var], {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_INDICATOR}, 'per_item': True}, [np.where(softmax_helper == np.max(softmax_helper), 1, 0)], id="SOFT_MAX MAX_INDICATOR 2D"),
-    pytest.param(Functions.SoftMax, [test_var], {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.PROB}, 'per_item': True},
+    pytest.param(Functions.SoftMax, [test_var], {kw.GAIN:RAND1, kw.PER_ITEM:True}, [softmax_helper], id="SOFT_MAX ALL 2D"),
+    pytest.param(Functions.SoftMax, [test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM:True},
+                 [np.where(softmax_helper == np.max(softmax_helper), softmax_helper, 0)], id="SOFT_MAX MAX_VAL 2D"),
+    pytest.param(Functions.SoftMax, [test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_INDICATOR, kw.PER_ITEM:True},
+                 [np.where(softmax_helper == np.max(softmax_helper), 1, 0)], id="SOFT_MAX MAX_INDICATOR 2D"),
+    pytest.param(Functions.SoftMax, [test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.PROB, kw.PER_ITEM:True},
                  [[0.0, 0.0, 0.0, 0.0, test_var[4], 0.0, 0.0, 0.0, 0.0, 0.0]], id="SOFT_MAX PROB 2D"),
 
     # SoftMax per-item with 2 elements in input
-    pytest.param(Functions.SoftMax, [test_var, test_var], {'gain':RAND1, 'per_item': True}, softmax_helper2, id="SOFT_MAX ALL PER_ITEM"),
-    pytest.param(Functions.SoftMax, [test_var, test_var], {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_VAL}, 'per_item': True},
+    pytest.param(Functions.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, kw.PER_ITEM: True}, softmax_helper2, id="SOFT_MAX ALL PER_ITEM"),
+    pytest.param(Functions.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_VAL}, kw.PER_ITEM: True},
                  np.where(softmax_helper2 == np.max(softmax_helper2), softmax_helper2, 0), id="SOFT_MAX MAX_VAL PER_ITEM"),
-    pytest.param(Functions.SoftMax, [test_var, test_var], {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_INDICATOR}, 'per_item': True},
+    pytest.param(Functions.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_INDICATOR}, kw.PER_ITEM: True},
                  np.where(softmax_helper2 == np.max(softmax_helper2), 1, 0), id="SOFT_MAX MAX_INDICATOR PER_ITEM"),
 
-    pytest.param(Functions.LinearMatrix, test_var, {'matrix':test_matrix}, np.dot(test_var, test_matrix), id="LINEAR_MATRIX SQUARE"),
-    pytest.param(Functions.LinearMatrix, test_var, {'matrix':test_matrix_l}, np.dot(test_var, test_matrix_l), id="LINEAR_MATRIX WIDE"),
-    pytest.param(Functions.LinearMatrix, test_var, {'matrix':test_matrix_s}, np.dot(test_var, test_matrix_s), id="LINEAR_MATRIX TALL"),
+    pytest.param(Functions.LinearMatrix, test_var, {kw.MATRIX:test_matrix}, np.dot(test_var, test_matrix), id="LINEAR_MATRIX SQUARE"),
+    pytest.param(Functions.LinearMatrix, test_var, {kw.MATRIX:test_matrix_l}, np.dot(test_var, test_matrix_l), id="LINEAR_MATRIX WIDE"),
+    pytest.param(Functions.LinearMatrix, test_var, {kw.MATRIX:test_matrix_s}, np.dot(test_var, test_matrix_s), id="LINEAR_MATRIX TALL"),
 ]
 
 @pytest.mark.function
@@ -94,20 +97,20 @@ tanh_derivative_helper = (RAND1 * (test_var + RAND2) + RAND3)
 tanh_derivative_helper = (1 - np.tanh(tanh_derivative_helper)**2) * RAND4 * RAND1
 
 derivative_test_data = [
-    (Functions.Linear, test_var, {'slope':RAND1, 'intercept':RAND2}, RAND1),
-    (Functions.Exponential, test_var, {'scale':RAND1, 'rate':RAND2}, RAND1 * RAND2 * np.exp(RAND2 * test_var)),
-    (Functions.Logistic, test_var, {'gain':RAND1, 'x_0':RAND2, 'offset':RAND3, 'scale':RAND4}, RAND1 * RAND4 * logistic_helper * (1 - logistic_helper)),
-    (Functions.ReLU, test_var, {'gain':RAND1, 'bias':RAND2, 'leak':RAND3}, np.where((test_var - RAND2) > 0, RAND1, RAND1 * RAND3)),
-    (Functions.Tanh, test_var, {'gain':RAND1, 'bias':RAND2, 'offset':RAND3, 'scale':RAND4}, tanh_derivative_helper),
+    (Functions.Linear, test_var, {kw.SLOPE:RAND1, kw.INTERCEPT:RAND2}, RAND1),
+    (Functions.Exponential, test_var, {kw.SCALE:RAND1, kw.RATE:RAND2}, RAND1 * RAND2 * np.exp(RAND2 * test_var)),
+    (Functions.Logistic, test_var, {kw.GAIN:RAND1, kw.X_0:RAND2, kw.OFFSET:RAND3, kw.SCALE:RAND4}, RAND1 * RAND4 * logistic_helper * (1 - logistic_helper)),
+    (Functions.ReLU, test_var, {kw.GAIN:RAND1, kw.BIAS:RAND2, kw.LEAK:RAND3}, np.where((test_var - RAND2) > 0, RAND1, RAND1 * RAND3)),
+    (Functions.Tanh, test_var, {kw.GAIN:RAND1, kw.BIAS:RAND2, kw.OFFSET:RAND3, kw.SCALE:RAND4}, tanh_derivative_helper),
 
     # SoftMax per-item=False
-    (Functions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_VAL}, 'per_item': False},
+    (Functions.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM:False},
      [-0.010680386821751537, -0.011118109698906909, -0.01082040340318878, -0.010670257514724047, -0.010362498859374309,
       -0.010933660158663306, -0.010397412260182806, -0.011602329078808718, 0.09684744183944892, -0.010262384043848513]),
-    (Functions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_INDICATOR}, 'per_item': False},
+    (Functions.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_INDICATOR, kw.PER_ITEM:False},
      [-0.010680386821751537, -0.011118109698906909, -0.01082040340318878, -0.010670257514724047, -0.010362498859374309,
       -0.010933660158663306, -0.010397412260182806, -0.011602329078808718, 0.09684744183944892, -0.010262384043848513]),
-    (Functions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.ALL}, 'per_item': False},
+    (Functions.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.ALL, kw.PER_ITEM:False},
      [[ 0.08863569, -0.01005855, -0.00978921, -0.00965338, -0.00937495, -0.00989168, -0.00940653, -0.01049662, -0.01068039, -0.00928437],
       [-0.01005855,  0.09185608, -0.01019041, -0.01004901, -0.00975917, -0.01029708, -0.00979205, -0.01092681, -0.01111811, -0.00966488],
       [-0.00978921, -0.01019041,  0.08966934, -0.00977993, -0.00949785, -0.01002135, -0.00952985, -0.01063423, -0.0108204,  -0.00940609],
@@ -120,13 +123,13 @@ derivative_test_data = [
       [-0.00928437, -0.00966488, -0.00940609, -0.00927557, -0.00900804, -0.00950454, -0.00903839, -0.01008581, -0.01026238,  0.08553008]]),
 
       # SoftMax per-tem=True 2D single element
-    (Functions.SoftMax, [test_var], {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_VAL}, 'per_item': True},
+    (Functions.SoftMax, [test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM:True},
      [[-0.010680386821751537, -0.011118109698906909, -0.01082040340318878, -0.010670257514724047, -0.010362498859374309,
        -0.010933660158663306, -0.010397412260182806, -0.011602329078808718, 0.09684744183944892, -0.010262384043848513]]),
-    (Functions.SoftMax, [test_var], {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_INDICATOR}, 'per_item': True},
+    (Functions.SoftMax, [test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_INDICATOR, kw.PER_ITEM:True},
      [[-0.010680386821751537, -0.011118109698906909, -0.01082040340318878, -0.010670257514724047, -0.010362498859374309,
        -0.010933660158663306, -0.010397412260182806, -0.011602329078808718, 0.09684744183944892, -0.010262384043848513]]),
-    (Functions.SoftMax, [test_var], {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.ALL}, 'per_item': True},
+    (Functions.SoftMax, [test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.ALL, kw.PER_ITEM:True},
      [[ 0.08863569, -0.01005855, -0.00978921, -0.00965338, -0.00937495, -0.00989168, -0.00940653, -0.01049662, -0.01068039, -0.00928437],
       [-0.01005855,  0.09185608, -0.01019041, -0.01004901, -0.00975917, -0.01029708, -0.00979205, -0.01092681, -0.01111811, -0.00966488],
       [-0.00978921, -0.01019041,  0.08966934, -0.00977993, -0.00949785, -0.01002135, -0.00952985, -0.01063423, -0.0108204,  -0.00940609],
@@ -144,7 +147,7 @@ derivative_test_data = [
 @pytest.mark.benchmark
 @pytest.mark.parametrize("func, variable, params, expected", derivative_test_data, ids=lambda x: getattr(x, 'name', None))
 def test_transfer_derivative(func, variable, params, expected, benchmark, func_mode):
-    if func == Functions.SoftMax and params['params'][kw.OUTPUT_TYPE] == kw.ALL and func_mode != "Python":
+    if func == Functions.SoftMax and params[kw.OUTPUT_TYPE] == kw.ALL and func_mode != "Python":
         pytest.skip("Compiled derivative using 'ALL' is not implemented")
 
     f = func(default_variable=variable, **params)
