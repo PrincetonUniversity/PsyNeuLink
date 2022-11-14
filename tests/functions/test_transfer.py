@@ -28,6 +28,7 @@ gaussian_helper = np.e**(-(test_var - RAND2)**2 / (2 * RAND1**2)) / np.sqrt(2 * 
 gaussian_helper = RAND3 * gaussian_helper + RAND4
 
 relu_helper = np.maximum(RAND1 * (test_var - RAND2), RAND3 * RAND1 *(test_var - RAND2))
+logistic_helper = RAND4 / (1 + np.exp(-(RAND1 * (test_var - RAND2)) + RAND3))
 
 def gaussian_distort_helper(seed):
     state = np.random.RandomState([seed])
@@ -39,7 +40,7 @@ def gaussian_distort_helper(seed):
 test_data = [
     pytest.param(Functions.Linear, test_var, {kw.SLOPE:RAND1, kw.INTERCEPT:RAND2}, test_var * RAND1 + RAND2, id="LINEAR"),
     pytest.param(Functions.Exponential, test_var, {kw.SCALE:RAND1, kw.RATE:RAND2}, RAND1 * np.exp(RAND2 * test_var), id="EXPONENTIAL"),
-    pytest.param(Functions.Logistic, test_var, {kw.GAIN:RAND1, kw.X_0:RAND2, kw.OFFSET:RAND3, kw.SCALE:RAND4}, RAND4 / (1 + np.exp(-(RAND1 * (test_var - RAND2)) + RAND3)), id="LOGISTIC"),
+    pytest.param(Functions.Logistic, test_var, {kw.GAIN:RAND1, kw.X_0:RAND2, kw.OFFSET:RAND3, kw.SCALE:RAND4}, logistic_helper, id="LOGISTIC"),
     pytest.param(Functions.Tanh, test_var, {kw.GAIN:RAND1, kw.BIAS:RAND2, kw.X_0:RAND3, kw.OFFSET:RAND4}, tanh_helper, id="TANH"),
     pytest.param(Functions.ReLU, test_var, {kw.GAIN:RAND1, kw.BIAS:RAND2, kw.LEAK:RAND3}, relu_helper, id="RELU"),
     # Angle doesn't have a helper using 'test_var', hardcode the input as well
@@ -94,7 +95,6 @@ def test_execute(func, variable, params, expected, benchmark, func_mode):
     assert np.allclose(res, expected)
 
 
-logistic_helper = RAND4 / (1 + np.exp(-(RAND1 * (test_var - RAND2)) + RAND3))
 tanh_derivative_helper = (RAND1 * (test_var + RAND2) + RAND3)
 tanh_derivative_helper = (1 - np.tanh(tanh_derivative_helper)**2) * RAND4 * RAND1
 
@@ -166,6 +166,7 @@ def test_transfer_derivative(func, variable, params, expected, benchmark, func_m
 
 
 derivative_out_test_data = [
+    (Functions.Logistic, logistic_helper, {kw.GAIN:RAND1, kw.X_0:RAND2, kw.OFFSET:RAND3, kw.SCALE:RAND4}, RAND1 * RAND4 * logistic_helper * (1 - logistic_helper)),
     (Functions.ReLU, relu_helper, {kw.GAIN:RAND1, kw.BIAS:RAND2, kw.LEAK:RAND3}, np.where((test_var - RAND2) > 0, RAND1, RAND1 * RAND3)),
     (Functions.SoftMax, softmax_helper, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM:False},
      [-0.010680386821751537, -0.011118109698906909, -0.01082040340318878, -0.010670257514724047, -0.010362498859374309,

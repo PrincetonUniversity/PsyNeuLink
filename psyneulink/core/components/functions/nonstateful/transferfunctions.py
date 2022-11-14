@@ -961,16 +961,17 @@ class Logistic(TransferFunction):  # -------------------------------------------
         exp_f = ctx.get_builtin("exp", [ctx.float_ty])
         val = builder.load(ptri)
 
-        val = builder.fadd(val, bias)
-        val = builder.fsub(val, x_0)
-        val = builder.fmul(val, gain)
-        val = builder.fsub(offset, val)
-        val = builder.call(exp_f, [val])
-        val = builder.fadd(ctx.float_ty(1), val)
-        val = builder.fdiv(ctx.float_ty(1), val)
-        val = builder.fmul(val, scale)
+        if "derivative_out" not in tags:
+            val = builder.fadd(val, bias)
+            val = builder.fsub(val, x_0)
+            val = builder.fmul(val, gain)
+            val = builder.fsub(offset, val)
+            val = builder.call(exp_f, [val])
+            val = builder.fadd(ctx.float_ty(1), val)
+            val = builder.fdiv(ctx.float_ty(1), val)
+            val = builder.fmul(val, scale)
 
-        if "derivative" in tags:
+        if "derivative" in tags or "derivative_out" in tags:
             # f(x) = g * s * o * (1-o)
             function_val = val
             val = builder.fsub(ctx.float_ty(1), function_val)
