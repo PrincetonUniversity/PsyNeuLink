@@ -27,6 +27,8 @@ tanh_helper = np.tanh(tanh_helper)
 gaussian_helper = np.e**(-(test_var - RAND2)**2 / (2 * RAND1**2)) / np.sqrt(2 * np.pi * RAND1)
 gaussian_helper = RAND3 * gaussian_helper + RAND4
 
+relu_helper = np.maximum(RAND1 * (test_var - RAND2), RAND3 * RAND1 *(test_var - RAND2))
+
 def gaussian_distort_helper(seed):
     state = np.random.RandomState([seed])
     # compensate for construction
@@ -39,7 +41,7 @@ test_data = [
     pytest.param(Functions.Exponential, test_var, {kw.SCALE:RAND1, kw.RATE:RAND2}, RAND1 * np.exp(RAND2 * test_var), id="EXPONENTIAL"),
     pytest.param(Functions.Logistic, test_var, {kw.GAIN:RAND1, kw.X_0:RAND2, kw.OFFSET:RAND3, kw.SCALE:RAND4}, RAND4 / (1 + np.exp(-(RAND1 * (test_var - RAND2)) + RAND3)), id="LOGISTIC"),
     pytest.param(Functions.Tanh, test_var, {kw.GAIN:RAND1, kw.BIAS:RAND2, kw.X_0:RAND3, kw.OFFSET:RAND4}, tanh_helper, id="TANH"),
-    pytest.param(Functions.ReLU, test_var, {kw.GAIN:RAND1, kw.BIAS:RAND2, kw.LEAK:RAND3}, np.maximum(RAND1 * (test_var - RAND2), RAND3 * RAND1 *(test_var - RAND2)), id="RELU"),
+    pytest.param(Functions.ReLU, test_var, {kw.GAIN:RAND1, kw.BIAS:RAND2, kw.LEAK:RAND3}, relu_helper, id="RELU"),
     # Angle doesn't have a helper using 'test_var', hardcode the input as well
     pytest.param(Functions.Angle, [0.5488135,  0.71518937, 0.60276338, 0.54488318, 0.4236548,
                                    0.64589411, 0.43758721, 0.891773, 0.96366276, 0.38344152], {},
@@ -164,6 +166,7 @@ def test_transfer_derivative(func, variable, params, expected, benchmark, func_m
 
 
 derivative_out_test_data = [
+    (Functions.ReLU, relu_helper, {kw.GAIN:RAND1, kw.BIAS:RAND2, kw.LEAK:RAND3}, np.where((test_var - RAND2) > 0, RAND1, RAND1 * RAND3)),
     (Functions.SoftMax, softmax_helper, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM:False},
      [-0.010680386821751537, -0.011118109698906909, -0.01082040340318878, -0.010670257514724047, -0.010362498859374309,
       -0.010933660158663306, -0.010397412260182806, -0.011602329078808718, 0.09684744183944892, -0.010262384043848513]),

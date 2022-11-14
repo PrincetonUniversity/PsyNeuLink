@@ -1579,9 +1579,12 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         # Maxnum for some reason needs full function prototype
         max_f = ctx.get_builtin("maxnum", [ctx.float_ty])
         var = builder.load(ptri)
-        val = builder.fsub(var, bias)
+        if "derivative_out" in tags:
+            val = builder.fdiv(var, gain)
+        else:
+            val = builder.fsub(var, bias)
 
-        if "derivative" in tags:
+        if "derivative" in tags or "derivative_out" in tags:
             predicate = builder.fcmp_ordered('>', val, val.type(0))
             val = builder.select(predicate, gain, builder.fmul(gain, leak))
         else:
@@ -1615,10 +1618,14 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         leak = self._get_current_parameter_value(LEAK, context)
         bias = self._get_current_parameter_value(BIAS, context)
 
-        value = np.empty_like(input)
-        value[(input - bias) > 0] = gain
-        value[(input - bias) <= 0] = gain * leak
+        if input is not None:
+            # Use input if provided
+            variable = np.array(input) - bias
+        else:
+            # Infer input from output
+            variable = np.array(output) / gain
 
+        value = np.where(variable > 0, gain, gain * leak)
         return value
 
 # **********************************************************************************************************************
