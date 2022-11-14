@@ -72,9 +72,9 @@ test_data = [
 
     # SoftMax per-item with 2 elements in input
     pytest.param(Functions.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, kw.PER_ITEM: True}, softmax_helper2, id="SOFT_MAX ALL PER_ITEM"),
-    pytest.param(Functions.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_VAL}, kw.PER_ITEM: True},
+    pytest.param(Functions.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM: True},
                  np.where(softmax_helper2 == np.max(softmax_helper2), softmax_helper2, 0), id="SOFT_MAX MAX_VAL PER_ITEM"),
-    pytest.param(Functions.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_INDICATOR}, kw.PER_ITEM: True},
+    pytest.param(Functions.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_INDICATOR, kw.PER_ITEM: True},
                  np.where(softmax_helper2 == np.max(softmax_helper2), 1, 0), id="SOFT_MAX MAX_INDICATOR PER_ITEM"),
 
     pytest.param(Functions.LinearMatrix, test_var, {kw.MATRIX:test_matrix}, np.dot(test_var, test_matrix), id="LINEAR_MATRIX SQUARE"),
