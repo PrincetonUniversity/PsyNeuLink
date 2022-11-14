@@ -981,16 +981,17 @@ class Logistic(TransferFunction):  # -------------------------------------------
         exp_f = ctx.get_builtin("exp", [ctx.float_ty])
         val = builder.load(ptri)
 
-        val = builder.fadd(val, bias)
-        val = builder.fsub(val, x_0)
-        val = builder.fmul(val, gain)
-        val = builder.fsub(offset, val)
-        val = builder.call(exp_f, [val])
-        val = builder.fadd(ctx.float_ty(1), val)
-        val = builder.fdiv(ctx.float_ty(1), val)
-        val = builder.fmul(val, scale)
+        if "derivative_out" not in tags:
+            val = builder.fadd(val, bias)
+            val = builder.fsub(val, x_0)
+            val = builder.fmul(val, gain)
+            val = builder.fsub(offset, val)
+            val = builder.call(exp_f, [val])
+            val = builder.fadd(ctx.float_ty(1), val)
+            val = builder.fdiv(ctx.float_ty(1), val)
+            val = builder.fmul(val, scale)
 
-        if "derivative" in tags:
+        if "derivative" in tags or "derivative_out" in tags:
             # f(x) = g * s * o * (1-o)
             function_val = val
             val = builder.fsub(ctx.float_ty(1), function_val)
@@ -1589,19 +1590,15 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         # Maxnum for some reason needs full function prototype
         max_f = ctx.get_builtin("maxnum", [ctx.float_ty])
         var = builder.load(ptri)
-
-        # FIX: THESE NEEDS TO BE CHANGED TO COMPORT WITH PYTHON BELOW
-        if "derivative" in tags:
-            val = builder.fsub(var, bias)
-            predicate = builder.fcmp_ordered('>', val, val.type(0))
-            val = builder.select(predicate, gain, builder.fmul(gain, leak))
         if "derivative_out" in tags:
             val = builder.fdiv(var, gain)
-            val = builder.fadd(val, bias)
+        else:
+            val = builder.fsub(var, bias)
+
+        if "derivative" in tags or "derivative_out" in tags:
             predicate = builder.fcmp_ordered('>', val, val.type(0))
             val = builder.select(predicate, gain, builder.fmul(gain, leak))
         else:
-            val = builder.fsub(var, bias)
             val1 = builder.fmul(val, gain)
             val2 = builder.fmul(val1, leak)
 
@@ -1639,12 +1636,9 @@ class ReLU(TransferFunction):  # -----------------------------------------------
             variable = np.array(input) - bias
         else:
             # Infer input from output
-            variable = np.array(output) / gain + bias
+            variable = np.array(output) / gain
 
-        value = np.empty_like(variable)
-        value[variable > 0] = gain
-        value[variable <= 0] = gain * leak
-
+        value = np.where(variable > 0, gain, gain * leak)
         return value
 
 # **********************************************************************************************************************
@@ -2724,17 +2718,17 @@ class SoftMax(TransferFunction):
         return builder
 
     def _gen_llvm_function_derivative_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
-        assert "derivative" in tags
+        assert "derivative" in tags or "derivative_out" in tags
         assert arg_in.type == arg_out.type
-        forward_tags = tags.difference({"derivative"})
+        forward_tags = tags.difference({"derivative", "derivative_out"})
 
-        # SoftMax derivative is calculated from the results. Recalculate them here
-        base_out = builder.alloca(arg_out.type.pointee)
-        builder = self._gen_llvm_function_body(ctx, builder, params, state, arg_in, base_out, output_type=self.output, tags=forward_tags)
-
-
-        all_out = builder.alloca(arg_out.type.pointee)
-        builder = self._gen_llvm_function_body(ctx, builder, params, state, base_out, all_out, output_type=ALL, tags=forward_tags)
+        # SoftMax derivative is calculated from the "ALL" results.
+        # Those can provided from outside, but we don't support receiving data in arg_out
+        if "derivative_out" in tags:
+            all_out = arg_in
+        else:
+            all_out = builder.alloca(arg_out.type.pointee)
+            builder = self._gen_llvm_function_body(ctx, builder, params, state, arg_in, all_out, output_type=ALL, tags=forward_tags)
 
         # The rest of the algorithm is for MAX_VAL and MAX_INDICATOR only
         assert self.output in {MAX_VAL, MAX_INDICATOR}, \
@@ -2778,7 +2772,7 @@ class SoftMax(TransferFunction):
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, output_type=None, *, tags:frozenset):
         output_type = self.output if output_type is None else output_type
-        if "derivative" in tags:
+        if "derivative" in tags or "derivative_out" in tags:
             return self._gen_llvm_function_derivative_body(ctx, builder, params, state, arg_in, arg_out, tags=tags)
 
         if self.parameters.per_item.get():
@@ -2854,46 +2848,29 @@ class SoftMax(TransferFunction):
     def derivative(self, input=None, output=None, context=None):
         """
         derivative(output)
-        # FIX: ADD SUPPORT FOR TARGET (INSTEAD OF MAX) FOR PARTIAL DERIVATIVE; MAY NEED ADDITIONAL ARGUMENT
+
         Returns
         -------
 
         derivative of values returned by SoftMax :  1d or 2d array (depending on *OUTPUT_TYPE* of SoftMax)
         """
 
-        if output is not None:
-            # Use output as SoftMax values
-            sm = output
-            arg_passed_in = output
+        if output is None:
+            output = self.function(input, params={OUTPUT_TYPE: ALL}, context=context)
         else:
-            # If output is not specified, calculate it from input (to find maximum value below)
-            # # MODIFIED 11/12/22 DEVEL: FIX: DOES USE output_type SO CAN GENERATE 0's
-            # output = self.function(input, context=context)
-            # MODIFIED 11/12/22 JDC:
-            # Get SoftMax for input over ALL units (needed even for cases of MAX_ACT and MAX_INDICATOR)
-            sm = self.function(input, params={OUTPUT_TYPE: ALL}, context=context)
-            sm = np.squeeze(sm)
-            # Do this for size assert below
-            arg_passed_in = input
-            # MODIFIED 11/12/22 END
+            assert not np.any(np.equal(0, output))
+
+        sm = np.squeeze(output)
+        size = len(sm)
+        assert (len(output) == 1 and len(output[0]) == size) or len(output) == size
 
         output_type = self._get_current_parameter_value(OUTPUT_TYPE, context)
-        # # MODIFIED 11/12/22 DEVEL:
-        # # FIX: THIS IS NOT GOOD, SINCE IT COMPUTES SOFTMAX *TWICE*
-        # #      HANDLE input ABOVE (UNDER ouput IS None CONDITION)
-        # sm = self.function(output, params={OUTPUT_TYPE: ALL}, context=context)
-        # sm = np.squeeze(sm)
-        # MODIFIED 11/12/22 END
-        size = len(sm)
-        assert (len(arg_passed_in) == 1 and len(arg_passed_in[0]) == size) or len(arg_passed_in) == size
-
-        # FIX: KEEP FOR GENERALITY, SHOULD *NOT* BE USED IN CONTEXT OF GRADIENT-BASED LEARNING;
-        #      THAT SHOULD ALWAYS BE MAX [OR TBI: TARGET]
         if output_type == ALL:
             # Return full Jacobian matrix of derivatives using Kronecker's delta method:
             derivative = np.empty([size, size])
             for j in range(size):
-                for i, val in zip(range(size), sm):
+ # FIX: ?SHOULDN'T THIS BE sm?
+                for i, val in zip(range(size), output):
                     if i == j:
                         delta = 1
                     else:
@@ -2904,20 +2881,20 @@ class SoftMax(TransferFunction):
             # Return 1d array of derivatives for max element (i.e., the one chosen by SoftMax)
             derivative = np.empty(size)
             # Get the element of output returned as non-zero when output_type is not ALL
-            # FIX: SUPPORT USE OF TARGET INSTEAD OF MAX:
-            index_of_max = int(np.where(sm == np.max(sm))[-1][0])
+            index_of_max = int(np.where(output == np.max(output))[-1][0])
             max_val = sm[index_of_max]
             for i in range(size):
                 if i == index_of_max:
                     d = 1
                 else:
                     d = 0
-                # FIX: SHOULD USE output
+                # FIX: ?SHOULD USE output?
                 derivative[i] = sm[i] * (d - max_val)
 
         else:
             raise FunctionError("Can't assign derivative for SoftMax function{} since OUTPUT_TYPE is PROB "
                                 "(and therefore the relevant element is ambiguous)".format(self.owner_name))
+
         return derivative
 
 
