@@ -163,6 +163,35 @@ def test_transfer_derivative(func, variable, params, expected, benchmark, func_m
     assert np.allclose(res, expected)
 
 
+derivative_out_test_data = [
+    (Functions.SoftMax, softmax_helper, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM:False},
+     [-0.010680386821751537, -0.011118109698906909, -0.01082040340318878, -0.010670257514724047, -0.010362498859374309,
+      -0.010933660158663306, -0.010397412260182806, -0.011602329078808718, 0.09684744183944892, -0.010262384043848513]),
+    (Functions.SoftMax, [softmax_helper], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM:True},
+     [[-0.010680386821751537, -0.011118109698906909, -0.01082040340318878, -0.010670257514724047, -0.010362498859374309,
+       -0.010933660158663306, -0.010397412260182806, -0.011602329078808718, 0.09684744183944892, -0.010262384043848513]]),
+]
+@pytest.mark.function
+@pytest.mark.transfer_function
+@pytest.mark.benchmark
+@pytest.mark.parametrize("func, variable, params, expected", derivative_out_test_data, ids=lambda x: getattr(x, 'name', None) or getattr(x, 'get', lambda p, q: None)(kw.OUTPUT_TYPE, None))
+def test_transfer_derivative_out(func, variable, params, expected, benchmark, func_mode):
+    if func == Functions.SoftMax and params[kw.OUTPUT_TYPE] == kw.ALL and func_mode != "Python":
+        pytest.skip("Compiled derivative using 'ALL' is not implemented")
+
+    f = func(default_variable=variable, **params)
+    benchmark.group = "TransferFunction " + func.componentName + " Derivative"
+    if func_mode == 'Python':
+        def ex(x):
+            return f.derivative(input=None, output=x)
+    elif func_mode == 'LLVM':
+        ex = pnlvm.execution.FuncExecution(f, tags=frozenset({"derivative_out"})).execute
+    elif func_mode == 'PTX':
+        ex = pnlvm.execution.FuncExecution(f, tags=frozenset({"derivative_out"})).cuda_execute
+
+    res = benchmark(ex, variable)
+    assert np.allclose(res, expected)
+
 def test_transfer_with_costs_function():
     f = Functions.TransferWithCosts()
     result = f(1)

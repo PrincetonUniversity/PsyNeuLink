@@ -2698,14 +2698,17 @@ class SoftMax(TransferFunction):
         return builder
 
     def _gen_llvm_function_derivative_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
-        assert "derivative" in tags
+        assert "derivative" in tags or "derivative_out" in tags
         assert arg_in.type == arg_out.type
-        forward_tags = tags.difference({"derivative"})
+        forward_tags = tags.difference({"derivative", "derivative_out"})
 
         # SoftMax derivative is calculated from the "ALL" results.
         # Those can provided from outside, but we don't support receiving data in arg_out
-        all_out = builder.alloca(arg_out.type.pointee)
-        builder = self._gen_llvm_function_body(ctx, builder, params, state, arg_in, all_out, output_type=ALL, tags=forward_tags)
+        if "derivative_out" in tags:
+            all_out = arg_in
+        else:
+            all_out = builder.alloca(arg_out.type.pointee)
+            builder = self._gen_llvm_function_body(ctx, builder, params, state, arg_in, all_out, output_type=ALL, tags=forward_tags)
 
         # The rest of the algorithm is for MAX_VAL and MAX_INDICATOR only
         assert self.output in {MAX_VAL, MAX_INDICATOR}, \
@@ -2749,7 +2752,7 @@ class SoftMax(TransferFunction):
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, output_type=None, *, tags:frozenset):
         output_type = self.output if output_type is None else output_type
-        if "derivative" in tags:
+        if "derivative" in tags or "derivative_out" in tags:
             return self._gen_llvm_function_derivative_body(ctx, builder, params, state, arg_in, arg_out, tags=tags)
 
         if self.parameters.per_item.get():
@@ -2835,7 +2838,7 @@ class SoftMax(TransferFunction):
         if output is None:
             output = self.function(input, params={OUTPUT_TYPE: ALL}, context=context)
         else:
-            assert not any(o == 0 for o in output)
+            assert not np.any(np.equal(0, output))
 
         sm = np.squeeze(output)
         size = len(sm)
