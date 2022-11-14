@@ -2869,7 +2869,7 @@ class SoftMax(TransferFunction):
             # Return full Jacobian matrix of derivatives using Kronecker's delta method:
             derivative = np.empty([size, size])
             for j in range(size):
- # FIX: ?SHOULDN'T THIS BE sm?
+                # FIX: ?SHOULDN'T THIS BE sm?
                 for i, val in zip(range(size), output):
                     if i == j:
                         delta = 1
@@ -2888,7 +2888,6 @@ class SoftMax(TransferFunction):
                     d = 1
                 else:
                     d = 0
-                # FIX: ?SHOULD USE output?
                 derivative[i] = sm[i] * (d - max_val)
 
         else:
