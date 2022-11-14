@@ -145,7 +145,7 @@ derivative_test_data = [
 @pytest.mark.function
 @pytest.mark.transfer_function
 @pytest.mark.benchmark
-@pytest.mark.parametrize("func, variable, params, expected", derivative_test_data, ids=lambda x: getattr(x, 'name', None))
+@pytest.mark.parametrize("func, variable, params, expected", derivative_test_data, ids=lambda x: getattr(x, 'name', None) or getattr(x, 'get', lambda p, q: None)(kw.OUTPUT_TYPE, None))
 def test_transfer_derivative(func, variable, params, expected, benchmark, func_mode):
     if func == Functions.SoftMax and params[kw.OUTPUT_TYPE] == kw.ALL and func_mode != "Python":
         pytest.skip("Compiled derivative using 'ALL' is not implemented")
