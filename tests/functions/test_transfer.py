@@ -202,6 +202,7 @@ def test_transfer_derivative_out(func, variable, params, expected, benchmark, fu
     res = benchmark(ex, variable)
     assert np.allclose(res, expected)
 
+
 derivative_test_data_out = [
     (Functions.ReLU, test_var, {'gain':RAND1, 'bias':RAND2, 'leak':RAND3}, 0.241418620076574),
     (Functions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_VAL}, 'per_item': False},
