@@ -1437,20 +1437,14 @@ class LinearCombination(
             comb_op = "fmul"
         elif operation == CROSS_ENTROPY:
             raise FunctionError(f"LinearCombination Function does not (yet) support CROSS_ENTROPY operation.")
-            # FROM objectivefunctions.py:
-            # def __gen_llvm_cross_entropy(self, builder, index, ctx, v1, v2, acc):
-            #     ptr1 = builder.gep(v1, [index])
-            #     ptr2 = builder.gep(v2, [index])
-            #     val1 = builder.load(ptr1)
-            #     val2 = builder.load(ptr2)
-            #
-            #     log_f = ctx.get_builtin("log", [ctx.float_ty])
-            #     log = builder.call(log_f, [val2])
-            #     prod = builder.fmul(val1, log)
-            #
-            #     acc_val = builder.load(acc)
-            #     new_acc = builder.fsub(acc_val, prod)
-            #     builder.store(new_acc, acc)
+            # FIX: THIS NEEDS TO BE REPLACED TO GENERATE A VECTOR WITH HADAMARD CROSS-ENTROPY OF vi AND vo
+            # ptr1 = builder.gep(vi, [index])
+            # ptr2 = builder.gep(vo, [index])
+            # val1 = builder.load(ptr1)
+            # val2 = builder.load(ptr2)
+            # log_f = ctx.get_builtin("log", [ctx.float_ty])
+            # log = builder.call(log_f, [val2])
+            # prod = builder.fmul(val1, log)
         else:
             assert False, "Unknown operation: {}".format(operation)
 

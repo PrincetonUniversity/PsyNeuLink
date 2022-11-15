@@ -75,7 +75,7 @@ TRAIN = True
 RUN = True
 ANALYZE = True # Analyze results of run
 REPORT_OUTPUT = ReportOutput.OFF       # Sets console output during run
-REPORT_PROGRESS = ReportProgress.ON   # Sets console progress bar during run
+REPORT_PROGRESS = ReportProgress.OFF   # Sets console progress bar during run
 REPORT_LEARNING = ReportLearning.OFF   # Sets console progress bar during training
 ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
 
@@ -392,7 +392,8 @@ def get_training_inputs(network, num_epochs, nback_levels):
                              network.nodes[FFN_CONTEXT_RETRIEVED]: context_retrieved,
                              network.nodes[FFN_TASK]: current_task},
                     TARGETS: {network.nodes[FFN_OUTPUT]:  target},
-                    EPOCHS: num_epochs*batch_size}
+                    # EPOCHS: num_epochs*batch_size}
+                    EPOCHS: num_epochs}
 
     return training_set, batch_size
 
@@ -577,7 +578,7 @@ def train_network(network,
                                                            num_epochs=num_epochs,
                                                            nback_levels=NBACK_LEVELS)
     print(f'num training stimuli per training set (minibatch size): {minibatch_size}')
-    print(f'num training sets (num_epochs): {num_epochs}')
+    print(f'num weight updates (num_epochs): {num_epochs}')
     print(f'total num trials: {num_epochs*minibatch_size}')
     print(f"\ntraining '{network.name}'...")
     start_time = timeit.default_timer()
@@ -588,6 +589,7 @@ def train_network(network,
                   # report_learning=REPORT_LEARNING,
                   learning_rate=learning_rate,
                   execution_mode=ExecutionMode.LLVMRun
+                  # execution_mode=ExecutionMode.Python
                   )
     stop_time = timeit.default_timer()
     print(f"'{network.name}' trained")
