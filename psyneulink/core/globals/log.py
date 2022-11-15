@@ -527,8 +527,6 @@ class EntriesDict(MutableMapping,dict):
 
         # Log to which this dict belongs
         self._ownerLog = owner
-        # Object to which the log belongs
-        self._owner = owner.owner
 
         # # VERSION THAT USES OWNER'S logPref TO LIST ENTRIES TO BE RECORDED
         # # List of entries (in owner's logPrefs) of entries to record
