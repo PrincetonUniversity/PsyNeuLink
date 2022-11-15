@@ -2142,6 +2142,7 @@ class BackPropagation(LearningFunction):
         activation_input = self._get_current_parameter_value(ACTIVATION_INPUT, context)
         activation_input = np.array(activation_input).reshape(len(activation_input), 1)
 
+        # FIX: ADD SUPPORT FOR CROSS ENTROPY AGAINST TARGET OR, IN CASE OF SOFTMAX, AGAINST MOST ACTIVE?
         # Derivative of error with respect to output activity (contribution of each output unit to the error above)
         loss_function = self.parameters.loss_function.get(context)
         if loss_function == MSE:

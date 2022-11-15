@@ -209,6 +209,9 @@ class AutodiffComposition(Composition):
         *l1*, *NLL*, *POISSON_NLL*, and *KL_DIV*. Any PyTorch loss function can work here, such as ones from
         https://pytorch.org/docs/stable/nn.html#loss-functions
 
+    Attributes
+    ----------
+
     losses : list of floats
         tracks the average for each weight update (i.e. each minibatch)
 

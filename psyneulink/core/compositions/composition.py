@@ -967,14 +967,78 @@ COMMENT:
     Change reference to example below to point to Rumelhart Semantic Network Model Script once implemented
 COMMENT
 
-`AutodiffCompositions <AutodiffComposition>` provide the ability to execute a composition using `PyTorch
+`AutodiffCompositions <AutodiffComposition>` provide the ability to execute backpropagation learning much more
+efficiently than using a standard Composition.  An AutodiffComposition is constructed in the same way, but there
+is no need to specify any `learning components <Composition_Learning_Components>`>` or using any `learning methods
+<Composition_Learning_Methods>` -- in fact, they should *not* be specified (see `warning
+<Autodiff_Learning_Components_Warning>` below) -- an AutodiffComposition automatically creates backpropagation
+`learning pathways <Composition_Learning_Pathway>` from all input to all output `Nodes <Composition_Nodes>`.
+While learning in an AutodiffComposition is restricted to the `BackPropagation` learning algorithm, its `loss
+function can be specified (using the **loss_spec** parameter of its constructor), which implements different kinds of
+`supervised learning <Composition_Learning_Supervised>` (for example, *MSE* can be used for regression,
+or **CROSS_ENTROPY** for classification).
+
+The advantage of using an AutodiffComposition is that it allows a model to be implemented in PsyNeuLink, and then
+exploit the acceleration of optimized implementations of learning. This can be achieved by executing the `learn
+<Composition.learn>` method in one of two modes (specified using its **execution_mode** argument):  using direct
+compilation (**execution_mode** = *LLVMRun*); or by automatically translating the model to
+`PyTorch <https://pytorch.org>`_ using that to execute it (**execution_mode** == *Python*.  The advantage of these 
+modes is that they can provide as much as three orders of magnitude speed-up in training a model.  However, the 
+disadvantage is that there are restrictions on the kinds of Compositions that be implemented in this way.  The
+relative advantages and disadvantates of using a AutodiffComosition versus a Composition to implement learning, 
+and of the two modes of execution for an AutodiffComposition are outlined in the following table, and described
+in more detail below.
+
+COMMENT:
+  TABLE:
+    * AutodiffComposition:
+        * Execute_mode.Python:
+            - execution:
+              - executes `learn <Composition.learn>` using PyTorch
+              - executes `run <Composition.run>` using Python
+            - advantage: - fast (but slightly slower than direct compilation)
+            - disadvantage :broader support (RNN including LSTM, convnet, ?transformer?)
+        * Execute_mode.LLVNRun:
+            - execution: executes `learn <Composition.learn>` *and* `run <Composition.run>` in compiled mode
+            - advantage: fastest (direct compilation of PNL code)
+            - disadvantage: but (currently) more limited; not suppored:
+                            * RNN (including LSTM)
+                            * convnet (though "in the wings")
+                            * transformer
+                            * ?external memory
+    * Composition:
+        - execution: executes `learn <Composition.learn>` *and* `run <Composition.run>` in Python mode
+        - disadvantage: learning is extremely slow
+        - advantage:
+          - broadest support (including RL, TDLearning, Hebbian, Kohonen / SOM)
+          - can be used to implement effects of modulation and control during learning
+          - useful for examination of individual operations (e.g., for teaching purposes)
+COMMENT
+
+*LLVM mode*
+~~~~~~~~~~~
+
+See `Compilation` for more information about executing a Composition in compiled mode.
+
+*PyTorch mode**
+~~~~~~~~~~~~~~~
+
+In addition being limited to the use of BackPropgation learning
+First, because it relies on PyTorch, it is best suited for use with `supervised
+learning <Composition_Learning_Supervised>`, although it can be used for some forms of `unsupervised learning
+<Composition_Learning_Unsupervised>` that are supported in PyTorch (e.g., `self-organized maps
+<https://github.com/giannisnik/som>`_).  Second, all of the Components in an AutodiffComposition must
+be with compatible with learning.
+
+COMMENT:
+- LOSS FUNCTION
+- Execute learn method using Execute_mode == Python (uses Python) or LLVMRun (direct compilation)
+COMMENT
+using `PyTorch
 <https://pytorch.org>`_ (see `example <BasicsAndPrimer_Rumelhart_Model>` in `BasicsAndPrimer`).  The
 AutodiffComposition constructor provides arguments for configuring the PyTorch implementation in various ways; the
 Composition is then built using the same methods (e.g., `add_node`, `add_projection`, `add_linear_processing_pathway`,
-etc.) as any other Composition. Note that there is no need to use any `learning methods <Composition_Learning_Methods>`
-— AutodiffCompositions automatically creates backpropagation `learning pathways <Composition_Learning_Pathway>` between
-all input - output `Node <Composition_Nodes>` paths; and, in fact, they should *not* be used nor any Learning
-Components explicitly added to the Composition (see `warning <Autodiff_Learning_Components_Warning>` below)
+etc.) as any other Composition.
 
 It can be run just as a standard Composition would - using `learn <AutodiffComposition.learn>` for learning mode,
 and `run <AutodiffComposition.run>` for test mode.
