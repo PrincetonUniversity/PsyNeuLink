@@ -967,14 +967,43 @@ COMMENT:
     Change reference to example below to point to Rumelhart Semantic Network Model Script once implemented
 COMMENT
 
-`AutodiffCompositions <AutodiffComposition>` provide the ability to execute a composition using `PyTorch
+`AutodiffCompositions <AutodiffComposition>` provide the ability to execute backpropagation learning for a
+composition much more efficiently than in the standard Python execution mode.  An AutodiffComposition is
+constructed in the same way that any Composition is constructed, but without any specifying any `learning
+components <Composition_Learning_Components>`>` or using any `learning methods <Composition_Learning_Methods>`
+-- in fact, they should *not* be specified (see `warning <Autodiff_Learning_Components_Warning>` below) -- an
+AutodiffComposition automatically creates a backpropagation `learning pathways <Composition_Learning_Pathway>`
+between all input to output `Node <Composition_Nodes>` pathways.
+COMMENT:
+- WHAT ABOUT SPECIFYING LEARNING FUNCTION?
+- LOSS FUNCTION
+- Execute learn method using Execute_mode == Python (uses Python) or LLVMRun (direct compilation)
+  MAKE TABLE:
+    * AutodiffComposition:
+        * Execute_mode.Python:
+            - executes `learn <Composition.learn>` using PyTorch
+            - executes `run <Composition.run>` using Python
+            - fast (but slightly slower than direct compilation)
+            - broader support (RNN including LSTM, convnet, ?transformer?)
+        * Execute_mode.LLVNRun:
+            - executes `learn <Composition.learn>` *and* `run <Composition.run>` in compiled mode
+            * fastest (direct compilation of PNL code)
+            * but (currently) more limited; not suppored:
+                * RNN (including LSTM)
+                * convnet (though "in the wings")
+                * transformer
+                * ?external memory
+    * Composition:
+        - executes `learn <Composition.learn>` *and* `run <Composition.run>` in Python mode
+        - learning is extremely slow
+        - broadest support (including RL, TDLearning, Hebbian, Kohonen / SOM)
+        - useful for examination of individual operations (e.g., for teaching purposes)
+COMMENT
+using `PyTorch
 <https://pytorch.org>`_ (see `example <BasicsAndPrimer_Rumelhart_Model>` in `BasicsAndPrimer`).  The
 AutodiffComposition constructor provides arguments for configuring the PyTorch implementation in various ways; the
 Composition is then built using the same methods (e.g., `add_node`, `add_projection`, `add_linear_processing_pathway`,
-etc.) as any other Composition. Note that there is no need to use any `learning methods <Composition_Learning_Methods>`
-— AutodiffCompositions automatically creates backpropagation `learning pathways <Composition_Learning_Pathway>` between
-all input - output `Node <Composition_Nodes>` paths; and, in fact, they should *not* be used nor any Learning
-Components explicitly added to the Composition (see `warning <Autodiff_Learning_Components_Warning>` below)
+etc.) as any other Composition.
 
 It can be run just as a standard Composition would - using `learn <AutodiffComposition.learn>` for learning mode,
 and `run <AutodiffComposition.run>` for test mode.
