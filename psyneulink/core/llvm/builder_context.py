@@ -63,7 +63,7 @@ _builtin_intrinsics = frozenset(('pow', 'log', 'exp', 'tanh', 'coth', 'csch',
 
 class _node_wrapper():
     def __init__(self, composition, node):
-        self._comp = composition
+        self._comp = weakref.proxy(composition)
         self._node = node
 
     def _gen_llvm_function(self, *, ctx, tags:frozenset):
