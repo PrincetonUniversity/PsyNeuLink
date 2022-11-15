@@ -989,6 +989,18 @@ relative advantages and disadvantates of using a AutodiffComosition versus a Com
 and of the two modes of execution for an AutodiffComposition are outlined in the following table, and described
 in more detail below.
 
++---------------+---------------+------------------------------------------------------------------------+
+|               |  Composition  |               **AutodiffComposition**                                  |
++               +               +------------------------------------------------------------------------+
+|               |               |  AutodiffComp using **LLVMRun**    |    AutodiffComp using **PyTorch** |
++---------------+---------------+------------------------------------------------------------------------+
+| Execution     |               |                                    |                                   |
++---------------+---------------+------------------------------------+-----------------------------------+
+| Advantages    |               |                                    |                                   |
++---------------+---------------+------------------------------------+-----------------------------------+
+| Disadvantages |               |                                    |                                   |
++---------------+---------------+------------------------------------+-----------------------------------+
+
 COMMENT:
   TABLE:
     * AutodiffComposition:
