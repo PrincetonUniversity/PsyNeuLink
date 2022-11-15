@@ -392,6 +392,7 @@ def get_training_inputs(network, num_epochs, nback_levels):
                              network.nodes[FFN_CONTEXT_RETRIEVED]: context_retrieved,
                              network.nodes[FFN_TASK]: current_task},
                     TARGETS: {network.nodes[FFN_OUTPUT]:  target},
+                    # EPOCHS: num_epochs*batch_size}
                     EPOCHS: num_epochs*batch_size}
 
     return training_set, batch_size
