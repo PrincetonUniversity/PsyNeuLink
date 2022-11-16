@@ -981,17 +981,16 @@ or **CROSS_ENTROPY** for classification).
 The advantage of using an AutodiffComposition is that it allows a model to be implemented in PsyNeuLink, and then
 exploit the acceleration of optimized implementations of learning. This can be achieved by executing the `learn
 <Composition.learn>` method in one of two modes (specified using its **execution_mode** argument):  using direct
-compilation (**execution_mode** = *LLVMRun*); or by automatically translating the model to
-`PyTorch <https://pytorch.org>`_ using that to execute it (**execution_mode** == *Python*.  The advantage of these 
-modes is that they can provide as much as three orders of magnitude speed-up in training a model.  However, the 
-disadvantage is that there are restrictions on the kinds of Compositions that be implemented in this way.  The
-relative advantages and disadvantates of using a AutodiffComosition versus a Composition to implement learning, 
-and of the two modes of execution for an AutodiffComposition are outlined in the following table, and described
-in more detail below.
+compilation (**execution_mode** = *ExecutionMode.LLVMRun*); or by automatically translating the model to `PyTorch
+<https://pytorch.org>`_ for training (**execution_mode** = *ExecutionMode.PyTorch*. The advantage of these modes
+is that they can provide as much as three orders of magnitude speed-up in training a model.  However, there are
+restrictions on the kinds of Compositions that be implemented in this way.  The features of the different ways to
+implement learning are outlined in the following table, and described in more detail below in `AutodiffComposition`.
 
-                                     **Comparison of Execution Modes for Learning**
+.. _Composition_Compilation_Table:
+
 .. table::
-    :align: center
+    :align: left
 
     +-----------------+------------------------+----------------------------------------------+
     |                 |  **Composition**       |         **AutodiffCommposition**             |
@@ -1012,103 +1011,6 @@ in more detail below.
     |                 |* modulation, inspection|                     |                        |
     +-----------------+------------------------+---------------------+------------------------+
 
-TEXT
-
-
-COMMENT:
-  TABLE:
-    * AutodiffComposition:
-        * Execute_mode.Python:
-            - execution:
-              - executes `learn <Composition.learn>` using PyTorch
-              - executes `run <Composition.run>` using Python
-            - advantage: - fast (but slightly slower than direct compilation)
-            - disadvantage :broader support (RNN including LSTM, convnet, ?transformer?)
-        * Execute_mode.LLVNRun:
-            - execution: executes `learn <Composition.learn>` *and* `run <Composition.run>` in compiled mode
-            - advantage: fastest (direct compilation of PNL code)
-            - disadvantage: but (currently) more limited; not suppored:
-                            * RNN (including LSTM)
-                            * convnet (though "in the wings")
-                            * transformer
-                            * ?external memory
-    * Composition:
-        - execution: executes `learn <Composition.learn>` *and* `run <Composition.run>` in Python mode
-        - disadvantage: learning is extremely slow
-        - advantage:
-          - broadest support (including RL, TDLearning, Hebbian, Kohonen / SOM)
-          - can be used to implement effects of modulation and control during learning
-          - useful for examination of individual operations (e.g., for teaching purposes)
-COMMENT
-
-*LLVM mode*
-^^^^^^^^^^^
-
-See `Compilation` for more information about executing a Composition in compiled mode.
-
-*PyTorch mode*
-^^^^^^^^^^^^^^
-
-In addition being limited to the use of BackPropgation learning
-First, because it relies on PyTorch, it is best suited for use with `supervised
-learning <Composition_Learning_Supervised>`, although it can be used for some forms of `unsupervised learning
-<Composition_Learning_Unsupervised>` that are supported in PyTorch (e.g., `self-organized maps
-<https://github.com/giannisnik/som>`_).  Second, all of the Components in an AutodiffComposition must
-be with compatible with learning.
-
-COMMENT:
-- LOSS FUNCTION
-- Execute learn method using Execute_mode == Python (uses Python) or LLVMRun (direct compilation)
-COMMENT
-using `PyTorch
-<https://pytorch.org>`_ (see `example <BasicsAndPrimer_Rumelhart_Model>` in `BasicsAndPrimer`).  The
-AutodiffComposition constructor provides arguments for configuring the PyTorch implementation in various ways; the
-Composition is then built using the same methods (e.g., `add_node`, `add_projection`, `add_linear_processing_pathway`,
-etc.) as any other Composition.
-
-It can be run just as a standard Composition would - using `learn <AutodiffComposition.learn>` for learning mode,
-and `run <AutodiffComposition.run>` for test mode.
-COMMENT:
-FIX: CHECK WITH SAMYAK THAT THIS IS CORRECT
-COMMENT
-
-    .. hint::
-        To execute the `learn <Composition.learn>` method of an AutodiffComposition using PyTorch,
-        the **execution_mode** argument of the method must be set to `LLVMRun`;  if the argument is not specified,
-        the AutodiffComposition executes in standard Python mode, which can be useful for debugging, but is
-        several orders of magnitude slower than using PyTorch.
-
-The advantage of this approach is that it allows the Composition to be implemented in PsyNeuLink, while exploiting
-the efficiency of execution in PyTorch (which can yield as much as three orders of magnitude improvement).  However,
-a disadvantage is that there are restrictions on the kinds of Compositions that be implemented in this way.
-First, because it relies on PyTorch, it is best suited for use with `supervised
-learning <Composition_Learning_Supervised>`, although it can be used for some forms of `unsupervised learning
-<Composition_Learning_Unsupervised>` that are supported in PyTorch (e.g., `self-organized maps
-<https://github.com/giannisnik/som>`_).  Second, all of the Components in an AutodiffComposition must
-be with compatible with learning.
-COMMENT:
-FIX: IS THIS STILL TRUE? SEEMS TO CONTRADICT STATEMENT BELOW:
-This means that it cannot be used with a Composition that contains any `modulatory components
-<ModulatorySignal_Anatomy_Figure>` or ones that are subject to modulation, whether by ModulatoryMechanisms within or
-outside the Composition;
-?MAYBE THE FOLLOWING IS BETTER:
-COMMENT
-This means that it cannot contain any `ModulatoryMechanisms <ModulatoryMechanism>`;  this includes a `controller
-<Composition_Controller>` or any LearningMechanisms, although it can include Components subject to `modulation
-<ModulatorySignal_Modulation>` (see `Figure <ModulatorySignal_Anatomy_Figure>`), as noted below.
-
-    .. _Autodiff_Learning_Components_Warning:
-    .. warning::
-        When an AutodiffComposition is constructed, it creates all of the learning Components
-        that are needed, and thus **cannot include** any that are prespecified.
-
-An AutodiffComposition can be `nested in a Composition <Composition_Nested>` that has such other Components. During
-learning, none of the internal Components of the AutodiffComposition (e.g., intermediate layers of a neural network
-model) are accessible to the other Components of the outer Composition, (e.g., as sources of information,
-or for modulation).  However, when learning turned off, then the  AutodiffComposition functions like any other,
-and all of its internal Components are accessible to other Components of the outer Composition. Thus, as long as access
-to its internal Components is not needed during learning, an `AutodiffComposition` can be trained, and then used to
-execute the trained Composition like any other.
 
 .. _Composition_Learning_UDF:
 
@@ -2002,19 +1904,26 @@ in order of their power, are:
     * *True* -- try to use the one that yields the greatesst improvement, progressively reverting to less powerful
       but more forgiving modes, in the order listed below, for each that fails;
 
-    * *LLVMRun* -- compile and run multiple `TRIAL <TimeScale.TRIAL>`\\s; if successful, the compiled binary is
-      semantically equivalent to the execution of the `run <Composition.run>` method using the Python interpreter;
+    * *ExecutionMode.LLVMRun* - compile and run multiple `TRIAL <TimeScale.TRIAL>`\\s; if successful,
+      the compiled binary is semantically equivalent to the execution of the `run <Composition.run>` method
+      using the Python interpreter;
 
-    * *LLVMExec* -- compile and run each `TRIAL <TimeScale.TRIAL>`, using the Python interpreter to iterate over them;
-      if successful, the compiled binary for each `TRIAL <TimeScale.TRIAL>` is semantically equivalent the execution
-      of the `execute <Composition.execute>` method using the Python interpreter;
+    * *ExecutionMode.LLVMExec* -- compile and run each `TRIAL <TimeScale.TRIAL>`, using the Python interpreter
+      to iterate over them; if successful, the compiled binary for each `TRIAL <TimeScale.TRIAL>` is semantically
+      equivalent the execution of the `execute <Composition.execute>` method using the Python interpreter;
 
-    * *LLVM* -- compile and run `Node <Composition_Nodes>` of the `Composition` and their `Projections <Projection>`,
-      using the Python interpreter to call the Composition's `scheduler <Composition.scheduler>`, execute each Node
-      and iterate over `TRIAL <TimeScale.TRIAL>`\\s; note that, in this mode, scheduling `Conditions <Condition>`
-      that rely on Node `Parameters` is not supported;
+    * *ExecutionMode.LLVM* -- compile and run `Node <Composition_Nodes>` of the `Composition` and their `Projections
+      <Projection>`, using the Python interpreter to call the Composition's `scheduler <Composition.scheduler>`,
+      execute each Node and iterate over `TRIAL <TimeScale.TRIAL>`\\s; note that, in this mode, scheduling
+      `Conditions <Condition>` that rely on Node `Parameters` is not supported;
 
-    * *Python* (same as *False*; the default) -- use the Python interpreter to execute the `Composition`.
+    * *ExecutionMode.Python* (same as *False*; the default) -- use the Python interpreter to execute the `Composition`.
+
+.. _Composition_Compilation_PyTorch:
+
+*PyTorch support.*  When using an `AutodiffComposition`, *ExecutionMode.PyTorch* can be used to execute its
+`learn <AutodiffComposition.learn>` method using Pytorch; however, it `run <AutodiffComposition.run>` method
+will execute using the Python interpreter.  See `Composition_Learning_AutodiffComposition` for additional details.
 
 .. _Composition_Compilation_PTX:
 
@@ -2024,7 +1933,8 @@ in order of their power, are:
 of the following modes in the **execution_mode** argument of a `Composition execution method
 <Composition_Execution_Methods>`:
 
-    * *PTXExec|PTXRun* -- equivalent to the LLVM counterparts but run in a single thread of a CUDA capable GPU.
+    * *ExecutionMode.PTXExec | *ExecutionMode.PTXRun* -- these are equivalent to the LLVM counterparts
+      but run in a single thread of a CUDA capable GPU.
 
 This requires that a working `pycuda package <https://documen.tician.de/pycuda/>`_ is
 `installed <https://wiki.tiker.net/PyCuda/Installation>`_, and that CUDA execution is explicitly enabled by setting
@@ -9933,17 +9843,17 @@ _
             for the current and all future runs of the Composition. See
             `Scheduler_Execution`
 
-        execution_mode : enum.Enum[Auto|LLVM|LLVMexec|LLVMRun|Python|PTXExec|PTXRun] : default Python
+        execution_mode : enum.Enum[Auto|LLVM|LLVMexec|LLVMRun|Python|PyTorch|PTXExec|PTXRun] : default Python
             specifies whether to run using the Python interpreter or a `compiled mode <Composition_Compilation>`.
             False is the same as ``Python``;  True tries LLVM compilation modes, in order of power, progressively
             reverting to less powerful modes (in the order of the options listed), and to Python if no compilation
-            mode succeeds (see `Composition_Compilation` for explanation of modes). PTX modes are used for
-            CUDA compilation.
+            mode succeeds (see `Composition_Compilation` for explanation of modes). PyTorch specifies that the
+            `learn <AutodiffComposition.learn>` method of an `AutodiffComposition` should be executed using PyTorch.
+            PTX modes are used for CUDA compilation.
 
         default_absolute_time_unit : ``pint.Quantity`` : ``1ms``
-            if not otherwise determined by any absolute **conditions**,
-            specifies the absolute duration of a `TIME_STEP`. See
-            `Scheduler.default_absolute_time_unit`
+            if not otherwise determined by any absolute **conditions**, specifies the absolute duration
+            of a `TIME_STEP`. See `Scheduler.default_absolute_time_unit`
 
         context : `execution_id <Context.execution_id>` : default `default_execution_id`
             context in which the `Composition` will be executed;  set to self.default_execution_id ifunspecified.

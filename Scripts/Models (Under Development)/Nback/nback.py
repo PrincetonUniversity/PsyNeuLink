@@ -588,8 +588,9 @@ def train_network(network,
                   report_progress=REPORT_PROGRESS,
                   # report_learning=REPORT_LEARNING,
                   learning_rate=learning_rate,
-                  execution_mode=ExecutionMode.LLVMRun
+                  # execution_mode=ExecutionMode.LLVMRun
                   # execution_mode=ExecutionMode.Python
+                  execution_mode=ExecutionMode.PyTorch
                   )
     stop_time = timeit.default_timer()
     print(f"'{network.name}' trained")

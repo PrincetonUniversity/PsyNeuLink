@@ -18,6 +18,7 @@ Contents
   * `AutodiffComposition_Execution`
       - `AutodiffComposition_Logging`
       - `AutodiffComposition_Nested_Execution`
+  * `AutodiffComposition_Examples`
   * `AutodiffComposition_Class_Reference`
 
 
@@ -29,14 +30,21 @@ Overview
 .. warning:: As of PsyNeuLink 0.7.5, the API for using AutodiffCompositions has been slightly changed!
    Please see `this link <RefactoredLearningGuide>` for more details!
 
-AutodiffComposition is a subclass of `Composition` used to train feedforward neural network models through integration
-with `PyTorch <https://pytorch.org/>`_, a machine learning library that executes considerably more quickly
-than using the `standard implementation of learning <Composition_Learning_Standard>` in a Composition, using its
-`learning methods <Composition_Learning_Methods>`. An AutodiffComposition is configured and run similarly to a standard
-Composition, with some exceptions that are described below.
-COMMENT:
-FIX: UPDATE runtimes WITH COMPILED VERSION
-COMMENT
+AutodiffComposition is a subclass of `Composition` used to train feedforward neural network models either using
+LLVM compilation or use of `PyTorch <https://pytorch.org/>`_, both of which execute considerably more quickly
+than using the `standard implementation of learning  <Composition_Learning_Standard>` in a Composition, with
+as many as three orders of magnitude acceleration.  While an AutodiffComposition can be constructed in much the
+same way as a standard Composition, there are limitations on the kinds of Compositions that be implemented in this
+way.
+
+XXXX
+First, because it relies on PyTorch, it is best suited for use with `supervised
+learning <Composition_Learning_Supervised>`, although it can be used for some forms of `unsupervised learning
+<Composition_Learning_Unsupervised>` that are supported in PyTorch (e.g., `self-organized maps
+<https://github.com/giannisnik/som>`_).
+ An
+AutodiffComposition is configured and run similarly to a standard Composition, with some exceptions that are
+described below.
 
 .. _AutodiffComposition_Creation:
 
@@ -45,8 +53,8 @@ Creating an AutodiffComposition
 
 An AutodiffComposition can be created by calling its constructor, and then adding `Components <Component>` using the
 standard `Composition methods <Composition_Creation>` for doing so.  The constructor also includes an number of
-parameters that are specific to the AutodiffComposition. See `AutodiffComposition_Class_Reference` for a list of
-these parameters.
+parameters that are specific to the AutodiffComposition (see `AutodiffComposition_Class_Reference` for a list of
+these parameters and for an `example <AutodiffComposition_Nested_Example>` of construction).
 
 .. warning:: Mechanisms or Projections should not be added to or deleted from an AutodiffComposition after it has
    been run for the first time. Unlike an ordinary Composition, AutodiffComposition does not support this
@@ -57,6 +65,33 @@ these parameters.
    should be set to `False`, as AutodiffComposition does not currently support trainable biases.
 
 
+Second, all of the Components in an AutodiffComposition must be with compatible with learning.
+COMMENT:
+FIX: IS THIS STILL TRUE? SEEMS TO CONTRADICT STATEMENT BELOW:
+This means that it cannot be used with a Composition that contains any `modulatory components
+<ModulatorySignal_Anatomy_Figure>` or ones that are subject to modulation, whether by ModulatoryMechanisms within or
+outside the Composition;
+?MAYBE THE FOLLOWING IS BETTER:
+COMMENT
+This means that it cannot contain any `ModulatoryMechanisms <ModulatoryMechanism>`;  this includes a `controller
+<Composition_Controller>` or any LearningMechanisms, although it can include Components subject to `modulation
+<ModulatorySignal_Modulation>` (see `Figure <ModulatorySignal_Anatomy_Figure>`), as noted below.
+
+    .. _Autodiff_Learning_Components_Warning:
+    .. warning::
+        When an AutodiffComposition is constructed, it creates all of the learning Components
+        that are needed, and thus **cannot include** any that are prespecified.
+
+An AutodiffComposition can be `nested in a Composition <Composition_Nested>` that has such other Components. During
+learning, none of the internal Components of the AutodiffComposition (e.g., intermediate layers of a neural network
+model) are accessible to the other Components of the outer Composition, (e.g., as sources of information,
+or for modulation).  However, when learning turned off, then the  AutodiffComposition functions like any other,
+and all of its internal Components are accessible to other Components of the outer Composition. Thus, as long as access
+to its internal Components is not needed during learning, an `AutodiffComposition` can be trained, and then used to
+execute the trained Composition like any other.
+
+
+
 .. _AutodiffComposition_Execution:
 
 Execution
@@ -65,8 +100,108 @@ Execution
 An AutodiffComposition's `run <Composition.run>`, `execute <Composition.execute>`, and `learn <Composition.learn>`
 methods are the same as for a `Composition`.
 
-The following is an example showing how to create a
-simple AutodiffComposition, specify its inputs and targets, and run it with learning enabled and disabled.
+see `table <Composition_Compilation_Table>` for a comparison of Composition and different modes of AutodiffComposition
+execution)
+
+
+
+*LLVM mode*
+^^^^^^^^^^^
+
+This provides the fastest performance, but is limited to `supervised learning <Composition_Learning_Supervised>`
+using the `BackPropagation` algorithm. This can be run using standard forms of loss, including mean squared error
+(MSE) and cross entropy, by specifying this in the **loss_spec** argument of the constructor (see `AutodiffComposition
+<AutodiffComposition_Class_Reference>` for additional details, and `Compilation Modes <Composition_Compiled_Modes>`
+for more information about executing a Composition in compiled mode.
+
+COMMENT:
+  TABLE:
+    * AutodiffComposition:
+        * Execute_mode.Python:
+            - execution:
+              - executes `learn <Composition.learn>` using PyTorch
+              - executes `run <Composition.run>` using Python
+            - advantage: - fast (but slightly slower than direct compilation)
+            - disadvantage :broader support (RNN including LSTM, convnet, ?transformer?)
+        * Execute_mode.LLVNRun:
+            - execution: executes `learn <Composition.learn>` *and* `run <Composition.run>` in compiled mode
+            - advantage: fastest (direct compilation of PNL code)
+            - disadvantage: but (currently) more limited; not suppored:
+                            * RNN (including LSTM)
+                            * convnet (though "in the wings")
+                            * transformer
+                            * ?external memory
+    * Composition:
+        - execution: executes `learn <Composition.learn>` *and* `run <Composition.run>` in Python mode
+        - disadvantage: learning is extremely slow
+        - advantage:
+          - broadest support (including RL, TDLearning, Hebbian, Kohonen / SOM)
+          - can be used to implement effects of modulation and control during learning
+          - useful for examination of individual operations (e.g., for teaching purposes)
+COMMENT
+
+
+
+*PyTorch mode*
+^^^^^^^^^^^^^^
+
+This is almost as fast as LLVM compilation, but provides greater flexiblity.  Although it too is best suited for use
+with `supervised learning <Composition_Learning_Supervised>`, it can also be used for some forms of `unsupervised
+learning <Composition_Learning_Unsupervised>` that are supported in PyTorch (e.g., `self-organized maps
+<https://github.com/giannisnik/som>`_).  Furthermore, while learning
+
+  Second, all of the Components in an AutodiffComposition must
+be with compatible with learning.
+
+COMMENT:
+- Execute learn method using Execute_mode == Python (uses Python) or LLVMRun (direct compilation)
+COMMENT
+using `PyTorch
+<https://pytorch.org>`_ (see `example <BasicsAndPrimer_Rumelhart_Model>` in `BasicsAndPrimer`).  The
+AutodiffComposition constructor provides arguments for configuring the PyTorch implementation in various ways; the
+Composition is then built using the same methods (e.g., `add_node`, `add_projection`, `add_linear_processing_pathway`,
+etc.) as any other Composition.
+
+It can be run just as a standard Composition would - using `learn <AutodiffComposition.learn>` for learning mode,
+and `run <AutodiffComposition.run>` for test mode.
+COMMENT:
+FIX: CHECK WITH SAMYAK THAT THIS IS CORRECT
+COMMENT
+
+
+.. _AutodiffComposition_Logging:
+
+Logging
+~~~~~~~
+
+Logging in AutodiffCompositions follows the same procedure as `logging in a Composition <Log>`.
+However, since an AutodiffComposition internally converts all of its mechanisms to an equivalent PyTorch model,
+then its inner components are not actually executed. This means that there is limited support for
+logging parameters of components inside an AutodiffComposition; Currently, the only supported parameters are:
+
+1) the `matrix` parameter of Projections
+
+2) the `value` parameter of its inner components
+
+.. _AutodiffComposition_Nested_Execution:
+
+Nested Execution
+~~~~~~~~~~~~~~~~
+
+Like any other `Composition`, an AutodiffComposition may be `nested inside another <Composition_Nested>`.
+(see `example <AutodiffComposition_Nested_Example>` below).
+
+------------------------------------
+
+.. _AutodiffComposition_Examples
+
+Examples
+--------
+
+.. _AutodiffComposition_Creation_Example:
+
+The following is an example showing how to create a simple AutodiffComposition, specify its inputs and targets,
+and run it with learning enabled and disabled:
 
     >>> import psyneulink as pnl
     >>> # Set up PsyNeuLink Components
@@ -89,26 +224,8 @@ simple AutodiffComposition, specify its inputs and targets, and run it with lear
     >>> # Run Composition in test mode
     >>> my_autodiff.run(inputs = input_dict['inputs'])
 
-.. _AutodiffComposition_Logging:
 
-Logging
-~~~~~~~
-
-Logging in AutodiffCompositions follows the same procedure as `logging in a Composition <Log>`.
-However, since an AutodiffComposition internally converts all of its mechanisms to an equivalent PyTorch model,
-then its inner components are not actually executed. This means that there is limited support for
-logging parameters of components inside an AutodiffComposition; Currently, the only supported parameters are:
-
-1) the `matrix` parameter of Projections
-
-2) the `value` parameter of its inner components
-
-.. _AutodiffComposition_Nested_Execution:
-
-Nested Execution
-~~~~~~~~~~~~~~~~
-
-Like any other `Composition`, an AutodiffComposition may be `nested inside another <Composition_Nested>`.
+.. _AutodiffComposition_Nested_Example:
 
 The following shows how the AutodiffComposition created in the previous example can be nested and run inside another
 Composition::
@@ -185,8 +302,11 @@ class AutodiffCompositionError(CompositionError):
 
 class AutodiffComposition(Composition):
     """
-    Subclass of `Composition` that trains models using `PyTorch <https://pytorch.org>`_.
-    See `Composition <Composition_Class_Reference>` for additional arguments and attributes.
+    Subclass of `Composition` that trains models using either LLVM compilation or `PyTorch <https://pytorch.org>`_;
+    see
+     and `Composition <Composition_Class_Reference>` for additional arguments and attributes.
+
+     .. _AutodiffComposition_Class_Reference:
 
     Arguments
     ---------
@@ -205,7 +325,7 @@ class AutodiffComposition(Composition):
         specifies the L2 penalty (which discourages large weights) used by the optimizer.
 
     loss_spec : str or PyTorch loss function : default MSE
-        specifies the loss function for training. The current string options are *MSE* (the default), *CROSS_ENTRY*,
+        specifies the loss function for training. The current string options are *MSE* (the default), *CROSS_ENTROPY*,
         *l1*, *NLL*, *POISSON_NLL*, and *KL_DIV*. Any PyTorch loss function can work here, such as ones from
         https://pytorch.org/docs/stable/nn.html#loss-functions
 
