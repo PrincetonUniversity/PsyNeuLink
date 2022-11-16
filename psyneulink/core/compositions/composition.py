@@ -10367,7 +10367,7 @@ _
                 <Composition_Controller>`; see `Report_Simulations` for additional details.
 
             report_to_devices : list(ReportDevices) : default ReportDevices.CONSOLE
-                specifies where output and progress should be reported; see `Report_To_Devices` for additional
+                specifies where output and progress should be reported; see `Report_To_Device` for additional
                 details and `ReportDevices` for options.
 
             Returns

@@ -79,7 +79,6 @@ by specifying a `ReportLearning` option in the **report_learning** argument of a
 
 .. _Report_To_Device:
 
-
 Devices
 -------
 

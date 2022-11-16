@@ -338,8 +338,7 @@ class AutodiffCompositionError(CompositionError):
 class AutodiffComposition(Composition):
     """
     Subclass of `Composition` that trains models using either LLVM compilation or `PyTorch <https://pytorch.org>`_;
-    see
-     and `Composition <Composition_Class_Reference>` for additional arguments and attributes.
+    see and `Composition <Composition_Class_Reference>` for additional arguments and attributes.
 
     Arguments
     ---------
