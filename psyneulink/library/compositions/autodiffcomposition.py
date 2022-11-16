@@ -18,8 +18,9 @@ Contents
   * `AutodiffComposition_Execution`
       - `AutodiffComopsition_LLVM`
       - `AutodiffComopsition_PyTorch`
-      - `AutodiffComposition_Logging`
       - `AutodiffComposition_Nested_Execution`
+      - `AutodiffComposition_Modulation`
+      - `AutodiffComposition_Logging`
   * `AutodiffComposition_Examples`
   * `AutodiffComposition_Class_Reference`
 
@@ -45,14 +46,16 @@ some forms of `unsupervised learning <Composition_Learning_Unsupervised>` that a
 Creating an AutodiffComposition
 -------------------------------
 
-An AutodiffComposition can be created by calling its constructor, and then adding `Components <Component>` using the
-standard `Composition methods <Composition_Creation>` for doing so.  The constructor also includes a number of
-parameters that are specific to the AutodiffComposition (see `AutodiffComposition_Class_Reference` for a list of
-these parameters, and `examples <AutodiffComposition_Examples>` below).  Note that all of the Components in an
-AutodiffComposition must be able to be subject to `learning <Composition_Learning>`, but cannot include any
-`learning components <Composition_Learning_Components>` themselves.  Specifically, it cannot include any
-`ModulatoryMechanisms <ModulatoryMechanism>`, `LearningProjections <LearningProjection>`,
-or the ObjectiveMechanism <OBJECTIVE_MECHANISM>` used to compute the loss for learning.
+An AutodiffComposition can be created by calling its constructor, and then adding `Components <Component>` using
+the standard `Composition methods <Composition_Creation>` for doing so (e.g., `add_node <Compositon.add_node>`,
+`add_projection <Compositon.add_projection`,  `add_linear_processing_pathway
+<Compositon.add_linear_processing_pathway`, etc.).  The constructor also includes a number of parameters that are
+specific to the AutodiffComposition (see `AutodiffComposition_Class_Reference` for a list of these parameters,
+and `examples <AutodiffComposition_Examples>` below).  Note that all of the Components in an AutodiffComposition
+must be able to be subject to `learning <Composition_Learning>`, but cannot include any `learning components
+<Composition_Learning_Components>` themselves.  Specifically, it cannot include any `ModulatoryMechanisms
+<ModulatoryMechanism>`, `LearningProjections <LearningProjection>`, or the ObjectiveMechanism <OBJECTIVE_MECHANISM>`
+used to compute the loss for learning.
 
     .. _Autodiff_Learning_Components_Warning:
     .. warning::
@@ -93,11 +96,7 @@ Execution
 ---------
 
 COMMENT:
-- Execute learn method using Execute_mode == Python (uses Python) or LLVMRun (direct compilation) using `PyTorch
-<https://pytorch.org>`_ (see `example <BasicsAndPrimer_Rumelhart_Model>` in `BasicsAndPrimer`).  The
-AutodiffComposition constructor provides arguments for configuring the PyTorch implementation in various ways; the
-Composition is then built using the same methods (e.g., `add_node`, `add_projection`, `add_linear_processing_pathway`,
-etc.) as any other Composition.
+- Execute learn method using Execute_mode == Python (uses Python) or LLVMRun (direct compilation) using
 
 It can be run just as a standard Composition would - using `learn <AutodiffComposition.learn>` for learning mode,
 and `run <AutodiffComposition.run>` for test mode.
@@ -115,7 +114,7 @@ that are described in greater detail below.
 .. _AutodiffComopsition_LLVM:
 
 *LLVM mode*
-^^^^^^^^^^^
+~~~~~~~~~~~
 
 This is specified by setting **execution_mode = *ExecutionMode.LLVMRun* in the `learn <Composition.learn>` method
 of an AutodiffCompositon.  This provides the fastest performance, but is limited to `supervised learning
@@ -161,13 +160,21 @@ COMMENT
 .. _AutodiffComopsition_PyTorch:
 
 *PyTorch mode*
-^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~
 
 This is specified by setting **execution_mode = *ExecutionMode.PyTorch* in the `learn <Composition.learn>` method of
-an AutodiffCompositon. This is almost as fast as `LLVM compilation, but provides greater flexiblity.  Although it too
-is best suited for use with `supervised learning <Composition_Learning_Supervised>`, it can also be used for some
-forms of `unsupervised learning <Composition_Learning_Unsupervised>` that are supported in PyTorch (e.g.,
-`self-organized maps <https://github.com/giannisnik/som>`_).
+an AutodiffCompositon (see `example <BasicsAndPrimer_Rumelhart_Model>` in `BasicsAndPrimer`).  This automatically
+translates the AutodiffComposition to a `PyTorch <https://pytorch.org>`_ model and uses that for execution.  This is
+almost as fast as `LLVM compilation, but provides greater flexiblity.  Although it too is best suited for use with
+`supervised learning <Composition_Learning_Supervised>`, it can also be used for some forms of `unsupervised learning
+<Composition_Learning_Unsupervised>` that are supported in PyTorch (e.g., `self-organized maps
+<https://github.com/giannisnik/som>`_).
+
+.. note::
+   While specifying *ExecutionMode.PyTorch* in the `learn <Composition.learn>`  method of an AutodiffComposition
+   causes it to use PyTorch for training, specifying this in the `run <Compositon.run>` method causes it to be
+   executing using the *Python* interpreter (and not PyTorch);  this is so that any modulation can take effect during
+   execution (see `AutodiffComopsition_Modulation` below), which is not supported by PyTorch.
 
 .. technical_note::
    *ExecutionMode.PyTorch* is a synonym for *ExecutionMode.Python*, that is provided for clarity of the user interface:
@@ -183,6 +190,8 @@ forms of `unsupervised learning <Composition_Learning_Unsupervised>` that are su
 *Nested Execution*
 ~~~~~~~~~~~~~~~~~~
 
+FIX:
+
 Like any other `Composition`, an AutodiffComposition may be `nested inside another <Composition_Nested>`.
 (see `example <AutodiffComposition_Nested_Example>` below).
 
@@ -195,11 +204,17 @@ and all of its internal Components are accessible to other Components of the out
 to its internal Components is not needed during learning, an `AutodiffComposition` can be trained, and then used to
 execute the trained Composition like any other.
 
+.. note::
+   Specifying *ExecutionMode.LLVMRUn* in either the `learn <Composition.learn>` and `run <Composition.run>` methods
+   of an AutodiffComposition causes it to (attempt to) use compiled execution in both cases;  this is because
+   LLVM compilation supports the use of modulation in PsyNeuLink models.
 
 .. _AutodiffComopsition_Modulation:
 
 *Modulation*
-^^^^^^^^^^^^
+~~~~~~~~~~~~
+
+FIX:
 In both cases, if the AutodiffComposition has Components that are
 subject to `modulatory control <ModulatorySignal_Modulation>`, the effects of these are
 
@@ -226,7 +241,7 @@ logging parameters of components inside an AutodiffComposition; Currently, the o
 
 ------------------------------------
 
-.. _AutodiffComposition_Examples
+.. _AutodiffComposition_Examples:
 
 Examples
 --------
