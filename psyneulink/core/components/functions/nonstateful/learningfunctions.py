@@ -1702,6 +1702,10 @@ class BackPropagation(LearningFunction):
     Calculate and return a matrix of weight changes and weighted error signal from arrays of inputs, outputs and error
     terms.
 
+    This implements the standard form of the `backpropagation learning algorithm
+    <https://en.wikipedia.org/wiki/Backpropagation>`_, using a form of loss determined by the `error_signal
+    <LearningMechanism_Input_Error_Signal>` of the `LearningMechanism` to which it is assigned.
+
     `function <BackPropagation.function>` calculates a matrix of weight changes using the
     `backpropagation <https://en.wikipedia.org/wiki/Backpropagation>`_ (`Generalized Delta Rule
     <http://www.nature.com/nature/journal/v323/n6088/abs/323533a0.html>`_) learning algorithm, computed as:
