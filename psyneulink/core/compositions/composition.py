@@ -989,17 +989,31 @@ relative advantages and disadvantates of using a AutodiffComosition versus a Com
 and of the two modes of execution for an AutodiffComposition are outlined in the following table, and described
 in more detail below.
 
-+---------------+---------------+------------------------------------------------------------------------+
-|               |  Composition  |               **AutodiffComposition**                                  |
-+               +               +------------------------------------------------------------------------+
-|               |               |  AutodiffComp using **LLVMRun**    |    AutodiffComp using **PyTorch** |
-+---------------+---------------+------------------------------------------------------------------------+
-| Execution     |               |                                    |                                   |
-+---------------+---------------+------------------------------------+-----------------------------------+
-| Advantages    |               |                                    |                                   |
-+---------------+---------------+------------------------------------+-----------------------------------+
-| Disadvantages |               |                                    |                                   |
-+---------------+---------------+------------------------------------+-----------------------------------+
+                                     **Comparison of Execution Modes for Learning**
+.. table::
+    :align: center
+
+    +-----------------+------------------------+----------------------------------------------+
+    |                 |  **Composition**       |         **AutodiffCommposition**             |
+    +-----------------+------------------------+---------------------+------------------------+
+    |                 |      *Python*          |*Direct Compilation* |         *PyTorch*      |
+    +=================+========================+=====================+========================+
+    | execution_mode =|  ExecutionMode.Python  |ExecutionMode.LLVMRun| ExecutionMode.PyTorch  |
+    +-----------------+------------------------+---------------------+------------------------+
+    |  *learn()*      |  Python interpreted    |  LLVM compiled      |     PyTorch compiled   |
+    |                 |                        |                     |                        |
+    |  *run()*        |  Python interpreted    |  LLVM compiled      |     Python interpreted |
+    +-----------------+------------------------+---------------------+------------------------+
+    |  *Speed:*       |       slow             |     fastest         |           fast         |
+    +-----------------+------------------------+---------------------+------------------------+
+    |                 |* Backpropagation       |* Backpropagation    |* Backpropagation       |
+    |                 |* Reinforcement learning|                     |* RNN, inclduing LSTM   |
+    |  *Supports:*    |* Unspervised learning  |                     |* Unsupervised learning |
+    |                 |* modulation, inspection|                     |                        |
+    +-----------------+------------------------+---------------------+------------------------+
+
+TEXT
+
 
 COMMENT:
   TABLE:
@@ -1028,12 +1042,12 @@ COMMENT:
 COMMENT
 
 *LLVM mode*
-~~~~~~~~~~~
+^^^^^^^^^^^
 
 See `Compilation` for more information about executing a Composition in compiled mode.
 
-*PyTorch mode**
-~~~~~~~~~~~~~~~
+*PyTorch mode*
+^^^^^^^^^^^^^^
 
 In addition being limited to the use of BackPropgation learning
 First, because it relies on PyTorch, it is best suited for use with `supervised
