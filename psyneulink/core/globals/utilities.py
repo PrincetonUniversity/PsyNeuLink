@@ -459,6 +459,12 @@ def iscompatible(candidate, reference=None, **kargs):
         # ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
         pass
 
+    # If the two are the same thing, can settle it right here
+    # This is a common pattern for tests that use the same structure
+    # as default variable and variable
+    if reference is not None and candidate is reference:
+        return True
+
     # If args not provided, assign to default values
     # if not specified in args, use these:
     #     args[kwCompatibilityType] = list
