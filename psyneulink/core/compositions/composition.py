@@ -982,10 +982,10 @@ The advantage of using an AutodiffComposition is that it allows a model to be im
 exploit the acceleration of optimized implementations of learning. This can be achieved by executing the `learn
 <Composition.learn>` method in one of two modes (specified using its **execution_mode** argument):  using direct
 compilation (**execution_mode** = *ExecutionMode.LLVMRun*); or by automatically translating the model to `PyTorch
-<https://pytorch.org>`_ for training (**execution_mode** = *ExecutionMode.PyTorch*. The advantage of these modes
-is that they can provide as much as three orders of magnitude speed-up in training a model.  However, there are
-restrictions on the kinds of Compositions that be implemented in this way.  The features of the different ways to
-implement learning are outlined in the following table, and described in more detail below in `AutodiffComposition`.
+<https://pytorch.org>`_ for training (**execution_mode** = *ExecutionMode.PyTorch*). The advantage of these modes is
+that they can provide up to three orders of magnitude speed-up in training a model. However, there are restrictions
+on the kinds of Compositions that be implemented in this way.  The features of the different ways to implement and
+execute learning are outlined in the following table, and described in more detail in `AutodiffComposition`.
 
 .. _Composition_Compilation_Table:
 
