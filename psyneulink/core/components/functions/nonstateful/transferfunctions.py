@@ -2515,7 +2515,7 @@ class SoftMax(TransferFunction):
               0 for all others.
 
     per_item : boolean : default True
-        for 2d variables, determines whether the SoftMax function will be applied to the entire variable (per_item =
+        for 2d variables, determines whether the SoftMax function is applied to the entire variable (per_item =
         False), or applied to each item in the variable separately (per_item = True).
 
     bounds : None if `output <SoftMax.output>` == MAX_VAL, else (0,1) : default (0,1)
@@ -2849,9 +2849,12 @@ class SoftMax(TransferFunction):
         """
         derivative(output)
 
+        .. technical note::
+           If MAX_VAL is specified for the `output <SoftMax.output>` parameter, and there is a tie for the maximum
+           value, the element with the lower index is used to compute the derivative (see IMPLEMENTATION NOTE below).
+
         Returns
         -------
-
         derivative of values returned by SoftMax :  1d or 2d array (depending on *OUTPUT_TYPE* of SoftMax)
         """
 
@@ -2874,14 +2877,18 @@ class SoftMax(TransferFunction):
                 else:
                     d = 0
                 derivative[j, i] = sm[i] * (d - sm[j])
-
         elif output_type in {MAX_VAL, MAX_INDICATOR}:
             # Return 1d array of derivatives for max element (i.e., the one chosen by SoftMax)
             derivative = np.empty(size)
-            # Get the element of output returned as non-zero when output_type is not ALL
-            # FIX: SHOULDN'T THIS USE sm RATHER THAN output? (SUGGESTED BELOW, THOUGH INDEX MAY NEED TO BE MODIFIED?)
-            # index_of_max = int(np.where(sm == np.max(sm))[-1][0])
-            index_of_max = int(np.where(output == np.max(output))[-1][0])
+            # Get the element of output returned as non-zero (max val) when output_type is not ALL
+            # IMPLEMENTATION NOTES:
+            #    if there is a tie for max, this chooses the item in sm with the lowest index in sm:
+            index_of_max = int(np.where(sm == np.max(sm))[-1][0])
+            #    the following would randomly choose a value in case of a tie,
+            #    but may cause problems with compilation:
+            # index_of_max = np.where(sm == np.max(sm))[0]
+            # if len(index_of_max)>1:
+            #     index_of_max = int(np.random.choice(index_of_max))
             max_val = sm[index_of_max]
             for i in range(size):
                 if i == index_of_max:
@@ -2889,7 +2896,6 @@ class SoftMax(TransferFunction):
                 else:
                     d = 0
                 derivative[i] = sm[i] * (d - max_val)
-
         else:
             raise FunctionError("Can't assign derivative for SoftMax function{} since OUTPUT_TYPE is PROB "
                                 "(and therefore the relevant element is ambiguous)".format(self.owner_name))

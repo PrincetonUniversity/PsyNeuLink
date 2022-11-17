@@ -2800,9 +2800,8 @@ from psyneulink.core.globals.keywords import \
     AFTER, ALL, ALLOW_PROBES, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROL, CONTROL_SIGNAL, CONTROLLER, CROSS_ENTROPY, \
     DEFAULT, DICT, EUCLIDEAN, FEEDBACK, FULL, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX, \
     INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, KL_DIV, \
-    LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
-    MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, \
-    MODEL_SPEC_ID_METADATA, \
+    L0, LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
+    MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MODEL_SPEC_ID_METADATA, \
     MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, NODE, OBJECTIVE_MECHANISM, ONLINE, OUTCOME, \
     OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
     PARAMETER, PARAMETER_CIM_NAME, POISSON_NLL, PORT, \
@@ -7211,7 +7210,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies the type of `LearningFunction` to use for the `LearningMechanism` constructued for each
             `MappingProjection` in the **pathway**.
 
-        loss_function : MSE or SSE : default None
+        loss_function : MSE, SSE or L0 : default MSE
             specifies the loss function used if `BackPropagation` is specified as the **learning_function**
             (see `add_backpropagation_learning_pathway <Composition.add_backpropagation_learning_pathway>`).
 
@@ -7471,7 +7470,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                              pathway,
                                              learning_rate=0.05,
                                              error_function=None,
-                                             loss_function:tc.enum(MSE,SSE,CROSS_ENTROPY)=MSE,
+                                             loss_function:tc.enum(MSE,SSE,CROSS_ENTROPY,L0)=MSE,
                                              learning_update:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=AFTER,
                                              default_projection_matrix=None,
                                              name:str=None):
@@ -7492,9 +7491,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies the function assigned to `ComparatorMechanism` used to compute the error from the target and the
             output (`value <Mechanism_Base.value>`) of the `TARGET` (last) Mechanism in the **pathway**).
 
-        loss_function : MSE, SSE or CROSS_ENTROPY : default MSE
+        loss_function : MSE, SSE, L0 or CROSS_ENTROPY : default MSE
             specifies the loss function used in computing the error term;
-            MSE = mean squared error, and SSE = sum squared error.
+            MSE = mean squared error, SSE = sum squared error, and L0 = summed error
 
         learning_update : Optional[bool|ONLINE|AFTER] : default AFTER
             specifies when the `matrix <MappingProjection.matrix>` parameters of the `learned_projections` are updated
@@ -8011,21 +8010,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     VARIABLE: output_source.output_ports[0].value}
             target={NAME: TARGET,
                     VARIABLE: target_mechanism.output_ports[0].value}
-            if loss_function in {MSE, SSE, EUCLIDEAN, POISSON_NLL, KL_DIV}:
-                # error_function = default for Comparator (LinearCombination) =>  target - sample
-                sample.update({WEIGHT: -1})
-                if loss_function == SSE:
-                    output_ports = [OUTCOME, SSE]
-                else:
-                    output_ports = [OUTCOME, MSE]
-            elif loss_function == CROSS_ENTROPY:
-                # error function:  uses LinearCombination to implement cross_entropy: (SoftMax(sample), SoftMax(target))
+            if loss_function == CROSS_ENTROPY:
+                # error function:  use LinearCombination to implement cross_entropy: (SoftMax(sample), SoftMax(target))
                 sample.update({FUNCTION: SoftMax(output=ALL)})
                 target.update({FUNCTION: SoftMax(output=ALL)})
                 error_function = LinearCombination(operation=CROSS_ENTROPY)
                 output_ports = [OUTCOME, SUM]
             else:
-                raise CompositionError(f"Unsupported loss function for '{self.name}': {loss_function}.")
+                # error_function: use default for Comparator (LinearCombination) =>  target - sample
+                sample.update({WEIGHT: -1})
+                if loss_function == L0:
+                    output_ports = [OUTCOME, SUM]
+                elif loss_function == SSE:
+                    output_ports = [OUTCOME, SSE]
+                else:
+                    output_ports = [OUTCOME, MSE]
             objective_mechanism = ComparatorMechanism(name='Comparator',
                                                       sample=sample,
                                                       target=target,

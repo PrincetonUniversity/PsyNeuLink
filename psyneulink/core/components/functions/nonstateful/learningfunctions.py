@@ -37,8 +37,8 @@ from psyneulink.core.components.functions.nonstateful.transferfunctions import L
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import \
     CONTRASTIVE_HEBBIAN_FUNCTION, TDLEARNING_FUNCTION, LEARNING_FUNCTION_TYPE, LEARNING_RATE, \
-    KOHONEN_FUNCTION, GAUSSIAN, LINEAR, EXPONENTIAL, HEBBIAN_FUNCTION, RL_FUNCTION, BACKPROPAGATION_FUNCTION, MATRIX, \
-    MSE, SSE, CROSS_ENTROPY
+    KOHONEN_FUNCTION, GAUSSIAN, LINEAR, EXPONENTIAL, HEBBIAN_FUNCTION, RL_FUNCTION, BACKPROPAGATION_FUNCTION, \
+    MATRIX, MSE, SSE, L0, CROSS_ENTROPY
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import is_numeric, scalar_distance, convert_to_np_array
@@ -2149,17 +2149,17 @@ class BackPropagation(LearningFunction):
         # FIX: ADD SUPPORT FOR CROSS ENTROPY AGAINST TARGET OR, IN CASE OF SOFTMAX, AGAINST MOST ACTIVE?
         # Derivative of error with respect to output activity (contribution of each output unit to the error above)
         loss_function = self.parameters.loss_function.get(context)
-        if loss_function == MSE:
-            num_output_units = self._get_current_parameter_value(ERROR_SIGNAL, context).shape[0]
-            dE_dA = np.dot(error_matrix, self._get_current_parameter_value(ERROR_SIGNAL, context)) / num_output_units * 2
+        if loss_function == L0:
+            dE_dA = np.dot(error_matrix, self._get_current_parameter_value(ERROR_SIGNAL, context))
         elif loss_function == SSE:
             dE_dA = np.dot(error_matrix, self._get_current_parameter_value(ERROR_SIGNAL, context)) * 2
         else:
-            dE_dA = np.dot(error_matrix, self._get_current_parameter_value(ERROR_SIGNAL, context))
+            # Use MSE as default loss
+            num_output_units = self._get_current_parameter_value(ERROR_SIGNAL, context).shape[0]
+            dE_dA = np.dot(error_matrix, self._get_current_parameter_value(ERROR_SIGNAL, context)) / num_output_units * 2
 
         # Derivative of the output activity
         activation_output = self._get_current_parameter_value(ACTIVATION_OUTPUT, context)
-        # dA_dW = self.activation_derivative_fct(input=activation_input, output=activation_output, context=context)
         dA_dW = self.activation_derivative_fct(input=None, output=activation_output, context=context)
 
         # Chain rule to get the derivative of the error with respect to the weights
