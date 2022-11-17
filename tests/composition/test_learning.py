@@ -9,7 +9,7 @@ from psyneulink.core.compositions.composition import Composition, CompositionErr
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation
 import psyneulink.core.llvm as pnlvm
-from psyneulink.core.globals.keywords import MSE, SSE
+from psyneulink.core.globals.keywords import MSE, SSE, L0
 
 
 class TestTargetSpecs:
@@ -1827,7 +1827,8 @@ class TestBackProp:
         backprop_pathway = comp.add_backpropagation_learning_pathway(
             pathway=p,
             # loss_function=MSE,
-            loss_function=SSE,
+            # loss_function=SSE,
+            loss_function=L0,
             learning_rate=1.
         )
 
@@ -1845,7 +1846,7 @@ class TestBackProp:
             (output_layer.get_output_values(comp), [np.array([0.22686074, 0.25270212, 0.91542149])]),
             # # FIX: error here? why still MSE
             # (objective_output_layer.output_ports[pnl.MSE].parameters.value.get(comp), np.array(0.04082589331852094)),
-            (objective_output_layer.output_ports[pnl.SSE].parameters.value.get(comp), np.array(0.04082589331852094)),
+            (objective_output_layer.output_ports[pnl.SUM].parameters.value.get(comp), np.array(-0.39498435)),
             (input_weights.get_mod_matrix(comp), np.array([
                 [ 0.09900247, 0.19839653, 0.29785764, 0.39739191, 0.49700232],
                 [ 0.59629092, 0.69403786, 0.79203411, 0.89030237, 0.98885379],
