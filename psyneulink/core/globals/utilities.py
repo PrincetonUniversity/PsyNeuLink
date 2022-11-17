@@ -1267,10 +1267,8 @@ class ContentAddressableList(UserList):
         except TypeError:
             key_num = self._get_key_for_item(key)
             if key_num is None:
-                # raise TypeError("\'{}\' is not a key in the {} being addressed".
-                #                 format(key, self.__class__.__name__))
-                # raise KeyError("\'{}\' is not a key in {}".
-                raise TypeError(f"'{key}' is not a key in {self.name}.")
+                # raise TypeError(f"'{key}' is not a key in {self.name}.")
+                raise TypeError(f"'{key}' is not in {self.name}.")
             return self.data[key_num]
 
     def __setitem__(self, key, value):

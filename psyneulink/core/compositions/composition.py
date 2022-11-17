@@ -8012,7 +8012,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             target={NAME: TARGET,
                     VARIABLE: target_mechanism.output_ports[0].value}
             if loss_function == CROSS_ENTROPY:
-                # error function:  uses LinearCombination to implement cross_entropy: (SoftMax(sample), SoftMax(target))
+                # error function:  use LinearCombination to implement cross_entropy: (SoftMax(sample), SoftMax(target))
                 sample.update({FUNCTION: SoftMax(output=ALL)})
                 target.update({FUNCTION: SoftMax(output=ALL)})
                 error_function = LinearCombination(operation=CROSS_ENTROPY)
@@ -8024,8 +8024,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     output_ports = [OUTCOME, SSE]
                 else:
                     output_ports = [OUTCOME, MSE]
-            # else:
-            #     raise CompositionError(f"Unsupported loss function for '{self.name}': {loss_function}.")
             objective_mechanism = ComparatorMechanism(name='Comparator',
                                                       sample=sample,
                                                       target=target,
