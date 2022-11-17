@@ -202,32 +202,6 @@ def test_transfer_derivative_out(func, variable, params, expected, benchmark, fu
     res = benchmark(ex, variable)
     assert np.allclose(res, expected)
 
-
-derivative_test_data_out = [
-    (Functions.ReLU, test_var, {'gain':RAND1, 'bias':RAND2, 'leak':RAND3}, 0.241418620076574),
-    (Functions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_VAL}, 'per_item': False},
-     [-0.01068039, -0.01111811, -0.0108204, -0.01067026, -0.0103625,
-      -0.01093366, -0.01039741, -0.01160233,  0.09684744, -0.01026238]),
-]
-@pytest.mark.function
-@pytest.mark.transfer_function
-@pytest.mark.benchmark
-@pytest.mark.parametrize("func, variable, params, expected", derivative_test_data_out,
-                         ids=lambda x: getattr(x, 'name', None))
-def test_transfer_derivative_out(func, variable, params, expected, benchmark, func_mode):
-    f = func(default_variable=variable, **params)
-    benchmark.group = "TransferFunction " + func.componentName + " Derivative"
-    if func_mode == 'Python':
-        def ex(data):
-            return f.derivative(input=None, output=data)
-    elif func_mode == 'LLVM':
-        ex = pnlvm.execution.FuncExecution(f, tags=frozenset({"derivative_out"})).execute
-    elif func_mode == 'PTX':
-        ex = pnlvm.execution.FuncExecution(f, tags=frozenset({"derivative_out"})).cuda_execute
-
-    res = benchmark(ex, variable)
-    assert np.allclose(res, expected)
-
 def test_transfer_with_costs_function():
     f = Functions.TransferWithCosts()
     result = f(1)
