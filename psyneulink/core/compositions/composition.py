@@ -7210,7 +7210,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies the type of `LearningFunction` to use for the `LearningMechanism` constructued for each
             `MappingProjection` in the **pathway**.
 
-        loss_function : MSE, SSE or L0 : default MSE
+        loss_function : MSE, SSE, L0 or CROSS_ENTROPY: default MSE
             specifies the loss function used if `BackPropagation` is specified as the **learning_function**
             (see `add_backpropagation_learning_pathway <Composition.add_backpropagation_learning_pathway>`).
 
@@ -7470,7 +7470,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                              pathway,
                                              learning_rate=0.05,
                                              error_function=None,
-                                             loss_function:tc.enum(MSE,SSE,CROSS_ENTROPY,L0)=MSE,
+                                             loss_function:tc.enum(MSE,SSE,L0, CROSS_ENTROPY)=MSE,
                                              learning_update:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=AFTER,
                                              default_projection_matrix=None,
                                              name:str=None):
@@ -8100,6 +8100,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             default_variable = [input_source.output_ports[0].value,
                                 output_source.output_ports[0].value] + error_signal_template
 
+            # For non-terminal learning_mechanism, use L0 loss (ERROR_SIGNAL =simple difference) for derivative
             learning_function = BackPropagation(default_variable=[input_source.output_ports[0].value,
                                                                   output_source.output_ports[0].value,
                                                                   error_signal_template[0]],
