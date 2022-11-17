@@ -8100,10 +8100,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             default_variable = [input_source.output_ports[0].value,
                                 output_source.output_ports[0].value] + error_signal_template
 
-            # For non-terminal learning_mechanism, use L0 loss (ERROR_SIGNAL =simple difference) for derivative
             learning_function = BackPropagation(default_variable=[input_source.output_ports[0].value,
                                                                   output_source.output_ports[0].value,
                                                                   error_signal_template[0]],
+                                                # Insures error_signal is simply dot-producted with error_matrix
+                                                #    in BackPropagation Function:
                                                 loss_function=L0,
                                                 activation_derivative_fct=output_source.function.derivative,
                                                 learning_rate=learning_rate)
