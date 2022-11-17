@@ -1826,6 +1826,7 @@ class TestBackProp:
         backprop_pathway = comp.add_backpropagation_learning_pathway(
             pathway=p,
             loss_function=MSE,
+            # loss_function=SSE,
             learning_rate=1.
         )
 

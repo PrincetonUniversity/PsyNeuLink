@@ -8011,21 +8011,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     VARIABLE: output_source.output_ports[0].value}
             target={NAME: TARGET,
                     VARIABLE: target_mechanism.output_ports[0].value}
-            if loss_function in {MSE, SSE, EUCLIDEAN, POISSON_NLL, KL_DIV}:
-                # error_function = default for Comparator (LinearCombination) =>  target - sample
-                sample.update({WEIGHT: -1})
-                if loss_function == SSE:
-                    output_ports = [OUTCOME, SSE]
-                else:
-                    output_ports = [OUTCOME, MSE]
-            elif loss_function == CROSS_ENTROPY:
+            if loss_function == CROSS_ENTROPY:
                 # error function:  uses LinearCombination to implement cross_entropy: (SoftMax(sample), SoftMax(target))
                 sample.update({FUNCTION: SoftMax(output=ALL)})
                 target.update({FUNCTION: SoftMax(output=ALL)})
                 error_function = LinearCombination(operation=CROSS_ENTROPY)
                 output_ports = [OUTCOME, SUM]
             else:
-                raise CompositionError(f"Unsupported loss function for '{self.name}': {loss_function}.")
+                # error_function: use default for Comparator (LinearCombination) =>  target - sample
+                sample.update({WEIGHT: -1})
+                if loss_function == SSE:
+                    output_ports = [OUTCOME, SSE]
+                else:
+                    output_ports = [OUTCOME, MSE]
+            # else:
+            #     raise CompositionError(f"Unsupported loss function for '{self.name}': {loss_function}.")
             objective_mechanism = ComparatorMechanism(name='Comparator',
                                                       sample=sample,
                                                       target=target,
