@@ -1695,6 +1695,7 @@ class BackPropagation(LearningFunction):
         default_variable=None,                           \
         activation_derivative_fct=Logistic().derivative, \
         learning_rate=None,                              \
+        loss_function=None,                              \
         params=None,                                     \
         name=None,                                       \
         prefs=None)
@@ -1802,6 +1803,10 @@ class BackPropagation(LearningFunction):
         supersedes any specification for the `Process` and/or `System` to which the function's
         `owner <Function.owner>` belongs (see `learning_rate <BackPropagation.learning_rate>` for details).
 
+    loss_function : MSE, SSE, L0, CROSS_ENTROPY : default None
+        specifies the operation to apply to the error signal (i.e., method of calculating the derivative of the errror
+        with respect to activation) before computing weight changes.
+
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -1857,8 +1862,9 @@ class BackPropagation(LearningFunction):
     default_learning_rate : float
         the value used for the `learning_rate <BackPropagation.learning_rate>` if it is not otherwise specified.
 
-    loss_function : string : default 'MSE'
-        the operation to apply to the error signal before computing weight changes.
+    loss_function : MSE, SSE, L0 or None
+        the operation to apply to the error signal (i.e., method of calculating the derivative of the errror
+        with respect to activation) before computing weight changes.
 
     owner : Component
         `Mechanism <Mechanism>` to which the Function belongs.
@@ -2146,17 +2152,16 @@ class BackPropagation(LearningFunction):
         activation_input = self._get_current_parameter_value(ACTIVATION_INPUT, context)
         activation_input = np.array(activation_input).reshape(len(activation_input), 1)
 
-        # FIX: ADD SUPPORT FOR CROSS ENTROPY AGAINST TARGET OR, IN CASE OF SOFTMAX, AGAINST MOST ACTIVE?
         # Derivative of error with respect to output activity (contribution of each output unit to the error above)
         loss_function = self.parameters.loss_function.get(context)
-        if loss_function == L0:
-            dE_dA = np.dot(error_matrix, self._get_current_parameter_value(ERROR_SIGNAL, context))
+        if loss_function == MSE:
+            num_output_units = self._get_current_parameter_value(ERROR_SIGNAL, context).shape[0]
+            dE_dA = np.dot(error_matrix, self._get_current_parameter_value(ERROR_SIGNAL, context)) / num_output_units * 2
         elif loss_function == SSE:
             dE_dA = np.dot(error_matrix, self._get_current_parameter_value(ERROR_SIGNAL, context)) * 2
         else:
-            # Use MSE as default loss
-            num_output_units = self._get_current_parameter_value(ERROR_SIGNAL, context).shape[0]
-            dE_dA = np.dot(error_matrix, self._get_current_parameter_value(ERROR_SIGNAL, context)) / num_output_units * 2
+            # Use L0 (this applies to hidden layers)
+            dE_dA = np.dot(error_matrix, self._get_current_parameter_value(ERROR_SIGNAL, context))
 
         # Derivative of the output activity
         activation_output = self._get_current_parameter_value(ACTIVATION_OUTPUT, context)

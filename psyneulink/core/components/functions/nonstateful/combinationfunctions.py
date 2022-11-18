@@ -1029,7 +1029,7 @@ class LinearCombination(
 
     operation : SUM, PRODUCT or CROSS_ENTROPY : default SUM
         specifies whether the `function <LinearCombination.function>` takes the elementwise (Hadamarad)
-        sum or product of the arrays in `variable  <LinearCombination.variable>`.
+        sum, product or cross entropy of the arrays in `variable  <LinearCombination.variable>`.
 
     scale : float or np.ndarray : default None
         specifies a value by which to multiply each element of the result of `function <LinearCombination.function>`
@@ -1079,8 +1079,8 @@ class LinearCombination(
         <LinearCombination.weights>` (if any are specified).
 
     operation : SUM or PRODUCT
-        determines whether the `function <LinearCombination.function>` takes the elementwise (Hadamard) sum or
-        product of the arrays in `variable  <LinearCombination.variable>`.
+        determines whether the `function <LinearCombination.function>` takes the elementwise (Hadamard) sum,
+        product, or cross entropy of the arrays in `variable  <LinearCombination.variable>`.
 
     scale : float or np.ndarray
         value is applied multiplicatively to each element of the array after applying the

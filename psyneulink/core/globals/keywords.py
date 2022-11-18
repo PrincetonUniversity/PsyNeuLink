@@ -278,13 +278,6 @@ ENTROPY = 'cross-entropy'
 CROSS_ENTROPY = 'cross-entropy'
 ENERGY = 'energy'
 
-# Additional metrics / loss functions used for learning:
-MSE = 'MSE'
-SSE = 'SSE'
-KL_DIV = 'kldiv'
-NLL = 'nll'
-POISSON_NLL = 'poissonnll'
-
 DISTANCE_METRICS = DistanceMetrics()
 DISTANCE_METRICS_SET = DISTANCE_METRICS._set()
 DISTANCE_METRICS_VALUES = DISTANCE_METRICS._values()
@@ -293,6 +286,14 @@ DISTANCE_METRICS_NAMES = DISTANCE_METRICS._names()
 ENERGY = 'energy'
 ENTROPY = 'entropy'
 CONVERGENCE = 'CONVERGENCE'
+
+# Additional metrics / loss functions used for learning:
+MSE = 'MSE'
+SSE = 'SSE'
+KL_DIV = 'kldiv'
+NLL = 'nll'
+POISSON_NLL = 'poissonnll'
+
 
 
 # **********************************************************************************************************************

@@ -8103,9 +8103,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             learning_function = BackPropagation(default_variable=[input_source.output_ports[0].value,
                                                                   output_source.output_ports[0].value,
                                                                   error_signal_template[0]],
-                                                # Insures error_signal is simply dot-producted with error_matrix
-                                                #    in BackPropagation Function:
-                                                loss_function=L0,
+                                                loss_function=None,
                                                 activation_derivative_fct=output_source.function.derivative,
                                                 learning_rate=learning_rate)
 
