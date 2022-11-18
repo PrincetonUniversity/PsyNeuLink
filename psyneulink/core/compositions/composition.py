@@ -9910,10 +9910,10 @@ _
         execution_phase = context.execution_phase
         context.execution_phase = ContextFlags.PREPARING
 
-        from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
-        if execution_mode is pnlvm.ExecutionMode.PyTorch and not isinstance(self, AutodiffComposition):
-            warnings.warn(f"{pnlvm.ExecutionMode.PyTorch.name} is being used to execute {self.name} "
-                          f"but it is not an AutodiffComposition, therefore PyTorch will not be used.")
+        # from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
+        # if execution_mode is pnlvm.ExecutionMode.PyTorch and not isinstance(self, AutodiffComposition):
+        #     warnings.warn(f"{pnlvm.ExecutionMode.PyTorch.name} is being used to execute {self.name} "
+        #                   f"but it is not an AutodiffComposition, therefore PyTorch will not be used.")
 
         for node in self.nodes:
             num_execs = node.parameters.num_executions._get(context)

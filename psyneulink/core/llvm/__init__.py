@@ -86,7 +86,6 @@ class ExecutionMode(enum.Flag):
     PTXExec = PTX | _Exec
     PyTorch = Python
 
-
 _binary_generation = 0
 
 
