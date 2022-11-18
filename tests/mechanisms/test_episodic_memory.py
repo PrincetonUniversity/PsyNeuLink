@@ -195,20 +195,20 @@ test_data = [
 ]
 
 # Allows names to be with each test_data set
-names = [test_data[i][0] for i in range(len(test_data))]
+names = [td[0] for td in test_data]
 
 @pytest.mark.parametrize('name, func, func_params, mech_params, test_var,'
                          'input_port_names, output_port_names, expected_output', test_data, ids=names)
 def test_with_contentaddressablememory(name, func, func_params, mech_params, test_var,
                                        input_port_names, output_port_names, expected_output, mech_mode):
+    if mech_mode != 'Python':
+        pytest.skip("Compiled execution not yet implemented for ContentAddressableMemory")
+
     f = func(seed=0, **func_params)
     # EpisodicMemoryMechanism(function=f, **mech_params)
     em = EpisodicMemoryMechanism(function=f, **mech_params)
     assert em.input_ports.names == input_port_names
     assert em.output_ports.names == output_port_names
-
-    if mech_mode != 'Python':
-        pytest.skip("PTX not yet implemented for ContentAddressableMemory")
 
     EX = pytest.helpers.get_mech_execution(em, mech_mode)
 
