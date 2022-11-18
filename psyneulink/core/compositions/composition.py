@@ -989,24 +989,24 @@ execute learning are outlined in the following table, and described in more deta
 .. table::
     :align: left
 
-    +-----------------+------------------------+--------------------------------------------------+
-    |                 |  **Composition**       |          **AutodiffCommposition**                |
-    +-----------------+------------------------+-----------------------+--------------------------+
-    |                 |      *Python*          | *Direct Compilation*  |          *PyTorch*       |
-    +=================+========================+=======================+==========================+
-    | execution_mode =| `ExecutionMode.Python` |`ExecutionMode.LLVMRun`| `ExecutionMode.PyTorch`  |
-    +-----------------+------------------------+-----------------------+--------------------------+
-    |  *learn()*      |  Python interpreted    |   LLVM compiled       |      PyTorch compiled    |
-    |                 |                        |                       |                          |
-    |  *run()*        |  Python interpreted    |   LLVM compiled       |      Python interpreted  |
-    +-----------------+------------------------+-----------------------+--------------------------+
-    |  *Speed:*       |       slow             |      fastest          |            fast          |
-    +-----------------+------------------------+-----------------------+--------------------------+
-    |                 |* Backpropagation       | * Backpropagation     | * Backpropagation        |
-    |                 |* Reinforcement learning|                       | * RNN, inclduing LSTM    |
-    |  *Supports:*    |* Unspervised learning  |                       | * Unsupervised learning  |
-    |                 |* modulation, inspection|                       |                          |
-    +-----------------+------------------------+-----------------------+--------------------------+
+    +-----------------+------------------------+------------------------------------------------+
+    |                 |  **Composition**       |          **AutodiffComposition**               |
+    +-----------------+------------------------+-----------------------+------------------------+
+    |                 |      *Python*          | *Direct Compilation*  |         *PyTorch*      |
+    +=================+========================+=======================+========================+
+    | execution_mode =| `ExecutionMode.Python` |`ExecutionMode.LLVMRun`|`ExecutionMode.PyTorch` |
+    +-----------------+------------------------+-----------------------+------------------------+
+    |  *learn()*      |  Python interpreted    |   LLVM compiled       |     PyTorch compiled   |
+    |                 |                        |                       |                        |
+    |  *run()*        |  Python interpreted    |   LLVM compiled       |     Python interpreted |
+    +-----------------+------------------------+-----------------------+------------------------+
+    |  *Speed:*       |       slow             |      fastest          |           fast         |
+    +-----------------+------------------------+-----------------------+------------------------+
+    |                 |* Backpropagation       | * Backpropagation     |* Backpropagation       |
+    |                 |* Reinforcement learning|                       |* RNN, inclduing LSTM   |
+    |  *Supports:*    |* Unspervised learning  |                       |* Unsupervised learning |
+    |                 |* modulation, inspection|                       |                        |
+    +-----------------+------------------------+-----------------------+------------------------+
 
 
 .. _Composition_Learning_UDF:
@@ -1896,10 +1896,7 @@ that caused the failure), reverting to the Python interpreter if all compiled mo
 specified and fails, an error is generated indicating the unsupported feature that failed. The compiled modes,
 in order of their power, are:
 
-COMMENT:
-FIX: MOVE THE FOLLOWING TO llvm/__init__/ExecutionMode
-
-.. _Composition_Compilation_LLVM:
+.. _Composition_Compilation_Modes:
 
     * *True* -- try to use the one that yields the greatesst improvement, progressively reverting to less powerful
       but more forgiving modes, in the order listed below, for each that fails;
@@ -1919,32 +1916,40 @@ FIX: MOVE THE FOLLOWING TO llvm/__init__/ExecutionMode
 
     * `ExecutionMode.Python` (same as *False*; the default) -- use the Python interpreter to execute the `Composition`.
 
-    * `ExecutionMode.PyTorch` -- used only for `AutodiffCompositon`: executes `learn <AutodiffComposition.learn>`
-       using `PyTorch` and `run <AutodiffComposition.run>` using Python interpreter.
+    * `ExecutionMode.PyTorch` -- used only for `AutodiffComposition`: executes `learn <AutodiffComposition.learn>`
+       using `PyTorch` and `run <AutodiffComposition.run>` using Python interpreter (see `below
+       <Composition_Compilation_PyTorch>` for additional details).
+
+      .. warning::
+         For clarity, `ExecutionMode.PyTorch` should only be used when executing an `AutodiffComposition`;
+         using it with a standard `Composition` is possible, but it will **not** have the expected effect of
+         executing its `learn <Composition.learn>` method using PyTorch.
+
+    * `ExecutionMode.PTXrun` -- compile multiple `TRIAL <TimeScale.TRIAL>`\\s  for execution on GPU
+      (see `below <Composition_Compilation_PTX>` for additional details).
+
+    * `ExecutionMode.PTXExec` -- compile individual `TRIAL <TimeScale.TRIAL>`\\s  for execution on GPU
+      (see `below <Composition_Compilation_PTX>` for additional details).
 
 .. _Composition_Compilation_PyTorch:
 
 *PyTorch support.*  When using an `AutodiffComposition`, `ExecutionMode.PyTorch` can be used to execute its
-`learn <AutodiffComposition.learn>` method using Pytorch; however, it `run <AutodiffComposition.run>` method
+`learn <AutodiffComposition.learn>` method using Pytorch; however, its `run <AutodiffComposition.run>` method
 will execute using the Python interpreter.  See `Composition_Learning_AutodiffComposition` for additional details.
 
 .. _Composition_Compilation_PTX:
 
 *GPU support.*  In addition to compilation for CPUs, support is being developed for `CUDA
 <https://developer.nvidia.com/about-cuda>`_ capable `Invidia GPUs
-<https://en.wikipedia.org/wiki/List_of_Nvidia_graphics_processing_units>`_.  This can be invoked by specifying one
-of the following modes in the **execution_mode** argument of a `Composition execution method
-<Composition_Execution_Methods>`:
-
-    * `ExecutionMode.PTXExec` | `ExecutionMode.PTXRun` -- these are equivalent to the LLVM counterparts
-      but run in a single thread of a CUDA capable GPU.
-
-This requires that a working `pycuda package <https://documen.tician.de/pycuda/>`_ is
-`installed <https://wiki.tiker.net/PyCuda/Installation>`_, and that CUDA execution is explicitly enabled by setting
-the ``PNL_LLVM_DEBUG`` environment variable to ``cuda``.  At present compilation using these modes runs on a single
-GPU thread, and therefore does not produce any performance benefits over running in compiled mode on a CPU;  (see
-`this <https://github.com/PrincetonUniversity/PsyNeuLink/projects/1>`_ for progress extending support of parallization
-in compiled modes).
+<https://en.wikipedia.org/wiki/List_of_Nvidia_graphics_processing_units>`_.  This can be invoked by
+specifying either `ExecutionMode.PTXRun` or `ExecutionMode.PTXExec` oin the **execution_mode** argument
+of a `Composition execution method <Composition_Execution_Methods>`, which are equivalent to the LLVM
+counterparts but run in a single thread of a CUDA capable GPU. This requires that a working `pycuda package
+<https://documen.tician.de/pycuda/>`_ is `installed <https://wiki.tiker.net/PyCuda/Installation>`_, and that
+CUDA execution is explicitly enabled by setting the ``PNL_LLVM_DEBUG`` environment variable to ``cuda``.  At present
+compilation using these modes runs on a single GPU thread, and therefore does not produce any performance benefits
+over running in compiled mode on a CPU;  (see `this <https://github.com/PrincetonUniversity/PsyNeuLink/projects/1>`_
+for progress extending support of parallization in compiled modes).
 
 
 .. _Composition_Execution_Results_and_Reporting:
@@ -9846,13 +9851,12 @@ _
             for the current and all future runs of the Composition. See
             `Scheduler_Execution`
 
-        execution_mode : enum.Enum[Auto|LLVM|LLVMexec|LLVMRun|Python|PyTorch|PTXExec|PTXRun] : default Python
+        execution_mode : bool or ExecutionMode : default ExecutionMode.Python
             specifies whether to run using the Python interpreter or a `compiled mode <Composition_Compilation>`.
-            False is the same as ``Python``;  True tries LLVM compilation modes, in order of power, progressively
+            False uses the Python interpreter; True tries LLVM compilation modes, in order of power, progressively
             reverting to less powerful modes (in the order of the options listed), and to Python if no compilation
-            mode succeeds (see `Composition_Compilation` for explanation of modes). PyTorch specifies that the
-            `learn <AutodiffComposition.learn>` method of an `AutodiffComposition` should be executed using PyTorch.
-            PTX modes are used for CUDA compilation.
+            mode succeeds;  see `ExecutionMode` for other options, and `Compilation Modes
+            <Composition_Compilation_Modes>` for a more detailed explanation of their operation.
 
         default_absolute_time_unit : ``pint.Quantity`` : ``1ms``
             if not otherwise determined by any absolute **conditions**, specifies the absolute duration
@@ -9905,6 +9909,11 @@ _
         # MODIFIED 3/28/22 END
         execution_phase = context.execution_phase
         context.execution_phase = ContextFlags.PREPARING
+
+        from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
+        if execution_mode is pnlvm.ExecutionMode.PyTorch and not isinstance(self, AutodiffComposition):
+            warnings.warn(f"{pnlvm.ExecutionMode.PyTorch.name} is being used to execute {self.name} "
+                          f"but it is not an AutodiffComposition, therefore PyTorch will not be used.")
 
         for node in self.nodes:
             num_execs = node.parameters.num_executions._get(context)

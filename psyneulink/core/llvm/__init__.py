@@ -31,20 +31,21 @@ __all__ = ['LLVMBuilderContext', 'ExecutionMode']
 class ExecutionMode(enum.Flag):
     """Specify execution a `Composition` in interpreted or one of ithe compiled modes.
     These are used to specify the **execution_mode** argument of a Composition's `execute <Composition.execute>`,
-    `run <Composition.run>`, and `learn <Composition.learn>` methods.  See `Compilation <Composition_Compilation>`
-    for additional details.
+    `run <Composition.run>`, and `learn <Composition.learn>` methods.  See `Compiled Modes
+    <Composition_Compilation_Modes>` under `Compilation <Composition_Compilation>` for additional details concerning
+    use of each mode by a Composition.
 
     Attributes
     ----------
 
     Python
-        Execute using the Python interpreter;  this is the default mode.
+      Execute using the Python interpreter;  this is the default mode.
 
     LLVM
       compile and run Composition `Nodes <Composition_Nodes>` and `Projections <Projection>` individually.
 
     LLVMExec
-      compile and run each `TRIAL <TimeScale.TRIAL>`.
+      compile and run each `TRIAL <TimeScale.TRIAL>` individually.
 
     LLVMRun
       compile and run multiple `TRIAL <TimeScale.TRIAL>`\\s.
@@ -55,6 +56,11 @@ class ExecutionMode(enum.Flag):
     PyTorch
       execute the `AutodiffComposition` `learn <AutodiffComposition.learn>` method using PyTorch, and its
       `run <AutodiffComposition.run>` method using the Python interpreter.
+
+      .. warning::
+         For clarity, this mode should only be used when executing an `AutodiffComposition`; using it
+         with a standard `Composition` is possible, but it will **not** have the expected effect of executing
+         its `learn <Composition.learn>` method using PyTorch.
 
     PTX
       compile and run Composition `Nodes <Composition_Nodes>` and `Projections <Projection>` using CUDA for GPU.
