@@ -972,14 +972,14 @@ is no need to specify any `learning components <Composition_Learning_Components>
 `learning pathways <Composition_Learning_Pathway>` from all input to all output `Nodes <Composition_Nodes>`.
 While learning in an AutodiffComposition is restricted to the `BackPropagation` learning algorithm, its `loss
 function can be specified (using the **loss_spec** parameter of its constructor), which implements different kinds of
-`supervised learning <Composition_Learning_Supervised>` (for example, *MSE* can be used for regression,
-or **CROSS_ENTROPY** for classification).
+`supervised learning <Composition_Learning_Supervised>` (for example, `Loss.MSE` can be used for regression,
+or `Loss.CROSS_ENTROPY` for classification).
 
 The advantage of using an AutodiffComposition is that it allows a model to be implemented in PsyNeuLink, and then
 exploit the acceleration of optimized implementations of learning. This can be achieved by executing the `learn
 <Composition.learn>` method in one of two modes (specified using its **execution_mode** argument):  using direct
-compilation (**execution_mode** = *ExecutionMode.LLVMRun*); or by automatically translating the model to `PyTorch
-<https://pytorch.org>`_ for training (**execution_mode** = *ExecutionMode.PyTorch*). The advantage of these modes is
+compilation (**execution_mode** = `ExecutionMode.LLVMRun`); or by automatically translating the model to `PyTorch
+<https://pytorch.org>`_ for training (**execution_mode** = `ExecutionMode.PyTorch`). The advantage of these modes is
 that they can provide up to three orders of magnitude speed-up in training a model. However, there are restrictions
 on the kinds of Compositions that be implemented in this way.  The features of the different ways to implement and
 execute learning are outlined in the following table, and described in more detail in `AutodiffComposition`.
@@ -989,24 +989,24 @@ execute learning are outlined in the following table, and described in more deta
 .. table::
     :align: left
 
-    +-----------------+------------------------+----------------------------------------------+
-    |                 |  **Composition**       |         **AutodiffCommposition**             |
-    +-----------------+------------------------+---------------------+------------------------+
-    |                 |      *Python*          |*Direct Compilation* |         *PyTorch*      |
-    +=================+========================+=====================+========================+
-    | execution_mode =|  ExecutionMode.Python  |ExecutionMode.LLVMRun| ExecutionMode.PyTorch  |
-    +-----------------+------------------------+---------------------+------------------------+
-    |  *learn()*      |  Python interpreted    |  LLVM compiled      |     PyTorch compiled   |
-    |                 |                        |                     |                        |
-    |  *run()*        |  Python interpreted    |  LLVM compiled      |     Python interpreted |
-    +-----------------+------------------------+---------------------+------------------------+
-    |  *Speed:*       |       slow             |     fastest         |           fast         |
-    +-----------------+------------------------+---------------------+------------------------+
-    |                 |* Backpropagation       |* Backpropagation    |* Backpropagation       |
-    |                 |* Reinforcement learning|                     |* RNN, inclduing LSTM   |
-    |  *Supports:*    |* Unspervised learning  |                     |* Unsupervised learning |
-    |                 |* modulation, inspection|                     |                        |
-    +-----------------+------------------------+---------------------+------------------------+
+    +-----------------+------------------------+--------------------------------------------------+
+    |                 |  **Composition**       |          **AutodiffCommposition**                |
+    +-----------------+------------------------+-----------------------+--------------------------+
+    |                 |      *Python*          | *Direct Compilation*  |          *PyTorch*       |
+    +=================+========================+=======================+==========================+
+    | execution_mode =| `ExecutionMode.Python` |`ExecutionMode.LLVMRun`| `ExecutionMode.PyTorch`  |
+    +-----------------+------------------------+-----------------------+--------------------------+
+    |  *learn()*      |  Python interpreted    |   LLVM compiled       |      PyTorch compiled    |
+    |                 |                        |                       |                          |
+    |  *run()*        |  Python interpreted    |   LLVM compiled       |      Python interpreted  |
+    +-----------------+------------------------+-----------------------+--------------------------+
+    |  *Speed:*       |       slow             |      fastest          |            fast          |
+    +-----------------+------------------------+-----------------------+--------------------------+
+    |                 |* Backpropagation       | * Backpropagation     | * Backpropagation        |
+    |                 |* Reinforcement learning|                       | * RNN, inclduing LSTM    |
+    |  *Supports:*    |* Unspervised learning  |                       | * Unsupervised learning  |
+    |                 |* modulation, inspection|                       |                          |
+    +-----------------+------------------------+-----------------------+--------------------------+
 
 
 .. _Composition_Learning_UDF:
@@ -1896,29 +1896,35 @@ that caused the failure), reverting to the Python interpreter if all compiled mo
 specified and fails, an error is generated indicating the unsupported feature that failed. The compiled modes,
 in order of their power, are:
 
+COMMENT:
+FIX: MOVE THE FOLLOWING TO llvm/__init__/ExecutionMode
+
 .. _Composition_Compilation_LLVM:
 
     * *True* -- try to use the one that yields the greatesst improvement, progressively reverting to less powerful
       but more forgiving modes, in the order listed below, for each that fails;
 
-    * *ExecutionMode.LLVMRun* - compile and run multiple `TRIAL <TimeScale.TRIAL>`\\s; if successful,
+    * `ExecutionMode.LLVMRun` - compile and run multiple `TRIAL <TimeScale.TRIAL>`\\s; if successful,
       the compiled binary is semantically equivalent to the execution of the `run <Composition.run>` method
       using the Python interpreter;
 
-    * *ExecutionMode.LLVMExec* -- compile and run each `TRIAL <TimeScale.TRIAL>`, using the Python interpreter
+    * `ExecutionMode.LLVMExec` -- compile and run each `TRIAL <TimeScale.TRIAL>`, using the Python interpreter
       to iterate over them; if successful, the compiled binary for each `TRIAL <TimeScale.TRIAL>` is semantically
       equivalent the execution of the `execute <Composition.execute>` method using the Python interpreter;
 
-    * *ExecutionMode.LLVM* -- compile and run `Node <Composition_Nodes>` of the `Composition` and their `Projections
+    * `ExecutionMode.LLVM` -- compile and run `Node <Composition_Nodes>` of the `Composition` and their `Projections
       <Projection>`, using the Python interpreter to call the Composition's `scheduler <Composition.scheduler>`,
       execute each Node and iterate over `TRIAL <TimeScale.TRIAL>`\\s; note that, in this mode, scheduling
       `Conditions <Condition>` that rely on Node `Parameters` is not supported;
 
-    * *ExecutionMode.Python* (same as *False*; the default) -- use the Python interpreter to execute the `Composition`.
+    * `ExecutionMode.Python` (same as *False*; the default) -- use the Python interpreter to execute the `Composition`.
+
+    * `ExecutionMode.PyTorch` -- used only for `AutodiffCompositon`: executes `learn <AutodiffComposition.learn>`
+       using `PyTorch` and `run <AutodiffComposition.run>` using Python interpreter.
 
 .. _Composition_Compilation_PyTorch:
 
-*PyTorch support.*  When using an `AutodiffComposition`, *ExecutionMode.PyTorch* can be used to execute its
+*PyTorch support.*  When using an `AutodiffComposition`, `ExecutionMode.PyTorch` can be used to execute its
 `learn <AutodiffComposition.learn>` method using Pytorch; however, it `run <AutodiffComposition.run>` method
 will execute using the Python interpreter.  See `Composition_Learning_AutodiffComposition` for additional details.
 
@@ -1930,7 +1936,7 @@ will execute using the Python interpreter.  See `Composition_Learning_AutodiffCo
 of the following modes in the **execution_mode** argument of a `Composition execution method
 <Composition_Execution_Methods>`:
 
-    * *ExecutionMode.PTXExec | *ExecutionMode.PTXRun* -- these are equivalent to the LLVM counterparts
+    * `ExecutionMode.PTXExec` | `ExecutionMode.PTXRun` -- these are equivalent to the LLVM counterparts
       but run in a single thread of a CUDA capable GPU.
 
 This requires that a working `pycuda package <https://documen.tician.de/pycuda/>`_ is
@@ -2762,8 +2768,8 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentsMeta
 from psyneulink.core.components.functions.fitfunctions import make_likelihood_function
 from psyneulink.core.components.functions.function import is_function_type, RandomMatrix
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination, \
-    PredictionErrorDeltaFunction
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import \
+    LinearCombination, PredictionErrorDeltaFunction
 from psyneulink.core.components.functions.nonstateful.learningfunctions import \
     LearningFunction, Reinforcement, BackPropagation, TDLearning
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity, Logistic, SoftMax
@@ -2798,15 +2804,15 @@ from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHO
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     AFTER, ALL, ALLOW_PROBES, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROL, CONTROL_SIGNAL, CONTROLLER, CROSS_ENTROPY, \
-    DEFAULT, DICT, EUCLIDEAN, FEEDBACK, FULL, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX, \
-    INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, KL_DIV, \
-    L0, LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
+    DEFAULT, DICT, FEEDBACK, FULL, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX, \
+    INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
+    LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, Loss, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MODEL_SPEC_ID_METADATA, \
     MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, NODE, OBJECTIVE_MECHANISM, ONLINE, OUTCOME, \
     OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
-    PARAMETER, PARAMETER_CIM_NAME, POISSON_NLL, PORT, \
+    PARAMETER, PARAMETER_CIM_NAME, PORT, \
     PROCESSING_PATHWAY, PROJECTION, PROJECTION_TYPE, PROJECTION_PARAMS, PULSE_CLAMP, RECEIVER, \
-    SAMPLE, SENDER, SHADOW_INPUTS, SOFT_CLAMP, SSE, SUM, \
+    SAMPLE, SENDER, SHADOW_INPUTS, SOFT_CLAMP, SUM, \
     TARGET, TARGET_MECHANISM, TEXT, VARIABLE, WEIGHT, OWNER_MECH
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase, check_user_specified
@@ -2820,7 +2826,8 @@ from psyneulink.core.scheduling.scheduler import Scheduler, SchedulingMode
 from psyneulink.core.scheduling.time import Time, TimeScale
 from psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism import \
     AutoAssociativeLearningMechanism
-from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism, MSE
+from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import \
+    ComparatorMechanism, OUTCOME, MSE, SSE, L0, L1, CROSS_ENTROPY
 from psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism import \
     PredictionErrorMechanism
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
@@ -7210,7 +7217,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies the type of `LearningFunction` to use for the `LearningMechanism` constructued for each
             `MappingProjection` in the **pathway**.
 
-        loss_function : MSE, SSE, L0 or CROSS_ENTROPY: default MSE
+        loss_function : Loss : default Loss.MSE
             specifies the loss function used if `BackPropagation` is specified as the **learning_function**
             (see `add_backpropagation_learning_pathway <Composition.add_backpropagation_learning_pathway>`).
 
@@ -7470,7 +7477,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                              pathway,
                                              learning_rate=0.05,
                                              error_function=None,
-                                             loss_function:tc.enum(MSE,SSE,L0, CROSS_ENTROPY)=MSE,
+                                             loss_function:tc.enum(Loss)=Loss.MSE,
                                              learning_update:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=AFTER,
                                              default_projection_matrix=None,
                                              name:str=None):
@@ -7491,9 +7498,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies the function assigned to `ComparatorMechanism` used to compute the error from the target and the
             output (`value <Mechanism_Base.value>`) of the `TARGET` (last) Mechanism in the **pathway**).
 
-        loss_function : MSE, SSE, L0 or CROSS_ENTROPY : default MSE
-            specifies the loss function used in computing the error term;
-            MSE = mean squared error, SSE = sum squared error, and L0 = summed error
+        loss_function : Loss : default Loss.MSE
+            specifies the loss function used in computing the error term;  see `Loss` for values.
 
         learning_update : Optional[bool|ONLINE|AFTER] : default AFTER
             specifies when the `matrix <MappingProjection.matrix>` parameters of the `learned_projections` are updated
@@ -7750,7 +7756,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                  pathway,
                                                  learning_rate=0.05,
                                                  error_function=None,
-                                                 loss_function=MSE,
+                                                 loss_function=Loss.MSE,
                                                  learning_update=AFTER,
                                                  default_projection_matrix=None,
                                                  name=None,
@@ -7760,7 +7766,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if not error_function:
             error_function = LinearCombination()
         if not loss_function:
-            loss_function = MSE
+            loss_function = Loss.MSE
 
         # Add pathway to graph and get its full specification (includes all ProcessingMechanisms and MappingProjections)
         # Pass ContextFlags.INITIALIZING so that it can be passed on to _analyze_graph() and then
@@ -8000,7 +8006,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #                                                   VARIABLE: output_source.output_ports[0].value,
             #                                                   WEIGHT: -1},
             #                                           function=error_function,
-            #                                           output_ports=[OUTCOME, MSE],
+            #                                           output_ports=[OUTCOME, Loss.MSE],
             #                                           )
             # # MODIFIED 11/12/22 NEW:
             target_mechanism = ProcessingMechanism(name='Target',
@@ -8010,7 +8016,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     VARIABLE: output_source.output_ports[0].value}
             target={NAME: TARGET,
                     VARIABLE: target_mechanism.output_ports[0].value}
-            if loss_function == CROSS_ENTROPY:
+            if loss_function == Loss.CROSS_ENTROPY:
                 # error function:  use LinearCombination to implement cross_entropy: (SoftMax(sample), SoftMax(target))
                 sample.update({FUNCTION: SoftMax(output=ALL)})
                 target.update({FUNCTION: SoftMax(output=ALL)})
@@ -8019,9 +8025,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 # error_function: use default for Comparator (LinearCombination) =>  target - sample
                 sample.update({WEIGHT: -1})
-                if loss_function == L0:
+                if loss_function == Loss.L0:
                     output_ports = [OUTCOME, SUM]
-                elif loss_function == SSE:
+                elif loss_function == Loss.SSE:
                     output_ports = [OUTCOME, SSE]
                 else:
                     output_ports = [OUTCOME, MSE]

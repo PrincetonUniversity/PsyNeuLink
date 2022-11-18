@@ -53,8 +53,8 @@ class ExecutionMode(enum.Flag):
       progressively attempt LLVMRun, LLVMexec. LLVM and then Python.
 
     PyTorch
-      execute the `AutodiffComposition` `learn <AutodiffComposition.learn` method using PyTorch, and its
-      `run <AutodiffComposition.run` method using the Python interpreter.
+      execute the `AutodiffComposition` `learn <AutodiffComposition.learn>` method using PyTorch, and its
+      `run <AutodiffComposition.run>` method using the Python interpreter.
 
     PTX
       compile and run Composition `Nodes <Composition_Nodes>` and `Projections <Projection>` using CUDA for GPU.

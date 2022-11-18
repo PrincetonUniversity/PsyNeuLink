@@ -208,8 +208,8 @@ def construct_model(stim_size = STIM_SIZE,
                                RANDOM_WEIGHTS_INITIALIZATION),
                               name=FFN_COMPOSITION,
                               learning_rate=LEARNING_RATE,
-                              loss_spec=CROSS_ENTROPY
-                              # loss_spec=MSE
+                              loss_spec=Loss.CROSS_ENTROPY
+                              # loss_spec=Loss.MSE
                               )
 
     # FULL MODEL (Outer Composition, including input, EM and control Mechanisms) ------------------------

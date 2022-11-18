@@ -38,7 +38,7 @@ from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import \
     CONTRASTIVE_HEBBIAN_FUNCTION, TDLEARNING_FUNCTION, LEARNING_FUNCTION_TYPE, LEARNING_RATE, \
     KOHONEN_FUNCTION, GAUSSIAN, LINEAR, EXPONENTIAL, HEBBIAN_FUNCTION, RL_FUNCTION, BACKPROPAGATION_FUNCTION, \
-    MATRIX, MSE, SSE, L0, CROSS_ENTROPY
+    MATRIX, Loss
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import is_numeric, scalar_distance, convert_to_np_array
@@ -1803,7 +1803,7 @@ class BackPropagation(LearningFunction):
         supersedes any specification for the `Process` and/or `System` to which the function's
         `owner <Function.owner>` belongs (see `learning_rate <BackPropagation.learning_rate>` for details).
 
-    loss_function : MSE, SSE, L0, CROSS_ENTROPY : default None
+    loss_function : Loss : default None
         specifies the operation to apply to the error signal (i.e., method of calculating the derivative of the errror
         with respect to activation) before computing weight changes.
 
@@ -1862,7 +1862,7 @@ class BackPropagation(LearningFunction):
     default_learning_rate : float
         the value used for the `learning_rate <BackPropagation.learning_rate>` if it is not otherwise specified.
 
-    loss_function : MSE, SSE, L0 or None
+    loss_function : Loss or None
         the operation to apply to the error signal (i.e., method of calculating the derivative of the errror
         with respect to activation) before computing weight changes.
 
@@ -2154,10 +2154,10 @@ class BackPropagation(LearningFunction):
 
         # Derivative of error with respect to output activity (contribution of each output unit to the error above)
         loss_function = self.parameters.loss_function.get(context)
-        if loss_function == MSE:
+        if loss_function == Loss.MSE:
             num_output_units = self._get_current_parameter_value(ERROR_SIGNAL, context).shape[0]
             dE_dA = np.dot(error_matrix, self._get_current_parameter_value(ERROR_SIGNAL, context)) / num_output_units * 2
-        elif loss_function == SSE:
+        elif loss_function == Loss.SSE:
             dE_dA = np.dot(error_matrix, self._get_current_parameter_value(ERROR_SIGNAL, context)) * 2
         else:
             # Use L0 (this applies to hidden layers)

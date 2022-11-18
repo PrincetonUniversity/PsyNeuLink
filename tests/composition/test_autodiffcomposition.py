@@ -11,7 +11,7 @@ from psyneulink.core.components.functions.nonstateful.transferfunctions import L
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals import Context
-from psyneulink.core.globals.keywords import TRAINING_SET, POISSON_NLL, L1, CROSS_ENTROPY
+from psyneulink.core.globals.keywords import TRAINING_SET, Loss
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
@@ -252,7 +252,7 @@ class TestMiscTrainingFunctionality:
         # assert np.allclose(pt_weights_out_bp, pt_weights_out_ap)
 
     @pytest.mark.parametrize(
-        'loss', [L1, POISSON_NLL]
+        'loss', [Loss.L1, Loss.POISSON_NLL]
     )
     def test_various_loss_specs(self, loss, autodiff_mode):
         if autodiff_mode is not pnl.ExecutionMode.Python:
@@ -3162,7 +3162,7 @@ class TestBatching:
         m1 = pnl.TransferMechanism()
         p = pnl.MappingProjection()
         m2 = pnl.TransferMechanism()
-        adc = pnl.AutodiffComposition(loss_spec=CROSS_ENTROPY)
+        adc = pnl.AutodiffComposition(loss_spec=Loss.CROSS_ENTROPY)
 
         adc.add_linear_processing_pathway([m1, p, m2])
         adc._build_pytorch_representation()

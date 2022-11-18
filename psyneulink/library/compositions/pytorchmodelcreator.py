@@ -7,7 +7,7 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer, SGDOptimizer
 from psyneulink.library.compositions.compiledloss import MSELoss, CROSS_ENTROPYLoss
 from psyneulink.library.compositions.pytorchllvmhelper import *
-from psyneulink.core.globals.keywords import TARGET_MECHANISM, MSE, CROSS_ENTROPY
+from psyneulink.core.globals.keywords import TARGET_MECHANISM, Loss
 from psyneulink.core.globals.utilities import get_deepcopy_with_shared
 from .pytorchcomponents import *
 
@@ -274,9 +274,9 @@ class PytorchModelCreator(torch.nn.Module):
         optimizer = self._get_compiled_optimizer()
         # setup loss
         loss_type = self._composition.loss_spec
-        if loss_type == MSE:
+        if loss_type == Loss.MSE:
             loss = MSELoss()
-        elif loss_type == CROSS_ENTROPY:
+        elif loss_type == Loss.CROSS_ENTROPY:
             loss = CROSS_ENTROPYLoss()
         else:
             raise Exception("LOSS TYPE", loss_type, "NOT SUPPORTED")

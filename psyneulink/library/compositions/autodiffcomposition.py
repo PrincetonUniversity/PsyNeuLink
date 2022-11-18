@@ -115,7 +115,7 @@ that are described in greater detail below.
 *LLVM mode*
 ~~~~~~~~~~~
 
-This is specified by setting **execution_mode** = *ExecutionMode.LLVMRun* in the `learn <Composition.learn>` method
+This is specified by setting **execution_mode** = `ExecutionMode.LLVMRun` in the `learn <Composition.learn>` method
 of an AutodiffCompositon.  This provides the fastest performance, but is limited to `supervised learning
 <Composition_Learning_Supervised>` using the `BackPropagation` algorithm. This can be run using standard forms of
 loss, including mean squared error (MSE) and cross entropy, by specifying this in the **loss_spec** argument of
@@ -123,7 +123,7 @@ the constructor (see `AutodiffComposition <AutodiffComposition_Class_Reference>`
 `Compilation Modes <Composition_Compiled_Modes>` for more information about executing a Composition in compiled mode.
 
     .. note::
-       Specifying *ExecutionMode.LLVMRUn* in either the `learn <Composition.learn>` and `run <Composition.run>`
+       Specifying `ExecutionMode.LLVMRUn` in either the `learn <Composition.learn>` and `run <Composition.run>`
        methods of an AutodiffComposition causes it to (attempt to) use compiled execution in both cases; this is
        because LLVM compilation supports the use of modulation in PsyNeuLink models (as compared to `PyTorch mode
        <AutodiffComposition_PyTorch>`; see `note <AutodiffComposition_PyTorch_Note>` below).
@@ -133,8 +133,8 @@ COMMENT:
 The advantage of using an AutodiffComposition is that it allows a model to be implemented in PsyNeuLink, and then
 exploit the acceleration of optimized implementations of learning. This can be achieved by executing the `learn
 <Composition.learn>` method in one of two modes (specified using its **execution_mode** argument):  using direct
-compilation (**execution_mode** = *ExecutionMode.LLVMRun*); or by automatically translating the model to `PyTorch
-<https://pytorch.org>`_ for training (**execution_mode** = *ExecutionMode.PyTorch*). The advantage of these modes is
+compilation (**execution_mode** = `ExecutionMode.LLVMRun`); or by automatically translating the model to `PyTorch
+<https://pytorch.org>`_ for training (**execution_mode** = `ExecutionMode.PyTorch`). The advantage of these modes is
 that they can provide up to three orders of magnitude speed-up in training a model. However, there are restrictions
 on the kinds of Compositions that be implemented in this way.  The features of the different ways to implement and
 execute learning are outlined in the following table, and described in more detail in `AutodiffComposition`.
@@ -168,7 +168,7 @@ COMMENT
 *PyTorch mode*
 ~~~~~~~~~~~~~~
 
-This is specified by setting **execution_mode = *ExecutionMode.PyTorch* in the `learn <Composition.learn>` method of
+This is specified by setting **execution_mode = `ExecutionMode.PyTorch` in the `learn <Composition.learn>` method of
 an AutodiffCompositon (see `example <BasicsAndPrimer_Rumelhart_Model>` in `BasicsAndPrimer`).  This automatically
 translates the AutodiffComposition to a `PyTorch <https://pytorch.org>`_ model and uses that for execution.  This is
 almost as fast as `LLVM compilation <_AutodiffComposition_LLVM>`, but provides greater flexiblity.  Although it too is
@@ -179,17 +179,17 @@ maps <https://github.com/giannisnik/som>`_).
     .. _AutodiffComposition_PyTorch_Note:
 
     .. note::
-       While specifying *ExecutionMode.PyTorch* in the `learn <Composition.learn>`  method of an AutodiffComposition
+       While specifying `ExecutionMode.PyTorch` in the `learn <Composition.learn>`  method of an AutodiffComposition
        causes it to use PyTorch for training, specifying this in the `run <Compositon.run>` method causes it to be
        executing using the *Python* interpreter (and not PyTorch);  this is so that any modulation can take effect
        during execution (see `AutodiffComposition_Nested_Modulation` below), which is not supported by PyTorch.
 
 .. technical_note::
-   *ExecutionMode.PyTorch* is a synonym for *ExecutionMode.Python*, that is provided for clarity of the user interface:
+   `ExecutionMode.PyTorch` is a synonym for `ExecutionMode.Python`, that is provided for clarity of the user interface:
    the default for an AutodiffComposition (i.e., if **execution_mode** is not specified, or it is set to
-   *ExecutionMode.Python*) is to use PyTorch translation in `learn <Composition.learn>` but the Python interpreter
-   for `run <Composition.run>`.  The use of *ExecutionMode.PyTorch* is simply to make it clear that, during learning,
-   it will use PyTorch. This contrasts with the use of *ExecutionMode.LLVMrun*, in which case both the `learn
+   `ExecutionMode.Python`) is to use PyTorch translation in `learn <Composition.learn>` but the Python interpreter
+   for `run <Composition.run>`.  The use of `ExecutionMode.PyTorch` is simply to make it clear that, during learning,
+   it will use PyTorch. This contrasts with the use of `ExecutionMode.LLVMrun`, in which case both the `learn
    <Composition.learn>` and `run <Composition.run>` methods use LLVM compilation.
 
 
@@ -309,8 +309,7 @@ from psyneulink.core.compositions.report \
     import ReportOutput, ReportParams, ReportProgress, ReportSimulations, ReportDevices, \
     LEARN_REPORT, EXECUTE_REPORT, PROGRESS_REPORT
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
-from psyneulink.core.globals.keywords import \
-    AUTODIFF_COMPOSITION, SOFT_CLAMP, CROSS_ENTROPY, MSE, SSE, KL_DIV, NLL, POISSON_NLL, L1
+from psyneulink.core.globals.keywords import AUTODIFF_COMPOSITION, SOFT_CLAMP, Loss
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.scheduling.time import TimeScale
@@ -356,10 +355,8 @@ class AutodiffComposition(Composition):
     weight_decay : float : default 0
         specifies the L2 penalty (which discourages large weights) used by the optimizer.
 
-    loss_spec : str or PyTorch loss function : default MSE
-        specifies the loss function for training. The current string options are *MSE* (the default), *CROSS_ENTROPY*,
-        *l1*, *NLL*, *POISSON_NLL*, and *KL_DIV*. Any PyTorch loss function can work here, such as ones from
-        https://pytorch.org/docs/stable/nn.html#loss-functions
+    loss_spec : Loss or PyTorch loss function : default Loss.MSE
+        specifies the loss function for training; see `Loss` for arguments.
 
     Attributes
     ----------
@@ -394,7 +391,7 @@ class AutodiffComposition(Composition):
                  learning_rate=None,
                  optimizer_type='sgd',
                  weight_decay=0,
-                 loss_spec=MSE,
+                 loss_spec=Loss.MSE,
                  disable_learning=False,
                  refresh_losses=False,
                  disable_cuda=True,
@@ -481,13 +478,13 @@ class AutodiffComposition(Composition):
             return optim.Adam(params, lr=learning_rate, weight_decay=weight_decay)
 
     def _get_loss(self, loss_spec):
-        if not isinstance(self.loss_spec, str):
+        if not isinstance(self.loss_spec, (str, Loss)):
             return self.loss_spec
-        elif loss_spec == MSE:
+        elif loss_spec == Loss.MSE:
             return nn.MSELoss(reduction='mean')
-        elif loss_spec == SSE:
+        elif loss_spec == Loss.SSE:
             return nn.MSELoss(reduction='sum')
-        elif loss_spec == CROSS_ENTROPY:
+        elif loss_spec == Loss.CROSS_ENTROPY:
             # Cross entropy loss is used for multiclass categorization and needs inputs in shape
             # ((# minibatch_size, C), targets) where C is a 1-d vector of probabilities for each potential category
             # and where target is a 1d vector of type long specifying the index to the target category. This
@@ -498,20 +495,20 @@ class AutodiffComposition(Composition):
                     x.unsqueeze(0),
                     y.type(torch.LongTensor)
             )
-        elif loss_spec == L1:
+        elif loss_spec == Loss.L1:
             return nn.L1Loss(reduction='sum')
-        elif loss_spec == NLL:
+        elif loss_spec == Loss.NLL:
             return nn.NLLLoss(reduction='sum')
-        elif loss_spec == POISSON_NLL:
+        elif loss_spec == Loss.POISSON_NLL:
             return nn.PoissonNLLLoss(reduction='sum')
-        elif loss_spec == KL_DIV:
+        elif loss_spec == Loss.KL_DIV:
             return nn.KLDivLoss(reduction='sum')
         else:
-            raise AutodiffCompositionError("Loss type {} not recognized. Loss argument must be a string or function. "
-                                           "Currently, the recognized loss types are Mean Squared Error, Cross Entropy,"
-                                           " L1 loss, Negative Log Likelihood loss, Poisson Negative Log Likelihood, "
-                                           "and KL Divergence. These are specified as MSE, CROSS_ENTROPY, 'l1', "
-                                           "NLL, POISSONNLL, and KL_DIV respectively.".format(loss_spec))
+            raise AutodiffCompositionError(f"Loss type {loss_spec} not recognized. Loss argument must be a "
+                                           f"Loss enum or function. Currently, the recognized loss types are: "
+                                           f"L1 (Mean), SSE (sum squared error), CROSS_ENTROPY, NLL (negative log "
+                                           f"likelihood), POISSONNLL (Poisson negative log likelihood, "
+                                           f"and KL_DIV (KL divergence.")
 
     # performs learning/training on all input-target pairs it recieves for given number of epochs
     def autodiff_training(self, inputs, targets, context=None, scheduler=None):

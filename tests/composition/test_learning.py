@@ -9,8 +9,8 @@ from psyneulink.core.compositions.composition import Composition, CompositionErr
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation
 import psyneulink.core.llvm as pnlvm
-from psyneulink.core.globals.keywords import MSE, SSE, L0
-
+from psyneulink.core.globals.keywords import Loss
+from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import SSE, MSE, L0
 
 class TestTargetSpecs:
 
@@ -1777,7 +1777,7 @@ class TestBackPropLearning:
 
     expected_quantities = [
         (
-            L0,
+            Loss.L0,
             pnl.SUM,
             # output_layer output values
             [np.array([0.22686074, 0.25270212, 0.91542149])],
@@ -1810,7 +1810,7 @@ class TestBackPropLearning:
              [np.array([0.22686074, 0.25270212, 0.91542149])]]
         ),
         (
-            SSE,
+            Loss.SSE,
             SSE,
             # output_layer output values
             [np.array([0.12306101, 0.12855051, 0.92795179])],
@@ -1843,7 +1843,7 @@ class TestBackPropLearning:
              [np.array([0.12306101, 0.12855051, 0.92795179])]]
         ),
         (
-            MSE,
+            Loss.MSE,
             MSE,
             # output_layer output values
             [np.array([0.34065762, 0.40283722, 0.90991679])],
@@ -1879,7 +1879,7 @@ class TestBackPropLearning:
     # Indices into expected_quantities
     @pytest.mark.parametrize("expected_quantities", expected_quantities,
                              # Rename L0 for test output as keyword actually = 'difference'
-                             ids=['L0' if x[0] == L0 else x[0] for x in expected_quantities])
+                             ids=['L0' if x[0] == Loss.L0 else x[0].name for x in expected_quantities])
     def test_multilayer_truth(self, expected_quantities):
 
         LOSS_FUNCTION = 0
