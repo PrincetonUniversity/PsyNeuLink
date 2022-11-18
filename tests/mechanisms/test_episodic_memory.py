@@ -48,7 +48,7 @@ names = [
 @pytest.mark.parametrize('variable, func, params, expected', test_data, ids=names)
 def test_with_dictionary_memory(variable, func, params, expected, benchmark, mech_mode):
     f = func(seed=0, **params)
-    m = EpisodicMemoryMechanism(content_size=len(variable[0]), assoc_size=len(variable[1]), function=f)
+    m = EpisodicMemoryMechanism(size=len(variable[0]), assoc_size=len(variable[1]), function=f)
     EX = pytest.helpers.get_mech_execution(m, mech_mode)
 
     EX(variable)
