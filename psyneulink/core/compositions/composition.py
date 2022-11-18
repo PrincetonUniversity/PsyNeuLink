@@ -7276,7 +7276,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Preserve existing NodeRole.OUTPUT status for any non-learning-related nodes
         for node in self.get_nodes_by_role(NodeRole.OUTPUT):
-            if not any(node for node in [pathway for pathway in self.pathways
+            if not any(n for n in [pathway for pathway in self.pathways
                                      if PathwayRole.LEARNING in pathway.roles]):
                 self._add_required_node_role(node, NodeRole.OUTPUT, context)
 
@@ -9360,9 +9360,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Get number of trials of input specified for Port
                 num_trials = len(port_input)
                 if max_num_trials != 1 and num_trials not in {1, max_num_trials}:
-                    raise CompositionError(f"Number of trials of input specified for {port.full_name} of {node.name} "
-                                           f"({num_trials}) is different from the number ({max_num_trials}) "
-                                           f"specified for one or more others.")
+                    raise CompositionError(f"Number of trials of input specified for {port.full_name} of"
+                                           f"{INPUT_Node.name} ({num_trials}) is different from the"
+                                           f"number ({max_num_trials}) specified for one or more others.")
                 max_num_trials = max(num_trials, max_num_trials)
 
             # Construct node_input_shape based on max_num_trials across all input_ports for mech
@@ -10023,8 +10023,8 @@ _
         if not valid_reset_type:
             raise CompositionError(
                 f"{reset_stateful_functions_when} is not a valid specification for reset_integrator_nodes_when "
-                f"of {self.name}. reset_integrator_nodes_when must be a Condition or a dict comprised of "
-                f" {Node: Condition} pairs.")
+                f"of {self.name}. reset_integrator_nodes_when must be a Condition or a dict comprised of " +
+                "{Node: Condition pairs.")
 
         self._reset_stateful_functions_when_cache = {}
 
