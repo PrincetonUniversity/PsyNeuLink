@@ -1,4 +1,4 @@
-"""
+r"""
 Stimuli from `Kane et al., 2007 <https://psycnet.apa.org/record/2007-06096-010?doi=1>`_
 Constructed from unique stimuli:  B, F, H, K, M, Q, R, X
 

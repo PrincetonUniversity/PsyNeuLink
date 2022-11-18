@@ -1837,7 +1837,7 @@ class Report:
         # MODIFIED 11/12/22 END
             # Print output reports as they are created
             if self._rich_console or self._rich_divert:
-                if output_report.trial_report and report_type is EXECUTE_REPORT:
+                if output_report.trial_report and report_type == EXECUTE_REPORT:
                     self._rich_progress.console.print(output_report.trial_report)
                     self._rich_progress.console.print('')
                 elif output_report.run_report and report_type in {RUN_REPORT, COMPILED_REPORT}:

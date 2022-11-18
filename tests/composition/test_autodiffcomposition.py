@@ -1963,7 +1963,7 @@ class TestTrainingIdenticalness():
         inputs_dict_comp[nouns_in_comp] = inputs_dict[nouns_in]
         inputs_dict_comp[rels_in_comp] = inputs_dict[rels_in]
 
-        result = sem_net_autodiff.run(inputs=inputs_dict)
+        sem_net_autodiff.run(inputs=inputs_dict)
 
         # TRAIN AUTODIFFCOMPOSITION
         def g_f():
@@ -1971,7 +1971,7 @@ class TestTrainingIdenticalness():
                    "targets": targets_dict,
                    "epochs": eps}
         g = g_f()
-        result = sem_net_autodiff.learn(inputs=g_f)
+        sem_net_autodiff.learn(inputs=g_f)
 
         # SET UP COMPOSITION
         sem_net_comp = Composition()
@@ -2023,8 +2023,8 @@ class TestTrainingIdenticalness():
         inputs_dict_comp[backprop_pathway.target] = targets_dict[out_sig_can]
 
         # TRAIN COMPOSITION
-        results = sem_net_comp.learn(inputs=inputs_dict_comp,
-                                  num_trials=(len(inputs_dict_comp[nouns_in_comp]) * eps))
+        sem_net_comp.learn(inputs=inputs_dict_comp,
+                           num_trials=(len(inputs_dict_comp[nouns_in_comp]) * eps))
 
         # CHECK THAT PARAMETERS FOR AUTODIFFCOMPOSITION, COMPOSITION ARE SAME
 
@@ -2226,7 +2226,6 @@ class TestTrainingIdenticalness():
             }
 
         g = get_inputs_gen()
-
         result_gen = xor_gen.learn(inputs=g)
 
         # SET UP MECHANISMS FOR COMPOSITION
