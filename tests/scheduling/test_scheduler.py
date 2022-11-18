@@ -1592,7 +1592,8 @@ class TestFeedback:
                                                               time_step_size=1.0),
                         reset_stateful_function_when=pnl.AtTrialStart(),
                         execute_until_finished=False,
-                        output_ports=[pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME],
+                        # Use only the decision variable in this test
+                        output_ports=[pnl.DECISION_VARIABLE],
                         name='DDM')
 
         response = pnl.ProcessingMechanism(size=2, name="GATE")
