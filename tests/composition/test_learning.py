@@ -1779,7 +1779,7 @@ class TestBackPropLearning:
         (
             Loss.L0,
             # pnl.SUM.upper(),
-            pnl.SUM,
+            pnl.SUM.upper(),
             # output_layer output values
             [np.array([0.22686074, 0.25270212, 0.91542149])],
             # objective_mechanism.output_port[<LOSS>] value
@@ -1954,7 +1954,6 @@ class TestBackPropLearning:
                  num_trials=10)
 
         objective_output_layer = comp.nodes[5]
-
 
         expected_output = [
             (output_layer.get_output_values(comp), expected_quantities[OUTPUT_LAYER_VAL]),

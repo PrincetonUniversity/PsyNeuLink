@@ -320,7 +320,7 @@ class ComparatorMechanism(ObjectiveMechanism):
     # ComparatorMechanism parameter and control signal assignments):
 
     standard_output_ports = ObjectiveMechanism.standard_output_ports.copy()
-    standard_output_ports.extend([{NAME: SUM,
+    standard_output_ports.extend([{NAME: SUM.upper(),
                                    FUNCTION: lambda x: np.sum(x)},
                                   {NAME: Loss.SSE.name,
                                    FUNCTION: lambda x: np.sum(x * x)},
@@ -328,7 +328,7 @@ class ComparatorMechanism(ObjectiveMechanism):
                                    FUNCTION: lambda x: np.sum(x * x) / safe_len(x)}]
                                  )
     standard_output_port_names = ObjectiveMechanism.standard_output_port_names.copy()
-    standard_output_port_names.extend([SUM, Loss.SSE.name, Loss.MSE.name])
+    standard_output_port_names.extend([SUM.upper(), Loss.SSE.name, Loss.MSE.name])
 
     @check_user_specified
     @tc.typecheck
