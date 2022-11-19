@@ -64,6 +64,8 @@ import random
 import timeit
 from enum import IntEnum
 import warnings
+from pathlib import Path
+import os
 
 import numpy as np
 from graph_scheduler import *
@@ -600,7 +602,7 @@ def train_network(network,
     else:
         training_time_str = f'{int(training_time/60)} minutes {int(training_time%60)} seconds'
     print(f'training time: {training_time_str} for {num_epochs} epochs')
-    path = network.save(filename=save_weights_to)
+    path = network.save(filename=save_weights_to, directory="results")
     print(f'max weight: {np.max(nback_model.nodes[FFN_COMPOSITION].nodes[FFN_HIDDEN].efferents[0].matrix.base)}')
     print(f'saved weights to: {save_weights_to}')
     return path
@@ -802,19 +804,26 @@ def plot_results(response_and_trial_types, stats):
 
 nback_model = construct_model()
 
+
 if TRAIN:
-    weights_filename = f'ffn.wts_nep_{NUM_EPOCHS}_lr_{str(LEARNING_RATE).split(".")[1]}.pnl'
+    # weights_filename = f'ffn.wts_nep_{NUM_EPOCHS}_lr_{str(LEARNING_RATE).split(".")[1]}.pnl'
+    # weights_path = Path(os.getcwd() / f'nback.results_nep_{NUM_EPOCHS}_lr_{str(LEARNING_RATE).split(".")[1]}.pnl')
+    weights_path = Path('/'.join([os.getcwd(), f'nback.results_nep_{NUM_EPOCHS}_lr'
+                                             f'_{str(LEARNING_RATE).split(".")[1]}.pnl']))
     saved_weights = train_network(nback_model.nodes[FFN_COMPOSITION],
-                                  save_weights_to=weights_filename)
+                                  save_weights_to=weights_path)
 if RUN:
-    from pathlib import Path
-    import os
-    results_filename = f'nback.results_nep_{NUM_EPOCHS}_lr_{str(LEARNING_RATE).split(".")[1]}.pnl'
+    # results_filename = f'nback.results_nep_{NUM_EPOCHS}_lr_{str(LEARNING_RATE).split(".")[1]}.pnl'
+    # results_path = Path(os.getcwd() / f'nback.results_nep_{NUM_EPOCHS}_lr_{str(LEARNING_RATE).split(".")[1]}.pnl')
+    results_path = Path('/'.join([os.getcwd(), f'nback.results_nep_{NUM_EPOCHS}_lr'
+                                             f'_{str(LEARNING_RATE).split(".")[1]}.pnl']))
     results = run_model(nback_model,
                         # load_weights_from=Path(os.path.join(os.getcwd(),'ffn.wts_nep_1_lr_01.pnl')),
                         # load_weights_from=Path(os.path.join(os.getcwd(),'ffn.wts_nep_6250_lr_01.pnl')),
                         # load_weights_from=INITIALIZER
-                        save_results_to= results_filename)
+                        # save_results_to= results_filename
+                        save_results_to= results_path
+                        )
 if ANALYZE:
     coded_responses, stats = analyze_results(results,
                                              num_trials=NUM_TRIALS,

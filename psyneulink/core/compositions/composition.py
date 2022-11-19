@@ -8025,7 +8025,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # error function:  use LinearCombination to implement cross_entropy: (SoftMax(sample), SoftMax(target))
                 sample.update({FUNCTION: SoftMax(output=ALL)})
                 target.update({FUNCTION: SoftMax(output=ALL)})
-                error_function = LinearCombination(operation=CROSS_ENTROPY)
+                # error_function = LinearCombination(operation=CROSS_ENTROPY)
+                error_function = LinearCombination(operation='cross-entropy')
                 output_ports = [OUTCOME, SUM]
             else:
                 # error_function: use default for Comparator (LinearCombination) =>  target - sample
