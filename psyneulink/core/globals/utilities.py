@@ -1261,17 +1261,14 @@ class ContentAddressableList(UserList):
 
     def __getitem__(self, key):
         if key is None:
-            raise KeyError("None is not a legal key for {}".format(self.name))
+            raise KeyError(f"None is not a legal key for '{self.name}'.")
         try:
             return self.data[key]
         except TypeError:
             key_num = self._get_key_for_item(key)
             if key_num is None:
-                # raise TypeError("\'{}\' is not a key in the {} being addressed".
-                #                 format(key, self.__class__.__name__))
-                # raise KeyError("\'{}\' is not a key in {}".
-                raise TypeError("\'{}\' is not a key in {}".
-                                format(key, self.name))
+                # raise TypeError(f"'{key}' is not a key in {self.name}.")
+                raise TypeError(f"'{key}' is not in {self.name}.")
             return self.data[key_num]
 
     def __setitem__(self, key, value):

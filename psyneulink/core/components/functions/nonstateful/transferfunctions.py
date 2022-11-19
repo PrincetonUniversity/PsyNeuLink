@@ -28,6 +28,11 @@ Overview
 
 Functions that transform their variable but maintain its shape.
 
+.. _TransferFunction_StandardAttributes:
+
+Standard Attributes
+~~~~~~~~~~~~~~~~~~~
+
 All TransferFunctions have the following attributes:
 
 * **bounds**:  specifies the lower and upper limits of the result;  if there are none, the attribute is set to
@@ -38,6 +43,21 @@ All TransferFunctions have the following attributes:
   each of these is assigned the name of one of the function's
   parameters and used by `ModulatoryProjections <ModulatoryProjection>` to modulate the output of the
   TransferFunction's function (see `Function_Modulatory_Params`).
+
+.. _TransferFunction_Derivative:
+
+Derivatives
+~~~~~~~~~~~
+
+Most TransferFunctions have a derivative method.  These take both an **input** and **output** argument.  In general,
+the **input** is used to compute the derivative of the function at that value. If that is not provided, some
+Functions can compute the derivative using the function's output, either directly (such as `Logistic.derivative`) or by
+inferring the input from the **output** and then computing the derivative for that value (such as `ReLU.derivative`)
+
+
+TranferFunction Class References
+--------------------------------
+
 
 """
 
@@ -52,11 +72,11 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import parameter_keywords
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.function import (
     DEFAULT_SEED, Function, Function_Base, FunctionError, _random_state_getter, _seed_setter, function_keywords,
     get_matrix, is_function_type,
 )
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot
 from psyneulink.core.components.functions.stateful.integratorfunctions import SimpleIntegrator
 from psyneulink.core.components.shellclasses import Projection
@@ -1052,21 +1072,11 @@ class Logistic(TransferFunction):  # -------------------------------------------
         Deriviative of logistic transform at output:  number or array
 
         """
-        # FIX: BackPropagation PASSES IN SAME INPUT AND OUTPUT
-        # if (output is not None and input is not None and self.prefs.paramValidationPref):
-        #     if isinstance(input, numbers.Number):
-        #         valid = output == self.function(input, context=context)
-        #     else:
-        #         valid = all(output[i] == self.function(input, context=context)[i] for i in range(len(input)))
-        #     if not valid:
-        #         raise FunctionError("Value of {} arg passed to {} ({}) "
-        #                             "does not match the value expected for specified {} ({})".
-        #                             format(repr('output'), self.__class__.__name__ + '.' + 'derivative', output,
-        #                                    repr('input'), input))
-        #
+
         gain = self._get_current_parameter_value(GAIN, context)
         scale = self._get_current_parameter_value(SCALE, context)
 
+        # Favor use of output: compute it from input if it is not provided
         if output is None:
             output = self.function(input, context=context)
 
@@ -1599,9 +1609,11 @@ class ReLU(TransferFunction):  # -----------------------------------------------
     @handle_external_context()
     def derivative(self, input=None, output=None, context=None):
         """
-        derivative(input)
+        derivative(input or else output)
 
-        Derivative of `function <ReLU._function>` at **input**.
+        Derivative of `function <ReLU._function>` at **input** or **output**.  If **input** is specified, that
+        is used to compute the derivative;  if **input** is not specified, it is inferred from the **output**
+        and then used to compute the derivative.
 
         Arguments
         ---------
@@ -1613,8 +1625,8 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         -------
 
         derivative :  number or array
-
         """
+
         gain = self._get_current_parameter_value(GAIN, context)
         leak = self._get_current_parameter_value(LEAK, context)
         bias = self._get_current_parameter_value(BIAS, context)
@@ -2503,7 +2515,7 @@ class SoftMax(TransferFunction):
               0 for all others.
 
     per_item : boolean : default True
-        for 2d variables, determines whether the SoftMax function will be applied to the entire variable (per_item =
+        for 2d variables, determines whether the SoftMax function is applied to the entire variable (per_item =
         False), or applied to each item in the variable separately (per_item = True).
 
     bounds : None if `output <SoftMax.output>` == MAX_VAL, else (0,1) : default (0,1)
@@ -2837,9 +2849,12 @@ class SoftMax(TransferFunction):
         """
         derivative(output)
 
+        .. technical note::
+           If MAX_VAL is specified for the `output <SoftMax.output>` parameter, and there is a tie for the maximum
+           value, the element with the lower index is used to compute the derivative (see IMPLEMENTATION NOTE below).
+
         Returns
         -------
-
         derivative of values returned by SoftMax :  1d or 2d array (depending on *OUTPUT_TYPE* of SoftMax)
         """
 
@@ -2854,7 +2869,7 @@ class SoftMax(TransferFunction):
 
         output_type = self._get_current_parameter_value(OUTPUT_TYPE, context)
         if output_type == ALL:
-            # Return full Jacobian matrix of derivatives
+            # Return full Jacobian matrix of derivatives using Kronecker's delta method:
             derivative = np.empty([size, size])
             for i, j in np.ndindex(size, size):
                 if i == j:
@@ -2862,12 +2877,18 @@ class SoftMax(TransferFunction):
                 else:
                     d = 0
                 derivative[j, i] = sm[i] * (d - sm[j])
-
         elif output_type in {MAX_VAL, MAX_INDICATOR}:
             # Return 1d array of derivatives for max element (i.e., the one chosen by SoftMax)
             derivative = np.empty(size)
-            # Get the element of output returned as non-zero when output_type is not ALL
-            index_of_max = int(np.where(output == np.max(output))[-1][0])
+            # Get the element of output returned as non-zero (max val) when output_type is not ALL
+            # IMPLEMENTATION NOTES:
+            #    if there is a tie for max, this chooses the item in sm with the lowest index in sm:
+            index_of_max = int(np.where(sm == np.max(sm))[-1][0])
+            #    the following would randomly choose a value in case of a tie,
+            #    but may cause problems with compilation:
+            # index_of_max = np.where(sm == np.max(sm))[0]
+            # if len(index_of_max)>1:
+            #     index_of_max = int(np.random.choice(index_of_max))
             max_val = sm[index_of_max]
             for i in range(size):
                 if i == index_of_max:
@@ -2875,7 +2896,6 @@ class SoftMax(TransferFunction):
                 else:
                     d = 0
                 derivative[i] = sm[i] * (d - max_val)
-
         else:
             raise FunctionError("Can't assign derivative for SoftMax function{} since OUTPUT_TYPE is PROB "
                                 "(and therefore the relevant element is ambiguous)".format(self.owner_name))

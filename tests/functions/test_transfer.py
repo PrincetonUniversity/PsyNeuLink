@@ -1,8 +1,9 @@
 import numpy as np
-import psyneulink.core.llvm as pnlvm
+import pytest
+
 import psyneulink.core.components.functions.nonstateful.transferfunctions as Functions
 import psyneulink.core.globals.keywords as kw
-import pytest
+import psyneulink.core.llvm as pnlvm
 
 SIZE=10
 np.random.seed(0)
@@ -97,6 +98,7 @@ def test_execute(func, variable, params, expected, benchmark, func_mode):
 
 tanh_derivative_helper = (RAND1 * (test_var + RAND2) + RAND3)
 tanh_derivative_helper = (1 - np.tanh(tanh_derivative_helper)**2) * RAND4 * RAND1
+
 
 derivative_test_data = [
     (Functions.Linear, test_var, {kw.SLOPE:RAND1, kw.INTERCEPT:RAND2}, RAND1),
