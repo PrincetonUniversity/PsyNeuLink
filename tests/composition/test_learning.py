@@ -1778,7 +1778,8 @@ class TestBackPropLearning:
     expected_quantities = [
         (
             Loss.L0,
-            pnl.SUM.upper(),
+            # pnl.SUM.upper(),
+            pnl.SUM,
             # output_layer output values
             [np.array([0.22686074, 0.25270212, 0.91542149])],
             # objective_mechanism.output_port[<LOSS>] value

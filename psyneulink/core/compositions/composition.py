@@ -8013,13 +8013,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 target.update({FUNCTION: SoftMax(output=ALL)})
                 error_function = LinearCombination(operation=CROSS_ENTROPY)
                 # error_function = LinearCombination(operation='cross-entropy')
-                output_ports = [OUTCOME, SUM.upper()]
+                output_ports = [OUTCOME, SUM]
             else:
                 # error_function: use default for Comparator (LinearCombination) =>  target - sample
                 sample.update({WEIGHT: -1})
                 if loss_function == Loss.L0:
                     # output_ports = [OUTCOME, Loss.L0.name]
-                    output_ports = [OUTCOME, SUM.upper()]
+                    output_ports = [OUTCOME, SUM]
                 elif loss_function == Loss.SSE:
                     output_ports = [OUTCOME, Loss.SSE.name]
                 else:
