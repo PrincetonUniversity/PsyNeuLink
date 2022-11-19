@@ -10,7 +10,7 @@ from psyneulink.core.components.mechanisms.processing.transfermechanism import T
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation
 import psyneulink.core.llvm as pnlvm
 from psyneulink.core.globals.keywords import Loss
-from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import SSE, MSE, L0
+# from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import SSE, MSE, L0
 
 class TestTargetSpecs:
 
@@ -1778,7 +1778,7 @@ class TestBackPropLearning:
     expected_quantities = [
         (
             Loss.L0,
-            pnl.SUM,
+            pnl.SUM.upper(),
             # output_layer output values
             [np.array([0.22686074, 0.25270212, 0.91542149])],
             # objective_mechanism.output_port[<LOSS>] value
@@ -1811,7 +1811,7 @@ class TestBackPropLearning:
         ),
         (
             Loss.SSE,
-            SSE,
+            Loss.SSE.name,
             # output_layer output values
             [np.array([0.12306101, 0.12855051, 0.92795179])],
             # objective_mechanism.output_port[<LOSS>] value
@@ -1844,7 +1844,7 @@ class TestBackPropLearning:
         ),
         (
             Loss.MSE,
-            MSE,
+            Loss.MSE.name,
             # output_layer output values
             [np.array([0.34065762, 0.40283722, 0.90991679])],
             # objective_mechanism.output_port[<LOSS>] value
@@ -2518,7 +2518,7 @@ class TestBackPropLearning:
             (hidden_comp.output_ports[0].parameters.value.get(comp), np.array([0.13227553, 0.01990677])),
             (response_comp.output_ports[0].parameters.value.get(comp), np.array([0.51044657, 0.5483048])),
             (comp.nodes['Comparator'].output_ports[0].parameters.value.get(comp), np.array([0.48955343, 0.4516952])),
-            (comp.nodes['Comparator'].output_ports[pnl.MSE].parameters.value.get(comp), np.array(
+            (comp.nodes['Comparator'].output_ports[pnl.Loss.MSE.name].parameters.value.get(comp), np.array(
                     0.22184555903789838)),
             (comp.projections['MappingProjection from Color[RESULT] to Hidden[InputPort-0]'].get_mod_matrix(comp),
              np.array([

@@ -440,7 +440,8 @@ def iscompatible(candidate, reference=None, **kargs):
     try:
         with warnings.catch_warnings():
             warnings.simplefilter(action='ignore', category=FutureWarning)
-            if reference is not None and (candidate == reference):
+            # np.array(...).size > 0 checks for empty list. Everything else create single element (dtype=obejct) array
+            if reference is not None and np.array(candidate, dtype=object).size > 0 and (candidate == reference):
                 return True
             # if reference is not None:
             #     if (isinstance(reference, (bool, int, float))
@@ -457,6 +458,12 @@ def iscompatible(candidate, reference=None, **kargs):
         # IMPLEMENTATION NOTE: np.array generates the following error:
         # ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
         pass
+
+    # If the two are the same thing, can settle it right here
+    # This is a common pattern for tests that use the same structure
+    # as default variable and variable
+    if reference is not None and candidate is reference:
+        return True
 
     # If args not provided, assign to default values
     # if not specified in args, use these:
@@ -1031,7 +1038,7 @@ def type_match(value, value_type):
         return value
     if value_type in {int, np.integer, np.int64, np.int32}:
         return int(value)
-    if value_type in {float, np.float, np.float64, np.float32}:
+    if value_type in {float, np.float64, np.float32}:
         return float(value)
     if value_type is np.ndarray:
         return np.array(value)

@@ -2831,8 +2831,7 @@ from psyneulink.core.scheduling.scheduler import Scheduler, SchedulingMode
 from psyneulink.core.scheduling.time import Time, TimeScale
 from psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism import \
     AutoAssociativeLearningMechanism
-from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import \
-    ComparatorMechanism, OUTCOME, MSE, SSE, L0, L1, CROSS_ENTROPY
+from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 from psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism import \
     PredictionErrorMechanism
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
@@ -7631,7 +7630,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                       target={NAME: TARGET,
                                                               VARIABLE: [0.]},
                                                       function=error_function,
-                                                      output_ports=[OUTCOME, MSE],
+                                                      output_ports=[OUTCOME, Loss.MSE.name],
                                                       )
             learning_mechanism = LearningMechanism(
                                     function=learning_function(
@@ -7708,7 +7707,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                   target={NAME: TARGET,
                                                           VARIABLE: [0.]},
                                                   function=error_function,
-                                                  output_ports=[OUTCOME, MSE],
+                                                  output_ports=[OUTCOME, Loss.MSE.name],
                                                   )
 
         learning_mechanism = \
@@ -8001,19 +8000,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Otherwise, create new ones
         except KeyError:
-            # # MODIFIED 11/12/22 OLD:
-            # target_mechanism = ProcessingMechanism(name='Target',
-            #                                        default_variable=output_source.output_ports[0].value)
-            # objective_mechanism = ComparatorMechanism(name='Comparator',
-            #                                           target={NAME: TARGET,
-            #                                                   VARIABLE: target_mechanism.output_ports[0].value},
-            #                                           sample={NAME: SAMPLE,
-            #                                                   VARIABLE: output_source.output_ports[0].value,
-            #                                                   WEIGHT: -1},
-            #                                           function=error_function,
-            #                                           output_ports=[OUTCOME, Loss.MSE],
-            #                                           )
-            # # MODIFIED 11/12/22 NEW:
             target_mechanism = ProcessingMechanism(name='Target',
                                                    default_variable=output_source.output_ports[0].value)
             # Base for object_mechanism output_ports:
@@ -8025,24 +8011,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # error function:  use LinearCombination to implement cross_entropy: (SoftMax(sample), SoftMax(target))
                 sample.update({FUNCTION: SoftMax(output=ALL)})
                 target.update({FUNCTION: SoftMax(output=ALL)})
-                # error_function = LinearCombination(operation=CROSS_ENTROPY)
-                error_function = LinearCombination(operation='cross-entropy')
-                output_ports = [OUTCOME, SUM]
+                error_function = LinearCombination(operation=CROSS_ENTROPY)
+                # error_function = LinearCombination(operation='cross-entropy')
+                output_ports = [OUTCOME, SUM.upper()]
             else:
                 # error_function: use default for Comparator (LinearCombination) =>  target - sample
                 sample.update({WEIGHT: -1})
                 if loss_function == Loss.L0:
-                    output_ports = [OUTCOME, SUM]
+                    output_ports = [OUTCOME, Loss.L0.name]
                 elif loss_function == Loss.SSE:
-                    output_ports = [OUTCOME, SSE]
+                    output_ports = [OUTCOME, Loss.SSE.name]
                 else:
-                    output_ports = [OUTCOME, MSE]
+                    output_ports = [OUTCOME, Loss.MSE.name]
             objective_mechanism = ComparatorMechanism(name='Comparator',
                                                       sample=sample,
                                                       target=target,
                                                       function=error_function,
                                                       output_ports=output_ports)
-            # MODIFIED 11/12/22 END
 
         learning_function = BackPropagation(default_variable=[input_source.output_ports[0].value,
                                                               output_source.output_ports[0].value,

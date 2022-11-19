@@ -161,7 +161,7 @@ def test_predator_prey(benchmark, mode, prng, samples, fp_type):
 
     # note: unitization is done in main loop
     greedy_action_mech = pnl.ProcessingMechanism(function=action_fn, input_ports=["predator", "player", "prey"],
-                                                 default_variable=[[0,0],[0,0],[0,0]], name="ACTION")
+                                                 default_variable=[[0, 1], [0, -1], [1, 0]], name="ACTION")
 
     direct_move = ComparatorMechanism(name='DIRECT MOVE',sample=player_pos, target=prey_pos)
 

@@ -284,8 +284,7 @@ DISTANCE_METRICS_SET = DISTANCE_METRICS._set()
 DISTANCE_METRICS_VALUES = DISTANCE_METRICS._values()
 DISTANCE_METRICS_NAMES = DISTANCE_METRICS._names()
 
-ENERGY = 'energy'
-ENTROPY = 'entropy'
+# ENTROPY = 'entropy'
 CONVERGENCE = 'CONVERGENCE'
 
 
@@ -339,6 +338,7 @@ class Loss(Enum):
     KL_DIV = auto()
     NLL = auto()
     POISSON_NLL = auto()
+    SUM = L0
 
 
 # **********************************************************************************************************************
@@ -1005,6 +1005,7 @@ STANDARD_DEVIATION = 'standard_deviation'
 VARIANCE = 'variance'
 
 # Note:  These are used only as names of StandardOutputPorts (hence upper case)
+
 MAX_VAL = 'MAX_VAL'
 MAX_ABS_VAL = 'MAX_ABS_VAL'
 MAX_ONE_HOT = 'MAX_ONE_HOT'
@@ -1017,7 +1018,7 @@ MIN_INDICATOR = 'MIN_INDICATOR'
 MIN_ABS_INDICATOR = 'MIN_ABS_INDICATOR'
 PROB = 'PROB'
 PROB_INDICATOR = 'PROB_INDICATOR'
-MUTUAL_ENTROPY = 'mutual entropy'
+MUTUAL_ENTROPY = 'MUTUAL_ENTROPY'
 PER_ITEM = 'per_item'
 
 INITIALIZER = 'initializer'
