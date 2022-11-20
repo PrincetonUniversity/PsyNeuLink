@@ -2437,7 +2437,6 @@ class BinomialDistort(TransferFunction):  #-------------------------------------
     BinomialDistort(          \
          default_variable,    \
          p=0.05,              \
-         learning_only=False, \
          seed=None,           \
          params=None,         \
          owner=None,          \
@@ -2452,11 +2451,9 @@ class BinomialDistort(TransferFunction):  #-------------------------------------
 
     .. math::
 
-        [variable_i=0 if rand[0,1] > p and context.runmode & ContextFlags.LEARNING_MODE]
+       variable_i=0 \\ if \\ \\ rand[0,1] > p \\ else \\ variable_i
 
-    Note:
-
-    `derivative <Dropout.derivative>` returns `variable`
+    `derivative <Binomial.derivative>` returns `variable`
 
     Arguments
     ---------
@@ -2466,7 +2463,7 @@ class BinomialDistort(TransferFunction):  #-------------------------------------
         drawn.
 
     p : float : default 0.5
-        specifies the probability with which each element of `varible` is replaced with zero.
+        specifies the probability with which each element of `variable` is replaced with zero.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -2489,7 +2486,7 @@ class BinomialDistort(TransferFunction):  #-------------------------------------
         each element determines mean of the Gaussian distribution from which each sample is drawn.
 
     p : float
-        the probability with which each element of `varible` is replaced with zero.
+        the probability with which each element of `variable` is replaced with zero.
 
     random_state : numpy.RandomState
         private pseudorandom number generator
@@ -2510,7 +2507,7 @@ class BinomialDistort(TransferFunction):  #-------------------------------------
     componentName = BINOMIAL_DISTORT_FUNCTION
 
     classPreferences = {
-        PREFERENCE_SET_NAME: 'DropoutClassPreferences',
+        PREFERENCE_SET_NAME: 'BinomialClassPreferences',
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
@@ -2672,16 +2669,13 @@ class Dropout(TransferFunction):  #
 
     The `function <BinomialDistort._function>` is applied only during learning; otherwise it operates as the
     `Identity  <Identity>` Function. During learning, the output of the function is
-    scaled by a factor of **p** (:math: `\\frac{1}{(1-p)}`), which implements the inverse scaling form of `dropout
+    scaled by :math:`\\frac{1}{(1-p)}`, which implements the inverse scaling form of `dropout
     <https://pytorch.org/docs/stable/generated/torch.nn.Dropout.html?highlight=dropout>`_ used by by PyTorch.
 
     .. math::
 
-        [if context.runmode & ContextFlags.LEARNING_MODE:
-            if rand[0,1] > p:  output_i=0
-            else output_i = variable_i * frac{1}{(1-p)}`
-        else:
-            output[i] = variable[i]]
+       variable_i=0 \\ if \\ context.runmode == ContextFlags.LEARNING\\_MODE \\ and \\ rand[0,1] > p
+       \\ else \\ variable_i * \\frac{1}{(1-p)}
 
     .. _technical_note::
        **learning_only** uses ``context.runmode &`` `ContextFlags.LEARNING_MODE`
@@ -2696,7 +2690,7 @@ class Dropout(TransferFunction):  #
         specifies a template for the value to be transformed.
 
     p : float : default 0.5
-        specifies the probability with which each element of `varible` is replaced with zero.
+        specifies the probability with which each element of `variable` is replaced with zero.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -2719,7 +2713,7 @@ class Dropout(TransferFunction):  #
         contains value to be transformed.
 
     p : float
-        the probability with which each element of `varible` is replaced with zero.
+        the probability with which each element of `variable` is replaced with zero.
 
     random_state : numpy.RandomState
         private pseudorandom number generator
