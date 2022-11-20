@@ -97,8 +97,8 @@ from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, is_pref_set
 from psyneulink.core.globals.utilities import parameter_spec, safe_len
 
-__all__ = ['Angle', 'Dropout', 'Exponential', 'Gaussian', 'GaussianDistort', 'Identity', 'Linear', 'LinearMatrix',
-           'Logistic', 'ReLU', 'SoftMax', 'Tanh', 'TransferFunction', 'TransferWithCosts'
+__all__ = ['Angle', 'BinomialDistort', 'Dropout', 'Exponential', 'Gaussian', 'GaussianDistort', 'Identity',
+           'Linear', 'LinearMatrix', 'Logistic', 'ReLU', 'SoftMax', 'Tanh', 'TransferFunction', 'TransferWithCosts'
            ]
 
 class TransferFunction(Function_Base):
@@ -2848,6 +2848,7 @@ class Dropout(TransferFunction):  #
 
         else:
             # ??Not sure whether the following works with autograd (https://github.com/HIPS/autograd/issues/416)
+            p = p or self.defaults.p
             self.binomial_distort.parameters.p.set(p, context)
             result = self.binomial_distort(variable) * (1/(1-p))
 
