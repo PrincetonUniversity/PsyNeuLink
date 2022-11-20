@@ -2531,7 +2531,6 @@ class BinomialDistort(TransferFunction):  #-------------------------------------
 
         """
         p = Parameter(0.5, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        learning_only = Parameter(False, modulable=False)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
         bounds = (None, None)
@@ -2541,7 +2540,6 @@ class BinomialDistort(TransferFunction):  #-------------------------------------
     def __init__(self,
                  default_variable=None,
                  p: tc.optional(tc.optional(parameter_spec)) = None,
-                 learning_only:bool = False,
                  seed=None,
                  params=None,
                  owner=None,
@@ -2550,7 +2548,6 @@ class BinomialDistort(TransferFunction):  #-------------------------------------
         super().__init__(
             default_variable=default_variable,
             p=p,
-            learning_only=learning_only,
             seed=seed,
             params=params,
             owner=owner,
@@ -2609,24 +2606,20 @@ class BinomialDistort(TransferFunction):  #-------------------------------------
         Returns
         -------
 
-        variable with elements zeroed with probability p (if learning_only = False or during `learning
-        mode <ContextFlags.LEARNING_MODE>` : number or array
+        variable with elements zeroed with probability p : number or array
 
         """
         p = self._get_current_parameter_value('p', context)
-        learning_only = self._get_current_parameter_value('learning_only', context)
         random_state = self._get_current_parameter_value('random_state', context)
-
-        # FIX: IMPLEMENT AS IDENTITY FUNCTION (SEE Linear)
-        if learning_only and (context.runmode != ContextFlags.LEARNING_MODE):
-            result = variable
-
-        else:
-            # ??Not sure whether the following works with autograd (https://github.com/HIPS/autograd/issues/416)
-            q = 1/(1-p) # Scaling factor for inverse implementation of drop-out during training
-            result = variable * random_state.binomial(size=len(variable), n=1, p=p) * q
-
+        result = variable * random_state.binomial(size=len(variable), n=1, p=p)
         return self.convert_output_type(result)
+
+    def _is_identity(self, context=None, defaults=False):
+        if defaults:
+            p = self.defaults.p
+        else:
+            p = self.parameters.p._get(context)
+        return p == 0.0
 
     # def derivative(self, output, input=None, context=None):
     #     """
@@ -2687,7 +2680,7 @@ class Dropout(TransferFunction):  #
             if rand[0,1] > p:  output_i=0
             else output_i = variable_i * frac{1}{(1-p)}`
         else:
-            output[i] = variable[i]
+            output[i] = variable[i]]
 
     .. _technical_note::
        **learning_only** uses ``context.runmode &`` `ContextFlags.LEARNING_MODE`
@@ -2779,6 +2772,7 @@ class Dropout(TransferFunction):  #
                  params=None,
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None):
+        self.binomial_distort = BinomialDistort(default_variable=default_variable, p=p)
 
         super().__init__(
             default_variable=default_variable,
@@ -2842,41 +2836,25 @@ class Dropout(TransferFunction):  #
         Returns
         -------
 
-        variable with elements zeroed with probability p : number or array
+        During learning, variable with elements zeroed with probability p, else scaled by :math:`frac{1}{(1-p)}`;
+        otherwise returns variable : number or array
 
         """
         p = self._get_current_parameter_value('p', context)
-        q = 1/(1-p) # Scaling factor for inverse implementation of drop-out during training
-        random_state = self._get_current_parameter_value('random_state', context)
 
+        # FIX: IMPLEMENT AS IDENTITY FUNCTION (SEE Linear)
         if context.runmode != ContextFlags.LEARNING_MODE:
             result = variable
 
         else:
-            try:
-                # By default, result should be returned as ndarray with same dimensionality as input
-                result = variable * random_state.binomial(size=len(variable), n=1, p=p) * q
-            except TypeError:
-                if hasattr(variable, "dtype"):
-                    # If variable is an array with mixed sizes or types, try item-by-item operation
-                    if variable.dtype == object:
-                        result = np.zeros_like(variable)
-                        for i, item in enumerate(variable):
-                            result[i] = variable[i] * random_state.binomial(size=len(variable[i]), n=1, p=p) * q
-                    else:
-                        raise FunctionError("Unrecognized type for {} of {} ({})".format(VARIABLE, self.name, variable))
-                # KAM 6/28/18: If the variable does't have a "dtype" attr but made it to this line, then it must be of a
-                # type that even np does not recognize -- typically a custom OutputPort variable with items of different
-                # shapes (e.g. variable = [[0.0], [0.0], array([[0.0, 0.0]])] )
-                elif isinstance(variable, list):
-                    result = []
-                    for variable_item in variable:
-                        result.append(np.multiply(variable_item,
-                                                  random_state.binomial(size=len(variable_item), n=1, p=p) * q))
-                else:
-                    raise FunctionError("Unrecognized type for {} of {} ({})".format(VARIABLE, self.name, variable))
+            # ??Not sure whether the following works with autograd (https://github.com/HIPS/autograd/issues/416)
+            self.binomial_distort.parameters.p.set(p, context)
+            result = self.binomial_distort(variable) * (1/(1-p))
 
         return self.convert_output_type(result)
+
+    def _is_identity(self, context=None, defaults=False):
+        return context.run_mode != ContextFlags.LEARNING_MODE
 
     @handle_external_context()
     def derivative(self, input=None, output=None, context=None):
