@@ -1643,6 +1643,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         value = np.where(variable > 0, gain, gain * leak)
         return value
 
+
 # **********************************************************************************************************************
 #                                                    Angle
 # **********************************************************************************************************************
@@ -2842,7 +2843,6 @@ class Dropout(TransferFunction):  #
         """
         p = self._get_current_parameter_value('p', context)
 
-        # FIX: IMPLEMENT AS IDENTITY FUNCTION (SEE Linear)
         if context.runmode != ContextFlags.LEARNING_MODE:
             result = variable
 
@@ -2855,7 +2855,12 @@ class Dropout(TransferFunction):  #
         return self.convert_output_type(result)
 
     def _is_identity(self, context=None, defaults=False):
-        return context.run_mode != ContextFlags.LEARNING_MODE
+        if defaults:
+            p = self.defaults.p
+        else:
+            p = self.parameters.p._get(context)
+
+        return (context.run_mode != ContextFlags.LEARNING_MODE) or (p == 0.0)
 
     @handle_external_context()
     def derivative(self, input=None, output=None, context=None):
