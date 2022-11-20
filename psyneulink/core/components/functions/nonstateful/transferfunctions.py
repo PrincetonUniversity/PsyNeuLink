@@ -2447,18 +2447,7 @@ class BinomialDistort(TransferFunction):  #-------------------------------------
     .. _BinomialDistort:
 
     `function <BinomialDistort._function>` returns `variable <BinomialDistort.variable>` with elements randomly
-    zeroed with probability **p**.
-
-    .. _BinomialDistort_Learning_Only:
-
-    If **learning_only** = True, then `function <BinomialDistort._function>` is applied only during learning,
-    and otherwise operates as the `Identity <Identity>` Function. During learning, the output of the function is
-    scaled by a factor of **p** (:math: `\\frac{1}{(1-p)}`), which implements the inverse scaling form of `dropout
-    <https://pytorch.org/docs/stable/generated/torch.nn.Dropout.html?highlight=dropout>`_ used by by PyTorch.
-
-    .. _technical_note::
-       **learning_only** uses ``context.runmode &`` `ContextFlags.LEARNING_MODE`
-       to determine when learning is in effect
+    zeroed with probability **p**:
 
     .. math::
 
@@ -2477,10 +2466,6 @@ class BinomialDistort(TransferFunction):  #-------------------------------------
 
     p : float : default 0.5
         specifies the probability with which each element of `varible` is replaced with zero.
-
-    learn_only : bool : default False
-        specifies whether `function <BinomialDistort._function>` is applied only during learning
-        (see `learning_only <BinomialDistort_Learning_Only>` for additional information).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -2504,10 +2489,6 @@ class BinomialDistort(TransferFunction):  #-------------------------------------
 
     p : float
         the probability with which each element of `varible` is replaced with zero.
-
-    learning_only : bool
-        specifies whether `function <BinomialDistort._function>` is applied only during learning
-        (see `learning_only <BinomialDistort_Learning_Only>` for additional information).
 
     random_state : numpy.RandomState
         private pseudorandom number generator
@@ -2536,12 +2517,6 @@ class BinomialDistort(TransferFunction):  #-------------------------------------
         """
             Attributes
             ----------
-                learning_only
-                    see `p <BinomialDistort.learning_only>`
-
-                    :default value: False
-                    :type: ``bool``
-
                 p
                     see `p <BinomialDistort.p>`
 
@@ -2699,13 +2674,24 @@ class Dropout(TransferFunction):  #
     .. _Dropout:
 
     `function <Dropout._function>` returns `variable <Dropout.variable>` with elements randomly zeroed with
-    probability **p** if context.runmode in `ContextFlags.LEARNING_MODE`:
+    probability **p** if context.runmode in `ContextFlags.LEARNING_MODE`.
+
+    The `function <BinomialDistort._function>` is applied only during learning; otherwise it operates as the
+    `Identity  <Identity>` Function. During learning, the output of the function is
+    scaled by a factor of **p** (:math: `\\frac{1}{(1-p)}`), which implements the inverse scaling form of `dropout
+    <https://pytorch.org/docs/stable/generated/torch.nn.Dropout.html?highlight=dropout>`_ used by by PyTorch.
 
     .. math::
 
-        [variable_i=0 if rand[0,1] > p and context.runmode & ContextFlags.LEARNING_MODE]
+        [if context.runmode & ContextFlags.LEARNING_MODE:
+            if rand[0,1] > p:  output_i=0
+            else output_i = variable_i * frac{1}{(1-p)}`
+        else:
+            output[i] = variable[i]
 
-    Note:
+    .. _technical_note::
+       **learning_only** uses ``context.runmode &`` `ContextFlags.LEARNING_MODE`
+       to determine when learning is in effect
 
     `derivative <Dropout.derivative>` returns `variable`
 
