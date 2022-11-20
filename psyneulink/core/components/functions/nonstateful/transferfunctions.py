@@ -22,6 +22,7 @@
 * `SoftMax`
 * `LinearMatrix`
 * `TransferWithCosts`
+* `Dropout`
 
 Overview
 --------
@@ -82,7 +83,7 @@ from psyneulink.core.components.functions.stateful.integratorfunctions import Si
 from psyneulink.core.components.shellclasses import Projection
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    ADDITIVE_PARAM, ALL, ANGLE_FUNCTION, BIAS, EXPONENTIAL_FUNCTION, \
+    ADDITIVE_PARAM, ALL, ANGLE_FUNCTION, BIAS, DROPOUT_FUNCTION, EXPONENTIAL_FUNCTION, \
     GAIN, GAUSSIAN_DISTORT_FUNCTION, GAUSSIAN_FUNCTION, HAS_INITIALIZERS, HOLLOW_MATRIX, \
     IDENTITY_FUNCTION, IDENTITY_MATRIX, INTERCEPT, LEAK, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, \
     TANH_FUNCTION, MATRIX_KEYWORD_NAMES, MATRIX, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, MULTIPLICATIVE_PARAM, \
@@ -95,7 +96,7 @@ from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, is_pref_set
 from psyneulink.core.globals.utilities import parameter_spec, safe_len
 
-__all__ = ['Angle', 'Exponential', 'Gaussian', 'GaussianDistort', 'Identity', 'Linear', 'LinearMatrix',
+__all__ = ['Angle', 'Dropout', 'Exponential', 'Gaussian', 'GaussianDistort', 'Identity', 'Linear', 'LinearMatrix',
            'Logistic', 'ReLU', 'SoftMax', 'Tanh', 'TransferFunction', 'TransferWithCosts'
            ]
 
@@ -2101,7 +2102,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         ---------
 
         variable : number or array : default class_defaults.variable
-           a single value or array to be transformed.
+           a single value or array to be distorted by Guassian distribution.
 
         params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -2426,6 +2427,259 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
 
 
 # **********************************************************************************************************************
+#                                               BinomialDistort
+# **********************************************************************************************************************
+
+class BinomialDistort(TransferFunction):  #-----------------------------------------------------------------------------
+    """
+    BinomialDistort(          \
+         default_variable,    \
+         p=0.05,              \
+         learning_only=False, \
+         seed=None,           \
+         params=None,         \
+         owner=None,          \
+         name=None,           \
+         prefs=None           \
+         )
+
+    .. _BinomialDistort:
+
+    `function <BinomialDistort._function>` returns `variable <BinomialDistort.variable>` with elements randomly
+    zeroed with probability **p**.
+
+    .. _BinomialDistort_Learning_Only:
+
+    If **learning_only** = True, then `function <BinomialDistort._function>` is applied only during learning,
+    and otherwise operates as the `Identity <Identity>` Function. During learning, the output of the function is
+    scaled by a factor of **p** (:math: `\\frac{1}{(1-p)}`), which implements the inverse scaling form of `dropout
+    <https://pytorch.org/docs/stable/generated/torch.nn.Dropout.html?highlight=dropout>`_ used by by PyTorch.
+
+    .. _technical_note::
+       **learning_only** uses ``context.runmode &`` `ContextFlags.LEARNING_MODE`
+       to determine when learning is in effect
+
+    .. math::
+
+        [variable_i=0 if rand[0,1] > p and context.runmode & ContextFlags.LEARNING_MODE]
+
+    Note:
+
+    `derivative <Dropout.derivative>` returns `variable`
+
+    Arguments
+    ---------
+
+    default_variable : number or array : default class_defaults.variable
+        specifies a template for the value(s) used as the mean of the Guassian distribution from which each sample is
+        drawn.
+
+    p : float : default 0.5
+        specifies the probability with which each element of `varible` is replaced with zero.
+
+    learn_only : bool : default False
+        specifies whether `function <BinomialDistort._function>` is applied only during learning
+        (see `learning_only <BinomialDistort_Learning_Only>` for additional information).
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    variable : number or array
+        each element determines mean of the Gaussian distribution from which each sample is drawn.
+
+    p : float
+        the probability with which each element of `varible` is replaced with zero.
+
+    learning_only : bool
+        specifies whether `function <BinomialDistort._function>` is applied only during learning
+        (see `learning_only <BinomialDistort_Learning_Only>` for additional information).
+
+    random_state : numpy.RandomState
+        private pseudorandom number generator
+
+    owner : Component
+        `component <Component>` to which the Function has been assigned.
+
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
+    """
+
+    componentName = BINOMIAL_DISTORT_FUNCTION
+
+    classPreferences = {
+        PREFERENCE_SET_NAME: 'DropoutClassPreferences',
+        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+    }
+
+    class Parameters(TransferFunction.Parameters):
+        """
+            Attributes
+            ----------
+                learning_only
+                    see `p <BinomialDistort.learning_only>`
+
+                    :default value: False
+                    :type: ``bool``
+
+                p
+                    see `p <BinomialDistort.p>`
+
+                    :default value: 0.5
+                    :type: ``float``
+
+                random_state
+                    see `random_state <BinomialDistort.random_state>`
+
+                    :default value: None
+                    :type: ``numpy.random.RandomState``
+
+        """
+        p = Parameter(0.5, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        learning_only = Parameter(False, modulable=False)
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
+        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
+        bounds = (None, None)
+
+    @check_user_specified
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 p: tc.optional(tc.optional(parameter_spec)) = None,
+                 learning_only:bool = False,
+                 seed=None,
+                 params=None,
+                 owner=None,
+                 prefs: tc.optional(is_pref_set) = None):
+
+        super().__init__(
+            default_variable=default_variable,
+            p=p,
+            learning_only=learning_only,
+            seed=seed,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
+
+    # # FIX: NEEDS TO CALL BONOMIAL and INCLUDE CONTEXTUALIZATION FOR LEARNING
+    # def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
+    #     ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+    #     ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+    #
+    #     variance_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, VARIANCE)
+    #     bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
+    #     scale_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SCALE)
+    #     offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
+    #
+    #     variance = pnlvm.helpers.load_extract_scalar_array_one(builder, variance_ptr)
+    #     bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
+    #     scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
+    #     offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
+    #
+    #     rvalp = builder.alloca(ptri.type.pointee, name="random_out")
+    #     rand_state_ptr = ctx.get_random_state_ptr(builder, self, state, params)
+    #     normal_f = ctx.get_normal_dist_function_by_state(rand_state_ptr)
+    #     builder.call(normal_f, [rand_state_ptr, rvalp])
+    #
+    #     rval = builder.load(rvalp)
+    #     rval = builder.fmul(rval, variance)
+    #     val = builder.load(ptri)
+    #     val = builder.fadd(val, bias)
+    #     val = builder.fadd(rval, val)
+    #     val = builder.fmul(val, scale)
+    #     val = builder.fadd(offset, val)
+    #
+    #     builder.store(val, ptro)
+
+    def _function(self,
+                 variable=None,
+                 context=None,
+                 params=None,
+                 ):
+        """
+
+        Arguments
+        ---------
+
+        variable : number or array : default class_defaults.variable
+           a single value or array to be randomly zeroed.
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+
+        Returns
+        -------
+
+        variable with elements zeroed with probability p (if learning_only = False or during `learning
+        mode <ContextFlags.LEARNING_MODE>` : number or array
+
+        """
+        p = self._get_current_parameter_value('p', context)
+        learning_only = self._get_current_parameter_value('learning_only', context)
+        random_state = self._get_current_parameter_value('random_state', context)
+
+        # FIX: IMPLEMENT AS IDENTITY FUNCTION (SEE Linear)
+        if learning_only and (context.runmode != ContextFlags.LEARNING_MODE):
+            result = variable
+
+        else:
+            # ??Not sure whether the following works with autograd (https://github.com/HIPS/autograd/issues/416)
+            q = 1/(1-p) # Scaling factor for inverse implementation of drop-out during training
+            result = variable * random_state.binomial(size=len(variable), n=1, p=p) * q
+
+        return self.convert_output_type(result)
+
+    # def derivative(self, output, input=None, context=None):
+    #     """
+    #     derivative(input, output):
+    #
+    #     Derivative of `function <BinomialDistort.function>`:
+    #
+    #         -input/:math:`{variance^3}*\\sqrt{2\\pi}`
+    #
+    #
+    #     Returns
+    #     -------
+    #
+    #     Derivative of Binomial of variable :  number or array
+    #
+    #     """
+    #     bias = self._get_current_parameter_value(BIAS, context)
+    #     scale = self._get_current_parameter_value(SCALE, context)
+    #     offset = self._get_current_parameter_value(OFFSET, context)
+    #
+    #     # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
+    #     f = scale * np.random.normal(input+bias, variance) + offset
+    #
+    # # FIX: ?WHICH IF EITHER IS CORRECT?:
+    # return self._get_current_parameter_value(VARIABLE, context)
+    # # return 1.0
+
+
+# **********************************************************************************************************************
 #                                                   SoftMax
 # **********************************************************************************************************************
 
@@ -2715,7 +2969,7 @@ class SoftMax(TransferFunction):
 
             builder.call(one_hot_f, [one_hot_p, one_hot_s, one_hot_in, one_hot_out])
         else:
-            assert False, "Unsupported output in {}: {}".format(self, out_type)
+            assert False, "Unsupported output in {}: {}".format(self, output_type)
 
         return builder
 
@@ -2903,6 +3157,242 @@ class SoftMax(TransferFunction):
                                 "(and therefore the relevant element is ambiguous)".format(self.owner_name))
 
         return derivative
+
+
+# **********************************************************************************************************************
+#                                                    Dropout
+# **********************************************************************************************************************
+
+class Dropout(TransferFunction):  #
+    # -------------------------------------------------------------------------------------
+    """
+    Dropout(               \
+         default_variable, \
+         p=0.5,            \
+         params=None,      \
+         owner=None,       \
+         name=None,        \
+         prefs=None        \
+         )
+
+    .. _Dropout:
+
+    `function <Dropout._function>` returns `variable <Dropout.variable>` with elements randomly zeroed with
+    probability **p** if context.runmode in `ContextFlags.LEARNING_MODE`:
+
+    .. math::
+
+        [variable_i=0 if rand[0,1] > p and context.runmode & ContextFlags.LEARNING_MODE]
+
+    Note:
+
+    `derivative <Dropout.derivative>` returns `variable`
+
+    Arguments
+    ---------
+
+    default_variable : number or array : default class_defaults.variable
+        specifies a template for the value to be transformed.
+
+    p : float : default 0.5
+        specifies the probability with which each element of `varible` is replaced with zero.
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    variable : number or array
+        contains value to be transformed.
+
+    p : float
+        the probability with which each element of `varible` is replaced with zero.
+
+    random_state : numpy.RandomState
+        private pseudorandom number generator
+
+    owner : Component
+        `component <Component>` to which the Function has been assigned.
+
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
+    """
+
+    componentName = DROPOUT_FUNCTION
+
+    classPreferences = {
+        PREFERENCE_SET_NAME: 'DropoutClassPreferences',
+        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+    }
+
+    class Parameters(TransferFunction.Parameters):
+        """
+            Attributes
+            ----------
+
+                p
+                    see `p <Dropout.p>`
+
+                    :default value: 0.5
+                    :type: ``float``
+
+                random_state
+                    see `random_state <GaussianDistort.random_state>`
+
+                    :default value: None
+                    :type: ``numpy.random.RandomState``
+        """
+        p = Parameter(0.5, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
+        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
+
+    @check_user_specified
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 p: tc.optional(tc.optional(parameter_spec)) = None,
+                 params=None,
+                 owner=None,
+                 prefs: tc.optional(is_pref_set) = None):
+
+        super().__init__(
+            default_variable=default_variable,
+            p=p,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
+
+    # FIX: NEEDS WORK, INCLUDING CONTEXTUALIZATION FOR LEARNING
+    # def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
+    #     ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+    #     ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+    #     # slope_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SLOPE)
+    #     # intercept_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, INTERCEPT)
+    #     #
+    #     # slope = pnlvm.helpers.load_extract_scalar_array_one(builder, slope_ptr)
+    #     # intercept = pnlvm.helpers.load_extract_scalar_array_one(builder, intercept_ptr)
+    #
+    #     # -----
+    #     rvalp = builder.alloca(ptri.type.pointee, name="random_out")
+    #     rand_state_ptr = ctx.get_random_state_ptr(builder, self, state, params)
+    #     normal_f = ctx.get_normal_dist_function_by_state(rand_state_ptr)
+    #     builder.call(normal_f, [rand_state_ptr, rvalp])
+    #     # -----
+    #
+    #
+    #     if "derivative" in tags:
+    #         # FIX: ?WHICH IS CORRECT:
+    #         # f'(x) = x
+    #         val = builder.load(ptri)
+    #         # # f'(x) = 1.0
+    #         # val = builder.load(1.0)
+    #
+    #     else:
+    #         # f(x) = mx + b
+    #         val = builder.load(ptri)
+    #         val = builder.fmul(val, slope)
+    #         val = builder.fadd(val, intercept)
+    #
+    #     builder.store(val, ptro)
+
+    def _function(self,
+                 variable=None,
+                 context=None,
+                 params=None,
+                 ):
+        """
+
+        Arguments
+        ---------
+
+        variable : number or array : default class_defaults.variable
+           a single value or array to be randomly zeroed.
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        Returns
+        -------
+
+        variable with elements zeroed with probability p : number or array
+
+        """
+        p = self._get_current_parameter_value('p', context)
+        q = 1/(1-p) # Scaling factor for inverse implementation of drop-out during training
+        random_state = self._get_current_parameter_value('random_state', context)
+
+        if context.runmode != ContextFlags.LEARNING_MODE:
+            result = variable
+
+        else:
+            try:
+                # By default, result should be returned as ndarray with same dimensionality as input
+                result = variable * random_state.binomial(size=len(variable), n=1, p=p) * q
+            except TypeError:
+                if hasattr(variable, "dtype"):
+                    # If variable is an array with mixed sizes or types, try item-by-item operation
+                    if variable.dtype == object:
+                        result = np.zeros_like(variable)
+                        for i, item in enumerate(variable):
+                            result[i] = variable[i] * random_state.binomial(size=len(variable[i]), n=1, p=p) * q
+                    else:
+                        raise FunctionError("Unrecognized type for {} of {} ({})".format(VARIABLE, self.name, variable))
+                # KAM 6/28/18: If the variable does't have a "dtype" attr but made it to this line, then it must be of a
+                # type that even np does not recognize -- typically a custom OutputPort variable with items of different
+                # shapes (e.g. variable = [[0.0], [0.0], array([[0.0, 0.0]])] )
+                elif isinstance(variable, list):
+                    result = []
+                    for variable_item in variable:
+                        result.append(np.multiply(variable_item,
+                                                  random_state.binomial(size=len(variable_item), n=1, p=p) * q))
+                else:
+                    raise FunctionError("Unrecognized type for {} of {} ({})".format(VARIABLE, self.name, variable))
+
+        return self.convert_output_type(result)
+
+    @handle_external_context()
+    def derivative(self, input=None, output=None, context=None):
+        """
+        derivative(input)
+
+        Derivative of `function <Dropout._function>` at **input**.
+
+        Arguments
+        ---------
+
+        input : number or array
+            value of the input to the Dropouput function at which derivative is to be taken.
+
+        Returns
+        -------
+
+        variable :  number or array
+
+        """
+        # FIX: ?WHICH IS CORRECT:
+        return self._get_current_parameter_value(VARIABLE, context)
+        # return 1.0
 
 
 # **********************************************************************************************************************

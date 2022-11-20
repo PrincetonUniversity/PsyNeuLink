@@ -176,7 +176,7 @@ class ContextFlags(enum.IntFlag):
     DEFAULT_MODE = enum.auto()
     """Default mode"""
     LEARNING_MODE = enum.auto()
-    """Set during `compositon.learn`"""
+    """Set during `composition.learn`"""
     SIMULATION_MODE = enum.auto()
     """Set during simulation by Composition.controller"""
 

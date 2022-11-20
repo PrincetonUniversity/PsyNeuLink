@@ -187,6 +187,17 @@ class LLVMBuilderContext:
         else:
             assert False, "Unknown PRNG type!"
 
+    # MODIFIED 11/20 NEW: JDC FIX: REQUIRES __pnl_builtin_mt_rand_binomial AND  __pnl_builtin_philox_rand_binomial
+    def get_binomial_dist_function_by_state(self, state):
+        if len(state.type.pointee) == 5:
+            return self.import_llvm_function("__pnl_builtin_mt_rand_binomial")
+        elif len(state.type.pointee) == 7:
+            # Normal exists only for self.float_ty
+            return self.import_llvm_function("__pnl_builtin_philox_rand_binomial")
+        else:
+            assert False, "Unknown PRNG type!"
+    # MODIFIED 11/20 END
+
     def get_normal_dist_function_by_state(self, state):
         if len(state.type.pointee) == 5:
             return self.import_llvm_function("__pnl_builtin_mt_rand_normal")
