@@ -971,8 +971,8 @@ is no need to specify any `learning components <Composition_Learning_Components>
 <Autodiff_Learning_Components_Warning>`) -- an AutodiffComposition automatically creates backpropagation
 `learning pathways <Composition_Learning_Pathway>` from all input to all output `Nodes <Composition_Nodes>`.
 While learning in an AutodiffComposition is restricted to the `BackPropagation` learning algorithm, its `loss
-function can be specified (using the **loss_spec** parameter of its constructor), which implements different kinds of
-`supervised learning <Composition_Learning_Supervised>` (for example, `Loss.MSE` can be used for regression,
+function <Loss>` can be specified (using the **loss_spec** parameter of its constructor), which implements different
+kinds of `supervised learning <Composition_Learning_Supervised>` (for example, `Loss.MSE` can be used for regression,
 or `Loss.CROSS_ENTROPY` for classification).
 
 The advantage of using an AutodiffComposition is that it allows a model to be implemented in PsyNeuLink, and then
@@ -7170,7 +7170,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def add_linear_learning_pathway(self,
                                     pathway,
                                     learning_function:LearningFunction,
-                                    loss_function=None,
+                                    loss_spec=None,
                                     learning_rate:tc.any(int,float)=0.05,
                                     error_function=LinearCombination,
                                     learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=AFTER,
@@ -7221,7 +7221,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies the type of `LearningFunction` to use for the `LearningMechanism` constructued for each
             `MappingProjection` in the **pathway**.
 
-        loss_function : Loss : default Loss.MSE
+        loss_spec : Loss : default Loss.MSE
             specifies the loss function used if `BackPropagation` is specified as the **learning_function**
             (see `add_backpropagation_learning_pathway <Composition.add_backpropagation_learning_pathway>`).
 
@@ -7296,7 +7296,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return self._create_backpropagation_learning_pathway(pathway,
                                                                  learning_rate,
                                                                  error_function,
-                                                                 loss_function,
+                                                                 loss_spec,
                                                                  learning_update,
                                                                  name=pathway_name,
                                                                  default_projection_matrix=default_projection_matrix,
@@ -7481,7 +7481,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                              pathway,
                                              learning_rate=0.05,
                                              error_function=None,
-                                             loss_function:tc.enum(Loss)=Loss.MSE,
+                                             loss_spec:tc.enum(Loss)=Loss.MSE,
                                              learning_update:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=AFTER,
                                              default_projection_matrix=None,
                                              name:str=None):
@@ -7502,7 +7502,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies the function assigned to `ComparatorMechanism` used to compute the error from the target and the
             output (`value <Mechanism_Base.value>`) of the `TARGET` (last) Mechanism in the **pathway**).
 
-        loss_function : Loss : default Loss.MSE
+        loss_spec : Loss : default Loss.MSE
             specifies the loss function used in computing the error term;  see `Loss` for values.
 
         learning_update : Optional[bool|ONLINE|AFTER] : default AFTER
@@ -7530,7 +7530,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return self.add_linear_learning_pathway(pathway,
                                                 learning_rate=learning_rate,
                                                 learning_function=BackPropagation,
-                                                loss_function=loss_function,
+                                                loss_spec=loss_spec,
                                                 error_function=error_function,
                                                 learning_update=learning_update,
                                                 default_projection_matrix=default_projection_matrix,
@@ -7760,7 +7760,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                  pathway,
                                                  learning_rate=0.05,
                                                  error_function=None,
-                                                 loss_function=Loss.MSE,
+                                                 loss_spec=Loss.MSE,
                                                  learning_update=AFTER,
                                                  default_projection_matrix=None,
                                                  name=None,
@@ -7769,8 +7769,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # FIX: LEARNING CONSOLIDATION - Can get rid of this:
         if not error_function:
             error_function = LinearCombination()
-        if not loss_function:
-            loss_function = Loss.MSE
+        if not loss_spec:
+            loss_spec = Loss.MSE
 
         # Add pathway to graph and get its full specification (includes all ProcessingMechanisms and MappingProjections)
         # Pass ContextFlags.INITIALIZING so that it can be passed on to _analyze_graph() and then
@@ -7820,7 +7820,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self._create_terminal_backprop_learning_components(input_source,
                                                                        output_source,
                                                                        error_function,
-                                                                       loss_function,
+                                                                       loss_spec,
                                                                        learned_projection,
                                                                        learning_rate,
                                                                        learning_update,
@@ -7878,7 +7878,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._create_terminal_backprop_learning_components(input_source,
                                                                    output_source,
                                                                    error_function,
-                                                                   loss_function,
+                                                                   loss_spec,
                                                                    learned_projection,
                                                                    learning_rate,
                                                                    learning_update,
@@ -7976,13 +7976,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     NodeRole.TARGET not in self.get_roles_by_node(n) for p in bfs(n)]
         for pathway in pathways:
             self.add_backpropagation_learning_pathway(pathway=pathway,
-                                                      loss_function=self.loss_spec)
+                                                      loss_spec=self.loss_spec)
 
     def _create_terminal_backprop_learning_components(self,
                                                       input_source,
                                                       output_source,
                                                       error_function,
-                                                      loss_function,
+                                                      loss_spec,
                                                       learned_projection,
                                                       learning_rate,
                                                       learning_update,
@@ -8007,7 +8007,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     VARIABLE: output_source.output_ports[0].value}
             target={NAME: TARGET,
                     VARIABLE: target_mechanism.output_ports[0].value}
-            if loss_function == Loss.CROSS_ENTROPY:
+            if loss_spec == Loss.CROSS_ENTROPY:
                 # error function:  use LinearCombination to implement cross_entropy: (SoftMax(sample), SoftMax(target))
                 sample.update({FUNCTION: SoftMax(output=ALL)})
                 target.update({FUNCTION: SoftMax(output=ALL)})
@@ -8016,9 +8016,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 # error_function: use default for Comparator (LinearCombination) =>  target - sample
                 sample.update({WEIGHT: -1})
-                if loss_function == Loss.L0:
+                if loss_spec == Loss.L0:
                     output_ports = [OUTCOME, SUM.upper()]
-                elif loss_function == Loss.SSE:
+                elif loss_spec == Loss.SSE:
                     output_ports = [OUTCOME, Loss.SSE.name]
                 else:
                     output_ports = [OUTCOME, Loss.MSE.name]
@@ -8033,7 +8033,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                               objective_mechanism.output_ports[0].value],
                                             activation_derivative_fct=output_source.function.derivative,
                                             learning_rate=learning_rate,
-                                            loss_function=loss_function)
+                                            loss_spec=loss_spec)
 
         learning_mechanism = LearningMechanism(function=learning_function,
                                                default_variable=[input_source.output_ports[0].value,
@@ -8099,7 +8099,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             learning_function = BackPropagation(default_variable=[input_source.output_ports[0].value,
                                                                   output_source.output_ports[0].value,
                                                                   error_signal_template[0]],
-                                                loss_function=None,
+                                                loss_spec=None,
                                                 activation_derivative_fct=output_source.function.derivative,
                                                 learning_rate=learning_rate)
 

@@ -1941,7 +1941,7 @@ class TestBackPropLearning:
         p = [input_layer, input_weights, hidden_layer_1, middle_weights, hidden_layer_2, output_weights, output_layer]
         backprop_pathway = comp.add_backpropagation_learning_pathway(
             pathway=p,
-            loss_function=expected_quantities[LOSS_FUNCTION],
+            loss_spec=expected_quantities[LOSS_FUNCTION],
             learning_rate=1.
         )
 
