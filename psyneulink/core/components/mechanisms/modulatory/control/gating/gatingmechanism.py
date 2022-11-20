@@ -196,10 +196,8 @@ from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import ContentAddressableList, convert_to_list
 
 __all__ = [
-    'GatingMechanism', 'GatingMechanismError', 'GatingMechanismRegistry'
+    'GatingMechanism', 'GatingMechanismError',
 ]
-
-GatingMechanismRegistry = {}
 
 
 def _is_gating_spec(spec):

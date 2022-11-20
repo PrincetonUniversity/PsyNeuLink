@@ -86,7 +86,6 @@ primary_registries = [
     CompositionRegistry,
     DeferredInitRegistry,
     FunctionRegistry,
-    GatingMechanismRegistry,
     MechanismRegistry,
     PathwayRegistry,
     PortRegistry,
