@@ -637,8 +637,9 @@ RELU_FUNCTION = "ReLU Function"
 ANGLE_FUNCTION = 'Angle Function'
 GAUSSIAN_FUNCTION = "Gaussian Function"
 GAUSSIAN_DISTORT_FUNCTION = "GaussianDistort Function"
-SOFTMAX_FUNCTION = 'SoftMax Function'
+BINOMIAL_DISTORT_FUNCTION = 'BinomialDistort Function'
 DROPOUT_FUNCTION = 'Dropout Function'
+SOFTMAX_FUNCTION = 'SoftMax Function'
 LINEAR_MATRIX_FUNCTION = "LinearMatrix Function"
 TRANSFER_WITH_COSTS_FUNCTION = "TransferWithCosts Function"
 
