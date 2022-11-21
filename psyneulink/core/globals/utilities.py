@@ -440,6 +440,7 @@ def iscompatible(candidate, reference=None, **kargs):
     try:
         with warnings.catch_warnings():
             warnings.simplefilter(action='ignore', category=FutureWarning)
+            warnings.simplefilter(action='ignore', category=np.VisibleDeprecationWarning)
             # np.array(...).size > 0 checks for empty list. Everything else create single element (dtype=obejct) array
             if reference is not None and np.array(candidate, dtype=object).size > 0 and (candidate == reference):
                 return True
