@@ -975,8 +975,8 @@ function <Loss>` can be specified (using the **loss_spec** parameter of its cons
 kinds of `supervised learning <Composition_Learning_Supervised>` (for example, `Loss.MSE` can be used for regression,
 or `Loss.CROSS_ENTROPY` for classification).
 
-The advantage of using an AutodiffComposition is that it allows a model to be implemented in PsyNeuLink, and then
-exploit the acceleration of optimized implementations of learning. This can be achieved by executing the `learn
+The advantage of using an AutodiffComposition is that it allows a model to be implemented in PsyNeuLink, while
+exploiting the acceleration of optimized implementations of learning. This can be achieved by executing the `learn
 <Composition.learn>` method in one of two modes (specified using its **execution_mode** argument):  using direct
 compilation (**execution_mode** = `ExecutionMode.LLVMRun`); or by automatically translating the model to `PyTorch
 <https://pytorch.org>`_ for training (**execution_mode** = `ExecutionMode.PyTorch`). The advantage of these modes is
@@ -987,26 +987,35 @@ execute learning are outlined in the following table, and described in more deta
 .. _Composition_Compilation_Table:
 
 .. table::
-    :align: left
+   :widths: 5 34 33 33
 
-    +-----------------+------------------------+------------------------------------------------+
-    |                 |  **Composition**       |          **AutodiffComposition**               |
-    +-----------------+------------------------+-----------------------+------------------------+
-    |                 |      *Python*          | *Direct Compilation*  |         *PyTorch*      |
-    +=================+========================+=======================+========================+
-    | execution_mode =| `ExecutionMode.Python` |`ExecutionMode.LLVMRun`|`ExecutionMode.PyTorch` |
-    +-----------------+------------------------+-----------------------+------------------------+
-    |  *learn()*      |  Python interpreted    |   LLVM compiled       |     PyTorch compiled   |
-    |                 |                        |                       |                        |
-    |  *run()*        |  Python interpreted    |   LLVM compiled       |     Python interpreted |
-    +-----------------+------------------------+-----------------------+------------------------+
-    |  *Speed:*       |       slow             |      fastest          |           fast         |
-    +-----------------+------------------------+-----------------------+------------------------+
-    |                 |* Backpropagation       | * Backpropagation     |* Backpropagation       |
-    |                 |* Reinforcement learning|                       |* RNN, inclduing LSTM   |
-    |  *Supports:*    |* Unspervised learning  |                       |* Unsupervised learning |
-    |                 |* modulation, inspection|                       |                        |
-    +-----------------+------------------------+-----------------------+------------------------+
+   +--------------------+------------------------------------+-----------------------------------------------+
+   |                    |**Composition**                     |**AutodiffComposition**                        |
+   +--------------------+------------------------------------+-----------------------+-----------------------+
+   |                    |*Python*                            |*Direct Compilation*   |*PyTorch*              |
+   +====================+====================================+=======================+=======================+
+   |execution_mode=     |`ExecutionMode.Python`              |`ExecutionMode.LLVMRun`|`ExecutionMode.PyTorch`|
+   +--------------------+------------------------------------+-----------------------+-----------------------+
+   |`learn()            |                                    |                       |                       |
+   |<Composition.learn>`|Python interpreted                  |LLVM compiled          |PyTorch compiled       |
+   |                    |                                    |                       |                       |
+   |`run()              |                                    |                       |                       |
+   |<Composition.run>`  |Python interpreted                  |LLVM compiled          |Python interpreted     |
+   +--------------------+------------------------------------+-----------------------+-----------------------+
+   |*Speed:*            |slow                                |fastest                |fast                   |
+   +--------------------+------------------------------------+-----------------------+-----------------------+
+   |                    |`BackPropagation`                   |Backpropagation        |Backpropagation        |
+   |                    |                                    |                       |                       |
+   |                    |`Reinforcement` learning            |                       |RNN, inclduing LSTM    |
+   |                    |                                    |                       |                       |
+   |*Supports:*         |`Unspervised learning               |                       |Unsupervised learning  |
+   |                    |<Composition_Learning_Unsupervised>`|                       |                       |
+   |                    |                                    |                       |                       |
+   |                    |`Modulation                         |                       |                       |
+   |                    |<ModulatorySignal_Modulation>`      |                       |                       |
+   |                    |                                    |                       |                       |
+   |                    |Inspection                          |                       |                       |
+   +--------------------+------------------------------------+-----------------------+-----------------------+
 
 
 .. _Composition_Learning_UDF:
