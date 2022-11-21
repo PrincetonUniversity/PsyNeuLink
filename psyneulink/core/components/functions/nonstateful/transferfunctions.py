@@ -2451,7 +2451,8 @@ class BinomialDistort(TransferFunction):  #-------------------------------------
 
     .. math::
 
-       variable_i=0 \\ if \\ \\ rand[0,1] > p \\ else \\ variable_i
+       if \\ \\ rand[0,1] > p: output_i=0 \\\\
+       else: \\ output_i = variable_i
 
     `derivative <Binomial.derivative>` returns `variable`
 
@@ -2665,20 +2666,17 @@ class Dropout(TransferFunction):  #
     .. _Dropout:
 
     `function <Dropout._function>` returns `variable <Dropout.variable>` with elements randomly zeroed with
-    probability **p** if context.runmode in `ContextFlags.LEARNING_MODE`.
-
-    The `function <BinomialDistort._function>` is applied only during learning; otherwise it operates as the
-    `Identity  <Identity>` Function. During learning, the output of the function is
-    scaled by :math:`\\frac{1}{(1-p)}`, which implements the inverse scaling form of `dropout
+    probability **p** during learning; otherwise functions as `Identity` Function.  During learning, the output
+    of the function is scaled by :math:`\\frac{1}{(1-p)}`, which implements the inverse scaling form of `dropout
     <https://pytorch.org/docs/stable/generated/torch.nn.Dropout.html?highlight=dropout>`_ used by by PyTorch.
 
     .. math::
 
-       variable_i=0 \\ if \\ context.runmode == ContextFlags.LEARNING\\_MODE \\ and \\ rand[0,1] > p
-       \\ else \\ variable_i * \\frac{1}{(1-p)}
+       if \\ (context.runmode == ContextFlags.LEARNING\\_MODE) \\ and \\ (rand[0,1] > p):  output_i = 0 \\\\
+       else: \\ output_i = \\frac{1}{(1-p)}variable_i
 
     .. _technical_note::
-       **learning_only** uses ``context.runmode &`` `ContextFlags.LEARNING_MODE`
+       **learning_only** uses ``context.runmode`` == `ContextFlags.LEARNING_MODE`
        to determine when learning is in effect
 
     `derivative <Dropout.derivative>` returns `variable`
