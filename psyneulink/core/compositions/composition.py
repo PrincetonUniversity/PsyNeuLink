@@ -994,7 +994,7 @@ execute learning are outlined in the following table, and described in more deta
    +--------------------+------------------------------------+-----------------------+-----------------------+
    |                    |*Python*                            |*Direct Compilation*   |*PyTorch*              |
    +====================+====================================+=======================+=======================+
-   |execution_mode=     |`ExecutionMode.Python`              |`ExecutionMode.LLVMRun`|`ExecutionMode.PyTorch`|
+   |execution_mode=     |`ExecutionMode.Python`              |`ExecutionMode.LLVMRun`|`ExecutionMode.LLVMRun`|
    +--------------------+------------------------------------+-----------------------+-----------------------+
    |`learn()            |                                    |                       |                       |
    |<Composition.learn>`|Python interpreted                  |LLVM compiled          |PyTorch compiled       |
