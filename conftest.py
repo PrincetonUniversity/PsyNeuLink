@@ -36,15 +36,6 @@ def pytest_addoption(parser):
     parser.addoption('--fp-precision', action='store', default='fp64', choices=['fp32', 'fp64'],
                      help='Set default fp precision for the runtime compiler. Default: fp64')
 
-def pytest_sessionstart(session):
-    precision = session.config.getvalue("--fp-precision")
-    if precision == 'fp64':
-        pnlvm.LLVMBuilderContext.default_float_ty = pnlvm.ir.DoubleType()
-    elif precision == 'fp32':
-        pnlvm.LLVMBuilderContext.default_float_ty = pnlvm.ir.FloatType()
-    else:
-        assert False, "Unsupported precision parameter: {}".format(precision)
-
 def pytest_runtest_setup(item):
     # Check that all 'cuda' tests are also marked 'llvm'
     assert 'llvm' in item.keywords or 'cuda' not in item.keywords
@@ -89,6 +80,30 @@ def pytest_generate_tests(metafunc):
         ]
         metafunc.parametrize("autodiff_mode", auto_modes)
 
+
+_old_register_prefix = None
+
+# Collection hooks
+def pytest_sessionstart(session):
+    """Initialize session with the right floating point precision and component name prefix."""
+
+    precision = session.config.getvalue("--fp-precision")
+    if precision == 'fp64':
+        pnlvm.LLVMBuilderContext.default_float_ty = pnlvm.ir.DoubleType()
+    elif precision == 'fp32':
+        pnlvm.LLVMBuilderContext.default_float_ty = pnlvm.ir.FloatType()
+    else:
+        assert False, "Unsupported precision parameter: {}".format(precision)
+
+    global _old_register_prefix
+    _old_register_prefix = psyneulink.core.globals.registry._register_auto_name_prefix
+    psyneulink.core.globals.registry._register_auto_name_prefix = "__pnl_pytest_"
+
+def pytest_collection_finish(session):
+    """Restore component prefix at the end of test collection."""
+    psyneulink.core.globals.registry._register_auto_name_prefix = _old_register_prefix
+
+# Runtest hooks
 def pytest_runtest_call(item):
     # seed = int(item.config.getoption('--pnl-seed'))
     seed = 0
