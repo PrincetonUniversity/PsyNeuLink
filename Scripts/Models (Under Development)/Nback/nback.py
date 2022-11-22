@@ -73,7 +73,7 @@ from psyneulink import *
 
 # Settings for running script:
 DISPLAY_MODEL = False # show visual graphic of model
-TRAIN = True
+TRAIN = False
 RUN = True
 ANALYZE = True # Analyze results of run
 REPORT_OUTPUT = ReportOutput.OFF       # Sets console output during run
@@ -139,6 +139,7 @@ class trial_types(IntEnum):
     NO_MATCH_NO_FOIL = 2    # ABB (2-back) or BCDA (3-back); not explicitly assigned: BBCA, BCCA or BBBA
     NO_MATCH_WITH_FOIL = 3  # BAA (2-back) or BACA (3-back); not explicitly assigned: BCAA or BAAA
 num_trial_types = len(trial_types)
+
 #endregion
 
 #region ===================================== MODEL CONSTRUCTION =======================================================
@@ -524,15 +525,33 @@ def get_run_inputs(model, nback_level,
 
         return(stim_seq, trial_type_seq)
 
-    def get_input_sequence(nback_level, num_trials=NUM_TRIALS):
-        # Construct sequence of stimulus and trial_type indices
-        stim_seq, trial_type_seq = generate_stim_sequence(nback_level, num_trials)
-        # Return list of corresponding stimulus input vectors
+    def get_input_sequence(nback_level, num_trials=NUM_TRIALS, use_sweepea=False):
+        """Construct sequence of stimulus and trial_type indices"""
+        # Use SweetPea if specified
+        if use_sweepea:
+            if nback_level == 2:
+                from stim.sweetpea_script import create_two_back
+                Kane_stimuli = {stim:idx for idx, stim in enumerate(['B', 'F', 'H', 'K', 'M', 'Q', 'R', 'X'])}
+                Kane_trial_types = {'1/1/0': trial_types.MATCH_NO_FOIL,
+                                    '1/2/0': trial_types.MATCH_WITH_FOIL,
+                                    '2/1/0': trial_types.NO_MATCH_NO_FOIL,
+                                    '2/2/0': trial_types.NO_MATCH_WITH_FOIL}
+                stim_dict = create_two_back()
+                assert True
+                stim_seq = [Kane_stimuli[i.upper()] for i in stim_dict[0]['letter']]
+                trial_type_seq = [Kane_trial_types[i] if i else None for i in stim_dict[0]['condi']]
+                assert True
+            else:
+                raise Exception(f"Use of SweetPea currently restricted to nback_level = 2")
+        # Else, use local algorithm
+        else:
+            stim_seq, trial_type_seq = generate_stim_sequence(nback_level, num_trials)
+            # Return list of corresponding stimulus input vectors
 
         input_set = [get_stim_set()[i] for i in stim_seq]
         return input_set, trial_type_seq
 
-    input_set, trial_type_seq = get_input_sequence(nback_level, num_trials)
+    input_set, trial_type_seq = get_input_sequence(nback_level, num_trials, use_sweepea=True)
     return {model.nodes[MODEL_STIMULUS_INPUT]: input_set,
             model.nodes[MODEL_CONTEXT_INPUT]: [[context_drift_rate]]*num_trials,
             model.nodes[MODEL_TASK_INPUT]: [get_task_input(nback_level)]*num_trials}, \
@@ -612,7 +631,7 @@ def train_network(network,
 
 def run_model(model,
               # load_weights_from=None,
-              load_weights_from='ffn.wts_nep_6250_lr_001.pnl',
+              load_weights_from='results/ffn.wts_nep_6250_lr_001.pnl',
               context_drift_rate=CONTEXT_DRIFT_RATE,
               num_trials=NUM_TRIALS,
               report_output=REPORT_OUTPUT,
