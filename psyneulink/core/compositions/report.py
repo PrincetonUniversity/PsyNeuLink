@@ -79,7 +79,6 @@ by specifying a `ReportLearning` option in the **report_learning** argument of a
 
 .. _Report_To_Device:
 
-
 Devices
 -------
 
@@ -168,7 +167,7 @@ __all__ = ['Report', 'ReportOutput', 'ReportParams', 'ReportProgress', 'ReportDe
            'ReportLearning', 'CONSOLE', 'CONTROLLED', 'LOGGED', 'MODULATED', 'MONITORED', 'RECORD', 'DIVERT',
            'PNL_VIEW', ]
 
-# Used to specify self._run_mode
+# Used to specify self._run_mode (specified as roots, that are conjugated in messages)
 DEFAULT = 'Execut'
 LEARNING = 'Train'
 SIMULATION = 'Simulat'
@@ -182,6 +181,7 @@ MECHANISM_REPORT = 'mechanism_report'
 CONTROLLER_REPORT = 'controller_report'
 LEARN_REPORT = 'learn_report'
 RUN_REPORT = 'run_report'
+COMPILED_REPORT = 'compiled_report'
 PROGRESS_REPORT = 'progress_report'
 
 trial_sep_str = f'===================='
@@ -925,7 +925,8 @@ class Report:
             simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
 
         # Call report_output
-        if any(r in {EXECUTE_REPORT, MECHANISM_REPORT, CONTROLLER_REPORT, LEARN_REPORT, RUN_REPORT} for r in reports):
+        if any(r in {EXECUTE_REPORT, MECHANISM_REPORT, CONTROLLER_REPORT,
+                     LEARN_REPORT, RUN_REPORT, COMPILED_REPORT} for r in reports):
 
             if content in {'run_start', 'execute_start'}:
                 if simulation_mode:
@@ -950,9 +951,7 @@ class Report:
         if PROGRESS_REPORT in reports:
             # Just pass args relevant to report_progress()
             progress_args = {k:v for k,v in kwargs.items() if k in {'caller', 'report_num', 'content', 'context'}}
-            self.report_progress(caller, **progress_args)
-
-        assert True
+            self.report_progress(caller, reports, **progress_args)
 
     def report_output(self,
                       caller,
@@ -1690,6 +1689,7 @@ class Report:
 
     def report_progress(self,
                         caller,
+                        reports,
                         report_num:int,
                         content:str,
                         context:Context) -> None:
@@ -1737,6 +1737,29 @@ class Report:
 
         # Update progress report
         if self._use_rich:
+
+            # MODIFIED 11/12/22 NEW:
+            if content == 'run_start' and COMPILED_REPORT in reports and self._run_mode == LEARNING:
+                composition_type_name = list(self.output_reports.keys())[0].componentCategory
+                composition_name = list(self.output_reports.keys())[0].name
+                message = f"{composition_type_name} '{composition_name}' training " \
+                          f"{output_report.num_trials} trials using PyTorch..."
+                # Method 1: (direct print)
+                # self._rich_progress.console.print(message)
+                output_report.run_report = message
+                # Method 2: (ensure it is also recorded if that is enabled)
+                if self._record_reports:
+                    with self._recording_console.capture() as capture:
+                        self._recording_console.print(node_report)
+                    self._recorded_reports += capture.get()
+                # Method 3: (shadow standard processing)
+                # self._rich_progress.update(output_report.rich_task_id,
+                #                            total=1,
+                #                            description=message,
+                #                            advance=1,
+                #                            refresh=True)
+            # MODIFIED 11/12/22 END
+
             if content == 'run_end':
                 # If it is the end of a run, and num_trials was not known (and so rich progress was "indeterminate"),
                 #    close out progress bar
@@ -1776,12 +1799,18 @@ class Report:
                                   advance=1,
                                   refresh=True)
 
-        #  FIX: NEED COMMENT ON WHY THIS IS NEEDED:
-        #   WITHOUT THIS, WHEN RECORD_DEVICES IS ACTIVE,
-        #        EITHER PROGRESS REPORT IS MISSING OR IT IS DUPLICATED ABOVE THE OUTPUT REPORT
+        # This is needed so that, when _record_reports is active, progress report is generated and not duplicated
         if self._report_output is ReportOutput.OFF or self._report_progress is ReportProgress.OFF:
-            self._print_and_record_reports(PROGRESS_REPORT)
-        assert True
+            # # MODIFIED 11/12/22 OLD:
+            # self._print_and_record_reports(PROGRESS_REPORT)
+            # # MODIFIED 11/12/22 NEW: FIX: MAY BE A PROBLEM IF RUN_REPORT IS ALSO EVER PASSED IN HERE
+            # self._print_and_record_reports(reports)
+            # # MODIFIED 11/12/22 NEWER
+            if COMPILED_REPORT in reports:
+                self._print_and_record_reports(COMPILED_REPORT, output_report)
+            else:
+                self._print_and_record_reports(PROGRESS_REPORT)
+            # MODIFIED 11/12/22 END
 
     def _print_and_record_reports(self, report_type:str, output_report:OutputReport=None) -> None:
         """
@@ -1800,14 +1829,18 @@ class Report:
             OutputReport for caller[_run_mode] in self.output_reports to use for reporting.
         """
 
-        # Print and record output report as they are created (progress reports are printed by _rich_progress.console)
-        if report_type in {EXECUTE_REPORT, RUN_REPORT}:
+        # Print and record output reports as they are created (progress reports are printed by _rich_progress.console)
+        # MODIFIED 11/12/22 OLD:
+        if report_type in {EXECUTE_REPORT, RUN_REPORT, COMPILED_REPORT}:
+        # # MODIFIED 11/12/22 NEW:
+        # if any(report in {EXECUTE_REPORT, RUN_REPORT, COMPILED_REPORT} for report in report_type):
+        # MODIFIED 11/12/22 END
             # Print output reports as they are created
             if self._rich_console or self._rich_divert:
-                if output_report.trial_report and report_type is EXECUTE_REPORT:
+                if output_report.trial_report and report_type == EXECUTE_REPORT:
                     self._rich_progress.console.print(output_report.trial_report)
                     self._rich_progress.console.print('')
-                elif output_report.run_report and report_type is RUN_REPORT:
+                elif output_report.run_report and report_type in {RUN_REPORT, COMPILED_REPORT}:
                     self._rich_progress.console.print(output_report.run_report)
                     self._rich_progress.console.print('')
             # Record output reports as they are created
@@ -1818,14 +1851,13 @@ class Report:
                     with self._recording_console.capture() as capture:
                         if report_type == EXECUTE_REPORT:
                             self._recording_console.print(output_report.trial_report)
-                        elif report_type == RUN_REPORT:
+                        elif report_type in {RUN_REPORT or COMPILED_REPORT}:
                             self._recording_console.print(output_report.run_report)
                     self._recorded_reports += capture.get()
 
         # Record progress after execution of outer-most Composition
         if (self._report_output is not ReportOutput.OFF
                 or (len(self._execution_stack)<=1 and not self._simulating)):
-
             if report_type is PROGRESS_REPORT:
                 # add progress report to any already recorded for output
                 progress_reports = '\n'.join([t.description for t in self._rich_progress.tasks])

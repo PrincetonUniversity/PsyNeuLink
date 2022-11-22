@@ -313,14 +313,12 @@ from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_iterable, convert_to_list
 
 __all__ = [
-    'CONTROL_SIGNAL_NAME', 'ControlMechanismRegistry', 'LCControlMechanism', 'LCControlMechanismError',
+    'CONTROL_SIGNAL_NAME', 'LCControlMechanism', 'LCControlMechanismError',
     'MODULATED_MECHANISMS',
 ]
 
 MODULATED_MECHANISMS = 'modulated_mechanisms'
 CONTROL_SIGNAL_NAME = 'LCControlMechanism_ControlSignal'
-
-ControlMechanismRegistry = {}
 
 class LCControlMechanismError(Exception):
     def __init__(self, error_value):
