@@ -112,19 +112,21 @@ class TestInputPorts:
         comp = pnl.Composition(nodes=(m, pnl.NodeRole.INTERNAL))
         assert pnl.NodeRole.INTERNAL in comp.get_roles_by_node(m)
         assert pnl.NodeRole.INPUT not in comp.get_roles_by_node(m)
-        assert not m.path_afferents
+
+        assert not m.path_afferents  # No path_afferents since internal_only is set by default_input
+
+
         if default_input is None:
-            with pytest.warns(UserWarning) as warning:  # Warn, since default_input is NOT set
+            with pytest.warns(UserWarning) as warnings:  # Warn, since default_input is NOT set
                 comp.run()
-            assert repr(warning[1].message.args[0]) == '"InputPort (\'INTERNAL_NODE\') of \'TransferMechanism-0\' ' \
-                                                       'doesn\'t have any afferent Projections."'
-            assert m.input_port.value == variable # For Mechanisms other than controller, default_variable seems
-            assert m.value == variable            #     to still be used even though default_input is NOT set
+            assert any(repr(w.message.args[0]) == '"InputPort (\'INTERNAL_NODE\') of \'TransferMechanism-0\' '
+                                                  'doesn\'t have any afferent Projections."'
+                       for w in warnings)
         else:
-            assert not m.path_afferents  # No path_afferents since internal_only is set by default_input
             comp.run()                   # No warning since default_input is set
-            assert m.input_port.value == variable
-            assert m.value == variable
+
+        assert m.input_port.value == variable # For Mechanisms other than controller, default_variable seems
+        assert m.value == variable            #     to still be used even though default_input is NOT set
 
     def test_no_efferents(self):
         A = pnl.InputPort()

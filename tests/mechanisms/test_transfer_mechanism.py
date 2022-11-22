@@ -546,13 +546,16 @@ class TestTransferMechanismIntegratorFunctionParams:
     @pytest.mark.benchmark(group="TransferMechanism Parameter Array Assignments")
     def test_transfer_mech_array_assignments_fct_over_mech_rate(self, benchmark, mech_mode):
 
-        T = TransferMechanism(
-                name='T',
-                default_variable=[0 for i in range(VECTOR_SIZE)],
-                integrator_mode=True,
-                integrator_function=AdaptiveIntegrator(rate=[i / 20 for i in range(VECTOR_SIZE)]),
-                integration_rate=[i / 10 for i in range(VECTOR_SIZE)]
-        )
+        with pytest.warns(UserWarning) as warnings:
+            T = TransferMechanism(
+                    name='T',
+                    default_variable=[0 for i in range(VECTOR_SIZE)],
+                    integrator_mode=True,
+                    integrator_function=AdaptiveIntegrator(rate=[i / 20 for i in range(VECTOR_SIZE)]),
+                    integration_rate=[i / 10 for i in range(VECTOR_SIZE)]
+            )
+            assert any(str(w.message).startswith('Specification of the "integration_rate" parameter')
+                       for w in warnings), "Warnings: {}".format([str(w.message) for w in warnings])
         EX = pytest.helpers.get_mech_execution(T, mech_mode)
 
         var = [1 for i in range(VECTOR_SIZE)]
@@ -633,19 +636,23 @@ class TestTransferMechanismIntegratorFunctionParams:
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism Parameter Array Assignments")
     def test_transfer_mech_array_assignments_fct_initlzr_over_mech_init_val(self, benchmark, mech_mode):
-        T = TransferMechanism(
-            name='T',
-            default_variable=[0 for i in range(VECTOR_SIZE)],
-            integrator_mode=True,
-            integrator_function=AdaptiveIntegrator(
-                    default_variable=[0 for i in range(VECTOR_SIZE)],
-                    initializer=[i / 10 for i in range(VECTOR_SIZE)]
-            ),
-            initial_value=[i / 10 for i in range(VECTOR_SIZE)]
-        )
-        EX = pytest.helpers.get_mech_execution(T, mech_mode)
+        with pytest.warns(UserWarning) as warnings:
+            T = TransferMechanism(
+                name='T',
+                default_variable=[0 for i in range(VECTOR_SIZE)],
+                integrator_mode=True,
+                integrator_function=AdaptiveIntegrator(
+                        default_variable=[0 for i in range(VECTOR_SIZE)],
+                        initializer=[i / 10 for i in range(VECTOR_SIZE)]
+                ),
+                initial_value=[i / 10 for i in range(VECTOR_SIZE)]
+            )
+            assert any(str(w.message).startswith('Specification of the "initial_value" parameter')
+                       for w in warnings), "Warnings: {}".format([str(w.message) for w in warnings])
 
+        EX = pytest.helpers.get_mech_execution(T, mech_mode)
         var = [1 for i in range(VECTOR_SIZE)]
+
         EX(var)
         val = benchmark(EX, var)
         assert np.allclose(val, [[ 0.75,  0.775,  0.8, 0.825]])
@@ -768,16 +775,20 @@ class TestTransferMechanismIntegratorFunctionParams:
     # FIXME: Incorrect T.integrator_function.defaults.variable reported
     def test_transfer_mech_array_assignments_fct_over_mech_noise(self, benchmark, mech_mode):
 
-        T = TransferMechanism(
-                name='T',
-                default_variable=[0 for i in range(VECTOR_SIZE)],
-                integrator_mode=True,
-                integrator_function=AdaptiveIntegrator(noise=[i / 20 for i in range(VECTOR_SIZE)]),
-                noise=[i / 10 for i in range(VECTOR_SIZE)]
-        )
-        EX = pytest.helpers.get_mech_execution(T, mech_mode)
+        with pytest.warns(UserWarning) as warnings:
+            T = TransferMechanism(
+                    name='T',
+                    default_variable=[0 for i in range(VECTOR_SIZE)],
+                    integrator_mode=True,
+                    integrator_function=AdaptiveIntegrator(noise=[i / 20 for i in range(VECTOR_SIZE)]),
+                    noise=[i / 10 for i in range(VECTOR_SIZE)]
+            )
+            assert any(str(w.message).startswith('Specification of the "noise" parameter')
+                       for w in warnings), "Warnings: {}".format([str(w.message) for w in warnings])
 
+        EX = pytest.helpers.get_mech_execution(T, mech_mode)
         var = [1 for i in range(VECTOR_SIZE)]
+
         EX(var)
         val = benchmark(EX, var)
         assert np.allclose(val, [[ 0.75, 0.825, 0.9, 0.975]])
