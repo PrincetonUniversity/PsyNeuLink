@@ -871,7 +871,7 @@ class DDM(ProcessingMechanism):
         if 'reset_stateful_function_when' not in kwargs:
             kwargs['reset_stateful_function_when'] = AtTrialStart()
 
-        # FIXME: Set maximum executions absurdly large to avoid early termination
+        # Set maximum executions absurdly large to avoid early termination
         self.max_executions_before_finished = sys.maxsize
 
         super(DDM, self).__init__(default_variable=default_variable,
