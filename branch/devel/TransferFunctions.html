@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferFunctions &mdash; PsyNeuLink 0.12.1.0+96.g89d25610 documentation</title>
+  <title>TransferFunctions &mdash; PsyNeuLink 0.12.1.0+102.gc5c4940f documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.12.1.0+96
+                  0.12.1.0+102
                 </div>
               
             
@@ -218,6 +218,8 @@
 <section id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>Functions that transform their variable but maintain its shape.</p>
+<section id="standard-attributes">
+<span id="transferfunction-standardattributes"></span><h3>Standard Attributes<a class="headerlink" href="#standard-attributes" title="Permalink to this headline">¶</a></h3>
 <p>All TransferFunctions have the following attributes:</p>
 <ul class="simple">
 <li><p><strong>bounds</strong>:  specifies the lower and upper limits of the result;  if there are none, the attribute is set to
@@ -230,6 +232,17 @@ each of these is assigned the name of one of the function’s
 parameters and used by <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a> to modulate the output of the
 TransferFunction’s function (see <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">Modulatory Parameters</span></a>).</p></li>
 </ul>
+</section>
+<section id="derivatives">
+<span id="transferfunction-derivative"></span><h3>Derivatives<a class="headerlink" href="#derivatives" title="Permalink to this headline">¶</a></h3>
+<p>Most TransferFunctions have a derivative method.  These take both an <strong>input</strong> and <strong>output</strong> argument.  In general,
+the <strong>input</strong> is used to compute the derivative of the function at that value. If that is not provided, some
+Functions can compute the derivative using the function’s output, either directly (such as <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.derivative" title="psyneulink.core.components.functions.transferfunctions.Logistic.derivative"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Logistic.derivative</span></code></a>) or by
+inferring the input from the <strong>output</strong> and then computing the derivative for that value (such as <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.ReLU.derivative" title="psyneulink.core.components.functions.transferfunctions.ReLU.derivative"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">ReLU.derivative</span></code></a>)</p>
+</section>
+</section>
+<section id="tranferfunction-class-references">
+<h2>TranferFunction Class References<a class="headerlink" href="#tranferfunction-class-references" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.Angle">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.transferfunctions.</span></span><span class="sig-name descname"><span class="pre">Angle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Angle" title="Permalink to this definition">¶</a></dt>
@@ -1579,8 +1592,10 @@ arguments of the constructor.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.ReLU.derivative">
-<span class="sig-name descname"><span class="pre">derivative</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.ReLU.derivative" title="Permalink to this definition">¶</a></dt>
-<dd><p>Derivative of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.ReLU._function" title="psyneulink.core.components.functions.transferfunctions.ReLU._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a> at <strong>input</strong>.</p>
+<span class="sig-name descname"><span class="pre">derivative</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">input</span> <span class="pre">or</span> <span class="pre">else</span> <span class="pre">output</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.ReLU.derivative" title="Permalink to this definition">¶</a></dt>
+<dd><p>Derivative of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.ReLU._function" title="psyneulink.core.components.functions.transferfunctions.ReLU._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a> at <strong>input</strong> or <strong>output</strong>.  If <strong>input</strong> is specified, that
+is used to compute the derivative;  if <strong>input</strong> is not specified, it is inferred from the <strong>output</strong>
+and then used to compute the derivative.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>input</strong> (<em>number</em>) – value of the input to the ReLU transform at which derivative is to be taken.</p>
@@ -1678,7 +1693,7 @@ sum of values to 1 (i.e., their <a class="reference external" href="https://en.w
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.SoftMax.per_item">
 <span class="sig-name descname"><span class="pre">per_item</span></span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.per_item" title="Permalink to this definition">¶</a></dt>
-<dd><p>for 2d variables, determines whether the SoftMax function will be applied to the entire variable (per_item =
+<dd><p>for 2d variables, determines whether the SoftMax function is applied to the entire variable (per_item =
 False), or applied to each item in the variable separately (per_item = True).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -2581,7 +2596,12 @@ based on its integral (i.e., it accumulated value over multiple executions).</p>
             <div class="psyneulink-side-scroll" id="psyneulink-side-scroll-right">
               <ul>
 <li><a class="reference internal" href="#">TransferFunctions</a><ul>
-<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#overview">Overview</a><ul>
+<li><a class="reference internal" href="#standard-attributes">Standard Attributes</a></li>
+<li><a class="reference internal" href="#derivatives">Derivatives</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tranferfunction-class-references">TranferFunction Class References</a></li>
 </ul>
 </li>
 </ul>

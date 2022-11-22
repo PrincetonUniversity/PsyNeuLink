@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutodiffComposition &mdash; PsyNeuLink 0.12.1.0+96.g89d25610 documentation</title>
+  <title>AutodiffComposition &mdash; PsyNeuLink 0.12.1.0+102.gc5c4940f documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.12.1.0+96
+                  0.12.1.0+102
                 </div>
               
             
@@ -219,54 +219,146 @@
 <li><p><a class="reference internal" href="#autodiffcomposition-creation"><span class="std std-ref">Creating an AutodiffComposition</span></a></p></li>
 <li><dl class="simple">
 <dt><a class="reference internal" href="#autodiffcomposition-execution"><span class="std std-ref">Execution</span></a></dt><dd><ul>
+<li><p><a class="reference internal" href="#autodiffcomposition-llvm"><span class="std std-ref">LLVM mode</span></a></p></li>
+<li><p><a class="reference internal" href="#autodiffcomposition-pytorch"><span class="std std-ref">PyTorch mode</span></a></p></li>
+<li><p><a class="reference internal" href="#autodiffcomposition-nested-modulation"><span class="std std-ref">Nested Execution and Modulation</span></a></p></li>
 <li><p><a class="reference internal" href="#autodiffcomposition-logging"><span class="std std-ref">Logging</span></a></p></li>
-<li><p><a class="reference internal" href="#autodiffcomposition-nested-execution"><span class="std std-ref">Nested Execution</span></a></p></li>
 </ul>
 </dd>
 </dl>
 </li>
+<li><p><a class="reference internal" href="#autodiffcomposition-examples"><span class="std std-ref">Examples</span></a></p></li>
 <li><p><a class="reference internal" href="#autodiffcomposition-class-reference"><span class="std std-ref">Class Reference</span></a></p></li>
 </ul>
 </div></blockquote>
 </section>
 <section id="overview">
 <span id="autodiffcomposition-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>As of PsyNeuLink 0.7.5, the API for using AutodiffCompositions has been slightly changed!
-Please see <a class="reference internal" href="RefactoredLearningGuide.html"><span class="doc">this link</span></a> for more details!</p>
-</div>
-<p>AutodiffComposition is a subclass of <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> used to train feedforward neural network models through integration
-with <a class="reference external" href="https://pytorch.org/">PyTorch</a>, a machine learning library that executes considerably more quickly
-than using the <a class="reference internal" href="Composition.html#composition-learning-standard"><span class="std std-ref">standard implementation of learning</span></a> in a Composition, using its
-<a class="reference internal" href="Composition.html#composition-learning-methods"><span class="std std-ref">learning methods</span></a>. An AutodiffComposition is configured and run similarly to a standard
-Composition, with some exceptions that are described below.</p>
+<p>AutodiffComposition is a subclass of <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> for constructing and training feedforward neural network
+either, using either direct compilation (to LLVM) or automatic conversion to <a class="reference external" href="https://pytorch.org/">PyTorch</a>,
+both of which considerably accelerate training (by as much as three orders of magnitude) compared to the
+<a class="reference internal" href="Composition.html#composition-learning-standard"><span class="std std-ref">standard implementation of learning</span></a> in a Composition.  Although an
+AutodiffComposition is constructed and executed in much the same way as a standard Composition, it largely restricted
+to feedforward neural networks using <a class="reference internal" href="Composition.html#composition-learning-supervised"><span class="std std-ref">supervised learning</span></a>, and in particular the
+the <a class="reference external" href="https://en.wikipedia.org/wiki/Backpropagation">backpropagation learning algorithm</a>. although it can be used for
+some forms of <a class="reference internal" href="Composition.html#composition-learning-unsupervised"><span class="std std-ref">unsupervised learning</span></a> that are supported in PyTorch (e.g.,
+<a class="reference external" href="https://github.com/giannisnik/som">self-organized maps</a>).</p>
 </section>
 <section id="creating-an-autodiffcomposition">
 <span id="autodiffcomposition-creation"></span><h2>Creating an AutodiffComposition<a class="headerlink" href="#creating-an-autodiffcomposition" title="Permalink to this headline">¶</a></h2>
-<p>An AutodiffComposition can be created by calling its constructor, and then adding <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> using the
-standard <a class="reference internal" href="Composition.html#composition-creation"><span class="std std-ref">Composition methods</span></a> for doing so.  The constructor also includes an number of
-parameters that are specific to the AutodiffComposition. See <a class="reference internal" href="#autodiffcomposition-class-reference"><span class="std std-ref">Class Reference</span></a> for a list of
-these parameters.</p>
-<div class="admonition warning">
+<p>An AutodiffComposition can be created by calling its constructor, and then adding <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> using
+the standard <a class="reference internal" href="Composition.html#composition-creation"><span class="std std-ref">Composition methods</span></a> for doing so (e.g., <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.add_node" title="psyneulink.core.compositions.composition.Composition.add_node"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">add_node</span></code></a>,
+<a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.add_projections" title="psyneulink.core.compositions.composition.Composition.add_projections"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">add_projection</span></code></a>,  <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.add_linear_processing_pathway" title="psyneulink.core.compositions.composition.Composition.add_linear_processing_pathway"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">add_linear_processing_pathway</span></code></a>, etc.).  The constructor also includes a number of parameters that are
+specific to the AutodiffComposition (see <a class="reference internal" href="#autodiffcomposition-class-reference"><span class="std std-ref">Class Reference</span></a> for a list of these parameters,
+and <a class="reference internal" href="#autodiffcomposition-examples"><span class="std std-ref">examples</span></a> below).  Note that all of the Components in an AutodiffComposition
+must be able to be subject to <a class="reference internal" href="Composition.html#composition-learning"><span class="std std-ref">learning</span></a>, but cannot include any <a class="reference internal" href="Composition.html#composition-learning-components"><span class="std std-ref">learning components</span></a> themselves.  Specifically, it cannot include any <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanisms</span></a>, <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a>, or the ObjectiveMechanism &lt;OBJECTIVE_MECHANISM&gt;`
+used to compute the loss for learning.</p>
+<blockquote>
+<div><div class="admonition warning" id="autodiff-learning-components-warning">
 <p class="admonition-title">Warning</p>
-<p>Mechanisms or Projections should not be added to or deleted from an AutodiffComposition after it has
-been run for the first time. Unlike an ordinary Composition, AutodiffComposition does not support this
-functionality.</p>
+<p>When an AutodiffComposition is constructed, it creates all of the learning Components
+that are needed, and thus <strong>cannot include</strong> any that are prespecified.</p>
+</div>
+</div></blockquote>
+<p>This means that an AutodiffComposition also cannot itself include a <a class="reference internal" href="Composition.html#composition-controller"><span class="std std-ref">controller</span></a> or any
+<a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanisms</span></a>.  However, it can include Mechanisms that are subject to modulatory control
+(see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-anatomy-figure"><span class="std std-ref">Figure</span></a>, and <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">modulation</span></a>) by ControlMechanisms
+<em>outside</em> the Composition, including the controller of a Composition within which the AutodiffComposition is nested.
+That is, an AutodiffComposition can be <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested in a Composition</span></a> that has such other Components
+(see <a class="reference internal" href="#autodiffcomposition-nested-modulation"><span class="std std-ref">Nested Execution and Modulation</span></a> below).</p>
+<p>A few other restrictions apply to the construction and modification of AutodiffCompositions:</p>
+<blockquote>
+<div><div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>AutodiffComposition does not (currently) support the <em>automatic</em> construction of separate bias parameters.
+Thus, when comparing a model constructed using an AutodiffComposition to a corresponding model in PyTorch, the
+<code class="xref any docutils literal notranslate"><span class="pre">bias</span></code> parameter of PyTorch modules should be set
+to <code class="xref any docutils literal notranslate"><span class="pre">False</span></code>.  Trainable biases <em>can</em> be specified explicitly in an AutodiffComposition by including a
+TransferMechanism that projects to the relevant Mechanism (i.e., implementing that layer of the network to
+receive the biases) using a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> with a <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter that
+implements a diagnoal matrix with values corresponding to the initial value of the biases.</p>
 </div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>When comparing models built in PyTorch to those using AutodiffComposition,
-the <code class="xref any docutils literal notranslate"><span class="pre">bias</span></code> parameter of PyTorch modules
-should be set to <code class="xref any docutils literal notranslate"><span class="pre">False</span></code>, as AutodiffComposition does not currently support trainable biases.</p>
+<p>Mechanisms or Projections should not be added to or deleted from an AutodiffComposition after it
+has been executed. Unlike an ordinary Composition, AutodiffComposition does not support this functionality.</p>
 </div>
+</div></blockquote>
 </section>
 <section id="execution">
 <span id="autodiffcomposition-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>An AutodiffComposition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a>, <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.execute" title="psyneulink.core.compositions.composition.Composition.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a>, and <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a>
-methods are the same as for a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>.</p>
-<p>The following is an example showing how to create a
-simple AutodiffComposition, specify its inputs and targets, and run it with learning enabled and disabled.</p>
+methods are the same as for a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>.  However, the <strong>execution_mode</strong> in the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a>
+method has different effects than for a standard Composition, that determine whether it uses <a class="reference internal" href="#autodiffcomposition-llvm"><span class="std std-ref">LLVM compilation</span></a> or <a class="reference internal" href="#autodiffcomposition-pytorch"><span class="std std-ref">translation to PyTorch</span></a> to execute learning.
+This <a class="reference internal" href="Composition.html#composition-compilation-table"><span class="std std-ref">table</span></a> provides a summary and comparison of these different modes of execution,
+that are described in greater detail below.</p>
+<section id="llvm-mode">
+<span id="autodiffcomposition-llvm"></span><h3><em>LLVM mode</em><a class="headerlink" href="#llvm-mode" title="Permalink to this headline">¶</a></h3>
+<p>This is specified by setting <strong>execution_mode</strong> = <a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.LLVMRun" title="psyneulink.core.llvm.__init__.ExecutionMode.LLVMRun"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode.LLVMRun</span></code></a> in the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method
+of an AutodiffCompositon.  This provides the fastest performance, but is limited to <a class="reference internal" href="Composition.html#composition-learning-supervised"><span class="std std-ref">supervised learning</span></a> using the <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.BackPropagation" title="psyneulink.core.components.functions.learningfunctions.BackPropagation"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BackPropagation</span></code></a> algorithm. This can be run using standard forms of
+loss, including mean squared error (MSE) and cross entropy, by specifying this in the <strong>loss_spec</strong> argument of
+the constructor (see <a class="reference internal" href="#autodiffcomposition-class-reference"><span class="std std-ref">AutodiffComposition</span></a> for additional details, and
+<a class="reference internal" href="Composition.html#composition-compiled-modes"><span class="std std-ref">Compilation Modes</span></a> for more information about executing a Composition in compiled mode.</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Specifying <code class="xref any docutils literal notranslate"><span class="pre">ExecutionMode.LLVMRUn</span></code> in either the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> and <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a>
+methods of an AutodiffComposition causes it to (attempt to) use compiled execution in both cases; this is
+because LLVM compilation supports the use of modulation in PsyNeuLink models (as compared to <a class="reference internal" href="#autodiffcomposition-pytorch"><span class="std std-ref">PyTorch mode</span></a>; see <a class="reference internal" href="#autodiffcomposition-pytorch-note"><span class="std std-ref">note</span></a> below).</p>
+</div>
+</div></blockquote>
+</section>
+<section id="pytorch-mode">
+<span id="autodiffcomposition-pytorch"></span><h3><em>PyTorch mode</em><a class="headerlink" href="#pytorch-mode" title="Permalink to this headline">¶</a></h3>
+<p>This is specified by setting <a href="#id1"><span class="problematic" id="id2">**</span></a>execution_mode = <a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.PyTorch" title="psyneulink.core.llvm.__init__.ExecutionMode.PyTorch"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode.PyTorch</span></code></a> in the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method of
+an AutodiffCompositon (see <a class="reference internal" href="BasicsAndPrimer.html#basicsandprimer-rumelhart-model"><span class="std std-ref">example</span></a> in <a class="reference internal" href="BasicsAndPrimer.html"><span class="doc">Basics and Primer</span></a>).  This automatically
+translates the AutodiffComposition to a <a class="reference external" href="https://pytorch.org">PyTorch</a> model and uses that for execution.  This is
+almost as fast as <code class="xref any docutils literal notranslate"><span class="pre">LLVM</span> <span class="pre">compilation</span></code>, but provides greater flexiblity.  Although it too is
+best suited for use with <a class="reference internal" href="Composition.html#composition-learning-supervised"><span class="std std-ref">supervised learning</span></a>, it can also be used for some forms
+of <a class="reference internal" href="Composition.html#composition-learning-unsupervised"><span class="std std-ref">unsupervised learning</span></a> that are supported in PyTorch (e.g., <a class="reference external" href="https://github.com/giannisnik/som">self-organized
+maps</a>).</p>
+<blockquote>
+<div><div class="admonition note" id="autodiffcomposition-pytorch-note">
+<p class="admonition-title">Note</p>
+<p>While specifying <a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.PyTorch" title="psyneulink.core.llvm.__init__.ExecutionMode.PyTorch"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode.PyTorch</span></code></a> in the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a>  method of an AutodiffComposition
+causes it to use PyTorch for training, specifying this in the <code class="xref any docutils literal notranslate"><span class="pre">run</span></code> method causes it to be
+executing using the <em>Python</em> interpreter (and not PyTorch);  this is so that any modulation can take effect
+during execution (see <a class="reference internal" href="#autodiffcomposition-nested-modulation"><span class="std std-ref">Nested Execution and Modulation</span></a> below), which is not supported by PyTorch.</p>
+</div>
+</div></blockquote>
+<div class="technical-note docutils container">
+<p><a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.PyTorch" title="psyneulink.core.llvm.__init__.ExecutionMode.PyTorch"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode.PyTorch</span></code></a> is a synonym for <a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.Python" title="psyneulink.core.llvm.__init__.ExecutionMode.Python"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode.Python</span></code></a>, that is provided for clarity of the user interface:
+the default for an AutodiffComposition (i.e., if <strong>execution_mode</strong> is not specified, or it is set to
+<a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.Python" title="psyneulink.core.llvm.__init__.ExecutionMode.Python"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode.Python</span></code></a>) is to use PyTorch translation in <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> but the Python interpreter
+for <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a>.  The use of <a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.PyTorch" title="psyneulink.core.llvm.__init__.ExecutionMode.PyTorch"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode.PyTorch</span></code></a> is simply to make it clear that, during learning,
+it will use PyTorch. This contrasts with the use of <code class="xref any docutils literal notranslate"><span class="pre">ExecutionMode.LLVMrun</span></code>, in which case both the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> and <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> methods use LLVM compilation.</p>
+</div>
+</section>
+<section id="nested-execution-and-modulation">
+<span id="autodiffcomposition-nested-modulation"></span><h3><em>Nested Execution and Modulation</em><a class="headerlink" href="#nested-execution-and-modulation" title="Permalink to this headline">¶</a></h3>
+<p>Like any other <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, an AutodiffComposition may be <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested</span></a> inside another
+(see <a class="reference internal" href="#autodiffcomposition-nested-example"><span class="std std-ref">example</span></a> below).  However, learning, none of the internal
+Components of the AutodiffComposition (e.g., intermediate layers of a neural network model) are accessible to the
+other Components of the outer Composition, (e.g., as sources of information, or for <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">modulation</span></a>).  However, when
+it is executed using its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> method, then the  AutodiffComposition functions like any other,
+and all of its internal Components are accessible to other Components of the outer Composition. Thus, as long as access
+to its internal Components is not needed during learning, an <a class="reference internal" href="#"><span class="doc">AutodiffComposition</span></a> can be trained, and then used to
+execute the trained Composition like any other.</p>
+</section>
+<section id="logging">
+<span id="autodiffcomposition-logging"></span><h3><em>Logging</em><a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h3>
+<p>Logging in AutodiffCompositions follows the same procedure as <a class="reference internal" href="Log.html"><span class="doc">logging in a Composition</span></a>.
+However, since an AutodiffComposition internally converts all of its Mechanisms either to LLVM
+or to an equivalent PyTorch model, then its inner components are not actually executed. This means that there is
+limited support for logging parameters of components inside an AutodiffComposition; Currently, the only supported
+parameters are:</p>
+<ol class="arabic simple">
+<li><p>the <a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter of Projections</p></li>
+<li><p>the <a class="reference internal" href="ControlProjection.html#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.value" title="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> parameter of its inner components</p></li>
+</ol>
+<p class="rubric" id="autodiffcomposition-examples">Examples</p>
+<p id="autodiffcomposition-creation-example">The following is an example showing how to create a simple AutodiffComposition, specify its inputs and targets,
+and run it with learning enabled and disabled:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Set up PsyNeuLink Components</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech_1</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span>
@@ -289,21 +381,7 @@ simple AutodiffComposition, specify its inputs and targets, and run it with lear
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_autodiff</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span> <span class="o">=</span> <span class="n">input_dict</span><span class="p">[</span><span class="s1">&#39;inputs&#39;</span><span class="p">])</span>
 </pre></div>
 </div>
-<section id="logging">
-<span id="autodiffcomposition-logging"></span><h3>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h3>
-<p>Logging in AutodiffCompositions follows the same procedure as <a class="reference internal" href="Log.html"><span class="doc">logging in a Composition</span></a>.
-However, since an AutodiffComposition internally converts all of its mechanisms to an equivalent PyTorch model,
-then its inner components are not actually executed. This means that there is limited support for
-logging parameters of components inside an AutodiffComposition; Currently, the only supported parameters are:</p>
-<ol class="arabic simple">
-<li><p>the <a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter of Projections</p></li>
-<li><p>the <a class="reference internal" href="ControlProjection.html#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.value" title="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> parameter of its inner components</p></li>
-</ol>
-</section>
-<section id="nested-execution">
-<span id="autodiffcomposition-nested-execution"></span><h3>Nested Execution<a class="headerlink" href="#nested-execution" title="Permalink to this headline">¶</a></h3>
-<p>Like any other <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, an AutodiffComposition may be <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested inside another</span></a>.</p>
-<p>The following shows how the AutodiffComposition created in the previous example can be nested and run inside another
+<p id="autodiffcomposition-nested-example">The following shows how the AutodiffComposition created in the previous example can be nested and run inside another
 Composition:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Create outer composition</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_outer_composition</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Composition</span><span class="p">()</span>
@@ -320,9 +398,9 @@ Composition:</p>
 <span id="autodiffcomposition-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.library.compositions.autodiffcomposition.</span></span><span class="sig-name descname"><span class="pre">AutodiffComposition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pathways</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'sgd'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_decay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_spec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'mse'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">disable_learning</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refresh_losses</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">disable_cuda</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cuda_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_no_retain_graph</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'autodiff_composition'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition" title="Permalink to this definition">¶</a></dt>
-<dd><p>Subclass of <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> that trains models using <a class="reference external" href="https://pytorch.org">PyTorch</a>.
-See <a class="reference internal" href="Composition.html#composition-class-reference"><span class="std std-ref">Composition</span></a> for additional arguments and attributes.</p>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.library.compositions.autodiffcomposition.</span></span><span class="sig-name descname"><span class="pre">AutodiffComposition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pathways</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'sgd'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_decay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_spec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Loss.MSE</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">disable_learning</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refresh_losses</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">disable_cuda</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cuda_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_no_retain_graph</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'autodiff_composition'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subclass of <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> that trains models using either LLVM compilation or <a class="reference external" href="https://pytorch.org">PyTorch</a>;
+see and <a class="reference internal" href="Composition.html#composition-class-reference"><span class="std std-ref">Composition</span></a> for additional arguments and attributes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -330,16 +408,44 @@ See <a class="reference internal" href="Composition.html#composition-class-refer
 <li><p><strong>disable_learning</strong> (<em>bool: default False</em>) – specifies whether the AutodiffComposition should disable learning when run in <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learning</span> <span class="pre">mode</span></code></a>.</p></li>
 <li><p><strong>optimizer_type</strong> (<em>str : default 'sgd'</em>) – the kind of optimizer used in training. The current options are ‘sgd’ or ‘adam’.</p></li>
 <li><p><strong>weight_decay</strong> (<em>float : default 0</em>) – specifies the L2 penalty (which discourages large weights) used by the optimizer.</p></li>
-<li><p><strong>loss_spec</strong> (<em>str</em><em> or </em><em>PyTorch loss function : default 'mse'</em>) – specifies the loss function for training. The current string options are ‘mse’ (the default), ‘crossentropy’,
-‘l1’, ‘nll’, ‘poissonnll’, and ‘kldiv’. Any PyTorch loss function can work here, such as ones from
-<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#loss-functions">https://pytorch.org/docs/stable/nn.html#loss-functions</a></p></li>
-<li><p><strong>losses</strong> (<em>list of floats</em>) – tracks the average for each weight update (i.e. each minibatch)</p></li>
-<li><p><strong>optimizer</strong> (<em>PyTorch optimizer function</em>) – the optimizer used for training. Depends on the <strong>optimizer_type</strong>, <strong>learning_rate</strong>, and <strong>weight_decay</strong>
-arguments from initialization.</p></li>
-<li><p><strong>loss</strong> (<em>PyTorch loss function</em>) – the loss function used for training. Depends on the <strong>loss_spec</strong> argument from initialization.</p></li>
+<li><p><strong>loss_spec</strong> (<a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.Loss" title="psyneulink.core.globals.keywords.Loss"><em>Loss</em></a><em> or </em><em>PyTorch loss function : default Loss.MSE</em>) – specifies the loss function for training; see <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.Loss" title="psyneulink.core.globals.keywords.Loss"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Loss</span></code></a> for arguments.</p></li>
 </ul>
 </dd>
 </dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.losses">
+<span class="sig-name descname"><span class="pre">losses</span></span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.losses" title="Permalink to this definition">¶</a></dt>
+<dd><p>tracks the average for each weight update (i.e. each minibatch)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list of floats</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.optimizer">
+<span class="sig-name descname"><span class="pre">optimizer</span></span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.optimizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>the optimizer used for training. Depends on the <strong>optimizer_type</strong>, <strong>learning_rate</strong>, and <strong>weight_decay</strong>
+arguments from initialization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>PyTorch optimizer function</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.loss">
+<span class="sig-name descname"><span class="pre">loss</span></span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.loss" title="Permalink to this definition">¶</a></dt>
+<dd><p>the loss function used for training. Depends on the <strong>loss_spec</strong> argument from initialization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>PyTorch loss function</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._update_learning_parameters">
 <span class="sig-name descname"><span class="pre">_update_learning_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._update_learning_parameters" title="Permalink to this definition">¶</a></dt>
@@ -403,7 +509,7 @@ if it is greater than there are inputs then inputs will be repeated (see <a clas
 for additional information).</p></li>
 <li><p><strong>epochs</strong> (<em>int</em><em> (</em><em>default=1</em><em>)</em>) – specifies the number of training epochs (that is, repetitions of the batched input set) to run with</p></li>
 <li><p><strong>learning_rate</strong> (<em>float : default None</em>) – specifies the learning_rate used by all <a class="reference internal" href="Composition.html#composition-learning-pathway"><span class="std std-ref">learning pathways</span></a>
-when the Composition’s learn method is called.  This overrides the <a href="#id2"><span class="problematic" id="id3">`</span></a>learning_rate specified
+when the Composition’s learn method is called.  This overrides the <a href="#id6"><span class="problematic" id="id7">`</span></a>learning_rate specified
 for any individual Pathways at construction, but only applies for the current execution of
 the learn method.</p></li>
 <li><p><strong>minibatch_size</strong> (<em>int</em><em> (</em><em>default=1</em><em>)</em>) – specifies the size of the minibatches to use. The input trials will be batched and run, after which
@@ -426,7 +532,7 @@ as part of the output report; see <a class="reference internal" href="Report.htm
 <li><p><strong>report_progress</strong> (<em>ReportProgress : default ReportProgress.OFF</em>) – specifies whether to report progress of execution in real time; see <a class="reference internal" href="Report.html#report-progress"><span class="std std-ref">Progress Reporting</span></a> for additional
 details.</p></li>
 <li><p><strong>report_simulations</strong> (<em>ReportSimulatons : default ReportSimulations.OFF</em>) – specifies whether to show output and/or progress for <a class="reference internal" href="OptimizationControlMechanism.html#optimizationcontrolmechanism-execution"><span class="std std-ref">simulations</span></a> executed by the Composition’s <a class="reference internal" href="Composition.html#composition-controller"><span class="std std-ref">controller</span></a>; see <a class="reference internal" href="Report.html#report-simulations"><span class="std std-ref">Simulations</span></a> for additional details.</p></li>
-<li><p><strong>report_to_devices</strong> (<em>list</em><em>(</em><a class="reference internal" href="Report.html#psyneulink.core.compositions.report.ReportDevices" title="psyneulink.core.compositions.report.ReportDevices"><em>ReportDevices</em></a><em>) </em><em>: default ReportDevices.CONSOLE</em>) – specifies where output and progress should be reported; see <code class="xref any docutils literal notranslate"><span class="pre">Report_To_Devices</span></code> for additional
+<li><p><strong>report_to_devices</strong> (<em>list</em><em>(</em><a class="reference internal" href="Report.html#psyneulink.core.compositions.report.ReportDevices" title="psyneulink.core.compositions.report.ReportDevices"><em>ReportDevices</em></a><em>) </em><em>: default ReportDevices.CONSOLE</em>) – specifies where output and progress should be reported; see <code class="xref any docutils literal notranslate"><span class="pre">Report_To_Device</span></code> for additional
 details and <a class="reference internal" href="Report.html#psyneulink.core.compositions.report.ReportDevices" title="psyneulink.core.compositions.report.ReportDevices"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ReportDevices</span></code></a> for options.</p></li>
 </ul>
 </dd>
@@ -594,8 +700,10 @@ in the AutodiffComposition are saved.</p></li>
 <li><a class="reference internal" href="#overview">Overview</a></li>
 <li><a class="reference internal" href="#creating-an-autodiffcomposition">Creating an AutodiffComposition</a></li>
 <li><a class="reference internal" href="#execution">Execution</a><ul>
-<li><a class="reference internal" href="#logging">Logging</a></li>
-<li><a class="reference internal" href="#nested-execution">Nested Execution</a></li>
+<li><a class="reference internal" href="#llvm-mode"><em>LLVM mode</em></a></li>
+<li><a class="reference internal" href="#pytorch-mode"><em>PyTorch mode</em></a></li>
+<li><a class="reference internal" href="#nested-execution-and-modulation"><em>Nested Execution and Modulation</em></a></li>
+<li><a class="reference internal" href="#logging"><em>Logging</em></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#class-reference">Class Reference</a></li>
