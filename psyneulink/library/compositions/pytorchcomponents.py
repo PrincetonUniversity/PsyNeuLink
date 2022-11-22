@@ -1,4 +1,4 @@
-from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear, Logistic, ReLU
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear, Logistic, ReLU, SoftMax
 from psyneulink.library.compositions.pytorchllvmhelper import *
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core import llvm as pnlvm
@@ -10,7 +10,8 @@ __all__ = ['PytorchMechanismWrapper', 'PytorchProjectionWrapper']
 def pytorch_function_creator(function, device, context=None):
     """
     Converts a PsyNeuLink function into an equivalent PyTorch lambda function.
-    NOTE: This is needed due to PyTorch limitations (see: https://github.com/PrincetonUniversity/PsyNeuLink/pull/1657#discussion_r437489990)
+    NOTE: This is needed due to PyTorch limitations
+    (see: https://github.com/PrincetonUniversity/PsyNeuLink/pull/1657#discussion_r437489990)
     """
     def get_fct_param_value(param_name):
         val = function._get_current_parameter_value(
@@ -37,6 +38,10 @@ def pytorch_function_creator(function, device, context=None):
         leak = get_fct_param_value('leak')
         return lambda x: (torch.max(input=(x - bias), other=torch.tensor([0], device=device).double()) * gain +
                             torch.min(input=(x - bias), other=torch.tensor([0], device=device).double()) * leak)
+
+    elif isinstance(function, SoftMax):
+        gain = get_fct_param_value('gain')
+        return lambda x: (torch.softmax(x, len(x), other=torch.tensor([0], device=device).double()))
 
     else:
         raise Exception(f"Function {function} is not currently supported in AutodiffCompositions!")

@@ -115,20 +115,22 @@ The Node(s) specified in each entry of the list project to the Node(s) specified
 *Pathway Projection Specifications*
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Where no Projections are specified between entries in the list, default Projections (using a `FULL_CONNECTIVITY_MATRIX`;
-see `MappingProjection_Matrix_Specification`) are created from each Node in the first entry, as the sender(s),
-to each Node in the second, as receiver(s) (described further `below <Pathway_Projections>`).  Projections between
-Nodes in the two entries can also be specified explicitly, by intercolating a Projection or set of Projections between
-the two entries in the list.  If the sender and receiver are both a single Mechanism, then a single `MappingProjection`
-can be `specified<MappingProjection_Creation>` between them.  The same applies if the sender is a `Composition` with
-a single `OUTPUT <NodeRole.OUTPUT>` Node and/or the receiver is a `Composition` with a single `INPUT <NodeRole.INPUT>`
-Node.  If either is a set of Nodes, or is a `nested Composition <Composition_Nested>` with more than one `INPUT
-<NodeRole.INPUT>` or `OUTPUT <NodeRole.OUTPUT>` Node, respectively, then a collection of Projections can be specified
-between any or all pairs of the Nodes in the set(s) and/or nested Composition(s), using either a set or list of
-Projections (order of specification does not matter whether a set or a list is used). The collection can contain
-`MappingProjections <MappingProjection>` between a specific pairs of Nodes and/or a single default specification
-(either a `matrix <MappingProjection.matrix>` specification or a MappingProjection without any `sender
-<MappingProjection.sender>` or `receiver <MappingProjection.receiver>` specified).
+Where no Projections are specified between entries in the list, default Projections are created (using a
+`FULL_CONNECTIVITY_MATRIX`, or the Pathway's `default_projection <Pathway.default_projection_matrix>` if specified)
+from each Node in the first entry, as the sender(s), to each Node in the second, as receiver(s) (described further
+`below <Pathway_Projections>`).  Projections between Nodes in the two entries can also be specified explicitly, by
+intercolating a Projection or set of Projections between the two entries in the list. If the sender and receiver are
+both a single Mechanism, then a single `MappingProjection` can be `specified<MappingProjection_Creation>` between
+them.  The same applies if the sender is a `Composition` with a single `OUTPUT <NodeRole.OUTPUT>` Node and/or the
+receiver is a `Composition` with a single `INPUT <NodeRole.INPUT>` Node.  If either is a set of Nodes, or is a
+`nested Composition <Composition_Nested>` with more than one `INPUT <NodeRole.INPUT>` or `OUTPUT <NodeRole.OUTPUT>`
+Node, respectively, then a collection of Projections can be specified between any or all pairs of the Nodes in the
+set(s) and/or nested Composition(s), using either a set or list of Projections (order of specification does not matter
+whether a set or a list is used). The collection can contain `MappingProjections <MappingProjection>` between specific
+pairs of Nodes and/or a single default specification (either a `matrix <MappingProjection.matrix>` specification or a
+MappingProjection without any `sender <MappingProjection.sender>` or `receiver <MappingProjection.receiver>`
+specified; see MappingProject  MappingProjection_Matrix_Specification
+).
 
     .. _Pathway_Projection_Matrix_Note:
 
@@ -231,9 +233,14 @@ of any of a Composition's `Pathway addition methods <Composition_Pathway_Additio
       <NodeRole.SINGLETON>`.  Sets can also be used in a list specification (see above; and see
       `add_linear_processing_pathway <Composition.add_linear_processing_pathway>` for additional details).
     ..
-    * **2-item tuple**: (Pathway, `LearningFunction`) -- used to specify a `learning Pathway
-      <Composition_Learning_Pathway>`;  the 1st item must be one of the forms of Pathway specification
-      described above, and the 2nd item must be a subclass of `LearningFunction`.
+    .. _Pathway_Specification_Tuple:
+
+    * **2 or 3-item tuple**: (Pathway, <learning_function>, <default_matrix_specification>) --
+      used to specify a `learning  Pathway <Composition_Learning_Pathway>` and/or a matrix to use for any unspecified
+      Projections (overrides default matrix for `MappingProjection`) if a default projection is not otherwise specified
+      (see `Pathway_Specification_Projections.  The 1st item of the tuple must be one of the forms of Pathway
+      specification described above.  The other items must be a subclass of `LearningFunction` and/or a `matrix
+      specification <MappingProjection_Matrix_Specification>`.
 
 .. _Pathway_Specification_Multiple:
 
@@ -245,7 +252,7 @@ can be specified (e.g., the **pathways** argument of the constructor for a `Comp
 <Composition.add_pathways>` method), they can be specified in a list, in which each item of the list can be any of
 the forms above, or one of the following:
 
-    * **Pathway** object or constructor: Pathway(pathway=\ `Pathway specification <Pathway_Specification>`,...).
+    * **Pathway** object or constructor: Pathway(pathway=\\ `Pathway specification <Pathway_Specification>`,...).
     ..
     .. _Pathway_Specification_Dictionary:
     * **dict**: {name : Pathway) -- in which **name** is a str and **Pathway** is a Pathway object or constuctor,
@@ -293,6 +300,9 @@ A Pathway has the following primary attributes:
   those `NodeRoles <NodeRole>` is assigned to a corresponding attribute on the Pathway.  If the Pathway does not belong
   to a Composition (i.e., it is a `template <Pathway_Template>`), then these attributes return None.
 
+* `default_projection_matrix <Pathway.default_projection_matrix>` - matrix used as default for Projections that are
+  not explicitly specified and for which no default is otherwise specified (see `Pathway_Specification_Projections`).
+
 * `learning_function <Pathway.learning_function>` - the LearningFunction assigned to the Pathway if it is a
   `learning Pathway <Composition_Learning_Pathway>` that belongs to a Composition; otherwise it is None.
 
@@ -322,6 +332,7 @@ from psyneulink.core.compositions.composition import Composition, CompositionErr
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ANY, CONTEXT, FEEDBACK, MAYBE, NODE, LEARNING_FUNCTION, OBJECTIVE_MECHANISM, PROJECTION, TARGET_MECHANISM
+from psyneulink.core.globals.utilities import is_matrix
 from psyneulink.core.globals.registry import register_category
 
 __all__ = [
@@ -416,10 +427,17 @@ class PathwayRole(Enum):
 
 class Pathway(object):
     """
-    Pathway(      \
-        pathway,  \
-        name=None \
+    Pathway(                       \
+        pathway,                   \
+        name=None                  \
         )
+    COMMENT:
+    Pathway(                       \
+        pathway,                   \
+        default_projection_matrix, \
+        name=None                  \
+        )
+    COMMENT
 
     A sequence of `Nodes <Composition_Nodes>` and `Projections <Projection>` in a `Composition`, or a template
     for one that can be assigned to one or more Compositions.
@@ -431,8 +449,15 @@ class Pathway(object):
         specifies list of `Nodes <Composition_Nodes>` and intercolated `Projections <Projection>` to be
         created for the Pathway.
 
+    COMMENT:
+    default_projection_matrix : list, array, function, `RandomMatrix` or MATRIX_KEYWORD : default None
+        specifies matrix to use for any unspecified Projections (overrides default matrix for `MappingProjection`)
+        if a default projection is not otherwise specified (see `Pathway_Specification_Projections`;
+        see `MappingProjection_Matrix_Specification` for details of specification)
+    COMMENT
+
     name : str : default see `name <Pathway.name>`
-        specifies the name of the Pathway;  see `name <Pathway.name>` for additional information.
+        specifies the name of the Pathway (see `name <Pathway.name>` for additional information).
 
     Attributes
     ----------
@@ -451,6 +476,13 @@ class Pathway(object):
         assigned to its `Nodes <Composition>` in the `composition <Pathway.composition>` to which it belongs.
         Returns an empty list if belongs to a Composition but no `PathwayRoles <PathwayRole>` have been assigned,
         and None if the Pathway is a `tempalte <Pathway_Template>` (i.e., not assigned to a Composition).
+
+    default_projection_matrix : list, array, function, `RandomMatrix` or MATRIX_KEYWORD : default None
+        matrix used for any unspecified Projections (overrides default matrix for `MappingProjection`)
+        if a default projection is not otherwise specified (see `Pathway_Specification_Projections`;
+        see `MappingProjection_Matrix_Specification` for details of specification).  A default_projection_matrix
+        is specified by including it in a tuple specification in the **pathways** argument of the Pathway's
+        constructor (see `2 or 3-item tuple <Pathway_Specification_Tuple>`).
 
     learning_function : `LearningFunction` or None
         `LearningFunction` used by `LearningMechanism(s) <LearningMechanism>` associated with Pathway if
@@ -500,6 +532,7 @@ class Pathway(object):
     def __init__(
             self,
             pathway:list,
+            # default_projection_matrix=None,
             name=None,
             **kwargs
     ):
@@ -546,6 +579,16 @@ class Pathway(object):
         else:
             self.learning_components = None
             self.roles = None
+
+        # Assign default_projection_matrix attribute
+        # self.default_projection_matrix = default_projection_matrix
+        # Parse from tuple spec in **pathway** arg:
+        self.default_projection_matrix = None
+        if isinstance(self.pathway, tuple):
+            for item in self.pathway:
+                if is_matrix(item):
+                    self.default_projection_matrix = item
+        assert True
 
     def _assign_roles(self, composition):
         """Assign `PathwayRoles <PathwayRole>` to Pathway based `NodeRoles <NodeRole>` assigned to its `Nodes

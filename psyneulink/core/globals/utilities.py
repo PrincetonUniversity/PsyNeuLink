@@ -359,7 +359,11 @@ def is_matrix(m):
         try:
             return is_matrix(m())
         except:
-            return False
+            try:
+                # random_matrix and RandomMatrix are allowable functions, but require num_rows and num_cols parameters
+                return is_matrix(1,2)
+            except:
+                return False
     return False
 
 
@@ -436,13 +440,30 @@ def iscompatible(candidate, reference=None, **kargs):
     try:
         with warnings.catch_warnings():
             warnings.simplefilter(action='ignore', category=FutureWarning)
-            if reference is not None and (candidate == reference):
+            # np.array(...).size > 0 checks for empty list. Everything else create single element (dtype=obejct) array
+            if reference is not None and np.array(candidate, dtype=object).size > 0 and (candidate == reference):
                 return True
+            # if reference is not None:
+            #     if (isinstance(reference, (bool, int, float))
+            #             and isinstance(candidate, (bool, int, float))
+            #             and candidate == reference):
+            #         return True
+            #     elif (isinstance(reference, (list, np.ndarray))
+            #           and isinstance(candidate, (list, np.ndarray)) and (candidate == reference).all()):
+            #         return True
+            #     elif is_iterable(reference) and is_iterable(candidate) and (candidate == reference):
+            #         return True
     except ValueError:
         # raise UtilitiesError("Could not compare {0} and {1}".format(candidate, reference))
         # IMPLEMENTATION NOTE: np.array generates the following error:
         # ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
         pass
+
+    # If the two are the same thing, can settle it right here
+    # This is a common pattern for tests that use the same structure
+    # as default variable and variable
+    if reference is not None and candidate is reference:
+        return True
 
     # If args not provided, assign to default values
     # if not specified in args, use these:
@@ -498,13 +519,11 @@ def iscompatible(candidate, reference=None, **kargs):
     if is_matrix_spec(reference):
         return is_matrix(candidate)
 
-    # MODIFIED 10/29/17 NEW:
     # IMPLEMENTATION NOTE: This allows a number in an ndarray to match a float or int
     # If both the candidate and reference are either a number or an ndarray of dim 0, consider it a match
     if ((is_number(candidate) or (isinstance(candidate, np.ndarray) and candidate.ndim == 0)) or
             (is_number(reference) or (isinstance(reference, np.ndarray) and reference.ndim == 0))):
         return True
-    # MODIFIED 10/29/17 END
 
     # IMPLEMENTATION NOTE:
     #   modified to allow numeric type mismatches (e.g., int and float;
@@ -1019,7 +1038,7 @@ def type_match(value, value_type):
         return value
     if value_type in {int, np.integer, np.int64, np.int32}:
         return int(value)
-    if value_type in {float, np.float, np.float64, np.float32}:
+    if value_type in {float, np.float64, np.float32}:
         return float(value)
     if value_type is np.ndarray:
         return np.array(value)
@@ -1037,30 +1056,42 @@ def get_value_from_array(array):
     :return:
     """
 
-def random_matrix(sender, receiver, clip=1, offset=0):
+def random_matrix(num_rows, num_cols, offset=0.0, scale=1.0):
     """Generate a random matrix
 
-    Calls np.random.rand to generate a 2d np.array with random values.
+    Calls np.random.rand to generate a 2d np.array with random values and shape (num_rows, num_cols):
+
+        :math:`matrix = (random[0.0:1.0] + offset) * scale
+
+    With the default values of **offset** and **scale**, values of matrix are floats between 0 and 1.
+    However, **offset** can be used to center the range on other values (e.g., **offset**=-0.5 centers values on 0),
+    and **scale** can be used to narrow or widen the range.  As a conveniuence the keyword 'ZERO_CENTER' can be used
+    in place of -.05.
 
     Arguments
     ----------
-    sender : int
+    num_rows : int
         specifies number of rows.
 
-    receiver : int
-        spcifies number of columns.
+    num_cols : int
+        specifies number of columns.
 
-    range : int
-        specifies upper limit (lower limit = 0).
+    offset : float or 'zero_center'
+        specifies amount added to each entry of the matrix before it is scaled.
 
-    offset : int
-        specifies amount added to each entry of the matrix.
+    scale : float
+        specifies amount by which random value + **offset** is multiplicatively scaled.
 
     Returns
     -------
     2d np.array
     """
-    return (clip * np.random.rand(sender, receiver)) + offset
+    if isinstance(offset,str):
+        if offset.upper() == 'ZERO_CENTER':
+            offset = -0.5
+        else:
+            raise UtilitiesError(f"'offset' arg of random_matrix must be a number of 'zero_center'")
+    return (np.random.rand(num_rows, num_cols) + offset) * scale
 
 def underscore_to_camelCase(item):
     item = item[1:]
@@ -1237,17 +1268,14 @@ class ContentAddressableList(UserList):
 
     def __getitem__(self, key):
         if key is None:
-            raise KeyError("None is not a legal key for {}".format(self.name))
+            raise KeyError(f"None is not a legal key for '{self.name}'.")
         try:
             return self.data[key]
         except TypeError:
             key_num = self._get_key_for_item(key)
             if key_num is None:
-                # raise TypeError("\'{}\' is not a key in the {} being addressed".
-                #                 format(key, self.__class__.__name__))
-                # raise KeyError("\'{}\' is not a key in {}".
-                raise TypeError("\'{}\' is not a key in {}".
-                                format(key, self.name))
+                # raise TypeError(f"'{key}' is not a key in {self.name}.")
+                raise TypeError(f"'{key}' is not in {self.name}.")
             return self.data[key_num]
 
     def __setitem__(self, key, value):

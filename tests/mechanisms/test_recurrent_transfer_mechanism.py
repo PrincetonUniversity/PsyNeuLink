@@ -100,35 +100,24 @@ class TestRecurrentTransferMechanismInputs:
     @pytest.mark.mechanism
     @pytest.mark.recurrent_transfer_mechanism
     @pytest.mark.benchmark(group="RecurrentTransferMechanism")
-    def test_recurrent_mech_inputs_list_of_ints(self, benchmark, mech_mode):
-        R = RecurrentTransferMechanism(
-            name='R',
-            default_variable=[0, 0, 0, 0]
-        )
+    @pytest.mark.parametrize("variable, params",
+                             [
+                              pytest.param(([10, 12, 0, -1], [1, 2, 3, 0]), {'size': 4}, id="list_of_ints"),
+                              pytest.param(([1.0, 1.2, 0., -1.3], [1., 5., 3., 0.]), {'size': 4}, id="list_of_floats"),
+                              pytest.param(([10], [10]), {}, id="no_init_params"),
+                             ])
+    def test_recurrent_mech_inputs(self, benchmark, params, variable, mech_mode):
+        R = RecurrentTransferMechanism(name='R', **params)
         EX = pytest.helpers.get_mech_execution(R, mech_mode)
 
-        val1 = EX([10, 12, 0, -1])
-        val2 = EX([1, 2, 3, 0])
+        val1 = EX(variable[0])
+        val2 = benchmark(EX, variable[1])
 
         # The outputs match inputs because recurrent projection is
-        # not used when executing: mech is reset each time
-        np.testing.assert_allclose(val1, [[10.0, 12.0, 0, -1]])
-        np.testing.assert_allclose(val2, [[1, 2, 3, 0]])
-        if benchmark.enabled:
-            benchmark(EX, [1, 2, 3, 0])
-
-    @pytest.mark.mechanism
-    @pytest.mark.recurrent_transfer_mechanism
-    @pytest.mark.benchmark(group="RecurrentTransferMechanism")
-    def test_recurrent_mech_inputs_list_of_floats(self, benchmark, mech_mode):
-        R = RecurrentTransferMechanism(
-            name='R',
-            size=4
-        )
-        EX = pytest.helpers.get_mech_execution(R, mech_mode)
-
-        val = benchmark(EX, [10.0, 10.0, 10.0, 10.0])
-        np.testing.assert_allclose(val, [[10.0, 10.0, 10.0, 10.0]])
+        # not used when executing standalone mechanism:
+        #  the mechanism is reset each time
+        np.testing.assert_allclose(val1, [variable[0]])
+        np.testing.assert_allclose(val2, [variable[1]])
 
     @pytest.mark.mechanism
     @pytest.mark.recurrent_transfer_mechanism
@@ -144,15 +133,16 @@ class TestRecurrentTransferMechanismInputs:
 
         val1 = EX([[1.0, 2.0]])
         val2 = EX([[1.0, 2.0]])
+
         # execute 10 times
-        for i in range(10):
-            val10 = EX([[1.0, 2.0]])
+        for i in range(9):
+            EX([[1.0, 2.0]])
+
+        val10 = benchmark(EX, [[1.0, 2.0]])
 
         assert np.allclose(val1, [[0.50249998, 0.50499983]])
         assert np.allclose(val2, [[0.50497484, 0.50994869]])
         assert np.allclose(val10, [[0.52837327, 0.55656439]])
-        if benchmark.enabled:
-            benchmark(EX, [[1.0, 2.0]])
 
     @pytest.mark.mechanism
     @pytest.mark.recurrent_transfer_mechanism
@@ -169,14 +159,14 @@ class TestRecurrentTransferMechanismInputs:
         val1 = EX([[1.0, 2.0]])
         val2 = EX([[1.0, 2.0]])
         # execute 10 times
-        for i in range(10):
-            val10 = EX([[1.0, 2.0]])
+        for i in range(9):
+            EX([[1.0, 2.0]])
+
+        val10 = benchmark(EX, [[1.0, 2.0]])
 
         assert np.allclose(val1, [[0.1, 0.2]])
         assert np.allclose(val2, [[0.196, 0.392]])
         assert np.allclose(val10, [[0.96822561, 1.93645121]])
-        if benchmark.enabled:
-            benchmark(EX, [[1.0, 2.0]])
 
     # def test_recurrent_mech_inputs_list_of_fns(self):
     #     R = RecurrentTransferMechanism(
@@ -190,21 +180,6 @@ class TestRecurrentTransferMechanismInputs:
     #     assert len(val[0]) == len(expected[0])
     #     for i in range(len(val[0])):
     #         np.testing.assert_allclose(val[0][i], expected[0][i])
-
-    @pytest.mark.mechanism
-    @pytest.mark.recurrent_transfer_mechanism
-    @pytest.mark.benchmark(group="RecurrentTransferMechanism")
-    def test_recurrent_mech_no_inputs(self, benchmark, mech_mode):
-        R = RecurrentTransferMechanism(
-            name='R'
-        )
-        np.testing.assert_allclose(R.defaults.variable, [[0]])
-        EX = pytest.helpers.get_mech_execution(R, mech_mode)
-
-        val = EX([10])
-        np.testing.assert_allclose(val, [[10.]])
-        if benchmark.enabled:
-            benchmark(EX, [1])
 
     def test_recurrent_mech_inputs_list_of_strings(self):
         with pytest.raises(MechanismError) as error_text:

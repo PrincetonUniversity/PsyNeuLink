@@ -56,6 +56,7 @@ def module_count():
 
 _BUILTIN_PREFIX = "__pnl_builtin_"
 _builtin_intrinsics = frozenset(('pow', 'log', 'exp', 'tanh', 'coth', 'csch',
+                                 'sin', 'cos',
                                  'is_close_float', 'is_close_double',
                                  'mt_rand_init', 'philox_rand_init'))
 

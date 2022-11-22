@@ -174,12 +174,10 @@ from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
 __all__ = [
-    'AGTControlMechanism', 'AGTControlMechanismError', 'ControlMechanismRegistry', 'MONITORED_OUTPUT_PORT_NAME_SUFFIX'
+    'AGTControlMechanism', 'AGTControlMechanismError', 'MONITORED_OUTPUT_PORT_NAME_SUFFIX'
 ]
 
 MONITORED_OUTPUT_PORT_NAME_SUFFIX = '_Monitor'
-
-ControlMechanismRegistry = {}
 
 class AGTControlMechanismError(Exception):
     def __init__(self, error_value):

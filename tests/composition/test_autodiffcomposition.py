@@ -1,6 +1,6 @@
 import logging
 import timeit as timeit
-
+import os
 import numpy as np
 
 import pytest
@@ -11,7 +11,7 @@ from psyneulink.core.components.functions.nonstateful.transferfunctions import L
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals import Context
-from psyneulink.core.globals.keywords import TRAINING_SET
+from psyneulink.core.globals.keywords import TRAINING_SET, Loss
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
@@ -55,6 +55,61 @@ def test_autodiff_forward(autodiff_mode):
 
     outputs = xor.run(inputs=[0,0], execution_mode=autodiff_mode)
     assert np.allclose(outputs, [[0.9479085241082691]])
+
+@pytest.mark.pytorch
+def test_autodiff_saveload(tmp_path):
+    def create_xor():
+        # create xor model mechanisms and projections
+        xor_in = TransferMechanism(name='xor_in',
+                                   default_variable=np.zeros(2))
+
+        xor_hid = TransferMechanism(name='xor_hid',
+                                    default_variable=np.zeros(10),
+                                    function=Logistic())
+
+        xor_out = TransferMechanism(name='xor_out',
+                                    default_variable=np.zeros(1),
+                                    function=Logistic())
+
+        hid_map = MappingProjection(matrix=np.random.rand(2,10), name='hid_map')
+        out_map = MappingProjection(matrix=np.random.rand(10,1), name='out_map')
+
+        # put the mechanisms and projections together in an autodiff composition (AC)
+        xor = AutodiffComposition()
+
+        xor.add_node(xor_in)
+        xor.add_node(xor_hid)
+        xor.add_node(xor_out)
+
+        xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
+        xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
+        return xor
+
+    np.random.seed(0)
+    xor1 = create_xor()
+    xor1_outputs = xor1.run(inputs=[0,0])
+
+    # save
+    # path = xor1.save()
+    path = xor1.save(os.path.join(tmp_path, 'xor_1.pnl'))
+
+    # del xor1
+    pnl.clear_registry()
+
+    # load
+    np.random.seed(1)
+    xor2 = create_xor()
+    xor2_outputs_pre = xor2.run(inputs=[0,0])
+    # xor2.load(os.path.join(tmp_path, 'xor_1.pnl'))
+    xor2.load(path)
+    xor2_outputs_post = xor2.run(inputs=[0,0])
+
+
+    # sanity check - make sure xor2 weights differ
+    assert not np.allclose(xor2_outputs_pre, xor2_outputs_post, atol=1e-9)
+
+    # make sure loaded model is identical, and used during run
+    assert np.allclose(xor1_outputs, xor2_outputs_post, atol=1e-9)
 
 @pytest.mark.pytorch
 @pytest.mark.acconstructor
@@ -197,7 +252,7 @@ class TestMiscTrainingFunctionality:
         # assert np.allclose(pt_weights_out_bp, pt_weights_out_ap)
 
     @pytest.mark.parametrize(
-        'loss', ['l1', 'poissonnll']
+        'loss', [Loss.L1, Loss.POISSON_NLL]
     )
     def test_various_loss_specs(self, loss, autodiff_mode):
         if autodiff_mode is not pnl.ExecutionMode.Python:
@@ -329,9 +384,9 @@ class TestMiscTrainingFunctionality:
         # results_before_proc = xor.run(inputs={xor_in:xor_inputs},
         #                               targets={xor_out:xor_targets},
         #                               epochs=10)
-        results_before_proc = xor.learn(inputs={"inputs": {xor_in:xor_inputs},
-                                                "targets": {xor_out:xor_targets},
-                                                "epochs": 10}, execution_mode=autodiff_mode)
+        results_before_proc = benchmark(xor.learn, inputs={"inputs": {xor_in:xor_inputs},
+                                                           "targets": {xor_out:xor_targets},
+                                                           "epochs": 10}, execution_mode=autodiff_mode)
 
         # fp32 results are different due to rounding
         if pytest.helpers.llvm_current_fp_precision() == 'fp32' and \
@@ -342,11 +397,6 @@ class TestMiscTrainingFunctionality:
         # FIXME: LLVM version is broken with learning rate == 1.5
         if learning_rate != 1.5 or autodiff_mode == pnl.ExecutionMode.Python:
             assert np.allclose(results_before_proc, expected)
-
-        if benchmark.enabled:
-            benchmark(xor.learn, inputs={"inputs": {xor_in:xor_inputs},
-                                         "targets": {xor_out:xor_targets},
-                                         "epochs": 10}, execution_mode=autodiff_mode)
 
 
     # test whether pytorch parameters and projections are kept separate (at diff. places in memory)
@@ -456,7 +506,7 @@ class TestTrainingCorrectness:
             [[0], [1], [1], [0]])
 
         if calls == 'single':
-            results = xor.learn(inputs={"inputs": {xor_in:xor_inputs},
+            results = benchmark(xor.learn, inputs={"inputs": {xor_in:xor_inputs},
                                         "targets": {xor_out:xor_targets},
                                         "epochs": eps}, execution_mode=autodiff_mode)
 
@@ -464,17 +514,13 @@ class TestTrainingCorrectness:
             input_dict = {"inputs": {xor_in: xor_inputs},
                           "targets": {xor_out: xor_targets},
                           "epochs": 1}
-            for i in range(eps):
-                results = xor.learn(inputs=input_dict, execution_mode=autodiff_mode)
+            for i in range(eps - 1):
+                xor.learn(inputs=input_dict, execution_mode=autodiff_mode)
+            results = benchmark(xor.learn, inputs=input_dict, execution_mode=autodiff_mode)
 
         assert len(results) == len(expected)
         for r, t in zip(results, expected):
             assert np.allclose(r[0], t)
-
-        if benchmark.enabled:
-            benchmark(xor.learn, inputs={"inputs": {xor_in: xor_inputs},
-                                         "targets": {xor_out: xor_targets},
-                                         "epochs": eps}, execution_mode=autodiff_mode)
 
 
     # tests whether semantic network created as autodiff composition learns properly
@@ -645,9 +691,9 @@ class TestTrainingCorrectness:
                 targets_dict[out_sig_can].append(truth_can[i])
 
         # TRAIN THE MODEL
-        results = sem_net.learn(inputs={'inputs': inputs_dict,
-                                        'targets': targets_dict,
-                                        'epochs': eps}, execution_mode=autodiff_mode)
+        results = benchmark(sem_net.learn, inputs={'inputs': inputs_dict,
+                                                   'targets': targets_dict,
+                                                   'epochs': eps}, execution_mode=autodiff_mode)
 
         # CHECK CORRECTNESS
         expected = [[[0.13455769, 0.12924714, 0.13288172, 0.1404659 , 0.14305814,
@@ -775,10 +821,6 @@ class TestTrainingCorrectness:
         for res, exp in zip(results, expected):
             for r, e in zip(res, exp):
                 assert np.allclose(r, e)
-        if benchmark.enabled:
-            benchmark(sem_net.learn, inputs={'inputs': inputs_dict,
-                                             'targets': targets_dict,
-                                             'epochs': eps}, execution_mode=autodiff_mode)
 
     def test_pytorch_equivalence_with_autodiff_composition(self, autodiff_mode):
         iSs = np.array(
@@ -1721,35 +1763,35 @@ class TestTrainingIdenticalness():
                                         default_variable=np.zeros(9),
                                         function=Logistic())
 
-        # SET UP MECHANISMS FOR SYSTEM
+        # SET UP MECHANISMS FOR Composition
 
-        nouns_in_sys = TransferMechanism(name="nouns_input_sys",
+        nouns_in_comp = TransferMechanism(name="nouns_input_comp",
                                          default_variable=np.zeros(8))
 
-        rels_in_sys = TransferMechanism(name="rels_input_sys",
+        rels_in_comp = TransferMechanism(name="rels_input_comp",
                                         default_variable=np.zeros(3))
 
-        h1_sys = TransferMechanism(name="hidden_nouns_sys",
+        h1_comp = TransferMechanism(name="hidden_nouns_comp",
                                    default_variable=np.zeros(8),
                                    function=Logistic())
 
-        h2_sys = TransferMechanism(name="hidden_mixed_sys",
+        h2_comp = TransferMechanism(name="hidden_mixed_comp",
                                    default_variable=np.zeros(15),
                                    function=Logistic())
 
-        out_sig_I_sys = TransferMechanism(name="sig_outs_I_sys",
+        out_sig_I_comp = TransferMechanism(name="sig_outs_I_comp",
                                           default_variable=np.zeros(8),
                                           function=Logistic())
 
-        out_sig_is_sys = TransferMechanism(name="sig_outs_is_sys",
+        out_sig_is_comp = TransferMechanism(name="sig_outs_is_comp",
                                            default_variable=np.zeros(12),
                                            function=Logistic())
 
-        out_sig_has_sys = TransferMechanism(name="sig_outs_has_sys",
+        out_sig_has_comp = TransferMechanism(name="sig_outs_has_comp",
                                             default_variable=np.zeros(9),
                                             function=Logistic())
 
-        out_sig_can_sys = TransferMechanism(name="sig_outs_can_sys",
+        out_sig_can_comp = TransferMechanism(name="sig_outs_can_comp",
                                             default_variable=np.zeros(9),
                                             function=Logistic())
 
@@ -1790,64 +1832,64 @@ class TestTrainingIdenticalness():
                                     sender=h2,
                                     receiver=out_sig_can)
 
-        # SET UP PROJECTIONS FOR SYSTEM
+        # SET UP PROJECTIONS FOR COMPOSITION
 
-        map_nouns_h1_sys = MappingProjection(matrix=map_nouns_h1.matrix.base.copy(),
-                                             name="map_nouns_h1_sys",
-                                             sender=nouns_in_sys,
-                                             receiver=h1_sys)
+        map_nouns_h1_comp = MappingProjection(matrix=map_nouns_h1.matrix.base.copy(),
+                                             name="map_nouns_h1_comp",
+                                             sender=nouns_in_comp,
+                                             receiver=h1_comp)
 
-        map_rels_h2_sys = MappingProjection(matrix=map_rels_h2.matrix.base.copy(),
-                                        name="map_relh2_sys",
-                                        sender=rels_in_sys,
-                                        receiver=h2_sys)
+        map_rels_h2_comp = MappingProjection(matrix=map_rels_h2.matrix.base.copy(),
+                                        name="map_relh2_comp",
+                                        sender=rels_in_comp,
+                                        receiver=h2_comp)
 
-        map_h1_h2_sys = MappingProjection(matrix=map_h1_h2.matrix.base.copy(),
-                                          name="map_h1_h2_sys",
-                                          sender=h1_sys,
-                                          receiver=h2_sys)
+        map_h1_h2_comp = MappingProjection(matrix=map_h1_h2.matrix.base.copy(),
+                                          name="map_h1_h2_comp",
+                                          sender=h1_comp,
+                                          receiver=h2_comp)
 
-        map_h2_I_sys = MappingProjection(matrix=map_h2_I.matrix.base.copy(),
-                                         name="map_h2_I_sys",
-                                         sender=h2_sys,
-                                         receiver=out_sig_I_sys)
+        map_h2_I_comp = MappingProjection(matrix=map_h2_I.matrix.base.copy(),
+                                         name="map_h2_I_comp",
+                                         sender=h2_comp,
+                                         receiver=out_sig_I_comp)
 
-        map_h2_is_sys = MappingProjection(matrix=map_h2_is.matrix.base.copy(),
-                                          name="map_h2_is_sys",
-                                          sender=h2_sys,
-                                          receiver=out_sig_is_sys)
+        map_h2_is_comp = MappingProjection(matrix=map_h2_is.matrix.base.copy(),
+                                          name="map_h2_is_comp",
+                                          sender=h2_comp,
+                                          receiver=out_sig_is_comp)
 
-        map_h2_has_sys = MappingProjection(matrix=map_h2_has.matrix.base.copy(),
-                                           name="map_h2_has_sys",
-                                           sender=h2_sys,
-                                           receiver=out_sig_has_sys)
+        map_h2_has_comp = MappingProjection(matrix=map_h2_has.matrix.base.copy(),
+                                           name="map_h2_has_comp",
+                                           sender=h2_comp,
+                                           receiver=out_sig_has_comp)
 
-        map_h2_can_sys = MappingProjection(matrix=map_h2_can.matrix.base.copy(),
-                                           name="map_h2_can_sys",
-                                           sender=h2_sys,
-                                           receiver=out_sig_can_sys)
+        map_h2_can_comp = MappingProjection(matrix=map_h2_can.matrix.base.copy(),
+                                           name="map_h2_can_comp",
+                                           sender=h2_comp,
+                                           receiver=out_sig_can_comp)
 
-        # SET UP COMPOSITION FOR SEMANTIC NET
-        sem_net = AutodiffComposition(learning_rate=0.5,
+        # SET UP AUTODIFFCOMPOSITION FOR SEMANTIC NET
+        sem_net_autodiff = AutodiffComposition(learning_rate=0.5,
                                       optimizer_type=opt,
                                       )
 
-        sem_net.add_node(nouns_in)
-        sem_net.add_node(rels_in)
-        sem_net.add_node(h1)
-        sem_net.add_node(h2)
-        sem_net.add_node(out_sig_I)
-        sem_net.add_node(out_sig_is)
-        sem_net.add_node(out_sig_has)
-        sem_net.add_node(out_sig_can)
+        sem_net_autodiff.add_node(nouns_in)
+        sem_net_autodiff.add_node(rels_in)
+        sem_net_autodiff.add_node(h1)
+        sem_net_autodiff.add_node(h2)
+        sem_net_autodiff.add_node(out_sig_I)
+        sem_net_autodiff.add_node(out_sig_is)
+        sem_net_autodiff.add_node(out_sig_has)
+        sem_net_autodiff.add_node(out_sig_can)
 
-        sem_net.add_projection(sender=nouns_in, projection=map_nouns_h1, receiver=h1)
-        sem_net.add_projection(sender=rels_in, projection=map_rels_h2, receiver=h2)
-        sem_net.add_projection(sender=h1, projection=map_h1_h2, receiver=h2)
-        sem_net.add_projection(sender=h2, projection=map_h2_I, receiver=out_sig_I)
-        sem_net.add_projection(sender=h2, projection=map_h2_is, receiver=out_sig_is)
-        sem_net.add_projection(sender=h2, projection=map_h2_has, receiver=out_sig_has)
-        sem_net.add_projection(sender=h2, projection=map_h2_can, receiver=out_sig_can)
+        sem_net_autodiff.add_projection(sender=nouns_in, projection=map_nouns_h1, receiver=h1)
+        sem_net_autodiff.add_projection(sender=rels_in, projection=map_rels_h2, receiver=h2)
+        sem_net_autodiff.add_projection(sender=h1, projection=map_h1_h2, receiver=h2)
+        sem_net_autodiff.add_projection(sender=h2, projection=map_h2_I, receiver=out_sig_I)
+        sem_net_autodiff.add_projection(sender=h2, projection=map_h2_is, receiver=out_sig_is)
+        sem_net_autodiff.add_projection(sender=h2, projection=map_h2_has, receiver=out_sig_has)
+        sem_net_autodiff.add_projection(sender=h2, projection=map_h2_can, receiver=out_sig_can)
         # INPUTS & OUTPUTS FOR SEMANTIC NET:
 
         nouns = ['oak', 'pine', 'rose', 'daisy', 'canary', 'robin', 'salmon', 'sunfish']
@@ -1917,82 +1959,89 @@ class TestTrainingIdenticalness():
                 targets_dict[out_sig_has].append(truth_has[i])
                 targets_dict[out_sig_can].append(truth_can[i])
 
-        inputs_dict_sys = {}
-        inputs_dict_sys[nouns_in_sys] = inputs_dict[nouns_in]
-        inputs_dict_sys[rels_in_sys] = inputs_dict[rels_in]
+        inputs_dict_comp = {}
+        inputs_dict_comp[nouns_in_comp] = inputs_dict[nouns_in]
+        inputs_dict_comp[rels_in_comp] = inputs_dict[rels_in]
 
-        result = sem_net.run(inputs=inputs_dict)
+        sem_net_autodiff.run(inputs=inputs_dict)
 
-        # TRAIN COMPOSITION
+        # TRAIN AUTODIFFCOMPOSITION
         def g_f():
             yield {"inputs": inputs_dict,
                    "targets": targets_dict,
                    "epochs": eps}
         g = g_f()
-        result = sem_net.learn(inputs=g_f)
+        sem_net_autodiff.learn(inputs=g_f)
 
-        # SET UP SYSTEM
-        sem_net_sys = Composition()
+        # SET UP COMPOSITION
+        sem_net_comp = Composition()
 
-        backprop_pathway = sem_net_sys.add_backpropagation_learning_pathway(
+        backprop_pathway = sem_net_comp.add_backpropagation_learning_pathway(
             pathway=[
-                nouns_in_sys,
-                map_nouns_h1_sys,
-                h1_sys,
-                map_h1_h2_sys,
-                h2_sys,
-                map_h2_I_sys,
-                out_sig_I_sys
+                nouns_in_comp,
+                map_nouns_h1_comp,
+                h1_comp,
+                map_h1_h2_comp,
+                h2_comp,
+                map_h2_I_comp,
+                out_sig_I_comp
             ],
             learning_rate=0.5
         )
-        inputs_dict_sys[backprop_pathway.target] = targets_dict[out_sig_I]
+        inputs_dict_comp[backprop_pathway.target] = targets_dict[out_sig_I]
 
-        backprop_pathway = sem_net_sys.add_backpropagation_learning_pathway(
+        backprop_pathway = sem_net_comp.add_backpropagation_learning_pathway(
             pathway=[
-                rels_in_sys,
-                map_rels_h2_sys,
-                h2_sys,
-                map_h2_is_sys,
-                out_sig_is_sys
+                rels_in_comp,
+                map_rels_h2_comp,
+                h2_comp,
+                map_h2_is_comp,
+                out_sig_is_comp
             ],
             learning_rate=0.5
         )
-        inputs_dict_sys[backprop_pathway.target] = targets_dict[out_sig_is]
+        inputs_dict_comp[backprop_pathway.target] = targets_dict[out_sig_is]
 
-        backprop_pathway = sem_net_sys.add_backpropagation_learning_pathway(
+        backprop_pathway = sem_net_comp.add_backpropagation_learning_pathway(
             pathway=[
-                h2_sys,
-                map_h2_has_sys,
-                out_sig_has_sys
+                h2_comp,
+                map_h2_has_comp,
+                out_sig_has_comp
             ],
             learning_rate=0.5
         )
-        inputs_dict_sys[backprop_pathway.target] = targets_dict[out_sig_has]
+        inputs_dict_comp[backprop_pathway.target] = targets_dict[out_sig_has]
 
-        backprop_pathway = sem_net_sys.add_backpropagation_learning_pathway(
+        backprop_pathway = sem_net_comp.add_backpropagation_learning_pathway(
             pathway=[
-                h2_sys,
-                map_h2_can_sys,
-                out_sig_can_sys
+                h2_comp,
+                map_h2_can_comp,
+                out_sig_can_comp
             ],
             learning_rate=0.5
         )
-        inputs_dict_sys[backprop_pathway.target] = targets_dict[out_sig_can]
+        inputs_dict_comp[backprop_pathway.target] = targets_dict[out_sig_can]
 
-        # TRAIN SYSTEM
-        results = sem_net_sys.learn(inputs=inputs_dict_sys,
-                                  num_trials=(len(inputs_dict_sys[nouns_in_sys]) * eps))
+        # TRAIN COMPOSITION
+        sem_net_comp.learn(inputs=inputs_dict_comp,
+                           num_trials=(len(inputs_dict_comp[nouns_in_comp]) * eps))
 
-        # CHECK THAT PARAMETERS FOR COMPOSITION, SYSTEM ARE SAME
+        # CHECK THAT PARAMETERS FOR AUTODIFFCOMPOSITION, COMPOSITION ARE SAME
 
-        assert np.allclose(map_nouns_h1.parameters.matrix.get(sem_net), map_nouns_h1_sys.get_mod_matrix(sem_net_sys))
-        assert np.allclose(map_rels_h2.parameters.matrix.get(sem_net), map_rels_h2_sys.get_mod_matrix(sem_net_sys))
-        assert np.allclose(map_h1_h2.parameters.matrix.get(sem_net), map_h1_h2_sys.get_mod_matrix(sem_net_sys))
-        assert np.allclose(map_h2_I.parameters.matrix.get(sem_net), map_h2_I_sys.get_mod_matrix(sem_net_sys))
-        assert np.allclose(map_h2_is.parameters.matrix.get(sem_net), map_h2_is_sys.get_mod_matrix(sem_net_sys))
-        assert np.allclose(map_h2_has.parameters.matrix.get(sem_net), map_h2_has_sys.get_mod_matrix(sem_net_sys))
-        assert np.allclose(map_h2_can.parameters.matrix.get(sem_net), map_h2_can_sys.get_mod_matrix(sem_net_sys))
+        assert np.allclose(map_nouns_h1.parameters.matrix.get(sem_net_autodiff),
+                           map_nouns_h1_comp.get_mod_matrix(sem_net_comp))
+        assert np.allclose(map_rels_h2.parameters.matrix.get(sem_net_autodiff),
+                           map_rels_h2_comp.get_mod_matrix(sem_net_comp))
+        assert np.allclose(map_h1_h2.parameters.matrix.get(sem_net_autodiff),
+                           map_h1_h2_comp.get_mod_matrix(sem_net_comp))
+        assert np.allclose(map_h2_I.parameters.matrix.get(sem_net_autodiff),
+                           map_h2_I_comp.get_mod_matrix(sem_net_comp))
+        assert np.allclose(map_h2_is.parameters.matrix.get(sem_net_autodiff),
+                           map_h2_is_comp.get_mod_matrix(sem_net_comp))
+        assert np.allclose(map_h2_has.parameters.matrix.get(sem_net_autodiff),
+                           map_h2_has_comp.get_mod_matrix(sem_net_comp))
+        assert np.allclose(map_h2_can.parameters.matrix.get(sem_net_autodiff),
+                           map_h2_can_comp.get_mod_matrix(sem_net_comp))
 
     def test_identicalness_of_input_types(self):
         # SET UP MECHANISMS FOR COMPOSITION
@@ -2177,7 +2226,6 @@ class TestTrainingIdenticalness():
             }
 
         g = get_inputs_gen()
-
         result_gen = xor_gen.learn(inputs=g)
 
         # SET UP MECHANISMS FOR COMPOSITION
@@ -3113,7 +3161,7 @@ class TestBatching:
         m1 = pnl.TransferMechanism()
         p = pnl.MappingProjection()
         m2 = pnl.TransferMechanism()
-        adc = pnl.AutodiffComposition(loss_spec='crossentropy')
+        adc = pnl.AutodiffComposition(loss_spec=Loss.CROSS_ENTROPY)
 
         adc.add_linear_processing_pathway([m1, p, m2])
         adc._build_pytorch_representation()

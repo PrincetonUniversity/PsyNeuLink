@@ -1914,11 +1914,8 @@ class TestControlMechanisms:
                                                    intensity_cost_function=pnl.Linear(slope=0.0),
                                                    allocation_samples=pnl.SampleSpec(start=1.0, stop=5.0, num=5))])
         )
-        results = ocomp.run([5], execution_mode=mode)
-        assert np.allclose(results, [[50]])
-
-        if benchmark.enabled:
-            benchmark(ocomp.run, [5], execution_mode=mode)
+        result = benchmark(ocomp.run, [5], execution_mode=mode)
+        assert np.allclose(result, [[50]])
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -1981,11 +1978,8 @@ class TestControlMechanisms:
                                                                                      stop=5.0,
                                                                                      num=5))])
         )
-        results = ocomp.run([5], execution_mode=mode)
-        assert np.allclose(results, [[70]])
-
-        if benchmark.enabled:
-            benchmark(ocomp.run, [5], execution_mode=mode)
+        result = benchmark(ocomp.run, [5], execution_mode=mode)
+        assert np.allclose(result, [[70]])
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2048,11 +2042,8 @@ class TestControlMechanisms:
                                                                                      stop=5.0,
                                                                                      num=5))])
         )
-        results = ocomp.run([5], execution_mode=mode)
-        assert np.allclose(results, [[5]])
-
-        if benchmark.enabled:
-            benchmark(ocomp.run, [5], execution_mode=mode)
+        result = benchmark(ocomp.run, [5], execution_mode=mode)
+        assert np.allclose(result, [[5]])
 
     def test_two_tier_ocm(self):
         integrationConstant = 0.8  # Time Constant
@@ -2275,11 +2266,8 @@ class TestControlMechanisms:
         iComp.add_controller(iController)
         assert iComp.controller == iController
         assert oComp.controller == oController
-        res = oComp.run(inputs=[5], execution_mode=comp_mode)
+        res = benchmark(oComp.run, inputs=[5], execution_mode=comp_mode)
         assert np.allclose(res, [40])
-
-        if benchmark.enabled:
-            benchmark(oComp.run, [5], execution_mode=comp_mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -3578,7 +3566,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         warning_msg = f'"\'OptimizationControlMechanism-0\' has \'num_estimates = {num_estimates}\' specified, ' \
                       f'but its \'agent_rep\' (\'comp\') has no random variables: ' \
                       f'\'RANDOMIZATION_CONTROL_SIGNAL\' will not be created, and num_estimates set to None."'
-        with pytest.warns(warning_type) as warning:
+        with pytest.warns(warning_type) as warnings:
             ocm = pnl.OptimizationControlMechanism(agent_rep=comp,
                                                    state_features=[A.input_port],
                                                    objective_mechanism=objective_mech,
@@ -3586,7 +3574,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                                                    num_estimates=num_estimates,
                                                    control_signals=[control_signal])
             if warning_type:
-                assert repr(warning[5].message.args[0]) == warning_msg
+                assert any(warning_msg == repr(w.message.args[0]) for w in warnings)
 
         comp.add_controller(ocm)
         inputs = {A: [[[1.0]]]}
