@@ -2553,8 +2553,8 @@ class BinomialDistort(TransferFunction):  #-------------------------------------
             prefs=prefs,
         )
 
-    # # FIX: NEEDS TO CALL BONOMIAL and INCLUDE CONTEXTUALIZATION FOR LEARNING
-    # def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
+        raise FunctionError(f"LLVM not yet supported for BinomialDistort.")
     #     ptri = builder.gep(vi, [ctx.int32_ty(0), index])
     #     ptro = builder.gep(vo, [ctx.int32_ty(0), index])
     #
@@ -2620,7 +2620,8 @@ class BinomialDistort(TransferFunction):  #-------------------------------------
             p = self.parameters.p._get(context)
         return p == 0.0
 
-    # def derivative(self, output, input=None, context=None):
+    def derivative(self, output, input=None, context=None):
+        raise FunctionError(f"Derivative of BinomialDistort not yet supported.")
     #     """
     #     derivative(input, output):
     #
@@ -2775,8 +2776,9 @@ class Dropout(TransferFunction):  #
             prefs=prefs,
         )
 
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
+        raise FunctionError(f"LLVM not yet supported for Dropout.")
     # FIX: NEEDS WORK, INCLUDING CONTEXTUALIZATION FOR LEARNING
-    # def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
     #     ptri = builder.gep(vi, [ctx.int32_ty(0), index])
     #     ptro = builder.gep(vo, [ctx.int32_ty(0), index])
     #     # slope_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SLOPE)
@@ -2856,26 +2858,27 @@ class Dropout(TransferFunction):  #
 
     @handle_external_context()
     def derivative(self, input=None, output=None, context=None):
-        """
-        derivative(input)
-
-        Derivative of `function <Dropout._function>` at **input**.
-
-        Arguments
-        ---------
-
-        input : number or array
-            value of the input to the Dropouput function at which derivative is to be taken.
-
-        Returns
-        -------
-
-        variable :  number or array
-
-        """
-        # FIX: ?WHICH IS CORRECT:
-        return self._get_current_parameter_value(VARIABLE, context)
-        # return 1.0
+        raise FunctionError(f"Derivative of Dropout not yet supported.")
+        # """
+        # derivative(input)
+        #
+        # Derivative of `function <Dropout._function>` at **input**.
+        #
+        # Arguments
+        # ---------
+        #
+        # input : number or array
+        #     value of the input to the Dropouput function at which derivative is to be taken.
+        #
+        # Returns
+        # -------
+        #
+        # variable :  number or array
+        #
+        # """
+        # # FIX: ?WHICH IS CORRECT:
+        # return self._get_current_parameter_value(VARIABLE, context)
+        # # return 1.0
 
 
 # **********************************************************************************************************************
