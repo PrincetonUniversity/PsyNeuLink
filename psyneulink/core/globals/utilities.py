@@ -439,9 +439,20 @@ def iscompatible(candidate, reference=None, **kargs):
     # IMPLEMENTATION NOTE: remove the duck typing when numpy supports a direct comparison of iterables
     try:
         with warnings.catch_warnings():
-            warnings.simplefilter(action='ignore', category=FutureWarning)
-            warnings.simplefilter(action='ignore', category=np.VisibleDeprecationWarning)
+            # warnings.simplefilter(action='ignore', category=FutureWarning)
+            # warnings.simplefilter(action='ignore', category=np.VisibleDeprecationWarning)
             # warnings.error(category=np.VisibleDeprecationWarning)
+
+            warnings.simplefilter('error')
+            try:
+                # if reference is not None and np.array(candidate, dtype=object).size > 0 and (candidate == reference):
+                #     return True
+                if (reference is not None and np.array(candidate, dtype=object).size > 0
+                        and safe_equals(candidate, reference)):
+                    return True
+            except:
+               raise Exception
+
 
             # warnings.simplefilter('error')
             # try:
@@ -450,9 +461,18 @@ def iscompatible(candidate, reference=None, **kargs):
             #    #put a breakpoint here
             # Share
 
+            # warnings.simplefilter('error')
+
             # np.array(...).size > 0 checks for empty list. Everything else create single element (dtype=obejct) array
-            if reference is not None and np.array(candidate, dtype=object).size > 0 and (candidate == reference):
-                return True
+
+
+            # if reference is not None and np.array(candidate, dtype=object).size > 0 and (candidate == reference):
+            #     return True
+
+            # if (reference is not None and np.array(candidate, dtype=object).size > 0
+            #         and safe_equals(candidate, reference)):
+            #     return True
+
             # if reference is not None:
             #     if (isinstance(reference, (bool, int, float))
             #             and isinstance(candidate, (bool, int, float))
@@ -463,6 +483,11 @@ def iscompatible(candidate, reference=None, **kargs):
             #         return True
             #     elif is_iterable(reference) and is_iterable(candidate) and (candidate == reference):
             #         return True
+
+        if (reference is not None and np.array(candidate, dtype=object).size > 0
+                and safe_equals(candidate, reference)):
+            return True
+
     except ValueError:
         # raise UtilitiesError("Could not compare {0} and {1}".format(candidate, reference))
         # IMPLEMENTATION NOTE: np.array generates the following error:
@@ -1664,6 +1689,31 @@ def safe_len(arr, fallback=1):
         return fallback
 
 
+# def safe_equals(x, y):
+#     """
+#         An == comparison that handles numpy's new behavior of returning
+#         an array of booleans instead of a single boolean for ==
+#     """
+#     with warnings.catch_warnings():
+#         warnings.simplefilter('error')
+#         try:
+#             val = x == y
+#             if isinstance(val, bool):
+#                 return val
+#             else:
+#                 raise ValueError
+#         except (ValueError, DeprecationWarning, FutureWarning):
+#             try:
+#                 return np.array_equal(x, y)
+#             except DeprecationWarning:
+#                 len_x = len(x)
+#                 return (
+#                     len_x == len(y)
+#                     and all([
+#                         safe_equals(x[i], y[i]) for i in range(len_x)
+#                     ])
+#                 )
+
 def safe_equals(x, y):
     """
         An == comparison that handles numpy's new behavior of returning
@@ -1680,14 +1730,17 @@ def safe_equals(x, y):
         except (ValueError, DeprecationWarning, FutureWarning):
             try:
                 return np.array_equal(x, y)
-            except DeprecationWarning:
+            except (DeprecationWarning, FutureWarning):
                 len_x = len(x)
-                return (
-                    len_x == len(y)
-                    and all([
-                        safe_equals(x[i], y[i]) for i in range(len_x)
-                    ])
-                )
+                try:
+                    return (
+                        len_x == len(y)
+                        and all([
+                            safe_equals(x[i], y[i]) for i in range(len_x)
+                        ])
+                    )
+                except KeyError:
+                    return False
 
 
 @tc.typecheck

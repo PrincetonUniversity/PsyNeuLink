@@ -2842,7 +2842,7 @@ class Dropout(TransferFunction):  #
             # ??Not sure whether the following works with autograd (https://github.com/HIPS/autograd/issues/416)
             p = p or self.defaults.p
             self.binomial_distort.parameters.p.set(p, context)
-            result = self.binomial_distort(variable) * (1/(1-p))
+            result = self.binomial_distort(variable) * (1 / (1 - p))
 
         return self.convert_output_type(result)
 
