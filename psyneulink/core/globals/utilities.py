@@ -438,60 +438,34 @@ def iscompatible(candidate, reference=None, **kargs):
     # If the two are equal, can settle it right here
     # IMPLEMENTATION NOTE: remove the duck typing when numpy supports a direct comparison of iterables
     try:
-        with warnings.catch_warnings():
-            # warnings.simplefilter(action='ignore', category=FutureWarning)
-            # warnings.simplefilter(action='ignore', category=np.VisibleDeprecationWarning)
-            # warnings.error(category=np.VisibleDeprecationWarning)
-
-            warnings.simplefilter('error')
-            try:
-                # if reference is not None and np.array(candidate, dtype=object).size > 0 and (candidate == reference):
-                #     return True
-                if (reference is not None and np.array(candidate, dtype=object).size > 0
-                        and safe_equals(candidate, reference)):
-                    return True
-            except:
-               raise Exception
-
-
-            # warnings.simplefilter('error')
-            # try:
-            #    #code that generates warning
-            # except:
-            #    #put a breakpoint here
-            # Share
-
-            # warnings.simplefilter('error')
-
-            # np.array(...).size > 0 checks for empty list. Everything else create single element (dtype=obejct) array
-
-
-            # if reference is not None and np.array(candidate, dtype=object).size > 0 and (candidate == reference):
-            #     return True
-
-            # if (reference is not None and np.array(candidate, dtype=object).size > 0
-            #         and safe_equals(candidate, reference)):
-            #     return True
-
-            # if reference is not None:
-            #     if (isinstance(reference, (bool, int, float))
-            #             and isinstance(candidate, (bool, int, float))
-            #             and candidate == reference):
-            #         return True
-            #     elif (isinstance(reference, (list, np.ndarray))
-            #           and isinstance(candidate, (list, np.ndarray)) and (candidate == reference).all()):
-            #         return True
-            #     elif is_iterable(reference) and is_iterable(candidate) and (candidate == reference):
-            #         return True
-
+        # # MODIFIED 11/23/22 OLD:
+        # with warnings.catch_warnings():
+        #     # warnings.simplefilter(action='ignore', category=FutureWarning)
+        #     # warnings.simplefilter(action='ignore', category=np.VisibleDeprecationWarning)
+        #     if reference is not None and np.array(candidate, dtype=object).size > 0 and (candidate == reference):
+        #         return True
+        # # MODIFIED 11/23/22 NEWER:
+        # with warnings.catch_warnings():
+        #     warnings.simplefilter('error')
+        #     try:
+        #         # if reference is not None and np.array(candidate, dtype=object).size > 0 and (candidate == reference):
+        #         #     return True
+        #         if (reference is not None and np.array(candidate, dtype=object).size > 0
+        #                 and safe_equals(candidate, reference)):
+        #             return True
+        #     except:
+        #        raise Exception
+        # MODIFIED 11/23/22 NEWEST:
         if (reference is not None and np.array(candidate, dtype=object).size > 0
                 and safe_equals(candidate, reference)):
             return True
+        # MODIFIED 11/23/22 END
 
     except ValueError:
         # raise UtilitiesError("Could not compare {0} and {1}".format(candidate, reference))
         # IMPLEMENTATION NOTE: np.array generates the following error:
         # ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
+        assert True
         pass
 
     # If the two are the same thing, can settle it right here
@@ -1719,6 +1693,7 @@ def safe_equals(x, y):
         An == comparison that handles numpy's new behavior of returning
         an array of booleans instead of a single boolean for ==
     """
+    from collections import defaultdict
     with warnings.catch_warnings():
         warnings.simplefilter('error')
         try:
@@ -1733,12 +1708,27 @@ def safe_equals(x, y):
             except (DeprecationWarning, FutureWarning):
                 len_x = len(x)
                 try:
-                    return (
-                        len_x == len(y)
-                        and all([
-                            safe_equals(x[i], y[i]) for i in range(len_x)
-                        ])
-                    )
+                    # MODIFIED 11/23/22 OLD:
+                    # return (
+                    #     len_x == len(y)
+                    #     and all([
+                    #         safe_equals(x[i], y[i]) for i in range(len_x)
+                    #     ])
+                    # )
+                    # MODIFIED 11/23/22 NEW:
+                    if len_x != len(y):
+                        return False
+                    for i in range(len_x):
+                        if isinstance(x[i],defaultdict) or isinstance(y[i],defaultdict):
+                            copy_x = x[i].copy()
+                            copy_y = y[i].copy()
+                            if not safe_equals(copy_x, copy_y):
+                                return False
+                        else:
+                            if not safe_equals(x[i],y[i]):
+                                return False
+                    return True
+                    # MODIFIED 11/23/22 END
                 except KeyError:
                     return False
 
