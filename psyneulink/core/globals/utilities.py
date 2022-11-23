@@ -438,41 +438,15 @@ def iscompatible(candidate, reference=None, **kargs):
     # If the two are equal, can settle it right here
     # IMPLEMENTATION NOTE: remove the duck typing when numpy supports a direct comparison of iterables
     try:
-        # # MODIFIED 11/23/22 OLD:
-        # with warnings.catch_warnings():
-        #     # warnings.simplefilter(action='ignore', category=FutureWarning)
-        #     # warnings.simplefilter(action='ignore', category=np.VisibleDeprecationWarning)
-        #     if reference is not None and np.array(candidate, dtype=object).size > 0 and (candidate == reference):
-        #         return True
-        # # MODIFIED 11/23/22 NEWER:
-        # with warnings.catch_warnings():
-        #     warnings.simplefilter('error')
-        #     try:
-        #         # if reference is not None and np.array(candidate, dtype=object).size > 0 and (candidate == reference):
-        #         #     return True
-        #         if (reference is not None and np.array(candidate, dtype=object).size > 0
-        #                 and safe_equals(candidate, reference)):
-        #             return True
-        #     except:
-        #        raise Exception
-        # MODIFIED 11/23/22 NEWEST:
         if (reference is not None and np.array(candidate, dtype=object).size > 0
                 and safe_equals(candidate, reference)):
             return True
-        # MODIFIED 11/23/22 END
 
     except ValueError:
         # raise UtilitiesError("Could not compare {0} and {1}".format(candidate, reference))
         # IMPLEMENTATION NOTE: np.array generates the following error:
         # ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
-        assert True
         pass
-
-    # If the two are the same thing, can settle it right here
-    # This is a common pattern for tests that use the same structure
-    # as default variable and variable
-    if reference is not None and candidate is reference:
-        return True
 
     # If args not provided, assign to default values
     # if not specified in args, use these:
@@ -1662,32 +1636,6 @@ def safe_len(arr, fallback=1):
     except TypeError:
         return fallback
 
-
-# def safe_equals(x, y):
-#     """
-#         An == comparison that handles numpy's new behavior of returning
-#         an array of booleans instead of a single boolean for ==
-#     """
-#     with warnings.catch_warnings():
-#         warnings.simplefilter('error')
-#         try:
-#             val = x == y
-#             if isinstance(val, bool):
-#                 return val
-#             else:
-#                 raise ValueError
-#         except (ValueError, DeprecationWarning, FutureWarning):
-#             try:
-#                 return np.array_equal(x, y)
-#             except DeprecationWarning:
-#                 len_x = len(x)
-#                 return (
-#                     len_x == len(y)
-#                     and all([
-#                         safe_equals(x[i], y[i]) for i in range(len_x)
-#                     ])
-#                 )
-
 def safe_equals(x, y):
     """
         An == comparison that handles numpy's new behavior of returning
@@ -1708,14 +1656,9 @@ def safe_equals(x, y):
             except (DeprecationWarning, FutureWarning):
                 len_x = len(x)
                 try:
-                    # MODIFIED 11/23/22 OLD:
-                    # return (
-                    #     len_x == len(y)
-                    #     and all([
-                    #         safe_equals(x[i], y[i]) for i in range(len_x)
-                    #     ])
-                    # )
-                    # MODIFIED 11/23/22 NEW:
+                    # IMPLEMENTATION NOTE:
+                    #  Handles case in which an element being compared is a defaultdict
+                    #  (makes copy to prevent indexing it from adding and entry to source)
                     if len_x != len(y):
                         return False
                     for i in range(len_x):
@@ -1728,7 +1671,6 @@ def safe_equals(x, y):
                             if not safe_equals(x[i],y[i]):
                                 return False
                     return True
-                    # MODIFIED 11/23/22 END
                 except KeyError:
                     return False
 

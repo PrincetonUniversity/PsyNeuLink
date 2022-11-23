@@ -995,7 +995,11 @@ execute learning are outlined in the following table, and described in more deta
       method of an `AutodiffComposition`;  specifying them in the `learn <Composition.learn>`()` method of a standard
       `Composition` causes an error.
 
+|
 .. _Composition_Compilation_Table:
+
+**Comparison of Learning Modes**
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. table::
    :widths: 5 34 33 33
