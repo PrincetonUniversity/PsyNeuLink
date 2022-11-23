@@ -990,10 +990,10 @@ that they can provide up to three orders of magnitude speed-up in training a mod
 on the kinds of Compositions that be implemented in this way.  The features of the different ways to implement and
 execute learning are outlined in the following table, and described in more detail in `AutodiffComposition`.
 
-.. warning::
-  * `ExecutionMode.LLVM` and `ExecutionMode.PyTorch` can only be used in the `learn <AutodiffComposition.learn>`
-    method of an `AutodiffComposition`;  specifying them in the `learn <Composition.learn>`()` method of a standard
-    `Composition` causes an error.
+  .. warning::
+    * `ExecutionMode.LLVM` and `ExecutionMode.PyTorch` can only be used in the `learn <AutodiffComposition.learn>`
+      method of an `AutodiffComposition`;  specifying them in the `learn <Composition.learn>`()` method of a standard
+      `Composition` causes an error.
 
 .. _Composition_Compilation_Table:
 
