@@ -73,9 +73,11 @@ of a Composition's `controller <Composition_Controller>`), by specifying a `Repo
 Learning
 --------
 
-Output and progress reporting can include execution during `learning <Composition_Learning>` `TRIALS <TimeScale.TRIAL>`
-by specifying a `ReportLearning` option in the **report_learning** argument of a Composition's `run
-<Composition.run>` or `learn <Composition.run>` methods.
+Output and progress reporting can be enabled during `learning <Composition_Learning>` by specifying a `ReportOutput`
+and/or `ReportProgress` option in, repsectively, the **report_output** and/or **report_progress** argument(s) of the
+Composition's `learn <Composition.learn>` method.  For a learning using a standard Composition, reporting occurs
+after every `TRIAL <TimeScale.TRIAL>`;  for learning using an `AutodiffComposition`, reporting occurs as learning
+begins and once it ends.
 
 .. _Report_To_Device:
 
@@ -164,8 +166,7 @@ from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.globals.utilities import convert_to_list
 
 __all__ = ['Report', 'ReportOutput', 'ReportParams', 'ReportProgress', 'ReportDevices', 'ReportSimulations',
-           'ReportLearning', 'CONSOLE', 'CONTROLLED', 'LOGGED', 'MODULATED', 'MONITORED', 'RECORD', 'DIVERT',
-           'PNL_VIEW', ]
+           'CONSOLE', 'CONTROLLED', 'LOGGED', 'MODULATED', 'MONITORED', 'RECORD', 'DIVERT', 'PNL_VIEW', ]
 
 # Used to specify self._run_mode (specified as roots, that are conjugated in messages)
 DEFAULT = 'Execut'
@@ -394,31 +395,6 @@ class ReportSimulations(Enum):
 
     ON
         enable output and progress reporting of simulations.
-    """
-
-    OFF = 0
-    ON = 1
-
-
-class ReportLearning(Enum):
-    """
-    Options used in the **report_learning** argument of a `Composition`\'s `run <Composition.run>` and `learn
-    <Composition.learn>` methods, to specify whether `learning <Composition_Learning>` `TRIALS
-    <TimeScale.TRIAL>` are included in output and progress reporting (see `Report_Learning` for additional
-    information).
-
-    .. technical_note::
-        Use of these options is expected in the **report_progress** constructor for the `Report` object,
-        and are used as the values of its `_report_learning <Report._report_learning>` attribute.
-
-    Attributes
-    ----------
-
-    OFF
-        suppress output and progress during `learning <Composition_Learning>`.
-
-    ON
-        enable output and progress reporting during `learning <Composition_Learning>`.
     """
 
     OFF = 0
@@ -1744,15 +1720,12 @@ class Report:
                 composition_name = list(self.output_reports.keys())[0].name
                 message = f"{composition_type_name} '{composition_name}' training " \
                           f"{output_report.num_trials} trials using PyTorch..."
-                # Method 1: (direct print)
-                # self._rich_progress.console.print(message)
-                output_report.run_report = message
-                # Method 2: (ensure it is also recorded if that is enabled)
+                # Method 1: (ensure it is also recorded if that is enabled)
                 if self._record_reports:
                     with self._recording_console.capture() as capture:
                         self._recording_console.print(node_report)
                     self._recorded_reports += capture.get()
-                # Method 3: (shadow standard processing)
+                # Method 2: (shadow standard processing)
                 # self._rich_progress.update(output_report.rich_task_id,
                 #                            total=1,
                 #                            description=message,

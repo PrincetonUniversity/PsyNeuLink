@@ -181,8 +181,16 @@ maps <https://github.com/giannisnik/som>`_).
     .. note::
        While specifying `ExecutionMode.PyTorch` in the `learn <Composition.learn>`  method of an AutodiffComposition
        causes it to use PyTorch for training, specifying this in the `run <Compositon.run>` method causes it to be
-       executing using the *Python* interpreter (and not PyTorch);  this is so that any modulation can take effect
+       executed using the *Python* interpreter (and not PyTorch);  this is so that any modulation can take effect
        during execution (see `AutodiffComposition_Nested_Modulation` below), which is not supported by PyTorch.
+
+    .. warning::
+      * Specifying `ExecutionMode.LLVM` or `ExecutionMode.PyTorch` in the learn() method of a standard
+        `Composition` causes an error.
+
+    .. note::
+      * Specifying `ExecutionMode.Python` in the learn() method of a `AutodiffComposition` is treated as a
+        synonym of `ExecutionMode.PyTorch` (see table).
 
 .. technical_note::
    `ExecutionMode.PyTorch` is a synonym for `ExecutionMode.Python`, that is provided for clarity of the user interface:
@@ -191,7 +199,6 @@ maps <https://github.com/giannisnik/som>`_).
    for `run <Composition.run>`.  The use of `ExecutionMode.PyTorch` is simply to make it clear that, during learning,
    it will use PyTorch. This contrasts with the use of `ExecutionMode.LLVMrun`, in which case both the `learn
    <Composition.learn>` and `run <Composition.run>` methods use LLVM compilation.
-
 
 .. _AutodiffComposition_Nested_Modulation:
 

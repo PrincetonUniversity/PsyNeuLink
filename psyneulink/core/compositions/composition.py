@@ -677,23 +677,29 @@ Composition, it can be executed calling the Composition's `learn <Composition.le
 *Configuring Learning in a Composition*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-There are three ways of configuring learning in a Composition:
+There are three ways of configuring learning in a Composition, using:
 
-i) using `standard PsyNeuLink Components <Composition_Learning_Standard>`
+i) `standard PsyNeuLink Components <Composition_Learning_Standard>`, for presentational and/or instructional purposes;
 
-ii) using the `AutodiffComposition <Composition_Learning_AutodiffComposition>` -- a specialized subclass of Composition
-    that executes learning using `PyTorch <https://pytorch.org>`_
+ii) an `AutodiffComposition <Composition_Learning_AutodiffComposition>`, a subclass of Composition
+    that executes learning efficiently;
 
-iii) using `UserDefinedFunctions <UserDefinedFunction>`.
+iii) `UserDefinedFunctions <Composition_Learning_UDF>`, that provide full flexiblity.
 
-The advantage of using standard PsyNeuLink compoments is that it assigns each operation involved in learning to a
-dedicated Component. This helps make clear exactly what those operations are, the sequence in which they are carried
-out, and how they interact with one another.  However, this can also make execution inefficient, due to the overhead
-incurred by distributing the calculations over different Components.  If more efficient computation is critical,
-then the `AutodiffComposition` can be used to execute a compatible PsyNeuLink Composition in PyTorch, or one or more
-`UserDefinedFunctions <UserDefinedFunction>` can be assigned to either PyTorch functions or those in any other Python
-environment that implements learning and accepts and returns tensors. Each of these approaches is described in more
-detail below.
+Implementing learning using PsyNeuLink compoments is meant as a complement to more standard implementations of
+learning in neural networks, such as `PyTorch <https://pytorch.org/>`_ or `TensorFlow <https://www.tensorflow.org>`_,
+that assigns each operation involved in learning to a dedicated Component. This helps make clear exactly what those
+operations are, the sequence in which they are carried out, and how they interact with one another, which can be
+useful in instructional settings, where each computation associtated with learning can be individually examined.
+However, the cost is that execution is extremely inefficient (due to the lack of parallelization). To execute learning
+on a scale typical of standard deep learning applicatons, an `AutodiffComposition` should be used.  This can executed
+using either `direct compilation <AutodiffComposition_LLVM>` or by translating the model to, and execiting it using
+`PyTorch <AutodiffComposition_PyTorch>`.  Both of these provide as much as three orders of magnitude acceleration
+(comparable to standard machine learning environments).  Finally, for full flexiblity, learning can be impelmented
+using one or more `UserDefinedFunctions <UserDefinedFunction>`, that can be assigned to PyTorch functions, or ones in
+any other Python environment that implements learning and accepts and returns tensors. Each of these approaches is
+described in more detail in the three sections that follow, and summarized in a `table <Composition_Compilation_Table>`
+that compares their advantages and disadvantages.
 
 .. _Composition_Learning_Standard:
 
@@ -984,6 +990,11 @@ that they can provide up to three orders of magnitude speed-up in training a mod
 on the kinds of Compositions that be implemented in this way.  The features of the different ways to implement and
 execute learning are outlined in the following table, and described in more detail in `AutodiffComposition`.
 
+.. warning::
+  * `ExecutionMode.LLVM` and `ExecutionMode.PyTorch` can only be used in the `learn <AutodiffComposition.learn>`
+    method of an `AutodiffComposition`;  specifying them in the `learn <Composition.learn>`()` method of a standard
+    `Composition` causes an error.
+
 .. _Composition_Compilation_Table:
 
 .. table::
@@ -1017,7 +1028,6 @@ execute learning are outlined in the following table, and described in more deta
    |                    |Inspection                          |                       |                       |
    +--------------------+------------------------------------+-----------------------+-----------------------+
 
-
 .. _Composition_Learning_UDF:
 
 *Learning Using UserDefinedFunctions*
@@ -1028,8 +1038,8 @@ environment that supports learning can be assigned as the `function <Mechanism_B
 <Mechanism>`, in which case it is automatically  wrapped as `UserDefinedFunction`.  For example, the `forward and
 backward methods <https://pytorch.org/docs/master/notes/extending.html>`_ of a PyTorch object can be assigned in this
 way.  The advanatage of this approach is that it can be applied to any Python function that adheres to the requirements
-of a `UserDefinedFunction`. It must be carefully coordinated with the execution of other learning-related Components in
-the Composition, to insure that each function is called at the appropriate times during execution.  Furthermore, as
+of a `UserDefinedFunction`. It must be carefully coordinated with the execution of other learning-related Components
+in the Composition, to insure that each function is called at the appropriate times during execution.  Furthermore, as
 with an `AutodiffComposition`, the internal constituents of the object (e.g., intermediates layers of a neural network
 model) are not accessible to other Components in the Composition (e.g., as a source of information or for modulation).
 

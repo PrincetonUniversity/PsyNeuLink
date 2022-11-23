@@ -78,7 +78,6 @@ RUN = True
 ANALYZE = True # Analyze results of run
 REPORT_OUTPUT = ReportOutput.OFF       # Sets console output during run
 REPORT_PROGRESS = ReportProgress.ON   # Sets console progress bar during run
-REPORT_LEARNING = ReportLearning.OFF   # Sets console progress bar during training
 ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
 
 #region ========================================= PARAMETERS ===========================================================
@@ -607,7 +606,6 @@ def train_network(network,
                   minibatch_size=minibatch_size,
                   report_output=REPORT_OUTPUT,
                   report_progress=REPORT_PROGRESS,
-                  # report_learning=REPORT_LEARNING,
                   learning_rate=learning_rate,
                   # execution_mode=ExecutionMode.LLVMRun
                   # execution_mode=ExecutionMode.Python
