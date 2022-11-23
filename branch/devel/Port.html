@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Port &mdash; PsyNeuLink 0.12.1.0+116.g9b9c8c55 documentation</title>
+  <title>Port &mdash; PsyNeuLink 0.12.1.0+117.gd36dd2dd documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.12.1.0+116
+                  0.12.1.0+117
                 </div>
               
             
@@ -590,7 +590,7 @@ or to disable modulation, using either the keyword <em>OVERRIDE</em> or <em>DSIA
 ParameterPorts belonging to a Mechanism are updated before the Mechanism’s function is called.  OutputPorts are
 updated after the Mechanism’s function is called.  When a Port is updated, it executes any Projections that project
 to it (listed in its <a class="reference internal" href="#psyneulink.core.components.ports.port.Port_Base.all_afferents" title="psyneulink.core.components.ports.port.Port_Base.all_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">all_afferents</span></code></a> attribute.  It uses the values it receives from any
-<code class="xref any docutils literal notranslate"><span class="pre">PathWayProjections</span></code> (listed in its <a class="reference internal" href="Mechanism.html#id14" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.path_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">path_afferents</span></code></a> attribute) as the variable for its
+<code class="xref any docutils literal notranslate"><span class="pre">PathWayProjections</span></code> (listed in its <a class="reference internal" href="#psyneulink.core.components.ports.port.Port_Base.path_afferents" title="psyneulink.core.components.ports.port.Port_Base.path_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">path_afferents</span></code></a> attribute) as the variable for its
 <a class="reference internal" href="#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>. It then executes all of the ModulatoryProjections it receives.  Different
 ModulatorySignals may call for different forms of modulation (see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a>).  Accordingly,
 it separately sums the values specified by any ModulatorySignals for the <em>MULTIPLICATIVE_PARAM</em> of its
