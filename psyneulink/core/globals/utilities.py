@@ -438,21 +438,10 @@ def iscompatible(candidate, reference=None, **kargs):
     # If the two are equal, can settle it right here
     # IMPLEMENTATION NOTE: remove the duck typing when numpy supports a direct comparison of iterables
     try:
-        with warnings.catch_warnings():
-            warnings.simplefilter(action='ignore', category=FutureWarning)
-            # np.array(...).size > 0 checks for empty list. Everything else create single element (dtype=obejct) array
-            if reference is not None and np.array(candidate, dtype=object).size > 0 and (candidate == reference):
-                return True
-            # if reference is not None:
-            #     if (isinstance(reference, (bool, int, float))
-            #             and isinstance(candidate, (bool, int, float))
-            #             and candidate == reference):
-            #         return True
-            #     elif (isinstance(reference, (list, np.ndarray))
-            #           and isinstance(candidate, (list, np.ndarray)) and (candidate == reference).all()):
-            #         return True
-            #     elif is_iterable(reference) and is_iterable(candidate) and (candidate == reference):
-            #         return True
+        if (reference is not None and np.array(candidate, dtype=object).size > 0
+                and safe_equals(candidate, reference)):
+            return True
+
     except ValueError:
         # raise UtilitiesError("Could not compare {0} and {1}".format(candidate, reference))
         # IMPLEMENTATION NOTE: np.array generates the following error:
@@ -1653,12 +1642,12 @@ def safe_len(arr, fallback=1):
     except TypeError:
         return fallback
 
-
 def safe_equals(x, y):
     """
         An == comparison that handles numpy's new behavior of returning
         an array of booleans instead of a single boolean for ==
     """
+    from collections import defaultdict
     with warnings.catch_warnings():
         warnings.simplefilter('error')
         try:
@@ -1670,14 +1659,26 @@ def safe_equals(x, y):
         except (ValueError, DeprecationWarning, FutureWarning):
             try:
                 return np.array_equal(x, y)
-            except DeprecationWarning:
+            except (DeprecationWarning, FutureWarning):
                 len_x = len(x)
-                return (
-                    len_x == len(y)
-                    and all([
-                        safe_equals(x[i], y[i]) for i in range(len_x)
-                    ])
-                )
+                try:
+                    # IMPLEMENTATION NOTE:
+                    #  Handles case in which an element being compared is a defaultdict
+                    #  (makes copy to prevent indexing it from adding and entry to source)
+                    if len_x != len(y):
+                        return False
+                    for i in range(len_x):
+                        if isinstance(x[i],defaultdict) or isinstance(y[i],defaultdict):
+                            copy_x = x[i].copy()
+                            copy_y = y[i].copy()
+                            if not safe_equals(copy_x, copy_y):
+                                return False
+                        else:
+                            if not safe_equals(x[i],y[i]):
+                                return False
+                    return True
+                except KeyError:
+                    return False
 
 
 @tc.typecheck
