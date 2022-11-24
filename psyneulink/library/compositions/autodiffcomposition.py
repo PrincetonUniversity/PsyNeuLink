@@ -631,18 +631,6 @@ class AutodiffComposition(Composition):
             self.infer_backpropagation_learning_pathways()
             self._built_pathways = True
 
-        if 'execution_mode' in kwargs:
-            execution_mode = kwargs['execution_mode']
-            if execution_mode == pnlvm.ExecutionMode.Python:
-                warnings.warn(f"{self.name}.learn() called with ExecutionMode.Python; "
-                              f"learning will be executed using PyTorch; "
-                              f"should use ExecutionMode.PyTorch for clarity, "
-                              f"or a standard Composition for Python execution.)")
-            # OK, now that the user has been advised to use ExecutionMode.PyTorch and warned *not* to ExecutionMdoe.Python,
-            #     convert ExecutionMode.PyTorch specification to ExecutionMode.Python for internal use (nice, eh?)
-            if execution_mode == pnlvm.ExecutionMode.PyTorch:
-                kwargs['execution_mode'] = pnlvm.ExecutionMode.Python
-
         return super().learn(*args, **kwargs)
 
     @handle_external_context()
