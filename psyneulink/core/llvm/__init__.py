@@ -73,6 +73,7 @@ class ExecutionMode(enum.Flag):
    """
 
     Python   = 0
+    PyTorch = enum.auto()
     LLVM     = enum.auto()
     PTX      = enum.auto()
     _Run      = enum.auto()
@@ -84,7 +85,6 @@ class ExecutionMode(enum.Flag):
     LLVMExec = LLVM | _Exec
     PTXRun = PTX | _Run
     PTXExec = PTX | _Exec
-    PyTorch = Python
 
 
 _binary_generation = 0
