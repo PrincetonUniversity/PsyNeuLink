@@ -644,7 +644,6 @@ class AutodiffComposition(Composition):
 
         return super().learn(*args, **kwargs)
 
-
     @handle_external_context()
     def execute(self,
                 inputs=None,
