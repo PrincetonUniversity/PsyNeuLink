@@ -286,6 +286,7 @@ Class Reference
 """
 import logging
 import os
+import warnings
 import numpy as np
 from pathlib import Path, PosixPath
 
@@ -629,6 +630,19 @@ class AutodiffComposition(Composition):
         if self._built_pathways is False:
             self.infer_backpropagation_learning_pathways()
             self._built_pathways = True
+
+        if 'execution_mode' in kwargs:
+            execution_mode = kwargs['execution_mode']
+            if execution_mode == pnlvm.ExecutionMode.Python:
+                warnings.warn(f"{self.name}.learn() called with ExecutionMode.Python; "
+                              f"learning will be executed using PyTorch; "
+                              f"should use ExecutionMode.PyTorch for clarity, "
+                              f"or a standard Composition for Python execution.)")
+            # OK, now that the user has been advised to use ExecutionMode.PyTorch and warned *not* to ExecutionMdoe.Python,
+            #     convert ExecutionMode.PyTorch specification to ExecutionMode.Python for internal use (nice, eh?)
+            if execution_mode == pnlvm.ExecutionMode.PyTorch:
+                kwargs['execution_mode'] = pnlvm.ExecutionMode.Python
+
         return super().learn(*args, **kwargs)
 
     @handle_external_context()
@@ -651,7 +665,7 @@ class AutodiffComposition(Composition):
                 clamp_input=SOFT_CLAMP,
                 targets=None,
                 runtime_params=None,
-                execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
+                execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.PyTorch,
                 skip_initialization=False,
                 report_output:ReportOutput=ReportOutput.OFF,
                 report_params:ReportOutput=ReportParams.OFF,

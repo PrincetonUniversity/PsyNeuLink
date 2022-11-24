@@ -76,6 +76,7 @@ def pytest_generate_tests(metafunc):
     if "autodiff_mode" in metafunc.fixturenames:
         auto_modes = [
             pnlvm.ExecutionMode.Python,
+            # pnlvm.ExecutionMode.PyTorch,
             pytest.param(pnlvm.ExecutionMode.LLVMRun, marks=pytest.mark.llvm)
         ]
         metafunc.parametrize("autodiff_mode", auto_modes)
@@ -163,6 +164,7 @@ def llvm_current_fp_precision():
 @pytest.helpers.register
 def get_comp_execution_modes():
     return [pytest.param(pnlvm.ExecutionMode.Python),
+            # pytest.param(pnlvm.ExecutionMode.PyTorch, marks=pytest.mark.pytorch),
             pytest.param(pnlvm.ExecutionMode.LLVM, marks=pytest.mark.llvm),
             pytest.param(pnlvm.ExecutionMode.LLVMExec, marks=pytest.mark.llvm),
             pytest.param(pnlvm.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
