@@ -1770,22 +1770,6 @@ class TestMiscTrainingFunctionality:
         assert not np.allclose(pt_weights_hid, hid_map.parameters.matrix.get(None))
         assert not np.allclose(pt_weights_out, out_map.parameters.matrix.get(None))
 
-    # def test_execution_mode_python_warning(self):
-    #     A = TransferMechanism(name="learning-process-mech-A")
-    #     B = TransferMechanism(name="learning-process-mech-B")
-    #     adc = AutodiffComposition(name='AUTODIFFCOMP')
-    #     pway = adc.add_backpropagation_learning_pathway(pathway=[A,B])
-    #     # Call learn with default_variable specified for target (for comparison with missing target)
-    #     with pytest.warns(UserWarning) as warning:
-    #         adc.learn(inputs={A: 1.0,
-    #                           pway.target: 0.0},
-    #                   execution_mode=pnl.ExecutionMode.Python,
-    #                   num_trials=2)
-    #     assert repr(warning[1].message.args[0]) == '\'AUTODIFFCOMP.learn() called with ExecutionMode.Python; ' \
-    #                                                'learning will be executed using PyTorch; should use ' \
-    #                                                'ExecutionMode.PyTorch for clarity, or a standard Composition ' \
-    #                                                'for Python execution.)\''
-
     def test_execution_mode_python_error(self):
         A = TransferMechanism(name="learning-process-mech-A")
         B = TransferMechanism(name="learning-process-mech-B")
@@ -1797,8 +1781,9 @@ class TestMiscTrainingFunctionality:
                               pway.target: 0.0},
                       execution_mode=pnl.ExecutionMode.Python,
                       num_trials=2)
-        assert error.value.error_value == f"ExecutionMode.Python cannot be used in the learn() method of " \
-                                          f"\'AutodiffComposition-0\'; use ExecutionMode.PyTorch or ExecutionMode.LLVM."
+        assert error.value.error_value == 'AUTODIFFCOMP is an AutodiffComposition so its learn() ' \
+                                          'cannot be called with execution_mode = ExecutionMode.Python; ' \
+                                          'use ExecutionMode.PyTorch or ExecutionMode.LLVM.'
 
 @pytest.mark.pytorch
 @pytest.mark.actime
