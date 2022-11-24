@@ -14,7 +14,7 @@ from psyneulink.core.globals import Context
 from psyneulink.core.globals.keywords import TRAINING_SET, Loss
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
+from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition, AutodiffCompositionError
 from psyneulink.core.compositions.report import ReportOutput
 
 logger = logging.getLogger(__name__)
@@ -1792,17 +1792,13 @@ class TestMiscTrainingFunctionality:
         adc = AutodiffComposition(name='AUTODIFFCOMP')
         pway = adc.add_backpropagation_learning_pathway(pathway=[A,B])
         # Call learn with default_variable specified for target (for comparison with missing target)
-        with pytest.raises(UserWarning) as warning:
+        with pytest.raises(AutodiffCompositionError) as error:
             adc.learn(inputs={A: 1.0,
                               pway.target: 0.0},
                       execution_mode=pnl.ExecutionMode.Python,
                       num_trials=2)
-        assert repr(warning[1].message.args[0]) == '\'AUTODIFFCOMP.learn() called with ExecutionMode.Python; ' \
-                                                   'learning will be executed using PyTorch; should use ' \
-                                                   'ExecutionMode.PyTorch for clarity, or a standard Composition ' \
-                                                   'for Python execution.)\''
-
-
+        assert error.value.error_value == f"ExecutionMode.Python cannot be used in the learn() method of " \
+                                          f"\'AutodiffComposition-0\'; use ExecutionMode.PyTorch or ExecutionMode.LLVM."
 
 @pytest.mark.pytorch
 @pytest.mark.actime
