@@ -146,7 +146,8 @@ class CompositionRunner():
         ---------
         Outputs from the final execution
         """
-        if not execution_mode:
+
+        if not (execution_mode & pnlvm.ExecutionMode.COMPILED):
             self._is_llvm_mode = False
         else:
             self._is_llvm_mode = True
@@ -195,7 +196,7 @@ class CompositionRunner():
                 raise Exception("The minibatch size cannot be greater than the number of trials.")
 
             early_stopper = None
-            if patience is not None and not execution_mode:
+            if patience is not None and not self._is_llvm_mode:
                 early_stopper = EarlyStopping(min_delta=min_delta, patience=patience)
 
             if callable(stim_input) and not isgeneratorfunction(stim_input):

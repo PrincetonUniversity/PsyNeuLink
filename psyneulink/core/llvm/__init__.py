@@ -85,6 +85,7 @@ class ExecutionMode(enum.Flag):
     LLVMExec = LLVM | _Exec
     PTXRun = PTX | _Run
     PTXExec = PTX | _Exec
+    COMPILED = ~ (Python | PyTorch)
 
 
 _binary_generation = 0

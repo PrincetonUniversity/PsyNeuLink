@@ -597,10 +597,9 @@ class AutodiffComposition(Composition):
         if 'execution_mode' in kwargs:
             execution_mode = kwargs['execution_mode']
             if execution_mode == pnlvm.ExecutionMode.Python:
-                warnings.warn(f"{self.name}.learn() called with ExecutionMode.Python; "
-                              f"learning will be executed using PyTorch; "
-                              f"should use ExecutionMode.PyTorch for clarity, "
-                              f"or a standard Composition for Python execution.)")
+                raise AutodiffCompositionError(f"{self.name} is an AutodiffComposition so its learn() "
+                                               f"cannot be called with execution_mode = ExecutionMode.Python; "
+                                               f"use ExecutionMode.PyTorch or ExecutionMode.LLVMRun.")
             # OK, now that the user has been advised to use ExecutionMode.PyTorch and warned *not* to ExecutionMdoe.Python,
             #     convert ExecutionMode.PyTorch specification to ExecutionMode.Python for internal use (nice, eh?)
             if execution_mode == pnlvm.ExecutionMode.PyTorch:
