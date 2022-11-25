@@ -1,16 +1,26 @@
 """
+Nback Model:  When Working Memory is Just Working and not Memory
+
+Overview
+--------
+
 This implements a model of the `Nback task <https://en.wikipedia.org/wiki/N-back#Neurobiology_of_n-back_task>`_
 described in `Beukers et al. (2022) <https://psyarxiv.com/jtw5p>`_.  The model uses a simple implementation of episodic
-(content-addressable) memory to store previous stimuli and the temporal context in which they occured,
-and a feedforward neural network to evaluate whether the current stimulus is a match to the n'th preceding stimulus
-(n-back level).  This model is an example of proposed interactions between working memory (e.g., in neocortex) and
-episodic memory e.g., in hippocampus and/or cerebellum) in the performance of tasks demanding of sequential processing
-and control, and along the lines of models emerging machine learning that augment the use of recurrent neural networks
-(e.g., long short-term memory mechanisms; LSTMs) for active memory and control with an external memory capable of
+memory (EM, as a form of content-retrieval memory) to store previous stimuli along with the temporal context in which
+ they occured, and a feedforward neural network (FFN) to evaluate whether the current stimulus is a match to the n'th
+preceding stimulus (n-back level) retrieved from EM.
+
+This model is an example of proposed interactions between working memory (e.g., in neocortex) and episodic memory
+(e.g., in hippocampus, and possibly cerebellum) in the performance of tasks demanding of sequential processing and
+control, along the lines of models emerging from machine learning that augment the use of recurrent neural networks
+(e.g., long short-term memory mechanisms; LSTMs) for active memory and control, with an external memory capable of
 rapid storage and content-based retrieval, such as the Neural Turing Machine (NTN; `Graves et al., 2016
 <https://arxiv.org/abs/1410.5401>`_), Episodic Planning Networks (EPN; `Ritter et al., 2020
 <https://arxiv.org/abs/2006.03662>`_), and Emergent Symbols through Binding Networks (ESBN; `Webb et al., 2021
 <https://arxiv.org/abs/2012.14601>`_).
+
+Methods
+~~~~~~~
 
 There are three primary methods in the script:
 
@@ -26,13 +36,55 @@ There are three primary methods in the script:
   takes the context drift rate to be applied on each trial and the number of trials to execute as args, as well as
   reporting and animation specifications (see "Execution parameters" below).
 
+The Model
+~~~~~~~~~
+
+The models is composed of two `Compositions <Composition>`: an outer one that contains the full model (nback_model),
+and an `AutodiffComposition` (ffn), nested within nback_model (see red box in Figure), that implements the
+feedforward neural network (ffn).
+--------
+The temporal context is provided by a randomly drifting high dimensional vector that maintains a constant norm (i.e.,
+drifts on a sphere).  The FFN is trained, given an n-back level of *n*, to identify when the current stimulus matches
+one stored in EM with a temporal context vector that differs by an amount corresponding to *n* time steps of drift.
+During n-back performance, the model encodes the current stimulus and temporal context, retrieves an item from EM
+that matches the current stimulus, weighted by the similarity of its temporal context vector (i.e., most recent), and
+then uses the FFN to evaluate whether it is an n-back match.  The model responds "match" if the FFN detects a match;
+otherwise, it either responds "non-match" or, with a fixed probability (hazard rate), it uses the current stimulus
+and temporal context to retrieve another sample from EM and repeat the evaluation.
+-------------
+This contains three input Mechanisms (
+
+Both of these are constructed in the construct_model function.
+The ffn Composition is trained use
+
+.. _nback_Fig:
+
+.. figure:: _static/N-Back_Model_movie.gif
+   :align: left
+   :alt: N-Back Model Animation
+-------------
+
+
+Settings
+~~~~~~~~
+
 See "Settings for running the script" to specify whether the model is trained and/or executed when the script is run,
 and whether a graphic display of the network is generated when it is constructed.
 
-Sequences of stimuli are constructed to match those used in the study by `Kane et al.,
-2007 <https://psycnet.apa.org/record/2007-06096-010?doi=1>`_
+Stimuli
+~~~~~~~
+
+Sequences of stimuli are constructed either using `SweetPea <https://sites.google.com/view/sweetpea-ai?pli=1>`_
+(using the script in stim/SweetPea) or replicate those used in the study by `Kane et al.,
+2007 <https://psycnet.apa.org/record/2007-06096-010?doi=1>`_ (from stimulus files in stim/Kane_et_al).
+
+    .. note::
+       Use of SweetPea for stimulus generation requires it be installed::
+       >> pip install sweetpea
 
 
+
+COMMENT:
 TODO:
     - from Andre
              - network architecture;  in particular, size of hidden layer and projection patterns to and from it
@@ -58,16 +110,15 @@ TODO:
         - replace get_input_sequence and get_training_inputs with generators passed to nback_model.run() and ffn.learn
         - build version that *can* maintain in WM, and uses EVC to decide which would be easier:
            maintenance in WM vs. storage/retrieval from EM (and the fit to Jarrod's data)
+COMMENT
 """
 
 import random
 import timeit
 from enum import IntEnum
-import warnings
 from pathlib import Path
 import os
 
-import numpy as np
 from graph_scheduler import *
 from psyneulink import *
 
