@@ -75,9 +75,10 @@ Learning
 
 Output and progress reporting can be enabled during `learning <Composition_Learning>` by specifying a `ReportOutput`
 and/or `ReportProgress` option in, repsectively, the **report_output** and/or **report_progress** argument(s) of the
-Composition's `learn <Composition.learn>` method.  For a learning using a standard Composition, reporting occurs
-after every `TRIAL <TimeScale.TRIAL>`;  for learning using an `AutodiffComposition`, reporting occurs as learning
-begins and once it ends.
+Composition's `learn <Composition.learn>` method.  For learning using a standard Composition, reporting occurs
+after every `TRIAL <TimeScale.TRIAL>` is executed;  for learning using an `AutodiffComposition`, which uses either
+`direct compilation <AutodiffComposition_LLVM>` or `translation to Pytorch <AutodiffComposition_PyTorch>`,
+reporting occurs just before learning begins and once it ends.
 
 .. _Report_To_Device:
 

@@ -94,21 +94,12 @@ A few other restrictions apply to the construction and modification of AutodiffC
 Execution
 ---------
 
-COMMENT:
-- Execute learn method using Execute_mode == Python (uses Python) or LLVMRun (direct compilation) using
-
-It can be run just as a standard Composition would - using `learn <AutodiffComposition.learn>` for learning mode,
-and `run <AutodiffComposition.run>` for test mode.
-FIX: CHECK WITH SAMYAK THAT THIS IS CORRECT
-COMMENT
-
 An AutodiffComposition's `run <Composition.run>`, `execute <Composition.execute>`, and `learn <Composition.learn>`
 methods are the same as for a `Composition`.  However, the **execution_mode** in the `learn <Composition.learn>`
 method has different effects than for a standard Composition, that determine whether it uses `LLVM compilation
 <AutodiffComposition_LLVM>` or `translation to PyTorch <AutodiffComposition_PyTorch>` to execute learning.
-This `table <Composition_Compilation_Table>` provides a summary and comparison of these different modes of execution,
-that are described in greater detail below.
-
+These are each described in greater detail below, and summarized in this `table <Composition_Compilation_Table>`
+which provides a comparison of the different modes of execution for an AutodiffComposition and standard `Composition`.
 
 .. _AutodiffComposition_LLVM:
 
@@ -127,41 +118,6 @@ the constructor (see `AutodiffComposition <AutodiffComposition_Class_Reference>`
        methods of an AutodiffComposition causes it to (attempt to) use compiled execution in both cases; this is
        because LLVM compilation supports the use of modulation in PsyNeuLink models (as compared to `PyTorch mode
        <AutodiffComposition_PyTorch>`; see `note <AutodiffComposition_PyTorch_Note>` below).
-
-
-COMMENT:
-The advantage of using an AutodiffComposition is that it allows a model to be implemented in PsyNeuLink, and then
-exploit the acceleration of optimized implementations of learning. This can be achieved by executing the `learn
-<Composition.learn>` method in one of two modes (specified using its **execution_mode** argument):  using direct
-compilation (**execution_mode** = `ExecutionMode.LLVMRun`); or by automatically translating the model to `PyTorch
-<https://pytorch.org>`_ for training (**execution_mode** = `ExecutionMode.PyTorch`). The advantage of these modes is
-that they can provide up to three orders of magnitude speed-up in training a model. However, there are restrictions
-on the kinds of Compositions that be implemented in this way.  The features of the different ways to implement and
-execute learning are outlined in the following table, and described in more detail in `AutodiffComposition`.
-  TABLE:
-    * AutodiffComposition:
-        * Execute_mode.Python:
-            - execution:
-              - executes `learn <Composition.learn>` using PyTorch
-              - executes `run <Composition.run>` using Python
-            - advantage: - fast (but slightly slower than direct compilation)
-            - disadvantage :broader support (RNN including LSTM, convnet, ?transformer?)
-        * Execute_mode.LLVNRun:
-            - execution: executes `learn <Composition.learn>` *and* `run <Composition.run>` in compiled mode
-            - advantage: fastest (direct compilation of PNL code)
-            - disadvantage: but (currently) more limited; not suppored:
-                            * RNN (including LSTM)
-                            * convnet (though "in the wings")
-                            * transformer
-                            * ?external memory
-    * Composition:
-        - execution: executes `learn <Composition.learn>` *and* `run <Composition.run>` in Python mode
-        - disadvantage: learning is extremely slow
-        - advantage:
-          - broadest support (including RL, TDLearning, Hebbian, Kohonen / SOM)
-          - can be used to implement effects of modulation and control during learning
-          - useful for examination of individual operations (e.g., for teaching purposes)
-COMMENT
 
 .. _AutodiffComposition_PyTorch:
 
