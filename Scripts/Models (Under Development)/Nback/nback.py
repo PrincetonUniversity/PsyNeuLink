@@ -19,10 +19,8 @@ rapid storage and content-based retrieval, such as the Neural Turing Machine (NT
 <https://arxiv.org/abs/2006.03662>`_), and Emergent Symbols through Binding Networks (ESBN; `Webb et al., 2021
 <https://arxiv.org/abs/2012.14601>`_).
 
-Methods
-~~~~~~~
-
-There are three primary methods in the script:
+There are three primary methods in the script used, respectively, to construct, train and run the model;  these
+are summarized below and their use is described in greater detail below.
 
 * construct_model(args):
   takes as arguments parameters used to construct the model;  for convenience, defaults are defined below,
@@ -33,16 +31,37 @@ There are three primary methods in the script:
   Note: learning_rate is set at construction (can specify using LEARNING_RATE under "Training parameters" below).
 
 * run_model()
-  takes the context drift rate to be applied on each trial and the number of trials to execute as args, as well as
-  reporting and animation specifications (see "Execution parameters" below).
+  takes as arguments the drift rate in the temporal context vector to be applied on each trial,
+  and the number of trials to execute, as well as reporting and animation specifications
+  (see "Execution parameters").
+
 
 The Model
 ~~~~~~~~~
 
-The models is composed of two `Compositions <Composition>`: an outer one that contains the full model (nback_model),
-and an `AutodiffComposition` (ffn), nested within nback_model (see red box in Figure), that implements the
-feedforward neural network (ffn).
---------
+The model is comprised of two `Compositions <Composition>`: an outer one that contains the full model (`nback_model
+<nback_model_composition>`), and an `AutodiffComposition`, nested within nback_model, that implements the feedforward
+neural network (`ffn <nback_ffn_composition>`) (see red box in the figure below).  Both of these are constructed in
+the `construct_model <nback.construct_model>` function (see `below <nback_methods>`).
+
+.. _nback_Fig:
+
+.. figure:: _static/N-Back_Model_movie.gif
+   :align: left
+   :alt: N-Back Model Animation
+
+.. _nback_ model_composition:
+
+nback_model Composition
+^^^^^^^^^^^^^^^^^^^^^^^
+
+This is comprised of three input Mechanisms, and the nested `ffn <nback_ffn_composition>` `Composition`.
+
+.. _nback_ffn_composition:
+
+FFN Composition
+^^^^^^^^^^^^^^^
+
 The temporal context is provided by a randomly drifting high dimensional vector that maintains a constant norm (i.e.,
 drifts on a sphere).  The FFN is trained, given an n-back level of *n*, to identify when the current stimulus matches
 one stored in EM with a temporal context vector that differs by an amount corresponding to *n* time steps of drift.
@@ -51,22 +70,21 @@ that matches the current stimulus, weighted by the similarity of its temporal co
 then uses the FFN to evaluate whether it is an n-back match.  The model responds "match" if the FFN detects a match;
 otherwise, it either responds "non-match" or, with a fixed probability (hazard rate), it uses the current stimulus
 and temporal context to retrieve another sample from EM and repeat the evaluation.
--------------
-This contains three input Mechanisms (
 
-Both of these are constructed in the construct_model function.
-The ffn Composition is trained use
+The ffn Composition is trained using the train_network() method
 
-.. _nback_Fig:
 
-.. figure:: _static/N-Back_Model_movie.gif
-   :align: left
-   :alt: N-Back Model Animation
--------------
+Constructing and Executing the Model
+------------------------------------
+
+.. _nback_methods:
 
 
 Settings
 ~~~~~~~~
+
+The default parameters are ones that have been fit to empirical data concerning human performance
+(taken from `Kane et al., 2007 <https://psycnet.apa.org/record/2007-06096-010?doi=1>`_).
 
 See "Settings for running the script" to specify whether the model is trained and/or executed when the script is run,
 and whether a graphic display of the network is generated when it is constructed.
@@ -82,7 +100,19 @@ Sequences of stimuli are constructed either using `SweetPea <https://sites.googl
        Use of SweetPea for stimulus generation requires it be installed::
        >> pip install sweetpea
 
+.. _nback_training:
 
+Training
+~~~~~~~~
+
+MORE HERE
+
+.. _nback_execution:
+
+Execution
+~~~~~~~~~
+
+MORE HERE
 
 COMMENT:
 TODO:
