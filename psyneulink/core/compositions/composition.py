@@ -10400,7 +10400,13 @@ _
             the results of the final epoch of training : list
         """
         from psyneulink.library.compositions import CompositionRunner
+        from psyneulink.library.compositions import AutodiffComposition
         runner = CompositionRunner(self)
+
+        if (execution_mode in {pnlvm.ExecutionMode.PyTorch, pnlvm.ExecutionMode.LLVM}
+                and not isinstance(self, AutodiffComposition)):
+            raise CompositionError(f"ExecutionMode.{execution_mode.name} cannot be used in the learn() method of "
+                                   f"'{self.name}' because it is not an {AutodiffComposition.componentCategory}")
 
         context.add_flag(ContextFlags.LEARNING_MODE)
         # # MODIFIED 3/28/22 NEW:

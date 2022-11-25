@@ -408,6 +408,22 @@ class TestLearningPathwayMethods:
                     num_trials=2)
         assert np.allclose(comp2.results, comp1.results)
 
+    @pytest.mark.parametrize('execution_mode',
+                             [pnlvm.ExecutionMode.LLVM, pnlvm.ExecutionMode.PyTorch])
+    def test_execution_mode_pytorch_and_LLVM_errors(self, execution_mode):
+        A = TransferMechanism(name="learning-process-mech-A")
+        B = TransferMechanism(name="learning-process-mech-B")
+        comp = Composition()
+        pway = comp.add_backpropagation_learning_pathway(pathway=[A,B])
+        # Call learn with default_variable specified for target (for comparison with missing target)
+        with pytest.raises(CompositionError) as error:
+            comp.learn(inputs={A: 1.0,
+                              pway.target: 0.0},
+                      execution_mode=execution_mode,
+                      num_trials=2)
+        assert error.value.error_value == f"ExecutionMode.{execution_mode.name} cannot be used in the learn() " \
+                                                f"method of \'Composition-0\' because it is not an AutodiffComposition"
+
 
 class TestNoLearning:
 
@@ -1710,6 +1726,7 @@ class TestNestedLearning:
                     f'as the target attribute of the relevant pathway in {inner_comp.name}.pathways. '
             )
 
+
 class TestBackPropLearning:
 
     def test_matrix_spec_and_learning_rate(self):
@@ -2079,6 +2096,7 @@ class TestBackPropLearning:
                                hidden_to_out_comp.get_mod_matrix(xor_comp))
             assert np.allclose(result_comp, result_LLVM)
 
+        # AutodiffComposition using PyTorch
         elif 'PYTORCH' in models:
 
             input_PYTORCH = pnl.TransferMechanism(name='input',
