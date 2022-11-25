@@ -6,33 +6,36 @@ Overview
 This implements a model of the `nback task <https://en.wikipedia.org/wiki/N-back#Neurobiology_of_n-back_task>`_
 described in `Beukers et al. (2022) <https://psyarxiv.com/jtw5p>`_.  The model uses a simple implementation of episodic
 memory (EM, as a form of content-retrieval memory) to store previous stimuli along with the temporal context in which
- they occured, and a feedforward neural network (FFN) to evaluate whether the current stimulus is a match to the n'th
+they occurred, and a feedforward neural network (FFN) to evaluate whether the current stimulus is a match to the n'th
 preceding stimulus (n-back level) retrieved from EM.
 
-This model is an example of proposed interactions between working memory (e.g., in neocortex) and episodic memory
-(e.g., in hippocampus, and possibly cerebellum) in the performance of tasks demanding of sequential processing and
-control, along the lines of models emerging from machine learning that augment the use of recurrent neural networks
-(e.g., long short-term memory mechanisms; LSTMs) for active memory and control, with an external memory capable of
-rapid storage and content-based retrieval, such as the Neural Turing Machine (NTN; `Graves et al., 2016
-<https://arxiv.org/abs/1410.5401>`_), Episodic Planning Networks (EPN; `Ritter et al., 2020
-<https://arxiv.org/abs/2006.03662>`_), and Emergent Symbols through Binding Networks (ESBN; `Webb et al., 2021
-<https://arxiv.org/abs/2012.14601>`_).
+The model is an example of proposed interactions between working memory (subserved by neocortical structures) and
+episodic memory (subserved by hippocampus, and possibly cerebellum) in the performance of tasks demanding of sequential
+processing and control, along the lines of models emerging from machine learning that augment the use of recurrent
+neural networks (e.g., long short-term memory mechanisms; LSTMs) for active memory and control, with an external memory
+capable of rapid storage and content-based retrieval, such as the
+Neural Turing Machine (NTN; `Graves et al., 2016 <https://arxiv.org/abs/1410.5401>`_),
+Episodic Planning Networks (EPN; `Ritter et al., 2020 <https://arxiv.org/abs/2006.03662>`_), and
+Emergent Symbols through Binding Networks (ESBN; `Webb et al., 2021 <https://arxiv.org/abs/2012.14601>`_).
 
-There are three primary methods in the script used, respectively, to construct, train and run the model;  these
-are summarized below and their use is described in greater detail below.
+The script conatins methods to construct, train, and run the model, and analyze the results of its execution:
 
-* construct_model(args):
+* `construct_model <nback.construct_model>`:
   takes as arguments parameters used to construct the model;  for convenience, defaults are defined below,
   (under "Construction parameters")
 
-* train_network(args)
+* `train_network <nback.train_network>`:
   takes as arguments the feedforward neural network Composition (FFN_COMPOSITION) and number of epochs to train.
   Note: learning_rate is set at construction (can specify using LEARNING_RATE under "Training parameters" below).
 
-* run_model()
+* `run_model <nback.run_model>`:
   takes as arguments the drift rate in the temporal context vector to be applied on each trial,
   and the number of trials to execute, as well as reporting and animation specifications
   (see "Execution parameters").
+
+* `analyze_results <nback.analyze_results>`:
+  takes as arguments the results of executing the model, and optionally a number of trials and nback_level to analyze;
+  returns d-prime statistics and plots results for different conditions at each nback_level executed.
 
 
 The Model
@@ -131,6 +134,7 @@ TODO:
     - train_network() and run_model(): refactor to take inputs and trial_types, and training_set, respectively
     - fix: get rid of objective_mechanism (see "VERSION *WITHOUT* ObjectiveMechanism" under control(...)
     - fix: warnings on run
+    - fix: remove num_nback_levels from contruct_model
     - complete documentation in BeukersNbackModel.rst
     - validate against nback-paper results
     - after validation:
@@ -148,16 +152,17 @@ import timeit
 from enum import IntEnum
 from pathlib import Path
 import os
+import numpy as np
 
 from graph_scheduler import *
 from psyneulink import *
 
 # Settings for running script:
-DISPLAY_MODEL = False # show visual graphic of model
-CONSTRUCT = False
-TRAIN = False
-RUN = False
-ANALYZE = False # Analyze results of run
+CONSTRUCT = True # THIS MUST BE SET TO True to run the script
+DISPLAY_MODEL = False # True = show visual graphic of model
+TRAIN = False  # True => train the FFN (WM)
+RUN = False  # True => test the model on sample stimulus sequences
+ANALYZE = False # True => output analysis of results of run
 REPORT_OUTPUT = ReportOutput.OFF       # Sets console output during run
 REPORT_PROGRESS = ReportProgress.ON   # Sets console progress bar during run
 ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
@@ -236,18 +241,30 @@ def construct_model(stim_size = STIM_SIZE,
                     retrieval_context_weight = RETRIEVAL_CONTEXT_WEIGHT,
                     # decision_softmax_temp = DECISION_SOFTMAX_TEMP
                     ):
-    """Construct nback_model
+    """**Construct nback_model**
+
     Arguments
     ---------
-    context_size: int : default CONTEXT_SIZE
-    hidden_size: int : default HIDDEN_SIZE
-    num_nback_levels: int : default NUM_NBACK_LEVELS
-    context_drift_noise: float : default CONTEXT_DRIFT_NOISE
-    retrievel_softmax_temp: float : default RETRIEVAL_SOFTMAX_TEMP
-    retrieval_hazard_rate: float : default RETRIEVAL_HAZARD_RATE
-    retrieval_stimulus_weight: float : default RETRIEVAL_STIM_WEIGHT
-    retrieval_context_weight: float : default RETRIEVAL_CONTEXT_WEIGHT
-    # decision_softmax_temp: float : default DECISION_SOFTMAX_TEMP)
+    context_size: int
+      length of the temporal context vector
+    hidden_size: int
+      dimensionality of the hidden unit layer
+    num_nback_levels: int
+      number of nback_levels to implement
+    context_drift_noise: float
+      rate of temporal context drift
+    retrievel_softmax_temp: float
+      temperature of softmax on retrieval from episodic memory
+    retrieval_hazard_rate: float
+      rate at which episodic memory is sampled if a match is not found
+    retrieval_stimulus_weight: float
+      weighting on stimulus component for retrieval of vectors stored in `episodic memory <EpisodicMemoryMechanism>`
+    retrieval_context_weight: float
+      weighting on context component for retrieval of vectors stored in `episodic memory <EpisodicMemoryMechanism>`
+    COMMENT:
+    decision_softmax_temp: float
+      temperature on softmax for decision (match vs. no-match)
+    COMMENT
 
     Returns
     -------
@@ -647,28 +664,28 @@ def train_network(network,
                   learning_rate=LEARNING_RATE,
                   num_epochs=NUM_EPOCHS,
                   save_weights_to=None):
-    """Train the network on trarining set.
+    """**Train feedforward network** on example stimulus sequences for each condition.
 
     Arguments
     ---------
     network: AutodiffComposition
-        specified the network to be trained;  this must be an `AutodiffComposition`.
-    training_set: dict : default None,
-        specifies inputs (see `Composition_Input_Dictionary`), including targets (`Composition_Target_Inputs`)
+        network to be trained;  this must be an `AutodiffComposition`.
+    training_set: dict
+        inputs (see `Composition_Input_Dictionary`), including targets (`Composition_Target_Inputs`)
         to use for training;  these are constructed in a call to get_training_inputs() if not specified here.
-    minibatch_size: int : default None,
-        specified number of inputs that will be presented within a single training epoch
+    minibatch_size: int
+        number of inputs that will be presented within a single training epoch
         (i.e. over which weight changes are aggregated and applied);  this is determined by the call to
         get_training_inputs() if **training_set** is not specified explicitly.
-    learning_rate: float : default LEARNING_RATE
-        specifies learning_rate to use for current training;  this overrides the value of `learning_rate
+    learning_rate: float
+        learning_rate to use for training;  this overrides the value of `learning_rate
         <AutodiffComposition.learning_rate>` specified in construction of the network.  If None is specified
          here, either the value specified at construction, or the default for `AutodiffComposition
          <AutodiffComposition.learning_rate>` is used.
-    num_epochs: int : default NUM_EPOCHS,
-        specifies number of training epochs (i.e., sets of minibatchs) to execute during training.
-    save_weights_to: Path : default None
-        specifies location to store weights at end of training.
+    num_epochs: int
+        number of training epochs (i.e., sets of minibatchs) to execute during training.
+    save_weights_to: Path
+        location to store weights at end of training.
 
     Returns
     -------
@@ -719,22 +736,23 @@ def run_model(model,
               animate=ANIMATE,
               save_results_to=None
               ):
-    """Run model for all nback levels with a specified context drift rate and number of trials
+    """**Run model** for all nback levels with a specified context drift rate and number of trials
+
     Arguments
     --------
-    load_weights_from:  Path : default None
+    load_weights_from:  Path
         specifies file from which to load pre-trained weights for matrices of FFN_COMPOSITION.
-    context_drift_rate: float : CONTEXT_DRIFT_RATE
+    context_drift_rate: float
         specifies drift rate as input to CONTEXT_INPUT, used by DriftOnASphere function of FFN_CONTEXT_INPUT.
-    num_trials: int : default 48
+    num_trials: int
         number of trials (stimuli) to run.
-    report_output: REPORT_OUTPUT : default REPORT_OUTPUT.OFF
+    report_output: ReportOutput
         specifies whether to report results during execution of run (see `Report_Output` for additional details).
-    report_progress: REPORT_PROGRESS : default REPORT_PROGRESS.OFF
+    report_progress: ReportProgress
         specifies whether to report progress of execution during run (see `Report_Progress` for additional details).
-    animate: dict or bool : default False
+    animate: dict or bool
         specifies whether to generate animation of execution (see `ShowGraph_Animation` for additional details).
-    save_results_to: Path : default None
+    save_results_to: Path
         specifies location to save results of the run along with trial_type_sequences for each nback level;
         if None, those are returned by call but not saved.
     """
@@ -778,6 +796,17 @@ def run_model(model,
 #region ================================= MODEL PERFORMANCE ANALYSIS ===================================================
 
 def analyze_results(results, num_trials=NUM_TRIALS, nback_levels=NBACK_LEVELS):
+    """**Analyze and plot results** of executed model.
+
+    Arguments
+    --------
+    results: ndarray
+        results returned from `run_model <nback.run_model>`.
+    num_trials:  int
+        number of trials to analyze.
+    nback_levels: list
+        nback levels to analyze
+    """
     responses_and_trial_types = [None] * len(nback_levels)
     stats = np.zeros((len(nback_levels),num_trial_types))
     MATCH = 'match'
