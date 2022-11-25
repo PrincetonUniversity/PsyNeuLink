@@ -10089,7 +10089,7 @@ _
                     elif execution_mode & pnlvm.ExecutionMode.PTX:
                         results += _comp_ex.cuda_run(inputs, num_trials, num_inputs_sets)
                     else:
-                        assert False, f"Unknown execution mode: {execution_mode}."
+                        assert False, "Unknown execution mode: {}".format(execution_mode)
 
                     # Update the parameter for results
                     self.parameters.results._set(results, context)
@@ -10481,7 +10481,10 @@ _
                     context.execution_phase = ContextFlags.PROCESSING
                     self.controller.execute(context=context)
 
-                if execution_mode & pnlvm.ExecutionMode.COMPILED:
+                else:
+                    assert (execution_mode == pnlvm.ExecutionMode.LLVM
+                            or execution_mode & pnlvm.ExecutionMode._Fallback),\
+                        f"PROGRAM ERROR: Unrecognized compiled execution_mode: '{execution_mode}'."
                     _comp_ex.execute_node(self.controller, context=context)
 
                 context.remove_flag(ContextFlags.PROCESSING)
@@ -10721,7 +10724,7 @@ _
                         elif execution_mode & pnlvm.ExecutionMode.PTX:
                             _comp_ex.cuda_execute(llvm_inputs)
                         else:
-                            assert False, f"Unknown execution mode: {execution_mode}."
+                            assert False, "Unknown execution mode: {}".format(execution_mode)
 
                         report(self,
                                PROGRESS_REPORT,

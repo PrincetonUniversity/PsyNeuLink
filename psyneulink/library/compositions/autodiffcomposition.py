@@ -636,7 +636,7 @@ class AutodiffComposition(Composition):
             if execution_mode == pnlvm.ExecutionMode.Python:
                 raise AutodiffCompositionError(f"{self.name} is an AutodiffComposition so its learn() "
                                                f"cannot be called with execution_mode = ExecutionMode.Python; "
-                                               f"use ExecutionMode.PyTorch or ExecutionMode.LLVM.")
+                                               f"use ExecutionMode.PyTorch or ExecutionMode.LLVMRun.")
             # OK, now that the user has been advised to use ExecutionMode.PyTorch and warned *not* to ExecutionMdoe.Python,
             #     convert ExecutionMode.PyTorch specification to ExecutionMode.Python for internal use (nice, eh?)
             if execution_mode == pnlvm.ExecutionMode.PyTorch:
