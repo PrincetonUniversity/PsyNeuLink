@@ -10395,7 +10395,7 @@ _
         from psyneulink.library.compositions import AutodiffComposition
         runner = CompositionRunner(self)
 
-        if (execution_mode in {pnlvm.ExecutionMode.PyTorch, pnlvm.ExecutionMode.LLVM}
+        if ((execution_mode is not pnlvm.ExecutionMode.Python)
                 and not isinstance(self, AutodiffComposition)):
             raise CompositionError(f"ExecutionMode.{execution_mode.name} cannot be used in the learn() method of "
                                    f"'{self.name}' because it is not an {AutodiffComposition.componentCategory}")
@@ -10477,11 +10477,14 @@ _
                        context=context,
                        node=self.controller)
 
-                if self.controller and not execution_mode:
+                if self.controller and not execution_mode & pnlvm.ExecutionMode.COMPILED:
                     context.execution_phase = ContextFlags.PROCESSING
                     self.controller.execute(context=context)
 
-                if execution_mode:
+                else:
+                    assert (execution_mode == pnlvm.ExecutionMode.LLVM
+                            or execution_mode & pnlvm.ExecutionMode._Fallback),\
+                        f"PROGRAM ERROR: Unrecognized compiled execution_mode: '{execution_mode}'."
                     _comp_ex.execute_node(self.controller, context=context)
 
                 context.remove_flag(ContextFlags.PROCESSING)
@@ -10705,7 +10708,7 @@ _
             # Run compiled execution (if compiled execution was requested
             # NOTE: This should be as high up as possible,
             # but still after the context has been initialized
-            if execution_mode:
+            if execution_mode & pnlvm.ExecutionMode.COMPILED:
                 is_simulation = (context is not None and
                                  ContextFlags.SIMULATION_MODE in context.runmode)
                 # Try running in Exec mode first
@@ -10819,7 +10822,7 @@ _
                 inputs = self._validate_execution_inputs(inputs)
                 build_CIM_input = self._build_variable_for_input_CIM(inputs)
 
-            if execution_mode:
+            if execution_mode & pnlvm.ExecutionMode.COMPILED:
                 _comp_ex.execute_node(self.input_CIM, inputs, context)
                 # FIXME: parameter_CIM should be executed here as well,
                 #        but node execution of nested compositions with
@@ -11024,7 +11027,7 @@ _
                 # This ensures that the order in which nodes execute does not affect the results of this timestep
                 frozen_values = {}
                 new_values = {}
-                if execution_mode:
+                if execution_mode & pnlvm.ExecutionMode.COMPILED:
                     _comp_ex.freeze_values()
 
                 # PURGE LEARNING IF NOT ENABLED ----------------------------------------------------------------
@@ -11106,7 +11109,7 @@ _
                                 context.replace_flag(ContextFlags.PROCESSING, ContextFlags.LEARNING)
 
                         # Execute Mechanism
-                        if execution_mode:
+                        if execution_mode & pnlvm.ExecutionMode.COMPILED:
                             _comp_ex.execute_node(node, context=context)
                         else:
                             if node is not self.controller:
@@ -11129,7 +11132,7 @@ _
 
                     elif isinstance(node, Composition):
 
-                        if execution_mode:
+                        if execution_mode & pnlvm.ExecutionMode.COMPILED:
                             # Invoking nested composition passes data via Python
                             # structures. Make sure all sources get their latest values
                             srcs = (proj.sender.owner for proj in node.input_CIM.afferents)
@@ -11168,7 +11171,7 @@ _
                                            execution_mode=nested_execution_mode)
 
                         # Get output info from nested execution
-                        if execution_mode:
+                        if execution_mode & pnlvm.ExecutionMode.COMPILED:
                             # Update result in binary data structure
                             _comp_ex.insert_node_output(node, ret)
 
@@ -11310,7 +11313,7 @@ _
                        context=context)
 
             # Extract result here
-            if execution_mode:
+            if execution_mode & pnlvm.ExecutionMode.COMPILED:
                 _comp_ex.freeze_values()
                 _comp_ex.execute_node(self.output_CIM, context=context)
                 report(self,

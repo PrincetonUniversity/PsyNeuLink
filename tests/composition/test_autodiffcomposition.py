@@ -14,7 +14,7 @@ from psyneulink.core.globals import Context
 from psyneulink.core.globals.keywords import TRAINING_SET, Loss
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
+from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition, AutodiffCompositionError
 from psyneulink.core.compositions.report import ReportOutput
 
 logger = logging.getLogger(__name__)
@@ -1770,22 +1770,20 @@ class TestMiscTrainingFunctionality:
         assert not np.allclose(pt_weights_hid, hid_map.parameters.matrix.get(None))
         assert not np.allclose(pt_weights_out, out_map.parameters.matrix.get(None))
 
-    def test_execution_mode_python_warning(self):
+    def test_execution_mode_python_error(self):
         A = TransferMechanism(name="learning-process-mech-A")
         B = TransferMechanism(name="learning-process-mech-B")
         adc = AutodiffComposition(name='AUTODIFFCOMP')
         pway = adc.add_backpropagation_learning_pathway(pathway=[A,B])
         # Call learn with default_variable specified for target (for comparison with missing target)
-        with pytest.warns(UserWarning) as warning:
+        with pytest.raises(AutodiffCompositionError) as error:
             adc.learn(inputs={A: 1.0,
                               pway.target: 0.0},
                       execution_mode=pnl.ExecutionMode.Python,
                       num_trials=2)
-        assert repr(warning[1].message.args[0]) == '\'AUTODIFFCOMP.learn() called with ExecutionMode.Python; ' \
-                                                   'learning will be executed using PyTorch; should use ' \
-                                                   'ExecutionMode.PyTorch for clarity, or a standard Composition ' \
-                                                   'for Python execution.)\''
-
+        assert error.value.error_value == 'AUTODIFFCOMP is an AutodiffComposition so its learn() ' \
+                                          'cannot be called with execution_mode = ExecutionMode.Python; ' \
+                                          'use ExecutionMode.PyTorch or ExecutionMode.LLVMRun.'
 
 @pytest.mark.pytorch
 @pytest.mark.actime
