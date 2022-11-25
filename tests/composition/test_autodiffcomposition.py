@@ -1783,7 +1783,7 @@ class TestMiscTrainingFunctionality:
                       num_trials=2)
         assert error.value.error_value == 'AUTODIFFCOMP is an AutodiffComposition so its learn() ' \
                                           'cannot be called with execution_mode = ExecutionMode.Python; ' \
-                                          'use ExecutionMode.PyTorch or ExecutionMode.LLVM.'
+                                          'use ExecutionMode.PyTorch or ExecutionMode.LLVMRun.'
 
 @pytest.mark.pytorch
 @pytest.mark.actime
