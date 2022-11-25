@@ -1,10 +1,9 @@
 """
-Nback Model:  When Working Memory is Just Working and not Memory
 
 Overview
 --------
 
-This implements a model of the `Nback task <https://en.wikipedia.org/wiki/N-back#Neurobiology_of_n-back_task>`_
+This implements a model of the `nback task <https://en.wikipedia.org/wiki/N-back#Neurobiology_of_n-back_task>`_
 described in `Beukers et al. (2022) <https://psyarxiv.com/jtw5p>`_.  The model uses a simple implementation of episodic
 memory (EM, as a form of content-retrieval memory) to store previous stimuli along with the temporal context in which
  they occured, and a feedforward neural network (FFN) to evaluate whether the current stimulus is a match to the n'th
@@ -50,7 +49,7 @@ the `construct_model <nback.construct_model>` function (see `below <nback_method
    :align: left
    :alt: N-Back Model Animation
 
-.. _nback_ model_composition:
+.. _nback_model_composition:
 
 nback_model Composition
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -128,7 +127,7 @@ TODO:
               - learning rate: 0.001; epoch: 1 trial per epoch of training
               - fix: state_dict with weights (still needed)
           - get empirical stimulus sequences (still needed)
-          - put Nback script (with pointer to latest version on PNL) in nback-paper repo
+          - put nback script (with pointer to latest version on PNL) in nback-paper repo
     - train_network() and run_model(): refactor to take inputs and trial_types, and training_set, respectively
     - fix: get rid of objective_mechanism (see "VERSION *WITHOUT* ObjectiveMechanism" under control(...)
     - fix: warnings on run
@@ -141,6 +140,7 @@ TODO:
         - build version that *can* maintain in WM, and uses EVC to decide which would be easier:
            maintenance in WM vs. storage/retrieval from EM (and the fit to Jarrod's data)
 COMMENT
+
 """
 
 import random
@@ -154,9 +154,10 @@ from psyneulink import *
 
 # Settings for running script:
 DISPLAY_MODEL = False # show visual graphic of model
+CONSTRUCT = False
 TRAIN = False
-RUN = True
-ANALYZE = True # Analyze results of run
+RUN = False
+ANALYZE = False # Analyze results of run
 REPORT_OUTPUT = ReportOutput.OFF       # Sets console output during run
 REPORT_PROGRESS = ReportProgress.ON   # Sets console progress bar during run
 ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
@@ -191,7 +192,7 @@ CONTEXT_DRIFT_RATE=.1 # drift rate used for DriftOnASphereIntegrator (function o
 NUM_TRIALS = 48 # number of stimuli presented in a trial sequence
 
 # Names of Compositions and Mechanisms:
-NBACK_MODEL = "Nback Model"
+NBACK_MODEL = "nback Model"
 FFN_COMPOSITION = "WORKING MEMORY (fnn)"
 FFN_STIMULUS_INPUT = "CURRENT STIMULUS"
 FFN_CONTEXT_INPUT = "CURRENT CONTEXT"
@@ -250,7 +251,7 @@ def construct_model(stim_size = STIM_SIZE,
 
     Returns
     -------
-    Composition implementing Nback model
+    Composition implementing nback model
     """
 
     print(f"constructing '{FFN_COMPOSITION}'...")
@@ -610,7 +611,7 @@ def get_run_inputs(model, nback_level,
         # Use SweetPea if specified
         if use_sweepea:
             if nback_level == 2:
-                from stim.sweetpea_script import create_two_back
+                from stim.SweetPea.sweetpea_script import create_two_back
                 Kane_stimuli = {stim:idx for idx, stim in enumerate(['B', 'F', 'H', 'K', 'M', 'Q', 'R', 'X'])}
                 Kane_trial_types = {'1/1/0': trial_types.MATCH_NO_FOIL,
                                     '1/2/0': trial_types.MATCH_WITH_FOIL,
@@ -813,12 +814,6 @@ def analyze_results(results, num_trials=NUM_TRIALS, nback_levels=NBACK_LEVELS):
     return data_dict, stats_dict
 
 
-
-
-
-
-
-
 def compute_dprime(hit_rate, fa_rate):
     """ returns dprime and sensitivity
     """
@@ -833,6 +828,7 @@ def compute_dprime(hit_rate, fa_rate):
 
 
 def plot_results(response_and_trial_types, stats):
+    import matplotlib as plt
     hits_stderr = np.concatenate((score.mean(2).std(-1)/np.sqrt(neps))[:,(0,1)])
     correj_stderr = np.concatenate((score.mean(2).std(-1)/np.sqrt(neps))[:,(2,3)])
     d,s = compute_dprime(
@@ -888,20 +884,13 @@ def plot_results(response_and_trial_types, stats):
     plt.savefig('figures/EMmetrics_yerr-%s-t%i.svg'%(mtag,tstamp))
 
 
-
-
-
-
-
-
 #endregion
-
 
 #region ===================================== SCRIPT EXECUTION =========================================================
 # Construct, train and/or run model based on settings at top of script
 
-nback_model = construct_model()
-
+if CONSTRUCT:
+    nback_model = construct_model()
 
 if TRAIN:
     # weights_filename = f'ffn.wts_nep_{NUM_EPOCHS}_lr_{str(LEARNING_RATE).split(".")[1]}.pnl'
