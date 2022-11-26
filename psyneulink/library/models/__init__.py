@@ -1,5 +1,6 @@
-from Beukers_et_al_2022 import *
 from . import Beukers_et_al_2022
+
+from Beukers_et_al_2022 import *
 from .Cohen_Huston1994 import *
 from .Cohen_Huston1994_horse_race import *
 from .GilzenratModel import *
