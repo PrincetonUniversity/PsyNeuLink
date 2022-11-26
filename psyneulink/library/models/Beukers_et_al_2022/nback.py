@@ -44,7 +44,7 @@ The script conatins methods to construct, train, and run the model, and analyze 
 The model is comprised of two `Compositions <Composition>`: an outer one that contains the full model (`nback_model
 <nback_model_composition>`), and an `AutodiffComposition`, nested within nback_model, that implements the feedforward
 neural network (`ffn <nback_ffn_composition>`) (see red box in the figure below).  Both of these are constructed in
-the `construct_model <nback.construct_model>` function (see `below <nback_methods>`).
+the `construct_model <nback.construct_model>` function (see `below <nback_methods_reference>`).
 
 .. _nback_Fig:
 
@@ -153,15 +153,21 @@ COMMENT
 
 """
 
+import os
 import random
 import timeit
 from enum import IntEnum
 from pathlib import Path
-import os
-import numpy as np
 
 from graph_scheduler import *
+
 from psyneulink import *
+
+# import argparse
+# parser = argparse.ArgumentParser()
+# parser.add_argument('--no-plot', action='store_false', help='Disable plotting', dest='enable_plot')
+# args = parser.parse_args()
+
 
 # Settings for running script:
 CONSTRUCT = False # THIS MUST BE SET TO True to run the script

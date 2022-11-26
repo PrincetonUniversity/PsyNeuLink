@@ -6,7 +6,6 @@ illustrate principles of neural and/or psychological function.
 
 .. toctree::
    :maxdepth: 1
-   :caption: Contents:
 
    GilzenratModel
    MontagueModel

@@ -5,9 +5,10 @@ Nback Model
 
 Script: :download:`nback.py <../../psyneulink/library/models/Beukers_et_al_2022/nback.py>`
 
-Jupyter Notebook: :download:`nback_nb.ipynb <../../psyneulink/library/models/Beukers_et_al_2022/nback_nb.ipynb>`
+Jupyter Notebook: `BeukersNBackModel_NB`
 
-.. Jupyter Notebook: `BeukersNBackModelNB`
+.. Jupyter Notebook: :download:`nback_nb.ipynb <../../psyneulink/library/models/Beukers_et_al_2022/nback_nb.ipynb>`
+
 
 
 .. automodule:: psyneulink.library.models.Beukers_et_al_2022.nback
