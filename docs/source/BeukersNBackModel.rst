@@ -7,10 +7,12 @@ Script: :download:`nback.py <../../psyneulink/library/models/Beukers_et_al_2022/
 
 Jupyter Notebook: `BeukersNBackModel_NB`
 
-.. Jupyter Notebook: :download:`nback_nb.ipynb <../../psyneulink/library/models/Beukers_et_al_2022/nback_nb.ipynb>`
+(instructions for running the notebook can be found `here <Tutorial>`, replacing ``nback_nb`` for ``tutorial``)
 
+.. toctree::
+   :maxdepth: 1
 
-
+   `Jupyter Notebook <../../psyneulink/library/models/Beukers_et_al_2022/nback_nb.ipynb>`
 
 
 .. automodule:: psyneulink.library.models.Beukers_et_al_2022.nback
