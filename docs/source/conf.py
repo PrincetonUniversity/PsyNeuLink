@@ -40,9 +40,11 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.mathjax',
     'sphinx_autodoc_typehints',
-    'technical_note'
+    'technical_note',
+    'nbsphinx',
     # 'sphinx.ext.imgmath'
 ]
+
 
 pngmath_latex_preamble=r'\usepackage[active]{preview}' # + other custom stuff for inline math, such as non-default math fonts etc.
 pngmath_use_preview=True
@@ -54,7 +56,8 @@ templates_path = ['_templates']
 # You can specify multiple suffix as a list of string:
 #
 # source_suffix = ['.rst', '.md']
-source_suffix = '.rst'
+source_suffix = ['.rst', '.ipynb']
+# source_suffix = '.rst'
 
 # The encoding of source files.
 #

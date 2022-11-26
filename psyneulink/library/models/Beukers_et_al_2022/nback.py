@@ -1,7 +1,7 @@
 """
 
-Overview
---------
+**Overview**
+------------
 
 This implements a model of the `nback task <https://en.wikipedia.org/wiki/N-back#Neurobiology_of_n-back_task>`_
 described in `Beukers et al. (2022) <https://psyarxiv.com/jtw5p>`_.  The model uses a simple implementation of episodic
@@ -38,8 +38,8 @@ The script conatins methods to construct, train, and run the model, and analyze 
   returns d-prime statistics and plots results for different conditions at each nback_level executed.
 
 
-The Model
-~~~~~~~~~
+**The Model**
+-------------
 
 The model is comprised of two `Compositions <Composition>`: an outer one that contains the full model (`nback_model
 <nback_model_composition>`), and an `AutodiffComposition`, nested within nback_model, that implements the feedforward
@@ -54,15 +54,15 @@ the `construct_model <nback.construct_model>` function (see `below <nback_method
 
 .. _nback_model_composition:
 
-nback_model Composition
-^^^^^^^^^^^^^^^^^^^^^^^
+*nback_model Composition*
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This is comprised of three input Mechanisms, and the nested `ffn <nback_ffn_composition>` `Composition`.
 
 .. _nback_ffn_composition:
 
-FFN Composition
-^^^^^^^^^^^^^^^
+*FFN Composition*
+~~~~~~~~~~~~~~~~~
 
 The temporal context is provided by a randomly drifting high dimensional vector that maintains a constant norm (i.e.,
 drifts on a sphere).  The FFN is trained, given an n-back level of *n*, to identify when the current stimulus matches
@@ -76,14 +76,13 @@ and temporal context to retrieve another sample from EM and repeat the evaluatio
 The ffn Composition is trained using the train_network() method
 
 
-Constructing and Executing the Model
-------------------------------------
+**Construction and Execution**
+------------------------------
 
-.. _nback_methods:
+.. _nback_settings:
 
-
-Settings
-~~~~~~~~
+*Settings*
+~~~~~~~~~~
 
 The default parameters are ones that have been fit to empirical data concerning human performance
 (taken from `Kane et al., 2007 <https://psycnet.apa.org/record/2007-06096-010?doi=1>`_).
@@ -91,8 +90,10 @@ The default parameters are ones that have been fit to empirical data concerning 
 See "Settings for running the script" to specify whether the model is trained and/or executed when the script is run,
 and whether a graphic display of the network is generated when it is constructed.
 
-Stimuli
-~~~~~~~
+.. _nback_stimuli:
+
+*Stimuli*
+~~~~~~~~~
 
 Sequences of stimuli are constructed either using `SweetPea <https://sites.google.com/view/sweetpea-ai?pli=1>`_
 (using the script in stim/SweetPea) or replicate those used in the study by `Kane et al.,
@@ -104,17 +105,22 @@ Sequences of stimuli are constructed either using `SweetPea <https://sites.googl
 
 .. _nback_training:
 
-Training
-~~~~~~~~
+*Training*
+~~~~~~~~~~
 
 MORE HERE
 
 .. _nback_execution:
 
-Execution
-~~~~~~~~~
+*Execution*
+~~~~~~~~~~~
 
 MORE HERE
+
+.. _nback_methods_reference:
+
+**Methods Reference**
+---------------------
 
 COMMENT:
 TODO:
@@ -140,7 +146,7 @@ TODO:
     - after validation:
         - try with STIM_SIZE = NUM_STIMS rather than 20 (as in nback-paper)
         - refactor generate_stim_sequence() to use actual empirical stimulus sequences
-        - replace get_input_sequence and get_training_inputs with generators passed to nback_model.run() and ffn.learn
+        - replace get_input_sequence and _get_training_inputs with generators passed to nback_model.run() and ffn.learn
         - build version that *can* maintain in WM, and uses EVC to decide which would be easier:
            maintenance in WM vs. storage/retrieval from EM (and the fit to Jarrod's data)
 COMMENT
@@ -158,7 +164,7 @@ from graph_scheduler import *
 from psyneulink import *
 
 # Settings for running script:
-CONSTRUCT = True # THIS MUST BE SET TO True to run the script
+CONSTRUCT = False # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = False # True = show visual graphic of model
 TRAIN = False  # True => train the FFN (WM)
 RUN = False  # True => test the model on sample stimulus sequences
@@ -213,7 +219,7 @@ EM = "EPISODIC MEMORY (dict)"
 CONTROLLER = "READ/WRITE CONTROLLER"
 
 class trial_types(IntEnum):
-    """Trial types explicitly assigned and counter-balanced in get_run_inputs()
+    """Trial types explicitly assigned and counter-balanced in _get_run_inputs()
     In notation below, "A" is always current stimulus.
     Foils are only explicitly assigned to items immediately following nback item.
     Subseq designated below as "not explicitly assigned" may still appear in the overall stimulus seq,
@@ -406,18 +412,18 @@ def construct_model(stim_size = STIM_SIZE,
 
 #region =====================================STIMULUS GENERATION =======================================================
 
-def get_stim_set(num_stim=STIM_SIZE):
+def _get_stim_set(num_stim=STIM_SIZE):
     """Construct an array of unique stimuli for use in an experiment, used by train_network() and run_model()"""
     # For now, use one-hots
     return np.eye(num_stim)
 
-def get_task_input(nback_level):
+def _get_task_input(nback_level):
     """Construct input to task Mechanism for a given nback_level, used by train_network() and run_model()"""
     task_input = list(np.zeros_like(NBACK_LEVELS))
     task_input[nback_level-NBACK_LEVELS[0]] = 1
     return task_input
 
-def get_training_inputs(network, num_epochs, nback_levels):
+def _get_training_inputs(network, num_epochs, nback_levels):
     """Construct set of training stimuli used by ffn.learn() in train_network()
     Construct one example of each condition:
         match:  stim_current = stim_retrieved  and context_current = context_retrieved
@@ -426,7 +432,7 @@ def get_training_inputs(network, num_epochs, nback_levels):
         non_lure:  stim_current != stim_retrieved  and context_current != context_retrieved
     """
     assert is_iterable(nback_levels) and all([0<i<=MAX_NBACK_LEVELS for i in nback_levels])
-    stimuli = get_stim_set()
+    stimuli = _get_stim_set()
     context_fct =  DriftOnASphereIntegrator(initializer=np.random.random(CONTEXT_SIZE-1),
                                             noise=CONTEXT_DRIFT_NOISE,
                                             dimension=CONTEXT_SIZE)
@@ -446,7 +452,7 @@ def get_training_inputs(network, num_epochs, nback_levels):
         # Construct one hot encoding for nback level
         # task_input = list(np.zeros(num_nback_levels))
         # task_input[nback_level-nback_levels[0]] = 1
-        task_input = get_task_input(nback_level)
+        task_input = _get_task_input(nback_level)
         for i in range(len(stimuli)):
             # Get current stimulus and distractor
             stims = list(stimuli.copy())
@@ -498,11 +504,11 @@ def get_training_inputs(network, num_epochs, nback_levels):
 
     return training_set, batch_size
 
-def get_run_inputs(model, nback_level,
-                   context_drift_rate=CONTEXT_DRIFT_RATE,
-                   num_stim=NUM_STIM,
-                   num_trials=NUM_TRIALS,
-                   mini_blocks=True):
+def _get_run_inputs(model, nback_level,
+                    context_drift_rate=CONTEXT_DRIFT_RATE,
+                    num_stim=NUM_STIM,
+                    num_trials=NUM_TRIALS,
+                    mini_blocks=True):
     """Construct set of stimulus inputs for run_model(), balancing across four conditions.
     Trial_type assignments:
       - trial_types are assigned to subseqs of nback_level+1 stimuli that are concatenated to form the full trial seq
@@ -527,7 +533,7 @@ def get_run_inputs(model, nback_level,
     def generate_stim_sequence(nback_level, num_trials):
         assert nback_level in {2,3} # At present, only 2- and 3-back levels are supported
 
-        stim_set = get_stim_set()
+        stim_set = _get_stim_set()
 
         def get_stim_subseq_for_trial_type(trial_type):
             """Return stimulus seq (as indices into stim_set) for the specified trial_type."""
@@ -646,13 +652,13 @@ def get_run_inputs(model, nback_level,
             stim_seq, trial_type_seq = generate_stim_sequence(nback_level, num_trials)
             # Return list of corresponding stimulus input vectors
 
-        input_set = [get_stim_set()[i] for i in stim_seq]
+        input_set = [_get_stim_set()[i] for i in stim_seq]
         return input_set, trial_type_seq
 
     input_set, trial_type_seq = get_input_sequence(nback_level, num_trials, use_sweepea=True)
     return {model.nodes[MODEL_STIMULUS_INPUT]: input_set,
             model.nodes[MODEL_CONTEXT_INPUT]: [[context_drift_rate]]*num_trials,
-            model.nodes[MODEL_TASK_INPUT]: [get_task_input(nback_level)]*num_trials}, \
+            model.nodes[MODEL_TASK_INPUT]: [_get_task_input(nback_level)] * num_trials}, \
            trial_type_seq
 #endregion
 
@@ -672,11 +678,11 @@ def train_network(network,
         network to be trained;  this must be an `AutodiffComposition`.
     training_set: dict
         inputs (see `Composition_Input_Dictionary`), including targets (`Composition_Target_Inputs`)
-        to use for training;  these are constructed in a call to get_training_inputs() if not specified here.
+        to use for training;  these are constructed in a call to _get_training_inputs() if not specified here.
     minibatch_size: int
         number of inputs that will be presented within a single training epoch
         (i.e. over which weight changes are aggregated and applied);  this is determined by the call to
-        get_training_inputs() if **training_set** is not specified explicitly.
+        _get_training_inputs() if **training_set** is not specified explicitly.
     learning_rate: float
         learning_rate to use for training;  this overrides the value of `learning_rate
         <AutodiffComposition.learning_rate>` specified in construction of the network.  If None is specified
@@ -693,9 +699,9 @@ def train_network(network,
     """
     print(f"constructing training set for '{network.name}'...")
     if training_set == None:
-        training_set, minibatch_size = get_training_inputs(network=network,
-                                                           num_epochs=num_epochs,
-                                                           nback_levels=NBACK_LEVELS)
+        training_set, minibatch_size = _get_training_inputs(network=network,
+                                                            num_epochs=num_epochs,
+                                                            nback_levels=NBACK_LEVELS)
     print(f'num training stimuli per training set (minibatch size): {minibatch_size}')
     print(f'num weight updates (num_epochs): {num_epochs}')
     print(f'total num trials: {num_epochs*minibatch_size}')
@@ -768,7 +774,7 @@ def run_model(model,
     for i, nback_level in enumerate(NBACK_LEVELS):
         # Reset episodic memory for new task using first entry (original initializer)
         em.function.reset(em.memory[0])
-        inputs, trial_type_seqs[i] = get_run_inputs(model, nback_level, context_drift_rate, num_trials)
+        inputs, trial_type_seqs[i] = _get_run_inputs(model, nback_level, context_drift_rate, num_trials)
         model.run(inputs=inputs,
                   report_output=report_output,
                   report_progress=report_progress,
@@ -842,8 +848,7 @@ def analyze_results(results, num_trials=NUM_TRIALS, nback_levels=NBACK_LEVELS):
 
     return data_dict, stats_dict
 
-
-def compute_dprime(hit_rate, fa_rate):
+def _compute_dprime(hit_rate, fa_rate):
     """ returns dprime and sensitivity
     """
     def clamp(n, minn, maxn):
@@ -855,12 +860,11 @@ def compute_dprime(hit_rate, fa_rate):
     c = 0.5 * np.log((1 - hit_rate) * (1 - fa_rate) / (hit_rate * fa_rate))
     return dl, c
 
-
-def plot_results(response_and_trial_types, stats):
+def _plot_results(response_and_trial_types, stats):
     import matplotlib as plt
     hits_stderr = np.concatenate((score.mean(2).std(-1)/np.sqrt(neps))[:,(0,1)])
     correj_stderr = np.concatenate((score.mean(2).std(-1)/np.sqrt(neps))[:,(2,3)])
-    d,s = compute_dprime(
+    d,s = _compute_dprime(
       np.concatenate(score.mean(2)[:,(0,1)]),
       np.concatenate(score.mean(2)[:,(2,3)])
     )
@@ -874,7 +878,7 @@ def plot_results(response_and_trial_types, stats):
     dprime = np.zeros(4)
     bias = np.zeros(4)
     for i in range(4):
-      d,s = compute_dprime(hits[i], 1-correj[i])
+      d,s = _compute_dprime(hits[i], 1 - correj[i])
       dprime[i]=d
       bias[i]=s
 
