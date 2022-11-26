@@ -9,12 +9,6 @@ Jupyter Notebook: :download:`nback_nb.ipynb <../../psyneulink/library/models/Beu
 
 (instructions for running the notebook can be found `here <Tutorial>`, replacing ``nback_nb`` for ``tutorial``)
 
-.. toctree::
-   :maxdepth: 1
-
-   BeukersNBackModel_NB
-
-
 
 .. automodule:: psyneulink.library.models.Beukers_et_al_2022.nback
    :members: construct_model, train_network, run_model, analyze_results
