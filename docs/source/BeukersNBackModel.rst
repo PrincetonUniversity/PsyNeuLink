@@ -12,7 +12,7 @@ Jupyter Notebook: :download:`nback_nb.ipynb <../../psyneulink/library/models/Beu
 .. toctree::
    :maxdepth: 1
 
-   BeukersNBackModel_NB
+   `Jupyter Notebook <../../psyneulink/library/models/Beukers_et_al_2022/nback_nb.ipynb>`
 
 
 .. automodule:: psyneulink.library.models.Beukers_et_al_2022.nback
