@@ -157,6 +157,7 @@ COMMENT
 import os
 import random
 import timeit
+import numpy as np
 from enum import IntEnum
 from pathlib import Path
 
@@ -165,9 +166,9 @@ from graph_scheduler import *
 from psyneulink import *
 
 # Settings for running script:
-CONSTRUCT = False # THIS MUST BE SET TO True to run the script
+CONSTRUCT = True # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = False # True = show visual graphic of model
-TRAIN = False  # True => train the FFN (WM)
+TRAIN = True  # True => train the FFN (WM)
 RUN = False  # True => test the model on sample stimulus sequences
 ANALYZE = False # True => output analysis of results of run
 REPORT_OUTPUT = ReportOutput.OFF       # Sets console output during run
@@ -656,7 +657,7 @@ def _get_run_inputs(model, nback_level,
         input_set = [_get_stim_set()[i] for i in stim_seq]
         return input_set, trial_type_seq
 
-    input_set, trial_type_seq = get_input_sequence(nback_level, num_trials, use_sweepea=True)
+    input_set, trial_type_seq = get_input_sequence(nback_level, num_trials, use_sweepea=False)
     return {model.nodes[MODEL_STIMULUS_INPUT]: input_set,
             model.nodes[MODEL_CONTEXT_INPUT]: [[context_drift_rate]]*num_trials,
             model.nodes[MODEL_TASK_INPUT]: [_get_task_input(nback_level)] * num_trials}, \
