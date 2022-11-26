@@ -1,3 +1,4 @@
+
 """
 
 **Overview**
@@ -162,12 +163,6 @@ from pathlib import Path
 from graph_scheduler import *
 
 from psyneulink import *
-
-# import argparse
-# parser = argparse.ArgumentParser()
-# parser.add_argument('--no-plot', action='store_false', help='Disable plotting', dest='enable_plot')
-# args = parser.parse_args()
-
 
 # Settings for running script:
 CONSTRUCT = False # THIS MUST BE SET TO True to run the script
