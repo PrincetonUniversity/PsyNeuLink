@@ -1560,10 +1560,10 @@ class TestMiscTrainingFunctionality:
         # assert np.allclose(pt_weights_out_bp, pt_weights_out_ap)
 
     @pytest.mark.parametrize(
-        'loss', [Loss.L1, Loss.POISSON_NLL]
+        'loss', [Loss.MSE, Loss.L1, Loss.POISSON_NLL, Loss.CROSS_ENTROPY]
     )
     def test_various_loss_specs(self, loss, autodiff_mode):
-        if autodiff_mode is not pnl.ExecutionMode.Python:
+        if autodiff_mode is not pnl.ExecutionMode.Python and loss in [Loss.POISSON_NLL, Loss.L1]:
             pytest.skip("Loss spec not yet implemented!")
 
         xor_in = TransferMechanism(name='xor_in',
@@ -1606,6 +1606,7 @@ class TestMiscTrainingFunctionality:
                             "epochs": 10}, execution_mode=autodiff_mode)
 
     def test_pytorch_loss_spec(self, autodiff_mode):
+
         if autodiff_mode is not pnl.ExecutionMode.Python:
             pytest.skip("Loss spec not yet implemented!")
 
