@@ -2858,27 +2858,27 @@ class Dropout(TransferFunction):  #
 
     @handle_external_context()
     def derivative(self, input=None, output=None, context=None):
-        raise FunctionError(f"Derivative of Dropout not yet supported.")
-        # """
-        # derivative(input)
-        #
-        # Derivative of `function <Dropout._function>` at **input**.
-        #
-        # Arguments
-        # ---------
-        #
-        # input : number or array
-        #     value of the input to the Dropouput function at which derivative is to be taken.
-        #
-        # Returns
-        # -------
-        #
-        # variable :  number or array
-        #
-        # """
-        # # FIX: ?WHICH IS CORRECT:
+        # raise FunctionError(f"Derivative of Dropout not yet supported.")
+        """
+        derivative(input)
+
+        Derivative of `function <Dropout._function>` at **input**.
+
+        Arguments
+        ---------
+
+        input : number or array
+            value of the input to the Dropouput function at which derivative is to be taken.
+
+        Returns
+        -------
+
+        variable :  number or array
+
+        """
+        # FIX: ?WHICH IS CORRECT:
         # return self._get_current_parameter_value(VARIABLE, context)
-        # # return 1.0
+        return 1.0
 
 
 # **********************************************************************************************************************

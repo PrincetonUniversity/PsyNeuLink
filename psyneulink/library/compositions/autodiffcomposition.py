@@ -456,10 +456,11 @@ class AutodiffComposition(Composition):
             # and therefore requires a wrapper function to properly package inputs.
             cross_entropy_loss = nn.CrossEntropyLoss()
             return lambda x, y: cross_entropy_loss(
-                    x.unsqueeze(0),
+                    # x.unsqueeze(0),
+                    x,
                     # y.type(torch.LongTensor)
-                    # x,
                     torch.argmax(y.type(torch.LongTensor))
+                    # y.type(x.type())
             )
         elif loss_spec == Loss.L1:
             return nn.L1Loss(reduction='sum')

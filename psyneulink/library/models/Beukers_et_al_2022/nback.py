@@ -169,7 +169,7 @@ from psyneulink import *
 CONSTRUCT = True # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = False # True = show visual graphic of model
 TRAIN = True  # True => train the FFN (WM)
-RUN = False  # True => test the model on sample stimulus sequences
+RUN = True  # True => test the model on sample stimulus sequences
 ANALYZE = False # True => output analysis of results of run
 REPORT_OUTPUT = ReportOutput.OFF       # Sets console output during run
 REPORT_PROGRESS = ReportProgress.ON   # Sets console progress bar during run
@@ -190,6 +190,7 @@ NBACK_LEVELS = [2,3] # Currently restricted to these
 NUM_NBACK_LEVELS = len(NBACK_LEVELS)
 CONTEXT_DRIFT_NOISE=0.0  # noise used by DriftOnASphereIntegrator (function of Context mech)
 RANDOM_WEIGHTS_INITIALIZATION=RandomMatrix(center=0.0, range=0.1)  # Matrix spec used to initialize all Projections
+DROPOUT_PROB = 0.05
 RETRIEVAL_SOFTMAX_TEMP=1/8 # express as gain # precision of retrieval process
 RETRIEVAL_HAZARD_RATE=0.04 # rate of re=sampling of em following non-match determination in a pass through ffn
 RETRIEVAL_STIM_WEIGHT=.05 # weighting of stimulus field in retrieval from em
@@ -213,6 +214,7 @@ FFN_STIMULUS_RETRIEVED = "RETRIEVED STIMULUS"
 FFN_CONTEXT_RETRIEVED = "RETRIEVED CONTEXT"
 FFN_TASK = "CURRENT TASK"
 FFN_HIDDEN = "HIDDEN LAYER"
+FFN_DROPOUT = "DROPOUT LAYER"
 FFN_OUTPUT = "DECISION LAYER"
 MODEL_STIMULUS_INPUT ='STIM'
 MODEL_CONTEXT_INPUT = 'CONTEXT'
@@ -304,6 +306,9 @@ def construct_model(stim_size = STIM_SIZE,
     hidden = TransferMechanism(name=FFN_HIDDEN,
                                size=hidden_size,
                                function=FFN_TRANSFER_FUNCTION)
+    dropout = TransferMechanism(name=FFN_DROPOUT,
+                               size=hidden_size,
+                               function=Dropout(p=DROPOUT_PROB))
     decision = ProcessingMechanism(name=FFN_OUTPUT,
                                    size=2,
                                    function=ReLU)
@@ -313,7 +318,7 @@ def construct_model(stim_size = STIM_SIZE,
                                  input_retrieved_stim,
                                  input_retrieved_context,
                                  input_task},
-                                hidden, decision],
+                                hidden, IDENTITY_MATRIX, dropout, decision],
                                RANDOM_WEIGHTS_INITIALIZATION),
                               name=FFN_COMPOSITION,
                               learning_rate=LEARNING_RATE,
