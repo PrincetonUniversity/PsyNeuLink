@@ -50,7 +50,10 @@ class PytorchModelCreator(torch.nn.Module):
 
         # Instantiate pytorch projections
         for projection in composition.projections:
-            if projection.sender.owner in self.component_map and projection.receiver.owner in self.component_map:
+            if (projection.sender.owner in self.component_map
+                    and projection.receiver.owner in self.component_map
+                    and not projection._exclude_in_autoiff
+            ):
                 proj_send = self.component_map[projection.sender.owner]
                 proj_recv = self.component_map[projection.receiver.owner]
 

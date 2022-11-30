@@ -170,7 +170,7 @@ CONSTRUCT = True # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = False # True = show visual graphic of model
 TRAIN = False  # True => train the FFN (WM)
 RUN = True  # True => test the model on sample stimulus sequences
-ANALYZE = True # True => output analysis of results of run
+ANALYZE = False # True => output analysis of results of run
 REPORT_OUTPUT = ReportOutput.OFF       # Sets console output during run
 REPORT_PROGRESS = ReportProgress.ON   # Sets console progress bar during run
 ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
@@ -942,26 +942,27 @@ def _plot_results(response_and_trial_types, stats):
 #region ===================================== SCRIPT EXECUTION =========================================================
 # Construct, train and/or run model based on settings at top of script
 
-if CONSTRUCT:
-    nback_model = construct_model()
+if __name__ == '__main__':
+    if CONSTRUCT:
+        nback_model = construct_model()
 
-if TRAIN:
-    weights_path = Path('/'.join([os.getcwd(), f'results/ffn.wts_nep_{NUM_EPOCHS}_lr'
-                                             f'_{str(LEARNING_RATE).split(".")[1]}.pnl']))
-    saved_weights = train_network(nback_model.nodes[FFN_COMPOSITION],
-                                  save_weights_to=weights_path)
-if RUN:
-    results_path = Path('/'.join([os.getcwd(), f'results/nback.results_nep_{NUM_EPOCHS}_lr'
-                                               f'_{str(LEARNING_RATE).split(".")[1]}.pnl']))
+    if TRAIN:
+        weights_path = Path('/'.join([os.getcwd(), f'results/ffn.wts_nep_{NUM_EPOCHS}_lr'
+                                                 f'_{str(LEARNING_RATE).split(".")[1]}.pnl']))
+        saved_weights = train_network(nback_model.nodes[FFN_COMPOSITION],
+                                      save_weights_to=weights_path)
+    if RUN:
+        results_path = Path('/'.join([os.getcwd(), f'results/nback.results_nep_{NUM_EPOCHS}_lr'
+                                                   f'_{str(LEARNING_RATE).split(".")[1]}.pnl']))
 
-    weights = 'results/ffn.wts_nep_6250_lr_001.pnl'
-    results = run_model(nback_model,
-                        load_weights_from = weights,
-                        save_results_to= results_path
-                        # inputs_source=Stimuli.SWEETPEA,
-                        )
-if ANALYZE:
-    coded_responses, stats = analyze_results(results,
-                                             num_trials=NUM_TRIALS,
-                                             nback_levels=NBACK_LEVELS)
+        weights = 'results/ffn.wts_nep_6250_lr_001.pnl'
+        results = run_model(nback_model,
+                            load_weights_from = weights,
+                            save_results_to= results_path
+                            # inputs_source=Stimuli.SWEETPEA,
+                            )
+    if ANALYZE:
+        coded_responses, stats = analyze_results(results,
+                                                 num_trials=NUM_TRIALS,
+                                                 nback_levels=NBACK_LEVELS)
 #endregion

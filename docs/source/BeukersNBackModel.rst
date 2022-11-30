@@ -5,9 +5,9 @@ Nback Model
 
 Script: :download:`nback.py <../../psyneulink/library/models/Beukers_et_al_2022/nback.py>`
 
-Jupyter Notebook: `BeukersNBackModel_NB`
+Example of Jupyter Notebook: `BeukersNBackModel_NB`
 
-(instructions for running the notebook can be found `here <Tutorial>`, replacing ``nback_nb`` for ``tutorial``)
+(Instructions for running the actual notebook can be found `here <Tutorial>`, replacing ``nback_nb`` for ``tutorial``)
 
 .. toctree::
    :maxdepth: 1

@@ -42,7 +42,7 @@ extensions = [
     'sphinx_autodoc_typehints',
     'technical_note',
     # 'nbsphinx',
-    'myst'
+    'myst_nb'
     # 'sphinx.ext.imgmath'
 ]
 
