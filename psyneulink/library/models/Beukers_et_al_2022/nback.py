@@ -169,7 +169,7 @@ from psyneulink import *
 CONSTRUCT = True # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = False # True = show visual graphic of model
 TRAIN = True  # True => train the FFN (WM)
-RUN = True  # True => test the model on sample stimulus sequences
+RUN = False  # True => test the model on sample stimulus sequences
 ANALYZE = False # True => output analysis of results of run
 REPORT_OUTPUT = ReportOutput.OFF       # Sets console output during run
 REPORT_PROGRESS = ReportProgress.ON   # Sets console progress bar during run
@@ -933,22 +933,14 @@ if CONSTRUCT:
     nback_model = construct_model()
 
 if TRAIN:
-    # weights_filename = f'ffn.wts_nep_{NUM_EPOCHS}_lr_{str(LEARNING_RATE).split(".")[1]}.pnl'
-    # weights_path = Path(os.getcwd() / f'nback.results_nep_{NUM_EPOCHS}_lr_{str(LEARNING_RATE).split(".")[1]}.pnl')
-    weights_path = Path('/'.join([os.getcwd(), f'nback.results_nep_{NUM_EPOCHS}_lr'
+    weights_path = Path('/'.join([os.getcwd(), f'results/ffn.wts_nep_{NUM_EPOCHS}_lr'
                                              f'_{str(LEARNING_RATE).split(".")[1]}.pnl']))
     saved_weights = train_network(nback_model.nodes[FFN_COMPOSITION],
                                   save_weights_to=weights_path)
 if RUN:
-    # results_filename = f'nback.results_nep_{NUM_EPOCHS}_lr_{str(LEARNING_RATE).split(".")[1]}.pnl'
-    # results_path = Path(os.getcwd() / f'nback.results_nep_{NUM_EPOCHS}_lr_{str(LEARNING_RATE).split(".")[1]}.pnl')
-    results_path = Path('/'.join([os.getcwd(), f'nback.results_nep_{NUM_EPOCHS}_lr'
-                                             f'_{str(LEARNING_RATE).split(".")[1]}.pnl']))
+    results_path = Path('/'.join([os.getcwd(), f'results/nback.results_nep_{NUM_EPOCHS}_lr'
+                                               f'_{str(LEARNING_RATE).split(".")[1]}.pnl']))
     results = run_model(nback_model,
-                        # load_weights_from=Path(os.path.join(os.getcwd(),'ffn.wts_nep_1_lr_01.pnl')),
-                        # load_weights_from=Path(os.path.join(os.getcwd(),'ffn.wts_nep_6250_lr_01.pnl')),
-                        # load_weights_from=INITIALIZER
-                        # save_results_to= results_filename
                         save_results_to= results_path
                         )
 if ANALYZE:
