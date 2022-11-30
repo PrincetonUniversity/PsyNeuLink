@@ -812,7 +812,7 @@ def run_model(model,
     else:
         execution_time_str = f'{int(execution_time/60)} minutes {int(execution_time%60)} seconds'
     print(f'execution time: {execution_time_str}')
-    results = np.array([model.results, trial_type_seqs])
+    results = np.array([model.results, trial_type_seqs], dtype=object)
     if save_results_to:
         np.save(save_results_to, results)
     # print(f'results: \n{model.results}')

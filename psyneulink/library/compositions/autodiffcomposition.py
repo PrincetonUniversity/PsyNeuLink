@@ -767,7 +767,7 @@ class AutodiffComposition(Composition):
 
     @handle_external_context(fallback_most_recent=True)
     def load(self, path:PosixPath=None, directory:str=None, filename:str=None, context=None):
-        """Loads all weights matrices for all MappingProjections in the AutodiffComposition from file
+        """Loads all weight matrices for all MappingProjections in the AutodiffComposition from file
         Arguments
         ---------
         path: Path : default None
@@ -799,6 +799,7 @@ class AutodiffComposition(Composition):
                 raise AutodiffCompositionError(f"'{path}' (for saving weight matrices of ({self.name}) "
                                                f"is not a legal path.")
         state = torch.load(path)
+
         for projection in [p for p in self.projections
                            if not (isinstance(p, ModulatoryProjection_Base)
                                    or isinstance(p.sender.owner, CompositionInterfaceMechanism)
@@ -816,8 +817,8 @@ class AutodiffComposition(Composition):
             projection.matrix.base = matrix
             projection.parameters.matrix.set(matrix, context=context, override=True)
             projection.parameter_ports['matrix'].parameters.value.set(matrix, context=context, override=True)
+
         self._build_pytorch_representation(context=context, refresh=True)
-    # MODIFIED 11/8/22 END
 
     def _get_state_ids(self):
         return super()._get_state_ids() + ["optimizer"]
