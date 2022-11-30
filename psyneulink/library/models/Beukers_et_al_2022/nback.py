@@ -169,8 +169,8 @@ from psyneulink import *
 CONSTRUCT = True # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = False # True = show visual graphic of model
 TRAIN = True  # True => train the FFN (WM)
-RUN = False  # True => test the model on sample stimulus sequences
-ANALYZE = False # True => output analysis of results of run
+RUN = True  # True => test the model on sample stimulus sequences
+ANALYZE = True # True => output analysis of results of run
 REPORT_OUTPUT = ReportOutput.OFF       # Sets console output during run
 REPORT_PROGRESS = ReportProgress.ON   # Sets console progress bar during run
 ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
@@ -741,7 +741,7 @@ def train_network(network,
 
 def run_model(model,
               # load_weights_from=None,
-              load_weights_from='results/ffn.wts_nep_6250_lr_001.pnl',
+              load_weights_from=None,
               context_drift_rate=CONTEXT_DRIFT_RATE,
               num_trials=NUM_TRIALS,
               report_output=REPORT_OUTPUT,
@@ -940,7 +940,10 @@ if TRAIN:
 if RUN:
     results_path = Path('/'.join([os.getcwd(), f'results/nback.results_nep_{NUM_EPOCHS}_lr'
                                                f'_{str(LEARNING_RATE).split(".")[1]}.pnl']))
+
+    weights = 'results/ffn.wts_nep_6250_lr_001.pnl'
     results = run_model(nback_model,
+                        load_weights_from = weights,
                         save_results_to= results_path
                         )
 if ANALYZE:

@@ -459,8 +459,8 @@ class AutodiffComposition(Composition):
                     # x.unsqueeze(0),
                     x,
                     # y.type(torch.LongTensor)
-                    torch.argmax(y.type(torch.LongTensor))
-                    # y.type(x.type())
+                    # torch.argmax(y.type(torch.LongTensor))
+                    y.type(x.type())
             )
         elif loss_spec == Loss.L1:
             return nn.L1Loss(reduction='sum')
