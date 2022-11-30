@@ -158,7 +158,7 @@ import os
 import random
 import timeit
 import numpy as np
-from enum import IntEnum
+from enum import Enum, IntEnum
 from pathlib import Path
 
 from graph_scheduler import *
@@ -168,7 +168,7 @@ from psyneulink import *
 # Settings for running script:
 CONSTRUCT = True # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = False # True = show visual graphic of model
-TRAIN = True  # True => train the FFN (WM)
+TRAIN = False  # True => train the FFN (WM)
 RUN = True  # True => test the model on sample stimulus sequences
 ANALYZE = True # True => output analysis of results of run
 REPORT_OUTPUT = ReportOutput.OFF       # Sets console output during run
@@ -222,7 +222,7 @@ MODEL_TASK_INPUT = "TASK"
 EM = "EPISODIC MEMORY (dict)"
 CONTROLLER = "READ/WRITE CONTROLLER"
 
-class trial_types(IntEnum):
+class TrialTypes(IntEnum):
     """Trial types explicitly assigned and counter-balanced in _get_run_inputs()
     In notation below, "A" is always current stimulus.
     Foils are only explicitly assigned to items immediately following nback item.
@@ -234,7 +234,11 @@ class trial_types(IntEnum):
     MATCH_WITH_FOIL = 1     # AAA (2-back) or AABA (3-back); not explicitly assigned: ABAA or AAAA
     NO_MATCH_NO_FOIL = 2    # ABB (2-back) or BCDA (3-back); not explicitly assigned: BBCA, BCCA or BBBA
     NO_MATCH_WITH_FOIL = 3  # BAA (2-back) or BACA (3-back); not explicitly assigned: BCAA or BAAA
-num_trial_types = len(trial_types)
+num_trial_types = len(TrialTypes)
+
+class Stimuli(Enum):
+    SWEETPEA = 'sweetpea'
+    KANE_STIMULI = 'kane'
 
 #endregion
 
@@ -511,11 +515,13 @@ def _get_training_inputs(network, num_epochs, nback_levels):
 
     return training_set, batch_size
 
-def _get_run_inputs(model, nback_level,
+def _get_run_inputs(model,
+                    nback_level,
                     context_drift_rate=CONTEXT_DRIFT_RATE,
                     num_stim=NUM_STIM,
                     num_trials=NUM_TRIALS,
-                    mini_blocks=True):
+                    mini_blocks=True,
+                    inputs_source=None):
     """Construct set of stimulus inputs for run_model(), balancing across four conditions.
     Trial_type assignments:
       - trial_types are assigned to subseqs of nback_level+1 stimuli that are concatenated to form the full trial seq
@@ -549,19 +555,19 @@ def _get_run_inputs(model, nback_level,
             curr_stim = subseq[nback_level] = random.choice(np.arange(len(stim_set)))
             other_stims = np.setdiff1d(np.arange(len(stim_set)),curr_stim).tolist()
 
-            if trial_type == trial_types.MATCH_NO_FOIL:           # ABA (2-back) or ABCA (3-back)
+            if trial_type == TrialTypes.MATCH_NO_FOIL:           # ABA (2-back) or ABCA (3-back)
                 subseq[0] = curr_stim  # Assign nback stim to match
                 # Assign remaining items in sequence to anything stimuli than curr_stim
                 subseq[1:nback_level] = random.sample(other_stims, nback_level-1)
-            elif trial_type == trial_types.MATCH_WITH_FOIL:        # AAA (2-back) or AABA (3-back)
+            elif trial_type == TrialTypes.MATCH_WITH_FOIL:        # AAA (2-back) or AABA (3-back)
                 subseq[0] = curr_stim  # Assign nback stim to match current stim
                 subseq[1] = curr_stim  # Assign curr_stim to stim next to nback as foil
                 # Assign any remaining items in sequence to any stimuli other than curr_stim
                 subseq[2:nback_level] = random.sample(other_stims, nback_level-2)
-            elif trial_type == trial_types.NO_MATCH_NO_FOIL:       # ABB (2-back) or BCDA (3-back)
+            elif trial_type == TrialTypes.NO_MATCH_NO_FOIL:       # ABB (2-back) or BCDA (3-back)
                 # Assign remaining items in sequence to any stimuli than curr_stim
                 subseq[0:nback_level] = random.sample(other_stims, nback_level)
-            elif trial_type == trial_types.NO_MATCH_WITH_FOIL:     # BAA (2-back) or BACA (3-back)
+            elif trial_type == TrialTypes.NO_MATCH_WITH_FOIL:     # BAA (2-back) or BACA (3-back)
                 # Assign remaining items in sequence to any stimuli than curr_stim
                 subseq[1] = curr_stim  # Assign curr_stim to stim next to nback as foil
                 subseq[0:1] = random.sample(other_stims, 1)
@@ -575,14 +581,14 @@ def _get_run_inputs(model, nback_level,
             # assert all(trial_type==None for trial_type in trial_type_seq[trial_num:trial_num + nback_level]), \
             #     f"trial_type should still be None for trials {trial_num - nback_level} to {trial_num - 1}."
             if subseq[-1] == subseq[0] and not subseq[-1] in subseq[1:-1]:
-                return trial_types.MATCH_NO_FOIL.value
+                return TrialTypes.MATCH_NO_FOIL.value
             elif subseq[-1] == subseq[0] and subseq[-1] in subseq[0:-1]:
-                return trial_types.MATCH_WITH_FOIL.value
+                return TrialTypes.MATCH_WITH_FOIL.value
             elif subseq[-1] not in subseq[0:-1]:
-                return trial_types.NO_MATCH_NO_FOIL.value
+                return TrialTypes.NO_MATCH_NO_FOIL.value
             elif subseq[-1] != subseq[0] and subseq[-1] in subseq[0:-1]:
                 # Note: for 3back, this includes: BAXA, BXAA, and BAAA
-                return trial_types.NO_MATCH_WITH_FOIL.value
+                return TrialTypes.NO_MATCH_WITH_FOIL.value
 
         subseq_size = nback_level+1
         num_sub_seqs = int(num_trials / num_trial_types)
@@ -636,17 +642,17 @@ def _get_run_inputs(model, nback_level,
 
         return(stim_seq, trial_type_seq)
 
-    def get_input_sequence(nback_level, num_trials=NUM_TRIALS, use_sweepea=False):
+    def get_input_sequence(nback_level, num_trials=NUM_TRIALS, inputs_source=None):
         """Construct sequence of stimulus and trial_type indices"""
         # Use SweetPea if specified
-        if use_sweepea:
+        if inputs_source == Stimuli.SWEETPEA:
             if nback_level == 2:
                 from stim.SweetPea.sweetpea_script import create_two_back
                 Kane_stimuli = {stim:idx for idx, stim in enumerate(['B', 'F', 'H', 'K', 'M', 'Q', 'R', 'X'])}
-                Kane_trial_types = {'1/1/0': trial_types.MATCH_NO_FOIL,
-                                    '1/2/0': trial_types.MATCH_WITH_FOIL,
-                                    '2/1/0': trial_types.NO_MATCH_NO_FOIL,
-                                    '2/2/0': trial_types.NO_MATCH_WITH_FOIL}
+                Kane_trial_types = {'1/1/0': TrialTypes.MATCH_NO_FOIL,
+                                    '1/2/0': TrialTypes.MATCH_WITH_FOIL,
+                                    '2/1/0': TrialTypes.NO_MATCH_NO_FOIL,
+                                    '2/2/0': TrialTypes.NO_MATCH_WITH_FOIL}
                 stim_dict = create_two_back()
                 assert True
                 stim_seq = [Kane_stimuli[i.upper()] for i in stim_dict[0]['letter']]
@@ -655,6 +661,8 @@ def _get_run_inputs(model, nback_level,
             else:
                 raise Exception(f"Use of SweetPea currently restricted to nback_level = 2")
         # Else, use local algorithm
+        elif inputs_source == Stimuli.KANE_STIMULI:
+            assert False, "KANE STIMULI NOT YET SUPPORTED AS INPUTS"
         else:
             stim_seq, trial_type_seq = generate_stim_sequence(nback_level, num_trials)
             # Return list of corresponding stimulus input vectors
@@ -662,7 +670,7 @@ def _get_run_inputs(model, nback_level,
         input_set = [_get_stim_set()[i] for i in stim_seq]
         return input_set, trial_type_seq
 
-    input_set, trial_type_seq = get_input_sequence(nback_level, num_trials, use_sweepea=False)
+    input_set, trial_type_seq = get_input_sequence(nback_level, num_trials, inputs_source=inputs_source)
     return {model.nodes[MODEL_STIMULUS_INPUT]: input_set,
             model.nodes[MODEL_CONTEXT_INPUT]: [[context_drift_rate]]*num_trials,
             model.nodes[MODEL_TASK_INPUT]: [_get_task_input(nback_level)] * num_trials}, \
@@ -744,6 +752,7 @@ def run_model(model,
               load_weights_from=None,
               context_drift_rate=CONTEXT_DRIFT_RATE,
               num_trials=NUM_TRIALS,
+              inputs_source=None,
               report_output=REPORT_OUTPUT,
               report_progress=REPORT_PROGRESS,
               animate=ANIMATE,
@@ -781,7 +790,11 @@ def run_model(model,
     for i, nback_level in enumerate(NBACK_LEVELS):
         # Reset episodic memory for new task using first entry (original initializer)
         em.function.reset(em.memory[0])
-        inputs, trial_type_seqs[i] = _get_run_inputs(model, nback_level, context_drift_rate, num_trials)
+        inputs, trial_type_seqs[i] = _get_run_inputs(model=model,
+                                                     nback_level=nback_level,
+                                                     context_drift_rate=context_drift_rate,
+                                                     num_trials=num_trials,
+                                                     inputs_source=inputs_source)
         model.run(inputs=inputs,
                   report_output=report_output,
                   report_progress=report_progress,
@@ -831,11 +844,11 @@ def analyze_results(results, num_trials=NUM_TRIALS, nback_levels=NBACK_LEVELS):
         relevant_responses = [MATCH if r == 1 else NON_MATCH for r in relevant_responses]
         responses_and_trial_types[i] = list(zip(relevant_responses, results[1][i]))
         # x = zip(relevant_responses, results[1][i])
-        for trial_type in trial_types:
+        for trial_type in TrialTypes:
             # relevant_data = [[response,condition] for response,condition in x if condition == trial_type]
             relevant_data = [[response,condition] for response,condition in zip(relevant_responses, results[1][i])
                              if condition == trial_type]
-            if trial_type in {trial_types.MATCH_NO_FOIL, trial_types.MATCH_WITH_FOIL}:
+            if trial_type in {TrialTypes.MATCH_NO_FOIL, TrialTypes.MATCH_WITH_FOIL}:
                 #  is the correct response for a match trial
                 stats[i][trial_type] = [d[0] for d in relevant_data
                                         if d[0] is not None].count(MATCH) / (len(relevant_data))
@@ -846,12 +859,12 @@ def analyze_results(results, num_trials=NUM_TRIALS, nback_levels=NBACK_LEVELS):
     for i, nback_level in enumerate(nback_levels):
         print(f"nback level {nback_level}:")
         for j, performance in enumerate(stats[i]):
-            print(f"\t{list(trial_types)[j].name}: {performance:.1f}")
+            print(f"\t{list(TrialTypes)[j].name}: {performance:.1f}")
 
     data_dict = {k:v for k,v in zip(nback_levels, responses_and_trial_types)}
     stats_dict = {}
     for i, nback_level in enumerate(nback_levels):
-        stats_dict.update({nback_level: {trial_type.name:stat for trial_type,stat in zip (trial_types, stats[i])}})
+        stats_dict.update({nback_level: {trial_type.name:stat for trial_type,stat in zip (TrialTypes, stats[i])}})
 
     return data_dict, stats_dict
 
@@ -945,6 +958,7 @@ if RUN:
     results = run_model(nback_model,
                         load_weights_from = weights,
                         save_results_to= results_path
+                        # inputs_source=Stimuli.SWEETPEA,
                         )
 if ANALYZE:
     coded_responses, stats = analyze_results(results,
