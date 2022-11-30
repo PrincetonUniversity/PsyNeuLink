@@ -168,9 +168,9 @@ from psyneulink import *
 # Settings for running script:
 CONSTRUCT = True # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = False # True = show visual graphic of model
-TRAIN = False  # True => train the FFN (WM)
+TRAIN = True  # True => train the FFN (WM)
 RUN = True  # True => test the model on sample stimulus sequences
-ANALYZE = False # True => output analysis of results of run
+ANALYZE = True # True => output analysis of results of run
 REPORT_OUTPUT = ReportOutput.OFF       # Sets console output during run
 REPORT_PROGRESS = ReportProgress.ON   # Sets console progress bar during run
 ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
@@ -322,10 +322,16 @@ def construct_model(stim_size = STIM_SIZE,
                                  input_retrieved_stim,
                                  input_retrieved_context,
                                  input_task},
-                                hidden, IDENTITY_MATRIX, dropout, decision],
+                                hidden,
+                                # IDENTITY_MATRIX,
+                                MappingProjection(matrix = IDENTITY_MATRIX, exclude_in_autodiff=True),
+                                dropout,
+                                decision],
                                RANDOM_WEIGHTS_INITIALIZATION),
                               name=FFN_COMPOSITION,
                               learning_rate=LEARNING_RATE,
+                              optimizer_type='adam',
+                              # optimizer_type='sgd',
                               loss_spec=Loss.CROSS_ENTROPY
                               # loss_spec=Loss.MSE
                               )

@@ -76,6 +76,7 @@ class CompositionRunner():
                 if call_after_minibatch:
                     call_after_minibatch()
 
+                # Update weights if not in LLVM Mode
                 if not self._is_llvm_mode:
                     self._composition._update_learning_parameters(context)
 

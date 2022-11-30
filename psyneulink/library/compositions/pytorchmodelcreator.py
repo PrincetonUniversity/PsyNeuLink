@@ -50,10 +50,7 @@ class PytorchModelCreator(torch.nn.Module):
 
         # Instantiate pytorch projections
         for projection in composition.projections:
-            if (projection.sender.owner in self.component_map
-                    and projection.receiver.owner in self.component_map
-                    and not projection._exclude_in_autoiff
-            ):
+            if projection.sender.owner in self.component_map and projection.receiver.owner in self.component_map:
                 proj_send = self.component_map[projection.sender.owner]
                 proj_recv = self.component_map[projection.receiver.owner]
 
@@ -87,7 +84,10 @@ class PytorchModelCreator(torch.nn.Module):
 
     def _regenerate_paramlist(self):
         self.params = nn.ParameterList()
-        for proj in self.projections:
+        # for proj in self.projections:
+        #    if proj._projection._exclude_from_autodiff:
+        #        continue
+        for proj in [p for p in self.projections if not p._projection._exclude_from_autodiff]:
             self.params.append(proj.matrix)
 
     # generates llvm function for self.forward

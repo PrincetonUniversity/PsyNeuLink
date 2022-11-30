@@ -527,7 +527,7 @@ class AutodiffComposition(Composition):
 
     def _update_learning_parameters(self, context):
         """
-        Updates parameters based on trials run since last update.
+        Updates parameters (weights) based on trials run since last update.
         """
         optimizer = self.parameters.optimizer._get(context=context)
         optimizer.zero_grad()
@@ -751,8 +751,8 @@ class AutodiffComposition(Composition):
                 raise AutodiffCompositionError(f"'{path}' (for saving weight matrices of ({self.name}) "
                                                f"is not a legal path.")
         proj_state = {
-            # p.name: p.parameters.matrix.get(context=context)
-            p.name: p.matrix.base
+            p.name: p.parameters.matrix.get(context=context)
+            # p.name: p.matrix.base
             for p in self.projections
             if not (isinstance(p, ModulatoryProjection_Base)
                     or isinstance(p.sender.owner, CompositionInterfaceMechanism)
