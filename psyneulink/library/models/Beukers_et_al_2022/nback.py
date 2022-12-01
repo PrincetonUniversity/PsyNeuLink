@@ -168,7 +168,7 @@ from psyneulink import *
 # Settings for running script:
 CONSTRUCT = True # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = False # True = show visual graphic of model
-TRAIN_FFN = False  # True => train the FFN (WM)
+TRAIN_FFN = True  # True => train the FFN (WM)
 TEST_FFN = True  # True => test the FFN on training stimuli (WM)
 RUN = False  # True => test the model on sample stimulus sequences
 ANALYZE = False # True => output analysis of results of run
@@ -768,21 +768,35 @@ def train_network(network,
     # print(f'loaded weights sample: {network.nodes[FFN_HIDDEN].path_afferents[0].matrix.base[0][:3]}...')
 
 def test_network(network,
-                 test_set=None,
+                 test_set,
                  load_weights_from=None):
     print(f"constructing test set for '{network.name}'...")
-    if test_set == None:
-        test_set, conditions, set_size = _get_training_inputs(network=network,
-                                                              num_epochs=1,
-                                                              nback_levels=NBACK_LEVELS)
+    test_set, conditions, set_size = _get_training_inputs(network=network,
+                                                          num_epochs=1,
+                                                          nback_levels=NBACK_LEVELS)
     print(f'total num trials: {set_size}')
+
+    inputs = [(test_set[INPUTS][network.nodes['CURRENT STIMULUS']][i],
+               test_set[INPUTS][network.nodes['RETRIEVED STIMULUS']][i],
+               test_set[INPUTS][network.nodes['CURRENT CONTEXT']][i],
+               test_set[INPUTS][network.nodes['RETRIEVED CONTEXT']][i]) for i in range(set_size)]
+    cxt_distances = [Distance(metric=COSINE)([inputs[i][2],inputs[i][3]]) for i in range(set_size)]
+    targets = list(test_set[TARGETS].values())[0]
+    num_items_per_nback_level = set_size // NUM_NBACK_LEVELS
+    trial_type_stats = []
+
+    for i in range(num_items_per_nback_level):
+        for trial_type in TrialTypes:
+            trial_type_stats.append((trial_type,
+                                     np.array(cxt_distances)[np.where(np.array(conditions)==trial_type)].mean(),
+                                     np.array(cxt_distances)[np.where(np.array(conditions)==trial_type)].std(),
+
     if load_weights_from:
         print(f"nback_model loading '{FFN_COMPOSITION}' weights from {load_weights_from}...")
         network.load(filename=load_weights_from)
-    network.run(inputs=test_set[INPUTS],
-                report_progress=ReportProgress.ON,
-                )
-    return network.results, list(test_set[TARGETS].values())[0], conditions
+    network.run(inputs=test_set[INPUTS], report_progress=ReportProgress.ON)
+
+    return inputs, cxt_distances, targets, conditions, network.results
 
 def run_model(model,
               # load_weights_from=None,
@@ -1000,8 +1014,8 @@ if __name__ == '__main__':
         except:
             weights_filename = f'results/ffn.wts_nep_{NUM_EPOCHS}_lr_{str(LEARNING_RATE).split(".")[1]}.pnl'
             weights_path = Path('/'.join([os.getcwd(), weights_filename]))
-        results, targets, conditions = test_network(nback_model.nodes[FFN_COMPOSITION],
-                                                    load_weights_from = weights_path)
+        inputs, cxt_distances, targets, conditions, results = test_network(nback_model.nodes[FFN_COMPOSITION],
+                                                                           load_weights_from = weights_path)
 
     if RUN:
         results_path = Path('/'.join([os.getcwd(), f'results/nback.results_nep_{NUM_EPOCHS}_lr'
