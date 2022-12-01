@@ -11,6 +11,7 @@ import numpy as np
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.compositions.composition import Composition
+from psyneulink.core.compositions.report import Report, ReportProgress, ReportDevices, LEARN_REPORT, PROGRESS_REPORT
 from psyneulink.core.globals.keywords import OBJECTIVE_MECHANISM, TRAINING_SET
 from inspect import isgeneratorfunction
 
@@ -139,6 +140,8 @@ class CompositionRunner():
                      call_after_minibatch = None,
                      context=None,
                      execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
+                     report_progress:ReportProgress=ReportProgress.OFF,
+                     report_to_devices:ReportDevices=None,
                      **kwargs):
         """
         Runs the composition repeatedly with the specified parameters.
@@ -221,14 +224,39 @@ class CompositionRunner():
             # Those test rely on the extra iteration that exits the iterator.
             # (Passing num_trials * stim_epoch + 1 works)
             run_trials = num_trials * stim_epoch if self._is_llvm_mode else None
-            self._composition.run(inputs=minibatched_input,
-                                  num_trials=run_trials,
-                                  skip_initialization=skip_initialization,
-                                  skip_analyze_graph=True,
-                                  execution_mode=execution_mode,
-                                  context=context,
-                                  **kwargs)
-            skip_initialization = True
+
+
+            with Report(self._composition,
+                        report_progress=report_progress,
+                        report_to_devices=report_to_devices,
+                        context=context) as report:
+
+                report_num = report.start_report(self._composition, num_trials, context)
+
+                report(self._composition,
+                       [LEARN_REPORT, PROGRESS_REPORT],
+                       report_num=report_num,
+                       scheduler=self._composition.scheduler,
+                       content='run_start',
+                       context=context)
+
+                self._composition.run(inputs=minibatched_input,
+                                      num_trials=run_trials,
+                                      skip_initialization=skip_initialization,
+                                      skip_analyze_graph=True,
+                                      execution_mode=execution_mode,
+                                      context=context,
+                                      **kwargs)
+                skip_initialization = True
+
+                report(self._composition,
+                       [LEARN_REPORT, PROGRESS_REPORT],
+                       report_num=report_num,
+                       scheduler=self._composition.scheduler,
+                       content='run_end',
+                       context=context,
+                       node=self)
+
 
         num_epoch_results = num_trials // minibatch_size # number of results expected from final epoch
         # return results from last epoch

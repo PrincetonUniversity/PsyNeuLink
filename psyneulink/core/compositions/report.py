@@ -1716,7 +1716,8 @@ class Report:
         if self._use_rich:
 
             # MODIFIED 11/12/22 NEW:
-            if content == 'run_start' and COMPILED_REPORT in reports and self._run_mode == LEARNING:
+            # if content == 'run_start' and COMPILED_REPORT in reports and self._run_mode == LEARNING:
+            if content == 'run_start' and self._run_mode == LEARNING:
                 composition_type_name = list(self.output_reports.keys())[0].componentCategory
                 composition_name = list(self.output_reports.keys())[0].name
                 message = f"{composition_type_name} '{composition_name}' training " \
@@ -1782,6 +1783,8 @@ class Report:
             # # MODIFIED 11/12/22 NEWER
             if COMPILED_REPORT in reports:
                 self._print_and_record_reports(COMPILED_REPORT, output_report)
+            elif LEARN_REPORT in reports:
+                self._print_and_record_reports(LEARN_REPORT, output_report)
             else:
                 self._print_and_record_reports(PROGRESS_REPORT)
             # MODIFIED 11/12/22 END
@@ -1805,7 +1808,7 @@ class Report:
 
         # Print and record output reports as they are created (progress reports are printed by _rich_progress.console)
         # MODIFIED 11/12/22 OLD:
-        if report_type in {EXECUTE_REPORT, RUN_REPORT, COMPILED_REPORT}:
+        if report_type in {EXECUTE_REPORT, RUN_REPORT, COMPILED_REPORT, LEARN_REPORT}:
         # # MODIFIED 11/12/22 NEW:
         # if any(report in {EXECUTE_REPORT, RUN_REPORT, COMPILED_REPORT} for report in report_type):
         # MODIFIED 11/12/22 END
@@ -1814,7 +1817,7 @@ class Report:
                 if output_report.trial_report and report_type == EXECUTE_REPORT:
                     self._rich_progress.console.print(output_report.trial_report)
                     self._rich_progress.console.print('')
-                elif output_report.run_report and report_type in {RUN_REPORT, COMPILED_REPORT}:
+                elif output_report.run_report and report_type in {RUN_REPORT, COMPILED_REPORT, LEARN_REPORT}:
                     self._rich_progress.console.print(output_report.run_report)
                     self._rich_progress.console.print('')
             # Record output reports as they are created

@@ -9678,9 +9678,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             skip_analyze_graph=False,
             report_output:ReportOutput=ReportOutput.OFF,
             report_params:ReportParams=ReportParams.OFF,
-            report_progress=ReportProgress.OFF,
-            report_simulations=ReportSimulations.OFF,
-            report_to_devices=None,
+            report_progress:ReportProgress=ReportProgress.OFF,
+            report_simulations:ReportSimulations=ReportSimulations.OFF,
+            report_to_devices:ReportDevices=None,
             animate=False,
             log=False,
             scheduler=None,
@@ -10298,6 +10298,8 @@ _
             randomize_minibatches=False,
             call_before_minibatch = None,
             call_after_minibatch = None,
+            report_progress:ReportProgress=ReportProgress.OFF,
+            report_to_devices:ReportDevices=None,
             *args,
             **kwargs
             ):
@@ -10448,6 +10450,8 @@ _
             call_after_minibatch=call_after_minibatch,
             context=context,
             execution_mode=execution_mode,
+            report_progress=report_progress,
+            report_to_devices=report_to_devices,
             *args, **kwargs)
 
         context.remove_flag(ContextFlags.LEARNING_MODE)

@@ -172,7 +172,7 @@ TRAIN = True  # True => train the FFN (WM)
 RUN = True  # True => test the model on sample stimulus sequences
 ANALYZE = True # True => output analysis of results of run
 REPORT_OUTPUT = ReportOutput.OFF       # Sets console output during run
-REPORT_PROGRESS = ReportProgress.ON   # Sets console progress bar during run
+REPORT_PROGRESS = ReportProgress.OFF   # Sets console progress bar during run
 ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
 
 #region ========================================= PARAMETERS ===========================================================
@@ -464,14 +464,12 @@ def _get_training_inputs(network, num_epochs, nback_levels):
     num_nback_levels = len(nback_levels)
     current_task = []
 
-    # for i in range(num_epochs):
     for nback_level in nback_levels:
         # Construct one hot encoding for nback level
-        # task_input = list(np.zeros(num_nback_levels))
-        # task_input[nback_level-nback_levels[0]] = 1
         task_input = _get_task_input(nback_level)
+        # Construct an example of each trial type for each stimulus
         for i in range(len(stimuli)):
-            # Get current stimulus and distractor
+            # Get current stimulus and a randomly selected distractor
             stims = list(stimuli.copy())
             # Get stim, and remove from stims so distractor can be picked randomly from remaining ones
             current_stim = stims.pop(i)
@@ -479,13 +477,18 @@ def _get_training_inputs(network, num_epochs, nback_levels):
             distractor_stim = stims[np.random.randint(0,len(stims))]
 
             # Get current context, nback context, and distractor
-            # Get nback+1 contexts (to bracket correct one)
-            for i in range(num_nback_levels+1):
+            # # # Get nback+1 contexts (to bracket correct one)
+            # # for i in range(num_nback_levels+1):
+            # # # Get current context from list as one that is next to last (leaving last one as potential lure)
+            # # current_context = contexts.pop(num_nback_levels-1)
+
+            # Get nback+2 contexts:  [0]=lure; [1]=nback, [nback+1]=current
+            for i in range(nback_level+2):
                 contexts.append(context_fct(CONTEXT_DRIFT_RATE))
-            # Get current context as one that is next to last from list (leaving last one as potential lure)
-            current_context = contexts.pop(num_nback_levels-1)
-            #
-            nback_context = contexts.pop(0)
+            # Get current context as last in list
+            current_context = contexts.pop(nback_level+1)
+            # Get nback context as second in list (first is lure)
+            nback_context = contexts.pop(1)
             distractor_context = contexts[np.random.randint(0,len(contexts))]
 
             # Assign retrieved stimulus and context accordingly to trial_type
@@ -516,7 +519,6 @@ def _get_training_inputs(network, num_epochs, nback_levels):
                              network.nodes[FFN_CONTEXT_RETRIEVED]: context_retrieved,
                              network.nodes[FFN_TASK]: current_task},
                     TARGETS: {network.nodes[FFN_OUTPUT]:  target},
-                    # EPOCHS: num_epochs*batch_size}
                     EPOCHS: num_epochs}
 
     return training_set, batch_size
@@ -730,8 +732,9 @@ def train_network(network,
     start_time = timeit.default_timer()
     network.learn(inputs=training_set,
                   minibatch_size=minibatch_size,
-                  report_output=REPORT_OUTPUT,
-                  report_progress=REPORT_PROGRESS,
+                  # report_output=REPORT_OUTPUT,
+                  # report_progress=REPORT_PROGRESS,
+                  report_progress=ReportProgress.ON,
                   learning_rate=learning_rate,
                   # execution_mode=ExecutionMode.LLVMRun
                   # execution_mode=ExecutionMode.Python
@@ -845,24 +848,28 @@ def analyze_results(results, num_trials=NUM_TRIALS, nback_levels=NBACK_LEVELS):
     NON_MATCH = 'non-match'
 
     for i, nback_level in enumerate(nback_levels):
+        conditions = results[1][i]
         # Code responses for given nback_level as 1 (match) or 0 (non-match)
-        relevant_responses = [int(r[0][0]) for r in results[0][i*num_trials:i*num_trials+num_trials]]
-        relevant_responses = [MATCH if r == 1 else NON_MATCH for r in relevant_responses]
-        responses_and_trial_types[i] = list(zip(relevant_responses, results[1][i]))
-        # x = zip(relevant_responses, results[1][i])
+        responses_for_nback_level = [r[0] for r in results[0][i*num_trials:i*num_trials+num_trials]]
+        responses_for_nback_level = [MATCH if r[0] > r[1] else NON_MATCH for r in responses_for_nback_level]
+        responses_and_trial_types[i] = list(zip(responses_for_nback_level, conditions))
         for trial_type in TrialTypes:
             # relevant_data = [[response,condition] for response,condition in x if condition == trial_type]
-            relevant_data = [[response,condition] for response,condition in zip(relevant_responses, results[1][i])
+            relevant_data = [[response, condition] for response, condition in zip(responses_for_nback_level, conditions)
                              if condition == trial_type]
-            if trial_type in {TrialTypes.MATCH_NO_FOIL, TrialTypes.MATCH_WITH_FOIL}:
-                #  is the correct response for a match trial
-                stats[i][trial_type] = [d[0] for d in relevant_data
-                                        if d[0] is not None].count(MATCH) / (len(relevant_data))
-            else:
-                # [0,1] is the correct response for a match trial
-                stats[i][trial_type] = [d[0] for d in relevant_data
-                                        if d[0] is not None].count(NON_MATCH) / (len(relevant_data))
-    for i, nback_level in enumerate(nback_levels):
+
+            # if trial_type in {TrialTypes.MATCH_NO_FOIL, TrialTypes.MATCH_WITH_FOIL}:
+            #     #  correct response for a match trial
+            #     stats[i][trial_type] = [d[0] for d in relevant_data
+            #                             if d[0] is not None].count(MATCH) / (len(relevant_data))
+            # else:
+            #     # correct response for a non-match trial
+            #     stats[i][trial_type] = [d[0] for d in relevant_data
+            #                             if d[0] is not None].count(NON_MATCH) / (len(relevant_data))
+
+            # Report % matches in each condition (should be 1.0 for MATCH trials and 0.0 for NON-MATCH trials
+            stats[i][trial_type] = [d[0] for d in relevant_data
+                                    if d[0] is not None].count(MATCH) / (len(relevant_data))
         print(f"nback level {nback_level}:")
         for j, performance in enumerate(stats[i]):
             print(f"\t{list(TrialTypes)[j].name}: {performance:.1f}")
@@ -948,6 +955,7 @@ def _plot_results(response_and_trial_types, stats):
 #region ===================================== SCRIPT EXECUTION =========================================================
 # Construct, train and/or run model based on settings at top of script
 
+# Only execute if called from command line (i.e., not on import)
 if __name__ == '__main__':
     if CONSTRUCT:
         nback_model = construct_model()
