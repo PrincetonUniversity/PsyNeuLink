@@ -198,7 +198,7 @@ RETRIEVAL_CONTEXT_WEIGHT = 1-RETRIEVAL_STIM_WEIGHT # weighting of context field 
 # DECISION_SOFTMAX_TEMP=1
 
 # Training parameters:
-NUM_EPOCHS= 6250    # nback-paper: 400,000 @ one trial per epoch = 6,250 @ 64 trials per epoch
+NUM_EPOCHS= 2 # 6250    # nback-paper: 400,000 @ one trial per epoch = 6,250 @ 64 trials per epoch
 LEARNING_RATE=0.001  # nback-paper: .001
 
 # Execution parameters:
@@ -215,11 +215,12 @@ FFN_CONTEXT_RETRIEVED = "RETRIEVED CONTEXT"
 FFN_TASK = "CURRENT TASK"
 FFN_HIDDEN = "HIDDEN LAYER"
 FFN_DROPOUT = "DROPOUT LAYER"
-FFN_OUTPUT = "DECISION LAYER"
+FFN_OUTPUT = "OUTPUT LAYER"
 MODEL_STIMULUS_INPUT ='STIM'
 MODEL_CONTEXT_INPUT = 'CONTEXT'
 MODEL_TASK_INPUT = "TASK"
 EM = "EPISODIC MEMORY (dict)"
+DECISION = "DECISION"
 CONTROLLER = "READ/WRITE CONTROLLER"
 
 class TrialTypes(IntEnum):
@@ -290,7 +291,7 @@ def construct_model(stim_size = STIM_SIZE,
     # FEED FORWARD NETWORK -----------------------------------------
 
     #     inputs: encoding of current stimulus and context, retrieved stimulus and retrieved context,
-    #     output: decision: match [1,0] or non-match [0,1]
+    #     output: match [1,0] or non-match [0,1]
     # Must be trained to detect match for specified task (1-back, 2-back, etc.)
     input_current_stim = TransferMechanism(name=FFN_STIMULUS_INPUT,
                                            size=stim_size,
@@ -313,7 +314,7 @@ def construct_model(stim_size = STIM_SIZE,
     dropout = TransferMechanism(name=FFN_DROPOUT,
                                size=hidden_size,
                                function=Dropout(p=DROPOUT_PROB))
-    decision = ProcessingMechanism(name=FFN_OUTPUT,
+    output = ProcessingMechanism(name=FFN_OUTPUT,
                                    size=2,
                                    function=ReLU)
 
@@ -326,7 +327,7 @@ def construct_model(stim_size = STIM_SIZE,
                                 # IDENTITY_MATRIX,
                                 MappingProjection(matrix = IDENTITY_MATRIX, exclude_in_autodiff=True),
                                 dropout,
-                                decision],
+                                output],
                                RANDOM_WEIGHTS_INITIALIZATION),
                               name=FFN_COMPOSITION,
                               learning_rate=LEARNING_RATE,
@@ -371,6 +372,10 @@ def construct_model(stim_size = STIM_SIZE,
                                                                 gain=retrievel_softmax_temp)),
                                  )
 
+    decision = TransferMechanism(name=DECISION,
+                                 size=2,
+                                 function=SoftMax(output=MAX_INDICATOR))
+
     # Control Mechanism
     #  Ensures current stimulus and context are only encoded in EM once (at beginning of trial)
     #    by controlling the storage_prob parameter of em:
@@ -402,7 +407,7 @@ def construct_model(stim_size = STIM_SIZE,
                                control=(STORAGE_PROB, em))
 
     nback_model = Composition(name=NBACK_MODEL,
-                              nodes=[stim, context, task, ffn, em, control],
+                              nodes=[stim, context, task, ffn, em, decision, control],
                               # Terminate trial if value of control is still 1 after first pass through execution
                               termination_processing={TimeScale.TRIAL: And(Condition(lambda: control.value),
                                                                            AfterPass(0, TimeScale.TRIAL))},
@@ -414,6 +419,7 @@ def construct_model(stim_size = STIM_SIZE,
     nback_model.add_projection(MappingProjection(), em.output_ports["RETRIEVED_STIMULUS_FIELD"], input_retrieved_stim)
     nback_model.add_projection(MappingProjection(), em.output_ports["RETRIEVED_CONTEXT_FIELD"], input_retrieved_context)
     nback_model.add_projection(MappingProjection(), stim, em.input_ports["STIMULUS_FIELD"])
+    nback_model.add_projection(MappingProjection(), output, decision, IDENTITY_MATRIX)
     nback_model.add_projection(MappingProjection(), context, em.input_ports["CONTEXT_FIELD"])
 
     if DISPLAY_MODEL:
@@ -734,7 +740,7 @@ def train_network(network,
                   minibatch_size=minibatch_size,
                   # report_output=REPORT_OUTPUT,
                   # report_progress=REPORT_PROGRESS,
-                  report_progress=ReportProgress.ON,
+                  # report_progress=ReportProgress.ON,
                   learning_rate=learning_rate,
                   # execution_mode=ExecutionMode.LLVMRun
                   # execution_mode=ExecutionMode.Python
@@ -961,17 +967,20 @@ if __name__ == '__main__':
         nback_model = construct_model()
 
     if TRAIN:
-        weights_path = Path('/'.join([os.getcwd(), f'results/ffn.wts_nep_{NUM_EPOCHS}_lr'
-                                                 f'_{str(LEARNING_RATE).split(".")[1]}.pnl']))
+        weights_filename = f'results/ffn.wts_nep_{NUM_EPOCHS}_lr_{str(LEARNING_RATE).split(".")[1]}.pnl'
+        weights_path = Path('/'.join([os.getcwd(), weights_filename]))
         saved_weights = train_network(nback_model.nodes[FFN_COMPOSITION],
                                       save_weights_to=weights_path)
     if RUN:
         results_path = Path('/'.join([os.getcwd(), f'results/nback.results_nep_{NUM_EPOCHS}_lr'
                                                    f'_{str(LEARNING_RATE).split(".")[1]}.pnl']))
-
-        weights = 'results/ffn.wts_nep_6250_lr_001.pnl'
+        try:
+            weights_path
+        except:
+            weights_filename = f'results/ffn.wts_nep_{NUM_EPOCHS}_lr_{str(LEARNING_RATE).split(".")[1]}.pnl'
+            weights_path = Path('/'.join([os.getcwd(), weights_filename]))
         results = run_model(nback_model,
-                            load_weights_from = weights,
+                            load_weights_from = weights_path,
                             save_results_to= results_path
                             # inputs_source=Stimuli.SWEETPEA,
                             )

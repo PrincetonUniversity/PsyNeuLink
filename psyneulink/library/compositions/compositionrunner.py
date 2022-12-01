@@ -225,7 +225,6 @@ class CompositionRunner():
             # (Passing num_trials * stim_epoch + 1 works)
             run_trials = num_trials * stim_epoch if self._is_llvm_mode else None
 
-
             with Report(self._composition,
                         report_progress=report_progress,
                         report_to_devices=report_to_devices,
@@ -256,7 +255,6 @@ class CompositionRunner():
                        content='run_end',
                        context=context,
                        node=self)
-
 
         num_epoch_results = num_trials // minibatch_size # number of results expected from final epoch
         # return results from last epoch

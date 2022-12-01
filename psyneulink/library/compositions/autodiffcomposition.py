@@ -731,12 +731,13 @@ class AutodiffComposition(Composition):
         Path
 
         """
+        error_msg = f" (for saving weight matrices for '{self.name}') is not a legal path."
+
         if path:
             try:
                 path = Path(path)
             except:
-                raise AutodiffCompositionError(f"'{path}' (for saving weight matrices of ({self.name}) "
-                                               f"is not a legal path.")
+                raise AutodiffCompositionError(f"'{path}'{error_msg}")
         else:
             try:
                 if directory:
@@ -748,8 +749,7 @@ class AutodiffComposition(Composition):
                 else:
                     path = Path(os.path.join(path, f'{self.name}_matrix_wts.pnl'))
             except IsADirectoryError:
-                raise AutodiffCompositionError(f"'{path}' (for saving weight matrices of ({self.name}) "
-                                               f"is not a legal path.")
+                raise AutodiffCompositionError(f"'{path}'{error_msg}")
         proj_state = {
             p.name: p.parameters.matrix.get(context=context)
             # p.name: p.matrix.base
@@ -762,7 +762,11 @@ class AutodiffComposition(Composition):
                     or p.sender.owner in self.get_nodes_by_role(NodeRole.LEARNING)
                     or p.receiver.owner in self.get_nodes_by_role(NodeRole.LEARNING)
                 )}
-        torch.save(proj_state, path)
+        try:
+            torch.save(proj_state, path)
+        except IsADirectoryError:
+            raise AutodiffCompositionError(f"'{path}'{error_msg}")
+
         return path
 
     @handle_external_context(fallback_most_recent=True)
@@ -781,10 +785,10 @@ class AutodiffComposition(Composition):
            Matrices must be stored in
            `PyTorch state_dict <https://pytorch.org/tutorials/beginner/saving_loading_models.html>`_ format.
         """
+        error_msg = f" (for loading weight matrices for '{self.name}') is not a legal path."
         if path:
             if not isinstance(path,Path):
-                raise AutodiffCompositionError(f"'{path}' (for saving weight matrices of ({self.name}) "
-                                               f"is not a legal path.")
+                raise AutodiffCompositionError(f"'{path}'{error_msg}")
         else:
             try:
                 if directory:
@@ -796,9 +800,11 @@ class AutodiffComposition(Composition):
                 else:
                     path = Path(os.path.join(path , f'{self.name}_matrix_wts.pnl'))
             except IsADirectoryError:
-                raise AutodiffCompositionError(f"'{path}' (for saving weight matrices of ({self.name}) "
-                                               f"is not a legal path.")
-        state = torch.load(path)
+                raise AutodiffCompositionError(f"'{path}'{error_msg}")
+        try:
+            state = torch.load(path)
+        except FileNotFoundError:
+            raise AutodiffCompositionError(f"'{path}'{error_msg}")
 
         for projection in [p for p in self.projections
                            if not (isinstance(p, ModulatoryProjection_Base)
