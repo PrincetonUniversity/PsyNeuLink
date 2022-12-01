@@ -779,7 +779,7 @@ def test_network(network,
     results = network.run(inputs=test_set[INPUTS],
                           report_progress=ReportProgress.ON,
                           )
-    return list(zip(conditions, test_set[TARGETS], results))
+    return network.results, test_set[TARGETS], conditions
 
 def run_model(model,
               # load_weights_from=None,
@@ -997,8 +997,8 @@ if __name__ == '__main__':
         except:
             weights_filename = f'results/ffn.wts_nep_{NUM_EPOCHS}_lr_{str(LEARNING_RATE).split(".")[1]}.pnl'
             weights_path = Path('/'.join([os.getcwd(), weights_filename]))
-        results, conditions = test_network(nback_model.nodes[FFN_COMPOSITION],
-                                           load_weights_from = weights_path)
+        results, targets, conditions = test_network(nback_model.nodes[FFN_COMPOSITION],
+                                                    load_weights_from = weights_path)
 
     if RUN:
         results_path = Path('/'.join([os.getcwd(), f'results/nback.results_nep_{NUM_EPOCHS}_lr'
