@@ -779,10 +779,10 @@ def test_network(network,
     if load_weights_from:
         print(f"nback_model loading '{FFN_COMPOSITION}' weights from {load_weights_from}...")
         network.load(filename=load_weights_from)
-    results = network.run(inputs=test_set[INPUTS],
-                          report_progress=ReportProgress.ON,
-                          )
-    return network.results, test_set[TARGETS], conditions
+    network.run(inputs=test_set[INPUTS],
+                report_progress=ReportProgress.ON,
+                )
+    return network.results, list(test_set[TARGETS].values())[0], conditions
 
 def run_model(model,
               # load_weights_from=None,
