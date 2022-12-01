@@ -198,7 +198,7 @@ RETRIEVAL_CONTEXT_WEIGHT = 1-RETRIEVAL_STIM_WEIGHT # weighting of context field 
 # DECISION_SOFTMAX_TEMP=1
 
 # Training parameters:
-NUM_EPOCHS= 2 # 6250    # nback-paper: 400,000 @ one trial per epoch = 6,250 @ 64 trials per epoch
+NUM_EPOCHS= 10 # 6250    # nback-paper: 400,000 @ one trial per epoch = 6,250 @ 64 trials per epoch
 LEARNING_RATE=0.001  # nback-paper: .001
 
 # Execution parameters:
@@ -740,14 +740,14 @@ def train_network(network,
                   minibatch_size=minibatch_size,
                   # report_output=REPORT_OUTPUT,
                   # report_progress=REPORT_PROGRESS,
-                  # report_progress=ReportProgress.ON,
+                  report_progress=ReportProgress.ON,
                   learning_rate=learning_rate,
                   # execution_mode=ExecutionMode.LLVMRun
                   # execution_mode=ExecutionMode.Python
                   execution_mode=ExecutionMode.PyTorch
                   )
     stop_time = timeit.default_timer()
-    print(f"'{network.name}' trained")
+    print(f"training of '{network.name}' done")
     training_time = stop_time-start_time
     if training_time <= 60:
         training_time_str = f'{int(training_time)} seconds'

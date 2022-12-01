@@ -10298,8 +10298,6 @@ _
             randomize_minibatches=False,
             call_before_minibatch = None,
             call_after_minibatch = None,
-            report_progress:ReportProgress=ReportProgress.OFF,
-            report_to_devices:ReportDevices=None,
             *args,
             **kwargs
             ):
@@ -10450,8 +10448,6 @@ _
             call_after_minibatch=call_after_minibatch,
             context=context,
             execution_mode=execution_mode,
-            report_progress=report_progress,
-            report_to_devices=report_to_devices,
             *args, **kwargs)
 
         context.remove_flag(ContextFlags.LEARNING_MODE)
