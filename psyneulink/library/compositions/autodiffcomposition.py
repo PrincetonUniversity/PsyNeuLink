@@ -325,15 +325,21 @@ class AutodiffComposition(Composition):
     Attributes
     ----------
 
-    losses : list of floats
-        tracks the average for each weight update (i.e. each minibatch)
-
     optimizer : PyTorch optimizer function
         the optimizer used for training. Depends on the **optimizer_type**, **learning_rate**, and **weight_decay**
         arguments from initialization.
 
     loss : PyTorch loss function
         the loss function used for training. Depends on the **loss_spec** argument from initialization.
+
+    losses : list of floats
+        tracks the average loss after each weight update (i.e. each minibatch) during learning.
+
+    last_saved_weights : path
+        path for file to which weights were last saved.
+
+    last_loaded_weights : path
+        path for file from which weights were last loaded.
 
     """
 
@@ -383,6 +389,8 @@ class AutodiffComposition(Composition):
         self.loss = None
         self.disable_learning = disable_learning
         self._runtime_learning_rate = None
+        self.last_saved_weights = None
+        self.last_loaded_weights = None
 
         # keeps track of average loss per epoch
         self.losses = []
@@ -767,6 +775,8 @@ class AutodiffComposition(Composition):
         except IsADirectoryError:
             raise AutodiffCompositionError(f"'{path}'{error_msg}")
 
+        self.last_saved_weights = path
+
         return path
 
     @handle_external_context(fallback_most_recent=True)
@@ -805,6 +815,8 @@ class AutodiffComposition(Composition):
             state = torch.load(path)
         except FileNotFoundError:
             raise AutodiffCompositionError(f"'{path}'{error_msg}")
+
+        self.last_loaded_weights = path
 
         for projection in [p for p in self.projections
                            if not (isinstance(p, ModulatoryProjection_Base)
