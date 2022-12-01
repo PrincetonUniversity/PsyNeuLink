@@ -11136,6 +11136,9 @@ _
                             context.replace_flag(ContextFlags.LEARNING, ContextFlags.PROCESSING)
                         context.remove_flag(ContextFlags.PROCESSING)
 
+                        # IMPLEMENTATION NOTE: PAUSE / BREAK POINT FOR EXECUTION OF INDIVIDUAL NODES
+                        assert True
+
                     # EXECUTE A NESTED COMPOSITION ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
                     elif isinstance(node, Composition):

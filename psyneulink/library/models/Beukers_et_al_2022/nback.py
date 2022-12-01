@@ -168,7 +168,7 @@ from psyneulink import *
 # Settings for running script:
 CONSTRUCT = True # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = False # True = show visual graphic of model
-TRAIN = True  # True => train the FFN (WM)
+TRAIN = False  # True => train the FFN (WM)
 RUN = True  # True => test the model on sample stimulus sequences
 ANALYZE = True # True => output analysis of results of run
 REPORT_OUTPUT = ReportOutput.OFF       # Sets console output during run
