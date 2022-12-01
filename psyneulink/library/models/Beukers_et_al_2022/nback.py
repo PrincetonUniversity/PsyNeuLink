@@ -770,12 +770,15 @@ def train_network(network,
 def test_network(network,
                  test_set=None,
                  load_weights_from=None):
-    print(f"constructing training set for '{network.name}'...")
+    print(f"constructing test set for '{network.name}'...")
     if test_set == None:
         test_set, conditions, set_size = _get_training_inputs(network=network,
                                                               num_epochs=1,
                                                               nback_levels=NBACK_LEVELS)
     print(f'total num trials: {set_size}')
+    if load_weights_from:
+        print(f"nback_model loading '{FFN_COMPOSITION}' weights from {load_weights_from}...")
+        network.load(filename=load_weights_from)
     results = network.run(inputs=test_set[INPUTS],
                           report_progress=ReportProgress.ON,
                           )

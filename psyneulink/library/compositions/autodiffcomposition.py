@@ -394,7 +394,7 @@ class AutodiffComposition(Composition):
 
         # keeps track of average loss per epoch
         self.losses = []
-˚
+
         # ordered execution sets for the pytorch model
         self.execution_sets = None
 
