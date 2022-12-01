@@ -168,9 +168,10 @@ from psyneulink import *
 # Settings for running script:
 CONSTRUCT = True # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = False # True = show visual graphic of model
-TRAIN = False  # True => train the FFN (WM)
-RUN = True  # True => test the model on sample stimulus sequences
-ANALYZE = True # True => output analysis of results of run
+TRAIN_FFN = False  # True => train the FFN (WM)
+TEST_FFN = True  # True => test the FFN on training stimuli (WM)
+RUN = False  # True => test the model on sample stimulus sequences
+ANALYZE = False # True => output analysis of results of run
 REPORT_OUTPUT = ReportOutput.OFF       # Sets console output during run
 REPORT_PROGRESS = ReportProgress.OFF   # Sets console progress bar during run
 ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
@@ -198,7 +199,7 @@ RETRIEVAL_CONTEXT_WEIGHT = 1-RETRIEVAL_STIM_WEIGHT # weighting of context field 
 # DECISION_SOFTMAX_TEMP=1
 
 # Training parameters:
-NUM_EPOCHS= 10 # 6250    # nback-paper: 400,000 @ one trial per epoch = 6,250 @ 64 trials per epoch
+NUM_EPOCHS= 20000 # 6250    # nback-paper: 400,000 @ one trial per epoch = 6,250 @ 64 trials per epoch
 LEARNING_RATE=0.001  # nback-paper: .001
 
 # Execution parameters:
@@ -453,7 +454,9 @@ def _get_training_inputs(network, num_epochs, nback_levels):
         stim_lure:  stim_current = stim_retrieved  and context_current != context_retrieved
         context_lure:  stim_current != stim_retrieved  and context_current == context_retrieved
         non_lure:  stim_current != stim_retrieved  and context_current != context_retrieved
+    Return training set (dict), conditions (list of TrialTypes), and batch size (int)
     """
+
     assert is_iterable(nback_levels) and all([0<i<=MAX_NBACK_LEVELS for i in nback_levels])
     stimuli = _get_stim_set()
     context_fct =  DriftOnASphereIntegrator(initializer=np.random.random(CONTEXT_SIZE-1),
@@ -469,6 +472,7 @@ def _get_training_inputs(network, num_epochs, nback_levels):
     target = []
     num_nback_levels = len(nback_levels)
     current_task = []
+    conditions = []
 
     for nback_level in nback_levels:
         # Construct one hot encoding for nback level
@@ -517,6 +521,7 @@ def _get_training_inputs(network, num_epochs, nback_levels):
                 else:
                     target.append([0,1])
                 current_task.append([task_input])
+                conditions.append(trial_type)
 
     batch_size = len(target)
     training_set = {INPUTS: {network.nodes[FFN_STIMULUS_INPUT]: stim_current,
@@ -527,7 +532,7 @@ def _get_training_inputs(network, num_epochs, nback_levels):
                     TARGETS: {network.nodes[FFN_OUTPUT]:  target},
                     EPOCHS: num_epochs}
 
-    return training_set, batch_size
+    return training_set, conditions, batch_size,
 
 def _get_run_inputs(model,
                     nback_level,
@@ -728,9 +733,9 @@ def train_network(network,
     """
     print(f"constructing training set for '{network.name}'...")
     if training_set == None:
-        training_set, minibatch_size = _get_training_inputs(network=network,
-                                                            num_epochs=num_epochs,
-                                                            nback_levels=NBACK_LEVELS)
+        training_set, conditions, minibatch_size = _get_training_inputs(network=network,
+                                                                        num_epochs=num_epochs,
+                                                                        nback_levels=NBACK_LEVELS)
     print(f'num training stimuli per training set (minibatch size): {minibatch_size}')
     print(f'num weight updates (num_epochs): {num_epochs}')
     print(f'total num trials: {num_epochs*minibatch_size}')
@@ -761,6 +766,20 @@ def train_network(network,
     # print(f'saved weights sample: {network.nodes[FFN_HIDDEN].path_afferents[0].matrix.base[0][:3]}...')
     # network.load(path)
     # print(f'loaded weights sample: {network.nodes[FFN_HIDDEN].path_afferents[0].matrix.base[0][:3]}...')
+
+def test_network(network,
+                 test_set=None,
+                 load_weights_from=None):
+    print(f"constructing training set for '{network.name}'...")
+    if test_set == None:
+        test_set, conditions, set_size = _get_training_inputs(network=network,
+                                                              num_epochs=1,
+                                                              nback_levels=NBACK_LEVELS)
+    print(f'total num trials: {set_size}')
+    results = network.run(inputs=test_set[INPUTS],
+                          report_progress=ReportProgress.ON,
+                          )
+    return list(zip(conditions, test_set[TARGETS], results))
 
 def run_model(model,
               # load_weights_from=None,
@@ -966,11 +985,21 @@ if __name__ == '__main__':
     if CONSTRUCT:
         nback_model = construct_model()
 
-    if TRAIN:
+    if TRAIN_FFN:
         weights_filename = f'results/ffn.wts_nep_{NUM_EPOCHS}_lr_{str(LEARNING_RATE).split(".")[1]}.pnl'
         weights_path = Path('/'.join([os.getcwd(), weights_filename]))
         saved_weights = train_network(nback_model.nodes[FFN_COMPOSITION],
                                       save_weights_to=weights_path)
+
+    if TEST_FFN:
+        try:
+            weights_path
+        except:
+            weights_filename = f'results/ffn.wts_nep_{NUM_EPOCHS}_lr_{str(LEARNING_RATE).split(".")[1]}.pnl'
+            weights_path = Path('/'.join([os.getcwd(), weights_filename]))
+        results, conditions = test_network(nback_model.nodes[FFN_COMPOSITION],
+                                           load_weights_from = weights_path)
+
     if RUN:
         results_path = Path('/'.join([os.getcwd(), f'results/nback.results_nep_{NUM_EPOCHS}_lr'
                                                    f'_{str(LEARNING_RATE).split(".")[1]}.pnl']))

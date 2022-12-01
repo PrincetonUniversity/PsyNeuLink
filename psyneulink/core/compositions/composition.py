@@ -10670,9 +10670,14 @@ _
             #   (2) whether to assign values to CIM from input dict (if not nested) or simply execute CIM (if nested)
             # JDC 3/28/22:
             #    This currently prevents a Composition that is nested within another to be tested on its own
+            #    (e.g., for testing a nested AutodiffComposition on its own after training, as in nback.py)
             #    Would be good to figure out a way to accomodate that
             nested = False
-            if len(self.input_CIM.path_afferents) > 0:
+            # # MODIFIED 12/1/22 OLD:
+            # if len(self.input_CIM.path_afferents) > 0:
+            # MODIFIED 12/1/22 NEW:  FIX: EFFORT TO ADDRESS ABOVE ISSUE;  NEEDS TESTING
+            if len(self.input_CIM.path_afferents) > 0 and context.composition != self:
+            # MODIFIED 12/1/22 END
                 nested = True
 
             runtime_params = self._parse_runtime_params_conditions(runtime_params)
@@ -10842,7 +10847,7 @@ _
                 # MODIFIED 3/28/22 CURRENT:
                 # IMPLEMENTATION NOTE: context.string set in Mechanism.execute
                 direct_call = (f"{context.source.name} EXECUTING" not in context.string)
-                # MODIFIED 3/28/22 NEW:
+                # # MODIFIED 3/28/22 NEW:
                 # direct_call = (context.source == ContextFlags.COMMAND_LINE)
                 # MODIFIED 3/28/22 END
                 simulation = ContextFlags.SIMULATION_MODE in context.runmode
