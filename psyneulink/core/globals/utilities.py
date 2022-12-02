@@ -1647,7 +1647,6 @@ def safe_equals(x, y):
         An == comparison that handles numpy's new behavior of returning
         an array of booleans instead of a single boolean for ==
     """
-    from collections import defaultdict
     with warnings.catch_warnings():
         warnings.simplefilter('error')
         try:
@@ -1660,25 +1659,24 @@ def safe_equals(x, y):
             try:
                 return np.array_equal(x, y)
             except (DeprecationWarning, FutureWarning):
+                # both should have len because non-len objects would not
+                # have triggered the warnings on == or array_equal
                 len_x = len(x)
-                try:
-                    # IMPLEMENTATION NOTE:
-                    #  Handles case in which an element being compared is a defaultdict
-                    #  (makes copy to prevent indexing it from adding and entry to source)
-                    if len_x != len(y):
-                        return False
-                    for i in range(len_x):
-                        if isinstance(x[i],defaultdict) or isinstance(y[i],defaultdict):
-                            copy_x = x[i].copy()
-                            copy_y = y[i].copy()
-                            if not safe_equals(copy_x, copy_y):
-                                return False
-                        else:
-                            if not safe_equals(x[i],y[i]):
-                                return False
-                    return True
-                except KeyError:
+                if len_x != len(y):
                     return False
+
+                if hasattr(x, 'keys') and hasattr(y, 'keys'):
+                    # dictionary-like
+                    if x.keys() != y.keys():
+                        return False
+                    subelements = x.keys()
+                elif hasattr(x, 'keys') or hasattr(y, 'keys'):
+                    return False
+                else:
+                    # list-like
+                    subelements = range(len_x)
+
+                return all([safe_equals(x[i], y[i]) for i in subelements])
 
 
 @tc.typecheck
