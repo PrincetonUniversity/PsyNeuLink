@@ -166,12 +166,12 @@ from graph_scheduler import *
 from psyneulink import *
 
 # Settings for running script:
-CONSTRUCT = True # THIS MUST BE SET TO True to run the script
+CONSTRUCT_MODEL = True # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = False # True = show visual graphic of model
 TRAIN_FFN = False  # True => train the FFN (WM)
 TEST_FFN = False  # True => test the FFN on training stimuli (WM)
-RUN = True  # True => test the model on sample stimulus sequences
-ANALYZE = False # True => output analysis of results of run
+RUN_MODEL = True  # True => test the model on sample stimulus sequences
+ANALYZE_RESULTS = True # True => output analysis of results of run
 REPORT_OUTPUT = ReportOutput.OFF       # Sets console output during run
 REPORT_PROGRESS = ReportProgress.OFF   # Sets console progress bar during run
 ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
@@ -199,7 +199,7 @@ RETRIEVAL_CONTEXT_WEIGHT = 1-RETRIEVAL_STIM_WEIGHT # weighting of context field 
 # DECISION_SOFTMAX_TEMP=1
 
 # Training parameters:
-NUM_EPOCHS= 20000 # 6250    # nback-paper: 400,000 @ one trial per epoch = 6,250 @ 64 trials per epoch
+NUM_EPOCHS= 6250  # 20000  # nback-paper: 400,000 @ one trial per epoch = 6,250 @ 64 trials per epoch
 LEARNING_RATE=0.001  # nback-paper: .001
 
 # Execution parameters:
@@ -224,7 +224,8 @@ EM = "EPISODIC MEMORY (dict)"
 DECISION = "DECISION"
 CONTROLLER = "READ/WRITE CONTROLLER"
 
-class TrialTypes(IntEnum):
+
+class TrialTypes(Enum):
     """Trial types explicitly assigned and counter-balanced in _get_run_inputs()
     In notation below, "A" is always current stimulus.
     Foils are only explicitly assigned to items immediately following nback item.
@@ -232,11 +233,12 @@ class TrialTypes(IntEnum):
         either within the subseq through random assignment,
         and/or through cross-subseq relationships that are not controlled in this design
     """
-    MATCH_NO_FOIL = 0       # ABA (2-back) or ABCA (3-back); not explicitly assigned: ABBA
-    MATCH_WITH_FOIL = 1     # AAA (2-back) or AABA (3-back); not explicitly assigned: ABAA or AAAA
-    NO_MATCH_NO_FOIL = 2    # ABB (2-back) or BCDA (3-back); not explicitly assigned: BBCA, BCCA or BBBA
-    NO_MATCH_WITH_FOIL = 3  # BAA (2-back) or BACA (3-back); not explicitly assigned: BCAA or BAAA
+    MATCH_NO_FOIL = 'match'           # ABA (2-back) or ABCA (3-back); not explicitly assigned: ABBA
+    MATCH_WITH_FOIL = 'stim_lure'     # AAA (2-back) or AABA (3-back); not explicitly assigned: ABAA or AAAA
+    NO_MATCH_NO_FOIL = 'context_lure' # ABB (2-back) or BCDA (3-back); not explicitly assigned: BBCA, BCCA or BBBA
+    NO_MATCH_WITH_FOIL = 'non_lure'   # BAA (2-back) or BACA (3-back); not explicitly assigned: BCAA or BAAA
 num_trial_types = len(TrialTypes)
+
 
 class Stimuli(Enum):
     SWEETPEA = 'sweetpea'
@@ -255,7 +257,6 @@ def construct_model(stim_size = STIM_SIZE,
                     retrieval_hazard_rate = RETRIEVAL_HAZARD_RATE,
                     retrieval_stimulus_weight = RETRIEVAL_STIM_WEIGHT,
                     retrieval_context_weight = RETRIEVAL_CONTEXT_WEIGHT,
-                    # decision_softmax_temp = DECISION_SOFTMAX_TEMP
                     ):
     """**Construct nback_model**
 
@@ -277,10 +278,6 @@ def construct_model(stim_size = STIM_SIZE,
       weighting on stimulus component for retrieval of vectors stored in `episodic memory <EpisodicMemoryMechanism>`
     retrieval_context_weight: float
       weighting on context component for retrieval of vectors stored in `episodic memory <EpisodicMemoryMechanism>`
-    COMMENT:
-    decision_softmax_temp: float
-      temperature on softmax for decision (match vs. no-match)
-    COMMENT
 
     Returns
     -------
@@ -462,9 +459,6 @@ def _get_training_inputs(network, num_epochs, nback_levels):
     context_fct =  DriftOnASphereIntegrator(initializer=np.random.random(CONTEXT_SIZE-1),
                                             noise=CONTEXT_DRIFT_NOISE,
                                             dimension=CONTEXT_SIZE)
-    contexts = []
-    trial_types = ['match', 'stim_lure', 'context_lure', 'non_lure']
-
     stim_current = []
     context_current = []
     stim_retrieved = []
@@ -479,18 +473,13 @@ def _get_training_inputs(network, num_epochs, nback_levels):
         task_input = _get_task_input(nback_level)
         # Construct an example of each trial type for each stimulus
         for i in range(len(stimuli)):
+            contexts = []
             # Get current stimulus and a randomly selected distractor
             stims = list(stimuli.copy())
             # Get stim, and remove from stims so distractor can be picked randomly from remaining ones
             current_stim = stims.pop(i)
             # Pick distractor randomly from stimuli remaining in set
             distractor_stim = stims[np.random.randint(0,len(stims))]
-
-            # Get current context, nback context, and distractor
-            # # # Get nback+1 contexts (to bracket correct one)
-            # # for i in range(num_nback_levels+1):
-            # # # Get current context from list as one that is next to last (leaving last one as potential lure)
-            # # current_context = contexts.pop(num_nback_levels-1)
 
             # Get nback+2 contexts:  [0]=lure; [1]=nback, [nback+1]=current
             for i in range(nback_level+2):
@@ -502,26 +491,26 @@ def _get_training_inputs(network, num_epochs, nback_levels):
             distractor_context = contexts[np.random.randint(0,len(contexts))]
 
             # Assign retrieved stimulus and context accordingly to trial_type
-            for trial_type in trial_types:
+            for trial_type in TrialTypes:
                 stim_current.append(current_stim)
                 context_current.append(current_context)
                 # Assign retrieved stimulus
-                if trial_type in {'match','stim_lure'}:
+                if trial_type in {TrialTypes.MATCH_NO_FOIL, TrialTypes.MATCH_WITH_FOIL}:
                     stim_retrieved.append(current_stim)
                 else: # context_lure or non_lure
                     stim_retrieved.append(distractor_stim)
                 # Assign retrieved context
-                if trial_type in {'match','context_lure'}:
+                if trial_type in {TrialTypes.MATCH_NO_FOIL,TrialTypes.NO_MATCH_NO_FOIL}:
                     context_retrieved.append(nback_context)
                 else: # stimulus_lure or non_lure
                     context_retrieved.append(distractor_context)
                 # Assign target
-                if trial_type == 'match':
+                if trial_type in {TrialTypes.MATCH_NO_FOIL, TrialTypes.MATCH_WITH_FOIL}:
                     target.append([1,0])
                 else:
                     target.append([0,1])
                 current_task.append([task_input])
-                conditions.append(trial_type)
+                conditions.append(trial_type.name)
 
     batch_size = len(target)
     training_set = {INPUTS: {network.nodes[FFN_STIMULUS_INPUT]: stim_current,
@@ -573,6 +562,7 @@ def _get_run_inputs(model,
             subseq = [None] * subseq_size
             curr_stim = subseq[nback_level] = random.choice(np.arange(len(stim_set)))
             other_stims = np.setdiff1d(np.arange(len(stim_set)),curr_stim).tolist()
+            trial_type = list(TrialTypes)[trial_type]
 
             if trial_type == TrialTypes.MATCH_NO_FOIL:           # ABA (2-back) or ABCA (3-back)
                 subseq[0] = curr_stim  # Assign nback stim to match
@@ -595,10 +585,6 @@ def _get_run_inputs(model,
             return subseq
 
         def get_trial_type_for_stim(subseq):
-            # assert len(subseq) == nback_level+1, \
-            #     f"Bad subseq len ({len(subseq)}) for nback_level ({nback_level})."
-            # assert all(trial_type==None for trial_type in trial_type_seq[trial_num:trial_num + nback_level]), \
-            #     f"trial_type should still be None for trials {trial_num - nback_level} to {trial_num - 1}."
             if subseq[-1] == subseq[0] and not subseq[-1] in subseq[1:-1]:
                 return TrialTypes.MATCH_NO_FOIL.value
             elif subseq[-1] == subseq[0] and subseq[-1] in subseq[0:-1]:
@@ -619,14 +605,10 @@ def _get_run_inputs(model,
 
         num_mini_blocks = int(num_trials / (num_trial_types * (nback_level+1)))
         mini_block_size = subseq_size * num_trial_types # Number of trials in a mini_block
-        # seq_of_trial_type_subseqs = [None] * num_mini_blocks * num_trial_types
         seq_of_trial_type_subseqs = []
         # Generate randomly ordered trial_type assignments for subseqs in each mini_block
         for i in range(num_mini_blocks):
-            # seq_of_trial_type_subseqs[i*num_trial_types:i+num_trial_types] = \
-            #     random.sample(range(num_trial_types), num_trial_types)
             seq_of_trial_type_subseqs.extend(random.sample(range(num_trial_types), num_trial_types))
-        # seq_of_trial_type_subseqs = random.sample(range(num_trial_types), num_trial_types) * mini_block_size
         if not mini_blocks:
             # Randomize the order of trial types across the entire sequence:
             random.shuffle(seq_of_trial_type_subseqs)
@@ -645,7 +627,7 @@ def _get_run_inputs(model,
             # Get seq of stimuli for subseq of specified trial_type
             stim_seq[idx:idx+nback_level+1] = get_stim_subseq_for_trial_type(trial_type)
             # Assign trial_type to last stim in subseq (since it was constructed specifically for that trial_type)
-            trial_type_seq[idx+nback_level] = trial_type
+            trial_type_seq[idx+nback_level] = list(TrialTypes)[trial_type].value
         # Pad remainder to get to num_trials with randomly selected stimuli
         stim_seq.extend(random.sample(range(num_trial_types),extra_trials))
         # Infer trial_types for all remaining stimuli (which should currently be marked as None)
@@ -679,9 +661,9 @@ def _get_run_inputs(model,
                 assert True
             else:
                 raise Exception(f"Use of SweetPea currently restricted to nback_level = 2")
-        # Else, use local algorithm
         elif inputs_source == Stimuli.KANE_STIMULI:
             assert False, "KANE STIMULI NOT YET SUPPORTED AS INPUTS"
+        # Else, use local algorithm
         else:
             stim_seq, trial_type_seq = generate_stim_sequence(nback_level, num_trials)
             # Return list of corresponding stimulus input vectors
@@ -760,29 +742,47 @@ def train_network(network,
         training_time_str = f'{int(training_time/60)} minutes {int(training_time%60)} seconds'
     print(f'training time: {training_time_str} for {num_epochs} epochs')
     path = network.save(filename=save_weights_to, directory="results")
-    # print(f'max weight: {np.max(nback_model.nodes[FFN_COMPOSITION].nodes[FFN_HIDDEN].afferents[0].matrix.base)}')
     print(f'saved weights to: {save_weights_to}')
     return path
     # print(f'saved weights sample: {network.nodes[FFN_HIDDEN].path_afferents[0].matrix.base[0][:3]}...')
     # network.load(path)
     # print(f'loaded weights sample: {network.nodes[FFN_HIDDEN].path_afferents[0].matrix.base[0][:3]}...')
 
-def test_network(network,
-                 test_set=None,
-                 load_weights_from=None):
+def test_network(network, load_weights_from=None):
+
     print(f"constructing test set for '{network.name}'...")
-    if test_set == None:
-        test_set, conditions, set_size = _get_training_inputs(network=network,
-                                                              num_epochs=1,
-                                                              nback_levels=NBACK_LEVELS)
+    test_set, conditions, set_size = _get_training_inputs(network=network,
+                                                          num_epochs=1,
+                                                          nback_levels=NBACK_LEVELS)
     print(f'total num trials: {set_size}')
+
+    inputs = [(test_set[INPUTS][network.nodes['CURRENT STIMULUS']][i],
+               test_set[INPUTS][network.nodes['RETRIEVED STIMULUS']][i],
+               test_set[INPUTS][network.nodes['CURRENT CONTEXT']][i],
+               test_set[INPUTS][network.nodes['RETRIEVED CONTEXT']][i]) for i in range(set_size)]
+    cxt_distances = [Distance(metric=COSINE)([inputs[i][2],inputs[i][3]]) for i in range(set_size)]
+    targets = list(test_set[TARGETS].values())[0]
+    trial_type_stats = []
+
+    num_items_per_nback_level = int(set_size/NUM_NBACK_LEVELS)
+    for i in range(NUM_NBACK_LEVELS):
+        start = i * num_items_per_nback_level
+        stop = start + num_items_per_nback_level
+        distances_for_level = np.array(cxt_distances[start:stop])
+        conditions_for_level = np.array(conditions[start:stop])
+        for trial_type in TrialTypes:
+            trial_type_stats.append(
+                (f'{NBACK_LEVELS[i]}-back', trial_type.name, trial_type.value,
+                 distances_for_level[np.where(conditions_for_level==trial_type.name)].mean(),
+                 distances_for_level[np.where(conditions_for_level==trial_type.name)].std()))
+
     if load_weights_from:
         print(f"nback_model loading '{FFN_COMPOSITION}' weights from {load_weights_from}...")
         network.load(filename=load_weights_from)
-    network.run(inputs=test_set[INPUTS],
-                report_progress=ReportProgress.ON,
-                )
-    return network.results, list(test_set[TARGETS].values())[0], conditions
+
+    network.run(inputs=test_set[INPUTS], report_progress=ReportProgress.ON)
+
+    return inputs, cxt_distances, targets, conditions, network.results, trial_type_stats
 
 def run_model(model,
               # load_weights_from=None,
@@ -820,7 +820,6 @@ def run_model(model,
     if load_weights_from:
         print(f"nback_model loading '{FFN_COMPOSITION}' weights from {load_weights_from}...")
         ffn.load(filename=load_weights_from)
-    print(f'max weight: {np.max(nback_model.nodes[FFN_COMPOSITION].nodes[FFN_HIDDEN].efferents[0].matrix.base)}')
     print(f"'{model.name}' executing...")
     trial_type_seqs = [None] * NUM_NBACK_LEVELS
     start_time = timeit.default_timer()
@@ -881,10 +880,10 @@ def analyze_results(results, num_trials=NUM_TRIALS, nback_levels=NBACK_LEVELS):
         responses_for_nback_level = [r[0] for r in results[0][i*num_trials:i*num_trials+num_trials]]
         responses_for_nback_level = [MATCH if r[0] > r[1] else NON_MATCH for r in responses_for_nback_level]
         responses_and_trial_types[i] = list(zip(responses_for_nback_level, conditions))
-        for trial_type in TrialTypes:
+        for j, trial_type in enumerate(TrialTypes):
             # relevant_data = [[response,condition] for response,condition in x if condition == trial_type]
             relevant_data = [[response, condition] for response, condition in zip(responses_for_nback_level, conditions)
-                             if condition == trial_type]
+                             if condition == trial_type.value]
 
             # if trial_type in {TrialTypes.MATCH_NO_FOIL, TrialTypes.MATCH_WITH_FOIL}:
             #     #  correct response for a match trial
@@ -896,7 +895,7 @@ def analyze_results(results, num_trials=NUM_TRIALS, nback_levels=NBACK_LEVELS):
             #                             if d[0] is not None].count(NON_MATCH) / (len(relevant_data))
 
             # Report % matches in each condition (should be 1.0 for MATCH trials and 0.0 for NON-MATCH trials
-            stats[i][trial_type] = [d[0] for d in relevant_data
+            stats[i][j] = [d[0] for d in relevant_data
                                     if d[0] is not None].count(MATCH) / (len(relevant_data))
         print(f"nback level {nback_level}:")
         for j, performance in enumerate(stats[i]):
@@ -985,7 +984,7 @@ def _plot_results(response_and_trial_types, stats):
 
 # Only execute if called from command line (i.e., not on import)
 if __name__ == '__main__':
-    if CONSTRUCT:
+    if CONSTRUCT_MODEL:
         nback_model = construct_model()
 
     if TRAIN_FFN:
@@ -1000,10 +999,10 @@ if __name__ == '__main__':
         except:
             weights_filename = f'results/ffn.wts_nep_{NUM_EPOCHS}_lr_{str(LEARNING_RATE).split(".")[1]}.pnl'
             weights_path = Path('/'.join([os.getcwd(), weights_filename]))
-        results, targets, conditions = test_network(nback_model.nodes[FFN_COMPOSITION],
-                                                    load_weights_from = weights_path)
+        inputs, cxt_distances, targets, conditions, results, trial_type_stats = \
+            test_network(nback_model.nodes[FFN_COMPOSITION], load_weights_from = weights_path)
 
-    if RUN:
+    if RUN_MODEL:
         results_path = Path('/'.join([os.getcwd(), f'results/nback.results_nep_{NUM_EPOCHS}_lr'
                                                    f'_{str(LEARNING_RATE).split(".")[1]}.pnl']))
         try:
@@ -1016,7 +1015,7 @@ if __name__ == '__main__':
                             save_results_to= results_path
                             # inputs_source=Stimuli.SWEETPEA,
                             )
-    if ANALYZE:
+    if ANALYZE_RESULTS:
         coded_responses, stats = analyze_results(results,
                                                  num_trials=NUM_TRIALS,
                                                  nback_levels=NBACK_LEVELS)
