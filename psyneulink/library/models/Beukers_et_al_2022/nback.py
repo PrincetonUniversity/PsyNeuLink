@@ -480,6 +480,10 @@ def _get_training_inputs(network:AutodiffComposition,
 
     assert is_iterable(nback_levels) and all([0<i<=MAX_NBACK_LEVELS for i in nback_levels])
     stimuli = _get_stim_set()
+    num_stim = len(stimuli)
+    if num_stim != NUM_STIM:
+        warnings.warn(f"Number of stimuli used for training set ({num_stim}) is not same "
+                      f"as specified in NUM_STIM ({NUM_STIM});  unexpexpected results may occur.")
     context_fct =  DriftOnASphereIntegrator(initializer=np.random.random(CONTEXT_SIZE-1),
                                             noise=CONTEXT_DRIFT_NOISE,
                                             dimension=CONTEXT_SIZE)
@@ -491,68 +495,141 @@ def _get_training_inputs(network:AutodiffComposition,
     current_task = []
     conditions = []
 
-    for n in range(num_training_sets_per_epoch):
-        for nback_level in nback_levels:
-            # Construct one hot encoding for nback level
-            task_input = _get_task_input(nback_level)
-            # Construct an example of each trial type for each stimulus
-            for i in range(len(stimuli)):
-                contexts = []
-                # Get current stimulus and a randomly selected distractor
-                stims = list(stimuli.copy())
-                # Get stim, and remove from stims so distractor can be picked randomly from remaining ones
-                current_stim = stims.pop(i)
-                # Pick distractor randomly from stimuli remaining in set
-                distractor_stim = stims[np.random.randint(0,len(stims))]
+    if generator:
+        def inputs_gen(trial_num):
+            for e in range(num_epochs):
+                for n in range(num_training_sets_per_epoch):
+                    for nback_level in nback_levels:
+                        # Construct one hot encoding for nback level
+                        task_input = _get_task_input(nback_level)
+                        # Construct an example of each trial type for each stimulus
+                        for i in range(num_stim):
+                            contexts = []
+                            # Get current stimulus and a randomly selected distractor
+                            stims = list(stimuli.copy())
+                            # Get stim, and remove from stims so distractor can be picked randomly from remaining ones
+                            current_stim = stims.pop(i)
+                            # Pick distractor randomly from stimuli remaining in set
+                            distractor_stim = stims[np.random.randint(0,len(stims))]
 
-                # Get nback+2 contexts:  [0]=lure; [1]=nback, [nback+1]=current
-                for i in range(nback_level+2):
-                    contexts.append(context_fct(CONTEXT_DRIFT_RATE))
-                # Get current context as last in list
-                current_context = contexts.pop(nback_level+1)
-                # Get nback context as second in list (first is lure)
-                nback_context = contexts.pop(1)
-                distractor_context = contexts[np.random.randint(0,len(contexts))]
+                            # Get nback+2 contexts:  [0]=lure; [1]=nback, [nback+1]=current
+                            for i in range(nback_level+2):
+                                contexts.append(context_fct(CONTEXT_DRIFT_RATE))
+                            # Get current context as last in list
+                            current_context = contexts.pop(nback_level+1)
+                            # Get nback context as second in list (first is lure)
+                            nback_context = contexts.pop(1)
+                            distractor_context = contexts[np.random.randint(0,len(contexts))]
 
-                # Assign retrieved stimulus and context accordingly to trial_type
-                for trial_type in TrialTypes:
-                    stim_current.append(current_stim)
-                    context_current.append(current_context)
-                    # Assign retrieved stimulus
-                    if trial_type in {TrialTypes.MATCH_NO_FOIL, TrialTypes.MATCH_WITH_FOIL}:
-                        stim_retrieved.append(current_stim)
-                    else: # context_lure or non_lure
-                        stim_retrieved.append(distractor_stim)
-                    # Assign retrieved context
-                    if trial_type in {TrialTypes.MATCH_NO_FOIL,TrialTypes.NO_MATCH_NO_FOIL}:
-                        context_retrieved.append(nback_context)
-                    else: # stimulus_lure or non_lure
-                        context_retrieved.append(distractor_context)
-                    # Assign target
-                    if trial_type in {TrialTypes.MATCH_NO_FOIL, TrialTypes.MATCH_WITH_FOIL}:
-                        target.append([1,0])
-                    else:
-                        target.append([0,1])
-                    current_task.append([task_input])
-                    conditions.append(trial_type.name)
+                            # Assign retrieved stimulus and context accordingly to trial_type
+                            for trial_type in TrialTypes:
+                                stim_current = current_stim
+                                context_current = current_context
+                                # Assign retrieved stimulus
+                                if trial_type in {TrialTypes.MATCH_NO_FOIL, TrialTypes.MATCH_WITH_FOIL}:
+                                    stim_retrieved = current_stim
+                                else: # context_lure or non_lure
+                                    stim_retrieved = distractor_stim
+                                # Assign retrieved context
+                                if trial_type in {TrialTypes.MATCH_NO_FOIL,TrialTypes.NO_MATCH_NO_FOIL}:
+                                    context_retrieved = nback_context
+                                else: # stimulus_lure or non_lure
+                                    context_retrieved = distractor_context
+                                current_task = [task_input]
 
-    batch_size = len(target)
-    training_set = {INPUTS: {network.nodes[FFN_STIMULUS_INPUT]: stim_current,
-                             network.nodes[FFN_CONTEXT_INPUT]: context_current,
-                             network.nodes[FFN_STIMULUS_RETRIEVED]: stim_retrieved,
-                             network.nodes[FFN_CONTEXT_RETRIEVED]: context_retrieved,
-                             network.nodes[FFN_TASK]: current_task},
-                    TARGETS: {network.nodes[FFN_OUTPUT]:  target},
+                                yield {network.nodes[FFN_STIMULUS_INPUT]: stim_current,
+                                       network.nodes[FFN_CONTEXT_INPUT]: context_current,
+                                       network.nodes[FFN_STIMULUS_RETRIEVED]: stim_retrieved,
+                                       network.nodes[FFN_CONTEXT_RETRIEVED]: context_retrieved,
+                                       network.nodes[FFN_TASK]: current_task}
+
+
+        def targets_gen(trial_num):
+            for e in range(num_epochs):
+                for n in range(num_training_sets_per_epoch):
+                    for nback_level in nback_levels:
+                        for i in range(num_stim):
+                            for trial_type in TrialTypes:
+                                # Assign target
+                                if trial_type in {TrialTypes.MATCH_NO_FOIL, TrialTypes.MATCH_WITH_FOIL}:
+                                    target = [1,0]
+                                else:
+                                    target = [0,1]
+
+                                yield {network.nodes[FFN_OUTPUT]: target}
+
+        # Get sequence of conditions (for return)
+        for e in range(num_epochs):
+            for n in range(num_training_sets_per_epoch):
+                for nback_level in nback_levels:
+                    for i in range(num_stim):
+                        for trial_type in TrialTypes:
+                            conditions.append(trial_type.name)
+
+        inputs = inputs_gen
+        targets = targets_gen
+        batch_size = num_stim * num_training_sets_per_epoch
+
+    else:
+        for n in range(num_training_sets_per_epoch):
+            for nback_level in nback_levels:
+                # Construct one hot encoding for nback level
+                task_input = _get_task_input(nback_level)
+                # Construct an example of each trial type for each stimulus
+                for i in range(num_stim):
+                    contexts = []
+                    # Get current stimulus and a randomly selected distractor
+                    stims = list(stimuli.copy())
+                    # Get stim, and remove from stims so distractor can be picked randomly from remaining ones
+                    current_stim = stims.pop(i)
+                    # Pick distractor randomly from stimuli remaining in set
+                    distractor_stim = stims[np.random.randint(0,len(stims))]
+
+                    # Get nback+2 contexts:  [0]=lure; [1]=nback, [nback+1]=current
+                    for i in range(nback_level+2):
+                        contexts.append(context_fct(CONTEXT_DRIFT_RATE))
+                    # Get current context as last in list
+                    current_context = contexts.pop(nback_level+1)
+                    # Get nback context as second in list (first is lure)
+                    nback_context = contexts.pop(1)
+                    distractor_context = contexts[np.random.randint(0,len(contexts))]
+
+                    # Assign retrieved stimulus and context accordingly to trial_type
+                    for trial_type in TrialTypes:
+                        stim_current.append(current_stim)
+                        context_current.append(current_context)
+                        # Assign retrieved stimulus
+                        if trial_type in {TrialTypes.MATCH_NO_FOIL, TrialTypes.MATCH_WITH_FOIL}:
+                            stim_retrieved.append(current_stim)
+                        else: # context_lure or non_lure
+                            stim_retrieved.append(distractor_stim)
+                        # Assign retrieved context
+                        if trial_type in {TrialTypes.MATCH_NO_FOIL,TrialTypes.NO_MATCH_NO_FOIL}:
+                            context_retrieved.append(nback_context)
+                        else: # stimulus_lure or non_lure
+                            context_retrieved.append(distractor_context)
+                        # Assign target
+                        if trial_type in {TrialTypes.MATCH_NO_FOIL, TrialTypes.MATCH_WITH_FOIL}:
+                            target.append([1,0])
+                        else:
+                            target.append([0,1])
+                        current_task.append([task_input])
+                        conditions.append(trial_type.name)
+
+        inputs = {network.nodes[FFN_STIMULUS_INPUT]: stim_current,
+                  network.nodes[FFN_CONTEXT_INPUT]: context_current,
+                  network.nodes[FFN_STIMULUS_RETRIEVED]: stim_retrieved,
+                  network.nodes[FFN_CONTEXT_RETRIEVED]: context_retrieved,
+                  network.nodes[FFN_TASK]: current_task}
+        targets = {network.nodes[FFN_OUTPUT]: target}
+        batch_size = len(target)
+
+    training_set = {INPUTS: inputs,
+                    TARGETS: targets,
                     EPOCHS: num_epochs}
 
-    def training_set_gen(trial_num):
 
-        pass
-
-    if generator:
-        return training_set_gen
-    else:
-        return training_set, conditions, batch_size,
+    return training_set, conditions, batch_size,
 
 
 def _get_run_inputs(model,
