@@ -735,12 +735,17 @@ def train_network(network,
     """
     print(f"\nconstructing training set for '{network.name}'...")
     if training_set == None:
-        training_set, conditions, batch_size = _get_training_inputs(network=network,
-                                                                    num_epochs=num_epochs,
-                                                                    nback_levels=NBACK_LEVELS)
+        training_set, conditions, batch_size = \
+            _get_training_inputs(network=network,
+                                 num_training_sets_per_epoch=NUM_TRAINING_SETS_PER_EPOCH,
+                                 num_epochs=num_epochs,
+                                 nback_levels=NBACK_LEVELS)
     minibatch_size = minibatch_size or batch_size
-    print(f'num training stimuli per training set (minibatch size): {minibatch_size}')
-    print(f'num weight updates (num_epochs): {num_epochs}')
+    # print(f'training stimuli per training set: {len(list(training_set[TARGETS].values())[0])}')
+    print(f'num training stimuli per training set: {minibatch_size//NUM_TRAINING_SETS_PER_EPOCH}')
+    print(f'num training sets per epoch: {NUM_TRAINING_SETS_PER_EPOCH}')
+    print(f'total num training stimuli per epoch: {minibatch_size}')
+    print(f'num epochs (weight updates): {num_epochs}')
     print(f'total num trials: {num_epochs*minibatch_size}')
     print(f"\ntraining '{network.name}' (started at {time.localtime()[3]}:{time.localtime()[4]})...")
     start_time = timeit.default_timer()
