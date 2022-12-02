@@ -156,6 +156,7 @@ COMMENT
 
 import os
 import random
+import time
 import timeit
 import numpy as np
 from enum import Enum, IntEnum
@@ -732,7 +733,7 @@ def train_network(network,
     -------
     Path containing saved weights for matrices of feedforward Projections in network.
     """
-    print(f"constructing training set for '{network.name}'...")
+    print(f"\nconstructing training set for '{network.name}'...")
     if training_set == None:
         training_set, conditions, batch_size = _get_training_inputs(network=network,
                                                                     num_epochs=num_epochs,
@@ -741,7 +742,7 @@ def train_network(network,
     print(f'num training stimuli per training set (minibatch size): {minibatch_size}')
     print(f'num weight updates (num_epochs): {num_epochs}')
     print(f'total num trials: {num_epochs*minibatch_size}')
-    print(f"\ntraining '{network.name}'...")
+    print(f"\ntraining '{network.name}' (started at {time.localtime()[3]}:{time.localtime()[4]})...")
     start_time = timeit.default_timer()
     network.learn(inputs=training_set,
                   minibatch_size=minibatch_size,
