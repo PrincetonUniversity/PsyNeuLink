@@ -738,7 +738,8 @@ def train_network(network,
                                                                     num_epochs=num_epochs,
                                                                     nback_levels=NBACK_LEVELS)
     minibatch_size = minibatch_size or batch_size
-    print(f'num training stimuli per training set (minibatch size): {minibatch_size}')
+    # print(f'training stimuli per training set: {len(list(training_set[TARGETS].values())[0])}')
+    print(f'num training stimuli per epoch (weight updates): {minibatch_size}')
     print(f'num weight updates (num_epochs): {num_epochs}')
     print(f'total num trials: {num_epochs*minibatch_size}')
     print(f"\ntraining '{network.name}'...")
