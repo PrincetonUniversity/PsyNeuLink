@@ -450,7 +450,9 @@ def _get_task_input(nback_level):
 def _get_training_inputs(network:AutodiffComposition,
                          num_training_sets_per_epoch:int=NUM_TRAINING_SETS_PER_EPOCH,
                          num_epochs:int=1,
-                         nback_levels:int=NBACK_LEVELS)->(dict, list, int):
+                         nback_levels:int=NBACK_LEVELS,
+                         generator:bool=True
+                         )->(dict, list, int):
     """Construct set of training stimuli used by ffn.learn() in train_network()
     Construct one example of each condition:
         match:  stim_current = stim_retrieved  and context_current = context_retrieved
@@ -469,6 +471,8 @@ def _get_training_inputs(network:AutodiffComposition,
     nback_levels: list[int] : default NBACK_LEVELS
         list of n-back levels for which to generate training sets;
         nback_levels themselves must be specified in the global NBACK_LEVELS
+    generator: bool : True
+        return generator rather than explicit list of training stimuli
     Return
     ------
     (dict, list, int) : training set, conditions (list of TrialTypes), and batch size
@@ -541,7 +545,15 @@ def _get_training_inputs(network:AutodiffComposition,
                     TARGETS: {network.nodes[FFN_OUTPUT]:  target},
                     EPOCHS: num_epochs}
 
-    return training_set, conditions, batch_size,
+    def training_set_gen(trial_num):
+
+        pass
+
+    if generator:
+        return training_set_gen
+    else:
+        return training_set, conditions, batch_size,
+
 
 def _get_run_inputs(model,
                     nback_level,
