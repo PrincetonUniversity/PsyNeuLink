@@ -868,6 +868,7 @@ def setup_mersenne_twister(ctx):
     gen_int = _setup_mt_rand_integer(ctx, state_ty)
     gen_float = _setup_mt_rand_float(ctx, state_ty, gen_int)
     _setup_mt_rand_normal(ctx, state_ty, gen_float)
+    _setup_rand_binomial(ctx, state_ty, gen_float, prefix="mt")
 
 
 _PHILOX_DEFAULT_ROUNDS = 10
@@ -1877,8 +1878,9 @@ def _setup_philox_rand_normal(ctx, state_ty, gen_float, gen_int, wi_data, ki_dat
     fptype = gen_float.args[1].type.pointee
     itype = gen_int.args[1].type.pointee
     if fptype != ctx.float_ty:
-        # We don't have numeric halpers available for the desired type
+        # We don't have numeric helpers available for the desired type
         return
+
     builder = _setup_builtin_func_builder(ctx, "philox_rand_normal",
                                          (state_ty.as_pointer(), fptype.as_pointer()))
     state, out = builder.function.args
@@ -1988,6 +1990,50 @@ def _setup_philox_rand_normal(ctx, state_ty, gen_float, gen_int, wi_data, ki_dat
 
     builder.branch(loop_block)
 
+def _setup_rand_binomial(ctx, state_ty, gen_float, prefix):
+    fptype = gen_float.args[1].type.pointee
+    if fptype != ctx.float_ty:
+        # We don't have numeric helpers available for the desired type
+        return
+
+    args = [state_ty.as_pointer(), # state
+            ctx.int32_ty.as_pointer(), # N - total number of draws
+            fptype.as_pointer(),  # p - prob of success
+            ctx.int32_ty.as_pointer()] # output
+
+    builder = _setup_builtin_func_builder(ctx, prefix + "_rand_binomial", args)
+    state, n_ptr, p_ptr, out_ptr = builder.function.args
+
+    n = builder.load(n_ptr)
+    p = builder.load(p_ptr)
+    q = builder.fsub(p.type(1), p)
+
+    success = out_ptr.type.pointee(1)
+    failure = out_ptr.type.pointee(0)
+
+    # N > 1 (!=1) is not supported
+    is_large_n = builder.icmp_unsigned("!=", n, n.type(1))
+    with builder.if_then(is_large_n):
+        builder.store(out_ptr.type.pointee(0), out_ptr)
+        builder.ret_void()
+
+    uniform_draw_ptr = builder.alloca(fptype, name="tmp_fp")
+    builder.call(gen_float, [state, uniform_draw_ptr])
+    draw = builder.load(uniform_draw_ptr)
+
+    # If 'p' is large enough, success == draw < p
+    is_less_than_p = builder.fcmp_ordered("<", draw, p)
+    large_p_result = builder.select(is_less_than_p, success, failure)
+
+
+    # The draw check is reverted for small p
+    is_less_than_q = builder.fcmp_ordered("<", draw, q)
+    small_p_result = builder.select(is_less_than_q, failure, success)
+
+    is_small_p = builder.fcmp_ordered("<=", p, p.type(0.5))
+    result = builder.select(is_small_p, small_p_result, large_p_result)
+    builder.store(result, out_ptr)
+    builder.ret_void()
 
 def get_philox_state_struct(ctx):
     int64_ty = ir.IntType(64)
@@ -2010,7 +2056,9 @@ def setup_philox(ctx):
     gen_int64 = _setup_philox_rand_int64(ctx, state_ty)
     gen_double = _setup_philox_rand_double(ctx, state_ty, gen_int64)
     _setup_philox_rand_normal(ctx, state_ty, gen_double, gen_int64, _wi_double_data, _ki_i64_data, _fi_double_data)
+    _setup_rand_binomial(ctx, state_ty, gen_double, prefix="philox")
 
     gen_int32 = _setup_philox_rand_int32(ctx, state_ty, gen_int64)
     gen_float = _setup_philox_rand_float(ctx, state_ty, gen_int32)
     _setup_philox_rand_normal(ctx, state_ty, gen_float, gen_int32, _wi_float_data, _ki_i32_data, _fi_float_data)
+    _setup_rand_binomial(ctx, state_ty, gen_float, prefix="philox")
