@@ -159,6 +159,7 @@ import random
 import time
 import timeit
 import numpy as np
+from typing import Union
 from enum import Enum, IntEnum
 from pathlib import Path
 
@@ -251,16 +252,16 @@ class Stimuli(Enum):
 
 #region ===================================== MODEL CONSTRUCTION =======================================================
 
-def construct_model(stim_size = STIM_SIZE,
-                    context_size = CONTEXT_SIZE,
-                    hidden_size = HIDDEN_SIZE,
-                    num_nback_levels = NUM_NBACK_LEVELS,
-                    context_drift_noise = CONTEXT_DRIFT_NOISE,
-                    retrievel_softmax_temp = RETRIEVAL_SOFTMAX_TEMP,
-                    retrieval_hazard_rate = RETRIEVAL_HAZARD_RATE,
-                    retrieval_stimulus_weight = RETRIEVAL_STIM_WEIGHT,
-                    retrieval_context_weight = RETRIEVAL_CONTEXT_WEIGHT,
-                    ):
+def construct_model(stim_size:int = STIM_SIZE,
+                    context_size:int = CONTEXT_SIZE,
+                    hidden_size:int = HIDDEN_SIZE,
+                    num_nback_levels:int = NUM_NBACK_LEVELS,
+                    context_drift_noise:float = CONTEXT_DRIFT_NOISE,
+                    retrievel_softmax_temp:float = RETRIEVAL_SOFTMAX_TEMP,
+                    retrieval_hazard_rate:float = RETRIEVAL_HAZARD_RATE,
+                    retrieval_stimulus_weight:float = RETRIEVAL_STIM_WEIGHT,
+                    retrieval_context_weight:float = RETRIEVAL_CONTEXT_WEIGHT,
+                    )->Composition:
     """**Construct nback_model**
 
     Arguments
@@ -487,13 +488,6 @@ def _get_training_inputs(network:AutodiffComposition,
     context_fct =  DriftOnASphereIntegrator(initializer=np.random.random(CONTEXT_SIZE-1),
                                             noise=CONTEXT_DRIFT_NOISE,
                                             dimension=CONTEXT_SIZE)
-    # FIX: GENERATOR EXAMPLE
-    # def g_f():
-    #     yield {"inputs": inputs_dict,
-    #            "targets": targets_dict,
-    #            "epochs": eps}
-    # g = g_f()
-    # sem_net_autodiff.learn(inputs=g_f)
 
     def trial_gen():
         stim_current = []
@@ -560,215 +554,30 @@ def _get_training_inputs(network:AutodiffComposition,
 
         yield training_set
 
+    # Get training_set
     if return_generator:
         training_set = trial_gen()
     else:
         training_set = next(trial_gen())
 
-    # Get sequence of conditions (for return)
+    # Get sequence of conditions
     conditions = []
     for n in range(num_training_sets_per_epoch):
         for l in nback_levels:
             for i in range(num_stim):
                 for trial_type in TrialTypes:
                     conditions.append(trial_type.name)
+
     batch_size = num_stim * len(TrialTypes) * len(nback_levels) * num_training_sets_per_epoch
-
-        # def trial_gen():
-        #     for t in range(num_training_sets_per_epoch):
-        #         for nback_level in nback_levels:
-        #             # Construct one hot encoding for nback level
-        #             task_input = _get_task_input(nback_level)
-        #             # Construct an example of each trial type for each stimulus
-        #             for i in range(num_stim):
-        #                 contexts = []
-        #                 # Get current stimulus and a randomly selected distractor
-        #                 stims = list(stimuli.copy())
-        #                 # Get stim, and remove from stims so distractor can be picked randomly from remaining ones
-        #                 current_stim = stims.pop(i)
-        #                 # Pick distractor randomly from stimuli remaining in set
-        #                 distractor_stim = stims[np.random.randint(0,len(stims))]
-        #
-        #                 # Get nback+2 contexts:  [0]=lure; [1]=nback, [nback+1]=current
-        #                 for i in range(nback_level+2):
-        #                     contexts.append(context_fct(CONTEXT_DRIFT_RATE))
-        #                 # Get current context as last in list
-        #                 current_context = contexts.pop(nback_level+1)
-        #                 # Get nback context as second in list (first is lure)
-        #                 nback_context = contexts.pop(1)
-        #                 distractor_context = contexts[np.random.randint(0,len(contexts))]
-        #
-        #                 # Assign retrieved stimulus and context accordingly to trial_type
-        #                 for trial_type in TrialTypes:
-        #                     stim_current = current_stim
-        #                     context_current = current_context
-        #                     # Assign retrieved stimulus
-        #                     if trial_type in {TrialTypes.MATCH_NO_FOIL, TrialTypes.MATCH_WITH_FOIL}:
-        #                         stim_retrieved = current_stim
-        #                     else: # context_lure or non_lure
-        #                         stim_retrieved = distractor_stim
-        #                     # Assign retrieved context
-        #                     if trial_type in {TrialTypes.MATCH_NO_FOIL,TrialTypes.NO_MATCH_NO_FOIL}:
-        #                         context_retrieved = nback_context
-        #                     else: # stimulus_lure or non_lure
-        #                         context_retrieved = distractor_context
-        #                     current_task = [task_input]
-        #                     # Assign target
-        #                     if trial_type in {TrialTypes.MATCH_NO_FOIL, TrialTypes.MATCH_WITH_FOIL}:
-        #                         target = [1,0]
-        #                     else:
-        #                         target = [0,1]
-        #
-        #                     yield {INPUTS: {network.nodes[FFN_STIMULUS_INPUT]: stim_current,
-        #                                     network.nodes[FFN_CONTEXT_INPUT]: context_current,
-        #                                     network.nodes[FFN_STIMULUS_RETRIEVED]: stim_retrieved,
-        #                                     network.nodes[FFN_CONTEXT_RETRIEVED]: context_retrieved,
-        #                                     network.nodes[FFN_TASK]: current_task},
-        #                            TARGETS: {network.nodes[FFN_OUTPUT]: target},
-        #                            EPOCHS: num_epochs}
-
-        # def inputs_gen():
-        #     for e in range(num_epochs):
-        #         for n in range(num_training_sets_per_epoch):
-        #             for nback_level in nback_levels:
-        #                 # Construct one hot encoding for nback level
-        #                 task_input = _get_task_input(nback_level)
-        #                 # Construct an example of each trial type for each stimulus
-        #                 for i in range(num_stim):
-        #                     contexts = []
-        #                     # Get current stimulus and a randomly selected distractor
-        #                     stims = list(stimuli.copy())
-        #                     # Get stim, and remove from stims so distractor can be picked randomly from remaining ones
-        #                     current_stim = stims.pop(i)
-        #                     # Pick distractor randomly from stimuli remaining in set
-        #                     distractor_stim = stims[np.random.randint(0,len(stims))]
-        #
-        #                     # Get nback+2 contexts:  [0]=lure; [1]=nback, [nback+1]=current
-        #                     for i in range(nback_level+2):
-        #                         contexts.append(context_fct(CONTEXT_DRIFT_RATE))
-        #                     # Get current context as last in list
-        #                     current_context = contexts.pop(nback_level+1)
-        #                     # Get nback context as second in list (first is lure)
-        #                     nback_context = contexts.pop(1)
-        #                     distractor_context = contexts[np.random.randint(0,len(contexts))]
-        #
-        #                     # Assign retrieved stimulus and context accordingly to trial_type
-        #                     for trial_type in TrialTypes:
-        #                         stim_current = current_stim
-        #                         context_current = current_context
-        #                         # Assign retrieved stimulus
-        #                         if trial_type in {TrialTypes.MATCH_NO_FOIL, TrialTypes.MATCH_WITH_FOIL}:
-        #                             stim_retrieved = current_stim
-        #                         else: # context_lure or non_lure
-        #                             stim_retrieved = distractor_stim
-        #                         # Assign retrieved context
-        #                         if trial_type in {TrialTypes.MATCH_NO_FOIL,TrialTypes.NO_MATCH_NO_FOIL}:
-        #                             context_retrieved = nback_context
-        #                         else: # stimulus_lure or non_lure
-        #                             context_retrieved = distractor_context
-        #                         current_task = [task_input]
-        #
-        #                         yield {network.nodes[FFN_STIMULUS_INPUT]: stim_current,
-        #                                network.nodes[FFN_CONTEXT_INPUT]: context_current,
-        #                                network.nodes[FFN_STIMULUS_RETRIEVED]: stim_retrieved,
-        #                                network.nodes[FFN_CONTEXT_RETRIEVED]: context_retrieved,
-        #                                network.nodes[FFN_TASK]: current_task}
-        #
-        # def targets_gen():
-        #     for e in range(num_epochs):
-        #         for n in range(num_training_sets_per_epoch):
-        #             for nback_level in nback_levels:
-        #                 for i in range(num_stim):
-        #                     for trial_type in TrialTypes:
-        #                         # Assign target
-        #                         if trial_type in {TrialTypes.MATCH_NO_FOIL, TrialTypes.MATCH_WITH_FOIL}:
-        #                             target = [1,0]
-        #                         else:
-        #                             target = [0,1]
-        #
-        #                         yield {network.nodes[FFN_OUTPUT]: target}
-        #
-        # inputs = inputs_gen()
-        # targets = targets_gen()
-
-        # # Generate generator
-        # training_set = trial_gen
-        # # Get sequence of conditions (for return)
-        # for e in range(num_epochs):
-        #     for n in range(num_training_sets_per_epoch):
-        #         for nback_level in nback_levels:
-        #             for i in range(num_stim):
-        #                 for trial_type in TrialTypes:
-        #                     conditions.append(trial_type.name)
-        # batch_size = num_stim * num_training_sets_per_epoch
-
-    # else:
-    #     for n in range(num_training_sets_per_epoch):
-    #         for nback_level in nback_levels:
-    #             # Construct one hot encoding for nback level
-    #             task_input = _get_task_input(nback_level)
-    #             # Construct an example of each trial type for each stimulus
-    #             for i in range(num_stim):
-    #                 contexts = []
-    #                 # Get current stimulus and a randomly selected distractor
-    #                 stims = list(stimuli.copy())
-    #                 # Get stim, and remove from stims so distractor can be picked randomly from remaining ones
-    #                 current_stim = stims.pop(i)
-    #                 # Pick distractor randomly from stimuli remaining in set
-    #                 distractor_stim = stims[np.random.randint(0,len(stims))]
-    #
-    #                 # Get nback+2 contexts:  [0]=lure; [1]=nback, [nback+1]=current
-    #                 for i in range(nback_level+2):
-    #                     contexts.append(context_fct(CONTEXT_DRIFT_RATE))
-    #                 # Get current context as last in list
-    #                 current_context = contexts.pop(nback_level+1)
-    #                 # Get nback context as second in list (first is lure)
-    #                 nback_context = contexts.pop(1)
-    #                 distractor_context = contexts[np.random.randint(0,len(contexts))]
-    #
-    #                 # Assign retrieved stimulus and context accordingly to trial_type
-    #                 for trial_type in TrialTypes:
-    #                     stim_current.append(current_stim)
-    #                     context_current.append(current_context)
-    #                     # Assign retrieved stimulus
-    #                     if trial_type in {TrialTypes.MATCH_NO_FOIL, TrialTypes.MATCH_WITH_FOIL}:
-    #                         stim_retrieved.append(current_stim)
-    #                     else: # context_lure or non_lure
-    #                         stim_retrieved.append(distractor_stim)
-    #                     # Assign retrieved context
-    #                     if trial_type in {TrialTypes.MATCH_NO_FOIL,TrialTypes.NO_MATCH_NO_FOIL}:
-    #                         context_retrieved.append(nback_context)
-    #                     else: # stimulus_lure or non_lure
-    #                         context_retrieved.append(distractor_context)
-    #                     # Assign target
-    #                     if trial_type in {TrialTypes.MATCH_NO_FOIL, TrialTypes.MATCH_WITH_FOIL}:
-    #                         target.append([1,0])
-    #                     else:
-    #                         target.append([0,1])
-    #                     current_task.append([task_input])
-    #                     conditions.append(trial_type.name)
-    #
-    #     inputs = {network.nodes[FFN_STIMULUS_INPUT]: stim_current,
-    #               network.nodes[FFN_CONTEXT_INPUT]: context_current,
-    #               network.nodes[FFN_STIMULUS_RETRIEVED]: stim_retrieved,
-    #               network.nodes[FFN_CONTEXT_RETRIEVED]: context_retrieved,
-    #               network.nodes[FFN_TASK]: current_task}
-    #     targets = {network.nodes[FFN_OUTPUT]: target}
-    #     training_set = {INPUTS: inputs,
-    #                     TARGETS: targets,
-    #                     EPOCHS: num_epochs}
-    #     batch_size = len(target)
 
     return training_set, conditions, batch_size,
 
-
 def _get_run_inputs(model,
-                    nback_level,
-                    context_drift_rate=CONTEXT_DRIFT_RATE,
-                    num_stim=NUM_STIM,
-                    num_trials=NUM_TRIALS,
-                    mini_blocks=True,
-                    inputs_source=None):
+                    nback_level:int,
+                    context_drift_rate:float=CONTEXT_DRIFT_RATE,
+                    num_trials:int=NUM_TRIALS,
+                    mini_blocks:bool=True,
+                    inputs_source:Stimuli=None)->(dict,list):
     """Construct set of stimulus inputs for run_model(), balancing across four conditions.
     Trial_type assignments:
       - trial_types are assigned to subseqs of nback_level+1 stimuli that are concatenated to form the full trial seq
@@ -919,12 +728,13 @@ def _get_run_inputs(model,
 
 #region ================================== MODEL EXECUTION METHODS =====================================================
 
-def train_network(network,
-                  training_set=None,
-                  minibatch_size=MINIBATCH_SIZE,
-                  learning_rate=LEARNING_RATE,
-                  num_epochs=NUM_EPOCHS,
-                  save_weights_to=None):
+def train_network(network:AutodiffComposition,
+                  training_set:dict=None,
+                  minibatch_size:int=MINIBATCH_SIZE,
+                  learning_rate:float=LEARNING_RATE,
+                  num_epochs:int=NUM_EPOCHS,
+                  save_weights_to:Union[Path,str,None]=None
+                  )->Path:
     """**Train feedforward network** on example stimulus sequences for each condition.
 
     Arguments
@@ -995,7 +805,9 @@ def train_network(network,
     # network.load(path)
     # print(f'loaded weights sample: {network.nodes[FFN_HIDDEN].path_afferents[0].matrix.base[0][:3]}...')
 
-def test_network(network, load_weights_from=None):
+def test_network(network:AutodiffComposition,
+                 load_weights_from:Union[Path,str,None]=None
+                 )->(dict,list,list,list,list,list):
 
     print(f"constructing test set for '{network.name}'...")
     test_set, conditions, set_size = _get_training_inputs(network=network,
@@ -1033,15 +845,14 @@ def test_network(network, load_weights_from=None):
     return inputs, cxt_distances, targets, conditions, network.results, trial_type_stats
 
 def run_model(model,
-              # load_weights_from=None,
-              load_weights_from=None,
-              context_drift_rate=CONTEXT_DRIFT_RATE,
-              num_trials=NUM_TRIALS,
-              inputs_source=None,
-              report_output=REPORT_OUTPUT,
-              report_progress=REPORT_PROGRESS,
-              animate=ANIMATE,
-              save_results_to=None
+              load_weights_from:Union[Path,str,None]=None,
+              context_drift_rate:float=CONTEXT_DRIFT_RATE,
+              num_trials:int=NUM_TRIALS,
+              inputs_source:Stimuli=None,
+              report_output:ReportOutput=REPORT_OUTPUT,
+              report_progress:ReportProgress=REPORT_PROGRESS,
+              animate:Union[dict,bool]=ANIMATE,
+              save_results_to:Union[Path,str,None]=None
               )->list:
     """**Run model** for all nback levels with a specified context drift rate and number of trials
 
@@ -1105,7 +916,10 @@ def run_model(model,
 
 #region ================================= MODEL PERFORMANCE ANALYSIS ===================================================
 
-def analyze_results(results, num_trials=NUM_TRIALS, nback_levels=NBACK_LEVELS):
+def analyze_results(results:list,
+                    num_trials:int=NUM_TRIALS,
+                    nback_levels:list=NBACK_LEVELS
+                    )->(dict,dict):
     """**Analyze and plot results** of executed model.
 
     Arguments
