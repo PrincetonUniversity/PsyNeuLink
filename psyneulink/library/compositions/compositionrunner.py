@@ -223,7 +223,6 @@ class CompositionRunner():
             # (Passing num_trials * stim_epoch + 1 works)
             run_trials = num_trials * stim_epoch if self._is_llvm_mode else None
 
-            # # MODIFIED 11/30/22 OLD:
             self._composition.run(inputs=minibatched_input,
                                   num_trials=run_trials,
                                   skip_initialization=skip_initialization,
@@ -232,49 +231,6 @@ class CompositionRunner():
                                   context=context,
                                   **kwargs)
             skip_initialization = True
-            # # MODIFIED 11/30/22 NEW:
-            # with Report(self._composition,
-            #             report_progress=report_progress,
-            #             report_to_devices=report_to_devices,
-            #             context=context) as report:
-            #
-            #     report_num = report.start_report(self._composition, num_trials, context)
-            #
-            #     report(self._composition,
-            #            [LEARN_REPORT, PROGRESS_REPORT],
-            #            report_num=report_num,
-            #            scheduler=self._composition.scheduler,
-            #            content='run_start',
-            #            context=context)
-            #
-            #     self._composition.run(inputs=minibatched_input,
-            #                           num_trials=run_trials,
-            #                           skip_initialization=skip_initialization,
-            #                           skip_analyze_graph=True,
-            #                           execution_mode=execution_mode,
-            #                           context=context,
-            #                           **kwargs)
-            #     skip_initialization = True
-            #
-            #     report(self._composition,
-            #            [LEARN_REPORT, PROGRESS_REPORT],
-            #            report_num=report_num,
-            #            scheduler=self._composition.scheduler,
-            #            content='run_end',
-            #            context=context,
-            #            node=self)
-            # # MODIFIED 11/30/22 NEWER:
-            # self._composition.run(inputs=minibatched_input,
-            #                       num_trials=run_trials,
-            #                       skip_initialization=skip_initialization,
-            #                       skip_analyze_graph=True,
-            #                       execution_mode=execution_mode,
-            #                       report_progress=report_progress,
-            #                       report_to_devices=report_to_devices,
-            #                       context=context,
-            #                       **kwargs)
-            # skip_initialization = True
-            # MODIFIED 11/30/22 END
 
         num_epoch_results = num_trials // minibatch_size # number of results expected from final epoch
         # return results from last epoch
