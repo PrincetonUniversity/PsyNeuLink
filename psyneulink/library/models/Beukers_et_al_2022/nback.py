@@ -203,7 +203,7 @@ RETRIEVAL_CONTEXT_WEIGHT = 1-RETRIEVAL_STIM_WEIGHT # weighting of context field 
 # Training parameters:
 NUM_TRAINING_SETS_PER_EPOCH = 1
 MINIBATCH_SIZE=None
-NUM_EPOCHS= 6250  # 20000  # nback-paper: 400,000 @ one trial per epoch = 6,250 @ 64 trials per epoch
+NUM_EPOCHS= 12500 # 6250  # 20000  # nback-paper: 400,000 @ one trial per epoch = 6,250 @ 64 trials per epoch
 LEARNING_RATE=0.001  # nback-paper: .001
 
 # Execution parameters:
@@ -539,7 +539,6 @@ def _get_training_inputs(network:AutodiffComposition,
                         else:
                             target.append([0,1])
                         current_task.append([task_input])
-                        conditions.append(trial_type.name)
 
         inputs = {network.nodes[FFN_STIMULUS_INPUT]: stim_current,
                   network.nodes[FFN_CONTEXT_INPUT]: context_current,
@@ -842,7 +841,10 @@ def test_network(network:AutodiffComposition,
 
     network.run(inputs=test_set[INPUTS], report_progress=ReportProgress.ON)
 
-    return inputs, cxt_distances, targets, conditions, network.results, trial_type_stats
+    if ANALYZE_RESULTS:
+        coded_responses, stats = analyze_results([network.results,conditions], test=True)
+
+    return inputs, cxt_distances, targets, conditions, network.results, trial_type_stats, coded_responses, stats
 
 def run_model(model,
               load_weights_from:Union[Path,str,None]=None,
@@ -911,14 +913,16 @@ def run_model(model,
     if save_results_to:
         np.save(save_results_to, results)
     # print(f'results: \n{model.results}')
-    return results
+    if ANALYZE_RESULTS:
+        coded_responses, stats = analyze_results(results, test=False)
+    return results, coded_responses, stats
 #endregion
 
 #region ================================= MODEL PERFORMANCE ANALYSIS ===================================================
 
 def analyze_results(results:list,
-                    num_trials:int=NUM_TRIALS,
-                    nback_levels:list=NBACK_LEVELS
+                    nback_levels:list=NBACK_LEVELS,
+                    test:bool=False
                     )->(dict,dict):
     """**Analyze and plot results** of executed model.
 
@@ -935,33 +939,47 @@ def analyze_results(results:list,
     stats = np.zeros((len(nback_levels),num_trial_types))
     MATCH = 'match'
     NON_MATCH = 'non-match'
+    num_trials = int(len(results[0])/len(nback_levels))
 
-    for i, nback_level in enumerate(nback_levels):
-        conditions = results[1][i]
-        # Code responses for given nback_level as 1 (match) or 0 (non-match)
-        responses_for_nback_level = [r[0] for r in results[0][i*num_trials:i*num_trials+num_trials]]
-        responses_for_nback_level = [MATCH if r[0] > r[1] else NON_MATCH for r in responses_for_nback_level]
-        responses_and_trial_types[i] = list(zip(responses_for_nback_level, conditions))
-        for j, trial_type in enumerate(TrialTypes):
-            # relevant_data = [[response,condition] for response,condition in x if condition == trial_type]
-            relevant_data = [[response, condition] for response, condition in zip(responses_for_nback_level, conditions)
-                             if condition == trial_type.value]
+    # FOR TEST
+    if test:
+        print(f"\n\nTest results (of ffn on training set):")
+        for i, nback_level in enumerate(nback_levels):
+            # conditions = results[1][i]
+            conditions = results[1]
+            # Code responses for given nback_level as 1 (match) or 0 (non-match)
+            responses_for_nback_level = [r[0] for r in results[0][i*num_trials:i*num_trials+num_trials]]
+            responses_for_nback_level = [MATCH if r[0] > r[1] else NON_MATCH for r in responses_for_nback_level]
+            responses_and_trial_types[i] = list(zip(responses_for_nback_level, conditions))
+            for j, trial_type in enumerate(TrialTypes):
+                relevant_data = [[response, condition] for response, condition in zip(responses_for_nback_level, conditions)
+                                 if condition == trial_type.name]
+                # Report % matches in each condition (should be 1.0 for MATCH trials and 0.0 for NON-MATCH trials
+                stats[i][j] = [d[0] for d in relevant_data
+                                        if d[0] is not None].count(MATCH) / (len(relevant_data))
+            print(f"nback level {nback_level}:")
+            for j, performance in enumerate(stats[i]):
+                print(f"\t{list(TrialTypes)[j].name}: {performance:.1f}")
 
-            # if trial_type in {TrialTypes.MATCH_NO_FOIL, TrialTypes.MATCH_WITH_FOIL}:
-            #     #  correct response for a match trial
-            #     stats[i][trial_type] = [d[0] for d in relevant_data
-            #                             if d[0] is not None].count(MATCH) / (len(relevant_data))
-            # else:
-            #     # correct response for a non-match trial
-            #     stats[i][trial_type] = [d[0] for d in relevant_data
-            #                             if d[0] is not None].count(NON_MATCH) / (len(relevant_data))
-
-            # Report % matches in each condition (should be 1.0 for MATCH trials and 0.0 for NON-MATCH trials
-            stats[i][j] = [d[0] for d in relevant_data
-                                    if d[0] is not None].count(MATCH) / (len(relevant_data))
-        print(f"nback level {nback_level}:")
-        for j, performance in enumerate(stats[i]):
-            print(f"\t{list(TrialTypes)[j].name}: {performance:.1f}")
+    # FOR RUN
+    else:
+        print(f"\n\nTest results (running full model on experimental sequence):")
+        for i, nback_level in enumerate(nback_levels):
+            conditions = results[1][i]
+            # Code responses for given nback_level as 1 (match) or 0 (non-match)
+            responses_for_nback_level = [r[0] for r in results[0][i*num_trials:i*num_trials+num_trials]]
+            responses_for_nback_level = [MATCH if r[0] > r[1] else NON_MATCH for r in responses_for_nback_level]
+            responses_and_trial_types[i] = list(zip(responses_for_nback_level, conditions))
+            for j, trial_type in enumerate(TrialTypes):
+                relevant_data = [[response, condition] for response, condition in zip(responses_for_nback_level,
+                                                                                      conditions)
+                                 if condition == trial_type.value]
+                # Report % matches in each condition (should be 1.0 for MATCH trials and 0.0 for NON-MATCH trials
+                stats[i][j] = [d[0] for d in relevant_data
+                                        if d[0] is not None].count(MATCH) / (len(relevant_data))
+            print(f"nback level {nback_level}:")
+            for j, performance in enumerate(stats[i]):
+                print(f"\t{list(TrialTypes)[j].name}: {performance:.1f}")
 
     data_dict = {k:v for k,v in zip(nback_levels, responses_and_trial_types)}
     stats_dict = {}
@@ -1037,9 +1055,8 @@ def _plot_results(response_and_trial_types, stats):
 
     plt.savefig('figures/EMmetrics-%s-t%i.jpg'%(mtag,tstamp))
     plt.savefig('figures/EMmetrics_yerr-%s-t%i.svg'%(mtag,tstamp))
-
-
 #endregion
+
 
 #region ===================================== SCRIPT EXECUTION =========================================================
 # Construct, train and/or run model based on settings at top of script
@@ -1061,10 +1078,10 @@ if __name__ == '__main__':
         except:
             weights_filename = f'results/ffn.wts_nep_{NUM_EPOCHS}_lr_{str(LEARNING_RATE).split(".")[1]}.pnl'
             weights_path = Path('/'.join([os.getcwd(), weights_filename]))
-        inputs, cxt_distances, targets, conditions, results, trial_type_stats = \
+
+        inputs, cxt_distances, targets, conditions, results, trial_type_stats, coded_responses, stats = \
             test_network(nback_model.nodes[FFN_COMPOSITION], load_weights_from = weights_path)
-        # results = np.array([results, conditions], dtype=object)
-        assert True
+        results = [results, conditions]
 
     if RUN_MODEL:
         results_path = Path('/'.join([os.getcwd(), f'results/nback.results_nep_{NUM_EPOCHS}_lr'
@@ -1079,8 +1096,7 @@ if __name__ == '__main__':
                             save_results_to= results_path
                             # inputs_source=Stimuli.SWEETPEA,
                             )
-    if ANALYZE_RESULTS:
-        coded_responses, stats = analyze_results(results,
-                                                 num_trials=NUM_TRIALS,
-                                                 nback_levels=NBACK_LEVELS)
+    # if ANALYZE_RESULTS:
+    #     coded_responses, stats = analyze_results(results,
+    #                                              nback_levels=NBACK_LEVELS)
 #endregion

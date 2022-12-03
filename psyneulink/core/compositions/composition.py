@@ -10675,7 +10675,7 @@ _
             nested = False
             # MODIFIED 12/1/22 OLD:
             if len(self.input_CIM.path_afferents) > 0:
-            # # MODIFIED 12/1/22 NEW:  FIX: EFFORT TO ADDRESS ABOVE ISSUE;  NEEDS TESTING
+            # # MODIFIED 12/1/22 NEW:  FIX: EFFORT TO ADDRESS ABOVE ISSUE;  NEEDS TESTING  CALL OF NESTED COMPOSITION
             # if len(self.input_CIM.path_afferents) > 0 and context.composition != self:
             # MODIFIED 12/1/22 END
                 nested = True
@@ -10847,7 +10847,7 @@ _
                 # MODIFIED 3/28/22 CURRENT:
                 # IMPLEMENTATION NOTE: context.string set in Mechanism.execute
                 direct_call = (f"{context.source.name} EXECUTING" not in context.string)
-                # # MODIFIED 3/28/22 NEW:
+                # # MODIFIED 3/28/22 NEW:  CALL OF NESTED COMPOSITION
                 # direct_call = (context.source == ContextFlags.COMMAND_LINE)
                 # MODIFIED 3/28/22 END
                 simulation = ContextFlags.SIMULATION_MODE in context.runmode
