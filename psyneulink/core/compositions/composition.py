@@ -10673,10 +10673,10 @@ _
             #    (e.g., for testing a nested AutodiffComposition on its own after training, as in nback.py)
             #    Would be good to figure out a way to accomodate that
             nested = False
-            # MODIFIED 12/1/22 OLD:
-            if len(self.input_CIM.path_afferents) > 0:
-            # # MODIFIED 12/1/22 NEW:  FIX: EFFORT TO ADDRESS ABOVE ISSUE;  NEEDS TESTING  CALL OF NESTED COMPOSITION
-            # if len(self.input_CIM.path_afferents) > 0 and context.composition != self:
+            # # MODIFIED 12/1/22 OLD:
+            # if len(self.input_CIM.path_afferents) > 0:
+            # MODIFIED 12/1/22 NEW:  FIX: EFFORT TO ADDRESS ABOVE ISSUE;  NEEDS TESTING  CALL OF NESTED COMPOSITION
+            if len(self.input_CIM.path_afferents) > 0 and context.composition != self:
             # MODIFIED 12/1/22 END
                 nested = True
 
