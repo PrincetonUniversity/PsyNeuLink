@@ -47,6 +47,8 @@ def test_random_int64(benchmark, mode, seed, expected):
         def f():
             gen_fun.cuda_call(gpu_state, gpu_out)
             return out[0]
+    else:
+        assert False, "Unknown mode: {}".format(mode)
 
     # Get >4 samples to force regeneration of Philox buffer
     res = [f(), f(), f(), f(), f(), f()]
@@ -89,6 +91,8 @@ def test_random_int32(benchmark, mode):
         def f():
             gen_fun.cuda_call(gpu_state, gpu_out)
             return out[0]
+    else:
+        assert False, "Unknown mode: {}".format(mode)
 
     # Get >4 samples to force regeneration of Philox buffer
     res = [f(), f(), f(), f(), f(), f()]
@@ -129,6 +133,8 @@ def test_random_double(benchmark, mode):
         def f():
             gen_fun.cuda_call(gpu_state, gpu_out)
             return out[0]
+    else:
+        assert False, "Unknown mode: {}".format(mode)
 
     res = [f(), f()]
     assert np.allclose(res, [0.014067035665647709, 0.2577672456246177])
@@ -168,6 +174,8 @@ def test_random_float(benchmark, mode):
         def f():
             gen_fun.cuda_call(gpu_state, gpu_out)
             return out[0]
+    else:
+        assert False, "Unknown mode: {}".format(mode)
 
     res = [f(), f()]
     assert np.allclose(res, [0.13562285900115967, 0.014066934585571289])
@@ -179,7 +187,7 @@ def test_random_float(benchmark, mode):
                                   pytest.param('LLVM', marks=pytest.mark.llvm),
                                   pytest.helpers.cuda_param('PTX')])
 @pytest.mark.parametrize('fp_type', [pnlvm.ir.DoubleType(), pnlvm.ir.FloatType()],
-                         ids=lambda x: str(x))
+                         ids=str)
 def test_random_normal(benchmark, mode, fp_type):
     if mode != 'numpy':
         # Instantiate builder context with the desired type
@@ -208,11 +216,13 @@ def test_random_normal(benchmark, mode, fp_type):
         init_fun.cuda_call(gpu_state, np.int64(SEED))
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_normal')
-        out = np.asfarray([0.0], dtype=dtype)
+        out = np.array([0.0], dtype=np.dtype(gen_fun.byref_arg_types[1]))
         gpu_out = pnlvm.jit_engine.pycuda.driver.Out(out)
         def f():
             gen_fun.cuda_call(gpu_state, gpu_out)
             return out[0]
+    else:
+        assert False, "Unknown mode: {}".format(mode)
 
     res = [f() for i in range(191000)]
     if fp_type is pnlvm.ir.DoubleType():
@@ -249,4 +259,68 @@ def test_random_normal(benchmark, mode, fp_type):
         assert np.allclose(res[190853:190857], [-0.8958197236061096, 0.10532315075397491,
                                                  2.000257730484009, -1.129721999168396])
     assert not any(np.isnan(res)), list(np.isnan(res)).index(True)
+    benchmark(f)
+
+@pytest.mark.benchmark(group="Philox Binomial distribution")
+@pytest.mark.parametrize('mode', ['numpy',
+                                  pytest.param('LLVM', marks=pytest.mark.llvm),
+                                  pytest.helpers.cuda_param('PTX')])
+@pytest.mark.parametrize('fp_type', [pnlvm.ir.DoubleType(), pnlvm.ir.FloatType()],
+                         ids=str)
+@pytest.mark.parametrize('n', [1])
+@pytest.mark.parametrize('p, exp_64, exp_32', [
+    (0, [0], [0]),
+    (0.1, [0xa0c0100], [0x20440250]),
+    (0.33, [0xa2c8186], [0x20440650]),
+    (0.5, [0xa2c81c6], [0x226c8650]),
+    (0.66, [0xf5d37e79], [0xdfbbf9af]),
+    (0.95, [0xf7f3ffff], [0xffbffdaf]),
+    (1, [0xffffffff], [0xffffffff]),
+    ])
+def test_random_binomial(benchmark, mode, fp_type, n, p, exp_64, exp_32):
+    if mode != 'numpy':
+        # Instantiate builder context with the desired type
+        pnlvm.LLVMBuilderContext(fp_type)
+
+    # numpy always uses fp64 uniform sampling
+    exp = exp_64 if fp_type is pnlvm.ir.DoubleType() or mode == 'numpy' else exp_32
+    if mode == 'numpy':
+        state = np.random.Philox([SEED])
+        prng = np.random.Generator(state)
+        def f():
+            return prng.binomial(n, p)
+    elif mode == 'LLVM':
+        init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_init')
+        c_state = init_fun.byref_arg_types[0]()
+        init_fun(c_state, SEED)
+
+        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_binomial')
+        c_n = gen_fun.byref_arg_types[1](n)
+        c_p = gen_fun.byref_arg_types[2](p)
+        c_out = gen_fun.byref_arg_types[-1]()
+        def f():
+            gen_fun(c_state, c_n, c_p, c_out)
+            return c_out.value
+    elif mode == 'PTX':
+        init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_init')
+        state_size = ctypes.sizeof(init_fun.byref_arg_types[0])
+        gpu_state = pnlvm.jit_engine.pycuda.driver.mem_alloc(state_size)
+        init_fun.cuda_call(gpu_state, np.int64(SEED))
+
+        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_binomial')
+        gpu_n = pnlvm.jit_engine.pycuda.driver.In(np.array([n], dtype=np.dtype(gen_fun.byref_arg_types[1])))
+        gpu_p = pnlvm.jit_engine.pycuda.driver.In(np.array([p], dtype=np.dtype(gen_fun.byref_arg_types[2])))
+        out = np.array([0.0], dtype=np.dtype(gen_fun.byref_arg_types[3]))
+        gpu_out = pnlvm.jit_engine.pycuda.driver.Out(out)
+
+        def f():
+            gen_fun.cuda_call(gpu_state, gpu_n, gpu_p, gpu_out)
+            return out[0]
+    else:
+        assert False, "Unknown mode: {}".format(mode)
+
+    res = [f() for i in range(32)]
+    res = int(''.join(str(x) for x in res), 2)
+    assert res == exp[n - 1]
+
     benchmark(f)
