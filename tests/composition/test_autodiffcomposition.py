@@ -3187,8 +3187,28 @@ class TestBatching:
         adc.add_linear_processing_pathway([m1, p, m2])
         adc._build_pytorch_representation()
 
-        classes = torch.Tensor([2, 1])
-        target = torch.Tensor([1])
+        # The following is based on earlier version of PyTorch that only allows
+        # class (index) based target specification (rather than one-hot) for cross-entropy loss:
+        # classes = torch.Tensor([2, 1])
+        # target = torch.Tensor([1])
+        # # Equation for loss taken from https://pytorch.org/docs/stable/nn.html#torch.nn.CrossEntropyLoss
+        # assert np.allclose(adc.loss(classes, target).detach().numpy(), -1 + np.log(np.exp(2) + np.exp(1)))
+        # assert np.allclose(adc.loss(output, target).detach().numpy(), -1 + np.log(np.exp(2) + np.exp(1)))
 
-        # Equation for loss taken from https://pytorch.org/docs/stable/nn.html#torch.nn.CrossEntropyLoss
-        assert np.allclose(adc.loss(classes, target).detach().numpy(), -1 + np.log(np.exp(2) + np.exp(1)))
+        # Current implementation uses one-hot target specification:
+        output = [2,1]
+        target = [0,1]
+
+        o = np.array(output)
+        t = np.array(target)
+        # ce_numpy = -np.sum((-t * np.log(o)) - ((1 - t) * np.log((1 - o))))
+        ce_numpy = -np.sum((-t * np.log(o)) - ((1 - t) * np.log((1 - o))))
+        # ce_pnl = np.sum(pnl.LinearCombination(operation=pnl.CROSS_ENTROPY)([pnl.SoftMax()(o),pnl.SoftMax()(t)]))
+        sm = pnl.SoftMax()
+        ce_pnl = np.sum(pnl.LinearCombination(operation=pnl.CROSS_ENTROPY)([sm(o),sm(t)]))
+
+        output = torch.Tensor(output)
+        target = torch.Tensor(target)
+        ce_torch = adc.loss(output, target).detach().numpy()
+
+        assert np.allclose(ce_pnl, ce_torch)

@@ -8037,6 +8037,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if loss_spec == Loss.CROSS_ENTROPY:
                 # error function:  use LinearCombination to implement cross_entropy: (SoftMax(sample), SoftMax(target))
                 sample.update({FUNCTION: SoftMax(output=ALL)})
+                # [JDC 12/4/22]: FIX: IS THIS COORRECT, OR SHOULD IT BE ASSUMED TO BE A ONE-HOT AND COMPLAIN IF NOT?
                 target.update({FUNCTION: SoftMax(output=ALL)})
                 error_function = LinearCombination(operation=CROSS_ENTROPY)
                 output_ports = [OUTCOME, SUM.upper()]
@@ -10666,6 +10667,7 @@ _
                 # These are meant to be assigned in run method;  needed here for direct call to execute method
                 self._animate = False
 
+            # [JDC 12/4/22]: FIX ALL OF THIS REPLACED BY REFERENCES TO self.is_nested
             # IMPLEMENTATION NOTE:
             # KAM 4/29/19
             # The nested var is set to True if the Composition is nested in another Composition, otherwise False
@@ -10685,8 +10687,8 @@ _
             #     nested = True
             # # MODIFIED 12/1/22 NEWEST:
             # nested = self.is_nested and not self._executed_from_command_line
-            # MODIFIED 12/1/22 FINAL?
-            nested = self.is_nested
+            # # MODIFIED 12/1/22 FINAL?
+            # nested = self.is_nested
             # MODIFIED 12/1/22 END
 
             runtime_params = self._parse_runtime_params_conditions(runtime_params)
@@ -10700,7 +10702,7 @@ _
 
             # if execute was called from command line and no inputs were specified,
             # assign default inputs to highest level composition (i.e. not on any nested Compositions)
-            if not inputs and not nested and ContextFlags.COMMAND_LINE in context.source:
+            if not inputs and not self.is_nested and ContextFlags.COMMAND_LINE in context.source:
                 inputs = self._instantiate_input_dict({})
             # Skip initialization if possible (for efficiency):
             # - and(context has not changed
@@ -10720,7 +10722,7 @@ _
                 # initialize from base context but don't overwrite any values already set for this context
                 if (
                     not skip_initialization
-                    and not nested
+                    and not self.is_nested
                     or context is None
                     and context.execution_phase is not ContextFlags.SIMULATION_MODE
                 ):
@@ -10849,10 +10851,11 @@ _
                 # FIXME: parameter_CIM should be executed here as well,
                 #        but node execution of nested compositions with
                 #        outside control is not supported yet.
-                assert not nested or len(self.parameter_CIM.afferents) == 0
+                assert not self.is_nested or len(self.parameter_CIM.afferents) == 0
 
-            elif nested:
+            elif self.is_nested:
 
+                # [JDC 12/2/22]: FIX NONE OF THIS SEEMS TO BE NEEDED ANY LONGER (AT LEAST TO PASS TESTS)
                 # MODIFIED 3/28/22 CURRENT:
                 # # IMPLEMENTATION NOTE: context.string set in Mechanism.execute
                 # executed_from_command_line = (f"{context.source.name} EXECUTING" not in context.string)
@@ -11140,7 +11143,7 @@ _
                             if node is not self.controller:
                                 mech_context = copy(context)
                                 mech_context.source = ContextFlags.COMPOSITION
-                                if nested and node in self.get_nodes_by_role(NodeRole.INPUT):
+                                if self.is_nested and node in self.get_nodes_by_role(NodeRole.INPUT):
                                     for port in node.input_ports:
                                         port._update(context=context)
                                 node.execute(context=mech_context,
@@ -12331,6 +12334,11 @@ _
 
     @property
     def is_nested(self):
+        """Determine whether Composition is nested in another
+        Used in run() to decide whether to:
+            (1) initialize from context
+            (2) assign values to CIM from input dict (if not nested) or simply execute CIM (if nested)
+        """
         return len(self.input_CIM.path_afferents) > 0
 
     @property
