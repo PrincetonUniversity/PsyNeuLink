@@ -92,6 +92,9 @@ test_data = [
     pytest.param(Functions.LinearMatrix, test_var, {kw.MATRIX:test_matrix}, np.dot(test_var, test_matrix), id="LINEAR_MATRIX SQUARE"),
     pytest.param(Functions.LinearMatrix, test_var, {kw.MATRIX:test_matrix_l}, np.dot(test_var, test_matrix_l), id="LINEAR_MATRIX WIDE"),
     pytest.param(Functions.LinearMatrix, test_var, {kw.MATRIX:test_matrix_s}, np.dot(test_var, test_matrix_s), id="LINEAR_MATRIX TALL"),
+
+    # Dropout is just identity in non-learning mode
+    pytest.param(Functions.Dropout, test_var, {}, test_var, id="DROPOUT"),
 ]
 
 @pytest.mark.function

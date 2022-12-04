@@ -2769,38 +2769,11 @@ class Dropout(TransferFunction):  #
         )
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
-        raise FunctionError(f"LLVM not yet supported for Dropout.")
-    # FIX: NEEDS WORK, INCLUDING CONTEXTUALIZATION FOR LEARNING
-    #     ptri = builder.gep(vi, [ctx.int32_ty(0), index])
-    #     ptro = builder.gep(vo, [ctx.int32_ty(0), index])
-    #     # slope_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SLOPE)
-    #     # intercept_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, INTERCEPT)
-    #     #
-    #     # slope = pnlvm.helpers.load_extract_scalar_array_one(builder, slope_ptr)
-    #     # intercept = pnlvm.helpers.load_extract_scalar_array_one(builder, intercept_ptr)
-    #
-    #     # -----
-    #     rvalp = builder.alloca(ptri.type.pointee, name="random_out")
-    #     rand_state_ptr = ctx.get_random_state_ptr(builder, self, state, params)
-    #     normal_f = ctx.get_normal_dist_function_by_state(rand_state_ptr)
-    #     builder.call(normal_f, [rand_state_ptr, rvalp])
-    #     # -----
-    #
-    #
-    #     if "derivative" in tags:
-    #         # FIX: ?WHICH IS CORRECT:
-    #         # f'(x) = x
-    #         val = builder.load(ptri)
-    #         # # f'(x) = 1.0
-    #         # val = builder.load(1.0)
-    #
-    #     else:
-    #         # f(x) = mx + b
-    #         val = builder.load(ptri)
-    #         val = builder.fmul(val, slope)
-    #         val = builder.fadd(val, intercept)
-    #
-    #     builder.store(val, ptro)
+        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+
+        val = builder.load(ptri)
+        builder.store(val, ptro)
 
     def _function(self,
                  variable=None,
