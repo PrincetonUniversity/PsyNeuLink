@@ -2558,6 +2558,10 @@ class BinomialDistort(TransferFunction):  #-------------------------------------
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
         p_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, 'p')
+        p = builder.load(p_ptr)
+        mod_p = builder.fsub(p.type(1), p)
+        p_mod_ptr = builder.alloca(mod_p.type)
+        builder.store(mod_p, p_mod_ptr)
 
         n_ptr = builder.alloca(ctx.int32_ty)
         builder.store(n_ptr.type.pointee(1), n_ptr)
@@ -2566,7 +2570,7 @@ class BinomialDistort(TransferFunction):  #-------------------------------------
         binomial_f = ctx.get_binomial_dist_function_by_state(rand_state_ptr)
 
         rvalp = builder.alloca(binomial_f.args[-1].type.pointee, name="random_out")
-        builder.call(binomial_f, [rand_state_ptr, n_ptr, p_ptr, rvalp])
+        builder.call(binomial_f, [rand_state_ptr, n_ptr, p_mod_ptr, rvalp])
 
         val = builder.load(ptri)
         rval = builder.load(rvalp)
@@ -2602,7 +2606,7 @@ class BinomialDistort(TransferFunction):  #-------------------------------------
         """
         p = self._get_current_parameter_value('p', context)
         random_state = self._get_current_parameter_value('random_state', context)
-        result = variable * random_state.binomial(size=len(variable), n=1, p=p)
+        result = variable * random_state.binomial(size=len(variable), n=1, p=(1 - p))
         return self.convert_output_type(result)
 
     def _is_identity(self, context=None, defaults=False):

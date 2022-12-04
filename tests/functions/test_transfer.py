@@ -42,7 +42,7 @@ def binomial_distort_helper(seed):
     state = np.random.RandomState([seed])
     # compensate for construction
     state.binomial(1, p=RAND1, size=len(test_var))
-    return state.binomial(1, p=RAND1, size=len(test_var)) * test_var
+    return state.binomial(1, p=(1 - RAND1), size=len(test_var)) * test_var
 
 
 test_data = [
