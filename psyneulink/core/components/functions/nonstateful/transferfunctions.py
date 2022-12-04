@@ -2554,34 +2554,26 @@ class BinomialDistort(TransferFunction):  #-------------------------------------
         )
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
-        raise FunctionError(f"LLVM not yet supported for BinomialDistort.")
-    #     ptri = builder.gep(vi, [ctx.int32_ty(0), index])
-    #     ptro = builder.gep(vo, [ctx.int32_ty(0), index])
-    #
-    #     variance_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, VARIANCE)
-    #     bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
-    #     scale_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SCALE)
-    #     offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
-    #
-    #     variance = pnlvm.helpers.load_extract_scalar_array_one(builder, variance_ptr)
-    #     bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
-    #     scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
-    #     offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
-    #
-    #     rvalp = builder.alloca(ptri.type.pointee, name="random_out")
-    #     rand_state_ptr = ctx.get_random_state_ptr(builder, self, state, params)
-    #     normal_f = ctx.get_normal_dist_function_by_state(rand_state_ptr)
-    #     builder.call(normal_f, [rand_state_ptr, rvalp])
-    #
-    #     rval = builder.load(rvalp)
-    #     rval = builder.fmul(rval, variance)
-    #     val = builder.load(ptri)
-    #     val = builder.fadd(val, bias)
-    #     val = builder.fadd(rval, val)
-    #     val = builder.fmul(val, scale)
-    #     val = builder.fadd(offset, val)
-    #
-    #     builder.store(val, ptro)
+        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+
+        p_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, 'p')
+
+        n_ptr = builder.alloca(ctx.int32_ty)
+        builder.store(n_ptr.type.pointee(1), n_ptr)
+
+        rand_state_ptr = ctx.get_random_state_ptr(builder, self, state, params)
+        binomial_f = ctx.get_binomial_dist_function_by_state(rand_state_ptr)
+
+        rvalp = builder.alloca(binomial_f.args[-1].type.pointee, name="random_out")
+        builder.call(binomial_f, [rand_state_ptr, n_ptr, p_ptr, rvalp])
+
+        val = builder.load(ptri)
+        rval = builder.load(rvalp)
+        rval = builder.uitofp(rval, val.type)
+        val = builder.fmul(val, rval)
+
+        builder.store(val, ptro)
 
     def _function(self,
                  variable=None,
