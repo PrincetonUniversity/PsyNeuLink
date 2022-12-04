@@ -171,8 +171,8 @@ from psyneulink import *
 CONSTRUCT_MODEL = True # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = False # True = show visual graphic of model
 TRAIN_FFN = False  # True => train the FFN (WM)
-TEST_FFN = True  # True => test the FFN on training stimuli (WM)
-RUN_MODEL = False  # True => test the model on sample stimulus sequences
+TEST_FFN = False  # True => test the FFN on training stimuli (WM)
+RUN_MODEL = True  # True => test the model on sample stimulus sequences
 ANALYZE_RESULTS = True # True => output analysis of results of run
 REPORT_OUTPUT = ReportOutput.OFF       # Sets console output during run
 REPORT_PROGRESS = ReportProgress.OFF   # Sets console progress bar during run
@@ -186,18 +186,18 @@ NUM_STIM = 8 # number of different stimuli in stimulus set -  QUESTION: WHY ISN"
 FFN_TRANSFER_FUNCTION = ReLU
 
 # Constructor parameters:  (values are from nback-paper)
-STIM_SIZE=8 # length of stimulus vector
-CONTEXT_SIZE=25 # length of context vector
-HIDDEN_SIZE=STIM_SIZE*4 # dimension of hidden units in ff
+STIM_SIZE = 8 # length of stimulus vector
+CONTEXT_SIZE = 25 # length of context vector
+HIDDEN_SIZE = STIM_SIZE * 4 # dimension of hidden units in ff
 NBACK_LEVELS = [2,3] # Currently restricted to these
 NUM_NBACK_LEVELS = len(NBACK_LEVELS)
-CONTEXT_DRIFT_NOISE=0.0  # noise used by DriftOnASphereIntegrator (function of Context mech)
+CONTEXT_DRIFT_NOISE = 0.0  # noise used by DriftOnASphereIntegrator (function of Context mech)
 RANDOM_WEIGHTS_INITIALIZATION=RandomMatrix(center=0.0, range=0.1)  # Matrix spec used to initialize all Projections
 DROPOUT_PROB = 0.05
-RETRIEVAL_SOFTMAX_TEMP=1/8 # express as gain # precision of retrieval process
-RETRIEVAL_HAZARD_RATE=0.04 # rate of re=sampling of em following non-match determination in a pass through ffn
-RETRIEVAL_STIM_WEIGHT=.05 # weighting of stimulus field in retrieval from em
-RETRIEVAL_CONTEXT_WEIGHT = 1-RETRIEVAL_STIM_WEIGHT # weighting of context field in retrieval from em
+RETRIEVAL_SOFTMAX_TEMP = 1 / 8 # express as gain # precision of retrieval process
+RETRIEVAL_HAZARD_RATE = 0.04 # rate of re=sampling of em following non-match determination in a pass through ffn
+RETRIEVAL_STIM_WEIGHT = .05 # weighting of stimulus field in retrieval from em
+RETRIEVAL_CONTEXT_WEIGHT = 1 - RETRIEVAL_STIM_WEIGHT # weighting of context field in retrieval from em
 # DECISION_SOFTMAX_TEMP=1
 
 # Training parameters:
@@ -241,6 +241,8 @@ class TrialTypes(Enum):
     MATCH_WITH_FOIL = 'stim_lure'     # AAA (2-back) or AABA (3-back); not explicitly assigned: ABAA or AAAA
     NO_MATCH_NO_FOIL = 'context_lure' # ABB (2-back) or BCDA (3-back); not explicitly assigned: BBCA, BCCA or BBBA
     NO_MATCH_WITH_FOIL = 'non_lure'   # BAA (2-back) or BACA (3-back); not explicitly assigned: BCAA or BAAA
+
+
 num_trial_types = len(TrialTypes)
 
 
@@ -349,7 +351,7 @@ def construct_model(stim_size:int = STIM_SIZE,
     # Context Encoding: takes scalar as drift step for current trial
     context = ProcessingMechanism(name=MODEL_CONTEXT_INPUT,
                                   function=DriftOnASphereIntegrator(
-                                      initializer=np.random.random(context_size-1),
+                                      initializer=np.random.random(context_size - 1),
                                       noise=context_drift_noise,
                                       dimension=context_size))
 
@@ -366,7 +368,7 @@ def construct_model(stim_size:int = STIM_SIZE,
                                               {NAME:"CONTEXT_FIELD",
                                                SIZE:context_size}],
                                  function=ContentAddressableMemory(
-                                     initializer=[[[0]*stim_size, [0]*context_size]],
+                                     initializer=[[[0] * stim_size, [0] * context_size]],
                                      distance_field_weights=[retrieval_stimulus_weight,
                                                              retrieval_context_weight],
                                      # equidistant_entries_select=NEWEST,
@@ -445,7 +447,7 @@ def _get_stim_set(num_stim=STIM_SIZE):
 def _get_task_input(nback_level):
     """Construct input to task Mechanism for a given nback_level, used by train_network() and run_model()"""
     task_input = list(np.zeros_like(NBACK_LEVELS))
-    task_input[nback_level-NBACK_LEVELS[0]] = 1
+    task_input[nback_level - NBACK_LEVELS[0]] = 1
     return task_input
 
 def _get_training_inputs(network:AutodiffComposition,
@@ -484,10 +486,10 @@ def _get_training_inputs(network:AutodiffComposition,
     num_stim = len(stimuli)
     if num_stim != NUM_STIM:
         warnings.warn(f"Number of stimuli used for training set ({num_stim}) is not same "
-                      f"as specified in NUM_STIM ({NUM_STIM});  unexpexpected results may occur.")
-    context_fct =  DriftOnASphereIntegrator(initializer=np.random.random(CONTEXT_SIZE-1),
-                                            noise=CONTEXT_DRIFT_NOISE,
-                                            dimension=CONTEXT_SIZE)
+                      f"as specified in NUM_STIM ({NUM_STIM}); unexpexpected results may occur.")
+    context_fct = DriftOnASphereIntegrator(initializer=np.random.random(CONTEXT_SIZE - 1),
+                                           noise=CONTEXT_DRIFT_NOISE,
+                                           dimension=CONTEXT_SIZE)
 
     def trial_gen():
         stim_current = []
@@ -511,10 +513,10 @@ def _get_training_inputs(network:AutodiffComposition,
                     distractor_stim = stims[np.random.randint(0,len(stims))]
 
                     # Get nback+2 contexts:  [0]=lure; [1]=nback, [nback+1]=current
-                    for i in range(nback_level+2):
+                    for i in range(nback_level + 2):
                         contexts.append(context_fct(CONTEXT_DRIFT_RATE))
                     # Get current context as last in list
-                    current_context = contexts.pop(nback_level+1)
+                    current_context = contexts.pop(nback_level + 1)
                     # Get nback context as second in list (first is lure)
                     nback_context = contexts.pop(1)
                     distractor_context = contexts[np.random.randint(0,len(contexts))]
@@ -605,7 +607,7 @@ def _get_run_inputs(model,
 
         def get_stim_subseq_for_trial_type(trial_type):
             """Return stimulus seq (as indices into stim_set) for the specified trial_type."""
-            subseq_size = nback_level+1
+            subseq_size = nback_level + 1
             subseq = [None] * subseq_size
             curr_stim = subseq[nback_level] = random.choice(np.arange(len(stim_set)))
             other_stims = np.setdiff1d(np.arange(len(stim_set)),curr_stim).tolist()
@@ -614,12 +616,12 @@ def _get_run_inputs(model,
             if trial_type == TrialTypes.MATCH_NO_FOIL:           # ABA (2-back) or ABCA (3-back)
                 subseq[0] = curr_stim  # Assign nback stim to match
                 # Assign remaining items in sequence to anything stimuli than curr_stim
-                subseq[1:nback_level] = random.sample(other_stims, nback_level-1)
+                subseq[1:nback_level] = random.sample(other_stims, nback_level - 1)
             elif trial_type == TrialTypes.MATCH_WITH_FOIL:        # AAA (2-back) or AABA (3-back)
                 subseq[0] = curr_stim  # Assign nback stim to match current stim
                 subseq[1] = curr_stim  # Assign curr_stim to stim next to nback as foil
                 # Assign any remaining items in sequence to any stimuli other than curr_stim
-                subseq[2:nback_level] = random.sample(other_stims, nback_level-2)
+                subseq[2:nback_level] = random.sample(other_stims, nback_level - 2)
             elif trial_type == TrialTypes.NO_MATCH_NO_FOIL:       # ABB (2-back) or BCDA (3-back)
                 # Assign remaining items in sequence to any stimuli than curr_stim
                 subseq[0:nback_level] = random.sample(other_stims, nback_level)
@@ -627,8 +629,8 @@ def _get_run_inputs(model,
                 # Assign remaining items in sequence to any stimuli than curr_stim
                 subseq[1] = curr_stim  # Assign curr_stim to stim next to nback as foil
                 subseq[0:1] = random.sample(other_stims, 1)
-                subseq[2:nback_level] = random.sample(other_stims, nback_level-2)
-            assert not None in subseq, "Failed to assign all stims for subseq in get_stim_subseq_for_trial_type."
+                subseq[2:nback_level] = random.sample(other_stims, nback_level - 2)
+            assert None not in subseq, "Failed to assign all stims for subseq in get_stim_subseq_for_trial_type."
             return subseq
 
         def get_trial_type_for_stim(subseq):
@@ -642,7 +644,7 @@ def _get_run_inputs(model,
                 # Note: for 3back, this includes: BAXA, BXAA, and BAAA
                 return TrialTypes.NO_MATCH_WITH_FOIL.value
 
-        subseq_size = nback_level+1
+        subseq_size = nback_level + 1
         num_sub_seqs = int(num_trials / num_trial_types)
         extra_trials = num_trials % num_trial_types
 
@@ -650,7 +652,7 @@ def _get_run_inputs(model,
         #    note: this is done over number of mini-blocks that fit into num_trials;
         #          remaining trials are randomly assigned trial_types below
 
-        num_mini_blocks = int(num_trials / (num_trial_types * (nback_level+1)))
+        num_mini_blocks = int(num_trials / (num_trial_types * (nback_level + 1)))
         mini_block_size = subseq_size * num_trial_types # Number of trials in a mini_block
         seq_of_trial_type_subseqs = []
         # Generate randomly ordered trial_type assignments for subseqs in each mini_block
@@ -672,16 +674,16 @@ def _get_run_inputs(model,
         for i, trial_type in enumerate(seq_of_trial_type_subseqs):  # <- LOOP VERSION
             idx = i * subseq_size
             # Get seq of stimuli for subseq of specified trial_type
-            stim_seq[idx:idx+nback_level+1] = get_stim_subseq_for_trial_type(trial_type)
+            stim_seq[idx:idx + nback_level + 1] = get_stim_subseq_for_trial_type(trial_type)
             # Assign trial_type to last stim in subseq (since it was constructed specifically for that trial_type)
-            trial_type_seq[idx+nback_level] = list(TrialTypes)[trial_type].value
+            trial_type_seq[idx + nback_level] = list(TrialTypes)[trial_type].value
         # Pad remainder to get to num_trials with randomly selected stimuli
         stim_seq.extend(random.sample(range(num_trial_types),extra_trials))
         # Infer trial_types for all remaining stimuli (which should currently be marked as None)
         for i in range(subseq_size,num_trials,subseq_size):
-            for j in range(i,i+nback_level):
-                assert trial_type_seq[j]==None, f"trial_type should still be None for trial {j}."
-                trial_type_seq[j] = get_trial_type_for_stim(stim_seq[i-subseq_size:i])
+            for j in range(i,i + nback_level):
+                assert trial_type_seq[j] is None, f"trial_type should still be None for trial {j}."
+                trial_type_seq[j] = get_trial_type_for_stim(stim_seq[i - subseq_size:i])
                 assert True
 
         trial_type_counts = [None] * num_trial_types
@@ -720,7 +722,7 @@ def _get_run_inputs(model,
 
     input_set, trial_type_seq = get_input_sequence(nback_level, num_trials, inputs_source=inputs_source)
     return {model.nodes[MODEL_STIMULUS_INPUT]: input_set,
-            model.nodes[MODEL_CONTEXT_INPUT]: [[context_drift_rate]]*num_trials,
+            model.nodes[MODEL_CONTEXT_INPUT]: [[context_drift_rate]] * num_trials,
             model.nodes[MODEL_TASK_INPUT]: [_get_task_input(nback_level)] * num_trials}, \
            trial_type_seq
 #endregion
@@ -762,7 +764,7 @@ def train_network(network:AutodiffComposition,
     Path containing saved weights for matrices of feedforward Projections in network.
     """
     print(f"\nconstructing training set for '{network.name}'...")
-    if training_set == None:
+    if training_set is None:
         training_set, conditions, batch_size = \
             _get_training_inputs(network=network,
                                  num_training_sets_per_epoch=NUM_TRAINING_SETS_PER_EPOCH,
@@ -791,7 +793,7 @@ def train_network(network:AutodiffComposition,
                   )
     stop_time = timeit.default_timer()
     print(f"training of '{network.name}' done")
-    training_time = stop_time-start_time
+    training_time = stop_time - start_time
     if training_time <= 60:
         training_time_str = f'{int(training_time)} seconds'
     else:
@@ -823,7 +825,7 @@ def test_network(network:AutodiffComposition,
     targets = list(test_set[TARGETS].values())[0]
     trial_type_stats = []
 
-    num_items_per_nback_level = int(set_size/NUM_NBACK_LEVELS)
+    num_items_per_nback_level = int(set_size / NUM_NBACK_LEVELS)
     for i in range(NUM_NBACK_LEVELS):
         start = i * num_items_per_nback_level
         stop = start + num_items_per_nback_level
@@ -939,7 +941,7 @@ def analyze_results(results:list,
     stats = np.zeros((len(nback_levels),num_trial_types))
     MATCH = 'match'
     NON_MATCH = 'non-match'
-    num_trials = int(len(results[0])/len(nback_levels))
+    num_trials = int(len(results[0]) / len(nback_levels))
 
     # FOR TEST
     if test:
@@ -948,7 +950,7 @@ def analyze_results(results:list,
             # conditions = results[1][i]
             conditions = results[1]
             # Code responses for given nback_level as 1 (match) or 0 (non-match)
-            responses_for_nback_level = [r[0] for r in results[0][i*num_trials:i*num_trials+num_trials]]
+            responses_for_nback_level = [r[0] for r in results[0][i * num_trials:i * num_trials + num_trials]]
             responses_for_nback_level = [MATCH if r[0] > r[1] else NON_MATCH for r in responses_for_nback_level]
             responses_and_trial_types[i] = list(zip(responses_for_nback_level, conditions))
             for j, trial_type in enumerate(TrialTypes):
@@ -967,7 +969,7 @@ def analyze_results(results:list,
         for i, nback_level in enumerate(nback_levels):
             conditions = results[1][i]
             # Code responses for given nback_level as 1 (match) or 0 (non-match)
-            responses_for_nback_level = [r[0] for r in results[0][i*num_trials:i*num_trials+num_trials]]
+            responses_for_nback_level = [r[0] for r in results[0][i * num_trials:i * num_trials + num_trials]]
             responses_for_nback_level = [MATCH if r[0] > r[1] else NON_MATCH for r in responses_for_nback_level]
             responses_and_trial_types[i] = list(zip(responses_for_nback_level, conditions))
             for j, trial_type in enumerate(TrialTypes):
@@ -984,12 +986,12 @@ def analyze_results(results:list,
     data_dict = {k:v for k,v in zip(nback_levels, responses_and_trial_types)}
     stats_dict = {}
     for i, nback_level in enumerate(nback_levels):
-        stats_dict.update({nback_level: {trial_type.name:stat for trial_type,stat in zip (TrialTypes, stats[i])}})
+        stats_dict.update({nback_level: {trial_type.name:stat for trial_type,stat in zip(TrialTypes, stats[i])}})
 
     return data_dict, stats_dict
 
 def _compute_dprime(hit_rate, fa_rate):
-    """ returns dprime and sensitivity
+    """returns dprime and sensitivity
     """
     def clamp(n, minn, maxn):
         return max(min(maxn, n), minn)
@@ -1002,15 +1004,15 @@ def _compute_dprime(hit_rate, fa_rate):
 
 def _plot_results(response_and_trial_types, stats):
     import matplotlib as plt
-    hits_stderr = np.concatenate((score.mean(2).std(-1)/np.sqrt(neps))[:,(0,1)])
-    correj_stderr = np.concatenate((score.mean(2).std(-1)/np.sqrt(neps))[:,(2,3)])
+    hits_stderr = np.concatenate((score.mean(2).std(-1) / np.sqrt(neps))[:,(0,1)])
+    correj_stderr = np.concatenate((score.mean(2).std(-1) / np.sqrt(neps))[:,(2,3)])
     d,s = _compute_dprime(
       np.concatenate(score.mean(2)[:,(0,1)]),
       np.concatenate(score.mean(2)[:,(2,3)])
     )
     print(d.shape,s.shape)
-    dprime_stderr = d.std(-1)/np.sqrt(neps)
-    bias_stderr = s.std(-1)/np.sqrt(neps)
+    dprime_stderr = d.std(-1) / np.sqrt(neps)
+    bias_stderr = s.std(-1) / np.sqrt(neps)
     #%%
     # 2back-target, 2back-lure, 3back-target, 3back-lure
     hits = np.concatenate(acc[:,(0,1)])
@@ -1018,12 +1020,13 @@ def _plot_results(response_and_trial_types, stats):
     dprime = np.zeros(4)
     bias = np.zeros(4)
     for i in range(4):
-      d,s = _compute_dprime(hits[i], 1 - correj[i])
-      dprime[i]=d
-      bias[i]=s
+        d,s = _compute_dprime(hits[i], 1 - correj[i])
+        dprime[i]=d
+        bias[i]=s
 
     #%%
-    f,axar = plt.subplots(2,2,figsize=(15,8));axar=axar.reshape(-1)
+    f,axar = plt.subplots(2,2,figsize=(15,8))
+    axar=axar.reshape(-1)
     cL = ['blue','darkblue','lightgreen','forestgreen']
     labL = ['2b,ctrl','2b,lure','3b,ctrl','3b,lure']
 
@@ -1049,12 +1052,12 @@ def _plot_results(response_and_trial_types, stats):
 
     ##
     for ax in axar[:2]:
-      ax.set_xticks(np.arange(4))
-      ax.set_xticklabels(labL)
-      ax.set_ylim(0,1)
+        ax.set_xticks(np.arange(4))
+        ax.set_xticklabels(labL)
+        ax.set_ylim(0,1)
 
-    plt.savefig('figures/EMmetrics-%s-t%i.jpg'%(mtag,tstamp))
-    plt.savefig('figures/EMmetrics_yerr-%s-t%i.svg'%(mtag,tstamp))
+    plt.savefig('figures/EMmetrics-%s-t%i.jpg' % (mtag,tstamp))
+    plt.savefig('figures/EMmetrics_yerr-%s-t%i.svg' % (mtag,tstamp))
 #endregion
 
 

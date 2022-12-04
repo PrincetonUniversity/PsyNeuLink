@@ -3711,6 +3711,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         components used for learning; those are contained in `learning_components
         <Composition.learning_components>` attribute.
 
+    is_nested : bool
+        True of Composition is `nested <Composition_Nested>` in another (outer) Compositon.
+
     results : list[list[list]]
         a list of the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` `Nodes <Composition_Nodes>`
         in the Composition for every `TRIAL <TimeScale.TRIAL>` executed in a call to `run <Composition.run>`.
@@ -3867,6 +3870,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.default_execution_id = self.name
         self.execution_ids = {self.default_execution_id}
+        self._executed_from_command_line = False
 
         self.projections = ContentAddressableList(component_type=Component)
 
@@ -9912,9 +9916,9 @@ _
             trials.
 
         """
-        # MODIFIED 3/28/22 OLD:
+        if context.source == ContextFlags.COMMAND_LINE:
+            self._executed_from_command_line = True
         context.source = ContextFlags.COMPOSITION
-        # MODIFIED 3/28/22 END
         execution_phase = context.execution_phase
         context.execution_phase = ContextFlags.PREPARING
 
@@ -10668,17 +10672,22 @@ _
             # Later on, this is used to determine:
             #   (1) whether to initialize from context
             #   (2) whether to assign values to CIM from input dict (if not nested) or simply execute CIM (if nested)
-            # JDC 3/28/22:
-            #    This currently prevents a Composition that is nested within another to be tested on its own
-            #    (e.g., for testing a nested AutodiffComposition on its own after training, as in nback.py)
-            #    Would be good to figure out a way to accomodate that
-            nested = False
+            # nested = False
             # # MODIFIED 12/1/22 OLD:
             # if len(self.input_CIM.path_afferents) > 0:
+            # if self.is_nested:
+            #     nested = True
             # MODIFIED 12/1/22 NEW:  FIX: EFFORT TO ADDRESS ABOVE ISSUE;  NEEDS TESTING  CALL OF NESTED COMPOSITION
-            if len(self.input_CIM.path_afferents) > 0 and context.composition != self:
+            # if len(self.input_CIM.path_afferents) > 0 and context.composition != self:
+            #     nested = True
+            # # MODIFIED 12/1/22 NEWER:
+            # if self.is_nested and not self._executed_from_command_line:
+            #     nested = True
+            # # MODIFIED 12/1/22 NEWEST:
+            # nested = self.is_nested and not self._executed_from_command_line
+            # MODIFIED 12/1/22 FINAL?
+            nested = self.is_nested
             # MODIFIED 12/1/22 END
-                nested = True
 
             runtime_params = self._parse_runtime_params_conditions(runtime_params)
 
@@ -10845,13 +10854,16 @@ _
             elif nested:
 
                 # MODIFIED 3/28/22 CURRENT:
-                # IMPLEMENTATION NOTE: context.string set in Mechanism.execute
-                direct_call = (f"{context.source.name} EXECUTING" not in context.string)
+                # # IMPLEMENTATION NOTE: context.string set in Mechanism.execute
+                # executed_from_command_line = (f"{context.source.name} EXECUTING" not in context.string)
                 # # MODIFIED 3/28/22 NEW:  CALL OF NESTED COMPOSITION
-                # direct_call = (context.source == ContextFlags.COMMAND_LINE)
+                # executed_from_command_line = (context.source == ContextFlags.COMMAND_LINE)
+                # # MODIFIED 12/3/22 NEWER:
+                # executed_from_command_line = self._executed_from_command_line
                 # MODIFIED 3/28/22 END
                 simulation = ContextFlags.SIMULATION_MODE in context.runmode
-                if simulation or direct_call:
+                # if simulation or executed_from_command_line:
+                if simulation or self._executed_from_command_line:
                     # For simulations, or direct call to nested Composition (e.g., from COMMAND_LINE to test it)
                     #  assign inputs if they not provided (e.g., # autodiff)
                     if inputs is not None:
@@ -12316,6 +12328,10 @@ _
         return ContentAddressableList(component_type=Projection,
                                       list=[p.component for p in self.graph.vertices
                                             if p.feedback is EdgeType.FEEDBACK])
+
+    @property
+    def is_nested(self):
+        return len(self.input_CIM.path_afferents) > 0
 
     @property
     def _all_nodes(self):

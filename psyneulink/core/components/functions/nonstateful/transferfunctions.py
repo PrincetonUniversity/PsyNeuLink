@@ -2610,7 +2610,7 @@ class BinomialDistort(TransferFunction):  #-------------------------------------
         """
         p = self._get_current_parameter_value('p', context)
         random_state = self._get_current_parameter_value('random_state', context)
-        result = variable * random_state.binomial(size=len(variable), n=1, p=1-p)
+        result = variable * random_state.binomial(size=len(variable), n=1, p= 1 - p)
         return self.convert_output_type(result)
 
     def _is_identity(self, context=None, defaults=False):
