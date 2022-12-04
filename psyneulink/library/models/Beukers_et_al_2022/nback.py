@@ -170,7 +170,7 @@ from psyneulink import *
 # Settings for running script:
 CONSTRUCT_MODEL = True # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = False # True = show visual graphic of model
-TRAIN_FFN = False  # True => train the FFN (WM)
+TRAIN_FFN = True  # True => train the FFN (WM)
 TEST_FFN = True  # True => test the FFN on training stimuli (WM)
 RUN_MODEL = True  # True => test the model on sample stimulus sequences
 ANALYZE_RESULTS = True # True => output analysis of results of run
@@ -807,7 +807,8 @@ def train_network(network:AutodiffComposition,
     # print(f'loaded weights sample: {network.nodes[FFN_HIDDEN].path_afferents[0].matrix.base[0][:3]}...')
 
 def test_network(network:AutodiffComposition,
-                 load_weights_from:Union[Path,str,None]=None
+                 load_weights_from:Union[Path,str,None]=None,
+                 nback_levels=NBACK_LEVELS,
                  )->(dict,list,list,list,list,list):
 
     print(f"constructing test set for '{network.name}'...")
@@ -845,8 +846,15 @@ def test_network(network:AutodiffComposition,
 
     if ANALYZE_RESULTS:
         coded_responses, stats = analyze_results([network.results,conditions], test=True)
-
-    return inputs, cxt_distances, targets, conditions, network.results, trial_type_stats, coded_responses, stats
+        import torch
+        cross_entropy_loss = \
+            [network.loss(torch.Tensor(output[0]),torch.Tensor(np.array(target))).detach().numpy().tolist()
+             for output, target in zip(network.results, targets)]
+    coded_responses_flat = []
+    for nback_level in nback_levels:
+        coded_responses_flat.extend(coded_responses[nback_level])
+    return inputs, cxt_distances, targets, conditions, network.results, coded_responses_flat, cross_entropy_loss, \
+           trial_type_stats, stats
 
 def run_model(model,
               load_weights_from:Union[Path,str,None]=None,
@@ -932,10 +940,11 @@ def analyze_results(results:list,
     --------
     results: ndarray
         results returned from `run_model <nback.run_model>`.
-    num_trials:  int
-        number of trials to analyze.
-    nback_levels: list
-        nback levels to analyze
+    nback_levels: list : default NBACK_LEVELS
+        list of nback levels executed in run() or test()
+    test: bool : default False
+        if True, analyze results for running ffn on set of stimuli used for training
+        else, anaylze results of running full model using experimental sequence of stimuli
     """
     responses_and_trial_types = [None] * len(nback_levels)
     stats = np.zeros((len(nback_levels),num_trial_types))
@@ -1082,9 +1091,49 @@ if __name__ == '__main__':
             weights_filename = f'results/ffn.wts_nep_{NUM_EPOCHS}_lr_{str(LEARNING_RATE).split(".")[1]}.pnl'
             weights_path = Path('/'.join([os.getcwd(), weights_filename]))
 
-        inputs, cxt_distances, targets, conditions, results, trial_type_stats, coded_responses, stats = \
+        inputs, cxt_distances, targets, conditions, results, coded_responses, ce_loss, \
+        trial_type_stats, stats = \
             test_network(nback_model.nodes[FFN_COMPOSITION], load_weights_from = weights_path)
-        results = [results, conditions]
+        # results = [results, conditions]
+        headings = ['condition', 'inputs', 'target', 'context distance', 'results', 'coded response', 'ce loss']
+        results = (headings,
+                   list(zip(conditions, inputs, targets, cxt_distances, results, coded_responses, ce_loss)),
+                   trial_type_stats,
+                   stats)
+
+        # SAVE RESULTS in CSV FORMAT
+        import csv
+        threshold = .005
+
+        high_loss = [list(x) for x in [results[1][i] for i in range(64)] if x[6] > threshold]
+        for i in range(len(high_loss)):
+            high_loss[i][6] = '{:.4f}'.format(high_loss[i][6])
+        high_loss.insert(0,headings)
+        file = open('high_loss.csv', 'w+', newline ='')
+        with file:
+            write = csv.writer(file)
+            write.writerows(high_loss)
+        file.close()
+
+        low_loss = [list(x) for x in [results[1][i] for i in range(64)] if x[6] <= threshold]
+        for i in range(len(low_loss)):
+            low_loss[i][6] = '{:.4f}'.format(low_loss[i][6])
+        low_loss.insert(0,headings)
+        file = open('low_loss.csv', 'w+', newline ='')
+        with file:
+            write = csv.writer(file)
+            write.writerows(low_loss)
+        file.close()
+
+        full_results = [list(x) for x in [results[1][i] for i in range(64)]]
+        for i in range(len(full_results)):
+            full_results[i][6] = '{:.4f}'.format(full_results[i][6])
+        full_results.insert(0,headings)
+        file = open('full_results.csv', 'w+', newline ='')
+        with file:
+            write = csv.writer(file)
+            write.writerows(full_results)
+        file.close()
 
     if RUN_MODEL:
         results_path = Path('/'.join([os.getcwd(), f'results/nback.results_nep_{NUM_EPOCHS}_lr'
