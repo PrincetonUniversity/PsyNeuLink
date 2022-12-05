@@ -203,7 +203,7 @@ RETRIEVAL_CONTEXT_WEIGHT = 1 - RETRIEVAL_STIM_WEIGHT # weighting of context fiel
 # Training parameters:
 NUM_TRAINING_SETS_PER_EPOCH = 1
 MINIBATCH_SIZE=None
-NUM_EPOCHS= 12500 # 6250  # 20000  # nback-paper: 400,000 @ one trial per epoch = 6,250 @ 64 trials per epoch
+NUM_EPOCHS=  6250 # 12500 # 20000  # nback-paper: 400,000 @ one trial per epoch = 6,250 @ 64 trials per epoch
 LEARNING_RATE=0.001  # nback-paper: .001
 
 # Execution parameters:
@@ -454,14 +454,15 @@ def _get_training_inputs(network:AutodiffComposition,
                          num_training_sets_per_epoch:int=NUM_TRAINING_SETS_PER_EPOCH,
                          num_epochs:int=1,
                          nback_levels:int=NBACK_LEVELS,
+                         foils_allowed_before:bool=True,
                          return_generator:bool=True
                          )->(dict, list, int):
     """Construct set of training stimuli used by ffn.learn() in train_network()
-    Construct one example of each condition:
-        match:  stim_current = stim_retrieved  and context_current = context_retrieved
-        stim_lure:  stim_current = stim_retrieved  and context_current != context_retrieved
-        context_lure:  stim_current != stim_retrieved  and context_current == context_retrieved
-        non_lure:  stim_current != stim_retrieved  and context_current != context_retrieved
+    Construct one example of each condition for each stimulus and each nback_level:
+        MATCH_NO_FOIL (match):  stim_current = stim_retrieved  and context_current = context_retrieved
+        MATCH_WITH_FOIL (stim_lure):  stim_current = stim_retrieved  and context_current != context_retrieved
+        NO_MATCH_WITH_FOIL (context_lure):  stim_current != stim_retrieved  and context_current == context_retrieved
+        NO_MATCH_NO_FOIL (non_lure):  stim_current != stim_retrieved  and context_current != context_retrieved
     Arguments
     ---------
     network: AutodiffComposition
@@ -474,6 +475,8 @@ def _get_training_inputs(network:AutodiffComposition,
     nback_levels: list[int] : default NBACK_LEVELS
         list of n-back levels for which to generate training sets;
         nback_levels themselves must be specified in the global NBACK_LEVELS
+    foils_allowed_before: bool : default True
+        only allows foils to occur after the target (e.g., for 2-back: XBAA and not ABXA)
     return_generator: bool : True
         return generator rather than explicit list of training stimuli
     Return
@@ -512,28 +515,36 @@ def _get_training_inputs(network:AutodiffComposition,
                     # Pick distractor randomly from stimuli remaining in set
                     distractor_stim = stims[np.random.randint(0,len(stims))]
 
-                    # Get nback+2 contexts:  [0]=lure; [1]=nback, [nback+1]=current
-                    for i in range(nback_level + 2):
+                    # If foils_allowed_before:
+                    #    nback+2 contexts:  [0]=potential foil; [1]=nback, [nback+2]=current
+                    # Else:
+                    #    nback+1 contexts:  [0]=nback, [nback+1]=current
+                    total_contexts = nback_level + 1 + foils_allowed_before
+                    for i in range(total_contexts):
                         contexts.append(context_fct(CONTEXT_DRIFT_RATE))
                     # Get current context as last in list
-                    current_context = contexts.pop(nback_level + 1)
-                    # Get nback context as second in list (first is lure)
-                    nback_context = contexts.pop(1)
+                    current_context = contexts.pop(-1)
+                    # Get nback context as either first or second in list, based on foils_allowed_before
+                    nback_context = contexts.pop(foils_allowed_before)
+                    # Choose distractor foil randomly from remaining contexts
+                    # (note:  if foils_allowed_before = False, only ones after target remain in list)
                     distractor_context = contexts[np.random.randint(0,len(contexts))]
 
                     # Assign retrieved stimulus and context accordingly to trial_type
                     for trial_type in TrialTypes:
                         stim_current.append(current_stim)
                         context_current.append(current_context)
-                        # Assign retrieved stimulus
+                        # Assign current stimulus as retrieved stimulus for MATCH_ trials
                         if trial_type in {TrialTypes.MATCH_NO_FOIL, TrialTypes.MATCH_WITH_FOIL}:
                             stim_retrieved.append(current_stim)
-                        else: # context_lure or non_lure
+                        # Assign distractor stimulus as retrieved stimulus for NON_MATCH_ trials
+                        else:
                             stim_retrieved.append(distractor_stim)
-                        # Assign retrieved context
+                        # Assign nback context as retrieved context for _NO_FOIL trials
                         if trial_type in {TrialTypes.MATCH_NO_FOIL,TrialTypes.NO_MATCH_NO_FOIL}:
                             context_retrieved.append(nback_context)
-                        else: # stimulus_lure or non_lure
+                        # Assign distractor context as retrieved context for _WITH_FOIL trials
+                        else:
                             context_retrieved.append(distractor_context)
                         # Assign target
                         if trial_type in {TrialTypes.MATCH_NO_FOIL, TrialTypes.MATCH_WITH_FOIL}:
