@@ -2554,34 +2554,30 @@ class BinomialDistort(TransferFunction):  #-------------------------------------
         )
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
-        raise FunctionError(f"LLVM not yet supported for BinomialDistort.")
-    #     ptri = builder.gep(vi, [ctx.int32_ty(0), index])
-    #     ptro = builder.gep(vo, [ctx.int32_ty(0), index])
-    #
-    #     variance_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, VARIANCE)
-    #     bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
-    #     scale_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SCALE)
-    #     offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
-    #
-    #     variance = pnlvm.helpers.load_extract_scalar_array_one(builder, variance_ptr)
-    #     bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
-    #     scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
-    #     offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
-    #
-    #     rvalp = builder.alloca(ptri.type.pointee, name="random_out")
-    #     rand_state_ptr = ctx.get_random_state_ptr(builder, self, state, params)
-    #     normal_f = ctx.get_normal_dist_function_by_state(rand_state_ptr)
-    #     builder.call(normal_f, [rand_state_ptr, rvalp])
-    #
-    #     rval = builder.load(rvalp)
-    #     rval = builder.fmul(rval, variance)
-    #     val = builder.load(ptri)
-    #     val = builder.fadd(val, bias)
-    #     val = builder.fadd(rval, val)
-    #     val = builder.fmul(val, scale)
-    #     val = builder.fadd(offset, val)
-    #
-    #     builder.store(val, ptro)
+        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+
+        p_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, 'p')
+        p = builder.load(p_ptr)
+        mod_p = builder.fsub(p.type(1), p)
+        p_mod_ptr = builder.alloca(mod_p.type)
+        builder.store(mod_p, p_mod_ptr)
+
+        n_ptr = builder.alloca(ctx.int32_ty)
+        builder.store(n_ptr.type.pointee(1), n_ptr)
+
+        rand_state_ptr = ctx.get_random_state_ptr(builder, self, state, params)
+        binomial_f = ctx.get_binomial_dist_function_by_state(rand_state_ptr)
+
+        rvalp = builder.alloca(binomial_f.args[-1].type.pointee, name="random_out")
+        builder.call(binomial_f, [rand_state_ptr, n_ptr, p_mod_ptr, rvalp])
+
+        val = builder.load(ptri)
+        rval = builder.load(rvalp)
+        rval = builder.uitofp(rval, val.type)
+        val = builder.fmul(val, rval)
+
+        builder.store(val, ptro)
 
     def _function(self,
                  variable=None,
@@ -2610,7 +2606,7 @@ class BinomialDistort(TransferFunction):  #-------------------------------------
         """
         p = self._get_current_parameter_value('p', context)
         random_state = self._get_current_parameter_value('random_state', context)
-        result = variable * random_state.binomial(size=len(variable), n=1, p= 1 - p)
+        result = variable * random_state.binomial(size=len(variable), n=1, p=(1 - p))
         return self.convert_output_type(result)
 
     def _is_identity(self, context=None, defaults=False):
@@ -2777,38 +2773,11 @@ class Dropout(TransferFunction):  #
         )
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
-        raise FunctionError(f"LLVM not yet supported for Dropout.")
-    # FIX: NEEDS WORK, INCLUDING CONTEXTUALIZATION FOR LEARNING
-    #     ptri = builder.gep(vi, [ctx.int32_ty(0), index])
-    #     ptro = builder.gep(vo, [ctx.int32_ty(0), index])
-    #     # slope_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SLOPE)
-    #     # intercept_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, INTERCEPT)
-    #     #
-    #     # slope = pnlvm.helpers.load_extract_scalar_array_one(builder, slope_ptr)
-    #     # intercept = pnlvm.helpers.load_extract_scalar_array_one(builder, intercept_ptr)
-    #
-    #     # -----
-    #     rvalp = builder.alloca(ptri.type.pointee, name="random_out")
-    #     rand_state_ptr = ctx.get_random_state_ptr(builder, self, state, params)
-    #     normal_f = ctx.get_normal_dist_function_by_state(rand_state_ptr)
-    #     builder.call(normal_f, [rand_state_ptr, rvalp])
-    #     # -----
-    #
-    #
-    #     if "derivative" in tags:
-    #         # FIX: ?WHICH IS CORRECT:
-    #         # f'(x) = x
-    #         val = builder.load(ptri)
-    #         # # f'(x) = 1.0
-    #         # val = builder.load(1.0)
-    #
-    #     else:
-    #         # f(x) = mx + b
-    #         val = builder.load(ptri)
-    #         val = builder.fmul(val, slope)
-    #         val = builder.fadd(val, intercept)
-    #
-    #     builder.store(val, ptro)
+        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+
+        val = builder.load(ptri)
+        builder.store(val, ptro)
 
     def _function(self,
                  variable=None,
