@@ -204,6 +204,7 @@ RETRIEVAL_CONTEXT_WEIGHT = 1 - RETRIEVAL_STIM_WEIGHT # weighting of context fiel
 NUM_TRAINING_SETS_PER_EPOCH = 1
 MINIBATCH_SIZE=None
 NUM_EPOCHS=  6250 # 12500 # 20000  # nback-paper: 400,000 @ one trial per epoch = 6,250 @ 64 trials per epoch
+FOILS_ALLOWED_BEFORE = False
 LEARNING_RATE=0.001  # nback-paper: .001
 
 # Execution parameters:
@@ -232,15 +233,16 @@ CONTROLLER = "READ/WRITE CONTROLLER"
 class TrialTypes(Enum):
     """Trial types explicitly assigned and counter-balanced in _get_run_inputs()
     In notation below, "A" is always current stimulus.
-    Foils are only explicitly assigned to items immediately following nback item.
+    Foils are only explicitly assigned to items immediately following nback item,
+        or before if **foils_allowed_before** is specified in _get_training_inputs()
     Subseq designated below as "not explicitly assigned" may still appear in the overall stimulus seq,
         either within the subseq through random assignment,
-        and/or through cross-subseq relationships that are not controlled in this design
+        and/or through cross-subseq relationships that are not controlled in this design.
     """
-    MATCH_NO_FOIL = 'match'           # ABA (2-back) or ABCA (3-back); not explicitly assigned: ABBA
-    MATCH_WITH_FOIL = 'stim_lure'     # AAA (2-back) or AABA (3-back); not explicitly assigned: ABAA or AAAA
-    NO_MATCH_NO_FOIL = 'context_lure' # ABB (2-back) or BCDA (3-back); not explicitly assigned: BBCA, BCCA or BBBA
-    NO_MATCH_WITH_FOIL = 'non_lure'   # BAA (2-back) or BACA (3-back); not explicitly assigned: BCAA or BAAA
+    MATCH_NO_FOIL = 'match'             # ABA (2-back) or ABCA (3-back); not explicitly assigned: ABBA
+    MATCH_WITH_FOIL = 'stim_lure'       # AAA (2-back) or AABA (3-back); not explicitly assigned: ABAA or AAAA
+    NO_MATCH_NO_FOIL = 'non_lure'       # BBA (2-back) or BCDA (3-back); not explicitly assigned: BBCA, BCCA or BBBA
+    NO_MATCH_WITH_FOIL = 'context_lure' # BAA (2-back) or BACA (3-back); not explicitly assigned: BCAA or BAAA
 
 
 num_trial_types = len(TrialTypes)
@@ -515,19 +517,19 @@ def _get_training_inputs(network:AutodiffComposition,
                     # Pick distractor randomly from stimuli remaining in set
                     distractor_stim = stims[np.random.randint(0,len(stims))]
 
-                    # If foils_allowed_before:
-                    #    nback+2 contexts:  [0]=potential foil; [1]=nback, [nback+2]=current
-                    # Else:
-                    #    nback+1 contexts:  [0]=nback, [nback+1]=current
-                    total_contexts = nback_level + 1 + foils_allowed_before
-                    for i in range(total_contexts):
+                    # IF foils_allowed_before IS True:
+                    #    total_contexts = nback+2 contexts:  [0]=potential foil; [1]=nback, [2+nback]=current
+                    # IF foils_allowed_before IS False:
+                    #    total_contexts = nback+1 contexts:  [0]=nback, [1+nback]=current
+                    total_contexts = nback_level + 1 + int(foils_allowed_before)
+                    for j in range(total_contexts):
                         contexts.append(context_fct(CONTEXT_DRIFT_RATE))
                     # Get current context as last in list
                     current_context = contexts.pop(-1)
                     # Get nback context as either first or second in list, based on foils_allowed_before
-                    nback_context = contexts.pop(foils_allowed_before)
+                    nback_context = contexts.pop(int(foils_allowed_before))
                     # Choose distractor foil randomly from remaining contexts
-                    # (note:  if foils_allowed_before = False, only ones after target remain in list)
+                    # (note:  if foils_allowed_before = False, only those after target remain in list)
                     distractor_context = contexts[np.random.randint(0,len(contexts))]
 
                     # Assign retrieved stimulus and context accordingly to trial_type
@@ -626,7 +628,7 @@ def _get_run_inputs(model,
 
             if trial_type == TrialTypes.MATCH_NO_FOIL:           # ABA (2-back) or ABCA (3-back)
                 subseq[0] = curr_stim  # Assign nback stim to match
-                # Assign remaining items in sequence to anything stimuli than curr_stim
+                # Assign remaining items in sequence to any stimuli other than curr_stim
                 subseq[1:nback_level] = random.sample(other_stims, nback_level - 1)
             elif trial_type == TrialTypes.MATCH_WITH_FOIL:        # AAA (2-back) or AABA (3-back)
                 subseq[0] = curr_stim  # Assign nback stim to match current stim
@@ -779,6 +781,7 @@ def train_network(network:AutodiffComposition,
         training_set, conditions, batch_size = \
             _get_training_inputs(network=network,
                                  num_training_sets_per_epoch=NUM_TRAINING_SETS_PER_EPOCH,
+                                 foils_allowed_before=FOILS_ALLOWED_BEFORE,
                                  num_epochs=num_epochs,
                                  nback_levels=NBACK_LEVELS)
 
@@ -826,6 +829,7 @@ def test_network(network:AutodiffComposition,
     test_set, conditions, set_size = _get_training_inputs(network=network,
                                                           num_epochs=1,
                                                           nback_levels=NBACK_LEVELS,
+                                                          foils_allowed_before=FOILS_ALLOWED_BEFORE,
                                                           return_generator=False)
     print(f'total num trials: {set_size}')
 
@@ -1023,6 +1027,21 @@ def _compute_dprime(hit_rate, fa_rate):
     return dl, c
 
 def _plot_results(response_and_trial_types, stats):
+
+    # SCORE IN NBACK-PAPER IS RETURNED BY THIS METHOD:
+    # def run_EMexp(neps,tsteps,argsD):
+    #   score = np.zeros([2,4,tsteps,neps])
+    #   for ep in range(neps):
+    #     for nback in nbackL:
+    #       for seq_int,tstep in itertools.product(range(4),np.arange(5,tsteps)):
+    #         print(ep,tstep)
+    #         stim,ctxt,ytarget = generate_trial(nback,tstep,stype=seq_int)
+    #         yhat = run_model_trial(stim,ctxt,nback-2,argsD)
+    #         [nback-2,seq_int,tstep,ep] = int(yhat==ytarget)
+    #   print(score.shape) # nback,seqtype,tsteps,epoch
+    #   acc = score.mean((2,3))
+    #   return acc,score
+
     import matplotlib as plt
     hits_stderr = np.concatenate((score.mean(2).std(-1) / np.sqrt(neps))[:,(0,1)])
     correj_stderr = np.concatenate((score.mean(2).std(-1) / np.sqrt(neps))[:,(2,3)])
