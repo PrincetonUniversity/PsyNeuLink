@@ -3211,7 +3211,7 @@ class TestBatching:
 
         # Compute cross-entropy loss using standard mathematical formulation
         #  which can return an "inf" value for entries = 0 in target vector
-        ce_pnl = np.sum(pnl.LinearCombination(operation=pnl.CROSS_ENTROPY)([np.log(sm(logit(o))),t]))
+        ce_pnl = np.sum(pnl.LinearCombination(operation=pnl.CROSS_ENTROPY)([sm(logit(o)),t]))
 
         output = torch.Tensor(output)
         target = torch.Tensor(target)
