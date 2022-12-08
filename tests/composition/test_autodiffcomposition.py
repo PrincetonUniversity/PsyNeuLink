@@ -3201,9 +3201,6 @@ class TestBatching:
 
         o = np.array(output)
         t = np.array(target)
-        # ce_numpy = -np.sum((-t * np.log(o)) - ((1 - t) * np.log((1 - o))))
-        # ce_numpy = -np.sum((-t * np.log(o)) - ((1 - t) * np.log((1 - o))))
-        # ce_pnl = np.sum(pnl.LinearCombination(operation=pnl.CROSS_ENTROPY)([pnl.SoftMax()(o),pnl.SoftMax()(t)]))
         sm = pnl.SoftMax()
         logit = pnl.Logistic()
 
