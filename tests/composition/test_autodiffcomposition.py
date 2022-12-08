@@ -3202,10 +3202,14 @@ class TestBatching:
         o = np.array(output)
         t = np.array(target)
         # ce_numpy = -np.sum((-t * np.log(o)) - ((1 - t) * np.log((1 - o))))
-        ce_numpy = -np.sum((-t * np.log(o)) - ((1 - t) * np.log((1 - o))))
+        # ce_numpy = -np.sum((-t * np.log(o)) - ((1 - t) * np.log((1 - o))))
         # ce_pnl = np.sum(pnl.LinearCombination(operation=pnl.CROSS_ENTROPY)([pnl.SoftMax()(o),pnl.SoftMax()(t)]))
         sm = pnl.SoftMax()
-        ce_pnl = np.sum(pnl.LinearCombination(operation=pnl.CROSS_ENTROPY)([sm(o),sm(t)]))
+        logit = pnl.Logistic()
+
+        ce_nnpt = -np.sum(np.log( np.exp(o)/np.sum(np.exp(o))) * t)
+
+        ce_pnl = np.sum(pnl.LinearCombination(operation=pnl.CROSS_ENTROPY)([np.log(sm(logit(o))),t]))
 
         output = torch.Tensor(output)
         target = torch.Tensor(target)
