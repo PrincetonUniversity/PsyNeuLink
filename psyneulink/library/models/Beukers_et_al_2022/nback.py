@@ -170,7 +170,7 @@ from psyneulink import *
 # Settings for running script:
 CONSTRUCT_MODEL = True # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = False # True = show visual graphic of model
-TRAIN_FFN = True  # True => train the FFN (WM)
+TRAIN_FFN = False  # True => train the FFN (WM)
 TEST_FFN = True  # True => test the FFN on training stimuli (WM)
 RUN_MODEL = True  # True => test the model on sample stimulus sequences
 ANALYZE_RESULTS = True # True => output analysis of results of run
@@ -378,6 +378,12 @@ def construct_model(stim_size:int = STIM_SIZE,
                                                                 gain=retrievel_softmax_temp)),
                                  )
 
+    logit = TransferMechanism(name='LOGIT',
+                              size=2,
+                              # output_ports=[{VARIABLE: (OWNER_VALUE,0),
+                              #                FUNCTION: lambda x : np.log(x)}],
+                              function=Logistic)
+
     decision = TransferMechanism(name=DECISION,
                                  size=2,
                                  function=SoftMax(output=MAX_INDICATOR))
@@ -413,7 +419,7 @@ def construct_model(stim_size:int = STIM_SIZE,
                                control=(STORAGE_PROB, em))
 
     nback_model = Composition(name=NBACK_MODEL,
-                              nodes=[stim, context, task, ffn, em, decision, control],
+                              nodes=[stim, context, task, ffn, em, logit, decision, control],
                               # Terminate trial if value of control is still 1 after first pass through execution
                               termination_processing={TimeScale.TRIAL: And(Condition(lambda: control.value),
                                                                            AfterPass(0, TimeScale.TRIAL))},
@@ -425,7 +431,9 @@ def construct_model(stim_size:int = STIM_SIZE,
     nback_model.add_projection(MappingProjection(), em.output_ports["RETRIEVED_STIMULUS_FIELD"], input_retrieved_stim)
     nback_model.add_projection(MappingProjection(), em.output_ports["RETRIEVED_CONTEXT_FIELD"], input_retrieved_context)
     nback_model.add_projection(MappingProjection(), stim, em.input_ports["STIMULUS_FIELD"])
-    nback_model.add_projection(MappingProjection(), output, decision, IDENTITY_MATRIX)
+    # nback_model.add_projection(MappingProjection(), output, decision, IDENTITY_MATRIX)
+    nback_model.add_projection(MappingProjection(), output, logit, IDENTITY_MATRIX)
+    nback_model.add_projection(MappingProjection(), logit, decision, IDENTITY_MATRIX)
     nback_model.add_projection(MappingProjection(), context, em.input_ports["CONTEXT_FIELD"])
 
     if DISPLAY_MODEL:
