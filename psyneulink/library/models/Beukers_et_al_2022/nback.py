@@ -321,8 +321,9 @@ def construct_model(stim_size:int = STIM_SIZE,
                                size=hidden_size,
                                function=Dropout(p=DROPOUT_PROB))
     output = ProcessingMechanism(name=FFN_OUTPUT,
-                                   size=2,
-                                   function=ReLU)
+                                 size=2,
+                                   # function=ReLU
+                                 )
 
     ffn = AutodiffComposition(([{input_current_stim,
                                  input_current_context,
