@@ -2869,7 +2869,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 f"specifications are not compatible with the inputs required by its 'agent_rep': '{error.error_value}' "
                 f"Use the get_inputs_format() method of '{self.agent_rep.name}' to see the required format, or "
                 f"remove the specification of '{STATE_FEATURES}' from the constructor for {self.name} "
-                f"to have them automatically assigned.")
+                f"to have them automatically assigned.") from error
         except KeyError as error:   # This occurs if a Node is illegal for a reason other than above,
             pass                    # and will issue the corresponding error message.
         except:  # Legal Node specifications, but incorrect for input to agent_rep
