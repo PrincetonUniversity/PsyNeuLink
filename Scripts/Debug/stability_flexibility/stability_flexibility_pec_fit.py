@@ -113,7 +113,7 @@ outer_comp_inputs = [
 
 outer_comp_inputs = pec.get_input_format(num_trials=len(cueTrain))
 
-ret = pec.run(inputs={comp: outer_comp_inputs}, num_trials=len(cueTrain))
+ret = pec.run(inputs=outer_comp_inputs, num_trials=len(cueTrain))
 
 # Check that the parameters are recovered and that the log-likelihood is correct
 # assert np.allclose(pec.controller.optimal_parameters, [0.3, 0.6], atol=0.1)
