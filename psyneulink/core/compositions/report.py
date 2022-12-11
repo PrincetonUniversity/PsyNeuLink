@@ -697,7 +697,8 @@ class Report:
             cls._report_progress = report_progress
             cls._report_output = report_output
             cls._report_params = report_params
-            cls._reporting_enabled = report_output is not ReportOutput.OFF or cls._report_progress
+            # cls._reporting_enabled = report_output is not ReportOutput.OFF or cls._report_progress
+            cls._reporting_enabled = report_output is not ReportOutput.OFF or report_progress is not ReportProgress.OFF
             cls._report_simulations = report_simulations
             cls._rich_console = ReportDevices.CONSOLE in cls._report_to_devices
             cls._rich_divert = ReportDevices.DIVERT in cls._report_to_devices
@@ -823,10 +824,14 @@ class Report:
         if num_trials is None:
             assert False, "Report.start_progress() called with num_trials unspecified."
 
+        if not self._reporting_enabled:
+            return
+
         self._context = context
 
         # Generate space before beginning of output
         if self._use_rich and not self.output_reports:
+        # if self._use_rich and self._reporting_enabled and not self.output_reports:
             print()
 
         if comp not in self.output_reports:

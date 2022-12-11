@@ -17,9 +17,9 @@ from inspect import isgeneratorfunction
 
 __all__ = ["CompositionRunner"]
 
-def inf_yield_none():
+def inf_yield_val(val=None):
     while True:
-        yield None
+        yield val
 
 class CompositionRunner():
 
@@ -34,7 +34,7 @@ class CompositionRunner():
         if isinstance(self._composition, AutodiffComposition):
             return self._composition._get_total_loss(num_trials, context)
         total_loss = 0
-        for terminal_sequence in self._composition._terminal_backprop_sequences.values():
+        for terminal_sequence in self._composition._terminal_bacAkprop_sequences.values():
             comparator = terminal_sequence[OBJECTIVE_MECHANISM, ]
             total_loss += comparator.value[0][0]
 
@@ -170,17 +170,19 @@ class CompositionRunner():
         if isinstance(targets, dict) or callable(targets):
             targets = [targets]
         elif targets is None:
-            targets = inf_yield_none()
+            targets = inf_yield_val(targets)
 
         if isgeneratorfunction(epochs):
             epochs = epochs()
 
         if (not isinstance(epochs, list) and not isinstance(epochs, tuple)):
-            epochs = [epochs]
+            epochs = inf_yield_val(epochs)
         elif epochs is None:
-            epochs = inf_yield_none()
+            epochs = inf_yield_val(1)
 
         skip_initialization = False
+
+        # FIX JDC 12/10/22: PUT with Report HERE, TREATING OUTER LOOP AS RUN, AND RUN AS TRIAL
 
         for stim_input, stim_target, stim_epoch in zip(inputs, targets, epochs):
             if not callable(stim_input) and 'epochs' in stim_input:

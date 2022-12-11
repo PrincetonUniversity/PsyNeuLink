@@ -3201,14 +3201,20 @@ class TestBatching:
 
         o = np.array(output)
         t = np.array(target)
-        # ce_numpy = -np.sum((-t * np.log(o)) - ((1 - t) * np.log((1 - o))))
-        ce_numpy = -np.sum((-t * np.log(o)) - ((1 - t) * np.log((1 - o))))
-        # ce_pnl = np.sum(pnl.LinearCombination(operation=pnl.CROSS_ENTROPY)([pnl.SoftMax()(o),pnl.SoftMax()(t)]))
         sm = pnl.SoftMax()
-        ce_pnl = np.sum(pnl.LinearCombination(operation=pnl.CROSS_ENTROPY)([sm(o),sm(t)]))
+        logit = pnl.Logistic()
+
+        # Compute cross-entropy loss as documented for `PyTorchCrossEntropyLoss using target class probabilies vector
+        # (see https://pytorch.org/docs/stable/generated/torch.nn.CrossEntropyLoss.html);
+        # avoids "inf" value for entries = 0 in target vector
+        ce_numpy = -np.sum(np.log( np.exp(o)/np.sum(np.exp(o))) * t)
+
+        # Compute cross-entropy loss using standard mathematical formulation
+        #  which can return an "inf" value for entries = 0 in target vector
+        ce_pnl = np.sum(pnl.LinearCombination(operation=pnl.CROSS_ENTROPY)([sm(logit(o)),t]))
 
         output = torch.Tensor(output)
         target = torch.Tensor(target)
         ce_torch = adc.loss(output, target).detach().numpy()
 
-        assert np.allclose(ce_pnl, ce_torch)
+        assert np.allclose(ce_numpy, ce_torch)
