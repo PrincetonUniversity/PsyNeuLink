@@ -9292,7 +9292,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            f"{bad_entry_names}.")
 
     def _instantiate_input_dict(self, inputs):
-        """Implement dict with all INPUT Node of Composition as keys and their assigned inputs or defaults as values
+        """Implement dict with all INPUT Nodes of Composition as keys and their assigned inputs or defaults as values
         **inputs** can contain specifications for inputs to InputPorts, Mechanisms and/or nested Compositions,
             that can be at any level of nesting within self.
         Consolidate any entries of **inputs** with InputPorts as keys to Mechanism or Composition entries
@@ -9311,6 +9311,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Construct input_dict from input_nodes of self
         for INPUT_Node in input_nodes:
+
+            # MODIFIED 12/11/22 NEW:
+            if not inputs:
+                input_dict[INPUT_Node] = INPUT_Node.external_input_shape
+                continue
+            # MODIFIED 12/11/22 END
 
             # If entry is for an INPUT_Node of self, assign the entry directly to input_dict and proceed to next
             if INPUT_Node in inputs:
@@ -9379,7 +9385,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             node_input = np.empty(tuple([max_num_trials] +
                                         list(np.array(mech.external_input_shape).shape)),
                                   dtype='object').tolist()
-            # - move ports to outer access for processing below
+            # - move ports to outer axis for processing below
             node_input = np.swapaxes(np.atleast_3d(np.array(node_input, dtype=object)),0,1).tolist()
 
             # Assign specs to ports of INPUT_Node, using ones in input_port_entries or defaults

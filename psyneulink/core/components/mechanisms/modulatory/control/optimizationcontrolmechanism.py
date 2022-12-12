@@ -2853,7 +2853,7 @@ class OptimizationControlMechanism(ControlMechanism):
             raise OptimizationControlMechanismError(
                 self_has_state_features_str + f"({[d.name for d in invalid_state_features]}) " + not_in_comps_str)
 
-        # # FOLLOWING IS FOR DEBUGGING: (TO SEE CODING ERRORS DIRECTLY) -----------------------
+        # # FOLLOWING IS FOR DEBUGGING: (TO SEE CODING ERRORS DIRECTLY AND BREAK WHERE THEY OCCUR) -----------------------
         # print("****** DEBUGGING CODE STILL IN OCM -- REMOVE FOR PROPER TESTING ************")
         # inputs_dict, num_inputs = self.agent_rep._parse_input_dict(self.parameters.state_feature_values._get(context))
         # #  END DEBUGGING ---------------------------------------------------------------------
@@ -3721,7 +3721,40 @@ class OptimizationControlMechanism(ControlMechanism):
     def get_inputs(self):
         """
         A method that returns the complete input values passed to the last call of run for the composition that
-        this OCM controls. This method is used by the OCM to get the complete input dictionary for all trials in
-        order to pass them on to the agent_rep during simulation.
+        this OCM controls. This method is used by the OCM in ParamterEstimationCompositionto get the complete
+        input dictionary for all trials in order to pass them on to the agent_rep during simulation.  It takes a
+        standard input dictionary (of the form specified by Composition.get_input_format(), and refactors it to
+        provide all trials' worth of inputs to each INPUT Node of the Composition being estimated or optimized.
         """
-        return self._input_values
+
+        # return self._input_values
+        if not hasattr(self, '_input_values') or self._input_values is None:
+            return None
+
+        from psyneulink.core.compositions.parameterestimationcomposition import\
+            ParameterEstimationComposition, ParameterEstimationCompositionError
+        model = list(self._input_values.keys())[0]
+        if (isinstance(self.composition, ParameterEstimationComposition)
+                and (len(self._input_values) != 1
+                     or not isinstance(self._input_values, dict)
+                     or model != self.composition.nodes[0]
+                )) :
+            raise ParameterEstimationCompositionError(f"The 'inputs' argument for the run() method of a "
+                                                      f"ParameterEstimationComposition must contain a single dict "
+                                                      f"specifying the inputs for the Composition (model) being "
+                                                      f"estimated or optimized ('{self.composition.nodes[0].name}'); "
+                                                      f"use {self.composition.name}.get_input_format() to see "
+                                                      f"the required format of the dict.")
+        trial_inputs = self._input_values[model]
+        input_values = {k:[] for k in self.state_input_ports}
+        for trial in trial_inputs:
+            if len(trial) != self.num_state_input_ports:
+                raise ParameterEstimationCompositionError(f"Each entry in the dict specifed in the `input` arg of "
+                                                          f"ParameterEstimationMechanism.run() must have the same "
+                                                          f"number of entries ({self.num_state_input_ports}) as there"
+                                                          f"are INPUT Nodes in the Composition (model) being estimated"
+                                                          f"or optimized ('{self.composition.nodes[0].name}'.")
+            for i in range(self.num_state_input_ports):
+                input_values[self.state_input_ports[i]].append(trial[i])
+
+        return input_values

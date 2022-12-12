@@ -663,10 +663,15 @@ class ParameterEstimationComposition(Composition):
 
         # We need to set the inputs for the composition during simulation, override the state features with the
         # inputs dict passed to the PEC run. This assumes that the inputs dict has the same order as the
-        # state features.
-        for state_input_port, value in zip(self.controller.state_input_ports, self.controller.get_inputs().values()):
+        # state features (i.e., as specified by PEC.get_input_format());
+        # note: the dict returned by get_inputs rearranges the inputs so that each node gets a full trial's worth of
+        # data
+        inputs_dict = self.controller.get_inputs()
+        for state_input_port, value in zip(self.controller.state_input_ports, inputs_dict.values()):
             state_input_port.parameters.value._set(value, context)
-
+        # Need to pass restructured inputs dict to run
+        # kwargs['inputs'] = {self.nodes[0]: list(inputs_dict.values())}
+        kwargs.pop('inputs')
         # Run the composition as normal
         return super(ParameterEstimationComposition, self).run(*args, **kwargs)
 
@@ -721,3 +726,8 @@ class ParameterEstimationComposition(Composition):
         # then it will raise an error.
         return self.controller.function.log_likelihood(*args, context=context)
 
+    def _parse_run_inputs(self, inputs, context):
+        return self._parse_input_dict({})
+
+    def _complete_init_of_partially_initialized_nodes(self, context):
+        pass
