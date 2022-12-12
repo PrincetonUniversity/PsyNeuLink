@@ -26,7 +26,7 @@ items to be logged, respectively. Entries can also be made by the user programma
 <Log.log_values>` method. Logging can be useful not only for observing the behavior of a Component in a model, but also
 in debugging the model during construction. The entries of a Log can be displayed in a "human readable" table using
 its `print_entries <Log.print_entries>` method, and returned in CSV and numpy array formats using its and `nparray
-<Log.nparray>`, `nparray_dictionary <Log.nparray_dictionary>` and `csv <Log.csv>`  methods.
+<Log.nparray>`, `nparray_dictionary <Log.nparray_dictionary>` and `csv <Log.csv>`  methods, respectively.
 
 .. _Log_Creation:
 
