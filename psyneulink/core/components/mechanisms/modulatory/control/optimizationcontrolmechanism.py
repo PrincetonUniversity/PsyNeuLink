@@ -1838,8 +1838,6 @@ class OptimizationControlMechanism(ControlMechanism):
                 self.initialization_status = ContextFlags.DEFERRED_INIT
                 return
 
-        self._input_values = None
-
         super().__init__(
             agent_rep=agent_rep,
             state_feature_specs=state_features,
