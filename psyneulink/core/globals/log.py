@@ -26,7 +26,7 @@ items to be logged, respectively. Entries can also be made by the user programma
 <Log.log_values>` method. Logging can be useful not only for observing the behavior of a Component in a model, but also
 in debugging the model during construction. The entries of a Log can be displayed in a "human readable" table using
 its `print_entries <Log.print_entries>` method, and returned in CSV and numpy array formats using its and `nparray
-<Log.nparray>`, `nparray_dictionary <Log.nparray_dictionary>` and `csv <Log.csv>`  methods.
+<Log.nparray>`, `nparray_dictionary <Log.nparray_dictionary>` and `csv <Log.csv>`  methods, respectively.
 
 .. _Log_Creation:
 
@@ -74,7 +74,8 @@ to access its `entries <Log.entries>`:
     ..
     * `nparray <Log.csv>` -- returns a 2d np.array with the `entries <Log.entries>` in the Log.
     ..
-    * `nparray_dictionary <Log.nparray_dictionary>` -- returns a dictionary of np.arrays with the `entries <Log.entries>` in the Log.
+    * `nparray_dictionary <Log.nparray_dictionary>` -- returns a dictionary of np.arrays
+      with the `entries <Log.entries>` in the Log.
     ..
     * `csv <Log.csv>` -- returns a CSV-formatted string with the `entries <Log.entries>` in the Log.
 
@@ -385,10 +386,12 @@ import warnings
 
 from collections import OrderedDict, namedtuple
 from collections.abc import MutableMapping
+from typing import Union
 
 import numpy as np
 import typecheck as tc
 
+from psyneulink.core.components.component import Component
 from psyneulink.core.globals.context import ContextFlags, _get_time, handle_external_context
 from psyneulink.core.globals.context import time as time_object
 from psyneulink.core.globals.keywords import ALL, CONTEXT, EID_SIMULATION, FUNCTION_PARAMETER_PREFIX, MODULATED_PARAMETER_PREFIX, TIME, VALUE
@@ -685,7 +688,7 @@ class Log:
     context_header = 'Execution Context'
     data_header = 'Data'
 
-    def __init__(self, owner, entries=None):
+    def __init__(self, owner:Union[Component, None], entries:Union[str, Component, list, None]=None):
         """Initialize Log with list of entries
 
         Each item of the entries list should be a string designating a Component to be logged;
@@ -910,7 +913,6 @@ class Log:
     @tc.typecheck
     @handle_external_context()
     def _deliver_values(self, entries, context=None):
-        from psyneulink.core.globals.parameters import parse_context
         """Deliver the value of one or more Components programmatically.
 
         This can be used to "manually" prepare the `value <Component.value>` of any of a Component's `loggable_items
@@ -929,6 +931,8 @@ class Log:
             they must be `loggable_items <Log.loggable_items>` of the owner's Log. If **entries** is *ALL* or is not
             specified, then the `value <Component.value>`\\s of all `loggable_items <Log.loggable_items>` are logged.
         """
+        from psyneulink.core.globals.parameters import parse_context
+
         entries = self._validate_entries_arg(entries)
         original_source = context.source
         context.source = ContextFlags.COMMAND_LINE
@@ -1003,7 +1007,6 @@ class Log:
     @tc.typecheck
     @handle_external_context()
     def log_values(self, entries, context=None):
-        from psyneulink.core.globals.parameters import parse_context
         """Log the value of one or more Components programmatically.
 
         This can be used to "manually" enter the `value <Component.value>` of any of a Component's `loggable_items
@@ -1022,6 +1025,8 @@ class Log:
             they must be `loggable_items <Log.loggable_items>` of the owner's Log. If **entries** is *ALL* or is not
             specified, then the `value <Component.value>`\\s of all `loggable_items <Log.loggable_items>` are logged.
         """
+        from psyneulink.core.globals.parameters import parse_context
+
         entries = self._validate_entries_arg(entries)
 
         # Validate the Component field of each LogEntry
@@ -1121,11 +1126,11 @@ class Log:
 
     @tc.typecheck
     def print_entries(self,
-                      entries:tc.optional(tc.any(str, list, is_component))=ALL,
+                      entries:Union[str, list, Component, None]=ALL,
                       width:int=120,
-                      display:tc.any(tc.enum(TIME, CONTEXT, VALUE, ALL), list)=ALL,
+                      display:Union[TIME, CONTEXT, VALUE, ALL, list]=ALL,
                       contexts=NotImplemented,
-                      exclude_sims=False,
+                      exclude_sims:bool=False,
                       # long_context=False
                       ):
         """
@@ -1296,12 +1301,12 @@ class Log:
 
     @tc.typecheck
     def nparray(self,
-                entries=None,
+                entries:Union[str, Component, list, None]=None,
                 header:bool=True,
                 owner_name:bool=False,
                 contexts=NotImplemented,
-                exclude_sims=False,
-                ):
+                exclude_sims:bool=False,
+                )->np.ndarray:
         """
         nparray(                 \
             entries=None,        \
@@ -1434,9 +1439,13 @@ class Log:
 
         return npa
 
-    def nparray_dictionary(self, entries=None, contexts=NotImplemented, exclude_sims=False):
+    def nparray_dictionary(self,
+                           entries:Union[str, Component, list]=None,
+                           contexts=NotImplemented,
+                           exclude_sims:bool=False
+                           )->OrderedDict:
         """
-        nparray_dictionary(                 \
+        nparray_dictionary(      \
             entries=None,        \
             )
 
@@ -1536,7 +1545,12 @@ class Log:
         return log_dict
 
     @tc.typecheck
-    def csv(self, entries=None, owner_name:bool=False, quotes:tc.optional(tc.any(bool, str))="\'", contexts=NotImplemented, exclude_sims=False):
+    def csv(self,
+            entries:Union[str, Component, list]=None,
+            owner_name:bool=False,
+            quotes:Union[None, bool, str]="\'",
+            exclude_sims:bool=False
+            )->str:
         """
         csv(                           \
             entries=None,              \
@@ -1549,8 +1563,8 @@ class Log:
         Each row (axis 0) is a time point, beginning with the time stamp and followed by the data for each
         Component at that time point, in the order they are specified in the **entries** argument. If all of the data
         for every Component have time values, then the first four items of each row are the time indices for the run,
-        trial, pass, and time_step of that time point, respectively, followed by the data for each Component at that time
-        point;  if a Component has no data for a time point, `None` is entered.
+        trial, pass, and time_step of that time point, respectively, followed by the data for each Component at that
+        time point;  if a Component has no data for a time point, `None` is entered.
 
         If any of the data for any Component does not have a time value (i.e., it has `None` in the time field of
         its `LogEntry`) then all of the entries must have the same number of data (LogEntry) items, and the first item
@@ -1560,7 +1574,7 @@ class Log:
            For data without time stamps, items in the same row are not guaranteed to refer to the same time point.
 
         The **owner_name** argument can be used to prepend the header for each Component with its owner.
-        The **quotes** argument can be used to suppress or specifiy quotes to use around numeric values.
+        The **quotes** argument can be used to suppress or specify quotes to use around numeric values.
 
 
         Arguments
@@ -1582,7 +1596,7 @@ class Log:
             if specified with a string, that is used in place of single quotes to enclose *all* items;
             if `False` or `None`, single quotes are used for headers (the items in the first row), but no others.
 
-        exclude_sims
+        exclude_sims : bool : default False
             set to True to exclude from output any values logged during `simulations <OptimizationControlMechanism_Model_Based>`
 
             :default value: False
