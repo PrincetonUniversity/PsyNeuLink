@@ -3182,7 +3182,7 @@ class OptimizationControlMechanism(ControlMechanism):
             assert self.parameters.comp_execution_mode._get(context) == "Python"
             exec_mode = pnlvm.ExecutionMode.Python
 
-            predicted_input = state_features = self.get_inputs() if self.get_inputs() else self.parameters.state_feature_values._get(context)
+            predicted_input = state_features = self.parameters.state_feature_values._get(context)
             ret_val = self.agent_rep.evaluate(predicted_input,
                                               control_allocation,
                                               self.parameters.num_trials_per_estimate._get(context),
@@ -3709,52 +3709,3 @@ class OptimizationControlMechanism(ControlMechanism):
         self.agent_rep.initialize(features_array=np.array(self.defaults.variable[1:]),
                                   control_signals = self.control_signals,
                                   context=context)
-
-
-    def set_inputs(self, inputs):
-        """
-        A method that allows caching the complete input values passed to the last call of run for the composition that
-        this OCM controls. This method is used by the ParamterEstimationComposition in its run method.
-        """
-        self._input_values = inputs
-
-    def get_inputs(self):
-        """
-        A method that returns the complete input values passed to the last call of run for the composition that
-        this OCM controls. This method is used by the OCM in ParamterEstimationCompositionto get the complete
-        input dictionary for all trials in order to pass them on to the agent_rep during simulation.  It takes a
-        standard input dictionary (of the form specified by Composition.get_input_format(), and refactors it to
-        provide all trials' worth of inputs to each INPUT Node of the Composition being estimated or optimized.
-        """
-
-        # return self._input_values
-        if not hasattr(self, '_input_values') or self._input_values is None:
-            return None
-
-        from psyneulink.core.compositions.parameterestimationcomposition import\
-            ParameterEstimationComposition, ParameterEstimationCompositionError
-        model = list(self._input_values.keys())[0]
-        if (isinstance(self.composition, ParameterEstimationComposition)
-                and (len(self._input_values) != 1
-                     or not isinstance(self._input_values, dict)
-                     or model != self.composition.nodes[0]
-                )) :
-            raise ParameterEstimationCompositionError(f"The 'inputs' argument for the run() method of a "
-                                                      f"ParameterEstimationComposition must contain a single dict "
-                                                      f"specifying the inputs for the Composition (model) being "
-                                                      f"estimated or optimized ('{self.composition.nodes[0].name}'); "
-                                                      f"use {self.composition.name}.get_input_format() to see "
-                                                      f"the required format of the dict.")
-        trial_inputs = self._input_values[model]
-        input_values = {k:[] for k in self.state_input_ports}
-        for trial in trial_inputs:
-            if len(trial) != self.num_state_input_ports:
-                raise ParameterEstimationCompositionError(f"Each entry in the dict specifed in the `input` arg of "
-                                                          f"ParameterEstimationMechanism.run() must have the same "
-                                                          f"number of entries ({self.num_state_input_ports}) as there"
-                                                          f"are INPUT Nodes in the Composition (model) being estimated"
-                                                          f"or optimized ('{self.composition.nodes[0].name}'.")
-            for i in range(self.num_state_input_ports):
-                input_values[self.state_input_ports[i]].append(trial[i])
-
-        return input_values

@@ -813,7 +813,7 @@ class OptimizationFunction(Function_Base):
         assert ocm is ocm.agent_rep.controller
 
         # Compiled evaluate expects the same variable as composition
-        state_features = ocm.get_inputs() if ocm.get_inputs() else ocm.parameters.state_feature_values._get(context)
+        state_features = ocm.parameters.state_feature_values._get(context)
         inputs, num_inputs_sets = ocm.agent_rep._parse_run_inputs(state_features, context)
 
         num_evals = np.prod([d.num for d in self.search_space])
