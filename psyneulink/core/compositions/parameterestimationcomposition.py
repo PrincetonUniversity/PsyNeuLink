@@ -666,8 +666,9 @@ class ParameterEstimationComposition(Composition):
         # without having the PEC provide them one-by-one to the simulated composition.  This assumes that the inputs 
         # dict has the inputs specified in the same order as the state features (i.e., as specified by 
         # PEC.get_input_format()), and rearranges them so that each node gets a full trial's worth of inputs.
-        # inputs_dict = self.controller.self.parameters.state_feature_values._get(context)
-        inputs_dict = self.controller._get_pec_inputs()
+        inputs_dict = self.controller.self.parameters.state_feature_values._get(context)
+        # inputs_dict = self.controller._get_pec_inputs()
+
         for state_input_port, value in zip(self.controller.state_input_ports, inputs_dict.values()):
             state_input_port.parameters.value._set(value, context)
         # Need to pass restructured inputs dict to run
@@ -735,8 +736,43 @@ class ParameterEstimationComposition(Composition):
 
 
 
-def _pec_ocm_state_feature_values_getter(owning_component=None, context=None):
-    return owning_component._get_pec_inputs()
+def _pec_ocm_state_feature_values_getter(self=None, context=None):
+    """
+    A method that returns the complete input values passed to the last call of run for the composition that
+    this OCM controls. This method is used by the OCM in ParamterEstimationCompositionto get the complete
+    input dictionary for all trials in order to pass them on to the agent_rep during simulation.  It takes a
+    standard input dictionary (of the form specified by Composition.get_input_format(), and refactors it to
+    provide all trials' worth of inputs to each INPUT Node of the Composition being estimated or optimized.
+    """
+    # return owning_component._get_pec_inputs()
+
+    model = list(self._pec_input_values.keys())[0]
+    if not isinstance(self.composition, ParameterEstimationComposition):
+        raise ParameterEstimationCompositionError(
+            f"A PEC_OCM can only be used with a ParmeterEstimationComposition")
+
+    if (len(self._pec_input_values) != 1
+            or not isinstance(self._pec_input_values, dict)
+            or model != self.composition.nodes[0]):
+        raise ParameterEstimationCompositionError(f"The 'inputs' argument for the run() method of a "
+                                                  f"ParameterEstimationComposition must contain a single dict "
+                                                  f"specifying the inputs for the Composition (model) being "
+                                                  f"estimated or optimized ('{self.composition.nodes[0].name}'); "
+                                                  f"use {self.composition.name}.get_input_format() to see "
+                                                  f"the required format of the dict.")
+    trial_inputs = self._pec_input_values[model]
+    input_values = {k:[] for k in self.state_input_ports}
+    for trial in trial_inputs:
+        if len(trial) != self.num_state_input_ports:
+            raise ParameterEstimationCompositionError(f"Each entry in the dict specifed in the `input` arg of "
+                                                      f"ParameterEstimationMechanism.run() must have the same "
+                                                      f"number of entries ({self.num_state_input_ports}) as there"
+                                                      f"are INPUT Nodes in the Composition (model) being estimated"
+                                                      f"or optimized ('{self.composition.nodes[0].name}'.")
+        for i in range(self.num_state_input_ports):
+            input_values[self.state_input_ports[i]].append(trial[i])
+
+    return input_values
 
 
 class PEC_OCM(OptimizationControlMechanism):
@@ -751,10 +787,10 @@ class PEC_OCM(OptimizationControlMechanism):
     class Parameters(OptimizationControlMechanism.Parameters):
         state_feature_values = Parameter(None,getter=_pec_ocm_state_feature_values_getter,
                                          user=False,  pnl_internal=True, read_only=True)
+
     def __init__(self, *args, **kwargs):
         self._pec_input_values = None
         super().__init__(*args, **kwargs)
-
 
     def _cache_pec_inputs(self, inputs):
         """
@@ -762,44 +798,3 @@ class PEC_OCM(OptimizationControlMechanism):
         this OCM controls. This method is used by the ParamterEstimationComposition in its run method.
         """
         self._pec_input_values = inputs
-
-    def _get_pec_inputs(self):
-        """
-        A method that returns the complete input values passed to the last call of run for the composition that
-        this OCM controls. This method is used by the OCM in ParamterEstimationCompositionto get the complete
-        input dictionary for all trials in order to pass them on to the agent_rep during simulation.  It takes a
-        standard input dictionary (of the form specified by Composition.get_input_format(), and refactors it to
-        provide all trials' worth of inputs to each INPUT Node of the Composition being estimated or optimized.
-        """
-
-        # # return self._pec_input_values
-        # if not hasattr(self, '_pec_input_values') or self._pec_input_values is None:
-        #     return None
-
-        model = list(self._pec_input_values.keys())[0]
-        if not isinstance(self.composition, ParameterEstimationComposition):
-            raise ParameterEstimationCompositionError(
-                f"A PEC_OCM can only be used with a ParmeterEstimationComposition")
-
-        if (len(self._pec_input_values) != 1
-                or not isinstance(self._pec_input_values, dict)
-                or model != self.composition.nodes[0]):
-            raise ParameterEstimationCompositionError(f"The 'inputs' argument for the run() method of a "
-                                                      f"ParameterEstimationComposition must contain a single dict "
-                                                      f"specifying the inputs for the Composition (model) being "
-                                                      f"estimated or optimized ('{self.composition.nodes[0].name}'); "
-                                                      f"use {self.composition.name}.get_input_format() to see "
-                                                      f"the required format of the dict.")
-        trial_inputs = self._pec_input_values[model]
-        input_values = {k:[] for k in self.state_input_ports}
-        for trial in trial_inputs:
-            if len(trial) != self.num_state_input_ports:
-                raise ParameterEstimationCompositionError(f"Each entry in the dict specifed in the `input` arg of "
-                                                          f"ParameterEstimationMechanism.run() must have the same "
-                                                          f"number of entries ({self.num_state_input_ports}) as there"
-                                                          f"are INPUT Nodes in the Composition (model) being estimated"
-                                                          f"or optimized ('{self.composition.nodes[0].name}'.")
-            for i in range(self.num_state_input_ports):
-                input_values[self.state_input_ports[i]].append(trial[i])
-
-        return input_values
