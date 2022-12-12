@@ -666,7 +666,8 @@ class ParameterEstimationComposition(Composition):
         # without having the PEC provide them one-by-one to the simulated composition.  This assumes that the inputs 
         # dict has the inputs specified in the same order as the state features (i.e., as specified by 
         # PEC.get_input_format()), and rearranges them so that each node gets a full trial's worth of inputs.
-        inputs_dict = self.controller.self.parameters.state_feature_values._get(context)
+        # inputs_dict = self.controller.self.parameters.state_feature_values._get(context)
+        inputs_dict = self.controller._get_pec_inputs()
         for state_input_port, value in zip(self.controller.state_input_ports, inputs_dict.values()):
             state_input_port.parameters.value._set(value, context)
         # Need to pass restructured inputs dict to run
