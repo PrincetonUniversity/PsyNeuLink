@@ -162,6 +162,7 @@ from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import BEFORE, OVERRIDE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
+from psyneulink.core.globals.utilities import convert_to_list
 from psyneulink.core.scheduling.time import TimeScale
 
 
@@ -470,13 +471,27 @@ class ParameterEstimationComposition(Composition):
         self._validate_params(locals())
 
         # Assign model
-        if model is not None:
+        self.model = None
+        if model:
             # If model has been specified, assign as (only) node in PEC, otherwise specification(s) in kwargs are used
             # (Note: _validate_params() ensures that either model or nodes and/or pathways are specified, but not both)
-            kwargs.update({'nodes': model})
             self.model = model
-        else:
-            self.model = self
+        elif 'nodes' in kwargs:
+            nodes = convert_to_list(kwargs['nodes'])
+            # A single Composition specified in nodes argument, so use as model
+            if len(nodes) == 1 and isinstance(nodes[0], Composition):
+                self.model = nodes[0]
+        elif 'pathways' in kwargs:
+            pways = convert_to_list(kwargs['pathways'])
+            # A single Composition specified in pathways arg, so use as model
+            if len(pways) == 1 and isinstance(pways[0], Composition):
+                self.model = pways[0]
+        if self.model is None:
+            # Use arguments provided to PEC to construct model
+            self.model = Composition(**kwargs)
+
+        # Provide self.model as single node of PEC
+        kwargs.update({'nodes': self.model})
 
         self.optimized_parameter_values = []
 
@@ -515,6 +530,7 @@ class ParameterEstimationComposition(Composition):
         #     - Composition's components are all available (limits need for deferred_inits)
         #     - search for seed params in _instantiate_ocm doesn't include pem itself or its functions)
         ocm = self._instantiate_ocm(agent_rep=self.model,
+        # ocm = self._instantiate_ocm(agent_rep=self,
                                     parameters=parameters,
                                     outcome_variables=outcome_variables,
                                     data=self.data,

@@ -3882,7 +3882,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.log = CompositionLog(owner=self)
         self._terminal_backprop_sequences = {}
 
+        # Controller
         self.controller = None
+        self._controller_initialization_status = ContextFlags.INITIALIZED
+        self.enable_controller = enable_controller
+        if controller:
+            self.add_controller(controller)
+        self.controller_mode = controller_mode
+        self.controller_time_scale = controller_time_scale
+        self.controller_condition = controller_condition
+        self.controller_condition.owner = self.controller
+        # This is set at runtime and may be used by the controller to assign its
+        #     `num_trials_per_estimate <OptimizationControlMechanism.num_trials_per_estimate>` attribute.
+        self.num_trials = None
 
         # FIX 4/8/20 [JDC]: WHY NOT CALL add_nodes()?
         # Nodes, Projections, and Pathways
@@ -3900,20 +3912,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.add_projections(projections)
 
         self.add_pathways(pathways, context=context)
-
-        # Controller
-        self.controller = None
-        self._controller_initialization_status = ContextFlags.INITIALIZED
-        self.enable_controller = enable_controller
-        if controller:
-            self.add_controller(controller)
-        self.controller_mode = controller_mode
-        self.controller_time_scale = controller_time_scale
-        self.controller_condition = controller_condition
-        self.controller_condition.owner = self.controller
-        # This is set at runtime and may be used by the controller to assign its
-        #     `num_trials_per_estimate <OptimizationControlMechanism.num_trials_per_estimate>` attribute.
-        self.num_trials = None
 
         self._update_parameter_components()
 
