@@ -101,17 +101,16 @@ pec.controller.parameters.comp_execution_mode.set("LLVM")
 pec.controller.function.parameters.save_values.set(True)
 
 # # ll, sim_data = pec.log_likelihood(0.3, 0.6, inputs=inputs_dict)
-outer_comp_inputs = [
-    [
-        np.array(taskTrain[i]),
-        np.array(stimulusTrain[i]),
-        np.array(cueTrain[i]),
-        np.array(0),
-    ]
-    for i in range(len(cueTrain))
-]
+# outer_comp_inputs = [
+#     [
+#         np.array(taskTrain[i]),
+#         np.array(stimulusTrain[i]),
+#         np.array(cueTrain[i]),
+#         np.array(0),
+#     ]
+#     for i in range(len(cueTrain))
+# ]
 
-# outer_comp_inputs = pec.get_input_format(num_trials=len(cueTrain))
 outer_comp_inputs = pec.get_input_format(num_trials=len(cueTrain))
 
 # ret = pec.run(inputs={comp: outer_comp_inputs}, num_trials=len(cueTrain))

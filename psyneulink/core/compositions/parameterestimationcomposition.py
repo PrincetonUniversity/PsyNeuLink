@@ -136,6 +136,15 @@ Supported Optimizers
 
 TBD
 
+Structure
+---------
+
+.. technical_note::
+   ParameterEstimationComposition uses an `PEC_OCM` as its `controller <Composition.controller>` -- a specialized
+   subclass of `OptimizationControlMechanism` that intercepts inputs provided to the `run
+   <ParameterEstimationComposition.run>` method of the ParameterEstimationComposition, and assigns them directly
+   to the `state_feature_values` of the PEC_OCM when it executes.
+
 .. _ParameterEstimationComposition_Class_Reference:
 
 Class Reference
@@ -673,7 +682,7 @@ class ParameterEstimationComposition(Composition):
             state_input_port.parameters.value._set(value, context)
         # Need to pass restructured inputs dict to run
         # kwargs['inputs'] = {self.nodes[0]: list(inputs_dict.values())}
-        kwargs.pop('inputs')
+        kwargs.pop('inputs', None)
         # Run the composition as normal
         return super(ParameterEstimationComposition, self).run(*args, **kwargs)
 
