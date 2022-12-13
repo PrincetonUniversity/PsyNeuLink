@@ -663,8 +663,8 @@ class ParameterEstimationComposition(Composition):
 
         # We need to set the inputs for the composition during simulation, by assigning the inputs dict passed in
         # PEC run() to its controller's state_feature_values (this is in order to accomodate multi-trial inputs
-        # without having the PEC provide them one-by-one to the simulated composition.  This assumes that the inputs 
-        # dict has the inputs specified in the same order as the state features (i.e., as specified by 
+        # without having the PEC provide them one-by-one to the simulated composition. This assumes that the inputs
+        # dict has the inputs specified in the same order as the state features (i.e., as specified by
         # PEC.get_input_format()), and rearranges them so that each node gets a full trial's worth of inputs.
         inputs_dict = self.controller.parameters.state_feature_values._get(context)
         # inputs_dict = self.controller._get_pec_inputs()
@@ -788,15 +788,15 @@ class PEC_OCM(OptimizationControlMechanism):
     """
     class Parameters(OptimizationControlMechanism.Parameters):
         """
-            Attributes
-            ----------
-                state_feature_values
-                    overrides `state_feature_values <OptimizationControlMechanism.state_feature_values` to
-                    assign inputs provided to run() method of ParameterEstimationComposition, and cached in
-                    pec_ocm._pec_input_values, that returns inputs reformatted to provide full set of trials'
-                    worth of inputs to each node of Composition being estimated or optimized.
-                    :default value: {}
-                    :type: dict
+        Attributes
+        ----------
+            state_feature_values
+                overrides `state_feature_values <OptimizationControlMechanism.state_feature_values` to
+                assign inputs provided to run() method of ParameterEstimationComposition, and cached in
+                pec_ocm._pec_input_values, that returns inputs reformatted to provide full set of trials'
+                worth of inputs to each node of Composition being estimated or optimized.
+                :default value: {}
+                :type: dict
         """
         state_feature_values = Parameter(None, getter=_pec_ocm_state_feature_values_getter,
                                          user=False, pnl_internal=True, read_only=True)
