@@ -780,11 +780,11 @@ def _pec_ocm_state_feature_values_getter(owning_component=None, context=None)->d
 class PEC_OCM(OptimizationControlMechanism):
     """OptimizationControlMechanism specialized for use with ParameterEstimationComposition
     Assign inputs passed to run method of ParameterEstimationComposition directly as values of
-      OptimizationControlMechanism's state_input_ports (this allows a full set of trials' worth of inputs
-      to be used to simulate
-    - Add set_input() method (call by PEC to cache inputs passed to its run method)
-    - Add _get_pec_inputs() method (called by state_feature_values_getter to get inputs
-    - Override state_feature_values_getter to return _get_pec_inputs
+      PEC_OCM's state_input_ports (this allows a full set of trials' worth of inputs to be used in each
+      run of the Composition being estimated or optimized.
+    _cache_pec_inputs(): called by PEC to cache inputs passed to its run method
+    _pec_ocm_state_feature_values_getter(): overrides state_feature_values_getter of OptimizationControlMechanism
+      to return input dict for simulation that incluces all trials' worth of inputs for each node.
     """
     class Parameters(OptimizationControlMechanism.Parameters):
         """
