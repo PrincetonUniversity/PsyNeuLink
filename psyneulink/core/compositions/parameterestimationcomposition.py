@@ -736,7 +736,7 @@ class ParameterEstimationComposition(Composition):
 
 
 def _pec_ocm_state_feature_values_getter(owning_component=None, context=None)->dict:
-    """Return the complete input values passed to the last call of run for the composition that the PEC_OCM controls.
+    """Return the complete input values passed to the last call of run for the Composition that the PEC_OCM controls.
     This method is used by the PEC_OCM to get the complete input dictionary for all trials, in order to pass them on
     to the agent_rep during simulation.  It takes a standard input dictionary (of the form specified by
     Composition.get_input_format(), and refactors it to provide all trials' worth of inputs to each INPUT Node of
@@ -779,9 +779,9 @@ def _pec_ocm_state_feature_values_getter(owning_component=None, context=None)->d
 
 class PEC_OCM(OptimizationControlMechanism):
     """OptimizationControlMechanism specialized for use with ParameterEstimationComposition
-    - Assign inputs passed to run method of ParameterEstimationComposition directly as values of
+    Assign inputs passed to run method of ParameterEstimationComposition directly as values of
       OptimizationControlMechanism's state_input_ports (this allows a full set of trials' worth of inputs
-      to be used)
+      to be used to simulate
     - Add set_input() method (call by PEC to cache inputs passed to its run method)
     - Add _get_pec_inputs() method (called by state_feature_values_getter to get inputs
     - Override state_feature_values_getter to return _get_pec_inputs
