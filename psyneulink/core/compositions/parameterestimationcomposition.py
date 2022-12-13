@@ -735,45 +735,44 @@ class ParameterEstimationComposition(Composition):
         pass
 
 
+def _pec_ocm_state_feature_values_getter(owning_component=None, context=None)->dict:
+    """Return the complete input values passed to the last call of run for the composition that the PEC_OCM controls.
+    This method is used by the PEC_OCM to get the complete input dictionary for all trials, in order to pass them on
+    to the agent_rep during simulation.  It takes a standard input dictionary (of the form specified by
+    Composition.get_input_format(), and refactors it to provide all trials' worth of inputs to each INPUT Node of
+    the Composition being estimated or optimized.
+    """
+    pec_ocm = owning_component
 
-def _pec_ocm_state_feature_values_getter(self=None, context=None)->dict:
-    """
-    Returns the complete input values passed to the last call of run for the composition that
-    this OCM controls. This method is used by the OCM in ParamterEstimationCompositionto get the complete
-    input dictionary for all trials in order to pass them on to the agent_rep during simulation.  It takes a
-    standard input dictionary (of the form specified by Composition.get_input_format(), and refactors it to
-    provide all trials' worth of inputs to each INPUT Node of the Composition being estimated or optimized.
-    """
-    # return owning_component._get_pec_inputs()
     try:
-        model = list(self._pec_input_values.keys())[0]
+        model = list(pec_ocm._pec_input_values.keys())[0]
     except:
         return {}
 
-    if not isinstance(self.composition, ParameterEstimationComposition):
+    if not isinstance(pec_ocm.composition, ParameterEstimationComposition):
         raise ParameterEstimationCompositionError(
             f"A PEC_OCM can only be used with a ParmeterEstimationComposition")
 
-    if (len(self._pec_input_values) != 1
-            or not isinstance(self._pec_input_values, dict)
-            or model != self.composition.nodes[0]):
+    if (len(pec_ocm._pec_input_values) != 1
+            or not isinstance(pec_ocm._pec_input_values, dict)
+            or model != pec_ocm.composition.nodes[0]):
         raise ParameterEstimationCompositionError(f"The 'inputs' argument for the run() method of a "
                                                   f"ParameterEstimationComposition must contain a single dict "
                                                   f"specifying the inputs for the Composition (model) being "
-                                                  f"estimated or optimized ('{self.composition.nodes[0].name}'); "
-                                                  f"use {self.composition.name}.get_input_format() to see "
+                                                  f"estimated or optimized ('{pec_ocm.composition.nodes[0].name}'); "
+                                                  f"use {pec_ocm.composition.name}.get_input_format() to see "
                                                   f"the required format of the dict.")
-    trial_inputs = self._pec_input_values[model]
-    input_values = {k:[] for k in self.state_input_ports}
+    trial_inputs = pec_ocm._pec_input_values[model]
+    input_values = {k:[] for k in pec_ocm.state_input_ports}
     for trial in trial_inputs:
-        if len(trial) != self.num_state_input_ports:
+        if len(trial) != pec_ocm.num_state_input_ports:
             raise ParameterEstimationCompositionError(f"Each entry in the dict specifed in the `input` arg of "
                                                       f"ParameterEstimationMechanism.run() must have the same "
-                                                      f"number of entries ({self.num_state_input_ports}) as there"
+                                                      f"number of entries ({pec_ocm.num_state_input_ports}) as there"
                                                       f"are INPUT Nodes in the Composition (model) being estimated"
-                                                      f"or optimized ('{self.composition.nodes[0].name}'.")
-        for i in range(self.num_state_input_ports):
-            input_values[self.state_input_ports[i]].append(trial[i])
+                                                      f"or optimized ('{pec_ocm.composition.nodes[0].name}'.")
+        for i in range(pec_ocm.num_state_input_ports):
+            input_values[pec_ocm.state_input_ports[i]].append(trial[i])
 
     return input_values
 
@@ -788,16 +787,26 @@ class PEC_OCM(OptimizationControlMechanism):
     - Override state_feature_values_getter to return _get_pec_inputs
     """
     class Parameters(OptimizationControlMechanism.Parameters):
-        state_feature_values = Parameter(None,getter=_pec_ocm_state_feature_values_getter,
-                                         user=False,  pnl_internal=True, read_only=True)
+        """
+            Attributes
+            ----------
+                state_feature_values
+                    overrides `state_feature_values <OptimizationControlMechanism.state_feature_values` to
+                    assign inputs provided to run() method of ParameterEstimationComposition, and cached in
+                    pec_ocm._pec_input_values, that returns inputs reformatted to provide full set of trials'
+                    worth of inputs to each node of Composition being estimated or optimized.
+                    :default value: {}
+                    :type: dict
+        """
+        state_feature_values = Parameter(None, getter=_pec_ocm_state_feature_values_getter,
+                                         user=False, pnl_internal=True, read_only=True)
 
     def __init__(self, *args, **kwargs):
         self._pec_input_values = None
         super().__init__(*args, **kwargs)
 
     def _cache_pec_inputs(self, inputs):
-        """
-        A method that allows caching the complete input values passed to the last call of run for the composition that
+        """Cache complete input values passed to the last call of run for the composition that
         this OCM controls. This method is used by the ParamterEstimationComposition in its run method.
         """
         self._pec_input_values = inputs

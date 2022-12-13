@@ -1684,6 +1684,14 @@ class OptimizationControlMechanism(ControlMechanism):
                     :default value: SHADOW_INPUTS
                     :type: ``dict``
 
+                state_feature_values
+                    Returns values of `state_input_ports <OptimizationControlMechanism.state_input_ports>`
+                    used as inputs to simulation (see `state_feature_values
+                    <OptimizationControlMechanism.state_features>`)
+
+                    :default value: SHADOW_INPUTS
+                    :type: ``dict``
+
                 state_feature_default_spec
                     This is a shell parameter to validate its assignment and explicity user specification of None
                     to override Parameter default;  its .spec attribute is assigned to the user-facing
@@ -1711,8 +1719,8 @@ class OptimizationControlMechanism(ControlMechanism):
         state_feature_default_spec = Parameter(SHADOW_INPUTS, stateful=False, loggable=False, read_only=True,
                                                structural=True)
         state_feature_function = Parameter(None, reference=True, stateful=False, loggable=False)
-        state_feature_values = Parameter(None,getter=_state_feature_values_getter,
-                                         user=False,  pnl_internal=True, read_only=True)
+        state_feature_values = Parameter(None, getter=_state_feature_values_getter,
+                                         user=False, pnl_internal=True, read_only=True)
         outcome_input_ports_option = Parameter(CONCATENATE, stateful=False, loggable=False, structural=True)
         function = Parameter(GridSearch, stateful=False, loggable=False)
         search_function = Parameter(None, stateful=False, loggable=False)
