@@ -666,7 +666,7 @@ class ParameterEstimationComposition(Composition):
         # without having the PEC provide them one-by-one to the simulated composition.  This assumes that the inputs 
         # dict has the inputs specified in the same order as the state features (i.e., as specified by 
         # PEC.get_input_format()), and rearranges them so that each node gets a full trial's worth of inputs.
-        inputs_dict = self.controller.self.parameters.state_feature_values._get(context)
+        inputs_dict = self.controller.parameters.state_feature_values._get(context)
         # inputs_dict = self.controller._get_pec_inputs()
 
         for state_input_port, value in zip(self.controller.state_input_ports, inputs_dict.values()):
@@ -736,17 +736,20 @@ class ParameterEstimationComposition(Composition):
 
 
 
-def _pec_ocm_state_feature_values_getter(self=None, context=None):
+def _pec_ocm_state_feature_values_getter(self=None, context=None)->dict:
     """
-    A method that returns the complete input values passed to the last call of run for the composition that
+    Returns the complete input values passed to the last call of run for the composition that
     this OCM controls. This method is used by the OCM in ParamterEstimationCompositionto get the complete
     input dictionary for all trials in order to pass them on to the agent_rep during simulation.  It takes a
     standard input dictionary (of the form specified by Composition.get_input_format(), and refactors it to
     provide all trials' worth of inputs to each INPUT Node of the Composition being estimated or optimized.
     """
     # return owning_component._get_pec_inputs()
+    try:
+        model = list(self._pec_input_values.keys())[0]
+    except:
+        return {}
 
-    model = list(self._pec_input_values.keys())[0]
     if not isinstance(self.composition, ParameterEstimationComposition):
         raise ParameterEstimationCompositionError(
             f"A PEC_OCM can only be used with a ParmeterEstimationComposition")
