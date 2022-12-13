@@ -753,8 +753,10 @@ class ParameterEstimationComposition(Composition):
         # then it will raise an error.
         return self.controller.function.log_likelihood(*args, context=context)
 
-    def _parse_run_inputs(self, inputs, context):
-        return self._parse_input_dict({})
+    # # MODIFIED 12/13/22 OLD:
+    # def _parse_run_inputs(self, inputs, context):
+    #     return self._parse_input_dict({})
+    # MODIFIED 12/13/22 END
 
     def _complete_init_of_partially_initialized_nodes(self, context):
         pass
@@ -788,7 +790,16 @@ def _pec_ocm_state_feature_values_getter(owning_component=None, context=None)->d
                                                   f"use {pec_ocm.composition.name}.get_input_format() to see "
                                                   f"the required format of the dict.")
     trial_inputs = pec_ocm._pec_input_values[model]
-    input_values = {k:[] for k in pec_ocm.state_input_ports}
+    # # MODIFIED 12/13/22 OLD:
+    # input_values = {k:[] for k in pec_ocm.state_input_ports}
+    # MODIFIED 12/13/22 NEW:
+    input_values = {k:[] for k in pec_ocm.agent_rep_input_ports}
+    # # # MODIFIED 12/13/22 NEWER:
+    # # Get input nodes for Composition controlled by PEC_OCM
+    # input_nodes = [spec for spec in pec_ocm.state_feature_specs if spec is not None]
+    # input_values = {k:[] for k in input_nodes}
+    # MODIFIED 12/13/22 END
+    # Assign all trials' worth of inputs to each INPUT node
     for trial in trial_inputs:
         if len(trial) != pec_ocm.num_state_input_ports:
             raise ParameterEstimationCompositionError(f"Each entry in the dict specifed in the `input` arg of "
@@ -797,7 +808,11 @@ def _pec_ocm_state_feature_values_getter(owning_component=None, context=None)->d
                                                       f"are INPUT Nodes in the Composition (model) being estimated"
                                                       f"or optimized ('{pec_ocm.composition.nodes[0].name}'.")
         for i in range(pec_ocm.num_state_input_ports):
-            input_values[pec_ocm.state_input_ports[i]].append(trial[i])
+            # # MODIFIED 12/13/22 OLD:
+            # input_values[pec_ocm.state_input_ports[i]].append(trial[i])
+            # MODIFIED 12/13/22 NEW:
+            input_values[pec_ocm.agent_rep_input_ports[i]].append([trial[i]])
+            # MODIFIED 12/13/22 END
 
     return input_values
 
@@ -835,3 +850,6 @@ class PEC_OCM(OptimizationControlMechanism):
         this OCM controls. This method is used by the ParamterEstimationComposition in its run method.
         """
         self._pec_input_values = inputs
+
+    # def _get_agent_rep_inputs(self, context):
+    #     pass

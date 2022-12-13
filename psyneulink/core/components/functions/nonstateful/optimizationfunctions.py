@@ -810,10 +810,16 @@ class OptimizationFunction(Function_Base):
 
         assert all(_is_static(sample_iterator) for sample_iterator in self.search_space)
 
-        assert ocm is ocm.agent_rep.controller
+        # MODIFIED 12/13/22 OLD:  FIX: SHOULD OCM REALLY BE THE CONTROLLER OF AGENT REP?  SHOULDN'T IT BE OF PEC?
+        # assert ocm is ocm.agent_rep.controller
+        # MODIFIED 12/13/22 END
 
-        # Compiled evaluate expects the same variable as composition
+        # # Compiled evaluate expects the same variable as composition
+        # MODIFIED 12/13/22 OLD:
         state_features = ocm.parameters.state_feature_values._get(context)
+        # # MODIFIED 12/13/22 NEW:
+        # state_features = ocm._get_agent_rep_inputs(context)
+        # MODIFIED 12/13/22 END
         inputs, num_inputs_sets = ocm.agent_rep._parse_run_inputs(state_features, context)
 
         num_evals = np.prod([d.num for d in self.search_space])
