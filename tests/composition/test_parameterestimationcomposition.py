@@ -182,8 +182,7 @@ def test_parameter_estimation_ddm_mle(func_mode):
 
     pec.controller.parameters.comp_execution_mode.set("LLVM")
     pec.controller.function.parameters.save_values.set(True)
-    inputs_dict = {pec: trial_inputs}
-    ret = pec.run(inputs=inputs_dict, num_trials=len(trial_inputs))
+    ret = pec.run(inputs={comp: trial_inputs}, num_trials=len(trial_inputs))
 
     # Check that the parameters are recovered and that the log-likelihood is correct, set the tolerance pretty high,
     # things are noisy because of the low number of trials and estimates.
