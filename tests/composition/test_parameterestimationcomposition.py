@@ -242,4 +242,3 @@ def test_pec_bad_outcom_var_spec():
                                                  num_trials_per_estimate=10,
                                                  )
     assert "The number of columns in the data to fit must match" in str(ex)
-
