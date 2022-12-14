@@ -356,6 +356,18 @@ class MaxLikelihoodEstimator(OptimizationFunction):
         def ll(*args):
             sim_data = self._run_simulations(*args, context=context)
 
+            # The composition might have more outputs that outcome variables that we wish to compute the likelihood
+            # over. We need to subset the ones we need.
+            sim_data = sim_data[:, :, self.outcome_variable_indices]
+
+            # Check the dimensions of the simulation results are the appropriate size. If not, likely the number of
+            # output ports on the composition is different from the number of columns in the data to fit. This should
+            # be caught at construction time, but I will leave this here to be safe.
+            if len(self.data_categorical_dims) != sim_data.shape[-1]:
+                raise ValueError("Mismatch in the number of columns provided in the data to fit and the number of "
+                                 "columns in the composition simulation results. Check that the data to fit has the "
+                                 "same number of columns (and order) as the composition results.")
+
             # Compute the likelihood given the data
             like = simulation_likelihood(
                 sim_data=sim_data,

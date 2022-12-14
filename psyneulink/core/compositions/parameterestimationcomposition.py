@@ -497,6 +497,13 @@ class ParameterEstimationComposition(Composition):
         self.data = data
         self.data_categorical_dims = data_categorical_dims
 
+        self.outcome_variables = outcome_variables
+
+        # This internal list variable keeps track of the specific indices within the composition's output correspond
+        # to the specified outcome variables. This is used in data fitting to subset the only the correct columns of the
+        # simulation results for likelihood estimation.
+        self._outcome_variable_indices = []
+
         if self.data is not None:
             self._validate_data()
 
@@ -569,6 +576,27 @@ class ParameterEstimationComposition(Composition):
                              "either a 2D numpy array or a pandas dataframe. Each row represents a single experimental "
                              "trial.")
 
+        if not isinstance(self.nodes[0], Composition):
+            raise ValueError("PEC is data fitting mode requires the PEC to have a single node that is a composition!")
+
+        # Make sure the output ports specified as outcome variables are present in the output ports of the inner
+        # composition.
+        in_comp = self.nodes[0]
+        in_comp_ports = list(in_comp.output_CIM.port_map.keys())
+        self._outcome_variable_indices = []
+        for outcome_var in self.outcome_variables:
+            try:
+                self._outcome_variable_indices.append(in_comp_ports.index(outcome_var))
+            except ValueError:
+                raise ValueError(f"Could not find outcome variable {outcome_var.full_name} in the output ports of "
+                                 f"the composition being fitted to data ({self.nodes[0]}). A current limitation of the "
+                                 f"PEC data fitting API is that any output port of composition that should be fit to "
+                                 f"data must be set as and output of the composition.")
+
+        if len(self.outcome_variables) != self.data.shape[-1]:
+            raise ValueError(f"The number of columns in the data to fit must match the length of outcome variables! "
+                             f"data.colums = {self.data.columns}, outcome_variables = {self.outcome_variables}")
+
     def _validate_params(self, args):
 
         kwargs = args.pop('kwargs')
@@ -640,6 +668,7 @@ class ParameterEstimationComposition(Composition):
         if data is not None:
             optimization_function.data = self._data_numpy
             optimization_function.data_categorical_dims = self.data_categorical_dims
+            optimization_function.outcome_variable_indices= self._outcome_variable_indices
 
         return PEC_OCM(
             agent_rep=agent_rep,

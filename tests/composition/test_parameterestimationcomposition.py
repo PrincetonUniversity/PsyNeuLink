@@ -186,4 +186,60 @@ def test_parameter_estimation_ddm_mle(func_mode):
 
     # Check that the parameters are recovered and that the log-likelihood is correct, set the tolerance pretty high,
     # things are noisy because of the low number of trials and estimates.
-    assert np.allclose(pec.controller.optimal_parameters, [0.3, 0.6], atol=0.1)
+    assert np.allclose(pec.controller.optimal_parameters, [ddm_params['rate'], ddm_params['threshold']], atol=0.1)
+def test_pec_bad_outcom_var_spec():
+    """
+    Tests that exception is raised when outcome variables specifies and output port that doesn't exist on the
+    composition being fit.
+    """
+    ddm_params = dict(starting_value=0.0, rate=0.3, noise=1.0,
+                      threshold=0.6, non_decision_time=0.15, time_step_size=0.01)
+
+    # Create a simple one mechanism composition containing a DDM in integrator mode.
+    decision = pnl.DDM(function=pnl.DriftDiffusionIntegrator(**ddm_params),
+                       output_ports=[pnl.DECISION_OUTCOME, pnl.RESPONSE_TIME],
+                       name='DDM')
+
+    # Add another dummy mechanism so output ports ont he composition are longer the DDM output ports.
+    transfer = pnl.TransferMechanism()
+
+    comp = pnl.Composition(pathways=[decision, transfer])
+
+    # Make up some random data to fit
+    data_to_fit = pd.DataFrame(np.random.random((20, 2)), columns=['decision', 'response_time'])
+    data_to_fit['decision'] = data_to_fit['decision'] > 0.5
+    data_to_fit['decision'] = data_to_fit['decision'].astype('category')
+
+    # Create a parameter estimation composition to fit the data we just generated and hopefully recover the
+    # parameters of the DDM.
+
+    fit_parameters = {
+        ('rate', decision): np.linspace(0.0, 0.4, 1000),
+        ('threshold', decision): np.linspace(0.5, 1.0, 1000),
+    }
+
+    with pytest.raises(ValueError) as ex:
+        pec = pnl.ParameterEstimationComposition(name='pec',
+                                                 nodes=[comp],
+                                                 parameters=fit_parameters,
+                                                 outcome_variables=[decision.output_ports[pnl.DECISION_OUTCOME],
+                                                                    decision.output_ports[pnl.RESPONSE_TIME]],
+                                                 data=data_to_fit,
+                                                 optimization_function=MaxLikelihoodEstimator(),
+                                                 num_estimates=20,
+                                                 num_trials_per_estimate=10,
+                                                 )
+    assert "Could not find outcome variable" in str(ex)
+
+    with pytest.raises(ValueError) as ex:
+        pec = pnl.ParameterEstimationComposition(name='pec',
+                                                 nodes=[comp],
+                                                 parameters=fit_parameters,
+                                                 outcome_variables=[transfer.output_ports[0]],
+                                                 data=data_to_fit,
+                                                 optimization_function=MaxLikelihoodEstimator(),
+                                                 num_estimates=20,
+                                                 num_trials_per_estimate=10,
+                                                 )
+    assert "The number of columns in the data to fit must match" in str(ex)
+

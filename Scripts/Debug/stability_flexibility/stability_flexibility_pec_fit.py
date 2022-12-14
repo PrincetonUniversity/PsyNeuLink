@@ -17,15 +17,15 @@ np.random.seed(seed)
 set_global_seed(seed)
 
 # High-level parameters the impact performance of the test
-num_trials = 40
+num_trials = 4
 time_step_size = 0.01
-num_estimates = 40
+num_estimates = 10000
 
 sf_params = dict(
     gain=3.0,
     leak=3.0,
     competition=4.0,
-    lca_time_step_size=0.01,
+    lca_time_step_size=time_step_size,
     non_decision_time=0.2,
     automaticity=0.15,
     starting_value=0.0,
@@ -33,14 +33,14 @@ sf_params = dict(
     ddm_noise=0.1,
     lca_noise=0.0,
     scale=1.0,
-    ddm_time_step_size=0.01,
+    ddm_time_step_size=time_step_size,
 )
 
 # Generate some sample data to run the model on
 taskTrain, stimulusTrain, cueTrain, switch = generate_trial_sequence(240, 0.5)
-taskTrain = taskTrain[0:3]
-stimulusTrain = stimulusTrain[0:3]
-cueTrain = cueTrain[0:3]
+taskTrain = taskTrain[0:num_trials]
+stimulusTrain = stimulusTrain[0:num_trials]
+cueTrain = cueTrain[0:num_trials]
 
 # Make a stability flexibility composition
 comp = make_stab_flex(**sf_params)
@@ -80,7 +80,7 @@ responseGate = comp.nodes["RESPONSE_GATE"]
 fit_parameters = {
     ("gain", controlModule): np.linspace(1.0, 10.0, 1000),  # Gain
     ("slope", congruenceWeighting): np.linspace(0.0, 0.5, 1000),  # Automaticity
-    ("threshold", decisionMaker): np.linspace(0.0, 1.0, 1000),  # Threshold
+    ("threshold", decisionMaker): np.linspace(0.3, 1.0, 1000),  # Threshold
 }
 
 pec = pnl.ParameterEstimationComposition(
