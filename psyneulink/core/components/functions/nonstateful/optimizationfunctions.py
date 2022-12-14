@@ -812,6 +812,11 @@ class OptimizationFunction(Function_Base):
 
         # MODIFIED 12/13/22 OLD:  FIX: SHOULD OCM REALLY BE THE CONTROLLER OF AGENT REP?  SHOULDN'T IT BE OF PEC?
         # assert ocm is ocm.agent_rep.controller
+        # MODIFIED 12/13/22 NEW:
+        ocm.agent_rep.controller = ocm
+        agent_rep = ocm.agent_rep
+        ocm.agent_rep = ocm.composition
+
         # MODIFIED 12/13/22 END
 
         # # Compiled evaluate expects the same variable as composition
@@ -833,6 +838,12 @@ class OptimizationFunction(Function_Base):
             outcomes = comp_exec.thread_evaluate(inputs, num_inputs_sets, num_evals, get_results)
         else:
             assert False, f"Unknown execution mode for {ocm.name}: {execution_mode}."
+
+        # MODIFIED 12/13/22 NEW:
+        ocm.agent_rep.controller = ocm.composition
+        ocm.agent_rep = agent_rep
+        # MODIFIED 12/13/22 END
+
 
         return outcomes, num_evals
 
