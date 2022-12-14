@@ -17,7 +17,7 @@ np.random.seed(seed)
 set_global_seed(seed)
 
 # High-level parameters the impact performance of the test
-num_trials = 4
+num_trials = 40
 time_step_size = 0.01
 num_estimates = 10000
 
@@ -58,10 +58,12 @@ inputs = {
     correctInfo: np.zeros_like(cueTrain),
 }
 
-comp.run(inputs)
+print("Running inner composition to generate data to fit for parameter recovery test.")
+comp.run(inputs, report_progress=pnl.ReportProgress.ON)
 results = comp.results
 
 #%%
+print("Setting up PEC")
 
 data_to_fit = pd.DataFrame(
     np.squeeze(np.array(results))[:, 1:], columns=["decision", "response_time"]
@@ -113,6 +115,7 @@ pec.controller.function.parameters.save_values.set(True)
 
 outer_comp_inputs = pec.get_input_format(num_trials=len(cueTrain))
 
+print("Running the PEC")
 # ret = pec.run(inputs={comp: outer_comp_inputs}, num_trials=len(cueTrain))
 ret = pec.run(inputs=outer_comp_inputs, num_trials=len(cueTrain))
 
