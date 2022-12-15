@@ -668,7 +668,7 @@ class ParameterEstimationComposition(Composition):
         if data is not None:
             optimization_function.data = self._data_numpy
             optimization_function.data_categorical_dims = self.data_categorical_dims
-            optimization_function.outcome_variable_indices= self._outcome_variable_indices
+            optimization_function.outcome_variable_indices = self._outcome_variable_indices
 
         return PEC_OCM(
             agent_rep=agent_rep,
@@ -801,7 +801,12 @@ def _pec_ocm_state_feature_values_getter(owning_component=None, context=None)->d
                                                   f"use {pec_ocm.composition.name}.get_input_format() to see "
                                                   f"the required format of the dict.")
     trial_inputs = pec_ocm._pec_input_values[model]
-    input_values = {k:[] for k in pec_ocm.state_input_ports}
+    # # MODIFIED 12/13/22 OLD:
+    # input_values = {k:[] for k in pec_ocm.state_input_ports}
+    # MODIFIED 12/13/22 NEW:
+    input_values = {k:[] for k in pec_ocm.agent_rep_input_ports}
+    # MODIFIED 12/13/22 END
+    # Assign all trials' worth of inputs to each INPUT node
     for trial in trial_inputs:
         if len(trial) != pec_ocm.num_state_input_ports:
             raise ParameterEstimationCompositionError(f"Each entry in the dict specifed in the `input` arg of "
@@ -810,7 +815,12 @@ def _pec_ocm_state_feature_values_getter(owning_component=None, context=None)->d
                                                       f"are INPUT Nodes in the Composition (model) being estimated"
                                                       f"or optimized ('{pec_ocm.composition.nodes[0].name}'.")
         for i in range(pec_ocm.num_state_input_ports):
-            input_values[pec_ocm.state_input_ports[i]].append(trial[i])
+            # # MODIFIED 12/13/22 OLD:
+            # input_values[pec_ocm.state_input_ports[i]].append(trial[i])
+            # input_values[pec_ocm.state_input_ports[i]].append(trial[i])
+            # MODIFIED 12/13/22 NEW:
+            input_values[pec_ocm.agent_rep_input_ports[i]].append([trial[i]])
+            # MODIFIED 12/13/22 END
 
     return input_values
 
