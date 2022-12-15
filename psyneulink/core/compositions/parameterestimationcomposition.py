@@ -766,8 +766,8 @@ class ParameterEstimationComposition(Composition):
         # then it will raise an error.
         return self.controller.function.log_likelihood(*args, context=context)
 
-    def _parse_run_inputs(self, inputs, context):
-        return self._parse_input_dict({})
+    # def _parse_run_inputs(self, inputs, context):
+    #     return self._parse_input_dict({})
 
     def _complete_init_of_partially_initialized_nodes(self, context):
         pass
