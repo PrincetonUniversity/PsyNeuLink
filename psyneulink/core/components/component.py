@@ -2307,6 +2307,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                                     f' {param.attribute_name} ({shared_obj_param._owner._owner}). The value'
                                     f' specified on {shared_obj_param._owner._owner} will be used.'
                                 )
+                                param.default_value = copy.deepcopy(shared_obj_param.default_value)
+
 
 
     @handle_external_context()
