@@ -170,8 +170,8 @@ from psyneulink import *
 # Settings for running script:
 CONSTRUCT_MODEL = True # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = False # True = show visual graphic of model
-TRAIN_FFN = True  # True => train the FFN (WM)
-TEST_FFN = True  # True => test the FFN on training stimuli (WM)
+TRAIN_FFN = False  # True => train the FFN (WM)
+TEST_FFN = False  # True => test the FFN on training stimuli (WM)
 RUN_MODEL = True  # True => test the model on sample stimulus sequences
 ANALYZE_RESULTS = True # True => output analysis of results of run
 REPORT_OUTPUT = ReportOutput.OFF       # Sets console output during run
@@ -186,9 +186,11 @@ NUM_STIM = 8 # number of different stimuli in stimulus set -  QUESTION: WHY ISN"
 FFN_TRANSFER_FUNCTION = ReLU
 
 # Constructor parameters:  (values are from nback-paper)
-STIM_SIZE = 8 # length of stimulus vector
+STIM_SIZE = 20 # length of stimulus vector
 CONTEXT_SIZE = 25 # length of context vector
-HIDDEN_SIZE = STIM_SIZE * 4 # dimension of hidden units in ff
+H1_SIZE = STIM_SIZE * 4 # dimension of stimulus hidden units in ff
+H2_SIZE = H1_SIZE
+H3_SIZE = H1_SIZE
 NBACK_LEVELS = [2,3] # Currently restricted to these
 NUM_NBACK_LEVELS = len(NBACK_LEVELS)
 CONTEXT_DRIFT_NOISE = 0.0  # noise used by DriftOnASphereIntegrator (function of Context mech)
@@ -219,7 +221,9 @@ FFN_CONTEXT_INPUT = "CURRENT CONTEXT"
 FFN_STIMULUS_RETRIEVED = "RETRIEVED STIMULUS"
 FFN_CONTEXT_RETRIEVED = "RETRIEVED CONTEXT"
 FFN_TASK = "CURRENT TASK"
-FFN_HIDDEN = "HIDDEN LAYER"
+FFN_H1 = "H1 LAYER"
+FFN_H2 = "H2 LAYER"
+FFN_ADD_LAYER = "ADD LAYER"
 FFN_DROPOUT = "DROPOUT LAYER"
 FFN_OUTPUT = "OUTPUT LAYER"
 MODEL_STIMULUS_INPUT ='STIM'
@@ -258,7 +262,8 @@ class Stimuli(Enum):
 
 def construct_model(stim_size:int = STIM_SIZE,
                     context_size:int = CONTEXT_SIZE,
-                    hidden_size:int = HIDDEN_SIZE,
+                    h1_size:int = H1_SIZE,
+                    h2_size:int = H2_SIZE,
                     num_nback_levels:int = NUM_NBACK_LEVELS,
                     context_drift_noise:float = CONTEXT_DRIFT_NOISE,
                     retrievel_softmax_temp:float = RETRIEVAL_SOFTMAX_TEMP,
@@ -272,8 +277,10 @@ def construct_model(stim_size:int = STIM_SIZE,
     ---------
     context_size: int
       length of the temporal context vector
-    hidden_size: int
-      dimensionality of the hidden unit layer
+    h1_size: int
+      dimensionality of stimulus hidden unit layer
+    h2_size: int
+      dimensionality of task hidden unit layer
     num_nback_levels: int
       number of nback_levels to implement
     context_drift_noise: float
@@ -314,11 +321,11 @@ def construct_model(stim_size:int = STIM_SIZE,
     input_task = TransferMechanism(name=FFN_TASK,
                                    size=num_nback_levels,
                                    function=FFN_TRANSFER_FUNCTION)
-    hidden = TransferMechanism(name=FFN_HIDDEN,
-                               size=hidden_size,
+    h1 = TransferMechanism(name=FFN_H1,
+                               size=h1_size,
                                function=FFN_TRANSFER_FUNCTION)
     dropout = TransferMechanism(name=FFN_DROPOUT,
-                               size=hidden_size,
+                               size=h2_size,
                                function=Dropout(p=DROPOUT_PROB))
     output = ProcessingMechanism(name=FFN_OUTPUT,
                                  size=2,
@@ -330,7 +337,7 @@ def construct_model(stim_size:int = STIM_SIZE,
                                  input_retrieved_stim,
                                  input_retrieved_context,
                                  input_task},
-                                hidden,
+                                h1,
                                 # IDENTITY_MATRIX,
                                 MappingProjection(matrix = IDENTITY_MATRIX, exclude_in_autodiff=True),
                                 dropout,
@@ -827,9 +834,9 @@ def train_network(network:AutodiffComposition,
     path = network.save(filename=save_weights_to, directory="results")
     print(f'saved weights to: {save_weights_to}')
     return path
-    # print(f'saved weights sample: {network.nodes[FFN_HIDDEN].path_afferents[0].matrix.base[0][:3]}...')
+    # print(f'saved weights sample: {network.nodes[FFN_H1].path_afferents[0].matrix.base[0][:3]}...')
     # network.load(path)
-    # print(f'loaded weights sample: {network.nodes[FFN_HIDDEN].path_afferents[0].matrix.base[0][:3]}...')
+    # print(f'loaded weights sample: {network.nodes[FFN_H1].path_afferents[0].matrix.base[0][:3]}...')
 
 def test_network(network:AutodiffComposition,
                  load_weights_from:Union[Path,str,None]=None,
@@ -1136,7 +1143,9 @@ if __name__ == '__main__':
 
         inputs, cxt_distances, targets, conditions, results, coded_responses, ce_loss, \
         trial_type_stats, stats = \
-            test_network(nback_model.nodes[FFN_COMPOSITION], load_weights_from = weights_path)
+            test_network(nback_model.nodes[FFN_COMPOSITION],
+                         load_weights_from = weights_path
+                         )
         headings = ['condition', 'inputs', 'target', 'context distance', 'results', 'coded response', 'ce loss']
         results = (headings,
                    list(zip(conditions, inputs, targets, cxt_distances, results, coded_responses, ce_loss)),
