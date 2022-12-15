@@ -643,7 +643,7 @@ class TestTransferMechanismIntegratorFunctionParams:
                 integrator_mode=True,
                 integrator_function=AdaptiveIntegrator(
                         default_variable=[0 for i in range(VECTOR_SIZE)],
-                        initializer=[i / 10 for i in range(VECTOR_SIZE)]
+                        initializer=[i / 20 for i in range(VECTOR_SIZE)]
                 ),
                 initial_value=[i / 10 for i in range(VECTOR_SIZE)]
             )
@@ -655,7 +655,7 @@ class TestTransferMechanismIntegratorFunctionParams:
 
         EX(var)
         val = benchmark(EX, var)
-        assert np.allclose(val, [[ 0.75,  0.775,  0.8, 0.825]])
+        assert np.allclose(val, [[0.75, 0.7625, 0.775, 0.7875]])
 
 
     def test_transfer_mech_array_assignments_wrong_size_mech_init_val(self):
