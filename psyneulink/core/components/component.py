@@ -2269,7 +2269,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 for c in shared_objs:
                     if isinstance(c, Component):
                         try:
-                            shared_obj_param = getattr(c.parameters, param.shared_parameter_name)
+                            shared_obj_param = param.source
                         except AttributeError:
                             continue
 
@@ -2304,8 +2304,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                                     f'Specification of the "{param.name}" parameter ({param.default_value})'
                                     f' for {self} conflicts with specification of its shared parameter'
                                     f' "{shared_obj_param.name}" ({shared_obj_param.default_value}) for its'
-                                    f' {param.attribute_name} ({param.source._owner._owner}). The value'
-                                    f' specified on {param.source._owner._owner} will be used.'
+                                    f' {param.attribute_name} ({shared_obj_param._owner._owner}). The value'
+                                    f' specified on {shared_obj_param._owner._owner} will be used.'
                                 )
 
 
