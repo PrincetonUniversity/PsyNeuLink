@@ -700,7 +700,7 @@ class ParameterEstimationComposition(Composition):
         self._assign_execution_ids(context)
 
         # We need to set the inputs for the composition during simulation, by assigning the inputs dict passed in
-        # PEC run() to its controller's state_feature_values (this is in order to accomodate multi-trial inputs
+        # PEC run() to its controller's state_feature_values (this is in order to accommodate multi-trial inputs
         # without having the PEC provide them one-by-one to the simulated composition. This assumes that the inputs
         # dict has the inputs specified in the same order as the state features (i.e., as specified by
         # PEC.get_input_format()), and rearranges them so that each node gets a full trial's worth of inputs.
@@ -765,9 +765,6 @@ class ParameterEstimationComposition(Composition):
         # Try to get the log-likelihood from controllers optimization_function, if it hasn't defined this function yet
         # then it will raise an error.
         return self.controller.function.log_likelihood(*args, context=context)
-
-    def _parse_run_inputs(self, inputs, context):
-        return self._parse_input_dict({})
 
     def _complete_init_of_partially_initialized_nodes(self, context):
         pass
