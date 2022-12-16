@@ -203,7 +203,7 @@ RETRIEVAL_CONTEXT_WEIGHT = 1 - RETRIEVAL_STIM_WEIGHT # weighting of context fiel
 # Training parameters:
 NUM_TRAINING_SETS_PER_EPOCH = 1
 MINIBATCH_SIZE=None
-NUM_EPOCHS=  1000 # 6250 # 12500 # 20000  # nback-paper: 400,000 @ one trial per epoch = 6,250 @ 64 trials per epoch
+NUM_EPOCHS=  500 # 6250 # 12500 # 20000  # nback-paper: 400,000 @ one trial per epoch = 6,250 @ 64 trials per epoch
 FOILS_ALLOWED_BEFORE = False
 LEARNING_RATE=0.001  # nback-paper: .001
 
@@ -247,6 +247,7 @@ class TrialTypes(Enum):
 
 num_trial_types = len(TrialTypes)
 
+loss = None
 
 class Stimuli(Enum):
     SWEETPEA = 'sweetpea'
@@ -759,7 +760,8 @@ def train_network(network:AutodiffComposition,
                   minibatch_size:int=MINIBATCH_SIZE,
                   learning_rate:float=LEARNING_RATE,
                   num_epochs:int=NUM_EPOCHS,
-                  save_weights_to:Union[Path,str,None]=None
+                  save_weights_to:Union[Path,str,None]=None,
+                  context=None
                   )->Path:
     """**Train feedforward network** on example stimulus sequences for each condition.
 
@@ -814,7 +816,8 @@ def train_network(network:AutodiffComposition,
                   learning_rate=learning_rate,
                   # execution_mode=ExecutionMode.LLVMRun
                   # execution_mode=ExecutionMode.Python
-                  execution_mode=ExecutionMode.PyTorch
+                  execution_mode=ExecutionMode.PyTorch,
+                  context=context
                   )
     stop_time = timeit.default_timer()
     print(f"training of '{network.name}' done")
@@ -834,6 +837,7 @@ def train_network(network:AutodiffComposition,
 def test_network(network:AutodiffComposition,
                  load_weights_from:Union[Path,str,None]=None,
                  nback_levels=NBACK_LEVELS,
+                 context=None
                  )->(dict,list,list,list,list,list):
 
     print(f"constructing test set for '{network.name}'...")
@@ -864,12 +868,15 @@ def test_network(network:AutodiffComposition,
                  distances_for_level[np.where(conditions_for_level==trial_type.name)].mean(),
                  distances_for_level[np.where(conditions_for_level==trial_type.name)].std()))
 
-    # FIX: COMMENTED OUT TO TEST TRAINING LOSS
+    # # FIX: COMMENT OUT TO TEST TRAINING LOSS FROM WEIGHTS JUST TRAINED W/O LOADING FROM DISK
     if load_weights_from:
-        print(f"nback_model loading '{FFN_COMPOSITION}' weights from {load_weights_from}...")
+        print(f"Loading weights for '{FFN_COMPOSITION}' from {load_weights_from}...")
         network.load(filename=load_weights_from)
 
-    network.run(inputs=test_set[INPUTS], report_progress=ReportProgress.ON)
+    network.run(inputs=test_set[INPUTS],
+                # report_progress=ReportProgress.ON,
+                context=context
+                )
 
     if ANALYZE_RESULTS:
         coded_responses, stats = analyze_results([network.results,conditions], test=True)
@@ -877,6 +884,7 @@ def test_network(network:AutodiffComposition,
         cross_entropy_loss = \
             [network.loss(torch.Tensor(output[0]),torch.Tensor(np.array(target))).detach().numpy().tolist()
              for output, target in zip(network.results, targets)]
+
     coded_responses_flat = []
     for nback_level in nback_levels:
         coded_responses_flat.extend(coded_responses[nback_level])
@@ -1120,10 +1128,13 @@ if __name__ == '__main__':
     if CONSTRUCT_MODEL:
         nback_model = construct_model()
 
+    context = Context(source=ContextFlags.COMMAND_LINE)
+
     if TRAIN_FFN:
         weights_filename = f'results/ffn.wts_nep_{NUM_EPOCHS}_lr_{str(LEARNING_RATE).split(".")[1]}.pnl'
         weights_path = Path('/'.join([os.getcwd(), weights_filename]))
         saved_weights = train_network(nback_model.nodes[FFN_COMPOSITION],
+                                      context=context,
                                       save_weights_to=weights_path
                                       )
 
@@ -1136,7 +1147,8 @@ if __name__ == '__main__':
 
         inputs, cxt_distances, targets, conditions, results, coded_responses, ce_loss, \
         trial_type_stats, stats = \
-            test_network(nback_model.nodes[FFN_COMPOSITION], load_weights_from = weights_path)
+            test_network(nback_model.nodes[FFN_COMPOSITION], load_weights_from = weights_path, context=context)
+
         headings = ['condition', 'inputs', 'target', 'context distance', 'results', 'coded response', 'ce loss']
         results = (headings,
                    list(zip(conditions, inputs, targets, cxt_distances, results, coded_responses, ce_loss)),
