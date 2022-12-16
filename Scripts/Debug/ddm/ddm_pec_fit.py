@@ -68,7 +68,7 @@ pec = pnl.ParameterEstimationComposition(name='pec',
 
 # pec.controller.parameters.comp_execution_mode.set("LLVM")
 pec.controller.function.parameters.save_values.set(True)
-# ll, sim_data = pec.log_likelihood(0.3, 0.6, inputs=inputs_dict)
+# ll, sim_data = pec.log_likelihood(0.3, 0.6, inputs={comp: trial_inputs})
 ret = pec.run(inputs={comp: trial_inputs}, num_trials=len(trial_inputs))
 
 # Check that the parameters are recovered and that the log-likelihood is correct
