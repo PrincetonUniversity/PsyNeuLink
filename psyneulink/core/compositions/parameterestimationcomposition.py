@@ -162,6 +162,7 @@ from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import BEFORE, OVERRIDE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
+from psyneulink.core.globals.utilities import convert_to_list
 from psyneulink.core.scheduling.time import TimeScale
 
 
@@ -469,15 +470,43 @@ class ParameterEstimationComposition(Composition):
 
         self._validate_params(locals())
 
-        # Assign model
-        if model is not None:
-            # If model has been specified, assign as (only) node in PEC, otherwise specification(s) in kwargs are used
-            # (Note: _validate_params() ensures that either model or nodes and/or pathways are specified, but not both)
+        # # MODIFIED 12/15/22 OLD:
+        # # Assign model
+        # if model is not None:
+        #     # If model has been specified, assign as (only) node in PEC, otherwise specification(s) in kwargs are used
+        #     # (Note: _validate_params() ensures that either model or nodes and/or pathways are specified, but not both)
+        #     kwargs.update({'nodes': model})
+        # #     self.model = model
+        # else:
+        #     model = kwargs['nodes'][0]
+        # self.model = model
+        # MODIFIED 12/15/22 NEW:
+        # IMPLEMENTATION NOTE: this currently assigns pec as ocm.agent_rep (rather than model) to satisfy LLVM
+        # Assign model as nested Composition of PEC
+        if not model:
+            # If model has not been specified, specification(s) in kwargs are used
+            # (note: _validate_params() ensures that either model or nodes and/or pathways are specified, but not both)
+            if 'nodes' in kwargs:
+                nodes = convert_to_list(kwargs['nodes'])
+                # A single Composition specified in nodes argument, so use as model
+                if len(nodes) == 1 and isinstance(nodes[0], Composition):
+                    model = nodes[0]
+            elif 'pathways' in kwargs:
+                pways = convert_to_list(kwargs['pathways'])
+                # A single Composition specified in pathways arg, so use as model
+                if len(pways) == 1 and isinstance(pways[0], Composition):
+                    model = pways[0]
+            else:
+                # Use arguments provided to PEC in **nodes**, **pathways** and/or **projections** to construct model
+                model = Composition(**kwargs, name='model')
+
+            # Assign model as single node of PEC
             kwargs.update({'nodes': model})
-        #     self.model = model
-        else:
-            model = kwargs['nodes']
+
+        # Assign model as nested composition in PEC and self.model as self
+        kwargs.update({'nodes': model})
         self.model = model
+        # MODIFIED 12/15/22 END
 
         self.optimized_parameter_values = []
 
@@ -522,6 +551,8 @@ class ParameterEstimationComposition(Composition):
         # (Note: Implement after Composition itself, so that:
         #     - Composition's components are all available (limits need for deferred_inits)
         #     - search for seed params in _instantiate_ocm doesn't include pem itself or its functions)
+        # IMPLEMENTATION NOTE: self is assigned as agent_rep to satisfy requirements of LLVM
+        # TBI: refactor so that agent_rep = model
         ocm = self._instantiate_ocm(agent_rep=self,
                                     parameters=parameters,
                                     outcome_variables=outcome_variables,
@@ -689,10 +720,6 @@ class ParameterEstimationComposition(Composition):
     @handle_external_context()
     def run(self, *args, **kwargs):
 
-        # Capture the input passed to run and pass it on to the OCM
-        assert self.controller is not None
-        self.controller._cache_pec_inputs(kwargs.get('inputs', None if not args else args[0]))
-
         # Clear any old results from the composition
         if self.results is not None:
             self.results.clear()
@@ -700,8 +727,11 @@ class ParameterEstimationComposition(Composition):
         context = kwargs.get('context', None)
         self._assign_execution_ids(context)
 
+        # Capture the input passed to run and pass it on to the OCM
+        assert self.controller is not None
+        self.controller._cache_pec_inputs(kwargs.get('inputs', None if not args else args[0]))
         # We need to set the inputs for the composition during simulation, by assigning the inputs dict passed in
-        # PEC run() to its controller's state_feature_values (this is in order to accommodate multi-trial inputs
+        # PEC run() to its controller's state_feature_values (this is in order to accomodate multi-trial inputs
         # without having the PEC provide them one-by-one to the simulated composition. This assumes that the inputs
         # dict has the inputs specified in the same order as the state features (i.e., as specified by
         # PEC.get_input_format()), and rearranges them so that each node gets a full trial's worth of inputs.
@@ -833,7 +863,8 @@ def _pec_ocm_state_feature_values_getter(owning_component=None, context=None)->d
                                                       f"number of entries ({pec_ocm.num_state_input_ports}) as there"
                                                       f"are INPUT Nodes in the Composition (model) being estimated"
                                                       f"or optimized ('{pec_ocm.composition.nodes[0].name}'.")
-    input_values = {pec_ocm.composition.model: np.array(trial_inputs).swapaxes(0,1).tolist()}
+    # input_values = {pec_ocm.composition.model: np.array(trial_inputs).swapaxes(0,1).tolist()}
+    input_values = {pec_ocm.composition.model: trial_inputs}
 
     # MODIFIED 12/14 END
 
