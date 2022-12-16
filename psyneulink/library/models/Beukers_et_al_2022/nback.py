@@ -170,8 +170,8 @@ from psyneulink import *
 # Settings for running script:
 CONSTRUCT_MODEL = True # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = False # True = show visual graphic of model
-TRAIN_FFN = False  # True => train the FFN (WM)
-TEST_FFN = False  # True => test the FFN on training stimuli (WM)
+TRAIN_FFN = True  # True => train the FFN (WM)
+TEST_FFN = True  # True => test the FFN on training stimuli (WM)
 RUN_MODEL = True  # True => test the model on sample stimulus sequences
 ANALYZE_RESULTS = True # True => output analysis of results of run
 REPORT_OUTPUT = ReportOutput.OFF       # Sets console output during run
@@ -180,17 +180,18 @@ ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation
 
 #region ========================================= PARAMETERS ===========================================================
 
-# Fixed (structural) parameters:
+# Fixed parameters:
 MAX_NBACK_LEVELS = 3
 NUM_STIM = 8 # number of different stimuli in stimulus set -  QUESTION: WHY ISN"T THIS EQUAL TO STIM_SIZE OR VICE VERSA?
 FFN_TRANSFER_FUNCTION = ReLU
+
 
 # Constructor parameters:  (values are from nback-paper)
 STIM_SIZE = 20 # length of stimulus vector
 CONTEXT_SIZE = 25 # length of context vector
 H1_SIZE = STIM_SIZE * 4 # dimension of stimulus hidden units in ff
 H2_SIZE = H1_SIZE
-H3_SIZE = H1_SIZE
+ADD_LAYER_SIZE = H1_SIZE
 NBACK_LEVELS = [2,3] # Currently restricted to these
 NUM_NBACK_LEVELS = len(NBACK_LEVELS)
 CONTEXT_DRIFT_NOISE = 0.0  # noise used by DriftOnASphereIntegrator (function of Context mech)
@@ -205,7 +206,7 @@ RETRIEVAL_CONTEXT_WEIGHT = 1 - RETRIEVAL_STIM_WEIGHT # weighting of context fiel
 # Training parameters:
 NUM_TRAINING_SETS_PER_EPOCH = 1
 MINIBATCH_SIZE=None
-NUM_EPOCHS=  1000 # 6250 # 12500 # 20000  # nback-paper: 400,000 @ one trial per epoch = 6,250 @ 64 trials per epoch
+NUM_EPOCHS=  6250 # 12500 # 20000  # nback-paper: 400,000 @ one trial per epoch = 6,250 @ 64 trials per epoch
 FOILS_ALLOWED_BEFORE = False
 LEARNING_RATE=0.001  # nback-paper: .001
 
@@ -324,6 +325,12 @@ def construct_model(stim_size:int = STIM_SIZE,
     h1 = TransferMechanism(name=FFN_H1,
                                size=h1_size,
                                function=FFN_TRANSFER_FUNCTION)
+    h2 = TransferMechanism(name=FFN_H2,
+                               size=h1_size,
+                               function=FFN_TRANSFER_FUNCTION)
+    add_layer = TransferMechanism(name=FFN_ADD_LAYER,
+                               size=h1_size,
+                               function=FFN_TRANSFER_FUNCTION)
     dropout = TransferMechanism(name=FFN_DROPOUT,
                                size=h2_size,
                                function=Dropout(p=DROPOUT_PROB))
@@ -331,18 +338,27 @@ def construct_model(stim_size:int = STIM_SIZE,
                                  size=2,
                                    # function=ReLU
                                  )
+    input_pway = Pathway([{input_current_stim, input_current_context, input_retrieved_stim, input_retrieved_context},
+                          RANDOM_WEIGHTS_INITIALIZATION,
+                          h1,
+                          # IDENTITY_MATRIX,
+                          MappingProjection(matrix = IDENTITY_MATRIX, exclude_in_autodiff=True),
+                          add_layer
+                          ])
 
-    ffn = AutodiffComposition(([{input_current_stim,
-                                 input_current_context,
-                                 input_retrieved_stim,
-                                 input_retrieved_context,
-                                 input_task},
-                                h1,
-                                # IDENTITY_MATRIX,
-                                MappingProjection(matrix = IDENTITY_MATRIX, exclude_in_autodiff=True),
-                                dropout,
-                                output],
-                               RANDOM_WEIGHTS_INITIALIZATION),
+    task_pway = Pathway([input_task,
+                         RANDOM_WEIGHTS_INITIALIZATION,
+                         h2,
+                         # IDENTITY_MATRIX,
+                         MappingProjection(matrix = IDENTITY_MATRIX, exclude_in_autodiff=True),
+                         add_layer])
+    output_pway = Pathway([add_layer,                                 # IDENTITY_MATRIX,
+                           MappingProjection(matrix = IDENTITY_MATRIX, exclude_in_autodiff=True),
+                           dropout,
+                           output,
+                           ])
+
+    ffn = AutodiffComposition(pathways = [input_pway, task_pway, output_pway],
                               name=FFN_COMPOSITION,
                               learning_rate=LEARNING_RATE,
                               optimizer_type='adam',
@@ -458,10 +474,11 @@ def construct_model(stim_size:int = STIM_SIZE,
 
 #region =====================================STIMULUS GENERATION =======================================================
 
-def _get_stim_set(num_stim=STIM_SIZE):
+def _get_stim_set(stim_size=STIM_SIZE, num_stim=NUM_STIM):
     """Construct an array of unique stimuli for use in an experiment, used by train_network() and run_model()"""
     # For now, use one-hots
-    return np.eye(num_stim)
+    # return np.eye(stim_size)
+    return np.eye(stim_size)[0:num_stim]
 
 def _get_task_input(nback_level):
     """Construct input to task Mechanism for a given nback_level, used by train_network() and run_model()"""
@@ -831,7 +848,7 @@ def train_network(network:AutodiffComposition,
     else:
         training_time_str = f'{int(training_time/60)} minutes {int(training_time%60)} seconds'
     print(f'training time: {training_time_str} for {num_epochs} epochs')
-    path = network.save(filename=save_weights_to, directory="results")
+    path = network.save(filename=save_weights_to, directory="results_original")
     print(f'saved weights to: {save_weights_to}')
     return path
     # print(f'saved weights sample: {network.nodes[FFN_H1].path_afferents[0].matrix.base[0][:3]}...')
