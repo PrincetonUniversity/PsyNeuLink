@@ -142,9 +142,18 @@ def test_parameter_estimation_ddm_mle(func_mode):
     comp = pnl.Composition(pathways=decision)
 
     # Let's generate an "experimental" dataset to fit. This is a parameter recovery test
-    # The input will be num_trials trials of the same constant stimulus drift rate of 1
-    # input = np.concatenate((np.repeat(-30.0, 30), np.repeat(30.0, 30)))[:, None]
-    trial_inputs = np.ones((num_trials, 1))
+    # Lets make 10% of the trials have a positive stimulus drift rate, and the other 90%
+    # have a negative stimulus drift rate.
+    # trial_inputs = np.ones((num_trials, 1))
+    rng = np.random.default_rng(12345)
+    trial_inputs = rng.choice([5.0, -5.0], size=(num_trials, 1), p=[0.10, 0.9], replace=True)
+
+    # Make the first and last input positive for sure. This helps make sure inputs are really getting
+    # passed to the composition correctly during parameter fitting, and we aren't just getting a single
+    # trials worth of a cached input.
+    trial_inputs[0] = np.abs(trial_inputs[0])
+    trial_inputs[-1] = np.abs(trial_inputs[-1])
+
     inputs_dict = {decision: trial_inputs}
 
     # Store the results of this "experiment" as a numpy array. This should be a
@@ -164,7 +173,7 @@ def test_parameter_estimation_ddm_mle(func_mode):
     # parameters of the DDM.
 
     fit_parameters = {
-        ('rate', decision): np.linspace(0.0, 0.4, 1000),
+        ('rate', decision): np.linspace(-0.5, 0.5, 1000),
         ('threshold', decision): np.linspace(0.5, 1.0, 1000),
         # ('non_decision_time', decision): np.linspace(0.0, 1.0, 1000),
     }
@@ -187,6 +196,8 @@ def test_parameter_estimation_ddm_mle(func_mode):
     # Check that the parameters are recovered and that the log-likelihood is correct, set the tolerance pretty high,
     # things are noisy because of the low number of trials and estimates.
     assert np.allclose(pec.controller.optimal_parameters, [ddm_params['rate'], ddm_params['threshold']], atol=0.1)
+
+
 def test_pec_bad_outcom_var_spec():
     """
     Tests that exception is raised when outcome variables specifies and output port that doesn't exist on the
