@@ -470,17 +470,6 @@ class ParameterEstimationComposition(Composition):
 
         self._validate_params(locals())
 
-        # # MODIFIED 12/15/22 OLD:
-        # # Assign model
-        # if model is not None:
-        #     # If model has been specified, assign as (only) node in PEC, otherwise specification(s) in kwargs are used
-        #     # (Note: _validate_params() ensures that either model or nodes and/or pathways are specified, but not both)
-        #     kwargs.update({'nodes': model})
-        # #     self.model = model
-        # else:
-        #     model = kwargs['nodes'][0]
-        # self.model = model
-        # MODIFIED 12/15/22 NEW:
         # IMPLEMENTATION NOTE: this currently assigns pec as ocm.agent_rep (rather than model) to satisfy LLVM
         # Assign model as nested Composition of PEC
         if not model:
@@ -506,7 +495,6 @@ class ParameterEstimationComposition(Composition):
         # Assign model as nested composition in PEC and self.model as self
         kwargs.update({'nodes': model})
         self.model = model
-        # MODIFIED 12/15/22 END
 
         self.optimized_parameter_values = []
 
@@ -851,21 +839,40 @@ def _pec_ocm_state_feature_values_getter(owning_component=None, context=None)->d
     #         input_values[pec_ocm.agent_rep_input_ports[i]].append([trial[i]])
     #         # MODIFIED 12/13/22 END
 
-    # MODIFIED 12/14 NEW:  ASSUMES pec_ocm.agent_rep is pec not model
-    # input_values = {k:[] for k in pec_ocm.state_input_ports}
-    # MODIFIED 12/13/22 NEW:
-    # MODIFIED 12/13/22 END
-    # Assign all trials' worth of inputs to each INPUT node
-    for trial in trial_inputs:
-        if len(trial) != pec_ocm.num_state_input_ports:
-            raise ParameterEstimationCompositionError(f"Each entry in the dict specifed in the `input` arg of "
-                                                      f"ParameterEstimationMechanism.run() must have the same "
-                                                      f"number of entries ({pec_ocm.num_state_input_ports}) as there"
-                                                      f"are INPUT Nodes in the Composition (model) being estimated"
-                                                      f"or optimized ('{pec_ocm.composition.nodes[0].name}'.")
-    # input_values = {pec_ocm.composition.model: np.array(trial_inputs).swapaxes(0,1).tolist()}
-    input_values = {pec_ocm.composition.model: trial_inputs}
+    # # MODIFIED 12/14 NEW:  ASSUMES pec_ocm.agent_rep is pec not model
+    # # input_values = {k:[] for k in pec_ocm.state_input_ports}
+    # # MODIFIED 12/13/22 NEW:
+    # # MODIFIED 12/13/22 END
+    # # Assign all trials' worth of inputs to each INPUT node
+    # for trial in trial_inputs:
+    #     if len(trial) != pec_ocm.num_state_input_ports:
+    #         raise ParameterEstimationCompositionError(f"Each entry in the dict specifed in the `input` arg of "
+    #                                                   f"ParameterEstimationMechanism.run() must have the same "
+    #                                                   f"number of entries ({pec_ocm.num_state_input_ports}) as there"
+    #                                                   f"are INPUT Nodes in the Composition (model) being estimated"
+    #                                                   f"or optimized ('{pec_ocm.composition.nodes[0].name}'.")
+    # # input_values = {pec_ocm.composition.model: np.array(trial_inputs).swapaxes(0,1).tolist()}
+    # input_values = {pec_ocm.composition.model: np.expand_dims(np.array(trial_inputs).swapaxes(0,1),2).tolist()}
+    # # input_values = {pec_ocm.composition.model: trial_inputs}
+    #
 
+    # # MODIFIED 12/14 NEWER:
+    # # Assign all trials' worth of inputs to each INPUT node
+    # input_values = [ [] for _ in range(pec_ocm.num_state_input_ports) ]
+    # for trial in trial_inputs:
+    #     if len(trial) != pec_ocm.num_state_input_ports:
+    #         raise ParameterEstimationCompositionError(f"Each entry in the dict specifed in the `input` arg of "
+    #                                                   f"ParameterEstimationMechanism.run() must have the same "
+    #                                                   f"number of entries ({pec_ocm.num_state_input_ports}) as there"
+    #                                                   f"are INPUT Nodes in the Composition (model) being estimated"
+    #                                                   f"or optimized ('{pec_ocm.composition.nodes[0].name}'.")
+    #     for i in range(pec_ocm.num_state_input_ports):
+    #         # input_values[i].append([trial[i]])
+    #         input_values[i].append(np.array([trial[i].tolist()]))
+    # input_values = {pec_ocm.composition.model: input_values}
+
+    # # MODIFIED 12/14 NEWEST:
+    input_values = pec_ocm._pec_input_values
     # MODIFIED 12/14 END
 
     return input_values

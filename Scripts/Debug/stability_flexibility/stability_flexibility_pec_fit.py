@@ -107,8 +107,8 @@ outer_comp_inputs = {comp: [
     [
         np.array(taskTrain[i]),
         np.array(stimulusTrain[i]),
-        np.array(cueTrain[i]),
-        np.array(0),
+        np.array([cueTrain[i]]),
+        np.array([0.0]),
     ]
     for i in range(len(cueTrain))
 ]}
