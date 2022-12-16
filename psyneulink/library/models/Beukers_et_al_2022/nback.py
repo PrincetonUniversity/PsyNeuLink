@@ -172,7 +172,7 @@ CONSTRUCT_MODEL = True # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = False # True = show visual graphic of model
 TRAIN_FFN = True  # True => train the FFN (WM)
 TEST_FFN = True  # True => test the FFN on training stimuli (WM)
-RUN_MODEL = False  # True => test the model on sample stimulus sequences
+RUN_MODEL = True  # True => test the model on sample stimulus sequences
 ANALYZE_RESULTS = True # True => output analysis of results of run
 REPORT_OUTPUT = ReportOutput.OFF       # Sets console output during run
 REPORT_PROGRESS = ReportProgress.OFF   # Sets console progress bar during run
@@ -321,8 +321,9 @@ def construct_model(stim_size:int = STIM_SIZE,
                                size=hidden_size,
                                function=Dropout(p=DROPOUT_PROB))
     output = ProcessingMechanism(name=FFN_OUTPUT,
-                                   size=2,
-                                   function=ReLU)
+                                 size=2,
+                                   # function=ReLU
+                                 )
 
     ffn = AutodiffComposition(([{input_current_stim,
                                  input_current_context,
@@ -419,7 +420,8 @@ def construct_model(stim_size:int = STIM_SIZE,
                                control=(STORAGE_PROB, em))
 
     nback_model = Composition(name=NBACK_MODEL,
-                              nodes=[stim, context, task, ffn, em, logit, decision, control],
+                              # nodes=[stim, context, task, ffn, em, logit, decision, control],
+                              nodes=[stim, context, task, ffn, em, decision, control],
                               # Terminate trial if value of control is still 1 after first pass through execution
                               termination_processing={TimeScale.TRIAL: And(Condition(lambda: control.value),
                                                                            AfterPass(0, TimeScale.TRIAL))},
@@ -431,9 +433,9 @@ def construct_model(stim_size:int = STIM_SIZE,
     nback_model.add_projection(MappingProjection(), em.output_ports["RETRIEVED_STIMULUS_FIELD"], input_retrieved_stim)
     nback_model.add_projection(MappingProjection(), em.output_ports["RETRIEVED_CONTEXT_FIELD"], input_retrieved_context)
     nback_model.add_projection(MappingProjection(), stim, em.input_ports["STIMULUS_FIELD"])
-    # nback_model.add_projection(MappingProjection(), output, decision, IDENTITY_MATRIX)
-    nback_model.add_projection(MappingProjection(), output, logit, IDENTITY_MATRIX)
-    nback_model.add_projection(MappingProjection(), logit, decision, IDENTITY_MATRIX)
+    nback_model.add_projection(MappingProjection(), output, decision, IDENTITY_MATRIX)
+    # nback_model.add_projection(MappingProjection(), output, logit, IDENTITY_MATRIX)
+    # nback_model.add_projection(MappingProjection(), logit, decision, IDENTITY_MATRIX)
     nback_model.add_projection(MappingProjection(), context, em.input_ports["CONTEXT_FIELD"])
 
     if DISPLAY_MODEL:
@@ -796,7 +798,6 @@ def train_network(network:AutodiffComposition,
                                  nback_levels=NBACK_LEVELS)
 
     minibatch_size = minibatch_size or batch_size
-    # print(f'training stimuli per training set: {len(list(training_set[TARGETS].values())[0])}')
     print(f'num training stimuli per training set: {minibatch_size//NUM_TRAINING_SETS_PER_EPOCH}')
     print(f'num training sets per epoch: {NUM_TRAINING_SETS_PER_EPOCH}')
     print(f'total num training stimuli per epoch: {minibatch_size}')
@@ -809,7 +810,7 @@ def train_network(network:AutodiffComposition,
                   num_trials=minibatch_size,
                   # report_output=REPORT_OUTPUT,
                   # report_progress=REPORT_PROGRESS,
-                  report_progress=ReportProgress.ON,
+                  # report_progress=ReportProgress.ON,
                   learning_rate=learning_rate,
                   # execution_mode=ExecutionMode.LLVMRun
                   # execution_mode=ExecutionMode.Python
@@ -864,9 +865,9 @@ def test_network(network:AutodiffComposition,
                  distances_for_level[np.where(conditions_for_level==trial_type.name)].std()))
 
     # FIX: COMMENTED OUT TO TEST TRAINING LOSS
-    # if load_weights_from:
-    #     print(f"nback_model loading '{FFN_COMPOSITION}' weights from {load_weights_from}...")
-    #     network.load(filename=load_weights_from)
+    if load_weights_from:
+        print(f"nback_model loading '{FFN_COMPOSITION}' weights from {load_weights_from}...")
+        network.load(filename=load_weights_from)
 
     network.run(inputs=test_set[INPUTS], report_progress=ReportProgress.ON)
 
@@ -1123,7 +1124,7 @@ if __name__ == '__main__':
         weights_filename = f'results/ffn.wts_nep_{NUM_EPOCHS}_lr_{str(LEARNING_RATE).split(".")[1]}.pnl'
         weights_path = Path('/'.join([os.getcwd(), weights_filename]))
         saved_weights = train_network(nback_model.nodes[FFN_COMPOSITION],
-                                      # save_weights_to=weights_path
+                                      save_weights_to=weights_path
                                       )
 
     if TEST_FFN:
@@ -1136,7 +1137,6 @@ if __name__ == '__main__':
         inputs, cxt_distances, targets, conditions, results, coded_responses, ce_loss, \
         trial_type_stats, stats = \
             test_network(nback_model.nodes[FFN_COMPOSITION], load_weights_from = weights_path)
-        # results = [results, conditions]
         headings = ['condition', 'inputs', 'target', 'context distance', 'results', 'coded response', 'ce loss']
         results = (headings,
                    list(zip(conditions, inputs, targets, cxt_distances, results, coded_responses, ce_loss)),

@@ -182,6 +182,8 @@ class CompositionRunner():
 
         skip_initialization = False
 
+        # FIX JDC 12/10/22: PUT with Report HERE, TREATING OUTER LOOP AS RUN, AND RUN AS TRIAL
+
         for stim_input, stim_target, stim_epoch in zip(inputs, targets, epochs):
             if not callable(stim_input) and 'epochs' in stim_input:
                 stim_epoch = stim_input['epochs']
