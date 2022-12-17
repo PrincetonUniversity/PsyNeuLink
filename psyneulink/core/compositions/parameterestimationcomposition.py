@@ -470,16 +470,6 @@ class ParameterEstimationComposition(Composition):
 
         self._validate_params(locals())
 
-        # # MODIFIED 12/15/22 OLD:
-        # # Assign model
-        # if model is not None:
-        #     # If model has been specified, assign as (only) node in PEC, otherwise specification(s) in kwargs are used
-        #     # (Note: _validate_params() ensures that either model or nodes and/or pathways are specified, but not both)
-        #     kwargs.update({'nodes': model})
-        #     self.model = model
-        # else:
-        #     self.model = self
-        # MODIFIED 12/15/22 NEW:
         # IMPLEMENTATION NOTE: this currently assigns pec as ocm.agent_rep (rather than model) to satisfy LLVM
         # Assign model as nested Composition of PEC
         if not model:
@@ -490,6 +480,7 @@ class ParameterEstimationComposition(Composition):
                 # A single Composition specified in nodes argument, so use as model
                 if len(nodes) == 1 and isinstance(nodes[0], Composition):
                     model = nodes[0]
+
             elif 'pathways' in kwargs:
                 pways = convert_to_list(kwargs['pathways'])
                 # A single Composition specified in pathways arg, so use as model
@@ -505,12 +496,8 @@ class ParameterEstimationComposition(Composition):
         # Assign model as nested composition in PEC and self.model as self
         kwargs.update({'nodes': model})
         self.model = model
-        # MODIFIED 12/15/22 END
 
         self.optimized_parameter_values = []
-
-        controller_mode = BEFORE
-        controller_time_scale = TimeScale.RUN
 
         super().__init__(name=name,
                          controller_mode=controller_mode,
@@ -552,8 +539,8 @@ class ParameterEstimationComposition(Composition):
         #     - search for seed params in _instantiate_ocm doesn't include pem itself or its functions)
         # IMPLEMENTATION NOTE: self is assigned as agent_rep to satisfy requirements of LLVM
         # TBI: refactor so that agent_rep = model
-        ocm = self._instantiate_ocm(# agent_rep=self.model, # STILL REQUIRED FOR test_parameter_estimation_composition
-                                    agent_rep = self,
+        ocm = self._instantiate_ocm(agent_rep=self.model, # STILL REQUIRED FOR test_parameter_estimation_composition
+                                    # agent_rep = self,
                                     parameters=parameters,
                                     outcome_variables=outcome_variables,
                                     data=self.data,

@@ -22,7 +22,7 @@ from psyneulink.library.components.mechanisms.processing.integrator.ddm import \
 # expected
 
 pec_test_args = [
-    (None, 2, True, False),               # No ObjectiveMechanism, 2 inputs, model, no nodes or pathways arg
+    # (None, 2, True, False),               # No ObjectiveMechanism, 2 inputs, model, no nodes or pathways arg
 
     # Disabling this test for now. Something gets messed up with the outcome variable having more then one
     # value.
