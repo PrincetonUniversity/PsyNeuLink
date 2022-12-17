@@ -203,7 +203,7 @@ def test_parameter_estimation_ddm_mle(func_mode):
     assert np.allclose(pec.controller.optimal_parameters, [ddm_params['rate'], ddm_params['threshold']], atol=0.1)
 
 
-def test_pec_bad_outcom_var_spec():
+def test_pec_bad_outcome_var_spec():
     """
     Tests that exception is raised when outcome variables specifies and output port that doesn't exist on the
     composition being fit.
