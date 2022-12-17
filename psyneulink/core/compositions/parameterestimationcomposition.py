@@ -539,8 +539,7 @@ class ParameterEstimationComposition(Composition):
         #     - search for seed params in _instantiate_ocm doesn't include pem itself or its functions)
         # IMPLEMENTATION NOTE: self is assigned as agent_rep to satisfy requirements of LLVM
         # TBI: refactor so that agent_rep = model
-        ocm = self._instantiate_ocm(# agent_rep=self.model, # STILL REQUIRED FOR test_parameter_estimation_composition
-                                    agent_rep = self,
+        ocm = self._instantiate_ocm(agent_rep = self,
                                     parameters=parameters,
                                     outcome_variables=outcome_variables,
                                     data=self.data,
