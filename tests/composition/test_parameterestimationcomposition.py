@@ -23,11 +23,7 @@ from psyneulink.library.components.mechanisms.processing.integrator.ddm import \
 
 pec_test_args = [
     (None, 2, True, False),               # No ObjectiveMechanism, 2 inputs, model, no nodes or pathways arg
-
-    # Disabling this test for now. Something gets messed up with the outcome variable having more then one
-    # value.
-    # (None, 2, False, True),               # No ObjectiveMechanism, 2 inputs, no model, nodes or pathways arg
-
+    (None, 2, False, True),               # No ObjectiveMechanism, 2 inputs, no model, nodes or pathways arg
     (Concatenate, 2, True, False),        # ObjectiveMechanism, 2 inputs, model, no nodes or pathways arg
     (LinearCombination, 1, True, False),  # ObjectiveMechanism, 1 input, model, no nodes or pathways arg
     # (None, 2, True, True), <- USE TO TEST ERROR
@@ -115,8 +111,17 @@ def test_parameter_estimation_composition(objective_function_arg, expected_outco
     assert ctlr.function.num_estimates == 3
     assert pnl.RANDOMIZATION_CONTROL_SIGNAL in ctlr.control_signals.names
     assert ctlr.control_signals[pnl.RANDOMIZATION_CONTROL_SIGNAL].allocation_samples.num == 3
-    pec.run()
 
+    if expected_outcome_input_len > 1:
+        expected_error = "Problem with '(GridSearch GridSearch Function-0)' in 'OptimizationControlMechanism-0': " \
+                         "GridSearch Error: (GridSearch GridSearch Function-0)._evaluate returned values with more " \
+                         "than one element. GridSearch currently does not support optimizing over multiple output " \
+                         "values."
+        with pytest.raises(pnl.FunctionError) as error:
+            pec.run()
+        assert expected_error == error.value.args[0]
+    else:
+        pec.run()
 
 # func_mode is a hacky wa to get properly marked; Python, LLVM, and CUDA
 def test_parameter_estimation_ddm_mle(func_mode):
@@ -198,7 +203,7 @@ def test_parameter_estimation_ddm_mle(func_mode):
     assert np.allclose(pec.controller.optimal_parameters, [ddm_params['rate'], ddm_params['threshold']], atol=0.1)
 
 
-def test_pec_bad_outcom_var_spec():
+def test_pec_bad_outcome_var_spec():
     """
     Tests that exception is raised when outcome variables specifies and output port that doesn't exist on the
     composition being fit.

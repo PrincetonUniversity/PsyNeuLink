@@ -8863,10 +8863,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Update input ports in order to get correct value for "outcome" (from objective mech)
         controller._update_input_ports(runtime_params, context)
 
-        # FIX: REFACTOR TO CREATE ARRAY OF INPUT_PORT VALUES FOR OUTCOME_INPUT_PORTS
-        outcome_is_array = controller.num_outcome_input_ports > 1
-        if not outcome_is_array:
+        # If outcome comes from a single input_port on controller, then get its value
+        #    (note: it is allowed to be a 1d array with len > 1)
+        if controller.num_outcome_input_ports <= 1:
+            # FIX: 12/15/22
+            #  THIS IS None IF self.controller_mode = AFTER (WHICH IS THE CASE IF agent_rep = model FOR PEC)
+            #  BELOW, THAT FORCES OUTCOME TO BE 0.0 EVEN IF IT IS A 1D ARRAY (I.E., NOT JUST A SCALAR)
+            #  (2D ARRAY RULED OUT ABOVE)
             outcome = controller.input_port.parameters.value._get(context)
+        # If outcome comes from more than one input_port on controller, then wrap them in an outer list
         else:
             outcome = []
             for i in range(controller.num_outcome_input_ports):
