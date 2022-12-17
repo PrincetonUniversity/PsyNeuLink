@@ -2103,7 +2103,7 @@ class GridSearch(OptimizationFunction):
                                      f"{self.__class__} _evaluate method.")
 
                 if all_values.shape[0] > 1:
-                    raise ValueError(f"GridSearch Error: {self}._evaluate returned values with more then one element. "
+                    raise ValueError(f"GridSearch Error: {self}._evaluate returned values with more than one element. "
                                      "GridSearch currently does not support optimizing over multiple output values.")
 
                 # Find the optimal value(s)
