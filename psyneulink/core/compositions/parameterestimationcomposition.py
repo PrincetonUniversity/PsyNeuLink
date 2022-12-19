@@ -154,6 +154,7 @@ Class Reference
 import numpy as np
 import pandas as pd
 
+import psyneulink.core.llvm as pnllvm
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \
     OptimizationControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -711,6 +712,12 @@ class ParameterEstimationComposition(Composition):
 
         context = kwargs.get('context', None)
         self._assign_execution_ids(context)
+
+        # Before we do anything, clear any compilation structures that have been generated. This is a workaround to
+        # an issue that causes the PEC to fail to run in LLVM mode when the inner composition that we are fitting
+        # has already been compiled.
+        if self.controller.parameters.comp_execution_mode.get(context) != "Python":
+            pnllvm.cleanup()
 
         # Capture the input passed to run and pass it on to the OCM
         assert self.controller is not None

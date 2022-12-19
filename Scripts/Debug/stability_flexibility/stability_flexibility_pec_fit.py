@@ -59,7 +59,7 @@ inputs = {
 }
 
 print("Running inner composition to generate data to fit for parameter recovery test.")
-comp.run(inputs, report_progress=pnl.ReportProgress.ON)
+comp.run(inputs, report_progress=pnl.ReportProgress.ON, execution_mode=pnl.ExecutionMode.LLVMRun)
 results = comp.results
 
 #%%
