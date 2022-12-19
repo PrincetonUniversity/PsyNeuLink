@@ -128,18 +128,30 @@ def test_pec_run_input_formats(input_format):
     input_node_1 = pnl.ProcessingMechanism(size=1)
     input_node_2 = pnl.ProcessingMechanism(size=2)
     input_node_3 = pnl.ProcessingMechanism(size=3)
-    output_node = pnl.TranProcessingMechanism(size=2)
-    model = pnl.Composition([{input_node_1, input_node_2, input_node_3}, output_node])
+    output_node = pnl.ProcessingMechanism(size=2)
+    model = pnl.Composition([{input_node_1, input_node_2, input_node_3}, output_node], name='model')
     num_trials = 4
+    fit_parameters = {("slope", output_node): np.linspace(1.0, 3.0, 3)}
     pec = pnl.ParameterEstimationComposition(
         name="pec",
         model=model,
+        parameters=fit_parameters,
         outcome_variables=output_node,
         optimization_function=MaxLikelihoodEstimator(),
         num_trials_per_estimate=num_trials)
-    if input_format == 'pec'
-        input_dict = 3
-
+    if input_format == 'pec':
+        input_dict = {model: [[np.array([1.]), np.array([2., 3., 4.]), np.array([5., 6.])],
+                              [np.array([7.]), np.array([8., 9., 10.]), np.array([11., 12.])],
+                              [np.array([13.]), np.array([14., 15., 16.]), np.array([17., 18.])],
+                              [np.array([19.]), np.array([20., 21., 22.]), np.array([23., 24.])]]}
+    else:        
+        input_dict = {input_node_1: [[np.array([1.])], [np.array([7.])],
+                                     [np.array([13.])], [np.array([19.])]],
+                      input_node_2: [[np.array([2., 3., 4])], [np.array([8., 9., 10.])], 
+                                     [np.array([14., 15., 16.])], [np.array([20., 21., 22.])]],
+                      input_node_3: [[np.array([5., 6.])], [np.array([11., 12.])],
+                                     [np.array([17., 18.])], [np.array([23., 24.])]]}
+    pec.run(inputs=input_dict)
 
 # func_mode is a hacky wa to get properly marked; Python, LLVM, and CUDA
 def test_parameter_estimation_ddm_mle(func_mode):
