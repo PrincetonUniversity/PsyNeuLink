@@ -119,7 +119,6 @@ model_inputs = {
     cueInterval: [[np.array([cueTrain[i]])] for i in range(num_trials)],
     correctInfo: [[np.array([0.0])] for i in range(num_trials)]
 }
-# outer_comp_inputs = pec.get_input_format(num_trials=len(cueTrain))
 
 print("Running the PEC")
 # ret = pec.run(inputs=outer_comp_inputs, num_trials=len(cueTrain))
