@@ -844,8 +844,11 @@ class PEC_OCM(OptimizationControlMechanism):
 
         model = self.composition.model
 
+        if not inputs_dict:
+            pass
+
         # If inputs_dict has model as its only entry, then check that its format is OK to pass to pec.run()
-        if len(inputs_dict) == 1 and model in inputs_dict:
+        elif len(inputs_dict) == 1 and model in inputs_dict:
             if len(inputs_dict) != self.num_state_input_ports:
                 raise ParameterEstimationCompositionError(f"The array in the dict specified for the 'inputs' arg of "
                                                           f"ParameterEstimationMechanism.run() is badly formatted: "
@@ -873,4 +876,4 @@ class PEC_OCM(OptimizationControlMechanism):
                     input_values[trial].extend(trial_seq[trial])
             inputs_dict = {model: input_values}
 
-            self._pec_input_values = inputs_dict
+        self._pec_input_values = inputs_dict
