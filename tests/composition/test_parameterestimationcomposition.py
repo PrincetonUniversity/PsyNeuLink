@@ -35,7 +35,7 @@ pec_test_args = [
     pec_test_args,
     ids=[f"{x[0]}-{'model' if x[2] else None}-{'nodes' if x[3] else None})" for x in pec_test_args]
 )
-def test_parameter_estimation_composition(objective_function_arg, expected_outcome_input_len, model_spec, node_spec):
+def test_pec(objective_function_arg, expected_outcome_input_len, model_spec, node_spec):
     """Test with and without ObjectiveMechanism specified, and use of model vs. nodes arg of PEC constructor"""
     samples = np.arange(0.1, 1.01, 0.3)
     Input = pnl.TransferMechanism(name='Input')
@@ -123,6 +123,65 @@ def test_parameter_estimation_composition(objective_function_arg, expected_outco
     else:
         pec.run()
 
+
+input_node_1 = pnl.ProcessingMechanism(size=1)
+input_node_2 = pnl.ProcessingMechanism(size=2)
+input_node_3 = pnl.ProcessingMechanism(size=3)
+output_node = pnl.ProcessingMechanism(size=2)
+model = pnl.Composition([{input_node_1, input_node_2, input_node_3}, output_node], name='model')
+pec = pnl.ParameterEstimationComposition(
+    name="pec",
+    model=model,
+    parameters={("slope", output_node): np.linspace(1.0, 3.0, 3)},
+    outcome_variables=output_node,
+    optimization_function=GridSearch)
+run_input_test_args = [
+    ('pec_good',
+     {model: [[np.array([1.]), np.array([2., 3., 4.]), np.array([5., 6.])],
+              [np.array([7.]), np.array([8., 9., 10.]), np.array([11., 12.])],
+              [np.array([13.]), np.array([14., 15., 16.]), np.array([17., 18.])],
+              [np.array([19.]), np.array([20., 21., 22.]), np.array([23., 24.])]]},
+     None
+     ),
+    ('pec_bad',
+     {model: [[np.array([1.]), np.array([2., 3., 4.])],
+              [np.array([7.]), np.array([8., 9., 10.]), np.array([11., 12.])],
+              [np.array([13.]), np.array([14., 15., 16.]), np.array([17., 18.])],
+              [np.array([19.]), np.array([20., 21., 22.]), np.array([23., 24.])]]},
+     'The array in the dict specified for the \'inputs\' arg of pec.run() is badly formatted: the length of each item '
+     'in the outer dimension (a trial\'s worth of inputs) must be equal to the number of inputs to \'model\' (3).'
+     ),
+    ('model_good',
+     {input_node_1: [[np.array([1.])], [np.array([7.])],
+                     [np.array([13.])], [np.array([19.])]],
+      input_node_2: [[np.array([2., 3., 4])], [np.array([8., 9., 10.])],
+                     [np.array([14., 15., 16.])], [np.array([20., 21., 22.])]],
+      input_node_3: [[np.array([5., 6.])], [np.array([11., 12.])],
+                     [np.array([17., 18.])], [np.array([23., 24.])]]},
+     None
+    ),
+    ('model_bad',
+     {input_node_1: [[np.array([1.])], [np.array([7.])],
+                     [np.array([13.])], [np.array([19.])]],
+      input_node_2: [[np.array([2., 3., 4])], [np.array([8., 9., 10.])],
+                     [np.array([14., 15., 16.])], [np.array([20., 21., 22.])]]},
+     'The dict specified in the `input` arg of pec.run() is badly formatted: the number of entries should equal '
+     'the number of inputs to \'model\' (3).'
+     ),
+]
+@pytest.mark.parametrize(
+    'input_format, inputs_dict, error_msg',
+    run_input_test_args,
+    ids=[f"{x[0]}" for x in run_input_test_args]
+)
+def test_pec_run_input_formats(input_format, inputs_dict, error_msg):
+    if error_msg:
+        with pytest.raises(pnl.ParameterEstimationCompositionError) as error:
+            pec.run(inputs=inputs_dict)
+        assert error.value.error_value == error_msg
+    else:
+        pec.run(inputs=inputs_dict)
+
 # func_mode is a hacky wa to get properly marked; Python, LLVM, and CUDA
 def test_parameter_estimation_ddm_mle(func_mode):
     """Test parameter estimation of a DDM in integrator mode with MLE."""
@@ -201,7 +260,6 @@ def test_parameter_estimation_ddm_mle(func_mode):
     # Check that the parameters are recovered and that the log-likelihood is correct, set the tolerance pretty high,
     # things are noisy because of the low number of trials and estimates.
     assert np.allclose(pec.controller.optimal_parameters, [ddm_params['rate'], ddm_params['threshold']], atol=0.1)
-
 
 def test_pec_bad_outcome_var_spec():
     """
