@@ -35,7 +35,7 @@ pec_test_args = [
     pec_test_args,
     ids=[f"{x[0]}-{'model' if x[2] else None}-{'nodes' if x[3] else None})" for x in pec_test_args]
 )
-def test_parameter_estimation_composition(objective_function_arg, expected_outcome_input_len, model_spec, node_spec):
+def test_pec(objective_function_arg, expected_outcome_input_len, model_spec, node_spec):
     """Test with and without ObjectiveMechanism specified, and use of model vs. nodes arg of PEC constructor"""
     samples = np.arange(0.1, 1.01, 0.3)
     Input = pnl.TransferMechanism(name='Input')
@@ -123,6 +123,24 @@ def test_parameter_estimation_composition(objective_function_arg, expected_outco
     else:
         pec.run()
 
+@pytest.mark.parametrize('input_format', ['pec', 'model'])
+def test_pec_run_input_formats(input_format):
+    input_node_1 = pnl.ProcessingMechanism(size=1)
+    input_node_2 = pnl.ProcessingMechanism(size=2)
+    input_node_3 = pnl.ProcessingMechanism(size=3)
+    output_node = pnl.TranProcessingMechanism(size=2)
+    model = pnl.Composition([{input_node_1, input_node_2, input_node_3}, output_node])
+    num_trials = 4
+    pec = pnl.ParameterEstimationComposition(
+        name="pec",
+        model=model,
+        outcome_variables=output_node,
+        optimization_function=MaxLikelihoodEstimator(),
+        num_trials_per_estimate=num_trials)
+    if input_format == 'pec'
+        input_dict = 3
+
+
 # func_mode is a hacky wa to get properly marked; Python, LLVM, and CUDA
 def test_parameter_estimation_ddm_mle(func_mode):
     """Test parameter estimation of a DDM in integrator mode with MLE."""
@@ -201,7 +219,6 @@ def test_parameter_estimation_ddm_mle(func_mode):
     # Check that the parameters are recovered and that the log-likelihood is correct, set the tolerance pretty high,
     # things are noisy because of the low number of trials and estimates.
     assert np.allclose(pec.controller.optimal_parameters, [ddm_params['rate'], ddm_params['threshold']], atol=0.1)
-
 
 def test_pec_bad_outcome_var_spec():
     """
