@@ -849,20 +849,21 @@ class PEC_OCM(OptimizationControlMechanism):
 
         # If inputs_dict has model as its only entry, then check that its format is OK to pass to pec.run()
         elif len(inputs_dict) == 1 and model in inputs_dict:
-            if len(inputs_dict) != self.num_state_input_ports:
+            if not all(len(trial) == self.num_state_input_ports for trial in inputs_dict[model]):
                 raise ParameterEstimationCompositionError(f"The array in the dict specified for the 'inputs' arg of "
-                                                          f"ParameterEstimationMechanism.run() is badly formatted: "
-                                                          f"the outer dimension should be equal to the number of inputs "
-                                                          f"to '{model.name}' ")
+                                                          f"{self.composition.name}.run() is badly formatted: "
+                                                          f"the length of each item in the outer dimension "
+                                                          f"(a trial's worth of inputs) must be equal to "
+                                                          f"the number of  inputs to '{model.name}'.")
 
         else:
             # Restructure inputs as nd array with each row (outer dim) a trial's worth of inputs
             #    and each item in the row (inner dim) the input to a node (or input_port) for that trial
             if len(inputs_dict) != self.num_state_input_ports:
                 raise ParameterEstimationCompositionError(f"The dict specified in the `input` arg of "
-                                                          f"ParameterEstimationMechanism.run() is badly formatted: "
-                                                          f"the number of entries should equal the number of inputs to "
-                                                          f"'{model.name}' ")
+                                                          f"{self.composition.name}.run() is badly formatted: "
+                                                          f"the number of entries should equal the number of "
+                                                          f"inputs to '{model.name}'.")
             trial_seqs = list(inputs_dict.values())
             num_trials = len(trial_seqs[0])
             input_values = [[] for _ in range(num_trials)]
