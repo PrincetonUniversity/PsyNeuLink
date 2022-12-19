@@ -129,6 +129,12 @@ input_node_2 = pnl.ProcessingMechanism(size=2)
 input_node_3 = pnl.ProcessingMechanism(size=3)
 output_node = pnl.ProcessingMechanism(size=2)
 model = pnl.Composition([{input_node_1, input_node_2, input_node_3}, output_node], name='model')
+pec = pnl.ParameterEstimationComposition(
+    name="pec",
+    model=model,
+    parameters={("slope", output_node): np.linspace(1.0, 3.0, 3)},
+    outcome_variables=output_node,
+    optimization_function=GridSearch)
 run_input_test_args = [
     ('pec_good',
      {model: [[np.array([1.]), np.array([2., 3., 4.]), np.array([5., 6.])],
@@ -142,7 +148,8 @@ run_input_test_args = [
               [np.array([7.]), np.array([8., 9., 10.]), np.array([11., 12.])],
               [np.array([13.]), np.array([14., 15., 16.]), np.array([17., 18.])],
               [np.array([19.]), np.array([20., 21., 22.]), np.array([23., 24.])]]},
-     'HELLO'
+     'The array in the dict specified for the \'inputs\' arg of pec.run() is badly formatted: the length of each item '
+     'in the outer dimension (a trial\'s worth of inputs) must be equal to the number of inputs to \'model\' (3).'
      ),
     ('model_good',
      {input_node_1: [[np.array([1.])], [np.array([7.])],
@@ -157,34 +164,21 @@ run_input_test_args = [
      {input_node_1: [[np.array([1.])], [np.array([7.])],
                      [np.array([13.])], [np.array([19.])]],
       input_node_2: [[np.array([2., 3., 4])], [np.array([8., 9., 10.])],
-                     [np.array([14., 15., 16.])], [np.array([20., 21., 22.])]],
-      input_node_3: [[np.array([5., 6.])], [np.array([11., 12.])],
-                     [np.array([17., 18.])], [np.array([23., 24.])]]},
-     'GOODBYE'
-    ),
+                     [np.array([14., 15., 16.])], [np.array([20., 21., 22.])]]},
+     'The dict specified in the `input` arg of pec.run() is badly formatted: the number of entries should equal '
+     'the number of inputs to \'model\' (3).'
+     ),
 ]
-
 @pytest.mark.parametrize(
-    'input_format inputs_dict error_msg',
+    'input_format, inputs_dict, error_msg',
     run_input_test_args,
-    ids=run_input_test_args[0]
+    ids=[f"{x[0]}" for x in run_input_test_args]
 )
 def test_pec_run_input_formats(input_format, inputs_dict, error_msg):
-    x = input_format
-    num_trials = 4
-    fit_parameters = {("slope", output_node): np.linspace(1.0, 3.0, 3)}
-    pec = pnl.ParameterEstimationComposition(
-        name="pec",
-        model=model,
-        parameters=fit_parameters,
-        outcome_variables=output_node,
-        # optimization_function=MaxLikelihoodEstimator(),
-        optimization_function=GridSearch,
-        num_trials_per_estimate=num_trials)
     if error_msg:
         with pytest.raises(pnl.ParameterEstimationCompositionError) as error:
             pec.run(inputs=inputs_dict)
-        assert error_msg == error.args[0].value
+        assert error.value.error_value == error_msg
     else:
         pec.run(inputs=inputs_dict)
 

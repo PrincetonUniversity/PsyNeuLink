@@ -166,7 +166,7 @@ from psyneulink.core.globals.utilities import convert_to_list
 from psyneulink.core.scheduling.time import TimeScale
 
 
-__all__ = ['ParameterEstimationComposition']
+__all__ = ['ParameterEstimationComposition', 'ParameterEstimationCompositionError']
 
 COMPOSITION_SPECIFICATION_ARGS = {'nodes', 'pathways', 'projections'}
 CONTROLLER_SPECIFICATION_ARGS = {'controller',
@@ -852,9 +852,9 @@ class PEC_OCM(OptimizationControlMechanism):
             if not all(len(trial) == self.num_state_input_ports for trial in inputs_dict[model]):
                 raise ParameterEstimationCompositionError(f"The array in the dict specified for the 'inputs' arg of "
                                                           f"{self.composition.name}.run() is badly formatted: "
-                                                          f"the length of each item in the outer dimension "
-                                                          f"(a trial's worth of inputs) must be equal to "
-                                                          f"the number of  inputs to '{model.name}'.")
+                                                          f"the length of each item in the outer dimension (a trial's "
+                                                          f"worth of inputs) must be equal to the number of inputs to "
+                                                          f"'{model.name}' ({self.num_state_input_ports}).")
 
         else:
             # Restructure inputs as nd array with each row (outer dim) a trial's worth of inputs
@@ -862,8 +862,8 @@ class PEC_OCM(OptimizationControlMechanism):
             if len(inputs_dict) != self.num_state_input_ports:
                 raise ParameterEstimationCompositionError(f"The dict specified in the `input` arg of "
                                                           f"{self.composition.name}.run() is badly formatted: "
-                                                          f"the number of entries should equal the number of "
-                                                          f"inputs to '{model.name}'.")
+                                                          f"the number of entries should equal the number of inputs "
+                                                          f"to '{model.name}' ({self.num_state_input_ports}).")
             trial_seqs = list(inputs_dict.values())
             num_trials = len(trial_seqs[0])
             input_values = [[] for _ in range(num_trials)]
