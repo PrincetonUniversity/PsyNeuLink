@@ -802,40 +802,7 @@ def _pec_ocm_state_feature_values_getter(owning_component=None, context=None)->d
         raise ParameterEstimationCompositionError(
             f"A PEC_OCM can only be used with a ParmeterEstimationComposition")
 
-    model = pec_ocm.composition.model
-    inputs_dict = pec_ocm._pec_input_values
-
-    # If inputs_dict has model as its only entry, then check that its format is OK to pass to pec.run()
-    if len(inputs_dict) == 1 and model in inputs_dict:
-        trial_inputs = pec_ocm._pec_input_values[model]
-        if len(trial_inputs) != pec_ocm.num_state_input_ports:
-            raise ParameterEstimationCompositionError(f"The array in the dict specified for the 'inputs' arg of "
-                                                      f"ParameterEstimationMechanism.run() is badly formatted: "
-                                                      f"the outer dimension should be equal to the number of inputs "
-                                                      f"to '{model.name}' ")
-
-    else:
-        # Restructure inputs as nd array with each row (outer dim) a trial's worth of inputs
-        #    and each item in the row (inner dim) the input to a node (or input_port) for that trial
-        if len(inputs_dict) != pec_ocm.num_state_input_ports:
-            raise ParameterEstimationCompositionError(f"The dict specified in the `input` arg of "
-                                                      f"ParameterEstimationMechanism.run() is badly formatted: "
-                                                      f"the number of entries should equal the number of inputs to "
-                                                      f"'{model.name}' ")
-        trial_seqs = list(inputs_dict.values())
-        num_trials = len(trial_seqs[0])
-        input_values = [[] for _ in range(num_trials)]
-        for trial in range(num_trials):
-            for trial_seq in trial_seqs:
-                if len(trial_seq) != num_trials:
-                    raise ParameterEstimationCompositionError(f"The dict specified in the `input` arg of "
-                                                              f"ParameterEstimationMechanism.run() is badly formatted: "
-                                                              f"every entry must have the same number of inputs.")
-                # input_values[trial].append(np.array([trial_seq[trial].tolist()]))
-                input_values[trial].extend(trial_seq[trial])
-        inputs_dict = {model: input_values}
-
-    return inputs_dict
+    return pec_ocm._pec_input_values
 
 
 class PEC_OCM(OptimizationControlMechanism):
@@ -866,8 +833,40 @@ class PEC_OCM(OptimizationControlMechanism):
         self._pec_input_values = None
         super().__init__(*args, **kwargs)
 
-    def _cache_pec_inputs(self, inputs):
+    def _cache_pec_inputs(self, inputs_dict):
         """Cache complete input values passed to the last call of run for the composition that
         this OCM controls. This method is used by the ParamterEstimationComposition in its run method.
         """
-        self._pec_input_values = inputs
+
+        model = self.composition.model
+
+        # If inputs_dict has model as its only entry, then check that its format is OK to pass to pec.run()
+        if len(inputs_dict) == 1 and model in inputs_dict:
+            if len(inputs_dict) != self.num_state_input_ports:
+                raise ParameterEstimationCompositionError(f"The array in the dict specified for the 'inputs' arg of "
+                                                          f"ParameterEstimationMechanism.run() is badly formatted: "
+                                                          f"the outer dimension should be equal to the number of inputs "
+                                                          f"to '{model.name}' ")
+
+        else:
+            # Restructure inputs as nd array with each row (outer dim) a trial's worth of inputs
+            #    and each item in the row (inner dim) the input to a node (or input_port) for that trial
+            if len(inputs_dict) != self.num_state_input_ports:
+                raise ParameterEstimationCompositionError(f"The dict specified in the `input` arg of "
+                                                          f"ParameterEstimationMechanism.run() is badly formatted: "
+                                                          f"the number of entries should equal the number of inputs to "
+                                                          f"'{model.name}' ")
+            trial_seqs = list(inputs_dict.values())
+            num_trials = len(trial_seqs[0])
+            input_values = [[] for _ in range(num_trials)]
+            for trial in range(num_trials):
+                for trial_seq in trial_seqs:
+                    if len(trial_seq) != num_trials:
+                        raise ParameterEstimationCompositionError(f"The dict specified in the `input` arg of "
+                                                                  f"ParameterEstimationMechanism.run() is badly formatted: "
+                                                                  f"every entry must have the same number of inputs.")
+                    # input_values[trial].append(np.array([trial_seq[trial].tolist()]))
+                    input_values[trial].extend(trial_seq[trial])
+            inputs_dict = {model: input_values}
+
+            self._pec_input_values = inputs_dict
