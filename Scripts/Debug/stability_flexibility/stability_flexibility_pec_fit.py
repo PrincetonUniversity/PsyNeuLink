@@ -113,11 +113,17 @@ outer_comp_inputs = {comp: [
     for i in range(len(cueTrain))
 ]}
 
+model_inputs = {
+    taskLayer: [[np.array(taskTrain[i])] for i in range(num_trials)],
+    stimulusInfo: [[np.array(stimulusTrain[i])] for i in range(num_trials)],
+    cueInterval: [[np.array([cueTrain[i]])] for i in range(num_trials)],
+    correctInfo: [[np.array([0.0])] for i in range(num_trials)]
+}
 # outer_comp_inputs = pec.get_input_format(num_trials=len(cueTrain))
 
 print("Running the PEC")
-# ret = pec.run(inputs={comp: outer_comp_inputs}, num_trials=len(cueTrain))
-ret = pec.run(inputs=outer_comp_inputs, num_trials=len(cueTrain))
+# ret = pec.run(inputs=outer_comp_inputs, num_trials=len(cueTrain))
+ret = pec.run(inputs=model_inputs, num_trials=len(cueTrain))
 
 # Check that the parameters are recovered and that the log-likelihood is correct
 # assert np.allclose(pec.controller.optimal_parameters, [0.3, 0.6], atol=0.1)
