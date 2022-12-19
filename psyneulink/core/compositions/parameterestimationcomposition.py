@@ -159,7 +159,7 @@ from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontro
     OptimizationControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
-from psyneulink.core.compositions.composition import Composition
+from psyneulink.core.compositions.composition import Composition, NodeRole
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import BEFORE, OVERRIDE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
@@ -795,91 +795,19 @@ class ParameterEstimationComposition(Composition):
 
 def _pec_ocm_state_feature_values_getter(owning_component=None, context=None)->dict:
     """Return the complete input values passed to the last call of run for the Composition that the PEC_OCM controls.
-    This method is used by the PEC_OCM to get the complete input dictionary for all trials, in order to pass them on
-    to the agent_rep during simulation.  It takes a standard input dictionary (of the form specified by
-    Composition.get_input_format(), and refactors it to provide all trials' worth of inputs to each INPUT Node of
-    the Composition being estimated or optimized.
+    This method is used by the PEC_OCM to get the complete input dictionary for all trials cached in _pec.input_values,
+    in order to pass them on to the agent_rep during simulation.
     """
     pec_ocm = owning_component
 
-    try:
-        model = list(pec_ocm._pec_input_values.keys())[0]
-    except:
+    if pec_ocm.initialization_status == ContextFlags.INITIALIZING or pec_ocm._pec_input_values == None:
         return {}
 
     if not isinstance(pec_ocm.composition, ParameterEstimationComposition):
         raise ParameterEstimationCompositionError(
             f"A PEC_OCM can only be used with a ParmeterEstimationComposition")
 
-    if (len(pec_ocm._pec_input_values) != 1
-            or not isinstance(pec_ocm._pec_input_values, dict)
-            or model != pec_ocm.composition.nodes[0]):
-        raise ParameterEstimationCompositionError(f"The 'inputs' argument for the run() method of a "
-                                                  f"ParameterEstimationComposition must contain a single dict "
-                                                  f"specifying the inputs for the Composition (model) being "
-                                                  f"estimated or optimized ('{pec_ocm.composition.nodes[0].name}'); "
-                                                  f"use {pec_ocm.composition.name}.get_input_format() to see "
-                                                  f"the required format of the dict.")
-    trial_inputs = pec_ocm._pec_input_values[model]
-    # MODIFIED 12/14 OLD:  ASSUMES pec_ocm.agent_rep is model not pec
-    # # # MODIFIED 12/13/22 OLD:
-    # # input_values = {k:[] for k in pec_ocm.state_input_ports}
-    # # MODIFIED 12/13/22 NEW:
-    # input_values = {k:[] for k in pec_ocm.agent_rep_input_ports}
-    # # MODIFIED 12/13/22 END
-    # # Assign all trials' worth of inputs to each INPUT node
-    # for trial in trial_inputs:
-    #     if len(trial) != pec_ocm.num_state_input_ports:
-    #         raise ParameterEstimationCompositionError(f"Each entry in the dict specifed in the `input` arg of "
-    #                                                   f"ParameterEstimationMechanism.run() must have the same "
-    #                                                   f"number of entries ({pec_ocm.num_state_input_ports}) as there"
-    #                                                   f"are INPUT Nodes in the Composition (model) being estimated"
-    #                                                   f"or optimized ('{pec_ocm.composition.nodes[0].name}'.")
-    #     for i in range(pec_ocm.num_state_input_ports):
-    #         # # MODIFIED 12/13/22 OLD:
-    #         # input_values[pec_ocm.state_input_ports[i]].append(trial[i])
-    #         # input_values[pec_ocm.state_input_ports[i]].append(trial[i])
-    #         # MODIFIED 12/13/22 NEW:
-    #         input_values[pec_ocm.agent_rep_input_ports[i]].append([trial[i]])
-    #         # MODIFIED 12/13/22 END
-
-    # # MODIFIED 12/14 NEW:  ASSUMES pec_ocm.agent_rep is pec not model
-    # # input_values = {k:[] for k in pec_ocm.state_input_ports}
-    # # MODIFIED 12/13/22 NEW:
-    # # MODIFIED 12/13/22 END
-    # # Assign all trials' worth of inputs to each INPUT node
-    # for trial in trial_inputs:
-    #     if len(trial) != pec_ocm.num_state_input_ports:
-    #         raise ParameterEstimationCompositionError(f"Each entry in the dict specifed in the `input` arg of "
-    #                                                   f"ParameterEstimationMechanism.run() must have the same "
-    #                                                   f"number of entries ({pec_ocm.num_state_input_ports}) as there"
-    #                                                   f"are INPUT Nodes in the Composition (model) being estimated"
-    #                                                   f"or optimized ('{pec_ocm.composition.nodes[0].name}'.")
-    # # input_values = {pec_ocm.composition.model: np.array(trial_inputs).swapaxes(0,1).tolist()}
-    # input_values = {pec_ocm.composition.model: np.expand_dims(np.array(trial_inputs).swapaxes(0,1),2).tolist()}
-    # # input_values = {pec_ocm.composition.model: trial_inputs}
-    #
-
-    # # MODIFIED 12/14 NEWER:
-    # # Assign all trials' worth of inputs to each INPUT node
-    # input_values = [ [] for _ in range(pec_ocm.num_state_input_ports) ]
-    # for trial in trial_inputs:
-    #     if len(trial) != pec_ocm.num_state_input_ports:
-    #         raise ParameterEstimationCompositionError(f"Each entry in the dict specifed in the `input` arg of "
-    #                                                   f"ParameterEstimationMechanism.run() must have the same "
-    #                                                   f"number of entries ({pec_ocm.num_state_input_ports}) as there"
-    #                                                   f"are INPUT Nodes in the Composition (model) being estimated"
-    #                                                   f"or optimized ('{pec_ocm.composition.nodes[0].name}'.")
-    #     for i in range(pec_ocm.num_state_input_ports):
-    #         # input_values[i].append([trial[i]])
-    #         input_values[i].append(np.array([trial[i].tolist()]))
-    # input_values = {pec_ocm.composition.model: input_values}
-
-    # # MODIFIED 12/14 NEWEST:
-    input_values = pec_ocm._pec_input_values
-    # MODIFIED 12/14 END
-
-    return input_values
+    return pec_ocm._pec_input_values
 
 
 class PEC_OCM(OptimizationControlMechanism):
@@ -910,8 +838,49 @@ class PEC_OCM(OptimizationControlMechanism):
         self._pec_input_values = None
         super().__init__(*args, **kwargs)
 
-    def _cache_pec_inputs(self, inputs):
-        """Cache complete input values passed to the last call of run for the composition that
-        this OCM controls. This method is used by the ParamterEstimationComposition in its run method.
+    def _cache_pec_inputs(self, inputs_dict:dict)->dict:
+        """Cache input values passed to the last call of run for the composition that this OCM controls.
+        This method is used by the ParamterEstimationComposition in its run() method.
+        If inputs_dict is of the form specified by ParemeterEstimationComposition.get_input_format()
+          ({model: inputs_array}, in which each item in the outer dimension of inputs_array is a trial's
+          worth of inputs, with one input for each of the pec_ocm.state_input_ports) then inputs_dict is
+          simply assigned to _pec_input_values.
+        If inputs_dict is formatted as the input to model (i.e., of the form model.get_input_format(),
+          it is refactored to the format required as input to the ParemeterEstimationComposition described above.
         """
-        self._pec_input_values = inputs
+
+        model = self.composition.model
+
+        if not inputs_dict:
+            pass
+
+        # If inputs_dict has model as its only entry, then check that its format is OK to pass to pec.run()
+        elif len(inputs_dict) == 1 and model in inputs_dict:
+            if len(inputs_dict) != self.num_state_input_ports:
+                raise ParameterEstimationCompositionError(f"The array in the dict specified for the 'inputs' arg of "
+                                                          f"ParameterEstimationMechanism.run() is badly formatted: "
+                                                          f"the outer dimension should be equal to the number of inputs "
+                                                          f"to '{model.name}' ")
+
+        else:
+            # Restructure inputs as nd array with each row (outer dim) a trial's worth of inputs
+            #    and each item in the row (inner dim) the input to a node (or input_port) for that trial
+            if len(inputs_dict) != self.num_state_input_ports:
+                raise ParameterEstimationCompositionError(f"The dict specified in the `input` arg of "
+                                                          f"ParameterEstimationMechanism.run() is badly formatted: "
+                                                          f"the number of entries should equal the number of inputs to "
+                                                          f"'{model.name}' ")
+            trial_seqs = list(inputs_dict.values())
+            num_trials = len(trial_seqs[0])
+            input_values = [[] for _ in range(num_trials)]
+            for trial in range(num_trials):
+                for trial_seq in trial_seqs:
+                    if len(trial_seq) != num_trials:
+                        raise ParameterEstimationCompositionError(f"The dict specified in the `input` arg of "
+                                                                  f"ParameterEstimationMechanism.run() is badly formatted: "
+                                                                  f"every entry must have the same number of inputs.")
+                    # input_values[trial].append(np.array([trial_seq[trial].tolist()]))
+                    input_values[trial].extend(trial_seq[trial])
+            inputs_dict = {model: input_values}
+
+        self._pec_input_values = inputs_dict
