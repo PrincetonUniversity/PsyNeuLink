@@ -17,7 +17,7 @@ np.random.seed(seed)
 set_global_seed(seed)
 
 # High-level parameters the impact performance of the test
-num_trials = 4
+num_trials = 40
 time_step_size = 0.01
 num_estimates = 10000
 
@@ -52,14 +52,14 @@ cueInterval = comp.nodes["Cue-Stimulus Interval"]
 correctInfo = comp.nodes["Correct Response Info"]
 
 inputs = {
-    taskLayer: taskTrain,
-    stimulusInfo: stimulusTrain,
-    cueInterval: cueTrain,
-    correctInfo: np.zeros_like(cueTrain),
+    taskLayer: [[np.array(taskTrain[i])] for i in range(num_trials)],
+    stimulusInfo: [[np.array(stimulusTrain[i])] for i in range(num_trials)],
+    cueInterval: [[np.array([cueTrain[i]])] for i in range(num_trials)],
+    correctInfo: [[np.array([0.0])] for i in range(num_trials)]
 }
 
 print("Running inner composition to generate data to fit for parameter recovery test.")
-comp.run(inputs, report_progress=pnl.ReportProgress.ON, execution_mode=pnl.ExecutionMode.LLVMRun)
+comp.run(inputs, execution_mode=pnl.ExecutionMode.LLVMRun)
 results = comp.results
 
 #%%
@@ -102,27 +102,11 @@ pec = pnl.ParameterEstimationComposition(
 pec.controller.parameters.comp_execution_mode.set("LLVM")
 pec.controller.function.parameters.save_values.set(True)
 
-# # ll, sim_data = pec.log_likelihood(0.3, 0.6, inputs=inputs_dict)
-outer_comp_inputs = {comp: [
-    [
-        np.array(taskTrain[i]),
-        np.array(stimulusTrain[i]),
-        np.array([cueTrain[i]]),
-        np.array([0.0]),
-    ]
-    for i in range(len(cueTrain))
-]}
-
-model_inputs = {
-    taskLayer: [[np.array(taskTrain[i])] for i in range(num_trials)],
-    stimulusInfo: [[np.array(stimulusTrain[i])] for i in range(num_trials)],
-    cueInterval: [[np.array([cueTrain[i]])] for i in range(num_trials)],
-    correctInfo: [[np.array([0.0])] for i in range(num_trials)]
-}
+# ll, sim_data = pec.log_likelihood(0.3, 0.6, inputs=inputs_dict)
 
 print("Running the PEC")
 # ret = pec.run(inputs=outer_comp_inputs, num_trials=len(cueTrain))
-ret = pec.run(inputs=model_inputs, num_trials=len(cueTrain))
+ret = pec.run(inputs=inputs, num_trials=len(cueTrain))
 
 # Check that the parameters are recovered and that the log-likelihood is correct
 # assert np.allclose(pec.controller.optimal_parameters, [0.3, 0.6], atol=0.1)
