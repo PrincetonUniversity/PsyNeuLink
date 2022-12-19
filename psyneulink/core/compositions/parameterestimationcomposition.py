@@ -788,10 +788,8 @@ class ParameterEstimationComposition(Composition):
 
 def _pec_ocm_state_feature_values_getter(owning_component=None, context=None)->dict:
     """Return the complete input values passed to the last call of run for the Composition that the PEC_OCM controls.
-    This method is used by the PEC_OCM to get the complete input dictionary for all trials, in order to pass them on
-    to the agent_rep during simulation.  It takes a standard input dictionary (of the form specified by
-    Composition.get_input_format(), and refactors it to provide all trials' worth of inputs to each INPUT Node of
-    the Composition being estimated or optimized.
+    This method is used by the PEC_OCM to get the complete input dictionary for all trials cached in _pec.input_values,
+    in order to pass them on to the agent_rep during simulation.
     """
     pec_ocm = owning_component
 
@@ -833,9 +831,15 @@ class PEC_OCM(OptimizationControlMechanism):
         self._pec_input_values = None
         super().__init__(*args, **kwargs)
 
-    def _cache_pec_inputs(self, inputs_dict):
-        """Cache complete input values passed to the last call of run for the composition that
-        this OCM controls. This method is used by the ParamterEstimationComposition in its run method.
+    def _cache_pec_inputs(self, inputs_dict:dict)->dict:
+        """Cache input values passed to the last call of run for the composition that this OCM controls.
+        This method is used by the ParamterEstimationComposition in its run() method.
+        If inputs_dict is of the form specified by ParemeterEstimationComposition.get_input_format()
+          ({model: inputs_array}, in which each item in the outer dimension of inputs_array is a trial's
+          worth of inputs, with one input for each of the pec_ocm.state_input_ports) then inputs_dict is
+          simply assigned to _pec_input_values.
+        If inputs_dict is formatted as the input to model (i.e., of the form model.get_input_format(),
+          it is refactored to the format required as input to the ParemeterEstimationComposition described above.
         """
 
         model = self.composition.model
