@@ -187,11 +187,10 @@ FFN_TRANSFER_FUNCTION = ReLU
 
 
 # Constructor parameters:  (values are from nback-paper)
-STIM_SIZE = 20 # length of stimulus vector
-CONTEXT_SIZE = 25 # length of context vector
-H1_SIZE = STIM_SIZE * 4 # dimension of stimulus hidden units in ff
-H2_SIZE = H1_SIZE
-ADD_LAYER_SIZE = H1_SIZE
+INPUT_SIZE = 90 # length of full stimulus vector
+TASK_SIZE = 10 # length of task specification vector
+H1_SIZE = INPUT_SIZE # dimension of stimulus hidden units in ff
+H2_SIZE = 80
 NBACK_LEVELS = [2,3] # Currently restricted to these
 NUM_NBACK_LEVELS = len(NBACK_LEVELS)
 CONTEXT_DRIFT_NOISE = 0.0  # noise used by DriftOnASphereIntegrator (function of Context mech)
@@ -217,15 +216,13 @@ NUM_TRIALS = 48 # number of stimuli presented in a trial sequence
 # Names of Compositions and Mechanisms:
 NBACK_MODEL = "nback Model"
 FFN_COMPOSITION = "WORKING MEMORY (fnn)"
-FFN_STIMULUS_INPUT = "CURRENT STIMULUS"
-FFN_CONTEXT_INPUT = "CURRENT CONTEXT"
-FFN_STIMULUS_RETRIEVED = "RETRIEVED STIMULUS"
-FFN_CONTEXT_RETRIEVED = "RETRIEVED CONTEXT"
-FFN_TASK = "CURRENT TASK"
+FFN_INPUT = "CURRENT INPUT LAYER"
+FFN_TASK = "CURRENT TASK LAYER"
+FFN_TASK_EMBED = "TASK EMBEDDING LAYER"
 FFN_H1 = "H1 LAYER"
-FFN_H2 = "H2 LAYER"
 FFN_ADD_LAYER = "ADD LAYER"
 FFN_DROPOUT = "DROPOUT LAYER"
+FFN_H2 = "H2 LAYER"
 FFN_OUTPUT = "OUTPUT LAYER"
 MODEL_STIMULUS_INPUT ='STIM'
 MODEL_CONTEXT_INPUT = 'CONTEXT'
@@ -261,8 +258,8 @@ class Stimuli(Enum):
 
 #region ===================================== MODEL CONSTRUCTION =======================================================
 
-def construct_model(stim_size:int = STIM_SIZE,
-                    context_size:int = CONTEXT_SIZE,
+def construct_model(input_size:int = INPUT_SIZE,
+                    task_size = TASK_SIZE,
                     h1_size:int = H1_SIZE,
                     h2_size:int = H2_SIZE,
                     num_nback_levels:int = NUM_NBACK_LEVELS,
@@ -276,12 +273,14 @@ def construct_model(stim_size:int = STIM_SIZE,
 
     Arguments
     ---------
-    context_size: int
-      length of the temporal context vector
+    input_size: int
+      dimensionality of input
+    task_size: int
+      dimensionality of task embedding layer
     h1_size: int
-      dimensionality of stimulus hidden unit layer
+      dimensionality of  input embedding layer
     h2_size: int
-      dimensionality of task hidden unit layer
+      dimensionality of hidden layer
     num_nback_levels: int
       number of nback_levels to implement
     context_drift_noise: float
@@ -305,59 +304,36 @@ def construct_model(stim_size:int = STIM_SIZE,
     # FEED FORWARD NETWORK -----------------------------------------
 
     #     inputs: encoding of current stimulus and context, retrieved stimulus and retrieved context,
+    #     task input:  one hot
     #     output: match [1,0] or non-match [0,1]
     # Must be trained to detect match for specified task (1-back, 2-back, etc.)
-    input_current_stim = TransferMechanism(name=FFN_STIMULUS_INPUT,
-                                           size=stim_size,
-                                           function=FFN_TRANSFER_FUNCTION)
-    input_current_context = TransferMechanism(name=FFN_CONTEXT_INPUT,
-                                              size=context_size,
-                                              function=FFN_TRANSFER_FUNCTION)
-    input_retrieved_stim = TransferMechanism(name=FFN_STIMULUS_RETRIEVED,
-                                             size=stim_size,
-                                             function=FFN_TRANSFER_FUNCTION)
-    input_retrieved_context = TransferMechanism(name=FFN_CONTEXT_RETRIEVED,
-                                                size=context_size,
-                                                function=FFN_TRANSFER_FUNCTION)
-    input_task = TransferMechanism(name=FFN_TASK,
-                                   size=num_nback_levels,
-                                   function=FFN_TRANSFER_FUNCTION)
-    h1 = TransferMechanism(name=FFN_H1,
-                               size=h1_size,
-                               function=FFN_TRANSFER_FUNCTION)
-    h2 = TransferMechanism(name=FFN_H2,
-                               size=h1_size,
-                               function=Linear)
-    add_layer = TransferMechanism(name=FFN_ADD_LAYER,
-                               size=h1_size,
-                               function=FFN_TRANSFER_FUNCTION)
-    dropout = TransferMechanism(name=FFN_DROPOUT,
-                               size=h1_size,
-                               function=Dropout(p=DROPOUT_PROB))
+    stim_context_input = TransferMechanism(name=FFN_INPUT,
+                                           size=input_size)
+    task_input = ProcessingMechanism(name=FFN_TASK,
+                                     size=task_size)
+    task_embedding = ProcessingMechanism(name=FFN_TASK,
+                                         size=h1_size)
+    h1 = ProcessingMechanism(name=FFN_H1,
+                             size=h1_size,
+                             function=FFN_TRANSFER_FUNCTION)
+    add_layer = ProcessingMechanism(name=FFN_ADD_LAYER,
+                                    size=h1_size)
+    dropout = ProcessingMechanism(name=FFN_DROPOUT,
+                                  size=h1_size,
+                                  function=Dropout(p=DROPOUT_PROB))
+    h2 = ProcessingMechanism(name=FFN_H2,
+                             size=h2_size,
+                             function=FFN_TRANSFER_FUNCTION)
     output = ProcessingMechanism(name=FFN_OUTPUT,
                                  size=2,
                                  function = Linear
                                  # function=ReLU
                                  )
-    input_pway = Pathway([{input_current_stim, input_current_context, input_retrieved_stim, input_retrieved_context},
-                          RANDOM_WEIGHTS_INITIALIZATION,
-                          h1,
-                          # IDENTITY_MATRIX,
-                          MappingProjection(matrix = IDENTITY_MATRIX, exclude_in_autodiff=True),
-                          add_layer
-                          ])
-
-    task_pway = Pathway([input_task,
-                         RANDOM_WEIGHTS_INITIALIZATION,
-                         h2,
-                         # IDENTITY_MATRIX,
-                         MappingProjection(matrix = IDENTITY_MATRIX, exclude_in_autodiff=True),
-                         add_layer])
-    output_pway = Pathway([add_layer,                                 # IDENTITY_MATRIX,
-                           MappingProjection(matrix = IDENTITY_MATRIX, exclude_in_autodiff=True),
-                           dropout,
-                           output,
-                           ])
+    PASS_THROUGH = MappingProjection(matrix = IDENTITY_MATRIX, exclude_in_autodiff=True),
+    input_pway = Pathway([stim_context_input, RANDOM_WEIGHTS_INITIALIZATION, h1, PASS_THROUGH, add_layer])
+    task_pway = Pathway([task_input, RANDOM_WEIGHTS_INITIALIZATION, task_embedding, PASS_THROUGH, add_layer])
+    output_pway = Pathway([add_layer, PASS_THROUGH, dropout,
+                           RANDOM_WEIGHTS_INITIALIZATION, h2, RANDOM_WEIGHTS_INITIALIZATION, output])
 
     ffn = AutodiffComposition(pathways = [input_pway, task_pway, output_pway],
                               name=FFN_COMPOSITION,
@@ -373,7 +349,7 @@ def construct_model(stim_size:int = STIM_SIZE,
     print(f"constructing '{NBACK_MODEL}'...")
 
     # Stimulus Encoding: takes STIM_SIZE vector as input
-    stim = TransferMechanism(name=MODEL_STIMULUS_INPUT, size=stim_size)
+    stim = TransferMechanism(name=MODEL_STIMULUS_INPUT, size=input_size)
 
     # Context Encoding: takes scalar as drift step for current trial
     context = ProcessingMechanism(name=MODEL_CONTEXT_INPUT,
@@ -391,11 +367,11 @@ def construct_model(stim_size:int = STIM_SIZE,
     #    - uses Softmax to retrieve best matching input, subject to weighting of stimulus and context by STIM_WEIGHT
     em = EpisodicMemoryMechanism(name=EM,
                                  input_ports=[{NAME:"STIMULUS_FIELD",
-                                               SIZE:stim_size},
+                                               SIZE:input_size},
                                               {NAME:"CONTEXT_FIELD",
                                                SIZE:context_size}],
                                  function=ContentAddressableMemory(
-                                     initializer=[[[0] * stim_size, [0] * context_size]],
+                                     initializer=[[[0] * input_size, [0] * context_size]],
                                      distance_field_weights=[retrieval_stimulus_weight,
                                                              retrieval_context_weight],
                                      # equidistant_entries_select=NEWEST,
@@ -475,15 +451,15 @@ def construct_model(stim_size:int = STIM_SIZE,
 
 #region =====================================STIMULUS GENERATION =======================================================
 
-def _get_stim_set(stim_size=STIM_SIZE, num_stim=NUM_STIM):
+def _get_stim_set(input_size=INPUT_SIZE, num_stim=NUM_STIM):
     """Construct an array of unique stimuli for use in an experiment, used by train_network() and run_model()"""
     # For now, use one-hots
-    # return np.eye(stim_size)
-    return np.eye(stim_size)[0:num_stim]
+    # return np.eye(input_size)
+    return np.eye(input_size)[0:num_stim]
 
 def _get_task_input(nback_level):
     """Construct input to task Mechanism for a given nback_level, used by train_network() and run_model()"""
-    task_input = list(np.zeros_like(NBACK_LEVELS))
+    task_input = list(np.zeros_like(TASK_SIZE))
     task_input[nback_level - NBACK_LEVELS[0]] = 1
     return task_input
 
