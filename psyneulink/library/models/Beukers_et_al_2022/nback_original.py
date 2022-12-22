@@ -170,7 +170,7 @@ from psyneulink import *
 # Settings for running script:
 CONSTRUCT_MODEL = True # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = False # True = show visual graphic of model
-TRAIN_FFN = True  # True => train the FFN (WM)
+TRAIN_FFN = False  # True => train the FFN (WM)
 TEST_FFN = True  # True => test the FFN on training stimuli (WM)
 RUN_MODEL = True  # True => test the model on sample stimulus sequences
 ANALYZE_RESULTS = True # True => output analysis of results of run
@@ -180,15 +180,20 @@ ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation
 
 #region ========================================= PARAMETERS ===========================================================
 
-# Fixed (structural) parameters:
+# Fixed parameters:
 MAX_NBACK_LEVELS = 3
 NUM_STIM = 8 # number of different stimuli in stimulus set -  QUESTION: WHY ISN"T THIS EQUAL TO STIM_SIZE OR VICE VERSA?
 FFN_TRANSFER_FUNCTION = ReLU
 
+
 # Constructor parameters:  (values are from nback-paper)
-STIM_SIZE = 8 # length of stimulus vector
-CONTEXT_SIZE = 25 # length of context vector
-HIDDEN_SIZE = STIM_SIZE * 4 # dimension of hidden units in ff
+
+STIM_SIZE = 20 # length of stimulus vector
+CONTEXT_SIZE = 25 # length of temporal context vector
+TASK_SIZE = 10 # length of task specification vector
+FFN_INPUT_SIZE = (STIM_SIZE + CONTEXT_SIZE) * 2 # length of full input vector
+H1_SIZE = FFN_INPUT_SIZE # dimension of stimulus hidden units in ff
+H2_SIZE = 80
 NBACK_LEVELS = [2,3] # Currently restricted to these
 NUM_NBACK_LEVELS = len(NBACK_LEVELS)
 CONTEXT_DRIFT_NOISE = 0.0  # noise used by DriftOnASphereIntegrator (function of Context mech)
@@ -203,7 +208,7 @@ RETRIEVAL_CONTEXT_WEIGHT = 1 - RETRIEVAL_STIM_WEIGHT # weighting of context fiel
 # Training parameters:
 NUM_TRAINING_SETS_PER_EPOCH = 1
 MINIBATCH_SIZE=None
-NUM_EPOCHS=  500 # 6250 # 12500 # 20000  # nback-paper: 400,000 @ one trial per epoch = 6,250 @ 64 trials per epoch
+NUM_EPOCHS=  6250 # 12500 # 20000  # nback-paper: 400,000 @ one trial per epoch = 6,250 @ 64 trials per epoch
 FOILS_ALLOWED_BEFORE = False
 LEARNING_RATE=0.001  # nback-paper: .001
 
@@ -214,17 +219,18 @@ NUM_TRIALS = 48 # number of stimuli presented in a trial sequence
 # Names of Compositions and Mechanisms:
 NBACK_MODEL = "nback Model"
 FFN_COMPOSITION = "WORKING MEMORY (fnn)"
-FFN_STIMULUS_INPUT = "CURRENT STIMULUS"
-FFN_CONTEXT_INPUT = "CURRENT CONTEXT"
-FFN_STIMULUS_RETRIEVED = "RETRIEVED STIMULUS"
-FFN_CONTEXT_RETRIEVED = "RETRIEVED CONTEXT"
-FFN_TASK = "CURRENT TASK"
-FFN_HIDDEN = "HIDDEN LAYER"
+FFN_INPUT = "CURRENT INPUT LAYER"
+FFN_TASK = "CURRENT TASK LAYER"
+FFN_TASK_EMBED = "TASK EMBEDDING LAYER"
+FFN_H1 = "H1 LAYER"
+FFN_ADD_LAYER = "ADD LAYER"
 FFN_DROPOUT = "DROPOUT LAYER"
+FFN_H2 = "H2 LAYER"
 FFN_OUTPUT = "OUTPUT LAYER"
 MODEL_STIMULUS_INPUT ='STIM'
 MODEL_CONTEXT_INPUT = 'CONTEXT'
 MODEL_TASK_INPUT = "TASK"
+CONCATENATE_FFN_INPUT = "CONCATENATE INPUT"
 EM = "EPISODIC MEMORY (dict)"
 DECISION = "DECISION"
 CONTROLLER = "READ/WRITE CONTROLLER"
@@ -247,7 +253,6 @@ class TrialTypes(Enum):
 
 num_trial_types = len(TrialTypes)
 
-loss = None
 
 class Stimuli(Enum):
     SWEETPEA = 'sweetpea'
@@ -255,13 +260,14 @@ class Stimuli(Enum):
 
 #endregion
 
-
-
 #region ===================================== MODEL CONSTRUCTION =======================================================
 
 def construct_model(stim_size:int = STIM_SIZE,
                     context_size:int = CONTEXT_SIZE,
-                    hidden_size:int = HIDDEN_SIZE,
+                    ffn_input_size:int = FFN_INPUT_SIZE,
+                    task_size = TASK_SIZE,
+                    h1_size:int = H1_SIZE,
+                    h2_size:int = H2_SIZE,
                     num_nback_levels:int = NUM_NBACK_LEVELS,
                     context_drift_noise:float = CONTEXT_DRIFT_NOISE,
                     retrievel_softmax_temp:float = RETRIEVAL_SOFTMAX_TEMP,
@@ -273,12 +279,18 @@ def construct_model(stim_size:int = STIM_SIZE,
 
     Arguments
     ---------
-    stim_size : int
-      length of stimulus vector
+    stim_size: int
+      dimensionality of stimulus vector
     context_size: int
-      length of the temporal context vector
-    hidden_size: int
-      dimensionality of the hidden unit layer
+      dimensionality of context vector
+    ffn_input_size: int
+      dimensionality of input to ffn (current stimulus and context + retrieved stimulus and context)
+    task_size: int
+      dimensionality of task embedding layer
+    h1_size: int
+      dimensionality of  input embedding layer
+    h2_size: int
+      dimensionality of hidden layer
     num_nback_levels: int
       number of nback_levels to implement
     context_drift_noise: float
@@ -300,47 +312,39 @@ def construct_model(stim_size:int = STIM_SIZE,
     print(f"constructing '{FFN_COMPOSITION}'...")
 
     # FEED FORWARD NETWORK -----------------------------------------
-
     #     inputs: encoding of current stimulus and context, retrieved stimulus and retrieved context,
+    #     task input:  one hot
     #     output: match [1,0] or non-match [0,1]
     # Must be trained to detect match for specified task (1-back, 2-back, etc.)
-    input_current_stim = TransferMechanism(name=FFN_STIMULUS_INPUT,
-                                           size=stim_size,
-                                           function=FFN_TRANSFER_FUNCTION)
-    input_current_context = TransferMechanism(name=FFN_CONTEXT_INPUT,
-                                              size=context_size,
-                                              function=FFN_TRANSFER_FUNCTION)
-    input_retrieved_stim = TransferMechanism(name=FFN_STIMULUS_RETRIEVED,
-                                             size=stim_size,
-                                             function=FFN_TRANSFER_FUNCTION)
-    input_retrieved_context = TransferMechanism(name=FFN_CONTEXT_RETRIEVED,
-                                                size=context_size,
-                                                function=FFN_TRANSFER_FUNCTION)
-    input_task = TransferMechanism(name=FFN_TASK,
-                                   size=num_nback_levels,
-                                   function=FFN_TRANSFER_FUNCTION)
-    hidden = TransferMechanism(name=FFN_HIDDEN,
-                               size=hidden_size,
-                               function=FFN_TRANSFER_FUNCTION)
-    dropout = TransferMechanism(name=FFN_DROPOUT,
-                               size=hidden_size,
-                               function=Dropout(p=DROPOUT_PROB))
+    stim_context_input = TransferMechanism(name=FFN_INPUT,
+                                           size=ffn_input_size)
+    task_input = ProcessingMechanism(name=FFN_TASK,
+                                     size=task_size)
+    task_embedding = ProcessingMechanism(name=FFN_TASK,
+                                         size=h1_size)
+    h1 = ProcessingMechanism(name=FFN_H1,
+                             size=h1_size,
+                             function=FFN_TRANSFER_FUNCTION)
+    add_layer = ProcessingMechanism(name=FFN_ADD_LAYER,
+                                    size=h1_size)
+    dropout = ProcessingMechanism(name=FFN_DROPOUT,
+                                  size=h1_size,
+                                  function=Dropout(p=DROPOUT_PROB))
+    h2 = ProcessingMechanism(name=FFN_H2,
+                             size=h2_size,
+                             function=FFN_TRANSFER_FUNCTION)
     output = ProcessingMechanism(name=FFN_OUTPUT,
                                  size=2,
-                                   # function=ReLU
+                                 function = Linear
+                                 # function=ReLU
                                  )
+    PASS_THROUGH = MappingProjection(matrix = IDENTITY_MATRIX, exclude_in_autodiff=True),
+    input_pway = Pathway([stim_context_input, RANDOM_WEIGHTS_INITIALIZATION, h1, IDENTITY_MATRIX, add_layer])
+    task_pway = Pathway([task_input, RANDOM_WEIGHTS_INITIALIZATION, task_embedding, IDENTITY_MATRIX, add_layer])
+    output_pway = Pathway([add_layer, IDENTITY_MATRIX, dropout,
+                           RANDOM_WEIGHTS_INITIALIZATION, h2, RANDOM_WEIGHTS_INITIALIZATION, output])
 
-    ffn = AutodiffComposition(([{input_current_stim,
-                                 input_current_context,
-                                 input_retrieved_stim,
-                                 input_retrieved_context,
-                                 input_task},
-                                hidden,
-                                # IDENTITY_MATRIX,
-                                MappingProjection(matrix = IDENTITY_MATRIX, exclude_in_autodiff=True),
-                                dropout,
-                                output],
-                               RANDOM_WEIGHTS_INITIALIZATION),
+    ffn = AutodiffComposition(pathways = [input_pway, task_pway, output_pway],
                               name=FFN_COMPOSITION,
                               learning_rate=LEARNING_RATE,
                               optimizer_type='adam',
@@ -353,7 +357,7 @@ def construct_model(stim_size:int = STIM_SIZE,
 
     print(f"constructing '{NBACK_MODEL}'...")
 
-    # Stimulus Encoding: takes STIM_SIZE vector as input
+    # Stimulus Encoding: takes stim_size vector as input
     stim = TransferMechanism(name=MODEL_STIMULUS_INPUT, size=stim_size)
 
     # Context Encoding: takes scalar as drift step for current trial
@@ -365,7 +369,7 @@ def construct_model(stim_size:int = STIM_SIZE,
 
     # Task: task one-hot indicating n-back (1, 2, 3 etc.) - must correspond to what ffn has been trained to do
     task = ProcessingMechanism(name=MODEL_TASK_INPUT,
-                               size=num_nback_levels)
+                               size=task_size)
 
     # Episodic Memory:
     #    - entries: stimulus (field[0]) and context (field[1]); randomly initialized
@@ -381,14 +385,14 @@ def construct_model(stim_size:int = STIM_SIZE,
                                                              retrieval_context_weight],
                                      # equidistant_entries_select=NEWEST,
                                      selection_function=SoftMax(output=MAX_INDICATOR,
-                                                                gain=retrievel_softmax_temp)),
-                                 )
+                                                                gain=retrievel_softmax_temp)))
 
-    logit = TransferMechanism(name='LOGIT',
-                              size=2,
-                              # output_ports=[{VARIABLE: (OWNER_VALUE,0),
-                              #                FUNCTION: lambda x : np.log(x)}],
-                              function=Logistic)
+    # Input to FFN
+    concat_input = ProcessingMechanism(name=CONCATENATE_FFN_INPUT,
+                                       input_ports=[stim, context,
+                                                    em.output_ports["RETRIEVED_STIMULUS_FIELD"],
+                                                    em.output_ports["RETRIEVED_CONTEXT_FIELD"]],
+                                       function=Concatenate)
 
     decision = TransferMechanism(name=DECISION,
                                  size=2,
@@ -426,22 +430,16 @@ def construct_model(stim_size:int = STIM_SIZE,
 
     nback_model = Composition(name=NBACK_MODEL,
                               # nodes=[stim, context, task, ffn, em, logit, decision, control],
-                              nodes=[stim, context, task, ffn, em, decision, control],
+                              nodes=[stim, context, task, ffn, em, concat_input, decision, control],
                               # Terminate trial if value of control is still 1 after first pass through execution
                               termination_processing={TimeScale.TRIAL: And(Condition(lambda: control.value),
                                                                            AfterPass(0, TimeScale.TRIAL))},
                               )
-    # # Terminate trial if value of control is still 1 after first pass through execution
-    nback_model.add_projection(MappingProjection(), stim, input_current_stim)
-    nback_model.add_projection(MappingProjection(), context, input_current_context)
-    nback_model.add_projection(MappingProjection(), task, input_task)
-    nback_model.add_projection(MappingProjection(), em.output_ports["RETRIEVED_STIMULUS_FIELD"], input_retrieved_stim)
-    nback_model.add_projection(MappingProjection(), em.output_ports["RETRIEVED_CONTEXT_FIELD"], input_retrieved_context)
     nback_model.add_projection(MappingProjection(), stim, em.input_ports["STIMULUS_FIELD"])
-    nback_model.add_projection(MappingProjection(), output, decision, IDENTITY_MATRIX)
-    # nback_model.add_projection(MappingProjection(), output, logit, IDENTITY_MATRIX)
-    # nback_model.add_projection(MappingProjection(), logit, decision, IDENTITY_MATRIX)
     nback_model.add_projection(MappingProjection(), context, em.input_ports["CONTEXT_FIELD"])
+    nback_model.add_projection(MappingProjection(), task, task_input)
+    nback_model.add_projection(MappingProjection(), output, decision, IDENTITY_MATRIX)
+    nback_model.add_projection(MappingProjection(), concat_input, stim_context_input)
 
     if DISPLAY_MODEL:
         nback_model.show_graph(
@@ -456,14 +454,14 @@ def construct_model(stim_size:int = STIM_SIZE,
 
 #region =====================================STIMULUS GENERATION =======================================================
 
-def _get_stim_set(num_stim=STIM_SIZE):
+def _get_stim_set(stim_size=STIM_SIZE, num_stim=NUM_STIM):
     """Construct an array of unique stimuli for use in an experiment, used by train_network() and run_model()"""
     # For now, use one-hots
-    return np.eye(num_stim)
+    return np.eye(stim_size)[0:num_stim]
 
 def _get_task_input(nback_level):
     """Construct input to task Mechanism for a given nback_level, used by train_network() and run_model()"""
-    task_input = list(np.zeros_like(NBACK_LEVELS))
+    task_input = [0] * TASK_SIZE
     task_input[nback_level - NBACK_LEVELS[0]] = 1
     return task_input
 
@@ -513,10 +511,7 @@ def _get_training_inputs(network:AutodiffComposition,
 
     def trial_gen():
         for ep in range(num_epochs):
-            stim_current = []
-            context_current = []
-            stim_retrieved = []
-            context_retrieved = []
+            stim_array = []
             target = []
             current_task = []
             for n in range(num_training_sets_per_epoch):
@@ -550,32 +545,27 @@ def _get_training_inputs(network:AutodiffComposition,
 
                         # Assign retrieved stimulus and context accordingly to trial_type
                         for trial_type in TrialTypes:
-                            stim_current.append(current_stim)
-                            context_current.append(current_context)
                             # Assign current stimulus as retrieved stimulus for MATCH_ trials
                             if trial_type in {TrialTypes.MATCH_NO_FOIL, TrialTypes.MATCH_WITH_FOIL}:
-                                stim_retrieved.append(current_stim)
+                                stim_retrieved = current_stim
                             # Assign distractor stimulus as retrieved stimulus for NON_MATCH_ trials
                             else:
-                                stim_retrieved.append(distractor_stim)
+                                stim_retrieved = distractor_stim
                             # Assign nback context as retrieved context for _NO_FOIL trials
                             if trial_type in {TrialTypes.MATCH_NO_FOIL,TrialTypes.NO_MATCH_NO_FOIL}:
-                                context_retrieved.append(nback_context)
+                                context_retrieved = nback_context
                             # Assign distractor context as retrieved context for _WITH_FOIL trials
                             else:
-                                context_retrieved.append(distractor_context)
+                                context_retrieved = distractor_context
                             # Assign target
                             if trial_type in {TrialTypes.MATCH_NO_FOIL, TrialTypes.MATCH_WITH_FOIL}:
                                 target.append([1,0])
                             else:
                                 target.append([0,1])
                             current_task.append([task_input])
-
-            inputs = {network.nodes[FFN_STIMULUS_INPUT]: stim_current,
-                      network.nodes[FFN_CONTEXT_INPUT]: context_current,
-                      network.nodes[FFN_STIMULUS_RETRIEVED]: stim_retrieved,
-                      network.nodes[FFN_CONTEXT_RETRIEVED]: context_retrieved,
-                      network.nodes[FFN_TASK]: current_task}
+                            stim_array.append([np.array(current_stim.tolist() + current_context.tolist() \
+                                                       + stim_retrieved.tolist() + context_retrieved.tolist())])
+            inputs = {network.nodes[FFN_INPUT]: stim_array}
             targets = {network.nodes[FFN_OUTPUT]: target}
 
             training_set = {INPUTS: inputs,
@@ -764,8 +754,7 @@ def train_network(network:AutodiffComposition,
                   minibatch_size:int=MINIBATCH_SIZE,
                   learning_rate:float=LEARNING_RATE,
                   num_epochs:int=NUM_EPOCHS,
-                  save_weights_to:Union[Path,str,None]=None,
-                  context=None
+                  save_weights_to:Union[Path,str,None]=None
                   )->Path:
     """**Train feedforward network** on example stimulus sequences for each condition.
 
@@ -820,8 +809,7 @@ def train_network(network:AutodiffComposition,
                   learning_rate=learning_rate,
                   # execution_mode=ExecutionMode.LLVMRun
                   # execution_mode=ExecutionMode.Python
-                  execution_mode=ExecutionMode.PyTorch,
-                  context=context
+                  execution_mode=ExecutionMode.PyTorch
                   )
     stop_time = timeit.default_timer()
     print(f"training of '{network.name}' done")
@@ -831,17 +819,16 @@ def train_network(network:AutodiffComposition,
     else:
         training_time_str = f'{int(training_time/60)} minutes {int(training_time%60)} seconds'
     print(f'training time: {training_time_str} for {num_epochs} epochs')
-    path = network.save(filename=save_weights_to, directory="results")
+    path = network.save(filename=save_weights_to, directory="results_original")
     print(f'saved weights to: {save_weights_to}')
     return path
-    # print(f'saved weights sample: {network.nodes[FFN_HIDDEN].path_afferents[0].matrix.base[0][:3]}...')
+    # print(f'saved weights sample: {network.nodes[FFN_H1].path_afferents[0].matrix.base[0][:3]}...')
     # network.load(path)
-    # print(f'loaded weights sample: {network.nodes[FFN_HIDDEN].path_afferents[0].matrix.base[0][:3]}...')
+    # print(f'loaded weights sample: {network.nodes[FFN_H1].path_afferents[0].matrix.base[0][:3]}...')
 
-def test_network(network:AutodiffComposition,
+def network_test(network:AutodiffComposition,
                  load_weights_from:Union[Path,str,None]=None,
                  nback_levels=NBACK_LEVELS,
-                 context=None
                  )->(dict,list,list,list,list,list):
 
     print(f"constructing test set for '{network.name}'...")
@@ -852,11 +839,16 @@ def test_network(network:AutodiffComposition,
                                                           return_generator=False)
     print(f'total num trials: {set_size}')
 
-    inputs = [(test_set[INPUTS][network.nodes['CURRENT STIMULUS']][i],
-               test_set[INPUTS][network.nodes['RETRIEVED STIMULUS']][i],
-               test_set[INPUTS][network.nodes['CURRENT CONTEXT']][i],
-               test_set[INPUTS][network.nodes['RETRIEVED CONTEXT']][i]) for i in range(set_size)]
-    cxt_distances = [Distance(metric=COSINE)([inputs[i][2],inputs[i][3]]) for i in range(set_size)]
+    inputs = [test_set[INPUTS][network.nodes['CURRENT INPUT LAYER']][i] for i in range(set_size)]
+    # cxt_distances = [Distance(metric=COSINE)([inputs[i][2],inputs[i][3]]) for i in range(set_size)]
+    current_stim_idx = slice(0,STIM_SIZE)
+    current_context_idx = slice(current_stim_idx.stop, current_stim_idx.stop + CONTEXT_SIZE)
+    retrieved_stim_idx = slice(current_context_idx.stop, current_context_idx.stop + STIM_SIZE)
+    retrieved_context_idx = slice(retrieved_stim_idx.stop, retrieved_stim_idx.stop + CONTEXT_SIZE)
+    stim_distances = [Distance(metric=COSINE)([inputs[i][0][current_stim_idx],
+                                              inputs[i][0][retrieved_stim_idx]]) for i in range(set_size)]
+    cxt_distances = [Distance(metric=COSINE)([inputs[i][0][current_context_idx],
+                                              inputs[i][0][retrieved_context_idx]]) for i in range(set_size)]
     targets = list(test_set[TARGETS].values())[0]
     trial_type_stats = []
 
@@ -864,23 +856,21 @@ def test_network(network:AutodiffComposition,
     for i in range(NUM_NBACK_LEVELS):
         start = i * num_items_per_nback_level
         stop = start + num_items_per_nback_level
-        distances_for_level = np.array(cxt_distances[start:stop])
+        stimulus_distances_for_level = np.array(stim_distances[start:stop])
+        context_distances_for_level = np.array(cxt_distances[start:stop])
         conditions_for_level = np.array(conditions[start:stop])
         for trial_type in TrialTypes:
             trial_type_stats.append(
                 (f'{NBACK_LEVELS[i]}-back', trial_type.name, trial_type.value,
-                 distances_for_level[np.where(conditions_for_level==trial_type.name)].mean(),
-                 distances_for_level[np.where(conditions_for_level==trial_type.name)].std()))
+                 context_distances_for_level[np.where(conditions_for_level==trial_type.name)].mean(),
+                 context_distances_for_level[np.where(conditions_for_level==trial_type.name)].std()))
 
-    # # FIX: COMMENT OUT TO TEST TRAINING LOSS FROM WEIGHTS JUST TRAINED W/O LOADING FROM DISK
+    # FIX: COMMENTED OUT TO TEST TRAINING LOSS
     if load_weights_from:
-        print(f"Loading weights for '{FFN_COMPOSITION}' from {load_weights_from}...")
+        print(f"nback_model loading '{FFN_COMPOSITION}' weights from {load_weights_from}...")
         network.load(filename=load_weights_from)
 
-    network.run(inputs=test_set[INPUTS],
-                # report_progress=ReportProgress.ON,
-                context=context
-                )
+    network.run(inputs=test_set[INPUTS], report_progress=ReportProgress.ON)
 
     if ANALYZE_RESULTS:
         coded_responses, stats = analyze_results([network.results,conditions], test=True)
@@ -888,7 +878,6 @@ def test_network(network:AutodiffComposition,
         cross_entropy_loss = \
             [network.loss(torch.Tensor(output[0]),torch.Tensor(np.array(target))).detach().numpy().tolist()
              for output, target in zip(network.results, targets)]
-
     coded_responses_flat = []
     for nback_level in nback_levels:
         coded_responses_flat.extend(coded_responses[nback_level])
@@ -1132,13 +1121,10 @@ if __name__ == '__main__':
     if CONSTRUCT_MODEL:
         nback_model = construct_model()
 
-    context = Context(source=ContextFlags.COMMAND_LINE)
-
     if TRAIN_FFN:
         weights_filename = f'results/ffn.wts_nep_{NUM_EPOCHS}_lr_{str(LEARNING_RATE).split(".")[1]}.pnl'
         weights_path = Path('/'.join([os.getcwd(), weights_filename]))
         saved_weights = train_network(nback_model.nodes[FFN_COMPOSITION],
-                                      context=context,
                                       save_weights_to=weights_path
                                       )
 
@@ -1151,8 +1137,9 @@ if __name__ == '__main__':
 
         inputs, cxt_distances, targets, conditions, results, coded_responses, ce_loss, \
         trial_type_stats, stats = \
-            test_network(nback_model.nodes[FFN_COMPOSITION], load_weights_from = weights_path, context=context)
-
+            network_test(nback_model.nodes[FFN_COMPOSITION],
+                         load_weights_from = weights_path
+                         )
         headings = ['condition', 'inputs', 'target', 'context distance', 'results', 'coded response', 'ce loss']
         results = (headings,
                    list(zip(conditions, inputs, targets, cxt_distances, results, coded_responses, ce_loss)),
