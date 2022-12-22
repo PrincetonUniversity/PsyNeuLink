@@ -3207,7 +3207,7 @@ class TestBatching:
         # Compute cross-entropy loss as documented for `PyTorchCrossEntropyLoss using target class probabilies vector
         # (see https://pytorch.org/docs/stable/generated/torch.nn.CrossEntropyLoss.html);
         # avoids "inf" value for entries = 0 in target vector
-        ce_numpy = -np.sum(np.log( np.exp(o)/np.sum(np.exp(o))) * t)
+        ce_numpy = -np.sum(np.log( np.exp(o) / np.sum(np.exp(o))) * t)
 
         # Compute cross-entropy loss using standard mathematical formulation
         #  which can return an "inf" value for entries = 0 in target vector

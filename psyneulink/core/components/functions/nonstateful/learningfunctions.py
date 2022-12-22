@@ -2118,6 +2118,10 @@ class BackPropagation(LearningFunction):
 
         self._check_args(variable=variable, context=context, params=params)
 
+        # IMPLEMENTATION NOTE: if error_matrix is an arg, it must in params (put there by super.function()
+        if params:
+            error_matrix = params.pop(ERROR_MATRIX, None)
+
         # Manage error_matrix param
         # During init, function is called directly from Component (i.e., not from LearningMechanism execute() method),
         #     so need "placemarker" error_matrix for validation

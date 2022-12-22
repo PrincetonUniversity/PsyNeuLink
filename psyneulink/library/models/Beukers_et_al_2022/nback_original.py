@@ -185,8 +185,8 @@ MAX_NBACK_LEVELS = 3
 NUM_STIM = 8 # number of different stimuli in stimulus set -  QUESTION: WHY ISN"T THIS EQUAL TO STIM_SIZE OR VICE VERSA?
 FFN_TRANSFER_FUNCTION = ReLU
 
-
 # Constructor parameters:  (values are from nback-paper)
+
 
 STIM_SIZE = 20 # length of stimulus vector
 CONTEXT_SIZE = 25 # length of temporal context vector
@@ -208,7 +208,7 @@ RETRIEVAL_CONTEXT_WEIGHT = 1 - RETRIEVAL_STIM_WEIGHT # weighting of context fiel
 # Training parameters:
 NUM_TRAINING_SETS_PER_EPOCH = 1
 MINIBATCH_SIZE=None
-NUM_EPOCHS=  6250 # 12500 # 20000  # nback-paper: 400,000 @ one trial per epoch = 6,250 @ 64 trials per epoch
+NUM_EPOCHS = 6250 # 12500 # 20000  # nback-paper: 400,000 @ one trial per epoch = 6,250 @ 64 trials per epoch
 FOILS_ALLOWED_BEFORE = False
 LEARNING_RATE=0.001  # nback-paper: .001
 
@@ -563,8 +563,10 @@ def _get_training_inputs(network:AutodiffComposition,
                             else:
                                 target.append([0,1])
                             current_task.append([task_input])
-                            stim_array.append([np.array(current_stim.tolist() + current_context.tolist() \
-                                                       + stim_retrieved.tolist() + context_retrieved.tolist())])
+                            stim_array.append([np.array(current_stim.tolist()
+                                                        + current_context.tolist()
+                                                        + stim_retrieved.tolist()
+                                                        + context_retrieved.tolist())])
             inputs = {network.nodes[FFN_INPUT]: stim_array}
             targets = {network.nodes[FFN_OUTPUT]: target}
 
