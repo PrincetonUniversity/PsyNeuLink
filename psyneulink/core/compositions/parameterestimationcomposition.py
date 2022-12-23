@@ -155,27 +155,38 @@ import numpy as np
 import pandas as pd
 
 import psyneulink.core.llvm as pnllvm
-from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \
-    OptimizationControlMechanism
-from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
+from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import (
+    OptimizationControlMechanism,
+)
+from psyneulink.core.components.mechanisms.processing.objectivemechanism import (
+    ObjectiveMechanism,
+)
+from psyneulink.core.components.ports.modulatorysignals.controlsignal import (
+    ControlSignal,
+)
 from psyneulink.core.compositions.composition import Composition, NodeRole
-from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
+from psyneulink.core.globals.context import (
+    Context,
+    ContextFlags,
+    handle_external_context,
+)
 from psyneulink.core.globals.keywords import BEFORE, OVERRIDE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.utilities import convert_to_list
 from psyneulink.core.scheduling.time import TimeScale
 
 
-__all__ = ['ParameterEstimationComposition', 'ParameterEstimationCompositionError']
+__all__ = ["ParameterEstimationComposition", "ParameterEstimationCompositionError"]
 
-COMPOSITION_SPECIFICATION_ARGS = {'nodes', 'pathways', 'projections'}
-CONTROLLER_SPECIFICATION_ARGS = {'controller',
-                                 'enable_controller',
-                                 'controller_mode',
-                                 'controller_time_scale',
-                                 'controller_condition',
-                                 'retain_old_simulation_data'}
+COMPOSITION_SPECIFICATION_ARGS = {"nodes", "pathways", "projections"}
+CONTROLLER_SPECIFICATION_ARGS = {
+    "controller",
+    "enable_controller",
+    "controller_mode",
+    "controller_time_scale",
+    "controller_condition",
+    "retain_old_simulation_data",
+}
 
 
 class ParameterEstimationCompositionError(Exception):
@@ -189,18 +200,27 @@ def _initial_seed_getter(owning_component, context=None):
     except:
         return None
 
+
 def _initial_seed_setter(value, owning_component, context=None):
     owning_component.controler.parameters.initial_seed.set(value, context)
     return value
 
+
 def _same_seed_for_all_parameter_combinations_getter(owning_component, context=None):
     try:
-        return owning_component.controler.parameters.same_seed_for_all_allocations._get(context)
+        return owning_component.controler.parameters.same_seed_for_all_allocations._get(
+            context
+        )
     except:
         return None
 
-def _same_seed_for_all_parameter_combinations_setter(value, owning_component, context=None):
-    owning_component.controler.parameters.same_seed_for_all_allocations.set(value, context)
+
+def _same_seed_for_all_parameter_combinations_setter(
+    value, owning_component, context=None
+):
+    owning_component.controler.parameters.same_seed_for_all_allocations.set(
+        value, context
+    )
     return value
 
 
@@ -427,47 +447,58 @@ class ParameterEstimationComposition(Composition):
 
     class Parameters(Composition.Parameters):
         """
-            Attributes
-            ----------
+        Attributes
+        ----------
 
-                initial_seed
-                    see `input_specification <ParameterEstimationComposition.initial_seed>`
+            initial_seed
+                see `input_specification <ParameterEstimationComposition.initial_seed>`
 
-                    :default value: None
-                    :type: ``int``
+                :default value: None
+                :type: ``int``
 
-                same_seed_for_all_parameter_combinations
-                    see `input_specification <ParameterEstimationComposition.same_seed_for_all_parameter_combinations>`
+            same_seed_for_all_parameter_combinations
+                see `input_specification <ParameterEstimationComposition.same_seed_for_all_parameter_combinations>`
 
-                    :default value: False
-                    :type: ``bool``
+                :default value: False
+                :type: ``bool``
 
         """
+
         # FIX: 11/32/21 CORRECT INITIAlIZATIONS?
-        initial_seed = Parameter(None, loggable=False, pnl_internal=True,
-                                 getter=_initial_seed_getter,
-                                 setter=_initial_seed_setter)
-        same_seed_for_all_parameter_combinations = Parameter(False, loggable=False, pnl_internal=True,
-                                                             getter=_same_seed_for_all_parameter_combinations_getter,
-                                                             setter=_same_seed_for_all_parameter_combinations_setter)
+        initial_seed = Parameter(
+            None,
+            loggable=False,
+            pnl_internal=True,
+            getter=_initial_seed_getter,
+            setter=_initial_seed_setter,
+        )
+        same_seed_for_all_parameter_combinations = Parameter(
+            False,
+            loggable=False,
+            pnl_internal=True,
+            getter=_same_seed_for_all_parameter_combinations_getter,
+            setter=_same_seed_for_all_parameter_combinations_setter,
+        )
 
     @handle_external_context()
     @check_user_specified
-    def __init__(self,
-                 parameters, # OCM control_signals
-                 outcome_variables,  # OCM monitor_for_control
-                 optimization_function, # function of OCM
-                 model=None,
-                 data=None,
-                 data_categorical_dims=None,
-                 objective_function=None, # function of OCM ObjectiveMechanism
-                 num_estimates=1, # num seeds per parameter combination (i.e., of OCM allocation_samples)
-                 num_trials_per_estimate=None, # num trials per run of model for each combination of parameters
-                 initial_seed=None,
-                 same_seed_for_all_parameter_combinations=None,
-                 name=None,
-                 context=None,
-                 **kwargs):
+    def __init__(
+        self,
+        parameters,  # OCM control_signals
+        outcome_variables,  # OCM monitor_for_control
+        optimization_function,  # function of OCM
+        model=None,
+        data=None,
+        data_categorical_dims=None,
+        objective_function=None,  # function of OCM ObjectiveMechanism
+        num_estimates=1,  # num seeds per parameter combination (i.e., of OCM allocation_samples)
+        num_trials_per_estimate=None,  # num trials per run of model for each combination of parameters
+        initial_seed=None,
+        same_seed_for_all_parameter_combinations=None,
+        name=None,
+        context=None,
+        **kwargs,
+    ):
 
         self._validate_params(locals())
 
@@ -476,35 +507,37 @@ class ParameterEstimationComposition(Composition):
         if not model:
             # If model has not been specified, specification(s) in kwargs are used
             # (note: _validate_params() ensures that either model or nodes and/or pathways are specified, but not both)
-            if 'nodes' in kwargs:
-                nodes = convert_to_list(kwargs['nodes'])
+            if "nodes" in kwargs:
+                nodes = convert_to_list(kwargs["nodes"])
                 # A single Composition specified in nodes argument, so use as model
                 if len(nodes) == 1 and isinstance(nodes[0], Composition):
                     model = nodes[0]
 
-            elif 'pathways' in kwargs:
-                pways = convert_to_list(kwargs['pathways'])
+            elif "pathways" in kwargs:
+                pways = convert_to_list(kwargs["pathways"])
                 # A single Composition specified in pathways arg, so use as model
                 if len(pways) == 1 and isinstance(pways[0], Composition):
                     model = pways[0]
             else:
                 # Use arguments provided to PEC in **nodes**, **pathways** and/or **projections** to construct model
-                model = Composition(**kwargs, name='model')
+                model = Composition(**kwargs, name="model")
 
             # Assign model as single node of PEC
-            kwargs.update({'nodes': model})
+            kwargs.update({"nodes": model})
 
         # Assign model as nested composition in PEC and self.model as self
-        kwargs.update({'nodes': model})
+        kwargs.update({"nodes": model})
         self.model = model
 
         self.optimized_parameter_values = []
 
-        super().__init__(name=name,
-                         controller_mode=BEFORE,
-                         controller_time_scale=TimeScale.RUN,
-                         enable_controller=True,
-                         **kwargs)
+        super().__init__(
+            name=name,
+            controller_mode=BEFORE,
+            controller_time_scale=TimeScale.RUN,
+            enable_controller=True,
+            **kwargs,
+        )
 
         context = Context(source=ContextFlags.COMPOSITION, execution_id=None)
 
@@ -540,18 +573,20 @@ class ParameterEstimationComposition(Composition):
         #     - search for seed params in _instantiate_ocm doesn't include pem itself or its functions)
         # IMPLEMENTATION NOTE: self is assigned as agent_rep to satisfy requirements of LLVM
         # TBI: refactor so that agent_rep = model
-        ocm = self._instantiate_ocm(agent_rep = self,
-                                    parameters=parameters,
-                                    outcome_variables=outcome_variables,
-                                    data=self.data,
-                                    objective_function=objective_function,
-                                    optimization_function=optimization_function,
-                                    num_estimates=num_estimates,
-                                    num_trials_per_estimate=num_trials_per_estimate,
-                                    initial_seed=initial_seed,
-                                    same_seed_for_all_parameter_combinations=same_seed_for_all_parameter_combinations,
-                                    return_results=return_results,
-                                    context=context)
+        ocm = self._instantiate_ocm(
+            agent_rep=self,
+            parameters=parameters,
+            outcome_variables=outcome_variables,
+            data=self.data,
+            objective_function=objective_function,
+            optimization_function=optimization_function,
+            num_estimates=num_estimates,
+            num_trials_per_estimate=num_trials_per_estimate,
+            initial_seed=initial_seed,
+            same_seed_for_all_parameter_combinations=same_seed_for_all_parameter_combinations,
+            return_results=return_results,
+            context=context,
+        )
         self.add_controller(ocm, context)
 
         # If we are using data fitting mode.
@@ -574,8 +609,10 @@ class ParameterEstimationComposition(Composition):
             self._data_numpy = self.data.to_numpy().astype(float)
 
             # Get which dimensions are categorical, and store the mask
-            self.data_categorical_dims = [True if isinstance(t, pd.CategoricalDtype) or t == bool else False
-                                          for t in self.data.dtypes]
+            self.data_categorical_dims = [
+                True if isinstance(t, pd.CategoricalDtype) or t == bool else False
+                for t in self.data.dtypes
+            ]
         elif isinstance(self.data, np.ndarray) and self.data.ndim == 2:
             self._data_numpy = self.data
 
@@ -586,16 +623,22 @@ class ParameterEstimationComposition(Composition):
                 # If the user specified a list of categorical dimensions, turn it into a mask
                 x = np.array(self.data_categorical_dims)
                 if x.dtype == int:
-                    self.data_categorical_dims = np.arange(self.data.shape[1]).astype(bool)
+                    self.data_categorical_dims = np.arange(self.data.shape[1]).astype(
+                        bool
+                    )
                     self.data_categorical_dims[x] = True
 
         else:
-            raise ValueError("Invalid format for data passed to OptimizationControlMechanism. Please ensure data is "
-                             "either a 2D numpy array or a pandas dataframe. Each row represents a single experimental "
-                             "trial.")
+            raise ValueError(
+                "Invalid format for data passed to OptimizationControlMechanism. Please ensure data is "
+                "either a 2D numpy array or a pandas dataframe. Each row represents a single experimental "
+                "trial."
+            )
 
         if not isinstance(self.nodes[0], Composition):
-            raise ValueError("PEC is data fitting mode requires the PEC to have a single node that is a composition!")
+            raise ValueError(
+                "PEC is data fitting mode requires the PEC to have a single node that is a composition!"
+            )
 
         # Make sure the output ports specified as outcome variables are present in the output ports of the inner
         # composition.
@@ -606,87 +649,117 @@ class ParameterEstimationComposition(Composition):
             try:
                 self._outcome_variable_indices.append(in_comp_ports.index(outcome_var))
             except ValueError:
-                raise ValueError(f"Could not find outcome variable {outcome_var.full_name} in the output ports of "
-                                 f"the composition being fitted to data ({self.nodes[0]}). A current limitation of the "
-                                 f"PEC data fitting API is that any output port of composition that should be fit to "
-                                 f"data must be set as and output of the composition.")
+                raise ValueError(
+                    f"Could not find outcome variable {outcome_var.full_name} in the output ports of "
+                    f"the composition being fitted to data ({self.nodes[0]}). A current limitation of the "
+                    f"PEC data fitting API is that any output port of composition that should be fit to "
+                    f"data must be set as and output of the composition."
+                )
 
         if len(self.outcome_variables) != self.data.shape[-1]:
-            raise ValueError(f"The number of columns in the data to fit must match the length of outcome variables! "
-                             f"data.colums = {self.data.columns}, outcome_variables = {self.outcome_variables}")
+            raise ValueError(
+                f"The number of columns in the data to fit must match the length of outcome variables! "
+                f"data.colums = {self.data.columns}, outcome_variables = {self.outcome_variables}"
+            )
 
     def _validate_params(self, args):
 
-        kwargs = args.pop('kwargs')
-        pec_name = f"{self.__class__.__name__} '{args.pop('name',None)}'" or f'a {self.__class__.__name__}'
+        kwargs = args.pop("kwargs")
+        pec_name = (
+            f"{self.__class__.__name__} '{args.pop('name',None)}'"
+            or f"a {self.__class__.__name__}"
+        )
 
         # FIX: 11/3/21 - WRITE TESTS FOR THESE ERRORS IN test_parameter_estimation_composition.py
 
         # Must specify either model or a COMPOSITION_SPECIFICATION_ARGS
-        if not (args['model'] or [arg for arg in kwargs if arg in COMPOSITION_SPECIFICATION_ARGS]):
-        # if not ((args['model'] or args['nodes']) for arg in kwargs if arg in COMPOSITION_SPECIFICATION_ARGS):
-            raise ParameterEstimationCompositionError(f"Must specify either 'model' or the "
-                                                      f"'nodes', 'pathways', and/or `projections` ars "
-                                                      f"in the constructor for {pec_name}.")
+        if not (
+            args["model"]
+            or [arg for arg in kwargs if arg in COMPOSITION_SPECIFICATION_ARGS]
+        ):
+            # if not ((args['model'] or args['nodes']) for arg in kwargs if arg in COMPOSITION_SPECIFICATION_ARGS):
+            raise ParameterEstimationCompositionError(
+                f"Must specify either 'model' or the "
+                f"'nodes', 'pathways', and/or `projections` ars "
+                f"in the constructor for {pec_name}."
+            )
 
         # Can't specify both model and COMPOSITION_SPECIFICATION_ARGUMENTS
         # if (args['model'] and [arg for arg in kwargs if arg in COMPOSITION_SPECIFICATION_ARGS]):
-        if args['model'] and kwargs.pop('nodes',None):
-            raise ParameterEstimationCompositionError(f"Can't specify both 'model' and the "
-                                                      f"'nodes', 'pathways', or 'projections' args "
-                                                      f"in the constructor for {pec_name}.")
+        if args["model"] and kwargs.pop("nodes", None):
+            raise ParameterEstimationCompositionError(
+                f"Can't specify both 'model' and the "
+                f"'nodes', 'pathways', or 'projections' args "
+                f"in the constructor for {pec_name}."
+            )
 
         # Disallow specification of PEC controller args
-        ctlr_spec_args_found = [arg for arg in CONTROLLER_SPECIFICATION_ARGS if arg in list(kwargs.keys())]
+        ctlr_spec_args_found = [
+            arg for arg in CONTROLLER_SPECIFICATION_ARGS if arg in list(kwargs.keys())
+        ]
         if ctlr_spec_args_found:
             plural = len(ctlr_spec_args_found) > 1
-            raise ParameterEstimationCompositionError(f"Cannot specify the following controller arg"
-                                                      f"{'s' if plural else ''} for {pec_name}: "
-                                                      f"'{', '.join(ctlr_spec_args_found)}'; "
-                                                      f"{'these are' if plural else 'this is'} "
-                                                      f"set automatically.")
+            raise ParameterEstimationCompositionError(
+                f"Cannot specify the following controller arg"
+                f"{'s' if plural else ''} for {pec_name}: "
+                f"'{', '.join(ctlr_spec_args_found)}'; "
+                f"{'these are' if plural else 'this is'} "
+                f"set automatically."
+            )
 
         # Disallow simultaneous specification of
         #     data (for data fitting; see _ParameterEstimationComposition_Data_Fitting)
         #          and objective_function (for optimization; see _ParameterEstimationComposition_Optimization)
-        if args['data'] is not None and args['objective_function'] is not None:
-            raise ParameterEstimationCompositionError(f"Both 'data' and 'objective_function' args were "
-                                                      f"specified for {pec_name}; must choose one "
-                                                      f"('data' for fitting or 'objective_function' for optimization).")
+        if args["data"] is not None and args["objective_function"] is not None:
+            raise ParameterEstimationCompositionError(
+                f"Both 'data' and 'objective_function' args were "
+                f"specified for {pec_name}; must choose one "
+                f"('data' for fitting or 'objective_function' for optimization)."
+            )
 
-    def _instantiate_ocm(self,
-                         agent_rep,
-                         parameters,
-                         outcome_variables,
-                         data,
-                         objective_function,
-                         optimization_function,
-                         num_estimates,
-                         num_trials_per_estimate,
-                         initial_seed,
-                         same_seed_for_all_parameter_combinations,
-                         return_results,
-                         context=None
-                         ):
+    def _instantiate_ocm(
+        self,
+        agent_rep,
+        parameters,
+        outcome_variables,
+        data,
+        objective_function,
+        optimization_function,
+        num_estimates,
+        num_trials_per_estimate,
+        initial_seed,
+        same_seed_for_all_parameter_combinations,
+        return_results,
+        context=None,
+    ):
 
         # # Parse **parameters** into ControlSignals specs
         control_signals = []
         for param, allocation in parameters.items():
-            control_signals.append(ControlSignal(modulates=param,
-                                                 # In parameter fitting (when data is present) we always want to
-                                                 # override the fitting parameters with the search values.
-                                                 modulation=OVERRIDE if self.data is not None else None,
-                                                 allocation_samples=allocation))
+            control_signals.append(
+                ControlSignal(
+                    modulates=param,
+                    # In parameter fitting (when data is present) we always want to
+                    # override the fitting parameters with the search values.
+                    modulation=OVERRIDE if self.data is not None else None,
+                    allocation_samples=allocation,
+                )
+            )
 
         # If objective_function has been specified, create and pass ObjectiveMechanism to ocm
-        objective_mechanism = ObjectiveMechanism(monitor=outcome_variables,
-                                                 function=objective_function) if objective_function else None
+        objective_mechanism = (
+            ObjectiveMechanism(monitor=outcome_variables, function=objective_function)
+            if objective_function
+            else None
+        )
 
         # FIX: NEED TO BE SURE CONSTRUCTOR FOR MLE optimization_function HAS data ATTRIBUTE
         if data is not None:
             optimization_function.data = self._data_numpy
             optimization_function.data_categorical_dims = self.data_categorical_dims
-            optimization_function.outcome_variable_indices = self._outcome_variable_indices
+            optimization_function.outcome_variable_indices = (
+                self._outcome_variable_indices
+            )
 
         return PEC_OCM(
             agent_rep=agent_rep,
@@ -710,18 +783,20 @@ class ParameterEstimationComposition(Composition):
         if self.results is not None:
             self.results.clear()
 
-        context = kwargs.get('context', None)
+        context = kwargs.get("context", None)
         self._assign_execution_ids(context)
 
         # Before we do anything, clear any compilation structures that have been generated. This is a workaround to
         # an issue that causes the PEC to fail to run in LLVM mode when the inner composition that we are fitting
         # has already been compiled.
-        if self.controller.parameters.comp_execution_mode.get(context) != "Python":
-            pnllvm.cleanup()
+        # if self.controller.parameters.comp_execution_mode.get(context) != "Python":
+        #     pnllvm.cleanup()
 
         # Capture the input passed to run and pass it on to the OCM
         assert self.controller is not None
-        self.controller._cache_pec_inputs(kwargs.get('inputs', None if not args else args[0]))
+        self.controller.set_pec_inputs_cache(
+            kwargs.get("inputs", None if not args else args[0])
+        )
         # We need to set the inputs for the composition during simulation, by assigning the inputs dict passed in
         # PEC run() to its controller's state_feature_values (this is in order to accomodate multi-trial inputs
         # without having the PEC provide them one-by-one to the simulated composition. This assumes that the inputs
@@ -730,11 +805,13 @@ class ParameterEstimationComposition(Composition):
         inputs_dict = self.controller.parameters.state_feature_values._get(context)
         # inputs_dict = self.controller._get_pec_inputs()
 
-        for state_input_port, value in zip(self.controller.state_input_ports, inputs_dict.values()):
+        for state_input_port, value in zip(
+            self.controller.state_input_ports, inputs_dict.values()
+        ):
             state_input_port.parameters.value._set(value, context)
         # Need to pass restructured inputs dict to run
         # kwargs['inputs'] = {self.nodes[0]: list(inputs_dict.values())}
-        kwargs.pop('inputs', None)
+        kwargs.pop("inputs", None)
         # Run the composition as normal
         return super(ParameterEstimationComposition, self).run(*args, **kwargs)
 
@@ -756,34 +833,44 @@ class ParameterEstimationComposition(Composition):
         """
 
         if self.controller is None:
-            raise ParameterEstimationCompositionError(f"The controller for ParameterEstimationComposition {self.name} "
-                                                      f"has not been instantiated yet. Cannot compute log-likelihood.")
+            raise ParameterEstimationCompositionError(
+                f"The controller for ParameterEstimationComposition {self.name} "
+                f"has not been instantiated yet. Cannot compute log-likelihood."
+            )
 
         if self.controller.function is None:
-            raise ParameterEstimationCompositionError(f"The function of the controller for "
-                                                      f"ParameterEstimationComposition {self.name} has not been "
-                                                      f"instantiated yet. Cannot compute log-likelihood.")
+            raise ParameterEstimationCompositionError(
+                f"The function of the controller for "
+                f"ParameterEstimationComposition {self.name} has not been "
+                f"instantiated yet. Cannot compute log-likelihood."
+            )
 
         if self.data is None:
-            raise ParameterEstimationCompositionError(f"The data for ParameterEstimationComposition {self.name} "
-                                                      f"has not been defined. Cannot compute log-likelihood.")
+            raise ParameterEstimationCompositionError(
+                f"The data for ParameterEstimationComposition {self.name} "
+                f"has not been defined. Cannot compute log-likelihood."
+            )
 
         if len(args) != len(self.fit_parameters):
-            raise ParameterEstimationCompositionError(f"The number of parameters specified in the call to "
-                                                      f"log_likelihood does not match the number of parameters "
-                                                      f"specified in the constructor of ParameterEstimationComposition.")
+            raise ParameterEstimationCompositionError(
+                f"The number of parameters specified in the call to "
+                f"log_likelihood does not match the number of parameters "
+                f"specified in the constructor of ParameterEstimationComposition."
+            )
 
-        if not hasattr(self.controller.function, 'log_likelihood'):
+        if not hasattr(self.controller.function, "log_likelihood"):
             of = self.controller.function
-            raise ParameterEstimationCompositionError(f"The function ({of}) for the controller of "
-                                                      f"ParameterEstimationComposition {self.name} does not appear to "
-                                                      f"have a log_likelihood function.")
+            raise ParameterEstimationCompositionError(
+                f"The function ({of}) for the controller of "
+                f"ParameterEstimationComposition {self.name} does not appear to "
+                f"have a log_likelihood function."
+            )
 
         context.composition = self
 
         # Capture the inputs and pass it on to the OCM
         assert self.controller is not None
-        self.controller._cache_pec_inputs(inputs)
+        self.controller.set_pec_inputs_cache(inputs)
 
         # Try to get the log-likelihood from controllers optimization_function, if it hasn't defined this function yet
         # then it will raise an error.
@@ -793,19 +880,23 @@ class ParameterEstimationComposition(Composition):
         pass
 
 
-def _pec_ocm_state_feature_values_getter(owning_component=None, context=None)->dict:
+def _pec_ocm_state_feature_values_getter(owning_component=None, context=None) -> dict:
     """Return the complete input values passed to the last call of run for the Composition that the PEC_OCM controls.
     This method is used by the PEC_OCM to get the complete input dictionary for all trials cached in _pec.input_values,
     in order to pass them on to the agent_rep during simulation.
     """
     pec_ocm = owning_component
 
-    if pec_ocm.initialization_status == ContextFlags.INITIALIZING or pec_ocm._pec_input_values == None:
+    if (
+        pec_ocm.initialization_status == ContextFlags.INITIALIZING
+        or pec_ocm._pec_input_values is None
+    ):
         return {}
 
     if not isinstance(pec_ocm.composition, ParameterEstimationComposition):
         raise ParameterEstimationCompositionError(
-            f"A PEC_OCM can only be used with a ParmeterEstimationComposition")
+            f"A PEC_OCM can only be used with a ParmeterEstimationComposition"
+        )
 
     return pec_ocm._pec_input_values
 
@@ -815,10 +906,11 @@ class PEC_OCM(OptimizationControlMechanism):
     Assign inputs passed to run method of ParameterEstimationComposition directly as values of
       PEC_OCM's state_input_ports (this allows a full set of trials' worth of inputs to be used in each
       run of the Composition being estimated or optimized.
-    _cache_pec_inputs(): called by PEC to cache inputs passed to its run method
+    set_pec_inputs_cache(): called by PEC to cache inputs passed to its run method
     _pec_ocm_state_feature_values_getter(): overrides state_feature_values_getter of OptimizationControlMechanism
       to return input dict for simulation that incluces all trials' worth of inputs for each node.
     """
+
     class Parameters(OptimizationControlMechanism.Parameters):
         """
         Attributes
@@ -831,14 +923,20 @@ class PEC_OCM(OptimizationControlMechanism):
                 :default value: {}
                 :type: dict
         """
-        state_feature_values = Parameter(None, getter=_pec_ocm_state_feature_values_getter,
-                                         user=False, pnl_internal=True, read_only=True)
+
+        state_feature_values = Parameter(
+            None,
+            getter=_pec_ocm_state_feature_values_getter,
+            user=False,
+            pnl_internal=True,
+            read_only=True,
+        )
 
     def __init__(self, *args, **kwargs):
         self._pec_input_values = None
         super().__init__(*args, **kwargs)
 
-    def _cache_pec_inputs(self, inputs_dict:dict)->dict:
+    def set_pec_inputs_cache(self, inputs_dict: dict) -> dict:
         """Cache input values passed to the last call of run for the composition that this OCM controls.
         This method is used by the ParamterEstimationComposition in its run() method.
         If inputs_dict is of the form specified by ParemeterEstimationComposition.get_input_format()
@@ -856,30 +954,38 @@ class PEC_OCM(OptimizationControlMechanism):
 
         # If inputs_dict has model as its only entry, then check that its format is OK to pass to pec.run()
         elif len(inputs_dict) == 1 and model in inputs_dict:
-            if not all(len(trial) == self.num_state_input_ports for trial in inputs_dict[model]):
-                raise ParameterEstimationCompositionError(f"The array in the dict specified for the 'inputs' arg of "
-                                                          f"{self.composition.name}.run() is badly formatted: "
-                                                          f"the length of each item in the outer dimension (a trial's "
-                                                          f"worth of inputs) must be equal to the number of inputs to "
-                                                          f"'{model.name}' ({self.num_state_input_ports}).")
+            if not all(
+                len(trial) == self.num_state_input_ports for trial in inputs_dict[model]
+            ):
+                raise ParameterEstimationCompositionError(
+                    f"The array in the dict specified for the 'inputs' arg of "
+                    f"{self.composition.name}.run() is badly formatted: "
+                    f"the length of each item in the outer dimension (a trial's "
+                    f"worth of inputs) must be equal to the number of inputs to "
+                    f"'{model.name}' ({self.num_state_input_ports})."
+                )
 
         else:
             # Restructure inputs as nd array with each row (outer dim) a trial's worth of inputs
             #    and each item in the row (inner dim) the input to a node (or input_port) for that trial
             if len(inputs_dict) != self.num_state_input_ports:
-                raise ParameterEstimationCompositionError(f"The dict specified in the `input` arg of "
-                                                          f"{self.composition.name}.run() is badly formatted: "
-                                                          f"the number of entries should equal the number of inputs "
-                                                          f"to '{model.name}' ({self.num_state_input_ports}).")
+                raise ParameterEstimationCompositionError(
+                    f"The dict specified in the `input` arg of "
+                    f"{self.composition.name}.run() is badly formatted: "
+                    f"the number of entries should equal the number of inputs "
+                    f"to '{model.name}' ({self.num_state_input_ports})."
+                )
             trial_seqs = list(inputs_dict.values())
             num_trials = len(trial_seqs[0])
             input_values = [[] for _ in range(num_trials)]
             for trial in range(num_trials):
                 for trial_seq in trial_seqs:
                     if len(trial_seq) != num_trials:
-                        raise ParameterEstimationCompositionError(f"The dict specified in the `input` arg of "
-                                                                  f"ParameterEstimationMechanism.run() is badly formatted: "
-                                                                  f"every entry must have the same number of inputs.")
+                        raise ParameterEstimationCompositionError(
+                            f"The dict specified in the `input` arg of "
+                            f"ParameterEstimationMechanism.run() is badly formatted: "
+                            f"every entry must have the same number of inputs."
+                        )
                     # input_values[trial].append(np.array([trial_seq[trial].tolist()]))
                     input_values[trial].extend(trial_seq[trial])
             inputs_dict = {model: input_values}

@@ -6,8 +6,11 @@ from scipy.optimize import differential_evolution
 
 from psyneulink.core.globals import SampleIterator
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
-from psyneulink.core.components.functions.nonstateful.optimizationfunctions import OptimizationFunction, \
-    OptimizationFunctionError, SEARCH_SPACE
+from psyneulink.core.components.functions.nonstateful.optimizationfunctions import (
+    OptimizationFunction,
+    OptimizationFunctionError,
+    SEARCH_SPACE,
+)
 
 from typing import Union, Optional, List, Dict, Any, Tuple, Callable
 import time
@@ -263,7 +266,7 @@ class MaxLikelihoodEstimator(OptimizationFunction):
             search_function=search_function,
             search_termination_function=search_termination_function,
             aggregation_function=None,
-            **kwargs
+            **kwargs,
         )
 
     @handle_external_context(fallback_most_recent=True)
@@ -277,22 +280,30 @@ class MaxLikelihoodEstimator(OptimizationFunction):
         # call to evaluate we only evaluate a single parameter setting. Scipy optimize will direct
         # the search procedure so we will reset the actual value of these singleton iterators dynamically
         # on each search iteration executed during the call to _function.
-        randomization_dimension = kwargs.get('randomization_dimension', len(search_space) - 1)
+        randomization_dimension = kwargs.get(
+            "randomization_dimension", len(search_space) - 1
+        )
         for i in range(len(search_space)):
             if i != randomization_dimension:
                 search_space[i] = SampleIterator([next(search_space[i])])
 
-        super(MaxLikelihoodEstimator, self).reset(search_space=search_space, context=context, **kwargs)
-        owner_str = ''
+        super(MaxLikelihoodEstimator, self).reset(
+            search_space=search_space, context=context, **kwargs
+        )
+        owner_str = ""
         if self.owner:
-            owner_str = f' of {self.owner.name}'
+            owner_str = f" of {self.owner.name}"
         for i in search_space:
             if i is None:
-                raise OptimizationFunctionError(f"Invalid {repr(SEARCH_SPACE)} arg for {self.name}{owner_str}; "
-                                                f"every dimension must be assigned a {SampleIterator.__name__}.")
+                raise OptimizationFunctionError(
+                    f"Invalid {repr(SEARCH_SPACE)} arg for {self.name}{owner_str}; "
+                    f"every dimension must be assigned a {SampleIterator.__name__}."
+                )
             if i.num is None:
-                raise OptimizationFunctionError(f"Invalid {repr(SEARCH_SPACE)} arg for {self.name}{owner_str}; each "
-                                                f"{SampleIterator.__name__} must have a value for its 'num' attribute.")
+                raise OptimizationFunctionError(
+                    f"Invalid {repr(SEARCH_SPACE)} arg for {self.name}{owner_str}; each "
+                    f"{SampleIterator.__name__} must have a value for its 'num' attribute."
+                )
 
         self.num_iterations = np.product([i.num for i in search_space])
 
@@ -319,8 +330,10 @@ class MaxLikelihoodEstimator(OptimizationFunction):
 
             # Map the args in order of the fittable parameters
             if i < len(search_space) - 1:
-                assert search_space[i].num == 1, "Search space for this dimension must be a single value, during search " \
-                                                 "we will change the value but not the shape."
+                assert search_space[i].num == 1, (
+                    "Search space for this dimension must be a single value, during search "
+                    "we will change the value but not the shape."
+                )
 
                 # All of this code is required to set the value of the singleton search space without creating a new
                 # object. It seems cleaner to just use search_space[i] = SampleIterator([arg]) but this seems to cause
@@ -353,6 +366,7 @@ class MaxLikelihoodEstimator(OptimizationFunction):
         """
         Make a function that computes the log likelihood of the simulation results.
         """
+
         def ll(*args):
             sim_data = self._run_simulations(*args, context=context)
 
@@ -364,9 +378,11 @@ class MaxLikelihoodEstimator(OptimizationFunction):
             # output ports on the composition is different from the number of columns in the data to fit. This should
             # be caught at construction time, but I will leave this here to be safe.
             if len(self.data_categorical_dims) != sim_data.shape[-1]:
-                raise ValueError("Mismatch in the number of columns provided in the data to fit and the number of "
-                                 "columns in the composition simulation results. Check that the data to fit has the "
-                                 "same number of columns (and order) as the composition results.")
+                raise ValueError(
+                    "Mismatch in the number of columns provided in the data to fit and the number of "
+                    "columns in the composition simulation results. Check that the data to fit has the "
+                    "same number of columns (and order) as the composition results."
+                )
 
             # Compute the likelihood given the data
             like = simulation_likelihood(
@@ -405,9 +421,11 @@ class MaxLikelihoodEstimator(OptimizationFunction):
         """
 
         if self.owner is None:
-            raise ValueError("Cannot compute a log-likelihood without being assigned as the function of an "
-                             "OptimizationControlMechanism. See the documentation for the "
-                             "ParameterEstimationControlMechanism for more information.")
+            raise ValueError(
+                "Cannot compute a log-likelihood without being assigned as the function of an "
+                "OptimizationControlMechanism. See the documentation for the "
+                "ParameterEstimationControlMechanism for more information."
+            )
 
         # Make sure we have instantiated the log-likelihood function.
         if self._ll_func is None:
@@ -419,11 +437,7 @@ class MaxLikelihoodEstimator(OptimizationFunction):
 
         return ll, sim_data
 
-    def _function(self,
-                 variable=None,
-                 context=None,
-                 params=None,
-                 **kwargs):
+    def _function(self, variable=None, context=None, params=None, **kwargs):
 
         optimal_sample = self.variable
         optimal_value = np.array([1.0])
@@ -434,8 +448,10 @@ class MaxLikelihoodEstimator(OptimizationFunction):
 
             ocm = self.owner
             if ocm is None:
-                raise ValueError("MaximumLikelihoodEstimator must be assigned to an OptimizationControlMechanism, "
-                                 "self.owner is None")
+                raise ValueError(
+                    "MaximumLikelihoodEstimator must be assigned to an OptimizationControlMechanism, "
+                    "self.owner is None"
+                )
 
             # Get a log likelihood function that can be used to compute the log likelihood of the simulation results
             ll_func = self._make_loglikelihood_func(context=context)
@@ -447,7 +463,12 @@ class MaxLikelihoodEstimator(OptimizationFunction):
 
         return optimal_sample, optimal_value, saved_samples, saved_values
 
-    def _fit(self, ll_func: Callable, display_iter: bool = True, save_iterations: bool = False):
+    def _fit(
+        self,
+        ll_func: Callable,
+        display_iter: bool = True,
+        save_iterations: bool = False,
+    ):
 
         bounds = list(self.fit_param_bounds.values())
 
@@ -557,9 +578,11 @@ class MaxLikelihoodEstimator(OptimizationFunction):
     def fit_param_names(self):
         """Get a unique name for each parameter in the fit."""
         if self.owner is not None:
-            return [cs.efferents[0].receiver.name
-                    for i, cs in enumerate(self.owner.control_signals)
-                    if i != self.randomization_dimension]
+            return [
+                cs.efferents[0].receiver.name
+                for i, cs in enumerate(self.owner.control_signals)
+                if i != self.randomization_dimension
+            ]
 
     @property
     def fit_param_bounds(self) -> Dict[str, Tuple[float, float]]:
@@ -571,9 +594,11 @@ class MaxLikelihoodEstimator(OptimizationFunction):
             A dict mapping parameter names to (lower, upper) bounds.
         """
         if self.owner is not None:
-            acs = [cs.allocation_samples
-                   for i, cs in enumerate(self.owner.control_signals)
-                   if i != self.randomization_dimension]
+            acs = [
+                cs.allocation_samples
+                for i, cs in enumerate(self.owner.control_signals)
+                if i != self.randomization_dimension
+            ]
 
             bounds = [(float(min(s)), float(max(s))) for s in acs]
             return dict(zip(self.fit_param_names, bounds))
