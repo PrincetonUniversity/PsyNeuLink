@@ -214,6 +214,9 @@ class DistanceMetrics:
         (can also be referenced as *L0*)\n
         :math:`d = \\sum\\limits^{len}(|a_1-a_2|)`
 
+    DOT_PRODUCT
+        :math:`d = \\sum\\limits^{len}\\(a_1 * a_2)}`
+
     EUCLIDEAN
         (can also be referenced as *L1*)\n
         :math:`d = \\sum\\limits^{len}\\sqrt{(a_1-a_2)^2}`
@@ -238,6 +241,7 @@ class DistanceMetrics:
         self.DIFFERENCE = DIFFERENCE
         self.L0 = L0
         self.NORMED_L0_SIMILARITY = NORMED_L0_SIMILARITY
+        self.DOT_PRODUCT = DOT_PRODUCT
         self.EUCLIDEAN = EUCLIDEAN
         self.L1 = L1
         self.ANGLE = ANGLE
@@ -270,6 +274,7 @@ DIFFERENCE = 'difference'
 L0 = DIFFERENCE
 NORMED_L0_SIMILARITY = 'normed_L0_similarity'
 MAX_ABS_DIFF = 'max_abs_diff'
+DOT_PRODUCT = 'dot_product'
 EUCLIDEAN = 'euclidean'
 L1 = EUCLIDEAN
 ANGLE = 'angle'
@@ -280,7 +285,6 @@ PEARSON = 'Pearson'
 ENTROPY = 'cross-entropy'
 CROSS_ENTROPY = 'cross-entropy'
 ENERGY = 'energy'
-DOT_PRODUCT = 'dot_product'
 
 DISTANCE_METRICS = DistanceMetrics()
 DISTANCE_METRICS_SET = DISTANCE_METRICS._set()
