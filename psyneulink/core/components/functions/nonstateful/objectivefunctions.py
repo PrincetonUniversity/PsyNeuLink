@@ -30,7 +30,7 @@ from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import EPSILON, FunctionError, Function_Base, get_matrix
 from psyneulink.core.globals.keywords import \
     CORRELATION, COSINE, COSINE_SIMILARITY, CROSS_ENTROPY, \
-    DEFAULT_VARIABLE, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DistanceMetrics, \
+    DEFAULT_VARIABLE, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DistanceMetrics, DOT_PRODUCT, \
     ENERGY, ENTROPY, EUCLIDEAN, HOLLOW_MATRIX, MATRIX, MAX_ABS_DIFF, \
     NORMED_L0_SIMILARITY, OBJECTIVE_FUNCTION_TYPE, SIZE, STABILITY_FUNCTION
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
@@ -988,7 +988,7 @@ class Distance(ObjectiveFunction):
             inner = functools.partial(self.__gen_llvm_sum_difference, **kwargs)
         elif self.metric == EUCLIDEAN:
             inner = functools.partial(self.__gen_llvm_sum_diff_squares, **kwargs)
-        elif self.metric == ENERGY:
+        elif self.metric == ENERGY or self.metric == DOT_PRODUCT:
             inner = functools.partial(self.__gen_llvm_sum_product, **kwargs)
         elif self.metric == CROSS_ENTROPY:
             inner = functools.partial(self.__gen_llvm_cross_entropy, **kwargs)
@@ -1038,8 +1038,8 @@ class Distance(ObjectiveFunction):
         if self.metric == NORMED_L0_SIMILARITY:
             ret = builder.fdiv(ret, ret.type(4))
             ret = builder.fsub(ret.type(1), ret)
-        # elif self.metric == DOT_PRODUCT:
-        #     ???
+        elif self.metric == DOT_PRODUCT:
+            pass # the dot product has already been computed above by __gen_llvm_sum_product
         elif self.metric == ENERGY:
             ret = builder.fmul(ret, ret.type(-0.5))
         elif self.metric == EUCLIDEAN:
