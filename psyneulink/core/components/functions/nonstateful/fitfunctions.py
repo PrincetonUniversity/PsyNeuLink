@@ -389,7 +389,7 @@ class MaxLikelihoodEstimator(OptimizationFunction):
                 sim_data=sim_data,
                 exp_data=self.data,
                 categorical_dims=self.data_categorical_dims,
-                combine_trials=True,
+                combine_trials=False,
             )
 
             # Make 0 densities very small so log doesn't explode
