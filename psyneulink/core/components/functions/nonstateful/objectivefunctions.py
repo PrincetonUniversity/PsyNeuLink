@@ -1038,6 +1038,8 @@ class Distance(ObjectiveFunction):
         if self.metric == NORMED_L0_SIMILARITY:
             ret = builder.fdiv(ret, ret.type(4))
             ret = builder.fsub(ret.type(1), ret)
+        # elif self.metric == DOT_PRODUCT:
+        #     ???
         elif self.metric == ENERGY:
             ret = builder.fmul(ret, ret.type(-0.5))
         elif self.metric == EUCLIDEAN:
@@ -1165,6 +1167,10 @@ class Distance(ObjectiveFunction):
         elif self.metric == NORMED_L0_SIMILARITY:
             result = 1.0 - np.sum(np.abs(v1 - v2)) / 4.0
 
+        # Simple dot product of v1 and v2
+        elif self.metric == DOT_PRODUCT:
+            result = np.dot(v1, v2)
+
         # Euclidean distance between v1 and v2
         elif self.metric == EUCLIDEAN:
             result = np.linalg.norm(v2 - v1)
@@ -1181,6 +1187,7 @@ class Distance(ObjectiveFunction):
             result = 1.0 - np.fabs(Distance.correlation(v1, v2))
             return self.convert_output_type(result)
 
+        # FIX: IMPLEMENT VERSION THAT DIRECTLY COMPUTES THE LUCE RATIO
         # Cross-entropy of v1 and v2
         elif self.metric == CROSS_ENTROPY:
             # FIX: VALIDATE THAT ALL ELEMENTS OF V1 AND V2 ARE 0 TO 1
