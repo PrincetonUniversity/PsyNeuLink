@@ -1819,13 +1819,13 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         """Store value in `memory <ContentAddressableMemory.memory>`.
         Convenience method for storing entry in memory.
         """
-        return self.function(entry, storage_prob=0.0, context=context, **kwargs)
+        return self(entry, retrieval_prob=0.0, context=context, **kwargs)
 
     def retrieve(self, entry, context=None, **kwargs):
         """Retrieve value from `memory <ContentAddressableMemory.memory>`.
         Convenience method for retrieving entry from memory.
         """
-        return self.function(entry, retrieval_prob=0.0, context=context, **kwargs)
+        return self(entry, storage_prob=0.0, context=context, **kwargs)
 
     @property
     def memory(self):
