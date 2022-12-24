@@ -27,7 +27,7 @@ jobs:
         python-version: [3.8, 3.9]
         python-architecture: ['x64']
         extra-args: ['']
-        os: [self-hosted]
+        os: [m1-mini]
 
     steps:
     # increased fetch-depth and tag checkout needed to get correct
