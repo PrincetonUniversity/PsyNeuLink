@@ -390,15 +390,15 @@ def test_parameter_estimation_ddm_mle(func_mode):
 
     pec.controller.parameters.comp_execution_mode.set("LLVM")
     pec.controller.function.parameters.save_values.set(True)
-    # ret = pec.run(inputs={comp: trial_inputs}, num_trials=len(trial_inputs))
-    #
-    # # Check that the parameters are recovered and that the log-likelihood is correct, set the tolerance pretty high,
-    # # things are noisy because of the low number of trials and estimates.
-    # assert np.allclose(
-    #     pec.controller.optimal_parameters,
-    #     [ddm_params["rate"], ddm_params["threshold"]],
-    #     atol=0.1,
-    # )
+    ret = pec.run(inputs={comp: trial_inputs}, num_trials=len(trial_inputs))
+
+    # Check that the parameters are recovered and that the log-likelihood is correct, set the tolerance pretty high,
+    # things are noisy because of the low number of trials and estimates.
+    assert np.allclose(
+        pec.controller.optimal_parameters,
+        [ddm_params["rate"], ddm_params["threshold"]],
+        atol=0.1,
+    )
 
 
 def test_pec_bad_outcome_var_spec():

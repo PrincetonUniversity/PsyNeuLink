@@ -24,23 +24,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.7, 3.8, 3.9]
+        python-version: [3.8, 3.9]
         python-architecture: ['x64']
         extra-args: ['']
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        include:
-          # add 32-bit build on windows
-          - python-version: 3.8
-            python-architecture: 'x86'
-            os: windows-latest
-          # code-coverage build on macos python 3.9
-          - python-version: 3.9
-            os: macos-latest
-            extra-args: '--cov=psyneulink'
-        exclude:
-          # 3.7 is broken on macos-11, https://github.com/actions/virtual-environments/issues/4230
-          - python-version: 3.7
-            os: macos-latest
+        os: [self-hosted]
 
     steps:
     # increased fetch-depth and tag checkout needed to get correct
