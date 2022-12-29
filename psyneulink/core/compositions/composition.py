@@ -2867,6 +2867,14 @@ class RunError(Exception):
         return repr(self.error_value)
 
 
+class StepMode(enum.IntEnum):
+    """Specifies the where breaks will occur when run from UI in step (debug) mode."""
+    NODE = enum.auto()
+    TIME_STEP = enum.auto()
+    TRIAL = enum.auto()
+    RUN = enum.auto()
+
+
 class EdgeType(enum.Enum):
     """
         Attributes:
@@ -9645,11 +9653,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     #                                           EXECUTION
     # ******************************************************************************************************************
 
-    # MODIFIED 3/28/22 OLD:
     @handle_external_context()
-    # # MODIFIED 3/28/22 NEW:
-    # @handle_external_context(source = ContextFlags.COMMAND_LINE)
-    # MODIFIED 3/28/22 END
     def run(
             self,
             inputs=None,
@@ -9675,13 +9679,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             report_to_devices=None,
             animate=False,
             log=False,
+            step_mode:StepMode=None,
             scheduler=None,
             scheduling_mode: typing.Optional[SchedulingMode] = None,
             execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
             default_absolute_time_unit: typing.Optional[pint.Quantity] = None,
             context=None,
             base_context=Context(execution_id=None),
-            ):
+            )->list[list]:
         """Pass inputs to Composition, then execute sets of nodes that are eligible to run until termination
         conditions are met.
 
@@ -10185,6 +10190,7 @@ _
                                             runtime_params=runtime_params,
                                             skip_initialization=True,
                                             execution_mode=execution_mode,
+                                            step_mode=step_mode,
                                             report=report,
                                             report_num=report_num
                                             )
@@ -10215,6 +10221,10 @@ _
 
                 if call_after_trial:
                     call_with_pruned_args(call_after_trial, context=context)
+
+                if step_mode is StepMode.TRIAL:
+                    # ToDo:  implement UI debug mode for trial
+                    pass
 
             # IMPLEMENTATION NOTE:
             # The AFTER Run controller execution takes place here, because there's no way to tell from within the
@@ -10271,6 +10281,10 @@ _
                     node.reset_stateful_function_when = self._reset_stateful_functions_when_cache[node]
                 except KeyError:
                     pass
+
+            if step_mode is StepMode.RUN:
+                # ToDo:  implement UI debug mode for run
+                pass
 
             return trial_output
 
@@ -10522,6 +10536,7 @@ _
             runtime_params=None,
             skip_initialization=False,
             execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
+            step_mode:StepMode=None,
             report_output:ReportOutput=ReportOutput.OFF,
             report_params:ReportOutput=ReportParams.OFF,
             report_progress:ReportProgress=ReportProgress.OFF,
@@ -10705,9 +10720,8 @@ _
                     self._initialize_from_context(context, base_context, override=False)
                     context.composition = self
 
-            # Run compiled execution (if compiled execution was requested
-            # NOTE: This should be as high up as possible,
-            # but still after the context has been initialized
+            # Run compiled execution (if compiled execution was requested)
+            # IMPLEMENTATION NOTE: This should be as high up as possible, but after the context has beeninitialized
             if execution_mode & pnlvm.ExecutionMode.COMPILED:
                 is_simulation = (context is not None and
                                  ContextFlags.SIMULATION_MODE in context.runmode)
@@ -10754,13 +10768,15 @@ _
                     # Compile all mechanism wrappers
                     for m in mechanisms:
                         _comp_ex._set_bin_node(m)
+                        if step_mode == StepMode.TIME_STEP:
+                            # ToDo:  implement UI debug mode for run
+                            pass
                 except Exception as e:
                     if not execution_mode & pnlvm.ExecutionMode._Fallback:
                         raise e from None
 
                     warnings.warn("Failed to compile wrapper for `{}' in `{}': {}".format(m.name, self.name, str(e)))
                     execution_mode = pnlvm.ExecutionMode.Python
-
 
             # Generate first frame of animation without any active_items
             if self._animate is not False:
@@ -11189,6 +11205,7 @@ _
                                context=context,
                                node=node)
 
+
                     # ANIMATE node ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                     if self._animate is not False and self._animate_unit == COMPONENT:
                         self._animate_execution(node, context)
@@ -11211,6 +11228,10 @@ _
                     for i in range(len(node.output_ports)):
                         node.output_ports[i].parameters.value._set(frozen_values[node][i], context,
                                                                    skip_history=True, skip_log=True)
+
+                    if step_mode == StepMode.NODE:
+                        # ToDo:  implement UI debug mode for run
+                        pass
 
                 # Set all nodes to new values
                 for node in next_execution_set:
@@ -11239,6 +11260,10 @@ _
 
                 if call_after_time_step:
                     call_with_pruned_args(call_after_time_step, context=context)
+
+                if step_mode == StepMode.TimeStep:
+                    # ToDo:  implement UI debug mode for run
+                    pass
 
             context.remove_flag(ContextFlags.PROCESSING)
 
