@@ -59,7 +59,9 @@ runs:
       shell: bash
       id: new_package
       run: |
-        export NEW_PACKAGE=$(echo '${{ github.head_ref }}' | cut -f 4 -d/ | sed 's/-gt.*//' | sed 's/-lt.*//')
+        # The branch name pattern is: "dependabot/pip/$TARGET/$PACKAGE{-gt-$MINVERSION,,}{-lt-$MAXVERSION,}{-$VERSION,}
+        # The expression below extracts just the $PACKAGE part
+        export NEW_PACKAGE=$(echo '${{ github.head_ref }}' | cut -f 4 -d/ | sed 's/-gt.*//' | sed 's/-lt.*//' | sed 's/-[0-9\.]*$//' )
         if grep "$NEW_PACKAGE" *requirements.txt; then 
           echo "new_package=$NEW_PACKAGE" >> $GITHUB_OUTPUT
           # save a list of all installed packages (including pip, wheel; it's never empty)
