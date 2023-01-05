@@ -376,7 +376,6 @@ class AutodiffComposition(Composition):
 
     componentCategory = AUTODIFF_COMPOSITION
     class Parameters(Composition.Parameters):
-        """"""
         optimizer = None
         learning_rate = Parameter(.001, fallback_default=True)
         losses = Parameter([])
