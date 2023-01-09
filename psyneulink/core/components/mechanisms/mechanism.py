@@ -2634,14 +2634,15 @@ class Mechanism_Base(Mechanism):
                 # Call input_port._execute with newly assigned variable and assign result to input_port.value
                 base_error_msg = f"Input to '{self.name}' ({input_item}) is incompatible " \
                                  f"with its corresponding {InputPort.__name__} ({input_port.full_name})"
+                variable = input_port.parameters.variable.get(context)
                 try:
-                    input_port.parameters.value._set(
-                        input_port._execute(input_port.parameters.variable.get(context), context),
-                        context)
-                except (RunError,TypeError) as error:
+                    value = input_port._execute(variable, context)
+                except (RunError, TypeError) as error:
                     raise MechanismError(f"{base_error_msg}: '{error.args[0]}.'")
                 except:
                     raise MechanismError(f"{base_error_msg}.")
+                else:
+                    input_port.parameters.value._set(value, context)
             else:
                 raise MechanismError(f"Length ({len(input_item)}) of input ({input_item}) does not match "
                                      f"required length ({input_port.default_input_shape.size}) for input "
