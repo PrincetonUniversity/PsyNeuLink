@@ -404,7 +404,7 @@ def construct_model(stim_size:int = STIM_SIZE,
     #      - if outcome of decision signifies a match or hazard rate is realized:
     #        - set  EM[store_prob]=1 (as prep encoding stimulus in EM on next trial)
     #        - this also serves to terminate trial (see nback_model.termination_processing condition)
-    #      - if outcome of decision signifies a non-match
+    #      - if outcome of decision signifies a non-match and hazard rate is not realized:
     #        - set  EM[store_prob]=0 (as prep for another retrieval from EM without storage)
     #        - continue trial
     control = ControlMechanism(name=CONTROLLER,
