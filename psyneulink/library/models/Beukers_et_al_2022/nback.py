@@ -71,8 +71,8 @@ one stored in EM with a temporal context vector that differs by an amount corres
 During n-back performance, the model encodes the current stimulus and temporal context, retrieves an item from EM
 that matches the current stimulus, weighted by the similarity of its temporal context vector (i.e., most recent), and
 then uses the FFN to evaluate whether it is an n-back match.  The model responds "match" if the FFN detects a match;
-otherwise, it either responds "non-match" or, with a fixed probability (hazard rate), it uses the current stimulus
-and temporal context to retrieve another sample from EM and repeat the evaluation.
+otherwise, it either uses the current stimulus and temporal context to retrieve another sample from EM and repeat the
+evaluation or, with a fixed probability (hazard rate), it responds "non-match".
 
 The ffn Composition is trained using the train_network() method
 
@@ -412,6 +412,8 @@ def construct_model(stim_size:int = STIM_SIZE,
                                                                       # Outcome=1 if match, else 0
                                                                       function=lambda x: int(x[0][0]>x[0][1])),
                                # Set ControlSignal for EM[store_prob]
+                               #   to 1 if match or hazard rate is realized (and store stimulus)
+                               #   else 0 (i.e., don't store stimulus and continue retrieving)
                                function=lambda outcome: int(bool(outcome)
                                                             or (np.random.random() > retrieval_hazard_rate)),
                                # ---------
