@@ -1378,20 +1378,32 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
             moments["mean_rt_minus"] = noise**2 / (drift_rate**2) * (2 * Z * coth(2 * Z) - (-X + Z) * coth(-X + Z))
 
             moments["var_rt_plus"] = noise**4 / (drift_rate**4) * \
-                              ((2 * Z)**2 * (csch(2 * Z))**2 + (2 * Z) * coth(2 * Z) -
-                               (Z + X)**2 * (csch(Z + X))**2 - (Z + X) * coth(Z + X))
+                              (((2 * Z)**2 * csch(2 * Z)**2 -
+                                (Z + X)**2 * csch(Z + X)**2) +
+                               ((2 * Z) * coth(2 * Z) -
+                                (Z + X) * coth(Z + X)))
 
             moments["var_rt_minus"] = noise**4 / (drift_rate**4) * \
-                              ((2 * Z)**2 * (csch(2 * Z))**2 + (2 * Z) * coth(2 * Z) -
-                               (Z - X)**2 * (csch(Z - X))**2 - (Z - X) * coth(Z - X))
+                              (((2 * Z)**2 * csch(2 * Z)**2 -
+                                (Z - X)**2 * csch(Z - X)**2) +
+                               ((2 * Z) * coth(2 * Z) -
+                                (Z - X) * coth(Z - X)))
 
             moments["skew_rt_plus"] = noise**6 / (drift_rate**6) * \
-                               (3 * (2 * Z)**2 * (csch(2 * Z))**2 + 2 * (2 * Z)**3 * coth(2 * Z) * (csch(2 * Z))**2 + 3 * (2 * Z) * coth(2 * Z) -
-                                3 * (Z + X)**2 * (csch(Z + X))**2 - 2 * (Z + X)**3 * coth(Z + X) * (csch(Z + X))**2 - 3 * (Z + X) * coth(Z + X))
+                               (3 * ((2 * Z)**2 * csch(2 * Z)**2 -
+                                     (Z + X)**2 * csch(Z + X)**2) +
+                                2 * ((2 * Z)**3 * coth(2 * Z) * csch(2 * Z)**2 -
+                                     (Z + X)**3 * coth(Z + X) * csch(Z + X)**2) +
+                                3 * ((2 * Z) * coth(2 * Z) -
+                                     (Z + X) * coth(Z + X)))
 
             moments["skew_rt_minus"] = noise**6 / (drift_rate**6) * \
-                               (3 * (2 * Z)**2 * (csch(2 * Z))**2 + 2 * (2 * Z)**3 * coth(2 * Z) * (csch(2 * Z))**2 + 3 * (2 * Z) * coth(2 * Z) -
-                                3 * (Z - X)**2 * (csch(Z - X))**2 - 2 * (Z - X)**3 * coth(Z - X) * (csch(Z - X))**2 - 3 * (Z - X) * coth(Z - X))
+                               (3 * ((2 * Z)**2 * csch(2 * Z)**2 -
+                                     (Z - X)**2 * csch(Z - X)**2) +
+                                2 * ((2 * Z)**3 * coth(2 * Z) * csch(2 * Z)**2 -
+                                     (Z - X)**3 * coth(Z - X) * csch(Z - X)**2) +
+                                3 * ((2 * Z) * coth(2 * Z) -
+                                     (Z - X) * coth(Z - X)))
 
             # divide third central moment by var_rt**1.5 to get skewness
             moments['skew_rt_plus'] /= moments['var_rt_plus']**1.5
