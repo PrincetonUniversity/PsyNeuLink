@@ -496,9 +496,18 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                     if initializer is not None and initializer.port and initializer.port.mod_afferents:
                         # If the initializer is subject to control, get its control_allocation
                         initializer_mod_proj = initializer.port.mod_afferents[0]
-                        mod_parameter_cim = initializer_mod_proj.sender.owner
-                        ctl_sig,_,_  = mod_parameter_cim._get_source_of_modulation_for_parameter_CIM(
-                            initializer_mod_proj.sender)
+                        mod_parameter_source = initializer_mod_proj.sender.owner
+                        from psyneulink.core.compositions.composition import CompositionInterfaceMechanism
+                        from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism \
+                            import ControlMechanism
+                        if isinstance(mod_parameter_source, CompositionInterfaceMechanism):
+                            ctl_sig,_,_  = mod_parameter_source._get_source_of_modulation_for_parameter_CIM(
+                                initializer_mod_proj.sender)
+                        elif isinstance(mod_parameter_source, ControlMechanism):
+                            ctl_sig = mod_parameter_source.control_signals[0]
+                        else:
+                            assert False, f"Cannot reset {self.name} because " \
+                                          f"the source of modulation is not of correct type."
                         kwargs[attr] = ctl_sig.parameters.value.get(context)
                     else:
                         # Otherwise, just use the default (or user-assigned) initializer
