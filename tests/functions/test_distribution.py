@@ -2,6 +2,8 @@ import numpy as np
 import pytest
 import sys
 
+from packaging import version as pversion
+
 import psyneulink.core.llvm as pnlvm
 import psyneulink.core.components.functions.nonstateful.distributionfunctions as Functions
 from psyneulink.core.globals.utilities import _SeededPhilox
@@ -25,32 +27,36 @@ dda_expected_negative = (0.42365479933890504, 0.0,
                          0.5173675420165031, 0.06942854144616283, 6.302631815990666,
                          1.4934079600147951, 0.4288991185241868, 1.7740760781361433)
 dda_expected_small = (0.5828813465336954, 0.04801236718458773,
-                      0.532471083815943, 0.09633801362499317, 6.111833139205608,
-                      1.5821207676710864, 0.5392724012504414, 1.8065252817609618)
+                      0.532471083815943, 0.09633801555720854, 6.1142591416669765,
+                      1.5821207676710864, 0.5392724051148722, 1.806647390875747)
+
 # Different libm implementations produce slightly different results
-if sys.platform.startswith("win") or sys.platform.startswith("darwin"):
+# Numpy 1.22+ uses new/optimized implementation of FP routines
+# on processors that support AVX512 since 1.22 [0]
+# [0] https://github.com/numpy/numpy/commit/1eff1c543a8f1e9d7ea29182b8c76db5a2efc3c2
+if sys.platform.startswith("win") or sys.platform.startswith("darwin") or \
+    ( pversion.parse(np.version.version) >= pversion.parse('1.22') and pytest.helpers.numpy_uses_avx512()):
     dda_expected_small = (0.5828813465336954, 0.04801236718458773,
-                          0.5324710838150166, 0.09633802135385469, 6.119380538293901,
-                          1.58212076767016, 0.5392724012504414, 1.8065252817609618)
+                          0.5324710838150166, 0.09633802135385469, 6.117763080882898,
+                          1.58212076767016, 0.5392724012504414, 1.8064031532265)
 
 normal_expected_mt = (1.0890232855122397)
 uniform_expected_mt = (0.6879771504250405)
 normal_expected_philox = (0.5910357654927911)
 uniform_expected_philox = (0.6043448764869507)
 
-llvm_expected = {}
 llvm_expected = {'fp64': {}, 'fp32': {}}
 llvm_expected['fp64'][dda_expected_small] = (0.5828813465336954, 0.04801236718458773,
-                                             0.5324710838085324, 0.09633787836991654, 6.0158766570416775,
-                                             1.5821207675877176, 0.5392731045768397, 1.8434859117411773)
+                                             0.5324710838085324, 0.09633788030213193, 6.0183026674990625,
+                                             1.5821207675877176, 0.5392731084412705, 1.843608020219776)
 
 # add fp32 results
 llvm_expected['fp32'][dda_expected_random] = (0.42365485429763794, 0.0,
-                                              0.5173675417900085, 0.06942801177501678, 6.302331447601318,
-                                              1.4934077262878418, 0.428894966840744, 1.7738982439041138)
+                                              0.5173675417900085, 0.069428451359272, 6.302595138549805,
+                                              1.4934077262878418, 0.42889538407325745, 1.7739042043685913)
 llvm_expected['fp32'][dda_expected_negative] = (0.4236549735069275, 5.960464477539063e-08,
-                                                0.5173678398132324, 0.06942889094352722, 6.303247451782227,
-                                                1.4934080839157104, 0.42889583110809326, 1.7739603519439697)
+                                                0.5173678398132324, 0.06942932307720184, 6.302994251251221,
+                                                1.4934080839157104, 0.4288962781429291, 1.7739406824111938)
 llvm_expected['fp32'][dda_expected_small] = None
 llvm_expected['fp32'][normal_expected_philox] = (0.5655658841133118)
 llvm_expected['fp32'][uniform_expected_philox] = (0.6180108785629272)
@@ -110,8 +116,8 @@ def test_execute(func, variable, params, prng, llvm_skip, expected, benchmark, f
         # it to the mechanism above
         if func_mode == "PTX" and precision == 'fp32' and expected is dda_expected_negative:
             expected = (0.4236549735069275, 5.960464477539063e-08,
-                        0.5173678398132324, 0.06942889094352722, 6.303247451782227,
-                        1.4934064149856567, 0.42889145016670227, 1.7737685441970825)
+                        0.5173678398132324, 0.06942932307720184, 6.302994728088379,
+                        1.4934064149856567, 0.4288918972015381, 1.7737658023834229)
         expected = llvm_expected.get(precision, {}).get(expected, expected)
 
     if expected is None:
