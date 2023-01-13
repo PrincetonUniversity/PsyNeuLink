@@ -676,7 +676,18 @@ class Function_Base(Function):
                  params=None,
                  target_set=None,
                  **kwargs):
-        assert True
+
+        # IMPLEMENTATION NOTE:
+        # The following is a convenience feature that supports specification of params directly in call to function
+        # by moving the to a params dict, which treats them as runtime_params
+        if kwargs:
+            for key in kwargs.copy():
+                if key in self.parameters.names():
+                    if not params:
+                        params = {key: kwargs.pop(key)}
+                    else:
+                        params.update({key: kwargs.pop(key)})
+
         # Validate variable and assign to variable, and validate params
         variable = self._check_args(variable=variable,
                                     context=context,
