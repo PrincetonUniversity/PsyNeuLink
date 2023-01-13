@@ -1,8 +1,10 @@
+import contextlib
 import doctest
+import io
+import numpy as np
 import psyneulink
 import pytest
-import numpy as np
-
+import re
 
 from psyneulink import clear_registry, primary_registries
 from psyneulink.core import llvm as pnlvm
@@ -200,6 +202,14 @@ def get_mech_execution(mech, mech_mode):
         return mech_wrapper
     else:
         assert False, "Unknown mechanism mode: {}".format(mech_mode)
+
+@pytest.helpers.register
+def numpy_uses_avx512():
+    out = io.StringIO()
+    with contextlib.redirect_stdout(out):
+        np.show_config()
+
+    return re.search('  found = .*AVX512.*', out.getvalue()) is not None
 
 @pytest.helpers.register
 def expand_np_ndarray(arr):

@@ -2,6 +2,8 @@ import numpy as np
 import pytest
 import sys
 
+from packaging import version as pversion
+
 import psyneulink.core.llvm as pnlvm
 import psyneulink.core.components.functions.nonstateful.distributionfunctions as Functions
 from psyneulink.core.globals.utilities import _SeededPhilox
@@ -27,8 +29,13 @@ dda_expected_negative = (0.42365479933890504, 0.0,
 dda_expected_small = (0.5828813465336954, 0.04801236718458773,
                       0.532471083815943, 0.09633801555720854, 6.1142591416669765,
                       1.5821207676710864, 0.5392724051148722, 1.806647390875747)
+
 # Different libm implementations produce slightly different results
-if sys.platform.startswith("win") or sys.platform.startswith("darwin"):
+# Numpy 1.22+ uses new/optimized implementation of FP routines
+# on processors that support AVX512 since 1.22 [0]
+# [0] https://github.com/numpy/numpy/commit/1eff1c543a8f1e9d7ea29182b8c76db5a2efc3c2
+if sys.platform.startswith("win") or sys.platform.startswith("darwin") or \
+    ( pversion.parse(np.version.version) >= pversion.parse('1.22') and pytest.helpers.numpy_uses_avx512()):
     dda_expected_small = (0.5828813465336954, 0.04801236718458773,
                           0.5324710838150166, 0.09633802135385469, 6.117763080882898,
                           1.58212076767016, 0.5392724012504414, 1.8064031532265)
