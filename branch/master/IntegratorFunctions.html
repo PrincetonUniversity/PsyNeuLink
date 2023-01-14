@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>IntegratorFunctions &mdash; PsyNeuLink 0.12.1.0+1.ga0f876695 documentation</title>
+  <title>IntegratorFunctions &mdash; PsyNeuLink 0.12.1.0+8.g06f3006ab documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.12.1.0+1
+                  0.12.1.0+8
                 </div>
               
             
@@ -856,6 +856,24 @@ reset) or the current value of <a class="reference internal" href="StatefulFunct
 reinitialization steps.</p>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.stateful.integratorfunctions.DriftDiffusionIntegrator._assign_to_mdf_model">
+<span class="sig-name descname"><span class="pre">_assign_to_mdf_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftDiffusionIntegrator._assign_to_mdf_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds an MDF representation of this function to MDF object
+<strong>model</strong>, including all necessary auxiliary functions.
+<strong>input_id</strong> is the input to the singular MDF function or first
+function representing this psyneulink Function, if applicable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the identifier of the final MDF function representing
+this psyneulink Function</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
@@ -1025,8 +1043,8 @@ integral.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.angle_function">
 <span class="sig-name descname"><span class="pre">angle_function</span></span><a class="headerlink" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.angle_function" title="Permalink to this definition">¶</a></dt>
-<dd><p>determines the function used to compute angle (reproted as result) from coordinates on sphere specified by
-coordinates in <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.previous_value" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a> displace by <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.variable" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> and possibly <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.noise" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.noise"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">noise</span></code></a>.</p>
+<dd><p>determines the function used to compute angle (reported as result) from coordinates on sphere specified by
+coordinates in <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.previous_value" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a> displaced by <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.variable" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> and possibly <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.noise" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.noise"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">noise</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p><a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.TransferFunction" title="psyneulink.core.components.functions.transferfunctions.TransferFunction">TransferFunction</a></p>
@@ -2075,7 +2093,7 @@ reinitialization steps.</p>
 \[previous\_value \cdot rate + increment  + noise\]</div>
 <p>so that, with each call to <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.AccumulatorIntegrator._function" title="psyneulink.core.components.functions.stateful.integratorfunctions.AccumulatorIntegrator._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a>, the accumulated value increases by:</p>
 <div class="math notranslate nohighlight">
-\[increment \cdot rate^{time\ step}.\]</div>
+\[increment \cdot rate^{time\_step}.\]</div>
 <p>Thus, accumulation increases lineary in steps of <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.AccumulatorIntegrator.increment" title="psyneulink.core.components.functions.stateful.integratorfunctions.AccumulatorIntegrator.increment"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">increment</span></code></a>
 if <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.AccumulatorIntegrator.rate" title="psyneulink.core.components.functions.stateful.integratorfunctions.AccumulatorIntegrator.rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">rate</span></code></a>=1.0, and exponentially otherwise.</p>
 <p><em>Modulatory Parameters:</em></p>

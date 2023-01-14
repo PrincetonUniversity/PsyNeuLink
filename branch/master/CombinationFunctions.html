@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>CombinationFunctions &mdash; PsyNeuLink 0.12.1.0+1.ga0f876695 documentation</title>
+  <title>CombinationFunctions &mdash; PsyNeuLink 0.12.1.0+8.g06f3006ab documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.12.1.0+1
+                  0.12.1.0+8
                 </div>
               
             
@@ -912,8 +912,8 @@ If it is 1d, its length must equal the number of items in <a class="reference in
 if it is 2d, the length of each item must be the same as those in <a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.LinearCombination.variable" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>,
 and there must be the same number of items as there are in <a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.LinearCombination.variable" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>
 (see <a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.LinearCombination.exponents" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination.exponents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">exponents</span></code></a> for details of how exponents are applied).</p></li>
-<li><p><strong>operation</strong> (<em>SUM</em><em> or </em><em>PRODUCT : default SUM</em>) – specifies whether the <code class="xref any docutils literal notranslate"><span class="pre">function</span></code> takes the elementwise (Hadamarad)
-sum or product of the arrays in <a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.LinearCombination.variable" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p></li>
+<li><p><strong>operation</strong> (<em>SUM</em><em>, </em><em>PRODUCT</em><em> or </em><em>CROSS_ENTROPY : default SUM</em>) – specifies whether the <code class="xref any docutils literal notranslate"><span class="pre">function</span></code> takes the elementwise (Hadamarad)
+sum, product or cross entropy of the arrays in <a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.LinearCombination.variable" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p></li>
 <li><p><strong>scale</strong> (<em>float</em><em> or </em><em>np.ndarray : default None</em>) – specifies a value by which to multiply each element of the result of <code class="xref any docutils literal notranslate"><span class="pre">function</span></code>
 (see <a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.LinearCombination.scale" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination.scale"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">scale</span></code></a> for details)</p></li>
 <li><p><strong>offset</strong> (<em>float</em><em> or </em><em>np.ndarray : default None</em>) – specifies a value to add to each element of the result of <code class="xref any docutils literal notranslate"><span class="pre">function</span></code>
@@ -971,8 +971,8 @@ array is used to exponentiate the corresponding element of the corresponding arr
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.combinationfunctions.LinearCombination.operation">
 <span class="sig-name descname"><span class="pre">operation</span></span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.LinearCombination.operation" title="Permalink to this definition">¶</a></dt>
-<dd><p>determines whether the <code class="xref any docutils literal notranslate"><span class="pre">function</span></code> takes the elementwise (Hadamard) sum or
-product of the arrays in <a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.LinearCombination.variable" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p>
+<dd><p>determines whether the <code class="xref any docutils literal notranslate"><span class="pre">function</span></code> takes the elementwise (Hadamard) sum,
+product, or cross entropy of the arrays in <a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.LinearCombination.variable" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>SUM or PRODUCT</p>

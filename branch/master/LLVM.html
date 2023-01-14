@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>User’s Guide &mdash; PsyNeuLink 0.12.1.0+8.g06f3006ab documentation</title>
+  <title>LLVM Compilation &mdash; PsyNeuLink 0.12.1.0+8.g06f3006ab documentation</title>
   
 
   
@@ -174,7 +174,7 @@
       </li>
 
         
-      <li>User’s Guide</li>
+      <li>LLVM Compilation</li>
     
   </ul>
 
@@ -197,9 +197,78 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <section id="user-s-guide">
-<h1>User’s Guide<a class="headerlink" href="#user-s-guide" title="Permalink to this headline">¶</a></h1>
-<p>Apologies:  The User’s Guide is still under development.</p>
+  <section id="module-psyneulink.core.llvm.__init__">
+<span id="llvm-compilation"></span><h1>LLVM Compilation<a class="headerlink" href="#module-psyneulink.core.llvm.__init__" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="psyneulink.core.llvm.__init__.ExecutionMode">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.llvm.__init__.</span></span><span class="sig-name descname"><span class="pre">ExecutionMode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.llvm.__init__.ExecutionMode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specify execution a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> in interpreted or one of ithe compiled modes.
+These are used to specify the <strong>execution_mode</strong> argument of a Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.execute" title="psyneulink.core.compositions.composition.Composition.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a>,
+<a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a>, and <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> methods.  See <a class="reference internal" href="Composition.html#composition-compilation-modes"><span class="std std-ref">Compiled Modes</span></a> under <a class="reference internal" href="Composition.html#composition-compilation"><span class="std std-ref">Compilation</span></a> for additional details concerning
+use of each mode by a Composition.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.llvm.__init__.ExecutionMode.Python">
+<span class="sig-name descname"><span class="pre">Python</span></span><a class="headerlink" href="#psyneulink.core.llvm.__init__.ExecutionMode.Python" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute using the Python interpreter;  this is the default mode.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.llvm.__init__.ExecutionMode.LLVM">
+<span class="sig-name descname"><span class="pre">LLVM</span></span><a class="headerlink" href="#psyneulink.core.llvm.__init__.ExecutionMode.LLVM" title="Permalink to this definition">¶</a></dt>
+<dd><p>compile and run Composition <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> and <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> individually.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.llvm.__init__.ExecutionMode.LLVMExec">
+<span class="sig-name descname"><span class="pre">LLVMExec</span></span><a class="headerlink" href="#psyneulink.core.llvm.__init__.ExecutionMode.LLVMExec" title="Permalink to this definition">¶</a></dt>
+<dd><p>compile and run each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> individually.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.llvm.__init__.ExecutionMode.LLVMRun">
+<span class="sig-name descname"><span class="pre">LLVMRun</span></span><a class="headerlink" href="#psyneulink.core.llvm.__init__.ExecutionMode.LLVMRun" title="Permalink to this definition">¶</a></dt>
+<dd><p>compile and run multiple <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>s.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.llvm.__init__.ExecutionMode.Auto">
+<span class="sig-name descname"><span class="pre">Auto</span></span><a class="headerlink" href="#psyneulink.core.llvm.__init__.ExecutionMode.Auto" title="Permalink to this definition">¶</a></dt>
+<dd><p>progressively attempt LLVMRun, LLVMexec. LLVM and then Python.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.llvm.__init__.ExecutionMode.PyTorch">
+<span class="sig-name descname"><span class="pre">PyTorch</span></span><a class="headerlink" href="#psyneulink.core.llvm.__init__.ExecutionMode.PyTorch" title="Permalink to this definition">¶</a></dt>
+<dd><p>execute the <a class="reference internal" href="AutodiffComposition.html"><span class="doc">AutodiffComposition</span></a> <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method using PyTorch, and its
+<code class="xref any docutils literal notranslate"><span class="pre">run</span></code> method using the Python interpreter.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>For clarity, this mode should only be used when executing an <a class="reference internal" href="AutodiffComposition.html"><span class="doc">AutodiffComposition</span></a>; using it
+with a standard <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> is possible, but it will <strong>not</strong> have the expected effect of executing
+its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method using PyTorch.</p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.llvm.__init__.ExecutionMode.PTX">
+<span class="sig-name descname"><span class="pre">PTX</span></span><a class="headerlink" href="#psyneulink.core.llvm.__init__.ExecutionMode.PTX" title="Permalink to this definition">¶</a></dt>
+<dd><p>compile and run Composition <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> and <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> using CUDA for GPU.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.llvm.__init__.ExecutionMode.PTXExec">
+<span class="sig-name descname"><span class="pre">PTXExec</span></span><a class="headerlink" href="#psyneulink.core.llvm.__init__.ExecutionMode.PTXExec" title="Permalink to this definition">¶</a></dt>
+<dd><p>compile and run each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> using CUDA for GPU.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.llvm.__init__.ExecutionMode.PTXRun">
+<span class="sig-name descname"><span class="pre">PTXRun</span></span><a class="headerlink" href="#psyneulink.core.llvm.__init__.ExecutionMode.PTXRun" title="Permalink to this definition">¶</a></dt>
+<dd><p>compile and run multiple <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>s using CUDA for GPU.</p>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
 
@@ -236,7 +305,7 @@
           <div class="psyneulink-right-menu" id="psyneulink-right-menu">
             <div class="psyneulink-side-scroll" id="psyneulink-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">User’s Guide</a></li>
+<li><a class="reference internal" href="#">LLVM Compilation</a></li>
 </ul>
 
             </div>

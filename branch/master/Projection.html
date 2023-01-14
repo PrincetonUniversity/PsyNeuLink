@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Projection &mdash; PsyNeuLink 0.12.1.0+1.ga0f876695 documentation</title>
+  <title>Projection &mdash; PsyNeuLink 0.12.1.0+8.g06f3006ab documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.12.1.0+1
+                  0.12.1.0+8
                 </div>
               
             
@@ -321,25 +321,19 @@ specifications.</p></li>
 <li><p><strong>Keyword</strong> – creates a default instance of the specified type, which can be any of the following:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p><em>MAPPING_PROJECTION</em> – if the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a> and/or its <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.receiver" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">receiver</span></code></a> cannot be inferred from the context in which this specification occurs, then its
-<a class="reference internal" href="MappingProjection.html#mappingprojection-deferred-initialization"><span class="std std-ref">initialization is deferred</span></a> until both of those have been
-determined (e.g., it is used in the specification of a <code class="xref any docutils literal notranslate"><span class="pre">pathway</span></code> for a <code class="xref any docutils literal notranslate"><span class="pre">Process</span></code>). For
-MappingProjections, a <a class="reference internal" href="MappingProjection.html#mappingprojection-matrix-specification"><span class="std std-ref">matrix specification</span></a> can also be used to
-specify the projection (see <strong>value</strong> below).</p></li>
-</ul>
-<p># FIX 5/8/20 [JDC] ELIMINATE SYSTEM:  IS IT TRUE THAT CONTROL SIGNALS ARE AUTOMATICALLY CREATED BY COMPOSITIONS?
-* <em>CONTROL_PROJECTION</em> (or <em>CONTROL</em>) – this can be used when specifying a parameter using the <a href="#id1"><span class="problematic" id="id2">`</span></a>tuple format</p>
-<blockquote>
-<div><p>&lt;ParameterPort_Tuple_Specification&gt;`, to create a default <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> to the <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> for that
+<li><p><em>MAPPING_PROJECTION</em> – if the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a> and/or its <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.receiver" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">receiver</span></code></a> cannot be inferred from the context in which this specification occurs, then
+its <a class="reference internal" href="MappingProjection.html#mappingprojection-deferred-initialization"><span class="std std-ref">initialization is deferred</span></a> until both of those have been
+determined (e.g., it is used in the specification of a <a class="reference internal" href="Pathway.html"><span class="doc">Pathway</span></a> for a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>). For MappingProjections,
+a <a class="reference internal" href="MappingProjection.html#mappingprojection-matrix-specification"><span class="std std-ref">matrix specification</span></a> can also be used to specify the Projection
+(see <strong>value</strong> below).</p></li>
+<li><p><em>CONTROL_PROJECTION</em> (or <em>CONTROL</em>) – this can be used when specifying a parameter using the <a class="reference internal" href="ParameterPort.html#parameterport-tuple-specification"><span class="std std-ref">tuple format</span></a>, to create a default <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> to the <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> for that
 parameter.  If the <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> to which the parameter belongs is part of a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, then a
 <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> is added to the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">controller</span></code></a> and assigned as the
 ControlProjection’s <a class="reference internal" href="ControlProjection.html#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.sender" title="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a>;  otherwise, the ControlProjection’s <a class="reference internal" href="ControlProjection.html#controlprojection-deferred-initialization"><span class="std std-ref">initialization
 is deferred</span></a> until the Mechanism is assigned to a Composition, at
 which time the ControlSignal is added to the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">controller</span></code></a> and assigned
 as its the ControlProjection’s <a class="reference internal" href="ControlProjection.html#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.sender" title="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a>.  See <a class="reference internal" href="ControlMechanism.html#controlmechanism-controlsignals"><span class="std std-ref">Specifying Parameters to Control</span></a> for
-additional details.</p>
-</div></blockquote>
-<ul class="simple">
+additional details.</p></li>
 <li><p><em>GATING_PROJECTION</em> (or <em>GATE</em>) – this can be used when specifying an <a class="reference internal" href="InputPort.html#inputport-projection-source-specification"><span class="std std-ref">InputPort</span></a> or an <code class="xref any docutils literal notranslate"><span class="pre">OutputPort</span></code>, to create a
 default <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a> to the <a class="reference internal" href="Port.html"><span class="doc">Port</span></a>. If the GatingProjection’s <a class="reference internal" href="GatingProjection.html#psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.sender" title="psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a>
 cannot be inferred from the context in which this specification occurs, then its <a class="reference internal" href="GatingProjection.html#gatingprojection-deferred-initialization"><span class="std std-ref">initialization is deferred</span></a> until it can be determined (e.g., a <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a> or
@@ -445,8 +439,8 @@ assigned to these, and the attributes of those Ports to which Projections of eac
 summarized in the following table, and described in greater detail in the subsections below.  In addition to the
 Port attributes to which different types of Projections are assigned (shown in the table), all of the Projections
 of a Port are listed in its <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.projections" title="psyneulink.core.components.ports.port.Port_Base.projections"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">projections</span></code></a> attribute.</p>
-<span id="projection-table"></span><table class="docutils align-center" id="id3">
-<caption><span class="caption-text"><strong>Sender, Receiver and Attribute Assignments for Projection Types</strong></span><a class="headerlink" href="#id3" title="Permalink to this table">¶</a></caption>
+<span id="projection-table"></span><table class="docutils align-center" id="id1">
+<caption><span class="caption-text"><strong>Sender, Receiver and Attribute Assignments for Projection Types</strong></span><a class="headerlink" href="#id1" title="Permalink to this table">¶</a></caption>
 <colgroup>
 <col style="width: 20%" />
 <col style="width: 35%" />

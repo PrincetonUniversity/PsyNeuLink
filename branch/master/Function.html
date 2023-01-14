@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Function &mdash; PsyNeuLink 0.12.1.0+1.ga0f876695 documentation</title>
+  <title>Function &mdash; PsyNeuLink 0.12.1.0+8.g06f3006ab documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.12.1.0+1
+                  0.12.1.0+8
                 </div>
               
             
@@ -552,6 +552,73 @@ Replace direct call to parameter_spec in tc, which seems to not get called by Fu
 <em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">_model_spec_parameter_blacklist</span></span><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base._model_spec_parameter_blacklist" title="Permalink to this definition">¶</a></dt>
 <dd><p>A set of Parameter names that should not be added to the generated
 constructor string</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.function.Function_Base._assign_to_mdf_model">
+<span class="sig-name descname"><span class="pre">_assign_to_mdf_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base._assign_to_mdf_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds an MDF representation of this function to MDF object
+<strong>model</strong>, including all necessary auxiliary functions.
+<strong>input_id</strong> is the input to the singular MDF function or first
+function representing this psyneulink Function, if applicable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the identifier of the final MDF function representing
+this psyneulink Function</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.function.RandomMatrix">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.function.</span></span><span class="sig-name descname"><span class="pre">RandomMatrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">center</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.RandomMatrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that returns matrix with random elements distributed uniformly around <strong>center</strong> across <strong>range</strong>.</p>
+<p>The <strong>center</strong> and <strong>range</strong> arguments are passed at construction, and used for all subsequent calls.
+Once constructed, the function must be called with two floats, <strong>sender_size</strong> and <strong>receiver_size</strong>,
+that specify the number of rows and columns of the matrix, respectively.</p>
+<p>Can be used to specify the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter of a <a class="reference internal" href="MappingProjection.html#mappingprojection-matrix-specification"><span class="std std-ref">MappingProjection</span></a>, and to specify a default matrix for Projections in the
+construction of a <a class="reference internal" href="Pathway.html"><span class="doc">Pathway</span></a> (see <a class="reference internal" href="Pathway.html#pathway-specification-projections"><span class="std std-ref">Pathway Projection Specifications</span></a>) or in a call to a Composition’s
+<a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.add_linear_processing_pathway" title="psyneulink.core.compositions.composition.Composition.add_linear_processing_pathway"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">add_linear_processing_pathway</span></code></a> method.</p>
+<div class="technical-note docutils container">
+<p>A call to the class calls <code class="xref any docutils literal notranslate"><span class="pre">random_matrix</span></code>, passing <strong>sender_size</strong> and
+<strong>receiver_size</strong> to <code class="xref any docutils literal notranslate"><span class="pre">random_matrix</span></code> as its <strong>num_rows</strong> and <strong>num_cols</strong>
+arguments, respectively, and passing the <code class="xref any docutils literal notranslate"><span class="pre">center</span></code>-0.5 and <code class="xref any docutils literal notranslate"><span class="pre">range</span></code>
+attributes specified at construction to <code class="xref any docutils literal notranslate"><span class="pre">random_matrix</span></code> as its <strong>offset</strong>
+and <strong>scale</strong> arguments, respectively.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>center</strong> (<em>float</em>) – specifies the value around which the matrix elements are distributed in all calls to the function.</p></li>
+<li><p><strong>range</strong> (<em>float</em>) – specifies range over which all matrix elements are distributed in all calls to the function.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.function.RandomMatrix.center">
+<span class="sig-name descname"><span class="pre">center</span></span><a class="headerlink" href="#psyneulink.core.components.functions.function.RandomMatrix.center" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines the center of the distribution of the matrix elements;</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.function.RandomMatrix.range">
+<span class="sig-name descname"><span class="pre">range</span></span><a class="headerlink" href="#psyneulink.core.components.functions.function.RandomMatrix.range" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines the range of the distribution of the matrix elements;</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
