@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Parameters &mdash; PsyNeuLink 0.12.1.0 documentation</title>
+  <title>Parameters &mdash; PsyNeuLink 0.13.0.0 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.12.1.0
+                  0.13.0.0
                 </div>
               
             
@@ -297,8 +297,13 @@ errors like those encountered in parallel programming.</p>
 </li>
 <li><p>default values for the parameters can be specified in the Parameters class body, or in the
 arguments for <em>B</em>.__init__. If both are specified and the values differ, an exception will be raised</p></li>
-<li><p>if you want assignments to parameter <em>p</em> to be validated, add a method _validate_p(value),
-that returns None if value is a valid assignment, or an error string if value is not a valid assignment</p></li>
+<li><dl class="simple">
+<dt>if you want assignments to parameter <em>p</em> to be validated, add a method _validate_p(value),   that returns None if value is a valid assignment, or an error string if value is not a valid assignment</dt><dd><ul class="simple">
+<li><p>NOTE: a validation method for <em>p</em> may reference other parameters         only if they are listed in <em>p</em>’s         <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter.dependencies" title="psyneulink.core.globals.parameters.Parameter.dependencies"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">dependencies</span></code></a></p></li>
+</ul>
+</dd>
+</dl>
+</li>
 <li><dl>
 <dt>if you want all values set to <em>p</em> to be parsed beforehand, add a method _parse_p(value) that returns the parsed value</dt><dd><ul>
 <li><p>for example, convert to a numpy array or float</p>
@@ -309,6 +314,7 @@ that returns None if value is a valid assignment, or an error string if value is
 </div>
 </div></blockquote>
 </li>
+<li><p>NOTE: parsers may not reference other parameters</p></li>
 </ul>
 </dd>
 </dl>
