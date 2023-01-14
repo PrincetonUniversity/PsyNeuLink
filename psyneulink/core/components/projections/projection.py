@@ -106,13 +106,13 @@ Projection in context:
   * **Keyword** -- creates a default instance of the specified type, which can be any of the following:
 
       * *MAPPING_PROJECTION* -- if the `sender <MappingProjection.sender>` and/or its `receiver
-        <MappingProjection.receiver>` cannot be inferred from the context in which this specification occurs, then its
-        `initialization is deferred <MappingProjection_Deferred_Initialization>` until both of those have been
-        determined (e.g., it is used in the specification of a `pathway <Process.pathway>` for a `Process`). For
-        MappingProjections, a `matrix specification <MappingProjection_Matrix_Specification>` can also be used to
-        specify the projection (see **value** below).
-      COMMENT:
+        <MappingProjection.receiver>` cannot be inferred from the context in which this specification occurs, then
+        its `initialization is deferred <MappingProjection_Deferred_Initialization>` until both of those have been
+        determined (e.g., it is used in the specification of a `Pathway` for a `Composition`). For MappingProjections,
+        a `matrix specification <MappingProjection_Matrix_Specification>` can also be used to specify the Projection
+        (see **value** below).
 
+      COMMENT:
       * *LEARNING_PROJECTION*  (or *LEARNING*) -- this can only be used in the specification of a `MappingProjection`
         (see `tuple <MappingProjection_Matrix_Specification>` format).  If the `receiver <MappingProjection.receiver>`
         of the MappingProjection projects to a `LearningMechanism` or a `ComparatorMechanism` that projects to one,
@@ -122,7 +122,9 @@ Projection in context:
         <LearningProjection.sender>`. See `LearningMechanism_Learning_Configurations` for additional details.
       COMMENT
 
+      COMMENT:
       # FIX 5/8/20 [JDC] ELIMINATE SYSTEM:  IS IT TRUE THAT CONTROL SIGNALS ARE AUTOMATICALLY CREATED BY COMPOSITIONS?
+      COMMENT
       * *CONTROL_PROJECTION* (or *CONTROL*) -- this can be used when specifying a parameter using the `tuple format
         <ParameterPort_Tuple_Specification>`, to create a default `ControlProjection` to the `ParameterPort` for that
         parameter.  If the `Component <Component>` to which the parameter belongs is part of a `Composition`, then a
@@ -422,7 +424,8 @@ from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
 from psyneulink.core.globals.socket import ConnectionInfo
-from psyneulink.core.globals.utilities import ContentAddressableList, is_matrix, is_numeric, parse_valid_identifier
+from psyneulink.core.globals.utilities import \
+    ContentAddressableList, is_matrix, is_numeric, parse_valid_identifier
 
 __all__ = [
     'Projection_Base', 'projection_keywords', 'PROJECTION_SPEC_KEYWORDS',
@@ -1110,7 +1113,7 @@ class Projection_Base(Projection):
             edge_function = edge_node.function
             edge_node = edge_node.as_mdf_model()
 
-            func_model = [f for f in edge_node.functions if f.id == parse_valid_identifier(edge_function.name)][0]
+            func_model = [f for f in edge_node.functions if f.id == parse_valid_identifier(f'{edge_node.id}_{edge_function.name}')][0]
             var_name = _get_variable_parameter_name(edge_function)
 
             # 2d variable on LinearMatrix will be incorrect on import back to psyneulink

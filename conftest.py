@@ -1,8 +1,10 @@
+import contextlib
 import doctest
+import io
+import numpy as np
 import psyneulink
 import pytest
-import numpy as np
-
+import re
 
 from psyneulink import clear_registry, primary_registries
 from psyneulink.core import llvm as pnlvm
@@ -35,15 +37,6 @@ def pytest_addoption(parser):
 
     parser.addoption('--fp-precision', action='store', default='fp64', choices=['fp32', 'fp64'],
                      help='Set default fp precision for the runtime compiler. Default: fp64')
-
-def pytest_sessionstart(session):
-    precision = session.config.getvalue("--fp-precision")
-    if precision == 'fp64':
-        pnlvm.LLVMBuilderContext.default_float_ty = pnlvm.ir.DoubleType()
-    elif precision == 'fp32':
-        pnlvm.LLVMBuilderContext.default_float_ty = pnlvm.ir.FloatType()
-    else:
-        assert False, "Unsupported precision parameter: {}".format(precision)
 
 def pytest_runtest_setup(item):
     # Check that all 'cuda' tests are also marked 'llvm'
@@ -84,11 +77,36 @@ def pytest_generate_tests(metafunc):
 
     if "autodiff_mode" in metafunc.fixturenames:
         auto_modes = [
-            pnlvm.ExecutionMode.Python,
+            # pnlvm.ExecutionMode.Python,
+            pnlvm.ExecutionMode.PyTorch,
             pytest.param(pnlvm.ExecutionMode.LLVMRun, marks=pytest.mark.llvm)
         ]
         metafunc.parametrize("autodiff_mode", auto_modes)
 
+
+_old_register_prefix = None
+
+# Collection hooks
+def pytest_sessionstart(session):
+    """Initialize session with the right floating point precision and component name prefix."""
+
+    precision = session.config.getvalue("--fp-precision")
+    if precision == 'fp64':
+        pnlvm.LLVMBuilderContext.default_float_ty = pnlvm.ir.DoubleType()
+    elif precision == 'fp32':
+        pnlvm.LLVMBuilderContext.default_float_ty = pnlvm.ir.FloatType()
+    else:
+        assert False, "Unsupported precision parameter: {}".format(precision)
+
+    global _old_register_prefix
+    _old_register_prefix = psyneulink.core.globals.registry._register_auto_name_prefix
+    psyneulink.core.globals.registry._register_auto_name_prefix = "__pnl_pytest_"
+
+def pytest_collection_finish(session):
+    """Restore component prefix at the end of test collection."""
+    psyneulink.core.globals.registry._register_auto_name_prefix = _old_register_prefix
+
+# Runtest hooks
 def pytest_runtest_call(item):
     # seed = int(item.config.getoption('--pnl-seed'))
     seed = 0
@@ -112,6 +130,29 @@ def comp_mode_no_llvm():
     # dummy fixture to allow 'comp_mode' filtering
     pass
 
+class FirstBench():
+    def __init__(self, benchmark):
+        super().__setattr__("benchmark", benchmark)
+
+    def __call__(self, f, *args, **kwargs):
+        res = []
+        # Compute the first result if benchmark is enabled
+        if self.benchmark.enabled:
+            res.append(f(*args, **kwargs))
+
+        res.append(self.benchmark(f, *args, **kwargs))
+        return res[0]
+
+    def __getattr__(self, attr):
+        return getattr(self.benchmark, attr)
+
+    def __setattr__(self, attr, val):
+        return setattr(self.benchmark, attr, val)
+
+@pytest.fixture
+def benchmark(benchmark):
+    return FirstBench(benchmark)
+
 @pytest.helpers.register
 def llvm_current_fp_precision():
     float_ty = pnlvm.LLVMBuilderContext.get_current().float_ty
@@ -125,6 +166,7 @@ def llvm_current_fp_precision():
 @pytest.helpers.register
 def get_comp_execution_modes():
     return [pytest.param(pnlvm.ExecutionMode.Python),
+            # pytest.param(pnlvm.ExecutionMode.PyTorch, marks=pytest.mark.pytorch),
             pytest.param(pnlvm.ExecutionMode.LLVM, marks=pytest.mark.llvm),
             pytest.param(pnlvm.ExecutionMode.LLVMExec, marks=pytest.mark.llvm),
             pytest.param(pnlvm.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
@@ -160,6 +202,14 @@ def get_mech_execution(mech, mech_mode):
         return mech_wrapper
     else:
         assert False, "Unknown mechanism mode: {}".format(mech_mode)
+
+@pytest.helpers.register
+def numpy_uses_avx512():
+    out = io.StringIO()
+    with contextlib.redirect_stdout(out):
+        np.show_config()
+
+    return re.search('  found = .*AVX512.*', out.getvalue()) is not None
 
 @pytest.helpers.register
 def expand_np_ndarray(arr):

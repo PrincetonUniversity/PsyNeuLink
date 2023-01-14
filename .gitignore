@@ -196,4 +196,5 @@ tests/*.pdf
 # mypy cache
 .mypy_cache
 
-/tests/json/*.json
+/tests/mdf/*.json
+/tests/mdf/*.yml

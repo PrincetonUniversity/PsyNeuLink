@@ -3,10 +3,19 @@ name: "CodeQL"
 on:
   push:
     branches: [ "master", "devel" ]
+    paths-ignore:
+      - 'docs/**'
   pull_request:
-    branches: [ "master" ]
+    branches: [ "master", "devel" ]
   schedule:
     - cron: "14 21 * * 5"
+
+# run only the latest instance of this workflow job for the current branch/PR
+# cancel older runs
+# fall back to run id if not available (run id is unique -> no cancellations)
+concurrency:
+  group: ci-${{ github.ref || github.run_id }}-${{ github.workflow }}
+  cancel-in-progress: true
 
 jobs:
   analyze:

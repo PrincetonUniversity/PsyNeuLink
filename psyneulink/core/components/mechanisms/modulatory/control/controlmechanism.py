@@ -357,18 +357,18 @@ Structure
 By default, a ControlMechanism has a single `input_port <Mechanism_Base.input_port>` named *OUTCOME*. If it has an
 `objective_mechanism <ControlMechanism.objective_mechanism>`, then the *OUTCOME* `input_port
 <ControlMechanism.outcome_input_ports>` receives a single `MappingProjection` from the `objective_mechanism
-<ControlMechanism.objective_mechanism>`\\'s *OUTCOME* `OutputPort` (see `ControlMechanism_ObjectiveMechanism` for
-additional details). If the ControlMechanism has no `objective_mechanism <ControlMechanism.objective_mechanism>` then,
-when it is added to a `Composition`, MappingProjections are created from the items specified in `monitor_for_control
-<ControlMechanism.monitor_for_control>` directly to InputPorts on the ControlMechanism (see
-`ControlMechanism_Monitor_for_Control` for additional details). The number of InputPorts created, and how the items
-listed in `monitor_for_control <ControlMechanism.monitor_for_control>` project to them is deterimined by the
-ControlMechanism's `outcome_input_ports_option <ControlMechanism.outcome_input_ports_option>`.  All of the Inports
-that receive Projections from those items, or the `objective_mechanism <ControlMechanism.objective_mechanism>` if
-the ControlMechanism has one, are listed in its `outcome_input_ports <ControlMechanism.outcome_input_ports>` attribute,
-and their values in the `outcome <ControlMechanism.outcome>` attribute.  The latter is used as the input to the
-ControlMechanism's `function <ControlMechanism.function>` to determine its `control_allocation
-<ControlMechanism.control_allocation>`.
+<ControlMechanism.objective_mechanism>`\\'s *OUTCOME* `OutputPort <OutputPort>` (see
+`ControlMechanism_ObjectiveMechanism` for additional details). If the ControlMechanism has no `objective_mechanism
+<ControlMechanism.objective_mechanism>` then, when it is added to a `Composition`, MappingProjections are created
+from the items specified in `monitor_for_control <ControlMechanism.monitor_for_control>` directly to InputPorts on
+the ControlMechanism (see `ControlMechanism_Monitor_for_Control` for additional details). The number of InputPorts
+created, and how the items listed in `monitor_for_control <ControlMechanism.monitor_for_control>` project to them is
+deterimined by the ControlMechanism's `outcome_input_ports_option <ControlMechanism.outcome_input_ports_option>`.
+All of the Inports that receive Projections from those items, or the `objective_mechanism
+<ControlMechanism.objective_mechanism>` if the ControlMechanism has one, are listed in its `outcome_input_ports
+<ControlMechanism.outcome_input_ports>` attribute, and their values in the `outcome <ControlMechanism.outcome>`
+attribute.  The latter is used as the input to the ControlMechanism's `function <ControlMechanism.function>` to
+determine its `control_allocation <ControlMechanism.control_allocation>`.
 
 .. _ControlMechanism_Function:
 
@@ -612,15 +612,13 @@ from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import ContentAddressableList, convert_to_list, convert_to_np_array, is_iterable
 
 __all__ = [
-    'CONTROL_ALLOCATION', 'GATING_ALLOCATION', 'ControlMechanism', 'ControlMechanismError', 'ControlMechanismRegistry',
+    'CONTROL_ALLOCATION', 'GATING_ALLOCATION', 'ControlMechanism', 'ControlMechanismError',
 ]
 
 CONTROL_ALLOCATION = 'control_allocation'
 GATING_ALLOCATION = 'gating_allocation'
 
 MonitoredOutputPortTuple = collections.namedtuple("MonitoredOutputPortTuple", "output_port weight exponent matrix")
-
-ControlMechanismRegistry = {}
 
 def _is_control_spec(spec):
     from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
@@ -857,7 +855,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
     outcome_input_ports_option : , SEPARATE, COMBINE, or CONCATENATE
         determines how items specified in `monitor_for_control <ControlMechanism.monitor_for_control>` project to
-        the ControlMechanism if not `objective_mechanism <ControlMechanism.objective_mechanism>` is specified.  If
+        the ControlMechanism if no `objective_mechanism <ControlMechanism.objective_mechanism>` is specified.  If
         *SEPARATE* is specified (the default), the `Projection` from each item specified in `monitor_for_control
         <ControlMechanism.monitor_for_control>` is assigned its own `InputPort`.  All of the InputPorts are assigned
         to a list in the ControlMechanism's `outcome_input_ports <ControlMechanism.outcome_input_ports>` attribute.
@@ -1300,7 +1298,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         )
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate SYSTEM, monitor_for_control, CONTROL_SIGNALS and GATING_SIGNALS
+        """Validate monitor_for_control, objective_mechanism, CONTROL_SIGNALS and GATING_SIGNALS
 
         """
         from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism

@@ -31,6 +31,7 @@ class TestOutputPorts:
         for i, e in zip(res, expected):
             assert np.array_equal(i, e)
 
+    @pytest.mark.composition
     @pytest.mark.mechanism
     @pytest.mark.parametrize('spec, expected1, expected2',
                              [((pnl.OWNER_VALUE, 0), [1], [1]),

@@ -604,6 +604,7 @@ def test_user_def_func_builtin_direct(func, args, expected, benchmark):
     val = benchmark(func, *args)
     assert np.allclose(val, expected)
 
+@pytest.mark.composition
 @pytest.mark.benchmark(group="UDF as Composition Origin")
 def test_udf_composition_origin(comp_mode, benchmark):
     def myFunction(variable, context):
@@ -616,6 +617,7 @@ def test_udf_composition_origin(comp_mode, benchmark):
     assert np.allclose(c.results[0][0], [3, 1])
 
 
+@pytest.mark.composition
 @pytest.mark.benchmark(group="UDF as Composition Terminal")
 def test_udf_composition_terminal(comp_mode, benchmark):
     def myFunction(variable, context):

@@ -68,11 +68,6 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
             if v is np:
                 self.register[k] = numpy_handlers
 
-        name_constants = {
-            True: ctx.bool_ty(1),
-            False: ctx.bool_ty(0),
-        }
-        self.name_constants = name_constants
         super().__init__()
 
     def _update_debug_metadata(self, builder: ir.IRBuilder, node:ast.AST):
@@ -239,9 +234,6 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
 
         return val[node.attr]
 
-    def visit_Num(self, node):
-        return self.ctx.float_ty(node.n)
-
     def visit_Assign(self, node):
         value = self.visit(node.value)
 
@@ -259,10 +251,24 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
             assert self.is_lval(target)
             self.builder.store(value, target)
 
+    # visit_Constant is supported in Python3.8+
+    def visit_Constant(self, node):
+        # Only True/False are currently supported as named constants
+        # Call deprecated visit_* methods to maintain coverage
+        if node.value is True or node.value is False:
+            return self.visit_NameConstant(node)
+
+        return self.visit_Num(node)
+
+    # deprecated in Python3.8+
     def visit_NameConstant(self, node):
-        val = self.name_constants[node.value]
-        assert val, f"Failed to convert NameConstant {node.value}"
-        return val
+        # Only True and False are supported atm
+        assert node.value is True or node.value is False
+        return self.ctx.bool_ty(node.value)
+
+    # deprecated in Python3.8+
+    def visit_Num(self, node):
+        return self.ctx.float_ty(node.n)
 
     def visit_Tuple(self, node:ast.AST):
         elements = (self.visit(element) for element in node.elts)

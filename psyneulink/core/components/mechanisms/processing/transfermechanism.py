@@ -1531,14 +1531,18 @@ class TransferMechanism(ProcessingMechanism_Base):
             current_input[maxCapIndices] = np.max(clip)
         return current_input
 
-    def _gen_llvm_is_finished_cond(self, ctx, builder, params, state):
-        current = pnlvm.helpers.get_state_ptr(builder, self, state, "value")
-        threshold_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
+    def _gen_llvm_is_finished_cond(self, ctx, builder, m_base_params, m_state, m_in):
+        current = pnlvm.helpers.get_state_ptr(builder, self, m_state, "value")
+
+        m_params, builder = self._gen_llvm_param_ports_for_obj(
+                self, m_base_params, ctx, builder, m_base_params, m_state, m_in)
+        threshold_ptr = pnlvm.helpers.get_param_ptr(builder, self, m_params,
                                                     "termination_threshold")
+
         if isinstance(threshold_ptr.type.pointee, pnlvm.ir.LiteralStructType):
             # Threshold is not defined, return the old value of finished flag
             assert len(threshold_ptr.type.pointee) == 0
-            is_finished_ptr = pnlvm.helpers.get_state_ptr(builder, self, state,
+            is_finished_ptr = pnlvm.helpers.get_state_ptr(builder, self, m_state,
                                                           "is_finished_flag")
             is_finished_flag = builder.load(is_finished_ptr)
             return builder.fcmp_ordered("!=", is_finished_flag,
@@ -1564,7 +1568,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                 b.store(max_val, cmp_val_ptr)
 
         elif isinstance(self.termination_measure, Function):
-            prev_val_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "value", 1)
+            prev_val_ptr = pnlvm.helpers.get_state_ptr(builder, self, m_state, "value", 1)
             prev_val = builder.load(prev_val_ptr)
 
             expected = np.empty_like([self.defaults.value[0], self.defaults.value[0]])
@@ -1576,8 +1580,8 @@ class TransferMechanism(ProcessingMechanism_Base):
                 self.termination_measure.defaults.variable = expected
 
             func = ctx.import_llvm_function(self.termination_measure)
-            func_params = pnlvm.helpers.get_param_ptr(builder, self, params, "termination_measure")
-            func_state = pnlvm.helpers.get_state_ptr(builder, self, state, "termination_measure")
+            func_params = pnlvm.helpers.get_param_ptr(builder, self, m_base_params, "termination_measure")
+            func_state = pnlvm.helpers.get_state_ptr(builder, self, m_state, "termination_measure")
             func_in = builder.alloca(func.args[2].type.pointee, name="is_finished_func_in")
             # Populate input
             func_in_current_ptr = builder.gep(func_in, [ctx.int32_ty(0),
@@ -1591,7 +1595,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
             builder.call(func, [func_params, func_state, func_in, cmp_val_ptr])
         elif isinstance(self.termination_measure, TimeScale):
-            ptr = builder.gep(pnlvm.helpers.get_state_ptr(builder, self, state, "num_executions"),
+            ptr = builder.gep(pnlvm.helpers.get_state_ptr(builder, self, m_state, "num_executions"),
                               [ctx.int32_ty(0), ctx.int32_ty(self.termination_measure.value)])
             ptr_val = builder.sitofp(builder.load(ptr), threshold.type)
             pnlvm.helpers.printf(builder, f"TERM MEASURE {self.termination_measure} %d %d\n",ptr_val, threshold)
@@ -1811,47 +1815,21 @@ class TransferMechanism(ProcessingMechanism_Base):
         super()._update_default_variable(new_default_variable, context=context)
 
     def as_mdf_model(self):
-        import modeci_mdf.mdf as mdf
-
         model = super().as_mdf_model()
         function_model = [
             f for f in model.functions
-            if f.id == parse_valid_identifier(self.function.name)
+            if f.id == f'{model.id}_{parse_valid_identifier(self.function.name)}'
         ][0]
-        assert function_model.id == parse_valid_identifier(self.function.name), (function_model.id, parse_valid_identifier(self.function.name))
+        assert function_model.id == f'{model.id}_{parse_valid_identifier(self.function.name)}', (function_model.id, parse_valid_identifier(self.function.name))
 
         if self.defaults.integrator_mode:
-            integrator_function_model = self.integrator_function.as_mdf_model()
-
             primary_input = function_model.args[_get_variable_parameter_name(self.function)]
-            self.integrator_function._set_mdf_arg(
-                integrator_function_model,
-                _get_variable_parameter_name(self.integrator_function),
-                primary_input
-            )
+            integrator_function_id = self.integrator_function._assign_to_mdf_model(model, primary_input)
+
             self.function._set_mdf_arg(
                 function_model,
                 _get_variable_parameter_name(self.function),
-                integrator_function_model.id
+                integrator_function_id
             )
-
-            for _, func_param in integrator_function_model.metadata['function_stateful_params'].items():
-                model.parameters.append(mdf.Parameter(**func_param))
-
-            model.functions.append(integrator_function_model)
-
-            res = self.integrator_function._get_mdf_noise_function()
-            try:
-                main_noise_function, extra_noise_functions = res
-            except TypeError:
-                pass
-            else:
-                main_noise_function.id = f'{model.id}_{main_noise_function.id}'
-                model.functions.append(main_noise_function)
-                model.functions.extend(extra_noise_functions)
-
-                self.integrator_function._set_mdf_arg(
-                    integrator_function_model, 'noise', main_noise_function.id
-                )
 
         return model

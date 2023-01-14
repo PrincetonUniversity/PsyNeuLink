@@ -53,6 +53,7 @@ class Scheduler(graph_scheduler.Scheduler, MDFSerializable):
 
         # TODO: consider integrating something like this into graph-scheduler?
         self._user_specified_conds = copy.copy(conditions) if conditions is not None else {}
+        self._user_specified_termination_conds = copy.copy(termination_conds) if termination_conds is not None else {}
 
         super().__init__(
             graph=graph,
@@ -117,6 +118,13 @@ class Scheduler(graph_scheduler.Scheduler, MDFSerializable):
             for node, cond in conditions.items()
         }
         super().add_condition_set(conditions)
+
+    @graph_scheduler.Scheduler.termination_conds.setter
+    def termination_conds(self, termination_conds):
+        if termination_conds is not None:
+            self._user_specified_termination_conds.update(termination_conds)
+
+        graph_scheduler.Scheduler.termination_conds.fset(self, termination_conds)
 
     @handle_external_context(fallback_default=True)
     def run(

@@ -113,8 +113,11 @@ To create new Parameters, reference this example of a new class *B*
       `Parameter attributes <Parameter_Attributes_Table>`
 - default values for the parameters can be specified in the Parameters class body, or in the
   arguments for *B*.__init__. If both are specified and the values differ, an exception will be raised
-- if you want assignments to parameter *p* to be validated, add a method _validate_p(value),
+- if you want assignments to parameter *p* to be validated, add a method _validate_p(value), \
   that returns None if value is a valid assignment, or an error string if value is not a valid assignment
+    - NOTE: a validation method for *p* may reference other parameters \
+        only if they are listed in *p*'s \
+        `dependencies <Parameter.dependencies>`
 - if you want all values set to *p* to be parsed beforehand, add a method _parse_p(value) that returns the parsed value
     - for example, convert to a numpy array or float
 
@@ -122,6 +125,8 @@ To create new Parameters, reference this example of a new class *B*
 
             def _parse_p(value):
                 return np.asarray(value)
+
+    - NOTE: parsers may not reference other parameters
 
 - setters and getters (used for more advanced behavior than parsing) should both return the final value to return (getter) or set (setter)
 
@@ -607,13 +612,15 @@ class ParametersTemplate:
         except TypeError:
             self._owner_ref = value
 
-    @property
-    def _in_dependency_order(self):
+    def _dependency_order_key(self, names=False):
         """
-            Returns:
-                list[Parameter] - a list of Parameters such that any
-                Parameter is placed before all of its
-                `dependencies <Parameter.dependencies>`
+        Args:
+            names (bool, optional): Whether sorting key is based on
+            Parameter names or Parameter objects. Defaults to False.
+
+        Returns:
+            types.FunctionType: a function that may be passed in as sort
+            key so that any Parameter is placed before its dependencies
         """
         parameter_function_ordering = list(toposort.toposort({
             p.name: p.dependencies for p in self if p.dependencies is not None
@@ -622,13 +629,30 @@ class ParametersTemplate:
             itertools.chain.from_iterable(parameter_function_ordering)
         )
 
-        def ordering(p):
-            try:
-                return parameter_function_ordering.index(p.name)
-            except ValueError:
-                return -1
+        if names:
+            def ordering(p):
+                try:
+                    return parameter_function_ordering.index(p)
+                except ValueError:
+                    return -1
+        else:
+            def ordering(p):
+                try:
+                    return parameter_function_ordering.index(p.name)
+                except ValueError:
+                    return -1
 
-        return sorted(self, key=ordering)
+        return ordering
+
+    @property
+    def _in_dependency_order(self):
+        """
+            Returns:
+                list[Parameter] - a list of Parameters such that any
+                Parameter is placed before all of its
+                `dependencies <Parameter.dependencies>`
+        """
+        return sorted(self, key=self._dependency_order_key())
 
 
 class Defaults(ParametersTemplate):

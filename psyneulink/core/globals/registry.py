@@ -217,6 +217,8 @@ def register_category(entry,
         raise RegistryError("Requested entry {0} not of type {1}".format(entry, base_class))
 
 
+_register_auto_name_prefix = ""
+
 def register_instance(entry, name, base_class, registry, sub_dict):
 
     renamed_instance_counts = registry[sub_dict].renamed_instance_counts
@@ -224,10 +226,13 @@ def register_instance(entry, name, base_class, registry, sub_dict):
     # If entry (instance) name is None, set entry's name to sub_dict-n where n is the next available numeric suffix
     # (starting at 0) based on the number of unnamed/renamed sub_dict objects that have already been assigned names
     if name is None:
-        entry.name = '{0}-{1}'.format(sub_dict, renamed_instance_counts[sub_dict])
+        entry.name = '{0}{1}-{2}'.format(_register_auto_name_prefix, sub_dict, renamed_instance_counts[sub_dict])
         renamed = True
     else:
         entry.name = name
+
+    assert not entry.name.startswith("__pnl_") or entry.name.startswith(_register_auto_name_prefix), \
+        "Using reserved name: {}".format(entry.name)
 
     while entry.name in registry[sub_dict].instanceDict:
         # if the decided name (provided or determined) is already assigned to an object, get the non-suffixed name,

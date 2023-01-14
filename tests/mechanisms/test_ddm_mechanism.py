@@ -126,18 +126,15 @@ class TestThreshold:
 
         decision_variables = []
         time_points = []
-        for i in range(5):
-            output = ex([variable])
-            decision_variables.append(output[0][0])
-            time_points.append(output[1][0])
+        results = []
+        for i in range(4):
+            results.append(ex([variable]))
+
+        results.append(benchmark(ex,[variable]))
 
         # decision variable accumulation stops
-        assert np.allclose(decision_variables, expected)
-
         # time accumulation does not stop
-        assert np.allclose(time_points, [1.0, 2.0, 3.0, 4.0, 5.0])
-        if benchmark.enabled:
-            benchmark(ex, [variable])
+        assert np.allclose(results, [[[b], [a + 1.0]] for a,b in enumerate(expected)])
 
     # def test_threshold_stops_accumulation_multiple_variables(self):
     #     D = IntegratorMechanism(name='DDM',
@@ -159,6 +156,7 @@ class TestThreshold:
     #     assert np.allclose(decision_variables_a, [2.0, 4.0, 5.0, 5.0, 5.0])
 
 
+    @pytest.mark.composition
     def test_is_finished_stops_composition(self):
         D = DDM(name='DDM',
                 function=DriftDiffusionIntegrator(threshold=10.0, time_step_size=1.0),
@@ -183,6 +181,7 @@ class TestThreshold:
     #
     #     sched = Scheduler(system=S)
 
+@pytest.mark.composition
 class TestInputPorts:
 
     def test_regular_input_mode(self):
@@ -256,10 +255,9 @@ def test_DDM_Integrator_Bogacz(benchmark, mech_mode, prng):
         T.parameters.random_state.set(_SeededPhilox([0]))
     ex = pytest.helpers.get_mech_execution(T, mech_mode)
 
-    val = ex(stim)[0]
+    ex(stim)
+    val = benchmark(ex, stim)[0]
     assert np.allclose(val, [1.0])
-    if benchmark.enabled:
-        benchmark(ex, stim)
 
 # ------------------------------------------------------------------------------------------------
 # # TEST 3
@@ -289,9 +287,9 @@ def test_DDM_Integrator_Bogacz(benchmark, mech_mode, prng):
 @pytest.mark.mechanism
 @pytest.mark.benchmark(group="DDM")
 @pytest.mark.parametrize("noise, expected", [
-    (0., 10),
-    (np.sqrt(0.5), 8.194383551861414),
-    (np.sqrt(2.0), 6.388767103722829),
+    (0., 20),
+    (np.sqrt(0.5), 18.40852795454561),
+    (np.sqrt(2.0), 16.817055909091223),
     ], ids=["0", "0.5", "2.0"])
 def test_DDM_noise(mech_mode, benchmark, noise, expected):
     T = DDM(
@@ -305,10 +303,9 @@ def test_DDM_noise(mech_mode, benchmark, noise, expected):
     )
     ex = pytest.helpers.get_mech_execution(T, mech_mode)
 
-    val = ex([10])
+    ex([10])
+    val = benchmark(ex, [10])
     assert np.allclose(val[0][0], expected)
-    if benchmark.enabled:
-        benchmark(ex, [10])
 
 # ------------------------------------------------------------------------------------------------
 
@@ -419,7 +416,7 @@ def test_DDM_input_fn():
 @pytest.mark.mechanism
 @pytest.mark.benchmark(group="DDM")
 @pytest.mark.parametrize("rate, expected", [
-    (5, 50), (5., 50), ([5], 50), (-5.0, -50),
+    (5, 100), (5., 100), ([5], 100), (-5.0, -100),
     ], ids=["int", "float", "list", "negative"])
 # ******
 # Should negative pass?
@@ -437,10 +434,9 @@ def test_DDM_rate(benchmark, rate, expected, mech_mode):
     )
     ex = pytest.helpers.get_mech_execution(T, mech_mode)
 
-    val = float(ex(stim)[0][0])
+    ex(stim)
+    val = float(benchmark(ex, stim)[0][0])
     assert val == expected
-    if benchmark.enabled:
-        benchmark(ex, stim)
 
 # ------------------------------------------------------------------------------------------------
 # INVALID RATES:
@@ -631,6 +627,7 @@ def test_WhenFinished_DDM_Analytical():
     c.is_satisfied()
 
 
+@pytest.mark.composition
 @pytest.mark.ddm_mechanism
 @pytest.mark.mechanism
 @pytest.mark.benchmark(group="DDM-comp")
@@ -650,45 +647,58 @@ def test_DDM_in_composition(benchmark, comp_mode):
     C = pnl.Composition()
     C.add_linear_processing_pathway([M])
     inputs = {M: [10]}
-    val = C.run(inputs, num_trials=2, execution_mode=comp_mode)
+    val = benchmark(C.run, inputs, num_trials=2, execution_mode=comp_mode)
+
     # FIXME: Python version returns dtype=object
     val = np.asfarray(val)
     assert np.allclose(val[0], [2.0])
     assert np.allclose(val[1], [0.2])
-    if benchmark.enabled:
-        benchmark(C.run, inputs, num_trials=2, execution_mode=comp_mode)
 
 
+@pytest.mark.composition
 @pytest.mark.ddm_mechanism
-@pytest.mark.mechanism
-def test_DDM_threshold_modulation(comp_mode):
-    M = pnl.DDM(
-        name='DDM',
-        function=pnl.DriftDiffusionAnalytical(
-            threshold=20.0,
-        ),
-    )
-    monitor = pnl.TransferMechanism(default_variable=[[0.0]],
-                                    size=1,
-                                    function=pnl.Linear(slope=1, intercept=0),
-                                    output_ports=[pnl.RESULT],
-                                    name='monitor')
+def test_DDM_threshold_modulation_analytical(comp_mode):
+    M = pnl.DDM(name='DDM',
+                function=pnl.DriftDiffusionAnalytical(
+                    threshold=20.0,
+                ),
+               )
+
+    control = pnl.ControlMechanism(control_signals=[(pnl.THRESHOLD, M)])
+
+    C = pnl.Composition()
+    C.add_node(M, required_roles=[pnl.NodeRole.ORIGIN, pnl.NodeRole.TERMINAL])
+    C.add_node(control)
+    inputs = {M:[1], control:[3]}
+    val = C.run(inputs, num_trials=1, execution_mode=comp_mode)
+
+    # Default modulation is 'multiplicative so the threshold is 20 * 3
+    assert np.allclose(val[0], [60.0])
+    assert np.allclose(val[1], [60.2])
+
+
+@pytest.mark.composition
+@pytest.mark.ddm_mechanism
+def test_DDM_threshold_modulation_integrator(comp_mode):
+    M = pnl.DDM(name='DDM',
+                execute_until_finished=True,
+                function=pnl.DriftDiffusionIntegrator(threshold=20),
+               )
 
     control = pnl.ControlMechanism(
-            monitor_for_control=monitor,
             control_signals=[(pnl.THRESHOLD, M)])
 
     C = pnl.Composition()
     C.add_node(M, required_roles=[pnl.NodeRole.ORIGIN, pnl.NodeRole.TERMINAL])
-    C.add_node(monitor)
     C.add_node(control)
-    inputs = {M:[1], monitor:[3]}
+    inputs = {M:[1], control:[3]}
     val = C.run(inputs, num_trials=1, execution_mode=comp_mode)
-    # FIXME: Python version returns dtype=object
-    val = np.asfarray(val)
-    assert np.allclose(val[0], [60.0])
-    assert np.allclose(val[1], [60.2])
 
+    assert np.allclose(val[0], [60.0])
+    assert np.allclose(val[1], [60.0])
+
+
+@pytest.mark.composition
 @pytest.mark.parametrize(["noise", "threshold", "expected_results"],[
                             (1.0, 0.0, (0.0, 1.0)),
                             (1.5, 2, (-2.0, 1.0)),
@@ -772,7 +782,7 @@ def test_sequence_of_DDM_mechs_in_Composition_Pathway():
         np.testing.assert_allclose(val, expected, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))
 
 
-@pytest.mark.mechanism
+@pytest.mark.composition
 @pytest.mark.ddm_mechanism
 def test_DDMMechanism_LCA_equivalent(comp_mode):
 

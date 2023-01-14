@@ -8,7 +8,9 @@ import pytest
 from psyneulink.core.compositions.composition import Composition, CompositionError, RunError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation
-
+import psyneulink.core.llvm as pnlvm
+from psyneulink.core.globals.keywords import Loss
+from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import SSE, MSE, L0
 
 class TestTargetSpecs:
 
@@ -405,6 +407,22 @@ class TestLearningPathwayMethods:
                     targets={B: 0.0},
                     num_trials=2)
         assert np.allclose(comp2.results, comp1.results)
+
+    @pytest.mark.parametrize('execution_mode',
+                             [pnlvm.ExecutionMode.LLVM, pnlvm.ExecutionMode.PyTorch])
+    def test_execution_mode_pytorch_and_LLVM_errors(self, execution_mode):
+        A = TransferMechanism(name="learning-process-mech-A")
+        B = TransferMechanism(name="learning-process-mech-B")
+        comp = Composition()
+        pway = comp.add_backpropagation_learning_pathway(pathway=[A,B])
+        # Call learn with default_variable specified for target (for comparison with missing target)
+        with pytest.raises(CompositionError) as error:
+            comp.learn(inputs={A: 1.0,
+                              pway.target: 0.0},
+                      execution_mode=execution_mode,
+                      num_trials=2)
+        assert error.value.error_value == f"ExecutionMode.{execution_mode.name} cannot be used in the learn() " \
+                                                f"method of \'Composition-0\' because it is not an AutodiffComposition"
 
 
 class TestNoLearning:
@@ -1708,7 +1726,8 @@ class TestNestedLearning:
                     f'as the target attribute of the relevant pathway in {inner_comp.name}.pathways. '
             )
 
-class TestBackProp:
+
+class TestBackPropLearning:
 
     def test_matrix_spec_and_learning_rate(self):
         T1 = pnl.TransferMechanism(size = 2,
@@ -1773,7 +1792,121 @@ class TestBackProp:
         #     else:
         #         print(node.name, " EMPTY LOG!")
 
-    def test_multilayer(self):
+    expected_quantities = [
+        (
+            Loss.L0,
+            pnl.SUM,
+            # output_layer output values
+            [np.array([0.22686074, 0.25270212, 0.91542149])],
+            # objective_mechanism.output_port[<LOSS>] value
+            [np.array(-0.39498435)],
+            # Input Weights
+            [[ 0.09900247, 0.19839653, 0.29785764, 0.39739191, 0.49700232],
+             [ 0.59629092, 0.69403786, 0.79203411, 0.89030237, 0.98885379]],
+            # Middle Weights
+            [[ 0.09490249, 0.10488719, 0.12074013, 0.1428774 ],
+             [ 0.29677354, 0.30507726, 0.31949676, 0.3404652 ],
+             [ 0.49857336, 0.50526254, 0.51830509, 0.53815062],
+             [ 0.70029406, 0.70544225, 0.71717037, 0.73594383],
+             [ 0.90192903, 0.90561554, 0.91609668, 0.93385292]],
+            # Output Weights
+            [[-0.74447522, -0.71016859, 0.31575293],
+             [-0.50885177, -0.47444784, 0.56676582],
+             [-0.27333719, -0.23912033, 0.8178167 ],
+             [-0.03767547, -0.00389039, 1.06888608]],
+            # Results
+            [[np.array([0.8344837 , 0.87072018, 0.89997433])],
+             [np.array([0.77970193, 0.83263138, 0.90159627])],
+             [np.array([0.70218502, 0.7773823 , 0.90307765])],
+             [np.array([0.60279149, 0.69958079, 0.90453143])],
+             [np.array([0.4967927 , 0.60030321, 0.90610082])],
+             [np.array([0.4056202 , 0.49472391, 0.90786617])],
+             [np.array([0.33763025, 0.40397637, 0.90977675])],
+             [np.array([0.28892812, 0.33633532, 0.9117193 ])],
+             [np.array([0.25348771, 0.28791896, 0.9136125 ])],
+             [np.array([0.22686074, 0.25270212, 0.91542149])]]
+        ),
+        (
+            Loss.SSE,
+            SSE,
+            # output_layer output values
+            [np.array([0.12306101, 0.12855051, 0.92795179])],
+            # objective_mechanism.output_port[<LOSS>] value
+            [np.array(0.03686019)],
+            # Input Weights
+            [[0.09944189, 0.19971589, 0.29997209, 0.40020673, 0.50041673],
+             [0.5979248, 0.69894361, 0.79989623, 0.90076867, 1.0015495]],
+            # Middle Weights
+            [[0.11871093, 0.12080358, 0.12913871, 0.14437706],
+             [0.32158068, 0.32166374, 0.32825218, 0.34203389],
+             [0.52434054, 0.52249285, 0.52740295, 0.53978486],
+             [0.72697833, 0.72328725, 0.72659469, 0.73763981],
+             [0.92948392, 0.92404372, 0.92583026, 0.93560663]],
+            # Output Weights
+            [[-0.93832915, -0.92583809, 0.36458405],
+             [-0.70446298, -0.69176289, 0.61576631],
+             [-0.47104248, -0.45856457, 0.86712447],
+             [-0.23778995, -0.22590794, 1.11863746]],
+            # Results
+            [[np.array([0.8344837, 0.87072018, 0.89997433])],
+             [np.array([0.71351724, 0.78641358, 0.90315634])],
+             [np.array([0.50994992, 0.62475304, 0.90595494])],
+             [np.array([0.32856147, 0.41172748, 0.90933295])],
+             [np.array([0.24083869, 0.2789737 , 0.91321678])],
+             [np.array([0.19538549, 0.21621273, 0.91684295])],
+             [np.array([0.16740723, 0.1806998 , 0.92008144])],
+             [np.array([0.14819045, 0.15753784, 0.92297786])],
+             [np.array([0.13402466, 0.14102997, 0.92558631])],
+             [np.array([0.12306101, 0.12855051, 0.92795179])]]
+        ),
+        (
+            Loss.MSE,
+            MSE,
+            # output_layer output values
+            [np.array([0.34065762, 0.40283722, 0.90991679])],
+            # objective_mechanism.output_port[<LOSS>] value
+            np.array([0.09548014]),
+            # Input Weights
+            [[0.09878461, 0.19766035, 0.29665234, 0.39577252, 0.49502758],
+             [0.59548084, 0.69130054, 0.78755247, 0.88428106, 0.98151113]],
+            # Middle Weights
+            [[0.07706183, 0.09444972, 0.11723154, 0.14557542],
+             [0.27818676, 0.29420326, 0.3158414, 0.34327603],
+             [0.4792692, 0.49396883, 0.51450859, 0.54106987],
+             [0.68030443, 0.69374747, 0.71323898, 0.73896663],
+             [0.88128847, 0.89353987, 0.91203717, 0.93697403]],
+            # Output Weights
+            [[-0.59467351, -0.52912455, 0.29597305],
+             [-0.35770705, -0.29192171, 0.54683712],
+             [-0.12052892, -0.05468307, 0.79769116],
+             [ 0.11707288, 0.18282992, 1.04852107]],
+            # Results
+            [[np.array([0.8344837, 0.87072018, 0.89997433])],
+             [np.array([0.79924855, 0.84620706, 0.90106255])],
+             [np.array([0.75417448, 0.81457342, 0.90208226])],
+             [np.array([0.69827147, 0.77394099, 0.90306295])],
+             [np.array([0.63285507, 0.72284124, 0.90404476])],
+             [np.array([0.5625646 , 0.66140581, 0.90507175])],
+             [np.array([0.49415513, 0.59273088, 0.90617688])],
+             [np.array([0.4332465 , 0.52285839, 0.90736771])],
+             [np.array([0.38219876, 0.45825994, 0.90862524])],
+             [np.array([0.34065762, 0.40283722, 0.90991679])]]
+        ),
+    ]
+    # Indices into expected_quantities
+    @pytest.mark.parametrize("expected_quantities", expected_quantities,
+                             # Rename L0 for test output as keyword actually = 'difference'
+                             ids=['L0' if x[0] == Loss.L0 else x[0].name for x in expected_quantities])
+    def test_multilayer_truth(self, expected_quantities):
+
+        LOSS_FUNCTION = 0
+        LOSS = 1
+        OUTPUT_LAYER_VAL = 2
+        OBJECTIVE_MECH_VAL = 3
+        INPUT_WEIGHTS = 4
+        MIDDLE_WEIGHTS = 5
+        OUTPUT_WEIGHTS = 6
+        RESULTS = 7
 
         input_layer = pnl.TransferMechanism(name='input_layer',
                                             function=pnl.Logistic,
@@ -1824,7 +1957,7 @@ class TestBackProp:
         p = [input_layer, input_weights, hidden_layer_1, middle_weights, hidden_layer_2, output_weights, output_layer]
         backprop_pathway = comp.add_backpropagation_learning_pathway(
             pathway=p,
-            loss_function='sse',
+            loss_function=expected_quantities[LOSS_FUNCTION],
             learning_rate=1.
         )
 
@@ -1838,42 +1971,15 @@ class TestBackProp:
 
         objective_output_layer = comp.nodes[5]
 
-        expected_output = [
-            (output_layer.get_output_values(comp), [np.array([0.22686074, 0.25270212, 0.91542149])]),
-            # error here? why still MSE
-            (objective_output_layer.output_ports[pnl.MSE].parameters.value.get(comp), np.array(0.04082589331852094)),
-            (input_weights.get_mod_matrix(comp), np.array([
-                [ 0.09900247, 0.19839653, 0.29785764, 0.39739191, 0.49700232],
-                [ 0.59629092, 0.69403786, 0.79203411, 0.89030237, 0.98885379],
-            ])),
-            (middle_weights.get_mod_matrix(comp), np.array([
-                [ 0.09490249, 0.10488719, 0.12074013, 0.1428774 ],
-                [ 0.29677354, 0.30507726, 0.31949676, 0.3404652 ],
-                [ 0.49857336, 0.50526254, 0.51830509, 0.53815062],
-                [ 0.70029406, 0.70544225, 0.71717037, 0.73594383],
-                [ 0.90192903, 0.90561554, 0.91609668, 0.93385292],
-            ])),
-            (output_weights.get_mod_matrix(comp), np.array([
-                [-0.74447522, -0.71016859, 0.31575293],
-                [-0.50885177, -0.47444784, 0.56676582],
-                [-0.27333719, -0.23912033, 0.8178167 ],
-                [-0.03767547, -0.00389039, 1.06888608],
-            ])),
-            (comp.parameters.results.get(comp), [
-                [np.array([0.8344837 , 0.87072018, 0.89997433])],
-                [np.array([0.77970193, 0.83263138, 0.90159627])],
-                [np.array([0.70218502, 0.7773823 , 0.90307765])],
-                [np.array([0.60279149, 0.69958079, 0.90453143])],
-                [np.array([0.4967927 , 0.60030321, 0.90610082])],
-                [np.array([0.4056202 , 0.49472391, 0.90786617])],
-                [np.array([0.33763025, 0.40397637, 0.90977675])],
-                [np.array([0.28892812, 0.33633532, 0.9117193 ])],
-                [np.array([0.25348771, 0.28791896, 0.9136125 ])],
-                [np.array([0.22686074, 0.25270212, 0.91542149])]
-            ]),
-        ]
 
-        # Test nparray output of log for Middle_Weights
+        expected_output = [
+            (output_layer.get_output_values(comp), expected_quantities[OUTPUT_LAYER_VAL]),
+            (objective_output_layer.output_ports[LOSS].parameters.value.get(comp),
+             expected_quantities[OBJECTIVE_MECH_VAL]),
+            (input_weights.get_mod_matrix(comp), expected_quantities[INPUT_WEIGHTS]),
+            (middle_weights.get_mod_matrix(comp), expected_quantities[MIDDLE_WEIGHTS]),
+            (output_weights.get_mod_matrix(comp), expected_quantities[OUTPUT_WEIGHTS]),
+            (comp.parameters.results.get(comp), expected_quantities[RESULTS])]
 
         for i in range(len(expected_output)):
             val, expected = expected_output[i]
@@ -1882,13 +1988,10 @@ class TestBackProp:
             # which WILL FAIL unless you gather higher precision values to use as reference
             np.testing.assert_allclose(val, expected, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))
 
-    @pytest.mark.parametrize('models', [
-        # [pnl.SYSTEM,pnl.COMPOSITION],
-        # [pnl.SYSTEM,'AUTODIFF'],
-        [pnl.COMPOSITION,'AUTODIFF']
-    ])
+    models = ['PYTORCH','LLVM']
+    @pytest.mark.parametrize('models', models, ids=[x for x in models])
     @pytest.mark.pytorch
-    def test_xor_training_identicalness_standard_composition_vs_autodiff(self, models):
+    def test_xor_training_identicalness_standard_composition_vs_PyTorch_and_LLVM(self, models):
         """Test equality of results for running 3-layered xor network using System, Composition and Autodiff"""
 
         num_epochs=2
@@ -1910,89 +2013,136 @@ class TestBackProp:
 
         # SET UP MODELS --------------------------------------------------------------------------------
 
-       # STANDARD Composition
-        if pnl.COMPOSITION in models:
+       # STANDARD Composition (used in all comparisons)
 
-            input_comp = pnl.TransferMechanism(name='input_comp',
+        input_comp = pnl.TransferMechanism(name='input_comp',
+                                   default_variable=np.zeros(2))
+
+        hidden_comp = pnl.TransferMechanism(name='hidden_comp',
+                                    default_variable=np.zeros(10),
+                                    function=pnl.Logistic())
+
+        output_comp = pnl.TransferMechanism(name='output_comp',
+                                    default_variable=np.zeros(1),
+                                    function=pnl.Logistic())
+
+        in_to_hidden_comp = pnl.MappingProjection(name='in_to_hidden_comp',
+                                    matrix=in_to_hidden_matrix.copy(),
+                                    sender=input_comp,
+                                    receiver=hidden_comp)
+
+        hidden_to_out_comp = pnl.MappingProjection(name='hidden_to_out_comp',
+                                    matrix=hidden_to_out_matrix.copy(),
+                                    sender=hidden_comp,
+                                    receiver=output_comp)
+
+        xor_comp = pnl.Composition()
+
+        backprop_pathway = xor_comp.add_backpropagation_learning_pathway([input_comp,
+                                                                          in_to_hidden_comp,
+                                                                          hidden_comp,
+                                                                          hidden_to_out_comp,
+                                                                          output_comp],
+                                                                         learning_rate=10)
+        target_mech = backprop_pathway.target
+        inputs_dict = {"inputs": {input_comp:xor_inputs},
+                       "targets": {output_comp:xor_targets},
+                       "epochs": num_epochs}
+        result_comp = xor_comp.learn(inputs=inputs_dict)
+
+        # AutodiffComposition using LLVM
+        if 'LLVM' in models:
+
+            input_LLVM = pnl.TransferMechanism(name='input',
                                        default_variable=np.zeros(2))
 
-            hidden_comp = pnl.TransferMechanism(name='hidden_comp',
+            hidden_LLVM = pnl.TransferMechanism(name='hidden',
                                         default_variable=np.zeros(10),
                                         function=pnl.Logistic())
 
-            output_comp = pnl.TransferMechanism(name='output_comp',
+            output_LLVM = pnl.TransferMechanism(name='output',
                                         default_variable=np.zeros(1),
                                         function=pnl.Logistic())
 
-            in_to_hidden_comp = pnl.MappingProjection(name='in_to_hidden_comp',
+            in_to_hidden_LLVM = pnl.MappingProjection(name='in_to_hidden',
                                         matrix=in_to_hidden_matrix.copy(),
-                                        sender=input_comp,
-                                        receiver=hidden_comp)
+                                        sender=input_LLVM,
+                                        receiver=hidden_LLVM)
 
-            hidden_to_out_comp = pnl.MappingProjection(name='hidden_to_out_comp',
+            hidden_to_out_LLVM = pnl.MappingProjection(name='hidden_to_out',
                                         matrix=hidden_to_out_matrix.copy(),
-                                        sender=hidden_comp,
-                                        receiver=output_comp)
+                                        sender=hidden_LLVM,
+                                        receiver=output_LLVM)
 
-            xor_comp = pnl.Composition()
+            xor_LLVM = pnl.AutodiffComposition(learning_rate=10,
+                                               optimizer_type='sgd')
 
-            backprop_pathway = xor_comp.add_backpropagation_learning_pathway([input_comp,
-                                                                              in_to_hidden_comp,
-                                                                              hidden_comp,
-                                                                              hidden_to_out_comp,
-                                                                              output_comp],
-                                                                             learning_rate=10)
-            target_mech = backprop_pathway.target
-            inputs_dict = {"inputs": {input_comp:xor_inputs},
-                           "targets": {output_comp:xor_targets},
+            xor_LLVM.add_node(input_LLVM)
+            xor_LLVM.add_node(hidden_LLVM)
+            xor_LLVM.add_node(output_LLVM)
+
+            xor_LLVM.add_projection(sender=input_LLVM, projection=in_to_hidden_LLVM, receiver=hidden_LLVM)
+            xor_LLVM.add_projection(sender=hidden_LLVM, projection=hidden_to_out_LLVM, receiver=output_LLVM)
+            xor_LLVM.infer_backpropagation_learning_pathways()
+
+            inputs_dict = {"inputs": {input_LLVM:xor_inputs},
+                           "targets": {output_LLVM:xor_targets},
                            "epochs": num_epochs}
-            result_comp = xor_comp.learn(inputs=inputs_dict)
+            result_LLVM = xor_LLVM.learn(inputs=inputs_dict, execution_mode=pnlvm.ExecutionMode.LLVMRun)
 
-        # AutodiffComposition
-        if 'AUTODIFF' in models:
+            assert np.allclose(in_to_hidden_LLVM.parameters.matrix.get(xor_LLVM),
+                               in_to_hidden_comp.get_mod_matrix(xor_comp))
+            assert np.allclose(hidden_to_out_LLVM.parameters.matrix.get(xor_LLVM),
+                               hidden_to_out_comp.get_mod_matrix(xor_comp))
+            assert np.allclose(result_comp, result_LLVM)
 
-            input_autodiff = pnl.TransferMechanism(name='input',
+        # AutodiffComposition using PyTorch
+        elif 'PYTORCH' in models:
+
+            input_PYTORCH = pnl.TransferMechanism(name='input',
                                        default_variable=np.zeros(2))
 
-            hidden_autodiff = pnl.TransferMechanism(name='hidden',
+            hidden_PYTORCH = pnl.TransferMechanism(name='hidden',
                                         default_variable=np.zeros(10),
                                         function=pnl.Logistic())
 
-            output_autodiff = pnl.TransferMechanism(name='output',
+            output_PYTORCH = pnl.TransferMechanism(name='output',
                                         default_variable=np.zeros(1),
                                         function=pnl.Logistic())
 
-            in_to_hidden_autodiff = pnl.MappingProjection(name='in_to_hidden',
+            in_to_hidden_PYTORCH = pnl.MappingProjection(name='in_to_hidden',
                                         matrix=in_to_hidden_matrix.copy(),
-                                        sender=input_autodiff,
-                                        receiver=hidden_autodiff)
+                                        sender=input_PYTORCH,
+                                        receiver=hidden_PYTORCH)
 
-            hidden_to_out_autodiff = pnl.MappingProjection(name='hidden_to_out',
+            hidden_to_out_PYTORCH = pnl.MappingProjection(name='hidden_to_out',
                                         matrix=hidden_to_out_matrix.copy(),
-                                        sender=hidden_autodiff,
-                                        receiver=output_autodiff)
+                                        sender=hidden_PYTORCH,
+                                        receiver=output_PYTORCH)
 
-            xor_autodiff = pnl.AutodiffComposition(learning_rate=10,
-                                                   optimizer_type='sgd')
+            xor_PYTORCH = pnl.AutodiffComposition(learning_rate=10,
+                                                  optimizer_type='sgd')
 
-            xor_autodiff.add_node(input_autodiff)
-            xor_autodiff.add_node(hidden_autodiff)
-            xor_autodiff.add_node(output_autodiff)
+            xor_PYTORCH.add_node(input_PYTORCH)
+            xor_PYTORCH.add_node(hidden_PYTORCH)
+            xor_PYTORCH.add_node(output_PYTORCH)
 
-            xor_autodiff.add_projection(sender=input_autodiff, projection=in_to_hidden_autodiff, receiver=hidden_autodiff)
-            xor_autodiff.add_projection(sender=hidden_autodiff, projection=hidden_to_out_autodiff, receiver=output_autodiff)
-            xor_autodiff.infer_backpropagation_learning_pathways()
+            xor_PYTORCH.add_projection(sender=input_PYTORCH, projection=in_to_hidden_PYTORCH, receiver=hidden_PYTORCH)
+            xor_PYTORCH.add_projection(sender=hidden_PYTORCH, projection=hidden_to_out_PYTORCH, receiver=output_PYTORCH)
+            xor_PYTORCH.infer_backpropagation_learning_pathways()
 
-            inputs_dict = {"inputs": {input_autodiff:xor_inputs},
-                           "targets": {output_autodiff:xor_targets},
+            inputs_dict = {"inputs": {input_PYTORCH:xor_inputs},
+                           "targets": {output_PYTORCH:xor_targets},
                            "epochs": num_epochs}
-            result_autodiff = xor_autodiff.learn(inputs=inputs_dict)
+            result_PYTORCH = xor_PYTORCH.learn(inputs=inputs_dict,
+                                               execution_mode=pnlvm.ExecutionMode.PyTorch)
 
-        # COMPARE WEIGHTS FOR PAIRS OF MODELS ----------------------------------------------------------
-        if all(m in models for m in {pnl.COMPOSITION, 'AUTODIFF'}):
-            assert np.allclose(in_to_hidden_autodiff.parameters.matrix.get(xor_autodiff), in_to_hidden_comp.get_mod_matrix(xor_comp))
-            assert np.allclose(hidden_to_out_autodiff.parameters.matrix.get(xor_autodiff), hidden_to_out_comp.get_mod_matrix(xor_comp))
-            assert np.allclose(result_comp, result_autodiff)
+            assert np.allclose(in_to_hidden_PYTORCH.parameters.matrix.get(xor_PYTORCH),
+                               in_to_hidden_comp.get_mod_matrix(xor_comp))
+            assert np.allclose(hidden_to_out_PYTORCH.parameters.matrix.get(xor_PYTORCH),
+                               hidden_to_out_comp.get_mod_matrix(xor_comp))
+            assert np.allclose(result_comp, result_PYTORCH)
+
 
     @pytest.mark.parametrize('configuration', [
         'Y UP',

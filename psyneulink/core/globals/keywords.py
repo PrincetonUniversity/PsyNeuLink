@@ -37,8 +37,8 @@ __all__ = [
     'ContentAddressableMemory_FUNCTION', 'CONTEXT',
     'CONTROL', 'CONTROL_MECHANISM', 'CONTROL_PATHWAY', 'CONTROL_PROJECTION',  'CONTROL_PROJECTION_PARAMS',
     'CONTROL_PROJECTIONS', 'CONTROL_SIGNAL', 'CONTROL_SIGNAL_SPECS', 'CONTROL_SIGNALS', 'CONTROLLED_PARAMS',
-    'CONTROLLER', 'CONTROLLER_OBJECTIVE', 'CORRELATION', 'COSINE', 'COST_FUNCTION', 'COUNT', 'CROSS_ENTROPY',
-    'CURRENT_EXECUTION_TIME', 'CUSTOM_FUNCTION', 'CYCLE',
+    'CONTROLLER', 'CONTROLLER_OBJECTIVE', 'CORRELATION', 'COSINE', 'COSINE_SIMILARITY',
+    'COST_FUNCTION', 'COUNT', 'CROSS_ENTROPY', 'CURRENT_EXECUTION_TIME', 'CUSTOM_FUNCTION', 'CYCLE',
     'DDM_MECHANISM', 'DECAY', 'DEFAULT', 'DEFAULT_CONTROL_MECHANISM', 'DEFAULT_INPUT', 'DEFAULT_MATRIX',
     'DEFAULT_PREFERENCE_SET_OWNER', 'DEFAULT_PROCESSING_MECHANISM', 'DEFAULT_VARIABLE',
     'DEFERRED_ASSIGNMENT', 'DEFERRED_DEFAULT_NAME', 'DEFERRED_INITIALIZATION', 'DICT', 'DictionaryMemory_FUNCTION',
@@ -46,9 +46,10 @@ __all__ = [
     'DIST_SHAPE', 'DISTANCE_FUNCTION', 'DISTANCE_METRICS', 'DISTRIBUTION_FUNCTION_TYPE', 'DIVISION',
     'DRIFT_DIFFUSION_INTEGRATOR_FUNCTION', 'DRIFT_ON_A_SPHERE_INTEGRATOR_FUNCTION', 'DUAL_ADAPTIVE_INTEGRATOR_FUNCTION',
     'EFFERENTS', 'EID_SIMULATION', 'EID_FROZEN', 'EITHER', 'ENABLE_CONTROLLER', 'ENABLED', 'ENERGY', 'ENTROPY',
-    'EPISODIC_MEMORY_MECHANISM', 'EQUAL', 'ERROR_DERIVATIVE_FUNCTION', 'EUCLIDEAN', 'EVC_MECHANISM', 'EVC_SIMULATION',
-    'EXAMPLE_FUNCTION_TYPE', 'EXECUTE_UNTIL_FINISHED', 'EXECUTING', 'EXECUTION', 'EXECUTION_COUNT', 'EXECUTION_ID',
-    'EXECUTION_PHASE', 'EXPONENTIAL', 'EXPONENT', 'EXPONENTIAL_DIST_FUNCTION', 'EXPONENTIAL_FUNCTION', 'EXPONENTS',
+    'EPISODIC_MEMORY_MECHANISM', 'EPOCHS', 'EQUAL', 'ERROR_DERIVATIVE_FUNCTION', 'EUCLIDEAN',
+    'EVC_MECHANISM', 'EVC_SIMULATION',  'EXAMPLE_FUNCTION_TYPE',
+    'EXECUTE_UNTIL_FINISHED', 'EXECUTING', 'EXECUTION', 'EXECUTION_COUNT', 'EXECUTION_ID', 'EXECUTION_PHASE',
+    'EXPONENTIAL', 'EXPONENT', 'EXPONENTIAL_DIST_FUNCTION', 'EXPONENTIAL_FUNCTION', 'EXPONENTS',
     'FEEDBACK', 'FITZHUGHNAGUMO_INTEGRATOR_FUNCTION', 'FINAL', 'FLAGS', 'FULL', 'FULL_CONNECTIVITY_MATRIX',
     'FUNCTION', 'FUNCTIONS', 'FUNCTION_COMPONENT_CATEGORY','FUNCTION_CHECK_ARGS',
     'FUNCTION_OUTPUT_TYPE', 'FUNCTION_OUTPUT_TYPE_CONVERSION', 'FUNCTION_PARAMS',
@@ -69,7 +70,7 @@ __all__ = [
     'LEARNING_OBJECTIVE', 'LEARNING_MECHANISM', 'LEARNING_MECHANISMS', 'LEARNING_PATHWAY', 'LEARNING_PROJECTION',
     'LEARNING_PROJECTION_PARAMS', 'LEARNING_RATE', 'LEARNING_SIGNAL', 'LEARNING_SIGNAL_SPECS', 'LEARNING_SIGNALS',
     'LESS_THAN', 'LESS_THAN_OR_EQUAL', 'LINEAR', 'LINEAR_COMBINATION_FUNCTION', 'LINEAR_FUNCTION',
-    'LINEAR_MATRIX_FUNCTION', 'LOG_ENTRIES', 'LOGISTIC_FUNCTION', 'LOW', 'LVOC_CONTROL_MECHANISM', 'L0', 'L1',
+    'LINEAR_MATRIX_FUNCTION', 'LOG_ENTRIES', 'LOGISTIC_FUNCTION', 'Loss', 'LOW', 'LVOC_CONTROL_MECHANISM',
     'MAPPING_PROJECTION', 'MAPPING_PROJECTION_PARAMS', 'MASKED_MAPPING_PROJECTION',
     'MATRIX', 'MATRIX_KEYWORD_NAMES', 'MATRIX_KEYWORD_SET', 'MATRIX_KEYWORD_VALUES', 'MATRIX_KEYWORDS','MatrixKeywords',
     'MAX_ABS_DIFF', 'MAX_ABS_INDICATOR', 'MAX_ONE_HOT', 'MAX_ABS_ONE_HOT', 'MAX_ABS_VAL',
@@ -84,7 +85,7 @@ __all__ = [
     'MODEL_SPEC_ID_RECEIVER_MECH', 'MODEL_SPEC_ID_RECEIVER_PORT',
     'MODEL_SPEC_ID_PARAMETER_INITIAL_VALUE', 'MODEL_SPEC_ID_PARAMETER_SOURCE',
     'MODEL_SPEC_ID_PARAMETER_VALUE', 'MODEL_SPEC_ID_TYPE',
-    'MSE', 'MULTIPLICATIVE', 'MULTIPLICATIVE_PARAM', 'MUTUAL_ENTROPY',
+    'MULTIPLICATIVE', 'MULTIPLICATIVE_PARAM', 'MUTUAL_ENTROPY',
     'NAME', 'NESTED', 'NEWEST',  'NODE', 'NOISE', 'NORMAL_DIST_FUNCTION', 'NORMED_L0_SIMILARITY', 'NOT_EQUAL',
     'NUM_EXECUTIONS_BEFORE_FINISHED',
     'OBJECTIVE_FUNCTION_TYPE', 'OBJECTIVE_MECHANISM', 'OBJECTIVE_MECHANISM_OBJECT', 'OFF', 'OFFSET', 'OLDEST', 'ON',
@@ -109,11 +110,11 @@ __all__ = [
     'RELU_FUNCTION', 'REST', 'RESULT', 'RESULT', 'ROLES', 'RL_FUNCTION', 'RUN',
     'SAMPLE', 'SAVE_ALL_VALUES_AND_POLICIES', 'SCALAR', 'SCALE', 'SCHEDULER', 'SELF', 'SENDER', 'SEPARATE',
     'SEPARATOR_BAR', 'SHADOW_INPUT_NAME', 'SHADOW_INPUTS', 'SIMPLE', 'SIMPLE_INTEGRATOR_FUNCTION', 'SIMULATIONS',
-    'SINGLETON', 'SIZE', 'SLOPE', 'SOFT_CLAMP', 'SOFTMAX_FUNCTION', 'SOURCE', 'SSE', 'STABILITY_FUNCTION',
+    'SINGLETON', 'SIZE', 'SLOPE', 'SOFT_CLAMP', 'SOFTMAX_FUNCTION', 'SOURCE', 'STABILITY_FUNCTION',
     'STANDARD_ARGS', 'STANDARD_DEVIATION', 'STANDARD_OUTPUT_PORTS', 'SUBTRACTION', 'SUM',
-    'TARGET', 'TARGET_MECHANISM', 'TARGET_LABELS_DICT', 'TERMINAL', 'TERMINATION_MEASURE', 'TERMINATION_THRESHOLD',
-    'TERMINATION_COMPARISION_OP', 'TERSE', 'TEXT', 'THRESHOLD', 'TIME', 'TIME_STEP_SIZE', 'TIME_STEPS_DIM',
-    'TRAINING_SET',
+    'TARGET', 'TARGET_MECHANISM', 'TARGET_LABELS_DICT', 'TERMINAL', 'TARGETS',
+    'TERMINATION_MEASURE', 'TERMINATION_THRESHOLD', 'TERMINATION_COMPARISION_OP', 'TERSE', 'TEXT', 'THRESHOLD',
+    'TIME', 'TIME_STEP_SIZE', 'TIME_STEPS_DIM', 'TRAINING_SET',
     'TRANSFER_FUNCTION_TYPE', 'TRANSFER_MECHANISM', 'TRANSFER_WITH_COSTS_FUNCTION',
     'TRIAL', 'TRIALS_DIM',
     'UNCHANGED', 'UNIFORM_DIST_FUNCTION', 'USER_DEFINED_FUNCTION', 'USER_DEFINED_FUNCTION_TYPE',
@@ -125,6 +126,7 @@ __all__ = [
 # ******************************************  KEYWORD CLASSES **********************************************************
 # **********************************************************************************************************************
 import operator
+from enum import Enum, auto
 
 class MatrixKeywords:
     """
@@ -240,6 +242,7 @@ class DistanceMetrics:
         self.CORRELATION = CORRELATION
         # self.PEARSON = PEARSON
         self.COSINE = COSINE
+        self.COSINE_SIMILARITY = COSINE
         self.ENTROPY = CROSS_ENTROPY
         self.CROSS_ENTROPY = CROSS_ENTROPY
         self.ENERGY = ENERGY
@@ -270,6 +273,7 @@ L1 = EUCLIDEAN
 ANGLE = 'angle'
 CORRELATION = 'correlation'
 COSINE = 'cosine'
+COSINE_SIMILARITY = 'cosine'
 PEARSON = 'Pearson'
 ENTROPY = 'cross-entropy'
 CROSS_ENTROPY = 'cross-entropy'
@@ -283,6 +287,58 @@ DISTANCE_METRICS_NAMES = DISTANCE_METRICS._names()
 ENERGY = 'energy'
 ENTROPY = 'entropy'
 CONVERGENCE = 'CONVERGENCE'
+
+
+class Loss(Enum):
+    """Loss function used for `learning <Composition_Learning>`.
+
+    Each keyword specifies a loss function used for learning in a `Composition` or `AutodiffComposition`,
+    and the comparable loss functions used by `PyTorch` when an AutodiffComposition is executed in
+    `ExecutionMode.PyTorch` mode.
+    COMMENT:
+    Get latex for remaining equations from https://blmoistawinde.github.io/ml_equations_latex/#cross-entropy
+    COMMENT
+
+    Attributes
+    ----------
+
+    L0
+        sum of errors:   :math:`\\sum\\limits^{len}_i|target_i - output_i|`
+
+    COMMENT:
+    L1
+        mean
+    COMMENT
+
+    SSE
+        sum of squared errors:    :math:`\\sum\\limits^{len}_i(target_i - output_i)^2`
+
+    MSE
+        mean of squared errors:   :math:`\\frac{\\sum\\limits^{len}_i(target_i - output_i)^2}{len}`
+
+    CROSS_ENTROPY
+        cross entropy:   :math:`\\sum\\limits^{len}_ioutput_i\\log(target_i)`
+
+    KL_DIV
+        `Kullback-Leibler (KL) divergence
+        <https://pytorch.org/docs/stable/generated/torch.nn.KLDivLoss.html?highlight=kullback>`_:
+        :math:`\\sum\\limits^{len}_itarget_i\\log{(\\frac{target_i}{output_i})}`
+
+    NLL
+        `Negative log likelihood loss <https://pytorch.org/docs/stable/generated/torch.nn.NLLLoss.html?highlight=nll>`_:
+        :math:`-{\\log(target_i)}`
+
+    POISSON_NLL
+        `Poisson negative log likelihood loss <https://pytorch.org/docs/stable/generated/torch.nn.PoissonNLLLoss.html>`_
+    """
+    L0 = auto()
+    L1 = auto()
+    SSE = auto()
+    MSE = auto()
+    CROSS_ENTROPY = auto()
+    KL_DIV = auto()
+    NLL = auto()
+    POISSON_NLL = auto()
 
 
 # **********************************************************************************************************************
@@ -411,6 +467,8 @@ CONTROL_PATHWAY = "control_pathway"
 LEARNING_PATHWAY = "learning_pathway"
 NODE = 'NODE'
 INPUTS = 'inputs'
+TARGETS = 'targets'
+EPOCHS = 'epochs'
 
 # Used in show_graph for show_nested
 NESTED = 'nested'
@@ -652,9 +710,10 @@ FUNCTIONS = 'functions'
 
 #endregion
 
-#region ---------------------------------------    AUTODIFF COMPOSITION   ----------------------------------------------
+#region ------------------------------------------  AUTODIFF COMPOSITION  ----------------------------------------------
 
 TRAINING_SET = 'training set'
+LEARNING_RATE = "learning_rate"
 
 #endregion
 
@@ -668,7 +727,6 @@ SOFT_CLAMP = "soft_clamp"
 HARD_CLAMP = "hard_clamp"
 PULSE_CLAMP = "pulse_clamp"
 NO_CLAMP = "no_clamp"
-LEARNING_RATE = "learning_rate"
 # CONTROL = 'CONTROL'
 PROCESS_DEFAULT_PROJECTION_FUNCTION = "Default Projection Function"
 PROCESS_EXECUTE = "ProcessExecute"
@@ -975,8 +1033,6 @@ NETWORK = 'network'
 
 GAMMA = 'gamma'
 
-MSE = 'MSE'
-SSE = 'SSE'
 #endregion
 
 # model spec keywords

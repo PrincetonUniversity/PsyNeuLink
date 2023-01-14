@@ -1914,11 +1914,8 @@ class TestControlMechanisms:
                                                    intensity_cost_function=pnl.Linear(slope=0.0),
                                                    allocation_samples=pnl.SampleSpec(start=1.0, stop=5.0, num=5))])
         )
-        results = ocomp.run([5], execution_mode=mode)
-        assert np.allclose(results, [[50]])
-
-        if benchmark.enabled:
-            benchmark(ocomp.run, [5], execution_mode=mode)
+        result = benchmark(ocomp.run, [5], execution_mode=mode)
+        assert np.allclose(result, [[50]])
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -1981,11 +1978,8 @@ class TestControlMechanisms:
                                                                                      stop=5.0,
                                                                                      num=5))])
         )
-        results = ocomp.run([5], execution_mode=mode)
-        assert np.allclose(results, [[70]])
-
-        if benchmark.enabled:
-            benchmark(ocomp.run, [5], execution_mode=mode)
+        result = benchmark(ocomp.run, [5], execution_mode=mode)
+        assert np.allclose(result, [[70]])
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2048,11 +2042,8 @@ class TestControlMechanisms:
                                                                                      stop=5.0,
                                                                                      num=5))])
         )
-        results = ocomp.run([5], execution_mode=mode)
-        assert np.allclose(results, [[5]])
-
-        if benchmark.enabled:
-            benchmark(ocomp.run, [5], execution_mode=mode)
+        result = benchmark(ocomp.run, [5], execution_mode=mode)
+        assert np.allclose(result, [[5]])
 
     def test_two_tier_ocm(self):
         integrationConstant = 0.8  # Time Constant
@@ -2275,11 +2266,8 @@ class TestControlMechanisms:
         iComp.add_controller(iController)
         assert iComp.controller == iController
         assert oComp.controller == oController
-        res = oComp.run(inputs=[5], execution_mode=comp_mode)
+        res = benchmark(oComp.run, inputs=[5], execution_mode=comp_mode)
         assert np.allclose(res, [40])
-
-        if benchmark.enabled:
-            benchmark(oComp.run, [5], execution_mode=comp_mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2600,6 +2588,7 @@ class TestControlMechanisms:
         assert np.allclose(best_second, comp.results[1])
 
 
+@pytest.mark.composition
 @pytest.mark.control
 class TestModelBasedOptimizationControlMechanisms_Execution:
     def test_ocm_default_function(self):
@@ -2950,8 +2939,6 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                                # Note: Skip decision variable OutputPort
                                evc_gratton.simulation_results[simulation][1:])
 
-    @pytest.mark.control
-    @pytest.mark.composition
     def test_laming_validation_specify_control_signals(self):
         # Mechanisms
         Input = pnl.TransferMechanism(name='Input')
@@ -3072,8 +3059,6 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                 err_msg='Failed on expected_output[{0}]'.format(trial)
             )
 
-    @pytest.mark.control
-    @pytest.mark.composition
     def test_stateful_mechanism_in_simulation(self):
         # Mechanisms
         Input = pnl.TransferMechanism(name='Input', integrator_mode=True)
@@ -3211,8 +3196,6 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                 err_msg='Failed on expected_output[{0}]'.format(trial)
             )
 
-    @pytest.mark.control
-    @pytest.mark.composition
     @pytest.mark.benchmark(group="Model Based OCM")
     @pytest.mark.parametrize("mode", pytest.helpers.get_comp_execution_modes() +
                                      [pytest.helpers.cuda_param('Python-PTX'),
@@ -3262,8 +3245,6 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         if benchmark.enabled:
             benchmark(comp.run, inputs, execution_mode=mode)
 
-    @pytest.mark.control
-    @pytest.mark.composition
     @pytest.mark.benchmark(group="Model Based OCM")
     @pytest.mark.parametrize("mode", pytest.helpers.get_comp_execution_modes() +
                                      [pytest.helpers.cuda_param('Python-PTX'),
@@ -3585,7 +3566,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         warning_msg = f'"\'OptimizationControlMechanism-0\' has \'num_estimates = {num_estimates}\' specified, ' \
                       f'but its \'agent_rep\' (\'comp\') has no random variables: ' \
                       f'\'RANDOMIZATION_CONTROL_SIGNAL\' will not be created, and num_estimates set to None."'
-        with pytest.warns(warning_type) as warning:
+        with pytest.warns(warning_type) as warnings:
             ocm = pnl.OptimizationControlMechanism(agent_rep=comp,
                                                    state_features=[A.input_port],
                                                    objective_mechanism=objective_mech,
@@ -3593,7 +3574,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                                                    num_estimates=num_estimates,
                                                    control_signals=[control_signal])
             if warning_type:
-                assert repr(warning[5].message.args[0]) == warning_msg
+                assert any(warning_msg == repr(w.message.args[0]) for w in warnings)
 
         comp.add_controller(ocm)
         inputs = {A: [[[1.0]]]}
@@ -3652,8 +3633,6 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         # initial 1 + each allocation sample (1, 2, 3) integrated
         assert B.parameters.value.get(comp) == 7
 
-    @pytest.mark.control
-    @pytest.mark.composition
     @pytest.mark.benchmark(group="Multilevel")
     def test_grid_search_random_selection(self, comp_mode, benchmark):
         A = pnl.ProcessingMechanism(name='A')
@@ -3700,8 +3679,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
             benchmark(comp.run, inputs=inputs, num_trials=10, context='bench_outer_comp', execution_mode=comp_mode)
             assert len(A.log.get_logged_entries()) == 0
 
-    @pytest.mark.control
-    @pytest.mark.composition
+
     def test_input_CIM_assignment(self, comp_mode):
         input_a = pnl.ProcessingMechanism(name='oa', function=pnl.Linear(slope=1))
         input_b = pnl.ProcessingMechanism(name='ob', function=pnl.Linear(slope=1))
@@ -3863,6 +3841,7 @@ class TestSampleIterator:
         assert sample_iterator.num == len(sample_list)
 
 
+@pytest.mark.composition
 @pytest.mark.control
 class TestControlTimeScales:
 

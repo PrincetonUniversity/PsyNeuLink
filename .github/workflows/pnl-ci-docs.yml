@@ -8,6 +8,13 @@ on:
       - 'v*'
   pull_request:
 
+# run only the latest instance of this workflow job for the current branch/PR
+# cancel older runs
+# fall back to run id if not available (run id is unique -> no cancellations)
+concurrency:
+  group: ci-${{ github.ref || github.run_id }}-${{ github.workflow }}
+  cancel-in-progress: true
+
 jobs:
   docs-build:
     runs-on: ${{ matrix.os }}
@@ -76,14 +83,14 @@ jobs:
       run: |
         python -m pip install -U pip
         python -m pip --version
-        echo ::set-output name=pip_cache_dir::$(python -m pip cache dir)
+        echo "pip_cache_dir=$(python -m pip cache dir)" | tee -a $GITHUB_OUTPUT
 
     - name: Wheels cache
       uses: actions/cache@v3
       with:
         path: ${{ steps.pip_cache.outputs.pip_cache_dir }}/wheels
-        key: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-pip-wheels-v2-${{ github.sha }}
-        restore-keys: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-pip-wheels-v2
+        key: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-pip-wheels-${{ hashFiles('requirements.txt', 'doc_requirements.txt') }}-${{ github.sha }}
+        restore-keys: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-pip-wheels-${{ hashFiles('requirements.txt', 'doc_requirements.txt') }}
 
     # We need to install all PNL deps since docs config imports psyneulink module
     - name: Install local, editable PNL package

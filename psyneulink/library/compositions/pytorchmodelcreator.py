@@ -5,9 +5,9 @@ from psyneulink.core.compositions.composition import NodeRole
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core import llvm as pnlvm
 from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer, SGDOptimizer
-from psyneulink.library.compositions.compiledloss import MSELoss
+from psyneulink.library.compositions.compiledloss import MSELoss, CROSS_ENTROPYLoss
 from psyneulink.library.compositions.pytorchllvmhelper import *
-from psyneulink.core.globals.keywords import TARGET_MECHANISM
+from psyneulink.core.globals.keywords import TARGET_MECHANISM, Loss
 from psyneulink.core.globals.utilities import get_deepcopy_with_shared
 from .pytorchcomponents import *
 
@@ -60,7 +60,8 @@ class PytorchModelCreator(torch.nn.Module):
                 proj_recv.add_afferent(new_proj)
                 self.projection_map[projection] = new_proj
                 self.projections.append(new_proj)
-                self.params.append(new_proj.matrix)
+
+        self._regenerate_paramlist()
 
         c = Context()
         try:
@@ -80,6 +81,11 @@ class PytorchModelCreator(torch.nn.Module):
         composition.scheduler._delete_counts(c.execution_id)
 
     __deepcopy__ = get_deepcopy_with_shared(shared_types=(Component, ComponentsMeta))
+
+    def _regenerate_paramlist(self):
+        self.params = nn.ParameterList()
+        for proj in self.projections:
+            self.params.append(proj.matrix)
 
     # generates llvm function for self.forward
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
@@ -268,8 +274,10 @@ class PytorchModelCreator(torch.nn.Module):
         optimizer = self._get_compiled_optimizer()
         # setup loss
         loss_type = self._composition.loss_spec
-        if loss_type == 'mse':
+        if loss_type == Loss.MSE:
             loss = MSELoss()
+        elif loss_type == Loss.CROSS_ENTROPY:
+            loss = CROSS_ENTROPYLoss()
         else:
             raise Exception("LOSS TYPE", loss_type, "NOT SUPPORTED")
 

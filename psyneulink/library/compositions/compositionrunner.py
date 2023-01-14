@@ -129,6 +129,7 @@ class CompositionRunner():
                      targets: dict = None,
                      num_trials: int = None,
                      epochs: int = 1,
+                     learning_rate = None,
                      minibatch_size: int = 1,
                      patience: int = None,
                      min_delta: int = 0,
@@ -139,16 +140,20 @@ class CompositionRunner():
                      execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
                      **kwargs):
         """
-        Runs the composition repeatedly with the specified parameters
+        Runs the composition repeatedly with the specified parameters.
 
         Returns
         ---------
         Outputs from the final execution
         """
-        if not execution_mode:
+
+        if not (execution_mode & pnlvm.ExecutionMode.COMPILED):
             self._is_llvm_mode = False
         else:
             self._is_llvm_mode = True
+
+        # This is used by local learning-related methods to override the default learning_rate set at construction.
+        self._composition._runtime_learning_rate = learning_rate
 
         # Handle function and generator inputs
         if isgeneratorfunction(inputs):
@@ -191,7 +196,7 @@ class CompositionRunner():
                 raise Exception("The minibatch size cannot be greater than the number of trials.")
 
             early_stopper = None
-            if patience is not None and not execution_mode:
+            if patience is not None and not self._is_llvm_mode:
                 early_stopper = EarlyStopping(min_delta=min_delta, patience=patience)
 
             if callable(stim_input) and not isgeneratorfunction(stim_input):

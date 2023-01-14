@@ -54,17 +54,16 @@ class TestTransferMechanismInputs:
         T = TransferMechanism(
             name='T',
             default_variable=[0 for i in range(VECTOR_SIZE)],
-            integration_rate=1.0,
+            integration_rate=0.5,
             integrator_mode=True
         )
         T.reset_stateful_function_when = Never()
         var = [10.0 for i in range(VECTOR_SIZE)]
         EX = pytest.helpers.get_mech_execution(T, mech_mode)
 
-        val = EX(var)
-        assert np.allclose(val, [[10.0 for i in range(VECTOR_SIZE)]])
-        if benchmark.enabled:
-            benchmark(EX, var)
+        EX(var)
+        val = benchmark(EX, var)
+        assert np.allclose(val, [[7.5 for i in range(VECTOR_SIZE)]])
 
     #@pytest.mark.mechanism
     #@pytest.mark.transfer_mechanism
@@ -109,8 +108,7 @@ class TestTransferMechanismInputs:
             )
             T.execute(["one", "two", "three", "four"])
         assert '"Input to \'T\' ([\'one\' \'two\' \'three\' \'four\']) is incompatible ' \
-               'with its corresponding InputPort (T[InputPort-0]): ' \
-               '\'cannot perform reduce with flexible type.\'"' in str(error_text.value)
+               'with its corresponding InputPort (T[InputPort-0]): ' in str(error_text.value)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -149,17 +147,16 @@ class TestTransferMechanismNoise:
             default_variable=[0 for i in range(VECTOR_SIZE)],
             function=Linear(),
             noise=5.0,
-            integration_rate=1.0,
+            integration_rate=0.5,
             integrator_mode=True
         )
         T.reset_stateful_function_when = Never()
         EX = pytest.helpers.get_mech_execution(T, mech_mode)
 
-        var = [0 for i in range(VECTOR_SIZE)]
-        val = EX(var)
-        assert np.allclose(val, [[5.0 for i in range(VECTOR_SIZE)]])
-        if benchmark.enabled:
-            benchmark(EX, var)
+        var = [1 for i in range(VECTOR_SIZE)]
+        EX(var)
+        val = benchmark(EX, var)
+        assert np.allclose(val, [[8.25 for i in range(VECTOR_SIZE)]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -203,18 +200,17 @@ class TestTransferMechanismNoise:
             name='T',
             default_variable=[0 for i in range(VECTOR_SIZE)],
             function=Linear(),
-            noise=[5.0 for i in range(VECTOR_SIZE)],
-            integration_rate=1.0,
+            noise=[5.0 + i for i in range(VECTOR_SIZE)],
+            integration_rate=0.3,
             integrator_mode=True
         )
         T.reset_stateful_function_when = Never()
         EX = pytest.helpers.get_mech_execution(T, mech_mode)
 
         var = [0 for i in range(VECTOR_SIZE)]
-        val = EX(var)
-        assert np.allclose(val, [[5.0 for i in range(VECTOR_SIZE)]])
-        if benchmark.enabled:
-            benchmark(EX, var)
+        EX(var)
+        val = benchmark(EX, var)
+        assert np.allclose(val, [[8.5 + (i * 1.7) for i in range(VECTOR_SIZE)]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -229,8 +225,8 @@ class TestTransferMechanismNoise:
                 integrator_mode=True
             )
             T.execute()
-        assert 'Noise parameter' in str(error_text.value) and "does not match default variable" in str(
-                error_text.value)
+        assert 'Noise parameter' in str(error_text.value)
+        assert "does not match default variable" in str(error_text.value)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -412,87 +408,33 @@ class TestTransferMechanismFunctions:
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism Logistic")
-    def test_transfer_mech_logistic_fun(self, benchmark, mech_mode):
+    @pytest.mark.parametrize("func,variables,expected",
+                             [
+                              # Operations on vector elements are independent so we only provide one value
+                              pytest.param(Logistic, [0], [0.5], id="Logistic"),
+                              pytest.param(ReLU, [0, 1, -1], [0., 1, 0.], id="ReLU"),
+                              pytest.param(Exponential, [0, 1, -1], [1., 2.71828183, 0.36787944], id="Exponential"),
+                              pytest.param(SoftMax, [0, 1, -1], [1. / VECTOR_SIZE, 1. / VECTOR_SIZE, 1. / VECTOR_SIZE], id="SoftMax"),
+                             ])
+    def test_transfer_mech_func(self, benchmark, func, variables, expected, mech_mode):
 
         T = TransferMechanism(
             name='T',
-            default_variable=[0 for i in range(VECTOR_SIZE)],
-            function=Logistic(),
+            default_variable=np.zeros(VECTOR_SIZE),
+            function=func,
             integration_rate=1.0,
             integrator_mode=True
         )
         EX = pytest.helpers.get_mech_execution(T, mech_mode)
 
-        var = [0 for i in range(VECTOR_SIZE)]
-        val = EX(var)
-        assert np.allclose(val, [[0.5 for i in range(VECTOR_SIZE)]])
-        if benchmark.enabled:
-            benchmark(EX, var)
+        vals = []
+        for var in variables[:-1]:
+            vals.append(EX([var] * VECTOR_SIZE))
+        vals.append(benchmark(EX, [variables[-1]] * VECTOR_SIZE))
 
-    @pytest.mark.mechanism
-    @pytest.mark.transfer_mechanism
-    @pytest.mark.benchmark(group="TransferMechanism ReLU")
-    def test_transfer_mech_relu_fun(self, benchmark, mech_mode):
-
-        T = TransferMechanism(
-            name='T',
-            default_variable=[0 for i in range(VECTOR_SIZE)],
-            function=ReLU(),
-            integration_rate=1.0,
-            integrator_mode=True
-        )
-        EX = pytest.helpers.get_mech_execution(T, mech_mode)
-
-        val1 = EX([0 for i in range(VECTOR_SIZE)])
-        val2 = EX([1 for i in range(VECTOR_SIZE)])
-        val3 = EX([-1 for i in range(VECTOR_SIZE)])
-
-        assert np.allclose(val1, [[0.0 for i in range(VECTOR_SIZE)]])
-        assert np.allclose(val2, [[1.0 for i in range(VECTOR_SIZE)]])
-        assert np.allclose(val3, [[0.0 for i in range(VECTOR_SIZE)]])
-
-        if benchmark.enabled:
-            benchmark(EX, [0 for i in range(VECTOR_SIZE)])
-
-    @pytest.mark.mechanism
-    @pytest.mark.transfer_mechanism
-    @pytest.mark.benchmark(group="TransferMechanism Exponential")
-    def test_transfer_mech_exponential_fun(self, benchmark, mech_mode):
-
-        T = TransferMechanism(
-            name='T',
-            default_variable=[0 for i in range(VECTOR_SIZE)],
-            function=Exponential(),
-            integration_rate=1.0,
-            integrator_mode=True
-        )
-        EX = pytest.helpers.get_mech_execution(T, mech_mode)
-
-        var = [0 for i in range(VECTOR_SIZE)]
-        val = EX(var)
-        assert np.allclose(val, [[1.0 for i in range(VECTOR_SIZE)]])
-        if benchmark.enabled:
-            benchmark(EX, var)
-
-    @pytest.mark.mechanism
-    @pytest.mark.transfer_mechanism
-    @pytest.mark.benchmark(group="TransferMechanism SoftMax")
-    def test_transfer_mech_softmax_fun(self, benchmark, mech_mode):
-
-        T = TransferMechanism(
-            name='T',
-            default_variable=[0 for i in range(VECTOR_SIZE)],
-            function=SoftMax(),
-            integration_rate=1.0,
-            integrator_mode=True
-        )
-        EX = pytest.helpers.get_mech_execution(T, mech_mode)
-
-        var = [0 for i in range(VECTOR_SIZE)]
-        val = EX(var)
-        assert np.allclose(val, [[1.0 / VECTOR_SIZE for i in range(VECTOR_SIZE)]])
-        if benchmark.enabled:
-            benchmark(EX, var)
+        assert len(vals) == len(expected)
+        for val, exp in zip(vals, expected):
+            assert np.allclose(val, [[exp]] * VECTOR_SIZE)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -577,10 +519,8 @@ class TestTransferMechanismIntegratorFunctionParams:
 
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
-        val = EX(var)
+        val = benchmark(EX, var)
         assert np.allclose(val, [[ 0., 0.19, 0.36, 0.51]])
-        if benchmark.enabled:
-            benchmark(EX, var)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -597,31 +537,30 @@ class TestTransferMechanismIntegratorFunctionParams:
 
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
-        val = EX(var)
+        val = benchmark(EX, var)
         assert np.allclose(val, [[ 0., 0.19, 0.36, 0.51]])
-        if benchmark.enabled:
-            benchmark(EX, var)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism Parameter Array Assignments")
     def test_transfer_mech_array_assignments_fct_over_mech_rate(self, benchmark, mech_mode):
 
-        T = TransferMechanism(
-                name='T',
-                default_variable=[0 for i in range(VECTOR_SIZE)],
-                integrator_mode=True,
-                integrator_function=AdaptiveIntegrator(rate=[i / 20 for i in range(VECTOR_SIZE)]),
-                integration_rate=[i / 10 for i in range(VECTOR_SIZE)]
-        )
+        with pytest.warns(UserWarning) as warnings:
+            T = TransferMechanism(
+                    name='T',
+                    default_variable=[0 for i in range(VECTOR_SIZE)],
+                    integrator_mode=True,
+                    integrator_function=AdaptiveIntegrator(rate=[i / 20 for i in range(VECTOR_SIZE)]),
+                    integration_rate=[i / 10 for i in range(VECTOR_SIZE)]
+            )
+            assert any(str(w.message).startswith('Specification of the "integration_rate" parameter')
+                       for w in warnings), "Warnings: {}".format([str(w.message) for w in warnings])
         EX = pytest.helpers.get_mech_execution(T, mech_mode)
 
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
-        val = EX(var)
+        val = benchmark(EX, var)
         assert np.allclose(val, [[ 0., 0.0975, 0.19, 0.2775]])
-        if benchmark.enabled:
-            benchmark(EX, var)
 
     def test_transfer_mech_array_assignments_wrong_size_mech_rate(self):
 
@@ -667,10 +606,8 @@ class TestTransferMechanismIntegratorFunctionParams:
 
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
-        val = EX(var)
+        val = benchmark(EX, var)
         assert np.allclose(val, [[ 0.75,  0.775,  0.8, 0.825]])
-        if benchmark.enabled:
-            benchmark(EX, var)
 
 
     @pytest.mark.mechanism
@@ -690,34 +627,35 @@ class TestTransferMechanismIntegratorFunctionParams:
 
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
-        val = EX(var)
+        val = benchmark(EX, var)
         assert np.allclose(val, [[ 0.75,  0.775,  0.8, 0.825]])
-        if benchmark.enabled:
-            benchmark(EX, var)
 
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism Parameter Array Assignments")
     def test_transfer_mech_array_assignments_fct_initlzr_over_mech_init_val(self, benchmark, mech_mode):
-        T = TransferMechanism(
-            name='T',
-            default_variable=[0 for i in range(VECTOR_SIZE)],
-            integrator_mode=True,
-            integrator_function=AdaptiveIntegrator(
-                    default_variable=[0 for i in range(VECTOR_SIZE)],
-                    initializer=[i / 10 for i in range(VECTOR_SIZE)]
-            ),
-            initial_value=[i / 10 for i in range(VECTOR_SIZE)]
-        )
-        EX = pytest.helpers.get_mech_execution(T, mech_mode)
+        with pytest.warns(UserWarning) as warnings:
+            T = TransferMechanism(
+                name='T',
+                default_variable=[0 for i in range(VECTOR_SIZE)],
+                integrator_mode=True,
+                integrator_function=AdaptiveIntegrator(
+                        default_variable=[0 for i in range(VECTOR_SIZE)],
+                        initializer=[i / 10 for i in range(VECTOR_SIZE)]
+                ),
+                initial_value=[i / 10 for i in range(VECTOR_SIZE)]
+            )
+            assert any(str(w.message).startswith('Specification of the "initial_value" parameter')
+                       for w in warnings), "Warnings: {}".format([str(w.message) for w in warnings])
 
+        EX = pytest.helpers.get_mech_execution(T, mech_mode)
         var = [1 for i in range(VECTOR_SIZE)]
+
         EX(var)
-        val = EX(var)
+        val = benchmark(EX, var)
         assert np.allclose(val, [[ 0.75,  0.775,  0.8, 0.825]])
-        if benchmark.enabled:
-            benchmark(EX, var)
+
 
     def test_transfer_mech_array_assignments_wrong_size_mech_init_val(self):
 
@@ -806,10 +744,9 @@ class TestTransferMechanismIntegratorFunctionParams:
 
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
-        val = EX(var)
+        val = benchmark(EX, var)
         assert np.allclose(val, [[ 0.75, 0.9, 1.05, 1.2 ]])
-        if benchmark.enabled:
-            benchmark(EX, var)
+
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -827,10 +764,9 @@ class TestTransferMechanismIntegratorFunctionParams:
 
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
-        val = EX(var)
+        val = benchmark(EX, var)
         assert np.allclose(val, [[ 0.75, 0.9, 1.05, 1.2 ]])
-        if benchmark.enabled:
-            benchmark(EX, var)
+
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -838,21 +774,24 @@ class TestTransferMechanismIntegratorFunctionParams:
     # FIXME: Incorrect T.integrator_function.defaults.variable reported
     def test_transfer_mech_array_assignments_fct_over_mech_noise(self, benchmark, mech_mode):
 
-        T = TransferMechanism(
-                name='T',
-                default_variable=[0 for i in range(VECTOR_SIZE)],
-                integrator_mode=True,
-                integrator_function=AdaptiveIntegrator(noise=[i / 20 for i in range(VECTOR_SIZE)]),
-                noise=[i / 10 for i in range(VECTOR_SIZE)]
-        )
-        EX = pytest.helpers.get_mech_execution(T, mech_mode)
+        with pytest.warns(UserWarning) as warnings:
+            T = TransferMechanism(
+                    name='T',
+                    default_variable=[0 for i in range(VECTOR_SIZE)],
+                    integrator_mode=True,
+                    integrator_function=AdaptiveIntegrator(noise=[i / 20 for i in range(VECTOR_SIZE)]),
+                    noise=[i / 10 for i in range(VECTOR_SIZE)]
+            )
+            assert any(str(w.message).startswith('Specification of the "noise" parameter')
+                       for w in warnings), "Warnings: {}".format([str(w.message) for w in warnings])
 
+        EX = pytest.helpers.get_mech_execution(T, mech_mode)
         var = [1 for i in range(VECTOR_SIZE)]
+
         EX(var)
-        val = EX(var)
+        val = benchmark(EX, var)
         assert np.allclose(val, [[ 0.75, 0.825, 0.9, 0.975]])
-        if benchmark.enabled:
-            benchmark(EX, var)
+
 
     # def test_transfer_mech_array_assignments_wrong_size_mech_noise(self, benchmark, mode):
     def test_transfer_mech_array_assignments_wrong_size_mech_noise(self):
@@ -903,14 +842,11 @@ class TestTransferMechanismTimeConstant:
         )
         EX = pytest.helpers.get_mech_execution(T, mech_mode)
 
-        val1 = T.execute([1 for i in range(VECTOR_SIZE)])
-        val2 = T.execute([1 for i in range(VECTOR_SIZE)])
+        val1 = EX([1 for i in range(VECTOR_SIZE)])
+        val2 = benchmark(EX, [1 for i in range(VECTOR_SIZE)])
 
         assert np.allclose(val1, [[0.8 for i in range(VECTOR_SIZE)]])
         assert np.allclose(val2, [[0.96 for i in range(VECTOR_SIZE)]])
-
-        if benchmark.enabled:
-            benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -1430,6 +1366,7 @@ class TestIntegratorMode:
         # linear fn: 0.595*1.0 = 0.595
         assert np.allclose(T.integrator_function.previous_value, 0.595)
 
+    @pytest.mark.composition
     def test_previous_value_persistence_run(self):
         T = TransferMechanism(name="T",
                               initial_value=0.5,
@@ -1497,6 +1434,7 @@ class TestIntegratorMode:
         assert np.allclose(T.integrator_function.previous_value, 0.46)  # property that looks at integrator, which updated with mech exec
         assert np.allclose(T.value, 0.46)  # on mechanism, but updates with exec
 
+    @pytest.mark.composition
     def test_reset_run(self):
         T = TransferMechanism(name="T",
                               initial_value=0.5,
@@ -1537,6 +1475,7 @@ class TestIntegratorMode:
         # linear fn: 0.595*1.0 = 0.595
         assert np.allclose(T.integrator_function.parameters.previous_value.get(C), 0.595)
 
+    @pytest.mark.composition
     def test_reset_run_array(self):
         T = TransferMechanism(name="T",
                               default_variable=[0.0, 0.0, 0.0],
@@ -1577,6 +1516,7 @@ class TestIntegratorMode:
         # linear fn: 0.595*1.0 = 0.595
         assert np.allclose(T.integrator_function.parameters.previous_value.get(C), [0.595, 0.595, 0.595])
 
+    @pytest.mark.composition
     def test_reset_run_2darray(self):
 
         initial_val = [[0.5, 0.5, 0.5]]
@@ -1629,6 +1569,7 @@ class TestIntegratorMode:
         assert "not allowed because its `integrator_mode` parameter" in str(err_txt.value)
         assert "is currently set to \'False\'; try setting it to \'True\'" in str(err_txt.value)
 
+    @pytest.mark.composition
     def test_switch_mode(self):
         T = TransferMechanism(integrator_mode=True,
                               on_resume_integrator_mode=LAST_INTEGRATED_VALUE)
@@ -1659,6 +1600,7 @@ class TestIntegratorMode:
         C.run({T: [[1.0], [1.0], [1.0]]})
         assert np.allclose(T.parameters.value.get(C), [[0.984375]])
 
+    @pytest.mark.composition
     def test_initial_values_softmax(self):
         T = TransferMechanism(default_variable=[[0.0, 0.0], [0.0, 0.0]],
                               function=SoftMax(),
@@ -1695,6 +1637,7 @@ class TestIntegratorMode:
         T.execute(1)
 
 
+@pytest.mark.composition
 class TestOnResumeIntegratorMode:
 
     def test_last_integrated_value_spec(self):
@@ -1777,7 +1720,6 @@ class TestOnResumeIntegratorMode:
         # Trial 1: 0.5*0.5 + 0.5*2.0 = 1.25 * 1.0 = 1.25
         assert np.allclose(T.parameters.value.get(C), [[1.25]])
 
-    @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism")
     # 'LLVM' mode is not supported, because synchronization of compiler and
