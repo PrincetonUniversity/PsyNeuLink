@@ -44,14 +44,18 @@ runs:
     - name: Drop pytorch on x86
       shell: bash
       run: |
+        echo > env_constraints.txt
         if [ $(python -c 'import struct; print(struct.calcsize("P") * 8)') == 32 ]; then
           sed -i /torch/d requirements.txt
           sed -i /modeci_mdf/d requirements.txt
           # pywinpty is a transitive dependency and v1.0+ removed support for x86 wheels
-          # terminado >= 0.10.0 pulls in pywinpty >= 1.1.0
+          echo "pywinpty<1" >> env_constraints.txt
+          # jupyter_sever pulls jupyter_server_terminals which depends on in pywinpty >= 2.0.3
+          echo "jupyter_server<2" >> env_constraints.txt
           # scipy >=1.9.2 doesn't provide win32 wheel and GA doesn't have working fortran on windows
+          echo "scipy<1.9.2" >> env_constraints.txt
           # scikit-learn >= 1.1.3 doesn't provide win32 wheel
-          [[ ${{ runner.os }} = Windows* ]] && pip install "pywinpty<1" "terminado<0.10" "scipy<1.9.2" "scikit-learn<1.1.3" "statsmodels<0.13.3" "jupyter-server<2" -c requirements.txt
+          echo "scikit-learn<1.1.3" >> env_constraints.txt
         fi
 
     - name: Install updated package
@@ -66,7 +70,7 @@ runs:
           echo "new_package=$NEW_PACKAGE" >> $GITHUB_OUTPUT
           # save a list of all installed packages (including pip, wheel; it's never empty)
           pip freeze --all > orig
-          pip install "$(echo $NEW_PACKAGE | sed 's/[-_]/./g' | xargs grep *requirements.txt -h -e | head -n1)"
+          pip install "$(echo $NEW_PACKAGE | sed 's/[-_]/./g' | xargs grep *requirements.txt -h -e | head -n1)" -c env_constraints.txt
           pip show "$NEW_PACKAGE" | grep 'Version' | tee new_version.deps
           # uninstall new packages but skip those from previous steps (pywinpty, terminado on windows x86)
           # the 'orig' list is not empty (includes at least pip, wheel)
@@ -78,7 +82,7 @@ runs:
     - name: Python dependencies
       shell: bash
       run: |
-        pip install -e .[${{ inputs.features }}]
+        pip install -e .[${{ inputs.features }}] -c env_constraints.txt
 
     - name: "Cleanup old wheels"
       shell: bash
