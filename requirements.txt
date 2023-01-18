@@ -16,6 +16,6 @@ toposort<1.10
 torch>=1.8.0, <1.14.0; (platform_machine == 'AMD64' or platform_machine == 'x86_64') and platform_python_implementation == 'CPython' and implementation_name == 'cpython'
 typecheck-decorator<=1.2
 leabra-psyneulink<=0.3.2
-rich>=10.1, <10.13
+rich>=10.1, <13.2
 pandas<1.5.3
 fastkde>=1.0.19, <1.0.21
