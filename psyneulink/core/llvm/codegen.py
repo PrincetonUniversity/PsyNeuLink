@@ -623,17 +623,26 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
     elif not is_mech:
         node_in = builder.alloca(node_function.args[2].type.pointee,
                                  name="composition_node_input")
-        incoming_projections = node.input_CIM.afferents + node.parameter_CIM.afferents
+        incoming_projections = node.parameter_CIM.afferents
+        if "reset" not in tags:
+            incoming_projections += node.input_CIM.afferents
     else:
         # this path also handles parameter_CIM with no afferent
         # projections. 'comp_in' does not include any extra values,
         # and the entire call should be optimized out.
         node_in = builder.alloca(node_function.args[2].type.pointee,
                                  name="mechanism_node_input")
-        incoming_projections = node.afferents
+        incoming_projections = node.mod_afferents if "reset" in tags else node.afferents
 
-    if "reset" in tags or "is_finished" in tags:
+    # Checking if node is finished doesn't need projections
+    # FIXME: Can the values used in the check be modulated?
+    if "is_finished" in tags:
         incoming_projections = []
+
+    if "reset" in tags:
+        proj_func_tags = func_tags.difference({"reset"}).union({"passthrough"})
+    else:
+        proj_func_tags = func_tags
 
     # Execute all incoming projections
     inner_projections = list(composition._inner_projections)
@@ -650,18 +659,18 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
             continue
 
         # Get location of projection input data
-        par_mech = proj.sender.owner
-        if par_mech in composition._all_nodes:
-            parent_idx = composition._get_node_index(par_mech)
+        send_mech = proj.sender.owner
+        if send_mech in composition._all_nodes:
+            send_node_idx = composition._get_node_index(send_mech)
         else:
-            assert par_mech is par_mech.composition.output_CIM
-            parent_idx = composition.nodes.index(par_mech.composition)
+            assert send_mech is send_mech.composition.output_CIM
+            send_node_idx = composition.nodes.index(send_mech.composition)
 
-        assert proj.sender in par_mech.output_ports
-        output_port_idx = par_mech.output_ports.index(proj.sender)
+        assert proj.sender in send_mech.output_ports
+        output_port_idx = send_mech.output_ports.index(proj.sender)
         proj_in = builder.gep(data_in, [ctx.int32_ty(0),
                                         ctx.int32_ty(0),
-                                        ctx.int32_ty(parent_idx),
+                                        ctx.int32_ty(send_node_idx),
                                         ctx.int32_ty(output_port_idx)])
 
         # Get location of projection output (in mechanism's input structure)
@@ -700,7 +709,7 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
         proj_idx = inner_projections.index(proj)
         proj_params = builder.gep(projections_params, [zero, ctx.int32_ty(proj_idx)])
         proj_state = builder.gep(projections_states, [zero, ctx.int32_ty(proj_idx)])
-        proj_function = ctx.import_llvm_function(proj, tags=func_tags)
+        proj_function = ctx.import_llvm_function(proj, tags=proj_func_tags)
 
         if proj_out.type != proj_function.args[3].type:
             warnings.warn("Shape mismatch: Projection ({}) results does not match the receiver state({}) input: {} vs. {}".format(proj, proj.receiver, proj.defaults.value, proj.receiver.defaults.variable))

@@ -2499,6 +2499,84 @@ class TestControlMechanisms:
         else:
             assert False, "Unknown PRNG!"
 
+    @pytest.mark.control
+    @pytest.mark.composition
+    # test only OCM modes. we check "saved_values" which are not available in e2e compolation
+    # FIXME: skip Python since direct ocm modulation of initlizers is not implemetned yet
+    @pytest.mark.parametrize('ocm_mode', [pytest.param('Python', marks=pytest.mark.skip),
+                                          pytest.param('LLVM', marks=pytest.mark.llvm),
+                                          pytest.helpers.cuda_param('PTX')])
+    def test_modulation_of_initializer(self, ocm_mode):
+        ddm = pnl.DDM(function=pnl.DriftDiffusionIntegrator(threshold=10,
+                                                            time_step_size=1,
+                                                            non_decision_time=0.6))
+
+        obj = pnl.ObjectiveMechanism(monitor=ddm.output_ports[pnl.RESPONSE_TIME])
+        comp = pnl.Composition(retain_old_simulation_data=True,
+                               controller_mode=pnl.BEFORE)
+        comp.add_node(ddm, required_roles=pnl.NodeRole.INPUT)
+        comp.add_node(obj)
+
+        comp.add_controller(
+            pnl.OptimizationControlMechanism(
+                agent_rep=comp,
+                objective_mechanism=obj,
+                control_signals=pnl.ControlSignal(
+                    modulates=(pnl.NON_DECISION_TIME, ddm),
+                    modulation=pnl.OVERRIDE,
+                    allocation_samples=[0.1, 0.2, 0.3, 0.4, 0.5],
+                )
+            )
+        )
+        comp.controller.function.save_values = True
+        comp.controller.comp_execution_mode = ocm_mode
+
+        comp.run(inputs={ddm: [2]},
+                 num_trials=1)
+
+        assert np.allclose(comp.controller.function.saved_values, [5.1, 5.2, 5.3, 5.4, 5.5])
+
+    @pytest.mark.control
+    @pytest.mark.composition
+    # test only OCM modes. we check "saved_values" which are not available in e2e compolation
+    # FIXME: skip Python since direct ocm modulation of initlizers is not implemetned yet
+    @pytest.mark.parametrize('ocm_mode', [pytest.param('Python', marks=pytest.mark.skip),
+                                          pytest.param('LLVM', marks=pytest.mark.llvm),
+                                          pytest.helpers.cuda_param('PTX')])
+    def test_modulation_of_initializer_nested(self, ocm_mode):
+        ddm = pnl.DDM(function=pnl.DriftDiffusionIntegrator(threshold=10,
+                                                            time_step_size=1,
+                                                            non_decision_time=0.6))
+
+        obj = pnl.ObjectiveMechanism(monitor=ddm.output_ports[pnl.RESPONSE_TIME])
+
+        inner_comp = pnl.Composition(name="Inner comp")
+        inner_comp.add_node(ddm, required_roles=pnl.NodeRole.INPUT)
+
+
+        outer_comp = pnl.Composition(retain_old_simulation_data=True,
+                                     controller_mode=pnl.BEFORE)
+
+        outer_comp.add_node(inner_comp, required_roles=pnl.NodeRole.INPUT)
+        outer_comp.add_controller(
+            pnl.OptimizationControlMechanism(
+                agent_rep=outer_comp,
+                objective_mechanism=obj,
+                control_signals=pnl.ControlSignal(
+                    modulates=(pnl.NON_DECISION_TIME, ddm),
+                    modulation=pnl.OVERRIDE,
+                    allocation_samples=[0.1, 0.2, 0.3, 0.4, 0.5],
+                )
+            )
+        )
+        outer_comp.controller.function.save_values = True
+        outer_comp.controller.comp_execution_mode = ocm_mode
+
+        outer_comp.run(inputs={inner_comp: [2]},
+                       num_trials=1)
+
+        assert np.allclose(outer_comp.controller.function.saved_values, [5.1, 5.2, 5.3, 5.4, 5.5])
+
     @pytest.mark.benchmark
     @pytest.mark.control
     @pytest.mark.composition

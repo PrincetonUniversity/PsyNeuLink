@@ -3146,13 +3146,18 @@ class Mechanism_Base(Mechanism):
                                                         arg_out])
         return builder, is_finished_cond
 
-    def _gen_llvm_function_reset(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+    def _gen_llvm_function_reset(self, ctx, builder, m_base_params, m_state, m_arg_in, m_arg_out, *, tags:frozenset):
         assert "reset" in tags
+
         reinit_func = ctx.import_llvm_function(self.function, tags=tags)
-        reinit_params = pnlvm.helpers.get_param_ptr(builder, self, params, "function")
-        reinit_state = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
         reinit_in = builder.alloca(reinit_func.args[2].type.pointee, name="reinit_in")
         reinit_out = builder.alloca(reinit_func.args[3].type.pointee, name="reinit_out")
+
+        reinit_base_params = pnlvm.helpers.get_param_ptr(builder, self, m_base_params, "function")
+        reinit_params, builder = self._gen_llvm_param_ports_for_obj(
+                self.function, reinit_base_params, ctx, builder, m_base_params, m_state, m_arg_in)
+        reinit_state = pnlvm.helpers.get_state_ptr(builder, self, m_state, "function")
+
         builder.call(reinit_func, [reinit_params, reinit_state, reinit_in,
                                    reinit_out])
 
