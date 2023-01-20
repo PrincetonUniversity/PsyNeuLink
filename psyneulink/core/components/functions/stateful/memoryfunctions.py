@@ -1815,6 +1815,18 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
         return memories
 
+    def store(self, entry, context=None, **kwargs):
+        """Store value in `memory <ContentAddressableMemory.memory>`.
+        Convenience method for storing entry in memory.
+        """
+        return self(entry, retrieval_prob=0.0, context=context, **kwargs)
+
+    def retrieve(self, entry, context=None, **kwargs):
+        """Retrieve value from `memory <ContentAddressableMemory.memory>`.
+        Convenience method for retrieving entry from memory.
+        """
+        return self(entry, storage_prob=0.0, context=context, **kwargs)
+
     @property
     def memory(self):
         """Return entries in self._memory as lists in an outer np.array;

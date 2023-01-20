@@ -1,8 +1,10 @@
+import contextlib
 import doctest
+import io
+import numpy as np
 import psyneulink
 import pytest
-import numpy as np
-
+import re
 
 from psyneulink import clear_registry, primary_registries
 from psyneulink.core import llvm as pnlvm
@@ -75,7 +77,8 @@ def pytest_generate_tests(metafunc):
 
     if "autodiff_mode" in metafunc.fixturenames:
         auto_modes = [
-            pnlvm.ExecutionMode.Python,
+            # pnlvm.ExecutionMode.Python,
+            pnlvm.ExecutionMode.PyTorch,
             pytest.param(pnlvm.ExecutionMode.LLVMRun, marks=pytest.mark.llvm)
         ]
         metafunc.parametrize("autodiff_mode", auto_modes)
@@ -163,6 +166,7 @@ def llvm_current_fp_precision():
 @pytest.helpers.register
 def get_comp_execution_modes():
     return [pytest.param(pnlvm.ExecutionMode.Python),
+            # pytest.param(pnlvm.ExecutionMode.PyTorch, marks=pytest.mark.pytorch),
             pytest.param(pnlvm.ExecutionMode.LLVM, marks=pytest.mark.llvm),
             pytest.param(pnlvm.ExecutionMode.LLVMExec, marks=pytest.mark.llvm),
             pytest.param(pnlvm.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
@@ -198,6 +202,14 @@ def get_mech_execution(mech, mech_mode):
         return mech_wrapper
     else:
         assert False, "Unknown mechanism mode: {}".format(mech_mode)
+
+@pytest.helpers.register
+def numpy_uses_avx512():
+    out = io.StringIO()
+    with contextlib.redirect_stdout(out):
+        np.show_config()
+
+    return re.search('  found = .*AVX512.*', out.getvalue()) is not None
 
 @pytest.helpers.register
 def expand_np_ndarray(arr):

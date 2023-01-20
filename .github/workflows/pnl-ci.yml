@@ -11,6 +11,11 @@ on:
       - 'v**'
   pull_request:
 
+env:
+  SELF_HOSTED_MACOS: ${{ secrets.SELF_HOSTED_MACOS }}
+  SELF_HOSTED_LINUX: ${{ secrets.SELF_HOSTED_LINUX }}
+  SELF_HOSTED_WINDOWS: ${{ secrets.SELF_HOSTED_WINDOWS }}
+
 # run only the latest instance of this workflow job for the current branch/PR
 # cancel older runs
 # fall back to run id if not available (run id is unique -> no cancellations)
@@ -19,15 +24,47 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # A job to select self-hosted runner if requested by an env var
+  select-runner:
+    runs-on: ubuntu-latest
+
+    outputs:
+      self_hosted_macos: ${{ steps.is_self_hosted.outputs.macos && 'macos' || '' }}
+      self_hosted_linux: ${{ steps.is_self_hosted.outputs.linux && 'linux' || '' }}
+      self_hosted_windows: ${{ steps.is_self_hosted.outputs.windows && 'windows' || '' }}
+
+    steps:
+    - name: Add macos
+      id: is_self_hosted
+      run: |
+        echo "macos=$SELF_HOSTED_MACOS" | tee -a $GITHUB_OUTPUT
+        echo "linux=$SELF_HOSTED_LINUX" | tee -a $GITHUB_OUTPUT
+        echo "windows=$SELF_HOSTED_WINDOWS" | tee -a $GITHUB_OUTPUT
+
+  # the main build job
   build:
-    runs-on: ${{ matrix.os }}
+    needs: select-runner
+    runs-on: ${{ (contains(needs.select-runner.outputs.*, matrix.os) && fromJSON(format('[ "self-hosted","{0}", "X64" ]', matrix.os))) || format('{0}-latest', matrix.os) }}
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.9]
+        python-version: [3.7, 3.8, 3.9]
         python-architecture: ['x64']
         extra-args: ['']
-        os: [m1-mini]
+        os: [ubuntu, macos, windows]
+        include:
+          # add 32-bit build on windows
+          - python-version: 3.8
+            python-architecture: 'x86'
+            os: windows
+          # code-coverage build on macos python 3.9
+          - python-version: 3.9
+            os: macos
+            extra-args: '--cov=psyneulink'
+        exclude:
+          # 3.7 is broken on macos-11, https://github.com/actions/virtual-environments/issues/4230
+          - python-version: 3.7
+            os: macos
 
     steps:
     # increased fetch-depth and tag checkout needed to get correct

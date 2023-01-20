@@ -438,21 +438,10 @@ def iscompatible(candidate, reference=None, **kargs):
     # If the two are equal, can settle it right here
     # IMPLEMENTATION NOTE: remove the duck typing when numpy supports a direct comparison of iterables
     try:
-        with warnings.catch_warnings():
-            warnings.simplefilter(action='ignore', category=FutureWarning)
-            # np.array(...).size > 0 checks for empty list. Everything else create single element (dtype=obejct) array
-            if reference is not None and np.array(candidate, dtype=object).size > 0 and (candidate == reference):
-                return True
-            # if reference is not None:
-            #     if (isinstance(reference, (bool, int, float))
-            #             and isinstance(candidate, (bool, int, float))
-            #             and candidate == reference):
-            #         return True
-            #     elif (isinstance(reference, (list, np.ndarray))
-            #           and isinstance(candidate, (list, np.ndarray)) and (candidate == reference).all()):
-            #         return True
-            #     elif is_iterable(reference) and is_iterable(candidate) and (candidate == reference):
-            #         return True
+        if (reference is not None and np.array(candidate, dtype=object).size > 0
+                and safe_equals(candidate, reference)):
+            return True
+
     except ValueError:
         # raise UtilitiesError("Could not compare {0} and {1}".format(candidate, reference))
         # IMPLEMENTATION NOTE: np.array generates the following error:
@@ -1653,7 +1642,6 @@ def safe_len(arr, fallback=1):
     except TypeError:
         return fallback
 
-
 def safe_equals(x, y):
     """
         An == comparison that handles numpy's new behavior of returning
@@ -1670,14 +1658,25 @@ def safe_equals(x, y):
         except (ValueError, DeprecationWarning, FutureWarning):
             try:
                 return np.array_equal(x, y)
-            except DeprecationWarning:
+            except (DeprecationWarning, FutureWarning):
+                # both should have len because non-len objects would not
+                # have triggered the warnings on == or array_equal
                 len_x = len(x)
-                return (
-                    len_x == len(y)
-                    and all([
-                        safe_equals(x[i], y[i]) for i in range(len_x)
-                    ])
-                )
+                if len_x != len(y):
+                    return False
+
+                if hasattr(x, 'keys') and hasattr(y, 'keys'):
+                    # dictionary-like
+                    if x.keys() != y.keys():
+                        return False
+                    subelements = x.keys()
+                elif hasattr(x, 'keys') or hasattr(y, 'keys'):
+                    return False
+                else:
+                    # list-like
+                    subelements = range(len_x)
+
+                return all([safe_equals(x[i], y[i]) for i in subelements])
 
 
 @tc.typecheck
