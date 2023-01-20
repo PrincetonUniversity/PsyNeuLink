@@ -2501,8 +2501,8 @@ class TestControlMechanisms:
 
     @pytest.mark.control
     @pytest.mark.composition
-    # test only OCM modes. we check "saved_values" which are not available in e2e compolation
-    # FIXME: skip Python since direct ocm modulation of initlizers is not implemetned yet
+    # test only OCM modes. we check "saved_values" which are not available in e2e compilation
+    # FIXME: skip Python since direct ocm modulation of initializers is not implemented yet
     @pytest.mark.parametrize('ocm_mode', [pytest.param('Python', marks=pytest.mark.skip),
                                           pytest.param('LLVM', marks=pytest.mark.llvm),
                                           pytest.helpers.cuda_param('PTX')])
@@ -2538,8 +2538,8 @@ class TestControlMechanisms:
 
     @pytest.mark.control
     @pytest.mark.composition
-    # test only OCM modes. we check "saved_values" which are not available in e2e compolation
-    # FIXME: skip Python since direct ocm modulation of initlizers is not implemetned yet
+    # test only OCM modes. we check "saved_values" which are not available in e2e compilation
+    # FIXME: skip Python since direct ocm modulation of initializers is not implemented yet
     @pytest.mark.parametrize('ocm_mode', [pytest.param('Python', marks=pytest.mark.skip),
                                           pytest.param('LLVM', marks=pytest.mark.llvm),
                                           pytest.helpers.cuda_param('PTX')])
