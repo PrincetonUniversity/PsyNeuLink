@@ -92,9 +92,7 @@ def test_simplified_greedy_agent_random(benchmark, comp_mode):
 
 @pytest.mark.model
 @pytest.mark.benchmark(group="Predator Prey")
-@pytest.mark.parametrize("mode", pytest.helpers.get_comp_execution_modes() +
-                                 [pytest.helpers.cuda_param('Python-PTX'),
-                                  pytest.param('Python-LLVM', marks=pytest.mark.llvm)])
+@pytest.mark.parametrize("mode, ocm_mode", pytest.helpers.get_comp_and_ocm_execution_modes())
 @pytest.mark.parametrize("samples", [[0,10],
     pytest.param([0,3,6,10], marks=pytest.mark.stress),
     pytest.param([0,2,4,6,8,10], marks=pytest.mark.stress),
@@ -102,18 +100,12 @@ def test_simplified_greedy_agent_random(benchmark, comp_mode):
 ], ids=lambda x: len(x))
 @pytest.mark.parametrize('prng', ['Default', 'Philox'])
 @pytest.mark.parametrize('fp_type', [pnl.core.llvm.ir.DoubleType, pnl.core.llvm.ir.FloatType])
-def test_predator_prey(benchmark, mode, prng, samples, fp_type):
+def test_predator_prey(benchmark, mode, ocm_mode, prng, samples, fp_type):
     if len(samples) > 10 and mode not in {pnl.ExecutionMode.LLVM,
                                           pnl.ExecutionMode.LLVMExec,
-                                          pnl.ExecutionMode.LLVMRun,
-                                          "Python-PTX", "Python-LLVM"}:
+                                          pnl.ExecutionMode.LLVMRun} and \
+       ocm_mode not in {'LLVM', 'PTX'}:
         pytest.skip("This test takes too long")
-    if str(mode).startswith('Python-'):
-        ocm_mode = mode.split('-')[1]
-        mode = pnl.ExecutionMode.Python
-    else:
-        # OCM default mode is Python
-        ocm_mode = 'Python'
 
     # Instantiate LLVMBuilderContext using the preferred fp type
     pnl.core.llvm.builder_context.LLVMBuilderContext(fp_type())
