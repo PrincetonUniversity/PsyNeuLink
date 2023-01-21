@@ -166,13 +166,22 @@ def llvm_current_fp_precision():
 @pytest.helpers.register
 def get_comp_execution_modes():
     return [pytest.param(pnlvm.ExecutionMode.Python),
-            # pytest.param(pnlvm.ExecutionMode.PyTorch, marks=pytest.mark.pytorch),
             pytest.param(pnlvm.ExecutionMode.LLVM, marks=pytest.mark.llvm),
             pytest.param(pnlvm.ExecutionMode.LLVMExec, marks=pytest.mark.llvm),
             pytest.param(pnlvm.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
             pytest.param(pnlvm.ExecutionMode.PTXExec, marks=[pytest.mark.llvm, pytest.mark.cuda]),
             pytest.param(pnlvm.ExecutionMode.PTXRun, marks=[pytest.mark.llvm,  pytest.mark.cuda])
            ]
+
+@pytest.helpers.register
+def get_comp_and_ocm_execution_modes():
+
+    # The first part converts composition execution mode to (comp_mod, ocm_mode) pair.
+    # All comp_mode-s other than Python set ocm_mode to None, which is invalid and will
+    # fail assertion if executed in Python mode, ExecutionMode.Python sets ocm_mode to 'Python'.
+    return [pytest.param(x.values[0], 'Python' if x.values[0] is pnlvm.ExecutionMode.Python else 'None', id=str(x.values[0]), marks=x.marks) for x in get_comp_execution_modes()] + \
+           [pytest.param(pnlvm.ExecutionMode.Python, 'LLVM', id='Python-LLVM', marks=pytest.mark.llvm),
+            pytest.param(pnlvm.ExecutionMode.Python, 'PTX', id='Python-PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])]
 
 @pytest.helpers.register
 def cuda_param(val):
