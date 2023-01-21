@@ -3495,6 +3495,12 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
             read_only=True
         )
 
+        def _parse_initializer(self, initializer):
+            if initializer.ndim > 1:
+                return np.atleast_1d(initializer.squeeze())
+            else:
+                return initializer
+
     @check_user_specified
     @tc.typecheck
     def __init__(
@@ -3537,6 +3543,9 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
             raise FunctionError(
                 "Invalid noise parameter for {}. OrnsteinUhlenbeckIntegrator requires noise parameter to be a float. "
                 "Noise parameter is used to construct the standard DDM noise distribution".format(self.name))
+
+    def _initialize_previous_value(self, initializer, context=None):
+        return super()._initialize_previous_value(self.parameters._parse_initializer(initializer), context)
 
     def _function(self,
                  variable=None,
