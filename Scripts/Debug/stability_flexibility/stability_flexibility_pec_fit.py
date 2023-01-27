@@ -5,7 +5,7 @@ import psyneulink as pnl
 import pandas as pd
 
 from psyneulink.core.globals.utilities import set_global_seed
-from psyneulink.core.components.functions.fitfunctions import MaxLikelihoodEstimator
+from psyneulink.core.components.functions.nonstateful.fitfunctions import MaxLikelihoodEstimator
 
 sys.path.append(".")
 
@@ -102,11 +102,14 @@ pec = pnl.ParameterEstimationComposition(
 pec.controller.parameters.comp_execution_mode.set("LLVM")
 pec.controller.function.parameters.save_values.set(True)
 
-# ll, sim_data = pec.log_likelihood(0.3, 0.6, inputs=inputs_dict)
-
 print("Running the PEC")
-# ret = pec.run(inputs=outer_comp_inputs, num_trials=len(cueTrain))
 ret = pec.run(inputs=inputs, num_trials=len(cueTrain))
+optimal_parameters = pec.controller.optimal_parameters
 
-# Check that the parameters are recovered and that the log-likelihood is correct
-# assert np.allclose(pec.controller.optimal_parameters, [0.3, 0.6], atol=0.1)
+# Print the recovered parameters.
+records = []
+for (name, mech), recovered_param in zip(fit_parameters.keys(), optimal_parameters):
+    percent_error = 100.0 * (abs(sf_params[name] - recovered_param) / sf_params[name])
+    records.append((name, mech.name, sf_params[name], recovered_param, percent_error))
+df = pd.DataFrame(records, columns=['Parameter', 'Component', 'Value', 'Recovered Value', 'Percent Error'])
+print(df)
