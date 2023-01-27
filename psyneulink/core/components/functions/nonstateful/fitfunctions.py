@@ -37,7 +37,7 @@ def get_param_str(params):
     The string version of the parameter dict
 
     """
-    return ", ".join(f"{name}={value:.5f}" for name, value in params.items())
+    return ", ".join(f"{name.replace('PARAMETER_CIM_', '')}={value:.5f}" for name, value in params.items())
 
 
 class BadLikelihoodWarning(UserWarning):
