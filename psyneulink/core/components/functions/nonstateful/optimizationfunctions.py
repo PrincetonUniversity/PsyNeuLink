@@ -1189,6 +1189,8 @@ class GradientOptimization(OptimizationFunction):
 
         if self.owner:
             owner_str = ' of {self.owner.name}'
+        else:
+            owner_str = ''
 
         # Get bounds from search_space if it has any non-None entries
         if any(i is not None for i in self.search_space):
