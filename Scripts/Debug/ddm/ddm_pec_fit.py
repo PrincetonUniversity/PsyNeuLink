@@ -103,8 +103,6 @@ assert np.allclose(
     atol=0.1,
 )
 
-
-#%%
 records = []
 for (name, mech), recovered_param in zip(fit_parameters.keys(), optimal_parameters):
     percent_error = 100.0 * (abs(ddm_params[name] - recovered_param) / ddm_params[name])
