@@ -12,9 +12,9 @@ np.random.seed(seed)
 set_global_seed(seed)
 
 # High-level parameters the impact performance of the test
-num_trials = 25
+num_trials = 50
 time_step_size = 0.01
-num_estimates = 40
+num_estimates = 40000
 
 ddm_params = dict(
     starting_value=0.0,
@@ -75,6 +75,7 @@ fit_parameters = {
     ('non_decision_time', decision): np.linspace(0.0, 1.0, 1000),
 }
 
+#%%
 pec = pnl.ParameterEstimationComposition(
     name="pec",
     nodes=[comp],
@@ -89,14 +90,24 @@ pec = pnl.ParameterEstimationComposition(
     num_trials_per_estimate=len(trial_inputs),
 )
 
-# pec.controller.parameters.comp_execution_mode.set("LLVM")
+pec.controller.parameters.comp_execution_mode.set("LLVM")
 pec.controller.function.parameters.save_values.set(True)
 ret = pec.run(inputs={comp: trial_inputs}, num_trials=len(trial_inputs))
+optimal_parameters = pec.controller.optimal_parameters
 
 # Check that the parameters are recovered and that the log-likelihood is correct, set the tolerance pretty high,
 # things are noisy because of the low number of trials and estimates.
 assert np.allclose(
-    pec.controller.optimal_parameters,
-    [ddm_params["rate"], ddm_params["threshold"]],
+    optimal_parameters,
+    [ddm_params["rate"], ddm_params["threshold"], ddm_params["non_decision_time"]],
     atol=0.1,
 )
+
+
+#%%
+records = []
+for (name, mech), recovered_param in zip(fit_parameters.keys(), optimal_parameters):
+    percent_error = 100.0 * (abs(ddm_params[name] - recovered_param) / ddm_params[name])
+    records.append((name, mech.name, ddm_params[name], recovered_param, percent_error))
+df = pd.DataFrame(records, columns=['Parameter', 'Component', 'Value', 'Recovered Value', 'Percent Error'])
+print(df)
