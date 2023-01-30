@@ -1260,6 +1260,8 @@ class GradientOptimization(OptimizationFunction):
 
         if self.owner:
             owner_str = ' of {self.owner.name}'
+        else:
+            owner_str = ''
 
         # Get bounds from search_space if it has any non-None entries
         if any(i is not None for i in self.search_space):
@@ -1314,9 +1316,9 @@ class GradientOptimization(OptimizationFunction):
                 # Array specified for upper bound, so replace any None's with +inf
                 upper = np.array([[float('inf')] if n[0] is None else n for n in upper.reshape(sample_len,1)])
 
-                if not all(lower<upper):
+                if not all(lower <= upper):
                     raise OptimizationFunctionError(f"Specification of {repr(BOUNDS)} arg ({bounds}) for {self.name}"
-                                                    f"{owner_str} resulted in lower >= corresponding upper for one or "
+                                                    f"{owner_str} resulted in lower > corresponding upper for one or "
                                                     f"more elements (lower: {lower.tolist()}; uuper: {upper.tolist()}).")
 
                 bounds = (lower,upper)
