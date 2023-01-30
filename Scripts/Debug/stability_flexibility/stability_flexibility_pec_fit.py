@@ -17,9 +17,9 @@ np.random.seed(seed)
 set_global_seed(seed)
 
 # High-level parameters the impact performance of the test
-num_trials = 40
+num_trials = 120
 time_step_size = 0.01
-num_estimates = 10000
+num_estimates = 30000
 
 sf_params = dict(
     gain=3.0,
@@ -27,7 +27,7 @@ sf_params = dict(
     competition=4.0,
     lca_time_step_size=time_step_size,
     non_decision_time=0.2,
-    automaticity=0.15,
+    automaticity=0.05,
     starting_value=0.0,
     threshold=0.6,
     ddm_noise=0.1,
@@ -41,6 +41,10 @@ taskTrain, stimulusTrain, cueTrain, switch = generate_trial_sequence(240, 0.5)
 taskTrain = taskTrain[0:num_trials]
 stimulusTrain = stimulusTrain[0:num_trials]
 cueTrain = cueTrain[0:num_trials]
+
+# CSI is in terms of time steps, we need to scale by ten because original code
+# was set to run with timestep size of 0.001
+cueTrain = [c / 10.0 for c in cueTrain]
 
 # Make a stability flexibility composition
 comp = make_stab_flex(**sf_params)
@@ -81,7 +85,7 @@ responseGate = comp.nodes["RESPONSE_GATE"]
 
 fit_parameters = {
     ("gain", controlModule): np.linspace(1.0, 10.0, 1000),  # Gain
-    ("slope", congruenceWeighting): np.linspace(0.0, 0.5, 1000),  # Automaticity
+    ("slope", congruenceWeighting): np.linspace(0.0, 0.1, 1000),  # Automaticity
     ("threshold", decisionMaker): np.linspace(0.3, 1.0, 1000),  # Threshold
 }
 
@@ -109,7 +113,13 @@ optimal_parameters = pec.controller.optimal_parameters
 # Print the recovered parameters.
 records = []
 for (name, mech), recovered_param in zip(fit_parameters.keys(), optimal_parameters):
-    percent_error = 100.0 * (abs(sf_params[name] - recovered_param) / sf_params[name])
-    records.append((name, mech.name, sf_params[name], recovered_param, percent_error))
+
+    if name == "slope":
+        true_param = sf_params['automaticity']
+    else:
+        true_param = sf_params[name]
+
+    percent_error = 100.0 * (abs(true_param - recovered_param) / true_param)
+    records.append((name, mech.name, true_param, recovered_param, percent_error))
 df = pd.DataFrame(records, columns=['Parameter', 'Component', 'Value', 'Recovered Value', 'Percent Error'])
 print(df)
