@@ -12,11 +12,11 @@ from psyneulink.core.components.functions.nonstateful.optimizationfunctions impo
     SEARCH_SPACE,
 )
 
-from typing import Union, Optional, List, Dict, Any, Tuple, Callable
+from typing import Dict, Tuple, Callable
 import time
 import numpy as np
-import pandas as pd
-from rich.progress import Progress, BarColumn, TimeRemainingColumn
+
+from rich.progress import BarColumn, TimeRemainingColumn
 
 import warnings
 import logging
@@ -475,8 +475,6 @@ class MaxLikelihoodEstimator(OptimizationFunction):
         # If the user has rich installed, make a nice progress bar
         from rich.progress import Progress
 
-        iterations = []
-
         with Progress(
             "[progress.description]{task.description}",
             BarColumn(),
@@ -583,6 +581,8 @@ class MaxLikelihoodEstimator(OptimizationFunction):
                 for i, cs in enumerate(self.owner.control_signals)
                 if i != self.randomization_dimension
             ]
+        else:
+            return None
 
     @property
     def fit_param_bounds(self) -> Dict[str, Tuple[float, float]]:
@@ -602,3 +602,5 @@ class MaxLikelihoodEstimator(OptimizationFunction):
 
             bounds = [(float(min(s)), float(max(s))) for s in acs]
             return dict(zip(self.fit_param_names, bounds))
+        else:
+            return None

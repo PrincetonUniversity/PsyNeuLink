@@ -395,3 +395,4 @@ if __name__ == "__main__":
         ddm_time_step_size=0.01,
         lca_time_step_size=0.01,
     )
+    print(comp.results)

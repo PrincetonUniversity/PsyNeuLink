@@ -390,7 +390,7 @@ def test_parameter_estimation_ddm_mle(func_mode):
 
     pec.controller.parameters.comp_execution_mode.set("LLVM")
     pec.controller.function.parameters.save_values.set(True)
-    ret = pec.run(inputs={comp: trial_inputs}, num_trials=len(trial_inputs))
+    pec.run(inputs={comp: trial_inputs}, num_trials=len(trial_inputs))
 
     # Check that the parameters are recovered and that the log-likelihood is correct, set the tolerance pretty high,
     # things are noisy because of the low number of trials and estimates.
@@ -443,7 +443,7 @@ def test_pec_bad_outcome_var_spec():
     }
 
     with pytest.raises(ValueError) as ex:
-        pec = pnl.ParameterEstimationComposition(
+        pnl.ParameterEstimationComposition(
             name="pec",
             nodes=[comp],
             parameters=fit_parameters,
@@ -459,7 +459,7 @@ def test_pec_bad_outcome_var_spec():
     assert "Could not find outcome variable" in str(ex)
 
     with pytest.raises(ValueError) as ex:
-        pec = pnl.ParameterEstimationComposition(
+        pnl.ParameterEstimationComposition(
             name="pec",
             nodes=[comp],
             parameters=fit_parameters,

@@ -252,8 +252,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
                                    f"in port_map for {port.owner}; found {len(input_port)}."
         assert len(input_port[0].path_afferents)==1, f"PROGRAM ERROR: Port ({input_port.name}) expected to have " \
                                                      f"just one path_afferent; has {len(input_port.path_afferents)}."
-        # if not input_port[0].path_afferents or comp == end_comp:
-        #     return input_port[0], input_port[0].owner, comp
+
         sender = input_port[0].path_afferents[0].sender
         if not isinstance(sender.owner, CompositionInterfaceMechanism):
             return sender, sender.owner, comp

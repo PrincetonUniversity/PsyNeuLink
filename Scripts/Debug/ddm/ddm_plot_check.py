@@ -6,13 +6,12 @@ import matplotlib.pyplot as plt
 
 plt.rcParams["figure.figsize"] = (20, 10)
 
-import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 
 import wfpt
 
-from psyneulink.core.components.functions.fitfunctions import simulation_likelihood
+from psyneulink.core.components.functions.nonstateful.fitfunctions import simulation_likelihood
 
 
 def ddm_pdf_analytical(rate, threshold, noise, starting_value, non_decision_time, time_step_size=0.01):

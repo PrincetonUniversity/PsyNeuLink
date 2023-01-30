@@ -164,7 +164,7 @@ from psyneulink.core.components.mechanisms.processing.objectivemechanism import 
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import (
     ControlSignal,
 )
-from psyneulink.core.compositions.composition import Composition, NodeRole
+from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals.context import (
     Context,
     ContextFlags,
@@ -196,22 +196,22 @@ class ParameterEstimationCompositionError(Exception):
 
 def _initial_seed_getter(owning_component, context=None):
     try:
-        return owning_component.controler.parameters.initial_seed._get(context)
-    except:
+        return owning_component.controller.parameters.initial_seed._get(context)
+    except AttributeError:
         return None
 
 
 def _initial_seed_setter(value, owning_component, context=None):
-    owning_component.controler.parameters.initial_seed.set(value, context)
+    owning_component.controller.parameters.initial_seed.set(value, context)
     return value
 
 
 def _same_seed_for_all_parameter_combinations_getter(owning_component, context=None):
     try:
-        return owning_component.controler.parameters.same_seed_for_all_allocations._get(
+        return owning_component.controller.parameters.same_seed_for_all_allocations._get(
             context
         )
-    except:
+    except AttributeError:
         return None
 
 
@@ -666,7 +666,7 @@ class ParameterEstimationComposition(Composition):
 
         kwargs = args.pop("kwargs")
         pec_name = (
-            f"{self.__class__.__name__} '{args.pop('name',None)}'"
+            f"{self.__class__.__name__} '{args.pop('name', None)}'"
             or f"a {self.__class__.__name__}"
         )
 

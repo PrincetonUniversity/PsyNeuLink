@@ -27,7 +27,6 @@ Functions that return the sample of a variable yielding the optimized value of a
 import contextlib
 # from fractions import Fraction
 import itertools
-import sys
 import warnings
 from numbers import Number
 
