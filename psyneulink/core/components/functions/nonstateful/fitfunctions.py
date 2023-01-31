@@ -467,7 +467,6 @@ class MaxLikelihoodEstimator(OptimizationFunction):
         self,
         ll_func: Callable,
         display_iter: bool = True,
-        save_iterations: bool = False,
     ):
 
         bounds = list(self.fit_param_bounds.values())
