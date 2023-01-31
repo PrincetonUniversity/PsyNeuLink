@@ -482,7 +482,7 @@ class MaxLikelihoodEstimator(OptimizationFunction):
             TimeRemainingColumn(),
         ) as progress:
             opt_task = progress.add_task(
-                "Maximum likelihood optimization ...", total=100, start=False
+                f"Maximum likelihood optimization (num_estimates={self.num_estimates}) ...", total=100, start=False
             )
 
             warns_with_params = []
