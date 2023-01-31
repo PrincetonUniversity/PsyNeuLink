@@ -500,7 +500,7 @@ class ParameterEstimationComposition(Composition):
         **kwargs,
     ):
 
-        self._validate_params(locals())
+        self._validate_params(locals().copy())
 
         # IMPLEMENTATION NOTE: this currently assigns pec as ocm.agent_rep (rather than model) to satisfy LLVM
         # Assign model as nested Composition of PEC
