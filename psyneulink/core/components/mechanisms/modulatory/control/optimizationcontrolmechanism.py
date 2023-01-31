@@ -1105,7 +1105,6 @@ from psyneulink.core.globals.registry import rename_instance_in_registry
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleSpec
 from psyneulink.core.globals.utilities import convert_to_list, ContentAddressableList, is_numeric
 from psyneulink.core.llvm.debug import debug_env
-from psyneulink.core.llvm import _convert_llvm_ir_to_ctype
 
 __all__ = [
     'OptimizationControlMechanism', 'OptimizationControlMechanismError',

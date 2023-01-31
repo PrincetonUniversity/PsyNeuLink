@@ -192,9 +192,6 @@ def plot_sim_results(rate, threshold, noise, starting_value, non_decision_time, 
 
         df = pd.concat([df, sim_df])
 
-    import seaborn as sns
-    import matplotlib.pyplot as plt
-
     fig, axes = plt.subplots(1, 2, sharex=True, sharey=True)
 
     # df = df.loc[:, ~df.columns.str.contains('Histogram')]
