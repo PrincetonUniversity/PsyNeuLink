@@ -87,12 +87,11 @@ pec = pnl.ParameterEstimationComposition(
     data=data_to_fit,
     optimization_function=MaxLikelihoodEstimator(),
     num_estimates=num_estimates,
-    num_trials_per_estimate=len(trial_inputs),
 )
 
 pec.controller.parameters.comp_execution_mode.set("LLVM")
 pec.controller.function.parameters.save_values.set(True)
-ret = pec.run(inputs={comp: trial_inputs}, num_trials=len(trial_inputs))
+ret = pec.run(inputs={comp: trial_inputs})
 optimal_parameters = pec.controller.optimal_parameters
 
 # Check that the parameters are recovered and that the log-likelihood is correct, set the tolerance pretty high,

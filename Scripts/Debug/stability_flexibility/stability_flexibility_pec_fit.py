@@ -100,14 +100,13 @@ pec = pnl.ParameterEstimationComposition(
     data=data_to_fit,
     optimization_function=MaxLikelihoodEstimator(),
     num_estimates=num_estimates,
-    num_trials_per_estimate=len(taskTrain),
 )
 
 pec.controller.parameters.comp_execution_mode.set("LLVM")
 pec.controller.function.parameters.save_values.set(True)
 
 print("Running the PEC")
-ret = pec.run(inputs=inputs, num_trials=len(cueTrain))
+ret = pec.run(inputs=inputs)
 optimal_parameters = pec.controller.optimal_parameters
 
 # Print the recovered parameters.

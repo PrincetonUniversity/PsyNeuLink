@@ -500,6 +500,11 @@ class ParameterEstimationComposition(Composition):
         **kwargs,
     ):
 
+        # If the number of trials per estimate is not specified and we are fitting to data then
+        # get it from the data.
+        if num_trials_per_estimate is None and data is not None:
+            num_trials_per_estimate = len(data)
+
         self._validate_params(locals().copy())
 
         # IMPLEMENTATION NOTE: this currently assigns pec as ocm.agent_rep (rather than model) to satisfy LLVM
