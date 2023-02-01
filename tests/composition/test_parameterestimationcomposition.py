@@ -311,7 +311,7 @@ def test_parameter_estimation_ddm_mle(func_mode):
         return
 
     # High-level parameters the impact performance of the test
-    num_trials = 25
+    num_trials = 50
     time_step_size = 0.01
     num_estimates = 40000
 
@@ -371,7 +371,7 @@ def test_parameter_estimation_ddm_mle(func_mode):
     fit_parameters = {
         ("rate", decision): np.linspace(-0.5, 0.5, 1000),
         ("threshold", decision): np.linspace(0.5, 1.0, 1000),
-        # ('non_decision_time', decision): np.linspace(0.0, 1.0, 1000),
+        ('non_decision_time', decision): np.linspace(0.0, 1.0, 1000),
     }
 
     pec = pnl.ParameterEstimationComposition(
@@ -383,20 +383,22 @@ def test_parameter_estimation_ddm_mle(func_mode):
             decision.output_ports[pnl.RESPONSE_TIME],
         ],
         data=data_to_fit,
-        optimization_function=MaxLikelihoodEstimator(),
+        optimization_function=MaxLikelihoodEstimator(max_iterations=1),
         num_estimates=num_estimates,
+        initial_seed=42,
     )
 
-    pec.controller.parameters.comp_execution_mode.set("LLVM")
+    pec.controller.parameters.comp_execution_mode.set(func_mode)
     pec.controller.function.parameters.save_values.set(True)
     pec.run(inputs={comp: trial_inputs})
 
-    # Check that the parameters are recovered and that the log-likelihood is correct, set the tolerance pretty high,
-    # things are noisy because of the low number of trials and estimates.
+    # The PEC was setup with max_iterations=1, we are just testing.
+    # We won't recover the parameters accurately but we can check
+    # against hardcoded values to make sure we are reproducing
+    # the same search trajectory from a known working example.
     assert np.allclose(
         pec.controller.optimal_parameters,
-        [ddm_params["rate"], ddm_params["threshold"]],
-        atol=0.1,
+        [0.222727, 0.597613, 0.122772],
     )
 
 

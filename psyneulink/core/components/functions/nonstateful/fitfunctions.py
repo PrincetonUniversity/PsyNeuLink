@@ -16,7 +16,7 @@ from typing import Dict, Tuple, Callable
 import time
 import numpy as np
 
-from rich.progress import BarColumn, TimeRemainingColumn
+from rich.progress import Progress, BarColumn, TimeRemainingColumn
 
 import warnings
 import logging
@@ -239,6 +239,7 @@ class MaxLikelihoodEstimator(OptimizationFunction):
         search_space=None,
         save_samples=None,
         save_values=None,
+        max_iterations=500,
         **kwargs,
     ):
 
@@ -251,6 +252,8 @@ class MaxLikelihoodEstimator(OptimizationFunction):
 
         # Set num_iterations to a default value of 1, this will be reset in reset() based on the search space
         self.num_iterations = 1
+
+        self.max_iterations = max_iterations
 
         # When the OCM passes in the search space, we need to modify it so that the fitting parameters are
         # set to single values since we want to use SciPy optimize to drive the search for these parameters.
@@ -471,8 +474,9 @@ class MaxLikelihoodEstimator(OptimizationFunction):
 
         bounds = list(self.fit_param_bounds.values())
 
-        # If the user has rich installed, make a nice progress bar
-        from rich.progress import Progress
+        # Get a seed to pass to scipy for its search. Make this dependent on the seed of the
+        # OCM
+        seed_for_scipy = self.owner.initial_seed
 
         with Progress(
             "[progress.description]{task.description}",
@@ -556,7 +560,8 @@ class MaxLikelihoodEstimator(OptimizationFunction):
                     neg_log_like,
                     bounds,
                     callback=progress_callback,
-                    maxiter=500,
+                    maxiter=self.parameters.max_iterations.get() - 1,
+                    seed=seed_for_scipy,
                     polish=False,
                 )
 

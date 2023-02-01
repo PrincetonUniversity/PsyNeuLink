@@ -6,10 +6,8 @@ import pandas as pd
 from psyneulink.core.globals.utilities import set_global_seed
 from psyneulink.core.components.functions.nonstateful.fitfunctions import MaxLikelihoodEstimator
 
-# Let's make things reproducible
-seed = 0
-np.random.seed(seed)
-set_global_seed(seed)
+# # Let's make things reproducible
+set_global_seed(0)
 
 # High-level parameters the impact performance of the test
 num_trials = 50
@@ -87,6 +85,7 @@ pec = pnl.ParameterEstimationComposition(
     data=data_to_fit,
     optimization_function=MaxLikelihoodEstimator(),
     num_estimates=num_estimates,
+    initial_seed=42,
 )
 
 pec.controller.parameters.comp_execution_mode.set("LLVM")
