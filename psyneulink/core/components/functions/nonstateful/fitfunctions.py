@@ -255,6 +255,9 @@ class MaxLikelihoodEstimator(OptimizationFunction):
 
         self.max_iterations = max_iterations
 
+        # Keeps track of the number of likelihood evaluations during search
+        self.num_evals = 0
+
         # When the OCM passes in the search space, we need to modify it so that the fitting parameters are
         # set to single values since we want to use SciPy optimize to drive the search for these parameters.
         # The randomization control signal is not set to a single value so that the composition still uses
@@ -481,12 +484,19 @@ class MaxLikelihoodEstimator(OptimizationFunction):
         with Progress(
             "[progress.description]{task.description}",
             BarColumn(),
-            "Convergence: [progress.percentage]{task.percentage:>3.0f}%",
+            "Completed: [progress.percentage]{task.percentage:>3.0f}%",
             TimeRemainingColumn(),
         ) as progress:
             opt_task = progress.add_task(
-                f"Maximum likelihood optimization (num_estimates={self.num_estimates}) ...", total=100, start=False
+                f"Maximum likelihood optimization (num_estimates={self.num_estimates}) ...", total=100
             )
+
+            # This is the number of likelihood evaluations we need per search iteration.
+            evals_per_iteration = 15*len(self.fit_param_names)
+            like_eval_task = progress.add_task("Search Evaluations ...", total=evals_per_iteration)
+            self.num_evals = 0
+
+            progress.update(opt_task, completed=0)
 
             warns_with_params = []
             with warnings.catch_warnings(record=True) as warns:
@@ -497,6 +507,7 @@ class MaxLikelihoodEstimator(OptimizationFunction):
                     t0 = time.time()
                     p = -ll_func(*x)[0]
                     elapsed = time.time() - t0
+                    self.num_evals = self.num_evals + 1
 
                     # Keep a log of warnings and the parameters that caused them
                     if len(warns) > 0 and warns[-1].category == BadLikelihoodWarning:
@@ -527,14 +538,24 @@ class MaxLikelihoodEstimator(OptimizationFunction):
                                 f"Likelihood-Eval-Time: {elapsed} (seconds)"
                             )
 
+                        if self.num_evals < 2*evals_per_iteration:
+                            max_evals = 2 * evals_per_iteration + 1
+                            progress.tasks[like_eval_task].total = max_evals
+                            progress.update(like_eval_task, completed=self.num_evals % max_evals)
+                        else:
+                            max_evals = evals_per_iteration
+                            progress.tasks[like_eval_task].total = max_evals
+                            progress.update(like_eval_task, completed=(self.num_evals - (2 * evals_per_iteration + 1)) % max_evals)
+
                     return p
 
                 def progress_callback(x, convergence):
-                    progress.start_task(opt_task)
                     params = dict(zip(self.fit_param_names, x))
                     convergence_pct = 100.0 * convergence
                     progress.console.print(
-                        f"[green]Current Best Parameters: {get_param_str(params)}, Neg-Log-Likelihood: {neg_log_like(x)}"
+                        f"[green]Current Best Parameters: {get_param_str(params)}, "
+                        f"Neg-Log-Likelihood: {neg_log_like(x)}, "
+                        f"Convergence: {convergence_pct}"
                     )
 
                     # If we encounter any BadLikelihoodWarnings. Summarize them for the user
@@ -562,6 +583,7 @@ class MaxLikelihoodEstimator(OptimizationFunction):
                     callback=progress_callback,
                     maxiter=self.parameters.max_iterations.get() - 1,
                     seed=seed_for_scipy,
+                    popsize=15,
                     polish=False,
                 )
 

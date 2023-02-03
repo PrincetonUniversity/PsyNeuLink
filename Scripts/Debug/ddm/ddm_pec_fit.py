@@ -10,9 +10,9 @@ from psyneulink.core.components.functions.nonstateful.fitfunctions import MaxLik
 set_global_seed(0)
 
 # High-level parameters the impact performance of the test
-num_trials = 50
+num_trials = 20
 time_step_size = 0.01
-num_estimates = 40000
+num_estimates = 10000
 
 ddm_params = dict(
     starting_value=0.0,
