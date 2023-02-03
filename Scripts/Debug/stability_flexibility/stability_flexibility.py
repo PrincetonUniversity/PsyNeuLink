@@ -115,6 +115,7 @@ def make_stab_flex(
     THRESHOLD = threshold  # Threshold
     NOISE = ddm_noise  # Noise
     SCALE = scale  # Scales DDM inputs so threshold can be set to 1
+    NON_DECISION_TIME = non_decision_time
 
     # Task Layer: [Color, Motion] {0, 1} Mutually Exclusive
     # Origin Node
@@ -223,6 +224,7 @@ def make_stab_flex(
             threshold=THRESHOLD,
             noise=NOISE,
             time_step_size=ddm_time_step_size,
+            non_decision_time=NON_DECISION_TIME,
         ),
         reset_stateful_function_when=pnl.AtTrialStart(),
         output_ports=[pnl.DECISION_OUTCOME, pnl.RESPONSE_TIME],

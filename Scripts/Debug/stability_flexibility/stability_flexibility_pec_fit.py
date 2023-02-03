@@ -66,13 +66,14 @@ print("Running inner composition to generate data to fit for parameter recovery 
 comp.run(inputs, execution_mode=pnl.ExecutionMode.LLVMRun)
 results = comp.results
 
-#%%
 print("Setting up PEC")
 
 data_to_fit = pd.DataFrame(
     np.squeeze(np.array(results))[:, 1:], columns=["decision", "response_time"]
 )
 data_to_fit["decision"] = data_to_fit["decision"].astype("category")
+
+#%%
 
 # Create a parameter estimation composition to fit the data we just generated and hopefully recover the
 # parameters of the composition.
