@@ -492,7 +492,7 @@ class MaxLikelihoodEstimator(OptimizationFunction):
             )
 
             # This is the number of likelihood evaluations we need per search iteration.
-            evals_per_iteration = 15*len(self.fit_param_names)
+            evals_per_iteration = 15 * len(self.fit_param_names)
             like_eval_task = progress.add_task("Search Evaluations ...", total=evals_per_iteration)
             self.num_evals = 0
 
@@ -538,7 +538,7 @@ class MaxLikelihoodEstimator(OptimizationFunction):
                                 f"Likelihood-Eval-Time: {elapsed} (seconds)"
                             )
 
-                        if self.num_evals < 2*evals_per_iteration:
+                        if self.num_evals < 2 * evals_per_iteration:
                             max_evals = 2 * evals_per_iteration + 1
                             progress.tasks[like_eval_task].total = max_evals
                             progress.update(like_eval_task, completed=self.num_evals % max_evals)

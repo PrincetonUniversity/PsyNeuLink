@@ -75,51 +75,51 @@ data_to_fit["decision"] = data_to_fit["decision"].astype("category")
 
 #%%
 
-# Create a parameter estimation composition to fit the data we just generated and hopefully recover the
-# parameters of the composition.
-
-controlModule = comp.nodes["Task Activations [Act1, Act2]"]
-congruenceWeighting = comp.nodes["Automaticity-weighted Stimulus Input [w*S1, w*S2]"]
-decisionMaker = comp.nodes["DDM"]
-decisionGate = comp.nodes["DECISION_GATE"]
-responseGate = comp.nodes["RESPONSE_GATE"]
-
-fit_parameters = {
-    ("gain", controlModule): np.linspace(1.0, 10.0, 1000),  # Gain
-    ("slope", congruenceWeighting): np.linspace(0.0, 0.1, 1000),  # Automaticity
-    ("threshold", decisionMaker): np.linspace(0.3, 1.0, 1000),  # Threshold
-}
-
-pec = pnl.ParameterEstimationComposition(
-    name="pec",
-    nodes=comp,
-    parameters=fit_parameters,
-    outcome_variables=[
-        decisionGate.output_ports[0],
-        responseGate.output_ports[0],
-    ],
-    data=data_to_fit,
-    optimization_function=MaxLikelihoodEstimator(),
-    num_estimates=num_estimates,
-)
-
-pec.controller.parameters.comp_execution_mode.set("LLVM")
-pec.controller.function.parameters.save_values.set(True)
-
-print("Running the PEC")
-ret = pec.run(inputs=inputs)
-optimal_parameters = pec.controller.optimal_parameters
-
-# Print the recovered parameters.
-records = []
-for (name, mech), recovered_param in zip(fit_parameters.keys(), optimal_parameters):
-
-    if name == "slope":
-        true_param = sf_params['automaticity']
-    else:
-        true_param = sf_params[name]
-
-    percent_error = 100.0 * (abs(true_param - recovered_param) / true_param)
-    records.append((name, mech.name, true_param, recovered_param, percent_error))
-df = pd.DataFrame(records, columns=['Parameter', 'Component', 'Value', 'Recovered Value', 'Percent Error'])
-print(df)
+# # Create a parameter estimation composition to fit the data we just generated and hopefully recover the
+# # parameters of the composition.
+#
+# controlModule = comp.nodes["Task Activations [Act1, Act2]"]
+# congruenceWeighting = comp.nodes["Automaticity-weighted Stimulus Input [w*S1, w*S2]"]
+# decisionMaker = comp.nodes["DDM"]
+# decisionGate = comp.nodes["DECISION_GATE"]
+# responseGate = comp.nodes["RESPONSE_GATE"]
+#
+# fit_parameters = {
+#     ("gain", controlModule): np.linspace(1.0, 10.0, 1000),  # Gain
+#     ("slope", congruenceWeighting): np.linspace(0.0, 0.1, 1000),  # Automaticity
+#     ("threshold", decisionMaker): np.linspace(0.3, 1.0, 1000),  # Threshold
+# }
+#
+# pec = pnl.ParameterEstimationComposition(
+#     name="pec",
+#     nodes=comp,
+#     parameters=fit_parameters,
+#     outcome_variables=[
+#         decisionGate.output_ports[0],
+#         responseGate.output_ports[0],
+#     ],
+#     data=data_to_fit,
+#     optimization_function=MaxLikelihoodEstimator(),
+#     num_estimates=num_estimates,
+# )
+#
+# pec.controller.parameters.comp_execution_mode.set("LLVM")
+# pec.controller.function.parameters.save_values.set(True)
+#
+# print("Running the PEC")
+# ret = pec.run(inputs=inputs)
+# optimal_parameters = pec.controller.optimal_parameters
+#
+# # Print the recovered parameters.
+# records = []
+# for (name, mech), recovered_param in zip(fit_parameters.keys(), optimal_parameters):
+#
+#     if name == "slope":
+#         true_param = sf_params['automaticity']
+#     else:
+#         true_param = sf_params[name]
+#
+#     percent_error = 100.0 * (abs(true_param - recovered_param) / true_param)
+#     records.append((name, mech.name, true_param, recovered_param, percent_error))
+# df = pd.DataFrame(records, columns=['Parameter', 'Component', 'Value', 'Recovered Value', 'Percent Error'])
+# print(df)
