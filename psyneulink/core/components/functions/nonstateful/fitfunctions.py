@@ -255,6 +255,10 @@ class MaxLikelihoodEstimator(OptimizationFunction):
 
         self.max_iterations = max_iterations
 
+        # This is the generation number we are on in the search, this corresponds to iterations in
+        # differential_evolution
+        self.gen_count = 1
+
         # Keeps track of the number of likelihood evaluations during search
         self.num_evals = 0
 
@@ -493,8 +497,12 @@ class MaxLikelihoodEstimator(OptimizationFunction):
 
             # This is the number of likelihood evaluations we need per search iteration.
             evals_per_iteration = 15 * len(self.fit_param_names)
-            like_eval_task = progress.add_task("Search Evaluations ...", total=evals_per_iteration)
             self.num_evals = 0
+            self.gen_count = 1
+
+            if display_iter:
+                eval_task_str = f"|-- Iteration 1 ..."
+                like_eval_task = progress.add_task(eval_task_str, total=evals_per_iteration)
 
             progress.update(opt_task, completed=0)
 
@@ -541,10 +549,14 @@ class MaxLikelihoodEstimator(OptimizationFunction):
                         if self.num_evals < 2 * evals_per_iteration:
                             max_evals = 2 * evals_per_iteration + 1
                             progress.tasks[like_eval_task].total = max_evals
+                            eval_task_str = f"|-- Iteration {self.gen_count} ..."
+                            progress.tasks[like_eval_task].description = eval_task_str
                             progress.update(like_eval_task, completed=self.num_evals % max_evals)
                         else:
-                            max_evals = evals_per_iteration
+                            max_evals = evals_per_iteration + 1
                             progress.tasks[like_eval_task].total = max_evals
+                            eval_task_str = f"|-- Iteration {self.gen_count} ..."
+                            progress.tasks[like_eval_task].description = eval_task_str
                             progress.update(like_eval_task, completed=(self.num_evals - (2 * evals_per_iteration + 1)) % max_evals)
 
                     return p
@@ -576,6 +588,7 @@ class MaxLikelihoodEstimator(OptimizationFunction):
                         )
 
                     progress.update(opt_task, completed=convergence_pct)
+                    self.gen_count = self.gen_count + 1
 
                 r = differential_evolution(
                     neg_log_like,
