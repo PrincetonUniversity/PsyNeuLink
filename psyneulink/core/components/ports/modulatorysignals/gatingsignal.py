@@ -247,6 +247,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
+from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignalError
 from psyneulink.core.components.ports.outputport import _output_port_variable_getter
 from psyneulink.core.globals.defaults import defaultGatingAllocation
 from psyneulink.core.globals.keywords import \
@@ -261,12 +262,8 @@ __all__ = [
 ]
 
 
-class GatingSignalError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class GatingSignalError(ModulatorySignalError):
+    pass
 
 
 gating_signal_keywords = {GATE}

@@ -300,7 +300,7 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.stateful.integratorfunctions import FitzHughNagumoIntegrator
-from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism, ControlMechanismError
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.core.components.shellclasses import Mechanism
@@ -320,9 +320,8 @@ __all__ = [
 MODULATED_MECHANISMS = 'modulated_mechanisms'
 CONTROL_SIGNAL_NAME = 'LCControlMechanism_ControlSignal'
 
-class LCControlMechanismError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
+class LCControlMechanismError(ControlMechanismError):
+    pass
 
 
 class LCControlMechanism(ControlMechanism):

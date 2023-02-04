@@ -512,9 +512,9 @@ class TestAddProjection:
         proj = MappingProjection(sender=A, receiver=B)
         with pytest.raises(CompositionError) as error:
             comp.add_projection(projection=proj, receiver=C)
-            assert '"Receiver (\'composition-pytests-C\') assigned to ' \
+            assert 'Receiver (\'composition-pytests-C\') assigned to ' \
                    '\'MappingProjection from composition-pytests-A[RESULT] to composition-pytests-B[InputPort-0] ' \
-                   'is incompatible with the positions of these Components in \'Composition-0\'."' == str(error.value)
+                   'is incompatible with the positions of these Components in \'Composition-0\'.' == str(error.value)
 
     @pytest.mark.stress
     @pytest.mark.parametrize(
@@ -3401,9 +3401,9 @@ class TestRun:
         comp.add_projection(MappingProjection(sender=A, receiver=C), A, C)
         with pytest.raises(CompositionError) as error_text:
             comp.add_projection(MappingProjection(sender=B, receiver=D), B, C)
-        assert '"Receiver (\'composition-pytests-C\') assigned to ' \
+        assert 'Receiver (\'composition-pytests-C\') assigned to ' \
                '\'MappingProjection from composition-pytests-B[RESULT] to composition-pytests-D[InputPort-0] ' \
-               'is incompatible with the positions of these Components in \'Composition-0\'."' == str(error_text.value)
+               'is incompatible with the positions of these Components in \'Composition-0\'.' == str(error_text.value)
 
     def test_projection_assignment_mistake_swap2(self):
         # A ----> C --
@@ -3423,9 +3423,9 @@ class TestRun:
         comp.add_projection(MappingProjection(sender=A, receiver=C), A, C)
         with pytest.raises(CompositionError) as error_text:
             comp.add_projection(MappingProjection(sender=B, receiver=C), B, D)
-        assert '"Receiver (\'composition-pytests-D\') assigned to ' \
+        assert 'Receiver (\'composition-pytests-D\') assigned to ' \
                '\'MappingProjection from composition-pytests-B[RESULT] to composition-pytests-C[InputPort-0] ' \
-               'is incompatible with the positions of these Components in \'Composition-0\'."' == str(error_text.value)
+               'is incompatible with the positions of these Components in \'Composition-0\'.' == str(error_text.value)
 
     @pytest.mark.composition
     def test_run_5_mechanisms_2_origins_1_terminal(self, comp_mode):
@@ -6461,7 +6461,7 @@ class TestShadowInputs:
                 ocomp = Composition(nodes=[mcomp,O], name='OUTER COMP')
             assert 'Attempt to shadow the input to a node (B) in a nested Composition of OUTER COMP ' \
                    'that is not an INPUT Node of that Composition is not currently supported.' \
-                   in err.value.error_value
+                   in str(err)
 
     def test_failure_to_find_node_to_shadow(self):
         A = ProcessingMechanism(name='A')
@@ -6907,20 +6907,20 @@ class TestNodeRoles:
         results_by_node = ocomp.get_results_by_nodes(nodes=Z, use_labels=True)
         assert repr(results_by_node) == '{(ProcessingMechanism Z): [\'red\']}'
 
-        label_not_in_dict_error_msg = '"Inappropriate use of \'purple\' as a stimulus for A in MIDDLE COMP: ' \
-                                      'it is not a label in its input_labels_dict."'
+        label_not_in_dict_error_msg = 'Inappropriate use of \'purple\' as a stimulus for A in MIDDLE COMP: ' \
+                                      'it is not a label in its input_labels_dict.'
         with pytest.raises(CompositionError) as error_text:
             ocomp.run(inputs={mcomp:[[0],['purple']],Q:['red']})
         assert label_not_in_dict_error_msg in str(error_text.value)
 
-        no_label_dict_error_msg = '"Inappropriate use of str (\'red\') as a stimulus for X in MIDDLE COMP: ' \
-                                  'it does not have an input_labels_dict."'
+        no_label_dict_error_msg = 'Inappropriate use of str (\'red\') as a stimulus for X in MIDDLE COMP: ' \
+                                  'it does not have an input_labels_dict.'
         with pytest.raises(CompositionError) as error_text:
             ocomp.run(inputs={mcomp:[['red'],['red']],Q:['red']})
         assert no_label_dict_error_msg in str(error_text.value)
 
-        no_such_node_error_msg = '"Nodes specified in get_results_by_nodes() method not found in OUTER COMP ' \
-                                 'nor any Compositions nested within it: [\'N\']"'
+        no_such_node_error_msg = 'Nodes specified in get_results_by_nodes() method not found in OUTER COMP ' \
+                                 'nor any Compositions nested within it: [\'N\']'
         with pytest.raises(CompositionError) as error_text:
             ocomp.get_results_by_nodes(nodes=['N'])
         assert no_such_node_error_msg in str(error_text.value)
@@ -6994,7 +6994,7 @@ class TestNodeRoles:
                                 allow_probes=allow_probes,
                                 include_probes_in_output=include_probes_in_output)
                 ocomp._analyze_graph()
-            assert err.value.error_value == err_msg
+            assert str(err.value) == err_msg
 
     def test_two_node_cycle(self):
         A = TransferMechanism()

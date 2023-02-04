@@ -189,7 +189,7 @@ class TestRecurrentTransferMechanismInputs:
                 integrator_mode=True
             )
             R.execute(["one", "two", "three", "four"])
-        assert '"Input to \'R\' ([\'one\' \'two\' \'three\' \'four\']) is incompatible ' \
+        assert 'Input to \'R\' ([\'one\' \'two\' \'three\' \'four\']) is incompatible ' \
                'with its corresponding InputPort (R[InputPort-0]): ' in str(error_text.value)
 
     def test_recurrent_mech_var_list_of_strings(self):

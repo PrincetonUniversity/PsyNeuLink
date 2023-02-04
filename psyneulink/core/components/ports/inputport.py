@@ -613,12 +613,8 @@ EXPONENT_INDEX = 2
 
 DEFER_VARIABLE_SPEC_TO_MECH_MSG = "InputPort variable not yet defined, defer to Mechanism"
 
-class InputPortError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class InputPortError(PortError):
+    pass
 
 
 class InputPort(Port_Base):

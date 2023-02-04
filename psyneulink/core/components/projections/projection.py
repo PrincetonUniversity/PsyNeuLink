@@ -404,6 +404,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
+from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.function import get_matrix
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.functions.nonstateful.transferfunctions import LinearMatrix
@@ -467,9 +468,8 @@ def projection_param_keywords():
 ProjectionTuple = namedtuple("ProjectionTuple", "port, weight, exponent, projection")
 
 
-class ProjectionError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
+class ProjectionError(ComponentError):
+    pass
 
 class DuplicateProjectionError(Exception):
     def __init__(self, error_value):

@@ -147,7 +147,7 @@ from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontro
     OptimizationControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
-from psyneulink.core.compositions.composition import Composition
+from psyneulink.core.compositions.composition import Composition, CompositionError
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import BEFORE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
@@ -163,9 +163,8 @@ CONTROLLER_SPECIFICATION_ARGS = {'controller',
                                  'retain_old_simulation_data'}
 
 
-class ParameterEstimationCompositionError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
+class ParameterEstimationCompositionError(CompositionError):
+    pass
 
 
 def _initial_seed_getter(owning_component, context=None):

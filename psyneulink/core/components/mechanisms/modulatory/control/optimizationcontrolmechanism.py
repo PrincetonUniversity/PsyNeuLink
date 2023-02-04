@@ -1213,12 +1213,8 @@ def _state_feature_values_getter(owning_component=None, context=None):
     return state_feature_values
 
 
-class OptimizationControlMechanismError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class OptimizationControlMechanismError(ControlMechanismError):
+    pass
 
 
 def _control_allocation_search_space_getter(owning_component=None, context=None):

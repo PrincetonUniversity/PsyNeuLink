@@ -78,7 +78,7 @@ Class Reference
 import numpy as np
 import typecheck as tc
 
-from psyneulink.library.compositions.regressioncfa import RegressionCFA
+from psyneulink.library.compositions.regressioncfa import RegressionCFA, RegressionCFAError
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BayesGLM
 from psyneulink.core.globals.keywords import DEFAULT_VARIABLE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
@@ -86,9 +86,8 @@ from psyneulink.core.globals.parameters import Parameter, check_user_specified
 __all__ = ['GymForagerCFA']
 
 
-class GymForagerCFAError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
+class GymForagerCFAError(RegressionCFAError):
+    pass
 
 
 class GymForagerCFA(RegressionCFA):

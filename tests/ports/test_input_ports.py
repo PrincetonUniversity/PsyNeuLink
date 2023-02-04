@@ -132,9 +132,9 @@ class TestInputPorts:
         A = pnl.InputPort()
         with pytest.raises(pnl.PortError) as error:
             A.efferents
-        assert '"InputPorts do not have \'efferents\'; (access attempted for Deferred Init InputPort)."' \
+        assert 'InputPorts do not have \'efferents\'; (access attempted for Deferred Init InputPort).' \
                in str(error.value)
         with pytest.raises(pnl.PortError) as error:
             A.efferents = ['test']
-        assert '"InputPorts are not allowed to have \'efferents\' ' \
-               '(assignment attempted for Deferred Init InputPort)."' in str(error.value)
+        assert 'InputPorts are not allowed to have \'efferents\' ' \
+               '(assignment attempted for Deferred Init InputPort).' in str(error.value)

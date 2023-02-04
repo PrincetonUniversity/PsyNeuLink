@@ -60,15 +60,14 @@ See `Projection <Projection_Class_Reference>`.
 
 """
 
-from psyneulink.core.components.projections.projection import Projection_Base
+from psyneulink.core.components.projections.projection import Projection_Base, ProjectionError
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import NAME, PATHWAY_PROJECTION, RECEIVER, SENDER
 
 __all__ = []
 
-class PathwayProjectionError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
+class PathwayProjectionError(ProjectionError):
+    pass
 
 
 class PathwayProjection_Base(Projection_Base):
