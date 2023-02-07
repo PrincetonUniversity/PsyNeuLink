@@ -534,7 +534,7 @@ import typecheck as tc
 
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation
-from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
+from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.ports.modulatorysignals.learningsignal import LearningSignal
@@ -641,12 +641,8 @@ ERROR_SOURCES = 'error_sources'
 DefaultTrainingMechanism = ObjectiveMechanism
 
 
-class LearningMechanismError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class LearningMechanismError(MechanismError):
+    pass
 
 
 def _learning_signal_getter(owning_component=None, context=None):

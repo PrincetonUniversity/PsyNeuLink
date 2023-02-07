@@ -425,9 +425,9 @@ def test_DDM_input_fn():
             execute_until_finished=False,
         )
         float(T.execute(stim))
-    assert '"Input to \'DDM\' ([(NormalDist Normal Distribution Function' in str(error_text.value)
+    assert 'Input to \'DDM\' ([(NormalDist Normal Distribution Function' in str(error_text.value)
     assert 'is incompatible with its corresponding InputPort (DDM[InputPort-0]): ' \
-           '\'unsupported operand type(s) for *: \'NormalDist\' and \'float\'.\'"' in str(error_text.value)
+           '\'unsupported operand type(s) for *: \'NormalDist\' and \'float\'.\'' in str(error_text.value)
 
 # ======================================= RATE TESTS ============================================
 

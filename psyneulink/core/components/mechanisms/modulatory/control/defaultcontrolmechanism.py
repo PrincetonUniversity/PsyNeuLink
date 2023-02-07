@@ -36,7 +36,7 @@ COMMENT
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism, ControlMechanismError
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import CONTROL, INPUT_PORTS, NAME
@@ -50,9 +50,8 @@ __all__ = [
 ]
 
 
-class DefaultControlMechanismError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
+class DefaultControlMechanismError(ControlMechanismError):
+    pass
 
 
 class DefaultControlMechanism(ControlMechanism):

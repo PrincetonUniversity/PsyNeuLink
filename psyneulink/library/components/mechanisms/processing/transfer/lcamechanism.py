@@ -197,6 +197,7 @@ from psyneulink.core.components.functions.nonstateful.objectivefunctions import 
 from psyneulink.core.components.functions.nonstateful.selectionfunctions import max_vs_avg, max_vs_next, MAX_VS_NEXT, MAX_VS_AVG
 from psyneulink.core.components.functions.stateful.integratorfunctions import LeakyCompetingIntegrator
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Logistic
+from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import _integrator_mode_setter
 from psyneulink.core.globals.keywords import \
     CONVERGENCE, FUNCTION, GREATER_THAN_OR_EQUAL, LCA_MECHANISM, LESS_THAN_OR_EQUAL, MATRIX, NAME, \
@@ -212,12 +213,8 @@ __all__ = ['LCAMechanism', 'LCAError', 'CONVERGENCE']
 logger = logging.getLogger(__name__)
 
 
-class LCAError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class LCAError(MechanismError):
+    pass
 
 
 

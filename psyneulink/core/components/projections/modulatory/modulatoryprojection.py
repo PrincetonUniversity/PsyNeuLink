@@ -94,7 +94,7 @@ Class Reference
 
 """
 
-from psyneulink.core.components.projections.projection import Projection_Base
+from psyneulink.core.components.projections.projection import Projection_Base, ProjectionError
 from psyneulink.core.globals.keywords import MODULATORY_PROJECTION, NAME
 from psyneulink.core.globals.log import ContextFlags
 
@@ -106,9 +106,8 @@ __all__ = [
 MODULATORY_SIGNAL_PARAMS = 'modulatory_signal_params'
 
 
-class ModulatoryProjectionError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
+class ModulatoryProjectionError(ProjectionError):
+    pass
 
 
 class ModulatoryProjection_Base(Projection_Base):

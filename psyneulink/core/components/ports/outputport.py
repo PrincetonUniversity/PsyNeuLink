@@ -623,7 +623,7 @@ import typecheck as tc
 
 from psyneulink.core.components.component import Component, ComponentError
 from psyneulink.core.components.functions.function import Function
-from psyneulink.core.components.ports.port import Port_Base, _instantiate_port_list, port_type_keywords
+from psyneulink.core.components.ports.port import Port_Base, PortError, _instantiate_port_list, port_type_keywords
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ALL, ASSIGN, CALCULATE, CONTEXT, CONTROL_SIGNAL, FUNCTION, GATING_SIGNAL, INDEX, INPUT_PORT, INPUT_PORTS, \
@@ -751,12 +751,8 @@ def _output_port_variable_getter(owning_component=None, context=None, output_por
     return _parse_output_port_variable(owning_component._variable_spec, owning_component.owner, context, output_port_name)
 
 
-class OutputPortError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class OutputPortError(PortError):
+    pass
 
 
 class OutputPort(Port_Base):

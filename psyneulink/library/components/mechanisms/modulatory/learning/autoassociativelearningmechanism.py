@@ -98,7 +98,7 @@ from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.nonstateful.learningfunctions import Hebbian
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
-    ACTIVATION_INPUT, LearningMechanism, LearningTiming, LearningType
+    ACTIVATION_INPUT, LearningMechanism, LearningMechanismError, LearningTiming, LearningType
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.projection import projection_keywords
 from psyneulink.core.globals.context import ContextFlags
@@ -124,12 +124,8 @@ output_port_names = [LEARNING_SIGNAL]
 
 DefaultTrainingMechanism = ObjectiveMechanism
 
-class AutoAssociativeLearningMechanismError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class AutoAssociativeLearningMechanismError(LearningMechanismError):
+    pass
 
 
 class AutoAssociativeLearningMechanism(LearningMechanism):

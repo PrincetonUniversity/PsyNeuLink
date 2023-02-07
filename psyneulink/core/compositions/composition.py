@@ -2770,7 +2770,7 @@ import typecheck as tc
 from PIL import Image
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.component import Component, ComponentsMeta
+from psyneulink.core.components.component import Component, ComponentError, ComponentsMeta
 from psyneulink.core.components.functions.function import is_function_type, RandomMatrix
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import \
     LinearCombination, PredictionErrorDeltaFunction
@@ -2847,14 +2847,8 @@ logger = logging.getLogger(__name__)
 CompositionRegistry = {}
 
 
-class CompositionError(Exception):
-
-    def __init__(self, error_value, **kwargs):
-        self.error_value = error_value
-        self.return_items = kwargs
-
-    def __str__(self):
-        return repr(self.error_value)
+class CompositionError(ComponentError):
+    pass
 
 
 class RunError(Exception):
@@ -6956,7 +6950,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 def handle_misc_errors(proj, error):
                     raise CompositionError(f"Bad Projection specification in {pathway_arg_str} ({proj}): "
-                                           f"{str(error.error_value)}")
+                                           f"{error}")
 
                 def handle_duplicates(sender, receiver):
                     duplicate = [p for p in receiver.afferents if p in sender.efferents]
@@ -7075,7 +7069,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     #   (since all Projections to or from it have been implemented)
                                     node_pairs = [pair for pair in node_pairs if (proj.owner not in pair)]
                                 except (InputPortError, ProjectionError) as error:
-                                    raise ProjectionError(str(error.error_value))
+                                    raise ProjectionError(error) from error
 
                         except (InputPortError, ProjectionError, MappingError) as error:
                             handle_misc_errors(proj, error)
@@ -7310,7 +7304,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             input_source, output_source, learned_projection = \
                 self._unpack_processing_components_of_learning_pathway(pathway, default_projection_matrix)
         except CompositionError as e:
-            raise CompositionError(e.error_value.replace('this method',
+            raise CompositionError(e.args[0].replace('this method',
                                                          f'{learning_function.__name__} {LearningFunction.__name__}'))
 
         # Add required role before calling add_linear_process_pathway so NodeRole.OUTPUTS are properly assigned

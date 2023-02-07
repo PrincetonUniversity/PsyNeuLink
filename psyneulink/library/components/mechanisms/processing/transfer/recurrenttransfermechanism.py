@@ -198,7 +198,7 @@ from psyneulink.core.components.functions.nonstateful.learningfunctions import H
 from psyneulink.core.components.functions.nonstateful.objectivefunctions import Stability
 from psyneulink.core.components.functions.stateful.integratorfunctions import AdaptiveIntegrator
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
-from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
+from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
     ACTIVATION_INPUT, LEARNING_SIGNAL, LearningMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
@@ -243,12 +243,8 @@ ENTROPY_OUTPUT_PORT_NAME='ENTROPY'
 
 
 
-class RecurrentTransferError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class RecurrentTransferError(MechanismError):
+    pass
 
 
 def _recurrent_transfer_mechanism_matrix_getter(owning_component=None, context=None):

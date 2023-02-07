@@ -145,7 +145,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
-from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
+from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.components.ports.inputport import InputPort
@@ -169,12 +169,8 @@ L0 = Loss.L0.name
 L1 = Loss.L1.name
 CROSS_ENTROPY = Loss.CROSS_ENTROPY.name
 
-class ComparatorMechanismError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class ComparatorMechanismError(MechanismError):
+    pass
 
 
 class ComparatorMechanism(ObjectiveMechanism):
