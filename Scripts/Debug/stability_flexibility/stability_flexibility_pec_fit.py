@@ -41,6 +41,7 @@ taskTrain, stimulusTrain, cueTrain, correctResponse = generate_trial_sequence(24
 taskTrain = taskTrain[0:num_trials]
 stimulusTrain = stimulusTrain[0:num_trials]
 cueTrain = cueTrain[0:num_trials]
+correctResponse = correctResponse[0:num_trials]
 
 # CSI is in terms of time steps, we need to scale by ten because original code
 # was set to run with timestep size of 0.001

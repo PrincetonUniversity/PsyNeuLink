@@ -164,7 +164,7 @@ from psyneulink.core.components.mechanisms.processing.objectivemechanism import 
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import (
     ControlSignal,
 )
-from psyneulink.core.compositions.composition import Composition
+from psyneulink.core.compositions.composition import Composition, CompositionError
 from psyneulink.core.globals.context import (
     Context,
     ContextFlags,
@@ -189,9 +189,8 @@ CONTROLLER_SPECIFICATION_ARGS = {
 }
 
 
-class ParameterEstimationCompositionError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
+class ParameterEstimationCompositionError(CompositionError):
+    pass
 
 
 def _initial_seed_getter(owning_component, context=None):
