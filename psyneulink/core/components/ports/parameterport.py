@@ -597,12 +597,8 @@ class ParameterPortList(ContentAddressableList):
             return ''
 
 
-class ParameterPortError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class ParameterPortError(PortError):
+    pass
 
 
 class ParameterPort(Port_Base):

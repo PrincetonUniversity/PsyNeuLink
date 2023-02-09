@@ -421,8 +421,8 @@ class TestLearningPathwayMethods:
                               pway.target: 0.0},
                       execution_mode=execution_mode,
                       num_trials=2)
-        assert error.value.error_value == f"ExecutionMode.{execution_mode.name} cannot be used in the learn() " \
-                                                f"method of \'Composition-0\' because it is not an AutodiffComposition"
+        assert str(error.value) == f"ExecutionMode.{execution_mode.name} cannot be used in the learn() " \
+                                   f"method of \'Composition-0\' because it is not an AutodiffComposition"
 
 
 class TestNoLearning:
@@ -1718,7 +1718,7 @@ class TestNestedLearning:
         try:
             outer_comp.learn({oa: 1, ot: 1})
         except CompositionError as e:
-            assert e.error_value == (
+            assert str(e) == (
                    f'Target mechanism {inner_comp_target.name} of nested Composition {inner_comp.name} is not being projected to '
                     f'from its enclosing Composition {outer_comp.name}. For a call to {outer_comp.name}.learn, {inner_comp_target.name} '
                     f'must have an afferent projection with a target value so that an error term may be computed. '

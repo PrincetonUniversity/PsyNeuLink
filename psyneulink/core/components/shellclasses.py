@@ -27,7 +27,7 @@ TBI:
 
 """
 
-from psyneulink.core.components.component import Component
+from psyneulink.core.components.component import Component, ComponentError
 from psyneulink.core.globals.parameters import check_user_specified
 
 __all__ = [
@@ -35,12 +35,8 @@ __all__ = [
 ]
 
 
-class ShellClassError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class ShellClassError(ComponentError):
+    pass
 
 
 def _attempt_to_call_base_class(cls, alternative):

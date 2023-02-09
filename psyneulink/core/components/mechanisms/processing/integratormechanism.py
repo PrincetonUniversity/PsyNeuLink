@@ -88,7 +88,7 @@ import numpy as np
 from psyneulink.core.components.functions.function import Function
 from psyneulink.core.components.functions.stateful.integratorfunctions import AdaptiveIntegrator
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
-from psyneulink.core.components.mechanisms.mechanism import Mechanism
+from psyneulink.core.components.mechanisms.mechanism import Mechanism, MechanismError
 from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, INTEGRATOR_MECHANISM, VARIABLE, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
@@ -102,12 +102,8 @@ __all__ = [
 # IntegratorMechanism parameter keywords:
 DEFAULT_RATE = 0.5
 
-class IntegratorMechanismError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class IntegratorMechanismError(MechanismError):
+    pass
 
 
 class IntegratorMechanism(ProcessingMechanism_Base):

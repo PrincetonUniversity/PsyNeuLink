@@ -1,8 +1,10 @@
+import contextlib
 import doctest
+import io
+import numpy as np
 import psyneulink
 import pytest
-import numpy as np
-
+import re
 
 from psyneulink import clear_registry, primary_registries
 from psyneulink.core import llvm as pnlvm
@@ -164,13 +166,22 @@ def llvm_current_fp_precision():
 @pytest.helpers.register
 def get_comp_execution_modes():
     return [pytest.param(pnlvm.ExecutionMode.Python),
-            # pytest.param(pnlvm.ExecutionMode.PyTorch, marks=pytest.mark.pytorch),
             pytest.param(pnlvm.ExecutionMode.LLVM, marks=pytest.mark.llvm),
             pytest.param(pnlvm.ExecutionMode.LLVMExec, marks=pytest.mark.llvm),
             pytest.param(pnlvm.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
             pytest.param(pnlvm.ExecutionMode.PTXExec, marks=[pytest.mark.llvm, pytest.mark.cuda]),
             pytest.param(pnlvm.ExecutionMode.PTXRun, marks=[pytest.mark.llvm,  pytest.mark.cuda])
            ]
+
+@pytest.helpers.register
+def get_comp_and_ocm_execution_modes():
+
+    # The first part converts composition execution mode to (comp_mod, ocm_mode) pair.
+    # All comp_mode-s other than Python set ocm_mode to None, which is invalid and will
+    # fail assertion if executed in Python mode, ExecutionMode.Python sets ocm_mode to 'Python'.
+    return [pytest.param(x.values[0], 'Python' if x.values[0] is pnlvm.ExecutionMode.Python else 'None', id=str(x.values[0]), marks=x.marks) for x in get_comp_execution_modes()] + \
+           [pytest.param(pnlvm.ExecutionMode.Python, 'LLVM', id='Python-LLVM', marks=pytest.mark.llvm),
+            pytest.param(pnlvm.ExecutionMode.Python, 'PTX', id='Python-PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])]
 
 @pytest.helpers.register
 def cuda_param(val):
@@ -200,6 +211,14 @@ def get_mech_execution(mech, mech_mode):
         return mech_wrapper
     else:
         assert False, "Unknown mechanism mode: {}".format(mech_mode)
+
+@pytest.helpers.register
+def numpy_uses_avx512():
+    out = io.StringIO()
+    with contextlib.redirect_stdout(out):
+        np.show_config()
+
+    return re.search('  found = .*AVX512.*', out.getvalue()) is not None
 
 @pytest.helpers.register
 def expand_np_ndarray(arr):

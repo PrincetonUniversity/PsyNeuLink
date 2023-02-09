@@ -1087,7 +1087,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.component import Component
+from psyneulink.core.components.component import Component, ComponentError
 from psyneulink.core.components.functions.function import FunctionOutputType
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
 from psyneulink.core.components.ports.inputport import DEFER_VARIABLE_SPEC_TO_MECH_MSG, InputPort
@@ -1125,12 +1125,8 @@ logger = logging.getLogger(__name__)
 MechanismRegistry = {}
 
 
-class MechanismError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class MechanismError(ComponentError):
+    pass
 
 
 class MechParamsDict(UserDict):
@@ -2634,14 +2630,15 @@ class Mechanism_Base(Mechanism):
                 # Call input_port._execute with newly assigned variable and assign result to input_port.value
                 base_error_msg = f"Input to '{self.name}' ({input_item}) is incompatible " \
                                  f"with its corresponding {InputPort.__name__} ({input_port.full_name})"
+                variable = input_port.parameters.variable.get(context)
                 try:
-                    input_port.parameters.value._set(
-                        input_port._execute(input_port.parameters.variable.get(context), context),
-                        context)
-                except (RunError,TypeError) as error:
+                    value = input_port._execute(variable, context)
+                except (RunError, TypeError) as error:
                     raise MechanismError(f"{base_error_msg}: '{error.args[0]}.'")
                 except:
                     raise MechanismError(f"{base_error_msg}.")
+                else:
+                    input_port.parameters.value._set(value, context)
             else:
                 raise MechanismError(f"Length ({len(input_item)}) of input ({input_item}) does not match "
                                      f"required length ({input_port.default_input_shape.size}) for input "
@@ -3145,13 +3142,18 @@ class Mechanism_Base(Mechanism):
                                                         arg_out])
         return builder, is_finished_cond
 
-    def _gen_llvm_function_reset(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+    def _gen_llvm_function_reset(self, ctx, builder, m_base_params, m_state, m_arg_in, m_arg_out, *, tags:frozenset):
         assert "reset" in tags
+
         reinit_func = ctx.import_llvm_function(self.function, tags=tags)
-        reinit_params = pnlvm.helpers.get_param_ptr(builder, self, params, "function")
-        reinit_state = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
         reinit_in = builder.alloca(reinit_func.args[2].type.pointee, name="reinit_in")
         reinit_out = builder.alloca(reinit_func.args[3].type.pointee, name="reinit_out")
+
+        reinit_base_params = pnlvm.helpers.get_param_ptr(builder, self, m_base_params, "function")
+        reinit_params, builder = self._gen_llvm_param_ports_for_obj(
+                self.function, reinit_base_params, ctx, builder, m_base_params, m_state, m_arg_in)
+        reinit_state = pnlvm.helpers.get_state_ptr(builder, self, m_state, "function")
+
         builder.call(reinit_func, [reinit_params, reinit_state, reinit_in,
                                    reinit_out])
 

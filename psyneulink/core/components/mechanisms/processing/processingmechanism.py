@@ -93,7 +93,7 @@ import numpy as np
 
 from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
 from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot
-from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, Mechanism
+from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, Mechanism, MechanismError
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.keywords import \
@@ -108,9 +108,8 @@ __all__ = [
 ]
 
 
-class ProcessingMechanismError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
+class ProcessingMechanismError(MechanismError):
+    pass
 
 
 # # These are defined here because STANDARD_DEVIATION AND VARIANCE
@@ -216,13 +215,6 @@ __all__ = [
 
 # ProcessingMechanism parameter keywords:
 DEFAULT_RATE = 0.5
-
-class ProcessingMechanismError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
 
 
 class ProcessingMechanism(ProcessingMechanism_Base):

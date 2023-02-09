@@ -310,9 +310,8 @@ parameter_keywords.update({MAPPING_PROJECTION})
 projection_keywords.update({MAPPING_PROJECTION})
 
 
-class MappingError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
+class MappingError(ProjectionError):
+    pass
 
 
 def _mapping_projection_matrix_getter(owning_component=None, context=None):

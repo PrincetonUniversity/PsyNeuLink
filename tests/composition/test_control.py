@@ -132,8 +132,7 @@ class TestControlSpecification:
                          'and/or OutputPorts to be monitored for control.'
         with pytest.raises(pnl.ControlMechanismError) as error:
             pnl.Composition(controller=pnl.ControlMechanism(objective_mechanism=mech))
-        error_msg = error.value.error_value
-        assert expected_error in error_msg
+        assert expected_error in str(error.value)
 
     def test_objective_mechanism_spec_as_monitor_for_control_error(self):
         expected_error = 'The \'monitor_for_control\' arg of \'ControlMechanism-0\' contains a specification ' \
@@ -141,8 +140,7 @@ class TestControlSpecification:
                          'This should be specified in its \'objective_mechanism\' argument.'
         with pytest.raises(pnl.ControlMechanismError) as error:
             pnl.Composition(controller=pnl.ControlMechanism(monitor_for_control=pnl.ObjectiveMechanism()))
-        error_msg = error.value.error_value
-        assert expected_error in error_msg
+        assert expected_error in str(error.value)
 
     @pytest.mark.state_features
     @pytest.mark.parametrize("control_spec", [CONTROL, PROJECTIONS])
@@ -621,7 +619,7 @@ class TestControlSpecification:
 
         with pytest.raises(pnl.OptimizationControlMechanismError) as error_text:
             ocomp.run({initial_node_a: [1]})
-        assert expected_text in error_text.value.error_value
+        assert expected_text in str(error_text.value)
 
         ocomp.add_linear_processing_pathway([deferred_node, initial_node_b])
         assert ocomp.controller.state_features == {'ia[InputPort-0]': 'ia[InputPort-0]',
@@ -670,8 +668,8 @@ class TestControlSpecification:
                 ])
         )
 
-        text = '"Controller has \'outcome_ouput_ports\' that receive Projections from the following Components ' \
-               'that do not belong to its agent_rep (ocomp): [\'deferred\']."'
+        text = 'Controller has \'outcome_ouput_ports\' that receive Projections from the following Components ' \
+               + 'that do not belong to its agent_rep (ocomp): [\'deferred\'].'
         with pytest.raises(pnl.OptimizationControlMechanismError) as error:
             ocomp.run({initial_node: [1]})
         assert text == str(error.value)
@@ -1073,7 +1071,7 @@ class TestControlMechanisms:
                 ocomp.add_controller(ocm)
                 ocomp._analyze_graph()
                 ocomp.run()
-            assert err.value.error_value == err_msg
+            assert str(err.value) == err_msg
 
     messages = [
         # 0
@@ -1083,16 +1081,16 @@ class TestControlMechanisms:
         f"behavior, use its get_inputs_format() method to see the format for its inputs.",
 
         # 1
-        f'\'Attempt to shadow the input to a node (IB) in a nested Composition of OUTER COMP '
-        f'that is not an INPUT Node of that Composition is not currently supported.\'',
+        'Attempt to shadow the input to a node (IB) in a nested Composition of OUTER COMP '
+        + 'that is not an INPUT Node of that Composition is not currently supported.',
 
         # 2
-        f'"\'OptimizationControlMechanism-0\' has \'state_features\' specified ([\'SHADOWED INPUT OF EXT[InputPort-0] '
-        f'FOR IA[InputPort-0]\']) that are missing from \'OUTER COMP\' and any Compositions nested within it."',
+        '\'OptimizationControlMechanism-0\' has \'state_features\' specified ([\'SHADOWED INPUT OF EXT[InputPort-0] '
+        + 'FOR IA[InputPort-0]\']) that are missing from \'OUTER COMP\' and any Compositions nested within it.',
 
         # 3
-        '"\'OptimizationControlMechanism-0\' has \'state_features\' specified ([\'INPUT FROM EXT[OutputPort-0] '
-        'FOR IA[InputPort-0]\']) that are missing from \'OUTER COMP\' and any Compositions nested within it."',
+        '\'OptimizationControlMechanism-0\' has \'state_features\' specified ([\'INPUT FROM EXT[OutputPort-0] '
+        + 'FOR IA[InputPort-0]\']) that are missing from \'OUTER COMP\' and any Compositions nested within it.',
 
         # 4
         f"The '{pnl.STATE_FEATURES}' argument has been specified for 'OptimizationControlMechanism-0' that is using "
@@ -1116,8 +1114,8 @@ class TestControlMechanisms:
         f"will generate an error.",
 
         # 7
-        f'"The number of \'state_features\' specified for OptimizationControlMechanism-0 (4) is more than the number '
-        f'of INPUT Nodes (3) of the Composition assigned as its agent_rep (\'OUTER COMP\')."',
+        'The number of \'state_features\' specified for OptimizationControlMechanism-0 (4) is more than the number '
+        + 'of INPUT Nodes (3) of the Composition assigned as its agent_rep (\'OUTER COMP\').',
 
         # 8
         f'The \'state_features\' specified for \'OptimizationControlMechanism-0\' contains an item (OC) '
@@ -2499,6 +2497,84 @@ class TestControlMechanisms:
         else:
             assert False, "Unknown PRNG!"
 
+    @pytest.mark.control
+    @pytest.mark.composition
+    # test only OCM modes. we check "saved_values" which are not available in e2e compilation
+    # FIXME: skip Python since direct ocm modulation of initializers is not implemented yet
+    @pytest.mark.parametrize('ocm_mode', [pytest.param('Python', marks=pytest.mark.skip),
+                                          pytest.param('LLVM', marks=pytest.mark.llvm),
+                                          pytest.helpers.cuda_param('PTX')])
+    def test_modulation_of_initializer(self, ocm_mode):
+        ddm = pnl.DDM(function=pnl.DriftDiffusionIntegrator(threshold=10,
+                                                            time_step_size=1,
+                                                            non_decision_time=0.6))
+
+        obj = pnl.ObjectiveMechanism(monitor=ddm.output_ports[pnl.RESPONSE_TIME])
+        comp = pnl.Composition(retain_old_simulation_data=True,
+                               controller_mode=pnl.BEFORE)
+        comp.add_node(ddm, required_roles=pnl.NodeRole.INPUT)
+        comp.add_node(obj)
+
+        comp.add_controller(
+            pnl.OptimizationControlMechanism(
+                agent_rep=comp,
+                objective_mechanism=obj,
+                control_signals=pnl.ControlSignal(
+                    modulates=(pnl.NON_DECISION_TIME, ddm),
+                    modulation=pnl.OVERRIDE,
+                    allocation_samples=[0.1, 0.2, 0.3, 0.4, 0.5],
+                )
+            )
+        )
+        comp.controller.function.save_values = True
+        comp.controller.comp_execution_mode = ocm_mode
+
+        comp.run(inputs={ddm: [2]},
+                 num_trials=1)
+
+        assert np.allclose(comp.controller.function.saved_values, [5.1, 5.2, 5.3, 5.4, 5.5])
+
+    @pytest.mark.control
+    @pytest.mark.composition
+    # test only OCM modes. we check "saved_values" which are not available in e2e compilation
+    # FIXME: skip Python since direct ocm modulation of initializers is not implemented yet
+    @pytest.mark.parametrize('ocm_mode', [pytest.param('Python', marks=pytest.mark.skip),
+                                          pytest.param('LLVM', marks=pytest.mark.llvm),
+                                          pytest.helpers.cuda_param('PTX')])
+    def test_modulation_of_initializer_nested(self, ocm_mode):
+        ddm = pnl.DDM(function=pnl.DriftDiffusionIntegrator(threshold=10,
+                                                            time_step_size=1,
+                                                            non_decision_time=0.6))
+
+        obj = pnl.ObjectiveMechanism(monitor=ddm.output_ports[pnl.RESPONSE_TIME])
+
+        inner_comp = pnl.Composition(name="Inner comp")
+        inner_comp.add_node(ddm, required_roles=pnl.NodeRole.INPUT)
+
+
+        outer_comp = pnl.Composition(retain_old_simulation_data=True,
+                                     controller_mode=pnl.BEFORE)
+
+        outer_comp.add_node(inner_comp, required_roles=pnl.NodeRole.INPUT)
+        outer_comp.add_controller(
+            pnl.OptimizationControlMechanism(
+                agent_rep=outer_comp,
+                objective_mechanism=obj,
+                control_signals=pnl.ControlSignal(
+                    modulates=(pnl.NON_DECISION_TIME, ddm),
+                    modulation=pnl.OVERRIDE,
+                    allocation_samples=[0.1, 0.2, 0.3, 0.4, 0.5],
+                )
+            )
+        )
+        outer_comp.controller.function.save_values = True
+        outer_comp.controller.comp_execution_mode = ocm_mode
+
+        outer_comp.run(inputs={inner_comp: [2]},
+                       num_trials=1)
+
+        assert np.allclose(outer_comp.controller.function.saved_values, [5.1, 5.2, 5.3, 5.4, 5.5])
+
     @pytest.mark.benchmark
     @pytest.mark.control
     @pytest.mark.composition
@@ -2614,16 +2690,8 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
 
     @pytest.mark.parametrize("nested", [True, False])
     @pytest.mark.parametrize("format", ["list", "tuple", "SampleIterator", "SampleIteratorArray", "SampleSpec", "ndArray"])
-    @pytest.mark.parametrize("mode", pytest.helpers.get_comp_execution_modes() +
-                                     [pytest.helpers.cuda_param('Python-PTX'),
-                                      pytest.param('Python-LLVM', marks=pytest.mark.llvm)])
-    def test_ocm_searchspace_format_equivalence(self, format, nested, mode):
-        if str(mode).startswith('Python-'):
-            ocm_mode = mode.split('-')[1]
-            mode = pnl.ExecutionMode.Python
-        else:
-            # OCM default mode is Python
-            ocm_mode = 'Python'
+    @pytest.mark.parametrize("mode, ocm_mode", pytest.helpers.get_comp_and_ocm_execution_modes())
+    def test_ocm_searchspace_format_equivalence(self, format, nested, mode, ocm_mode):
 
         if format == "list":
             search_space = [1, 10]
@@ -3197,16 +3265,8 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
             )
 
     @pytest.mark.benchmark(group="Model Based OCM")
-    @pytest.mark.parametrize("mode", pytest.helpers.get_comp_execution_modes() +
-                                     [pytest.helpers.cuda_param('Python-PTX'),
-                                      pytest.param('Python-LLVM', marks=pytest.mark.llvm)])
-    def test_model_based_ocm_after(self, benchmark, mode):
-        if str(mode).startswith('Python-'):
-            ocm_mode = mode.split('-')[1]
-            mode = pnl.ExecutionMode.Python
-        else:
-            # OCM default mode is Python
-            ocm_mode = 'Python'
+    @pytest.mark.parametrize("mode, ocm_mode", pytest.helpers.get_comp_and_ocm_execution_modes())
+    def test_model_based_ocm_after(self, benchmark, mode, ocm_mode):
 
         A = pnl.ProcessingMechanism(name='A')
         B = pnl.ProcessingMechanism(name='B')
@@ -3246,16 +3306,8 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
             benchmark(comp.run, inputs, execution_mode=mode)
 
     @pytest.mark.benchmark(group="Model Based OCM")
-    @pytest.mark.parametrize("mode", pytest.helpers.get_comp_execution_modes() +
-                                     [pytest.helpers.cuda_param('Python-PTX'),
-                                      pytest.param('Python-LLVM', marks=pytest.mark.llvm)])
-    def test_model_based_ocm_before(self, benchmark, mode):
-        if str(mode).startswith('Python-'):
-            ocm_mode = mode.split('-')[1]
-            mode = pnl.ExecutionMode.Python
-        else:
-            # OCM default mode is Python
-            ocm_mode = 'Python'
+    @pytest.mark.parametrize("mode, ocm_mode", pytest.helpers.get_comp_and_ocm_execution_modes())
+    def test_model_based_ocm_before(self, benchmark, mode, ocm_mode):
 
         A = pnl.ProcessingMechanism(name='A')
         B = pnl.ProcessingMechanism(name='B')

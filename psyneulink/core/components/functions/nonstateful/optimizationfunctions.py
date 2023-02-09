@@ -40,7 +40,7 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import (
-    DEFAULT_SEED, Function_Base, _random_state_getter,
+    DEFAULT_SEED, Function_Base, FunctionError, _random_state_getter,
     _seed_setter, is_function_type,
 )
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
@@ -66,9 +66,8 @@ SEARCH_TERMINATION_FUNCTION = 'search_termination_function'
 DIRECTION = 'direction'
 SIMULATION_PROGRESS = 'simulation_progress'
 
-class OptimizationFunctionError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
+class OptimizationFunctionError(FunctionError):
+    pass
 
 
 def _num_estimates_getter(owning_component, context):
@@ -1189,6 +1188,8 @@ class GradientOptimization(OptimizationFunction):
 
         if self.owner:
             owner_str = ' of {self.owner.name}'
+        else:
+            owner_str = ''
 
         # Get bounds from search_space if it has any non-None entries
         if any(i is not None for i in self.search_space):
@@ -1243,9 +1244,9 @@ class GradientOptimization(OptimizationFunction):
                 # Array specified for upper bound, so replace any None's with +inf
                 upper = np.array([[float('inf')] if n[0] is None else n for n in upper.reshape(sample_len,1)])
 
-                if not all(lower<upper):
+                if not all(lower <= upper):
                     raise OptimizationFunctionError(f"Specification of {repr(BOUNDS)} arg ({bounds}) for {self.name}"
-                                                    f"{owner_str} resulted in lower >= corresponding upper for one or "
+                                                    f"{owner_str} resulted in lower > corresponding upper for one or "
                                                     f"more elements (lower: {lower.tolist()}; uuper: {upper.tolist()}).")
 
                 bounds = (lower,upper)
