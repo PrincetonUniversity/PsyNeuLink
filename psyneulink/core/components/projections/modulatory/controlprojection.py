@@ -133,12 +133,8 @@ projection_keywords.update({CONTROL_PROJECTION, CONTROL})
 
 CONTROL_SIGNAL_PARAMS = 'control_signal_params'
 
-class ControlProjectionError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class ControlProjectionError(ProjectionError):
+    pass
 
 
 class ControlProjection(ModulatoryProjection_Base):

@@ -404,6 +404,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
+from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.function import get_matrix
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.functions.nonstateful.transferfunctions import LinearMatrix
@@ -467,9 +468,8 @@ def projection_param_keywords():
 ProjectionTuple = namedtuple("ProjectionTuple", "port, weight, exponent, projection")
 
 
-class ProjectionError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
+class ProjectionError(ComponentError):
+    pass
 
 class DuplicateProjectionError(Exception):
     def __init__(self, error_value):
@@ -1035,6 +1035,12 @@ class Projection_Base(Projection):
 
     # Provide invocation wrapper
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+
+        if "passthrough" in tags:
+            assert arg_in.type == arg_out.type, "Requestd passthrough projection but types are not compatible IN: {} OUT: {}".format(arg_in.type, arg_out.type)
+            builder.store(builder.load(arg_in), arg_out)
+            return builder
+
         mf_state = pnlvm.helpers.get_state_ptr(builder, self, state, self.parameters.function.name)
         mf_params = pnlvm.helpers.get_param_ptr(builder, self, params, self.parameters.function.name)
         main_function = ctx.import_llvm_function(self.function)

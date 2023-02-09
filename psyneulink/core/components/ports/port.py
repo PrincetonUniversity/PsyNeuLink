@@ -847,13 +847,8 @@ def _is_port_class(spec):
 #        Individual portRegistries (used for naming) are created for each Mechanism
 PortRegistry = {}
 
-class PortError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-
-    def __str__(self):
-        return repr(self.error_value)
+class PortError(ComponentError):
+    pass
 
 
 # DOCUMENT:  INSTANTIATION CREATES AN ATTIRBUTE ON THE OWNER MECHANISM WITH THE PORT'S NAME + VALUE_SUFFIX

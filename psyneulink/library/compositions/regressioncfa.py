@@ -83,7 +83,7 @@ from itertools import product
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BayesGLM
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.ports.port import _parse_port_spec
-from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
+from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator, CompositionFunctionApproximatorError
 from psyneulink.core.globals.keywords import ALL, CONTROL_SIGNALS, DEFAULT_VARIABLE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.utilities import get_deepcopy_with_shared, powerset, tensor_power
@@ -148,9 +148,8 @@ class PV(Enum):
     COST = 8
 
 
-class RegressionCFAError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
+class RegressionCFAError(CompositionFunctionApproximatorError):
+    pass
 
 
 class RegressionCFA(CompositionFunctionApproximator):

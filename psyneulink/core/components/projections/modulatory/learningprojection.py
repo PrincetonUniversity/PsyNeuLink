@@ -196,7 +196,7 @@ from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.components.projections.projection import projection_keywords
+from psyneulink.core.components.projections.projection import ProjectionError, projection_keywords
 from psyneulink.core.components.shellclasses import ShellClass
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
@@ -222,12 +222,8 @@ WT_MATRIX_RECEIVERS_DIM = 1
 DefaultTrainingMechanism = ObjectiveMechanism
 
 
-class LearningProjectionError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class LearningProjectionError(ProjectionError):
+    pass
 
 
 def _learning_signal_getter(owning_component=None, context=None):

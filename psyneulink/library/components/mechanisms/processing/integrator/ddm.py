@@ -373,6 +373,7 @@ from psyneulink.core.components.functions.nonstateful.distributionfunctions impo
     DriftDiffusionAnalytical
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import Reduce
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import _is_control_spec
+from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.ports.outputport import SEQUENTIAL, StandardOutputPorts
@@ -431,12 +432,8 @@ def decision_variable_to_array(x):
         return [0,x]
 
 
-class DDMError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class DDMError(MechanismError):
+    pass
 
 
 class DDM(ProcessingMechanism):

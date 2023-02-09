@@ -107,7 +107,7 @@ import typecheck as tc
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.nonstateful.transferfunctions import LinearMatrix
 from psyneulink.core.components.functions.function import get_matrix
-from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.core.components.projections.pathway.mappingprojection import MappingError, MappingProjection
 from psyneulink.core.components.projections.projection import projection_keywords
 from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.components.ports.outputport import OutputPort
@@ -124,9 +124,8 @@ parameter_keywords.update({AUTO_ASSOCIATIVE_PROJECTION})
 projection_keywords.update({AUTO_ASSOCIATIVE_PROJECTION})
 
 
-class AutoAssociativeError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
+class AutoAssociativeError(MappingError):
+    pass
 
 
 class AutoAssociativeProjection(MappingProjection):
