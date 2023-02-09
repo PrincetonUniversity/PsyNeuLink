@@ -170,7 +170,7 @@ from psyneulink import *
 # Settings for running script:
 CONSTRUCT_MODEL = True # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = False # True = show visual graphic of model
-TRAIN_FFN = False  # True => train the FFN (WM)
+TRAIN_FFN = True  # True => train the FFN (WM)
 TEST_FFN = True  # True => test the FFN on training stimuli (WM)
 RUN_MODEL = True  # True => test the model on sample stimulus sequences
 ANALYZE_RESULTS = True # True => output analysis of results of run
@@ -404,7 +404,7 @@ def construct_model(stim_size:int = STIM_SIZE,
     #      - if outcome of decision signifies a match or hazard rate is realized:
     #        - set  EM[store_prob]=1 (as prep encoding stimulus in EM on next trial)
     #        - this also serves to terminate trial (see nback_model.termination_processing condition)
-    #      - if outcome of decision signifies a non-match
+    #      - if outcome of decision signifies a non-match and hazard rate is not realized:
     #        - set  EM[store_prob]=0 (as prep for another retrieval from EM without storage)
     #        - continue trial
     control = ControlMechanism(name=CONTROLLER,
@@ -416,8 +416,10 @@ def construct_model(stim_size:int = STIM_SIZE,
                                                                       # Outcome=1 if match, else 0
                                                                       function=lambda x: int(x[0][0]>x[0][1])),
                                # Set ControlSignal for EM[store_prob]
+                               #   to 1 if match or hazard rate is realized (i.e., store stimulus and end trial)
+                               #   else 0 (i.e., don't store stimulus and continue retrieving)
                                function=lambda outcome: int(bool(outcome)
-                                                            or (np.random.random() > retrieval_hazard_rate)),
+                                                            or (np.random.random() < retrieval_hazard_rate)),
                                # ---------
                                # # VERSION *WITHOUT* ObjectiveMechanism:
                                # monitor_for_control=decision,
