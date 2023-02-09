@@ -7,4 +7,4 @@ pytest-helpers-namespace<2021.12.30
 pytest-profiling<=1.7.0
 pytest-pycodestyle<2.4.0
 pytest-pydocstyle<2.4.0
-pytest-xdist<3.2.0
+pytest-xdist<3.3.0
