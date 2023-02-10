@@ -171,15 +171,10 @@ def test_pec(objective_function_arg, expected_outcome_input_len, model_spec, nod
     )
 
     if expected_outcome_input_len > 1:
-        expected_error = (
-            "Problem with '(GridSearch GridSearch Function-0)' in 'OptimizationControlMechanism-0': "
-            "GridSearch Error: (GridSearch GridSearch Function-0)._evaluate returned values with more "
-            "than one element. GridSearch currently does not support optimizing over multiple output "
-            "values."
-        )
+        expected_error = "GridSearch currently does not support optimizing over multiple output values."
         with pytest.raises(pnl.FunctionError) as error:
             pec.run()
-        assert expected_error == error.value.args[0]
+        assert expected_error in error.value.args[0]
     else:
         pec.run()
 

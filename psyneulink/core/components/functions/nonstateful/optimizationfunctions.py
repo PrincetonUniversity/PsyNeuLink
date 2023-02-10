@@ -681,18 +681,20 @@ class OptimizationFunction(Function_Base):
                 self.parameters.randomization_dimension._get(context) and \
                 self.parameters.num_estimates._get(context) is not None:
 
-            # FIXME: This is easy to support in hybrid mode. We just need to convert ctype results
-            #        returned from _grid_evaluate to numpy
-            assert not self.owner or self.owner.parameters.comp_execution_mode._get(context) == 'Python', \
-                   "Aggregation function not supported in compiled mode!"
-
-            # Reshape all the values we encountered to group those that correspond to the same parameter values
-            # can be aggregated. After this we should have an array that is of shape
-            # (number of parameter combinations (excluding randomization), num_estimates, number of output values)
+            # Reshape all_values so that aggregation can be performed over randomization dimension
             num_estimates = int(self.parameters.num_estimates._get(context))
-            num_param_combs = all_values.shape[1] // num_estimates
-            num_outputs = all_values.shape[0]
-            all_values = np.reshape(all_values.transpose(), (num_param_combs, num_estimates, num_outputs))
+            num_evals = np.prod([d.num for d in self.search_space])
+            num_param_combs = num_evals // num_estimates
+
+            # if in compiled model, all_values comes from _grid_evaluate, so convert ctype double array to numpy
+            if self.owner and self.owner.parameters.comp_execution_mode._get(context) != 'Python':
+                num_outcomes = len(all_values) // num_evals
+                all_values = np.ctypeslib.as_array(all_values).reshape((num_outcomes, num_evals))
+                all_samples = np.array(all_samples).transpose()
+            else:
+                num_outcomes = all_values.shape[0]
+
+            all_values = np.reshape(all_values.transpose(), (num_param_combs, num_estimates, num_outcomes))
 
             # Since we are aggregating over the randomized value of the control allocation, we also need to drop the
             # randomized dimension from the samples. That is, we don't want to return num_estimates samples for each
@@ -791,7 +793,6 @@ class OptimizationFunction(Function_Base):
         evaluated_samples = np.stack(evaluated_samples, axis=-1)
 
         # FIX: 11/3/21: ??MODIFY TO RETURN SAME AS _grid_evaluate
-        # return current_sample, current_value, evaluated_samples, estimated_values
         return current_sample, current_value, evaluated_samples, estimated_values
 
     def _grid_evaluate(self, ocm, context, get_results:bool):
@@ -2061,8 +2062,9 @@ class GridSearch(OptimizationFunction):
 
             # Compiled version
             ocm = self._get_optimized_controller()
-            if ocm is not None and ocm.parameters.comp_execution_mode._get(context) in {"PTX", "LLVM"}:
-
+            # if ocm is not None and ocm.parameters.comp_execution_mode._get(context) in {"PTX", "LLVM"}:
+            if (ocm is not None and ocm.parameters.comp_execution_mode._get(context) in {"PTX", "LLVM"}
+                    and not isinstance(all_values, np.ndarray)):
                 # Reduce array of values to min/max
                 # select_min params are:
                 # params, state, min_sample_ptr, sample_ptr, min_value_ptr, value_ptr, opt_count_ptr, count
