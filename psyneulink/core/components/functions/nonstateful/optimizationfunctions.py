@@ -675,7 +675,7 @@ class OptimizationFunction(Function_Base):
                                                                                          context)
 
         # If  aggregation_function is specified and there is a randomization dimension specified
-        # in the control signals; use the aggregation function aggregate over the samples generated
+        # in the control signals; use the aggregation function to aggregate over the samples generated
         # for different randomized values of the control signal
         if self.aggregation_function and \
                 self.parameters.randomization_dimension._get(context) and \

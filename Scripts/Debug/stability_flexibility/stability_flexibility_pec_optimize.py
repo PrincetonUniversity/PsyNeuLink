@@ -5,7 +5,7 @@ import psyneulink as pnl
 import pandas as pd
 
 from psyneulink.core.globals.utilities import set_global_seed
-from psyneulink.core.components.functions.nonstateful.fitfunctions import MaxLikelihoodEstimator
+from psyneulink.core.components.functions.nonstateful.optimizationfunctions import GridSearch
 
 sys.path.append(".")
 
@@ -72,12 +72,12 @@ print("Setting up PEC")
 data_to_fit = pd.DataFrame(
     np.squeeze(np.array(results))[:, 1:], columns=["decision", "response_time"]
 )
-data_to_fit["decision"] = data_to_fit["decision"].astype("category")
+#data_to_fit["decision"] = data_to_fit["decision"].astype("category")
 
 #%%
 
-# Create a parameter estimation composition to fit the data we just generated and hopefully recover the
-# parameters of the composition.
+# Create a parameter estimation composition to search for parameter values 
+# that optimize an objective function
 
 controlModule = comp.nodes["Task Activations [Act1, Act2]"]
 congruenceWeighting = comp.nodes["Automaticity-weighted Stimulus Input [w*S1, w*S2]"]
@@ -86,11 +86,14 @@ decisionGate = comp.nodes["DECISION_GATE"]
 responseGate = comp.nodes["RESPONSE_GATE"]
 
 fit_parameters = {
-    ("gain", controlModule): np.linspace(1.0, 10.0, 1000),  # Gain
-    ("slope", congruenceWeighting): np.linspace(0.0, 0.1, 1000),  # Automaticity
-    ("threshold", decisionMaker): np.linspace(0.01, 0.5, 1000),  # Threshold
-    ("non_decision_time", decisionMaker): np.linspace(0.1, 0.4, 1000),  # Threshold
+    ("threshold", decisionMaker): np.linspace(0.01, 0.5, 100),  # Threshold
 }
+
+def objective_function(variable):
+    decision_variable = variable[0]
+    rt_variable = variable[1]
+    rr = decision_variable / rt_variable
+    return rr
 
 pec = pnl.ParameterEstimationComposition(
     name="pec",
@@ -100,8 +103,8 @@ pec = pnl.ParameterEstimationComposition(
         decisionGate.output_ports[0],
         responseGate.output_ports[0],
     ],
-    data=data_to_fit,
-    optimization_function=MaxLikelihoodEstimator(),
+    objective_function=objective_function,
+    optimization_function=GridSearch(),
     num_estimates=num_estimates,
 )
 
@@ -112,7 +115,7 @@ print("Running the PEC")
 ret = pec.run(inputs=inputs)
 optimal_parameters = pec.controller.optimal_parameters
 
-# Print the recovered parameters.
+# Print the optimized parameters.
 records = []
 for (name, mech), recovered_param in zip(fit_parameters.keys(), optimal_parameters):
 
@@ -121,7 +124,6 @@ for (name, mech), recovered_param in zip(fit_parameters.keys(), optimal_paramete
     else:
         true_param = sf_params[name]
 
-    percent_error = 100.0 * (abs(true_param - recovered_param) / true_param)
-    records.append((name, mech.name, true_param, recovered_param, percent_error))
-df = pd.DataFrame(records, columns=['Parameter', 'Component', 'Value', 'Recovered Value', 'Percent Error'])
+    records.append((name, mech.name, recovered_param))
+df = pd.DataFrame(records, columns=['Parameter', 'Component', 'Optimized Value'])
 print(df)

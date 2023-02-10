@@ -122,6 +122,14 @@ Parameter Optimization
       an array containing the `value <OutputPort.value>` of the OutputPort corresponding to each  item specified in
       `outcome_variables <ParameterEstimationComposition.outcome_variables>`.
 
+      .. technical_note::
+         The **objective_function** is used to a create an `ObjectiveMechanism` that provides input
+         to the ParameterEstimationComposition's `controller <ParameterEstimationComposition.controller>`;
+         it should not be confused with the `objective_mechanism <OptimizationFunction.objective_mechanism>`
+         of the `OptimizationControlMechanism`\\'s `OptimizationFunction`;
+         see `OptimizationControlMechanism_ObjectiveMechanism` and
+         `OptimizationControlMechanism_Function` for additional details.
+
     * **optimization_function** - specifies the function used to search over values of the `parameters
       <ParameterEstimationComposition.parameters>` in order to optimize the **objective_function**.  It can be any
       `OptimizationFunction` that accepts an `objective_function <OptimizationFunction>` as an argument or specifies
@@ -155,21 +163,13 @@ import numpy as np
 import pandas as pd
 
 import psyneulink.core.llvm as pnllvm
-from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import (
-    OptimizationControlMechanism,
-)
-from psyneulink.core.components.mechanisms.processing.objectivemechanism import (
-    ObjectiveMechanism,
-)
-from psyneulink.core.components.ports.modulatorysignals.controlsignal import (
-    ControlSignal,
-)
 from psyneulink.core.compositions.composition import Composition, CompositionError
-from psyneulink.core.globals.context import (
-    Context,
-    ContextFlags,
-    handle_external_context,
-)
+from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \
+    OptimizationControlMechanism
+from psyneulink.core.components.functions.nonstateful.optimizationfunctions import GridSearch
+from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
+from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import BEFORE, OVERRIDE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.utilities import convert_to_list
@@ -281,19 +281,16 @@ class ParameterEstimationComposition(Composition):
         all data dimensions are assumed to be continuous.
 
     objective_function : ObjectiveFunction, function or method
-        specifies the function used to evaluate the `net_outcome <ControlMechanism.net_outcome>` of the `model
-        <ParameterEstimationComposition.model>` when the ParameterEstimationComposition is used for
-        `ParameterEstimationComposition_Optimization` (see `objective_function
-        <ParameterEstimationComposition.objective_function>` for additional information).
+        specifies the function used by **optimization_function** (see `objective_function
+        <ParameterEstimationComposition.objective_function>` for additional information);  the shape of its `variable
+        <Component.variable>` argument (i.e., its first positional argument) must be the same as an
+        array containing the `value <OutputPort.value>` of the OutputPort corresponding to each item specified in
+        `outcome_variables <ParameterEstimationComposition.outcome_variables>`.
 
-    optimization_function : OptimizationFunction, function or method
+    optimization_function : OptimizationFunction, function or method : default or MaximumLikelihood or GridSearch
         specifies the function used to evaluate the `fit to data <ParameterEstimationComposition_Data_Fitting>`
-        or `optimize <ParameterEstimationComposition_Optimization>` the parameters of the `model
-        <ParameterEstimationComposition.model>` according to a specified `objective_function
-        <ParameterEstimationComposition.objective_function>`; the shape of its `variable <Component.variable>` of the
-        `objective_function (i.e., its first positional argument) must be the same as an array containing the `value
-        <OutputPort.value>` of the OutputPort corresponding to each item specified in `outcome_variables
-        <ParameterEstimationComposition.outcome_variables>`.
+        (default: `MaximumLikelihood`) or to `optimize <ParameterEstimationComposition_Optimization>` the parameters of
+        the `model <ParameterEstimationComposition.model>` (default: `GridSearch`)according to **`objective_function**.
 
     num_estimates : int : default 1
         specifies the number of estimates made for a each combination of `parameter <ParameterEstimationComposition>`
@@ -358,8 +355,7 @@ class ParameterEstimationComposition(Composition):
     objective_function : ObjectiveFunction, function or method
         determines the function used to evaluate the `results <Composition.results>` of the `model
         <ParameterEstimationComposition.model>` under each set of `parameter
-        <ParameterEstimationComposition.parameters>` values when the ParameterEstimationComposition is used for
-        `ParameterEstimationComposition_Optimization`.  It is passed to the ParameterEstimationComposition's
+        <ParameterEstimationComposition.parameters>` values.  It is passed to the ParameterEstimationComposition's
         `OptimizationControlMechanism` as the function of its `objective_mechanism
         <ControlMechanism.objective_mechanism>`, that is used to compute the `net_outcome
         <ControlMechanism.net_outcome>` for of the `model <ParameterEstimationComposition.model>` each time it is
@@ -370,7 +366,7 @@ class ParameterEstimationComposition(Composition):
         determines the function used to estimate the parameters of the `model <ParameterEstimationComposition.model>`
         that either best fit the `data <ParameterEstimationComposition.data>` when the ParameterEstimationComposition
         is used for `ParameterEstimationComposition_Data_Fitting`, or that achieve some maximum or minimum value of
-        the the `optimization_function <ParameterEstimationComposition.optimization_function>` when the
+        the `optimization_function <ParameterEstimationComposition.optimization_function>` when the
         ParameterEstimationComposition is used for `ParameterEstimationComposition_Optimization`.  This is assigned as
         the `function <OptimizationControlMechanism.function>` of the ParameterEstimationComposition's
         `OptimizationControlMechanism`.
@@ -750,13 +746,14 @@ class ParameterEstimationComposition(Composition):
                 )
             )
 
-        # If objective_function has been specified, create and pass ObjectiveMechanism to ocm
+        # If objective_function has been specified, use it to create ObjectiveMechanism and pass that to ocm
         objective_mechanism = (
             ObjectiveMechanism(monitor=outcome_variables, function=objective_function)
             if objective_function
             else None
         )
 
+        # if data is specified, assign to optimization_function attributes
         if data is not None:
             try:
                 optimization_function.data = self._data_numpy
@@ -770,9 +767,9 @@ class ParameterEstimationComposition(Composition):
                     f"It must have a 'data' attribute and a 'data_categorical_dims' attribute."
             )
 
-        elif optimization_function is not None:
-            # If data is None, but no optimization_function is specified, use default
-            optimization_function = GridSearch(objective_function=objective_function)
+        # # If data is not specified, and no optimization_function is specified, use default
+        # elif optimization_function is not None:
+        #     optimization_function = GridSearch()
 
         return PEC_OCM(
             agent_rep=agent_rep,
@@ -788,6 +785,7 @@ class ParameterEstimationComposition(Composition):
             context=context,
             return_results=return_results,
         )
+        assert True
 
     @handle_external_context()
     def run(self, *args, **kwargs):
