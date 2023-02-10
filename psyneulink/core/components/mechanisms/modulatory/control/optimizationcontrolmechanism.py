@@ -1554,6 +1554,10 @@ class OptimizationControlMechanism(ControlMechanism):
         the `control_allocation <ControlMechanism.control_allocation>` that yielded the optimal
         `net_outcome <ControlMechanism.net_outcome>` in call to `evaluate_agent_rep <OptimizationControlMechanism>`.
 
+    optimal_net_outcome : float
+        the `net_outcome <ControlMechanism.net_outcome>` for the `optimal_control_allocation
+        <OptimizationControlMechanism>`.
+
     saved_samples : list
         contains all values of `control_allocation <ControlMechanism.control_allocation>` sampled by `function
         <OptimizationControlMechanism.function>` if its `save_samples <OptimizationFunction.save_samples>` parameter
@@ -3102,6 +3106,7 @@ class OptimizationControlMechanism(ControlMechanism):
             self.saved_values = saved_values
 
         self.optimal_control_allocation = optimal_control_allocation
+        self.optimal_net_outcome = optimal_net_outcome
         optimal_control_allocation = np.array(optimal_control_allocation).reshape((len(self.defaults.value), 1))
 
         # Return optimal control_allocation formatted as 2d array

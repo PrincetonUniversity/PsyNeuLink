@@ -392,7 +392,7 @@ def test_parameter_estimation_ddm_mle(func_mode):
     # against hardcoded values to make sure we are reproducing
     # the same search trajectory from a known working example.
     assert np.allclose(
-        pec.controller.optimal_parameters,
+        pec.optimized_parameter_values,
         [0.222727, 0.597613, 0.122772],
     )
 
