@@ -1550,6 +1550,10 @@ class OptimizationControlMechanism(ControlMechanism):
         <ControlMechanism.control_allocation>` (see `note <OptimizationControlMechanism_Randomization_Control_Signal>`
         above).
 
+    optimal_control_allocation : 1d array
+        the `control_allocation <ControlMechanism.control_allocation>` that yielded the optimal
+        `net_outcome <ControlMechanism.net_outcome>` in call to `evaluate_agent_rep <OptimizationControlMechanism>`.
+
     saved_samples : list
         contains all values of `control_allocation <ControlMechanism.control_allocation>` sampled by `function
         <OptimizationControlMechanism.function>` if its `save_samples <OptimizationFunction.save_samples>` parameter
@@ -3092,13 +3096,15 @@ class OptimizationControlMechanism(ControlMechanism):
         # clean up frozen values after execution
         self.agent_rep._clean_up_as_agent_rep(frozen_context, alt_controller=alt_controller)
 
-        optimal_control_allocation = np.array(optimal_control_allocation).reshape((len(self.defaults.value), 1))
         if self.function.save_samples:
             self.saved_samples = saved_samples
         if self.function.save_values:
             self.saved_values = saved_values
 
-        # Return optimal control_allocation
+        self.optimal_control_allocation = optimal_control_allocation
+        optimal_control_allocation = np.array(optimal_control_allocation).reshape((len(self.defaults.value), 1))
+
+        # Return optimal control_allocation formatted as 2d array
         return optimal_control_allocation
 
     def _get_frozen_context(self, context=None):

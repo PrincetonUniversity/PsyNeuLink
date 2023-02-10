@@ -816,8 +816,13 @@ class ParameterEstimationComposition(Composition):
         # Need to pass restructured inputs dict to run
         # kwargs['inputs'] = {self.nodes[0]: list(inputs_dict.values())}
         kwargs.pop("inputs", None)
+
         # Run the composition as normal
-        return super(ParameterEstimationComposition, self).run(*args, **kwargs)
+        results = super(ParameterEstimationComposition, self).run(*args, **kwargs)
+
+        self.optimized_parameter_values = self.controller.optimal_control_allocation[:-1]
+
+        return results
 
     @handle_external_context()
     def log_likelihood(self, *args, inputs=None, context=None) -> float:
