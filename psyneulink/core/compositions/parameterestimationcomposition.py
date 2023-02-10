@@ -757,13 +757,22 @@ class ParameterEstimationComposition(Composition):
             else None
         )
 
-        # FIX: NEED TO BE SURE CONSTRUCTOR FOR MLE optimization_function HAS data ATTRIBUTE
         if data is not None:
-            optimization_function.data = self._data_numpy
-            optimization_function.data_categorical_dims = self.data_categorical_dims
-            optimization_function.outcome_variable_indices = (
-                self._outcome_variable_indices
+            try:
+                optimization_function.data = self._data_numpy
+                optimization_function.data_categorical_dims = self.data_categorical_dims
+                optimization_function.outcome_variable_indices = (
+                    self._outcome_variable_indices
+                )
+            except AttributeError:
+                raise ParameterEstimationCompositionError(
+                    f"Optimization function {optimization_function} does not support data fitting; "
+                    f"It must have a 'data' attribute and a 'data_categorical_dims' attribute."
             )
+
+        elif optimization_function is not None:
+            # If data is None, but no optimization_function is specified, use default
+            optimization_function = GridSearch(objective_function=objective_function)
 
         return PEC_OCM(
             agent_rep=agent_rep,
