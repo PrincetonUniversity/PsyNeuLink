@@ -76,9 +76,8 @@ data_to_fit = pd.DataFrame(
 
 #%%
 
-# Create a parameter estimation composition to fit the data we just generated and hopefully recover the
-# parameters of the composition.
-# Alternatively we can search for parameter values that optimize an objective function
+# Create a parameter estimation composition to search for parameter values 
+# that optimize an objective function
 
 controlModule = comp.nodes["Task Activations [Act1, Act2]"]
 congruenceWeighting = comp.nodes["Automaticity-weighted Stimulus Input [w*S1, w*S2]"]
@@ -93,7 +92,8 @@ fit_parameters = {
 def objective_function(variable):
     decision_variable = variable[0]
     rt_variable = variable[1]
-    return rt_variable
+    rr = decision_variable / rt_variable
+    return rr
 
 pec = pnl.ParameterEstimationComposition(
     name="pec",
