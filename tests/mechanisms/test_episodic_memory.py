@@ -221,8 +221,11 @@ def test_with_contentaddressablememory(name, func, func_params, mech_params, tes
 def test_contentaddressable_memory_warnings_and_errors():
 
     # both memory arg of Mechanism and initializer for its function are specified
-    text = "The 'memory' argument specified for EpisodicMemoryMechanism-0 will override the specification " \
-            "for the 'initializer' argument of its function"
+    text = (
+        r"Specification of the \"memory\" parameter[.\S\s]*The value"
+        + r" specified on \(ContentAddressableMemory ContentAddressableMemory"
+        + r" Function-\d\) will be used\."
+    )
     with pytest.warns(UserWarning, match=text):
         em = EpisodicMemoryMechanism(
             memory = [[[1,2,3],[4,5,6]]],
