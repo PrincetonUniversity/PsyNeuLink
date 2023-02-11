@@ -422,6 +422,10 @@ class ParameterEstimationComposition(Composition):
         `optimized_parameter_values` is an array containing the values of the corresponding `parameter
         <ParameterEstimationComposition.parameters>` the distribution of which were determined to be optimal.
 
+    optimal_value : float
+        contains the results returned by execution of `agent_rep <OptimizationControlMechanism.agent_rep>` for the
+        parameter values in `optimized_parameter_values <ParameterEstimationComposition.optimized_parameter_values>`.
+
     results : list[list[list]]
         contains the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` `Nodes <Composition_Nodes>`
         in the `model <ParameterEstimationComposition.model>` for every `TRIAL <TimeScale.TRIAL>` executed (see
@@ -823,8 +827,15 @@ class ParameterEstimationComposition(Composition):
         # Need to pass restructured inputs dict to run
         # kwargs['inputs'] = {self.nodes[0]: list(inputs_dict.values())}
         kwargs.pop("inputs", None)
+
         # Run the composition as normal
-        return super(ParameterEstimationComposition, self).run(*args, **kwargs)
+        results = super(ParameterEstimationComposition, self).run(*args, **kwargs)
+
+        # Remove randomization dimension
+        self.optimized_parameter_values = self.controller.optimal_control_allocation[:-1]
+        self.optimal_value = self.controller.optimal_net_outcome
+
+        return results
 
     @handle_external_context()
     def log_likelihood(self, *args, inputs=None, context=None) -> float:

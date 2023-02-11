@@ -6833,12 +6833,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     items_to_delete.append(pathway[i - 1])
         for item in items_to_delete:
             if isinstance(item, ControlMechanism):
-                arg_name = f'in the {repr(MONITOR_FOR_CONTROL)} of its constructor'
+                if item.objective_mechanism:
+                    msg = f' since it has an ObjectiveMechanism that was specified in its constructor'
+                else:
+                    msg = f' since there were ones already specified in ' \
+                          f'the {repr(MONITOR_FOR_CONTROL)} of its constructor'
             else:
-                arg_name = f'either in the {repr(MONITOR)} arg of its constructor, ' \
+                msg = f' since there were ones already specified either in ' \
+                           f'the {repr(MONITOR)} arg of its constructor, ' \
                            f'or in the {repr(MONITOR_FOR_CONTROL)} arg of its associated {ControlMechanism.__name__}'
-            warnings.warn(f'No new {Projection.__name__}s were added to {item.name} that was included in '
-                          f'the {pathway_arg_str}, since there were ones already specified {arg_name}.')
+            warnings.warn(f"No new {Projection.__name__}s were added to '{item.name}' "
+                          f"that was included in the {pathway_arg_str},{msg}.")
             del pathway[pathway.index(item)]
 
         # Then, loop through pathway and validate that the Mechanism-Projection relationships make sense
@@ -7135,10 +7140,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                               f"one already in {self.name}: {pathway}; it will be ignored.")
                 return existing_pathway
             #
-            # Shorter because it contained one or more ControlMechanisms with monitor_for_control specified.
-            elif explicit_pathway == [m for m in pathway
-                                      if not (isinstance(m, ControlMechanism)
-                                              or (isinstance(m, tuple) and isinstance(m[0], ControlMechanism)))]:
+            # Shorter because it contained one or more ControlMechanisms with monitor_for_control specified
+            #    or an ObjectiveMechanism that projects to a ControlMechanism.
+            elif explicit_pathway == [m for m in pathway if not (
+                    (isinstance(m, ControlMechanism)
+                      or (isinstance(m, tuple) and isinstance(m[0], ControlMechanism))
+                     or (isinstance(m, ObjectiveMechanism) and m.control_mechanism)))]:
                 pass
             else:
                 # Otherwise, something has gone wrong

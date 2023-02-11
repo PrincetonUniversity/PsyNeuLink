@@ -92,6 +92,8 @@ fit_parameters = {
 def objective_function(variable):
     decision_variable = variable[0]
     rt_variable = variable[1]
+    # if rt_variable == 0.0:
+    #     return np.array([0.0])
     rr = decision_variable / rt_variable
     return rr
 
@@ -112,18 +114,5 @@ pec.controller.parameters.comp_execution_mode.set("LLVM")
 pec.controller.function.parameters.save_values.set(True)
 
 print("Running the PEC")
-ret = pec.run(inputs=inputs)
-optimal_parameters = pec.controller.optimal_parameters
-
-# Print the optimized parameters.
-records = []
-for (name, mech), recovered_param in zip(fit_parameters.keys(), optimal_parameters):
-
-    if name == "slope":
-        true_param = sf_params['automaticity']
-    else:
-        true_param = sf_params[name]
-
-    records.append((name, mech.name, recovered_param))
-df = pd.DataFrame(records, columns=['Parameter', 'Component', 'Optimized Value'])
-print(df)
+comp.show_graph()
+#ret = pec.run(inputs=inputs)
