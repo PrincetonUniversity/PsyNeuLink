@@ -831,6 +831,7 @@ class ParameterEstimationComposition(Composition):
         # Run the composition as normal
         results = super(ParameterEstimationComposition, self).run(*args, **kwargs)
 
+        # IMPLEMENTATION NOTE: has not executed OCM after first call
         if hasattr(self.controller, 'optimal_control_allocation'):
             # Assign optimalize_parameter_values and optimal_value
             #    (remove randomization dimension)
