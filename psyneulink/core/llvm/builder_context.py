@@ -403,7 +403,7 @@ class LLVMBuilderContext:
     def get_node_wrapper(self, composition, node):
         cache = getattr(composition, '_node_wrappers', None)
         if cache is None:
-            cache = dict()
+            cache = weakref.WeakKeyDictionary()
             setattr(composition, '_node_wrappers', cache)
         return cache.setdefault(node, _node_wrapper(composition, node))
 
