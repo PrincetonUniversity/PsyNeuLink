@@ -232,8 +232,9 @@ run_input_test_args = [
                 ],
             ]
         },
-        "The array in the dict specified for the 'inputs' arg of pec.run() is badly formatted: the length of each item "
-        "in the outer dimension (a trial's worth of inputs) must be equal to the number of inputs to 'model' (3).",
+        f"The array in the dict specified for the 'inputs' arg of pec.run() is badly formatted: "
+        f"the length of each item in the outer dimension (a trial's worth of inputs) "
+        f"must be equal to the number of inputs to 'model' (3).",
     ),
     (
         "model_good",
@@ -275,8 +276,8 @@ run_input_test_args = [
                 [np.array([20.0, 21.0, 22.0])],
             ],
         },
-        "The dict specified in the `input` arg of pec.run() is badly formatted: the number of entries should equal "
-        "the number of inputs to 'model' (3).",
+        f"The dict specified in the `input` arg of pec.run() is badly formatted: "
+        f"the number of entries should equal the number of inputs to 'model' (3).",
     ),
 ]
 
@@ -290,7 +291,7 @@ def test_pec_run_input_formats(input_format, inputs_dict, error_msg):
     if error_msg:
         with pytest.raises(pnl.ParameterEstimationCompositionError) as error:
             pec.run(inputs=inputs_dict)
-        assert error.value.error_value == error_msg
+        assert error.value.args[0] == error_msg
     else:
         pec.run(inputs=inputs_dict)
 

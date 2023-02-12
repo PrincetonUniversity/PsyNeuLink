@@ -831,9 +831,11 @@ class ParameterEstimationComposition(Composition):
         # Run the composition as normal
         results = super(ParameterEstimationComposition, self).run(*args, **kwargs)
 
-        # Remove randomization dimension
-        self.optimized_parameter_values = self.controller.optimal_control_allocation[:-1]
-        self.optimal_value = self.controller.optimal_net_outcome
+        if hasattr(self.controller, 'optimal_control_allocation'):
+            # Assign optimalize_parameter_values and optimal_value
+            #    (remove randomization dimension)
+            self.optimized_parameter_values = self.controller.optimal_control_allocation[:-1]
+            self.optimal_value = self.controller.optimal_net_outcome
 
         return results
 
