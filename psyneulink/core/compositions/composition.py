@@ -4606,16 +4606,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
            of the consideration queue, then the second-to-last entry is NodeRole.TERMINAL instead.
         """
         queue = self.scheduler.consideration_queue
+        origins = set()
+        terminals = set()
 
         for node in list(queue)[0]:
             self._add_node_role(node, NodeRole.ORIGIN)
+            origins.add(node)
 
         for node in list(queue)[-1]:
             if NodeRole.CONTROLLER_OBJECTIVE not in self.get_roles_by_node(node):
                 self._add_node_role(node, NodeRole.TERMINAL)
+                terminals.add(node)
             elif len(queue[-1]) < 2:
                 for previous_node in queue[-2]:
                     self._add_node_role(previous_node, NodeRole.TERMINAL)
+                    terminals.add(previous_node)
 
         # IMPLEMENTATION NOTE:
         #   The following is needed because the assignments above only identify nodes in the *last* consideration_set;
@@ -4628,6 +4633,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if efferent.receiver.owner is not self.output_CIM
             ]):
                 self._add_node_role(node, NodeRole.TERMINAL)
+                terminals.add(node)
+
+        return origins, terminals
+
 
     def _add_node_aux_components(self, node, context=None):
         """Add aux_components of node to Composition.
@@ -4922,8 +4931,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._add_node_role(node_role_pair[0], node_role_pair[1])
 
         # Get ORIGIN and TERMINAL Nodes using self.scheduler.consideration_queue
+        origins = set()
+        terminal = set()
         if self.scheduler.consideration_queue:
-            self._determine_origin_and_terminal_nodes_from_consideration_queue()
+            # IMPLEMENTATION NOTE: origins and terminals collected just for debugging (not used below)
+            origins, terminals = self._determine_origin_and_terminal_nodes_from_consideration_queue()
 
         # INPUT
         for node in self.get_nodes_by_role(NodeRole.ORIGIN):

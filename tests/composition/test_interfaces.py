@@ -542,20 +542,31 @@ class TestConnectCompositionsViaCIMS:
         assert SLOPE in icomp.parameter_CIM.output_ports.names[2]
 
     def test_parameter_CIM_routing_from_ControlMechanism(self):
+        from psyneulink.core.compositions.composition import NodeRole
         # Inner Composition
         ia = TransferMechanism(name='ia')
         ib = TransferMechanism(name='ib')
         icomp = Composition(name='icomp', pathways=[ia])
         # Outer Composition
+        # ocomp = Composition(name='ocomp', pathways=[icomp])
         ocomp = Composition(name='ocomp', pathways=[icomp])
-        cm = ControlMechanism(
-            name='control_mechanism',
-            control_signals=
-            ControlSignal(projections=[(SLOPE, ib)])
-        )
+        # USING EXPLICIT INPUT NODE IN ocomp WORKS:
+        # oa = TransferMechanism(name='oa')
+        # ocomp = Composition(name='ocomp', pathways=[oa,icomp])
+        cm = ControlMechanism(name='control_mechanism',
+                              control_signals= ControlSignal(projections=[(SLOPE, ib)]))
         icomp.add_linear_processing_pathway([ia, ib])
         ocomp.add_linear_processing_pathway([cm, icomp])
-        res = ocomp.run([[2], [2], [2]])
+        # REPLACING PRECEDING LINE WITH THIS DOESN'T HELP:
+        # ocomp.add_node(cm)
+        # THIS WORKS:
+        # ocomp.add_linear_processing_pathway([cm, (icomp, NodeRole.INPUT)])
+        roles = ocomp.get_nodes_by_role(NodeRole.INPUT)
+        # res = ocomp.run([[2], [2], [2]])
+        res = ocomp.run(inputs={cm:[[2], [2], [2]],
+                                icomp:[[2], [2], [2]]})
+        # VERSION THAT USES EXPLICIT INPUT NODE IN ocomp
+                                # oa:[[2], [2], [2]]})
         assert np.allclose(res, [[4], [4], [4]])
         assert len(ib.mod_afferents) == 1
         assert ib.mod_afferents[0].sender == icomp.parameter_CIM.output_port
