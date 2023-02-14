@@ -37,21 +37,22 @@ A ControlMechanism is a `ModulatoryMechanism` that `modulates the value(s) <Modu
 more `Ports <Port>` of other Mechanisms in the `Composition` to which it belongs. In general, a ControlMechanism is
 used to modulate the `ParameterPort(s) <ParameterPort>` of one or more Mechanisms, that determine the value(s) of
 the parameter(s) of the `function(s) <Mechanism_Base.function>` of those Mechanism(s). However, a ControlMechanism
-can also be used to modulate the function of `InputPorts <InputPort>` and/or `OutputPort <OutputPorts>`,
-much like a `GatingMechanism`.  A ControlMechanism's `function <ControlMechanism.function>` calculates a
-`control_allocation <ControlMechanism.control_allocation>`: a list of values provided to each of its `control_signals
-<ControlMechanism.control_signals>`.  Its control_signals are `ControlSignal` OutputPorts that are used to modulate
-the parameters of other Mechanisms' `function <Mechanism_Base.function>` (see `ControlSignal_Modulation` for a more
-detailed description of how modulation operates).  A ControlMechanism can be configured to monitor the outputs of
-other Mechanisms in order to determine its `control_allocation <ControlMechanism.control_allocation>`, by specifying
-these in the **monitor_for_control** `argument <ControlMechanism_Monitor_for_Control_Argument>` of its constructor,
-or in the **monitor** `argument <ObjectiveMechanism_Monitor>` of an ObjectiveMechanism` assigned to its
-**objective_mechanism** `argument <ControlMechanism_Objective_Mechanism_Argument>` (see `ControlMechanism_Creation`
-below).  A ControlMechanism can also be assigned as the `controller <Composition.controller>` of a `Composition`,
-which has a special relation to that Composition: it generally executes either before or after all of the other
-Mechanisms in that Composition (see `Composition_Controller_Execution`).  The OutputPorts monitored by the
-ControlMechanism or its `objective_mechanism <ControlMechanism.objective_mechanism>`, and the parameters it modulates
-can be listed using its `show <ControlMechanism.show>` method.
+can also be used to modulate the function of `InputPorts <InputPort>` and/or `OutputPort <OutputPorts>` (see
+`GatingMechanism`).  A ControlMechanism's `function <ControlMechanism.function>` calculates a `control_allocation
+<ControlMechanism.control_allocation>`: a list of values provided to each of its `control_signals
+<ControlMechanism.control_signals>`. Its control_signals are `ControlSignal` OutputPorts, with `ControlProjections
+<ControlProjection>` to the `ParameterPort(s) <ParameterPort>` of the parameter(s) it controls (see
+`ControlSignal_Modulation` for a more detailed description of how modulation operates).  A ControlMechanism can be
+configured to monitor the outputs of other Mechanisms in order to determine its `control_allocation
+<ControlMechanism.control_allocation>`, by specifying these in the **monitor_for_control** `argument
+<ControlMechanism_Monitor_for_Control_Argument>` of its constructor, or in the **monitor** `argument
+<ObjectiveMechanism_Monitor>` of an ObjectiveMechanism` assigned to its **objective_mechanism** `argument
+<ControlMechanism_Objective_Mechanism_Argument>` (see `ControlMechanism_Creation` below).  A ControlMechanism can
+also be assigned as the `controller <Composition.controller>` of a `Composition`, which has a special relation to
+that Composition: it generally executes either before or after all of the other Mechanisms in that Composition (see
+`Composition_Controller_Execution`).  The OutputPorts monitored by the ControlMechanism or its `objective_mechanism
+<ControlMechanism.objective_mechanism>`, and the parameters it modulates can be listed using its `show
+<ControlMechanism.show>` method.
 
 .. _ControlMechanism_Composition_Controller:
 
@@ -377,18 +378,17 @@ determine its `control_allocation <ControlMechanism.control_allocation>`.
 
 A ControlMechanism's `function <ControlMechanism.function>` uses its `outcome <ControlMechanism.outcome>`
 attribute (the `value <InputPort.value>` of its *OUTCOME* `InputPort`) to generate a `control_allocation
-<ControlMechanism.control_allocation>`.  By default, its `function <ControlMechanism.function>` is assigned
-the `Identity`, which takes a single value as its input, and copies it to the output, this assigns the value of
-each item of `control_allocation <ControlMechanism.control_allocation>`.  This item is assigned as
-the allocation for the all `ControlSignal` in `control_signals <ControlMechanism.control_signals>`. This
-distributes the ControlMechanism's input as the allocation to each of its `control_signals
-<ControlMechanism.control_signals>`.
-This same behavior also applies to any custom function assigned to a
-ControlMechanism that returns a 2d array with a single item in its outer dimension (axis 0).  If a function is
-assigned that returns a 2d array with more than one item, and it has the same number of `control_signals
-<ControlMechanism.control_signals>`, then each ControlSignal is assigned to the corresponding item of the function's
-value.  However, these default behaviors can be modified by specifying that individual ControlSignals reference
-different items in `control_allocation` as their `variable <Projection_Base.variable>`
+<ControlMechanism.control_allocation>`.  By default, its `function <ControlMechanism.function>` is assigned the
+`Identity` Function, which takes a single value as its input, and copies it to the output, and assigns that value
+to each item of `control_allocation <ControlMechanism.control_allocation>`.  Each item of the  `control_allocation
+<ControlMechanism.control_allocation>` is then assigned as the allocation for each the corresponding  `ControlSignal`
+in `control_signals <ControlMechanism.control_signals>`, thereby distributing the ControlMechanism's input as the
+allocation to each of its `control_signals <ControlMechanism.control_signals>`. This same behavior also applies to
+any custom function assigned to a ControlMechanism that returns a 2d array with a single item in its outer dimension
+(axis 0).  If a function is assigned that returns a 2d array with more than one item, and it has the same number of
+`control_signals <ControlMechanism.control_signals>`, then each ControlSignal is assigned to the corresponding item
+of the function's value.  However, these default behaviors can be modified by specifying that individual
+ControlSignals reference different items in `control_allocation` as their `variable <Projection_Base.variable>`
 (see `OutputPort_Custom_Variable`).
 
 .. _ControlMechanism_Output:
@@ -1364,6 +1364,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 raise ControlMechanismError(f"Invalid specification for '{CONTROL}' argument of {self.name}:"
                                             f"({ctl_spec})")
 
+    # FIX: 2/11/23 SHOULDN'T THIS BE PUT ON COMPOSITION NOW?
     # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
     def _instantiate_objective_mechanism(self, input_ports=None, context=None):
         """
@@ -1742,8 +1743,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         from psyneulink.core.components.projections.projection import ProjectionError
 
         try:
-            # set the default by implicit shape defined by one of the
-            # allocation_samples if possible
+            # set the default by implicit shape defined by one of the allocation_samples if possible
             try:
                 allocation_parameter_default = control_signal_spec._init_args['allocation_samples'][0]
             except AttributeError:
@@ -1756,10 +1756,10 @@ class ControlMechanism(ModulatoryMechanism_Base):
             # tests/composition/test_control.py::TestModelBasedOptimizationControlMechanisms::test_stateful_mechanism_in_simulation
             allocation_parameter_default = np.ones(np.asarray(allocation_parameter_default).shape)
         except (KeyError, IndexError, TypeError):
-            # if control allocation is a single value specified from
-            # default_variable for example, it should be used here
-            # instead of the "global default" defaultControlAllocation
+            # No allocation_samples specified, so use default control_allocation:
             if len(self.defaults.control_allocation) == 1:
+                #   if control allocation is a single value (specified from default_variable for example),
+                #     it should be used here instead of the "global default" defaultControlAllocation
                 allocation_parameter_default = copy.deepcopy(self.defaults.control_allocation)
             else:
                 allocation_parameter_default = copy.deepcopy(defaultControlAllocation)
@@ -1815,74 +1815,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
                               f"has one or more {projection_type.__name__}s redundant with ones already on "
                               f"an existing {ControlSignal.__name__} ({existing_ctl_sig.name}).")
 
-    def show(self):
-        """Display the OutputPorts monitored by ControlMechanism's `objective_mechanism
-        <ControlMechanism.objective_mechanism>` and the parameters modulated by its `control_signals
-        <ControlMechanism.control_signals>`.
-        """
-
-        print("\n---------------------------------------------------------")
-
-        print("\n{0}".format(self.name))
-        print("\n\tMonitoring the following Mechanism OutputPorts:")
-        for port in self.objective_mechanism.input_ports:
-            for projection in port.path_afferents:
-                monitored_port = projection.sender
-                monitored_port_Mech = projection.sender.owner
-                # ContentAddressableList
-                monitored_port_index = self.monitored_output_ports.index(monitored_port)
-
-                weight = self.monitored_output_ports_weights_and_exponents[monitored_port_index][0]
-                exponent = self.monitored_output_ports_weights_and_exponents[monitored_port_index][1]
-
-                print("\t\t{0}: {1} (exp: {2}; wt: {3})".
-                      format(monitored_port_Mech.name, monitored_port.name, weight, exponent))
-
-        try:
-            if self.control_signals:
-                print("\n\tControlling the following Mechanism parameters:".format(self.name))
-                # Sort for consistency of output:
-                port_Names_sorted = sorted(self.control_signals.names)
-                for port_Name in port_Names_sorted:
-                    for projection in self.control_signals[port_Name].efferents:
-                        print("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
-        except:
-            pass
-
-        try:
-            if self.gating_signals:
-                print("\n\tGating the following Ports:".format(self.name))
-                # Sort for consistency of output:
-                port_Names_sorted = sorted(self.gating_signals.names)
-                for port_Name in port_Names_sorted:
-                    for projection in self.gating_signals[port_Name].efferents:
-                        print("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
-        except:
-            pass
-
-        print("\n---------------------------------------------------------")
-
-    def add_to_monitor(self, monitor_specs, context=None):
-        """Instantiate OutputPorts to be monitored by ControlMechanism's `objective_mechanism
-        <ControlMechanism.objective_mechanism>`.
-
-        **monitored_output_ports** can be any of the following:
-            - `Mechanism <Mechanism>`;
-            - `OutputPort`;
-            - `tuple specification <InputPort_Tuple_Specification>`;
-            - `Port specification dictionary <InputPort_Specification_Dictionary>`;
-            - list with any of the above.
-        If any item is a Mechanism, its `primary OutputPort <OutputPort_Primary>` is used.
-        OutputPorts must belong to Mechanisms in the same `System` as the ControlMechanism.
-        """
-        output_ports = self.objective_mechanism.add_to_monitor(monitor_specs=monitor_specs, context=context)
-
-    def _add_process(self, process, role:str):
-        assert False
-        super()._add_process(process, role)
-        if self.objective_mechanism:
-            self.objective_mechanism._add_process(process, role)
-
     def _remove_default_control_signal(self, type:tc.enum(CONTROL_SIGNAL, GATING_SIGNAL)):
         if type == CONTROL_SIGNAL:
             ctl_sig_attribute = self.control_signals
@@ -1898,6 +1830,21 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 and ctl_sig_attribute[0].name==type + '-0'
                 and not ctl_sig_attribute[0].efferents):
             self.remove_ports(ctl_sig_attribute[0])
+
+    def add_to_monitor(self, monitor_specs, context=None):
+        """Instantiate OutputPorts to be monitored by ControlMechanism's `objective_mechanism
+        <ControlMechanism.objective_mechanism>`.
+
+        **monitored_output_ports** can be any of the following:
+            - `Mechanism <Mechanism>`;
+            - `OutputPort`;
+            - `tuple specification <InputPort_Tuple_Specification>`;
+            - `Port specification dictionary <InputPort_Specification_Dictionary>`;
+            - list with any of the above.
+        If any item is a Mechanism, its `primary OutputPort <OutputPort_Primary>` is used.
+        OutputPorts must belong to Mechanisms in the same `System` as the ControlMechanism.
+        """
+        output_ports = self.objective_mechanism.add_to_monitor(monitor_specs=monitor_specs, context=context)
 
     # FIX: 11/15/21 SHOULDN'T THIS BE PUT ON COMPOSITION??
     def _activate_projections_for_compositions(self, composition=None):
@@ -1975,6 +1922,53 @@ class ControlMechanism(ModulatoryMechanism_Base):
         value = [a for a in control_allocation]
         self.parameters.value._set(value, context)
         self._update_output_ports(runtime_params, context)
+
+    def show(self):
+        """Display the OutputPorts monitored by ControlMechanism's `objective_mechanism
+        <ControlMechanism.objective_mechanism>` and the parameters modulated by its `control_signals
+        <ControlMechanism.control_signals>`.
+        """
+
+        print("\n---------------------------------------------------------")
+
+        print("\n{0}".format(self.name))
+        print("\n\tMonitoring the following Mechanism OutputPorts:")
+        for port in self.objective_mechanism.input_ports:
+            for projection in port.path_afferents:
+                monitored_port = projection.sender
+                monitored_port_Mech = projection.sender.owner
+                # ContentAddressableList
+                monitored_port_index = self.monitored_output_ports.index(monitored_port)
+
+                weight = self.monitored_output_ports_weights_and_exponents[monitored_port_index][0]
+                exponent = self.monitored_output_ports_weights_and_exponents[monitored_port_index][1]
+
+                print("\t\t{0}: {1} (exp: {2}; wt: {3})".
+                      format(monitored_port_Mech.name, monitored_port.name, weight, exponent))
+
+        try:
+            if self.control_signals:
+                print("\n\tControlling the following Mechanism parameters:".format(self.name))
+                # Sort for consistency of output:
+                port_Names_sorted = sorted(self.control_signals.names)
+                for port_Name in port_Names_sorted:
+                    for projection in self.control_signals[port_Name].efferents:
+                        print("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
+        except:
+            pass
+
+        try:
+            if self.gating_signals:
+                print("\n\tGating the following Ports:".format(self.name))
+                # Sort for consistency of output:
+                port_Names_sorted = sorted(self.gating_signals.names)
+                for port_Name in port_Names_sorted:
+                    for projection in self.gating_signals[port_Name].efferents:
+                        print("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
+        except:
+            pass
+
+        print("\n---------------------------------------------------------")
 
     @property
     def monitored_output_ports(self):

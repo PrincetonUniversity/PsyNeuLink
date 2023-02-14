@@ -114,19 +114,5 @@ pec.controller.parameters.comp_execution_mode.set("LLVM")
 pec.controller.function.parameters.save_values.set(True)
 
 print("Running the PEC")
-ret = pec.run(inputs=inputs)
-assert True
-# optimal_parameters = pec.controller.optimal_parameters
-
-# # Print the optimized parameters.
-# records = []
-# for (name, mech), recovered_param in zip(fit_parameters.keys(), optimal_parameters):
-#
-#     if name == "slope":
-#         true_param = sf_params['automaticity']
-#     else:
-#         true_param = sf_params[name]
-#
-#     records.append((name, mech.name, recovered_param))
-# df = pd.DataFrame(records, columns=['Parameter', 'Component', 'Optimized Value'])
-# print(df)
+comp.show_graph()
+#ret = pec.run(inputs=inputs)

@@ -110,7 +110,7 @@ pec.controller.function.parameters.save_values.set(True)
 
 print("Running the PEC")
 ret = pec.run(inputs=inputs)
-optimal_parameters = pec.controller.optimal_parameters
+optimal_parameters = pec.optimized_parameter_values
 
 # Print the recovered parameters.
 records = []

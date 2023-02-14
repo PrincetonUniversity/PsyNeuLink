@@ -675,7 +675,7 @@ class OptimizationFunction(Function_Base):
                                                                                          context)
 
         # If  aggregation_function is specified and there is a randomization dimension specified
-        # in the control signals; use the aggregation function aggregate over the samples generated
+        # in the control signals; use the aggregation function to aggregate over the samples generated
         # for different randomized values of the control signal
         if self.aggregation_function and \
                 self.parameters.randomization_dimension._get(context) and \
@@ -1978,10 +1978,10 @@ class GridSearch(OptimizationFunction):
 
             # FIX:  INITIALIZE TO FULL LENGTH AND ASSIGN DEFAULT VALUES (MORE EFFICIENT):
             samples = np.array([[]])
-            sample_optimal = np.empty_like(self.search_space[0])
+            optimal_sample = np.empty_like(self.search_space[0])
             values = np.array([])
-            value_optimal = float('-Infinity')
-            sample_value_max_tuple = (sample_optimal, value_optimal)
+            optimal_value = float('-Infinity')
+            sample_value_max_tuple = (optimal_sample, optimal_value)
 
             # Set up progress bar
             _show_progress = False
@@ -2010,19 +2010,19 @@ class GridSearch(OptimizationFunction):
 
                 # Evaluate for optimal value
                 if direction == MAXIMIZE:
-                    value_optimal = max(value, value_optimal)
+                    optimal_value = max(value, optimal_value)
                 elif direction == MINIMIZE:
-                    value_optimal = min(value, value_optimal)
+                    optimal_value = min(value, optimal_value)
                 else:
                     assert False, "PROGRAM ERROR: bad value for {} arg of {}: {}".\
                         format(repr(DIRECTION),self.name,direction)
 
                 # FIX: PUT ERROR HERE IF value AND/OR value_max ARE EMPTY (E.G., WHEN EXECUTION_ID IS WRONG)
                 # If value is optimal, store corresponing sample
-                if value == value_optimal:
+                if value == optimal_value:
                     # Keep track of port values and allocation policy associated with EVC max
-                    sample_optimal = sample
-                    sample_value_max_tuple = (sample_optimal, value_optimal)
+                    optimal_sample = sample
+                    sample_value_max_tuple = (optimal_sample, optimal_value)
 
                 # Save samples and/or values if specified
                 if self.save_values:
@@ -2039,7 +2039,7 @@ class GridSearch(OptimizationFunction):
             max_tuples = Comm.allgather(sample_value_max_tuple)
             # get tuple with "value_max of maxes"
             max_value_of_max_tuples = max(max_tuples, key=lambda max_tuple: max_tuple[1])
-            # get value_optimal, port values and allocation policy associated with "max of maxes"
+            # get optimal_value, port values and allocation policy associated with "max of maxes"
             return_optimal_sample = max_value_of_max_tuples[0]
             return_optimal_value = max_value_of_max_tuples[1]
 
@@ -2083,8 +2083,8 @@ class GridSearch(OptimizationFunction):
                 bin_func(ct_param, ct_state, ct_opt_sample, ct_alloc, ct_opt_value,
                          ct_values, ct_opt_count, ct_start, ct_stop)
 
-                value_optimal = ct_opt_value.value
-                sample_optimal = np.ctypeslib.as_array(ct_opt_sample)
+                optimal_value = ct_opt_value.value
+                optimal_sample = np.ctypeslib.as_array(ct_opt_sample)
                 all_values = np.ctypeslib.as_array(ct_values)
 
                 # These are normally stored in the parent function (OptimizationFunction).
@@ -2112,11 +2112,11 @@ class GridSearch(OptimizationFunction):
                 optimal_value_count = 1
                 value_sample_pairs = zip(all_values.flatten(),
                                          [all_samples[:,i] for i in range(all_samples.shape[1])])
-                value_optimal, sample_optimal = next(value_sample_pairs)
+                optimal_value, optimal_sample = next(value_sample_pairs)
 
                 select_randomly = self.parameters.select_randomly_from_optimal_values._get(context)
                 for value, sample in value_sample_pairs:
-                    if select_randomly and np.allclose(value, value_optimal):
+                    if select_randomly and np.allclose(value, optimal_value):
                         optimal_value_count += 1
 
                         # swap with probability = 1/optimal_value_count in order to achieve
@@ -2126,11 +2126,11 @@ class GridSearch(OptimizationFunction):
                         random_value = random_state.rand()
 
                         if random_value < probability:
-                            value_optimal, sample_optimal = value, sample
+                            optimal_value, optimal_sample = value, sample
 
-                    elif (value > value_optimal and direction == MAXIMIZE) or \
-                            (value < value_optimal and direction == MINIMIZE):
-                        value_optimal, sample_optimal = value, sample
+                    elif (value > optimal_value and direction == MAXIMIZE) or \
+                            (value < optimal_value and direction == MINIMIZE):
+                        optimal_value, optimal_sample = value, sample
                         optimal_value_count = 1
 
             if self.parameters.save_samples._get(context):
@@ -2140,7 +2140,7 @@ class GridSearch(OptimizationFunction):
                 self.parameters.saved_values._set(all_values, context)
                 return_all_values = all_values
 
-        return sample_optimal, value_optimal, return_all_samples, return_all_values
+        return optimal_sample, optimal_value, return_all_samples, return_all_values
 
 
 class GaussianProcess(OptimizationFunction):

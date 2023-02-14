@@ -820,8 +820,12 @@ is automatically assigned the OptimizationControlMechanism's `evaluate_agent_rep
 <OptimizationControlMechanism.evaluate_agent_rep>` method, that is used to evaluate each `control_allocation
 <ControlMechanism.control_allocation>` sampled from the `search_space <OptimizationFunction.search_space>` by the
 `search_function <OptimizationFunction.search_function>` until the `search_termination_function
-<OptimizationFunction.search_termination_function>` returns `True` (see `OptimizationControlMechanism_Execution`
-for additional details).
+<OptimizationFunction.search_termination_function>` returns `True`.  The `net_outcome <ControlMechanism.net_outcome>`
+returned by the call to `evaluate_agent_rep <OptimizationControlMechanism.evaluate_agent_rep>` is assigned to the
+OptimizationControlMechanism's `optimal_net_outcome <OptimizationControlMechanism.optimal_net_outcome>` attribute,
+and the `control_allocation  <ControlMechanism.control_allocation>` that yielded it is assigned to the
+OptimizationControlMechanism's `optimal_control_allocation <OptimizationControlMechanism.optimal_control_allocation>`
+attribute (see `OptimizationControlMechanism_Execution` for additional details).
 
 .. _OptimizationControlMechanism_Custom_Function:
 
@@ -1002,7 +1006,11 @@ When an OptimizationControlMechanism is executed, it carries out the following s
     `net_outcome <ControlMechanism.net_outcome>` to the OptimizationControlMechanism's `control_signals,
     that compute their `values <ControlSignal.value>` which, in turn, are assigned to their `ControlProjections
     <ControlProjection>` to `modulate the Parameters <ModulatorySignal_Modulation>` they control when the
-    Composition is next executed.
+    Composition is next executed. That `control_allocation <ControlMechanism.control_allocation>` is also
+    assigned as the OptimizationControlMechanism's `optimal_control_allocation
+    <OptimizationControlMechanism.optimal_control_allocation>` attribute, and the 'net_outcome
+    <ControlMechanism.net_outcome>` that yield it is assigned to the OptimizationControlMechanism's
+    `optimal_net_outcome <OptimizationControlMechanism.optimal_net_outcome>` attribute.
 
 .. _OptimizationControlMechanism_Estimation_Randomization:
 
@@ -1553,6 +1561,10 @@ class OptimizationControlMechanism(ControlMechanism):
     optimal_control_allocation : 1d array
         the `control_allocation <ControlMechanism.control_allocation>` that yielded the optimal
         `net_outcome <ControlMechanism.net_outcome>` in call to `evaluate_agent_rep <OptimizationControlMechanism>`.
+
+    optimal_net_outcome : float
+        the `net_outcome <ControlMechanism.net_outcome>` for the `optimal_control_allocation
+        <OptimizationControlMechanism>` returned by call to `evaluate_agent_rep <OptimizationControlMechanism>`.
 
     saved_samples : list
         contains all values of `control_allocation <ControlMechanism.control_allocation>` sampled by `function
@@ -3102,6 +3114,7 @@ class OptimizationControlMechanism(ControlMechanism):
             self.saved_values = saved_values
 
         self.optimal_control_allocation = optimal_control_allocation
+        self.optimal_net_outcome = optimal_net_outcome
         optimal_control_allocation = np.array(optimal_control_allocation).reshape((len(self.defaults.value), 1))
 
         # Return optimal control_allocation formatted as 2d array
