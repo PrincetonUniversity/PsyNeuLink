@@ -468,7 +468,9 @@ class MaxLikelihoodEstimator(OptimizationFunction):
 
             # Run the MLE optimization
             results = self._fit(ll_func=ll_func)
+
             optimal_value = results["neg-log-likelihood"]
+
             # Replace randomization dimension to match expected dimension of output_values of OCM
             optimal_sample = list(results["fitted_params"].values()) + [0.0]
 

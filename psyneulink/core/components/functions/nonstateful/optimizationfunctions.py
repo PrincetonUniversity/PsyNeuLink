@@ -2109,29 +2109,25 @@ class GridSearch(OptimizationFunction):
                                      "GridSearch currently does not support optimizing over multiple output values.")
 
                 # Find the optimal value(s)
-                optimal_value_count = 1
-                value_sample_pairs = zip(all_values.flatten(),
-                                         [all_samples[:,i] for i in range(all_samples.shape[1])])
-                optimal_value, optimal_sample = next(value_sample_pairs)
 
+                # If there are multiple control allocations that achieve the same optimal value,
+                # do we need to sample one of the allocations randomly.
                 select_randomly = self.parameters.select_randomly_from_optimal_values._get(context)
-                for value, sample in value_sample_pairs:
-                    if select_randomly and np.allclose(value, optimal_value):
-                        optimal_value_count += 1
 
-                        # swap with probability = 1/optimal_value_count in order to achieve
-                        # uniformly random selection from identical outcomes
-                        probability = 1 / optimal_value_count
-                        random_state = self._get_current_parameter_value("random_state", context)
-                        random_value = random_state.rand()
+                if select_randomly:
+                    rng = self._get_current_parameter_value("random_state", context)
+                    if direction == MAXIMIZE:
+                        optimal_index = rng.choice(np.argwhere(all_values.flatten() == np.max(all_values)))
+                    elif direction == MINIMIZE:
+                        optimal_index = rng.choice(np.argwhere(all_values.flatten() == np.min(all_values)))
+                else:
+                    if direction == MAXIMIZE:
+                        optimal_index = np.argmax(all_values)
+                    elif direction == MINIMIZE:
+                        optimal_index = np.argmin(all_values)
 
-                        if random_value < probability:
-                            optimal_value, optimal_sample = value, sample
-
-                    elif (value > optimal_value and direction == MAXIMIZE) or \
-                            (value < optimal_value and direction == MINIMIZE):
-                        optimal_value, optimal_sample = value, sample
-                        optimal_value_count = 1
+                optimal_value = all_values.flatten()[optimal_index]
+                optimal_sample = all_samples[:, optimal_index]
 
             if self.parameters.save_samples._get(context):
                 self.parameters.saved_samples._set(all_samples, context)
