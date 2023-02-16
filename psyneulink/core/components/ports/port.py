@@ -2379,7 +2379,8 @@ class Port_Base(Port):
                 if f_mod_ptr.type != arg_out.type:
                     assert len(f_mod_ptr.type.pointee) == 1
                     warnings.warn("Shape mismatch: Overriding modulation should match parameter port output: {} vs. {}".format(
-                                  afferent.defaults.value, self.defaults.value))
+                                  afferent.defaults.value, self.defaults.value),
+                                  pnlvm.PNLCompilerWarning)
                     f_mod_ptr = builder.gep(f_mod_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
                 builder.store(builder.load(f_mod_ptr), arg_out)
                 return builder
@@ -2394,7 +2395,8 @@ class Port_Base(Port):
                 if f_mod_param_ptr.type != f_mod_ptr.type:
                     warnings.warn("Shape mismatch: Modulation vs. modulated parameter: {} vs. {}".format(
                                   afferent.defaults.value,
-                                  getattr(self.function.parameters, name).get(None)))
+                                  getattr(self.function.parameters, name).get(None)),
+                                  pnlvm.PNLCompilerWarning)
                     param_val = pnlvm.helpers.load_extract_scalar_array_one(builder, f_mod_ptr)
                 else:
                     param_val = builder.load(f_mod_ptr)

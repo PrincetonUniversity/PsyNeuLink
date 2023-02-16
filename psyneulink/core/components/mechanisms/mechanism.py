@@ -3120,7 +3120,9 @@ class Mechanism_Base(Mechanism):
             assert value is mech_val_ptr
         else:
             # FIXME: Does this need some sort of parsing?
-            warnings.warn("Shape mismatch: function result does not match mechanism value param: {} vs. {}".format(value.type.pointee, mech_val_ptr.type.pointee))
+            warnings.warn("Shape mismatch: function result does not match mechanism value param: {} vs. {}".format(
+                          value.type.pointee, mech_val_ptr.type.pointee),
+                          pnlvm.PNLCompilerWarning)
 
         # Update  num_executions parameter
         num_executions_ptr = pnlvm.helpers.get_state_ptr(builder, self, m_state, "num_executions")
