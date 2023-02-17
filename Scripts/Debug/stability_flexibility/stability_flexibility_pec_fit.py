@@ -12,9 +12,9 @@ sys.path.append(".")
 from stability_flexibility import make_stab_flex, generate_trial_sequence
 
 # Let's make things reproducible
-seed = 0
-np.random.seed(seed)
-set_global_seed(seed)
+pnl_seed = 0
+set_global_seed(pnl_seed)
+trial_seq_seed = 0
 
 # High-level parameters the impact performance of the test
 num_trials = 120
@@ -37,7 +37,7 @@ sf_params = dict(
 )
 
 # Generate some sample data to run the model on
-taskTrain, stimulusTrain, cueTrain, correctResponse = generate_trial_sequence(240, 0.5)
+taskTrain, stimulusTrain, cueTrain, correctResponse = generate_trial_sequence(240, 0.5, seed=trial_seq_seed)
 taskTrain = taskTrain[0:num_trials]
 stimulusTrain = stimulusTrain[0:num_trials]
 cueTrain = cueTrain[0:num_trials]
