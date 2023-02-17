@@ -12,9 +12,9 @@ sys.path.append(".")
 from stability_flexibility import make_stab_flex, generate_trial_sequence
 
 # Let's make things reproducible
-seed = 0
-np.random.seed(seed)
-set_global_seed(seed)
+pnl_seed = 2
+trial_seq_seed = 1
+set_global_seed(pnl_seed)
 
 # High-level parameters the impact performance of the test
 num_trials = 120
@@ -37,7 +37,7 @@ sf_params = dict(
 )
 
 # Generate some sample data to run the model on
-taskTrain, stimulusTrain, cueTrain, correctResponse = generate_trial_sequence(240, 0.5)
+taskTrain, stimulusTrain, cueTrain, correctResponse = generate_trial_sequence(240, 0.5, seed=trial_seq_seed)
 taskTrain = taskTrain[0:num_trials]
 stimulusTrain = stimulusTrain[0:num_trials]
 cueTrain = cueTrain[0:num_trials]
@@ -74,9 +74,14 @@ data_to_fit = pd.DataFrame(
 )
 #data_to_fit["decision"] = data_to_fit["decision"].astype("category")
 
-#%%
+print(f"PNL Seed = {pnl_seed}")
+print(f"Trial Seq Seed = {trial_seq_seed}")
+print(f"task[0:5] = {taskTrain[0:5]}")
+print(f"stimulus[0:5] = {stimulusTrain[0:5]}")
+print(data_to_fit[0:5])
 
-# Create a parameter estimation composition to search for parameter values 
+
+# Create a parameter estimation composition to search for parameter values
 # that optimize an objective function
 
 controlModule = comp.nodes["Task Activations [Act1, Act2]"]

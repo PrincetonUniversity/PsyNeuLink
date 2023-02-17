@@ -6,7 +6,7 @@ import pandas as pd
 
 
 # Define function to generate a counterbalanced trial sequence with a specified switch trial frequency
-def generate_trial_sequence(n, frequency):
+def generate_trial_sequence(n, frequency, seed: int = None):
 
     # Compute trial number
     nTotalTrials = n
@@ -17,7 +17,8 @@ def generate_trial_sequence(n, frequency):
 
     # Determine task transitions
     transitions = [1] * nSwitchTrials + [0] * nRepeatTrials
-    order = np.random.permutation(list(range(nTotalTrials)))
+    rng = np.random.RandomState(seed)
+    order = rng.permutation(list(range(nTotalTrials)))
     transitions[:] = [transitions[i] for i in order]
 
     # Determine stimuli with 50% congruent trials
