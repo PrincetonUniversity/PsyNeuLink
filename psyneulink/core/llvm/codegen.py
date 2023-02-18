@@ -20,6 +20,7 @@ from psyneulink.core.scheduling.condition import Never
 from psyneulink.core.scheduling.time import TimeScale
 from . import helpers
 from .debug import debug_env
+from .warnings import PNLCompilerWarning
 
 class UserDefinedFunctionVisitor(ast.NodeVisitor):
     def __init__(self, ctx, builder, func_globals, func_params, arg_in, arg_out):
@@ -712,7 +713,9 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
         proj_function = ctx.import_llvm_function(proj, tags=proj_func_tags)
 
         if proj_out.type != proj_function.args[3].type:
-            warnings.warn("Shape mismatch: Projection ({}) results does not match the receiver state({}) input: {} vs. {}".format(proj, proj.receiver, proj.defaults.value, proj.receiver.defaults.variable))
+            warnings.warn("Shape mismatch: Projection ({}) results don't match the receiver state({}) input: {} vs. {}".format(
+                           proj, proj.receiver, proj.defaults.value, proj.receiver.defaults.variable),
+                           PNLCompilerWarning)
             # Check that this workaround applies only to projections to inner composition
             # that are off by one dimension, but in the 'wrong' direction (we need to add one dim).
             assert len(proj_function.args[3].type.pointee) == 1

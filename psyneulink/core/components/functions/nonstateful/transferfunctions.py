@@ -3369,10 +3369,14 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out, *, tags:frozenset):
         # Restrict to 1d arrays
         if self.defaults.variable.ndim != 1:
-            warnings.warn("Shape mismatch: {} (in {}) got 2D input: {}".format(self, self.owner, self.defaults.variable))
+            warnings.warn("Shape mismatch: {} (in {}) got 2D input: {}".format(
+                          self, self.owner, self.defaults.variable),
+                          pnlvm.PNLCompilerWarning)
             arg_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
         if self.defaults.value.ndim != 1:
-            warnings.warn("Shape mismatch: {} (in {}) has 2D output: {}".format(self, self.owner, self.defaults.value))
+            warnings.warn("Shape mismatch: {} (in {}) has 2D output: {}".format(
+                          self, self.owner, self.defaults.value),
+                          pnlvm.PNLCompilerWarning)
             arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
         matrix = pnlvm.helpers.get_param_ptr(builder, self, params, MATRIX)
@@ -4390,11 +4394,15 @@ class TransferWithCosts(TransferFunction):
         trans_s = pnlvm.helpers.get_state_ptr(builder, self, state, transfer_f.name)
         trans_in = arg_in
         if trans_in.type != trans_f.args[2].type:
-            warnings.warn("Shape mismatch: {} input does not match the transfer function ({}): {} vs. {}".format(self, transfer_f.get(), self.defaults.variable, transfer_f.get().defaults.variable))
+            warnings.warn("Shape mismatch: {} input does not match the transfer function ({}): {} vs. {}".format(
+                          self, transfer_f.get(), self.defaults.variable, transfer_f.get().defaults.variable),
+                          pnlvm.PNLCompilerWarning)
             trans_in = builder.gep(trans_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
         trans_out = arg_out
         if trans_out.type != trans_f.args[3].type:
-            warnings.warn("Shape mismatch: {} output does not match the transfer function ({}): {} vs. {}".format(self, transfer_f.get(), self.defaults.value, transfer_f.get().defaults.value))
+            warnings.warn("Shape mismatch: {} output does not match the transfer function ({}): {} vs. {}".format(
+                          self, transfer_f.get(), self.defaults.value, transfer_f.get().defaults.value),
+                          pnlvm.PNLCompilerWarning)
             trans_out = builder.gep(trans_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
         builder.call(trans_f, [trans_p, trans_s, trans_in, trans_out])
 

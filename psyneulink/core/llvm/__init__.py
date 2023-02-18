@@ -25,6 +25,8 @@ from .debug import debug_env
 from .execution import *
 from .execution import _tupleize
 from .jit_engine import *
+from .warnings import *
+
 
 __all__ = ['LLVMBuilderContext', 'ExecutionMode']
 
