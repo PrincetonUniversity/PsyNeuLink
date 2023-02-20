@@ -2066,6 +2066,14 @@ class GridSearch(OptimizationFunction):
             # if ocm is not None and ocm.parameters.comp_execution_mode._get(context) in {"PTX", "LLVM"}:
             if ocm is not None and ocm.parameters.comp_execution_mode._get(context) in {"PTX", "LLVM"}:
 
+                # If we have a numpy array, convert back to ctypes
+                if isinstance(all_values, np.ndarray):
+                    ct_values = all_values.flatten().ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+                    num_values = len(all_values.flatten())
+                else:
+                    ct_values = all_values
+                    num_values = len(ct_values)
+
                 # Reduce array of values to min/max
                 # select_min params are:
                 # params, state, min_sample_ptr, sample_ptr, min_value_ptr, value_ptr, opt_count_ptr, count
@@ -2076,13 +2084,9 @@ class GridSearch(OptimizationFunction):
                 ct_opt_sample = bin_func.byref_arg_types[2](float("NaN"))
                 ct_alloc = None # NULL for samples
                 ct_opt_value = bin_func.byref_arg_types[4]()
-
-                # Evaluate returns a numpy array, convert to ctypes
-                ct_values = all_values.flatten().ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-
                 ct_opt_count = bin_func.byref_arg_types[6](0)
                 ct_start = bin_func.c_func.argtypes[7](0)
-                ct_stop = bin_func.c_func.argtypes[8](len(all_values.flatten()))
+                ct_stop = bin_func.c_func.argtypes[8](num_values)
 
                 bin_func(ct_param, ct_state, ct_opt_sample, ct_alloc, ct_opt_value,
                          ct_values, ct_opt_count, ct_start, ct_stop)
@@ -2090,12 +2094,14 @@ class GridSearch(OptimizationFunction):
                 optimal_value = ct_opt_value.value
                 optimal_sample = np.ctypeslib.as_array(ct_opt_sample)
 
+                if not isinstance(all_values, np.ndarray):
+                    all_values = np.ctypeslib.as_array(ct_values)
+
                 # These are normally stored in the parent function (OptimizationFunction).
                 # Since we didn't  call super()._function like the python path,
                 # save the values here
                 if self.parameters.save_samples._get(context):
                     self.parameters.saved_samples._set(all_samples, context)
-
                 if self.parameters.save_values._get(context):
                     self.parameters.saved_values._set(all_values, context)
 
