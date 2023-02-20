@@ -29,7 +29,7 @@ sf_params = dict(
     non_decision_time=0.2,
     automaticity=0.01,
     starting_value=0.0,
-    threshold=0.1,
+    threshold=0.3,
     ddm_noise=0.1,
     lca_noise=0.0,
     scale=0.2,
@@ -91,7 +91,7 @@ decisionGate = comp.nodes["DECISION_GATE"]
 responseGate = comp.nodes["RESPONSE_GATE"]
 
 fit_parameters = {
-    ("threshold", decisionMaker): np.linspace(0.01, 0.5, 100),  # Threshold
+    ("threshold", decisionMaker): np.linspace(0.01, 0.5, 1000),  # Threshold
 }
 
 def objective_function(variable):
@@ -119,5 +119,7 @@ pec.controller.parameters.comp_execution_mode.set("LLVM")
 pec.controller.function.parameters.save_values.set(True)
 
 print("Running the PEC")
-comp.show_graph()
-#ret = pec.run(inputs=inputs)
+#comp.show_graph()
+ret = pec.run(inputs=inputs)
+print("Optimal threshold: ", pec.optimized_parameter_values)
+print("Current threshold: ", sf_params["threshold"], ", Reward rate: ", np.mean(data_to_fit["decision"] / data_to_fit['response_time']))
