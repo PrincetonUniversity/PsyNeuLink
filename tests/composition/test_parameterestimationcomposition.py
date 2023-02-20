@@ -73,16 +73,11 @@ pec_test_args = [
         for x in pec_test_args
     ],
 )
-def test_pec(objective_function_arg, expected_outcome_input_len, model_spec, node_spec):
+def test_pec(objective_function_arg, expected_outcome_input_len, model_spec, node_spec, func_mode):
     """Test with and without ObjectiveMechanism specified, and use of model vs. nodes arg of PEC constructor"""
+
     samples = np.arange(0.1, 1.01, 0.3)
     Input = pnl.TransferMechanism(name="Input")
-    reward = pnl.TransferMechanism(
-        output_ports=[pnl.RESULT, pnl.MEAN, pnl.VARIANCE],
-        name="reward",
-        # integrator_mode=True,
-        # noise=NormalDist  # <- FIX 11/3/31: TEST ALLOCATION OF SEED FOR THIS WHEN WORKING
-    )
     Decision = DDM(
         function=DriftDiffusionAnalytical(
             drift_rate=(
@@ -123,7 +118,6 @@ def test_pec(objective_function_arg, expected_outcome_input_len, model_spec, nod
     )
 
     comp = pnl.Composition(name="evc", retain_old_simulation_data=True)
-    comp.add_node(reward, required_roles=[pnl.NodeRole.OUTPUT])
     comp.add_node(Decision, required_roles=[pnl.NodeRole.OUTPUT])
     comp.add_node(Decision2, required_roles=[pnl.NodeRole.OUTPUT])
     task_execution_pathway = [Input, pnl.IDENTITY_MATRIX, Decision, Decision2]
@@ -152,6 +146,8 @@ def test_pec(objective_function_arg, expected_outcome_input_len, model_spec, nod
     )
     ctlr = pec.controller
 
+    ctlr.parameters.comp_execution_mode.set(func_mode)
+
     assert ctlr.num_outcome_input_ports == 1
     if objective_function_arg:
         # pec.show_graph(show_cim=True)
@@ -171,9 +167,20 @@ def test_pec(objective_function_arg, expected_outcome_input_len, model_spec, nod
     )
 
     if expected_outcome_input_len > 1:
-        expected_error = "GridSearch currently does not support optimizing over multiple output values."
-        with pytest.raises(pnl.FunctionError) as error:
-            pec.run()
+
+        # In compiled mode, we don't support objective_mechanism=None unless we in data fitting mode.
+        if func_mode == "LLVM" and objective_function_arg is None:
+            expected_error = "objective_mechanism on OptimizationControlMechanism cannot be None"
+            with pytest.raises(AssertionError) as error:
+                pec.run()
+            pytest.xfail("In compiled mode, we don't support objective_mechanism=None unless we in data fitting mode.")
+        elif objective_function_arg == Concatenate:
+            pytest.xfail("In compiled mode, we don't support objective_mechanism=Concatenate")
+        else:
+            expected_error = "GridSearch currently does not support optimizing over multiple output values."
+            with pytest.raises(pnl.FunctionError) as error:
+                pec.run()
+
         assert expected_error in error.value.args[0]
     else:
         pec.run()

@@ -31,6 +31,7 @@ import warnings
 from numbers import Number
 
 import numpy as np
+import ctypes
 import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
@@ -2063,8 +2064,8 @@ class GridSearch(OptimizationFunction):
             # Compiled version
             ocm = self._get_optimized_controller()
             # if ocm is not None and ocm.parameters.comp_execution_mode._get(context) in {"PTX", "LLVM"}:
-            if (ocm is not None and ocm.parameters.comp_execution_mode._get(context) in {"PTX", "LLVM"}
-                    and not isinstance(all_values, np.ndarray)):
+            if ocm is not None and ocm.parameters.comp_execution_mode._get(context) in {"PTX", "LLVM"}:
+
                 # Reduce array of values to min/max
                 # select_min params are:
                 # params, state, min_sample_ptr, sample_ptr, min_value_ptr, value_ptr, opt_count_ptr, count
@@ -2074,30 +2075,32 @@ class GridSearch(OptimizationFunction):
                 ct_state = bin_func.byref_arg_types[1](*self._get_state_initializer(context))
                 ct_opt_sample = bin_func.byref_arg_types[2](float("NaN"))
                 ct_alloc = None # NULL for samples
-                ct_values = all_values
                 ct_opt_value = bin_func.byref_arg_types[4]()
+
+                # Evaluate returns a numpy array, convert to ctypes
+                ct_values = all_values.flatten().ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+
                 ct_opt_count = bin_func.byref_arg_types[6](0)
                 ct_start = bin_func.c_func.argtypes[7](0)
-                ct_stop = bin_func.c_func.argtypes[8](len(ct_values))
+                ct_stop = bin_func.c_func.argtypes[8](len(all_values.flatten()))
 
                 bin_func(ct_param, ct_state, ct_opt_sample, ct_alloc, ct_opt_value,
                          ct_values, ct_opt_count, ct_start, ct_stop)
 
                 optimal_value = ct_opt_value.value
                 optimal_sample = np.ctypeslib.as_array(ct_opt_sample)
-                all_values = np.ctypeslib.as_array(ct_values)
 
                 # These are normally stored in the parent function (OptimizationFunction).
                 # Since we didn't  call super()._function like the python path,
                 # save the values here
                 if self.parameters.save_samples._get(context):
                     self.parameters.saved_samples._set(all_samples, context)
+
                 if self.parameters.save_values._get(context):
                     self.parameters.saved_values._set(all_values, context)
 
             # Python version
             else:
-
 
                 if all_values.shape[-1] != all_samples.shape[-1]:
                     raise ValueError(f"GridSearch Error: {self}._evaluate returned mismatched sizes for "
@@ -2109,25 +2112,29 @@ class GridSearch(OptimizationFunction):
                                      "GridSearch currently does not support optimizing over multiple output values.")
 
                 # Find the optimal value(s)
+                optimal_value_count = 1
+                value_sample_pairs = zip(all_values.flatten(),
+                                         [all_samples[:,i] for i in range(all_samples.shape[1])])
+                optimal_value, optimal_sample = next(value_sample_pairs)
 
-                # If there are multiple control allocations that achieve the same optimal value,
-                # do we need to sample one of the allocations randomly.
                 select_randomly = self.parameters.select_randomly_from_optimal_values._get(context)
+                for value, sample in value_sample_pairs:
+                    if select_randomly and np.allclose(value, optimal_value):
+                        optimal_value_count += 1
 
-                if select_randomly:
-                    rng = self._get_current_parameter_value("random_state", context)
-                    if direction == MAXIMIZE:
-                        optimal_index = rng.choice(np.argwhere(all_values.flatten() == np.max(all_values)))
-                    elif direction == MINIMIZE:
-                        optimal_index = rng.choice(np.argwhere(all_values.flatten() == np.min(all_values)))
-                else:
-                    if direction == MAXIMIZE:
-                        optimal_index = np.argmax(all_values)
-                    elif direction == MINIMIZE:
-                        optimal_index = np.argmin(all_values)
+                        # swap with probability = 1/optimal_value_count in order to achieve
+                        # uniformly random selection from identical outcomes
+                        probability = 1 / optimal_value_count
+                        random_state = self._get_current_parameter_value("random_state", context)
+                        random_value = random_state.rand()
 
-                optimal_value = all_values.flatten()[optimal_index]
-                optimal_sample = all_samples[:, optimal_index]
+                        if random_value < probability:
+                            optimal_value, optimal_sample = value, sample
+
+                    elif (value > optimal_value and direction == MAXIMIZE) or \
+                            (value < optimal_value and direction == MINIMIZE):
+                        optimal_value, optimal_sample = value, sample
+                        optimal_value_count = 1
 
             if self.parameters.save_samples._get(context):
                 self.parameters.saved_samples._set(all_samples, context)

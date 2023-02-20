@@ -3480,6 +3480,10 @@ class OptimizationControlMechanism(ControlMechanism):
 
         if "evaluate_type_objective" in tags:
             # Extract objective mechanism value
+
+            assert self.objective_mechanism, f"objective_mechanism on OptimizationControlMechanism cannot be None " \
+                                             f"in compiled mode"
+
             idx = self.agent_rep._get_node_index(self.objective_mechanism)
             # Mechanisms' results are stored in the first substructure
             objective_op_ptr = builder.gep(comp_data, [ctx.int32_ty(0),
