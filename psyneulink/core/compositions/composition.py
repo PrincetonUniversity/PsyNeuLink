@@ -4043,11 +4043,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         self._graph_processing = self.graph.copy()
 
-        def remove_vertex(vertex):
-            for parent in vertex.parents:
-                for child in vertex.children:
-                    child.source_types[parent] = vertex.feedback
-                    self._graph_processing.connect_vertices(parent, child)
+        def remove_vertex(vertex, connect_endpoints):
+            if connect_endpoints:
+                for parent in vertex.parents:
+                    for child in vertex.children:
+                        child.source_types[parent] = vertex.feedback
+                        self._graph_processing.connect_vertices(parent, child)
 
             self._graph_processing.remove_vertex(vertex)
 
@@ -4055,7 +4056,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         vert_list = self._graph_processing.vertices.copy()
         for cur_vertex in vert_list:
             if not cur_vertex.component.is_processing:
-                remove_vertex(cur_vertex)
+                remove_vertex(cur_vertex, cur_vertex.component._creates_scheduling_dependency)
 
         # this determines CYCLE nodes and final FEEDBACK nodes
         self._graph_processing.prune_feedback_edges()
@@ -5825,6 +5826,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                                        sender_mechanism, receiver,
                                                                                        graph_receiver, context)
                 receiver = projection.receiver
+                if context.source is not ContextFlags.COMMAND_LINE:
+                    projection._creates_scheduling_dependency = False
 
         if sender_mechanism is self.parameter_CIM:
             idx = self.parameter_CIM.output_ports.index(sender)
