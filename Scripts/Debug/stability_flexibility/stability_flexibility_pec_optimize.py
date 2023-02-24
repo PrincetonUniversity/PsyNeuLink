@@ -17,9 +17,9 @@ trial_seq_seed = 1
 set_global_seed(pnl_seed)
 
 # High-level parameters the impact performance of the test
-num_trials = 120
+num_trials = 12
 time_step_size = 0.01
-num_estimates = 30000
+num_estimates = 3
 
 sf_params = dict(
     gain=3.0,
@@ -91,7 +91,7 @@ decisionGate = comp.nodes["DECISION_GATE"]
 responseGate = comp.nodes["RESPONSE_GATE"]
 
 fit_parameters = {
-    ("threshold", decisionMaker): np.linspace(0.01, 0.5, 1000),  # Threshold
+    ("threshold", decisionMaker): np.linspace(0.01, 0.5, 10),  # Threshold
 }
 
 def objective_function(variable):
@@ -115,7 +115,7 @@ pec = pnl.ParameterEstimationComposition(
     num_estimates=num_estimates,
 )
 
-pec.controller.parameters.comp_execution_mode.set("LLVM")
+# pec.controller.parameters.comp_execution_mode.set("LLVM")
 pec.controller.function.parameters.save_values.set(True)
 
 print("Running the PEC")
