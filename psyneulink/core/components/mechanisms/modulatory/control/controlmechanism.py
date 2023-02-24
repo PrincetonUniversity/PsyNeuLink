@@ -1954,7 +1954,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 for port_Name in port_Names_sorted:
                     for projection in self.control_signals[port_Name].efferents:
                         print("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
-        except:
+        except Exception:
             pass
 
         try:
@@ -1965,7 +1965,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 for port_Name in port_Names_sorted:
                     for projection in self.gating_signals[port_Name].efferents:
                         print("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
-        except:
+        except Exception:
             pass
 
         print("\n---------------------------------------------------------")

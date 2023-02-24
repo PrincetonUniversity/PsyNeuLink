@@ -226,6 +226,7 @@ def simulation_likelihood(
         return kdes
 
 
+
 class MaxLikelihoodEstimator(OptimizationFunction):
     """
     A class for performing parameter estimation for a composition using maximum likelihood estimation (MLE). When a

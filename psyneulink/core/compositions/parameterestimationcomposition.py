@@ -789,7 +789,6 @@ class ParameterEstimationComposition(Composition):
             context=context,
             return_results=return_results,
         )
-        assert True
 
     @handle_external_context()
     def run(self, *args, **kwargs):
