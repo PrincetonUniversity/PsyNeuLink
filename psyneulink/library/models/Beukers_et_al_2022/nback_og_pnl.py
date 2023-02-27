@@ -19,7 +19,7 @@ Neural Turing Machine (NTN; `Graves et al., 2016 <https://arxiv.org/abs/1410.540
 Episodic Planning Networks (EPN; `Ritter et al., 2020 <https://arxiv.org/abs/2006.03662>`_), and
 Emergent Symbols through Binding Networks (ESBN; `Webb et al., 2021 <https://arxiv.org/abs/2012.14601>`_).
 
-The script conatins methods to construct, train, and run the model, and analyze the results of its execution:
+The script contains methods to construct, train, and run the model, and analyze the results of its execution:
 
 * `construct_model <nback.construct_model>`:
   takes as arguments parameters used to construct the model;  for convenience, defaults are defined below,
