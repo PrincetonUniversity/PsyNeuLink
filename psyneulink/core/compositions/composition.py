@@ -10812,6 +10812,8 @@ _
             # -DS
 
             context.execution_phase = ContextFlags.PROCESSING
+            build_CIM_input = NotImplemented
+
             if inputs is not None:
                 inputs = self._validate_execution_inputs(inputs)
                 build_CIM_input = self._build_variable_for_input_CIM(inputs)
@@ -10849,6 +10851,7 @@ _
                 self.parameter_CIM.execute(context=context)
 
             else:
+                assert build_CIM_input != NotImplemented, f"{self} not in nested mode and no inputs available"
                 self.input_CIM.execute(build_CIM_input, context=context)
 
                 # Update nested compositions
