@@ -1571,7 +1571,8 @@ class TransferMechanism(ProcessingMechanism_Base):
             got = np.empty_like(self.termination_measure.defaults.variable)
             if expected.shape != got.shape:
                 warnings.warn("Shape mismatch: Termination measure input: "
-                              "{self.termination_measure.defaults.variable} should be {expected.shape}.")
+                              "{} should be {}.".format(self.termination_measure.defaults.variable, expected.shape),
+                              pnlvm.PNLCompilerWarning)
                 # FIXME: HACK the distance function is not initialized
                 self.termination_measure.defaults.variable = expected
 

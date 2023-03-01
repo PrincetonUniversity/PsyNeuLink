@@ -23,6 +23,7 @@ Functions that store and can return a record of their input.
 
 """
 
+import copy
 import numbers
 import warnings
 from collections import deque
@@ -2541,8 +2542,8 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
             previous_value = self._get_current_parameter_value("initializer", context)
 
         if previous_value == []:
-            self.parameters.previous_value._get(context).clear()
             value = np.ndarray(shape=(2, 0, len(self.defaults.variable[0])))
+            self.parameters.previous_value._set(copy.deepcopy(value), context)
 
         else:
             value = self._initialize_previous_value(previous_value, context=context)

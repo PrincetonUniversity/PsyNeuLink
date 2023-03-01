@@ -70,7 +70,7 @@ runs:
           echo "new_package=$NEW_PACKAGE" >> $GITHUB_OUTPUT
           # save a list of all installed packages (including pip, wheel; it's never empty)
           pip freeze --all > orig
-          pip install "$(echo $NEW_PACKAGE | sed 's/[-_]/./g' | xargs grep *requirements.txt -h -e | head -n1)" -c env_constraints.txt
+          pip install "$(echo $NEW_PACKAGE | sed 's/[-_]/./g' | xargs grep *requirements.txt -h -e | head -n1)" -c env_constraints.txt -c broken_trans_deps.txt
           pip show "$NEW_PACKAGE" | grep 'Version' | tee new_version.deps
           # uninstall new packages but skip those from previous steps (pywinpty, terminado on windows x86)
           # the 'orig' list is not empty (includes at least pip, wheel)
@@ -82,7 +82,7 @@ runs:
     - name: Python dependencies
       shell: bash
       run: |
-        pip install -e .[${{ inputs.features }}] -c env_constraints.txt
+        pip install -e .[${{ inputs.features }}] -c env_constraints.txt -c broken_trans_deps.txt
 
     - name: "Cleanup old wheels"
       shell: bash
