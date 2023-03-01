@@ -226,14 +226,7 @@ def simulation_likelihood(
         return kdes
 
 
-
-class MaxLikelihoodEstimator(OptimizationFunction):
-    """
-    A class for performing parameter estimation for a composition using maximum likelihood estimation (MLE). When a
-    ParameterEstimationComposition is used for `ParameterEstimationComposition_Data_Fitting`, an instance of this class
-    can be assigned to the ParameterEstimationComposition's
-    `optimization_function <ParameterEstimationComposition.optimization_function>`.
-    """
+class PECOptimizationFunction(OptimizationFunction):
 
     def __init__(
         self,
@@ -247,21 +240,8 @@ class MaxLikelihoodEstimator(OptimizationFunction):
         search_function = self._traverse_grid
         search_termination_function = self._grid_complete
 
-        # A cached copy of our log-likelihood function. This can only be created after the function has been assigned
-        # to a OptimizationControlMechanism under and ParameterEstimationComposition.
-        self._ll_func = None
-
         # Set num_iterations to a default value of 1, this will be reset in reset() based on the search space
         self.num_iterations = 1
-
-        self.max_iterations = max_iterations
-
-        # This is the generation number we are on in the search, this corresponds to iterations in
-        # differential_evolution
-        self.gen_count = 1
-
-        # Keeps track of the number of likelihood evaluations during search
-        self.num_evals = 0
 
         # When the OCM passes in the search space, we need to modify it so that the fitting parameters are
         # set to single values since we want to use SciPy optimize to drive the search for these parameters.
@@ -298,7 +278,7 @@ class MaxLikelihoodEstimator(OptimizationFunction):
             if i != randomization_dimension:
                 search_space[i] = SampleIterator([next(search_space[i])])
 
-        super(MaxLikelihoodEstimator, self).reset(
+        super().reset(
             search_space=search_space, context=context, **kwargs
         )
         owner_str = ""
@@ -372,6 +352,44 @@ class MaxLikelihoodEstimator(OptimizationFunction):
         all_values = np.transpose(all_values, (0, 2, 1))
 
         return all_values
+
+
+class MaxLikelihoodEstimator(PECOptimizationFunction):
+    """
+    A class for performing parameter estimation for a composition using maximum likelihood estimation (MLE). When a
+    ParameterEstimationComposition is used for `ParameterEstimationComposition_Data_Fitting`, an instance of this class
+    can be assigned to the ParameterEstimationComposition's
+    `optimization_function <ParameterEstimationComposition.optimization_function>`.
+    """
+
+    def __init__(
+        self,
+        search_space=None,
+        save_samples=None,
+        save_values=None,
+        max_iterations=500,
+        **kwargs,
+    ):
+
+        # A cached copy of our log-likelihood function. This can only be created after the function has been assigned
+        # to a OptimizationControlMechanism under and ParameterEstimationComposition.
+        self._ll_func = None
+
+        self.max_iterations = max_iterations
+
+        # This is the generation number we are on in the search, this corresponds to iterations in
+        # differential_evolution
+        self.gen_count = 1
+
+        # Keeps track of the number of likelihood evaluations during search
+        self.num_evals = 0
+
+        super().__init__(
+            search_space=search_space,
+            save_samples=save_samples,
+            save_values=save_values,
+            **kwargs,
+        )
 
     def _make_loglikelihood_func(self, context=None):
         """
