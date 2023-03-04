@@ -12338,6 +12338,18 @@ _
         if self.controller:
             yield self.controller
 
+    @property
+    def _sender_ports(self):
+        ports = super()._sender_ports
+        ports.extend(self.parameter_CIM.output_ports)
+        return ports
+
+    @property
+    def _receiver_ports(self):
+        ports = super()._receiver_ports
+        ports.extend(self.parameter_CIM.input_ports)
+        return ports
+
     # endregion PROPERTIES
 
     # ******************************************************************************************************************
