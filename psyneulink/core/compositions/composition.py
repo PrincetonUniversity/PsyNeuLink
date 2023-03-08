@@ -4935,11 +4935,36 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._determine_origin_and_terminal_nodes_from_consideration_queue()
 
         # INPUT
-        for node in self.get_nodes_by_role(NodeRole.ORIGIN):
+        origin_nodes = self.get_nodes_by_role(NodeRole.ORIGIN)
+        for node in origin_nodes:
             # Don't allow INTERNAL Nodes to be INPUTS
             if NodeRole.INTERNAL in self.get_roles_by_node(node):
                 continue
             self._add_node_role(node, NodeRole.INPUT)
+
+            # special case, ControlMechanisms create MappingProjections
+            # to inner composition parameter CIMs, which may or may not
+            # create scheduler dependencies (determined by user action).
+            # If an inner composition is not ORIGIN because of this
+            # condition, add it as INPUT anyway.
+            if isinstance(node, ControlMechanism):
+                for child in self.graph_processing.comp_to_vertex[node].children:
+                    for parent in child.parents:
+                        # MappingProjections from non-ControlMechanisms
+                        # always obey standard scheduling behavior
+                        if (
+                            not isinstance(parent.component, ControlMechanism)
+                            or parent.component not in origin_nodes
+                        ):
+                            continue
+
+                        for proj in child.component.get_afferents(parent.component):
+                            if (
+                                isinstance(proj, PathwayProjection_Base)
+                                and proj._creates_scheduling_dependency
+                            ):
+                                self._add_node_role(child.component, NodeRole.INPUT)
+                                break
 
         # CYCLE
         for node in self.graph_processing.cycle_vertices:
