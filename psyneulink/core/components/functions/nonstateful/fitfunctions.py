@@ -12,7 +12,7 @@ from psyneulink.core.components.functions.nonstateful.optimizationfunctions impo
     SEARCH_SPACE,
 )
 
-from typing import Dict, Tuple, Callable
+from typing import Dict, Tuple, Callable, List, Optional
 import time
 import numpy as np
 
@@ -40,13 +40,20 @@ def get_param_str(params):
     return ", ".join(f"{name.replace('PARAMETER_CIM_', '')}={value:.5f}" for name, value in params.items())
 
 
-class BadLikelihoodWarning(UserWarning):
+class PECObjectiveFuncWarning(UserWarning):
+    """
+    A custom warning that is used to signal when the objective function could not be evaluated for some reason.
+    This is usually caused when parameter values cause degenerate simulation results (no variance in values).
+    """
+    pass
+
+
+class BadLikelihoodWarning(PECObjectiveFuncWarning):
     """
     A custom warning that is used to signal when the likelihood could not be evaluated for some reason.
     This is usually caused when parameter values cause degenerate simulation results (no variance in values).
     It can also be caused when experimental data is not matching any of the simulation results.
     """
-
     pass
 
 
@@ -220,6 +227,9 @@ def simulation_likelihood(
                 )
             )
 
+        # Make 0 densities very small so log doesn't explode later
+        kdes_eval[kdes_eval == 0.0] = ZERO_PROB
+
         return kdes_eval
 
     else:
@@ -227,21 +237,50 @@ def simulation_likelihood(
 
 
 class PECOptimizationFunction(OptimizationFunction):
+    """
+    A class for performing parameter estimation for a composition.
+    """
 
     def __init__(
         self,
+        method,
+        objective_function=None,
+        data_fiting_mode=False,
         search_space=None,
-        save_samples=None,
-        save_values=None,
-        max_iterations=500,
+        save_samples: Optional[bool] = None,
+        save_values: Optional[bool] = None,
+        max_iterations: int = 500,
+        maximize: bool = True,
         **kwargs,
     ):
 
+        self.method = method
+
+        # Are we maximizing or minimizing the objective function?
+        self.maximize = maximize
+
+        # The outcome variables to select from the composition's output need to be specified. These will be
+        # set automatically by the PEC when PECOptimizationFunction is passed to it.
+        self.outcome_variable_indices = None
+
+        # The objective function to use for optimization. We can't set objective_function directly
+        # because that will be set to agent_rep.evaluate when the PECOptimizationFunction is passed to
+        # the OCM. Instead, we set self._pec_objective_function to the objective function, self.objective_function
+        # will be used to compute just the simulation results, the these will then be passed to the
+        # _pec_objective_function. Very confusing!
+        self._pec_objective_function = objective_function
+
+        # Are we in data fitting mode, or generic optimization. This is set automatically by the PEC when
+        # PECOptimizationFunction is passed to it. It only really determines whether some cosmetic
+        # things.
+        self.data_fitting_mode = data_fiting_mode
+
+        # This is a bit confusing but PECOptimizationFunction utilizes the OCM search machinery only to run
+        # simulations of the composition under different randomization. Thus, regardless of the method passed
+        # to PECOptimize, we always set the search_function and search_termination_function for GridSearch.
+        # The grid in our case is only over the randomization control signal.
         search_function = self._traverse_grid
         search_termination_function = self._grid_complete
-
-        # Set num_iterations to a default value of 1, this will be reset in reset() based on the search space
-        self.num_iterations = 1
 
         # When the OCM passes in the search space, we need to modify it so that the fitting parameters are
         # set to single values since we want to use SciPy optimize to drive the search for these parameters.
@@ -249,6 +288,23 @@ class PECOptimizationFunction(OptimizationFunction):
         # the evaluate machinery to get the different simulations for a given setting of parameters chosen
         # by scipy during optimization. This variable keeps track of the original search space.
         self._full_search_space = None
+
+        # Set num_iterations to a default value of 1, this will be reset in reset() based on the search space
+        self.num_iterations = 1
+
+        # Store max_iterations, this should be a common parameter for all optimization methods
+        self.max_iterations = max_iterations
+
+        # A cached copy of our log-likelihood function. This can only be created after the function has been assigned
+        # to a OptimizationControlMechanism under and ParameterEstimationComposition.
+        self._ll_func = None
+
+        # This is the generation number we are on in the search, this corresponds to iterations in
+        # differential_evolution
+        self.gen_count = 1
+
+        # Keeps track of the number of objective function evaluations during search
+        self.num_evals = 0
 
         super().__init__(
             search_space=search_space,
@@ -259,6 +315,13 @@ class PECOptimizationFunction(OptimizationFunction):
             aggregation_function=None,
             **kwargs,
         )
+
+    def set_pec_objective_function(self, objective_function: Callable):
+        """
+        Set the PEC objective function, this is the function that will be called by the OCM to evaluate
+        the simulation results generated by the composition when it is simulated by the PEC.
+        """
+        self._pec_objective_function = objective_function
 
     @handle_external_context(fallback_most_recent=True)
     def reset(self, search_space, context=None, **kwargs):
@@ -348,85 +411,256 @@ class PECOptimizationFunction(OptimizationFunction):
         )
 
         # We need to swap the simulation (randomization dimension) with the output dimension so things
-        # are in the right order for the likelihood computation.
+        # are in the right order passing to the objective_function call signature.
         all_values = np.transpose(all_values, (0, 2, 1))
 
         return all_values
 
-
-class MaxLikelihoodEstimator(PECOptimizationFunction):
-    """
-    A class for performing parameter estimation for a composition using maximum likelihood estimation (MLE). When a
-    ParameterEstimationComposition is used for `ParameterEstimationComposition_Data_Fitting`, an instance of this class
-    can be assigned to the ParameterEstimationComposition's
-    `optimization_function <ParameterEstimationComposition.optimization_function>`.
-    """
-
-    def __init__(
-        self,
-        search_space=None,
-        save_samples=None,
-        save_values=None,
-        max_iterations=500,
-        **kwargs,
-    ):
-
-        # A cached copy of our log-likelihood function. This can only be created after the function has been assigned
-        # to a OptimizationControlMechanism under and ParameterEstimationComposition.
-        self._ll_func = None
-
-        self.max_iterations = max_iterations
-
-        # This is the generation number we are on in the search, this corresponds to iterations in
-        # differential_evolution
-        self.gen_count = 1
-
-        # Keeps track of the number of likelihood evaluations during search
-        self.num_evals = 0
-
-        super().__init__(
-            search_space=search_space,
-            save_samples=save_samples,
-            save_values=save_values,
-            **kwargs,
-        )
-
-    def _make_loglikelihood_func(self, context=None):
+    def _make_objective_func(self, context=None):
         """
-        Make a function that computes the log likelihood of the simulation results.
+        Make an objective function to pass to an optimization algorithm. Creates a function that runs simulations and
+        then feeds the results self._pec_objective_func. This cannot be invoked until the PECOptimizationFunction
+        (self) has been assigned to an OptimizationControlMechanism.
         """
 
-        def ll(*args):
+        def objfunc(*args):
             sim_data = self._run_simulations(*args, context=context)
 
-            # The composition might have more outputs that outcome variables that we wish to compute the likelihood
-            # over. We need to subset the ones we need.
+            # The composition might have more outputs than outcome variables, we need to subset the ones we need.
             sim_data = sim_data[:, :, self.outcome_variable_indices]
 
-            # Check the dimensions of the simulation results are the appropriate size. If not, likely the number of
-            # output ports on the composition is different from the number of columns in the data to fit. This should
-            # be caught at construction time, but I will leave this here to be safe.
-            if len(self.data_categorical_dims) != sim_data.shape[-1]:
+            return self._pec_objective_function(sim_data)
+
+        return objfunc
+
+    def _function(self, variable=None, context=None, params=None, **kwargs):
+        """
+        Run the optimization algorithm to find the optimal control allocation.
+        """
+
+        optimal_sample = self.variable
+        optimal_value = np.array([1.0])
+        saved_samples = []
+        saved_values = []
+
+        if not self.is_initializing:
+
+            ocm = self.owner
+            if ocm is None:
                 raise ValueError(
-                    "Mismatch in the number of columns provided in the data to fit and the number of "
-                    "columns in the composition simulation results. Check that the data to fit has the "
-                    "same number of columns (and order) as the composition results."
+                    "PECOptimizationFunction must be assigned to an OptimizationControlMechanism, "
+                    "self.owner is None"
                 )
 
-            # Compute the likelihood given the data
-            like = simulation_likelihood(
-                sim_data=sim_data,
-                exp_data=self.data,
-                categorical_dims=self.data_categorical_dims,
-                combine_trials=False,
+            # Get the objective function that we are trying to minimize
+            f = self._make_objective_func(context=context)
+
+            # Run the MLE optimization
+            results = self._fit(obj_func=f)
+
+            # Get the optimal function value and sample
+            optimal_value = results["optimal_value"]
+
+            # Replace randomization dimension to match expected dimension of output_values of OCM. This is ugly but
+            # necessary.
+            optimal_sample = list(results["fitted_params"].values()) + [0.0]
+
+        return optimal_sample, optimal_value, saved_samples, saved_values
+
+    def _fit(
+        self,
+        obj_func: Callable,
+        display_iter: bool = True,
+    ):
+        if self.method == "differential_evolution":
+            return self._fit_differential_evolution(obj_func, display_iter)
+        elif self.method == "gridsearch":
+            return self._fit_gridsearch(obj_func, display_iter)
+        else:
+            raise ValueError(f"Invalid optimization_function method: {self.method}")
+
+    def _fit_differential_evolution(self, obj_func: Callable, display_iter: bool = True,):
+        """
+        Implementation of search using scipy's differential_evolution algorithm.
+        """
+
+        bounds = list(self.fit_param_bounds.values())
+
+        # Get a seed to pass to scipy for its search. Make this dependent on the seed of the
+        # OCM
+        seed_for_scipy = self.owner.initial_seed
+
+        direction = -1 if self.maximize else 1
+        direction_str = "Maximizing" if self.maximize else "Minimizing"
+
+        with Progress(
+                "[progress.description]{task.description}",
+                BarColumn(),
+                "Completed: [progress.percentage]{task.percentage:>3.0f}%",
+                TimeRemainingColumn(),
+        ) as progress:
+
+            # We need to display things a bit differently depending on whether we are fitting data or optimizing
+            task_disp = "Maximum Likelihood Estimation" if self.data_fitting_mode else f"{direction_str} Objective Function"
+            f_str = 'Log-Likelihood' if self.data_fitting_mode else 'Obj-Func-Value'
+
+            opt_task = progress.add_task(
+                f"{task_disp} (num_estimates={self.num_estimates}) ...", total=100
             )
 
-            # Make 0 densities very small so log doesn't explode
-            like[like == 0.0] = 1.0e-10
+            # This is the number of evaluations we need per search iteration.
+            evals_per_iteration = 15 * len(self.fit_param_names)
+            self.num_evals = 0
+            self.gen_count = 1
 
-            return np.sum(np.log(like)), sim_data
+            if display_iter:
+                eval_task_str = f"|-- Iteration 1 ..."
+                like_eval_task = progress.add_task(eval_task_str, total=evals_per_iteration)
 
-        return ll
+            progress.update(opt_task, completed=0)
+
+            warns_with_params = []
+            with warnings.catch_warnings(record=True) as warns:
+
+                # Create a wrapper function for the objective. This lets us keep track of progress and such
+                def objfunc_wrapper(x):
+                    params = dict(zip(self.fit_param_names, x))
+                    t0 = time.time()
+                    obj_val = obj_func(*x)
+                    p = direction * obj_val
+                    elapsed = time.time() - t0
+                    self.num_evals = self.num_evals + 1
+
+                    # Keep a log of warnings and the parameters that caused them
+                    if len(warns) > 0 and warns[-1].category == PECObjectiveFuncWarning:
+                        warns_with_params.append((warns[-1], params))
+
+                    # Are we displaying each iteration
+                    if display_iter:
+
+                        # If we got a warning generating the obective function value, report it
+                        if (
+                                len(warns) > 0
+                                and warns[-1].category == PECObjectiveFuncWarning
+                        ):
+                            progress.console.print(f"Warning: ", style="bold red")
+                            progress.console.print(
+                                f"{warns[-1].message}", style="bold red"
+                            )
+                            progress.console.print(
+                                f"{get_param_str(params)}, {f_str}: {obj_val}, "
+                                f"Eval-Time: {elapsed} (seconds)",
+                                style="bold red",
+                            )
+                            # Clear the warnings
+                            warns.clear()
+                        else:
+                            progress.console.print(
+                                f"{get_param_str(params)}, {f_str}: {obj_val}, "
+                                f"Eval-Time: {elapsed} (seconds)"
+                            )
+
+                        if self.num_evals < 2 * evals_per_iteration:
+                            max_evals = 2 * evals_per_iteration + 1
+                            progress.tasks[like_eval_task].total = max_evals
+                            eval_task_str = f"|-- Iteration {self.gen_count} ..."
+                            progress.tasks[like_eval_task].description = eval_task_str
+                            progress.update(like_eval_task, completed=self.num_evals % max_evals)
+                        else:
+                            max_evals = evals_per_iteration + 1
+                            progress.tasks[like_eval_task].total = max_evals
+                            eval_task_str = f"|-- Iteration {self.gen_count} ..."
+                            progress.tasks[like_eval_task].description = eval_task_str
+                            progress.update(like_eval_task,
+                                            completed=(self.num_evals - (2 * evals_per_iteration + 1)) % max_evals)
+
+                    return p
+
+                def progress_callback(x, convergence):
+                    params = dict(zip(self.fit_param_names, x))
+                    convergence_pct = 100.0 * convergence
+                    progress.console.print(
+                        f"[green]Current Best Parameters: {get_param_str(params)}, "
+                        f"{f_str}: {obj_func(*x)}, "
+                        f"Convergence: {convergence_pct}"
+                    )
+
+                    # If we encounter any PECObjectiveFuncWarnings. Summarize them for the user
+                    if len(warns_with_params) > 0:
+                        progress.console.print(
+                            f"Warning: degenerate {f_str} values for the following parameter values ",
+                            style="bold red",
+                        )
+                        for w in warns_with_params:
+                            progress.console.print(
+                                f"\t{get_param_str(w[1])}", style="bold red"
+                            )
+                        progress.console.print(
+                            "If these warnings are intermittent, check to see if search "
+                            "space is appropriately bounded. If they are constant, and you are fitting to"
+                            "data, make sure experimental data and output of your composition are similar.",
+                            style="bold red",
+                        )
+
+                    progress.update(opt_task, completed=convergence_pct)
+                    self.gen_count = self.gen_count + 1
+
+                r = differential_evolution(
+                    objfunc_wrapper,
+                    bounds,
+                    callback=progress_callback,
+                    maxiter=self.parameters.max_iterations.get() - 1,
+                    seed=seed_for_scipy,
+                    popsize=15,
+                    polish=False,
+                )
+
+            # Bind the fitted parameters to their names
+            fitted_params = dict(zip(list(self.fit_param_names), r.x))
+
+        # Save all the results
+        output_dict = {
+            "fitted_params": fitted_params,
+            "optimal_value": direction * r.fun,
+        }
+
+        return output_dict
+
+    def _fit_gridsearch(self, obj_func: Callable, display_iter: bool = True):
+        raise ValueError("Grid search not implemented for PEC yet")
+
+    @property
+    def fit_param_names(self) -> List[str]:
+        """Get a unique name for each parameter in the fit."""
+        if self.owner is not None:
+            return [
+                cs.efferents[0].receiver.name
+                for i, cs in enumerate(self.owner.control_signals)
+                if i != self.randomization_dimension
+            ]
+        else:
+            return None
+
+    @property
+    def fit_param_bounds(self) -> Dict[str, Tuple[float, float]]:
+        """
+        Get the allocation samples for just the fitting parameters. Whatever they are, turn them into upper and lower
+        bounds.
+
+        Returns:
+            A dict mapping parameter names to (lower, upper) bounds.
+        """
+        if self.owner is not None:
+            acs = [
+                cs.allocation_samples
+                for i, cs in enumerate(self.owner.control_signals)
+                if i != self.randomization_dimension
+            ]
+
+            bounds = [(float(min(s)), float(max(s))) for s in acs]
+            return dict(zip(self.fit_param_names, bounds))
+        else:
+            return None
 
     @handle_external_context(fallback_most_recent=True)
     def log_likelihood(self, *args, context=None):
@@ -458,208 +692,10 @@ class MaxLikelihoodEstimator(PECOptimizationFunction):
 
         # Make sure we have instantiated the log-likelihood function.
         if self._ll_func is None:
-            self._ll_func = self._make_loglikelihood_func(context=context)
+            self._ll_func = self._make_objective_func(context=context)
 
         context.execution_phase = ContextFlags.PROCESSING
         ll, sim_data = self._ll_func(*args)
         context.remove_flag(ContextFlags.PROCESSING)
 
         return ll, sim_data
-
-    def _function(self, variable=None, context=None, params=None, **kwargs):
-
-        optimal_sample = self.variable
-        optimal_value = np.array([1.0])
-        saved_samples = []
-        saved_values = []
-
-        if not self.is_initializing:
-
-            ocm = self.owner
-            if ocm is None:
-                raise ValueError(
-                    "MaximumLikelihoodEstimator must be assigned to an OptimizationControlMechanism, "
-                    "self.owner is None"
-                )
-
-            # Get a log likelihood function that can be used to compute the log likelihood of the simulation results
-            ll_func = self._make_loglikelihood_func(context=context)
-
-            # Run the MLE optimization
-            results = self._fit(ll_func=ll_func)
-            optimal_value = results["neg-log-likelihood"]
-            # Replace randomization dimension to match expected dimension of output_values of OCM
-            optimal_sample = list(results["fitted_params"].values()) + [0.0]
-
-        return optimal_sample, optimal_value, saved_samples, saved_values
-
-    def _fit(
-        self,
-        ll_func: Callable,
-        display_iter: bool = True,
-    ):
-
-        bounds = list(self.fit_param_bounds.values())
-
-        # Get a seed to pass to scipy for its search. Make this dependent on the seed of the
-        # OCM
-        seed_for_scipy = self.owner.initial_seed
-
-        with Progress(
-            "[progress.description]{task.description}",
-            BarColumn(),
-            "Completed: [progress.percentage]{task.percentage:>3.0f}%",
-            TimeRemainingColumn(),
-        ) as progress:
-            opt_task = progress.add_task(
-                f"Maximum likelihood optimization (num_estimates={self.num_estimates}) ...", total=100
-            )
-
-            # This is the number of likelihood evaluations we need per search iteration.
-            evals_per_iteration = 15 * len(self.fit_param_names)
-            self.num_evals = 0
-            self.gen_count = 1
-
-            if display_iter:
-                eval_task_str = f"|-- Iteration 1 ..."
-                like_eval_task = progress.add_task(eval_task_str, total=evals_per_iteration)
-
-            progress.update(opt_task, completed=0)
-
-            warns_with_params = []
-            with warnings.catch_warnings(record=True) as warns:
-
-                # Create a wrapper function for the objective.
-                def neg_log_like(x):
-                    params = dict(zip(self.fit_param_names, x))
-                    t0 = time.time()
-                    p = -ll_func(*x)[0]
-                    elapsed = time.time() - t0
-                    self.num_evals = self.num_evals + 1
-
-                    # Keep a log of warnings and the parameters that caused them
-                    if len(warns) > 0 and warns[-1].category == BadLikelihoodWarning:
-                        warns_with_params.append((warns[-1], params))
-
-                    # Are we displaying each iteration
-                    if display_iter:
-
-                        # If we got a warning generating the likelihood, report it
-                        if (
-                            len(warns) > 0
-                            and warns[-1].category == BadLikelihoodWarning
-                        ):
-                            progress.console.print(f"Warning: ", style="bold red")
-                            progress.console.print(
-                                f"{warns[-1].message}", style="bold red"
-                            )
-                            progress.console.print(
-                                f"{get_param_str(params)}, Neg-Log-Likelihood: {p}, "
-                                f"Likelihood-Eval-Time: {elapsed} (seconds)",
-                                style="bold red",
-                            )
-                            # Clear the warnings
-                            warns.clear()
-                        else:
-                            progress.console.print(
-                                f"{get_param_str(params)}, Neg-Log-Likelihood: {p}, "
-                                f"Likelihood-Eval-Time: {elapsed} (seconds)"
-                            )
-
-                        if self.num_evals < 2 * evals_per_iteration:
-                            max_evals = 2 * evals_per_iteration + 1
-                            progress.tasks[like_eval_task].total = max_evals
-                            eval_task_str = f"|-- Iteration {self.gen_count} ..."
-                            progress.tasks[like_eval_task].description = eval_task_str
-                            progress.update(like_eval_task, completed=self.num_evals % max_evals)
-                        else:
-                            max_evals = evals_per_iteration + 1
-                            progress.tasks[like_eval_task].total = max_evals
-                            eval_task_str = f"|-- Iteration {self.gen_count} ..."
-                            progress.tasks[like_eval_task].description = eval_task_str
-                            progress.update(like_eval_task, completed=(self.num_evals - (2 * evals_per_iteration + 1)) % max_evals)
-
-                    return p
-
-                def progress_callback(x, convergence):
-                    params = dict(zip(self.fit_param_names, x))
-                    convergence_pct = 100.0 * convergence
-                    progress.console.print(
-                        f"[green]Current Best Parameters: {get_param_str(params)}, "
-                        f"Neg-Log-Likelihood: {neg_log_like(x)}, "
-                        f"Convergence: {convergence_pct}"
-                    )
-
-                    # If we encounter any BadLikelihoodWarnings. Summarize them for the user
-                    if len(warns_with_params) > 0:
-                        progress.console.print(
-                            "Warning: degenerate likelihood for the following parameter values ",
-                            style="bold red",
-                        )
-                        for w in warns_with_params:
-                            progress.console.print(
-                                f"\t{get_param_str(w[1])}", style="bold red"
-                            )
-                        progress.console.print(
-                            "If these warnings are intermittent, check to see if search "
-                            "space is appropriately bounded. If they are constant, make sure "
-                            "experimental data and output of your composition are similar.",
-                            style="bold red",
-                        )
-
-                    progress.update(opt_task, completed=convergence_pct)
-                    self.gen_count = self.gen_count + 1
-
-                r = differential_evolution(
-                    neg_log_like,
-                    bounds,
-                    callback=progress_callback,
-                    maxiter=self.parameters.max_iterations.get() - 1,
-                    seed=seed_for_scipy,
-                    popsize=15,
-                    polish=False,
-                )
-
-            # Bind the fitted parameters to their names
-            fitted_params = dict(zip(list(self.fit_param_names), r.x))
-
-        # Save all the results
-        output_dict = {
-            "fitted_params": fitted_params,
-            "neg-log-likelihood": r.fun,
-        }
-
-        return output_dict
-
-    @property
-    def fit_param_names(self):
-        """Get a unique name for each parameter in the fit."""
-        if self.owner is not None:
-            return [
-                cs.efferents[0].receiver.name
-                for i, cs in enumerate(self.owner.control_signals)
-                if i != self.randomization_dimension
-            ]
-        else:
-            return None
-
-    @property
-    def fit_param_bounds(self) -> Dict[str, Tuple[float, float]]:
-        """
-        Get the allocation samples for just the fitting parameters. Whatever they are, turn them into upper and lower
-        bounds.
-
-        Returns:
-            A dict mapping parameter names to (lower, upper) bounds.
-        """
-        if self.owner is not None:
-            acs = [
-                cs.allocation_samples
-                for i, cs in enumerate(self.owner.control_signals)
-                if i != self.randomization_dimension
-            ]
-
-            bounds = [(float(min(s)), float(max(s))) for s in acs]
-            return dict(zip(self.fit_param_names, bounds))
-        else:
-            return None

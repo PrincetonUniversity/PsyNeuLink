@@ -10,11 +10,8 @@ from psyneulink.core.components.functions.nonstateful.combinationfunctions impor
 from psyneulink.core.components.functions.nonstateful.distributionfunctions import (
     DriftDiffusionAnalytical,
 )
-from psyneulink.core.components.functions.nonstateful.optimizationfunctions import (
-    GridSearch,
-)
 from psyneulink.core.components.functions.nonstateful.fitfunctions import (
-    MaxLikelihoodEstimator,
+    PECOptimizationFunction,
 )
 from psyneulink.core.components.projections.modulatory.controlprojection import (
     ControlProjection,
@@ -63,8 +60,6 @@ pec_test_args = [
     # (None, 2, True, True), <- USE TO TEST ERROR
     # (None, 2, False, False), <- USE TO TEST ERROR
 ]
-
-
 @pytest.mark.parametrize(
     "objective_function_arg, expected_outcome_input_len, model_spec, node_spec",
     pec_test_args,
@@ -139,7 +134,7 @@ def test_pec(objective_function_arg, expected_outcome_input_len, model_spec, nod
             Decision.output_ports[RESPONSE_TIME],
         ],
         objective_function=objective_function_arg,
-        optimization_function=GridSearch,
+        optimization_function='gridsearch',
         num_estimates=3,
         # controller_mode=AFTER,   # For testing error
         # enable_controller=False  # For testing error
@@ -198,7 +193,7 @@ pec = pnl.ParameterEstimationComposition(
     model=model,
     parameters={("slope", output_node): np.linspace(1.0, 3.0, 3)},
     outcome_variables=output_node,
-    optimization_function=GridSearch,
+    optimization_function=PECOptimizationFunction(method='gridsearch'),
 )
 run_input_test_args = [
     (
@@ -386,7 +381,7 @@ def test_parameter_estimation_ddm_mle(func_mode):
             decision.output_ports[pnl.RESPONSE_TIME],
         ],
         data=data_to_fit,
-        optimization_function=MaxLikelihoodEstimator(max_iterations=1),
+        optimization_function=PECOptimizationFunction(method='differential_evolution', max_iterations=1),
         num_estimates=num_estimates,
         initial_seed=42,
     )
@@ -456,7 +451,7 @@ def test_pec_bad_outcome_var_spec():
                 decision.output_ports[pnl.RESPONSE_TIME],
             ],
             data=data_to_fit,
-            optimization_function=MaxLikelihoodEstimator(),
+            optimization_function='differential_evolution',
             num_estimates=20,
             num_trials_per_estimate=10,
         )
@@ -469,7 +464,7 @@ def test_pec_bad_outcome_var_spec():
             parameters=fit_parameters,
             outcome_variables=[transfer.output_ports[0]],
             data=data_to_fit,
-            optimization_function=MaxLikelihoodEstimator(),
+            optimization_function='differential_evolution',
             num_estimates=20,
             num_trials_per_estimate=10,
         )

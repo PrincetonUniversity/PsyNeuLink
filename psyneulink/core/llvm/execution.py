@@ -705,7 +705,10 @@ class CompExecution(CUDAExecution):
         # Output ctype
         out_el_ty = bin_func.byref_arg_types[4]
         if all_results:
-            out_el_ty *= ocm.parameters.num_trials_per_estimate.get(self._execution_contexts[0])
+            num_trials = ocm.parameters.num_trials_per_estimate.get(self._execution_contexts[0])
+            if num_trials is None:
+                num_trials = num_input_sets
+            out_el_ty *= num_trials
         out_ty = out_el_ty * num_evaluations
 
         ct_num_inputs = bin_func.byref_arg_types[7](num_input_sets)

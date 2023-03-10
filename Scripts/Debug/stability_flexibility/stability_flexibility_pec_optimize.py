@@ -17,9 +17,9 @@ trial_seq_seed = 1
 set_global_seed(pnl_seed)
 
 # High-level parameters the impact performance of the test
-num_trials = 12
+num_trials = 240
 time_step_size = 0.01
-num_estimates = 3
+num_estimates = 100
 
 sf_params = dict(
     gain=3.0,
@@ -94,13 +94,15 @@ fit_parameters = {
     ("threshold", decisionMaker): np.linspace(0.01, 0.5, 10),  # Threshold
 }
 
-def objective_function(variable):
-    decision_variable = variable[0]
-    rt_variable = variable[1]
-    # if rt_variable == 0.0:
-    #     return np.array([0.0])
-    rr = decision_variable / rt_variable
-    return rr
+
+def reward_rate(sim_data):
+    """
+    Objective function for PEC to optimize. This function takes in the simulation data,
+    a 3D array of shape (num_trials, num_estimates, num_outcome_vars), and returns a
+    scalar value that is the reward rate.
+    """
+    return np.mean(sim_data[:, :, 0][:] / sim_data[:, :, 1][:])
+
 
 pec = pnl.ParameterEstimationComposition(
     name="pec",
@@ -110,16 +112,17 @@ pec = pnl.ParameterEstimationComposition(
         decisionGate.output_ports[0],
         responseGate.output_ports[0],
     ],
-    objective_function=objective_function,
-    optimization_function=GridSearch(),
+    objective_function=reward_rate,
+    optimization_function='differential_evolution',
     num_estimates=num_estimates,
 )
 
-# pec.controller.parameters.comp_execution_mode.set("LLVM")
+pec.controller.parameters.comp_execution_mode.set("LLVM")
 pec.controller.function.parameters.save_values.set(True)
 
 print("Running the PEC")
 #comp.show_graph()
 ret = pec.run(inputs=inputs)
 print("Optimal threshold: ", pec.optimized_parameter_values)
+print("Optimal Reward Rate: ", pec.optimal_value)
 print("Current threshold: ", sf_params["threshold"], ", Reward rate: ", np.mean(data_to_fit["decision"] / data_to_fit['response_time']))

@@ -5,7 +5,6 @@ import psyneulink as pnl
 import pandas as pd
 
 from psyneulink.core.globals.utilities import set_global_seed
-from psyneulink.core.components.functions.nonstateful.fitfunctions import MaxLikelihoodEstimator
 
 sys.path.append(".")
 
@@ -17,9 +16,9 @@ set_global_seed(pnl_seed)
 trial_seq_seed = 0
 
 # High-level parameters the impact performance of the test
-num_trials = 120
+num_trials = 12
 time_step_size = 0.01
-num_estimates = 30000
+num_estimates = 3
 
 sf_params = dict(
     gain=3.0,
@@ -101,11 +100,11 @@ pec = pnl.ParameterEstimationComposition(
         responseGate.output_ports[0],
     ],
     data=data_to_fit,
-    optimization_function=MaxLikelihoodEstimator(),
+    optimization_function='differential_evolution',
     num_estimates=num_estimates,
 )
 
-pec.controller.parameters.comp_execution_mode.set("LLVM")
+# pec.controller.parameters.comp_execution_mode.set("LLVM")
 pec.controller.function.parameters.save_values.set(True)
 
 print("Running the PEC")

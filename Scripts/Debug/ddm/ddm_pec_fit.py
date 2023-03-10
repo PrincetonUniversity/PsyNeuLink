@@ -4,7 +4,6 @@ import psyneulink as pnl
 import pandas as pd
 
 from psyneulink.core.globals.utilities import set_global_seed
-from psyneulink.core.components.functions.nonstateful.fitfunctions import MaxLikelihoodEstimator
 
 # # Let's make things reproducible
 set_global_seed(0)
@@ -83,7 +82,7 @@ pec = pnl.ParameterEstimationComposition(
         decision.output_ports[pnl.RESPONSE_TIME],
     ],
     data=data_to_fit,
-    optimization_function=MaxLikelihoodEstimator(),
+    optimization_function="differential_evolution",
     num_estimates=num_estimates,
     initial_seed=42,
 )

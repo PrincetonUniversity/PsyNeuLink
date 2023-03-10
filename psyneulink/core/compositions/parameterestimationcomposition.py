@@ -162,21 +162,23 @@ Class Reference
 ---------------
 
 """
+import warnings
+
 import numpy as np
 import pandas as pd
 
 import psyneulink.core.llvm as pnllvm
 from psyneulink.core.compositions.composition import Composition, CompositionError
-from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \
     OptimizationControlMechanism
-from psyneulink.core.components.functions.nonstateful.optimizationfunctions import GridSearch
+from psyneulink.core.components.functions.nonstateful.fitfunctions import PECOptimizationFunction, simulation_likelihood
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import BEFORE, OVERRIDE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.utilities import convert_to_list
 from psyneulink.core.scheduling.time import TimeScale
+from psyneulink.core.components.ports.outputport import OutputPort
 
 
 __all__ = ["ParameterEstimationComposition", "ParameterEstimationCompositionError"]
@@ -554,22 +556,44 @@ class ParameterEstimationComposition(Composition):
         self.data = data
         self.data_categorical_dims = data_categorical_dims
 
-        self.outcome_variables = outcome_variables
+        if not isinstance(self.nodes[0], Composition):
+            raise ValueError(
+                "PEC requires the PEC to have a single node that is a composition!"
+            )
 
         # This internal list variable keeps track of the specific indices within the composition's output correspond
         # to the specified outcome variables. This is used in data fitting to subset the only the correct columns of the
         # simulation results for likelihood estimation.
-        self._outcome_variable_indices = []
+        # Make sure the output ports specified as outcome variables are present in the output ports of the inner
+        # composition.
+        self.outcome_variables = outcome_variables
 
+        try:
+            iter(self.outcome_variables)
+        except TypeError:
+            self.outcome_variables = [self.outcome_variables]
+
+        self._outcome_variable_indices = []
+        in_comp = self.nodes[0]
+        in_comp_ports = list(in_comp.output_CIM.port_map.keys())
+        for outcome_var in self.outcome_variables:
+            try:
+                if not isinstance(outcome_var, OutputPort):
+                    outcome_var = outcome_var.output_port
+
+                self._outcome_variable_indices.append(in_comp_ports.index(outcome_var))
+            except ValueError:
+                raise ValueError(
+                    f"Could not find outcome variable {outcome_var.full_name} in the output ports of "
+                    f"the composition being fitted to data ({self.nodes[0]}). A current limitation of the "
+                    f"PEC data fitting API is that any output port of composition that should be fit to "
+                    f"data must be set as and output of the composition."
+                )
+
+        # Validate data if it is provided, need to do this now because this method also checks if
+        # the data is compatible with outcome variables determined above
         if self.data is not None:
             self._validate_data()
-
-        # If there is data being passed, then we are in data fitting mode and we need the OCM to return the full results
-        # from a simulation of a composition.
-        if self.data is not None:
-            return_results = True
-        else:
-            return_results = False
 
         # Store the parameters specified for fitting
         self.fit_parameters = parameters
@@ -591,17 +615,15 @@ class ParameterEstimationComposition(Composition):
             num_trials_per_estimate=num_trials_per_estimate,
             initial_seed=initial_seed,
             same_seed_for_all_parameter_combinations=same_seed_for_all_parameter_combinations,
-            return_results=return_results,
             context=context,
         )
         self.add_controller(ocm, context)
 
-        # If we are using data fitting mode.
-        # We need to ensure the aggregation function is set to None on the OptimizationFunction so that calls to
-        # evaluate do not aggregate results of simulations. We want all results for all simulations so we can compute
-        # the likelihood ourselves.
-        if self.data is not None:
-            ocm.function.parameters.aggregation_function._set(None, context)
+        # In both optimization mode and data fitting mode, the PEC does not need an aggregation function to
+        # combine results across the randomized dimension. We need to ensure the aggregation function is set to None on
+        # the OptimizationFunction so that calls to evaluate do not aggregate results of simulations. We want all
+        # results for all simulations so we can compute the likelihood ourselves.
+        ocm.function.parameters.aggregation_function._set(None, context)
 
         # The call run on PEC might lead to the run method again recursively for simulation. We need to keep track of
         # this to avoid infinite recursion.
@@ -611,7 +633,9 @@ class ParameterEstimationComposition(Composition):
         """Check if user supplied data to fit is valid for data fitting mode."""
 
         # If the data is not in numpy format (could be a pandas dataframe) convert it to numpy. Cast all values to
-        # floats and keep track of categorical dimensions with a mask
+        # floats and keep track of categorical dimensions with a mask. This preprocessing is done to make the data
+        # compatible with passing directly to simulation_likelihood function. This avoids having to do the same with
+        # each call to the likelihood function during optimization.
         if isinstance(self.data, pd.DataFrame):
             self._data_numpy = self.data.to_numpy().astype(float)
 
@@ -641,27 +665,6 @@ class ParameterEstimationComposition(Composition):
                 "either a 2D numpy array or a pandas dataframe. Each row represents a single experimental "
                 "trial."
             )
-
-        if not isinstance(self.nodes[0], Composition):
-            raise ValueError(
-                "PEC is data fitting mode requires the PEC to have a single node that is a composition!"
-            )
-
-        # Make sure the output ports specified as outcome variables are present in the output ports of the inner
-        # composition.
-        in_comp = self.nodes[0]
-        in_comp_ports = list(in_comp.output_CIM.port_map.keys())
-        self._outcome_variable_indices = []
-        for outcome_var in self.outcome_variables:
-            try:
-                self._outcome_variable_indices.append(in_comp_ports.index(outcome_var))
-            except ValueError:
-                raise ValueError(
-                    f"Could not find outcome variable {outcome_var.full_name} in the output ports of "
-                    f"the composition being fitted to data ({self.nodes[0]}). A current limitation of the "
-                    f"PEC data fitting API is that any output port of composition that should be fit to "
-                    f"data must be set as and output of the composition."
-                )
 
         if len(self.outcome_variables) != self.data.shape[-1]:
             raise ValueError(
@@ -736,7 +739,6 @@ class ParameterEstimationComposition(Composition):
         num_trials_per_estimate,
         initial_seed,
         same_seed_for_all_parameter_combinations,
-        return_results,
         context=None,
     ):
 
@@ -746,39 +748,55 @@ class ParameterEstimationComposition(Composition):
             control_signals.append(
                 ControlSignal(
                     modulates=param,
-                    # In parameter fitting (when data is present) we always want to
-                    # override the fitting parameters with the search values.
-                    modulation=OVERRIDE if self.data is not None else None,
+                    modulation=OVERRIDE,
                     allocation_samples=allocation,
                 )
             )
 
-        # If objective_function has been specified, use it to create ObjectiveMechanism and pass that to ocm
-        objective_mechanism = (
-            ObjectiveMechanism(monitor=outcome_variables, function=objective_function)
-            if objective_function
-            else None
-        )
+        # For the PEC, the objective mechanism is not needed because in context of optimization of data fitting
+        # we require all trials (and number of estimates) to compute the scalar objective value. In data fitting
+        # this is usually and likelihood estimated by kernel density estimation using the simulated data and the
+        # user provided data. For optimization, it is computed arbitrarily by the user provided objective_function
+        # to the PEC. Either way, the objective_mechanism is not the appropriate place because it gets
+        # executed on each trial's execution.
+        objective_mechanism = None
 
-        # if data is specified, assign to optimization_function attributes
-        if data is not None:
-            try:
-                optimization_function.data = self._data_numpy
-                optimization_function.data_categorical_dims = self.data_categorical_dims
-                optimization_function.outcome_variable_indices = (
-                    self._outcome_variable_indices
+        # if data is specified and objective_function is None, define maximum likelihood estimation objective function
+        if data is not None and objective_function is None:
+            # Create an objective function that computes the negative sum of the log likelihood of the data,
+            # so we can perform maximum likelihood estimation. This will be our objective function in
+            # data fitting mode.
+            def f(sim_data):
+                like = simulation_likelihood(
+                    sim_data=sim_data,
+                    exp_data=self._data_numpy,
+                    categorical_dims=self.data_categorical_dims,
                 )
-            except AttributeError:
-                raise ParameterEstimationCompositionError(
-                    f"Optimization function {optimization_function} does not support data fitting; "
-                    f"It must have a 'data' attribute and a 'data_categorical_dims' attribute."
-            )
 
-        # # If data is not specified, and no optimization_function is specified, use default
-        # elif optimization_function is not None:
-        #     optimization_function = GridSearch()
+                return np.sum(np.log(like))
 
-        return PEC_OCM(
+            objective_function = f
+
+        if optimization_function is None:
+            warnings.warn('optimization_function argument to PEC was not specified, defaulting to gridsearch, this is slow!')
+            optimization_function = PECOptimizationFunction(method='gridsearch', objective_function=objective_function)
+        elif type(optimization_function) == str:
+            optimization_function = PECOptimizationFunction(method=optimization_function, objective_function=objective_function)
+        elif not isinstance(optimization_function, PECOptimizationFunction):
+            raise ParameterEstimationCompositionError("optimization_function for PEC must either be either a valid "
+                                                      "string for a supported optimization method or an instance of "
+                                                      "PECOptimizationFunction.")
+        else:
+            optimization_function.set_pec_objective_function(objective_function)
+
+        if data is not None:
+            optimization_function.data_fitting_mode = True
+
+        # I wish I had a cleaner way to do this. The optimization function doesn't have any way to figure out which
+        # indices it needs from composition output. This needs to be passed down from the PEC.
+        optimization_function.outcome_variable_indices = self._outcome_variable_indices
+
+        ocm = PEC_OCM(
             agent_rep=agent_rep,
             monitor_for_control=outcome_variables,
             allow_probes=True,
@@ -790,8 +808,10 @@ class ParameterEstimationComposition(Composition):
             initial_seed=initial_seed,
             same_seed_for_all_allocations=same_seed_for_all_parameter_combinations,
             context=context,
-            return_results=return_results,
+            return_results=True,
         )
+
+        return ocm
 
     @handle_external_context()
     def run(self, *args, **kwargs):
@@ -820,7 +840,6 @@ class ParameterEstimationComposition(Composition):
         # dict has the inputs specified in the same order as the state features (i.e., as specified by
         # PEC.get_input_format()), and rearranges them so that each node gets a full trial's worth of inputs.
         inputs_dict = self.controller.parameters.state_feature_values._get(context)
-        # inputs_dict = self.controller._get_pec_inputs()
 
         for state_input_port, value in zip(
             self.controller.state_input_ports, inputs_dict.values()
@@ -829,6 +848,8 @@ class ParameterEstimationComposition(Composition):
         # Need to pass restructured inputs dict to run
         # kwargs['inputs'] = {self.nodes[0]: list(inputs_dict.values())}
         kwargs.pop("inputs", None)
+
+        self.controller.parameters.num_trials_per_estimate.set(len(inputs_dict[list(inputs_dict.keys())[0]]), context=context)
 
         # Run the composition as normal
         results = super(ParameterEstimationComposition, self).run(*args, **kwargs)
