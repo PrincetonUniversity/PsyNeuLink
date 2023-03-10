@@ -122,7 +122,7 @@ class TestConstructor:
         # Run with learning
         target = c.pathways['LEARNING_PATHWAY'].target
         result = c(inputs={A:[[1],[100]],B:[[2],[1]],target:[[3],[300]]})
-        np.allclose(result, [[[1.], [0.73105858]], [[100.], [0.62507661]]])
+        np.testing.assert_allclose(result, [[[1.], [0.73105858]], [[100.], [0.62507661]]])
 
 
 class TestAddMechanism:
@@ -3159,7 +3159,7 @@ class TestRunInputSpecifications:
         C = Composition(pathways=[A])
         output = C.run(inputs={A: [[1.0], [2.0, 2.0]]})
         for i,j in zip(output,[[1.0],[2.0,2.0]]):
-            np.allclose(i,j)
+            np.testing.assert_allclose(i,j)
 
     def test_heterogeneous_variables_two_trials(self):
         # from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -3168,7 +3168,7 @@ class TestRunInputSpecifications:
         C.run(inputs={A: [[[1.1], [2.1, 2.1]], [[1.2], [2.2, 2.2]]]})
         for i,j in zip(C.results,[[[1.1], [2.1, 2.1]], [[1.2], [2.2, 2.2]]]):
             for k,l in zip(i,j):
-                np.allclose(k,l)
+                np.testing.assert_allclose(k,l)
 
     def test_3_origins(self):
         comp = Composition()

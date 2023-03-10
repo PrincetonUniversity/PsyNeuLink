@@ -759,7 +759,7 @@ class TestContentAddressableMemory:
         retrieved = c(stim)
         np.all(retrieved==np.array([[7,8,9],[10,11,12]]))
         distances_by_field = [Distance(metric=COSINE)([retrieved[i], stim[i]]) for i in range(2)]
-        np.allclose(c.distances_by_field, distances_by_field)
+        np.testing.assert_allclose(c.distances_by_field, distances_by_field)
 
     # Test of ContentAddressableMemory without LLVM:
     def test_ContentAddressableMemory_with_initializer_and_equal_field_sizes(self):

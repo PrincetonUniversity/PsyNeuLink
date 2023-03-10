@@ -206,7 +206,7 @@ class TestControlMechanism:
         results = comp.run(inputs={mech:[[2],[2],[2]], control_mech:[2]}, num_trials=2, execution_mode=comp_mode)
 
         np.testing.assert_allclose(control_mech.parameters.control_allocation.get(), [1, 1, 1])
-        np.allclose(results, [[4],[4],[4]])
+        np.testing.assert_allclose(results, [[4],[4],[4]])
 
 
     def test_control_of_all_output_ports(self, comp_mode):
@@ -219,7 +219,7 @@ class TestControlMechanism:
         results = comp.run(inputs={mech:[[2]], control_mech:[3]}, num_trials=2, execution_mode=comp_mode)
 
         np.testing.assert_allclose(control_mech.parameters.control_allocation.get(), [1, 1, 1])
-        np.allclose(results, [[6],[6],[6]])
+        np.testing.assert_allclose(results, [[6],[6],[6]])
 
     def test_control_signal_default_allocation_specification(self):
 
