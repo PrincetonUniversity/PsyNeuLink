@@ -58,6 +58,6 @@ def test_basic(func, variable, integration_method, params, expected, benchmark, 
     res = EX(variable)
     res = benchmark(EX, variable)
 
-    assert np.allclose(res[0], expected[0])
-    assert np.allclose(res[1], expected[1])
-    assert np.allclose(res[2], expected[2])
+    np.testing.assert_allclose(res[0], expected[0], rtol=1e-5, atol=1e-8)
+    np.testing.assert_allclose(res[1], expected[1], rtol=1e-5, atol=1e-8)
+    np.testing.assert_allclose(res[2], expected[2], rtol=1e-5, atol=1e-8)

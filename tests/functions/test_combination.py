@@ -231,7 +231,7 @@ def test_reduce_function(variable, operation, exponents, weights, scale, offset,
     if operation == pnl.PRODUCT:
         expected = np.product(tmp, axis=1) * scale + offset
 
-    assert np.allclose(res, expected)
+    np.testing.assert_allclose(res, expected, rtol=1e-5, atol=1e-8)
 
 
 @pytest.mark.benchmark(group="LinearCombinationFunction")
@@ -269,7 +269,7 @@ def test_linear_combination_function(variable, operation, exponents, weights, sc
     if operation == pnl.PRODUCT:
         expected = np.product(tmp, axis=0) * scale + offset
 
-    assert np.allclose(res, expected)
+    np.testing.assert_allclose(res, expected, rtol=1e-5, atol=1e-8)
 
 
 @pytest.mark.benchmark(group="LinearCombinationFunction in Mechanism")

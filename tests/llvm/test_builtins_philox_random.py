@@ -178,7 +178,7 @@ def test_random_float(benchmark, mode):
         assert False, "Unknown mode: {}".format(mode)
 
     res = [f(), f()]
-    assert np.allclose(res, [0.13562285900115967, 0.014066934585571289])
+    np.testing.assert_allclose(res, [0.13562285900115967, 0.014066934585571289], rtol=1e-5, atol=1e-8)
     benchmark(f)
 
 

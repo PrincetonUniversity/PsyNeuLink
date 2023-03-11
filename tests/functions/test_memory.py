@@ -150,8 +150,8 @@ def test_basic(func, variable, params, expected, benchmark, func_mode):
 
     EX(variable)
     res = benchmark(EX, variable)
-    assert np.allclose(res[0], expected[0])
-    assert np.allclose(res[1], expected[1])
+    np.testing.assert_allclose(res[0], expected[0], rtol=1e-5, atol=1e-8)
+    np.testing.assert_allclose(res[1], expected[1], rtol=1e-5, atol=1e-8)
 
 #endregion
 
@@ -672,14 +672,14 @@ class TestContentAddressableMemory:
         retrieved = c([[1, 2, 4], [4, 5, 9]])
         np.testing.assert_equal(retrieved, [[1, 2, 5], [4, 5, 8]])
         assert c.distance == Distance(metric=COSINE)([retrieved,[[1,2,4],[4,5,9]]])
-        assert np.allclose(c.distances_by_field, [0.00397616, 0.00160159])
+        np.testing.assert_allclose(c.distances_by_field, [0.00397616, 0.00160159], rtol=1e-5, atol=1e-8)
 
         # Test distance_field_weights as scalar
         c.distance_field_weights=[2.5]
         retrieved = c([[1, 2, 4], [4, 5, 9]])
         np.testing.assert_equal(retrieved, [[1, 2, 5], [4, 5, 8]])
         assert c.distance == 2.5 * Distance(metric=COSINE)([retrieved,[[1,2,4],[4,5,9]]])
-        assert np.allclose(c.distances_by_field, [2.5 * 0.00397616, 2.5 * 0.00160159])
+        np.testing.assert_allclose(c.distances_by_field, [2.5 * 0.00397616, 2.5 * 0.00160159], rtol=1e-5, atol=1e-8)
 
         # Test with 0 as field weight
         c.distance_field_weights=[1,0]
@@ -737,15 +737,15 @@ class TestContentAddressableMemory:
         # Test distances with evenly weighted fields
         retrieved = c(stimuli[0])
         np.testing.assert_equal(retrieved, stimuli[0])
-        assert np.allclose(c.distances_to_entries, [0, distances[0], distances[1]])
+        np.testing.assert_allclose(c.distances_to_entries, [0, distances[0], distances[1]], rtol=1e-5, atol=1e-8)
 
         retrieved = c(stimuli[1])
         np.testing.assert_equal(retrieved, stimuli[1])
-        assert np.allclose(c.distances_to_entries, [distances[0], 0, distances[2]])
+        np.testing.assert_allclose(c.distances_to_entries, [distances[0], 0, distances[2]], rtol=1e-5, atol=1e-8)
 
         retrieved = c(stimuli[2])
         np.testing.assert_equal(retrieved, stimuli[2])
-        assert np.allclose(c.distances_to_entries, [distances[1], distances[2], 0])
+        np.testing.assert_allclose(c.distances_to_entries, [distances[1], distances[2], 0], rtol=1e-5, atol=1e-8)
 
         # Test distances using distance_field_weights
         field_weights = [np.array([[1],[0]]), np.array([[0],[1]])]
@@ -761,15 +761,15 @@ class TestContentAddressableMemory:
 
             retrieved = c(stimuli[0])
             np.testing.assert_equal(retrieved, stimuli[0])
-            assert np.allclose(c.distances_to_entries, [0, distances[0], distances[1]])
+            np.testing.assert_allclose(c.distances_to_entries, [0, distances[0], distances[1]], rtol=1e-5, atol=1e-8)
 
             retrieved = c(stimuli[1])
             np.testing.assert_equal(retrieved, stimuli[1])
-            assert np.allclose(c.distances_to_entries, [distances[0], 0, distances[2]])
+            np.testing.assert_allclose(c.distances_to_entries, [distances[0], 0, distances[2]], rtol=1e-5, atol=1e-8)
 
             retrieved = c(stimuli[2])
             np.testing.assert_equal(retrieved, stimuli[2])
-            assert np.allclose(c.distances_to_entries, [distances[1], distances[2], 0])
+            np.testing.assert_allclose(c.distances_to_entries, [distances[1], distances[2], 0], rtol=1e-5, atol=1e-8)
 
         # Test distances_by_fields
         c.distance_field_weights=[1,1]

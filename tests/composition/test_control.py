@@ -2459,7 +2459,7 @@ class TestControlMechanisms:
 
         dty = np.float32 if pytest.helpers.llvm_current_fp_precision() == 'fp32' and comp_mode != pnl.ExecutionMode.Python else np.float64
         expected = [get_val(s, dty) for s in seeds] * 2
-        assert np.allclose(np.squeeze(comp.results[:len(seeds) * 2]), expected)
+        np.testing.assert_allclose(np.squeeze(comp.results[:len(seeds) * 2]), expected, rtol=1e-5, atol=1e-8)
 
     @pytest.mark.benchmark
     @pytest.mark.control

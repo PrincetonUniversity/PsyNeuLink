@@ -97,7 +97,7 @@ class TestProcessingMechanismFunctions:
     # def test_processing_mechanism_NavarroAndFuss_function(self):
     #     PM1 = ProcessingMechanism(function=NavarroAndFuss)
     #     PM1.execute(1.0)
-    #     # assert np.allclose(PM1.value, 1.0)
+    #     # np.testing.assert_allclose(PM1.value, 1.0, rtol=1e-5, atol=1e-8)
 
     def test_processing_mechanism_Distance_function(self):
         PM1 = ProcessingMechanism(function=Distance,
