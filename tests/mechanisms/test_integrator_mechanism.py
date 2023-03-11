@@ -438,6 +438,7 @@ class TestIntegratorFunctions:
 
         ex(var)
         val = benchmark(ex, var)
+        # FIX: FOR mech_mode==Python ELEMENTS OF val ARE 2D NOT 1D ARRAYS
         assert np.allclose(val, [[0.10501801629915011], [0.10501801629915011], [0.10501801629915011]])
 
     @pytest.mark.mechanism

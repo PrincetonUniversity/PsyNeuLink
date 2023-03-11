@@ -1637,10 +1637,7 @@ class TestFeedback:
             comp.scheduler.add_condition(response, condition(0))
 
         result = comp.run([0.05], execution_mode=comp_mode)
-        #HACK: The result is an object dtype in Python mode for some reason?
-        if comp_mode is pnl.ExecutionMode.Python:
-            result = np.asfarray(result[0])
-        assert np.allclose(result, expected_result)
+        np.testing.assert_allclose(result, expected_result)
 
 
     @pytest.mark.composition

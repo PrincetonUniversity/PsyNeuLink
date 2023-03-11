@@ -310,7 +310,7 @@ class TestConnectCompositionsViaCIMS:
             scheduler=sched,
             execution_mode=comp_mode
         )
-        assert np.allclose(output, [[[36.]]])
+        np.testing.assert_allclose(output, [[36.]])
 
         if comp_mode is pnlvm.ExecutionMode.Python:
             assert np.allclose(A.get_output_values(outer_composition), [[1.0]])

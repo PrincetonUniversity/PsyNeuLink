@@ -214,6 +214,8 @@ def test_transfer_derivative_out(func, variable, params, expected, benchmark, fu
         assert False, "unknown function mode: {}".format(func_mode)
 
     res = benchmark(ex, variable)
+    # FIX: THIS FAILS FOR func_mode=Python, func=SoftMax, and kw.PER_ITEM:True:
+    #      EXPECTS 2d BUT ONLY 1D IS RETURNED
     assert np.allclose(res, expected)
 
 def test_transfer_with_costs_function():

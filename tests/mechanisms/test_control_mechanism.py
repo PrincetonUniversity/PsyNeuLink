@@ -218,7 +218,7 @@ class TestControlMechanism:
         comp.add_nodes([(mech, pnl.NodeRole.INPUT), (control_mech, pnl.NodeRole.INPUT)])
         results = comp.run(inputs={mech:[[2]], control_mech:[3]}, num_trials=2, execution_mode=comp_mode)
 
-        assert np.allclose(control_mech.parameters.control_allocation.get(), [1, 1, 1])
+        np.testing.assert_allclose(control_mech.parameters.control_allocation.get(), [[1]])
         np.allclose(results, [[6],[6],[6]])
 
     def test_control_signal_default_allocation_specification(self):
