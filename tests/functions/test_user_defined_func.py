@@ -44,7 +44,7 @@ def test_user_def_bin_arith(param1, param2, func, func_mode, benchmark):
     e = pytest.helpers.get_func_execution(U, func_mode)
 
     val = benchmark(e, 0)
-    assert np.allclose(val, func(0, param1=param1, param2=param2))
+    np.testing.assert_allclose(val, func(0, param1=param1, param2=param2))
 
 
 def unNot(variable):
@@ -203,7 +203,7 @@ def test_user_def_func_cmpop(func, var1, var2, expected, func_mode, benchmark):
     e = pytest.helpers.get_func_execution(U, func_mode)
 
     val = benchmark(e, [0])
-    assert np.allclose(expected, val)
+    np.testing.assert_allclose(expected, val)
 
 @pytest.mark.parametrize("op,var1,var2,expected", [ # parameter is string since compiled udf doesn't support closures as of present
                     ("Eq", 1.0, 2.0, 0.0),
@@ -275,7 +275,7 @@ def test_user_def_func_cmpop_numpy(op, var1, var2, expected, func_mode, benchmar
     e = pytest.helpers.get_func_execution(U, func_mode)
 
     val = benchmark(e, [0])
-    assert np.allclose(expected, val)
+    np.testing.assert_allclose(expected, val)
 
 
 def simpleFun(variable, param1, param2):
@@ -314,7 +314,7 @@ def test_user_def_func(func, var, params, expected, func_mode, benchmark):
     e = pytest.helpers.get_func_execution(U, func_mode)
 
     val = benchmark(e, var)
-    assert np.allclose(val, expected)
+    np.testing.assert_allclose(val, expected)
 
 
 def branchOnVarCmp(variable, param1, param2):
@@ -363,7 +363,7 @@ def test_user_def_func_branching(func, var, expected, func_mode, benchmark):
     e = pytest.helpers.get_func_execution(U, func_mode)
 
     val = benchmark(e, var)
-    assert np.allclose(val, expected)
+    np.testing.assert_allclose(val, expected)
 
 
 @pytest.mark.benchmark(group="Function UDF")
@@ -377,7 +377,7 @@ def test_user_def_func_variable_index(func_mode, benchmark):
     e = pytest.helpers.get_func_execution(U, func_mode)
 
     val = benchmark(e, [[1, 3]])
-    assert np.allclose(val, [[6, 10]])
+    np.testing.assert_allclose(val, [[6, 10]])
 
 
 def unarySubVar(variable, param):
@@ -409,7 +409,7 @@ def test_user_def_func_unary(func, variable, func_mode, benchmark):
     e = pytest.helpers.get_func_execution(U, func_mode)
 
     val = benchmark(e, variable)
-    assert np.allclose(val, func(variable, param=variable))
+    np.testing.assert_allclose(val, func(variable, param=variable))
 
 
 @pytest.mark.benchmark(group="Function UDF")
@@ -421,7 +421,7 @@ def test_user_def_reward_func(func_mode, benchmark):
     e = pytest.helpers.get_func_execution(U, func_mode)
 
     val = benchmark(e, variable)
-    assert np.allclose(val, 0.2232142857142857)
+    np.testing.assert_allclose(val, 0.2232142857142857)
 
 
 @pytest.mark.parametrize("dtype, expected", [ # parameter is string since compiled udf doesn't support closures as of present
@@ -474,7 +474,7 @@ def test_user_def_func_return(dtype, expected, func_mode, benchmark):
     e = pytest.helpers.get_func_execution(U, func_mode)
 
     val = benchmark(e, 0)
-    assert np.allclose(val, expected)
+    np.testing.assert_allclose(val, expected)
 
 
 @pytest.mark.parametrize("op,variable,expected", [ # parameter is string since compiled udf doesn't support closures as of present
@@ -533,7 +533,7 @@ def test_user_def_func_numpy(op, variable, expected, func_mode, benchmark):
     e = pytest.helpers.get_func_execution(U, func_mode)
 
     val = benchmark(e, variable)
-    assert np.allclose(val, expected, equal_nan=True)
+    np.testing.assert_allclose(val, expected, equal_nan=True)
 
 
 @pytest.mark.benchmark(group="UDF in Mechanism")
@@ -547,7 +547,7 @@ def test_udf_in_mechanism(mech_mode, benchmark):
     e = pytest.helpers.get_mech_execution(myMech, mech_mode)
 
     val = benchmark(e, [-1, 2, 3, 4])
-    assert np.allclose(val, [[10]])
+    np.testing.assert_allclose(val, [[10]])
 
 
 @pytest.mark.parametrize("op,variable,expected", [ # parameter is string since compiled udf doesn't support closures as of present
@@ -586,7 +586,7 @@ def test_user_def_func_builtin(op, variable, expected, func_mode, benchmark):
     e = pytest.helpers.get_func_execution(U, func_mode)
 
     val = benchmark(e, variable)
-    assert np.allclose(val, expected)
+    np.testing.assert_allclose(val, expected)
 
 
 @pytest.mark.parametrize(
@@ -602,7 +602,7 @@ def test_user_def_func_builtin_direct(func, args, expected, benchmark):
     func = UserDefinedFunction(func)
 
     val = benchmark(func, *args)
-    assert np.allclose(val, expected)
+    np.testing.assert_allclose(val, expected)
 
 @pytest.mark.composition
 @pytest.mark.benchmark(group="UDF as Composition Origin")
@@ -614,7 +614,7 @@ def test_udf_composition_origin(comp_mode, benchmark):
     T = TransferMechanism(size=2, function=Linear)
     c = Composition(pathways=[myMech, T])
     benchmark(c.run, inputs={myMech: [[1, 3, 5]]}, execution_mode=comp_mode)
-    assert np.allclose(c.results[0][0], [3, 1])
+    np.testing.assert_allclose(c.results[0][0], [3, 1])
 
 
 @pytest.mark.composition
@@ -627,7 +627,7 @@ def test_udf_composition_terminal(comp_mode, benchmark):
     T2 = TransferMechanism(size=3, function=Linear)
     c2 = Composition(pathways=[[T2, myMech]])
     benchmark(c2.run, inputs={T2: [[1, 2, 3]]}, execution_mode=comp_mode)
-    assert np.allclose(c2.results[0][0], [3, 1])
+    np.testing.assert_allclose(c2.results[0][0], [3, 1])
 
 
 def test_udf_with_pnl_func():
@@ -640,8 +640,8 @@ def test_udf_with_pnl_func():
     myMech = ProcessingMechanism(function=myFunction, size=3, name='myMech')
     val1 = myMech.execute(input=[1, 2, 3])
     val2 = U.execute(variable=[[1, 2, 3]])
-    assert np.allclose(val1, val2)
-    assert np.allclose(val1, L([1, 2, 3]) + 2)
+    np.testing.assert_allclose(val1, val2)
+    np.testing.assert_allclose(val1, L([1, 2, 3]) + 2)
 
 
 def test_udf_runtime_params_reset():
@@ -737,7 +737,7 @@ class TestUserDefFunc:
     def test_mech_autogenerated_udf_execute(self, mech_with_autogenerated_udf):
         # Test if execute is working with auto-defined udf's
         val1 = mech_with_autogenerated_udf.execute(input=[[1], [1]])
-        assert np.allclose(val1, np.array([[1], [1]]))
+        np.testing.assert_allclose(val1, np.array([[1], [1]]))
 
     def test_autogenerated_udf(self, mech_with_autogenerated_udf):
         assert isinstance(mech_with_autogenerated_udf.function, UserDefinedFunction)

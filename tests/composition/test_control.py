@@ -37,7 +37,7 @@ class TestControlSpecification:
         comp.add_controller(ctl_mech)
         assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
         assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_ports['drift_rate']
-        assert np.allclose(comp.controller.control[0].allocation_samples(),
+        np.testing.assert_allclose(comp.controller.control[0].allocation_samples(),
                            [0.1, 0.4, 0.7000000000000001, 1.0000000000000002])
 
     def test_add_controller_in_comp_constructor_then_add_node_with_control_specified(self):
@@ -59,7 +59,7 @@ class TestControlSpecification:
         comp._analyze_graph()
         assert comp.controller.control[0].efferents[0].receiver == ddm.parameter_ports['drift_rate']
         assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
-        assert np.allclose(comp.controller.control[0].allocation_samples(),
+        np.testing.assert_allclose(comp.controller.control[0].allocation_samples(),
                            [0.1, 0.4, 0.7000000000000001, 1.0000000000000002])
 
     def test_redundant_control_spec_add_node_with_control_specified_then_controller_in_comp_constructor(self):
@@ -116,7 +116,7 @@ class TestControlSpecification:
         comp.add_node(ddm)
         assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_ports['drift_rate']
         assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
-        assert np.allclose(comp.controller.control[0].allocation_samples(), [0.2, 0.5, 0.8])
+        np.testing.assert_allclose(comp.controller.control[0].allocation_samples(), [0.2, 0.5, 0.8])
 
     # def test_missing_mech_referenced_by_controller_warning(self):
     #     mech = pnl.ProcessingMechanism()
@@ -314,7 +314,7 @@ class TestControlSpecification:
             assert comp.controller.state_input_ports.names == [deferred_numeric_input_port_0,
                                                                deferred_numeric_input_port_1]
             assert comp.controller.state_features == {deferred_node_0: [1.1], deferred_node_1: [2.2]}
-            assert np.allclose(list(comp.controller.state_feature_values.values()), [[0.9625],[1.925]])
+            np.testing.assert_allclose(list(comp.controller.state_feature_values.values()), [[0.9625],[1.925]])
             assert list(comp.controller.state_feature_values.keys()) == [deferred_node_0, deferred_node_1]
         elif state_features_arg == 'dict':
             assert comp.controller.state_input_ports.names == [deferred_shadowed_0, deferred_shadowed_1]
@@ -358,7 +358,7 @@ class TestControlSpecification:
             assert comp.controller.state_input_ports.names == [numeric_reward_node, numeric_Input_node]
             assert comp.controller.state_features == {'reward[InputPort-0]': [1.1],
                                                       'Input[InputPort-0]': [2.2]}
-            assert np.allclose(list(comp.controller.state_feature_values.values()), [[1.065625],[2.13125]])
+            np.testing.assert_allclose(list(comp.controller.state_feature_values.values()), [[1.065625],[2.13125]])
             assert list(comp.controller.state_feature_values.keys()) == [reward.input_port, Input.input_port]
         elif state_features_arg in {'list_reversed', 'dict_reversed'}:
             assert all(p.path_afferents for p in comp.controller.state_input_ports)
@@ -521,7 +521,7 @@ class TestControlSpecification:
                 [[15.], [15.0], [0.0], [3.84279648], [0.81637827]]]
 
         for simulation in range(len(expected_sim_results_array)):
-            assert np.allclose(expected_sim_results_array[simulation],
+            np.testing.assert_allclose(expected_sim_results_array[simulation],
                                # Note: Skip decision variable OutputPort
                                comp.simulation_results[simulation][0:3] + comp.simulation_results[simulation][4:6])
 
@@ -1325,9 +1325,10 @@ class TestControlMechanisms:
                 assert ocm.state_features == {'IA[InputPort-0]': 'IA[InputPort-0]',
                                               'OA[InputPort-0]': None,
                                               'OB[InputPort-0]': [3, 1, 2]}
-                assert all(np.allclose(expected, actual)
-                           for expected, actual in zip(list(ocm.state_feature_values.values()),
-                                                       [[0.], [3, 1, 2]]))
+                for expected, actual in zip(
+                    list(ocm.state_feature_values.values()), [[0.], [3, 1, 2]]
+                ):
+                    np.testing.assert_allclose(expected, actual)
 
             elif test_condition in {'input_dict_spec', 'input_dict_spec_short'}:
                 assert len(ocm.state_input_ports) == 3
@@ -1335,9 +1336,10 @@ class TestControlMechanisms:
                 assert ocm.state_features == {'IA[InputPort-0]': 'IA[InputPort-0]',
                                               'OA[InputPort-0]': 'OC[InputPort-0]',
                                               'OB[InputPort-0]': 'OB[OutputPort-0]'}
-                assert all(np.allclose(expected, actual)
-                           for expected, actual in zip(list(ocm.state_feature_values.values()),
-                                                       [[0.], [0.], [0, 0, 0]]))
+                for expected, actual in zip(
+                    list(ocm.state_feature_values.values()), [[0.], [0.], [0, 0, 0]]
+                ):
+                    np.testing.assert_allclose(expected, actual)
 
             elif test_condition == 'set_spec_short':
                 assert len(ocm.state_input_ports) == 1
@@ -1346,9 +1348,10 @@ class TestControlMechanisms:
                 assert ocm.state_features == {'IA[InputPort-0]': None,
                                               'OA[InputPort-0]': 'OA[InputPort-0]',
                                               'OB[InputPort-0]': None}
-                assert all(np.allclose(expected, actual)
-                           for expected, actual in zip(list(ocm.state_feature_values.values()),
-                                                       [[0.], [0.], [0, 0, 0]]))
+                for expected, actual in zip(
+                    list(ocm.state_feature_values.values()), [[0.], [0.], [0, 0, 0]]
+                ):
+                    np.testing.assert_allclose(expected, actual)
 
         elif test_condition == 'shadow_inputs_dict_spec_w_none':
             assert len(ocm.state_input_ports) == 2
@@ -1356,9 +1359,10 @@ class TestControlMechanisms:
             assert ocm.state_features == {'IA[InputPort-0]': 'IA[InputPort-0]',
                                           'OA[InputPort-0]': None,
                                           'OB[InputPort-0]': 'OB[InputPort-0]'}
-            assert all(np.allclose(expected, actual)
-                       for expected, actual in zip(list(ocm.state_feature_values.values()),
-                                                   [[0.], [0.], [0, 0, 0]]))
+            for expected, actual in zip(
+                list(ocm.state_feature_values.values()), [[0.], [0.], [0, 0, 0]]
+            ):
+                np.testing.assert_allclose(expected, actual)
 
         elif exception_type is UserWarning:
             # These also produce errors, tested below
@@ -1379,9 +1383,10 @@ class TestControlMechanisms:
                         assert ocm.state_features == {'IA[InputPort-0]': 'OA[OutputPort-0]',
                                                       'OA[InputPort-0]': 'OA[InputPort-0]',
                                                       'OB[InputPort-0]': 'OB[InputPort-0]'}
-                        assert all(np.allclose(expected, actual)
-                                   for expected, actual in zip(list(ocm.state_feature_values.values()),
-                                                               [[0.], [0.], [0, 0, 0]]))
+                        for expected, actual in zip(
+                            list(ocm.state_feature_values.values()), [[0.], [0.], [0, 0, 0]]
+                        ):
+                            np.testing.assert_allclose(expected, actual)
 
                 assert error_or_warning_message in [warning[i].message.args[0] for i in range(len(warning))]
 
@@ -1659,9 +1664,10 @@ class TestControlMechanisms:
             inputs = {A:[1,2], B:[1,2], C:[1,2]}
             result = comp.run(inputs=inputs, context='test')
             assert result == [[24.]]
-            assert all(np.allclose(actual, expected)
-                       for actual, expected in zip(list(ocm.parameters.state_feature_values.get('test').values()),
-                                                   [[2],[[1],[2]],[3]]))
+            for actual, expected in zip(
+                list(ocm.parameters.state_feature_values.get('test').values()), [[2],[[1],[2]],[3]]
+            ):
+                np.testing.assert_allclose(actual, expected)
         else:
             assert isinstance(ocm.state_input_ports[0].function, pnl.LinearCombination)
             assert isinstance(ocm.state_input_ports[1].function, pnl.LinearCombination)
@@ -1669,9 +1675,10 @@ class TestControlMechanisms:
             inputs = {A:[1,2], B:[1,2], C:[1,2]}
             result = comp.run(inputs=inputs, context='test')
             assert result == [[24.]]
-            assert all(np.allclose(expected, actual)
-                       for actual, expected in zip(list(ocm.parameters.state_feature_values.get('test').values()),
-                                                   [[2],[2],[2]]))
+            for actual, expected in zip(
+                list(ocm.parameters.state_feature_values.get('test').values()), [[2],[2],[2]]
+            ):
+                np.testing.assert_allclose(expected, actual)
 
     @pytest.mark.state_features
     @pytest.mark.control
@@ -1700,7 +1707,8 @@ class TestControlMechanisms:
                              ]
         )
         ocomp.add_controller(ocm)
-        assert all(np.allclose(x,y) for x,y in zip(ocm.state, [[0.0], [0.0], [3.0, 1.0, 2.0], [1.0], [1.0]]))
+        for x, y in zip(ocm.state, [[0.0], [0.0], [3.0, 1.0, 2.0], [1.0], [1.0]]):
+            np.testing.assert_allclose(x, y)
         assert len(ocm.state_distal_sources_and_destinations_dict) == 6
         keys = list(ocm.state_distal_sources_and_destinations_dict.keys())
         values = list(ocm.state_distal_sources_and_destinations_dict.values())
@@ -1713,9 +1721,10 @@ class TestControlMechanisms:
         assert keys[4] == (oc.parameter_ports[pnl.INTERCEPT], oc, ocomp, 4)
         assert keys[5] == (oc.parameter_ports[pnl.SLOPE], oc, ocomp, 4)
         ocomp.run()
-        assert all(np.allclose(expected, actual)
-                   for expected, actual in zip(list(ocm.state_feature_values.values()),
-                                               [[0.], [0.], [3, 1, 2]]))
+        for expected, actual in zip(
+            list(ocm.state_feature_values.values()), [[0.], [0.], [3, 1, 2]]
+        ):
+            np.testing.assert_allclose(expected, actual)
 
     def test_modulation_of_control_signal_intensity_cost_function_MULTIPLICATIVE(self):
         # tests multiplicative modulation of default intensity_cost_function (Exponential) of
@@ -1736,7 +1745,7 @@ class TestControlMechanisms:
                                                     ])
 
         comp.run(inputs={mech:[3]}, num_trials=2)
-        assert np.allclose(ctl_mech_A.control_signals[0].intensity_cost, 8103.083927575384008)
+        np.testing.assert_allclose(ctl_mech_A.control_signals[0].intensity_cost, 8103.083927575384008)
 
     def test_feedback_assignment_for_multiple_control_projections_to_same_mechanism(self):
         """Test that multiple ControlProjections from a ControlMechanism to the same Mechanism are treated
@@ -1749,7 +1758,7 @@ class TestControlMechanisms:
         comp = pnl.Composition()
         comp.add_nodes([mech, control_mech])
         result = comp.run(inputs={control_mech:[2]}, num_trials=3)
-        # assert np.allclose(result, [[2],[2],[2]])
+        # np.testing.assert_allclose(result, [[2],[2],[2]])
         assert pnl.NodeRole.INPUT not in comp.get_roles_by_node(mech)
         assert pnl.NodeRole.INPUT in comp.get_roles_by_node(control_mech)
 
@@ -1781,7 +1790,7 @@ class TestControlMechanisms:
                                                     ])
 
         comp.run(inputs={mech:[3]}, num_trials=2)
-        assert np.allclose(ctl_mech_A.control_signals[0].intensity_cost, 403.428793492735123)
+        np.testing.assert_allclose(ctl_mech_A.control_signals[0].intensity_cost, 403.428793492735123)
 
     def test_lvoc(self):
         m1 = pnl.TransferMechanism(input_ports=["InputPort A", "InputPort B"])
@@ -1913,7 +1922,7 @@ class TestControlMechanisms:
                                                    allocation_samples=pnl.SampleSpec(start=1.0, stop=5.0, num=5))])
         )
         result = benchmark(ocomp.run, [5], execution_mode=mode)
-        assert np.allclose(result, [[50]])
+        np.testing.assert_allclose(result, [[50]])
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -1977,7 +1986,7 @@ class TestControlMechanisms:
                                                                                      num=5))])
         )
         result = benchmark(ocomp.run, [5], execution_mode=mode)
-        assert np.allclose(result, [[70]])
+        np.testing.assert_allclose(result, [[70]])
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2041,7 +2050,7 @@ class TestControlMechanisms:
                                                                                      num=5))])
         )
         result = benchmark(ocomp.run, [5], execution_mode=mode)
-        assert np.allclose(result, [[5]])
+        np.testing.assert_allclose(result, [[5]])
 
     def test_two_tier_ocm(self):
         integrationConstant = 0.8  # Time Constant
@@ -2208,7 +2217,7 @@ class TestControlMechanisms:
         stimulusTrain = [[1, -1], [1, -1], [1, -1]]
         zipTrain = list(zip(taskTrain, stimulusTrain))
         outerComposition.run(zipTrain)
-        assert np.allclose(outerComposition.results,
+        np.testing.assert_allclose(outerComposition.results,
                            [[[0.05], [0.42357798], [0.76941918], [0.23058082]],
                             [[0.1], [0.64721378], [0.98737278], [0.01262722]],
                             [[0.1], [0.60232676], [0.9925894], [0.0074106]]])
@@ -2265,7 +2274,7 @@ class TestControlMechanisms:
         assert iComp.controller == iController
         assert oComp.controller == oController
         res = benchmark(oComp.run, inputs=[5], execution_mode=comp_mode)
-        assert np.allclose(res, [40])
+        np.testing.assert_allclose(res, [40])
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2301,8 +2310,8 @@ class TestControlMechanisms:
                 },
             execution_mode=comp_mode
         )
-        assert np.allclose(val[0], [5])
-        assert np.allclose(val[1], [0.7978996, 0.40776362])
+        np.testing.assert_allclose(val[0], [5])
+        np.testing.assert_allclose(val[1], [0.7978996, 0.40776362])
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2323,7 +2332,7 @@ class TestControlMechanisms:
         comp.add_nodes([(mech, pnl.NodeRole.INPUT), (control_mech, pnl.NodeRole.INPUT)])
         inputs = {mech:[[0.5]], control_mech:[0.2]}
         results = comp.run(inputs=inputs, num_trials=1, execution_mode=comp_mode)
-        assert np.allclose(results, expected)
+        np.testing.assert_allclose(results, expected)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2342,7 +2351,7 @@ class TestControlMechanisms:
         comp.add_nodes([(mech, pnl.NodeRole.INPUT), (control_mech, pnl.NodeRole.INPUT)])
         inputs = {mech:[[0.5]], control_mech:[0.2]}
         results = comp.run(inputs=inputs, num_trials=1, execution_mode=comp_mode)
-        assert np.allclose(results, expected)
+        np.testing.assert_allclose(results, expected)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2362,7 +2371,7 @@ class TestControlMechanisms:
         comp.add_nodes([(mech, pnl.NodeRole.INPUT), (control_mech, pnl.NodeRole.INPUT)])
         inputs = {mech:[[0.5]], control_mech:[0.2]}
         results = comp.run(inputs=inputs, num_trials=1, execution_mode=comp_mode)
-        assert np.allclose(results, expected)
+        np.testing.assert_allclose(results, expected)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2425,9 +2434,9 @@ class TestControlMechanisms:
         )
 
         ret = comp.run(inputs={mech: [2]}, num_trials=1, execution_mode=comp_mode)
-        assert np.allclose(ret, expected)
+        np.testing.assert_allclose(ret, expected)
         if comp_mode == pnl.ExecutionMode.Python:
-            assert np.allclose(comp.controller.function.saved_values.flatten(), exp_values)
+            np.testing.assert_allclose(comp.controller.function.saved_values.flatten(), exp_values)
 
     @pytest.mark.benchmark
     @pytest.mark.control
@@ -2459,7 +2468,7 @@ class TestControlMechanisms:
 
         dty = np.float32 if pytest.helpers.llvm_current_fp_precision() == 'fp32' else np.float64
         expected = [get_val(s, dty) for s in seeds] * 2
-        assert np.allclose(np.squeeze(comp.results[:len(seeds) * 2]), expected)
+        np.testing.assert_allclose(np.squeeze(comp.results[:len(seeds) * 2]), expected)
 
     @pytest.mark.benchmark
     @pytest.mark.control
@@ -2489,11 +2498,11 @@ class TestControlMechanisms:
 
         precision = pytest.helpers.llvm_current_fp_precision()
         if prng == 'Default':
-            assert np.allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[100, 21], [100, 23], [100, 20]] * 2)
+            np.testing.assert_allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[100, 21], [100, 23], [100, 20]] * 2)
         elif prng == 'Philox' and precision == 'fp64':
-            assert np.allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[100, 19], [100, 21], [100, 21]] * 2)
+            np.testing.assert_allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[100, 19], [100, 21], [100, 21]] * 2)
         elif prng == 'Philox' and precision == 'fp32':
-            assert np.allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[100, 17], [100, 22], [100, 20]] * 2)
+            np.testing.assert_allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[100, 17], [100, 22], [100, 20]] * 2)
         else:
             assert False, "Unknown PRNG!"
 
@@ -2532,7 +2541,7 @@ class TestControlMechanisms:
         comp.run(inputs={ddm: [2]},
                  num_trials=1)
 
-        assert np.allclose(comp.controller.function.saved_values, [5.1, 5.2, 5.3, 5.4, 5.5])
+        np.testing.assert_allclose(comp.controller.function.saved_values, [5.1, 5.2, 5.3, 5.4, 5.5])
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2573,7 +2582,7 @@ class TestControlMechanisms:
         outer_comp.run(inputs={inner_comp: [2]},
                        num_trials=1)
 
-        assert np.allclose(outer_comp.controller.function.saved_values, [5.1, 5.2, 5.3, 5.4, 5.5])
+        np.testing.assert_allclose(outer_comp.controller.function.saved_values, [5.1, 5.2, 5.3, 5.4, 5.5])
 
     @pytest.mark.benchmark
     @pytest.mark.control
@@ -2601,11 +2610,11 @@ class TestControlMechanisms:
 
         precision = pytest.helpers.llvm_current_fp_precision()
         if prng == 'Default':
-            assert np.allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[-1, 3.99948962], [1, 3.99948962], [-1, 3.99948962]] * 2)
+            np.testing.assert_allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[-1, 3.99948962], [1, 3.99948962], [-1, 3.99948962]] * 2)
         elif prng == 'Philox' and precision == 'fp64':
-            assert np.allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[-1, 3.99948962], [-1, 3.99948962], [1, 3.99948962]] * 2)
+            np.testing.assert_allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[-1, 3.99948962], [-1, 3.99948962], [1, 3.99948962]] * 2)
         elif prng == 'Philox' and precision == 'fp32':
-            assert np.allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[1, 3.99948978], [-1, 3.99948978], [1, 3.99948978]] * 2)
+            np.testing.assert_allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[1, 3.99948978], [-1, 3.99948978], [1, 3.99948978]] * 2)
         else:
             assert False, "Unknown PRNG!"
 
@@ -2660,8 +2669,8 @@ class TestControlMechanisms:
                                 first_generator_samples[index_best + 1:]
         best_second = max(second_considerations)
         # Check that we select the maximum of generated values
-        assert np.allclose(best_first, comp.results[0])
-        assert np.allclose(best_second, comp.results[1])
+        np.testing.assert_allclose(best_first, comp.results[0])
+        np.testing.assert_allclose(best_second, comp.results[1])
 
 
 @pytest.mark.composition
@@ -2819,7 +2828,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         ]
 
         for simulation in range(len(expected_sim_results_array)):
-            assert np.allclose(expected_sim_results_array[simulation],
+            np.testing.assert_allclose(expected_sim_results_array[simulation],
                                # Note: Skip decision variable OutputPort
                                comp.simulation_results[simulation][0:3] + comp.simulation_results[simulation][4:6])
 
@@ -2999,11 +3008,11 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         ]
 
         for trial in range(len(evc_gratton.results)):
-            assert np.allclose(expected_results_array[trial],
+            np.testing.assert_allclose(expected_results_array[trial],
                                # Note: Skip decision variable OutputPort
                                evc_gratton.results[trial][1:])
         for simulation in range(len(evc_gratton.simulation_results)):
-            assert np.allclose(expected_sim_results_array[simulation],
+            np.testing.assert_allclose(expected_sim_results_array[simulation],
                                # Note: Skip decision variable OutputPort
                                evc_gratton.simulation_results[simulation][1:])
 
@@ -3108,7 +3117,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         ]
 
         for simulation in range(len(expected_sim_results_array)):
-            assert np.allclose(
+            np.testing.assert_allclose(
                 expected_sim_results_array[simulation],
                 # Note: Skip decision variable OutputPort
                 comp.simulation_results[simulation][0:3] + comp.simulation_results[simulation][4:6]
@@ -3245,7 +3254,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         ]
 
         for simulation in range(len(expected_sim_results_array)):
-            assert np.allclose(
+            np.testing.assert_allclose(
                 expected_sim_results_array[simulation],
                 # Note: Skip decision variable OutputPort
                 comp.simulation_results[simulation][0:3] + comp.simulation_results[simulation][4:6]
@@ -3298,9 +3307,9 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         comp.run(inputs=inputs, execution_mode=mode)
 
         # objective_mech.log.print_entries(pnl.OUTCOME)
-        assert np.allclose(comp.results, [[np.array([1.])], [np.array([1.5])], [np.array([2.25])]])
+        np.testing.assert_allclose(comp.results, [[np.array([1.])], [np.array([1.5])], [np.array([2.25])]])
         if mode == pnl.ExecutionMode.Python:
-            assert np.allclose(np.asfarray(ocm.function.saved_values).flatten(), [0.75, 1.5, 2.25])
+            np.testing.assert_allclose(np.asfarray(ocm.function.saved_values).flatten(), [0.75, 1.5, 2.25])
 
         if benchmark.enabled:
             benchmark(comp.run, inputs, execution_mode=mode)
@@ -3339,9 +3348,9 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         comp.run(inputs=inputs, execution_mode=mode)
 
         # objective_mech.log.print_entries(pnl.OUTCOME)
-        assert np.allclose(comp.results, [[np.array([0.75])], [np.array([1.5])], [np.array([2.25])]])
+        np.testing.assert_allclose(comp.results, [[np.array([0.75])], [np.array([1.5])], [np.array([2.25])]])
         if mode == pnl.ExecutionMode.Python:
-            assert np.allclose(np.asfarray(ocm.function.saved_values).flatten(), [0.75, 1.5, 2.25])
+            np.testing.assert_allclose(np.asfarray(ocm.function.saved_values).flatten(), [0.75, 1.5, 2.25])
 
         if benchmark.enabled:
             benchmark(comp.run, inputs, execution_mode=mode)
@@ -3383,7 +3392,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         log = objective_mech.log.nparray_dictionary()
 
         # "outer" composition
-        assert np.allclose(log["comp"][pnl.OUTCOME], [[0.75], [1.5], [2.25]])
+        np.testing.assert_allclose(log["comp"][pnl.OUTCOME], [[0.75], [1.5], [2.25]])
 
         # preprocess to ignore control allocations
         log_parsed = {}
@@ -3584,7 +3593,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
 
         inputs = {taskLayer: taskTrain, stimulusInfo: stimulusTrain}
         stabilityFlexibility.run(inputs)
-        assert np.allclose(stabilityFlexibility.results,
+        np.testing.assert_allclose(stabilityFlexibility.results,
                            [[[0.0475], [0.33695222], [1.], [1.13867062e-09]],
                             [[0.0475], [1.13635091], [0.93038951], [0.06961049]],
                             [[0.0475], [0.35801411], [0.99999998], [1.77215519e-08]],
@@ -3641,14 +3650,14 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
             # noise
 
         if rand_var: # results for DDM (which has random variables)
-            assert np.allclose(comp.simulation_results,
+            np.testing.assert_allclose(comp.simulation_results,
                                [[np.array([2.25])], [np.array([3.5])], [np.array([4.75])], [np.array([3.])], [np.array([4.25])], [np.array([5.5])]])
-            assert np.allclose(comp.results,
+            np.testing.assert_allclose(comp.results,
                                [[np.array([1.]), np.array([1.1993293])], [np.array([1.]), np.array([3.24637662])]])
         else:  # results for ProcessingMechanism (which does not have any random variables)
-            assert np.allclose(comp.simulation_results,
+            np.testing.assert_allclose(comp.simulation_results,
                                [[np.array([2.25])], [np.array([3.5])], [np.array([4.75])], [np.array([3.])], [np.array([4.25])], [np.array([5.5])]])
-            assert np.allclose(comp.results,
+            np.testing.assert_allclose(comp.results,
                                [[np.array([1.])], [np.array([1.75])]])
 
     def test_model_based_ocm_no_simulations(self):
@@ -3715,13 +3724,13 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         inputs = {A: [[[1.0]]]}
 
         comp.run(inputs=inputs, num_trials=10, context='outer_comp', execution_mode=comp_mode)
-        assert np.allclose(comp.results, [[[0.7310585786300049]], [[0.999999694097773]], [[0.999999694097773]], [[0.9999999979388463]], [[0.9999999979388463]], [[0.999999694097773]], [[0.9999999979388463]], [[0.999999999986112]], [[0.999999694097773]], [[0.9999999999999993]]])
+        np.testing.assert_allclose(comp.results, [[[0.7310585786300049]], [[0.999999694097773]], [[0.999999694097773]], [[0.9999999979388463]], [[0.9999999979388463]], [[0.999999694097773]], [[0.9999999979388463]], [[0.999999999986112]], [[0.999999694097773]], [[0.9999999999999993]]])
 
         # control signal value (mod slope) is chosen randomly from all of the control signal values
         # that correspond to a net outcome of 1
         if comp_mode is pnl.ExecutionMode.Python:
             log_arr = A.log.nparray_dictionary()
-            assert np.allclose([[1.], [15.], [15.], [20.], [20.], [15.], [20.], [25.], [15.], [35.]],
+            np.testing.assert_allclose([[1.], [15.], [15.], [20.], [20.], [15.], [20.], [25.], [15.], [35.]],
                                log_arr['outer_comp']['mod_slope'])
 
         if benchmark.enabled:
@@ -3776,7 +3785,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         #
         # Thus, in the correct case, the output of the model is 7 ((5*1)+(-2*-1)) and in the errant case the output of the model is
         # -7 ((5*-1)+(-2*1))
-        assert np.allclose(results, [[7]])
+        np.testing.assert_allclose(results, [[7]])
 
 
 @pytest.mark.control
@@ -3791,14 +3800,14 @@ class TestSampleIterator:
         expected = [0, 2, 4, 6, 8, 10]
 
         for i in range(6):
-            assert np.allclose(next(sample_iterator), expected[i])
+            np.testing.assert_allclose(next(sample_iterator), expected[i])
 
         assert next(sample_iterator, None) is None
 
         sample_iterator.reset()
 
         for i in range(6):
-            assert np.allclose(next(sample_iterator), expected[i])
+            np.testing.assert_allclose(next(sample_iterator), expected[i])
 
         assert next(sample_iterator, None) is None
 
@@ -3811,14 +3820,14 @@ class TestSampleIterator:
         expected = [0, 2, 4, 6, 8, 10]
 
         for i in range(6):
-            assert np.allclose(next(sample_iterator), expected[i])
+            np.testing.assert_allclose(next(sample_iterator), expected[i])
 
         assert next(sample_iterator, None) is None
 
         sample_iterator.reset()
 
         for i in range(6):
-            assert np.allclose(next(sample_iterator), expected[i])
+            np.testing.assert_allclose(next(sample_iterator), expected[i])
 
         assert next(sample_iterator, None) is None
 
@@ -3838,14 +3847,14 @@ class TestSampleIterator:
         expected = [0.65, 3.44, 6.23, 9.02]
 
         for i in range(4):
-            assert np.allclose(next(sample_iterator), expected[i])
+            np.testing.assert_allclose(next(sample_iterator), expected[i])
 
         assert next(sample_iterator, None) is None
 
         sample_iterator.reset()
 
         for i in range(4):
-            assert np.allclose(next(sample_iterator), expected[i])
+            np.testing.assert_allclose(next(sample_iterator), expected[i])
 
         assert next(sample_iterator, None) is None
 
@@ -3857,7 +3866,7 @@ class TestSampleIterator:
         expected = [3.4359565850611617, 4.4847029144020505, 2.4464727305984764, 5.302845918582278, 4.306822898004032]
 
         for i in range(5):
-            assert np.allclose(next(sample_iterator), expected[i])
+            np.testing.assert_allclose(next(sample_iterator), expected[i])
 
     def test_function_with_num(self):
         fun = pnl.NormalDist(mean=5.0)
@@ -3868,7 +3877,7 @@ class TestSampleIterator:
         expected = [3.4359565850611617, 4.4847029144020505, 2.4464727305984764, 5.302845918582278]
 
         for i in range(4):
-            assert np.allclose(next(sample_iterator), expected[i])
+            np.testing.assert_allclose(next(sample_iterator), expected[i])
 
         assert next(sample_iterator, None) is None
 
@@ -3877,14 +3886,14 @@ class TestSampleIterator:
         sample_iterator = SampleIterator(specification=sample_list)
 
         for i in range(len(sample_list)):
-            assert np.allclose(next(sample_iterator), sample_list[i])
+            np.testing.assert_allclose(next(sample_iterator), sample_list[i])
 
         assert next(sample_iterator, None) is None
 
         sample_iterator.reset()
 
         for i in range(len(sample_list)):
-            assert np.allclose(next(sample_iterator), sample_list[i])
+            np.testing.assert_allclose(next(sample_iterator), sample_list[i])
 
         assert next(sample_iterator, None) is None
 

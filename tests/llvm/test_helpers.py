@@ -458,7 +458,7 @@ def test_helper_numerical(mode, op, var, expected, fp_type):
         res = np.ctypeslib.as_array(bin_f.byref_arg_types[0](var))
         bin_f.cuda_wrap_call(res)
 
-    assert np.allclose(res, expected)
+    np.testing.assert_allclose(res, expected)
 
 @pytest.mark.llvm
 @pytest.mark.parametrize('mode', ['CPU',
@@ -595,4 +595,4 @@ def test_helper_convert_fp_type(t1, t2, mode, val):
     else:
         bin_f.cuda_wrap_call(x, y)
 
-    assert np.allclose(y, ref, equal_nan=True)
+    np.testing.assert_allclose(y, ref, equal_nan=True)

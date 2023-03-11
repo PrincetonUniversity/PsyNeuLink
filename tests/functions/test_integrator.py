@@ -194,7 +194,7 @@ def test_execute(func, func_mode, variable, noise, params, benchmark):
     res = benchmark(ex, variable)
     expected = func[1](f.initializer, variable, 3, noise, **params)
     for r, e in zip(res, expected):
-        assert np.allclose(r, e)
+        np.testing.assert_allclose(r, e)
 
 
 def test_integrator_function_no_default_variable_and_params_len_more_than_1():
@@ -292,7 +292,7 @@ def test_DriftOnASphere_identicalness_against_reference_implementation():
         return ctxt
     results_sd = spherical_drift()
 
-    assert np.allclose(np.array(results_dos), np.array(results_sd))
+    np.testing.assert_allclose(np.array(results_dos), np.array(results_sd))
 
 
 # FIX: CROSS WITH INITIALIZER SIZE:

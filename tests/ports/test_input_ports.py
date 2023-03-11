@@ -18,7 +18,7 @@ class TestInputPorts:
         c = pnl.Composition(pathways=[[t1, t3], [t2, t3]])
         input_dict = {t1:[1,2],t2:[3,4]}
         val = c.run(inputs=input_dict)
-        assert np.allclose(val, [[3, 8]])
+        np.testing.assert_allclose(val, [[3, 8]])
 
     def test_combine_param_redundant_fct_class_spec(self):
         t1 = pnl.TransferMechanism(size=2)
@@ -31,7 +31,7 @@ class TestInputPorts:
         c = pnl.Composition(pathways=[[t1, t3],[t2, t3]])
         input_dict = {t1:[1,2],t2:[3,4]}
         val = c.run(inputs=input_dict)
-        assert np.allclose(val, [[3, 8]])
+        np.testing.assert_allclose(val, [[3, 8]])
 
     def test_combine_param_redundant_fct_constructor_spec(self):
         t1 = pnl.TransferMechanism(size=2)
@@ -43,7 +43,7 @@ class TestInputPorts:
         c = pnl.Composition(pathways=[[t1, t3],[t2, t3]])
         input_dict = {t1:[1,2],t2:[3,4]}
         val = c.run(inputs=input_dict)
-        assert np.allclose(val, [[3, 8]])
+        np.testing.assert_allclose(val, [[3, 8]])
 
     def test_combine_param_conflicting_fct_operation_spec(self):
         with pytest.raises(pnl.InputPortError) as error_text:

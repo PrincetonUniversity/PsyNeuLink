@@ -53,8 +53,8 @@ def test_with_dictionary_memory(variable, func, params, expected, benchmark, mec
 
     EX(variable)
     res = benchmark(EX, variable)
-    assert np.allclose(res[0], expected[0])
-    assert np.allclose(res[1], expected[1])
+    np.testing.assert_allclose(res[0], expected[0])
+    np.testing.assert_allclose(res[1], expected[1])
 
 
 # TEST WITH ContentAddressableMemory ***********************************************************************************

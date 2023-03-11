@@ -251,9 +251,9 @@ class TestResetValues:
         # We expect these results to match the results from immediately after saving the state
         output_after_reinitialization = [A.execute(1.0), A.execute(1.0)]
 
-        assert np.allclose(output_after_saving_state, output_after_reinitialization)
-        assert np.allclose(original_output, [np.array([[1.0]]), np.array([[2.0]])])
-        assert np.allclose(output_after_reinitialization, [np.array([[3.0]]), np.array([[4.0]])])
+        np.testing.assert_allclose(output_after_saving_state, output_after_reinitialization)
+        np.testing.assert_allclose(original_output, [np.array([[1.0]]), np.array([[2.0]])])
+        np.testing.assert_allclose(output_after_reinitialization, [np.array([[3.0]]), np.array([[4.0]])])
 
     def test_reset_state_transfer_mechanism(self):
         A = pnl.TransferMechanism(name='A', integrator_mode=True)
@@ -277,6 +277,6 @@ class TestResetValues:
         # We expect these results to match the results from immediately after saving the state
         output_after_reinitialization = [A.execute(1.0), A.execute(1.0)]
 
-        assert np.allclose(output_after_saving_state, output_after_reinitialization)
-        assert np.allclose(original_output, [np.array([[0.5]]), np.array([[0.75]])])
-        assert np.allclose(output_after_reinitialization, [np.array([[0.875]]), np.array([[0.9375]])])
+        np.testing.assert_allclose(output_after_saving_state, output_after_reinitialization)
+        np.testing.assert_allclose(original_output, [np.array([[0.5]]), np.array([[0.75]])])
+        np.testing.assert_allclose(output_after_reinitialization, [np.array([[0.875]]), np.array([[0.9375]])])

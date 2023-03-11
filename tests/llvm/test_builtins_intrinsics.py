@@ -56,6 +56,6 @@ def test_builtin_op(benchmark, op, args, builtin, result, func_mode):
     res = benchmark(f, *args)
 
     if pytest.helpers.llvm_current_fp_precision() == 'fp32':
-        assert np.allclose(res, result)
+        np.testing.assert_allclose(res, result)
     else:
         np.testing.assert_allclose(res, result)

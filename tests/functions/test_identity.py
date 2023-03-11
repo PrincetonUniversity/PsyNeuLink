@@ -14,4 +14,4 @@ def test_basic(size, benchmark, func_mode):
     EX = pytest.helpers.get_func_execution(f, func_mode)
 
     res = benchmark(EX, variable)
-    assert np.allclose(res, variable)
+    np.testing.assert_allclose(res, variable)

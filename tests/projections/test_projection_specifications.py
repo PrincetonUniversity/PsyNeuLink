@@ -45,14 +45,14 @@ class TestProjectionSpecificationFormats:
                                                  M3_M4_matrix_B,
                                                  M4])
 
-        assert np.allclose(M2_M3_proj.matrix.base, M2_M3_matrix)
+        np.testing.assert_allclose(M2_M3_proj.matrix.base, M2_M3_matrix)
         assert M2.efferents[0] is M2_M3_proj
-        assert np.allclose(M3.efferents[0].matrix.base, M3_M4_matrix_A)
+        np.testing.assert_allclose(M3.efferents[0].matrix.base, M3_M4_matrix_A)
         # This is if different Projections are allowed between the same sender and receiver in different Compositions:
-        # assert np.allclose(M3.efferents[1].matrix, M3_M4_matrix_B)
+        # np.testing.assert_allclose(M3.efferents[1].matrix, M3_M4_matrix_B)
         c.run(inputs={M1:[2, -30]})
-        # assert np.allclose(c.results, [[-130.19166667, -152.53333333, -174.875]])
-        assert np.allclose(c.results, [[ -78.115,  -91.52 , -104.925]])
+        # np.testing.assert_allclose(c.results, [[-130.19166667, -152.53333333, -174.875]])
+        np.testing.assert_allclose(c.results, [[ -78.115,  -91.52 , -104.925]])
 
     @pytest.mark.parametrize('args', [
         (pnl.CONTROL, None),
@@ -495,7 +495,7 @@ class TestProjectionSpecificationFormats:
                                     )
         c = pnl.Composition(pathways=[[t1, proj, t2]])
         val = c.execute(inputs={t1:[1,2]})
-        assert np.allclose(val, [[8, 12]])
+        np.testing.assert_allclose(val, [[8, 12]])
 
         t1 = pnl.TransferMechanism(size=2)
         t2 = pnl.TransferMechanism(size=2)
@@ -507,7 +507,7 @@ class TestProjectionSpecificationFormats:
                                     )
         c = pnl.Composition(pathways=[[t1, proj, t2]])
         val = c.execute(inputs={t1:[1,2]})
-        assert np.allclose(val, [[1, 8]])
+        np.testing.assert_allclose(val, [[1, 8]])
 
         t1 = pnl.TransferMechanism(size=2)
         t2 = pnl.TransferMechanism(size=2)
@@ -518,7 +518,7 @@ class TestProjectionSpecificationFormats:
                                     )
         c = pnl.Composition(pathways=[[t1, proj, t2]])
         val = c.execute(inputs={t1:[1,2]})
-        assert np.allclose(val, [[1, 8]])
+        np.testing.assert_allclose(val, [[1, 8]])
 
     def test_masked_mapping_projection_mask_conficts_with_matrix(self):
 

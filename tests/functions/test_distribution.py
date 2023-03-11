@@ -131,6 +131,6 @@ def test_execute(func, variable, params, prng, llvm_skip, expected, benchmark, f
     res = benchmark(ex, variable)
 
     if pytest.helpers.llvm_current_fp_precision() == 'fp32':
-        assert np.allclose(res, expected)
+        np.testing.assert_allclose(res, expected)
     else:
         np.testing.assert_allclose(res, expected)

@@ -92,7 +92,7 @@ class TestRPC:
         while not pipeline.empty():
             actual.append(pipeline.get())
         assert all([i.context == 'COMP' for i in actual])
-        assert np.allclose([
+        np.testing.assert_allclose([
             np.ndarray(shape=np.array(actual[1].value.shape), buffer=np.array(actual[1].value.data)),
             np.ndarray(shape=np.array(actual[3].value.shape), buffer=np.array(actual[3].value.data)),
             np.ndarray(shape=np.array(actual[5].value.shape), buffer=np.array(actual[5].value.data)),
@@ -103,7 +103,7 @@ class TestRPC:
         actual = []
         while not pipeline.empty():
             actual.append(pipeline.get())
-        assert np.allclose([
+        np.testing.assert_allclose([
             np.ndarray(shape=np.array(actual[1].value.shape), buffer=np.array(actual[1].value.data)),
             np.ndarray(shape=np.array(actual[3].value.shape), buffer=np.array(actual[3].value.data)),
             np.ndarray(shape=np.array(actual[5].value.shape), buffer=np.array(actual[5].value.data)),
@@ -172,9 +172,9 @@ class TestRPC:
         expected_results_T1 = [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]
 
         assert expected_times_T1 == t1_result_times == t1_slope_times == t1_value_times
-        assert np.allclose(expected_values_T1, t1_value_values)
-        assert np.allclose(expected_results_T1, t1_result_values)
-        assert np.allclose(expected_slopes_T1, t1_slope_values)
+        np.testing.assert_allclose(expected_values_T1, t1_value_values)
+        np.testing.assert_allclose(expected_results_T1, t1_result_values)
+        np.testing.assert_allclose(expected_slopes_T1, t1_slope_values)
 
         # T2 log after zero-th run --------------------------------------------
 
@@ -184,9 +184,9 @@ class TestRPC:
         expected_results_T2 = [[2.0, 4.0], [6.0, 8.0], [10.0, 12.0]]
 
         assert expected_times_T2 == t2_result_times == t2_slope_times == t2_value_times
-        assert np.allclose(expected_values_T2, t2_value_values)
-        assert np.allclose(expected_results_T2, t2_result_values)
-        assert np.allclose(expected_slopes_T2, t2_slope_values)
+        np.testing.assert_allclose(expected_values_T2, t2_value_values)
+        np.testing.assert_allclose(expected_results_T2, t2_result_values)
+        np.testing.assert_allclose(expected_slopes_T2, t2_slope_values)
 
         # RUN ONE  |  TRIALS ZERO, ONE, TWO -------------------------------------
 
@@ -233,9 +233,9 @@ class TestRPC:
         expected_results_T1 = [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]
 
         assert expected_times_T1 == t1_result_times == t1_slope_times == t1_value_times
-        assert np.allclose(expected_values_T1, t1_value_values)
-        assert np.allclose(expected_results_T1, t1_result_values)
-        assert np.allclose(expected_slopes_T1, t1_slope_values)
+        np.testing.assert_allclose(expected_values_T1, t1_value_values)
+        np.testing.assert_allclose(expected_results_T1, t1_result_values)
+        np.testing.assert_allclose(expected_slopes_T1, t1_slope_values)
 
         # T2 log after first run -------------------------------------------
 
@@ -245,9 +245,9 @@ class TestRPC:
         expected_results_T2 = [[2.0, 4.0], [6.0, 8.0], [10.0, 12.0]]
 
         assert expected_times_T2 == t2_result_times == t2_slope_times == t2_value_times
-        assert np.allclose(expected_values_T2, t2_value_values)
-        assert np.allclose(expected_results_T2, t2_result_values)
-        assert np.allclose(expected_slopes_T2, t2_slope_values)
+        np.testing.assert_allclose(expected_values_T2, t2_value_values)
+        np.testing.assert_allclose(expected_results_T2, t2_result_values)
+        np.testing.assert_allclose(expected_slopes_T2, t2_slope_values)
 
     def test_log_dictionary_with_scheduler(self):
         T1 = pnl.TransferMechanism(name='log_test_T1',
@@ -304,9 +304,9 @@ class TestRPC:
         expected_values_T1 = [[[0.5]], [[0.75]], [[0.875]]]
         expected_slopes_T1 = [[1], [1], [1]]
         assert expected_times_T1 == t1_result_times == t1_slope_times == t1_value_times
-        assert np.allclose(expected_values_T1, t1_value_values)
-        assert np.allclose(expected_results_T1, t1_result_values)
-        assert np.allclose(expected_slopes_T1, t1_slope_values)
+        np.testing.assert_allclose(expected_values_T1, t1_value_values)
+        np.testing.assert_allclose(expected_results_T1, t1_result_values)
+        np.testing.assert_allclose(expected_slopes_T1, t1_slope_values)
 
         # Check values T2
 
@@ -314,8 +314,8 @@ class TestRPC:
         expected_values_T2 = [[[3]], [[4.5]], [[5.25]]]
         expected_slopes_T2 = [[6], [6], [6]]
         assert expected_times_T2 == t2_slope_times == t2_value_times
-        assert np.allclose(expected_values_T2, t2_value_values)
-        assert np.allclose(expected_slopes_T2, t2_slope_values)
+        np.testing.assert_allclose(expected_values_T2, t2_value_values)
+        np.testing.assert_allclose(expected_slopes_T2, t2_slope_values)
 
     def test_log_dictionary_with_scheduler_many_time_step_increments(self):
         T1 = pnl.TransferMechanism(name='log_test_T1',
@@ -418,7 +418,7 @@ class TestRPC:
         assert list(integration_end_dict.keys()) == expected_times
         vals = [i.value.data for i in integration_end_dict.values()]
         # floats in value, so use np.allclose
-        assert np.allclose(vals, [[[0.52466739, 0.47533261]] * 3])
+        np.testing.assert_allclose(vals, [[[0.52466739, 0.47533261]] * 3])
         if multi_run:
             comp.run(inputs={m0: [[1, 0], [1, 0], [1, 0]]}, context=con_with_rpc_pipeline)
             actual = []
@@ -432,7 +432,7 @@ class TestRPC:
             assert list(integration_end_dict.keys()) == expected_times
             vals = [i.value.data for i in integration_end_dict.values()]
             # floats in value, so use np.allclose
-            assert np.allclose(vals, [[[0.52466739, 0.47533261]] * 6])
+            np.testing.assert_allclose(vals, [[[0.52466739, 0.47533261]] * 6])
 
 class TestFullModels:
     def test_multilayer(self):
@@ -568,7 +568,7 @@ class TestFullModels:
             actual.append(pipeline.get())
         log_val = [np.ndarray(shape=np.array(i.value.shape), buffer=np.array(i.value.data)) for i in actual]
         assert all([True if i.context == 'multilayer' else False for i in actual])
-        assert np.allclose(log_val, expected_log_val[1][0][4])
+        np.testing.assert_allclose(log_val, expected_log_val[1][0][4])
 
         # Test Programatic logging
         hidden_layer_2.log._deliver_values(pnl.VALUE, con_with_rpc_pipeline)
@@ -591,7 +591,7 @@ class TestFullModels:
         )
         assert actual[0].context == 'multilayer'
         assert actual[0].time == '1:0:0:0'
-        assert np.allclose(
+        np.testing.assert_allclose(
             expected_log_val[1][0][4],
             log_val
         )
@@ -651,7 +651,7 @@ class TestFullModels:
         )
 
         assert [i.time for i in matrices] == ['1:0:1:0', '1:1:1:0', '1:2:1:0', '1:3:1:0', '1:4:1:0']
-        assert np.allclose(
+        np.testing.assert_allclose(
             expected_log_val[1][0][4],
             log_val
         )

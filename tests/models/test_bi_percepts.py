@@ -138,7 +138,7 @@ def test_necker_cube(benchmark, comp_mode, n_nodes, n_time_steps, expected):
     # run the model
     res = benchmark(bp_comp.run, input_dict, num_trials=n_time_steps, execution_mode=comp_mode)
     if pytest.helpers.llvm_current_fp_precision() == 'fp32':
-        assert np.allclose(res, expected)
+        np.testing.assert_allclose(res, expected)
     else:
         np.testing.assert_allclose(res, expected)
 
@@ -221,7 +221,7 @@ def test_vectorized_necker_cube(benchmark, comp_mode):
                  }
 
     result = benchmark(comp2.run, input_dict, num_trials=10, execution_mode=comp_mode)
-    assert np.allclose(result,
+    np.testing.assert_allclose(result,
             [[ 2636.29181172,  -662.53579899,  2637.35386946,  -620.15550833,
                -595.55319772,  2616.74310649,  -442.74286574,  2588.4778162 ,
                 725.33941441, -2645.25148476,   570.96811513, -2616.80319979,

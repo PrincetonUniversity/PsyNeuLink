@@ -91,7 +91,7 @@ def test_autodiff_forward(autodiff_mode):
     xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
     outputs = xor.run(inputs=[0,0], execution_mode=autodiff_mode)
-    assert np.allclose(outputs, [[0.9479085241082691]])
+    np.testing.assert_allclose(outputs, [[0.9479085241082691]])
 
 
 @pytest.mark.pytorch
@@ -152,7 +152,7 @@ class TestTrainingCorrectness:
 
         assert len(results) == len(expected)
         for r, t in zip(results, expected):
-            assert np.allclose(r[0], t)
+            np.testing.assert_allclose(r[0], t)
 
 
     # tests whether semantic network created as autodiff composition learns properly
@@ -452,7 +452,7 @@ class TestTrainingCorrectness:
 
         for res, exp in zip(results, expected):
             for r, e in zip(res, exp):
-                assert np.allclose(r, e)
+                np.testing.assert_allclose(r, e)
 
     def test_pytorch_equivalence_with_autodiff_composition(self, autodiff_mode):
         iSs = np.array(
@@ -664,7 +664,7 @@ class TestTrainingCorrectness:
                              0.05186586, 0.05829845, 0.05179337, 0.03504668, 0.05379566,
                              0.07103772, 0.03544133, 0.03019486, 0.12605846, 0.03976812])
 
-        assert np.allclose(output,comparator)
+        np.testing.assert_allclose(output,comparator)
 
     def test_pytorch_equivalence_with_autodiff_training_disabled_on_proj(self):
         iSs = np.array(
@@ -1192,19 +1192,19 @@ class TestTrainingIdenticalness():
 
         # CHECK THAT PARAMETERS FOR AUTODIFFCOMPOSITION, COMPOSITION ARE SAME
 
-        assert np.allclose(map_nouns_h1.parameters.matrix.get(sem_net_autodiff),
+        np.testing.assert_allclose(map_nouns_h1.parameters.matrix.get(sem_net_autodiff),
                            map_nouns_h1_comp.get_mod_matrix(sem_net_comp))
-        assert np.allclose(map_rels_h2.parameters.matrix.get(sem_net_autodiff),
+        np.testing.assert_allclose(map_rels_h2.parameters.matrix.get(sem_net_autodiff),
                            map_rels_h2_comp.get_mod_matrix(sem_net_comp))
-        assert np.allclose(map_h1_h2.parameters.matrix.get(sem_net_autodiff),
+        np.testing.assert_allclose(map_h1_h2.parameters.matrix.get(sem_net_autodiff),
                            map_h1_h2_comp.get_mod_matrix(sem_net_comp))
-        assert np.allclose(map_h2_I.parameters.matrix.get(sem_net_autodiff),
+        np.testing.assert_allclose(map_h2_I.parameters.matrix.get(sem_net_autodiff),
                            map_h2_I_comp.get_mod_matrix(sem_net_comp))
-        assert np.allclose(map_h2_is.parameters.matrix.get(sem_net_autodiff),
+        np.testing.assert_allclose(map_h2_is.parameters.matrix.get(sem_net_autodiff),
                            map_h2_is_comp.get_mod_matrix(sem_net_comp))
-        assert np.allclose(map_h2_has.parameters.matrix.get(sem_net_autodiff),
+        np.testing.assert_allclose(map_h2_has.parameters.matrix.get(sem_net_autodiff),
                            map_h2_has_comp.get_mod_matrix(sem_net_comp))
-        assert np.allclose(map_h2_can.parameters.matrix.get(sem_net_autodiff),
+        np.testing.assert_allclose(map_h2_can.parameters.matrix.get(sem_net_autodiff),
                            map_h2_can_comp.get_mod_matrix(sem_net_comp))
 
     def test_identicalness_of_input_types(self):
@@ -1491,9 +1491,9 @@ class TestMiscTrainingFunctionality:
         xor._analyze_graph()
         xor._build_pytorch_representation(context=xor.default_execution_id)
         # check whether pytorch parameters are identical to projections
-        assert np.allclose(hid_map.parameters.matrix.get(None),
+        np.testing.assert_allclose(hid_map.parameters.matrix.get(None),
                            xor.parameters.pytorch_representation.get(xor).params[0].detach().numpy())
-        assert np.allclose(out_map.parameters.matrix.get(None),
+        np.testing.assert_allclose(out_map.parameters.matrix.get(None),
                            xor.parameters.pytorch_representation.get(xor).params[1].detach().numpy())
 
     # test whether processing doesn't interfere with pytorch parameters after training
@@ -1556,8 +1556,8 @@ class TestMiscTrainingFunctionality:
         # pt_weights_out_ap = xor.parameters.pytorch_representation.get(xor).params[1].detach().numpy().copy()
         #
         # # check that weight parameters before and after processing are the same
-        # assert np.allclose(pt_weights_hid_bp, pt_weights_hid_ap)
-        # assert np.allclose(pt_weights_out_bp, pt_weights_out_ap)
+        # np.testing.assert_allclose(pt_weights_hid_bp, pt_weights_hid_ap)
+        # np.testing.assert_allclose(pt_weights_out_bp, pt_weights_out_ap)
 
     @pytest.mark.parametrize(
         'loss', [Loss.L1, Loss.POISSON_NLL]
@@ -1704,7 +1704,7 @@ class TestMiscTrainingFunctionality:
             expected = [[[0.9918830394744873]], [[0.9982172846794128]], [[0.9978305697441101]], [[0.9994590878486633]]]
         # FIXME: LLVM version is broken with learning rate == 1.5
         if learning_rate != 1.5 or autodiff_mode == pnl.ExecutionMode.Python:
-            assert np.allclose(results_before_proc, expected)
+            np.testing.assert_allclose(results_before_proc, expected)
 
 
     # test whether pytorch parameters and projections are kept separate (at diff. places in memory)
@@ -1762,8 +1762,8 @@ class TestMiscTrainingFunctionality:
         pt_weights_out = xor.parameters.pytorch_representation.get(xor).params[1].detach().numpy().copy()
 
         # assert that projections are still what they were initialized as
-        assert np.allclose(hid_map.parameters.matrix.get(None), hid_m)
-        assert np.allclose(out_map.parameters.matrix.get(None), out_m)
+        np.testing.assert_allclose(hid_map.parameters.matrix.get(None), hid_m)
+        np.testing.assert_allclose(out_map.parameters.matrix.get(None), out_m)
 
         # assert that projections didn't change during training with the pytorch
         # parameters (they should now be different)
@@ -2306,7 +2306,7 @@ def test_autodiff_saveload(tmp_path):
     assert not np.allclose(xor2_outputs_pre, xor2_outputs_post, atol=1e-9)
 
     # make sure loaded model is identical, and used during run
-    assert np.allclose(xor1_outputs, xor2_outputs_post, atol=1e-9)
+    np.testing.assert_allclose(xor1_outputs, xor2_outputs_post, atol=1e-9)
 
 
 @pytest.mark.pytorch
@@ -2517,10 +2517,10 @@ class TestNested:
         learning_context = Context()
         result1 = xor_autodiff.learn(inputs=input_dict, execution_mode=autodiff_mode, epochs=num_epochs, context=learning_context, patience=patience, min_delta=min_delta)
         result1 = np.array(result1).flatten()
-        assert np.allclose(result1, np.array(xor_targets).flatten(), atol=0.1)
+        np.testing.assert_allclose(result1, np.array(xor_targets).flatten(), atol=0.1)
         result2 = parentComposition.run(inputs=no_training_input, execution_mode=autodiff_mode, context=learning_context)
 
-        assert np.allclose(result2, [[0]], atol=0.1)
+        np.testing.assert_allclose(result2, [[0]], atol=0.1)
 
     @pytest.mark.parametrize(
         'num_epochs, learning_rate, patience, min_delta', [
@@ -2587,7 +2587,7 @@ class TestNested:
         xor_autodiff.learn(inputs=input_dict, execution_mode=autodiff_mode, context=learning_context, patience=patience, min_delta=min_delta)
         result2 = parentComposition.run(inputs=no_training_input, execution_mode=autodiff_mode, context=learning_context)
 
-        assert np.allclose(result2, [[0]], atol=0.1)
+        np.testing.assert_allclose(result2, [[0]], atol=0.1)
 
     # CW 12/21/18: Test is failing due to bugs, will fix later
     # @pytest.mark.parametrize(
@@ -2667,7 +2667,7 @@ class TestNested:
     #
     #     result = parentComposition.run(inputs=no_training_input)
     #
-    #     assert np.allclose(result, [[0]], atol=0.1)
+    #     np.testing.assert_allclose(result, [[0]], atol=0.1)
 
     @pytest.mark.parametrize(
         'eps, opt', [
@@ -3172,8 +3172,8 @@ class TestBatching:
         c1_results = xor.parameters.results._get(c1)
         c2_results = xor.parameters.results._get(c2)
 
-        assert np.allclose(c1_results[0][:2], c2_results[0][:2])
-        assert np.allclose(c1_results[0][2:], c2_results[0][2:])
+        np.testing.assert_allclose(c1_results[0][:2], c2_results[0][:2])
+        np.testing.assert_allclose(c1_results[0][2:], c2_results[0][2:])
 
     def test_cross_entropy_loss(self):
         import torch
@@ -3190,4 +3190,4 @@ class TestBatching:
         target = torch.Tensor([1])
 
         # Equation for loss taken from https://pytorch.org/docs/stable/nn.html#torch.nn.CrossEntropyLoss
-        assert np.allclose(adc.loss(classes, target).detach().numpy(), -1 + np.log(np.exp(2) + np.exp(1)))
+        np.testing.assert_allclose(adc.loss(classes, target).detach().numpy(), -1 + np.log(np.exp(2) + np.exp(1)))
