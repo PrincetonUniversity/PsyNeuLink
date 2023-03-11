@@ -116,8 +116,8 @@ class TestConstructor:
         # Run without learning
         result = c(inputs={A:[[1],[100]],B:[[2],[1]]})
         print(result)
-        assert np.allclose(result, [[100.],[0.62245933]])
-        assert np.allclose(c(), [[100.],[0.62245933]])
+        np.testing.assert_allclose(result, [[100.], [0.62245933]], rtol=1e-5, atol=1e-8)
+        np.testing.assert_allclose(c(), [[100.], [0.62245933]], rtol=1e-5, atol=1e-8)
 
         # Run with learning
         target = c.pathways['LEARNING_PATHWAY'].target

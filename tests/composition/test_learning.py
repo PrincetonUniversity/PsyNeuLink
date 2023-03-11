@@ -542,10 +542,15 @@ class TestReinforcement:
         comp.learn(inputs=inputs_dict)
 
 
-        assert np.allclose(learning_mechanism.value, [np.array([0.4275, 0.]), np.array([0.4275, 0.])])
-        assert np.allclose(action_selection.value, [[1.], [2.30401336], [0.97340301], [0.02659699], [2.30401336],
-                                                    [2.08614798], [1.85006765], [2.30401336], [2.08614798],
-                                                    [1.85006765]])
+        np.testing.assert_allclose(learning_mechanism.value, [np.array([0.4275, 0.]), np.array([0.4275, 0.])], rtol=1e-5, atol=1e-8)
+        np.testing.assert_allclose(
+            action_selection.value,
+            [
+                [1.], [2.30401336], [0.97340301], [0.02659699], [2.30401336],
+                [2.08614798], [1.85006765], [2.30401336], [2.08614798], [1.85006765]
+            ],
+            rtol=1e-5, atol=1e-8
+        )
 
     def test_reinforcement_fixed_targets(self):
         input_layer = pnl.TransferMechanism(size=2,
@@ -563,8 +568,12 @@ class TestReinforcement:
         c.learn(inputs={input_layer: [[1, 1], [1, 1]]},
                 targets={action_selection: [[10.], [10.]]})
 
-        assert np.allclose(action_selection.value, [[1.], [2.30401336], [0.97340301], [0.02659699], [2.30401336],
-                                                    [2.08614798], [1.85006765], [2.30401336], [2.08614798], [1.85006765]])
+        np.testing.assert_allclose(
+            action_selection.value,
+            [[1.], [2.30401336], [0.97340301], [0.02659699], [2.30401336],
+            [2.08614798], [1.85006765], [2.30401336], [2.08614798], [1.85006765]],
+            rtol=1e-5, atol=1e-8,
+        )
 
     def test_prediction_error_delta_first_run(self):
         learning_rate = 0.3
@@ -1373,27 +1382,42 @@ class TestReinforcement:
         comp.learn(inputs=inputs_dict)
 
 
-        assert np.allclose(learning_mechanism.value, [np.array([0.4275, 0.]), np.array([0.4275, 0.])])
-        assert np.allclose(action_selection.value, [[1.], [2.30401336], [0.97340301], [0.02659699], [2.30401336],
-                                                    [2.08614798], [1.85006765], [2.30401336], [2.08614798],
-                                                    [1.85006765]])
+        np.testing.assert_allclose(learning_mechanism.value, [np.array([0.4275, 0.]), np.array([0.4275, 0.])], rtol=1e-5, atol=1e-8)
+        np.testing.assert_allclose(
+            action_selection.value,
+            [
+                [1.], [2.30401336], [0.97340301], [0.02659699], [2.30401336],
+                [2.08614798], [1.85006765], [2.30401336], [2.08614798], [1.85006765]
+            ],
+            rtol=1e-5, atol=1e-8
+        )
 
         # Pause learning -- values are the same as the previous trial (because we pass in the same inputs)
         inputs_dict = {input_layer: [[1., 1.], [1., 1.]]}
         comp.run(inputs=inputs_dict)
-        assert np.allclose(learning_mechanism.value, [np.array([0.4275, 0.]), np.array([0.4275, 0.])])
-        assert np.allclose(action_selection.value, [[1.], [2.30401336], [0.97340301], [0.02659699], [2.30401336],
-                                                    [2.08614798], [1.85006765], [2.30401336], [2.08614798],
-                                                    [1.85006765]])
+        np.testing.assert_allclose(learning_mechanism.value, [np.array([0.4275, 0.]), np.array([0.4275, 0.])], rtol=1e-5, atol=1e-8)
+        np.testing.assert_allclose(
+            action_selection.value,
+            [
+                [1.], [2.30401336], [0.97340301], [0.02659699], [2.30401336],
+                [2.08614798], [1.85006765], [2.30401336], [2.08614798], [1.85006765]
+            ],
+            rtol=1e-5, atol=1e-8
+        )
 
         # Resume learning
         inputs_dict = {input_layer: [[1., 1.], [1., 1.]],
                        target_mechanism: [[10.], [10.]]}
         comp.learn(inputs=inputs_dict)
-        assert np.allclose(learning_mechanism.value, [np.array([0.38581875, 0.]), np.array([0.38581875, 0.])])
-        assert np.allclose(action_selection.value, [[1.], [0.978989672], [0.99996], [0.0000346908466], [0.978989672],
-                                                    [0.118109771], [1.32123733], [0.978989672], [0.118109771],
-                                                    [1.32123733]])
+        np.testing.assert_allclose(learning_mechanism.value, [np.array([0.38581875, 0.]), np.array([0.38581875, 0.])], rtol=1e-5, atol=1e-8)
+        np.testing.assert_allclose(
+            action_selection.value,
+            [
+                [1.], [0.978989672], [0.99996], [0.0000346908466], [0.978989672],
+                [0.118109771], [1.32123733], [0.978989672], [0.118109771], [1.32123733]
+            ],
+            rtol=1e-5, atol=1e-8
+        )
 
     def test_td_enabled_learning_false(self):
 
@@ -2763,7 +2787,7 @@ class TestBackPropLearning:
                              0.05186586, 0.05829845, 0.05179337, 0.03504668, 0.05379566,
                              0.07103772, 0.03544133, 0.03019486, 0.12605846, 0.03976812])
 
-        assert np.allclose(comparator, np.array(mnet.parameters.results.get(mnet)[-15:]).reshape(225))
+        np.testing.assert_allclose(comparator, np.array(mnet.parameters.results.get(mnet)[-15:]).reshape(225), rtol=1e-5, atol=1e-8)
 
 
 def validate_learning_mechs(comp):
