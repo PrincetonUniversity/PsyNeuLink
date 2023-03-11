@@ -209,6 +209,7 @@ def test_predator_prey(benchmark, mode, ocm_mode, prng, samples, fp_type):
     run_results = benchmark(agent_comp.run, inputs=input_dict, num_trials=2, execution_mode=mode)
 
     if len(samples) == 2:
+        # FIX: CAN FIX MOST (BUT NOT ALL) FAILURES BY CHANGING results[0] -> results
         if prng == 'Default':
             np.testing.assert_allclose(run_results[0], [[0.9705216285127504, -0.1343332460369043]])
         elif prng == 'Philox':
@@ -224,6 +225,7 @@ def test_predator_prey(benchmark, mode, ocm_mode, prng, samples, fp_type):
         if mode == pnl.ExecutionMode.Python and not benchmark.enabled:
             # FIXME: The results are 'close' for both Philox and MT,
             #        because they're dominated by costs
+            # FIX: STILL FAILS EVEN IF results[0] -> results ABOVE
             np.testing.assert_allclose(np.asfarray(ocm.function.saved_values).flatten(),
                                [-2.66258741, -22027.9970321, -22028.17515945, -44053.59867802,
                                 -22028.06045185, -44053.4048842, -44053.40736234, -66078.90687915])

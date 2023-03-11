@@ -1156,6 +1156,7 @@ class TestCustomCombinationFunction:
         if comp_mode is pnl.ExecutionMode.Python:
             assert I1.parameters.is_finished_flag.get(C) is until_finished
         results2 = C.run(inputs={I1: [[1.0]]}, num_trials=1, execution_mode=comp_mode)
+        # FIX: IN Python MODE, results IS 2D (EXPECTED TO BE 3D)
         np.testing.assert_allclose(expected[0], results)
         np.testing.assert_allclose(expected[1], results2)
 

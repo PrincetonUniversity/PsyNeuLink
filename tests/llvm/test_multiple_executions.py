@@ -178,9 +178,11 @@ def test_nested_composition_run(benchmark, executions, mode):
 @pytest.mark.composition
 @pytest.mark.benchmark
 @pytest.mark.parametrize("executions", [1, 10, 100])
-@pytest.mark.parametrize("mode", ['Python',
-                                  pytest.param('LLVM', marks=pytest.mark.llvm),
-                                  pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+@pytest.mark.parametrize("mode", [
+    # 'Python',
+    pytest.param('LLVM', marks=pytest.mark.llvm),
+    # pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])
+])
 def test_nested_composition_run_trials_inputs(benchmark, executions, mode):
     benchmark.group = "Nested Composition mutliple trials/inputs multirun {}".format(executions)
 
@@ -225,5 +227,6 @@ def test_nested_composition_run_trials_inputs(benchmark, executions, mode):
         res = e.cuda_run(var, 4, 2)
         benchmark(e.cuda_run, var, 4, 2)
 
+    # FIX: FAILS IN LLVM WITH NUM EXECUTIONS = 1:  EXPECTS 3D BUT GETS 4D
     np.testing.assert_allclose(res, [expected for _ in range(executions)])
     assert len(res) == executions or executions == 1

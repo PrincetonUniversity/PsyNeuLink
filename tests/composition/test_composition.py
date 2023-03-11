@@ -3511,7 +3511,7 @@ class TestRun:
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched, execution_mode=comp_mode)
 
-        np.testing.assert_allclose([[[40.0]]], output)
+        np.testing.assert_allclose([[40.0]], output)
 
     @pytest.mark.composition
     def test_sender_receiver_not_specified(self, comp_mode):
@@ -3671,7 +3671,7 @@ class TestRun:
         m_outer = ProcessingMechanism(size=2)
         outer_comp = Composition(pathways=[m_outer, inner_comp])
         result = outer_comp.run(execution_mode=mode)
-        np.testing.assert_allclose(result, [[0.0],[0.0]])
+        np.testing.assert_allclose(result, [[0.0, 0.0]])
 
     @pytest.mark.composition
     def test_run_no_inputs(self, comp_mode):
@@ -3903,12 +3903,12 @@ class TestRun:
         comp.add_node(A)
         sched = Scheduler(composition=comp)
         output1 = comp.run(inputs={A: [[1.0, 2.0, 3.0]]}, scheduler=sched, execution_mode=comp_mode)
-        np.testing.assert_allclose([5.0, 10.0, 15.0], output1)
+        np.testing.assert_allclose([[5.0, 10.0, 15.0]], output1)
         output2 = benchmark(comp.run, inputs={A: [[1.0, 2.0, 3.0]]}, scheduler=sched, execution_mode=comp_mode)
         # Using the hollow matrix: (10 + 15 + 1) * 5 = 130,
         #                          ( 5 + 15 + 2) * 5 = 110,
         #                          ( 5 + 10 + 3) * 5 = 90
-        np.testing.assert_allclose([130.0, 110.0, 90.0], output2)
+        np.testing.assert_allclose([[130.0, 110.0, 90.0]], output2)
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Recurrent")
