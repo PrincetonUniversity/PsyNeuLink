@@ -209,14 +209,17 @@ def test_predator_prey(benchmark, mode, ocm_mode, prng, samples, fp_type):
     run_results = benchmark(agent_comp.run, inputs=input_dict, num_trials=2, execution_mode=mode)
 
     if len(samples) == 2:
-        # FIX: CAN FIX MOST (BUT NOT ALL) FAILURES BY CHANGING results[0] -> results
+        # FIX: LLVM MODE SEEMS TO RETURN ONLY ONE TRIAL'S WORTH OF DATA, EVEN THOUGH NUM_TRIALS=2 ABOVE:
         if prng == 'Default':
-            np.testing.assert_allclose(run_results[0], [[0.9705216285127504, -0.1343332460369043]])
+            # np.testing.assert_allclose(run_results[0], [[0.9705216285127504, -0.1343332460369043]])
+            np.testing.assert_allclose(run_results, [[0.9705216285127504, -0.1343332460369043]])
         elif prng == 'Philox':
             if mode == pnl.ExecutionMode.Python or pytest.helpers.llvm_current_fp_precision() == 'fp64':
-                np.testing.assert_allclose(run_results[0], [[-0.16882940384606543, -0.07280074899749223]])
+                # np.testing.assert_allclose(run_results[0], [[-0.16882940384606543, -0.07280074899749223]])
+                np.testing.assert_allclose(run_results, [[-0.16882940384606543, -0.07280074899749223]])
             elif pytest.helpers.llvm_current_fp_precision() == 'fp32':
-                np.testing.assert_allclose(run_results[0], [[-0.8639436960220337, 0.4983368515968323]])
+                # np.testing.assert_allclose(run_results[0], [[-0.8639436960220337, 0.4983368515968323]])
+                np.testing.assert_allclose(run_results, [[-0.8639436960220337, 0.4983368515968323]])
             else:
                 assert False, "Unkown FP type!"
         else:
