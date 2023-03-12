@@ -152,7 +152,7 @@ class TestTrainingCorrectness:
 
         assert len(results) == len(expected)
         for r, t in zip(results, expected):
-            np.testing.assert_allclose(r[0], t)
+            np.testing.assert_allclose(r, t)
 
 
     # tests whether semantic network created as autodiff composition learns properly
