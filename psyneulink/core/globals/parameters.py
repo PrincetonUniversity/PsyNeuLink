@@ -442,8 +442,14 @@ def check_user_specified(func):
         try:
             self._user_specified_args
         except AttributeError:
-            self._prev_constructor = constructor if '__init__' in type(self).__dict__ else None
+            self._prev_constructor = None #constructor if '__init__' in type(self).__dict__ else None
             self._user_specified_args = copy.copy(kwargs)
+            self._user_specified_args['_owner'] = None
+            self._user_specified_args['owner'] = None
+            self._user_specified_args['cims'] = None
+            self._user_specified_args['output_CIM'] = None
+            self._user_specified_args['input_CIM'] = None
+            self._user_specified_args['parameter_CIM'] = None
         else:
             # add args determined in constructor to user_specifed.
             # since some args are set by the values of other
