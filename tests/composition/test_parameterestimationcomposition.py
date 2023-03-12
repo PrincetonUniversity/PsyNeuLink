@@ -193,7 +193,7 @@ pec = pnl.ParameterEstimationComposition(
     model=model,
     parameters={("slope", output_node): np.linspace(1.0, 3.0, 3)},
     outcome_variables=output_node,
-    optimization_function=PECOptimizationFunction(method='gridsearch'),
+    optimization_function=PECOptimizationFunction(method='differential_evolution'),
 )
 run_input_test_args = [
     (
