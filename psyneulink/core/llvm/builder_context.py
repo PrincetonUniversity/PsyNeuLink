@@ -66,6 +66,9 @@ class _node_wrapper():
         self._comp = weakref.proxy(composition)
         self._node = node
 
+    def __repr__(self):
+        return "Node wrapper for node '{}' in composition '{}'".format(self._node, self._comp)
+
     def _gen_llvm_function(self, *, ctx, tags:frozenset):
         return codegen.gen_node_wrapper(ctx, self._comp, self._node, tags=tags)
 
