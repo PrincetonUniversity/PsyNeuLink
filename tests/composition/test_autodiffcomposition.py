@@ -64,6 +64,7 @@ class TestACConstructor:
 
 
 @pytest.mark.pytorch
+@pytest.mark.composition
 def test_autodiff_forward(autodiff_mode):
     # create xor model mechanisms and projections
     xor_in = TransferMechanism(name='xor_in',
@@ -96,6 +97,7 @@ def test_autodiff_forward(autodiff_mode):
 
 @pytest.mark.pytorch
 @pytest.mark.accorrectness
+@pytest.mark.composition
 class TestTrainingCorrectness:
 
     # test whether xor model created as autodiff composition learns properly
@@ -1457,6 +1459,7 @@ class TestTrainingIdenticalness():
 
 @pytest.mark.pytorch
 @pytest.mark.acmisc
+@pytest.mark.composition
 class TestMiscTrainingFunctionality:
 
     # test whether pytorch parameters are initialized to be identical to the Autodiff Composition's
@@ -2452,6 +2455,7 @@ class TestACLogging:
 
 @pytest.mark.pytorch
 @pytest.mark.acnested
+@pytest.mark.composition
 class TestNested:
 
     @pytest.mark.parametrize(

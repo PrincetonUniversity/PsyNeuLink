@@ -3263,6 +3263,7 @@ class TestRunInputSpecifications:
                                       pytest.param(pnl.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
                                       pytest.param(pnl.ExecutionMode.PTXRun, marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                      ])
+    @pytest.mark.composition
     def test_generator_as_input(self, mode):
         c = pnl.Composition()
 
@@ -3288,6 +3289,7 @@ class TestRunInputSpecifications:
                                       pytest.param(pnl.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
                                       pytest.param(pnl.ExecutionMode.PTXRun, marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                      ])
+    @pytest.mark.composition
     def test_generator_as_input_with_num_trials(self, mode):
         c = pnl.Composition()
 
