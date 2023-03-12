@@ -2,6 +2,7 @@ import psyneulink as pnl
 import pytest
 import numpy as np
 
+@pytest.mark.composition
 class TestCompositionMethods:
 
     def test_get_output_values_prop(self):

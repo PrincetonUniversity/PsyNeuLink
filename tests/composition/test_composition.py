@@ -3263,6 +3263,7 @@ class TestRunInputSpecifications:
                                       pytest.param(pnl.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
                                       pytest.param(pnl.ExecutionMode.PTXRun, marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                      ])
+    @pytest.mark.composition
     def test_generator_as_input(self, mode):
         c = pnl.Composition()
 
@@ -3288,6 +3289,7 @@ class TestRunInputSpecifications:
                                       pytest.param(pnl.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
                                       pytest.param(pnl.ExecutionMode.PTXRun, marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                      ])
+    @pytest.mark.composition
     def test_generator_as_input_with_num_trials(self, mode):
         c = pnl.Composition()
 
@@ -3920,7 +3922,6 @@ class TestRun:
                                        output_ports = [RESULT])
         comp.add_node(R)
         comp._analyze_graph()
-        sched = Scheduler(composition=comp)
         val = comp.run(inputs={R: [[3.0]]}, num_trials=1, execution_mode=comp_mode)
         assert np.allclose(val, [[0.95257413]])
         val = comp.run(inputs={R: [[4.0]]}, num_trials=1, execution_mode=comp_mode)
@@ -3942,7 +3943,6 @@ class TestRun:
                                        output_ports = [RESULT])
         comp.add_node(R)
         comp._analyze_graph()
-        sched = Scheduler(composition=comp)
         val = comp.run(inputs={R: [[3.0]]}, num_trials=1, execution_mode=comp_mode)
         assert np.allclose(val, [[0.50749944]])
         val = comp.run(inputs={R: [[4.0]]}, num_trials=1, execution_mode=comp_mode)
@@ -3959,7 +3959,6 @@ class TestRun:
         R = RecurrentTransferMechanism(size=2, function=Logistic())
         comp.add_node(R)
         comp._analyze_graph()
-        sched = Scheduler(composition=comp)
         val = comp.run(inputs={R: [[1.0, 2.0]]}, num_trials=1, execution_mode=comp_mode)
         assert np.allclose(val, [[0.81757448, 0.92414182]])
         val = comp.run(inputs={R: [[1.0, 2.0]]}, num_trials=1, execution_mode=comp_mode)
@@ -3980,7 +3979,6 @@ class TestRun:
                                        output_ports = [RESULT])
         comp.add_node(R)
         comp._analyze_graph()
-        sched = Scheduler(composition=comp)
         val = comp.run(inputs={R: [[1.0, 2.0]]}, num_trials=1, execution_mode=comp_mode)
         assert np.allclose(val, [[0.5, 0.73105858]])
         val = comp.run(inputs={R: [[1.0, 2.0]]}, num_trials=1, execution_mode=comp_mode)
@@ -4002,7 +4000,6 @@ class TestRun:
                                        output_ports = [RESULT])
         comp.add_node(R)
         comp._analyze_graph()
-        sched = Scheduler(composition=comp)
         val = comp.run(inputs={R: [[1.0, 2.0]]}, num_trials=1, execution_mode=comp_mode)
         assert np.allclose(val, [[0.5, 0.50249998]])
         val = comp.run(inputs={R: [[1.0, 2.0]]}, num_trials=1, execution_mode=comp_mode)
@@ -4630,12 +4627,10 @@ class TestNestedCompositions:
 
         inner_comp = Composition(name="inner_comp")
         inner_comp.add_linear_processing_pathway([A, B])
-        sched = Scheduler(composition=inner_comp)
 
         outer_comp = Composition(name="outer_comp")
         outer_comp.add_node(inner_comp)
 
-        sched = Scheduler(composition=outer_comp)
         ret = outer_comp.run(inputs=[1.0], execution_mode=comp_mode)
 
         assert np.allclose(ret, [[[0.52497918747894]]])
@@ -4653,7 +4648,6 @@ class TestNestedCompositions:
 
         inner_comp1 = Composition(name="inner_comp1")
         inner_comp1.add_linear_processing_pathway([A, B])
-        sched = Scheduler(composition=inner_comp1)
 
         C = TransferMechanism(name="C",
                               function=Logistic,
@@ -4662,13 +4656,11 @@ class TestNestedCompositions:
 
         inner_comp2 = Composition(name="inner_comp2")
         inner_comp2.add_node(C)
-        sched = Scheduler(composition=inner_comp2)
 
         outer_comp = Composition(name="outer_comp")
         outer_comp.add_node(inner_comp1)
         outer_comp.add_node(inner_comp2)
 
-        sched = Scheduler(composition=outer_comp)
         ret = outer_comp.run(inputs={inner_comp1: [[1.0]], inner_comp2: [[1.0]]}, execution_mode=comp_mode)
         assert np.allclose(ret, [[[0.52497918747894]],[[0.52497918747894]]])
 

@@ -144,8 +144,6 @@ class TestConnectCompositionsViaCIMS:
         }
 
 
-        sched = Scheduler(composition=comp1)
-
         comp2 = Composition(name="second_composition")
 
         A2 = TransferMechanism(name="A2",
@@ -158,8 +156,6 @@ class TestConnectCompositionsViaCIMS:
         comp2.add_node(B2)
 
         comp2.add_projection(MappingProjection(sender=A2, receiver=B2), A2, B2)
-
-        sched = Scheduler(composition=comp2)
 
         comp3 = Composition(name="outer_composition")
         comp3.add_node(comp1)
