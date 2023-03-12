@@ -3457,7 +3457,7 @@ class TestRun:
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched, execution_mode=comp_mode)
 
-        np.testing.assert_allclose([250], output)
+        np.testing.assert_allclose([[250]], output)
 
     @pytest.mark.composition
     @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Python]) # LLVM doesn't support EveryNCalls fr N > 1
@@ -3572,7 +3572,7 @@ class TestRun:
         inputs_dict = {A: 3}
         sched = Scheduler(composition=comp)
         output = comp.execute(inputs=inputs_dict, scheduler=sched, execution_mode=mode)
-        np.testing.assert_allclose([75], output)
+        np.testing.assert_allclose([[75]], output)
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="LPP")
@@ -3715,7 +3715,7 @@ class TestRun:
                        B: [5]}
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched, execution_mode=comp_mode)
-        np.testing.assert_allclose([250], output)
+        np.testing.assert_allclose([[250]], output)
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="LinearComposition")

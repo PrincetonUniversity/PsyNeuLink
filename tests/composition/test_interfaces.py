@@ -414,7 +414,7 @@ class TestConnectCompositionsViaCIMS:
         # inner composition 2 = 0.25*12.5 = 3.125
         # outer composition = (3.125 + 12.75) * 3.0 = 47.625
 
-        np.testing.assert_allclose(output, np.array([47.625]))
+        np.testing.assert_allclose(output, np.array([[47.625]]))
 
     def test_input_specification_multiple_nested_compositions(self):
 
