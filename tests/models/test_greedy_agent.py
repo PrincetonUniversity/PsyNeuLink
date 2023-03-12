@@ -209,14 +209,18 @@ def test_predator_prey(benchmark, mode, ocm_mode, prng, samples, fp_type):
     run_results = benchmark(agent_comp.run, inputs=input_dict, num_trials=2, execution_mode=mode)
 
     if len(samples) == 2:
-        # FIX: CAN FIX MOST (BUT NOT ALL) FAILURES BY CHANGING results[0] -> results
+        # FIX: REQUIRES TOLERANCE OF 1e-6
         if prng == 'Default':
-            assert np.allclose(run_results[0], [[0.9705216285127504, -0.1343332460369043]])
+            # np.testing.assert_allclose(run_results[0], [[0.9705216285127504, -0.1343332460369043]])
+            # np.testing.assert_allclose(run_results, [[0.9705216285127504, -0.1343332460369043]])
+            np.testing.assert_allclose(run_results, [[0.9705216285127504, -0.1343332460369043]], atol=1e-6, rtol=1e-6)
         elif prng == 'Philox':
             if mode == pnl.ExecutionMode.Python or pytest.helpers.llvm_current_fp_precision() == 'fp64':
-                assert np.allclose(run_results[0], [[-0.16882940384606543, -0.07280074899749223]])
+                # np.testing.assert_allclose(run_results[0], [[-0.16882940384606543, -0.07280074899749223]])
+                np.testing.assert_allclose(run_results, [[-0.16882940384606543, -0.07280074899749223]])
             elif pytest.helpers.llvm_current_fp_precision() == 'fp32':
-                assert np.allclose(run_results[0], [[-0.8639436960220337, 0.4983368515968323]])
+                # np.testing.assert_allclose(run_results[0], [[-0.8639436960220337, 0.4983368515968323]])
+                np.testing.assert_allclose(run_results, [[-0.8639436960220337, 0.4983368515968323]])
             else:
                 assert False, "Unkown FP type!"
         else:
@@ -225,7 +229,8 @@ def test_predator_prey(benchmark, mode, ocm_mode, prng, samples, fp_type):
         if mode == pnl.ExecutionMode.Python and not benchmark.enabled:
             # FIXME: The results are 'close' for both Philox and MT,
             #        because they're dominated by costs
-            # FIX: STILL FAILS EVEN IF results[0] -> results ABOVE
-            assert np.allclose(np.asfarray(ocm.function.saved_values).flatten(),
-                               [-2.66258741, -22027.9970321, -22028.17515945, -44053.59867802,
-                                -22028.06045185, -44053.4048842, -44053.40736234, -66078.90687915])
+            # FIX: Requires 1e-5 tolerance
+            np.testing.assert_allclose(np.asfarray(ocm.function.saved_values).flatten(),
+                                       [-2.66258741, -22027.9970321, -22028.17515945, -44053.59867802,
+                                        -22028.06045185, -44053.4048842, -44053.40736234, -66078.90687915],
+                                       rtol=1e-5, atol=1e-5)
