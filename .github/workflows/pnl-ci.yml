@@ -48,22 +48,36 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.7, 3.8, 3.9]
+        python-version: ['3.7', '3.9']
         python-architecture: ['x64']
         extra-args: ['']
         os: [ubuntu, macos, windows]
         include:
           # add 32-bit build on windows
-          - python-version: 3.8
+          - python-version: '3.8'
             python-architecture: 'x86'
             os: windows
+
           # code-coverage build on macos python 3.9
-          - python-version: 3.9
+          - python-version: '3.9'
             os: macos
             extra-args: '--cov=psyneulink'
+
+          # fp32 compiled run on linux python 3.9
+          - python-version: '3.9'
+            os: ubuntu
+            extra-args: '-m llvm --fp-precision=fp32'
+
+          # add python 3.8 build on macos since 3.7 is broken
+          # https://github.com/actions/virtual-environments/issues/4230
+          - python-version: '3.8'
+            python-architecture: 'x64'
+            os: macos
+
         exclude:
-          # 3.7 is broken on macos-11, https://github.com/actions/virtual-environments/issues/4230
-          - python-version: 3.7
+          # 3.7 is broken on macos-11,
+          # https://github.com/actions/virtual-environments/issues/4230
+          - python-version: '3.7'
             os: macos
 
     steps:
