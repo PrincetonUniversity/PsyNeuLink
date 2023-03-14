@@ -4659,8 +4659,8 @@ class TestNestedCompositions:
         outer_comp.add_node(inner_comp1)
         outer_comp.add_node(inner_comp2)
 
-        ret = outer_comp.run(inputs={inner_comp1: [[1.0]], inner_comp2: [[1.0]]}, execution_mode=comp_mode)
-        np.testing.assert_allclose(ret, [[0.52497918747894],[0.52497918747894]])
+        outer_comp.run(inputs={inner_comp1: [[1.0]], inner_comp2: [[1.0]]}, execution_mode=comp_mode)
+        np.testing.assert_allclose(outer_comp.results, [[[0.52497918747894], [0.52497918747894]]])
 
     @pytest.mark.nested
     @pytest.mark.composition
