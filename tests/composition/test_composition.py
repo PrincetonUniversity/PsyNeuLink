@@ -4638,7 +4638,7 @@ class TestNestedCompositions:
         sched = Scheduler(composition=outer_comp)
         ret = outer_comp.run(inputs=[1.0], execution_mode=comp_mode)
 
-        np.testing.assert_allclose(ret, [[[0.52497918747894]]])
+        np.testing.assert_allclose(ret, [[0.52497918747894]])
 
 
     @pytest.mark.nested
@@ -4670,7 +4670,7 @@ class TestNestedCompositions:
 
         sched = Scheduler(composition=outer_comp)
         ret = outer_comp.run(inputs={inner_comp1: [[1.0]], inner_comp2: [[1.0]]}, execution_mode=comp_mode)
-        np.testing.assert_allclose(ret, [[[0.52497918747894]],[[0.52497918747894]]])
+        np.testing.assert_allclose(ret, [[0.52497918747894],[0.52497918747894]])
 
     @pytest.mark.nested
     @pytest.mark.composition
