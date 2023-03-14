@@ -241,7 +241,7 @@ class TestConnectCompositionsViaCIMS:
             execution_mode=comp_mode
         )
 
-        assert np.allclose(output, [[[180.], [1800.]]])
+        np.testing.assert_allclose(output, [[180.], [1800.]])
         if comp_mode is pnlvm.ExecutionMode.Python:
             assert np.allclose(inner_composition_1.get_output_values(outer_composition), [[30.], [300.]])
             assert np.allclose(inner_composition_2.get_output_values(outer_composition), [[180.], [1800.]])
