@@ -109,7 +109,13 @@ class TestInputPorts:
             assert m.input_port.internal_only is True
         else:
             assert m.input_port.internal_only is False
-        comp = pnl.Composition(nodes=(m, pnl.NodeRole.INTERNAL))
+        comp = pnl.Composition()
+        comp.add_node(
+            m,
+            required_roles=pnl.NodeRole.INTERNAL,
+            context=pnl.Context(source=pnl.ContextFlags.METHOD)
+        )
+        comp._analyze_graph()
         assert pnl.NodeRole.INTERNAL in comp.get_roles_by_node(m)
         assert pnl.NodeRole.INPUT not in comp.get_roles_by_node(m)
 

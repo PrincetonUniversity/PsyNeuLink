@@ -597,11 +597,9 @@ class TestPathway:
         assert p.learning_components is None
 
     def test_pathway_assign_composition_arg_error(self):
-        c = Composition()
-        with pytest.raises(pnl.CompositionError) as error_text:
+        error_text = "'composition' arg of constructor for Pathway must be a Composition"
+        with pytest.raises(pnl.CompositionError, match=error_text):
             p = Pathway(pathway=[], composition='c')
-        assert "\'composition\' can not be specified as an arg in the constructor for a Pathway" in str(
-                error_text.value)
 
     def test_pathway_assign_roles_error(self):
         A = ProcessingMechanism()
@@ -792,7 +790,7 @@ class TestCompositionPathwayArgsAndAdditionMethods:
         p = Pathway(pathway=([A,B], Reinforcement), name='P')
         c = Composition()
 
-        regexp = "LearningFunction found in specification of 'pathway' arg for "\
+        regexp = "LearningFunction found in 'pathway' arg for "\
                  "add_linear_procesing_pathway method .*"\
                 r"Reinforcement'>; it will be ignored"
         with pytest.warns(UserWarning, match=regexp):
@@ -3622,7 +3620,7 @@ class TestRun:
         with pytest.raises(CompositionError) as error_text:
             comp.add_linear_processing_pathway([A, A_to_B, B, C, D, E, C_to_E])
 
-        assert ("The last item in the \'pathway\' arg for add_linear_procesing_pathway method" in str(error_text.value)
+        assert ("The last item in \'pathway\' arg for add_linear_procesing_pathway method" in str(error_text.value)
                 and "cannot be a Projection:" in str(error_text.value))
 
     def test_LPP_two_projections_in_a_row(self):
@@ -6255,7 +6253,7 @@ class TestAuxComponents:
         C = TransferMechanism(name='C',
                               function=Linear(slope=2.0))
 
-        A.aux_components = [(B, NodeRole.TERMINAL), MappingProjection(sender=A, receiver=B)]
+        A.aux_components = [(B, NodeRole.OUTPUT), MappingProjection(sender=A, receiver=B)]
 
         comp = Composition(name='composition')
         comp.add_node(A)
@@ -6275,7 +6273,7 @@ class TestAuxComponents:
 
         assert np.allclose(B.parameters.value.get(comp), [[2.0]])
 
-        assert B in comp.get_nodes_by_role(NodeRole.TERMINAL)
+        assert B in comp.get_nodes_by_role(NodeRole.OUTPUT)
         assert np.allclose(C.parameters.value.get(comp), [[4.0]])
         assert np.allclose(comp.get_output_values(comp), [[2.0], [4.0]])
 
@@ -7293,7 +7291,9 @@ class TestNodeRoles:
         assert {mech, ctl_mech_A, ctl_mech_B} == set(comp.get_nodes_by_role(NodeRole.OUTPUT))
         # Current instantiation always assigns ctl_mech_B as TERMINAL in this case;
         # this is here to flag any violation of this in the future, in case that is not intended
+        assert {mech} == set(comp.get_nodes_by_role(NodeRole.ORIGIN))
         assert {ctl_mech_B} == set(comp.get_nodes_by_role(NodeRole.TERMINAL))
+        assert {mech, ctl_mech_A, ctl_mech_B} == set(comp.get_nodes_by_role(NodeRole.OUTPUT))
 
     def test_LEARNING_hebbian(self):
         A = RecurrentTransferMechanism(name='A', size=2, enable_learning=True)

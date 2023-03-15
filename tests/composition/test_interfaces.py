@@ -13,7 +13,7 @@ from psyneulink.core.components.ports.modulatorysignals.controlsignal import Con
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.compositions.composition import Composition, CompositionError
+from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.utilities import convert_all_elements_to_np_array
 from psyneulink.core.globals.keywords import INTERCEPT, NOISE, SLOPE
@@ -537,25 +537,72 @@ class TestConnectCompositionsViaCIMS:
         assert NOISE in icomp.parameter_CIM.output_ports.names[1]
         assert SLOPE in icomp.parameter_CIM.output_ports.names[2]
 
-    def test_parameter_CIM_routing_from_ControlMechanism(self):
+    @pytest.fixture
+    def parameter_CIM_routing_composition(self):
         # Inner Composition
         ia = TransferMechanism(name='ia')
         ib = TransferMechanism(name='ib')
-        icomp = Composition(name='icomp', pathways=[ia])
+        icomp = Composition(name='icomp', pathways=[ia, ib])
         # Outer Composition
-        ocomp = Composition(name='ocomp', pathways=[icomp])
+        ocomp = Composition(name='ocomp')
         cm = ControlMechanism(
             name='control_mechanism',
-            control_signals=
-            ControlSignal(projections=[(SLOPE, ib)])
+            control_signals=ControlSignal(projections=[(SLOPE, ib)])
         )
-        icomp.add_linear_processing_pathway([ia, ib])
+        return ia, ib, cm, icomp, ocomp
+
+    def test_parameter_CIM_routing_from_ControlMechanism_pathway_explicit(
+        self, parameter_CIM_routing_composition
+    ):
+        ia, ib, cm, icomp, ocomp = parameter_CIM_routing_composition
         ocomp.add_linear_processing_pathway([cm, icomp])
-        res = ocomp.run([[2], [2], [2]])
-        assert np.allclose(res, [[4], [4], [4]])
+
+        ocomp._analyze_graph()
+        input_nodes = ocomp.get_nodes_by_role(NodeRole.INPUT)
+        assert cm in input_nodes
+        assert icomp in input_nodes
+
+        ocomp.run(
+            inputs={
+                cm: [[2], [2], [2]],
+                icomp: [[2], [2], [2]],
+            }
+        )
+        # linear combination of cm output and run inputs to icomp
+        # results in effective input of 2+2=4, then this is multiplied
+        # by the controlled slope of ib (2), resulting in 8
+        np.testing.assert_array_almost_equal(ocomp.results, [[[8]], [[8]], [[8]]])
         assert len(ib.mod_afferents) == 1
         assert ib.mod_afferents[0].sender == icomp.parameter_CIM.output_port
         assert icomp.parameter_CIM_ports[ib.parameter_ports['slope']][0].path_afferents[0].sender == cm.output_port
+        assert cm in ocomp.graph_processing.dependency_dict[icomp]
+
+    def test_parameter_CIM_routing_from_ControlMechanism_pathway_implicit(
+        self, parameter_CIM_routing_composition
+    ):
+        ia, ib, cm, icomp, ocomp = parameter_CIM_routing_composition
+        ocomp.add_node(cm)
+        ocomp.add_node(icomp)
+
+        ocomp._analyze_graph()
+        input_nodes = ocomp.get_nodes_by_role(NodeRole.INPUT)
+        assert cm in input_nodes
+        assert icomp in input_nodes
+
+        ocomp.run(
+            inputs={
+                cm: [[2], [2], [2]],
+                icomp: [[2], [2], [2]],
+            }
+        )
+        # first trial result for icomp is 2 because cm and icomp run
+        # simultaneously, so the value of cm control signals is still
+        # cm's default (1) and not its input (2)
+        np.testing.assert_allclose(ocomp.results, [[[2]], [[4]], [[4]]])
+        assert len(ib.mod_afferents) == 1
+        assert ib.mod_afferents[0].sender == icomp.parameter_CIM.output_port
+        assert icomp.parameter_CIM_ports[ib.parameter_ports['slope']][0].path_afferents[0].sender == cm.output_port
+        assert cm not in ocomp.graph_processing.dependency_dict[icomp]
 
     def test_nested_control_projection_count_controller(self):
         # Inner Composition
