@@ -9,7 +9,6 @@ from psyneulink.core.components.functions.nonstateful.transferfunctions import L
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.compositions.composition import Composition
-from psyneulink.core.scheduling.scheduler import Scheduler
 import psyneulink.core.globals.keywords as kw
 
 SIZE=10
@@ -91,13 +90,11 @@ def test_nested_composition_execution(benchmark, executions, mode):
     inner_comp = Composition(name="inner_comp")
     inner_comp.add_linear_processing_pathway([A, B])
     inner_comp._analyze_graph()
-    sched = Scheduler(composition=inner_comp)
 
     outer_comp = Composition(name="outer_comp")
     outer_comp.add_node(inner_comp)
 
     outer_comp._analyze_graph()
-    sched = Scheduler(composition=outer_comp)
 
     # The input dict should assign inputs origin nodes (inner_comp in this case)
     var = {inner_comp: [[1.0]]}
@@ -144,13 +141,11 @@ def test_nested_composition_run(benchmark, executions, mode):
     inner_comp = Composition(name="inner_comp")
     inner_comp.add_linear_processing_pathway([A, B])
     inner_comp._analyze_graph()
-    sched = Scheduler(composition=inner_comp)
 
     outer_comp = Composition(name="outer_comp")
     outer_comp.add_node(inner_comp)
 
     outer_comp._analyze_graph()
-    sched = Scheduler(composition=outer_comp)
 
     # The input dict should assign inputs origin nodes (inner_comp in this case)
     var = {inner_comp: [[[2.0]]]}
@@ -195,13 +190,11 @@ def test_nested_composition_run_trials_inputs(benchmark, executions, mode):
     inner_comp = Composition(name="inner_comp")
     inner_comp.add_linear_processing_pathway([A, B])
     inner_comp._analyze_graph()
-    sched = Scheduler(composition=inner_comp)
 
     outer_comp = Composition(name="outer_comp")
     outer_comp.add_node(inner_comp)
 
     outer_comp._analyze_graph()
-    sched = Scheduler(composition=outer_comp)
 
     # The input dict should assign inputs origin nodes (inner_comp in this case)
     var = {inner_comp: [[[2.0]], [[3.0]]]}

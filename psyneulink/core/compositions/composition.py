@@ -3894,7 +3894,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             projections = convert_to_list(projections)
             self.add_projections(projections)
 
-        self.add_pathways(pathways, context=context)
+        # CONSTRUCTOR flag is needed for warning check tests, but this
+        # must be changed immediately to COMMAND_LINE because any
+        # pathways added in composition constructor should be created
+        # the same as if they were created on a command-line call. Do
+        # not use the above context object because the source change
+        # will persist after this call
+        self.add_pathways(pathways, context=Context(source=ContextFlags.CONSTRUCTOR))
 
         # Controller
         self.controller = None
@@ -4037,11 +4043,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         self._graph_processing = self.graph.copy()
 
-        def remove_vertex(vertex):
-            for parent in vertex.parents:
-                for child in vertex.children:
-                    child.source_types[parent] = vertex.feedback
-                    self._graph_processing.connect_vertices(parent, child)
+        def remove_vertex(vertex, connect_endpoints):
+            if connect_endpoints:
+                for parent in vertex.parents:
+                    for child in vertex.children:
+                        child.source_types[parent] = vertex.feedback
+                        self._graph_processing.connect_vertices(parent, child)
 
             self._graph_processing.remove_vertex(vertex)
 
@@ -4049,7 +4056,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         vert_list = self._graph_processing.vertices.copy()
         for cur_vertex in vert_list:
             if not cur_vertex.component.is_processing:
-                remove_vertex(cur_vertex)
+                remove_vertex(cur_vertex, cur_vertex.component._creates_scheduling_dependency)
 
         # this determines CYCLE nodes and final FEEDBACK nodes
         self._graph_processing.prune_feedback_edges()
@@ -4061,7 +4068,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # region ---------------------------------------NODES  -------------------------------------------------------------
     # ******************************************************************************************************************
 
-    @handle_external_context(source = ContextFlags.COMPOSITION)
+    @handle_external_context()
     def add_node(self, node, required_roles=None, context=None):
         """
             Add a Node (`Mechanism <Mechanism>` or `Composition`) to Composition, if it is not already added
@@ -4079,10 +4086,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # FIX 5/25/20 [JDC]: ADD ERROR STRING (as in pathway_arg_str in add_linear_processing_pathway)
         # Raise error if Composition is added to itself
         if node is self:
-            pathway_arg_str = ""
-            if context.source in {ContextFlags.INITIALIZING, ContextFlags.METHOD}:
-                pathway_arg_str = " in " + context.string
-            raise CompositionError(f"Attempt to add Composition as a Node to itself{pathway_arg_str}.")
+            pathway_arg_str = context.string
+            raise CompositionError(f"Attempt to add Composition as a Node to itself {pathway_arg_str}.")
 
         required_roles = convert_to_list(required_roles)
 
@@ -4115,7 +4120,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.needs_update_scheduler = True
             self.needs_update_controller = True
 
-        invalid_aux_components = self._add_node_aux_components(node)
+        invalid_aux_components = self._add_node_aux_components(node, context=context)
 
         # Implement required_roles
         if required_roles:
@@ -4706,11 +4711,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if sender_node in self._all_nodes and \
                         receiver_node in self._all_nodes:
                     self.add_projection(projection=proj_spec[0],
-                                        feedback=proj_spec[1])
+                                        feedback=proj_spec[1],
+                                        context=context,
+                    )
                 else:
                     self.add_projection(sender=proj_spec[0].sender,
                                         receiver=proj_spec[0].receiver,
-                                        feedback=proj_spec[1])
+                                        feedback=proj_spec[1],
+                                        context=context,
+                    )
                 del node.aux_components[node.aux_components.index(proj_spec)]
 
             # MODIFIED 12/29/21 NEW:
@@ -4926,11 +4935,36 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._determine_origin_and_terminal_nodes_from_consideration_queue()
 
         # INPUT
-        for node in self.get_nodes_by_role(NodeRole.ORIGIN):
+        origin_nodes = self.get_nodes_by_role(NodeRole.ORIGIN)
+        for node in origin_nodes:
             # Don't allow INTERNAL Nodes to be INPUTS
             if NodeRole.INTERNAL in self.get_roles_by_node(node):
                 continue
             self._add_node_role(node, NodeRole.INPUT)
+
+            # special case, ControlMechanisms create MappingProjections
+            # to inner composition parameter CIMs, which may or may not
+            # create scheduler dependencies (determined by user action).
+            # If an inner composition is not ORIGIN because of this
+            # condition, add it as INPUT anyway.
+            if isinstance(node, ControlMechanism):
+                for child in self.graph_processing.comp_to_vertex[node].children:
+                    for parent in child.parents:
+                        # MappingProjections from non-ControlMechanisms
+                        # always obey standard scheduling behavior
+                        if (
+                            not isinstance(parent.component, ControlMechanism)
+                            or parent.component not in origin_nodes
+                        ):
+                            continue
+
+                        for proj in child.component.get_afferents(parent.component):
+                            if (
+                                isinstance(proj, PathwayProjection_Base)
+                                and proj._creates_scheduling_dependency
+                            ):
+                                self._add_node_role(child.component, NodeRole.INPUT)
+                                break
 
         # CYCLE
         for node in self.graph_processing.cycle_vertices:
@@ -5152,6 +5186,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             - delete all of the above for any node Ports which were previously, but are no longer, classified as
               INPUT/OUTPUT
         """
+        # temporarily change context source for scope of this method so
+        # port calls are not believed to come directly from
+        # script/command-line
+        prev_source = context.source
+        context.source = ContextFlags.METHOD
 
         # Composition's CIMs need to be set up from scratch, so we remove their default input and output ports
         if not self.input_CIM.connected_to_composition:
@@ -5477,6 +5516,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 assert c == 0, f"PROGRAM ERROR:  Number of external control projections {c} is greater than 0. " \
                                f"This means there was a failure to route these projections through the PCIM."
 
+        context.source = prev_source
+
     def _get_nested_node_CIM_port(self,
                                   node: Mechanism,
                                   node_port: tc.any(InputPort, OutputPort),
@@ -5626,7 +5667,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    "Composition requires a list of Projections, each of which must have a "
                                    "sender and a receiver.".format(self.name))
 
-    @handle_external_context(source=ContextFlags.METHOD)
+    @handle_external_context(source=ContextFlags.COMMAND_LINE)
     def add_projection(self,
                        projection=None,
                        sender=None,
@@ -5810,6 +5851,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                                        sender_mechanism, receiver,
                                                                                        graph_receiver, context)
                 receiver = projection.receiver
+                if context.source is not ContextFlags.COMMAND_LINE:
+                    projection._creates_scheduling_dependency = False
 
         if sender_mechanism is self.parameter_CIM:
             idx = self.parameter_CIM.output_ports.index(sender)
@@ -6197,7 +6240,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         # TBI - Shadow projection type? Matrix value?
                         new_projection = MappingProjection(sender=correct_sender,
                                                            receiver=input_port)
-                        self.add_projection(new_projection, sender=correct_sender, receiver=input_port)
+                        self.add_projection(new_projection, sender=correct_sender, receiver=input_port, context=context)
                 else:
                     raise CompositionError(f"Unable to find port specified to be shadowed by '{input_port.owner.name}' "
                                            f"({shadowed_projection.receiver.owner.name}"
@@ -6457,11 +6500,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 pathway = list(pathway)
             # If tuple is (pathway, LearningFunction), get pathway and ignore LearningFunction
             elif isinstance(pathway[1],type) and issubclass(pathway[1], LearningFunction):
-                warnings.warn(f"{LearningFunction.__name__} found in specification of {pathway_arg_str}: {pathway[1]}; "
+                warnings.warn(f"{LearningFunction.__name__} found {pathway_arg_str}: {pathway[1]}; "
                               f"it will be ignored")
                 pathway = pathway[0]
             else:
-                raise CompositionError(f"Unrecognized tuple specification in {pathway_arg_str}: {pathway}")
+                raise CompositionError(f"Unrecognized tuple specification {pathway_arg_str}: {pathway}")
         elif not isinstance(pathway, collections.abc.Iterable) or all(_is_pathway_entry_spec(n, ANY) for n in pathway):
             pathway = convert_to_list(pathway)
         else:
@@ -6469,7 +6512,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                   f"a Node (Mechanism or Composition) or a Projection nor a set of either: "
             bad_entries = [repr(entry) for entry in pathway if not _is_pathway_entry_spec(entry, ANY)]
             raise CompositionError(f"{bad_entry_error_msg}{','.join(bad_entries)}")
-            # raise CompositionError(f"Unrecognized specification in {pathway_arg_str}: {pathway}")
+            # raise CompositionError(f"Unrecognized specification {pathway_arg_str}: {pathway}")
 
         lists = [entry for entry in pathway
                  if isinstance(entry, list) and all(_is_pathway_entry_spec(node, NODE) for node in entry)]
@@ -6555,6 +6598,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pathways_arg_str = f"'pathways' arg for the add_pathways method of {self.name}"
         elif context.source == ContextFlags.CONSTRUCTOR:
             pathways_arg_str = f"'pathways' arg of the constructor for {self.name}"
+            context.source = ContextFlags.COMMAND_LINE
         else:
             assert False, f"PROGRAM ERROR:  unrecognized context passed to add_pathways of {self.name}."
         context.string = pathways_arg_str
@@ -6703,7 +6747,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 raise CompositionError(f"{bad_entry_error_msg}{repr(pathway)}")
 
-            context.source = ContextFlags.METHOD
             if pway_type == PROCESSING_PATHWAY:
                 new_pathway = self.add_linear_processing_pathway(pathway=pway,
                                                                  default_projection_matrix=matrix,
@@ -6780,9 +6823,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pathway_arg_str = context.string
         # Otherwise, refer to call from this method
         else:
-            pathway_arg_str = f"'pathway' arg for add_linear_procesing_pathway method of '{self.name}'"
+            pathway_arg_str = f"in 'pathway' arg for add_linear_procesing_pathway method of '{self.name}'"
 
-        context.source = ContextFlags.METHOD
         context.string = pathway_arg_str
 
         pathway, pathway_name = self._parse_pathway(pathway, name, pathway_arg_str)
@@ -6800,7 +6842,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             node_entries.append(pathway[0])
         else:
             # 'MappingProjection has no attribute _name' error is thrown when pathway[0] is passed to the error msg
-            raise CompositionError(f"First item in {pathway_arg_str} must be "
+            raise CompositionError(f"First item {pathway_arg_str} must be "
                                    f"a Node (Mechanism or Composition): {pathway}.")
 
         # Add all of the remaining nodes in the pathway
@@ -6893,7 +6935,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # Validate that Projection specification is not last entry
                 if c == len(pathway) - 1:
-                    raise CompositionError(f"The last item in the {pathway_arg_str} cannot be a Projection: "
+                    raise CompositionError(f"The last item {pathway_arg_str} cannot be a Projection: "
                                            f"{pathway[c]}.")
 
                 # Validate that entry is between two Nodes (or sets of Nodes)
@@ -6906,7 +6948,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     receivers = [_get_spec_if_tuple(receiver) for receiver in convert_to_list(next_entry)]
                     node_pairs = list(itertools.product(senders,receivers))
                 else:
-                    raise CompositionError(f"A Projection specified in {pathway_arg_str} "
+                    raise CompositionError(f"A Projection specified {pathway_arg_str} "
                                            f"is not between two Nodes: {pathway[c]}")
 
                 # Convert specs in entry to list (embedding in one if matrix) for consistency of handling below
@@ -6950,7 +6992,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 proj_set = []
 
                 def handle_misc_errors(proj, error):
-                    raise CompositionError(f"Bad Projection specification in {pathway_arg_str} ({proj}): "
+                    raise CompositionError(f"Bad Projection specification {pathway_arg_str} ({proj}): "
                                            f"{error}")
 
                 def handle_duplicates(sender, receiver):
@@ -6961,7 +7003,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         f"in call to {repr('add_linear_processing_pathway')} for {self.name}."
                     duplicate = duplicate[0]
                     warning_msg = f"Projection specified between {sender.name} and {receiver.name} " \
-                                  f"in {pathway_arg_str} is a duplicate of one"
+                                  f"{pathway_arg_str} is a duplicate of one"
                     # IMPLEMENTATION NOTE: Version that allows different Projections between same
                     #                      sender and receiver in different Compositions
                     # if duplicate in self.projections:
@@ -7000,7 +7042,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 # Default is a matrix_spec
                                 assert is_matrix(default_proj_spec), \
                                     f"PROGRAM ERROR: Expected {default_proj_spec} to be " \
-                                    f"a matrix specification in {pathway_arg_str}."
+                                    f"a matrix specification {pathway_arg_str}."
                                 projection = self.add_projection(projection=MappingProjection(sender=sender,
                                                                                               matrix=default_proj_spec,
                                                                                               receiver=receiver),
@@ -7104,7 +7146,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # BAD PATHWAY ENTRY: contains neither Node nor Projection specification(s)
             else:
-                assert False, f"PROGRAM ERROR : An entry in {pathway_arg_str} is not a Node (Mechanism " \
+                assert False, f"PROGRAM ERROR : An entry {pathway_arg_str} is not a Node (Mechanism " \
                               f"or Composition) or a Projection nor a set of either: {repr(pathway[c])}."
 
         # Finally, clean up any tuple specs
@@ -7121,7 +7163,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # If pathway is an existing one, return that
         existing_pathway = next((p for p in self.pathways if explicit_pathway==p.pathway), None)
         if existing_pathway:
-            warnings.warn(f"Pathway specified in {pathway_arg_str} already exists in {self.name}: {pathway}; "
+            warnings.warn(f"Pathway specified {pathway_arg_str} already exists in {self.name}: {pathway}; "
                           f"it will be ignored.")
             return existing_pathway
         # If the explicit pathway is shorter than the one specified, then need to do more checking
@@ -7132,7 +7174,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                          if not isinstance(item, Projection)]), None)
             # Shorter because Projections generated for unspecified ones duplicated existing ones & were suppressed
             if existing_pathway:
-                warnings.warn(f"Pathway specified in {pathway_arg_str} has same Nodes in same order as "
+                warnings.warn(f"Pathway specified {pathway_arg_str} has same Nodes in same order as "
                               f"one already in {self.name}: {pathway}; it will be ignored.")
                 return existing_pathway
             #
@@ -7144,7 +7186,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 # Otherwise, something has gone wrong
                 assert False, \
-                    f"PROGRAM ERROR: Bad pathway specification for {self.name} in {pathway_arg_str}: {pathway}."
+                    f"PROGRAM ERROR: Bad pathway specification for {self.name} {pathway_arg_str}: {pathway}."
 
         pathway = Pathway(pathway=explicit_pathway,
                           composition=self,
@@ -7263,7 +7305,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pathway_arg_str = context.string
         # Otherwise, refer to call from this method
         else:
-            pathway_arg_str = f"'pathway' arg for add_linear_procesing_pathway method of {self.name}"
+            pathway_arg_str = f"in 'pathway' arg for add_linear_procesing_pathway method of {self.name}"
         context.source = ContextFlags.METHOD
         context.string = pathway_arg_str
 
@@ -7276,7 +7318,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Make sure pathways is not a (<pathway spec>, LearningFunction) tuple that conflicts with learning_function
         if isinstance(pathway,tuple) and pathway[1] is not learning_function:
-            raise CompositionError(f"Specification in {pathway_arg_str} contains a tuple that specifies a different "
+            raise CompositionError(f"Specification {pathway_arg_str} contains a tuple that specifies a different "
                                    f"{LearningFunction.__name__} ({pathway[1].__name__}) than the one specified in "
                                    f"its 'learning_function' arg ({learning_function.__name__}).")
 
@@ -7770,7 +7812,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Add pathway to graph and get its full specification (includes all ProcessingMechanisms and MappingProjections)
         # Pass ContextFlags.INITIALIZING so that it can be passed on to _analyze_graph() and then
         #    _check_for_projection_assignments() in order to ignore checks for require_projection_in_composition
-        context.string = f"'pathway' arg for add_backpropagation_learning_pathway method of {self.name}"
+        context.string = f"in 'pathway' arg for add_backpropagation_learning_pathway method of {self.name}"
         learning_pathway = self.add_linear_processing_pathway(pathway=pathway,
                                                               name=name,
                                                               default_projection_matrix=default_projection_matrix,
@@ -8434,7 +8476,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.node_ordering.append(controller)
         self.enable_controller = True
         # FIX: 11/15/21 - SHOULD THIS METHOD BE MOVED HERE (TO COMPOSITION) FROM ControlMechanism
-        controller._activate_projections_for_compositions(self)
+        controller._activate_projections_for_compositions(self, context=context)
         self._analyze_graph(context=context)
         if not invalid_aux_components:
             self._controller_initialization_status = ContextFlags.INITIALIZED
@@ -8467,11 +8509,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if not self.controller:
             return hanging_control_specs
         else:
+            # must not instantiate control signal with COMMAND_LINE
+            # source here because later port methods assume it is a
+            # direct command-line call, not down-line
+            prev_source = context.source
+            context.source = ContextFlags.COMPOSITION
             for spec in hanging_control_specs:
                 control_signal = self.controller._instantiate_control_signal(control_signal=spec,
                                                                              context=context)
                 self.controller.control.append(control_signal)
                 self.controller._activate_projections_for_compositions(self)
+            context.source = prev_source
         return []
 
     def _get_monitor_for_control_nodes(self):
@@ -8576,6 +8624,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         projection specification from the original sender to the relevant input port of the pcim of the Composition
         located in the same level of nesting.
         """
+        # COMMAND_LINE context in port methods/constructors act as if
+        # method is *directly* executed from script/command-line, not
+        # just as a down-line consequence
+        prev_source = context.source
+        context.source = ContextFlags.METHOD
+
         for proj in receiver.mod_afferents:
             if proj.sender.owner == sender_mechanism:
                 receiver._remove_projection_to_port(proj)
@@ -8601,10 +8655,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if receiver.owner not in graph_receiver.nodes.data + graph_receiver.cims:
             receiver = interface_input_port
         graph_receiver.parameter_CIM.add_ports([control_signal], context=context)
+
+        # restore context source here because add_projection must know the original source
+        context.source = prev_source
+
         # add sender and receiver to self.parameter_CIM_ports dict
         for p in control_signal.projections:
             # self.add_projection(p)
-            graph_receiver.add_projection(p, receiver=p.receiver, sender=control_signal)
+            graph_receiver.add_projection(p, receiver=p.receiver, sender=control_signal, context=context)
         try:
             sender._remove_projection_to_port(projection)
         except (ValueError, PortError):
@@ -10812,6 +10870,8 @@ _
             # -DS
 
             context.execution_phase = ContextFlags.PROCESSING
+            build_CIM_input = NotImplemented
+
             if inputs is not None:
                 inputs = self._validate_execution_inputs(inputs)
                 build_CIM_input = self._build_variable_for_input_CIM(inputs)
@@ -10849,6 +10909,7 @@ _
                 self.parameter_CIM.execute(context=context)
 
             else:
+                assert build_CIM_input != NotImplemented, f"{self} not in nested mode and no inputs available"
                 self.input_CIM.execute(build_CIM_input, context=context)
 
                 # Update nested compositions
@@ -12304,6 +12365,18 @@ _
         yield self.parameter_CIM
         if self.controller:
             yield self.controller
+
+    @property
+    def _sender_ports(self):
+        ports = super()._sender_ports
+        ports.extend(self.parameter_CIM.output_ports)
+        return ports
+
+    @property
+    def _receiver_ports(self):
+        ports = super()._receiver_ports
+        ports.extend(self.parameter_CIM.input_ports)
+        return ports
 
     # endregion PROPERTIES
 

@@ -168,15 +168,18 @@ def test_transfer_derivative(func, variable, params, expected, benchmark, func_m
     res = benchmark(ex, variable)
     np.testing.assert_allclose(res, expected, rtol=1e-5, atol=1e-8)
 
-
+# FIX: JDC MODIFED PER JAN -- CHECK
 derivative_out_test_data = [
     (Functions.Logistic, logistic_helper, {kw.GAIN:RAND1, kw.X_0:RAND2, kw.OFFSET:RAND3, kw.SCALE:RAND4}, RAND1 * RAND4 * logistic_helper * (1 - logistic_helper)),
     (Functions.ReLU, relu_helper, {kw.GAIN:RAND1, kw.BIAS:RAND2, kw.LEAK:RAND3}, np.where((test_var - RAND2) > 0, RAND1, RAND1 * RAND3)),
     (Functions.SoftMax, softmax_helper, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM:False},
      [-0.010680386821751537, -0.011118109698906909, -0.01082040340318878, -0.010670257514724047, -0.010362498859374309,
       -0.010933660158663306, -0.010397412260182806, -0.011602329078808718, 0.09684744183944892, -0.010262384043848513]),
-    (Functions.SoftMax, [softmax_helper], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM:True},
+    (Functions.SoftMax, [softmax_helper, softmax_helper], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM:True},
      [[-0.010680386821751537, -0.011118109698906909, -0.01082040340318878, -0.010670257514724047, -0.010362498859374309,
+       -0.010933660158663306, -0.010397412260182806, -0.011602329078808718, 0.09684744183944892,
+       -0.010262384043848513],
+      [-0.010680386821751537, -0.011118109698906909, -0.01082040340318878, -0.010670257514724047, -0.010362498859374309,
        -0.010933660158663306, -0.010397412260182806, -0.011602329078808718, 0.09684744183944892, -0.010262384043848513]]),
 ]
 @pytest.mark.function
