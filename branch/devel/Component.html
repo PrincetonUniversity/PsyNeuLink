@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Component &mdash; PsyNeuLink 0.13.0.0+30.g7336df2f6 documentation</title>
+  <title>Component &mdash; PsyNeuLink 0.13.0.0+38.g88e33cc26 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.13.0.0+30
+                  0.13.0.0+38
                 </div>
               
             
@@ -1154,6 +1154,64 @@ value based on its default_variable.</p>
 <span class="sig-name descname"><span class="pre">is_finished</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.is_finished" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set by a Component to signal completion of its <a class="reference internal" href="#component-execution"><span class="std std-ref">execution</span></a> in a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>; used by <code class="xref any docutils literal notranslate"><span class="pre">Component-based</span> <span class="pre">Conditions</span></code> to predicate the
 execution of one or more other Components on a Component.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="psyneulink.core.components.component.Component._sender_ports">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">_sender_ports</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component._sender_ports" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns:
+ContentAddressableList: list containing Ports on this object
+that can send Projections</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="psyneulink.core.components.component.Component._receiver_ports">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">_receiver_ports</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component._receiver_ports" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns:
+ContentAddressableList: list containing Ports on this object
+that can receive Projections</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.component.Component.get_afferents">
+<span class="sig-name descname"><span class="pre">get_afferents</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">from_component</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.get_afferents" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>from_component</strong> (<a class="reference internal" href="#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a><em>, </em><em>optional</em>) – if specified, filters</p></li>
+<li><p><strong>from</strong> (<em>returned list to contain only afferents originating</em>) – </p></li>
+<li><p><strong>None.</strong> (<em>*from_component*</em><em> or </em><em>one of its Ports. Defaults to</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>list of afferent Projections to this
+Component</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ContentAddressableList</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.component.Component.get_efferents">
+<span class="sig-name descname"><span class="pre">get_efferents</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">to_component</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.get_efferents" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>to_component</strong> (<a class="reference internal" href="#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a><em>, </em><em>optional</em>) – if specified, filters</p></li>
+<li><p><strong>at</strong> (<em>returned list to contain only efferents ending</em>) – </p></li>
+<li><p><strong>None.</strong> (<em>*to_component*</em><em> or </em><em>one of its Ports. Defaults to</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>list of efferent Projections from
+this Component</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ContentAddressableList</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py property">

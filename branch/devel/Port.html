@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Port &mdash; PsyNeuLink 0.13.0.0+30.g7336df2f6 documentation</title>
+  <title>Port &mdash; PsyNeuLink 0.13.0.0+38.g88e33cc26 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.13.0.0+30
+                  0.13.0.0+38
                 </div>
               
             
@@ -1307,6 +1307,48 @@ or MULTIPLICATIVE if not specified</p>
 <dt class="sig sig-object py" id="psyneulink.core.components.ports.port.Port_Base.value_label">
 <em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">value_label</span></span><a class="headerlink" href="#psyneulink.core.components.ports.port.Port_Base.value_label" title="Permalink to this definition">¶</a></dt>
 <dd><p>Alias of labeled_value</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.port.Port_Base.get_afferents">
+<span class="sig-name descname"><span class="pre">get_afferents</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">from_component</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.port.Port_Base.get_afferents" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>from_component</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a><em>, </em><em>optional</em>) – if specified, filters</p></li>
+<li><p><strong>from</strong> (<em>returned list to contain only afferents originating</em>) – </p></li>
+<li><p><strong>None.</strong> (<em>*from_component*</em><em> or </em><em>one of its Ports. Defaults to</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>list of afferent Projections to this
+Component</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ContentAddressableList</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.port.Port_Base.get_efferents">
+<span class="sig-name descname"><span class="pre">get_efferents</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">to_component</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.port.Port_Base.get_efferents" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>to_component</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a><em>, </em><em>optional</em>) – if specified, filters</p></li>
+<li><p><strong>at</strong> (<em>returned list to contain only efferents ending</em>) – </p></li>
+<li><p><strong>None.</strong> (<em>*to_component*</em><em> or </em><em>one of its Ports. Defaults to</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>list of efferent Projections from
+this Component</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ContentAddressableList</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py property">

@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.13.0.0+30.g7336df2f6 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.13.0.0+38.g88e33cc26 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.13.0.0+30
+                  0.13.0.0+38
                 </div>
               
             
@@ -5169,6 +5169,22 @@ may change during runtime</p>
 <dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition._dependent_components">
 <em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">_dependent_components</span></span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition._dependent_components" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a set of Components that will be executed if this Component is executed</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition._sender_ports">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">_sender_ports</span></span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition._sender_ports" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns:
+ContentAddressableList: list containing Ports on this object
+that can send Projections</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition._receiver_ports">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">_receiver_ports</span></span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition._receiver_ports" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns:
+ContentAddressableList: list containing Ports on this object
+that can receive Projections</p>
 </dd></dl>
 
 <dl class="py method">
