@@ -724,6 +724,13 @@ def _net_outcome_getter(owning_component=None, context=None):
     except TypeError:
         return [0]
 
+def _control_allocation_getter(owning_component=None, context=None):
+    # return self.output_values
+    try:
+        return [v.parameters.variable._get(context) for v in owning_component.output_ports]
+    except (TypeError, AttributeError):
+        return [defaultControlAllocation]
+
 
 class ControlMechanism(ModulatoryMechanism_Base):
     """
@@ -1026,6 +1033,13 @@ class ControlMechanism(ModulatoryMechanism_Base):
                     :default value: None
                     :type:
 
+                control_allocation
+                    see `control_allocation <ControlMechanism.control_signal_costs>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
                 control_signal_costs
                     see `control_signal_costs <ControlMechanism.control_signal_costs>`
 
@@ -1116,10 +1130,14 @@ class ControlMechanism(ModulatoryMechanism_Base):
         """
         # This must be a list, as there may be more than one (e.g., one per control_signal)
         variable = Parameter(np.array([[defaultControlAllocation]]), pnl_internal=True, constructor_argument='default_variable')
-        value = Parameter(np.array([defaultControlAllocation]),
-                          # aliases='control_allocation',
-                          pnl_internal=True)
+        value = Parameter(np.array([defaultControlAllocation]),pnl_internal=True)
         default_allocation = None
+        control_allocation = Parameter(np.array([defaultControlAllocation]),
+                                       read_only=True,
+                                       getter=_control_allocation_getter,
+                                       # structural=True,
+                                       # pnl_internal=True,
+                                       )
         combine_costs = Parameter(np.sum, stateful=False, loggable=False)
         costs = Parameter(None, read_only=True, getter=_control_mechanism_costs_getter)
         control_signal_costs = Parameter(None, read_only=True, pnl_internal=True)
@@ -2064,7 +2082,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
             [self.objective_mechanism] if self.objective_mechanism else [],
         ))
 
-    @property
-    def control_allocation(self):
-        # return self.output_values
-        return [v.parameters.variable.get() for v in self.output_ports]
+    # @property
+    # def control_allocation(self):
+    #     # return self.output_values
+    #     return [v.parameters.variable.get() for v in self.output_ports]
