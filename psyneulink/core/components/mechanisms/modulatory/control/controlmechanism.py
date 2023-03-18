@@ -1115,7 +1115,9 @@ class ControlMechanism(ModulatoryMechanism_Base):
         """
         # This must be a list, as there may be more than one (e.g., one per control_signal)
         variable = Parameter(np.array([[defaultControlAllocation]]), pnl_internal=True, constructor_argument='default_variable')
-        value = Parameter(np.array([defaultControlAllocation]), aliases='control_allocation', pnl_internal=True)
+        value = Parameter(np.array([defaultControlAllocation]),
+                          # aliases='control_allocation',
+                          pnl_internal=True)
         default_allocation = None
         combine_costs = Parameter(np.sum, stateful=False, loggable=False)
         costs = Parameter(None, read_only=True, getter=_control_mechanism_costs_getter)
@@ -1759,8 +1761,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
             # if control allocation is a single value specified from
             # default_variable for example, it should be used here
             # instead of the "global default" defaultControlAllocation
-            if len(self.defaults.control_allocation) == 1:
-                allocation_parameter_default = copy.deepcopy(self.defaults.control_allocation)
+            if len(self.defaults.value) == 1:
+                allocation_parameter_default = copy.deepcopy(self.defaults.value)
             else:
                 allocation_parameter_default = copy.deepcopy(defaultControlAllocation)
 
@@ -1972,8 +1974,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
         based on specified `control_allocation <ControlMechanism.control_allocation>`
         (used by controller of a Composition in simulations)
         """
-        value = [a for a in control_allocation]
-        self.parameters.value._set(value, context)
+        # value = [a for a in control_allocation]
+        # self.parameters.value._set(value, context)
         self._update_output_ports(runtime_params, context)
 
     @property
@@ -2060,3 +2062,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
             # [self.objective_mechanism],
             [self.objective_mechanism] if self.objective_mechanism else [],
         ))
+
+    @property
+    def control_allocation(self):
+        # return self.output_values
+        return [v.parameters.variable.get() for v in self.output_ports]
