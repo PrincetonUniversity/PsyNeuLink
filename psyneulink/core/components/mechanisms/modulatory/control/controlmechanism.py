@@ -39,7 +39,7 @@ used to modulate the `ParameterPort(s) <ParameterPort>` of one or more Mechanism
 the parameter(s) of the `function(s) <Mechanism_Base.function>` of those Mechanism(s). However, a ControlMechanism
 can also be used to modulate the function of `InputPorts <InputPort>` and/or `OutputPort <OutputPorts>`,
 much like a `GatingMechanism`.  A ControlMechanism's `function <ControlMechanism.function>` calculates a
-`control_allocation <ControlMechanism.control_allocation>`: a list of values provided to each of its `control_signals
+`control_allocation <ControlMechanism.control_allocation>`: one or more values used as inputs for its `control_signals
 <ControlMechanism.control_signals>`.  Its control_signals are `ControlSignal` OutputPorts that are used to modulate
 the parameters of other Mechanisms' `function <Mechanism_Base.function>` (see `ControlSignal_Modulation` for a more
 detailed description of how modulation operates).  A ControlMechanism can be configured to monitor the outputs of
@@ -376,20 +376,20 @@ determine its `control_allocation <ControlMechanism.control_allocation>`.
 ~~~~~~~~~~
 
 A ControlMechanism's `function <ControlMechanism.function>` uses its `outcome <ControlMechanism.outcome>`
-attribute (the `value <InputPort.value>` of its *OUTCOME* `InputPort`) to generate a `control_allocation
-<ControlMechanism.control_allocation>`.  By default, its `function <ControlMechanism.function>` is assigned
-the `Identity`, which takes a single value as its input, and copies it to the output, this assigns the value of
-each item of `control_allocation <ControlMechanism.control_allocation>`.  This item is assigned as
-the allocation for the all `ControlSignal` in `control_signals <ControlMechanism.control_signals>`. This
-distributes the ControlMechanism's input as the allocation to each of its `control_signals
-<ControlMechanism.control_signals>`.
-This same behavior also applies to any custom function assigned to a
-ControlMechanism that returns a 2d array with a single item in its outer dimension (axis 0).  If a function is
-assigned that returns a 2d array with more than one item, and it has the same number of `control_signals
-<ControlMechanism.control_signals>`, then each ControlSignal is assigned to the corresponding item of the function's
-value.  However, these default behaviors can be modified by specifying that individual ControlSignals reference
-different items in `control_allocation` as their `variable <Projection_Base.variable>`
-(see `OutputPort_Custom_Variable`).
+attribute (the `value <InputPort.value>` of its *OUTCOME* `InputPort`) to generate one or more values used
+for ControlMechanism's `control_allocation <ControlMechanism.control_allocation>`.  By default, its `function
+<ControlMechanism.function>` is assigned the `Identity` Function, which takes a single value as its input and returns
+it as its output.  That is then used as the ControlSignal's `control_allocation <ControlMechanism.control_allocation>`,
+which in turn is assigned as the allocation for all of the ControlMechanism's `control_signals
+<ControlMechanism.control_signals>`. That is, by default, the ControlMechanism's input is distributed as the
+allocation to each of its `control_signals <ControlMechanism.control_signals>`. This same behavior also occurs for
+any custom function assigned to a ControlMechanism that returns a 2d array with a single item in its outer dimension
+(axis 0).  If a function is assigned that returns a 2d array with more than one item, and the number of those items
+(i.e., the length of the 2d array) is the same as the number of `control_signals <ControlMechanism.control_signals>`,
+then each item is assigned to a corresponding `ControlSignal` (in the order in which they are specified in the
+**control_signals** argument of the ControlMechanism's constructor).  However, these default behaviors can be modified
+by specifying that individual ControlSignals reference different items in the ControlMechanism's `value
+<Mechanism_Base.value>` (see `OutputPort_Custom_Variable`).
 
 .. _ControlMechanism_Output:
 
@@ -911,14 +911,15 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
     control_allocation : 2d array
         each item is the value assigned as the `allocation <ControlSignal.allocation>` for the corresponding
-        ControlSignal listed in the `control_signals` attribute;  the control_allocation is the same as the
-        ControlMechanism's `value <Mechanism_Base.value>` attribute).
+        ControlSignal listed in the `control_signals <ControlMechanism.control_signals>` attribute (that is,
+        it is a list of the values of the `variable <OutputPort.variable>` attributes of the ControlMechanism's
+        `ControlSignals <ControlSignal>`).
 
     control_signals : ContentAddressableList[ControlSignal]
         list of the `ControlSignals <ControlSignal>` for the ControlMechanism, including any inherited from a
         `Composition` for which it is a `controller <Composition.controller>` (same as ControlMechanism's
         `output_ports <Mechanism_Base.output_ports>` attribute); each sends a `ControlProjection`
-        to the `ParameterPort` for the parameter it controls
+        to the `ParameterPort` for the parameter it controls.
 
     compute_reconfiguration_cost : Function, function or method
         function used to compute the ControlMechanism's `reconfiguration_cost  <ControlMechanism.reconfiguration_cost>`;
