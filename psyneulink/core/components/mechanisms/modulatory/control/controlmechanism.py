@@ -1704,7 +1704,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         #     assign each control_signal to the corresponding item of the function's value
         # - a different number of items than number of control_signals,
         #     leave things alone, and allow any errant indices for control_signals to be caught later.
-        self.defaults.value = np.array(self.function.value)
+        self.defaults.value = np.array(self.function.value, dtype=object)
         self.parameters.value._set(copy.deepcopy(self.defaults.value), context)
 
         len_fct_value = len(self.function.value)
@@ -1997,14 +1997,15 @@ class ControlMechanism(ModulatoryMechanism_Base):
         #  Need to set value of ControlMechanism (rather than variables of ControlSignals)
         #  since OutputPort uses _output_port_variable_getter() to parse its variable_spec
         #  rather than assigning a value directly to its variable.
-        value = [a for a in control_allocation]
-        self.parameters.value._set(value, context)
-        # self.parameters.value._set(control_allocation, context)
+        # value = [a for a in control_allocation]
+        # self.parameters.value._set(value, context)
+        self.parameters.value._set(control_allocation, context)
         # IMPLEMENTATION NOTE: this doesn't work for the reason above:
         # for control_signal, allocation in zip(self.control_signals, control_allocation):
         #     control_signal.parameters.variable._set(allocation, context)
         self._update_output_ports(runtime_params, context)
-        # assert self.parameters.control_allocation._get(context) == control_allocation
+        # # FIX: SECOND CONTROL ALLOCATION NOT GETTING UPDATED:
+        # assert (self.parameters.control_allocation._get(context) == control_allocation).all()
 
 
     @property
