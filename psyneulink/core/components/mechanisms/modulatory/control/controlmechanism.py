@@ -727,7 +727,7 @@ def _net_outcome_getter(owning_component=None, context=None):
 def _control_allocation_getter(owning_component=None, context=None):
     # return self.output_values
     try:
-        return [v.parameters.variable._get(context) for v in owning_component.output_ports]
+        return [v.parameters.variable._get(context) for v in owning_component.control_signals]
     except (TypeError, AttributeError):
         return [defaultControlAllocation]
 
@@ -1995,6 +1995,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
         """
         # value = [a for a in control_allocation]
         # self.parameters.value._set(value, context)
+        for control_signal, allocation in zip(self.control_signals, control_allocation):
+            control_signal.parameters.variable._set(allocation, context)
         self._update_output_ports(runtime_params, context)
 
     @property
