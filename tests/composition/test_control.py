@@ -1923,7 +1923,7 @@ class TestControlMechanisms:
                                                    allocation_samples=pnl.SampleSpec(start=1.0, stop=5.0, num=5))])
         )
         result = benchmark(ocomp.run, [5], execution_mode=mode)
-        np.testing.assert_allclose(result, [[50]])
+        np.testing.assert_allclose(result, [[50], [50]])
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -1987,7 +1987,7 @@ class TestControlMechanisms:
                                                                                      num=5))])
         )
         result = benchmark(ocomp.run, [5], execution_mode=mode)
-        np.testing.assert_allclose(result, [[70]])
+        np.testing.assert_allclose(result, [[70],[70]])
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2051,7 +2051,7 @@ class TestControlMechanisms:
                                                                                      num=5))])
         )
         result = benchmark(ocomp.run, [5], execution_mode=mode)
-        np.testing.assert_allclose(result, [[5]])
+        np.testing.assert_allclose(result, [[5],[5]])
 
     def test_two_tier_ocm(self):
         integrationConstant = 0.8  # Time Constant
@@ -2221,7 +2221,7 @@ class TestControlMechanisms:
         np.testing.assert_allclose(outerComposition.results,
                            [[[0.05], [0.42357798], [0.76941918], [0.23058082]],
                             [[0.1], [0.64721378], [0.98737278], [0.01262722]],
-                            [[0.1], [0.60232676], [0.9925894], [0.0074106]]])
+                            [[0.1], [0.60232676], [0.9925894], [0.0074106]]], atol=1e-8)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2275,7 +2275,7 @@ class TestControlMechanisms:
         assert iComp.controller == iController
         assert oComp.controller == oController
         res = benchmark(oComp.run, inputs=[5], execution_mode=comp_mode)
-        np.testing.assert_allclose(res, [40])
+        np.testing.assert_allclose(res, [[40]])
 
     @pytest.mark.control
     @pytest.mark.composition
