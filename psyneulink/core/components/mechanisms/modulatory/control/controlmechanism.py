@@ -1993,11 +1993,19 @@ class ControlMechanism(ModulatoryMechanism_Base):
         based on specified `control_allocation <ControlMechanism.control_allocation>`
         (used by controller of a Composition in simulations)
         """
-        # value = [a for a in control_allocation]
-        # self.parameters.value._set(value, context)
-        for control_signal, allocation in zip(self.control_signals, control_allocation):
-            control_signal.parameters.variable._set(allocation, context)
+        # IMPLEMENTATION NOTE:
+        #  Need to set value of ControlMechanism (rather than variables of ControlSignals)
+        #  since OutputPort uses _output_port_variable_getter() to parse its variable_spec
+        #  rather than assigning a value directly to its variable.
+        value = [a for a in control_allocation]
+        self.parameters.value._set(value, context)
+        # self.parameters.value._set(control_allocation, context)
+        # IMPLEMENTATION NOTE: this doesn't work for the reason above:
+        # for control_signal, allocation in zip(self.control_signals, control_allocation):
+        #     control_signal.parameters.variable._set(allocation, context)
         self._update_output_ports(runtime_params, context)
+        # assert self.parameters.control_allocation._get(context) == control_allocation
+
 
     @property
     def monitored_output_ports(self):
