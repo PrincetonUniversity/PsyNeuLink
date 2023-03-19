@@ -2921,6 +2921,8 @@ class OptimizationControlMechanism(ControlMechanism):
                 - (Optimization) function may return additional information (e.g., GridSearch)
                 - _execute() method processes the value returned by the OptimizationFunction (to incorporate costs)
         """
+        # self.defaults.value = np.tile(control_signal.parameters.variable.default_value, (len(self.output_ports), 1))
+        # # self.parameters.control_allocation._set(copy.deepcopy(self.defaults.value), context)
         self.defaults.value = np.array(self.control_allocation)
         self.parameters.value._set(copy.deepcopy(self.defaults.value), context)
         return self.control_allocation
