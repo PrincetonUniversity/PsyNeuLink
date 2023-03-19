@@ -2912,6 +2912,19 @@ class OptimizationControlMechanism(ControlMechanism):
         super()._instantiate_control_signals(context)
         self._create_randomization_control_signal(context)
 
+    def _set_mechanism_value(self, context):
+        """Set Mechanism's value from control_allocation.
+        OCM uses optimal_control_allocation (returned by its _execute() method), which is isomorphic to
+        self.control_allocation, as its value.
+        IMPLEMENTATION NOTE:
+            This is because the OCM's:
+                - (Optimization) function may return additional information (e.g., GridSearch)
+                - _execute() method processes the value returned by the OptimizationFunction (to incorporate costs)
+        """
+        self.defaults.value = np.array(self.control_allocation)
+        self.parameters.value._set(copy.deepcopy(self.defaults.value), context)
+        return self.control_allocation
+
     def _create_randomization_control_signal(self, context):
         if self.num_estimates:
             # must be SampleSpec in allocation_samples arg
@@ -3023,7 +3036,7 @@ class OptimizationControlMechanism(ControlMechanism):
             self._initialize_composition_function_approximator(context)
 
     def _execute(self, variable=None, context=None, runtime_params=None):
-        """Find control_allocation that optimizes net_outcome of agent_rep.evaluate().
+        """Return control_allocation that optimizes net_outcome of agent_rep.evaluate().
         """
 
         if self.is_initializing:

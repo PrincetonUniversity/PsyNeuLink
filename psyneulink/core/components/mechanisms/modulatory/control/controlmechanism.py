@@ -1704,17 +1704,15 @@ class ControlMechanism(ModulatoryMechanism_Base):
         #     assign each control_signal to the corresponding item of the function's value
         # - a different number of items than number of control_signals,
         #     leave things alone, and allow any errant indices for control_signals to be caught later.
-        self.defaults.value = np.array(self.function.value, dtype=object)
-        self.parameters.value._set(copy.deepcopy(self.defaults.value), context)
-
-        len_fct_value = len(self.function.value)
+        control_allocation_len = len(self._set_mechanism_value(context))
 
         # Assign each ControlSignal's variable_spec to index of ControlMechanism's value
         for i, control_signal in enumerate(self.control):
 
             # If number of control_signals is same as number of items in function's value,
             #    assign each ControlSignal to the corresponding item of the function's value
-            if len_fct_value == len(self.control):
+            # if len_fct_value == len(self.control):
+            if len(self.control) == control_allocation_len:
                 control_signal._variable_spec = (OWNER_VALUE, i)
 
             if not isinstance(control_signal.owner_value_index, int):
@@ -1796,6 +1794,16 @@ class ControlMechanism(ModulatoryMechanism_Base):
         if not type(control_signal) in convert_to_list(self.outputPortTypes):
             raise ProjectionError(f'{type(control_signal)} inappropriate for {self.name}')
         return control_signal
+
+    def _set_mechanism_value(self, context):
+        """Set Mechanism's value.
+        By default, use value returned by ControlMechanism's function.
+        Can be overridden by a subclass if it determines its value in some other way (see OCM for example).
+        Note: this is used to determine the number of ControlSignals
+        """
+        self.defaults.value = np.array(self.function.value, dtype=object)
+        self.parameters.value._set(copy.deepcopy(self.defaults.value), context)
+        return self.defaults.value
 
     def _check_for_duplicates(self, control_signal, control_signals, context):
         """
@@ -2006,7 +2014,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
         self._update_output_ports(runtime_params, context)
         # # FIX: SECOND CONTROL ALLOCATION NOT GETTING UPDATED:
         # assert (self.parameters.control_allocation._get(context) == control_allocation).all()
-
 
     @property
     def monitored_output_ports(self):
