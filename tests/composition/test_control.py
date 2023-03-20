@@ -3612,7 +3612,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
             B = pnl.ProcessingMechanism(name='B',
                                         function=pnl.SimpleIntegrator(rate=1))
 
-        comp = pnl.Composition(name='comp')
+        comp = pnl.Composition(name='comp', retain_old_simulation_data=True)
         comp.add_linear_processing_pathway([A, B])
 
         search_range = pnl.SampleSpec(start=0.25, stop=0.75, step=0.25)
