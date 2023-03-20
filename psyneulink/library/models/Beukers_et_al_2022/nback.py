@@ -840,7 +840,7 @@ def train_network(network:AutodiffComposition,
     # network.load(path)
     # print(f'loaded weights sample: {network.nodes[FFN_HIDDEN].path_afferents[0].matrix.base[0][:3]}...')
 
-def test_network(network:AutodiffComposition,
+def network_test(network:AutodiffComposition,
                  load_weights_from:Union[Path,str,None]=None,
                  nback_levels=NBACK_LEVELS,
                  context=None
@@ -877,7 +877,7 @@ def test_network(network:AutodiffComposition,
     # # FIX: COMMENT OUT TO TEST TRAINING LOSS FROM WEIGHTS JUST TRAINED W/O LOADING FROM DISK
     if load_weights_from:
         print(f"Loading weights for '{FFN_COMPOSITION}' from {load_weights_from}...")
-        network.load(filename=load_weights_from)
+        network.load(filename=load_weights_from, context=context)
 
     network.run(inputs=test_set[INPUTS],
                 # report_progress=ReportProgress.ON,
@@ -1151,9 +1151,10 @@ if __name__ == '__main__':
             weights_filename = f'results/ffn.wts_nep_{NUM_EPOCHS}_lr_{str(LEARNING_RATE).split(".")[1]}.pnl'
             weights_path = Path('/'.join([os.getcwd(), weights_filename]))
 
+        # context = 'new'
         inputs, cxt_distances, targets, conditions, results, coded_responses, ce_loss, \
         trial_type_stats, stats = \
-            test_network(nback_model.nodes[FFN_COMPOSITION], load_weights_from = weights_path, context=context)
+            network_test(nback_model.nodes[FFN_COMPOSITION], load_weights_from = weights_path, context=context)
 
         headings = ['condition', 'inputs', 'target', 'context distance', 'results', 'coded response', 'ce loss']
         results = (headings,
