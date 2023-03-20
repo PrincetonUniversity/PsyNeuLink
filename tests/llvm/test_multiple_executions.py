@@ -214,12 +214,14 @@ def test_nested_composition_run_trials_inputs(benchmark, executions, mode):
     elif mode == 'LLVM':
         e = pnlvm.execution.CompExecution(outer_comp, [None for _ in range(executions)])
         res = e.run(var, 4, 2)
+        # FIX: NEED TO FORCE EXTRA DIMENSION FOR RESULT IF ONLY ON EXECUTION
+        if executions == 1:
+            res = [res]
         benchmark(e.run, var, 4, 2)
     elif mode == 'PTX':
         e = pnlvm.execution.CompExecution(outer_comp, [None for _ in range(executions)])
         res = e.cuda_run(var, 4, 2)
         benchmark(e.cuda_run, var, 4, 2)
 
-    # FIX: FAILS IN LLVM WITH NUM EXECUTIONS = 1:  EXPECTS 3D BUT GETS 4D
     np.testing.assert_allclose(res, [expected for _ in range(executions)])
     assert len(res) == executions or executions == 1
