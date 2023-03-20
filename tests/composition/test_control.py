@@ -3651,15 +3651,36 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
             # noise
 
         if rand_var: # results for DDM (which has random variables)
-            np.testing.assert_allclose(comp.simulation_results,
-                               [[np.array([2.25])], [np.array([3.5])], [np.array([4.75])], [np.array([3.])], [np.array([4.25])], [np.array([5.5])]])
+            if num_estimates in {None,1}:
+                np.testing.assert_allclose(comp.simulation_results,[[np.array([1.]),np.array([3.24637662])],
+                                                                    [np.array([1.]),np.array([2.12805516])],
+                                                                    [np.array([1.]),np.array([1.52673967])],
+                                                                    [np.array([1.]),np.array([3.24637662])],
+                                                                    [np.array([1.]),np.array([2.12805516])],
+                                                                    [np.array([1.]),np.array([1.52673967])]])
+            else:
+                np.testing.assert_allclose(comp.simulation_results,[[np.array([1.]), np.array([3.24637662])],
+                                                                    [np.array([1.]), np.array([3.24637662])],
+                                                                    [np.array([1.]), np.array([2.12805516])],
+                                                                    [np.array([1.]), np.array([2.12805516])],
+                                                                    [np.array([1.]), np.array([1.52673967])],
+                                                                    [np.array([1.]), np.array([1.52673967])],
+                                                                    [np.array([1.]), np.array([3.24637662])],
+                                                                    [np.array([1.]), np.array([3.24637662])],
+                                                                    [np.array([1.]), np.array([2.12805516])],
+                                                                    [np.array([1.]), np.array([2.12805516])],
+                                                                    [np.array([1.]), np.array([1.52673967])],
+                                                                    [np.array([1.]), np.array([1.52673967])]])
             np.testing.assert_allclose(comp.results,
-                               [[np.array([1.]), np.array([1.1993293])], [np.array([1.]), np.array([3.24637662])]])
+                                       [[np.array([1.]), np.array([1.1993293])],
+                                        [np.array([1.]), np.array([3.24637662])]])
+
         else:  # results for ProcessingMechanism (which does not have any random variables)
             np.testing.assert_allclose(comp.simulation_results,
-                               [[np.array([2.25])], [np.array([3.5])], [np.array([4.75])], [np.array([3.])], [np.array([4.25])], [np.array([5.5])]])
+                                       [[np.array([1.25])], [np.array([1.5])], [np.array([1.75])],
+                                        [np.array([2.])], [np.array([2.25])], [np.array([2.5])]])
             np.testing.assert_allclose(comp.results,
-                               [[np.array([1.])], [np.array([1.75])]])
+                                       [[np.array([1.])], [np.array([1.75])]])
 
     def test_model_based_ocm_no_simulations(self):
         A = pnl.ProcessingMechanism(name='A')
