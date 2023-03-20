@@ -2886,28 +2886,6 @@ class OptimizationControlMechanism(ControlMechanism):
                 control_signal.cost_options = CostFunctions.DEFAULTS
                 control_signal._instantiate_cost_attributes(context)
 
-    # def _instantiate_control_signals(self, context):
-    #     """Size control_allocation and assign modulatory_signals
-    #
-    #     Set size of control_allocation equal to number of modulatory_signals.
-    #     Assign each modulatory_signal sequentially to corresponding item of control_allocation.
-    #     Assign RANDOMIZATION_CONTROL_SIGNAL for random_variables
-    #     """
-    #
-    #     control_signals = []
-    #     for i, spec in list(enumerate(self.output_ports)):
-    #         control_signal = self._instantiate_control_signal(spec, context=context)
-    #         control_signal._variable_spec = (OWNER_VALUE, i)
-    #         # MODIFIED 11/20/21 NEW:
-    #         #  FIX - SHOULD MOVE THIS TO WHERE IT IS CALLED IN ControlSignal._instantiate_control_signal
-    #         if self._check_for_duplicates(control_signal, control_signals, context):
-    #             continue
-    #         # MODIFIED 11/20/21 END
-    #         self.output_ports[i] = control_signal
-    #
-    #     self._create_randomization_control_signal(context)
-    #     self.defaults.value = np.tile(control_signal.parameters.variable.default_value, (len(self.output_ports), 1))
-    #     # self.parameters.control_allocation._set(copy.deepcopy(self.defaults.value), context)
     def _instantiate_control_signals(self, context):
         super()._instantiate_control_signals(context)
         self._create_randomization_control_signal(context)
@@ -2918,11 +2896,9 @@ class OptimizationControlMechanism(ControlMechanism):
         self.control_allocation, as its value.
         IMPLEMENTATION NOTE:
             This is because the OCM's:
-                - (Optimization) function may return additional information (e.g., GridSearch)
+                - (Optimization) function returns additional information (e.g., GridSearch)
                 - _execute() method processes the value returned by the OptimizationFunction (to incorporate costs)
         """
-        # self.defaults.value = np.tile(control_signal.parameters.variable.default_value, (len(self.output_ports), 1))
-        # # self.parameters.control_allocation._set(copy.deepcopy(self.defaults.value), context)
         self.defaults.value = np.array(self.control_allocation)
         self.parameters.value._set(copy.deepcopy(self.defaults.value), context)
         return self.control_allocation
@@ -3209,6 +3185,18 @@ class OptimizationControlMechanism(ControlMechanism):
                                            self.parameters.num_trials_per_estimate._get(context),
                                            context=context
                                            )
+
+    def _apply_control_allocation(self, control_allocation, runtime_params, context):
+        """Update values to `control_signals <ControlMechanism.control_signals>`
+        based on specified `control_allocation <ControlMechanism.control_allocation>`"""
+        # IMPLEMENTATION NOTE:
+        #  Need to set value of ControlMechanism (rather than variables of ControlSignals)
+        #  since OutputPort uses _output_port_variable_getter() to parse its variable_spec
+        #  rather than assigning a value directly to its variable.
+        #  Need to assign OCM's value to control_allocation, since the value of its function includes other info
+        #  (see `function <OptimizationControlMechanism.optimization_>`)
+        self.parameters.value._set(control_allocation, context)
+        self._update_output_ports(runtime_params, context)
 
     def _get_evaluate_output_struct_type(self, ctx, *, tags):
         assert "evaluate_type_objective" in tags, "Unknown evaluate type: {}".format(tags)
