@@ -1151,7 +1151,7 @@ if __name__ == '__main__':
             weights_filename = f'results/ffn.wts_nep_{NUM_EPOCHS}_lr_{str(LEARNING_RATE).split(".")[1]}.pnl'
             weights_path = Path('/'.join([os.getcwd(), weights_filename]))
 
-        # context = 'new'
+        context = 'new'
         inputs, cxt_distances, targets, conditions, results, coded_responses, ce_loss, \
         trial_type_stats, stats = \
             network_test(nback_model.nodes[FFN_COMPOSITION], load_weights_from = weights_path, context=context)
