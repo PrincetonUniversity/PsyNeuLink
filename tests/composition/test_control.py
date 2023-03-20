@@ -3604,7 +3604,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
             B = pnl.ProcessingMechanism(name='B',
                                         function=pnl.SimpleIntegrator(rate=1))
 
-        comp = pnl.Composition(name='comp')
+        comp = pnl.Composition(name='comp', retain_old_simulation_data=True)
         comp.add_linear_processing_pathway([A, B])
 
         search_range = pnl.SampleSpec(start=0.25, stop=0.75, step=0.25)
@@ -3643,15 +3643,36 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
             # noise
 
         if rand_var: # results for DDM (which has random variables)
-            assert np.allclose(comp.simulation_results,
-                               [[np.array([2.25])], [np.array([3.5])], [np.array([4.75])], [np.array([3.])], [np.array([4.25])], [np.array([5.5])]])
-            assert np.allclose(comp.results,
-                               [[np.array([1.]), np.array([1.1993293])], [np.array([1.]), np.array([3.24637662])]])
+            if num_estimates in {None,1}:
+                np.testing.assert_allclose(comp.simulation_results,[[np.array([1.]),np.array([3.24637662])],
+                                                                    [np.array([1.]),np.array([2.12805516])],
+                                                                    [np.array([1.]),np.array([1.52673967])],
+                                                                    [np.array([1.]),np.array([3.24637662])],
+                                                                    [np.array([1.]),np.array([2.12805516])],
+                                                                    [np.array([1.]),np.array([1.52673967])]])
+            else:
+                np.testing.assert_allclose(comp.simulation_results,[[np.array([1.]), np.array([3.24637662])],
+                                                                    [np.array([1.]), np.array([3.24637662])],
+                                                                    [np.array([1.]), np.array([2.12805516])],
+                                                                    [np.array([1.]), np.array([2.12805516])],
+                                                                    [np.array([1.]), np.array([1.52673967])],
+                                                                    [np.array([1.]), np.array([1.52673967])],
+                                                                    [np.array([1.]), np.array([3.24637662])],
+                                                                    [np.array([1.]), np.array([3.24637662])],
+                                                                    [np.array([1.]), np.array([2.12805516])],
+                                                                    [np.array([1.]), np.array([2.12805516])],
+                                                                    [np.array([1.]), np.array([1.52673967])],
+                                                                    [np.array([1.]), np.array([1.52673967])]])
+            np.testing.assert_allclose(comp.results,
+                                       [[np.array([1.]), np.array([1.1993293])],
+                                        [np.array([1.]), np.array([3.24637662])]])
+
         else:  # results for ProcessingMechanism (which does not have any random variables)
-            assert np.allclose(comp.simulation_results,
-                               [[np.array([2.25])], [np.array([3.5])], [np.array([4.75])], [np.array([3.])], [np.array([4.25])], [np.array([5.5])]])
-            assert np.allclose(comp.results,
-                               [[np.array([1.])], [np.array([1.75])]])
+            np.testing.assert_allclose(comp.simulation_results,
+                                       [[np.array([1.25])], [np.array([1.5])], [np.array([1.75])],
+                                        [np.array([2.])], [np.array([2.25])], [np.array([2.5])]])
+            np.testing.assert_allclose(comp.results,
+                                       [[np.array([1.])], [np.array([1.75])]])
 
     def test_model_based_ocm_no_simulations(self):
         A = pnl.ProcessingMechanism(name='A')
