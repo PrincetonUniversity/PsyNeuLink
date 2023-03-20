@@ -840,7 +840,7 @@ def train_network(network:AutodiffComposition,
     # network.load(path)
     # print(f'loaded weights sample: {network.nodes[FFN_HIDDEN].path_afferents[0].matrix.base[0][:3]}...')
 
-def network_test(network:AutodiffComposition,
+def test_network(network:AutodiffComposition,
                  load_weights_from:Union[Path,str,None]=None,
                  nback_levels=NBACK_LEVELS,
                  context=None
@@ -1154,7 +1154,7 @@ if __name__ == '__main__':
         context = 'TEST'
         inputs, cxt_distances, targets, conditions, results, coded_responses, ce_loss, \
         trial_type_stats, stats = \
-            network_test(nback_model.nodes[FFN_COMPOSITION], load_weights_from = weights_path, context=context)
+            test_network(nback_model.nodes[FFN_COMPOSITION], load_weights_from = weights_path, context=context)
 
         headings = ['condition', 'inputs', 'target', 'context distance', 'results', 'coded response', 'ce loss']
         results = (headings,
