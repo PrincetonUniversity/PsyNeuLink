@@ -2887,27 +2887,21 @@ class OptimizationControlMechanism(ControlMechanism):
                 control_signal._instantiate_cost_attributes(context)
 
     def _instantiate_control_signals(self, context):
-        """Size control_allocation and assign modulatory_signals
-
-        Set size of control_allocation equal to number of modulatory_signals.
-        Assign each modulatory_signal sequentially to corresponding item of control_allocation.
-        Assign RANDOMIZATION_CONTROL_SIGNAL for random_variables
-        """
-
-        control_signals = []
-        for i, spec in list(enumerate(self.output_ports)):
-            control_signal = self._instantiate_control_signal(spec, context=context)
-            control_signal._variable_spec = (OWNER_VALUE, i)
-            # MODIFIED 11/20/21 NEW:
-            #  FIX - SHOULD MOVE THIS TO WHERE IT IS CALLED IN ControlSignal._instantiate_control_signal
-            if self._check_for_duplicates(control_signal, control_signals, context):
-                continue
-            # MODIFIED 11/20/21 END
-            self.output_ports[i] = control_signal
-
+        super()._instantiate_control_signals(context)
         self._create_randomization_control_signal(context)
-        self.defaults.value = np.tile(control_signal.parameters.variable.default_value, (len(self.output_ports), 1))
-        self.parameters.control_allocation._set(copy.deepcopy(self.defaults.value), context)
+
+    def _set_mechanism_value(self, context):
+        """Set Mechanism's value from control_allocation.
+        OCM uses optimal_control_allocation (returned by its _execute() method), which is isomorphic to
+        self.control_allocation, as its value.
+        IMPLEMENTATION NOTE:
+            This is because the OCM's:
+                - (Optimization) function returns additional information (e.g., GridSearch)
+                - _execute() method processes the value returned by the OptimizationFunction (to incorporate costs)
+        """
+        self.defaults.value = np.array(self.control_allocation)
+        self.parameters.value._set(copy.deepcopy(self.defaults.value), context)
+        return self.control_allocation
 
     def _create_randomization_control_signal(self, context):
         if self.num_estimates:
@@ -3005,7 +2999,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # after search_space to avoid IndexError when getting
         # num_estimates of function
         self.function.reset(**{
-            DEFAULT_VARIABLE: self.parameters.control_allocation._get(context),
+            DEFAULT_VARIABLE: self.parameters.value._get(context),
             OBJECTIVE_FUNCTION: self.evaluate_agent_rep,
             # SEARCH_FUNCTION: self.search_function,
             # SEARCH_TERMINATION_FUNCTION: self.search_termination_function,
@@ -3020,17 +3014,16 @@ class OptimizationControlMechanism(ControlMechanism):
             self._initialize_composition_function_approximator(context)
 
     def _execute(self, variable=None, context=None, runtime_params=None):
-        """Find control_allocation that optimizes net_outcome of agent_rep.evaluate().
+        """Return control_allocation that optimizes net_outcome of agent_rep.evaluate().
         """
 
         if self.is_initializing:
             return [defaultControlAllocation]
 
         # Assign default control_allocation if it is not yet specified (presumably first trial)
-        control_allocation = self.parameters.control_allocation._get(context)
+        control_allocation = self.control_allocation
         if control_allocation is None:
             control_allocation = [c.defaults.variable for c in self.control_signals]
-            self.parameters.control_allocation._set(control_allocation, context=None)
 
         # Give the agent_rep a chance to adapt based on last trial's state_feature_values and control_allocation
         if hasattr(self.agent_rep, "adapt"):
@@ -3071,7 +3064,8 @@ class OptimizationControlMechanism(ControlMechanism):
         # clean up frozen values after execution
         self.agent_rep._clean_up_as_agent_rep(frozen_context, alt_controller=alt_controller)
 
-        optimal_control_allocation = np.array(optimal_control_allocation).reshape((len(self.defaults.value), 1))
+        # optimal_control_allocation = np.array(optimal_control_allocation).reshape((len(self.defaults.value), 1))
+        optimal_control_allocation = np.array(optimal_control_allocation).reshape((len(self.control_allocation),1))
         if self.function.save_samples:
             self.saved_samples = saved_samples
         if self.function.save_values:
@@ -3191,6 +3185,18 @@ class OptimizationControlMechanism(ControlMechanism):
                                            self.parameters.num_trials_per_estimate._get(context),
                                            context=context
                                            )
+
+    def _apply_control_allocation(self, control_allocation, runtime_params, context):
+        """Update values to `control_signals <ControlMechanism.control_signals>`
+        based on specified `control_allocation <ControlMechanism.control_allocation>`"""
+        # IMPLEMENTATION NOTE:
+        #  Need to set value of ControlMechanism (rather than variables of ControlSignals)
+        #  since OutputPort uses _output_port_variable_getter() to parse its variable_spec
+        #  rather than assigning a value directly to its variable.
+        #  Need to assign OCM's value to control_allocation, since the value of its function includes other info
+        #  (see `function <OptimizationControlMechanism.optimization_>`)
+        self.parameters.value._set(control_allocation, context)
+        self._update_output_ports(runtime_params, context)
 
     def _get_evaluate_output_struct_type(self, ctx, *, tags):
         assert "evaluate_type_objective" in tags, "Unknown evaluate type: {}".format(tags)
