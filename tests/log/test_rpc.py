@@ -418,7 +418,7 @@ class TestRPC:
         assert list(integration_end_dict.keys()) == expected_times
         vals = [i.value.data for i in integration_end_dict.values()]
         # floats in value, so use np.allclose
-        np.testing.assert_allclose(vals, [[[0.52466739, 0.47533261]] * 3])
+        np.testing.assert_allclose(vals, [[0.52466739, 0.47533261]] * 3)
         if multi_run:
             comp.run(inputs={m0: [[1, 0], [1, 0], [1, 0]]}, context=con_with_rpc_pipeline)
             actual = []
@@ -432,7 +432,7 @@ class TestRPC:
             assert list(integration_end_dict.keys()) == expected_times
             vals = [i.value.data for i in integration_end_dict.values()]
             # floats in value, so use np.allclose
-            np.testing.assert_allclose(vals, [[[0.52466739, 0.47533261]] * 6])
+            np.testing.assert_allclose(vals, [[0.52466739, 0.47533261]] * 6)
 
 class TestFullModels:
     def test_multilayer(self):

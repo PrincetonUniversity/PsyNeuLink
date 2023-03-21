@@ -974,12 +974,12 @@ class TestLog:
         assert log_dict['Pass'] == [[1], [1], [1]] if scheduler_conditions else [[0], [0], [0]]
         assert log_dict['Time_step'] == [[1], [1], [1]]
         # floats in value, so use np.allclose
-        np.testing.assert_allclose(log_dict['value'], [[[0.52466739, 0.47533261]] * 3])
+        np.testing.assert_allclose(log_dict['value'], [[[0.52466739, 0.47533261]] for _ in range(3)])
         if multi_run:
             comp.run(inputs={m0: [[1, 0], [1, 0], [1, 0]]})
             log_dict = lca.log.nparray_dictionary()['Composition-0']
             assert log_dict['Run'] == [[0], [0], [0], [1], [1], [1]]
-            np.testing.assert_allclose(log_dict['value'], [[[0.52466739, 0.47533261]] * 6])
+            np.testing.assert_allclose(log_dict['value'], [[[0.52466739, 0.47533261]] for _ in range(6)])
 
     def test_log_with_non_full_execution_id_entries(self):
         t = pnl.TransferMechanism()

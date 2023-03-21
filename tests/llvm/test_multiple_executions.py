@@ -117,7 +117,12 @@ def test_nested_composition_execution(benchmark, executions, mode):
         res = e.extract_node_output(outer_comp.output_CIM)
         benchmark(e.cuda_execute, var)
 
-    np.testing.assert_allclose(res, [expected for _ in range(executions)])
+    # If we are doing multiple executions, the expected value should be repeated in a list.
+    if executions > 1:
+        expected = [expected for _ in range(executions)]
+
+    np.testing.assert_allclose(res, expected)
+
     assert len(res) == executions
 
 
