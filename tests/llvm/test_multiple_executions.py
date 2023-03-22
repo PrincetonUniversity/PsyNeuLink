@@ -158,12 +158,24 @@ def test_nested_composition_run(benchmark, executions, mode):
     if executions > 1:
         var = [var for _ in range(executions)]
     if mode == 'Python':
-        e = outer_comp.run if executions == 1 else lambda x : [outer_comp.run(x[i], context=i) for i in range(executions)]
+        def e(x):
+            if executions == 1:
+                outer_comp.run(x)
+                return [outer_comp.results.copy()]
+            else:
+                results = []
+                for i in range(executions):
+                    outer_comp.run(x[i], context=i)
+                    results.append(outer_comp.results.copy())
+                return results
+
         res = e(var)
         benchmark(e, var)
     elif mode == 'LLVM':
         e = pnlvm.execution.CompExecution(outer_comp, [None for _ in range(executions)])
         res = e.run(var, 1, 1)
+        if executions == 1:
+            res = [res]
         benchmark(e.run, var, 1, 1)
     elif mode == 'PTX':
         e = pnlvm.execution.CompExecution(outer_comp, [None for _ in range(executions)])
