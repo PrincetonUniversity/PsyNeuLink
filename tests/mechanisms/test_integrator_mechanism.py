@@ -393,7 +393,8 @@ class TestIntegratorFunctions:
         ex = pytest.helpers.get_mech_execution(I, mech_mode)
 
         val = benchmark(ex, [[1], [2]])
-        assert np.allclose(val, [[3]])
+        np.testing.assert_allclose(val, [[3], [3]])  # output_port values
+        np.testing.assert_allclose(I.value, [[3], [5]])
 
     @pytest.mark.mimo
     @pytest.mark.mechanism
