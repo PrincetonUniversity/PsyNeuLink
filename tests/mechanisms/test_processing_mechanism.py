@@ -250,7 +250,7 @@ class TestProcessingMechanismStandardOutputPorts:
                                               (MAX_ABS_INDICATOR, [[0, 0, 1]]),
                                               (MAX_ABS_ONE_HOT, [[0, 0, 4]]),
                                               (MAX_VAL, [[2]]),
-                                              (PROB, [[0, 2, 0]]),
+                                              (PROB, [[[0, 2, 0]]]),
                                              ],
                              ids=lambda x: x if isinstance(x, str) else "")
     def test_output_ports(self, mech_mode, op, expected, benchmark):
