@@ -3010,7 +3010,7 @@ class TestRunInputSpecifications:
         C = Composition(pathways=[T, T2])
         run_result = C.run(inputs={})
         np.testing.assert_allclose(T.parameters.value.get(C), [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])
-        np.testing.assert_allclose(run_result, [[np.array([2.0, 4.0])]])
+        np.testing.assert_allclose(run_result, [np.array([2.0, 4.0])])
 
     input_args = [
         ('non_input_node',
