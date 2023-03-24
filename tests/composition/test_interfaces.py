@@ -466,11 +466,11 @@ class TestConnectCompositionsViaCIMS:
                     scheduler=sched)
 
         # level_0 output = 2.0 * (1.0 + 2.0) = 6.0
-        assert np.allclose(level_0.get_output_values(level_2), [6.0])
+        np.testing.assert_allclose(level_0.get_output_values(level_2), [[6.0]])
         # level_1 output = 2.0 * (1.0 + 6.0) = 14.0
-        assert np.allclose(level_1.get_output_values(level_2), [14.0])
+        np.testing.assert_allclose(level_1.get_output_values(level_2), [[14.0]])
         # level_2 output = 2.0 * (1.0 + 2.0 + 14.0) = 34.0
-        assert np.allclose(level_2.get_output_values(level_2), [34.0])
+        np.testing.assert_allclose(level_2.get_output_values(level_2), [[34.0]])
 
     def test_warning_on_custom_cim_ports(self):
 
