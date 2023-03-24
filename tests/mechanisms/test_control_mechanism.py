@@ -197,7 +197,6 @@ class TestControlMechanism:
         expected_results = [[0.96941429, 0.9837254 , 0.99217549]]
         assert np.allclose(results, expected_results)
 
-
     def test_control_of_all_input_ports(self, comp_mode):
         mech = pnl.ProcessingMechanism(input_ports=['A','B','C'])
         control_mech = pnl.ControlMechanism(control=mech.input_ports)

@@ -1130,14 +1130,14 @@ class TestContentAddressableMemory:
         )
         expected_memory = [[[ 1,  2,  3],[ 4,  5,  6]],
                            [[ 7,  8,  9],[10, 11, 12]],
-                           [[7,8,9], [10,11,12]]],
-        assert np.allclose(c.memory, expected_memory)
+                           [[7,8,9], [10,11,12]]]
+        np.testing.assert_allclose(c.memory, expected_memory)
         c.add_to_memory([[ 1,  2,  3],[ 4,  5,  6]])
         expected_memory = [[[ 1,  2,  3],[ 4,  5,  6]],
                            [[ 7,  8,  9],[10, 11, 12]],
                            [[7,8,9], [10,11,12]],
-                           [[ 1,  2,  3],[ 4,  5,  6]]],
-        assert np.allclose(c.memory, expected_memory)
+                           [[ 1,  2,  3],[ 4,  5,  6]]]
+        np.testing.assert_allclose(c.memory, expected_memory)
 
     def test_ContentAddressableMemory_overwrite_mode(self):
 

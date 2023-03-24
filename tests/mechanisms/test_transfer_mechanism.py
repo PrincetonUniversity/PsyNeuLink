@@ -1629,8 +1629,8 @@ class TestIntegratorMode:
         expected_result_s2 = S2([[3.25, 4.25]])
 
         assert np.allclose(expected_result_integrator, T.parameters.integrator_function_value.get(C))
-        assert np.allclose(expected_result_s1, result[0])
-        assert np.allclose(expected_result_s2, result[1])
+        np.testing.assert_allclose(expected_result_s1, [result[0]])
+        np.testing.assert_allclose(expected_result_s2, [result[1]])
 
     def test_set_integrator_mode_after_init(self):
         T = TransferMechanism()
