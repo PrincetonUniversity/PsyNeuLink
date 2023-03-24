@@ -58,38 +58,40 @@ class TestProcessingMechanismFunctions:
         PM2.execute(1.0)
         assert np.allclose(PM2.value, 3.0)
 
-    @pytest.mark.parametrize("function,expected", [(LinearCombination, [[1.]]),
-                                                   (Reduce, [[1.]]),
-                                                   (CombineMeans, [1.0]),
-                                                   (Exponential, [[2.71828183]]),
-                                                   (Logistic, [[0.73105858]]),
-                                                   (SoftMax, [[1,]]),
-                                                   (SimpleIntegrator, [[1.]]),
-                                                   (AdaptiveIntegrator, [[1.]]),
-                                                   (DriftDiffusionIntegrator(time_step_size=1.0), [[[1.]], [[1.]]]),
-                                                   (OrnsteinUhlenbeckIntegrator, [[[-1.]], [[1.]]]),
-                                                   (AccumulatorIntegrator, [[0.]]),
-                                                   (FitzHughNagumoIntegrator, [[[0.05127053]], [[0.00279552]], [[0.05]]]),
-                                                   (DualAdaptiveIntegrator, [[0.1517455]]),
-                                                   (DriftDiffusionAnalytical, [[1.19932930e+00],
-                                                                               [3.35350130e-04],
-                                                                               [1.19932930e+00],
-                                                                               [2.48491374e-01],
-                                                                               [1.48291009e+00],
-                                                                               [1.19932930e+00],
-                                                                               [2.48491374e-01],
-                                                                               [1.48291009e+00]]),
-                                                   (NormalDist, [[-0.51529709]]),
-                                                   (ExponentialDist, [[0.29964231]]),
-                                                   (UniformDist, [[0.25891675]]),
-                                                   (GammaDist, [[0.29964231]]),
-                                                   (WaldDist, [[0.73955962]]),
-                                                  ],
-                             ids=lambda x: getattr(x, "componentName", ""))
+    @pytest.mark.parametrize(
+        "function,expected", [
+            (LinearCombination, [[1.]]),
+            (Reduce, [[1.]]),
+            (CombineMeans, [1.0]),
+            (Exponential, [[2.71828183]]),
+            (Logistic, [[0.73105858]]),
+            (SoftMax, [[1, ]]),
+            (SimpleIntegrator, [[1.]]),
+            (AdaptiveIntegrator, [[1.]]),
+            (DriftDiffusionIntegrator, [[[1.]], [[1.]]]),
+            (OrnsteinUhlenbeckIntegrator, [[[-1.]], [[1.]]]),
+            (AccumulatorIntegrator, [[0.]]),
+            (FitzHughNagumoIntegrator, [[[0.05127053]], [[0.00279552]], [[0.05]]]),
+            (DualAdaptiveIntegrator, [[0.1517455]]),
+            (DriftDiffusionAnalytical, [[1.19932930e+00],
+                                        [3.35350130e-04],
+                                        [1.19932930e+00],
+                                        [2.48491374e-01],
+                                        [1.48291009e+00],
+                                        [1.19932930e+00],
+                                        [2.48491374e-01],
+                                        [1.48291009e+00]]),
+            (NormalDist, [[-0.51529709]]),
+            (ExponentialDist, [[0.29964231]]),
+            (UniformDist, [[0.25891675]]),
+            (GammaDist, [[0.29964231]]),
+            (WaldDist, [[0.73955962]]),
+        ],
+        ids=lambda x: getattr(x, "componentName", ""))
     def test_processing_mechanism_function(self, function, expected):
         PM = ProcessingMechanism(function=function)
         res = PM.execute(1.0)
-        assert np.allclose(np.asfarray(res), expected)
+        np.testing.assert_allclose(np.asfarray(res), expected, rtol=1e-5, atol=1e-8)
 
     # COMMENTED OUT BECAUSE OF MATLAB ENGINE:
     # def test_processing_mechanism_NavarroAndFuss_function(self):
