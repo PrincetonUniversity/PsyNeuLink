@@ -12,7 +12,7 @@ class TestBuffer():
     def test_buffer_standalone(self):
         B = Buffer()
         val = B.execute(1.0)
-        np.testing.assert_allclose(np.atleast_1d(1.0), val)
+        np.testing.assert_allclose([[1.0]], val)
 
     @pytest.mark.benchmark(group="BufferFunction")
     @pytest.mark.parametrize("rate, expected",
