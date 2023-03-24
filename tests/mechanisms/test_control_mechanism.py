@@ -173,7 +173,7 @@ class TestControlMechanism:
         # c.add_linear_processing_pathway(pathway=z)
         comp.add_node(Control_Mechanism)
 
-        np.testing.assert_allclose(Control_Mechanism.parameters.control_allocation.get(), [0, 0, 0])
+        np.testing.assert_allclose(np.asfarray(Control_Mechanism.parameters.control_allocation.get()), [[0], [0], [0]])
 
         stim_list = {
             Input_Layer: [[-1, 30]],
@@ -196,7 +196,6 @@ class TestControlMechanism:
         results = comp.learn(num_trials=1, inputs=stim_list)
         expected_results = [[0.96941429, 0.9837254 , 0.99217549]]
         np.testing.assert_allclose(results, expected_results)
-
 
     def test_control_of_all_input_ports(self, comp_mode):
         mech = pnl.ProcessingMechanism(input_ports=['A','B','C'])

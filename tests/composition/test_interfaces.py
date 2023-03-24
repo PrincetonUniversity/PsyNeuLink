@@ -40,7 +40,7 @@ class TestExecuteCIM:
 
         cim = CompositionInterfaceMechanism()
         cim.execute(2.0)
-        np.testing.assert_allclose(cim.value, [2.0])
+        np.testing.assert_allclose(cim.value, [[2.0]])
 
     def test_assign_value(self):
         cim = CompositionInterfaceMechanism()
@@ -760,7 +760,7 @@ class TestInputSpec:
         comp.add_node(A)
 
         comp.run(inputs={A: 5.0})
-        np.testing.assert_allclose(comp.results, [[5.0]])
+        np.testing.assert_allclose(comp.results, [[[5.0]]])
 
         comp.run(inputs={A: [5.0, 10.0, 15.0]})
         np.testing.assert_allclose(comp.results, [[[5.0]], [[5.0]], [[10.0]], [[15.0]]])
@@ -876,7 +876,7 @@ class TestSimplifedNestedCompositionSyntax:
         # comp3:  input = 5.0   |  output = 180.0
 
         res = outer.run(inputs={inner1: [[5.]]})
-        np.testing.assert_allclose(res, [[[180.0]]])
+        np.testing.assert_allclose(res, [[180.0]])
 
         np.testing.assert_allclose(inner1.output_port.parameters.value.get(outer), [30.0])
         np.testing.assert_allclose(inner2.output_port.parameters.value.get(outer), [180.0])
