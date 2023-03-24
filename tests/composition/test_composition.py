@@ -5036,7 +5036,7 @@ class TestNestedCompositions:
         comp_lvl1 = Composition(name="comp_lvl2", pathways=[comp_lvl2])
         comp_lvl0 = Composition(name="outer_comp", pathways=[comp_lvl1])
         ret = comp_lvl0.run(inputs={comp_lvl1: {comp_lvl2: {comp_lvl3a: [[1.0]], comp_lvl3b: [[1.0]]}}})
-        assert np.allclose(ret, [[[0.52497918747894]], [[0.52497918747894]]])
+        np.testing.assert_allclose(ret, [[0.52497918747894], [0.52497918747894]])
 
     @pytest.mark.state_features
     @pytest.mark.control
