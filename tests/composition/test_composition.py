@@ -7896,4 +7896,4 @@ class TestInputSpecsDocumentationExamples:
             call_after_trial=store_inputs
         )
 
-        np.testing.assert_allclose(check_inputs, [[[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]])
+        np.testing.assert_allclose(check_inputs, [[[1.0, 2.0, 3.0]], [[1.0, 2.0, 3.0]]])
