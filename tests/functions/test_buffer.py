@@ -104,7 +104,7 @@ class TestBuffer():
         val = benchmark(P.execute, 1.0)
 
         # NOTE: actual output is [0, [[1]]]
-        np.testing.assert_allclose(np.asfarray(val), [[0., 1.]])
+        np.testing.assert_allclose(np.asfarray(val, dtype=object), [0., 1.])
 
         # fails due to value and variable problems when Buffer is the function of a mechanism
         # P = ProcessingMechanism(function=Buffer(default_variable=[[0.0], [1.0], [2.0]],
