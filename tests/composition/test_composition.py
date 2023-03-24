@@ -299,7 +299,7 @@ class TestAddProjection:
         comp.add_node(B)
         comp.add_projection(sender=A, receiver=B)
         result = comp.run(inputs={A: [1.0]})
-        np.testing.assert_allclose(result, [[np.array([2.])]])
+        np.testing.assert_allclose(result, [np.array([2.])])
 
     def test_add_proj_missing_sender(self):
         comp = Composition()
@@ -2113,7 +2113,7 @@ class TestGraphCycles:
 
 
         output = comp.run(inputs={R1: [1.0]}, num_trials=3)
-        np.testing.assert_allclose(output, [[np.array([22.])]])
+        np.testing.assert_allclose(output, [np.array([22.])])
 
 @pytest.mark.pathways
 class TestExecutionOrder:
@@ -3225,7 +3225,7 @@ class TestRunInputSpecifications:
         inputs_dict = {A: [[5]]}
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched)
-        np.testing.assert_allclose([125], output)
+        np.testing.assert_allclose([[125]], output)
 
     def test_run_2_mechanisms_reuse_input(self):
         comp = Composition()
@@ -5314,7 +5314,7 @@ class TestCompositionInterface:
 
         output = comp.run(inputs=inputs_dict, scheduler=sched)
 
-        np.testing.assert_allclose([np.array([[250.]]), np.array([[250.]])], output)
+        np.testing.assert_allclose([np.array([250.])], output)
 
         # add a new branch to the composition
         F = TransferMechanism(name="composition-pytests-F", function=Linear(slope=2.0))

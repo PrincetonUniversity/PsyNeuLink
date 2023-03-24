@@ -136,8 +136,8 @@ class TestProcessingMechanismFunctions:
         PM2 = ProcessingMechanism(size=[2, 2, 2], function=LinearCombination, input_ports=['1', '2', '3'])
         PM1.execute([[1, 2, 3, 4], [5, 4, 2, 2]])
         PM2.execute([[2, 0], [1, 3], [1, 0]])
-        np.testing.assert_allclose(PM1.value, [6, 6, 5, 6])
-        np.testing.assert_allclose(PM2.value, [4, 3])
+        np.testing.assert_allclose(PM1.value, [[6, 6, 5, 6]])
+        np.testing.assert_allclose(PM2.value, [[4, 3]])
 
 class TestLinearMatrixFunction:
 
