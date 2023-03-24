@@ -556,7 +556,8 @@ class TestConnectCompositionsViaCIMS:
         icomp.add_linear_processing_pathway([ia, ib])
         ocomp.add_linear_processing_pathway([cm, icomp])
         res = ocomp.run([[2], [2], [2]])
-        np.testing.assert_allclose(res, [[4], [4], [4]])
+        np.testing.assert_allclose(res, [[4]])
+        np.testing.assert_allclose(ocomp.results, [[[4]], [[4]], [[4]]])
         assert len(ib.mod_afferents) == 1
         assert ib.mod_afferents[0].sender == icomp.parameter_CIM.output_port
         assert icomp.parameter_CIM_ports[ib.parameter_ports['slope']][0].path_afferents[0].sender == cm.output_port
