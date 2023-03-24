@@ -5819,7 +5819,7 @@ class TestInputSpecifications:
         inputs_dict = {A: [[5]]}
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched)
-        np.testing.assert_allclose([125], output)
+        np.testing.assert_allclose([[125]], output)
 
     def test_run_2_mechanisms_reuse_input(self):
         comp = Composition()
