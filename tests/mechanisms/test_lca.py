@@ -342,7 +342,7 @@ class TestClip:
                          leak=0.5,
                          function=Linear,
                          integrator_mode=False)
-        np.testing.assert_allclose(L.execute([3.0, 0.0, -3.0]), [2.0, 0.0, -2.0])
+        np.testing.assert_allclose(L.execute([3.0, 0.0, -3.0]), [[2.0, 0.0, -2.0]])
 
     def test_clip_2d_array(self):
         L = LCAMechanism(default_variable=[[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],

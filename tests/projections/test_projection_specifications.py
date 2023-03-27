@@ -52,7 +52,7 @@ class TestProjectionSpecificationFormats:
         # np.testing.assert_allclose(M3.efferents[1].matrix, M3_M4_matrix_B)
         c.run(inputs={M1:[2, -30]})
         # np.testing.assert_allclose(c.results, [[-130.19166667, -152.53333333, -174.875]])
-        np.testing.assert_allclose(c.results, [[ -78.115,  -91.52 , -104.925]])
+        np.testing.assert_allclose(c.results, [[[-78.115,  -91.52, -104.925]]])
 
     @pytest.mark.parametrize('args', [
         (pnl.CONTROL, None),

@@ -1487,7 +1487,7 @@ class TestIntegratorMode:
         C = Composition(pathways=[T])
         T.reset_stateful_function_when = Never()
 
-        np.testing.assert_allclose(T.integrator_function.previous_value, [0.5, 0.5, 0.5])
+        np.testing.assert_allclose(T.integrator_function.previous_value, [[0.5, 0.5, 0.5]])
 
         C.run(inputs={T: [1.0, 1.0, 1.0]}, num_trials=2)
         # Trial 1
@@ -1496,7 +1496,7 @@ class TestIntegratorMode:
         # Trial 2
         # integration: 0.9*0.55 + 0.1*1.0 + 0.0 = 0.595  --->  previous value = 0.595
         # linear fn: 0.595*1.0 = 0.595
-        np.testing.assert_allclose(T.integrator_function.parameters.previous_value.get(C), [0.595, 0.595, 0.595])
+        np.testing.assert_allclose(T.integrator_function.parameters.previous_value.get(C), [[0.595, 0.595, 0.595]])
 
         T.integrator_function.reset([0.9, 0.9, 0.9], context=C)
 
@@ -1776,7 +1776,7 @@ class TestClip:
                               clip=[-2.0, 2.0])
         EX = pytest.helpers.get_mech_execution(T, mech_mode)
 
-        np.testing.assert_allclose(EX([3.0, 0.0, -3.0]), [2.0, 0.0, -2.0])
+        np.testing.assert_allclose(EX([3.0, 0.0, -3.0]), [[2.0, 0.0, -2.0]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
