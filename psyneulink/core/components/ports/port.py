@@ -2295,6 +2295,16 @@ class Port_Base(Port):
         raise PortError(f"{self.__class__.__name__}s are not allowed to have 'efferents' "
                              f"(assignment attempted for {self.full_name}).")
 
+    def get_afferents(self, from_component=None):
+        return self._get_matching_projections(
+            from_component, self.all_afferents, filter_component_is_sender=True
+        )
+
+    def get_efferents(self, to_component=None):
+        return self._get_matching_projections(
+            to_component, self.efferents, filter_component_is_sender=False
+        )
+
     @property
     def full_name(self):
         """Return name relative to owner as:  <owner.name>[<self.name>]"""

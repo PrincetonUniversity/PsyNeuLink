@@ -3270,9 +3270,11 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
 
     .. math::
        previous\\_value + (decay \\cdot  previous\\_value) - (rate \\cdot variable) + \\mathcal{N}(\\sigma^2)
+
     where
-    ..  math::
-        \\sigma^2 =\\sqrt{time\\_step\\_size \\cdot noise}
+
+    .. math::
+       \\sigma^2 =\\sqrt{time\\_step\\_size \\cdot noise}
 
     *Modulatory Parameters:*
 

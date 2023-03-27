@@ -1929,7 +1929,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
             self.remove_ports(ctl_sig_attribute[0])
 
     # FIX: 11/15/21 SHOULDN'T THIS BE PUT ON COMPOSITION??
-    def _activate_projections_for_compositions(self, composition=None):
+    def _activate_projections_for_compositions(self, composition=None, context=None):
         """Activate eligible Projections to or from Nodes in Composition.
         If Projection is to or from a node NOT (yet) in the Composition,
         assign it the node's aux_components attribute but do not activate it.
@@ -1977,7 +1977,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
             proj._activate_for_compositions(composition)
 
         for proj in deeply_nested_aux_components.values():
-            composition.add_projection(proj, sender=proj.sender, receiver=proj.receiver)
+            composition.add_projection(proj, sender=proj.sender, receiver=proj.receiver, context=context)
 
         # Add any remaining afferent Projections that have been assigned and are from nodes in composition
         remaining_projections = set(self.projections) - dependent_projections - set(self.composition.projections)
