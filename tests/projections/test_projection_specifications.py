@@ -51,8 +51,8 @@ class TestProjectionSpecificationFormats:
         # This is if different Projections are allowed between the same sender and receiver in different Compositions:
         # assert np.allclose(M3.efferents[1].matrix, M3_M4_matrix_B)
         c.run(inputs={M1:[2, -30]})
-        # assert np.allclose(c.results, [[-130.19166667, -152.53333333, -174.875]])
-        assert np.allclose(c.results, [[ -78.115,  -91.52 , -104.925]])
+        # np.testing.assert_allclose(c.results, [[-130.19166667, -152.53333333, -174.875]])
+        np.testing.assert_allclose(c.results, [[[-78.115,  -91.52, -104.925]]])
 
     @pytest.mark.parametrize('args', [
         (pnl.CONTROL, None),

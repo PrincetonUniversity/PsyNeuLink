@@ -641,7 +641,7 @@ def test_udf_with_pnl_func():
     val1 = myMech.execute(input=[1, 2, 3])
     val2 = U.execute(variable=[[1, 2, 3]])
     assert np.allclose(val1, val2)
-    assert np.allclose(val1, L([1, 2, 3]) + 2)
+    np.testing.assert_allclose(val1, [L([1, 2, 3]) + 2])
 
 
 def test_udf_runtime_params_reset():

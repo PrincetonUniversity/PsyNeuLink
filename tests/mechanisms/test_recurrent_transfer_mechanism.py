@@ -995,7 +995,7 @@ class TestClip:
     def test_clip_array(self):
         R = RecurrentTransferMechanism(default_variable=[[0.0, 0.0, 0.0]],
                               clip=[-2.0, 2.0])
-        assert np.allclose(R.execute([3.0, 0.0, -3.0]), [2.0, 0.0, -2.0])
+        np.testing.assert_allclose(R.execute([3.0, 0.0, -3.0]), [[2.0, 0.0, -2.0]])
 
     def test_clip_2d_array(self):
         R = RecurrentTransferMechanism(default_variable=[[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
