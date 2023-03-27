@@ -2508,7 +2508,8 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         random_state = self._get_current_parameter_value("random_state", context)
 
         variable = self.parameters._parse_initializer(variable)
-        previous_value = self.parameters.previous_value._get(context)
+        previous_value = self.parameters._parse_initializer(self.parameters.previous_value._get(context))
+        previous_time = self.parameters._parse_initializer(self._get_current_parameter_value('previous_time', context))
 
         try:
             random_draw = params['random_draw']
@@ -2523,7 +2524,6 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         # If this NOT an initialization run, update the old value and time
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        previous_time = self._get_current_parameter_value('previous_time', context)
         if not self.is_initializing:
             previous_value = adjusted_value
             previous_time = previous_time + time_step_size
@@ -3579,7 +3579,10 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         time_step_size = self._get_current_parameter_value(TIME_STEP_SIZE, context)
         random_state = self._get_current_parameter_value('random_state', context)
 
-        previous_value = np.atleast_2d(self.parameters.previous_value._get(context))
+        previous_value = self.parameters.previous_value._get(context)
+
+        variable = self.parameters._parse_initializer(variable)
+        previous_value = self.parameters._parse_initializer(previous_value)
 
         random_normal = random_state.normal()
 
@@ -3596,11 +3599,6 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         if not self.is_initializing:
             previous_value = adjusted_value
             previous_time = previous_time + time_step_size
-            if not np.isscalar(variable):
-                previous_time = np.broadcast_to(
-                    previous_time,
-                    variable.shape
-                ).copy()
             self.parameters.previous_time._set(previous_time, context)
 
         self.parameters.previous_value._set(previous_value, context)
