@@ -840,7 +840,7 @@ class TestSimplifedNestedCompositionSyntax:
         # comp3:  input = 5.0   |  output = 180.0
 
         res = outer.run(inputs={inner1: [[5.]]})
-        np.testing.assert_allclose(res, [[[180.0]]])
+        np.testing.assert_allclose(res, [[180.0]])
 
         np.testing.assert_allclose(inner1.output_port.parameters.value.get(outer), [30.0])
         np.testing.assert_allclose(inner2.output_port.parameters.value.get(outer), [180.0])
