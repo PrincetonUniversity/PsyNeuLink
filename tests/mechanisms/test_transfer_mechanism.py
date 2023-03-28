@@ -1539,12 +1539,12 @@ class TestIntegratorMode:
         # Trial 2
         # integration: 0.9*0.55 + 0.1*1.0 + 0.0 = 0.595  --->  previous value = 0.595
         # linear fn: 0.595*1.0 = 0.595
-        assert np.allclose(T.integrator_function.parameters.previous_value.get(C), [0.595, 0.595, 0.595])
+        np.testing.assert_allclose(T.integrator_function.parameters.previous_value.get(C), [[0.595, 0.595, 0.595]])
 
         T.integrator_function.reset([0.9, 0.9, 0.9], context=C)
 
         assert np.allclose(T.integrator_function.parameters.previous_value.get(C), [0.9, 0.9, 0.9])
-        assert np.allclose(T.parameters.value.get(C), [0.595, 0.595, 0.595])
+        np.testing.assert_allclose(T.parameters.value.get(C), [[0.595, 0.595, 0.595]])
 
         T.reset(initial_val, context=C)
 
@@ -1558,7 +1558,7 @@ class TestIntegratorMode:
         # Trial 4
         # integration: 0.9*0.55 + 0.1*1.0 + 0.0 = 0.595  --->  previous value = 0.595
         # linear fn: 0.595*1.0 = 0.595
-        assert np.allclose(T.integrator_function.parameters.previous_value.get(C), [0.595, 0.595, 0.595])
+        np.testing.assert_allclose(T.integrator_function.parameters.previous_value.get(C), [[0.595, 0.595, 0.595]])
 
     def test_reset_not_integrator(self):
 
