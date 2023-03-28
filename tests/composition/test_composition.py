@@ -5821,7 +5821,7 @@ class TestInputSpecifications:
         inputs_dict = {A: [[5]]}
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched, num_trials=5)
-        assert np.allclose([125], output)
+        np.testing.assert_allclose([[125]], output)
 
     def test_some_inputs_not_specified(self):
         comp = Composition()
