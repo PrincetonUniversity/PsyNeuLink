@@ -252,8 +252,8 @@ class TestResetValues:
         output_after_reinitialization = [A.execute(1.0), A.execute(1.0)]
 
         assert np.allclose(output_after_saving_state, output_after_reinitialization)
-        assert np.allclose(original_output, [np.array([[1.0]]), np.array([[2.0]])])
-        assert np.allclose(output_after_reinitialization, [np.array([[3.0]]), np.array([[4.0]])])
+        np.testing.assert_allclose(original_output, np.array([[[1.0], [1.0]], [[2.0], [2.0]]]))
+        np.testing.assert_allclose(output_after_reinitialization, np.array([[[3.0], [3.0]], [[4.0], [4.0]]]))
 
     def test_reset_state_transfer_mechanism(self):
         A = pnl.TransferMechanism(name='A', integrator_mode=True)
