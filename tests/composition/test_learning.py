@@ -44,7 +44,7 @@ class TestTargetSpecs:
         # Confirm that targets are ignored in run (vs learn)
         comp.run(inputs={A: 1.0,
                          p.target:2.0})
-        np.testing.assert_allclose(comp.results, [[[1.]], [[1.]], [[1.]]])
+        np.testing.assert_allclose(comp.results, [[[1.]]])
         comp.learn(inputs={A: 1.0,
                            p.target:2.0})
         comp.learn(inputs={A: 1.0,
