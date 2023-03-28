@@ -181,8 +181,8 @@ class TestConnectCompositionsViaCIMS:
         # comp3:
         # input = 5.0
         # output = 180.0
-        res = comp3.run(inputs={comp1: [[5.]]}, execution_mode=comp_mode)
-        np.testing.assert_allclose(res, [[[180.0]]])
+        comp3.run(inputs={comp1: [[5.]]}, execution_mode=comp_mode)
+        np.testing.assert_allclose(comp3.results, [[[180.0]]])
         if comp_mode is pnlvm.ExecutionMode.Python:
             np.testing.assert_allclose(comp1.output_port.parameters.value.get(comp3), [30.0])
             np.testing.assert_allclose(comp2.output_port.parameters.value.get(comp3), [180.0])
