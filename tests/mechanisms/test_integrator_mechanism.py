@@ -66,33 +66,33 @@ class TestReset:
         I = IntegratorMechanism(name="I",
                                 function=DualAdaptiveIntegrator())
         I.reset_stateful_function_when = Never()
-        assert np.allclose([[0.0]], I.function.previous_short_term_avg)
-        assert np.allclose([[0.0]], I.function.previous_long_term_avg)
+        np.testing.assert_allclose([0.0], I.function.previous_short_term_avg)
+        np.testing.assert_allclose([0.0], I.function.previous_long_term_avg)
 
         I.function.reset(0.2, 0.8)
 
-        assert np.allclose([[0.2]], I.function.previous_short_term_avg)
-        assert np.allclose([[0.8]], I.function.previous_long_term_avg)
+        np.testing.assert_allclose([0.2], I.function.previous_short_term_avg)
+        np.testing.assert_allclose([0.8], I.function.previous_long_term_avg)
 
         I.function.reset()
 
-        assert np.allclose([[0.0]], I.function.previous_short_term_avg)
-        assert np.allclose([[0.0]], I.function.previous_long_term_avg)
+        np.testing.assert_allclose([0.0], I.function.previous_short_term_avg)
+        np.testing.assert_allclose([0.0], I.function.previous_long_term_avg)
 
         I.reset(0.3, 0.7)
 
-        assert np.allclose([[0.3]], I.function.previous_short_term_avg)
-        assert np.allclose([[0.7]], I.function.previous_long_term_avg)
+        np.testing.assert_allclose([0.3], I.function.previous_short_term_avg)
+        np.testing.assert_allclose([0.7], I.function.previous_long_term_avg)
         context = Context(execution_id=None)
         print(I.value)
         print(I.function._combine_terms(0.3, 0.7, context))
-        assert np.allclose(I.function._combine_terms(0.3, 0.7, context), I.value)
+        np.testing.assert_allclose([I.function._combine_terms(0.3, 0.7, context)], I.value)
 
         I.reset()
 
-        assert np.allclose([[0.0]], I.function.previous_short_term_avg)
-        assert np.allclose([[0.0]], I.function.previous_long_term_avg)
-        assert np.allclose(I.function._combine_terms(0.0, 0.0, context), I.value)
+        np.testing.assert_allclose([0.0], I.function.previous_short_term_avg)
+        np.testing.assert_allclose([0.0], I.function.previous_long_term_avg)
+        np.testing.assert_allclose([I.function._combine_terms(0.0, 0.0, context)], I.value)
 
     def test_Simple_valid(self):
         I = IntegratorMechanism(
