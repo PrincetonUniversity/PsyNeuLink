@@ -101,15 +101,15 @@ class TestReduce:
                                               default_variable=[[1, 2, 3, 4, 5]],
                                               name="R_mechanism")
 
-        assert np.allclose(R_function.execute([1, 2, 3, 4, 5]), [15.0])
-        assert np.allclose(R_function.execute([[1, 2, 3, 4, 5]]), [15.0])
-        assert np.allclose(R_function.execute([[[1, 2, 3, 4, 5]]]), [1, 2, 3, 4, 5])
-        # assert np.allclose(R_function.execute([[[1, 2, 3, 4, 5]]]), [15.0])
+        np.testing.assert_allclose(R_function.execute([1, 2, 3, 4, 5]), [15.0])
+        np.testing.assert_allclose(R_function.execute([[1, 2, 3, 4, 5]]), [15.0])
+        np.testing.assert_allclose(R_function.execute([[[1, 2, 3, 4, 5]]]), [[1, 2, 3, 4, 5]])
+        # np.testing.assert_allclose(R_function.execute([[[1, 2, 3, 4, 5]]]), [15.0])
 
-        assert np.allclose(R_mechanism.execute([1, 2, 3, 4, 5]), [[15.0]])
-        assert np.allclose(R_mechanism.execute([[1, 2, 3, 4, 5]]), [[15.0]])
-        assert np.allclose(R_mechanism.execute([1, 2, 3, 4, 5]), [15.0])
-        # assert np.allclose(R_mechanism.execute([[1, 2, 3, 4, 5]]), [15.0])
+        np.testing.assert_allclose(R_mechanism.execute([1, 2, 3, 4, 5]), [[15.0]])
+        np.testing.assert_allclose(R_mechanism.execute([[1, 2, 3, 4, 5]]), [[15.0]])
+        np.testing.assert_allclose(R_mechanism.execute([1, 2, 3, 4, 5]), [[15.0]])
+        # np.testing.assert_allclose(R_mechanism.execute([[1, 2, 3, 4, 5]]), [15.0])
 
     @pytest.mark.function
     @pytest.mark.combination_function
