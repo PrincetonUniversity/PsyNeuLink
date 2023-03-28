@@ -294,4 +294,5 @@ def test_linear_combination_function_in_mechanism(operation, input, input_ports,
     if operation == pnl.PRODUCT:
         expected = np.product(input, axis=0) * scale + offset
 
-    assert np.allclose(res, expected)
+    # expected is always 1d vs 2d return value res
+    np.testing.assert_allclose(res[0], expected)
