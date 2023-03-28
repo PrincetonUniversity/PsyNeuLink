@@ -119,9 +119,9 @@ class TestReduce:
 
         np.testing.assert_allclose(R_function.execute([[1], [2], [3], [4], [5]]), [1, 2, 3, 4, 5])
         # np.testing.assert_allclose(R_function.execute([[1], [2], [3], [4], [5]]), [15.0])
-        np.testing.assert_allclose(R_function.execute([[[1], [2], [3], [4], [5]]]), [15.0])
+        np.testing.assert_allclose(R_function.execute([[[1], [2], [3], [4], [5]]]), [[15.0]])
 
-        np.testing.assert_allclose(R_mechanism.execute([[1], [2], [3], [4], [5]]), [1, 2, 3, 4, 5])
+        np.testing.assert_allclose(R_mechanism.execute([[1], [2], [3], [4], [5]]), [[1, 2, 3, 4, 5]])
         # np.testing.assert_allclose(R_mechanism.execute([[1], [2], [3], [4], [5]]), [15.0])
 
     @pytest.mark.function
@@ -133,9 +133,10 @@ class TestReduce:
                                               name="R_mechanism")
 
         np.testing.assert_allclose(R_function.execute([[1, 2, 3], [4, 5, 6], [7, 8, 9]]), [6, 15, 24])
-        np.testing.assert_allclose(R_function.execute([[[1, 2, 3], [4, 5, 6], [7, 8, 9]]]), [12, 15, 18])
+        np.testing.assert_allclose(R_function.execute([[[1, 2, 3], [4, 5, 6], [7, 8, 9]]]), [[12, 15, 18]])
 
-        np.testing.assert_allclose(R_mechanism.execute([[1, 2, 3], [4, 5, 6], [7, 8, 9]]), [6, 15, 24])
+        # Mechanism returns a 2d array
+        np.testing.assert_allclose(R_mechanism.execute([[1, 2, 3], [4, 5, 6], [7, 8, 9]]), [[6, 15, 24]])
 
     # def test_heterogeneous_arrays(self):
     #     R_function = pnl.Reduce(operation=pnl.SUM)
