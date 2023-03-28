@@ -101,12 +101,12 @@ class TestReduce:
 
         np.testing.assert_allclose(R_function.execute([1, 2, 3, 4, 5]), [15.0])
         np.testing.assert_allclose(R_function.execute([[1, 2, 3, 4, 5]]), [15.0])
-        np.testing.assert_allclose(R_function.execute([[[1, 2, 3, 4, 5]]]), [1, 2, 3, 4, 5])
+        np.testing.assert_allclose(R_function.execute([[[1, 2, 3, 4, 5]]]), [[1, 2, 3, 4, 5]])
         # np.testing.assert_allclose(R_function.execute([[[1, 2, 3, 4, 5]]]), [15.0])
 
         np.testing.assert_allclose(R_mechanism.execute([1, 2, 3, 4, 5]), [[15.0]])
         np.testing.assert_allclose(R_mechanism.execute([[1, 2, 3, 4, 5]]), [[15.0]])
-        np.testing.assert_allclose(R_mechanism.execute([1, 2, 3, 4, 5]), [15.0])
+        np.testing.assert_allclose(R_mechanism.execute([1, 2, 3, 4, 5]), [[15.0]])
         # np.testing.assert_allclose(R_mechanism.execute([[1, 2, 3, 4, 5]]), [15.0])
 
     @pytest.mark.function
