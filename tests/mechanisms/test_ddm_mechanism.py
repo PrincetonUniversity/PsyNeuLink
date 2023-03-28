@@ -200,7 +200,7 @@ class TestInputPorts:
                            [[1.00000000e+00], [1.19932930e+00], [9.99664650e-01], [3.35350130e-04],
                             [1.19932930e+00], [2.48491374e-01], [1.48291009e+00], [1.19932930e+00],
                             [2.48491374e-01], [1.48291009e+00]])
-        np.testing.assert_allclose(result, [[1.]])
+        np.testing.assert_allclose(result, [[1.0], [1.0]])
 
     def test_array_mode(self):
         input_mech = ProcessingMechanism(size=2)
@@ -219,7 +219,7 @@ class TestInputPorts:
                            [[1.00000000e+00], [1.19932930e+00], [9.99664650e-01], [3.35350130e-04],
                             [1.19932930e+00], [2.48491374e-01], [1.48291009e+00], [1.19932930e+00],
                             [2.48491374e-01], [1.48291009e+00]])
-        np.testing.assert_allclose(result, [[1., 0.]])
+        np.testing.assert_allclose(result, [[1., 0.], [1.0, 0.0]])
 
 class TestOutputPorts:
 
