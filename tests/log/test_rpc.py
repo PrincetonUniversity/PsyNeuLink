@@ -575,7 +575,7 @@ class TestFullModels:
         actual = []
         while not pipeline.empty():
             actual.append(pipeline.get())
-        log_val = np.ndarray(shape=np.array(actual[0].value.shape), buffer=np.array(actual[0].value.data))
+        log_val = [np.ndarray(shape=np.array(actual[0].value.shape), buffer=np.array(actual[0].value.data))]
         expected_log_val = np.array(
             [
                 ['multilayer'],
