@@ -63,9 +63,10 @@ class TestOutputPorts:
         C.add_node(node=mech)
         C.termination_processing[pnl.TimeScale.TRIAL] = pnl.AtPass(2)
         outs = C.run(inputs={mech: var}, num_trials=2, execution_mode=comp_mode)
-        np.testing.assert_allclose(outs, expected1)
+        # outs is entire mechanism value, expected is output port value
+        np.testing.assert_allclose(outs[0], expected1)
         outs = C.run(inputs={mech: var}, num_trials=2, execution_mode=comp_mode)
-        np.testing.assert_allclose(outs, expected2)
+        np.testing.assert_allclose(outs[0], expected2)
 
     def test_no_path_afferents(self):
         A = pnl.OutputPort()
