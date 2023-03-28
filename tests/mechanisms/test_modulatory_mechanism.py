@@ -60,4 +60,4 @@ class TestControlMechanism:
         assert Tz.parameter_ports[SLOPE].mod_afferents[0].sender.owner == C
         # results are ordered Tz, Ty
         # Tz value is 1 on first trial because controller runs after
-        assert np.allclose(comp.results,[[[1.], [4.]], [[4.], [4.]]])
+        np.testing.assert_allclose(comp.results, [[[1.], [4.]], [[4.], [4.]]])
