@@ -159,7 +159,7 @@ class TestLCA:
         comp.add_node(lca)
 
         result = benchmark(comp.run, inputs={lca:[1,0]}, execution_mode=comp_mode)
-        assert np.allclose(result, [0.70005431, 0.29994569])
+        np.testing.assert_allclose(result, [[0.70005431, 0.29994569]])
 
     @pytest.mark.composition
     def test_LCAMechanism_threshold_with_max_vs_next(self):
