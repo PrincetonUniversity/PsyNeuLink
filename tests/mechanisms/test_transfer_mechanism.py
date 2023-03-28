@@ -435,7 +435,7 @@ class TestTransferMechanismFunctions:
         assert len(vals) == len(expected)
         # FIX: FOR PYTHON: val IS LIST WITH 1 ITEM OF LEN 4, BUT EXPECTS LIST WITH 4 1D LISTS
         for val, exp in zip(vals, expected):
-            assert np.allclose(val, [[exp]] * VECTOR_SIZE)
+            np.testing.assert_allclose(val, [[exp] * VECTOR_SIZE])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
