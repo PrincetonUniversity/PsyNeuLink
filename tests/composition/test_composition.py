@@ -3539,7 +3539,7 @@ class TestRun:
         inputs_dict = {A: [5]}
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched, num_trials=5, execution_mode=comp_mode)
-        assert np.allclose([125], output)
+        np.testing.assert_allclose([[125]], output)
 
     @pytest.mark.composition
     def test_run_2_mechanisms_double_trial_specs(self, comp_mode):
