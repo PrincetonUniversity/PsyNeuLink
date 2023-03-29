@@ -1146,7 +1146,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         if self._target_included:
             self.parameters.output_activity._set(self.input_ports[TARGET].socket_template, context)
 
-    @check_user_specified
     @beartype
     def _instantiate_recurrent_projection(self,
                                           mech: Mechanism,

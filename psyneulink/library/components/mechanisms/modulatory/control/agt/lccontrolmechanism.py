@@ -883,15 +883,13 @@ class LCControlMechanism(ControlMechanism):
 
     # 5/8/20: ELIMINATE SYSTEM
     # SEEMS TO STILL BE USED BY SOME MODELS;  DELETE WHEN THOSE ARE UPDATED
-    # @check_user_specified
-    @beartype
+    # @beartype
     # def _add_system(self, system, role:str):
     #     super()._add_system(system, role)
     #     if isinstance(self.modulated_mechanisms, str) and self.modulated_mechanisms == ALL:
     #         # Call with ContextFlags.COMPONENT so that OutputPorts are replaced rather than added
     #         self._instantiate_output_ports(context=Context(source=ContextFlags.COMPONENT))
 
-    @check_user_specified
     @beartype
     def add_modulated_mechanisms(self, mechanisms:list):
         """Add ControlProjections to the specified Mechanisms.

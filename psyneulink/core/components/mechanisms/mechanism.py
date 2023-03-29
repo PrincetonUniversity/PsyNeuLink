@@ -3732,7 +3732,6 @@ class Mechanism_Base(Mechanism):
         return {INPUT_PORTS: instantiated_input_ports,
                 OUTPUT_PORTS: instantiated_output_ports}
 
-    @check_user_specified
     @beartype
     def remove_ports(self, ports, context=REMOVE_PORTS):
         """
@@ -3904,10 +3903,8 @@ class Mechanism_Base(Mechanism):
             return self.input_ports.index(port)
         raise MechanismError("{} is not an InputPort of {}.".format(port.name, self.name))
 
-    # @check_user_specified
     @beartype
-    # def _get_port_value_labels(self, port_type: Union[InputPort, OutputPort]):
-    def _get_port_value_labels(self, port_type, context=None):
+    def _get_port_value_labels(self, port_type: Union[InputPort, OutputPort], context=None):
         """Return list of labels for the value of each Port of specified port_type.
         If the labels_dict has subdicts (one for each Port), get label for the value of each Port from its subdict.
         If the labels dict does not have subdicts, then use the same dict for the only (or all) Port(s)

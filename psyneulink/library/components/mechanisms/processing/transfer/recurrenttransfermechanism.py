@@ -1060,7 +1060,6 @@ class RecurrentTransferMechanism(TransferMechanism):
             return
 
     # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
-    @check_user_specified
     @beartype
     def _instantiate_recurrent_projection(self,
                                           mech: Mechanism_Base,

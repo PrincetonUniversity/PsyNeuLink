@@ -5156,7 +5156,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             break
         return external_modulators
 
-    @check_user_specified
     @beartype
     def _create_CIM_ports(self, context=None):
         """

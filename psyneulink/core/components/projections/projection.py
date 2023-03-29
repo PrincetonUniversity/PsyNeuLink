@@ -1868,7 +1868,6 @@ def _parse_connection_specs(connectee_port_type,
     return connect_with_ports
 
 
-@check_user_specified
 @beartype
 def _validate_connection_request(
         owner,  # Owner of Port seeking connection
