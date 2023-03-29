@@ -433,7 +433,7 @@ class GatingMechanism(ControlMechanism):
         )
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_gating_allocation=None,
                  size=None,

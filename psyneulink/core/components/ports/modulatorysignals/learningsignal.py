@@ -331,7 +331,7 @@ class LearningSignal(ModulatorySignal):
         learning_rate = None
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  owner=None,
                  reference_value=None,

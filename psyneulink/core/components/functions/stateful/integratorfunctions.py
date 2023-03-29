@@ -223,7 +223,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         initializer = Parameter(np.array([0]), pnl_internal=True)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  rate=None,
@@ -554,7 +554,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         increment = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  rate=None,
@@ -831,7 +831,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  rate: Optional[ValidParamSpecType] = None,
@@ -1067,7 +1067,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  rate=None,
@@ -1580,7 +1580,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
 
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  # rate: parameter_spec = 0.5,
@@ -2022,7 +2022,7 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
         min_val = Parameter(-1.0, function_arg=True)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  rate: Optional[ValidParamSpecType] = None,
@@ -2433,7 +2433,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
                 return initializer
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(
         self,
         default_variable=None,
@@ -3000,7 +3000,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
             return noise
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  rate: Optional[ValidParamSpecType] = None,
@@ -3514,7 +3514,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
 
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(
         self,
         default_variable=None,
@@ -3812,7 +3812,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         time_step_size = Parameter(0.1, modulable=True, function_arg=True)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  leak: Optional[ValidParamSpecType] = None,
@@ -4494,7 +4494,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         )
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  # scale=1.0,

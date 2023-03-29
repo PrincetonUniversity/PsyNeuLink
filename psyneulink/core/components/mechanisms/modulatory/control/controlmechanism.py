@@ -1212,7 +1212,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
             # validate_monitored_port_spec(self._owner, input_ports)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  size=None,

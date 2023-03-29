@@ -286,7 +286,7 @@ class PredictionErrorMechanism(ComparatorMechanism):
         target = None
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  sample: Optional[Union[OutputPort, Mechanism_Base, dict, NumericCollections, str]] = None,
                  target: Optional[Union[OutputPort, Mechanism_Base, dict, NumericCollections, str]] = None,

@@ -204,7 +204,7 @@ class OneHot(SelectionFunction):
                 return 'not one of {0}'.format(options)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  mode: Optional[Literal['MAX_VAL', 'MAX_ABS_VAL', 'MAX_INDICATOR', 'MAX_ABS_INDICATOR',

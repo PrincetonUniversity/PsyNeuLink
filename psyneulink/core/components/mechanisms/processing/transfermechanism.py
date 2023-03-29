@@ -1282,7 +1282,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                        f" {','.join(comparison_operators.keys())}."
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  size=None,

@@ -909,8 +909,7 @@ class Log:
             else:
                 assign_delivery_condition(item[0], item[1])
 
-    @check_user_specified
-    @tc.typecheck
+    @beartype
     @handle_external_context()
     def _deliver_values(self, entries, context=None):
         from psyneulink.core.globals.parameters import parse_context
@@ -944,8 +943,7 @@ class Log:
 
         context.source = original_source
 
-    @check_user_specified
-    @tc.typecheck
+    @beartype
     def _log_value(
             self,
             value,
@@ -1004,8 +1002,7 @@ class Log:
                 time = time or _get_time(self.owner, condition)
                 self.entries[self.owner.name] = LogEntry(time, condition_string, value)
 
-    @check_user_specified
-    @tc.typecheck
+    @beartype
     @handle_external_context()
     def log_values(self, entries, context=None):
         from psyneulink.core.globals.parameters import parse_context
@@ -1124,8 +1121,7 @@ class Log:
                     # MODIFIED 6/15/20 END
                 assert True
 
-    @check_user_specified
-    @tc.typecheck
+    @beartype
     def print_entries(self,
                       entries: Optional[Union[str, list, 'Component']] = 'all',
                       width: int = 120,
@@ -1300,8 +1296,8 @@ class Log:
                     if len(datum[eid]) > 1:
                         print("\n")
 
-    @check_user_specified
-    @tc.typecheck
+
+    @beartype
     def nparray(self,
                 entries=None,
                 header:bool=True,
@@ -1542,8 +1538,7 @@ class Log:
 
         return log_dict
 
-    @check_user_specified
-    @tc.typecheck
+    @beartype
     def csv(self, entries=None, owner_name: bool = False, quotes: Optional[Union[bool, str]] = "\'",
             contexts=NotImplemented, exclude_sims=False):
         """

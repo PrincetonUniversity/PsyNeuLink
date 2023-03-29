@@ -290,6 +290,10 @@ DISTANCE_METRICS_SET = DISTANCE_METRICS._set()
 DISTANCE_METRICS_VALUES = DISTANCE_METRICS._values()
 DISTANCE_METRICS_NAMES = DISTANCE_METRICS._names()
 
+ENERGY = 'energy'
+ENTROPY = 'entropy'
+CONVERGENCE = 'CONVERGENCE'
+
 
 class Loss(Enum):
     """Loss function used for `learning <Composition_Learning>`.

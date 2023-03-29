@@ -221,7 +221,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
 
     @handle_external_context()
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  rate=None,

@@ -229,7 +229,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
 
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  # FIX: 12/11/18 JDC - NOT SAFE TO SPECIFY A MUTABLE TYPE AS DEFAULT
                  default_variable=None,
@@ -1157,7 +1157,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             return initializer
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  # FIX: REINSTATE WHEN 3.6 IS RETIRED:
                  # default_variable=None,
@@ -2191,7 +2191,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
 
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  retrieval_prob: Optional[Union[int, float]] = None,
@@ -2633,8 +2633,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         ret_val[1] = list(memory[1])
         return ret_val
 
-    @check_user_specified
-    @tc.typecheck
+    @beartype
     def _validate_memory(self, memory: Union[list, np.ndarray], context):
 
         # memory must be list or 2d array with 2 items
@@ -2644,16 +2643,14 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
 
         self._validate_key(memory[KEYS], context)
 
-    @check_user_specified
-    @tc.typecheck
+    @beartype
     def _validate_key(self, key: Union[list, np.ndarray], context):
         # Length of key must be same as that of existing entries (so it can be matched on retrieval)
         if len(key) != self.parameters.key_size._get(context):
             raise FunctionError(f"Length of 'key' ({key}) to store in {self.__class__.__name__} ({len(key)}) "
                                 f"must be same as others in the dict ({self.parameters.key_size._get(context)})")
 
-    @check_user_specified
-    @tc.typecheck
+    @beartype
     @handle_external_context()
     def get_memory(self, query_key:Union[list, np.ndarray], context=None):
         """get_memory(query_key, context=None)
@@ -2724,8 +2721,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         # Return as list of lists
         return [list(best_match_key), list(best_match_val)]
 
-    @check_user_specified
-    @tc.typecheck
+    @beartype
     def _store_memory(self, memory:Union[list, np.ndarray], context):
         """Save an key-value pair to `memory <DictionaryMemory.memory>`
 
@@ -2784,8 +2780,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
 
         return storage_succeeded
 
-    @check_user_specified
-    @tc.typecheck
+    @beartype
     @handle_external_context()
     def add_to_memory(self, memories:Union[list, np.ndarray], context=None):
         """Add one or more key-value pairs into `memory <ContentAddressableMemory.memory>`
@@ -2804,8 +2799,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         for memory in memories:
             self._store_memory(memory, context)
 
-    @check_user_specified
-    @tc.typecheck
+    @beartype
     @handle_external_context()
     def delete_from_memory(self, memories:Union[list, np.ndarray], key_only:bool= True, context=None):
         """Delete one or more key-value pairs from `memory <ContentAddressableMememory.memory>`

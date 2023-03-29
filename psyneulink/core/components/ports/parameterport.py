@@ -699,7 +699,7 @@ class ParameterPort(Port_Base):
     #endregion
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  owner,
                  reference_value=None,
@@ -801,8 +801,7 @@ class ParameterPort(Port_Base):
     def _get_all_projections(self):
         return self.mod_afferents
 
-    @check_user_specified
-    @tc.typecheck
+    @beartype
     def _parse_port_specific_specs(self, owner, port_dict, port_specific_spec):
         """Get connections specified in a ParameterPort specification tuple
 

@@ -2777,7 +2777,7 @@ from psyneulink.core.components.component import Component, ComponentError, Comp
 from psyneulink.core.components.functions.fitfunctions import make_likelihood_function
 from psyneulink.core.components.functions.function import is_function_type, Function, RandomMatrix
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import \
-    LinearCombination, PredictionErrorDeltaFunction
+        LinearCombination, PredictionErrorDeltaFunction
 from psyneulink.core.components.functions.nonstateful.learningfunctions import \
     LearningFunction, Reinforcement, BackPropagation, TDLearning
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity, Logistic, SoftMax
@@ -5157,7 +5157,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return external_modulators
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def _create_CIM_ports(self, context=None):
         """
             - remove the default InputPort and OutputPort from the CIMs if this is the first time that real
@@ -7413,7 +7413,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                            learning_rate: float = 0.05,
                                            error_function: Optional[Function] = None,
                                            learning_update: Union[bool, Literal['online', 'after']] = 'online',
-                                           default_projection_matrix=None,
+                                                                                      default_projection_matrix=None,
                                            name: str = None):
         """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`Reinforcement`
 

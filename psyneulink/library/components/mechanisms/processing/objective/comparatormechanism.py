@@ -335,7 +335,7 @@ class ComparatorMechanism(ObjectiveMechanism):
     standard_output_port_names.extend([SUM, Loss.SSE.name, Loss.MSE.name])
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  sample: Optional[Union[OutputPort, Mechanism_Base, dict, NumericCollections, str]] = None,

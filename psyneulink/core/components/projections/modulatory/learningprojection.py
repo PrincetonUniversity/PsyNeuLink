@@ -438,7 +438,7 @@ class LearningProjection(ModulatoryProjection_Base):
     projection_sender = LearningMechanism
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  sender: Optional[Union[LearningSignal, LearningMechanism]] = None,
                  receiver: Optional[Union[ParameterPort, MappingProjection]] = None,

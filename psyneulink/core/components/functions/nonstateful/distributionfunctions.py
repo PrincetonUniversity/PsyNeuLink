@@ -162,7 +162,7 @@ class NormalDist(DistributionFunction):
         seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  mean=None,
@@ -345,7 +345,7 @@ class UniformToNormalDist(DistributionFunction):
         standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  mean=None,
@@ -472,7 +472,7 @@ class ExponentialDist(DistributionFunction):
         seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  beta=None,
@@ -599,7 +599,7 @@ class UniformDist(DistributionFunction):
         seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  low=None,
@@ -757,7 +757,7 @@ class GammaDist(DistributionFunction):
         dist_shape = Parameter(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  scale=None,
@@ -892,7 +892,7 @@ class WaldDist(DistributionFunction):
         mean = Parameter(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  scale=None,
@@ -1129,7 +1129,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         )
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  drift_rate: Optional[ValidParamSpecType] = None,

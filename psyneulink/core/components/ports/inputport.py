@@ -873,7 +873,7 @@ class InputPort(Port_Base):
 
     @handle_external_context()
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  owner=None,
                  reference_value=None,
@@ -1112,8 +1112,7 @@ class InputPort(Port_Base):
     def _get_all_projections(self):
         return self._get_all_afferents()
 
-    @check_user_specified
-    @tc.typecheck
+    @beartype
     def _parse_port_specific_specs(self, owner, port_dict, port_specific_spec):
         """Get weights, exponents and/or any connections specified in an InputPort specification tuple
 

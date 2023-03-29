@@ -662,7 +662,7 @@ class LCControlMechanism(ControlMechanism):
         modulated_mechanisms = Parameter(None, stateful=False, loggable=False)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  objective_mechanism: Optional[Union[ObjectiveMechanism, list]] = None,
@@ -884,7 +884,7 @@ class LCControlMechanism(ControlMechanism):
     # 5/8/20: ELIMINATE SYSTEM
     # SEEMS TO STILL BE USED BY SOME MODELS;  DELETE WHEN THOSE ARE UPDATED
     # @check_user_specified
-    @tc.typecheck
+    @beartype
     # def _add_system(self, system, role:str):
     #     super()._add_system(system, role)
     #     if isinstance(self.modulated_mechanisms, str) and self.modulated_mechanisms == ALL:
@@ -892,7 +892,7 @@ class LCControlMechanism(ControlMechanism):
     #         self._instantiate_output_ports(context=Context(source=ContextFlags.COMPONENT))
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def add_modulated_mechanisms(self, mechanisms:list):
         """Add ControlProjections to the specified Mechanisms.
         """
@@ -912,7 +912,7 @@ class LCControlMechanism(ControlMechanism):
             #                                              receiver=parameter_port))
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def remove_modulated_mechanisms(self, mechanisms:list):
         """Remove the ControlProjections to the specified Mechanisms.
         """

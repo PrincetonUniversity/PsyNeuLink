@@ -90,7 +90,7 @@ class DefaultControlMechanism(ControlMechanism):
     #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  objective_mechanism: Optional[Union[ObjectiveMechanism, list]] = None,
                  control_signals: Optional[list] = None,

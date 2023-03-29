@@ -1003,7 +1003,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         )
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  # default_variable:Union[list, np.ndarray],
                  default_variable=None,

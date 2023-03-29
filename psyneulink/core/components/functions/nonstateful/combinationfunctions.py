@@ -204,7 +204,7 @@ class Concatenate(CombinationFunction):  # -------------------------------------
         changes_shape = Parameter(True, stateful=False, loggable=False, pnl_internal=True)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  scale: Optional[ValidParamSpecType] = None,
@@ -424,7 +424,7 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  scale: Optional[ValidParamSpecType] = None,
@@ -728,7 +728,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         changes_shape = Parameter(True, stateful=False, loggable=False, pnl_internal=True)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  # weights:  Optional[ValidParamSpecType] = None,
                  # exponents:  Optional[ValidParamSpecType] = None,
@@ -1177,14 +1177,14 @@ class LinearCombination(
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  # weights:  Optional[ValidParamSpecType] = None,
                  # exponents:  Optional[ValidParamSpecType] = None,
                  weights=None,
                  exponents=None,
-                 operation: Optional[Literal['sum', 'product', 'cross_entropy']] = None,
+                 operation: Optional[Literal['sum', 'product', 'cross-entropy']] = None,
                  scale=None,
                  offset=None,
                  params=None,
@@ -1716,7 +1716,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  # weights: Optional[ValidParamSpecType] = None,
@@ -1976,7 +1976,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
         gamma = Parameter(1.0, modulable=True)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  gamma: Optional[float] = None,

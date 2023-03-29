@@ -437,7 +437,7 @@ class LCAMechanism(RecurrentTransferMechanism):
                                     FUNCTION:max_vs_avg}])
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  size: Optional[Union[int, list, np.ndarray]] = None,

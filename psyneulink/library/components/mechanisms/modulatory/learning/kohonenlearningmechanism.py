@@ -318,7 +318,7 @@ class KohonenLearningMechanism(LearningMechanism):
         modulation = ADDITIVE
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable: Union[list, np.ndarray],
                  size=None,

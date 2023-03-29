@@ -1186,8 +1186,7 @@ ProjSpecType = Union[
 ProjSpecTypeWithTuple = Union[ProjSpecType, Tuple[ProjSpecType, Union[Literal['MappingProjection']]]]
 
 
-@check_user_specified
-    @tc.typecheck
+@beartype
 def _is_projection_spec(spec, proj_type: Optional[Type] = None, include_matrix_spec=True):
     """Evaluate whether spec is a valid Projection specification
 
@@ -1870,7 +1869,7 @@ def _parse_connection_specs(connectee_port_type,
 
 
 @check_user_specified
-    @tc.typecheck
+@beartype
 def _validate_connection_request(
         owner,  # Owner of Port seeking connection
         connect_with_ports: list,  # Port to which connection is being sought
@@ -2032,7 +2031,7 @@ def _get_projection_value_shape(sender, matrix):
 
 # IMPLEMENTATION NOTE: MOVE THIS TO ModulatorySignals WHEN THAT IS IMPLEMENTED
 @check_user_specified
-    @tc.typecheck
+@beartype
 def _validate_receiver(sender_mech:Mechanism,
                        projection:Projection,
                        expected_owner_type:type,

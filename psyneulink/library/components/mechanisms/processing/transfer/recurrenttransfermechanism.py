@@ -643,7 +643,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     standard_output_port_names.extend([ENERGY_OUTPUT_PORT_NAME, ENTROPY_OUTPUT_PORT_NAME])
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  size=None,
@@ -1061,7 +1061,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def _instantiate_recurrent_projection(self,
                                           mech: Mechanism_Base,
                                           # this typecheck was failing, I didn't want to fix (7/19/17 CW)

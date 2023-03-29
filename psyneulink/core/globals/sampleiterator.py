@@ -150,8 +150,7 @@ class SampleSpec():
 
     """
 
-    @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  start: Optional[Union[int, float]] = None,
                  stop: Optional[Union[int, float]] = None,

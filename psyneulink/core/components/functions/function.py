@@ -1196,7 +1196,7 @@ class EVCAuxiliaryFunction(Function_Base):
        }
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  function,
                  variable=None,

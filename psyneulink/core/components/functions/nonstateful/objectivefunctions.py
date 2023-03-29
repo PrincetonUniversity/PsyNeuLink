@@ -208,7 +208,7 @@ class Stability(ObjectiveFunction):
         normalize = Parameter(False, stateful=False)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  size=None,
@@ -784,7 +784,7 @@ class Distance(ObjectiveFunction):
         metric = Parameter(DIFFERENCE, stateful=False)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  metric: Optional[DistanceMetricLiteral] = None,

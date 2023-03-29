@@ -220,7 +220,7 @@ class Identity(TransferFunction):  # -------------------------------------------
     }
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  params=None,
@@ -388,7 +388,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
         intercept = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  slope: Optional[ValidParamSpecType] = None,
@@ -650,7 +650,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
         bounds = (0, None)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  rate: Optional[ValidParamSpecType] = None,
@@ -941,7 +941,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
         bounds = (0, 1)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  gain: Optional[ValidParamSpecType] = None,
@@ -1261,7 +1261,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         bounds = (0, 1)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  gain: Optional[ValidParamSpecType] = None,
@@ -1526,7 +1526,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         bounds = (None, None)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  gain: Optional[ValidParamSpecType] = None,
@@ -1744,7 +1744,7 @@ class Angle(TransferFunction):  # ----------------------------------------------
                 return f"must be list or 1d array of length 2 or greater."
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  params=None,
@@ -2035,7 +2035,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         bounds = (None, None)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  standard_deviation: Optional[ValidParamSpecType] = None,
@@ -2309,7 +2309,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         bounds = (None, None)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  variance: Optional[ValidParamSpecType] = None,
@@ -2590,7 +2590,7 @@ class SoftMax(TransferFunction):
                 return 'not one of {0}'.format(options)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  gain: Optional[ValidParamSpecType] = None,
@@ -3058,7 +3058,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     #     return False
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  matrix=None,
@@ -4064,7 +4064,7 @@ class TransferWithCosts(TransferFunction):
         )
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  size=None,
@@ -4277,8 +4277,7 @@ class TransferWithCosts(TransferFunction):
             and enabled_cost_functions == CostFunctions.NONE
         )
 
-    @check_user_specified
-    @tc.typecheck
+    @beartype
     def assign_costs(self, cost_functions: Union[CostFunctions, list], execution_context=None):
         """Assigns specified functions; all others are disabled.
 
@@ -4297,8 +4296,7 @@ class TransferWithCosts(TransferFunction):
         self.parameters.enabled_cost_functions.set(CostFunctions.NONE, execution_context)
         return self.enable_costs(cost_functions, execution_context)
 
-    @check_user_specified
-    @tc.typecheck
+    @beartype
     def enable_costs(self, cost_functions: Union[CostFunctions, list], execution_context=None):
         """Enable specified `cost functions <TransferWithCosts_Cost_Functions>`;
         settings for all other cost functions are left intact.
@@ -4322,8 +4320,7 @@ class TransferWithCosts(TransferFunction):
         self.parameters.enabled_cost_functions.set(enabled_cost_functions, execution_context)
         return enabled_cost_functions
 
-    @check_user_specified
-    @tc.typecheck
+    @beartype
     def disable_costs(self, cost_functions: Union[CostFunctions, list], execution_context=None):
         """Disable specified `cost functions <TransferWithCosts_Cost_Functions>`;
         settings for all other cost functions are left intact.

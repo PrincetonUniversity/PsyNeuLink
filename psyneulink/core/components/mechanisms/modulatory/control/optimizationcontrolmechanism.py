@@ -1738,7 +1738,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
     @handle_external_context()
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  agent_rep=None,
                  state_features: Optional[Union[str, Iterable, InputPort, OutputPort, Mechanism]] = SHADOW_INPUTS,
