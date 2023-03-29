@@ -325,7 +325,8 @@ class ComparatorMechanism(ObjectiveMechanism):
     standard_output_port_names = ObjectiveMechanism.standard_output_port_names.copy()
     standard_output_port_names.extend([SSE, MSE])
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  sample: Optional[Union[OutputPort, Mechanism_Base, dict, NumericCollections, str]] = None,

@@ -246,7 +246,8 @@ class AGTControlMechanism(ControlMechanism):
     #     PREFERENCE_SET_NAME: 'ControlMechanismClassPreferences',
     #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(self,
                  monitored_output_ports=None,
                  function=None,

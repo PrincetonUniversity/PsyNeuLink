@@ -172,7 +172,8 @@ class MaskedMappingProjection(MappingProjection):
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(self,
                  sender=None,
                  receiver=None,

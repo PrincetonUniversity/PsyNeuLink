@@ -55,7 +55,8 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
     class Parameters(Mechanism_Base.Parameters):
         variable = Parameter(np.array([SystemDefaultInputValue]), constructor_argument='default_variable')
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  size=None,

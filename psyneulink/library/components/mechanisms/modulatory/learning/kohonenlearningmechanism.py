@@ -321,7 +321,8 @@ class KohonenLearningMechanism(LearningMechanism):
         learning_timing = LearningTiming.EXECUTION_PHASE
         modulation = ADDITIVE
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(self,
                  default_variable: Union[list, np.ndarray],
                  size=None,

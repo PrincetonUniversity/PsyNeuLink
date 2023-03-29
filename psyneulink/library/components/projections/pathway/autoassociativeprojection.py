@@ -238,7 +238,8 @@ class AutoAssociativeProjection(MappingProjection):
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(self,
                  owner=None,
                  sender=None,

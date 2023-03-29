@@ -794,7 +794,8 @@ class ControlSignal(ModulatorySignal):
 
     #endregion
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(self,
                  owner=None,
                  reference_value=None,

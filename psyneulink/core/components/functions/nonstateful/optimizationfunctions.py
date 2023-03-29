@@ -406,7 +406,8 @@ class OptimizationFunction(Function_Base):
         saved_samples = Parameter([], read_only=True, pnl_internal=True)
         saved_values = Parameter([], read_only=True, pnl_internal=True)
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(
         self,
         default_variable=None,
@@ -1086,7 +1087,8 @@ class GradientOptimization(OptimizationFunction):
             else:
                 return -1
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  objective_function: Optional[Callable] = None,
@@ -1488,7 +1490,8 @@ class GridSearch(OptimizationFunction):
 
     # TODO: should save_values be in the constructor if it's ignored?
     # is False or True the correct value?
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  objective_function: Optional[Callable] = None,
@@ -2200,7 +2203,8 @@ class GaussianProcess(OptimizationFunction):
 
     # TODO: should save_values be in the constructor if it's ignored?
     # is False or True the correct value?
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  objective_function: Optional[Callable] = None,
@@ -2460,7 +2464,8 @@ class ParamEstimationFunction(OptimizationFunction):
         save_samples = True
         save_values = True
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(self,
                  priors,
                  observed,

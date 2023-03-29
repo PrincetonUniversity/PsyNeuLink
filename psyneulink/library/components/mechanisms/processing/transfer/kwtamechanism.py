@@ -345,7 +345,8 @@ class KWTAMechanism(RecurrentTransferMechanism):
         average_based = False
         inhibition_only = True
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  size=None,
@@ -658,7 +659,8 @@ class KWTAMechanism(RecurrentTransferMechanism):
         # return output_vector
         # #endregion
 
-    # @beartype
+    # @check_user_specified
+    @tc.typecheck
     # def _instantiate_recurrent_projection(self,
     #                                       mech: Mechanism_Base,
     #                                       matrix=FULL_CONNECTIVITY_MATRIX,

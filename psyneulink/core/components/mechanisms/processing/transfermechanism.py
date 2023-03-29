@@ -1285,7 +1285,8 @@ class TransferMechanism(ProcessingMechanism_Base):
                 return f"must be boolean comparison operator or one of the following strings:" \
                        f" {','.join(comparison_operators.keys())}."
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  size=None,

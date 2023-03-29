@@ -215,7 +215,8 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                 return 'functions in a list must be instantiated and have the desired noise variable shape'
 
     @handle_external_context()
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  rate=None,

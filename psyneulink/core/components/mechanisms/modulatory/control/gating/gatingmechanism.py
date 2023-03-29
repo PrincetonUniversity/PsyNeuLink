@@ -435,7 +435,8 @@ class GatingMechanism(ControlMechanism):
             constructor_argument='gate'
         )
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(self,
                  default_gating_allocation=None,
                  size=None,

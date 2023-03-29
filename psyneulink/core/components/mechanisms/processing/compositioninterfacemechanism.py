@@ -176,7 +176,8 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         """
         function = Parameter(Identity, stateful=False, loggable=False)
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  size=None,

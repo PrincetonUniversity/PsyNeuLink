@@ -154,7 +154,8 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         function = Parameter(AdaptiveIntegrator(rate=0.5), stateful=False, loggable=False)
 
         #
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  size=None,

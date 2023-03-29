@@ -239,7 +239,8 @@ class ControlProjection(ModulatoryProjection_Base):
 
     projection_sender = ControlMechanism
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(self,
                  sender=None,
                  receiver=None,

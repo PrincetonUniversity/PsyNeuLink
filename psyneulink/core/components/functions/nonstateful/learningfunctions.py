@@ -1935,7 +1935,8 @@ class BackPropagation(LearningFunction):
 
     default_learning_rate = 1.0
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  activation_derivative_fct: Optional[Union[types.FunctionType, types.MethodType]]=None,

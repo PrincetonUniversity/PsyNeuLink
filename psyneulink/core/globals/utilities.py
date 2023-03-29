@@ -687,7 +687,8 @@ def powerset(iterable):
     s = list(iterable)
     return chain.from_iterable(combinations(s, r) for r in range(len(s) + 1))
 
-@beartype
+@check_user_specified
+    @tc.typecheck
 def tensor_power(items, levels: Optional[range] = None, flat=False):
     """return tensor product for all members of powerset of items
 
@@ -1702,7 +1703,8 @@ def safe_equals(x, y):
                 )
 
 
-@beartype
+@check_user_specified
+    @tc.typecheck
 def _get_arg_from_stack(arg_name:str):
     # Get arg from the stack
 

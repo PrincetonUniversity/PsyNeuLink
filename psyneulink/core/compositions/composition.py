@@ -5081,7 +5081,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             break
         return external_modulators
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def _create_CIM_ports(self, context=None):
         """
             - remove the default InputPort and OutputPort from the CIMs if this is the first time that real

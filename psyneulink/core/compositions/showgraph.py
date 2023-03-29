@@ -474,7 +474,8 @@ class ShowGraph():
         self.learning_rank = learning_rank
         self.output_rank = output_rank
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     @handle_external_context(source=ContextFlags.COMPOSITION)
     def show_graph(self,
                    show_all: bool = False,
@@ -2165,7 +2166,8 @@ class ShowGraph():
                        color=learning_proj_color, penwidth=learning_proj_width)
         return True
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def _assign_incoming_edges(self,
                                g,
                                rcvr,

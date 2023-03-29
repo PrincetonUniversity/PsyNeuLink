@@ -284,7 +284,8 @@ class ProcessingMechanism(ProcessingMechanism_Base):
         PREFERENCE_SET_NAME: 'ProcessingMechanismCustomClassPreferences',
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  size=None,

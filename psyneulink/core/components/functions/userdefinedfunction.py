@@ -452,7 +452,8 @@ class UserDefinedFunction(Function_Base):
             pnl_internal=True,
         )
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(self,
                  custom_function=None,
                  default_variable=None,

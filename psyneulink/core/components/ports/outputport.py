@@ -907,7 +907,8 @@ class OutputPort(Port_Base):
 
     #endregion
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     @handle_external_context()
     def __init__(self,
                  owner=None,
@@ -1065,7 +1066,8 @@ class OutputPort(Port_Base):
     def _parse_function_variable(self, variable, context=None):
         return _parse_output_port_variable(variable, self.owner)
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def _parse_port_specific_specs(self, owner, port_dict, port_specific_spec):
         """Get variable spec and/or connections specified in an OutputPort specification tuple
 
@@ -1539,7 +1541,8 @@ class StandardOutputPorts():
 
     keywords = {PRIMARY, SEQUENTIAL, ALL}
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(self,
                  owner: Component,
                  output_port_dicts: list,
@@ -1631,12 +1634,14 @@ class StandardOutputPorts():
 
         return dict_list
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def add_port_dicts(self, output_port_dicts: list, indices: Optional[Union[int, str, list]] = None):
         self.data.extend(self._instantiate_std_port_list(output_port_dicts, indices))
         assert True
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def get_port_dict(self, name:str):
         """Return a copy of the named OutputPort dict
         """
@@ -1647,7 +1652,8 @@ class StandardOutputPorts():
         #                                 format(name, StandardOutputPorts.__class__.__name__, self.owner.name))
         return None
 
-    # @beartype
+    # @check_user_specified
+    @tc.typecheck
     # def get_dict(self, name:str):
     #     return self.data[self.names.index(name)].copy()
     #
@@ -1694,7 +1700,8 @@ def _parse_output_port_function(owner, output_port_name, function, params_dict_a
             return lambda x: function(x[OWNER_VALUE][0])
     return function
 
-@beartype
+@check_user_specified
+    @tc.typecheck
 def _maintain_backward_compatibility(d:dict, name, owner):
     """Maintain compatibility with use of INDEX, ASSIGN and CALCULATE in OutputPort specification"""
 

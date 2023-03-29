@@ -1741,7 +1741,8 @@ class OptimizationControlMechanism(ControlMechanism):
                        f"with a shape appropriate for all of the INPUT Nodes or InputPorts to which it will be applied."
 
     @handle_external_context()
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(self,
                  agent_rep=None,
                  state_features: Optional[Union[str, Iterable, InputPort, OutputPort, Mechanism]] = SHADOW_INPUTS,

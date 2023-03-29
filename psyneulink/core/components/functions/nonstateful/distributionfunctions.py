@@ -161,7 +161,8 @@ class NormalDist(DistributionFunction):
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  mean=None,
@@ -343,7 +344,8 @@ class UniformToNormalDist(DistributionFunction):
         mean = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  mean=None,
@@ -469,7 +471,8 @@ class ExponentialDist(DistributionFunction):
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  beta=None,
@@ -595,7 +598,8 @@ class UniformDist(DistributionFunction):
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  low=None,
@@ -752,7 +756,8 @@ class GammaDist(DistributionFunction):
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         dist_shape = Parameter(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  scale=None,
@@ -886,7 +891,8 @@ class WaldDist(DistributionFunction):
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         mean = Parameter(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  scale=None,
@@ -1122,7 +1128,8 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
             read_only=True
         )
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  drift_rate: Optional[ValidParamSpecType] = None,

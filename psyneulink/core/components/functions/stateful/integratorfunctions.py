@@ -222,7 +222,8 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         previous_value = Parameter(np.array([0]), initializer='initializer')
         initializer = Parameter(np.array([0]), pnl_internal=True)
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  rate=None,
@@ -552,7 +553,8 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM], function_arg=True)
         increment = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  rate=None,
@@ -828,7 +830,8 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
         rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM], function_arg=True)
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  rate: Optional[ValidParamSpecType] = None,
@@ -1063,7 +1066,8 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM], function_arg=True)
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  rate=None,
@@ -1575,7 +1579,8 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
         long_term_logistic = None
 
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  # rate: parameter_spec = 0.5,
@@ -2016,7 +2021,8 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
         max_val = Parameter(1.0, function_arg=True)
         min_val = Parameter(-1.0, function_arg=True)
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  rate: Optional[ValidParamSpecType] = None,
@@ -2420,7 +2426,8 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
             else:
                 return initializer
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(
         self,
         default_variable=None,
@@ -2944,7 +2951,8 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
                 noise = np.array(noise)
             return noise
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  rate: Optional[ValidParamSpecType] = None,
@@ -3450,7 +3458,8 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
             read_only=True
         )
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(
         self,
         default_variable=None,
@@ -3744,7 +3753,8 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
         time_step_size = Parameter(0.1, modulable=True, function_arg=True)
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  leak: Optional[ValidParamSpecType] = None,
@@ -4425,7 +4435,8 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
             read_only=True
         )
 
-    @beartype
+    @check_user_specified
+    @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  # scale=1.0,
