@@ -7206,14 +7206,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     # region ------------------------------------ LEARNING -------------------------------------------------------------
 
+    @beartype
     @handle_external_context()
     def add_linear_learning_pathway(self,
                                     pathway,
                                     learning_function: LearningFunction,
-                                    loss_function=None,
+                                    loss_function: Loss = Loss.MSE,
                                     learning_rate: Union[int, float] = 0.05,
                                     error_function=LinearCombination,
-                                    learning_update: Union[bool, Literal['before', 'after']] = 'after',
+                                    learning_update: Union[bool, Literal['online', 'after']] = 'after',
                                     default_projection_matrix=None,
                                     name: str = None,
                                     context=None):
@@ -7407,12 +7408,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._analyze_graph()
         return learning_pathway
 
+    @beartype
     def add_reinforcement_learning_pathway(self,
                                            pathway: list,
                                            learning_rate: float = 0.05,
                                            error_function: Optional[Function] = None,
                                            learning_update: Union[bool, Literal['online', 'after']] = 'online',
-                                                                                      default_projection_matrix=None,
+                                           default_projection_matrix=None,
                                            name: str = None):
         """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`Reinforcement`
 
@@ -7462,6 +7464,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                 default_projection_matrix=default_projection_matrix,
                                                 name=name)
 
+    @beartype
     def add_td_learning_pathway(self,
                                 pathway: list,
                                 learning_rate: float = 0.05,
@@ -7516,11 +7519,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                 default_projection_matrix=default_projection_matrix,
                                                 name=name)
 
+    @beartype
     def add_backpropagation_learning_pathway(self,
                                              pathway: list,
                                              learning_rate: float = 0.05,
                                              error_function: Optional[Function] = None,
-                                             loss_function: Literal['MSE', 'SSE'] = 'MSE',
+                                             loss_function: Loss = Loss.MSE,
                                              learning_update: Optional[Union[bool, Literal['online', 'after']]] = 'after',
                                              default_projection_matrix=None,
                                              name: str = None):
@@ -8350,8 +8354,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # region ------------------------------------- CONTROL -------------------------------------------------------------
     # ******************************************************************************************************************
 
+    @beartype
     @handle_external_context()
-    def add_controller(self, controller:ControlMechanism, context=None):
+    def add_controller(self, controller: ControlMechanism, context=None):
         """
         Add a `ControlMechanism` as the `controller <Composition.controller>` of the Composition.
 
