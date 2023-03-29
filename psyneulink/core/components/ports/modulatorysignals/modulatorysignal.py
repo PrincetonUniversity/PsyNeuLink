@@ -407,11 +407,13 @@ Class Reference
 
 from psyneulink.core.components.component import component_keywords
 from psyneulink.core.components.ports.outputport import OutputPort
+from psyneulink.core.components.ports.port import PortError
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultModulatoryAllocation
 from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, CONTROL, DISABLE, MAYBE, MECHANISM, MODULATION, MODULATORY_SIGNAL, MULTIPLICATIVE_PARAM, \
     OVERRIDE, PROJECTIONS, VARIABLE
+from psyneulink.core.globals.parameters import check_user_specified
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
 __all__ = [
@@ -438,12 +440,8 @@ modulatory_signal_keywords.update(component_keywords)
 modulation_type_keywords = [MULTIPLICATIVE_PARAM, ADDITIVE_PARAM, OVERRIDE, DISABLE]
 
 
-class ModulatorySignalError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class ModulatorySignalError(PortError):
+    pass
 
 
 class ModulatorySignal(OutputPort):
@@ -562,6 +560,7 @@ class ModulatorySignal(OutputPort):
     #     PREFERENCE_SET_NAME: 'OutputPortCustomClassPreferences',
     #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
+    @check_user_specified
     def __init__(self,
                  owner=None,
                  size=None,

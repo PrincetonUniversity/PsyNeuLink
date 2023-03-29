@@ -51,7 +51,7 @@ class TestControlMechanism:
 
         comp = Composition(enable_controller=True)
         comp.add_linear_processing_pathway(pathway=[Tx,Tz])
-        comp.add_node(Ty, required_roles=NodeRole.TERMINAL)
+        comp.add_node(Ty, required_roles=NodeRole.OUTPUT)
         comp.add_controller(C)
 
         assert Tz.parameter_ports[SLOPE].mod_afferents[0].sender.owner == C

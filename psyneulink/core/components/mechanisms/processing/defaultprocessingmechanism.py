@@ -20,7 +20,7 @@ from psyneulink._typing import Optional, Union
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.globals.defaults import SystemDefaultInputValue
 from psyneulink.core.globals.keywords import DEFAULT_PROCESSING_MECHANISM
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 

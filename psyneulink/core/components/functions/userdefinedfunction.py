@@ -9,6 +9,7 @@
 #
 # *****************************************  USER-DEFINED FUNCTION  ****************************************************
 
+import builtins
 import numpy as np
 from beartype import beartype
 
@@ -20,7 +21,7 @@ from psyneulink.core.components.functions.function import FunctionError, Functio
 from psyneulink.core.globals.keywords import \
     CONTEXT, CUSTOM_FUNCTION, OWNER, PARAMS, \
     SELF, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences import ValidPrefSet
 from psyneulink.core.globals.utilities import _is_module_class, iscompatible
 
@@ -36,7 +37,7 @@ class _ExpressionVisitor(ast.NodeVisitor):
         self.functions = set()
 
     def visit_Name(self, node):
-        if node.id not in __builtins__:
+        if node.id not in dir(builtins):
             self.vars.add(node.id)
 
     def visit_Call(self, node):
@@ -46,7 +47,7 @@ class _ExpressionVisitor(ast.NodeVisitor):
         except AttributeError:
             func_id = node.func.id
 
-        if func_id not in __builtins__:
+        if func_id not in dir(builtins):
             self.functions.add(func_id)
 
         for c in ast.iter_child_nodes(node):

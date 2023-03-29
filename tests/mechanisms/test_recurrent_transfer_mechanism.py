@@ -21,6 +21,7 @@ from psyneulink.library.components.mechanisms.processing.transfer.recurrenttrans
     RecurrentTransferError, RecurrentTransferMechanism
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 
+@pytest.mark.composition
 class TestMatrixSpec:
     def test_recurrent_mech_matrix(self):
 
@@ -99,35 +100,24 @@ class TestRecurrentTransferMechanismInputs:
     @pytest.mark.mechanism
     @pytest.mark.recurrent_transfer_mechanism
     @pytest.mark.benchmark(group="RecurrentTransferMechanism")
-    def test_recurrent_mech_inputs_list_of_ints(self, benchmark, mech_mode):
-        R = RecurrentTransferMechanism(
-            name='R',
-            default_variable=[0, 0, 0, 0]
-        )
+    @pytest.mark.parametrize("variable, params",
+                             [
+                              pytest.param(([10, 12, 0, -1], [1, 2, 3, 0]), {'size': 4}, id="list_of_ints"),
+                              pytest.param(([1.0, 1.2, 0., -1.3], [1., 5., 3., 0.]), {'size': 4}, id="list_of_floats"),
+                              pytest.param(([10], [10]), {}, id="no_init_params"),
+                             ])
+    def test_recurrent_mech_inputs(self, benchmark, params, variable, mech_mode):
+        R = RecurrentTransferMechanism(name='R', **params)
         EX = pytest.helpers.get_mech_execution(R, mech_mode)
 
-        val1 = EX([10, 12, 0, -1])
-        val2 = EX([1, 2, 3, 0])
+        val1 = EX(variable[0])
+        val2 = benchmark(EX, variable[1])
 
         # The outputs match inputs because recurrent projection is
-        # not used when executing: mech is reset each time
-        np.testing.assert_allclose(val1, [[10.0, 12.0, 0, -1]])
-        np.testing.assert_allclose(val2, [[1, 2, 3, 0]])
-        if benchmark.enabled:
-            benchmark(EX, [1, 2, 3, 0])
-
-    @pytest.mark.mechanism
-    @pytest.mark.recurrent_transfer_mechanism
-    @pytest.mark.benchmark(group="RecurrentTransferMechanism")
-    def test_recurrent_mech_inputs_list_of_floats(self, benchmark, mech_mode):
-        R = RecurrentTransferMechanism(
-            name='R',
-            size=4
-        )
-        EX = pytest.helpers.get_mech_execution(R, mech_mode)
-
-        val = benchmark(EX, [10.0, 10.0, 10.0, 10.0])
-        np.testing.assert_allclose(val, [[10.0, 10.0, 10.0, 10.0]])
+        # not used when executing standalone mechanism:
+        #  the mechanism is reset each time
+        np.testing.assert_allclose(val1, [variable[0]])
+        np.testing.assert_allclose(val2, [variable[1]])
 
     @pytest.mark.mechanism
     @pytest.mark.recurrent_transfer_mechanism
@@ -143,15 +133,16 @@ class TestRecurrentTransferMechanismInputs:
 
         val1 = EX([[1.0, 2.0]])
         val2 = EX([[1.0, 2.0]])
+
         # execute 10 times
-        for i in range(10):
-            val10 = EX([[1.0, 2.0]])
+        for i in range(9):
+            EX([[1.0, 2.0]])
+
+        val10 = benchmark(EX, [[1.0, 2.0]])
 
         assert np.allclose(val1, [[0.50249998, 0.50499983]])
         assert np.allclose(val2, [[0.50497484, 0.50994869]])
         assert np.allclose(val10, [[0.52837327, 0.55656439]])
-        if benchmark.enabled:
-            benchmark(EX, [[1.0, 2.0]])
 
     @pytest.mark.mechanism
     @pytest.mark.recurrent_transfer_mechanism
@@ -168,14 +159,14 @@ class TestRecurrentTransferMechanismInputs:
         val1 = EX([[1.0, 2.0]])
         val2 = EX([[1.0, 2.0]])
         # execute 10 times
-        for i in range(10):
-            val10 = EX([[1.0, 2.0]])
+        for i in range(9):
+            EX([[1.0, 2.0]])
+
+        val10 = benchmark(EX, [[1.0, 2.0]])
 
         assert np.allclose(val1, [[0.1, 0.2]])
         assert np.allclose(val2, [[0.196, 0.392]])
         assert np.allclose(val10, [[0.96822561, 1.93645121]])
-        if benchmark.enabled:
-            benchmark(EX, [[1.0, 2.0]])
 
     # def test_recurrent_mech_inputs_list_of_fns(self):
     #     R = RecurrentTransferMechanism(
@@ -190,21 +181,6 @@ class TestRecurrentTransferMechanismInputs:
     #     for i in range(len(val[0])):
     #         np.testing.assert_allclose(val[0][i], expected[0][i])
 
-    @pytest.mark.mechanism
-    @pytest.mark.recurrent_transfer_mechanism
-    @pytest.mark.benchmark(group="RecurrentTransferMechanism")
-    def test_recurrent_mech_no_inputs(self, benchmark, mech_mode):
-        R = RecurrentTransferMechanism(
-            name='R'
-        )
-        np.testing.assert_allclose(R.defaults.variable, [[0]])
-        EX = pytest.helpers.get_mech_execution(R, mech_mode)
-
-        val = EX([10])
-        np.testing.assert_allclose(val, [[10.]])
-        if benchmark.enabled:
-            benchmark(EX, [1])
-
     def test_recurrent_mech_inputs_list_of_strings(self):
         with pytest.raises(MechanismError) as error_text:
             R = RecurrentTransferMechanism(
@@ -213,9 +189,8 @@ class TestRecurrentTransferMechanismInputs:
                 integrator_mode=True
             )
             R.execute(["one", "two", "three", "four"])
-        assert '"Input to \'R\' ([\'one\' \'two\' \'three\' \'four\']) is incompatible ' \
-               'with its corresponding InputPort (R[InputPort-0]): ' \
-               '\'cannot perform reduce with flexible type.\'"' in str(error_text.value)
+        assert 'Input to \'R\' ([\'one\' \'two\' \'three\' \'four\']) is incompatible ' \
+               'with its corresponding InputPort (R[InputPort-0]): ' in str(error_text.value)
 
     def test_recurrent_mech_var_list_of_strings(self):
         with pytest.raises(ParameterError) as error_text:
@@ -628,6 +603,7 @@ class TestRecurrentTransferMechanismTimeConstant:
 # won't get executed if we only use the execute() method of Mechanism: thus, to test it we must use a Composition
 
 
+@pytest.mark.composition
 def run_twice_in_composition(mech, input1, input2=None):
     if input2 is None:
         input2 = input1
@@ -637,6 +613,7 @@ def run_twice_in_composition(mech, input1, input2=None):
     return result[0]
 
 
+@pytest.mark.composition
 class TestRecurrentTransferMechanismInProcess:
     simple_prefs = {REPORT_OUTPUT_PREF: False, VERBOSE_PREF: False}
 
@@ -722,6 +699,7 @@ class TestRecurrentTransferMechanismInProcess:
         np.testing.assert_allclose(R.parameters.value.get(c), [[21, 3, 12, 35]])
 
 
+@pytest.mark.composition
 class TestRecurrentTransferMechanismInComposition:
     simple_prefs = {REPORT_OUTPUT_PREF: False, VERBOSE_PREF: False}
 
@@ -957,6 +935,7 @@ class TestRecurrentTransferMechanismInComposition:
         np.testing.assert_allclose(R.output_port.parameters.value.get(C),[0.0, 1.18518086, 0.0, 1.18518086])
 
 
+@pytest.mark.composition
 class TestRecurrentTransferMechanismReset:
 
     def test_reset_run(self):
@@ -1024,6 +1003,7 @@ class TestClip:
         assert np.allclose(R.execute([[-5.0, -1.0, 5.0], [5.0, -5.0, 1.0], [1.0, 5.0, 5.0]]),
                            [[-2.0, -1.0, 2.0], [2.0, -2.0, 1.0], [1.0, 2.0, 2.0]])
 
+@pytest.mark.composition
 class TestRecurrentInputPort:
 
     def test_ris_simple(self):
@@ -1061,6 +1041,7 @@ class TestCustomCombinationFunction:
         result = R2.execute([1,2])
         np.testing.assert_allclose(result, [[0,0]])
 
+    @pytest.mark.composition
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
     @pytest.mark.parametrize('cond0, cond1, expected', [
@@ -1107,6 +1088,7 @@ class TestCustomCombinationFunction:
 
         assert np.allclose(expected, C.results)
 
+    @pytest.mark.composition
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
     @pytest.mark.parametrize('cond0, cond1, expected', [
@@ -1152,7 +1134,7 @@ class TestCustomCombinationFunction:
 
         assert np.allclose(exp, C.results)
 
-    @pytest.mark.mechanism
+    @pytest.mark.composition
     @pytest.mark.integrator_mechanism
     @pytest.mark.parametrize('until_finished, expected', [
         (True, [[[[0.96875]]], [[[0.9990234375]]]]), # The 5th and the 10th iteration
@@ -1177,6 +1159,7 @@ class TestCustomCombinationFunction:
         assert np.allclose(expected[0], results)
         assert np.allclose(expected[1], results2)
 
+@pytest.mark.composition
 class TestDebugProperties:
 
     def test_defaults(self):

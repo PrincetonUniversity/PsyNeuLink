@@ -95,12 +95,13 @@ import numpy as np
 
 from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
 from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot
-from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, Mechanism
+from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, Mechanism, MechanismError
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.keywords import \
     FUNCTION, MAX_ABS_INDICATOR, MAX_ABS_ONE_HOT, MAX_ABS_VAL, MAX_INDICATOR, MAX_ONE_HOT, MAX_VAL, MEAN, MEDIAN, \
-    NAME, PROB, PROCESSING_MECHANISM, PREFERENCE_SET_NAME, STANDARD_DEVIATION, VARIANCE
+    NAME, PROB, PROCESSING_MECHANISM, PREFERENCE_SET_NAME, STANDARD_DEVIATION, VARIANCE, VARIABLE, OWNER_VALUE
+from psyneulink.core.globals.parameters import check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
@@ -109,9 +110,8 @@ __all__ = [
 ]
 
 
-class ProcessingMechanismError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
+class ProcessingMechanismError(MechanismError):
+    pass
 
 
 # # These are defined here because STANDARD_DEVIATION AND VARIANCE
@@ -167,9 +167,11 @@ class ProcessingMechanism_Base(Mechanism_Base):
                                   {NAME: MAX_ABS_INDICATOR,
                                    FUNCTION: OneHot(mode=MAX_ABS_INDICATOR)},
                                   {NAME: PROB,
+                                   VARIABLE: OWNER_VALUE,
                                    FUNCTION: SoftMax(output=PROB)}])
     standard_output_port_names = [i['name'] for i in standard_output_ports]
 
+    @check_user_specified
     def __init__(self,
                  default_variable=None,
                  size=None,
@@ -215,13 +217,6 @@ __all__ = [
 
 # ProcessingMechanism parameter keywords:
 DEFAULT_RATE = 0.5
-
-class ProcessingMechanismError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
 
 
 class ProcessingMechanism(ProcessingMechanism_Base):

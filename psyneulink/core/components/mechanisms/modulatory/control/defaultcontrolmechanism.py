@@ -38,10 +38,11 @@ from beartype import beartype
 
 from psyneulink._typing import Optional, Union
 
-from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism, ControlMechanismError
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import CONTROL, INPUT_PORTS, NAME
+from psyneulink.core.globals.parameters import check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import ContentAddressableList
@@ -51,9 +52,8 @@ __all__ = [
 ]
 
 
-class DefaultControlMechanismError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
+class DefaultControlMechanismError(ControlMechanismError):
+    pass
 
 
 class DefaultControlMechanism(ControlMechanism):

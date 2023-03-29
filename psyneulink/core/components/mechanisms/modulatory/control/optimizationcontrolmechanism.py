@@ -1099,7 +1099,7 @@ from psyneulink.core.globals.keywords import \
     ALL, COMPOSITION, COMPOSITION_FUNCTION_APPROXIMATOR, CONCATENATE, DEFAULT_INPUT, DEFAULT_VARIABLE, EID_FROZEN, \
     FUNCTION, INPUT_PORT, INTERNAL_ONLY, NAME, OPTIMIZATION_CONTROL_MECHANISM, NODE, OWNER_VALUE, PARAMS, PORT, \
     PROJECTIONS, SHADOW_INPUTS, VALUE
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import rename_instance_in_registry
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleSpec
@@ -1213,12 +1213,8 @@ def _state_feature_values_getter(owning_component=None, context=None):
     return state_feature_values
 
 
-class OptimizationControlMechanismError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class OptimizationControlMechanismError(ControlMechanismError):
+    pass
 
 
 def _control_allocation_search_space_getter(owning_component=None, context=None):
@@ -3194,11 +3190,8 @@ class OptimizationControlMechanism(ControlMechanism):
                                            context=context
                                            )
 
-    def _get_evaluate_input_struct_type(self, ctx):
-        # We construct input from optimization function input
-        return ctx.get_input_struct_type(self.function)
-
-    def _get_evaluate_output_struct_type(self, ctx):
+    def _get_evaluate_output_struct_type(self, ctx, *, tags):
+        assert "evaluate_type_objective" in tags, "Unknown evaluate type: {}".format(tags)
         # Returns a scalar that is the predicted net_outcome
         return ctx.float_ty
 
@@ -3212,7 +3205,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 ctx.get_state_struct_type(self).as_pointer(),
                 self._get_evaluate_alloc_struct_type(ctx).as_pointer(),
                 ctx.float_ty.as_pointer(),
-                ctx.float_ty.as_pointer()]
+                self._get_evaluate_output_struct_type(ctx, tags=tags).as_pointer()]
 
         builder = ctx.create_llvm_function(args, self, str(self) + "_net_outcome")
         llvm_func = builder.function
@@ -3252,9 +3245,9 @@ class OptimizationControlMechanism(ControlMechanism):
                 data_out = builder.gep(op_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
             if data_in.type != data_out.type:
-                warnings.warn(f"Shape mismatch: Allocation sample '{i}' "
-                              f"({self.parameters.control_allocation_search_space.get()}) "
-                              f"doesn't match input port input ({op.defaults.variable}).")
+                warnings.warn("Shape mismatch: Allocation sample '{}' ({}) doesn't match input port input ({}).".format(
+                               i, self.parameters.control_allocation_search_space.get(), op.defaults.variable),
+                               pnlvm.PNLCompilerWarning)
                 assert len(data_out.type.pointee) == 1
                 data_out = builder.gep(data_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
@@ -3310,7 +3303,12 @@ class OptimizationControlMechanism(ControlMechanism):
         allocation = builder.alloca(evaluate_f.args[2].type.pointee, name="allocation")
         with pnlvm.helpers.for_loop(builder, start, stop, stop.type(1), "alloc_loop") as (b, idx):
 
-            func_out = b.gep(arg_out, [idx])
+            if "evaluate_type_objective" in tags:
+                out_idx = idx
+            else:
+                assert False, "Evaluation type not detected in tags, or unknown: {}".format(tags)
+
+            func_out = b.gep(arg_out, [out_idx])
             pnlvm.helpers.create_sample(b, allocation, search_space, idx)
 
             b.call(evaluate_f, [params, state, allocation, func_out, arg_in, data])
@@ -3323,8 +3321,8 @@ class OptimizationControlMechanism(ControlMechanism):
         args = [ctx.get_param_struct_type(self.agent_rep).as_pointer(),
                 ctx.get_state_struct_type(self.agent_rep).as_pointer(),
                 self._get_evaluate_alloc_struct_type(ctx).as_pointer(),
-                self._get_evaluate_output_struct_type(ctx).as_pointer(),
-                self._get_evaluate_input_struct_type(ctx).as_pointer(),
+                self._get_evaluate_output_struct_type(ctx, tags=tags).as_pointer(),
+                ctx.get_input_struct_type(self.agent_rep).as_pointer(),
                 ctx.get_data_struct_type(self.agent_rep).as_pointer()]
 
         builder = ctx.create_llvm_function(args, self, str(self) + "_evaluate")
@@ -3332,7 +3330,7 @@ class OptimizationControlMechanism(ControlMechanism):
         for p in llvm_func.args:
             p.attributes.add('nonnull')
 
-        comp_params, base_comp_state, allocation_sample, arg_out, arg_in, base_comp_data = llvm_func.args
+        comp_params, base_comp_state, allocation_sample, arg_out, comp_input, base_comp_data = llvm_func.args
 
         if "const_params" in debug_env:
             comp_params = builder.alloca(comp_params.type.pointee, name="const_params_loc")
@@ -3388,37 +3386,8 @@ class OptimizationControlMechanism(ControlMechanism):
                                                       ctx.int32_ty(0)])
             builder.store(builder.load(sample_ptr), sample_dst)
 
-        # Construct input
-        comp_input = builder.alloca(sim_f.args[3].type.pointee, name="sim_input")
-
-        input_initialized = [False] * len(comp_input.type.pointee)
-        for src_idx, ip in enumerate(self.input_ports):
-            if ip.shadow_inputs is None:
-                continue
-
-            # shadow inputs point to an input port of of a node.
-            # If that node takes direct input, it will have an associated
-            # (input_port, output_port) in the input_CIM.
-            # Take the former as an index to composition input variable.
-            cim_in_port = self.agent_rep.input_CIM_ports[ip.shadow_inputs][0]
-            dst_idx = self.agent_rep.input_CIM.input_ports.index(cim_in_port)
-
-            # Check that all inputs are unique
-            assert not input_initialized[dst_idx], "Double initialization of input {}".format(dst_idx)
-            input_initialized[dst_idx] = True
-
-            src = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(src_idx)])
-            # Destination is a struct of 2d arrays
-            dst = builder.gep(comp_input, [ctx.int32_ty(0),
-                                           ctx.int32_ty(dst_idx),
-                                           ctx.int32_ty(0)])
-            builder.store(builder.load(src), dst)
-
-        # Assert that we have populated all inputs
-        assert all(input_initialized), \
-          "Not all inputs to the simulated composition are initialized: {}".format(input_initialized)
-
         if "const_input" in debug_env:
+            comp_input = builder.alloca(sim_f.args[3].type.pointee, name="sim_input")
             if not debug_env["const_input"]:
                 input_init = [[os.defaults.variable.tolist()] for os in self.agent_rep.input_CIM.input_ports]
                 print("Setting default input: ", input_init)
@@ -3450,25 +3419,32 @@ class OptimizationControlMechanism(ControlMechanism):
         builder.store(num_inputs.type.pointee(1), num_inputs)
 
         # Simulations don't store output
-        comp_output = sim_f.args[4].type(None)
+        if "evaluate_type_objective" in tags:
+            comp_output = sim_f.args[4].type(None)
+        else:
+            assert False, "Evaluation type not detected in tags, or unknown: {}".format(tags)
+
         builder.call(sim_f, [comp_state, comp_params, comp_data, comp_input,
                              comp_output, num_trials, num_inputs])
 
-        # Extract objective mechanism value
-        idx = self.agent_rep._get_node_index(self.objective_mechanism)
-        # Mechanisms' results are stored in the first substructure
-        objective_os_ptr = builder.gep(comp_data, [ctx.int32_ty(0),
-                                                   ctx.int32_ty(0),
-                                                   ctx.int32_ty(idx)])
-        # Objective mech output shape should be 1 single element 2d array
-        objective_val_ptr = builder.gep(objective_os_ptr,
-                                        [ctx.int32_ty(0), ctx.int32_ty(0),
-                                         ctx.int32_ty(0)], "obj_val_ptr")
+        if "evaluate_type_objective" in tags:
+            # Extract objective mechanism value
+            idx = self.agent_rep._get_node_index(self.objective_mechanism)
+            # Mechanisms' results are stored in the first substructure
+            objective_op_ptr = builder.gep(comp_data, [ctx.int32_ty(0),
+                                                       ctx.int32_ty(0),
+                                                       ctx.int32_ty(idx)])
+            # Objective mech output shape should be 1 single element 2d array
+            objective_val_ptr = builder.gep(objective_op_ptr,
+                                            [ctx.int32_ty(0), ctx.int32_ty(0),
+                                             ctx.int32_ty(0)], "obj_val_ptr")
 
-        net_outcome_f = ctx.import_llvm_function(self, tags=tags.union({"net_outcome"}))
-        builder.call(net_outcome_f, [controller_params, controller_state,
-                                     allocation_sample, objective_val_ptr,
-                                     arg_out])
+            net_outcome_f = ctx.import_llvm_function(self, tags=tags.union({"net_outcome"}))
+            builder.call(net_outcome_f, [controller_params, controller_state,
+                                         allocation_sample, objective_val_ptr,
+                                         arg_out])
+        else:
+            assert False, "Evaluation type not detected in tags, or unknown: {}".format(tags)
 
         builder.ret_void()
 

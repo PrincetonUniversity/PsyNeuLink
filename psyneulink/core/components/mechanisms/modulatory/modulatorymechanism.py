@@ -138,8 +138,9 @@ Class Reference
 
 """
 
-from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
+from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError
 from psyneulink.core.globals.keywords import ADAPTIVE_MECHANISM
+from psyneulink.core.globals.parameters import check_user_specified
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
 __all__ = [
@@ -147,9 +148,8 @@ __all__ = [
 ]
 
 
-class ModulatoryMechanismError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
+class ModulatoryMechanismError(MechanismError):
+    pass
 
 
 class ModulatoryMechanism_Base(Mechanism_Base):
@@ -191,6 +191,7 @@ class ModulatoryMechanism_Base(Mechanism_Base):
     #     PREFERENCE_SET_NAME: 'ModulatoryMechanismClassPreferences',
     #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
+    @check_user_specified
     def __init__(self,
                  default_variable,
                  size,

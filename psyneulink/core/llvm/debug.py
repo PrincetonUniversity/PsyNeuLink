@@ -23,7 +23,6 @@ Increased debug output:
  * "print_values" -- Enabled printfs in llvm code (from ctx printf helper)
 
 Compilation modifiers:
- * "debug_info" -- emit line debugging information when generating LLVM IR
  * "const_data" -- hardcode initial output values into generated code,
                 instead of loading them from the data argument
  * "const_input" -- hardcode input values for composition runs

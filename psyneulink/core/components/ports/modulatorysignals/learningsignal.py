@@ -192,11 +192,11 @@ from beartype import beartype
 
 from psyneulink._typing import Optional
 
-from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal
+from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal, ModulatorySignalError
 from psyneulink.core.components.ports.outputport import PRIMARY
 from psyneulink.core.globals.keywords import \
     LEARNING_PROJECTION, LEARNING_SIGNAL, OUTPUT_PORT_PARAMS, PARAMETER_PORT, PARAMETER_PORTS, RECEIVER
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import ValidParamSpecType
@@ -206,13 +206,8 @@ __all__ = [
 ]
 
 
-class LearningSignalError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-
-    def __str__(self):
-        return repr(self.error_value)
+class LearningSignalError(ModulatorySignalError):
+    pass
 
 
 class LearningSignal(ModulatorySignal):

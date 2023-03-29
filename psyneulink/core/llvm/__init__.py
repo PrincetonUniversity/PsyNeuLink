@@ -25,11 +25,57 @@ from .debug import debug_env
 from .execution import *
 from .execution import _tupleize
 from .jit_engine import *
+from .warnings import *
+
 
 __all__ = ['LLVMBuilderContext', 'ExecutionMode']
 
 class ExecutionMode(enum.Flag):
+    """Specify execution a `Composition` in interpreted or one of ithe compiled modes.
+    These are used to specify the **execution_mode** argument of a Composition's `execute <Composition.execute>`,
+    `run <Composition.run>`, and `learn <Composition.learn>` methods.  See `Compiled Modes
+    <Composition_Compilation_Modes>` under `Compilation <Composition_Compilation>` for additional details concerning
+    use of each mode by a Composition.
+
+    Attributes
+    ----------
+
+    Python
+      Execute using the Python interpreter;  this is the default mode.
+
+    LLVM
+      compile and run Composition `Nodes <Composition_Nodes>` and `Projections <Projection>` individually.
+
+    LLVMExec
+      compile and run each `TRIAL <TimeScale.TRIAL>` individually.
+
+    LLVMRun
+      compile and run multiple `TRIAL <TimeScale.TRIAL>`\\s.
+
+    Auto
+      progressively attempt LLVMRun, LLVMexec. LLVM and then Python.
+
+    PyTorch
+      execute the `AutodiffComposition` `learn <AutodiffComposition.learn>` method using PyTorch, and its
+      `run <AutodiffComposition.run>` method using the Python interpreter.
+
+      .. warning::
+         For clarity, this mode should only be used when executing an `AutodiffComposition`; using it
+         with a standard `Composition` is possible, but it will **not** have the expected effect of executing
+         its `learn <Composition.learn>` method using PyTorch.
+
+    PTX
+      compile and run Composition `Nodes <Composition_Nodes>` and `Projections <Projection>` using CUDA for GPU.
+
+    PTXExec
+      compile and run each `TRIAL <TimeScale.TRIAL>` using CUDA for GPU.
+
+    PTXRun
+      compile and run multiple `TRIAL <TimeScale.TRIAL>`\\s using CUDA for GPU.
+   """
+
     Python   = 0
+    PyTorch = enum.auto()
     LLVM     = enum.auto()
     PTX      = enum.auto()
     _Run      = enum.auto()
@@ -41,6 +87,7 @@ class ExecutionMode(enum.Flag):
     LLVMExec = LLVM | _Exec
     PTXRun = PTX | _Run
     PTXExec = PTX | _Exec
+    COMPILED = ~ (Python | PyTorch)
 
 
 _binary_generation = 0
@@ -158,12 +205,15 @@ class LLVMBinaryFunction:
     def cuda_call(self, *args, threads=1, block_size=None):
         block_size = self.cuda_max_block_size(block_size)
         grid = ((threads + block_size - 1) // block_size, 1)
-        self._cuda_kernel(*args, np.int32(threads),
-                          block=(block_size, 1, 1), grid=grid)
+        ktime = self._cuda_kernel(*args, np.int32(threads), time_kernel="time_stat" in debug_env,
+                                  block=(block_size, 1, 1), grid=grid)
+        if "time_stat" in debug_env:
+            print("Time to run kernel '{}' using {} threads: {}".format(
+                self.name, threads, ktime))
 
-    def cuda_wrap_call(self, *args, threads=1, block_size=None):
+    def cuda_wrap_call(self, *args, **kwargs):
         wrap_args = (jit_engine.pycuda.driver.InOut(a) if isinstance(a, np.ndarray) else a for a in args)
-        self.cuda_call(*wrap_args, threads=threads, block_size=block_size)
+        self.cuda_call(*wrap_args, **kwargs)
 
     @staticmethod
     @functools.lru_cache(maxsize=32)

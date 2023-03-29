@@ -165,26 +165,24 @@ from beartype import beartype
 from psyneulink._typing import Optional
 
 from psyneulink.core.components.functions.stateful.integratorfunctions import DualAdaptiveIntegrator
-from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism, ControlMechanismError
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import MONITORED_OUTPUT_PORTS, ObjectiveMechanism
 from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.keywords import \
     INIT_EXECUTE_METHOD_ONLY, MECHANISM, OBJECTIVE_MECHANISM
+from psyneulink.core.globals.parameters import check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
 __all__ = [
-    'AGTControlMechanism', 'AGTControlMechanismError', 'ControlMechanismRegistry', 'MONITORED_OUTPUT_PORT_NAME_SUFFIX'
+    'AGTControlMechanism', 'AGTControlMechanismError', 'MONITORED_OUTPUT_PORT_NAME_SUFFIX'
 ]
 
 MONITORED_OUTPUT_PORT_NAME_SUFFIX = '_Monitor'
 
-ControlMechanismRegistry = {}
-
-class AGTControlMechanismError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
+class AGTControlMechanismError(ControlMechanismError):
+    pass
 
 
 class AGTControlMechanism(ControlMechanism):

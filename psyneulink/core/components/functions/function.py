@@ -159,21 +159,23 @@ from psyneulink.core.globals.keywords import (
     ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, EXAMPLE_FUNCTION_TYPE, FULL_CONNECTIVITY_MATRIX,
     FUNCTION_COMPONENT_CATEGORY, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, HOLLOW_MATRIX,
     IDENTITY_MATRIX, INVERSE_HOLLOW_MATRIX, NAME, PREFERENCE_SET_NAME, RANDOM_CONNECTIVITY_MATRIX, VALUE, VARIABLE,
-    MODEL_SPEC_ID_METADATA, MODEL_SPEC_ID_MDF_VARIABLE, MatrixKeywordLiteral
+    MODEL_SPEC_ID_MDF_VARIABLE, MatrixKeywordLiteral
 )
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.mdf import _get_variable_parameter_name
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import REPORT_OUTPUT_PREF, ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import (
     convert_to_np_array, get_global_seed, is_instance_or_subclass, object_has_single_value, parameter_spec, parse_valid_identifier, safe_len,
-    SeededRandomState, contains_type, is_numeric, NumericCollections
+    SeededRandomState, contains_type, is_numeric, NumericCollections,
+    random_matrix
 )
 
 __all__ = [
     'ArgumentTherapy', 'EPSILON', 'Function_Base', 'function_keywords', 'FunctionError', 'FunctionOutputType',
     'FunctionRegistry', 'get_param_value_for_function', 'get_param_value_for_keyword', 'is_Function',
-    'is_function_type', 'PERTINACITY', 'PROPENSITY'
+    'is_function_type', 'PERTINACITY', 'PROPENSITY', 'RandomMatrix'
 ]
 
 EPSILON = np.finfo(float).eps
@@ -554,6 +556,7 @@ class Function_Base(Function):
     classPreferenceLevel = PreferenceLevel.CATEGORY
 
     _model_spec_id_parameters = 'args'
+    _mdf_stateful_parameter_indices = {}
 
     _specified_variable_shape_flexibility = DefaultsFlexibility.INCREASE_DIMENSION
 
@@ -607,6 +610,7 @@ class Function_Base(Function):
     # Note: the following enforce encoding as 1D np.ndarrays (one array per variable)
     variableEncodingDim = 1
 
+    @check_user_specified
     @abc.abstractmethod
     def __init__(
         self,
@@ -675,7 +679,18 @@ class Function_Base(Function):
                  params=None,
                  target_set=None,
                  **kwargs):
-        assert True
+
+        # IMPLEMENTATION NOTE:
+        # The following is a convenience feature that supports specification of params directly in call to function
+        # by moving the to a params dict, which treats them as runtime_params
+        if kwargs:
+            for key in kwargs.copy():
+                if key in self.parameters.names():
+                    if not params:
+                        params = {key: kwargs.pop(key)}
+                    else:
+                        params.update({key: kwargs.pop(key)})
+
         # Validate variable and assign to variable, and validate params
         variable = self._check_args(variable=variable,
                                     context=context,
@@ -818,10 +833,21 @@ class Function_Base(Function):
             'multiplicative_param', 'additive_param',
         })
 
-    def _get_mdf_noise_function(self):
+    def _assign_to_mdf_model(self, model, input_id) -> str:
+        """Adds an MDF representation of this function to MDF object
+        **model**, including all necessary auxiliary functions.
+        **input_id** is the input to the singular MDF function or first
+        function representing this psyneulink Function, if applicable.
+
+        Returns:
+            str: the identifier of the final MDF function representing
+            this psyneulink Function
+        """
         import modeci_mdf.mdf as mdf
 
         extra_noise_functions = []
+
+        self_model = self.as_mdf_model()
 
         def handle_noise(noise):
             if is_instance_or_subclass(noise, Component):
@@ -835,14 +861,47 @@ class Function_Base(Function):
             else:
                 return None
 
-        noise = handle_noise(self.defaults.noise)
+        try:
+            noise_val = handle_noise(self.defaults.noise)
+        except AttributeError:
+            noise_val = None
 
-        if noise is not None:
-            return mdf.Function(
-                id=f'{parse_valid_identifier(self.name)}_noise',
+        if noise_val is not None:
+            noise_func = mdf.Function(
+                id=f'{model.id}_{parse_valid_identifier(self.name)}_noise',
                 value=MODEL_SPEC_ID_MDF_VARIABLE,
-                args={MODEL_SPEC_ID_MDF_VARIABLE: noise},
-            ), extra_noise_functions
+                args={MODEL_SPEC_ID_MDF_VARIABLE: noise_val},
+            )
+            self._set_mdf_arg(self_model, 'noise', noise_func.id)
+
+            model.functions.extend(extra_noise_functions)
+            model.functions.append(noise_func)
+
+        self_model.id = f'{model.id}_{self_model.id}'
+        self._set_mdf_arg(self_model, _get_variable_parameter_name(self), input_id)
+        model.functions.append(self_model)
+
+        # assign stateful parameters
+        for param, index in self._mdf_stateful_parameter_indices.items():
+            initializer_name = getattr(self.parameters, param).initializer
+
+            # in this case, parameter gets updated to its function's final value
+            try:
+                initializer_value = self_model.args[initializer_name]
+            except KeyError:
+                initializer_value = self_model.metadata[initializer_name]
+
+            index_str = f'[{index}]' if index is not None else ''
+
+            model.parameters.append(
+                mdf.Parameter(
+                    id=param,
+                    default_initial_value=initializer_value,
+                    value=f'{self_model.id}{index_str}'
+                )
+            )
+
+        return self_model.id
 
     def as_mdf_model(self):
         import modeci_mdf.mdf as mdf
@@ -850,7 +909,6 @@ class Function_Base(Function):
 
         parameters = self._mdf_model_parameters
         metadata = self._mdf_metadata
-        metadata[MODEL_SPEC_ID_METADATA]['function_stateful_params'] = {}
         stateful_params = set()
 
         # add stateful parameters into metadata for mechanism to get
@@ -861,17 +919,6 @@ class Function_Base(Function):
                 continue
 
             if param.initializer is not None:
-                # in this case, parameter gets updated to its function's final value
-                try:
-                    initializer_value = parameters[self._model_spec_id_parameters][param.initializer]
-                except KeyError:
-                    initializer_value = metadata[MODEL_SPEC_ID_METADATA]['initializer']
-
-                metadata[MODEL_SPEC_ID_METADATA]['function_stateful_params'][name] = {
-                    'id': name,
-                    'default_initial_value': initializer_value,
-                    'value': parse_valid_identifier(self.name)
-                }
                 stateful_params.add(name)
 
         # stateful parameters cannot show up as args or they will not be
@@ -899,7 +946,7 @@ class Function_Base(Function):
             if typ not in mdf_functions.mdf_functions:
                 warnings.warn(f'{typ} is not an MDF standard function, this is likely to produce an incompatible model.')
 
-            model.function = {typ: parameters[self._model_spec_id_parameters]}
+            model.function = typ
 
         return model
 
@@ -997,6 +1044,7 @@ class ArgumentTherapy(Function_Base):
     # These are used both to type-cast the params, and as defaults if none are assigned
     #  in the initialization call or later (using either _instantiate_defaults or during a function call)
 
+    @check_user_specified
     def __init__(self,
                  default_variable=None,
                  propensity=10.0,
@@ -1167,6 +1215,48 @@ class EVCAuxiliaryFunction(Function_Base):
                          )
 
 
+class RandomMatrix():
+    """Function that returns matrix with random elements distributed uniformly around **center** across **range**.
+
+    The **center** and **range** arguments are passed at construction, and used for all subsequent calls.
+    Once constructed, the function must be called with two floats, **sender_size** and **receiver_size**,
+    that specify the number of rows and columns of the matrix, respectively.
+
+    Can be used to specify the `matrix <MappingProjection.matrix>` parameter of a `MappingProjection
+    <MappingProjection_Matrix_Specification>`, and to specify a default matrix for Projections in the
+    construction of a `Pathway` (see `Pathway_Specification_Projections`) or in a call to a Composition's
+    `add_linear_processing_pathway<Composition.add_linear_processing_pathway>` method.
+
+    .. technical_note::
+       A call to the class calls `random_matrix <Utilities.random_matrix>`, passing **sender_size** and
+       **receiver_size** to `random_matrix <Utilities.random_matrix>` as its **num_rows** and **num_cols**
+       arguments, respectively, and passing the `center <RandomMatrix.offset>`-0.5 and `range <RandomMatrix.scale>`
+       attributes specified at construction to `random_matrix <Utilities.random_matrix>` as its **offset**
+       and **scale** arguments, respectively.
+
+    Arguments
+    ----------
+    center : float
+        specifies the value around which the matrix elements are distributed in all calls to the function.
+    range : float
+        specifies range over which all matrix elements are distributed in all calls to the function.
+
+    Attributes
+    ----------
+    center : float
+        determines the center of the distribution of the matrix elements;
+    range : float
+        determines the range of the distribution of the matrix elements;
+    """
+
+    def __init__(self, center:float=0.0, range:float=1.0):
+        self.center=center
+        self.range=range
+
+    def __call__(self, sender_size:int, receiver_size:int):
+        return random_matrix(sender_size, receiver_size, offset=self.center - 0.5, scale=self.range)
+
+
 def get_matrix(specification, rows=1, cols=1, context=None):
     """Returns matrix conforming to specification with dimensions = rows x cols or None
 
@@ -1181,6 +1271,7 @@ def get_matrix(specification, rows=1, cols=1, context=None):
             + INVERSE_HOLLOW_MATRIX: 0's on diagonal, -1's elsewhere (must be square matrix), otherwise generates error
             + FULL_CONNECTIVITY_MATRIX: all 1's
             + RANDOM_CONNECTIVITY_MATRIX (random floats uniformly distributed between 0 and 1)
+            + RandomMatrix (random floats uniformly distributed around a specified center value with a specified range)
         + 2D list or np.ndarray of numbers
 
      Returns 2D array with length=rows in dim 0 and length=cols in dim 1, or none if specification is not recognized
@@ -1188,9 +1279,6 @@ def get_matrix(specification, rows=1, cols=1, context=None):
 
     # Matrix provided (and validated in _validate_params); convert to array
     if isinstance(specification, (list, np.matrix)):
-        # # MODIFIED 4/9/22 OLD:
-        # return convert_to_np_array(specification)
-        # MODIFIED 4/9/22 NEW:
         if is_numeric(specification):
             return convert_to_np_array(specification)
         else:
@@ -1238,7 +1326,7 @@ def get_matrix(specification, rows=1, cols=1, context=None):
         return np.random.rand(rows, cols)
 
     # Function is specified, so assume it uses random.rand() and call with sender_len and receiver_len
-    if isinstance(specification, types.FunctionType):
+    if isinstance(specification, (types.FunctionType, RandomMatrix)):
         return specification(rows, cols)
 
     # (7/12/17 CW) this is a PATCH (like the one in MappingProjection) to allow users to

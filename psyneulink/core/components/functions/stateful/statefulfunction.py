@@ -32,7 +32,7 @@ from psyneulink.core.components.functions.nonstateful.distributionfunctions impo
 from psyneulink.core.components.functions.function import Function_Base, FunctionError, _noise_setter
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import STATEFUL_FUNCTION_TYPE, STATEFUL_FUNCTION, NOISE, RATE
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.utilities import iscompatible, convert_to_np_array, contains_type
 
@@ -169,6 +169,11 @@ class StatefulFunction(Function_Base): #  --------------------------------------
 
     componentType = STATEFUL_FUNCTION_TYPE
     componentName = STATEFUL_FUNCTION
+
+    # TODO: consider moving this to a Parameter attribute
+    _mdf_stateful_parameter_indices = {
+        'previous_value': None
+    }
 
     class Parameters(Function_Base.Parameters):
         """
@@ -515,7 +520,8 @@ class StatefulFunction(Function_Base): #  --------------------------------------
             dest_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, a)
             if source_ptr.type != dest_ptr.type:
                 warnings.warn("Shape mismatch: stateful param does not match the initializer: "
-                              "{initializer}({source_ptr.type}) vs. {a}({dest_ptr.type}).")
+                              "{}({}) vs. {}({}).".format(initializer, source_ptr.type, a, dst_ptr.type),
+                              pnlvm.PNLCompilerWarning)
                 # Take a guess that dest just has an extra dimension
                 assert len(dest_ptr.type.pointee) == 1
                 dest_ptr = builder.gep(dest_ptr, [ctx.int32_ty(0),

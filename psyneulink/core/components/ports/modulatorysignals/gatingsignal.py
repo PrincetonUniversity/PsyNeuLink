@@ -249,12 +249,13 @@ from beartype import beartype
 from psyneulink._typing import Optional
 
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
+from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignalError
 from psyneulink.core.components.ports.outputport import _output_port_variable_getter
 from psyneulink.core.globals.defaults import defaultGatingAllocation
 from psyneulink.core.globals.keywords import \
     GATE, GATING_PROJECTION, GATING_SIGNAL, INPUT_PORT, INPUT_PORTS, \
     MODULATES, OUTPUT_PORT, OUTPUT_PORTS, OUTPUT_PORT_PARAMS, PROJECTIONS, RECEIVER
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
@@ -263,12 +264,8 @@ __all__ = [
 ]
 
 
-class GatingSignalError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class GatingSignalError(ModulatorySignalError):
+    pass
 
 
 gating_signal_keywords = {GATE}

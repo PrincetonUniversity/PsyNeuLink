@@ -106,13 +106,13 @@ Projection in context:
   * **Keyword** -- creates a default instance of the specified type, which can be any of the following:
 
       * *MAPPING_PROJECTION* -- if the `sender <MappingProjection.sender>` and/or its `receiver
-        <MappingProjection.receiver>` cannot be inferred from the context in which this specification occurs, then its
-        `initialization is deferred <MappingProjection_Deferred_Initialization>` until both of those have been
-        determined (e.g., it is used in the specification of a `pathway <Process.pathway>` for a `Process`). For
-        MappingProjections, a `matrix specification <MappingProjection_Matrix_Specification>` can also be used to
-        specify the projection (see **value** below).
-      COMMENT:
+        <MappingProjection.receiver>` cannot be inferred from the context in which this specification occurs, then
+        its `initialization is deferred <MappingProjection_Deferred_Initialization>` until both of those have been
+        determined (e.g., it is used in the specification of a `Pathway` for a `Composition`). For MappingProjections,
+        a `matrix specification <MappingProjection_Matrix_Specification>` can also be used to specify the Projection
+        (see **value** below).
 
+      COMMENT:
       * *LEARNING_PROJECTION*  (or *LEARNING*) -- this can only be used in the specification of a `MappingProjection`
         (see `tuple <MappingProjection_Matrix_Specification>` format).  If the `receiver <MappingProjection.receiver>`
         of the MappingProjection projects to a `LearningMechanism` or a `ComparatorMechanism` that projects to one,
@@ -122,7 +122,9 @@ Projection in context:
         <LearningProjection.sender>`. See `LearningMechanism_Learning_Configurations` for additional details.
       COMMENT
 
+      COMMENT:
       # FIX 5/8/20 [JDC] ELIMINATE SYSTEM:  IS IT TRUE THAT CONTROL SIGNALS ARE AUTOMATICALLY CREATED BY COMPOSITIONS?
+      COMMENT
       * *CONTROL_PROJECTION* (or *CONTROL*) -- this can be used when specifying a parameter using the `tuple format
         <ParameterPort_Tuple_Specification>`, to create a default `ControlProjection` to the `ParameterPort` for that
         parameter.  If the `Component <Component>` to which the parameter belongs is part of a `Composition`, then a
@@ -404,6 +406,7 @@ from beartype import beartype
 from psyneulink._typing import Optional, Union, Type, Literal, Any, Dict, Tuple
 
 from psyneulink.core import llvm as pnlvm
+from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.function import get_matrix, ValidMatrixSpecType
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.functions.nonstateful.transferfunctions import LinearMatrix
@@ -411,7 +414,7 @@ from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import 
 from psyneulink.core.components.ports.port import PortError
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base, Projection, Port
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.json import _get_variable_parameter_name
+from psyneulink.core.globals.mdf import _get_variable_parameter_name
 from psyneulink.core.globals.keywords import \
     CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, EXPONENT, FUNCTION_PARAMS, GATE, GATING_PROJECTION, GATING_SIGNAL, \
     INPUT_PORT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, \
@@ -420,11 +423,12 @@ from psyneulink.core.globals.keywords import \
     NAME, OUTPUT_PORT, OUTPUT_PORTS, PARAMS, PATHWAY, PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, \
     RECEIVER, SENDER, STANDARD_ARGS, PORT, PORTS, WEIGHT, ADD_INPUT_PORT, ADD_OUTPUT_PORT, \
     PROJECTION_COMPONENT_CATEGORY
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
 from psyneulink.core.globals.socket import ConnectionInfo
-from psyneulink.core.globals.utilities import ContentAddressableList, is_matrix, is_numeric, parse_valid_identifier
+from psyneulink.core.globals.utilities import \
+    ContentAddressableList, is_matrix, is_numeric, parse_valid_identifier
 
 __all__ = [
     'Projection_Base', 'projection_keywords', 'PROJECTION_SPEC_KEYWORDS',
@@ -466,9 +470,8 @@ def projection_param_keywords():
 ProjectionTuple = namedtuple("ProjectionTuple", "port, weight, exponent, projection")
 
 
-class ProjectionError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
+class ProjectionError(ComponentError):
+    pass
 
 class DuplicateProjectionError(Exception):
     def __init__(self, error_value):
@@ -633,6 +636,7 @@ class Projection_Base(Projection):
 
     classPreferenceLevel = PreferenceLevel.CATEGORY
 
+    @check_user_specified
     @abc.abstractmethod
     def __init__(self,
                  receiver,
@@ -745,6 +749,8 @@ class Projection_Base(Projection):
         if hasattr(self.receiver, "afferents_info"):
             if self not in self.receiver.afferents_info:
                 self.receiver.afferents_info[self] = ConnectionInfo()
+
+        self._creates_scheduling_dependency = True
 
        # Validate variable, function and params
         # Note: pass name of Projection (to override assignment of componentName in super.__init__)
@@ -1031,6 +1037,12 @@ class Projection_Base(Projection):
 
     # Provide invocation wrapper
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+
+        if "passthrough" in tags:
+            assert arg_in.type == arg_out.type, "Requestd passthrough projection but types are not compatible IN: {} OUT: {}".format(arg_in.type, arg_out.type)
+            builder.store(builder.load(arg_in), arg_out)
+            return builder
+
         mf_state = pnlvm.helpers.get_state_ptr(builder, self, state, self.parameters.function.name)
         mf_params = pnlvm.helpers.get_param_ptr(builder, self, params, self.parameters.function.name)
         main_function = ctx.import_llvm_function(self.function)
@@ -1068,8 +1080,8 @@ class Projection_Base(Projection):
             else:
                 sender_mech = parse_valid_identifier(self.sender.owner.name)
         else:
-            sender_name = None
-            sender_mech = None
+            sender_name = ''
+            sender_mech = ''
 
         if not isinstance(self.receiver, type):
             try:
@@ -1088,8 +1100,8 @@ class Projection_Base(Projection):
             else:
                 receiver_mech = parse_valid_identifier(self.receiver.owner.name)
         else:
-            receiver_name = None
-            receiver_mech = None
+            receiver_name = ''
+            receiver_mech = ''
 
         socket_dict = {
             MODEL_SPEC_ID_SENDER_PORT: f'{sender_mech}_{sender_name}',
@@ -1111,7 +1123,7 @@ class Projection_Base(Projection):
             edge_function = edge_node.function
             edge_node = edge_node.as_mdf_model()
 
-            func_model = [f for f in edge_node.functions if f.id == parse_valid_identifier(edge_function.name)][0]
+            func_model = [f for f in edge_node.functions if f.id == parse_valid_identifier(f'{edge_node.id}_{edge_function.name}')][0]
             var_name = _get_variable_parameter_name(edge_function)
 
             # 2d variable on LinearMatrix will be incorrect on import back to psyneulink
@@ -1149,10 +1161,7 @@ class Projection_Base(Projection):
         else:
             metadata = self._mdf_metadata
             try:
-                metadata[MODEL_SPEC_ID_METADATA]['functions'] = mdf.Function.to_dict_format(
-                    self.function.as_mdf_model(),
-                    ordered=False
-                )
+                metadata[MODEL_SPEC_ID_METADATA]['functions'] = mdf.Function.to_dict(self.function.as_mdf_model())
             except AttributeError:
                 # projection is in deferred init, special handling here?
                 pass

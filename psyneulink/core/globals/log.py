@@ -1641,7 +1641,7 @@ class Log:
 
             csv += next_eid_entry_data
 
-        return(csv)
+        return (csv)
 
     def _validate_entries_arg(self, entries, loggable=True, logged=False):
         from psyneulink.core.components.component import Component

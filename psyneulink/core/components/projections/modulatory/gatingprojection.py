@@ -114,7 +114,7 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     FUNCTION_OUTPUT_TYPE, GATE, GATING_MECHANISM, GATING_PROJECTION, GATING_SIGNAL, \
     INPUT_PORT, OUTPUT_PORT
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
@@ -126,12 +126,8 @@ parameter_keywords.update({GATING_PROJECTION, GATE})
 projection_keywords.update({GATING_PROJECTION, GATE})
 GATING_SIGNAL_PARAMS = 'gating_signal_params'
 
-class GatingProjectionError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class GatingProjectionError(ProjectionError):
+    pass
 
 
 def _gating_signal_getter(owning_component=None, context=None):

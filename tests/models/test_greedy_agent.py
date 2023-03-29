@@ -52,15 +52,8 @@ def test_simplified_greedy_agent(benchmark, comp_mode):
     for projection in greedy_action_mech.projections:
         agent_comp.add_projection(projection)
 
-    run_results = agent_comp.run(inputs={player:[[619,177]],
-                                         prey:[[419,69]]},
-                                 execution_mode=comp_mode)
+    run_results = benchmark(agent_comp.run, inputs={player:[[619,177]],prey:[[419,69]]}, execution_mode=comp_mode)
     assert np.allclose(run_results, [[-200, -108]])
-    if benchmark.enabled:
-        benchmark(agent_comp.run, **{'inputs':{
-            player:[[619,177]],
-            prey:[[419,69]],
-            }, 'execution_mode':comp_mode})
 
 @pytest.mark.model
 @pytest.mark.benchmark(group="Greedy Agant Random")
@@ -94,25 +87,12 @@ def test_simplified_greedy_agent_random(benchmark, comp_mode):
     for projection in greedy_action_mech.projections:
         agent_comp.add_projection(projection)
 
-    run_results = agent_comp.run(inputs={player:[[619,177]],
-                                         prey:[[419,69]]},
-                                 execution_mode=comp_mode)
-    # KDM 12/4/19: modified results due to global seed offset of
-    # GaussianDistort assignment.
-    # to produce old numbers, run get_global_seed once before creating
-    # each Mechanism with GaussianDistort above
+    run_results = benchmark(agent_comp.run, inputs={player:[[619, 177]], prey:[[419, 69]]}, execution_mode=comp_mode)
     assert np.allclose(run_results, [[-199.5484223217141, -107.79361870517444]])
-    if benchmark.enabled:
-        benchmark(agent_comp.run, **{'inputs':{
-            player:[[619,177]],
-            prey:[[419,69]],
-            }, 'execution_mode':comp_mode})
 
 @pytest.mark.model
 @pytest.mark.benchmark(group="Predator Prey")
-@pytest.mark.parametrize("mode", pytest.helpers.get_comp_execution_modes() +
-                                 [pytest.helpers.cuda_param('Python-PTX'),
-                                  pytest.param('Python-LLVM', marks=pytest.mark.llvm)])
+@pytest.mark.parametrize("mode, ocm_mode", pytest.helpers.get_comp_and_ocm_execution_modes())
 @pytest.mark.parametrize("samples", [[0,10],
     pytest.param([0,3,6,10], marks=pytest.mark.stress),
     pytest.param([0,2,4,6,8,10], marks=pytest.mark.stress),
@@ -120,18 +100,12 @@ def test_simplified_greedy_agent_random(benchmark, comp_mode):
 ], ids=lambda x: len(x))
 @pytest.mark.parametrize('prng', ['Default', 'Philox'])
 @pytest.mark.parametrize('fp_type', [pnl.core.llvm.ir.DoubleType, pnl.core.llvm.ir.FloatType])
-def test_predator_prey(benchmark, mode, prng, samples, fp_type):
+def test_predator_prey(benchmark, mode, ocm_mode, prng, samples, fp_type):
     if len(samples) > 10 and mode not in {pnl.ExecutionMode.LLVM,
                                           pnl.ExecutionMode.LLVMExec,
-                                          pnl.ExecutionMode.LLVMRun,
-                                          "Python-PTX", "Python-LLVM"}:
+                                          pnl.ExecutionMode.LLVMRun} and \
+       ocm_mode not in {'LLVM', 'PTX'}:
         pytest.skip("This test takes too long")
-    if str(mode).startswith('Python-'):
-        ocm_mode = mode.split('-')[1]
-        mode = pnl.ExecutionMode.Python
-    else:
-        # OCM default mode is Python
-        ocm_mode = 'Python'
 
     # Instantiate LLVMBuilderContext using the preferred fp type
     pnl.core.llvm.builder_context.LLVMBuilderContext(fp_type())
@@ -179,7 +153,7 @@ def test_predator_prey(benchmark, mode, prng, samples, fp_type):
 
     # note: unitization is done in main loop
     greedy_action_mech = pnl.ProcessingMechanism(function=action_fn, input_ports=["predator", "player", "prey"],
-                                                 default_variable=[[0,0],[0,0],[0,0]], name="ACTION")
+                                                 default_variable=[[0, 1], [0, -1], [1, 0]], name="ACTION")
 
     direct_move = ComparatorMechanism(name='DIRECT MOVE',sample=player_pos, target=prey_pos)
 
@@ -232,7 +206,7 @@ def test_predator_prey(benchmark, mode, prng, samples, fp_type):
                   predator_pos:[[-0.03479106, -0.47666293]],
                   prey_pos:[[-0.60836214,  0.1760381 ]],
                  }
-    run_results = agent_comp.run(inputs=input_dict, num_trials=2, execution_mode=mode)
+    run_results = benchmark(agent_comp.run, inputs=input_dict, num_trials=2, execution_mode=mode)
 
     if len(samples) == 2:
         if prng == 'Default':
@@ -247,12 +221,9 @@ def test_predator_prey(benchmark, mode, prng, samples, fp_type):
         else:
             assert False, "Unknown PRNG!"
 
-        if mode == pnl.ExecutionMode.Python:
-            # FIXEM: The results are 'close' for both Philox and MT,
+        if mode == pnl.ExecutionMode.Python and not benchmark.enabled:
+            # FIXME: The results are 'close' for both Philox and MT,
             #        because they're dominated by costs
             assert np.allclose(np.asfarray(ocm.function.saved_values).flatten(),
                                [-2.66258741, -22027.9970321, -22028.17515945, -44053.59867802,
                                 -22028.06045185, -44053.4048842, -44053.40736234, -66078.90687915])
-
-    if benchmark.enabled:
-        benchmark(agent_comp.run, inputs=input_dict, execution_mode=mode)

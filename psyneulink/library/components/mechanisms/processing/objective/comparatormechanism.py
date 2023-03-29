@@ -147,32 +147,32 @@ from beartype import beartype
 from psyneulink._typing import Optional, Union
 
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
-from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
+from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.port import _parse_port_spec
 from psyneulink.core.globals.keywords import \
-    COMPARATOR_MECHANISM, FUNCTION, INPUT_PORTS, NAME, OUTCOME, SAMPLE, TARGET, VARIABLE, PREFERENCE_SET_NAME, MSE, SSE
-from psyneulink.core.globals.parameters import Parameter
+    COMPARATOR_MECHANISM, FUNCTION, INPUT_PORTS, NAME, OUTCOME, SAMPLE, TARGET, \
+    VARIABLE, PREFERENCE_SET_NAME, Loss, SUM
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.utilities import \
     NumericCollections, is_value_spec, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, recursive_update
 from psyneulink.core.globals.utilities import safe_len
 
-__all__ = [
-    'ComparatorMechanism', 'ComparatorMechanismError'
-]
+__all__ = ['ComparatorMechanism', 'ComparatorMechanismError', 'MSE', 'SSE', 'SSE', 'L0', 'L1', 'CROSS_ENTROPY']
 
+MSE = Loss.MSE.name
+SSE = Loss.SSE.name
+L0 = Loss.L0.name
+L1 = Loss.L1.name
+CROSS_ENTROPY = Loss.CROSS_ENTROPY.name
 
-class ComparatorMechanismError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class ComparatorMechanismError(MechanismError):
+    pass
 
 
 class ComparatorMechanism(ObjectiveMechanism):
@@ -247,13 +247,19 @@ class ComparatorMechanism(ObjectiveMechanism):
 
         .. _COMPARATOR_MECHANISM_SSE
 
+        *SUM*
+            the sum of the terms in in the array returned by the Mechanism's function.
+
         *SSE*
-            the value of the sum squared error of the Mechanism's function
+            the sum of squares of the terms in the array returned by the Mechanism's function.
 
         .. _COMPARATOR_MECHANISM_MSE
 
         *MSE*
-            the value of the mean squared error of the Mechanism's function
+            the mean of the squares of the terms returned by the Mechanism's function.
+
+        .. _COMPARATOR_MECHANISM_MSE
+
 
     """
     componentType = COMPARATOR_MECHANISM
@@ -318,12 +324,15 @@ class ComparatorMechanism(ObjectiveMechanism):
     # ComparatorMechanism parameter and control signal assignments):
 
     standard_output_ports = ObjectiveMechanism.standard_output_ports.copy()
-    standard_output_ports.extend([{NAME: SSE,
+    standard_output_ports.extend([{NAME: SUM,
+                                   FUNCTION: lambda x: np.sum(x)},
+                                  {NAME: SSE,
                                    FUNCTION: lambda x: np.sum(x * x)},
                                   {NAME: MSE,
-                                   FUNCTION: lambda x: np.sum(x * x) / safe_len(x)}])
+                                   FUNCTION: lambda x: np.sum(x * x) / safe_len(x)}]
+                                 )
     standard_output_port_names = ObjectiveMechanism.standard_output_port_names.copy()
-    standard_output_port_names.extend([SSE, MSE])
+    standard_output_port_names.extend([SUM, Loss.SSE.name, Loss.MSE.name])
 
     @check_user_specified
     @tc.typecheck

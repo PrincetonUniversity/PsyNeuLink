@@ -67,7 +67,6 @@ def AdaptiveIntFun(init, value, iterations, noise, rate, offset, **kwargs):
             return [3.59649986, 3.28818534, 2.45181396, 3.14321808, 1.56270704,
                     2.88397872, 1.62818492, 3.72575501, 2.80657186, 2.2131637]
 
-
 def DriftIntFun(init, value, iterations, noise, **kwargs):
     assert iterations == 3
     if np.isscalar(noise):
@@ -107,7 +106,6 @@ def LeakyFun(init, value, iterations, noise, **kwargs):
             return [2.39694798, 2.27976578, 1.9349721, 2.21280371, 1.5655935, 2.11241762, 1.59283164, 2.46577518, 2.09617208, 1.82765063]
         else:
             return [3.12748415, 2.76778478, 2.45911505, 3.06686514, 1.6311395, 2.19281309, 1.61148745, 3.23404557, 2.81418859, 2.63042344]
-
 
 def AccumulatorFun(init, value, iterations, noise, **kwargs):
     assert iterations == 3
@@ -169,7 +167,7 @@ def test_execute(func, func_mode, variable, noise, params, benchmark):
 
     if 'DriftOnASphereIntegrator' in func[0].componentName:
         if func_mode != 'Python':
-            pytest.skip("DriftDiffusionIntegrator not yet compiled")
+            pytest.skip("DriftOnASphereIntegrator not yet compiled")
         params.update({'dimension':len(variable) + 1})
     else:
         if 'dimension' in params:
@@ -193,13 +191,10 @@ def test_execute(func, func_mode, variable, noise, params, benchmark):
 
     ex(variable)
     ex(variable)
-    res = ex(variable)
+    res = benchmark(ex, variable)
     expected = func[1](f.initializer, variable, 3, noise, **params)
     for r, e in zip(res, expected):
         assert np.allclose(r, e)
-
-    if benchmark.enabled:
-        benchmark(ex, variable)
 
 
 def test_integrator_function_no_default_variable_and_params_len_more_than_1():
@@ -262,6 +257,43 @@ names = [
     "ANGLE_CLASS", "ANGLE_NONE", "ANGLE_2", "ANGLE_3",
     "NOISE_SCALAR", "NOISE_2", "NOISE_3", "NOISE_4"
 ]
+
+
+def test_DriftOnASphere_identicalness_against_reference_implementation():
+    """Compare against reference implementation in nback-paper model (https://github.com/andrebeu/nback-paper)."""
+
+    # PNL DriftOnASphere
+    DoS = Functions.DriftOnASphereIntegrator(dimension=5, initializer=np.array([.2] * (4)), noise=0.0)
+    results_dos = []
+    for i in range(3):
+        results_dos.append(DoS(.1))
+
+    # nback-paper implementation
+    def spherical_drift(n_steps=3, dim=5, var=0, mean=.1):
+        def convert_spherical_to_angular(dim, ros):
+            ct = np.zeros(dim)
+            ct[0] = np.cos(ros[0])
+            prod = np.product([np.sin(ros[k]) for k in range(1, dim - 1)])
+            n_prod = prod
+            for j in range(dim - 2):
+                n_prod /= np.sin(ros[j + 1])
+                amt = n_prod * np.cos(ros[j + 1])
+                ct[j + 1] = amt
+            ct[dim - 1] = prod
+            return ct
+        # initialize the spherical coordinates to ensure each context run begins in a new random location on the unit sphere
+        ros = np.array([.2] *(dim - 1))
+        slen = n_steps
+        ctxt = np.zeros((slen, dim))
+        for i in range(slen):
+            noise = np.random.normal(mean, var, size=(dim - 1)) # add a separately-drawn Gaussian to each spherical coord
+            ros += noise
+            ctxt[i] = convert_spherical_to_angular(dim, ros)
+        return ctxt
+    results_sd = spherical_drift()
+
+    assert np.allclose(np.array(results_dos), np.array(results_sd))
+
 
 # FIX: CROSS WITH INITIALIZER SIZE:
 @pytest.mark.parametrize("params, error_msg, error_type", test_vars, ids=names)

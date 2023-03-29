@@ -40,7 +40,7 @@ def test_gating(benchmark, comp_mode):
     comp.add_linear_processing_pathway(p_pathway)
     comp.add_node(Gating_Mechanism)
 
-    comp.run(num_trials=4, inputs=stim_list, execution_mode=comp_mode)
+    benchmark(comp.run, num_trials=4, inputs=stim_list, execution_mode=comp_mode)
 
     expected_results = [
         [np.array([0., 0., 0.])],
@@ -49,9 +49,7 @@ def test_gating(benchmark, comp_mode):
         [np.array([2.53788284, 2.53788284, 2.53788284])]
     ]
 
-    np.testing.assert_allclose(comp.results, expected_results)
-    if benchmark.enabled:
-        benchmark(comp.run, num_trials=4, inputs=stim_list, execution_mode=comp_mode)
+    np.testing.assert_allclose(comp.results[:4], expected_results)
 
 # DEPRECATED FUNCTIONALITY 9/26/19
 # @pytest.mark.composition

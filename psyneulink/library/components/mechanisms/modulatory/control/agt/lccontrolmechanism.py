@@ -302,31 +302,28 @@ from psyneulink._typing import Optional, Union, Iterable
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.stateful.integratorfunctions import FitzHughNagumoIntegrator
-from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism, ControlMechanismError
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.keywords import \
     INIT_EXECUTE_METHOD_ONLY, MULTIPLICATIVE_PARAM, PROJECTIONS
-from psyneulink.core.globals.parameters import Parameter, ParameterAlias
+from psyneulink.core.globals.parameters import Parameter, ParameterAlias, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import convert_to_list
 
 __all__ = [
-    'CONTROL_SIGNAL_NAME', 'ControlMechanismRegistry', 'LCControlMechanism', 'LCControlMechanismError',
+    'CONTROL_SIGNAL_NAME', 'LCControlMechanism', 'LCControlMechanismError',
     'MODULATED_MECHANISMS',
 ]
 
 MODULATED_MECHANISMS = 'modulated_mechanisms'
 CONTROL_SIGNAL_NAME = 'LCControlMechanism_ControlSignal'
 
-ControlMechanismRegistry = {}
-
-class LCControlMechanismError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
+class LCControlMechanismError(ControlMechanismError):
+    pass
 
 
 class LCControlMechanism(ControlMechanism):
@@ -835,12 +832,11 @@ class LCControlMechanism(ControlMechanism):
 
         return gain_t, output_values[0], output_values[1], output_values[2]
 
-    def _gen_llvm_invoke_function(self, ctx, builder, function, params, state,
-                                  variable, out, *, tags:frozenset):
-        assert function is self.function
-        mf_out, builder = super()._gen_llvm_invoke_function(ctx, builder, function,
-                                                            params, state, variable,
-                                                            None, tags=tags)
+    def _gen_llvm_mechanism_functions(self, ctx, builder, m_base_params, m_params, m_state, m_in,
+                                      m_val, ip_output, *, tags:frozenset):
+        mf_out, builder = super()._gen_llvm_mechanism_functions(ctx, builder, m_base_params,
+                                                                m_params, m_state, m_in,
+                                                                None, ip_output, tags=tags)
 
         # prepend gain type (matches output[1] type)
         gain_ty = mf_out.type.pointee.elements[1]
@@ -850,49 +846,40 @@ class LCControlMechanism(ControlMechanism):
 
         # allocate a new output location if the type doesn't match the one
         # provided by the caller.
-        if mech_out_ty != out.type.pointee:
-            out = builder.alloca(mech_out_ty, name="mechanism_out")
+        if mech_out_ty != m_val.type.pointee:
+            m_val = builder.alloca(mech_out_ty, name="mechanism_out")
 
         # Load mechanism parameters
-        params = builder.function.args[0]
-        scaling_factor_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
+        scaling_factor_ptr = pnlvm.helpers.get_param_ptr(builder, self, m_params,
                                                          "scaling_factor_gain")
-        base_factor_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
+        base_factor_ptr = pnlvm.helpers.get_param_ptr(builder, self, m_params,
                                                       "base_level_gain")
-        # If modulated, scaling factor is a single element array
-        if isinstance(scaling_factor_ptr.type.pointee, pnlvm.ir.ArrayType):
-            assert len(scaling_factor_ptr.type.pointee) == 1
-            scaling_factor_ptr = builder.gep(scaling_factor_ptr,
-                                             [ctx.int32_ty(0), ctx.int32_ty(0)])
-        # If modulated, base factor is a single element array
-        if isinstance(base_factor_ptr.type.pointee, pnlvm.ir.ArrayType):
-            assert len(base_factor_ptr.type.pointee) == 1
-            base_factor_ptr = builder.gep(base_factor_ptr,
-                                          [ctx.int32_ty(0), ctx.int32_ty(0)])
-        scaling_factor = builder.load(scaling_factor_ptr)
-        base_factor = builder.load(base_factor_ptr)
+        # If modulated, parameters are single element array
+        scaling_factor = pnlvm.helpers.load_extract_scalar_array_one(builder, scaling_factor_ptr)
+        base_factor = pnlvm.helpers.load_extract_scalar_array_one(builder, base_factor_ptr)
 
-        # Apply to the entire vector
+        # Apply to the entire first subvector
         vi = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(1)])
-        vo = builder.gep(out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        vo = builder.gep(m_val, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
         with pnlvm.helpers.array_ptr_loop(builder, vi, "LC_gain") as (b1, index):
             in_ptr = b1.gep(vi, [ctx.int32_ty(0), index])
+            out_ptr = b1.gep(vo, [ctx.int32_ty(0), index])
+
             val = b1.load(in_ptr)
             val = b1.fmul(val, scaling_factor)
             val = b1.fadd(val, base_factor)
 
-            out_ptr = b1.gep(vo, [ctx.int32_ty(0), index])
             b1.store(val, out_ptr)
 
         # copy the main function return value
         for i, _ in enumerate(mf_out.type.pointee.elements):
             ptr = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
-            out_ptr = builder.gep(out, [ctx.int32_ty(0), ctx.int32_ty(i + 1)])
+            out_ptr = builder.gep(m_val, [ctx.int32_ty(0), ctx.int32_ty(i + 1)])
             val = builder.load(ptr)
             builder.store(val, out_ptr)
 
-        return out, builder
+        return m_val, builder
 
     # 5/8/20: ELIMINATE SYSTEM
     # SEEMS TO STILL BE USED BY SOME MODELS;  DELETE WHEN THOSE ARE UPDATED
@@ -944,15 +931,15 @@ class LCControlMechanism(ControlMechanism):
 
             # Delete ControlProjection ControlSignal's list of efferents
             index = self.control_signals[0].efferents[control_projection]
-            del(self.control_signals[0].efferents[index])
+            del self.control_signals[0].efferents[index]
 
             # Delete ControlProjection from recipient ParameterPort
             index = parameter_port.mod_afferents[control_projection]
-            del(parameter_port.mod_afferents[index])
+            del parameter_port.mod_afferents[index]
 
             # Delete Mechanism from self.modulated_mechanisms
             index = self.modulated_mechanisms.index(mech)
-            del(self.modulated_mechanisms[index])
+            del self.modulated_mechanisms[index]
 
     def show(self):
         """Display the `OutputPorts <OutputPort>` monitored by the LCControlMechanism's `objective_mechanism`

@@ -200,7 +200,7 @@ from psyneulink.core.components.functions.nonstateful.learningfunctions import H
 from psyneulink.core.components.functions.nonstateful.objectivefunctions import Stability
 from psyneulink.core.components.functions.stateful.integratorfunctions import AdaptiveIntegrator
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
-from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
+from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
     ACTIVATION_INPUT, LEARNING_SIGNAL, LearningMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
@@ -212,7 +212,7 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import \
     AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_PORT, MATRIX, NAME, RECURRENT_TRANSFER_MECHANISM, RESULT
-from psyneulink.core.globals.parameters import Parameter, SharedParameter
+from psyneulink.core.globals.parameters import Parameter, SharedParameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.registry import register_instance, remove_instance_from_registry
 from psyneulink.core.globals.socket import ConnectionInfo
@@ -245,12 +245,8 @@ ENTROPY_OUTPUT_PORT_NAME='ENTROPY'
 
 
 
-class RecurrentTransferError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class RecurrentTransferError(MechanismError):
+    pass
 
 
 def _recurrent_transfer_mechanism_matrix_getter(owning_component=None, context=None):
@@ -1087,7 +1083,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             new_input_port = InputPort(owner=self, name=RECURRENT, variable=self.defaults.variable[0],
                                         internal_only=True)
             assert (len(new_input_port.all_afferents) == 0)  # just a sanity check
-            assert(self.input_port.name != "Recurrent Input Port")
+            assert self.input_port.name != "Recurrent Input Port"
             # Rename existing InputPort as EXTERNAL
             remove_instance_from_registry(registry=self._portRegistry,
                                           category=INPUT_PORT,
@@ -1341,6 +1337,8 @@ class RecurrentTransferMechanism(TransferMechanism):
             # 'is_finished' inner loop so we always see the most up-to-date
             # input
             builder.call(recurrent_f, [recurrent_params, recurrent_state, recurrent_in, recurrent_out])
+
+        assert not self.has_recurrent_input_port, "Configuration using combination function is not supported!"
 
         return super()._gen_llvm_input_ports(ctx, builder, params, state, arg_in)
 

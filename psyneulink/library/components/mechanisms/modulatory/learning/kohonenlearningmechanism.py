@@ -102,14 +102,14 @@ from psyneulink._typing import Optional, Union, Callable
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.nonstateful.learningfunctions import Hebbian
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
-    ACTIVATION_INPUT, ACTIVATION_OUTPUT, LearningMechanism, LearningTiming, LearningType
+    ACTIVATION_INPUT, ACTIVATION_OUTPUT, LearningMechanism, LearningMechanismError, LearningTiming, LearningType
 from psyneulink.core.components.projections.projection import projection_keywords
 from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     ADDITIVE, KOHONEN_LEARNING_MECHANISM, \
     LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_numeric, ValidParamSpecType
@@ -129,12 +129,8 @@ output_port_names = [LEARNING_SIGNAL]
 # DefaultTrainingMechanism = ObjectiveMechanism
 
 
-class KohonenLearningMechanismError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class KohonenLearningMechanismError(LearningMechanismError):
+    pass
 
 
 class KohonenLearningMechanism(LearningMechanism):

@@ -1209,6 +1209,31 @@ class TestTermination:
         # two executions of B
         assert output == [.75]
 
+    def test_termination_conditions_after_recreating_scheduler(self):
+        comp = Composition()
+        A = TransferMechanism()
+        comp.scheduler.termination_conds = {TimeScale.TRIAL: AfterNCalls(A, 3)}
+        B = TransferMechanism()
+        for m in [A, B]:
+            comp.add_node(m)
+
+        comp.run(inputs={A: 1, B: 1})
+
+        expected_output = [{A, B}, {A, B}, {A, B}]
+        assert comp.scheduler.execution_list[comp.default_execution_id] == expected_output
+
+    def test_termination_conditions_in_composition_constructor(self):
+        A = TransferMechanism()
+        comp = Composition(termination_processing={TimeScale.TRIAL: AfterNCalls(A, 3)})
+        B = TransferMechanism()
+        for m in [A, B]:
+            comp.add_node(m)
+
+        comp.run(inputs={A: 1, B: 1})
+
+        expected_output = [{A, B}, {A, B}, {A, B}]
+        assert comp.scheduler.execution_list[comp.default_execution_id] == expected_output
+
 
 def _get_vertex_feedback_type(graph, sender_port, receiver_mech):
     # there is only one projection per pair
@@ -1498,7 +1523,7 @@ class TestFeedback:
         }
         assert comp.scheduler.dependency_dict == expected_dependencies
 
-    @pytest.mark.mechanism
+    @pytest.mark.composition
     @pytest.mark.transfer_mechanism
     @pytest.mark.parametrize('timescale, expected',
                              [(TimeScale.TIME_STEP, [[0.5], [0.4375]]),
@@ -1567,7 +1592,8 @@ class TestFeedback:
                                                               time_step_size=1.0),
                         reset_stateful_function_when=pnl.AtTrialStart(),
                         execute_until_finished=False,
-                        output_ports=[pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME],
+                        # Use only the decision variable in this test
+                        output_ports=[pnl.DECISION_VARIABLE],
                         name='DDM')
 
         response = pnl.ProcessingMechanism(size=2, name="GATE")

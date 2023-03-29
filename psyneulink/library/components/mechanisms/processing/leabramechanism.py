@@ -103,10 +103,11 @@ import numbers
 
 import numpy as np
 
+from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.function import Function_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.globals.keywords import LEABRA_FUNCTION, LEABRA_FUNCTION_TYPE, LEABRA_MECHANISM, NETWORK, PREFERENCE_SET_NAME
-from psyneulink.core.globals.parameters import FunctionParameter, Parameter
+from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.scheduling.time import TimeScale
@@ -124,13 +125,8 @@ input_port_names = [MAIN_INPUT, LEARNING_TARGET]
 output_port_name = [MAIN_OUTPUT]
 
 
-class LeabraError(Exception):
-
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class LeabraError(ComponentError):
+    pass
 
 
 class LeabraFunction(Function_Base):
@@ -212,6 +208,7 @@ class LeabraFunction(Function_Base):
         variable = Parameter(np.array([[0], [0]]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         network = None
 
+    @check_user_specified
     def __init__(self,
                  default_variable=None,
                  network=None,
@@ -471,6 +468,7 @@ class LeabraMechanism(ProcessingMechanism_Base):
         network = FunctionParameter(None)
         training_flag = Parameter(False, setter=_training_flag_setter, dependencies='network')
 
+    @check_user_specified
     def __init__(self,
                  network=None,
                  input_size=None,

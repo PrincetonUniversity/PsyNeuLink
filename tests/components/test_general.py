@@ -55,33 +55,12 @@ def test_function_parameters_stateless(class_):
         pass
 
 
-@pytest.mark.parametrize(
-    'class_',
-    component_classes
-)
-def test_parameters_user_specified(class_):
-    violators = set()
-    constructor_parameters = inspect.signature(class_.__init__).parameters
-    for name, param in constructor_parameters.items():
-        if (
-            param.kind in {
-                inspect.Parameter.POSITIONAL_OR_KEYWORD,
-                inspect.Parameter.KEYWORD_ONLY
-            }
-            and name in class_.parameters.names()
-            and param.default is not inspect.Parameter.empty
-            and param.default is not None
-        ):
-            violators.add(name)
-
-    message = (
-        "If a value other than None is used as the default value in a class's"
-        + ' constructor/__init__, for an argument corresponding to a Parameter,'
-        + ' _user_specified will always be True. The default value should be'
-        + " specified in the class's Parameters inner class. Violators for"
-        + f' {class_.__name__}: {violators}'
+@pytest.mark.parametrize("class_", component_classes)
+def test_constructors_have_check_user_specified(class_):
+    assert "check_user_specified" in inspect.getsource(class_.__init__), (
+        f"The __init__ method of Component {class_.__name__} must be wrapped by"
+        f" check_user_specified in {pnl.core.globals.parameters.check_user_specified.__module__}"
     )
-    assert violators == set(), message
 
 
 @pytest.fixture(scope='module')
@@ -147,7 +126,7 @@ def test_all_dependent_parameters(
     params_inner_comp_keys = set(params_inner_comp.keys())
 
     assert params_inner_comp_keys.issubset(params_comp_keys)
-    assert(
+    assert (
         len(params_comp_keys) == 0
         or not params_comp_keys.issubset(params_inner_comp_keys)
     )

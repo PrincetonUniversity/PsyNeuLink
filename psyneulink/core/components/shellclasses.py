@@ -27,19 +27,16 @@ TBI:
 
 """
 
-from psyneulink.core.components.component import Component
+from psyneulink.core.components.component import Component, ComponentError
+from psyneulink.core.globals.parameters import check_user_specified
 
 __all__ = [
     'Function', 'Mechanism', 'Process_Base', 'Projection', 'ShellClass', 'ShellClassError', 'Port', 'System_Base',
 ]
 
 
-class ShellClassError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class ShellClassError(ComponentError):
+    pass
 
 
 def _attempt_to_call_base_class(cls, alternative):
@@ -73,6 +70,7 @@ class Process_Base(ShellClass):
 
 class Mechanism(ShellClass):
 
+    @check_user_specified
     def __init__(self,
                  default_variable=None,
                  size=None,

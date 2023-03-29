@@ -58,12 +58,12 @@ class TestProjectionSpecificationFormats:
         (pnl.CONTROL, None),
         (pnl.MODULATES, None),
         (pnl.PROJECTIONS, None),
-        ('mod and ctl', '"Both \'control\' and \'modulates\' arguments are specified in '
-                        'the constructor for \'ControlSignal; Should use just \'control\'."'),
+        ('mod and ctl', 'Both \'control\' and \'modulates\' arguments are specified in '
+                        'the constructor for \'ControlSignal; Should use just \'control\'.'),
         ('proj and ctl', 'Both \'control\' and \'projections\' arguments are specified in the constructor for '
                          '\'ControlSignal; Must use just one or the other.'),
-        ('proj and mod','"Both \'modulates\' and \'projections\' arguments are specified in the constructor for '
-                        '\'ControlSignal; Should use just \'projections\' (or \'control\') "')
+        ('proj and mod','Both \'modulates\' and \'projections\' arguments are specified in the constructor for '
+                        '\'ControlSignal; Should use just \'projections\' (or \'control\') ')
     ])
     @pytest.mark.control
     def test_control_signal_projections_arg(self, args):
@@ -92,12 +92,12 @@ class TestProjectionSpecificationFormats:
         (pnl.GATE, None),
         (pnl.MODULATES, None),
         (pnl.PROJECTIONS, None),
-        ('mod and gate', '"Both \'gate\' and \'modulates\' arguments are specified in the constructor for '
-                         '\'GatingSignal; Should use just \'gate\'."'),
+        ('mod and gate', 'Both \'gate\' and \'modulates\' arguments are specified in the constructor for '
+                         '\'GatingSignal; Should use just \'gate\'.'),
         ('proj and gate', 'Both \'gate\' and \'projections\' arguments are specified in the constructor for '
                           '\'GatingSignal; Must use just one or the other.'),
-        ('proj and mod','"Both \'modulates\' and \'projections\' arguments are specified in the constructor for '
-                        '\'GatingSignal; Should use just \'projections\' (or \'gate\') "')
+        ('proj and mod','Both \'modulates\' and \'projections\' arguments are specified in the constructor for '
+                        '\'GatingSignal; Should use just \'projections\' (or \'gate\') ')
     ])
     @pytest.mark.control
     def test_gating_signal_projections_arg(self, args):
@@ -140,13 +140,13 @@ class TestProjectionSpecificationFormats:
         if extra_spec:
             ctl_sig_spec.update({extra_spec:[M.parameter_ports[pnl.STARTING_VALUE]]})
             gating_sig_spec.update({extra_spec:[M.output_ports[pnl.RESPONSE_TIME]]})
-            ctl_err_msg = '"Both \'PROJECTIONS\' and \'CONTROL\' entries found in specification dict for ' \
-                          '\'ControlSignal\' of \'ControlMechanism-0\'. Must use only one or the other."'
+            ctl_err_msg = 'Both \'PROJECTIONS\' and \'CONTROL\' entries found in specification dict for ' \
+                          '\'ControlSignal\' of \'ControlMechanism-0\'. Must use only one or the other.'
             with pytest.raises(pnl.ControlSignalError) as err:
                 pnl.ControlMechanism(control_signals=[ctl_sig_spec])
             assert ctl_err_msg == str(err.value)
-            gating_err_msg = '"Both \'PROJECTIONS\' and \'GATE\' entries found in specification dict for ' \
-                             '\'GatingSignal\' of \'GatingMechanism-0\'. Must use only one or the other."'
+            gating_err_msg = 'Both \'PROJECTIONS\' and \'GATE\' entries found in specification dict for ' \
+                             '\'GatingSignal\' of \'GatingMechanism-0\'. Must use only one or the other.'
             with pytest.raises(pnl.GatingSignalError) as err:
                 pnl.GatingMechanism(gating_signals=[gating_sig_spec])
             assert gating_err_msg == str(err.value)
@@ -480,8 +480,7 @@ class TestProjectionSpecificationFormats:
             )
             c.add_linear_processing_pathway([m0, p0, m1])
             for warn in w:
-                if r'elementwise comparison failed; returning scalar instead' in warn.message.args[0]:
-                    raise
+                assert 'elementwise comparison failed; returning scalar instead' not in warn.message.args[0]
 
     # KDM: this is a good candidate for pytest.parametrize
     def test_masked_mapping_projection(self):

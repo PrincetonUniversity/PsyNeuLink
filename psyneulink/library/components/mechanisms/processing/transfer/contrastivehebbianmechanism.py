@@ -337,15 +337,16 @@ from beartype import beartype
 
 from psyneulink._typing import Optional, Union, Callable, Literal
 
+
 from psyneulink.core.components.functions.function import get_matrix
 from psyneulink.core.components.functions.nonstateful.learningfunctions import ContrastiveHebbian, Hebbian
 from psyneulink.core.components.functions.nonstateful.objectivefunctions import Distance
-from psyneulink.core.components.mechanisms.mechanism import Mechanism
+from psyneulink.core.components.mechanisms.mechanism import Mechanism, MechanismError
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     CONTRASTIVE_HEBBIAN_MECHANISM, COUNT, FUNCTION, HARD_CLAMP, HOLLOW_MATRIX, MAX_ABS_DIFF, NAME, \
     SIZE, SOFT_CLAMP, TARGET, VARIABLE
-from psyneulink.core.globals.parameters import Parameter, SharedParameter
+from psyneulink.core.globals.parameters import Parameter, SharedParameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.utilities import ValidParamSpecType, NumericCollections
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
@@ -386,12 +387,8 @@ MINUS_PHASE = False
 PLUS_PHASE  = True
 
 
-class ContrastiveHebbianError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class ContrastiveHebbianError(MechanismError):
+    pass
 
 
 def _CHM_output_activity_getter(owning_component=None, context=None):

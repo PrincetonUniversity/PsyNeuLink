@@ -31,6 +31,7 @@ class TestOutputPorts:
         for i, e in zip(res, expected):
             assert np.array_equal(i, e)
 
+    @pytest.mark.composition
     @pytest.mark.mechanism
     @pytest.mark.parametrize('spec, expected1, expected2',
                              [((pnl.OWNER_VALUE, 0), [1], [1]),
@@ -70,9 +71,9 @@ class TestOutputPorts:
         A = pnl.OutputPort()
         with pytest.raises(pnl.PortError) as error:
             A.path_afferents
-        assert '"OutputPorts do not have \'path_afferents\'; (access attempted for Deferred Init OutputPort)."' \
+        assert 'OutputPorts do not have \'path_afferents\'; (access attempted for Deferred Init OutputPort).' \
                in str(error.value)
         with pytest.raises(pnl.PortError) as error:
             A.path_afferents = ['test']
-        assert '"OutputPorts are not allowed to have \'path_afferents\' ' \
-               '(assignment attempted for Deferred Init OutputPort)."' in str(error.value)
+        assert 'OutputPorts are not allowed to have \'path_afferents\' ' \
+               '(assignment attempted for Deferred Init OutputPort).' in str(error.value)

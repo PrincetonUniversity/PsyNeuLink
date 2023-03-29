@@ -56,14 +56,18 @@ def module_count():
 
 _BUILTIN_PREFIX = "__pnl_builtin_"
 _builtin_intrinsics = frozenset(('pow', 'log', 'exp', 'tanh', 'coth', 'csch',
+                                 'sin', 'cos',
                                  'is_close_float', 'is_close_double',
                                  'mt_rand_init', 'philox_rand_init'))
 
 
 class _node_wrapper():
     def __init__(self, composition, node):
-        self._comp = composition
+        self._comp = weakref.proxy(composition)
         self._node = node
+
+    def __repr__(self):
+        return "Node wrapper for node '{}' in composition '{}'".format(self._node, self._comp)
 
     def _gen_llvm_function(self, *, ctx, tags:frozenset):
         return codegen.gen_node_wrapper(ctx, self._comp, self._node, tags=tags)
@@ -199,7 +203,7 @@ class LLVMBuilderContext:
         if name in _builtin_intrinsics:
             return self.import_llvm_function(_BUILTIN_PREFIX + name)
         if name in ('maxnum'):
-            function_type = pnlvm.ir.FunctionType(args[0], [args[0], args[0]])
+            function_type = ir.FunctionType(args[0], [args[0], args[0]])
         return self.module.declare_intrinsic("llvm." + name, args, function_type)
 
     def create_llvm_function(self, args, component, name=None, *, return_type=ir.VoidType(), tags:frozenset=frozenset()):
@@ -207,21 +211,20 @@ class LLVMBuilderContext:
 
         # Builtins are already unique and need to keep their special name
         func_name = name if name.startswith(_BUILTIN_PREFIX) else self.get_unique_name(name)
-        func_ty = pnlvm.ir.FunctionType(return_type, args)
-        llvm_func = pnlvm.ir.Function(self.module, func_ty, name=func_name)
+        func_ty = ir.FunctionType(return_type, args)
+        llvm_func = ir.Function(self.module, func_ty, name=func_name)
         llvm_func.attributes.add('argmemonly')
         for a in llvm_func.args:
             if isinstance(a.type, ir.PointerType):
                 a.attributes.add('nonnull')
 
         metadata = self.get_debug_location(llvm_func, component)
-        if metadata is not None:
-            scope = dict(metadata.operands)["scope"]
-            llvm_func.set_metadata("dbg", scope)
+        scope = dict(metadata.operands)["scope"]
+        llvm_func.set_metadata("dbg", scope)
 
         # Create entry block
         block = llvm_func.append_basic_block(name="entry")
-        builder = pnlvm.ir.IRBuilder(block)
+        builder = ir.IRBuilder(block)
         builder.debug_metadata = metadata
 
         return builder
@@ -263,12 +266,9 @@ class LLVMBuilderContext:
         used_seed = builder.load(used_seed_ptr)
 
         seed_ptr = helpers.get_param_ptr(builder, component, params, "seed")
-        if isinstance(seed_ptr.type.pointee, ir.ArrayType):
-            # Modulated params are usually single element arrays
-            seed_ptr = builder.gep(seed_ptr, [self.int32_ty(0), self.int32_ty(0)])
-        new_seed = builder.load(seed_ptr)
+        new_seed = pnlvm.helpers.load_extract_scalar_array_one(builder, seed_ptr)
         # FIXME: The seed should ideally be integer already.
-        #        However, it can be modulated and we don't support,
+        #        However, it can be modulated and we don't support
         #        passing integer values as computed results.
         new_seed = builder.fptoui(new_seed, used_seed.type)
 
@@ -287,9 +287,6 @@ class LLVMBuilderContext:
 
     @staticmethod
     def get_debug_location(func: ir.Function, component):
-        if "debug_info" not in debug_env:
-            return
-
         mod = func.module
         path = inspect.getfile(component.__class__) if component is not None else "<pnl_builtin>"
         d_version = mod.add_metadata([ir.IntType(32)(2), "Dwarf Version", ir.IntType(32)(4)])
@@ -327,6 +324,14 @@ class LLVMBuilderContext:
             "line": 0, "column": 0, "scope": di_func,
         })
         return di_loc
+
+    @staticmethod
+    def update_debug_loc_position(di_loc: ir.DIValue, line:int, column:int):
+        di_func = dict(di_loc.operands)["scope"]
+
+        return di_loc.parent.add_debug_info("DILocation", {
+            "line": line, "column": column, "scope": di_func,
+        })
 
     @_comp_cached
     def get_input_struct_type(self, component):
@@ -401,7 +406,7 @@ class LLVMBuilderContext:
     def get_node_wrapper(self, composition, node):
         cache = getattr(composition, '_node_wrappers', None)
         if cache is None:
-            cache = dict()
+            cache = weakref.WeakKeyDictionary()
             setattr(composition, '_node_wrappers', cache)
         return cache.setdefault(node, _node_wrapper(composition, node))
 

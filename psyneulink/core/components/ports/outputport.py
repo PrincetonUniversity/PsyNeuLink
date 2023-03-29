@@ -625,7 +625,7 @@ from psyneulink._typing import Optional, Union
 
 from psyneulink.core.components.component import Component, ComponentError
 from psyneulink.core.components.functions.function import Function
-from psyneulink.core.components.ports.port import Port_Base, _instantiate_port_list, port_type_keywords
+from psyneulink.core.components.ports.port import Port_Base, PortError, _instantiate_port_list, port_type_keywords
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ALL, ASSIGN, CALCULATE, CONTEXT, CONTROL_SIGNAL, FUNCTION, GATING_SIGNAL, INDEX, INPUT_PORT, INPUT_PORTS, \
@@ -633,7 +633,7 @@ from psyneulink.core.globals.keywords import \
     OWNER_VALUE, PARAMS, PARAMS_DICT, PROJECTION, PROJECTIONS, RECEIVER, REFERENCE_VALUE, STANDARD_OUTPUT_PORTS, PORT, \
     VALUE, VARIABLE, \
     output_port_spec_to_parameter_name, INPUT_PORT_VARIABLES
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
@@ -753,12 +753,8 @@ def _output_port_variable_getter(owning_component=None, context=None, output_por
     return _parse_output_port_variable(owning_component._variable_spec, owning_component.owner, context, output_port_name)
 
 
-class OutputPortError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class OutputPortError(PortError):
+    pass
 
 
 class OutputPort(Port_Base):
@@ -1291,7 +1287,7 @@ class OutputPort(Port_Base):
     def as_mdf_model(self):
         import modeci_mdf.mdf as mdf
 
-        owner_func_name = parse_valid_identifier(self.owner.function.name)
+        owner_func_name = parse_valid_identifier(f'{self.owner.name}_{self.owner.function.name}')
         if self._variable_spec == OWNER_VALUE:
             value = owner_func_name
         elif isinstance(self._variable_spec, tuple) and self._variable_spec[0] == OWNER_VALUE:
@@ -1305,6 +1301,8 @@ class OutputPort(Port_Base):
         return mdf.OutputPort(
             id=parse_valid_identifier(self.name),
             value=value,
+            shape=str(self.defaults.value.shape),
+            type=str(self.defaults.value.dtype),
             **self._mdf_metadata
         )
 

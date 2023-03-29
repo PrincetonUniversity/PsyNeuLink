@@ -41,7 +41,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.utilities import convert_to_np_array, ValidParamSpecType
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 
 __all__ = [
     'DistributionFunction', 'DRIFT_RATE', 'DRIFT_RATE_VARIABILITY', 'DriftDiffusionAnalytical', 'ExponentialDist',
@@ -1380,20 +1380,32 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
             moments["mean_rt_minus"] = noise**2 / (drift_rate**2) * (2 * Z * coth(2 * Z) - (-X + Z) * coth(-X + Z))
 
             moments["var_rt_plus"] = noise**4 / (drift_rate**4) * \
-                              ((2 * Z)**2 * (csch(2 * Z))**2 + (2 * Z) * coth(2 * Z) -
-                               (Z + X)**2 * (csch(Z + X))**2 - (Z + X) * coth(Z + X))
+                              (((2 * Z)**2 * csch(2 * Z)**2 -
+                                (Z + X)**2 * csch(Z + X)**2) +
+                               ((2 * Z) * coth(2 * Z) -
+                                (Z + X) * coth(Z + X)))
 
             moments["var_rt_minus"] = noise**4 / (drift_rate**4) * \
-                              ((2 * Z)**2 * (csch(2 * Z))**2 + (2 * Z) * coth(2 * Z) -
-                               (Z - X)**2 * (csch(Z - X))**2 - (Z - X) * coth(Z - X))
+                              (((2 * Z)**2 * csch(2 * Z)**2 -
+                                (Z - X)**2 * csch(Z - X)**2) +
+                               ((2 * Z) * coth(2 * Z) -
+                                (Z - X) * coth(Z - X)))
 
             moments["skew_rt_plus"] = noise**6 / (drift_rate**6) * \
-                               (3 * (2 * Z)**2 * (csch(2 * Z))**2 + 2 * (2 * Z)**3 * coth(2 * Z) * (csch(2 * Z))**2 + 3 * (2 * Z) * coth(2 * Z) -
-                                3 * (Z + X)**2 * (csch(Z + X))**2 - 2 * (Z + X)**3 * coth(Z + X) * (csch(Z + X))**2 - 3 * (Z + X) * coth(Z + X))
+                               (3 * ((2 * Z)**2 * csch(2 * Z)**2 -
+                                     (Z + X)**2 * csch(Z + X)**2) +
+                                2 * ((2 * Z)**3 * coth(2 * Z) * csch(2 * Z)**2 -
+                                     (Z + X)**3 * coth(Z + X) * csch(Z + X)**2) +
+                                3 * ((2 * Z) * coth(2 * Z) -
+                                     (Z + X) * coth(Z + X)))
 
             moments["skew_rt_minus"] = noise**6 / (drift_rate**6) * \
-                               (3 * (2 * Z)**2 * (csch(2 * Z))**2 + 2 * (2 * Z)**3 * coth(2 * Z) * (csch(2 * Z))**2 + 3 * (2 * Z) * coth(2 * Z) -
-                                3 * (Z - X)**2 * (csch(Z - X))**2 - 2 * (Z - X)**3 * coth(Z - X) * (csch(Z - X))**2 - 3 * (Z - X) * coth(Z - X))
+                               (3 * ((2 * Z)**2 * csch(2 * Z)**2 -
+                                     (Z - X)**2 * csch(Z - X)**2) +
+                                2 * ((2 * Z)**3 * coth(2 * Z) * csch(2 * Z)**2 -
+                                     (Z - X)**3 * coth(Z - X) * csch(Z - X)**2) +
+                                3 * ((2 * Z) * coth(2 * Z) -
+                                     (Z - X) * coth(Z - X)))
 
             # divide third central moment by var_rt**1.5 to get skewness
             moments['skew_rt_plus'] /= moments['var_rt_plus']**1.5
@@ -1495,7 +1507,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
                 x0tilde = builder.fdiv(y0tilde, drift_rate_normed)
 
                 exp_f = ctx.get_builtin("exp", [bias_adj.type])
-                # Precompute the same values as Python above
+                # Pre-compute the same values as Python above
                 neg2_x0tilde_atilde = builder.fmul(x0tilde.type(-2), x0tilde)
                 neg2_x0tilde_atilde = builder.fmul(neg2_x0tilde_atilde, atilde)
                 exp_neg2_x0tilde_atilde = builder.call(exp_f, [neg2_x0tilde_atilde])
@@ -1617,9 +1629,9 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         ZmX_sqr_csch_ZmX_sqr = builder.fmul(ZmX_sqr, csch_ZmX_sqr)
 
         # Variance plus
-        v_rt_p = builder.fadd(Z2_sqr_csch_Z2_sqr, Z2_coth_Z2)
-        v_rt_p = builder.fsub(v_rt_p, ZpX_sqr_csch_ZpX_sqr)
-        v_rt_p = builder.fsub(v_rt_p, ZpX_coth_ZpX)
+        v_rt_pA = builder.fsub(Z2_sqr_csch_Z2_sqr, ZpX_sqr_csch_ZpX_sqr)
+        v_rt_pB = builder.fsub(Z2_coth_Z2, ZpX_coth_ZpX)
+        v_rt_p = builder.fadd(v_rt_pA, v_rt_pB)
         v_rt_p = builder.fmul(noise_q_drift_q, v_rt_p)
         builder.store(v_rt_p, var_rt_plus_ptr)
 
@@ -1627,9 +1639,9 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         v_rt_p_1_5 = builder.call(pow_f, [v_rt_p, v_rt_p.type(1.5)])
 
         # Variance minus
-        v_rt_m = builder.fadd(Z2_sqr_csch_Z2_sqr, Z2_coth_Z2)
-        v_rt_m = builder.fsub(v_rt_m, ZmX_sqr_csch_ZmX_sqr)
-        v_rt_m = builder.fsub(v_rt_m, ZmX_coth_ZmX)
+        v_rt_mA = builder.fsub(Z2_sqr_csch_Z2_sqr, ZmX_sqr_csch_ZmX_sqr)
+        v_rt_mB = builder.fsub(Z2_coth_Z2, ZmX_coth_ZmX)
+        v_rt_m = builder.fadd(v_rt_mA, v_rt_mB)
         v_rt_m = builder.fmul(noise_q_drift_q, v_rt_m)
         builder.store(v_rt_m, var_rt_minus_ptr)
 
@@ -1641,38 +1653,43 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         drift_rate_6 = builder.fmul(drift_rate_q, drift_rate_sqr)
 
         srt_tmp0 = builder.fdiv(noise_6, drift_rate_6)
-        srt_tmp1a = builder.fmul(Z2_sqr_csch_Z2_sqr.type(3),
-                                  Z2_sqr_csch_Z2_sqr)
-        srt_tmp2a = builder.fmul(Z2_coth_Z2, Z2_sqr_csch_Z2_sqr)
-        srt_tmp2a = builder.fmul(srt_tmp2a.type(2), srt_tmp2a)
-        srt_tmp3a = builder.fmul(Z2_coth_Z2.type(3), Z2_coth_Z2)
-        s_rt = builder.fadd(srt_tmp1a, srt_tmp2a)
-        s_rt = builder.fadd(s_rt, srt_tmp3a)
+
+        Z2_cub_coth_Z2_csch_Z2_sqr = builder.fmul(Z2_coth_Z2, Z2_sqr_csch_Z2_sqr)
+        ZpX_cub_coth_ZpX_csch_Z2_sqr = builder.fmul(ZpX_coth_ZpX, ZpX_sqr_csch_ZpX_sqr)
+        ZmX_cub_coth_ZmX_csch_Z2_sqr = builder.fmul(ZmX_coth_ZmX, ZmX_sqr_csch_ZmX_sqr)
 
         # Skew plus
-        srtp_tmp1b = builder.fmul(ZpX_sqr_csch_ZpX_sqr.type(3),
-                                  ZpX_sqr_csch_ZpX_sqr)
-        srtp_tmp2b = builder.fmul(ZpX_coth_ZpX, ZpX_sqr_csch_ZpX_sqr)
-        srtp_tmp2b = builder.fmul(srtp_tmp2b.type(2), srtp_tmp2b)
-        srtp_tmp3b = builder.fmul(ZpX_coth_ZpX.type(3), ZpX_coth_ZpX)
+        s_rt_p_tmpA = builder.fsub(Z2_sqr_csch_Z2_sqr, ZpX_sqr_csch_ZpX_sqr)
+        s_rt_p_tmpA = builder.fmul(s_rt_p_tmpA, s_rt_p_tmpA.type(3))
 
-        s_rt_p = builder.fsub(s_rt, srtp_tmp1b)
-        s_rt_p = builder.fsub(s_rt_p, srtp_tmp2b)
-        s_rt_p = builder.fsub(s_rt_p, srtp_tmp3b)
+        s_rt_p_tmpB = builder.fsub(Z2_cub_coth_Z2_csch_Z2_sqr,
+                                   ZpX_cub_coth_ZpX_csch_Z2_sqr)
+        s_rt_p_tmpB = builder.fadd(s_rt_p_tmpB, s_rt_p_tmpB)
+
+        s_rt_p_tmpC = builder.fsub(Z2_coth_Z2, ZpX_coth_ZpX)
+        s_rt_p_tmpC = builder.fmul(s_rt_p_tmpC, s_rt_p_tmpC.type(3))
+
+        s_rt_p = builder.fadd(s_rt_p_tmpA, s_rt_p_tmpB)
+        s_rt_p = builder.fadd(s_rt_p, s_rt_p_tmpC)
+
         s_rt_p = builder.fmul(srt_tmp0, s_rt_p)
         s_rt_p = builder.fdiv(s_rt_p, v_rt_p_1_5)
         builder.store(s_rt_p, skew_rt_plus_ptr)
 
         # Skew minus
-        srtm_tmp1b = builder.fmul(ZmX_sqr_csch_ZmX_sqr.type(3),
-                                  ZmX_sqr_csch_ZmX_sqr)
-        srtm_tmp2b = builder.fmul(ZmX_coth_ZmX, ZmX_sqr_csch_ZmX_sqr)
-        srtm_tmp2b = builder.fmul(srtm_tmp2b.type(2), srtm_tmp2b)
-        srtm_tmp3b = builder.fmul(ZmX_coth_ZmX.type(3), ZmX_coth_ZmX)
+        s_rt_m_tmpA = builder.fsub(Z2_sqr_csch_Z2_sqr, ZmX_sqr_csch_ZmX_sqr)
+        s_rt_m_tmpA = builder.fmul(s_rt_m_tmpA, s_rt_m_tmpA.type(3))
 
-        s_rt_m = builder.fsub(s_rt, srtm_tmp1b)
-        s_rt_m = builder.fsub(s_rt_m, srtm_tmp2b)
-        s_rt_m = builder.fsub(s_rt_m, srtm_tmp3b)
+        s_rt_m_tmpB = builder.fsub(Z2_cub_coth_Z2_csch_Z2_sqr,
+                                   ZmX_cub_coth_ZmX_csch_Z2_sqr)
+        s_rt_m_tmpB = builder.fadd(s_rt_m_tmpB, s_rt_m_tmpB)
+
+        s_rt_m_tmpC = builder.fsub(Z2_coth_Z2, ZmX_coth_ZmX)
+        s_rt_m_tmpC = builder.fmul(s_rt_m_tmpC, s_rt_m_tmpC.type(3))
+
+        s_rt_m = builder.fadd(s_rt_m_tmpA, s_rt_m_tmpB)
+        s_rt_m = builder.fadd(s_rt_m, s_rt_m_tmpC)
+
         s_rt_m = builder.fmul(srt_tmp0, s_rt_m)
         s_rt_m = builder.fdiv(s_rt_m, v_rt_m_1_5)
         builder.store(s_rt_m, skew_rt_minus_ptr)

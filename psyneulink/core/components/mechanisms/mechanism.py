@@ -1089,7 +1089,7 @@ from beartype import beartype
 from psyneulink._typing import Optional, Union, Literal, Type
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.component import Component
+from psyneulink.core.components.component import Component, ComponentError
 from psyneulink.core.components.functions.function import FunctionOutputType
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
 from psyneulink.core.components.ports.inputport import DEFER_VARIABLE_SPEC_TO_MECH_MSG, InputPort
@@ -1100,7 +1100,6 @@ from psyneulink.core.components.ports.port import \
     REMOVE_PORTS, PORT_SPEC, _parse_port_spec, PORT_SPECIFIC_PARAMS, PROJECTION_SPECIFIC_PARAMS
 from psyneulink.core.components.shellclasses import Mechanism, Projection, Port
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
-from psyneulink.core.globals.json import _get_variable_parameter_name, _substitute_expression_args
 # TODO: remove unused keywords
 from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, EXECUTION_PHASE, EXPONENT, FUNCTION_PARAMS, \
@@ -1111,7 +1110,7 @@ from psyneulink.core.globals.keywords import \
     NAME, OUTPUT, OUTPUT_LABELS_DICT, OUTPUT_PORT, OUTPUT_PORT_PARAMS, OUTPUT_PORTS, OWNER_EXECUTION_COUNT, OWNER_VALUE, \
     PARAMETER_PORT, PARAMETER_PORT_PARAMS, PARAMETER_PORTS, PROJECTIONS, REFERENCE_VALUE, RESULT, \
     TARGET_LABELS_DICT, VALUE, VARIABLE, WEIGHT, MODEL_SPEC_ID_MDF_VARIABLE, MODEL_SPEC_ID_INPUT_PORT_COMBINATION_FUNCTION
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
 from psyneulink.core.globals.utilities import \
@@ -1128,12 +1127,8 @@ logger = logging.getLogger(__name__)
 MechanismRegistry = {}
 
 
-class MechanismError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class MechanismError(ComponentError):
+    pass
 
 
 class MechParamsDict(UserDict):
@@ -1683,6 +1678,7 @@ class Mechanism_Base(Mechanism):
     @check_user_specified
     @tc.typecheck
     @abc.abstractmethod
+    @check_user_specified
     def __init__(self,
                  default_variable=None,
                  size=None,
@@ -2637,14 +2633,15 @@ class Mechanism_Base(Mechanism):
                 # Call input_port._execute with newly assigned variable and assign result to input_port.value
                 base_error_msg = f"Input to '{self.name}' ({input_item}) is incompatible " \
                                  f"with its corresponding {InputPort.__name__} ({input_port.full_name})"
+                variable = input_port.parameters.variable.get(context)
                 try:
-                    input_port.parameters.value._set(
-                        input_port._execute(input_port.parameters.variable.get(context), context),
-                        context)
-                except (RunError,TypeError) as error:
+                    value = input_port._execute(variable, context)
+                except (RunError, TypeError) as error:
                     raise MechanismError(f"{base_error_msg}: '{error.args[0]}.'")
                 except:
                     raise MechanismError(f"{base_error_msg}.")
+                else:
+                    input_port.parameters.value._set(value, context)
             else:
                 raise MechanismError(f"Length ({len(input_item)}) of input ({input_item}) does not match "
                                      f"required length ({input_port.default_input_shape.size}) for input "
@@ -3091,7 +3088,7 @@ class Mechanism_Base(Mechanism):
 
         return f_out, builder
 
-    def _gen_llvm_is_finished_cond(self, ctx, builder, m_params, m_state):
+    def _gen_llvm_is_finished_cond(self, ctx, builder, m_base_params, m_state, m_inputs):
         return ctx.bool_ty(1)
 
     def _gen_llvm_mechanism_functions(self, ctx, builder, m_base_params, m_params, m_state, m_in,
@@ -3126,7 +3123,9 @@ class Mechanism_Base(Mechanism):
             assert value is mech_val_ptr
         else:
             # FIXME: Does this need some sort of parsing?
-            warnings.warn("Shape mismatch: function result does not match mechanism value param: {} vs. {}".format(value.type.pointee, mech_val_ptr.type.pointee))
+            warnings.warn("Shape mismatch: function result does not match mechanism value param: {} vs. {}".format(
+                          value.type.pointee, mech_val_ptr.type.pointee),
+                          pnlvm.PNLCompilerWarning)
 
         # Update  num_executions parameter
         num_executions_ptr = pnlvm.helpers.get_state_ptr(builder, self, m_state, "num_executions")
@@ -3144,23 +3143,34 @@ class Mechanism_Base(Mechanism):
 
         # is_finished should be checked after output ports ran
         is_finished_f = ctx.import_llvm_function(self, tags=tags.union({"is_finished"}))
-        is_finished_cond = builder.call(is_finished_f, [m_params, m_state, arg_in,
+        is_finished_cond = builder.call(is_finished_f, [m_base_params, m_state, arg_in,
                                                         arg_out])
         return builder, is_finished_cond
 
-    def _gen_llvm_function_reset(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+    def _gen_llvm_function_reset(self, ctx, builder, m_base_params, m_state, m_arg_in, m_arg_out, *, tags:frozenset):
         assert "reset" in tags
+
         reinit_func = ctx.import_llvm_function(self.function, tags=tags)
-        reinit_params = pnlvm.helpers.get_param_ptr(builder, self, params, "function")
-        reinit_state = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
         reinit_in = builder.alloca(reinit_func.args[2].type.pointee, name="reinit_in")
         reinit_out = builder.alloca(reinit_func.args[3].type.pointee, name="reinit_out")
+
+        reinit_base_params = pnlvm.helpers.get_param_ptr(builder, self, m_base_params, "function")
+        reinit_params, builder = self._gen_llvm_param_ports_for_obj(
+                self.function, reinit_base_params, ctx, builder, m_base_params, m_state, m_arg_in)
+        reinit_state = pnlvm.helpers.get_state_ptr(builder, self, m_state, "function")
+
         builder.call(reinit_func, [reinit_params, reinit_state, reinit_in,
                                    reinit_out])
 
         return builder
 
     def _gen_llvm_function(self, *, extra_args=[], ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
+        """
+        Overloaded main function LLVM generation method.
+
+        Mechanisms need to support "is_finished" execution variant (used by scheduling conditions)
+        on top of the variants supported by Component.
+        """
         if "is_finished" not in tags:
             return super()._gen_llvm_function(extra_args=extra_args, ctx=ctx,
                                               tags=tags)
@@ -3173,12 +3183,20 @@ class Mechanism_Base(Mechanism):
 
         builder = ctx.create_llvm_function(args, self, return_type=ctx.bool_ty,
                                            tags=tags)
-        params, state = builder.function.args[:2]
-        finished = self._gen_llvm_is_finished_cond(ctx, builder, params, state)
+        params, state, inputs = builder.function.args[:3]
+        finished = self._gen_llvm_is_finished_cond(ctx, builder, params, state, inputs)
         builder.ret(finished)
         return builder.function
 
     def _gen_llvm_function_body(self, ctx, builder, base_params, state, arg_in, arg_out, *, tags:frozenset):
+        """
+        Overloaded LLVM code generation method.
+
+        Implements main mechanisms loop (while not finished). Calls two other internal Mechanism functions;
+        'is_finished' to terminate the loop, and '_gen_llvm_function_internal' to generate body of the
+        loop (invocation of Ports and Functions).
+        """
+
         assert "reset" not in tags
 
         params, builder = self._gen_llvm_param_ports_for_obj(
@@ -3206,7 +3224,9 @@ class Mechanism_Base(Mechanism):
         builder.branch(loop_block)
         builder.position_at_end(loop_block)
 
-        # Get internal function
+        # Get internal function. Use function call to get proper stack manipulation
+        # inside the body of the execution loop. We could use 'stacksave' and
+        # 'stackrestore', but not all LLVM targets support those ops.
         args_t = [a.type for a in builder.function.args]
         args_t[4:4] = [base_params.type]
         internal_builder = ctx.create_llvm_function(args_t, self,
@@ -4176,7 +4196,7 @@ class Mechanism_Base(Mechanism):
                 model.functions.append(
                     mdf.Function(
                         id=combination_function_id,
-                        function={'onnx::ReduceSum': combination_function_args},
+                        function='onnx::ReduceSum',
                         args=combination_function_args
                     )
                 )
@@ -4202,23 +4222,12 @@ class Mechanism_Base(Mechanism):
 
             model.output_ports.append(op_model)
 
-        function_model = self.function.as_mdf_model()
-
-        for _, func_param in function_model.metadata['function_stateful_params'].items():
-            model.parameters.append(mdf.Parameter(**func_param))
-
         if len(ip.path_afferents) > 1:
             primary_function_input_name = combination_function_dimreduce_id
         else:
             primary_function_input_name = model.input_ports[0].id
 
-        self.function._set_mdf_arg(
-            function_model, _get_variable_parameter_name(self.function), primary_function_input_name
-        )
-        model.functions.append(function_model)
-
-        for func_model in model.functions:
-            _substitute_expression_args(func_model)
+        self.function._assign_to_mdf_model(model, primary_function_input_name)
 
         return model
 

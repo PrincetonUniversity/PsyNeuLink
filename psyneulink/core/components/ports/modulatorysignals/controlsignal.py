@@ -413,7 +413,7 @@ from psyneulink.core.components.functions.nonstateful.combinationfunctions impor
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Exponential, Linear, CostFunctions, \
     TransferWithCosts
 from psyneulink.core.components.functions.stateful.integratorfunctions import SimpleIntegrator
-from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal
+from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal, ModulatorySignalError
 from psyneulink.core.components.ports.outputport import _output_port_variable_getter
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
@@ -423,7 +423,8 @@ from psyneulink.core.globals.keywords import \
     OUTPUT_PORT, OUTPUT_PORTS, OUTPUT_PORT_PARAMS, \
     PARAMETER_PORT, PARAMETER_PORTS, PROJECTIONS, \
     RECEIVER, FUNCTION
-from psyneulink.core.globals.parameters import FunctionParameter, Parameter, get_validator_by_function
+from psyneulink.core.globals.parameters import FunctionParameter, Parameter, get_validator_by_function, \
+    check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.sampleiterator import SampleSpec, SampleIterator
@@ -441,13 +442,8 @@ from psyneulink.core.components.functions.nonstateful.transferfunctions import \
 COST_OPTIONS = 'cost_options'
 
 
-class ControlSignalError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-
-    def __str__(self):
-        return repr(self.error_value)
+class ControlSignalError(ModulatorySignalError):
+    pass
 
 
 class ControlSignal(ModulatorySignal):
@@ -1181,10 +1177,13 @@ class ControlSignal(ModulatorySignal):
             else:
                 ifunc_in = arg_in
             # point output to the proper slot in comb func input
-            assert cost_funcs == 0, "Intensity should eb the first cost function!"
+            assert cost_funcs == 0, "Intensity should be the first cost function!"
             ifunc_out = builder.gep(cfunc_in, [ctx.int32_ty(0), ctx.int32_ty(cost_funcs)])
             if ifunc_out.type != ifunc.args[3].type:
-                warnings.warn("Shape mismatch: {} element of combination func input ({}) doesn't match INTENSITY cost output ({})".format(cost_funcs, self.function.combine_costs_fct.defaults.variable, self.function.intensity_cost_fct.defaults.value))
+                warnings.warn("Shape mismatch: {} element of combination func input ({}) doesn't match INTENSITY cost output ({})".format(
+                              cost_funcs, self.function.combine_costs_fct.defaults.variable,
+                              self.function.intensity_cost_fct.defaults.value),
+                              pnlvm.PNLCompilerWarning)
                 assert self.cost_options == CostFunctions.INTENSITY
                 ifunc_out = cfunc_in
 

@@ -392,10 +392,8 @@ class TestIntegratorFunctions:
         )
         ex = pytest.helpers.get_mech_execution(I, mech_mode)
 
-        val = ex([[1], [2]])
+        val = benchmark(ex, [[1], [2]])
         assert np.allclose(val, [[3]])
-        if benchmark.enabled:
-            benchmark(ex, [[1], [2]])
 
     @pytest.mark.mimo
     @pytest.mark.mechanism
@@ -408,10 +406,8 @@ class TestIntegratorFunctions:
         )
         ex = pytest.helpers.get_mech_execution(I, mech_mode)
 
-        val = ex([5])
+        val = benchmark(ex, [5])
         assert np.allclose(val, [[2.5], [2.5]])
-        if benchmark.enabled:
-            benchmark(ex, [5])
 
     @pytest.mark.mimo
     @pytest.mark.mechanism
@@ -427,10 +423,8 @@ class TestIntegratorFunctions:
         )
         ex = pytest.helpers.get_mech_execution(I, mech_mode)
 
-        val = ex([[1], [2]])
+        val = benchmark(ex, [[1], [2]])
         assert np.allclose(val, [[5], [3]])
-        if benchmark.enabled:
-            benchmark(ex, [[1], [2]])
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -442,10 +436,9 @@ class TestIntegratorFunctions:
                                 function=FitzHughNagumoIntegrator())
         ex = pytest.helpers.get_mech_execution(I, mech_mode)
 
-        val = ex(var)
-        assert np.allclose(val[0], [0.05127053])
-        if benchmark.enabled:
-            benchmark(ex, var)
+        ex(var)
+        val = benchmark(ex, var)
+        assert np.allclose(val, [[0.10501801629915011], [0.10501801629915011], [0.10501801629915011]])
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -457,10 +450,11 @@ class TestIntegratorFunctions:
                                 function=FitzHughNagumoIntegrator)
         ex = pytest.helpers.get_mech_execution(I, mech_mode)
 
-        val = ex(var)
-        assert np.allclose(val[0], [0.05127053, 0.15379818])
-        if benchmark.enabled:
-            benchmark(ex, var)
+        ex(var)
+        val = benchmark(ex, var)
+        assert np.allclose(val, [[[0.10501801629915011, 0.3151109244983909]],
+                                 [[0.10501801629915011, 0.3151109244983909]],
+                                 [[0.10501801629915011, 0.3151109244983909]]])
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -602,10 +596,9 @@ class TestIntegratorFunctions:
         I = IntegratorMechanism()
         ex = pytest.helpers.get_mech_execution(I, mech_mode)
 
-        val = ex([10])
-        assert np.allclose(val, [[5.0]])
-        if benchmark.enabled:
-            benchmark(ex, [10])
+        ex([10])
+        val = benchmark(ex, [10])
+        assert np.allclose(val, [[7.5]])
 
 class TestIntegratorInputs:
     # Part 1: VALID INPUT:
@@ -1174,7 +1167,7 @@ class TestStatefulness:
         assert I.has_initializers
         assert hasattr(I, "reset_stateful_function_when")
 
-    @pytest.mark.mechanism
+    @pytest.mark.composition
     @pytest.mark.integrator_mechanism
     @pytest.mark.parametrize('cond0, cond1, expected', [
         (pnl.Never(), pnl.AtTrial(2),
@@ -1218,6 +1211,7 @@ class TestStatefulness:
 
         assert np.allclose(expected, C.results)
 
+    @pytest.mark.composition
     def test_reset_stateful_function_when(self):
         I1 = IntegratorMechanism()
         I2 = IntegratorMechanism()

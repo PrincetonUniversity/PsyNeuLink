@@ -8,7 +8,8 @@ import pytest
 
 import psyneulink as pnl
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
-from psyneulink.core.components.functions.nonstateful.learningfunctions import Reinforcement, BackPropagation
+from psyneulink.core.components.functions.nonstateful.learningfunctions import \
+    LearningFunction, Reinforcement, BackPropagation, TDLearning
 from psyneulink.core.components.functions.nonstateful.optimizationfunctions import GridSearch
 from psyneulink.core.components.functions.nonstateful.transferfunctions import \
     Linear, Logistic, INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM
@@ -39,9 +40,12 @@ from psyneulink.core.scheduling.condition import AtTimeStep, AtTrial, Never, Tim
 from psyneulink.core.scheduling.condition import EveryNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler, SchedulingMode
 from psyneulink.core.scheduling.time import TimeScale
+from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 from psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism import LCControlMechanism
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
     RecurrentTransferMechanism
+from psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism import \
+    EpisodicMemoryMechanism
 
 logger = logging.getLogger(__name__)
 
@@ -508,9 +512,9 @@ class TestAddProjection:
         proj = MappingProjection(sender=A, receiver=B)
         with pytest.raises(CompositionError) as error:
             comp.add_projection(projection=proj, receiver=C)
-            assert '"Receiver (\'composition-pytests-C\') assigned to ' \
+            assert 'Receiver (\'composition-pytests-C\') assigned to ' \
                    '\'MappingProjection from composition-pytests-A[RESULT] to composition-pytests-B[InputPort-0] ' \
-                   'is incompatible with the positions of these Components in \'Composition-0\'."' == str(error.value)
+                   'is incompatible with the positions of these Components in \'Composition-0\'.' == str(error.value)
 
     @pytest.mark.stress
     @pytest.mark.parametrize(
@@ -593,11 +597,9 @@ class TestPathway:
         assert p.learning_components is None
 
     def test_pathway_assign_composition_arg_error(self):
-        c = Composition()
-        with pytest.raises(pnl.CompositionError) as error_text:
+        error_text = "'composition' arg of constructor for Pathway must be a Composition"
+        with pytest.raises(pnl.CompositionError, match=error_text):
             p = Pathway(pathway=[], composition='c')
-        assert "\'composition\' can not be specified as an arg in the constructor for a Pathway" in str(
-                error_text.value)
 
     def test_pathway_assign_roles_error(self):
         A = ProcessingMechanism()
@@ -788,7 +790,7 @@ class TestCompositionPathwayArgsAndAdditionMethods:
         p = Pathway(pathway=([A,B], Reinforcement), name='P')
         c = Composition()
 
-        regexp = "LearningFunction found in specification of 'pathway' arg for "\
+        regexp = "LearningFunction found in 'pathway' arg for "\
                  "add_linear_procesing_pathway method .*"\
                 r"Reinforcement'>; it will be ignored"
         with pytest.warns(UserWarning, match=regexp):
@@ -1011,6 +1013,75 @@ class TestCompositionPathwayArgsAndAdditionMethods:
             assert C.efferents[0].receiver.owner == D
             assert all(node in comp.get_nodes_by_role(NodeRole.INPUT) for node in {A,C})
             assert all(node in comp.get_nodes_by_role(NodeRole.OUTPUT) for node in {B,D})
+
+    config = [
+        ('([{A,B,C},D,E],Proj)', 'a'),
+        ('([{A,B,C},Proj_1,D,E],Proj_2)', 'b'),
+        ('([{A,B,C},D,Proj_1,E],Proj_2)', 'c'),
+        ('Pathway(default_matrix)', 'd'),
+        ('([A,B,C],BackProp,Proj)', 'e'),
+        ('([A,B,C],Proj,BackProp)', 'f'),
+        ('([A,B],RL,Proj)', 'g'),
+        ('([A,B],TD,Proj)', 'h'),
+        # FIX: Set specification not yet supported for learning pathway:
+        # ('([{A,B,C},D,Proj_1,E],Proj_2,learning_fct)', 'i'),  # set spec for Projections
+        # ('([{A,B,C},D,Proj_1,E],learning_fct,Proj_2)', 'j'),  # not yet supported for learning Pathways
+    ]
+    @pytest.mark.parametrize('config', config, ids=[x[0] for x in config])
+    def test_pathway_tuple_specs(self, config):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        # if config[1] not in {'g','h'}:
+        D = ProcessingMechanism(name='D')
+        E = ProcessingMechanism(name='E')
+        F = ProcessingMechanism(name='F')
+        if config[1]=='a':
+            comp = Composition(([{A,B,C},D,E],[2.9]))
+            assert all([p.matrix.base==2.9 for p in D.path_afferents])
+            assert E.path_afferents[0].matrix.base==2.9
+        if config[1]=='b':
+            comp = Composition(([{A,B,C},[1.6],D,E],[2.9]))
+            assert all([p.matrix.base==1.6 for p in D.path_afferents])
+            assert E.path_afferents[0].matrix.base==2.9
+        if config[1]=='c':
+            comp = Composition(([{A,B,C},D,[1.6],E],[2.9]))
+            assert all([p.matrix.base==2.9 for p in D.path_afferents])
+            assert E.path_afferents[0].matrix.base==1.6
+        if config[1]=='d':
+            pway=Pathway(([{A,B,C},[1.6],D,E], [2.9]))
+            comp = Composition(pway)
+            assert all([p.matrix.base==1.6 for p in D.path_afferents])
+            assert E.path_afferents[0].matrix.base==2.9
+        if config[1]=='e':
+            comp = Composition(([A,B,C],BackPropagation,[2.9]))
+            assert B.path_afferents[0].matrix.base==2.9
+            assert C.path_afferents[0].matrix.base==2.9
+            assert comp.pathways[0].learning_function == BackPropagation
+        if config[1]=='f':
+            comp = Composition(([A,B,C],[2.9],BackPropagation))
+            assert B.path_afferents[0].matrix.base==2.9
+            assert C.path_afferents[0].matrix.base==2.9
+            assert comp.pathways[0].learning_function == BackPropagation
+        if config[1]=='g':
+            comp = Composition(([A,B],Reinforcement,[2.9]))
+            assert B.path_afferents[0].matrix.base==2.9
+            assert comp.pathways[0].learning_function == Reinforcement
+        if config[1]=='h':
+            comp = Composition(([A,B],[2.9],TDLearning))
+            assert B.path_afferents[0].matrix.base==2.9
+            assert comp.pathways[0].learning_function == TDLearning
+        # FIX: Set specification not yet supported for learning pathway:
+        # if config[1]=='i':
+        #     comp = Composition(([{A,B,C},D,[1.6],E],BackPropagation,[2.9]))
+        #     assert all([p.matrix.base==2.9 for p in D.path_afferents])
+        #     assert E.path_afferents[0].matrix.base==1.6
+        #     assert comp.pathways[0].learning_function == BackPropagation
+        # if config[1]=='j':
+        #     comp = Composition(([{A,B,C},D,[1.6],E],[2.9],BackPropagation))
+        #     assert all([p.matrix.base==2.9 for p in D.path_afferents])
+        #     assert E.path_afferents[0].matrix.base==1.6
+        #     assert comp.pathways[0].learning_function == BackPropagation
 
     def test_add_pathways_bad_arg_error(self):
         I = InputPort(name='I')
@@ -1607,7 +1678,9 @@ class TestCompositionPathwaysArg:
         C = ProcessingMechanism(name='C')
         with pytest.raises(pnl.CompositionError) as error_text:
             c = Composition(pathways=[{'P1': ([A,B],C)}])
-        assert ("The 2nd item" in str(error_text.value) and "must be a LearningFunction" in str(error_text.value))
+        assert ("Bad spec for one of the items in the value of a dict specified for the \'pathways\' arg "
+                "of the constructor for Composition-0: (ProcessingMechanism C); "
+                "its item(s) must be a matrix specification and/or a LearningFunction" in str(error_text.value))
 
 
 class TestProperties:
@@ -2530,11 +2603,8 @@ class TestExecutionOrder:
 
         inputs_dict = {A: [4.0]}
         sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict, scheduler=sched, execution_mode=comp_mode)
+        output = benchmark(comp.run, inputs=inputs_dict, scheduler=sched, execution_mode=comp_mode)
         assert np.allclose(output, 320)
-
-        if benchmark.enabled:
-            benchmark(comp.run, inputs=inputs_dict, scheduler=sched, execution_mode=comp_mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2570,11 +2640,8 @@ class TestExecutionOrder:
 
 
         inputs_dict = {B: [4.0]}
-        output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
+        output = benchmark(comp.run, inputs=inputs_dict, execution_mode=comp_mode)
         assert np.allclose(output, 354.19328716)
-
-        if benchmark.enabled:
-            benchmark(comp.run, inputs=inputs_dict, execution_mode=comp_mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2610,11 +2677,8 @@ class TestExecutionOrder:
 
         inputs_dict = {B: [4.0]}
         sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict, scheduler=sched, execution_mode=comp_mode)
+        output = benchmark(comp.run, inputs=inputs_dict, scheduler=sched, execution_mode=comp_mode)
         assert np.allclose(output, 650.83865743)
-
-        if benchmark.enabled:
-            benchmark(comp.run, inputs=inputs_dict, scheduler=sched, execution_mode=comp_mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2650,10 +2714,8 @@ class TestExecutionOrder:
 
 
         inputs_dict = {B: [4.0]}
-        output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
+        output = benchmark(comp.run, inputs=inputs_dict, execution_mode=comp_mode)
         assert np.allclose(output, 150.83865743)
-        if benchmark.enabled:
-            benchmark(comp.run, inputs=inputs_dict, execution_mode=comp_mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2690,11 +2752,8 @@ class TestExecutionOrder:
 
         inputs_dict = {B: [4.0]}
         sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict, scheduler=sched, execution_mode=comp_mode)
+        output = benchmark(comp.run, inputs=inputs_dict, scheduler=sched, execution_mode=comp_mode)
         assert np.allclose(output, 600)
-
-        if benchmark.enabled:
-            benchmark(comp.run, inputs=inputs_dict, scheduler=sched, execution_mode=comp_mode)
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Transfer")
@@ -3202,6 +3261,7 @@ class TestRunInputSpecifications:
                                       pytest.param(pnl.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
                                       pytest.param(pnl.ExecutionMode.PTXRun, marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                      ])
+    @pytest.mark.composition
     def test_generator_as_input(self, mode):
         c = pnl.Composition()
 
@@ -3227,6 +3287,7 @@ class TestRunInputSpecifications:
                                       pytest.param(pnl.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
                                       pytest.param(pnl.ExecutionMode.PTXRun, marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                      ])
+    @pytest.mark.composition
     def test_generator_as_input_with_num_trials(self, mode):
         c = pnl.Composition()
 
@@ -3340,9 +3401,9 @@ class TestRun:
         comp.add_projection(MappingProjection(sender=A, receiver=C), A, C)
         with pytest.raises(CompositionError) as error_text:
             comp.add_projection(MappingProjection(sender=B, receiver=D), B, C)
-        assert '"Receiver (\'composition-pytests-C\') assigned to ' \
+        assert 'Receiver (\'composition-pytests-C\') assigned to ' \
                '\'MappingProjection from composition-pytests-B[RESULT] to composition-pytests-D[InputPort-0] ' \
-               'is incompatible with the positions of these Components in \'Composition-0\'."' == str(error_text.value)
+               'is incompatible with the positions of these Components in \'Composition-0\'.' == str(error_text.value)
 
     def test_projection_assignment_mistake_swap2(self):
         # A ----> C --
@@ -3362,9 +3423,9 @@ class TestRun:
         comp.add_projection(MappingProjection(sender=A, receiver=C), A, C)
         with pytest.raises(CompositionError) as error_text:
             comp.add_projection(MappingProjection(sender=B, receiver=C), B, D)
-        assert '"Receiver (\'composition-pytests-D\') assigned to ' \
+        assert 'Receiver (\'composition-pytests-D\') assigned to ' \
                '\'MappingProjection from composition-pytests-B[RESULT] to composition-pytests-C[InputPort-0] ' \
-               'is incompatible with the positions of these Components in \'Composition-0\'."' == str(error_text.value)
+               'is incompatible with the positions of these Components in \'Composition-0\'.' == str(error_text.value)
 
     @pytest.mark.composition
     def test_run_5_mechanisms_2_origins_1_terminal(self, comp_mode):
@@ -3559,7 +3620,7 @@ class TestRun:
         with pytest.raises(CompositionError) as error_text:
             comp.add_linear_processing_pathway([A, A_to_B, B, C, D, E, C_to_E])
 
-        assert ("The last item in the \'pathway\' arg for add_linear_procesing_pathway method" in str(error_text.value)
+        assert ("The last item in \'pathway\' arg for add_linear_procesing_pathway method" in str(error_text.value)
                 and "cannot be a Projection:" in str(error_text.value))
 
     def test_LPP_two_projections_in_a_row(self):
@@ -3843,22 +3904,15 @@ class TestRun:
         sched = Scheduler(composition=comp)
         output1 = comp.run(inputs={A: [[1.0, 2.0, 3.0]]}, scheduler=sched, execution_mode=comp_mode)
         assert np.allclose([5.0, 10.0, 15.0], output1)
-        output2 = comp.run(inputs={A: [[1.0, 2.0, 3.0]]}, scheduler=sched, execution_mode=comp_mode)
+        output2 = benchmark(comp.run, inputs={A: [[1.0, 2.0, 3.0]]}, scheduler=sched, execution_mode=comp_mode)
         # Using the hollow matrix: (10 + 15 + 1) * 5 = 130,
         #                          ( 5 + 15 + 2) * 5 = 110,
         #                          ( 5 + 10 + 3) * 5 = 90
         assert np.allclose([130.0, 110.0, 90.0], output2)
-        if benchmark.enabled:
-            benchmark(comp.run, inputs={A: [[1.0, 2.0, 3.0]]}, scheduler=sched, execution_mode=comp_mode)
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Recurrent")
-    @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Python,
-                                      pytest.param(pnl.ExecutionMode.LLVM, marks=pytest.mark.llvm),
-                                      pytest.param(pnl.ExecutionMode.LLVMExec, marks=pytest.mark.llvm),
-                                      pytest.param(pnl.ExecutionMode.PTXExec, marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                     ])
-    def test_run_recurrent_transfer_mechanism_hetero(self, benchmark, mode):
+    def test_run_recurrent_transfer_mechanism_hetero(self, benchmark, comp_mode):
         comp = Composition()
         R = RecurrentTransferMechanism(size=1,
                                        function=Logistic(),
@@ -3866,29 +3920,18 @@ class TestRun:
                                        output_ports = [RESULT])
         comp.add_node(R)
         comp._analyze_graph()
-        sched = Scheduler(composition=comp)
-        val = comp.execute(inputs={R: [[3.0]]}, execution_mode=mode)
+        val = comp.run(inputs={R: [[3.0]]}, num_trials=1, execution_mode=comp_mode)
         assert np.allclose(val, [[0.95257413]])
-        val = comp.execute(inputs={R: [[4.0]]}, execution_mode=mode)
+        val = comp.run(inputs={R: [[4.0]]}, num_trials=1, execution_mode=comp_mode)
         assert np.allclose(val, [[0.98201379]])
 
-        # execute 10 times
-        for i in range(10):
-            val = comp.execute(inputs={R: [[5.0]]}, execution_mode=mode)
-
+        # execute 10 trials
+        val = benchmark(comp.run, inputs={R: [[5.0]]}, num_trials=10, execution_mode=comp_mode)
         assert np.allclose(val, [[0.99330715]])
-
-        if benchmark.enabled:
-            benchmark(comp.execute, inputs={R: [[1.0]]}, execution_mode=mode)
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Recurrent")
-    @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Python,
-                                      pytest.param(pnl.ExecutionMode.LLVM, marks=pytest.mark.llvm),
-                                      pytest.param(pnl.ExecutionMode.LLVMExec, marks=pytest.mark.llvm),
-                                      pytest.param(pnl.ExecutionMode.PTXExec, marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                     ])
-    def test_run_recurrent_transfer_mechanism_integrator(self, benchmark, mode):
+    def test_run_recurrent_transfer_mechanism_integrator(self, benchmark, comp_mode):
         comp = Composition()
         R = RecurrentTransferMechanism(size=1,
                                        function=Logistic(),
@@ -3898,56 +3941,35 @@ class TestRun:
                                        output_ports = [RESULT])
         comp.add_node(R)
         comp._analyze_graph()
-        sched = Scheduler(composition=comp)
-        val = comp.execute(inputs={R: [[3.0]]}, execution_mode=mode)
+        val = comp.run(inputs={R: [[3.0]]}, num_trials=1, execution_mode=comp_mode)
         assert np.allclose(val, [[0.50749944]])
-        val = comp.execute(inputs={R: [[4.0]]}, execution_mode=mode)
+        val = comp.run(inputs={R: [[4.0]]}, num_trials=1, execution_mode=comp_mode)
         assert np.allclose(val, [[0.51741795]])
 
-        # execute 10 times
-        for i in range(10):
-            val = comp.execute(inputs={R: [[5.0]]}, execution_mode=mode)
-
+        # execute 10 trials
+        val = benchmark(comp.run, inputs={R: [[5.0]]}, num_trials=10, execution_mode=comp_mode)
         assert np.allclose(val, [[0.6320741]])
-
-        if benchmark.enabled:
-            benchmark(comp.execute, inputs={R: [[1.0]]}, execution_mode=mode)
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Recurrent")
-    @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Python,
-                                      pytest.param(pnl.ExecutionMode.LLVM, marks=pytest.mark.llvm),
-                                      pytest.param(pnl.ExecutionMode.LLVMExec, marks=pytest.mark.llvm),
-                                      pytest.param(pnl.ExecutionMode.PTXExec, marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                     ])
-    def test_run_recurrent_transfer_mechanism_vector_2(self, benchmark, mode):
+    def test_run_recurrent_transfer_mechanism_vector_2(self, benchmark, comp_mode):
         comp = Composition()
         R = RecurrentTransferMechanism(size=2, function=Logistic())
         comp.add_node(R)
         comp._analyze_graph()
-        sched = Scheduler(composition=comp)
-        val = comp.execute(inputs={R: [[1.0, 2.0]]}, execution_mode=mode)
+        val = comp.run(inputs={R: [[1.0, 2.0]]}, num_trials=1, execution_mode=comp_mode)
         assert np.allclose(val, [[0.81757448, 0.92414182]])
-        val = comp.execute(inputs={R: [[1.0, 2.0]]}, execution_mode=mode)
+        val = comp.run(inputs={R: [[1.0, 2.0]]}, num_trials=1, execution_mode=comp_mode)
         assert np.allclose(val, [[0.87259959,  0.94361816]])
 
-        # execute 10 times
-        for i in range(10):
-            val = comp.execute(inputs={R: [[1.0, 2.0]]}, execution_mode=mode)
+        # execute 10 trials
+        val = benchmark(comp.run, inputs={R: [[1.0, 2.0]]}, num_trials=10, execution_mode=comp_mode)
 
         assert np.allclose(val, [[0.87507549,  0.94660049]])
 
-        if benchmark.enabled:
-            benchmark(comp.execute, inputs={R: [[1.0, 2.0]]}, execution_mode=mode)
-
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Recurrent")
-    @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Python,
-                                      pytest.param(pnl.ExecutionMode.LLVM, marks=pytest.mark.llvm),
-                                      pytest.param(pnl.ExecutionMode.LLVMExec, marks=pytest.mark.llvm),
-                                      pytest.param(pnl.ExecutionMode.PTXExec, marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                     ])
-    def test_run_recurrent_transfer_mechanism_hetero_2(self, benchmark, mode):
+    def test_run_recurrent_transfer_mechanism_hetero_2(self, benchmark, comp_mode):
         comp = Composition()
         R = RecurrentTransferMechanism(size=2,
                                        function=Logistic(),
@@ -3955,29 +3977,18 @@ class TestRun:
                                        output_ports = [RESULT])
         comp.add_node(R)
         comp._analyze_graph()
-        sched = Scheduler(composition=comp)
-        val = comp.execute(inputs={R: [[1.0, 2.0]]}, execution_mode=mode)
+        val = comp.run(inputs={R: [[1.0, 2.0]]}, num_trials=1, execution_mode=comp_mode)
         assert np.allclose(val, [[0.5, 0.73105858]])
-        val = comp.execute(inputs={R: [[1.0, 2.0]]}, execution_mode=mode)
+        val = comp.run(inputs={R: [[1.0, 2.0]]}, num_trials=1, execution_mode=comp_mode)
         assert np.allclose(val, [[0.3864837, 0.73105858]])
 
-        # execute 10 times
-        for i in range(10):
-            val = comp.execute(inputs={R: [[1.0, 2.0]]}, execution_mode=mode)
-
+        # execute 10 trials
+        val = benchmark(comp.run, inputs={R: [[1.0, 2.0]]}, num_trials=10, execution_mode=comp_mode)
         assert np.allclose(val, [[0.36286875, 0.78146724]])
-
-        if benchmark.enabled:
-            benchmark(comp.execute, inputs={R: [[1.0, 2.0]]}, execution_mode=mode)
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Recurrent")
-    @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Python,
-                                      pytest.param(pnl.ExecutionMode.LLVM, marks=pytest.mark.llvm),
-                                      pytest.param(pnl.ExecutionMode.LLVMExec, marks=pytest.mark.llvm),
-                                      pytest.param(pnl.ExecutionMode.PTXExec, marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                     ])
-    def test_run_recurrent_transfer_mechanism_integrator_2(self, benchmark, mode):
+    def test_run_recurrent_transfer_mechanism_integrator_2(self, benchmark, comp_mode):
         comp = Composition()
         R = RecurrentTransferMechanism(size=2,
                                        function=Logistic(),
@@ -3987,20 +3998,15 @@ class TestRun:
                                        output_ports = [RESULT])
         comp.add_node(R)
         comp._analyze_graph()
-        sched = Scheduler(composition=comp)
-        val = comp.execute(inputs={R: [[1.0, 2.0]]}, execution_mode=mode)
+        val = comp.run(inputs={R: [[1.0, 2.0]]}, num_trials=1, execution_mode=comp_mode)
         assert np.allclose(val, [[0.5, 0.50249998]])
-        val = comp.execute(inputs={R: [[1.0, 2.0]]}, execution_mode=mode)
+        val = comp.run(inputs={R: [[1.0, 2.0]]}, num_trials=1, execution_mode=comp_mode)
         assert np.allclose(val, [[0.4999875, 0.50497484]])
 
-        # execute 10 times
-        for i in range(10):
-            val = comp.execute(inputs={R: [[1.0, 2.0]]}, execution_mode=mode)
+        # execute 10 trials
+        val = benchmark(comp.run, inputs={R: [[1.0, 2.0]]}, num_trials=10, execution_mode=comp_mode)
 
         assert np.allclose(val, [[0.49922843, 0.52838607]])
-
-        if benchmark.enabled:
-            benchmark(comp.execute, inputs={R: [[1.0, 2.0]]}, execution_mode=mode)
 
     def test_run_termination_condition_custom_context(self):
         D = pnl.DDM(function=pnl.DriftDiffusionIntegrator, execute_until_finished=False)
@@ -4028,6 +4034,30 @@ class TestRun:
 
         comp.run({t: [1]}, context=context)
         assert comp.results == [[[2]]]
+
+    def test_missing_afferent_at_run_time(self):
+        A = ProcessingMechanism()
+        B = ProcessingMechanism(input_ports=['OCCUPIED', 'UNOCCUPIED'])
+        comp = Composition([A,B])
+        warning_type = UserWarning
+        warning_msg = '"InputPort (\'UNOCCUPIED\') of \'ProcessingMechanism-1\' ' \
+                      'doesn\'t have any afferent Projections."'
+        with pytest.raises(TypeError): # Caused by error on B at construction (with only one InputPort "occupied")
+            with pytest.warns(warning_type) as warning:
+                comp.run()
+        assert repr(warning[0].message.args[0]) == warning_msg
+
+    def test_missing_efferent_at_run_time(self):
+        A = ProcessingMechanism()
+        B = ProcessingMechanism(output_ports=['OCCUPIED','UNOCCUPIED'])  # Comparator Mech has two inputports,
+        C = ProcessingMechanism(name='C')
+        comp = Composition([A,B,C])
+        warning_type = UserWarning
+        warning_msg = '"OutputPort (\'UNOCCUPIED\') of \'ProcessingMechanism-1\' ' \
+                      'doesn\'t have any efferent Projections in \'Composition-0\'."'
+        with pytest.warns(warning_type) as warning:
+            comp.run()
+        assert repr(warning[0].message.args[0]) == warning_msg
 
 
 class TestCallBeforeAfterTimescale:
@@ -4595,12 +4625,10 @@ class TestNestedCompositions:
 
         inner_comp = Composition(name="inner_comp")
         inner_comp.add_linear_processing_pathway([A, B])
-        sched = Scheduler(composition=inner_comp)
 
         outer_comp = Composition(name="outer_comp")
         outer_comp.add_node(inner_comp)
 
-        sched = Scheduler(composition=outer_comp)
         ret = outer_comp.run(inputs=[1.0], execution_mode=comp_mode)
 
         assert np.allclose(ret, [[[0.52497918747894]]])
@@ -4618,7 +4646,6 @@ class TestNestedCompositions:
 
         inner_comp1 = Composition(name="inner_comp1")
         inner_comp1.add_linear_processing_pathway([A, B])
-        sched = Scheduler(composition=inner_comp1)
 
         C = TransferMechanism(name="C",
                               function=Logistic,
@@ -4627,13 +4654,11 @@ class TestNestedCompositions:
 
         inner_comp2 = Composition(name="inner_comp2")
         inner_comp2.add_node(C)
-        sched = Scheduler(composition=inner_comp2)
 
         outer_comp = Composition(name="outer_comp")
         outer_comp.add_node(inner_comp1)
         outer_comp.add_node(inner_comp2)
 
-        sched = Scheduler(composition=outer_comp)
         ret = outer_comp.run(inputs={inner_comp1: [[1.0]], inner_comp2: [[1.0]]}, execution_mode=comp_mode)
         assert np.allclose(ret, [[[0.52497918747894]],[[0.52497918747894]]])
 
@@ -6228,7 +6253,7 @@ class TestAuxComponents:
         C = TransferMechanism(name='C',
                               function=Linear(slope=2.0))
 
-        A.aux_components = [(B, NodeRole.TERMINAL), MappingProjection(sender=A, receiver=B)]
+        A.aux_components = [(B, NodeRole.OUTPUT), MappingProjection(sender=A, receiver=B)]
 
         comp = Composition(name='composition')
         comp.add_node(A)
@@ -6248,7 +6273,7 @@ class TestAuxComponents:
 
         assert np.allclose(B.parameters.value.get(comp), [[2.0]])
 
-        assert B in comp.get_nodes_by_role(NodeRole.TERMINAL)
+        assert B in comp.get_nodes_by_role(NodeRole.OUTPUT)
         assert np.allclose(C.parameters.value.get(comp), [[4.0]])
         assert np.allclose(comp.get_output_values(comp), [[2.0], [4.0]])
 
@@ -6426,7 +6451,7 @@ class TestShadowInputs:
                 ocomp = Composition(nodes=[mcomp,O], name='OUTER COMP')
             assert 'Attempt to shadow the input to a node (B) in a nested Composition of OUTER COMP ' \
                    'that is not an INPUT Node of that Composition is not currently supported.' \
-                   in err.value.error_value
+                   in str(err)
 
     def test_failure_to_find_node_to_shadow(self):
         A = ProcessingMechanism(name='A')
@@ -6872,20 +6897,20 @@ class TestNodeRoles:
         results_by_node = ocomp.get_results_by_nodes(nodes=Z, use_labels=True)
         assert repr(results_by_node) == '{(ProcessingMechanism Z): [\'red\']}'
 
-        label_not_in_dict_error_msg = '"Inappropriate use of \'purple\' as a stimulus for A in MIDDLE COMP: ' \
-                                      'it is not a label in its input_labels_dict."'
+        label_not_in_dict_error_msg = 'Inappropriate use of \'purple\' as a stimulus for A in MIDDLE COMP: ' \
+                                      'it is not a label in its input_labels_dict.'
         with pytest.raises(CompositionError) as error_text:
             ocomp.run(inputs={mcomp:[[0],['purple']],Q:['red']})
         assert label_not_in_dict_error_msg in str(error_text.value)
 
-        no_label_dict_error_msg = '"Inappropriate use of str (\'red\') as a stimulus for X in MIDDLE COMP: ' \
-                                  'it does not have an input_labels_dict."'
+        no_label_dict_error_msg = 'Inappropriate use of str (\'red\') as a stimulus for X in MIDDLE COMP: ' \
+                                  'it does not have an input_labels_dict.'
         with pytest.raises(CompositionError) as error_text:
             ocomp.run(inputs={mcomp:[['red'],['red']],Q:['red']})
         assert no_label_dict_error_msg in str(error_text.value)
 
-        no_such_node_error_msg = '"Nodes specified in get_results_by_nodes() method not found in OUTER COMP ' \
-                                 'nor any Compositions nested within it: [\'N\']"'
+        no_such_node_error_msg = 'Nodes specified in get_results_by_nodes() method not found in OUTER COMP ' \
+                                 'nor any Compositions nested within it: [\'N\']'
         with pytest.raises(CompositionError) as error_text:
             ocomp.get_results_by_nodes(nodes=['N'])
         assert no_such_node_error_msg in str(error_text.value)
@@ -6959,7 +6984,7 @@ class TestNodeRoles:
                                 allow_probes=allow_probes,
                                 include_probes_in_output=include_probes_in_output)
                 ocomp._analyze_graph()
-            assert err.value.error_value == err_msg
+            assert str(err.value) == err_msg
 
     def test_two_node_cycle(self):
         A = TransferMechanism()
@@ -7266,7 +7291,9 @@ class TestNodeRoles:
         assert {mech, ctl_mech_A, ctl_mech_B} == set(comp.get_nodes_by_role(NodeRole.OUTPUT))
         # Current instantiation always assigns ctl_mech_B as TERMINAL in this case;
         # this is here to flag any violation of this in the future, in case that is not intended
+        assert {mech} == set(comp.get_nodes_by_role(NodeRole.ORIGIN))
         assert {ctl_mech_B} == set(comp.get_nodes_by_role(NodeRole.TERMINAL))
+        assert {mech, ctl_mech_A, ctl_mech_B} == set(comp.get_nodes_by_role(NodeRole.OUTPUT))
 
     def test_LEARNING_hebbian(self):
         A = RecurrentTransferMechanism(name='A', size=2, enable_learning=True)
@@ -7361,6 +7388,20 @@ class TestNodeRoles:
         comp = pnl.Composition([[A],[B,C]])
 
         assert comp.nodes_to_roles[A] == {NodeRole.INPUT, NodeRole.OUTPUT, NodeRole.SINGLETON, NodeRole.ORIGIN, NodeRole.TERMINAL}
+
+    def test_feedback_projection_added_by_pathway(self):
+        A = pnl.ProcessingMechanism(name='A')
+        B = pnl.ProcessingMechanism(name='B')
+        C = pnl.ProcessingMechanism(name='C')
+
+        icomp = pnl.Composition(pathways=[C])
+        ocomp = pnl.Composition(pathways=[A, icomp, (B, pnl.NodeRole.FEEDBACK_SENDER), A])
+
+        assert ocomp.nodes_to_roles == {
+            A: {NodeRole.ORIGIN, NodeRole.INPUT, NodeRole.FEEDBACK_RECEIVER},
+            icomp: {NodeRole.INTERNAL},
+            B: {NodeRole.TERMINAL, NodeRole.OUTPUT, NodeRole.FEEDBACK_SENDER},
+        }
 
 
 class TestMisc:
@@ -7615,14 +7656,12 @@ class TestMisc:
         comp.run(inputs={A: [0], B: [0]})
 
         assert type(comp.scheduler.conditions[A]) is pnl.Always
-        assert(
-            type(comp.scheduler.conditions[B]) is pnl.EveryNCalls
-            and comp.scheduler.conditions[B].args == (A, 2)
-        )
-        assert(
-            type(comp.scheduler.conditions[C]) is pnl.EveryNCalls
-            and comp.scheduler.conditions[C].args == (A, 2)
-        )
+        assert type(comp.scheduler.conditions[B]) is pnl.EveryNCalls
+        assert comp.scheduler.conditions[B].args == (A, 2)
+
+        assert type(comp.scheduler.conditions[C]) is pnl.EveryNCalls
+        assert comp.scheduler.conditions[C].args == (A, 2)
+
         assert comp.scheduler.execution_list[comp.default_execution_id] == [{A}, {A, B}, {C}]
         assert set(comp.scheduler._user_specified_conds.keys()) == {B, C}
 
@@ -7640,10 +7679,9 @@ class TestMisc:
 
         assert type(comp.scheduler.conditions[A]) is pnl.Always
         assert B not in comp.scheduler.conditions
-        assert(
-            type(comp.scheduler.conditions[C]) is pnl.EveryNCalls
-            and comp.scheduler.conditions[C].args == (A, 2)
-        )
+        assert type(comp.scheduler.conditions[C]) is pnl.EveryNCalls
+        assert comp.scheduler.conditions[C].args == (A, 2)
+
         assert comp.scheduler.execution_list[comp.default_execution_id] == [{A}, {A}, {C}]
         assert set(comp.scheduler._user_specified_conds.keys()) == {C}
 

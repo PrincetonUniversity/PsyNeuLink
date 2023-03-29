@@ -109,12 +109,12 @@ from psyneulink._typing import Optional
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.nonstateful.transferfunctions import LinearMatrix
 from psyneulink.core.components.functions.function import get_matrix
-from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.core.components.projections.pathway.mappingprojection import MappingError, MappingProjection
 from psyneulink.core.components.projections.projection import projection_keywords
 from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.keywords import AUTO_ASSOCIATIVE_PROJECTION, DEFAULT_MATRIX, HOLLOW_MATRIX, FUNCTION, OWNER_MECH
-from psyneulink.core.globals.parameters import SharedParameter, Parameter
+from psyneulink.core.globals.parameters import SharedParameter, Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
@@ -126,9 +126,8 @@ parameter_keywords.update({AUTO_ASSOCIATIVE_PROJECTION})
 projection_keywords.update({AUTO_ASSOCIATIVE_PROJECTION})
 
 
-class AutoAssociativeError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
+class AutoAssociativeError(MappingError):
+    pass
 
 
 class AutoAssociativeProjection(MappingProjection):
@@ -384,11 +383,11 @@ def get_hetero_matrix(raw_hetero, size):
 # similar to get_hetero_matrix() above
 def get_auto_matrix(raw_auto, size):
     if isinstance(raw_auto, numbers.Number):
-        return np.diag(np.full(size, raw_auto, dtype=np.float))
+        return np.diag(np.full(size, raw_auto, dtype=float))
     elif ((isinstance(raw_auto, np.ndarray) and raw_auto.ndim == 1) or
               (isinstance(raw_auto, list) and np.array(raw_auto).ndim == 1)):
         if len(raw_auto) == 1:
-            return np.diag(np.full(size, raw_auto[0], dtype=np.float))
+            return np.diag(np.full(size, raw_auto[0], dtype=float))
         else:
             if len(raw_auto) != size:
                 return None

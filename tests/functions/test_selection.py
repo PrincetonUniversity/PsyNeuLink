@@ -76,8 +76,6 @@ def test_basic(func, variable, params, expected, benchmark, func_mode):
     EX = pytest.helpers.get_func_execution(f, func_mode)
 
     EX(variable)
-    res = EX(variable)
+    res = benchmark(EX, variable)
 
     assert np.allclose(res, expected)
-    if benchmark.enabled:
-        benchmark(EX, variable)

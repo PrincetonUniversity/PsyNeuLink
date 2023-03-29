@@ -6,6 +6,11 @@ import re
 import warnings
 
 
+NO_PARAMETERS = "NO_PARAMETERS"
+NO_INIT = "NO_INIT"
+NO_VALUE = "NO_VALUE"
+
+
 def shared_parameter_warning_regex(param_name, shared_name=None):
     if shared_name is None:
         shared_name = param_name
@@ -258,11 +263,15 @@ def test_copy():
     [
         (pnl.AdaptiveIntegrator, {'rate': None}, 'rate', False),
         (pnl.AdaptiveIntegrator, {'rate': None}, 'multiplicative_param', False),
+        (pnl.AdaptiveIntegrator, {'rate': 0.5}, 'additive_param', False),
         (pnl.AdaptiveIntegrator, {'rate': 0.5}, 'rate', True),
         (pnl.AdaptiveIntegrator, {'rate': 0.5}, 'multiplicative_param', True),
         (pnl.TransferMechanism, {'integration_rate': None}, 'integration_rate', False),
         (pnl.TransferMechanism, {'integration_rate': 0.5}, 'integration_rate', True),
-    ]
+        (pnl.TransferMechanism, {'initial_value': 0}, 'initial_value', True),
+        (pnl.TransferMechanism, {'initial_value': None}, 'initial_value', False),
+        (pnl.TransferMechanism, {}, 'initial_value', False),
+    ],
 )
 def test_user_specified(cls_, kwargs, parameter, is_user_specified):
     c = cls_(**kwargs)
@@ -442,3 +451,223 @@ class TestSharedParameters:
                     raise
 
         delattr(pnl.AdaptiveIntegrator.Parameters, '_parse_noise')
+
+
+class TestSpecificationType:
+    @staticmethod
+    def _create_params_class_variant(cls_param, init_param, parent_class=pnl.Component):
+        # init_param as Parameter doesn't make sense, only check cls_param
+        if cls_param is pnl.Parameter:
+            cls_param = pnl.Parameter()
+
+        if cls_param is NO_PARAMETERS:
+            if init_param is NO_INIT:
+
+                class TestComponent(parent_class):
+                    pass
+
+            else:
+
+                class TestComponent(parent_class):
+                    @pnl.core.globals.parameters.check_user_specified
+                    def __init__(self, p=init_param):
+                        super().__init__(p=p)
+
+        elif cls_param is NO_VALUE:
+            if init_param is NO_INIT:
+
+                class TestComponent(parent_class):
+                    class Parameters(parent_class.Parameters):
+                        pass
+
+            else:
+
+                class TestComponent(parent_class):
+                    class Parameters(parent_class.Parameters):
+                        pass
+
+                    @pnl.core.globals.parameters.check_user_specified
+                    def __init__(self, p=init_param):
+                        super().__init__(p=p)
+
+        else:
+            if init_param is NO_INIT:
+
+                class TestComponent(parent_class):
+                    class Parameters(parent_class.Parameters):
+                        p = cls_param
+
+            else:
+
+                class TestComponent(parent_class):
+                    class Parameters(parent_class.Parameters):
+                        p = cls_param
+
+                    @pnl.core.globals.parameters.check_user_specified
+                    def __init__(self, p=init_param):
+                        super().__init__(p=p)
+
+        return TestComponent
+
+    @pytest.mark.parametrize(
+        "cls_param, init_param, param_default",
+        [
+            (1, 1, 1),
+            (1, None, 1),
+            (None, 1, 1),
+            (1, NO_INIT, 1),
+            ("foo", "foo", "foo"),
+            (np.array(1), np.array(1), np.array(1)),
+            (np.array([1]), np.array([1]), np.array([1])),
+        ],
+    )
+    def test_valid_assignment(self, cls_param, init_param, param_default):
+        TestComponent = TestSpecificationType._create_params_class_variant(cls_param, init_param)
+        assert TestComponent.defaults.p == param_default
+        assert TestComponent.parameters.p.default_value == param_default
+
+    @pytest.mark.parametrize(
+        "cls_param, init_param",
+        [
+            (1, 2),
+            (2, 1),
+            (1, 1.0),
+            (np.array(1), 1),
+            (np.array([1]), 1),
+            (np.array([1]), np.array(1)),
+            ("foo", "bar"),
+        ],
+    )
+    def test_conflicting_assignments(self, cls_param, init_param):
+        with pytest.raises(AssertionError, match="Conflicting default parameter"):
+            TestSpecificationType._create_params_class_variant(cls_param, init_param)
+
+    @pytest.mark.parametrize(
+        "child_cls_param, child_init_param, parent_value, child_value",
+        [
+            (NO_PARAMETERS, NO_INIT, 1, 1),
+            (NO_VALUE, NO_INIT, 1, 1),
+            (2, NO_INIT, 1, 2),
+            (NO_PARAMETERS, 2, 1, 2),
+            (NO_VALUE, 2, 1, 2),
+            (2, 2, 1, 2),
+        ],
+    )
+    @pytest.mark.parametrize(
+        "parent_cls_param, parent_init_param",
+        [(1, 1), (1, None), (None, 1), (pnl.Parameter, 1)],
+    )
+    def test_inheritance(
+        self,
+        parent_cls_param,
+        parent_init_param,
+        child_cls_param,
+        child_init_param,
+        parent_value,
+        child_value,
+    ):
+        TestParent = TestSpecificationType._create_params_class_variant(
+            parent_cls_param, parent_init_param
+        )
+        TestChild = TestSpecificationType._create_params_class_variant(
+            child_cls_param, child_init_param, parent_class=TestParent
+        )
+
+        assert TestParent.defaults.p == parent_value
+        assert TestParent.parameters.p.default_value == parent_value
+
+        assert TestChild.defaults.p == child_value
+        assert TestChild.parameters.p.default_value == child_value
+
+    @pytest.mark.parametrize("set_from_defaults", [True, False])
+    @pytest.mark.parametrize(
+        "child_cls_param, child_init_param",
+        [(1, 1), (1, None), (None, 1), (NO_PARAMETERS, 1), (1, NO_INIT)],
+    )
+    @pytest.mark.parametrize("parent_cls_param, parent_init_param", [(0, 0), (0, None)])
+    def test_set_and_reset(
+        self,
+        parent_cls_param,
+        parent_init_param,
+        child_cls_param,
+        child_init_param,
+        set_from_defaults,
+    ):
+        def set_p_default(obj, val):
+            if set_from_defaults:
+                obj.defaults.p = val
+            else:
+                obj.parameters.p.default_value = val
+
+        TestParent = TestSpecificationType._create_params_class_variant(
+            parent_cls_param, parent_init_param
+        )
+        TestChild = TestSpecificationType._create_params_class_variant(
+            child_cls_param, child_init_param, parent_class=TestParent
+        )
+        TestGrandchild = TestSpecificationType._create_params_class_variant(
+            NO_PARAMETERS, NO_INIT, parent_class=TestChild
+        )
+
+        set_p_default(TestChild, 10)
+        assert TestParent.defaults.p == 0
+        assert TestChild.defaults.p == 10
+        assert TestGrandchild.defaults.p == 10
+
+        set_p_default(TestGrandchild, 20)
+        assert TestParent.defaults.p == 0
+        assert TestChild.defaults.p == 10
+        assert TestGrandchild.defaults.p == 20
+
+        TestChild.parameters.p.reset()
+        assert TestParent.defaults.p == 0
+        assert TestChild.defaults.p == 1
+        assert TestGrandchild.defaults.p == 20
+
+        TestGrandchild.parameters.p.reset()
+        assert TestParent.defaults.p == 0
+        assert TestChild.defaults.p == 1
+        assert TestGrandchild.defaults.p == 1
+
+        set_p_default(TestGrandchild, 20)
+        assert TestParent.defaults.p == 0
+        assert TestChild.defaults.p == 1
+        assert TestGrandchild.defaults.p == 20
+
+
+def test_dependent_parameter_validate():
+    # using 3 parameters to reduce chance of random success
+    class NewF(pnl.Function_Base):
+        class Parameters(pnl.Function_Base.Parameters):
+            a = pnl.Parameter(1)
+            b = pnl.Parameter(2, dependencies='a')
+            c = pnl.Parameter(3, dependencies='b')
+            d = pnl.Parameter(4, dependencies='c')
+
+            def _validate_b(self, b):
+                if b != self.a.default_value + 1:
+                    return 'invalid'
+
+            def _validate_c(self, c):
+                if c != self.b.default_value + 1:
+                    return 'invalid'
+
+            def _validate_d(self, d):
+                if d != self.c.default_value + 1:
+                    return 'invalid'
+
+        def __init__(self, **kwargs):
+            return super().__init__(0, {}, **kwargs)
+
+        def _function(self, variable=None, context=None, params=None):
+            return 0
+
+    pnl.ProcessingMechanism(function=NewF(a=2, b=3, c=4, d=5))
+
+    with pytest.raises(pnl.ParameterError) as err:
+        # b should be first error to occur
+        pnl.ProcessingMechanism(function=NewF(b=3, c=5, d=7))
+    assert re.match(
+        r"Value \(3\) assigned to parameter 'b'.*is not valid: invalid",
+        str(err.value)
+    )

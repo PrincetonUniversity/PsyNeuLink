@@ -128,16 +128,18 @@ def _ptx_jit_constructor():
 
 
 def _try_parse_module(module):
+    module_text_ir = str(module)
+
     if "dump-llvm-gen" in debug_env:
         with open(module.name + '.generated.ll', 'w') as dump_file:
-            dump_file.write(str(module))
+            dump_file.write(module_text_ir)
 
     # IR module is not the same as binding module.
     # "assembly" in this case is LLVM IR assembly.
     # This is intentional design decision to ease
     # compatibility between LLVM versions.
     try:
-        mod = binding.parse_assembly(str(module))
+        mod = binding.parse_assembly(module_text_ir)
         mod.verify()
     except Exception as e:
         print("ERROR: llvm parsing failed: {}".format(e))
@@ -279,6 +281,8 @@ class cpu_jit_engine(jit_engine):
 
 
 _ptx_builtin_source = """
+__device__ {type} __pnl_builtin_sin({type} a) {{ return sin(a); }}
+__device__ {type} __pnl_builtin_cos({type} a) {{ return cos(a); }}
 __device__ {type} __pnl_builtin_log({type} a) {{ return log(a); }}
 __device__ {type} __pnl_builtin_exp({type} a) {{ return exp(a); }}
 __device__ {type} __pnl_builtin_pow({type} a, {type} b) {{ return pow(a, b); }}

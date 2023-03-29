@@ -16,7 +16,7 @@ import pint
 
 from psyneulink import _unit_registry
 from psyneulink.core.globals.context import Context, handle_external_context
-from psyneulink.core.globals.json import JSONDumpable
+from psyneulink.core.globals.mdf import MDFSerializable
 from psyneulink.core.globals.utilities import parse_valid_identifier
 from psyneulink.core.scheduling.condition import _create_as_pnl_condition
 
@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 SchedulingMode = graph_scheduler.scheduler.SchedulingMode
 
 
-class Scheduler(graph_scheduler.Scheduler, JSONDumpable):
+class Scheduler(graph_scheduler.Scheduler, MDFSerializable):
     def __init__(
         self,
         composition=None,
@@ -53,6 +53,7 @@ class Scheduler(graph_scheduler.Scheduler, JSONDumpable):
 
         # TODO: consider integrating something like this into graph-scheduler?
         self._user_specified_conds = copy.copy(conditions) if conditions is not None else {}
+        self._user_specified_termination_conds = copy.copy(termination_conds) if termination_conds is not None else {}
 
         super().__init__(
             graph=graph,
@@ -117,6 +118,13 @@ class Scheduler(graph_scheduler.Scheduler, JSONDumpable):
             for node, cond in conditions.items()
         }
         super().add_condition_set(conditions)
+
+    @graph_scheduler.Scheduler.termination_conds.setter
+    def termination_conds(self, termination_conds):
+        if termination_conds is not None:
+            self._user_specified_termination_conds.update(termination_conds)
+
+        graph_scheduler.Scheduler.termination_conds.fset(self, termination_conds)
 
     @handle_external_context(fallback_default=True)
     def run(

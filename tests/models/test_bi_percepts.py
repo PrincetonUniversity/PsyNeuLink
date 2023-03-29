@@ -32,6 +32,8 @@ expected_8_10 = [[-71427.62150144271], [-71428.44255569541],
     pytest.param(8, 10, expected_8_10, id="8-10"),
 ])
 def test_necker_cube(benchmark, comp_mode, n_nodes, n_time_steps, expected):
+    benchmark.group = "Necker Cube {}-{}".format(n_nodes, n_time_steps)
+
     # this code only works for N_PERCEPTS == 2
     ALL_PERCEPTS = ['a', 'b']
 
@@ -124,13 +126,6 @@ def test_necker_cube(benchmark, comp_mode, n_nodes, n_time_steps, expected):
         for node_ in bp_comp.nodes
     }
 
-    # run the model
-    res = bp_comp.run(input_dict, num_trials=n_time_steps, execution_mode=comp_mode)
-    if pytest.helpers.llvm_current_fp_precision() == 'fp32':
-        assert np.allclose(res, expected)
-    else:
-        np.testing.assert_allclose(res, expected)
-
     # Test that order of CIM ports follows order of Nodes in self.nodes
     for i in range(n_nodes):
         a_name = "a-{}".format(i)
@@ -140,9 +135,12 @@ def test_necker_cube(benchmark, comp_mode, n_nodes, n_time_steps, expected):
         assert b_name in bp_comp.input_CIM.input_ports.names[i + n_nodes]
         assert b_name in bp_comp.output_CIM.output_ports.names[i + n_nodes]
 
-    if benchmark.enabled:
-        benchmark.group = "Necker Cube {}-{}".format(n_nodes, n_time_steps)
-        benchmark(bp_comp.run, input_dict, num_trials=n_time_steps, execution_mode=comp_mode)
+    # run the model
+    res = benchmark(bp_comp.run, input_dict, num_trials=n_time_steps, execution_mode=comp_mode)
+    if pytest.helpers.llvm_current_fp_precision() == 'fp32':
+        assert np.allclose(res, expected)
+    else:
+        np.testing.assert_allclose(res, expected)
 
 
 @pytest.mark.model
@@ -222,7 +220,7 @@ def test_vectorized_necker_cube(benchmark, comp_mode):
                   node4: np.random.random((1,16))
                  }
 
-    result = comp2.run(input_dict, num_trials=10, execution_mode=comp_mode)
+    result = benchmark(comp2.run, input_dict, num_trials=10, execution_mode=comp_mode)
     assert np.allclose(result,
             [[ 2636.29181172,  -662.53579899,  2637.35386946,  -620.15550833,
                -595.55319772,  2616.74310649,  -442.74286574,  2588.4778162 ,
@@ -232,6 +230,3 @@ def test_vectorized_necker_cube(benchmark, comp_mode):
                2590.69244696,  -555.19824432,  2591.63200098,  -509.58072358,
               -2618.88711219,   682.65814776, -2620.18294962,   640.09719335,
                 615.39758884, -2599.45663784,   462.67291695, -2570.99427346]])
-
-    if benchmark.enabled:
-        benchmark(comp2.run, input_dict, num_trials=10, execution_mode=comp_mode)

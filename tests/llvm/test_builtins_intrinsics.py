@@ -25,8 +25,10 @@ y = np.random.rand()
                          (lambda x: 1.0 / np.sinh(x), (450,), "__pnl_builtin_csch", 1 / np.sinh(450)),
                          #~900 is the limit after which exp(x) used in csch formula returns inf
                          (lambda x: 1.0 / np.sinh(x), (900,), "__pnl_builtin_csch", 1 / np.sinh(900)),
+                         (np.sin, (x,), "__pnl_builtin_sin", np.sin(x)),
+                         (np.cos, (x,), "__pnl_builtin_cos", np.cos(x)),
                          ], ids=["EXP", "Large EXP", "LOG", "POW", "TANH", "Large TANH", "COTH", "Large COTH",
-                                "CSCH", "Large CSCH", "xLarge CSCH"])
+                                "CSCH", "Large CSCH", "xLarge CSCH", "SIN", "COS"])
 def test_builtin_op(benchmark, op, args, builtin, result, func_mode):
     if func_mode == 'Python':
         f = op

@@ -781,7 +781,8 @@ from psyneulink._typing import Optional, Union, Type
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import ComponentError, DefaultsFlexibility, component_keywords
-from psyneulink.core.components.functions.function import Function, get_param_value_for_keyword, is_function_type
+from psyneulink.core.components.functions.function import \
+    Function, get_param_value_for_keyword, is_function_type, RandomMatrix
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import CombinationFunction, LinearCombination
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
 from psyneulink.core.components.shellclasses import Mechanism, Projection, Port
@@ -799,7 +800,7 @@ from psyneulink.core.globals.keywords import \
     RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, SENDER, STANDARD_OUTPUT_PORTS, \
     PORT, PORT_COMPONENT_CATEGORY, PORT_CONTEXT, Port_Name, port_params, PORT_PREFS, PORT_TYPE, port_value, \
     VALUE, VARIABLE, WEIGHT
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import VERBOSE_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category
@@ -848,13 +849,8 @@ def _is_port_class(spec):
 #        Individual portRegistries (used for naming) are created for each Mechanism
 PortRegistry = {}
 
-class PortError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-
-    def __str__(self):
-        return repr(self.error_value)
+class PortError(ComponentError):
+    pass
 
 
 # DOCUMENT:  INSTANTIATION CREATES AN ATTIRBUTE ON THE OWNER MECHANISM WITH THE PORT'S NAME + VALUE_SUFFIX
@@ -1802,12 +1798,12 @@ class Port_Base(Port):
         try:
             if projection in self.mod_afferents or projection in self.path_afferents:
                 self._remove_projection_to_port(projection, context=context)
-        except(PortError):
+        except PortError:
             pass
         try:
             if projection in self.efferents:
                 self._remove_projection_from_port(projection, context=context)
-        except(PortError):
+        except PortError:
             pass
 
     def _remove_projection_from_port(self, projection, context=None):
@@ -2301,6 +2297,16 @@ class Port_Base(Port):
         raise PortError(f"{self.__class__.__name__}s are not allowed to have 'efferents' "
                              f"(assignment attempted for {self.full_name}).")
 
+    def get_afferents(self, from_component=None):
+        return self._get_matching_projections(
+            from_component, self.all_afferents, filter_component_is_sender=True
+        )
+
+    def get_efferents(self, to_component=None):
+        return self._get_matching_projections(
+            to_component, self.efferents, filter_component_is_sender=False
+        )
+
     @property
     def full_name(self):
         """Return name relative to owner as:  <owner.name>[<self.name>]"""
@@ -2385,7 +2391,8 @@ class Port_Base(Port):
                 if f_mod_ptr.type != arg_out.type:
                     assert len(f_mod_ptr.type.pointee) == 1
                     warnings.warn("Shape mismatch: Overriding modulation should match parameter port output: {} vs. {}".format(
-                                  afferent.defaults.value, self.defaults.value))
+                                  afferent.defaults.value, self.defaults.value),
+                                  pnlvm.PNLCompilerWarning)
                     f_mod_ptr = builder.gep(f_mod_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
                 builder.store(builder.load(f_mod_ptr), arg_out)
                 return builder
@@ -2400,7 +2407,8 @@ class Port_Base(Port):
                 if f_mod_param_ptr.type != f_mod_ptr.type:
                     warnings.warn("Shape mismatch: Modulation vs. modulated parameter: {} vs. {}".format(
                                   afferent.defaults.value,
-                                  getattr(self.function.parameters, name).get(None)))
+                                  getattr(self.function.parameters, name).get(None)),
+                                  pnlvm.PNLCompilerWarning)
                     param_val = pnlvm.helpers.load_extract_scalar_array_one(builder, f_mod_ptr)
                 else:
                     param_val = builder.load(f_mod_ptr)
@@ -2956,6 +2964,12 @@ def _parse_port_spec(port_type=None,
     # function; try to resolve to a value
     if isinstance(port_specification, types.FunctionType):
         port_specification = port_specification()
+
+    # RandomMatrix (used for Projection); try to resolve to a matrix
+    if isinstance(port_specification, RandomMatrix):
+        rows = len(owner.sender.value)
+        cols = len(owner.receiver.value)
+        port_specification = port_specification(rows,cols)
 
     # ModulatorySpecification of some kind
     if _is_modulatory_spec(port_specification):

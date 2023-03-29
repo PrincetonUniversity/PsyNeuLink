@@ -23,6 +23,7 @@ Functions that store and can return a record of their input.
 
 """
 
+import copy
 import numbers
 import warnings
 from collections import deque
@@ -47,7 +48,7 @@ from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, BUFFER_FUNCTION, MEMORY_FUNCTION, COSINE, \
     ContentAddressableMemory_FUNCTION, DictionaryMemory_FUNCTION, \
     MIN_INDICATOR, MULTIPLICATIVE_PARAM, NEWEST, NOISE, OLDEST, OVERWRITE, RATE, RANDOM, VARIABLE
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.utilities import \
     all_within_range, convert_to_np_array, convert_to_list, convert_all_elements_to_np_array
@@ -468,7 +469,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     An entry is stored and retrieved as an array containing a set of `fields <EpisodicMemoryMechanism_Memory_Fields>`
     each of which is a 1d array.  An array containing such entries can be used to initialize the contents of `memory
     <ContentAddressableMemory.memory>` by providing it in the **initializer** argument of the ContentAddressableMemory's
-    constructor, or in a call to its  `reset  <ContentAddressableMemory.reset>` method.  The current contents of `memory
+    constructor, or in a call to its `reset  <ContentAddressableMemory.reset>` method.  The current contents of `memory
     <ContentAddressableMemory.memory>` can be inspected using the `memory <ContentAddressableMemory.memory>` attribute,
     which returns a list containing the current entries, each as a list containing all fields for that entry.  The
     `memory_num_fields <ContentAddressableMemory.memory_num_fields>` contains the number of fields expected for each
@@ -503,7 +504,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
       the entry closest to `variable <ContentAddressableMemory.variable>` is retrieved from is retrieved from `memory
       <ContentAddressableMemory.memory>`.  The entry is chosen by calling, in order:
 
-        * `distance_function <ContentAddressableMemory.distance_function>`\: generates a list of and compares
+        * `distance_function <ContentAddressableMemory.distance_function>`: generates a list of and compares
           `distances <ContentAddressableMemory.distances>` between `variable <ContentAddressableMemory.variable>`
           and each entry in `memory <ContentAddressableMemory.memory>`, possibly weighted by `distance_field_weights
           <ContentAddressableMemory.distance_field_weights>`, as follows:
@@ -530,7 +531,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                between `variable <ContentAddressableMemory.variable>` and entries for those fields are not included
                in the averaging of distances by field.
 
-        * `selection_function <ContentAddressableMemory.selection_function>`\: called with the list of distances
+        * `selection_function <ContentAddressableMemory.selection_function>`: called with the list of distances
           to determine which entries to select for consideration. If more than on entry from `memory
           <ContentAddressableMemory.memory>` is identified, `equidistant_entries_select
           <ContentAddressableMemory.equidistant_entries_select>` is used to determine which to retrieve.  If no
@@ -767,7 +768,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
     noise : float, list, 2d array, or Function : default 0.0
         specifies random value(s) added to `variable <ContentAddressableMemory.variable>` before storing in
-        `memory <ContentAddressableMemory.memory>`\;  if a list or 2d array, it must be the same shape as `variable
+        `memory <ContentAddressableMemory.memory>`;  if a list or 2d array, it must be the same shape as `variable
          ContentAddressableMemory.variable>` (see `noise <ContentAddressableMemory.noise>` for details).
 
     initializer : 3d array or list : default None
@@ -1817,6 +1818,18 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
         return memories
 
+    def store(self, entry, context=None, **kwargs):
+        """Store value in `memory <ContentAddressableMemory.memory>`.
+        Convenience method for storing entry in memory.
+        """
+        return self(entry, retrieval_prob=0.0, context=context, **kwargs)
+
+    def retrieve(self, entry, context=None, **kwargs):
+        """Retrieve value from `memory <ContentAddressableMemory.memory>`.
+        Convenience method for retrieving entry from memory.
+        """
+        return self(entry, storage_prob=0.0, context=context, **kwargs)
+
     @property
     def memory(self):
         """Return entries in self._memory as lists in an outer np.array;
@@ -2176,6 +2189,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         distance_function = Parameter(Distance(metric=COSINE), stateful=False, loggable=False)
         selection_function = Parameter(OneHot(mode=MIN_INDICATOR), stateful=False, loggable=False)
 
+
     @check_user_specified
     @tc.typecheck
     def __init__(self,
@@ -2530,8 +2544,8 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
             previous_value = self._get_current_parameter_value("initializer", context)
 
         if previous_value == []:
-            self.parameters.previous_value._get(context).clear()
             value = np.ndarray(shape=(2, 0, len(self.defaults.variable[0])))
+            self.parameters.previous_value._set(copy.deepcopy(value), context)
 
         else:
             value = self._initialize_previous_value(previous_value, context=context)
