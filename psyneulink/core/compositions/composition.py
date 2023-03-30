@@ -2760,7 +2760,6 @@ import typing
 import warnings
 from copy import deepcopy, copy
 from inspect import isgenerator, isgeneratorfunction
-from psyneulink._typing import Union
 
 import graph_scheduler
 import networkx
@@ -2768,7 +2767,7 @@ import numpy as np
 import pint
 from beartype import beartype
 
-from psyneulink._typing import Optional, Union, Literal
+from psyneulink._typing import Optional, Union, Literal, Type, Callable
 
 from PIL import Image
 
@@ -7210,13 +7209,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     @handle_external_context()
     def add_linear_learning_pathway(self,
                                     pathway,
-                                    learning_function: LearningFunction,
-                                    loss_function: Loss = Loss.MSE,
+                                    learning_function: Union[Type[LearningFunction], LearningFunction, Callable] = None,
+                                    loss_function: Optional[Loss] = Loss.MSE,
                                     learning_rate: Union[int, float] = 0.05,
                                     error_function=LinearCombination,
                                     learning_update: Union[bool, Literal['online', 'after']] = 'after',
                                     default_projection_matrix=None,
-                                    name: str = None,
+                                    name: Optional[str] = None,
                                     context=None):
         """Implement learning pathway (including necessary `learning components <Composition_Learning_Components>`.
 
@@ -7410,12 +7409,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @beartype
     def add_reinforcement_learning_pathway(self,
-                                           pathway: list,
-                                           learning_rate: float = 0.05,
+                                           pathway: Union[list, 'psyneulink.core.compositions.pathway.Pathway'],
+                                           learning_rate: Union[float, int] = 0.05,
                                            error_function: Optional[Function] = None,
                                            learning_update: Union[bool, Literal['online', 'after']] = 'online',
                                            default_projection_matrix=None,
-                                           name: str = None):
+                                           name: Optional[str] = None):
         """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`Reinforcement`
 
         Arguments
@@ -7466,8 +7465,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @beartype
     def add_td_learning_pathway(self,
-                                pathway: list,
-                                learning_rate: float = 0.05,
+                                pathway: Union[list, 'psyneulink.core.compositions.pathway.Pathway'],
+                                learning_rate: Union[int, float] = 0.05,
                                 error_function: Optional[Function] = None,
                                 learning_update: Union[bool, Literal['online', 'after']] = 'online',
                                 default_projection_matrix=None,
@@ -7521,10 +7520,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @beartype
     def add_backpropagation_learning_pathway(self,
-                                             pathway: list,
-                                             learning_rate: float = 0.05,
+                                             pathway: Union[list, 'psyneulink.core.compositions.pathway.Pathway'],
+                                             learning_rate: Union[int, float] = 0.05,
                                              error_function: Optional[Function] = None,
-                                             loss_function: Loss = Loss.MSE,
+                                             loss_function: Optional[Loss] = Loss.MSE,
                                              learning_update: Optional[Union[bool, Literal['online', 'after']]] = 'after',
                                              default_projection_matrix=None,
                                              name: str = None):
