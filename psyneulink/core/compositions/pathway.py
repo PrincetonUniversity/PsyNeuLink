@@ -329,7 +329,6 @@ import typecheck as tc
 
 from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
-from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ANY, CONTEXT, FEEDBACK, MAYBE, NODE, LEARNING_FUNCTION, OBJECTIVE_MECHANISM, PROJECTION, TARGET_MECHANISM
 from psyneulink.core.globals.utilities import is_matrix
@@ -528,7 +527,6 @@ class Pathway(object):
     componentName = componentType
     name = componentName
 
-    @handle_external_context()
     def __init__(
             self,
             pathway:list,
@@ -542,15 +540,12 @@ class Pathway(object):
         # Get composition arg (if specified)
         self.composition = None
         self.composition = kwargs.pop('composition',None)
-        # composition arg not allowed from command line
-        if self.composition and context.source == ContextFlags.COMMAND_LINE:
-            raise CompositionError(f"'composition' can not be specified as an arg in the constructor for a "
-                              f"{self.__class__.__name__}; it is assigned when the {self.__class__.__name__} "
-                              f"is added to a {Composition.__name__}.")
         # composition arg must be a Composition
-        if self.composition:
-            assert isinstance(self.composition, Composition), \
-                f"'composition' arg of constructor for {self.__class__.__name__} must be a {Composition.__name__}."
+        if self.composition is not None:
+            if not isinstance(self.composition, Composition):
+                raise CompositionError(
+                    f"'composition' arg of constructor for {self.__class__.__name__} must be a {Composition.__name__}."
+                )
 
         # There should be no other arguments in constructor
         if kwargs:
@@ -559,7 +554,7 @@ class Pathway(object):
 
         # Register and get name
         # - if called from command line, being used as a template, so don't register
-        if context.source == ContextFlags.COMMAND_LINE:
+        if context is None:
             # But do pass through name so that it can be used to construct the instance that will be used
             self.name = name
         else:

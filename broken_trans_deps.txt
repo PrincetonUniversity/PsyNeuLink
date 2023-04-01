@@ -1,0 +1,5 @@
+# This file constraints broken (transitive) dependencies
+
+# onnxruntime-1.14.0 is broken on macos/x64
+# https://github.com/microsoft/onnxruntime/issues/14663
+onnxruntime != 1.14.0; platform_system=="Darwin"

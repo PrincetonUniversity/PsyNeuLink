@@ -1,0 +1,931 @@
+{
+    "comp_comp2": {
+        "format": "ModECI MDF v0.3.3",
+        "generating_application": "PsyNeuLink v0.10.0.0+808.gd0848c3ecf.dirty",
+        "graphs": {
+            "comp": {
+                "conditions": {
+                    "node_specific": {
+                        "A": {
+                            "type": "EveryNPasses",
+                            "args": {
+                                "n": 1,
+                                "time_scale": "TimeScale.ENVIRONMENT_STATE_UPDATE"
+                            }
+                        },
+                        "B": {
+                            "type": "EveryNCalls",
+                            "args": {
+                                "dependency": "A",
+                                "n": 2
+                            }
+                        }
+                    },
+                    "termination": {
+                        "environment_sequence": {
+                            "type": "AfterNEnvironmentStateUpdates",
+                            "args": {
+                                "n": 1,
+                                "time_scale": "TimeScale.ENVIRONMENT_SEQUENCE"
+                            }
+                        },
+                        "environment_state_update": {
+                            "type": "AfterNCalls",
+                            "args": {
+                                "dependency": "B",
+                                "n": 4,
+                                "time_scale": "TimeScale.ENVIRONMENT_STATE_UPDATE"
+                            }
+                        }
+                    }
+                },
+                "metadata": {
+                    "type": "Composition",
+                    "execute_until_finished": true,
+                    "max_executions_before_finished": 1000,
+                    "variable": [
+                        0
+                    ],
+                    "results": [],
+                    "simulation_results": [],
+                    "retain_old_simulation_data": false,
+                    "has_initializers": false,
+                    "input_specification": null,
+                    "node_ordering": [
+                        "A",
+                        "B"
+                    ],
+                    "required_node_roles": [],
+                    "controller": null
+                },
+                "nodes": {
+                    "A": {
+                        "metadata": {
+                            "type": "TransferMechanism",
+                            "termination_measure_value": 0.0,
+                            "input_port_variables": null,
+                            "input_labels_dict": {},
+                            "execute_until_finished": true,
+                            "max_executions_before_finished": 1000,
+                            "output_labels_dict": {},
+                            "variable": [
+                                [
+                                    0
+                                ]
+                            ],
+                            "has_initializers": false,
+                            "termination_comparison_op": "<=",
+                            "termination_threshold": null,
+                            "on_resume_integrator_mode": "current_value",
+                            "input_ports": null,
+                            "output_ports": [
+                                "RESULTS"
+                            ],
+                            "integrator_function_value": [
+                                [
+                                    0
+                                ]
+                            ],
+                            "termination_measure": {
+                                "Distance_Function_2_1": {
+                                    "function": {
+                                        "distance": {}
+                                    },
+                                    "args": {},
+                                    "metadata": {
+                                        "type": "Distance",
+                                        "execute_until_finished": true,
+                                        "max_executions_before_finished": 1000,
+                                        "variable": [
+                                            [
+                                                [
+                                                    0
+                                                ]
+                                            ],
+                                            [
+                                                [
+                                                    0
+                                                ]
+                                            ]
+                                        ],
+                                        "changes_shape": false,
+                                        "output_type": "FunctionOutputType.DEFAULT",
+                                        "has_initializers": false,
+                                        "enable_output_type_conversion": false,
+                                        "metric": "max_abs_diff",
+                                        "normalize": false,
+                                        "function_stateful_params": {}
+                                    }
+                                }
+                            },
+                            "clip": null,
+                            "integrator_mode": false,
+                            "integrator_function": {
+                                "AdaptiveIntegrator_Function_0": {
+                                    "value": "(1 - rate) * previous_value + rate * variable0 + noise + offset",
+                                    "args": {
+                                        "noise": 0.0,
+                                        "offset": 0.0,
+                                        "rate": 0.5
+                                    },
+                                    "metadata": {
+                                        "type": "AdaptiveIntegrator",
+                                        "initializer": [
+                                            [
+                                                0
+                                            ]
+                                        ],
+                                        "execute_until_finished": true,
+                                        "max_executions_before_finished": 1000,
+                                        "enable_output_type_conversion": false,
+                                        "variable": [
+                                            [
+                                                0
+                                            ]
+                                        ],
+                                        "changes_shape": false,
+                                        "output_type": "FunctionOutputType.DEFAULT",
+                                        "has_initializers": true,
+                                        "function_stateful_params": {
+                                            "previous_value": {
+                                                "id": "previous_value",
+                                                "default_initial_value": [
+                                                    [
+                                                        0
+                                                    ]
+                                                ],
+                                                "value": "AdaptiveIntegrator_Function_0"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "input_ports": {
+                            "A_input_port__INPUT_CIM_A_InputPort_0__to__A_InputPort_0_": {
+                                "shape": "(1,)",
+                                "type": "float64"
+                            },
+                            "A_input_port__INPUT_CIM_A_InputPort_0__to__A_InputPort_0__1": {
+                                "shape": "(1,)",
+                                "type": "float64"
+                            }
+                        },
+                        "functions": {
+                            "A_input_combination_function": {
+                                "function": {
+                                    "onnx::ReduceSum": {
+                                        "data": "combination_function_input_data",
+                                        "axes": 0
+                                    }
+                                },
+                                "args": {
+                                    "data": "combination_function_input_data",
+                                    "axes": 0
+                                }
+                            },
+                            "A_input_combination_function_dimreduce": {
+                                "value": "A_input_combination_function[0][0]",
+                                "args": {
+                                    "variable0": "A_input_combination_function"
+                                }
+                            },
+                            "Linear_Function_6": {
+                                "function": {
+                                    "linear": {
+                                        "intercept": 2.0,
+                                        "slope": 5.0,
+                                        "variable0": "A_input_combination_function_dimreduce"
+                                    }
+                                },
+                                "args": {
+                                    "intercept": 2.0,
+                                    "slope": 5.0,
+                                    "variable0": "A_input_combination_function_dimreduce"
+                                },
+                                "metadata": {
+                                    "type": "Linear",
+                                    "execute_until_finished": true,
+                                    "max_executions_before_finished": 1000,
+                                    "variable": [
+                                        [
+                                            0
+                                        ]
+                                    ],
+                                    "changes_shape": false,
+                                    "output_type": "FunctionOutputType.NP_2D_ARRAY",
+                                    "has_initializers": false,
+                                    "enable_output_type_conversion": true,
+                                    "bounds": null,
+                                    "function_stateful_params": {}
+                                }
+                            }
+                        },
+                        "parameters": {
+                            "combination_function_input_data": {
+                                "value": "[A_input_port__INPUT_CIM_A_InputPort_0__to__A_InputPort_0_, A_input_port__INPUT_CIM_A_InputPort_0__to__A_InputPort_0__1]"
+                            }
+                        },
+                        "output_ports": {
+                            "A_RESULT": {
+                                "value": "Linear_Function_6",
+                                "metadata": {
+                                    "type": "OutputPort",
+                                    "execute_until_finished": true,
+                                    "max_executions_before_finished": 1000,
+                                    "variable": [
+                                        2.0
+                                    ],
+                                    "require_projection_in_composition": true,
+                                    "has_initializers": false,
+                                    "projections": null
+                                }
+                            }
+                        }
+                    },
+                    "B": {
+                        "metadata": {
+                            "type": "TransferMechanism",
+                            "termination_measure_value": 0.0,
+                            "input_port_variables": null,
+                            "input_labels_dict": {},
+                            "execute_until_finished": true,
+                            "max_executions_before_finished": 1000,
+                            "output_labels_dict": {},
+                            "variable": [
+                                [
+                                    0
+                                ]
+                            ],
+                            "has_initializers": false,
+                            "termination_comparison_op": "<=",
+                            "termination_threshold": null,
+                            "on_resume_integrator_mode": "current_value",
+                            "input_ports": null,
+                            "output_ports": [
+                                "RESULTS"
+                            ],
+                            "integrator_function_value": [
+                                [
+                                    0
+                                ]
+                            ],
+                            "termination_measure": {
+                                "Distance_Function_2_3": {
+                                    "function": {
+                                        "distance": {}
+                                    },
+                                    "args": {},
+                                    "metadata": {
+                                        "type": "Distance",
+                                        "execute_until_finished": true,
+                                        "max_executions_before_finished": 1000,
+                                        "variable": [
+                                            [
+                                                [
+                                                    0
+                                                ]
+                                            ],
+                                            [
+                                                [
+                                                    0
+                                                ]
+                                            ]
+                                        ],
+                                        "changes_shape": false,
+                                        "output_type": "FunctionOutputType.DEFAULT",
+                                        "has_initializers": false,
+                                        "enable_output_type_conversion": false,
+                                        "metric": "max_abs_diff",
+                                        "normalize": false,
+                                        "function_stateful_params": {}
+                                    }
+                                }
+                            },
+                            "clip": null,
+                            "integrator_mode": false,
+                            "integrator_function": {
+                                "AdaptiveIntegrator_Function_1": {
+                                    "value": "(1 - rate) * previous_value + rate * variable0 + noise + offset",
+                                    "args": {
+                                        "noise": 0.0,
+                                        "offset": 0.0,
+                                        "rate": 0.5
+                                    },
+                                    "metadata": {
+                                        "type": "AdaptiveIntegrator",
+                                        "initializer": [
+                                            [
+                                                0
+                                            ]
+                                        ],
+                                        "execute_until_finished": true,
+                                        "max_executions_before_finished": 1000,
+                                        "enable_output_type_conversion": false,
+                                        "variable": [
+                                            [
+                                                0
+                                            ]
+                                        ],
+                                        "changes_shape": false,
+                                        "output_type": "FunctionOutputType.DEFAULT",
+                                        "has_initializers": true,
+                                        "function_stateful_params": {
+                                            "previous_value": {
+                                                "id": "previous_value",
+                                                "default_initial_value": [
+                                                    [
+                                                        0
+                                                    ]
+                                                ],
+                                                "value": "AdaptiveIntegrator_Function_1"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "input_ports": {
+                            "B_input_port_MappingProjection_from_A_RESULT__to_B_InputPort_0_": {
+                                "shape": "(1,)",
+                                "type": "float64"
+                            },
+                            "B_input_port__INPUT_CIM_B_InputPort_0__to__B_InputPort_0_": {
+                                "shape": "(1,)",
+                                "type": "float64"
+                            }
+                        },
+                        "functions": {
+                            "B_input_combination_function": {
+                                "function": {
+                                    "onnx::ReduceSum": {
+                                        "data": "combination_function_input_data",
+                                        "axes": 0
+                                    }
+                                },
+                                "args": {
+                                    "data": "combination_function_input_data",
+                                    "axes": 0
+                                }
+                            },
+                            "B_input_combination_function_dimreduce": {
+                                "value": "B_input_combination_function[0][0]",
+                                "args": {
+                                    "variable0": "B_input_combination_function"
+                                }
+                            },
+                            "Logistic_Function_0": {
+                                "function": {
+                                    "logistic": {
+                                        "scale": 1.0,
+                                        "bias": 0.0,
+                                        "x_0": 0,
+                                        "offset": 0.0,
+                                        "gain": 1.0,
+                                        "variable0": "B_input_combination_function_dimreduce"
+                                    }
+                                },
+                                "args": {
+                                    "scale": 1.0,
+                                    "bias": 0.0,
+                                    "x_0": 0,
+                                    "offset": 0.0,
+                                    "gain": 1.0,
+                                    "variable0": "B_input_combination_function_dimreduce"
+                                },
+                                "metadata": {
+                                    "type": "Logistic",
+                                    "execute_until_finished": true,
+                                    "max_executions_before_finished": 1000,
+                                    "enable_output_type_conversion": true,
+                                    "variable": [
+                                        [
+                                            0
+                                        ]
+                                    ],
+                                    "changes_shape": false,
+                                    "output_type": "FunctionOutputType.NP_2D_ARRAY",
+                                    "has_initializers": false,
+                                    "bounds": [
+                                        0,
+                                        1
+                                    ],
+                                    "function_stateful_params": {}
+                                }
+                            }
+                        },
+                        "parameters": {
+                            "combination_function_input_data": {
+                                "value": "[B_input_port_MappingProjection_from_A_RESULT__to_B_InputPort_0_, B_input_port__INPUT_CIM_B_InputPort_0__to__B_InputPort_0_]"
+                            }
+                        },
+                        "output_ports": {
+                            "B_RESULT": {
+                                "value": "Logistic_Function_0",
+                                "metadata": {
+                                    "type": "OutputPort",
+                                    "execute_until_finished": true,
+                                    "max_executions_before_finished": 1000,
+                                    "variable": [
+                                        0.5
+                                    ],
+                                    "require_projection_in_composition": true,
+                                    "has_initializers": false,
+                                    "projections": null
+                                }
+                            }
+                        }
+                    }
+                },
+                "edges": {
+                    "MappingProjection_from_A_RESULT__to_B_InputPort_0_": {
+                        "parameters": {
+                            "weight": 1
+                        },
+                        "sender": "A",
+                        "receiver": "B",
+                        "sender_port": "A_RESULT",
+                        "receiver_port": "B_input_port_MappingProjection_from_A_RESULT__to_B_InputPort_0_",
+                        "metadata": {
+                            "type": "MappingProjection",
+                            "execute_until_finished": true,
+                            "max_executions_before_finished": 1000,
+                            "has_initializers": false,
+                            "weight": null,
+                            "exponent": null,
+                            "functions": {
+                                "LinearMatrix_Function_0": {
+                                    "function": {
+                                        "onnx::MatMul": {
+                                            "B": [
+                                                [
+                                                    1.0
+                                                ]
+                                            ]
+                                        }
+                                    },
+                                    "args": {
+                                        "B": [
+                                            [
+                                                1.0
+                                            ]
+                                        ]
+                                    },
+                                    "metadata": {
+                                        "type": "LinearMatrix",
+                                        "execute_until_finished": true,
+                                        "max_executions_before_finished": 1000,
+                                        "A": [
+                                            2.0
+                                        ],
+                                        "changes_shape": false,
+                                        "output_type": "FunctionOutputType.DEFAULT",
+                                        "has_initializers": false,
+                                        "enable_output_type_conversion": false,
+                                        "bounds": null,
+                                        "function_stateful_params": {}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "comp2": {
+                "conditions": {
+                    "node_specific": {
+                        "A": {
+                            "type": "EveryNPasses",
+                            "args": {
+                                "n": 1,
+                                "time_scale": "TimeScale.ENVIRONMENT_STATE_UPDATE"
+                            }
+                        },
+                        "B": {
+                            "type": "EveryNCalls",
+                            "args": {
+                                "dependency": "A",
+                                "n": 4
+                            }
+                        }
+                    },
+                    "termination": {
+                        "environment_sequence": {
+                            "type": "AfterNEnvironmentStateUpdates",
+                            "args": {
+                                "n": 1,
+                                "time_scale": "TimeScale.ENVIRONMENT_SEQUENCE"
+                            }
+                        },
+                        "environment_state_update": {
+                            "type": "AfterNCalls",
+                            "args": {
+                                "dependency": "B",
+                                "n": 8,
+                                "time_scale": "TimeScale.ENVIRONMENT_STATE_UPDATE"
+                            }
+                        }
+                    }
+                },
+                "metadata": {
+                    "type": "Composition",
+                    "execute_until_finished": true,
+                    "max_executions_before_finished": 1000,
+                    "variable": [
+                        0
+                    ],
+                    "results": [],
+                    "simulation_results": [],
+                    "retain_old_simulation_data": false,
+                    "has_initializers": false,
+                    "input_specification": null,
+                    "node_ordering": [
+                        "A",
+                        "B"
+                    ],
+                    "required_node_roles": [],
+                    "controller": null
+                },
+                "nodes": {
+                    "A": {
+                        "metadata": {
+                            "type": "TransferMechanism",
+                            "termination_measure_value": 0.0,
+                            "input_port_variables": null,
+                            "input_labels_dict": {},
+                            "execute_until_finished": true,
+                            "max_executions_before_finished": 1000,
+                            "output_labels_dict": {},
+                            "variable": [
+                                [
+                                    0
+                                ]
+                            ],
+                            "has_initializers": false,
+                            "termination_comparison_op": "<=",
+                            "termination_threshold": null,
+                            "on_resume_integrator_mode": "current_value",
+                            "input_ports": null,
+                            "output_ports": [
+                                "RESULTS"
+                            ],
+                            "integrator_function_value": [
+                                [
+                                    0
+                                ]
+                            ],
+                            "termination_measure": {
+                                "Distance_Function_2_1": {
+                                    "function": {
+                                        "distance": {}
+                                    },
+                                    "args": {},
+                                    "metadata": {
+                                        "type": "Distance",
+                                        "execute_until_finished": true,
+                                        "max_executions_before_finished": 1000,
+                                        "variable": [
+                                            [
+                                                [
+                                                    0
+                                                ]
+                                            ],
+                                            [
+                                                [
+                                                    0
+                                                ]
+                                            ]
+                                        ],
+                                        "changes_shape": false,
+                                        "output_type": "FunctionOutputType.DEFAULT",
+                                        "has_initializers": false,
+                                        "enable_output_type_conversion": false,
+                                        "metric": "max_abs_diff",
+                                        "normalize": false,
+                                        "function_stateful_params": {}
+                                    }
+                                }
+                            },
+                            "clip": null,
+                            "integrator_mode": false,
+                            "integrator_function": {
+                                "AdaptiveIntegrator_Function_0": {
+                                    "value": "(1 - rate) * previous_value + rate * variable0 + noise + offset",
+                                    "args": {
+                                        "noise": 0.0,
+                                        "offset": 0.0,
+                                        "rate": 0.5
+                                    },
+                                    "metadata": {
+                                        "type": "AdaptiveIntegrator",
+                                        "initializer": [
+                                            [
+                                                0
+                                            ]
+                                        ],
+                                        "execute_until_finished": true,
+                                        "max_executions_before_finished": 1000,
+                                        "enable_output_type_conversion": false,
+                                        "variable": [
+                                            [
+                                                0
+                                            ]
+                                        ],
+                                        "changes_shape": false,
+                                        "output_type": "FunctionOutputType.DEFAULT",
+                                        "has_initializers": true,
+                                        "function_stateful_params": {
+                                            "previous_value": {
+                                                "id": "previous_value",
+                                                "default_initial_value": [
+                                                    [
+                                                        0
+                                                    ]
+                                                ],
+                                                "value": "AdaptiveIntegrator_Function_0"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "input_ports": {
+                            "A_input_port__INPUT_CIM_A_InputPort_0__to__A_InputPort_0_": {
+                                "shape": "(1,)",
+                                "type": "float64"
+                            },
+                            "A_input_port__INPUT_CIM_A_InputPort_0__to__A_InputPort_0__1": {
+                                "shape": "(1,)",
+                                "type": "float64"
+                            }
+                        },
+                        "functions": {
+                            "A_input_combination_function": {
+                                "function": {
+                                    "onnx::ReduceSum": {
+                                        "data": "combination_function_input_data",
+                                        "axes": 0
+                                    }
+                                },
+                                "args": {
+                                    "data": "combination_function_input_data",
+                                    "axes": 0
+                                }
+                            },
+                            "A_input_combination_function_dimreduce": {
+                                "value": "A_input_combination_function[0][0]",
+                                "args": {
+                                    "variable0": "A_input_combination_function"
+                                }
+                            },
+                            "Linear_Function_6": {
+                                "function": {
+                                    "linear": {
+                                        "intercept": 2.0,
+                                        "slope": 5.0,
+                                        "variable0": "A_input_combination_function_dimreduce"
+                                    }
+                                },
+                                "args": {
+                                    "intercept": 2.0,
+                                    "slope": 5.0,
+                                    "variable0": "A_input_combination_function_dimreduce"
+                                },
+                                "metadata": {
+                                    "type": "Linear",
+                                    "execute_until_finished": true,
+                                    "max_executions_before_finished": 1000,
+                                    "variable": [
+                                        [
+                                            0
+                                        ]
+                                    ],
+                                    "changes_shape": false,
+                                    "output_type": "FunctionOutputType.NP_2D_ARRAY",
+                                    "has_initializers": false,
+                                    "enable_output_type_conversion": true,
+                                    "bounds": null,
+                                    "function_stateful_params": {}
+                                }
+                            }
+                        },
+                        "parameters": {
+                            "combination_function_input_data": {
+                                "value": "[A_input_port__INPUT_CIM_A_InputPort_0__to__A_InputPort_0_, A_input_port__INPUT_CIM_A_InputPort_0__to__A_InputPort_0__1]"
+                            }
+                        },
+                        "output_ports": {
+                            "A_RESULT": {
+                                "value": "Linear_Function_6",
+                                "metadata": {
+                                    "type": "OutputPort",
+                                    "execute_until_finished": true,
+                                    "max_executions_before_finished": 1000,
+                                    "variable": [
+                                        2.0
+                                    ],
+                                    "require_projection_in_composition": true,
+                                    "has_initializers": false,
+                                    "projections": null
+                                }
+                            }
+                        }
+                    },
+                    "B": {
+                        "metadata": {
+                            "type": "TransferMechanism",
+                            "termination_measure_value": 0.0,
+                            "input_port_variables": null,
+                            "input_labels_dict": {},
+                            "execute_until_finished": true,
+                            "max_executions_before_finished": 1000,
+                            "output_labels_dict": {},
+                            "variable": [
+                                [
+                                    0
+                                ]
+                            ],
+                            "has_initializers": false,
+                            "termination_comparison_op": "<=",
+                            "termination_threshold": null,
+                            "on_resume_integrator_mode": "current_value",
+                            "input_ports": null,
+                            "output_ports": [
+                                "RESULTS"
+                            ],
+                            "integrator_function_value": [
+                                [
+                                    0
+                                ]
+                            ],
+                            "termination_measure": {
+                                "Distance_Function_2_3": {
+                                    "function": {
+                                        "distance": {}
+                                    },
+                                    "args": {},
+                                    "metadata": {
+                                        "type": "Distance",
+                                        "execute_until_finished": true,
+                                        "max_executions_before_finished": 1000,
+                                        "variable": [
+                                            [
+                                                [
+                                                    0
+                                                ]
+                                            ],
+                                            [
+                                                [
+                                                    0
+                                                ]
+                                            ]
+                                        ],
+                                        "changes_shape": false,
+                                        "output_type": "FunctionOutputType.DEFAULT",
+                                        "has_initializers": false,
+                                        "enable_output_type_conversion": false,
+                                        "metric": "max_abs_diff",
+                                        "normalize": false,
+                                        "function_stateful_params": {}
+                                    }
+                                }
+                            },
+                            "clip": null,
+                            "integrator_mode": false,
+                            "integrator_function": {
+                                "AdaptiveIntegrator_Function_1": {
+                                    "value": "(1 - rate) * previous_value + rate * variable0 + noise + offset",
+                                    "args": {
+                                        "noise": 0.0,
+                                        "offset": 0.0,
+                                        "rate": 0.5
+                                    },
+                                    "metadata": {
+                                        "type": "AdaptiveIntegrator",
+                                        "initializer": [
+                                            [
+                                                0
+                                            ]
+                                        ],
+                                        "execute_until_finished": true,
+                                        "max_executions_before_finished": 1000,
+                                        "enable_output_type_conversion": false,
+                                        "variable": [
+                                            [
+                                                0
+                                            ]
+                                        ],
+                                        "changes_shape": false,
+                                        "output_type": "FunctionOutputType.DEFAULT",
+                                        "has_initializers": true,
+                                        "function_stateful_params": {
+                                            "previous_value": {
+                                                "id": "previous_value",
+                                                "default_initial_value": [
+                                                    [
+                                                        0
+                                                    ]
+                                                ],
+                                                "value": "AdaptiveIntegrator_Function_1"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "input_ports": {
+                            "B_input_port_MappingProjection_from_A_RESULT__to_B_InputPort_0_": {
+                                "shape": "(1,)",
+                                "type": "float64"
+                            },
+                            "B_input_port__INPUT_CIM_B_InputPort_0__to__B_InputPort_0_": {
+                                "shape": "(1,)",
+                                "type": "float64"
+                            }
+                        },
+                        "functions": {
+                            "B_input_combination_function": {
+                                "function": {
+                                    "onnx::ReduceSum": {
+                                        "data": "combination_function_input_data",
+                                        "axes": 0
+                                    }
+                                },
+                                "args": {
+                                    "data": "combination_function_input_data",
+                                    "axes": 0
+                                }
+                            },
+                            "B_input_combination_function_dimreduce": {
+                                "value": "B_input_combination_function[0][0]",
+                                "args": {
+                                    "variable0": "B_input_combination_function"
+                                }
+                            },
+                            "Logistic_Function_0": {
+                                "function": {
+                                    "logistic": {
+                                        "scale": 1.0,
+                                        "bias": 0.0,
+                                        "x_0": 0,
+                                        "offset": 0.0,
+                                        "gain": 1.0,
+                                        "variable0": "B_input_combination_function_dimreduce"
+                                    }
+                                },
+                                "args": {
+                                    "scale": 1.0,
+                                    "bias": 0.0,
+                                    "x_0": 0,
+                                    "offset": 0.0,
+                                    "gain": 1.0,
+                                    "variable0": "B_input_combination_function_dimreduce"
+                                },
+                                "metadata": {
+                                    "type": "Logistic",
+                                    "execute_until_finished": true,
+                                    "max_executions_before_finished": 1000,
+                                    "enable_output_type_conversion": true,
+                                    "variable": [
+                                        [
+                                            0
+                                        ]
+                                    ],
+                                    "changes_shape": false,
+                                    "output_type": "FunctionOutputType.NP_2D_ARRAY",
+                                    "has_initializers": false,
+                                    "bounds": [
+                                        0,
+                                        1
+                                    ],
+                                    "function_stateful_params": {}
+                                }
+                            }
+                        },
+                        "parameters": {
+                            "combination_function_input_data": {
+                                "value": "[B_input_port_MappingProjection_from_A_RESULT__to_B_InputPort_0_, B_input_port__INPUT_CIM_B_InputPort_0__to__B_InputPort_0_]"
+                            }
+                        },
+                        "output_ports": {
+                            "B_RESULT": {
+                                "value": "Logistic_Function_0",
+                                "metadata": {
+                                    "type": "OutputPort",
+                                    "execute_until_finished": true,
+                                    "max_executions_before_finished": 1000,
+                                    "variable": [
+                                        0.5
+                                    ],
+                                    "require_projection_in_composition": true,
+                                    "has_initializers": false,
+                                    "projections": null
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

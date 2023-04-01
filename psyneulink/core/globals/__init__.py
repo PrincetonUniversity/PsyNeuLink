@@ -9,6 +9,7 @@ from . import preferences
 from . import registry
 from . import utilities
 from . import sampleiterator
+from . import warnings
 
 from .context import *
 from .defaults import *
@@ -21,6 +22,7 @@ from .preferences import *
 from .registry import *
 from .utilities import *
 from .sampleiterator import *
+from .warnings import *
 
 __all__ = list(context.__all__)
 __all__.extend(defaults.__all__)
@@ -33,3 +35,4 @@ __all__.extend(preferences.__all__)
 __all__.extend(registry.__all__)
 __all__.extend(utilities.__all__)
 __all__.extend(sampleiterator.__all__)
+__all__.extend(warnings.__all__)

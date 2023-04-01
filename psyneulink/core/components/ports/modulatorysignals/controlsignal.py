@@ -1174,10 +1174,13 @@ class ControlSignal(ModulatorySignal):
             else:
                 ifunc_in = arg_in
             # point output to the proper slot in comb func input
-            assert cost_funcs == 0, "Intensity should eb the first cost function!"
+            assert cost_funcs == 0, "Intensity should be the first cost function!"
             ifunc_out = builder.gep(cfunc_in, [ctx.int32_ty(0), ctx.int32_ty(cost_funcs)])
             if ifunc_out.type != ifunc.args[3].type:
-                warnings.warn("Shape mismatch: {} element of combination func input ({}) doesn't match INTENSITY cost output ({})".format(cost_funcs, self.function.combine_costs_fct.defaults.variable, self.function.intensity_cost_fct.defaults.value))
+                warnings.warn("Shape mismatch: {} element of combination func input ({}) doesn't match INTENSITY cost output ({})".format(
+                              cost_funcs, self.function.combine_costs_fct.defaults.variable,
+                              self.function.intensity_cost_fct.defaults.value),
+                              pnlvm.PNLCompilerWarning)
                 assert self.cost_options == CostFunctions.INTENSITY
                 ifunc_out = cfunc_in
 

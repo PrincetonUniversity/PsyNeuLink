@@ -750,6 +750,8 @@ class Projection_Base(Projection):
             if self not in self.receiver.afferents_info:
                 self.receiver.afferents_info[self] = ConnectionInfo()
 
+        self._creates_scheduling_dependency = True
+
        # Validate variable, function and params
         # Note: pass name of Projection (to override assignment of componentName in super.__init__)
         super(Projection_Base, self).__init__(

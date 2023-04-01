@@ -1,18 +1,18 @@
 autograd<1.6
 graph-scheduler>=0.2.0, <1.1.2
 dill<=0.32
-elfi<0.8.5
+elfi<0.8.7
 graphviz<0.21.0
 grpcio<1.43.0
 grpcio-tools<1.43.0
 llvmlite<0.40
-matplotlib<3.6.4
+matplotlib<3.7.2
 modeci_mdf<0.5, >=0.3.4; (platform_machine == 'AMD64' or platform_machine == 'x86_64') and platform_python_implementation == 'CPython' and implementation_name == 'cpython'
 networkx<3.1
 numpy<1.22.5, >=1.19.0
 pillow<9.5.0
 pint<0.21.0
-toposort<1.10
+toposort<1.11
 torch>=1.8.0, <1.14.0; (platform_machine == 'AMD64' or platform_machine == 'x86_64') and platform_python_implementation == 'CPython' and implementation_name == 'cpython'
 typecheck-decorator<=1.2
 leabra-psyneulink<=0.3.2

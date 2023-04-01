@@ -63,8 +63,11 @@ _builtin_intrinsics = frozenset(('pow', 'log', 'exp', 'tanh', 'coth', 'csch',
 
 class _node_wrapper():
     def __init__(self, composition, node):
-        self._comp = composition
+        self._comp = weakref.proxy(composition)
         self._node = node
+
+    def __repr__(self):
+        return "Node wrapper for node '{}' in composition '{}'".format(self._node, self._comp)
 
     def _gen_llvm_function(self, *, ctx, tags:frozenset):
         return codegen.gen_node_wrapper(ctx, self._comp, self._node, tags=tags)
@@ -411,7 +414,7 @@ class LLVMBuilderContext:
     def get_node_wrapper(self, composition, node):
         cache = getattr(composition, '_node_wrappers', None)
         if cache is None:
-            cache = dict()
+            cache = weakref.WeakKeyDictionary()
             setattr(composition, '_node_wrappers', cache)
         return cache.setdefault(node, _node_wrapper(composition, node))
 
