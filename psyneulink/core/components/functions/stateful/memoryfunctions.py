@@ -1689,11 +1689,6 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
         if granularity == 'per_field':
             # Note: this is just used for reporting, and not determining storage or retrieval
-
-            # # Replace None's with 0 to allow multiplication
-            # old_distances_by_field = np.array([distance_fct([cue[i], candidate[i]])
-            #                                for i in range(num_fields)]
-            #                               ) * np.array([f if f is not None else 0 for f in field_weights])
             # Report None if any element of cue, candidate or field_weights is None or empty list:
             distances_by_field = np.array([None]*num_fields)
             # If field_weights is scalar, splay out as array of length num_fields so can iterate through all of them
