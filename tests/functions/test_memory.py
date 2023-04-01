@@ -449,7 +449,7 @@ class TestDictionaryMemory:
                             seed=module_seed,
                     )
             )
-        assert np.allclose(em.memory, np.array([[[1, 2, 3], [4, 5, 6]]]))
+        np.testing.assert_allclose(em.memory, np.array([[[1, 2, 3], [4, 5, 6]]]))
 
     def test_DictionaryMemory_add_and_delete_from_memory(self):
 
@@ -469,13 +469,13 @@ class TestDictionaryMemory:
                            [[ 7,  8,  9],[10, 11, 12]],
                            [[10, 20, 30],[40, 50, 60]],
                            [[11, 21, 31],[41, 51, 61]]]
-        assert np.allclose(em.memory, expected_memory)
+        np.testing.assert_allclose(em.memory, expected_memory)
 
         em.delete_from_memory([[[1,2,3],[4,5,6]]])
         expected_memory = [[[ 7,  8,  9],[10, 11, 12]],
                            [[10, 20, 30],[40, 50, 60]],
                            [[11, 21, 31],[41, 51, 61]]]
-        assert np.allclose(em.memory, expected_memory)
+        np.testing.assert_allclose(em.memory, expected_memory)
 
         # Test adding and deleting a single memory
         em.add_to_memory([[1,2,3],[100,101,102]])
@@ -483,13 +483,13 @@ class TestDictionaryMemory:
                            [[10, 20, 30],[40, 50, 60]],
                            [[11, 21, 31],[41, 51, 61]],
                            [[ 1,  2,  3],[100,101,102]]]
-        assert np.allclose(em.memory, expected_memory)
+        np.testing.assert_allclose(em.memory, expected_memory)
 
         em.delete_from_memory([[1,2,3],[100,101,102]])
         expected_memory = [[[ 7,  8,  9],[10, 11, 12]],
                            [[10, 20, 30],[40, 50, 60]],
                            [[11, 21, 31],[41, 51, 61]]]
-        assert np.allclose(em.memory, expected_memory)
+        np.testing.assert_allclose(em.memory, expected_memory)
 
         # Test adding memory with different size value
         em.add_to_memory([[1,2,3],[100,101,102,103]])
@@ -499,7 +499,7 @@ class TestDictionaryMemory:
                            [[ 1,  2,  3],[100,101,102,103]]]
         for m,e in zip(em.memory,expected_memory):
             for i,j in zip(m,e):
-                assert np.allclose(i,j)
+                np.testing.assert_allclose(i,j)
 
         # Test adding memory with different size value as np.array
         em.add_to_memory(np.array([[1,2,3],[200,201,202,203]], dtype=object))
@@ -510,7 +510,7 @@ class TestDictionaryMemory:
                            [[ 1,  2,  3],[200,201,202,203]]]
         for m,e in zip(em.memory,expected_memory):
             for i,j in zip(m,e):
-                assert np.allclose(i,j)
+                np.testing.assert_allclose(i,j)
 
         # Test error for illegal key:
         with pytest.raises(FunctionError) as error_text:
@@ -533,29 +533,29 @@ class TestDictionaryMemory:
 
         # Add new memory
         retreived = em.execute([[7,8,10], [100,110,120]])
-        assert np.allclose(list(retreived), [[7,8,9],[10,11,12]])
+        np.testing.assert_allclose(list(retreived), [[7,8,9],[10,11,12]])
         expected_memory = [[[ 1,  2,  3],[4, 5, 6]],
                            [[7,8,9], [10,11,12]],
                            [[7,8,10], [100,110,120]]]
-        assert np.allclose(em.memory, expected_memory)
+        np.testing.assert_allclose(em.memory, expected_memory)
 
         # Overwrite old memory
         retreived = em.execute([[7,8,9], [100,110,120]])
-        assert np.allclose(list(retreived), [[7,8,9],[10,11,12]])
+        np.testing.assert_allclose(list(retreived), [[7,8,9],[10,11,12]])
         expected_memory = [[[ 1,  2,  3],[4, 5, 6]],
                            [[7,8,9], [100,110,120]],
                            [[7,8,10], [100,110,120]]]
-        assert np.allclose(em.memory, expected_memory)
+        np.testing.assert_allclose(em.memory, expected_memory)
 
         # Allow entry of memory with duplicate key
         em.duplicate_keys = True
         retreived = em.execute([[7,8,9], [200,210,220]])
-        assert np.allclose(list(retreived), [[7,8,9],[100,110,120]])
+        np.testing.assert_allclose(list(retreived), [[7,8,9],[100,110,120]])
         expected_memory = [[[ 1,  2,  3],[4, 5, 6]],
                            [[7,8,9], [100,110,120]],
                            [[7,8,10], [100,110,120]],
                            [[7,8,9], [200,210,220]]]
-        assert np.allclose(em.memory, expected_memory)
+        np.testing.assert_allclose(em.memory, expected_memory)
 
         # Attempt to overwrite with two matches should generate error
         em.duplicate_keys = OVERWRITE
@@ -584,7 +584,7 @@ class TestDictionaryMemory:
                            [[10,20,30],[40,50,60]],
                            [[11,21,31],[41,51,61]],
                            [[12,22,32],[42,52,62]]]
-        assert np.allclose(em.memory, expected_memory)
+        np.testing.assert_allclose(em.memory, expected_memory)
 
     @pytest.mark.parametrize(
         'param_name',
@@ -1027,7 +1027,7 @@ class TestContentAddressableMemory:
                 retrieval_prob = 1.0,
                 seed=module_seed,
             )
-        assert np.allclose(c.memory, np.array([[[1, 2, 3], [4, 5, 6]]]))
+        np.testing.assert_allclose(c.memory, np.array([[[1, 2, 3], [4, 5, 6]]]))
 
     def test_ContentAddressableMemory_add_and_delete_from_memory(self):
 
@@ -1047,13 +1047,13 @@ class TestContentAddressableMemory:
                            [[ 7,  8,  9],[10, 11, 12]],
                            [[10, 20, 30],[40, 50, 60]],
                            [[11, 21, 31],[41, 51, 61]]]
-        assert np.allclose(c.memory, expected_memory)
+        np.testing.assert_allclose(c.memory, expected_memory)
 
         c.delete_from_memory([[[1,2,3],[4,5,6]]])
         expected_memory = [[[ 7,  8,  9],[10, 11, 12]],
                            [[10, 20, 30],[40, 50, 60]],
                            [[11, 21, 31],[41, 51, 61]]]
-        assert np.allclose(c.memory, expected_memory)
+        np.testing.assert_allclose(c.memory, expected_memory)
 
         # Test adding and deleting a single memory
         c.add_to_memory([[1,2,3],[100,101,102]])
@@ -1061,13 +1061,13 @@ class TestContentAddressableMemory:
                            [[10, 20, 30],[40, 50, 60]],
                            [[11, 21, 31],[41, 51, 61]],
                            [[ 1,  2,  3],[100,101,102]]]
-        assert np.allclose(c.memory, expected_memory)
+        np.testing.assert_allclose(c.memory, expected_memory)
 
         c.delete_from_memory([[1,2,3],[100,101,102]])
         expected_memory = [[[ 7,  8,  9],[10, 11, 12]],
                            [[10, 20, 30],[40, 50, 60]],
                            [[11, 21, 31],[41, 51, 61]]]
-        assert np.allclose(c.memory, expected_memory)
+        np.testing.assert_allclose(c.memory, expected_memory)
 
         # Test adding memory with different size value
         with pytest.raises(FunctionError) as error_text:
@@ -1099,27 +1099,27 @@ class TestContentAddressableMemory:
 
         expected_memory = [[[ 1,  2,  3],[ 4,  5,  6]],
                            [[ 7,  8,  9],[10, 11, 12]]]
-        assert np.allclose(c.memory, expected_memory)
+        np.testing.assert_allclose(c.memory, expected_memory)
 
         c.add_to_memory([[ 1,  2,  3],[ 4,  5,  6]])
-        assert np.allclose(c.memory, expected_memory)
+        np.testing.assert_allclose(c.memory, expected_memory)
 
         c.execute([[ 1,  2,  3],[ 4,  5,  6]])
-        assert np.allclose(c.memory, expected_memory)
+        np.testing.assert_allclose(c.memory, expected_memory)
 
         c.duplicate_threshold = 0  # <- Low threshold allows new entry to be considered distinct
         c.add_to_memory([[ 1,  2,  3],[ 4,  5,  7]])
         expected_memory = [[[ 1,  2,  3],[ 4,  5,  6]],
                            [[ 7,  8,  9],[10, 11, 12]],
                            [[ 1,  2,  3],[ 4,  5,  7]]]
-        assert np.allclose(c.memory, expected_memory)
+        np.testing.assert_allclose(c.memory, expected_memory)
 
         c.duplicate_threshold = .1  # <- Higher threshold means new entry is considered duplicate
         c.add_to_memory([[ 1,  2,  3],[ 4,  5,  8]])
         expected_memory = [[[ 1,  2,  3],[ 4,  5,  6]],
                            [[ 7,  8,  9],[10, 11, 12]],
                            [[ 1,  2,  3],[ 4,  5,  7]]]
-        assert np.allclose(c.memory, expected_memory)
+        np.testing.assert_allclose(c.memory, expected_memory)
 
         c = ContentAddressableMemory(
             initializer=[[[1,2,3], [4,5,6]],
@@ -1154,29 +1154,29 @@ class TestContentAddressableMemory:
 
         # Add new memory
         retreived = c([[10,11,12], [100,110,120]])
-        assert np.allclose(list(retreived), [[7,8,9], [10,11,12]])
+        np.testing.assert_allclose(list(retreived), [[7,8,9], [10,11,12]])
         expected_memory = [[[1,2,3], [4,5,6]],
                            [[7,8,9], [10,11,12]],
                            [[10,11,12], [100,110,120]]]
-        assert np.allclose(c.memory, expected_memory)
+        np.testing.assert_allclose(c.memory, expected_memory)
 
         # Overwrite old memory
         retreived = c([[7,8,9], [200,201,202]])
-        assert np.allclose(list(retreived), [[7,8,9], [10,11,12]])
+        np.testing.assert_allclose(list(retreived), [[7,8,9], [10,11,12]])
         expected_memory = [[[1,2,3], [4,5,6]],
                            [[7,8,9], [200,201,202]],
                            [[10,11,12], [100,110,120]]]
-        assert np.allclose(c.memory, expected_memory)
+        np.testing.assert_allclose(c.memory, expected_memory)
 
         # Allow entry duplicate of memory with
         c.duplicate_entries_allowed = True
         retreived = c([[7,8,9], [300,310,320]])
-        assert np.allclose(list(retreived), [[7,8,9],[200,201,202]])
+        np.testing.assert_allclose(list(retreived), [[7,8,9],[200,201,202]])
         expected_memory = [[[1,2,3],[4,5,6]],
                            [[7,8,9], [200,201,202]],
                            [[10,11,12], [100,110,120]],
                            [[7,8,9], [300,310,320]]]
-        assert np.allclose(c.memory, expected_memory)
+        np.testing.assert_allclose(c.memory, expected_memory)
 
         # Attempt to overwrite with two matches should generate error
         c.duplicate_entries_allowed = OVERWRITE
@@ -1209,7 +1209,7 @@ class TestContentAddressableMemory:
                            [[10,20,30],[40,50,60]],
                            [[11,21,31],[41,51,61]],
                            [[12,22,32],[42,52,62]]]
-        assert np.allclose(c.memory, expected_memory)
+        np.testing.assert_allclose(c.memory, expected_memory)
 
     def test_ContentAddressableMemory_errors_and_warnings(self):
 

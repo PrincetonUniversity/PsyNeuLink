@@ -42,7 +42,7 @@ class TestTransferMechanismInputs:
         )
         T.reset_stateful_function_when = Never()
         val = benchmark(T.execute, [10 for i in range(VECTOR_SIZE)])
-        assert np.allclose(val, [[10.0 for i in range(VECTOR_SIZE)]])
+        np.testing.assert_allclose(val, [[10.0 for i in range(VECTOR_SIZE)]])
         assert len(T.size) == 1 and T.size[0] == VECTOR_SIZE and isinstance(T.size[0], np.integer)
         # this test assumes size is returned as a 1D array: if it's not, then several tests in this file must be changed
 
@@ -63,7 +63,7 @@ class TestTransferMechanismInputs:
 
         EX(var)
         val = benchmark(EX, var)
-        assert np.allclose(val, [[7.5 for i in range(VECTOR_SIZE)]])
+        np.testing.assert_allclose(val, [[7.5 for i in range(VECTOR_SIZE)]])
 
     #@pytest.mark.mechanism
     #@pytest.mark.transfer_mechanism
@@ -75,7 +75,7 @@ class TestTransferMechanismInputs:
     #         integrator_mode=True
     #     )
     #     val = T.execute([Linear().execute(), NormalDist().execute(), Exponential().execute(), ExponentialDist().execute()])
-    #     assert np.allclose(val, [[np.array([0.]), 0.4001572083672233, np.array([1.]), 0.7872011523172707]]
+    #     np.testing.assert_allclose(val, [[np.array([0.]), 0.4001572083672233, np.array([1.]), 0.7872011523172707]]
 
     # @pytest.mark.mechanism
     # @pytest.mark.transfer_mechanism
@@ -156,7 +156,7 @@ class TestTransferMechanismNoise:
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
         val = benchmark(EX, var)
-        assert np.allclose(val, [[8.25 for i in range(VECTOR_SIZE)]])
+        np.testing.assert_allclose(val, [[8.25 for i in range(VECTOR_SIZE)]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -172,7 +172,7 @@ class TestTransferMechanismNoise:
         )
         T.reset_stateful_function_when = Never()
         val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[-0.6931771, 1.00018003, 2.5496904, -0.71562799]])
+        np.testing.assert_allclose(val, [[-0.6931771, 1.00018003, 2.5496904, -0.71562799]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -210,7 +210,7 @@ class TestTransferMechanismNoise:
         var = [0 for i in range(VECTOR_SIZE)]
         EX(var)
         val = benchmark(EX, var)
-        assert np.allclose(val, [[8.5 + (i * 1.7) for i in range(VECTOR_SIZE)]])
+        np.testing.assert_allclose(val, [[8.5 + (i * 1.7) for i in range(VECTOR_SIZE)]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -260,7 +260,7 @@ class TestDistributionFunctions:
         )
 
         val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[-0.6931771 ,  1.00018003,  2.5496904 , -0.71562799]])
+        np.testing.assert_allclose(val, [[-0.6931771 ,  1.00018003,  2.5496904 , -0.71562799]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -292,7 +292,7 @@ class TestDistributionFunctions:
             integrator_mode=True,
         )
         val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[1.53154485, 0.36141864, 0.64740347, 0.87558564]])
+        np.testing.assert_allclose(val, [[1.53154485, 0.36141864, 0.64740347, 0.87558564]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -321,7 +321,7 @@ class TestDistributionFunctions:
             # T.noise.base.parameters.random_state.get(None).seed([22])
             T.noise.parameters.seed.set(22, None)
             val = T.execute([0, 0, 0, 0])
-            assert np.allclose(val, [[1.73027452, -1.07866481, -1.98421126,  2.99564032]])
+            np.testing.assert_allclose(val, [[1.73027452, -1.07866481, -1.98421126,  2.99564032]])
 
 
 
@@ -338,7 +338,7 @@ class TestDistributionFunctions:
             integrator_mode=True
         )
         val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[0.78379859, 0.30331273, 0.47659695, 0.58338204]])
+        np.testing.assert_allclose(val, [[0.78379859, 0.30331273, 0.47659695, 0.58338204]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -353,7 +353,7 @@ class TestDistributionFunctions:
             integrator_mode=True
         )
         val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[1.53154485, 0.36141864, 0.64740347, 0.87558564]])
+        np.testing.assert_allclose(val, [[1.53154485, 0.36141864, 0.64740347, 0.87558564]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -368,7 +368,7 @@ class TestDistributionFunctions:
             integrator_mode=True
         )
         val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[0.39640095, 0.45094588, 2.88271841, 0.41203028]])
+        np.testing.assert_allclose(val, [[0.39640095, 0.45094588, 2.88271841, 0.41203028]])
 
 
 class TestTransferMechanismFunctions:
@@ -381,7 +381,7 @@ class TestTransferMechanismFunctions:
                               default_variable=[[0.0, 0.0]],
                               function=UserDefinedFunction(custom_function=double_all_elements))
         result = T.execute([[1.0, 2.0]])
-        assert np.allclose(result, [[2.0, 4.0]])
+        np.testing.assert_allclose(result, [[2.0, 4.0]])
 
     def tests_valid_udf_2d_variable(self):
         def double_all_elements(variable):
@@ -391,7 +391,7 @@ class TestTransferMechanismFunctions:
                               default_variable=[[0.0, 0.0], [0.0, 0.0]],
                               function=UserDefinedFunction(custom_function=double_all_elements))
         result = T.execute([[1.0, 2.0], [3.0, 4.0]])
-        assert np.allclose(result, [[2.0, 4.0], [6.0, 8.0]])
+        np.testing.assert_allclose(result, [[2.0, 4.0], [6.0, 8.0]])
 
     def tests_invalid_udf(self):
         def sum_all_elements(variable):
@@ -521,7 +521,7 @@ class TestTransferMechanismIntegratorFunctionParams:
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
         val = benchmark(EX, var)
-        assert np.allclose(val, [[ 0., 0.19, 0.36, 0.51]])
+        np.testing.assert_allclose(val, [[ 0., 0.19, 0.36, 0.51]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -539,7 +539,7 @@ class TestTransferMechanismIntegratorFunctionParams:
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
         val = benchmark(EX, var)
-        assert np.allclose(val, [[ 0., 0.19, 0.36, 0.51]])
+        np.testing.assert_allclose(val, [[ 0., 0.19, 0.36, 0.51]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -608,7 +608,7 @@ class TestTransferMechanismIntegratorFunctionParams:
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
         val = benchmark(EX, var)
-        assert np.allclose(val, [[ 0.75,  0.775,  0.8, 0.825]])
+        np.testing.assert_allclose(val, [[ 0.75,  0.775,  0.8, 0.825]])
 
 
     @pytest.mark.mechanism
@@ -629,7 +629,7 @@ class TestTransferMechanismIntegratorFunctionParams:
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
         val = benchmark(EX, var)
-        assert np.allclose(val, [[ 0.75,  0.775,  0.8, 0.825]])
+        np.testing.assert_allclose(val, [[ 0.75,  0.775,  0.8, 0.825]])
 
 
     @pytest.mark.mechanism
@@ -655,7 +655,7 @@ class TestTransferMechanismIntegratorFunctionParams:
 
         EX(var)
         val = benchmark(EX, var)
-        assert np.allclose(val, [[0.75, 0.7625, 0.775, 0.7875]])
+        np.testing.assert_allclose(val, [[0.75, 0.7625, 0.775, 0.7875]])
 
 
     def test_transfer_mech_array_assignments_wrong_size_mech_init_val(self):
@@ -682,8 +682,8 @@ class TestTransferMechanismIntegratorFunctionParams:
         )
         result1 = T.execute([range(VECTOR_SIZE)])
         result2 = T.execute([range(VECTOR_SIZE)])
-        assert np.allclose(result1, [[0., 0.2, 0.6, 1.2]])
-        assert np.allclose(result2, [[0., 0.36, 1.02, 1.92]])
+        np.testing.assert_allclose(result1, [[0., 0.2, 0.6, 1.2]])
+        np.testing.assert_allclose(result2, [[0., 0.36, 1.02, 1.92]])
 
     def test_transfer_mech_array_assignment_wrong_size_integrator_fct_default_variable(self):
 
@@ -746,7 +746,7 @@ class TestTransferMechanismIntegratorFunctionParams:
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
         val = benchmark(EX, var)
-        assert np.allclose(val, [[ 0.75, 0.9, 1.05, 1.2 ]])
+        np.testing.assert_allclose(val, [[ 0.75, 0.9, 1.05, 1.2 ]])
 
 
     @pytest.mark.mechanism
@@ -766,7 +766,7 @@ class TestTransferMechanismIntegratorFunctionParams:
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
         val = benchmark(EX, var)
-        assert np.allclose(val, [[ 0.75, 0.9, 1.05, 1.2 ]])
+        np.testing.assert_allclose(val, [[ 0.75, 0.9, 1.05, 1.2 ]])
 
 
     @pytest.mark.mechanism
@@ -791,7 +791,7 @@ class TestTransferMechanismIntegratorFunctionParams:
 
         EX(var)
         val = benchmark(EX, var)
-        assert np.allclose(val, [[ 0.75, 0.825, 0.9, 0.975]])
+        np.testing.assert_allclose(val, [[ 0.75, 0.825, 0.9, 0.975]])
 
 
     # def test_transfer_mech_array_assignments_wrong_size_mech_noise(self, benchmark, mode):
@@ -846,8 +846,8 @@ class TestTransferMechanismTimeConstant:
         val1 = EX([1 for i in range(VECTOR_SIZE)])
         val2 = benchmark(EX, [1 for i in range(VECTOR_SIZE)])
 
-        assert np.allclose(val1, [[0.8 for i in range(VECTOR_SIZE)]])
-        assert np.allclose(val2, [[0.96 for i in range(VECTOR_SIZE)]])
+        np.testing.assert_allclose(val1, [[0.8 for i in range(VECTOR_SIZE)]])
+        np.testing.assert_allclose(val2, [[0.96 for i in range(VECTOR_SIZE)]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -863,7 +863,7 @@ class TestTransferMechanismTimeConstant:
         EX = pytest.helpers.get_mech_execution(T, mech_mode)
 
         val = benchmark(EX, [1 for i in range(VECTOR_SIZE)])
-        assert np.allclose(val, [[1.0 for i in range(VECTOR_SIZE)]])
+        np.testing.assert_allclose(val, [[1.0 for i in range(VECTOR_SIZE)]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -879,7 +879,7 @@ class TestTransferMechanismTimeConstant:
         EX = pytest.helpers.get_mech_execution(T, mech_mode)
 
         val = benchmark(EX, [1 for i in range(VECTOR_SIZE)])
-        assert np.allclose(val, [[0.0 for i in range(VECTOR_SIZE)]])
+        np.testing.assert_allclose(val, [[0.0 for i in range(VECTOR_SIZE)]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -895,7 +895,7 @@ class TestTransferMechanismTimeConstant:
         EX = pytest.helpers.get_mech_execution(T, mech_mode)
 
         val = EX([1, 1, 1, 1])
-        assert np.allclose(val, [[0.9, 0.9, 0.9, 0.9]])
+        np.testing.assert_allclose(val, [[0.9, 0.9, 0.9, 0.9]])
 
         # FIXME: The code bellow modifies parameter value.
         #        This is not support in compiled mode.
@@ -905,7 +905,7 @@ class TestTransferMechanismTimeConstant:
         T.noise.base = 10
 
         val = EX([1, 2, -3, 0])
-        assert np.allclose(val, [[10.98, 11.78, 7.779999999999999, 10.18]]) # testing noise changes to an integrator
+        np.testing.assert_allclose(val, [[10.98, 11.78, 7.779999999999999, 10.18]]) # testing noise changes to an integrator
 
     # @pytest.mark.mechanism
     # @pytest.mark.transfer_mechanism
@@ -937,7 +937,7 @@ class TestTransferMechanismTimeConstant:
 
         EX([1, 1, 1, 1])
         val = EX([1, 1, 1, 1])
-        assert np.allclose(val, [[ 0.96,  0.91,  0.84,  0.75]])
+        np.testing.assert_allclose(val, [[ 0.96,  0.91,  0.84,  0.75]])
 
 
     @pytest.mark.mechanism
@@ -979,7 +979,7 @@ class TestTransferMechanismSize:
             size=4
         )
         val = T.execute([10, 10, 10, 10])
-        assert np.allclose(val, [[10.0, 10.0, 10.0, 10.0]])
+        np.testing.assert_allclose(val, [[10.0, 10.0, 10.0, 10.0]])
 
     # ------------------------------------------------------------------------------------------------
     # TEST 3
@@ -993,7 +993,7 @@ class TestTransferMechanismSize:
             size=VECTOR_SIZE
         )
         val = T.execute([10.0 for i in range(VECTOR_SIZE)])
-        assert np.allclose(val, [[10.0 for i in range(VECTOR_SIZE)]])
+        np.testing.assert_allclose(val, [[10.0 for i in range(VECTOR_SIZE)]])
 
     # ------------------------------------------------------------------------------------------------
     # TEST 4
@@ -1008,7 +1008,7 @@ class TestTransferMechanismSize:
     #         integrator_mode=True
     #     )
     #     val = T.execute([Linear().execute(), NormalDist().execute(), Exponential().execute(), ExponentialDist().execute()])
-    #     assert np.allclose(val, [[np.array([0.]), 0.4001572083672233, np.array([1.]), 0.7872011523172707]]
+    #     np.testing.assert_allclose(val, [[np.array([0.]), 0.4001572083672233, np.array([1.]), 0.7872011523172707]]
 
     # ------------------------------------------------------------------------------------------------
     # TEST 5
@@ -1036,7 +1036,7 @@ class TestTransferMechanismSize:
             size=4.0
         )
         val = T.execute([10, 10, 10, 10])
-        assert np.allclose(val, [[10.0, 10.0, 10.0, 10.0]])
+        np.testing.assert_allclose(val, [[10.0, 10.0, 10.0, 10.0]])
 
     # ------------------------------------------------------------------------------------------------
     # TEST 7
@@ -1050,7 +1050,7 @@ class TestTransferMechanismSize:
             size=4.0
         )
         val = T.execute([10.0, 10.0, 10.0, 10.0])
-        assert np.allclose(val, [[10.0, 10.0, 10.0, 10.0]])
+        np.testing.assert_allclose(val, [[10.0, 10.0, 10.0, 10.0]])
 
     # ------------------------------------------------------------------------------------------------
     # TEST 8
@@ -1065,7 +1065,7 @@ class TestTransferMechanismSize:
     #         integrator_mode=True
     #     )
     #     val = T.execute([Linear().execute(), NormalDist().execute(), Exponential().execute(), ExponentialDist().execute()])
-    #     assert np.allclose(val, [[np.array([0.]), 0.4001572083672233, np.array([1.]), 0.7872011523172707]]
+    #     np.testing.assert_allclose(val, [[np.array([0.]), 0.4001572083672233, np.array([1.]), 0.7872011523172707]]
 
     # ------------------------------------------------------------------------------------------------
     # TEST 9
@@ -1148,7 +1148,7 @@ class TestTransferMechanismSize:
         )
         assert len(T.defaults.variable) == 1 and (T.defaults.variable[0] == [1, 2, 3, 4]).all()
         val = T.execute([10.0, 10.0, 10.0, 10.0])
-        assert np.allclose(val, [[10.0, 10.0, 10.0, 10.0]])
+        np.testing.assert_allclose(val, [[10.0, 10.0, 10.0, 10.0]])
 
     # ------------------------------------------------------------------------------------------------
     # TEST 15
@@ -1164,7 +1164,7 @@ class TestTransferMechanismSize:
         )
         assert len(T.defaults.variable) == 1 and (T.defaults.variable[0] == [1, 2, 3, 4]).all()
         val = T.execute([10.0, 10.0, 10.0, 10.0])
-        assert np.allclose(val, [[10.0, 10.0, 10.0, 10.0]])
+        np.testing.assert_allclose(val, [[10.0, 10.0, 10.0, 10.0]])
 
     # ------------------------------------------------------------------------------------------------
     # TEST 16
@@ -1296,7 +1296,7 @@ class TestTransferMechanismMultipleInputPorts:
         EX = pytest.helpers.get_mech_execution(T, mech_mode)
 
         val = benchmark(EX, [[1.0, 2.0], [3.0, 4.0]])
-        assert np.allclose(val, [[3., 5.], [7., 9.]])
+        np.testing.assert_allclose(val, [[3., 5.], [7., 9.]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -1308,7 +1308,7 @@ class TestTransferMechanismMultipleInputPorts:
             default_variable=[[0.0, 0.0], [0.0, 0.0]]
         )
         val = T.execute([[1.0, 2.0], [3.0, 4.0]])
-        assert np.allclose(val, [[1.6136458, 7.00036006], [12.09938081, 7.56874402]])
+        np.testing.assert_allclose(val, [[1.6136458, 7.00036006], [12.09938081, 7.56874402]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -1341,12 +1341,12 @@ class TestTransferMechanismMultipleInputPorts:
 class TestIntegratorMode:
     def test_integrator_mode_simple_on_and_off(self):
         T = TransferMechanism(size=2)
-        assert np.allclose(T.execute([0.5, 1]), [[0.5, 1]])
+        np.testing.assert_allclose(T.execute([0.5, 1]), [[0.5, 1]])
         T.integrator_mode=True
-        assert np.allclose(T.execute([0.5, 1]), [[0.25, 0.5 ]])
-        assert np.allclose(T.execute([0.5, 1]), [[0.375, 0.75 ]])
+        np.testing.assert_allclose(T.execute([0.5, 1]), [[0.25, 0.5 ]])
+        np.testing.assert_allclose(T.execute([0.5, 1]), [[0.375, 0.75 ]])
         T.integrator_mode=False
-        assert np.allclose(T.execute([0.5, 1]), [[0.5, 1]])
+        np.testing.assert_allclose(T.execute([0.5, 1]), [[0.5, 1]])
 
     def test_previous_value_persistence_execute(self):
         T = TransferMechanism(name="T",
@@ -1355,17 +1355,17 @@ class TestIntegratorMode:
                               integration_rate=0.1,
                               noise=0.0)
         T.reset_stateful_function_when = Never()
-        assert np.allclose(T.integrator_function.previous_value, 0.5)
+        np.testing.assert_allclose(T.integrator_function.previous_value, 0.5)
 
         T.execute(1.0)
         # integration: 0.9*0.5 + 0.1*1.0 + 0.0 = 0.55  --->  previous value = 0.55
         # linear fn: 0.55*1.0 = 0.55
-        assert np.allclose(T.integrator_function.previous_value, 0.55)
+        np.testing.assert_allclose(T.integrator_function.previous_value, 0.55)
 
         T.execute(1.0)
         # integration: 0.9*0.55 + 0.1*1.0 + 0.0 = 0.595  --->  previous value = 0.595
         # linear fn: 0.595*1.0 = 0.595
-        assert np.allclose(T.integrator_function.previous_value, 0.595)
+        np.testing.assert_allclose(T.integrator_function.previous_value, 0.595)
 
     @pytest.mark.composition
     def test_previous_value_persistence_run(self):
@@ -1377,7 +1377,7 @@ class TestIntegratorMode:
         C = Composition(pathways=[T])
         T.reset_stateful_function_when = Never()
 
-        assert np.allclose(T.integrator_function.previous_value, 0.5)
+        np.testing.assert_allclose(T.integrator_function.previous_value, 0.5)
 
         C.run(inputs={T: 1.0}, num_trials=2)
         # Trial 1
@@ -1386,7 +1386,7 @@ class TestIntegratorMode:
         # Trial 2
         # integration: 0.9*0.55 + 0.1*1.0 + 0.0 = 0.595  --->  previous value = 0.595
         # linear fn: 0.595*1.0 = 0.595
-        assert np.allclose(T.integrator_function.parameters.previous_value.get(C), 0.595)
+        np.testing.assert_allclose(T.integrator_function.parameters.previous_value.get(C), 0.595)
 
         C.run(inputs={T: 2.0}, num_trials=2)
         # Trial 3
@@ -1396,7 +1396,7 @@ class TestIntegratorMode:
         # integration: 0.9*0.7355 + 0.1*2.0 + 0.0 = 0.86195  --->  previous value = 0.86195
         # linear fn: 0.86195*1.0 = 0.86195
 
-        assert np.allclose(T.integrator_function.parameters.previous_value.get(C), 0.86195)
+        np.testing.assert_allclose(T.integrator_function.parameters.previous_value.get(C), 0.86195)
 
     def test_previous_value_reset_execute(self):
         T = TransferMechanism(name="T",
@@ -1405,35 +1405,35 @@ class TestIntegratorMode:
                               integration_rate=0.1,
                               noise=0.0)
         T.reset_stateful_function_when = Never()
-        assert np.allclose(T.integrator_function.previous_value, 0.5)
+        np.testing.assert_allclose(T.integrator_function.previous_value, 0.5)
         T.execute(1.0)
         # integration: 0.9*0.5 + 0.1*1.0 + 0.0 = 0.55  --->  previous value = 0.55
         # linear fn: 0.55*1.0 = 0.55
-        assert np.allclose(T.integrator_function.previous_value, 0.55)
-        assert np.allclose(T.value, 0.55)
+        np.testing.assert_allclose(T.integrator_function.previous_value, 0.55)
+        np.testing.assert_allclose(T.value, 0.55)
 
         # Reset integrator_function ONLY
         T.integrator_function.reset(0.6)
 
-        assert np.allclose(T.integrator_function.previous_value, 0.6)   # previous_value is a property that looks at integrator_function
-        assert np.allclose(T.value, 0.55)           # on mechanism only, so does not update until execution
+        np.testing.assert_allclose(T.integrator_function.previous_value, 0.6)   # previous_value is a property that looks at integrator_function
+        np.testing.assert_allclose(T.value, 0.55)           # on mechanism only, so does not update until execution
 
         T.execute(1.0)
         # integration: 0.9*0.6 + 0.1*1.0 + 0.0 = 0.64  --->  previous value = 0.55
         # linear fn: 0.64*1.0 = 0.64
-        assert np.allclose(T.integrator_function.previous_value, 0.64)   # property that looks at integrator_function
-        assert np.allclose(T.value, 0.64)            # on mechanism, but updates with execution
+        np.testing.assert_allclose(T.integrator_function.previous_value, 0.64)   # property that looks at integrator_function
+        np.testing.assert_allclose(T.value, 0.64)            # on mechanism, but updates with execution
 
         T.reset(0.4)
         # linear fn: 0.4*1.0 = 0.4
-        assert np.allclose(T.integrator_function.previous_value, 0.4)   # property that looks at integrator, which updated with mech reset
-        assert np.allclose(T.value, 0.4)  # on mechanism, but updates with mech reset
+        np.testing.assert_allclose(T.integrator_function.previous_value, 0.4)   # property that looks at integrator, which updated with mech reset
+        np.testing.assert_allclose(T.value, 0.4)  # on mechanism, but updates with mech reset
 
         T.execute(1.0)
         # integration: 0.9*0.4 + 0.1*1.0 + 0.0 = 0.46  --->  previous value = 0.46
         # linear fn: 0.46*1.0 = 0.46
-        assert np.allclose(T.integrator_function.previous_value, 0.46)  # property that looks at integrator, which updated with mech exec
-        assert np.allclose(T.value, 0.46)  # on mechanism, but updates with exec
+        np.testing.assert_allclose(T.integrator_function.previous_value, 0.46)  # property that looks at integrator, which updated with mech exec
+        np.testing.assert_allclose(T.value, 0.46)  # on mechanism, but updates with exec
 
     @pytest.mark.composition
     def test_reset_run(self):
@@ -1446,7 +1446,7 @@ class TestIntegratorMode:
 
         T.reset_stateful_function_when = Never()
 
-        assert np.allclose(T.integrator_function.previous_value, 0.5)
+        np.testing.assert_allclose(T.integrator_function.previous_value, 0.5)
 
         C.run(inputs={T: 1.0}, num_trials=2)
         # Trial 1
@@ -1455,17 +1455,17 @@ class TestIntegratorMode:
         # Trial 2
         # integration: 0.9*0.55 + 0.1*1.0 + 0.0 = 0.595  --->  previous value = 0.595
         # linear fn: 0.595*1.0 = 0.595
-        assert np.allclose(T.integrator_function.parameters.previous_value.get(C), 0.595)
+        np.testing.assert_allclose(T.integrator_function.parameters.previous_value.get(C), 0.595)
 
         T.integrator_function.reset(0.9, context=C)
 
-        assert np.allclose(T.integrator_function.parameters.previous_value.get(C), 0.9)
-        assert np.allclose(T.parameters.value.get(C), 0.595)
+        np.testing.assert_allclose(T.integrator_function.parameters.previous_value.get(C), 0.9)
+        np.testing.assert_allclose(T.parameters.value.get(C), 0.595)
 
         T.reset(0.5, context=C)
 
-        assert np.allclose(T.integrator_function.parameters.previous_value.get(C), 0.5)
-        assert np.allclose(T.parameters.value.get(C), 0.5)
+        np.testing.assert_allclose(T.integrator_function.parameters.previous_value.get(C), 0.5)
+        np.testing.assert_allclose(T.parameters.value.get(C), 0.5)
 
         C.run(inputs={T: 1.0}, num_trials=2)
         # Trial 3
@@ -1474,7 +1474,7 @@ class TestIntegratorMode:
         # Trial 4
         # integration: 0.9*0.55 + 0.1*1.0 + 0.0 = 0.595  --->  previous value = 0.595
         # linear fn: 0.595*1.0 = 0.595
-        assert np.allclose(T.integrator_function.parameters.previous_value.get(C), 0.595)
+        np.testing.assert_allclose(T.integrator_function.parameters.previous_value.get(C), 0.595)
 
     @pytest.mark.composition
     def test_reset_run_array(self):
@@ -1500,12 +1500,12 @@ class TestIntegratorMode:
 
         T.integrator_function.reset([0.9, 0.9, 0.9], context=C)
 
-        assert np.allclose(T.integrator_function.parameters.previous_value.get(C), [0.9, 0.9, 0.9])
+        np.testing.assert_allclose(T.integrator_function.parameters.previous_value.get(C), [0.9, 0.9, 0.9])
         np.testing.assert_allclose(T.parameters.value.get(C), [[0.595, 0.595, 0.595]])
 
         T.reset([0.5, 0.5, 0.5], context=C)
 
-        assert np.allclose(T.integrator_function.parameters.previous_value.get(C), [0.5, 0.5, 0.5])
+        np.testing.assert_allclose(T.integrator_function.parameters.previous_value.get(C), [0.5, 0.5, 0.5])
         np.testing.assert_allclose(T.parameters.value.get(C), [[0.5, 0.5, 0.5]])
 
         C.run(inputs={T: [1.0, 1.0, 1.0]}, num_trials=2)
@@ -1530,7 +1530,7 @@ class TestIntegratorMode:
         C = Composition(pathways=[T])
         T.reset_stateful_function_when = Never()
 
-        assert np.allclose(T.integrator_function.previous_value, initial_val)
+        np.testing.assert_allclose(T.integrator_function.previous_value, initial_val)
 
         C.run(inputs={T: [1.0, 1.0, 1.0]}, num_trials=2)
         # Trial 1
@@ -1543,13 +1543,13 @@ class TestIntegratorMode:
 
         T.integrator_function.reset([0.9, 0.9, 0.9], context=C)
 
-        assert np.allclose(T.integrator_function.parameters.previous_value.get(C), [0.9, 0.9, 0.9])
+        np.testing.assert_allclose(T.integrator_function.parameters.previous_value.get(C), [0.9, 0.9, 0.9])
         np.testing.assert_allclose(T.parameters.value.get(C), [[0.595, 0.595, 0.595]])
 
         T.reset(initial_val, context=C)
 
-        assert np.allclose(T.integrator_function.parameters.previous_value.get(C), initial_val)
-        assert np.allclose(T.parameters.value.get(C), initial_val)
+        np.testing.assert_allclose(T.integrator_function.parameters.previous_value.get(C), initial_val)
+        np.testing.assert_allclose(T.parameters.value.get(C), initial_val)
 
         C.run(inputs={T: [1.0, 1.0, 1.0]}, num_trials=2)
         # Trial 3
@@ -1579,7 +1579,7 @@ class TestIntegratorMode:
         T.reset_stateful_function_when = Never()
         # T starts with integrator_mode = True; confirm that T behaves correctly
         C.run({T: [[1.0], [1.0], [1.0]]})
-        assert np.allclose(T.parameters.value.get(C), [[0.875]])
+        np.testing.assert_allclose(T.parameters.value.get(C), [[0.875]])
 
         assert T.parameters.integrator_mode.get(C) is True
         assert T.integrator_function is integrator_function
@@ -1590,7 +1590,7 @@ class TestIntegratorMode:
         assert T.parameters.integrator_mode.get(C) is False
 
         C.run({T: [[1.0], [1.0], [1.0]]})
-        assert np.allclose(T.parameters.value.get(C), [[1.0]])
+        np.testing.assert_allclose(T.parameters.value.get(C), [[1.0]])
 
         # Switch integrator_mode BACK to True; confirm that T picks up where it left off
         T.parameters.integrator_mode.set(True, context=C)
@@ -1599,7 +1599,7 @@ class TestIntegratorMode:
         assert T.integrator_function is integrator_function
 
         C.run({T: [[1.0], [1.0], [1.0]]})
-        assert np.allclose(T.parameters.value.get(C), [[0.984375]])
+        np.testing.assert_allclose(T.parameters.value.get(C), [[0.984375]])
 
     @pytest.mark.composition
     def test_initial_values_softmax(self):
@@ -1628,7 +1628,7 @@ class TestIntegratorMode:
         S2 = SoftMax()
         expected_result_s2 = S2([[3.25, 4.25]])
 
-        assert np.allclose(expected_result_integrator, T.parameters.integrator_function_value.get(C))
+        np.testing.assert_allclose(expected_result_integrator, T.parameters.integrator_function_value.get(C))
         np.testing.assert_allclose(expected_result_s1, [result[0]])
         np.testing.assert_allclose(expected_result_s2, [result[1]])
 
@@ -1651,21 +1651,21 @@ class TestOnResumeIntegratorMode:
         C.run(inputs={T: [[1.0], [2.0]]})                   # Run in "integrator mode"
         # Trial 0: 0.5*0.0 + 0.5*1.0 = 0.5 * 1.0 = 0.5
         # Trial 1: 0.5*0.5 + 0.5*2.0 = 1.25 * 1.0 = 1.25
-        assert np.allclose(T.parameters.value.get(C), [[1.25]])
+        np.testing.assert_allclose(T.parameters.value.get(C), [[1.25]])
 
         T.parameters.integrator_mode.set(False, context=C)    # Switch to "instantaneous mode"
 
         C.run(inputs={T: [[1.0], [2.0]]})                               # Run in "instantaneous mode"
         # Trial 0: 1.0 * 1.0 = 1.0
         # Trial 1: 1.0 * 2.0 = 2.0
-        assert np.allclose(T.parameters.value.get(C), [[2.0]])
+        np.testing.assert_allclose(T.parameters.value.get(C), [[2.0]])
 
         T.parameters.integrator_mode.set(True, context=C)     # Switch back to "integrator mode"
 
         C.run(inputs={T: [[1.0], [2.0]]})                               # Run in "integrator mode" and pick up at 1.25
         # Trial 0: 0.5*1.25 + 0.5*1.0 = 1.125 * 1.0 = 1.125
         # Trial 1: 0.5*1.125 + 0.5*2.0 = 1.5625 * 1.0 = 1.5625
-        assert np.allclose(T.parameters.value.get(C), [[1.5625]])
+        np.testing.assert_allclose(T.parameters.value.get(C), [[1.5625]])
 
     def test_current_value_spec(self):
         T = TransferMechanism(on_resume_integrator_mode=CURRENT_VALUE,
@@ -1677,21 +1677,21 @@ class TestOnResumeIntegratorMode:
         C.run(inputs={T: [[1.0], [2.0]]})                   # Run in "integrator mode"
         # Trial 0: 0.5*0.0 + 0.5*1.0 = 0.5 * 1.0 = 0.5
         # Trial 1: 0.5*0.5 + 0.5*2.0 = 1.25 * 1.0 = 1.25
-        assert np.allclose(T.parameters.value.get(C), [[1.25]])
+        np.testing.assert_allclose(T.parameters.value.get(C), [[1.25]])
 
         T.parameters.integrator_mode.set(False, context=C)     # Switch to "instantaneous mode"
 
         C.run(inputs={T: [[1.0], [2.0]]})                                # Run in "instantaneous mode"
         # Trial 0: 1.0 * 1.0 = 1.0
         # Trial 1: 1.0 * 2.0 = 2.0
-        assert np.allclose(T.parameters.value.get(C), [[2.0]])
+        np.testing.assert_allclose(T.parameters.value.get(C), [[2.0]])
 
         T.parameters.integrator_mode.set(True, context=C)      # Switch back to "integrator mode"
 
         C.run(inputs={T: [[1.0], [2.0]]})                                # Run in "integrator mode" and pick up at 2.0
         # Trial 0: 0.5*2.0 + 0.5*1.0 = 1.5 * 1.0 = 1.5
         # Trial 1: 0.5*1.5 + 0.5*2.0 = 1.75 * 1.0 = 1.75
-        assert np.allclose(T.parameters.value.get(C), [[1.75]])
+        np.testing.assert_allclose(T.parameters.value.get(C), [[1.75]])
 
     def test_reset_spec(self):
         T = TransferMechanism(on_resume_integrator_mode=RESET,
@@ -1705,21 +1705,21 @@ class TestOnResumeIntegratorMode:
         C.run(inputs={T: [[1.0], [2.0]]})                        # Run in "integrator mode"
         # Trial 0: 0.5*0.0 + 0.5*1.0 = 0.5 * 1.0 = 0.5
         # Trial 1: 0.5*0.5 + 0.5*2.0 = 1.25 * 1.0 = 1.25
-        assert np.allclose(T.parameters.value.get(C), [[1.25]])
+        np.testing.assert_allclose(T.parameters.value.get(C), [[1.25]])
 
         T.parameters.integrator_mode.set(False, context=C)                               # Switch to "instantaneous mode"
 
         C.run(inputs={T: [[1.0], [2.0]]})                       # Run in "instantaneous mode"
         # Trial 0: 1.0 * 1.0 = 1.0
         # Trial 1: 1.0 * 2.0 = 2.0
-        assert np.allclose(T.parameters.value.get(C), [[2.0]])
+        np.testing.assert_allclose(T.parameters.value.get(C), [[2.0]])
 
         T.parameters.integrator_mode.set(True, context=C)                                # Switch back to "integrator mode"
 
         C.run(inputs={T: [[1.0], [2.0]]})                       # Run in "integrator mode", pick up at 0.0
         # Trial 0: 0.5*0.0 + 0.5*1.0 = 0.5 * 1.0 = 0.5
         # Trial 1: 0.5*0.5 + 0.5*2.0 = 1.25 * 1.0 = 1.25
-        assert np.allclose(T.parameters.value.get(C), [[1.25]])
+        np.testing.assert_allclose(T.parameters.value.get(C), [[1.25]])
 
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism")
@@ -1750,7 +1750,7 @@ class TestOnResumeIntegratorMode:
                   instruction_input: [[1, -1], [-1, 1]]}
         result = comp.run(inputs=inputs, execution_mode=comp_mode)
 
-        assert np.allclose(result, [[0.43636140750487973, 0.47074475219780554]])
+        np.testing.assert_allclose(result, [[0.43636140750487973, 0.47074475219780554]])
         if comp_mode is pnlvm.ExecutionMode.Python:
             assert decision.num_executions.time_step == 1
             assert decision.num_executions.pass_ == 2
@@ -1765,9 +1765,9 @@ class TestClip:
         T = TransferMechanism(clip=[-2.0, 2.0])
         EX = pytest.helpers.get_mech_execution(T, mech_mode)
 
-        assert np.allclose(EX(3.0), 2.0)
-        assert np.allclose(EX(1.0), 1.0)
-        assert np.allclose(EX(-3.0), -2.0)
+        np.testing.assert_allclose(EX(3.0), 2.0)
+        np.testing.assert_allclose(EX(1.0), 1.0)
+        np.testing.assert_allclose(EX(-3.0), -2.0)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -1785,7 +1785,7 @@ class TestClip:
                               clip=[-2.0, 2.0])
         EX = pytest.helpers.get_mech_execution(T, mech_mode)
 
-        assert np.allclose(EX([[-5.0, -1.0, 5.0], [5.0, -5.0, 1.0], [1.0, 5.0, 5.0]]),
+        np.testing.assert_allclose(EX([[-5.0, -1.0, 5.0], [5.0, -5.0, 1.0], [1.0, 5.0, 5.0]]),
                            [[-2.0, -1.0, 2.0], [2.0, -2.0, 1.0], [1.0, 2.0, 2.0]])
 
 
@@ -1797,10 +1797,10 @@ class TestOutputPorts:
 
         T.execute(input=[[1.0], [2.0], [3.0]])
 
-        assert np.allclose(T.value, [[1.0], [2.0], [3.0]])
-        assert np.allclose(T.output_ports[0].value, [1.0])
-        assert np.allclose(T.output_ports[1].value, [2.0])
-        assert np.allclose(T.output_ports[2].value, [3.0])
+        np.testing.assert_allclose(T.value, [[1.0], [2.0], [3.0]])
+        np.testing.assert_allclose(T.output_ports[0].value, [1.0])
+        np.testing.assert_allclose(T.output_ports[1].value, [2.0])
+        np.testing.assert_allclose(T.output_ports[2].value, [3.0])
 
     def test_add_input_ports(self):
         T = TransferMechanism(default_variable=[[0], [0], [0]])
@@ -1817,15 +1817,15 @@ class TestOutputPorts:
     def test_combine_standard_output_port(self):
         T = TransferMechanism(default_variable=[[0,0,0],[0,0,0]], output_ports=[COMBINE])
         T.execute([[1,2,1],[5,0,4]])
-        assert np.allclose(T.output_ports[0].value, [6,2,5])
+        np.testing.assert_allclose(T.output_ports[0].value, [6,2,5])
 
         # assert len(T.input_ports) == 4
         # assert len(T.output_ports) == 4
         #
         # T.execute(input=[[1.0], [2.0], [3.0], [4.0]])
         #
-        # assert np.allclose(T.value, [[1.0], [2.0], [3.0], [4.0]])
-        # assert np.allclose(T.output_ports[0].value, [1.0])
-        # assert np.allclose(T.output_ports[1].value, [2.0])
-        # assert np.allclose(T.output_ports[2].value, [3.0])
-        # assert np.allclose(T.output_ports[3].value, [4.0])
+        # np.testing.assert_allclose(T.value, [[1.0], [2.0], [3.0], [4.0]])
+        # np.testing.assert_allclose(T.output_ports[0].value, [1.0])
+        # np.testing.assert_allclose(T.output_ports[1].value, [2.0])
+        # np.testing.assert_allclose(T.output_ports[2].value, [3.0])
+        # np.testing.assert_allclose(T.output_ports[3].value, [4.0])

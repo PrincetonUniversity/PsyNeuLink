@@ -140,9 +140,9 @@ class TestRecurrentTransferMechanismInputs:
 
         val10 = benchmark(EX, [[1.0, 2.0]])
 
-        assert np.allclose(val1, [[0.50249998, 0.50499983]])
-        assert np.allclose(val2, [[0.50497484, 0.50994869]])
-        assert np.allclose(val10, [[0.52837327, 0.55656439]])
+        np.testing.assert_allclose(val1, [[0.50249998, 0.50499983]])
+        np.testing.assert_allclose(val2, [[0.50497484, 0.50994869]])
+        np.testing.assert_allclose(val10, [[0.52837327, 0.55656439]])
 
     @pytest.mark.mechanism
     @pytest.mark.recurrent_transfer_mechanism
@@ -164,9 +164,9 @@ class TestRecurrentTransferMechanismInputs:
 
         val10 = benchmark(EX, [[1.0, 2.0]])
 
-        assert np.allclose(val1, [[0.1, 0.2]])
-        assert np.allclose(val2, [[0.196, 0.392]])
-        assert np.allclose(val10, [[0.96822561, 1.93645121]])
+        np.testing.assert_allclose(val1, [[0.1, 0.2]])
+        np.testing.assert_allclose(val2, [[0.196, 0.392]])
+        np.testing.assert_allclose(val10, [[0.96822561, 1.93645121]])
 
     # def test_recurrent_mech_inputs_list_of_fns(self):
     #     R = RecurrentTransferMechanism(
@@ -652,13 +652,13 @@ class TestRecurrentTransferMechanismInProcess:
         c = Composition(pathways=[[T1, proj, T2]])
         c.run(inputs={T1: [[1, 2, 3, 4]]})
         proj.matrix.base = [[2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2]]
-        assert np.allclose(proj.matrix.base, [[2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2]])
+        np.testing.assert_allclose(proj.matrix.base, [[2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2]])
         # c.run(inputs={T1: [[1, 2, 3, 4]]})
         T1.execute([[1, 2, 3, 4]])
         proj.execute()
         # removed this assert, because before the changes of most_recent_execution_id -> most_recent_context
         # proj.matrix.base referred to the 'Process-0' execution_id, even though it was last executed with None
-        # assert np.allclose(proj.matrix.base, np.array([[2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2]]))
+        # np.testing.assert_allclose(proj.matrix.base, np.array([[2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2]]))
 
     def test_recurrent_mech_process_matrix_change(self):
         R = RecurrentTransferMechanism(
@@ -878,7 +878,7 @@ class TestRecurrentTransferMechanismInComposition:
                     [1.1, 0., 1.1, 1.1],
                     [1.1, 1.1, 0., 1.1],
                     [1.1, 1.1, 1.1, 0.]]
-        assert np.allclose(R.recurrent_projection.mod_matrix, matrix_1)
+        np.testing.assert_allclose(R.recurrent_projection.mod_matrix, matrix_1)
         print(R.recurrent_projection.mod_matrix)
         R.learning_rate.base = 0.9
 
@@ -890,7 +890,7 @@ class TestRecurrentTransferMechanismInComposition:
                     [1.911125, 0., 1.911125, 1.911125],
                     [1.911125, 1.911125, 0., 1.911125],
                     [1.911125, 1.911125, 1.911125, 0.]]
-        # assert np.allclose(R.recurrent_projection.mod_matrix, matrix_2)
+        # np.testing.assert_allclose(R.recurrent_projection.mod_matrix, matrix_2)
         print(R.recurrent_projection.mod_matrix)
 
     def test_learning_of_orthognal_inputs(self):
@@ -948,7 +948,7 @@ class TestRecurrentTransferMechanismReset:
                  noise=0.0)
         R.reset_stateful_function_when = Never()
         C = Composition(pathways=[R])
-        assert np.allclose(R.integrator_function.previous_value, 0.5)
+        np.testing.assert_allclose(R.integrator_function.previous_value, 0.5)
 
         # S.run(inputs={R: 1.0},
         #       num_trials=2,
@@ -965,17 +965,17 @@ class TestRecurrentTransferMechanismReset:
         # Trial 2    |   variable = 1.0 + 0.55
         # integration: 0.9*0.55 + 0.1*1.55 + 0.0 = 0.65  --->  previous value = 0.65
         # linear fn: 0.65*1.0 = 0.65
-        assert np.allclose(R.integrator_function.parameters.previous_value.get(C), 0.65)
+        np.testing.assert_allclose(R.integrator_function.parameters.previous_value.get(C), 0.65)
 
         R.integrator_function.reset(0.9, context=C)
 
-        assert np.allclose(R.integrator_function.parameters.previous_value.get(C), 0.9)
-        assert np.allclose(R.parameters.value.get(C), 0.65)
+        np.testing.assert_allclose(R.integrator_function.parameters.previous_value.get(C), 0.9)
+        np.testing.assert_allclose(R.parameters.value.get(C), 0.65)
 
         R.reset(0.5, context=C)
 
-        assert np.allclose(R.integrator_function.parameters.previous_value.get(C), 0.5)
-        assert np.allclose(R.parameters.value.get(C), 0.5)
+        np.testing.assert_allclose(R.integrator_function.parameters.previous_value.get(C), 0.5)
+        np.testing.assert_allclose(R.parameters.value.get(C), 0.5)
 
         C.run(inputs={R: 1.0}, num_trials=2)
         # Trial 3
@@ -984,13 +984,13 @@ class TestRecurrentTransferMechanismReset:
         # Trial 4
         # integration: 0.9*0.6 + 0.1*1.6 + 0.0 = 0.7 --->  previous value = 0.7
         # linear fn: 0.7*1.0 = 0.7
-        assert np.allclose(R.integrator_function.parameters.previous_value.get(C), 0.7)
+        np.testing.assert_allclose(R.integrator_function.parameters.previous_value.get(C), 0.7)
 
 class TestClip:
     def test_clip_float(self):
         R = RecurrentTransferMechanism(clip=[-2.0, 2.0])
-        assert np.allclose(R.execute(3.0), 2.0)
-        assert np.allclose(R.execute(-3.0), -2.0)
+        np.testing.assert_allclose(R.execute(3.0), 2.0)
+        np.testing.assert_allclose(R.execute(-3.0), -2.0)
 
     def test_clip_array(self):
         R = RecurrentTransferMechanism(default_variable=[[0.0, 0.0, 0.0]],
@@ -1000,7 +1000,7 @@ class TestClip:
     def test_clip_2d_array(self):
         R = RecurrentTransferMechanism(default_variable=[[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
                               clip=[-2.0, 2.0])
-        assert np.allclose(R.execute([[-5.0, -1.0, 5.0], [5.0, -5.0, 1.0], [1.0, 5.0, 5.0]]),
+        np.testing.assert_allclose(R.execute([[-5.0, -1.0, 5.0], [5.0, -5.0, 1.0], [1.0, 5.0, 5.0]]),
                            [[-2.0, -1.0, 2.0], [2.0, -2.0, 1.0], [1.0, 2.0, 2.0]])
 
 @pytest.mark.composition
@@ -1086,7 +1086,7 @@ class TestCustomCombinationFunction:
 
         C.run(inputs={I1: [[1.0]], I2: [[1.0]]}, num_trials=7, execution_mode=comp_mode)
 
-        assert np.allclose(expected, C.results)
+        np.testing.assert_allclose(expected, C.results)
 
     @pytest.mark.composition
     @pytest.mark.mechanism
@@ -1132,7 +1132,7 @@ class TestCustomCombinationFunction:
 
         C.run(inputs={I1: [[1.0]], I2: [[1.0]]}, num_trials=7, execution_mode=comp_mode)
 
-        assert np.allclose(exp, C.results)
+        np.testing.assert_allclose(exp, C.results)
 
     @pytest.mark.composition
     @pytest.mark.integrator_mechanism

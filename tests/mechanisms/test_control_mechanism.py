@@ -67,10 +67,10 @@ class TestLCControlMechanism:
             assert base_gain_assigned_to_B[i] == user_specified_gain
 
         # (3) LC output on trial n becomes gain of A and B on trial n + 1
-        assert np.allclose(mod_gain_assigned_to_A[1:], gain_created_by_LC_output_port_1[0:-1])
+        np.testing.assert_allclose(mod_gain_assigned_to_A[1:], gain_created_by_LC_output_port_1[0:-1])
 
         # (4) mechanisms A and B should always have the same gain values (b/c they are identical)
-        assert np.allclose(mod_gain_assigned_to_A, mod_gain_assigned_to_B)
+        np.testing.assert_allclose(mod_gain_assigned_to_A, mod_gain_assigned_to_B)
 
     @pytest.mark.mechanism
     @pytest.mark.control_mechanism
@@ -185,17 +185,17 @@ class TestControlMechanism:
         expected_results =[[[0.81493513, 0.85129046, 0.88154205]],
                            [[0.81331773, 0.85008207, 0.88157851]],
                            [[0.81168332, 0.84886047, 0.88161468]]]
-        assert np.allclose(comp.results, expected_results)
+        np.testing.assert_allclose(comp.results, expected_results)
 
         stim_list[Control_Mechanism]=[0.0]
         results = comp.learn(num_trials=1, inputs=stim_list)
         expected_results = [[0.5, 0.5, 0.5]]
-        assert np.allclose(results, expected_results)
+        np.testing.assert_allclose(results, expected_results)
 
         stim_list[Control_Mechanism]=[2.0]
         results = comp.learn(num_trials=1, inputs=stim_list)
         expected_results = [[0.96941429, 0.9837254 , 0.99217549]]
-        assert np.allclose(results, expected_results)
+        np.testing.assert_allclose(results, expected_results)
 
     def test_control_of_all_input_ports(self, comp_mode):
         mech = pnl.ProcessingMechanism(input_ports=['A','B','C'])
@@ -248,7 +248,7 @@ class TestControlMechanism:
         assert c1.control_signals[2].value == [3]      # default_allocation from pnl.ControlSignal
         assert m3.parameter_ports[pnl.SLOPE].value == [1]
         result = comp.run(inputs={m1:[2],m2:[3],m3:[4]})
-        assert np.allclose(result, [[20.], [6.], [12.]])
+        np.testing.assert_allclose(result, [[20.], [6.], [12.]])
         assert c1.control_signals[0].value == [10]
         assert m1.parameter_ports[pnl.SLOPE].value == [10]
         assert c1.control_signals[1].value == [10]
@@ -256,7 +256,7 @@ class TestControlMechanism:
         assert c1.control_signals[2].value == [10]
         assert m3.parameter_ports[pnl.SLOPE].value == [3]
         result = comp.run(inputs={m1:[2],m2:[3],m3:[4]})
-        assert np.allclose(result, [[20.], [30.], [40.]])
+        np.testing.assert_allclose(result, [[20.], [30.], [40.]])
         assert c1.control_signals[0].value == [10]
         assert m1.parameter_ports[pnl.SLOPE].value == [10]
         assert c1.control_signals[1].value == [10]
@@ -287,7 +287,7 @@ class TestControlMechanism:
         assert c2.control_signals[2].value == [6]        # default_allocation from pnl.ControlSignal assigned
         assert m3.parameter_ports[pnl.SLOPE].value == [10]
         result = comp.run(inputs={m1:[2],m2:[3],m3:[4]})
-        assert np.allclose(result, [[8.], [15.], [24.]])
+        np.testing.assert_allclose(result, [[8.], [15.], [24.]])
         assert c2.control_signals[0].value == [10]
         assert m1.parameter_ports[pnl.SLOPE].value == [4]
         assert c2.control_signals[1].value == [10]
@@ -295,7 +295,7 @@ class TestControlMechanism:
         assert c2.control_signals[2].value == [10]
         assert m3.parameter_ports[pnl.SLOPE].value == [6]
         result = comp.run(inputs={m1:[2],m2:[3],m3:[4]})
-        assert np.allclose(result, [[20.], [30.], [40.]])
+        np.testing.assert_allclose(result, [[20.], [30.], [40.]])
         assert c2.control_signals[0].value == [10]
         assert m1.parameter_ports[pnl.SLOPE].value == [10]
         assert c2.control_signals[1].value == [10]

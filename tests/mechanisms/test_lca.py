@@ -56,7 +56,7 @@ class TestLCA:
         # new_transfer_input = 0.265 + ( 0.5 * 0.265 + 3.0 * 0.53 + 0.0 + 1.0)*0.1 + 0.0    =    0.53725
         # f(new_transfer_input) = 0.53725 * 2.0 = 1.0745
 
-        assert np.allclose(C.results[:3], [[[0.2]], [[0.51]], [[0.9905]]])
+        np.testing.assert_allclose(C.results[:3], [[[0.2]], [[0.51]], [[0.9905]]])
 
     @pytest.mark.composition
     @pytest.mark.lca_mechanism
@@ -115,7 +115,7 @@ class TestLCA:
         # new_transfer_input_2 = 0.51 + ( 0.5 * 0.51 + 3.0 * 1.02 - 1.0*0.45 + 2.0)*0.1 + 0.0    =    0.9965
         # f(new_transfer_input_2) = 0.9965 * 2.0 = 1.463
 
-        assert np.allclose(C.results[:3], [[[0.2, 0.4]], [[0.43, 0.98]], [[0.6705, 1.833]]])
+        np.testing.assert_allclose(C.results[:3], [[[0.2, 0.4]], [[0.43, 0.98]], [[0.6705, 1.833]]])
 
     @pytest.mark.composition
     def test_equivalance_of_threshold_and_when_finished_condition(self):
@@ -139,14 +139,14 @@ class TestLCA:
         comp2.add_linear_processing_pathway([lca_single_step,response2])
         comp2.scheduler.add_condition(response2, WhenFinished(lca_single_step))
         result2 = comp2.run(inputs={lca_single_step:[1,0]})
-        assert np.allclose(result1, result2)
+        np.testing.assert_allclose(result1, result2)
 
     def test_LCAMechanism_matrix(self):
         matrix = [[0,-2],[-2,0]]
         lca1 = LCAMechanism(size=2, leak=0.5, competition=2)
-        assert np.allclose(lca1.matrix.base, matrix)
+        np.testing.assert_allclose(lca1.matrix.base, matrix)
         lca2 = LCAMechanism(size=2, leak=0.5, matrix=matrix)
-        assert np.allclose(lca1.matrix.base, lca2.matrix.base)
+        np.testing.assert_allclose(lca1.matrix.base, lca2.matrix.base)
 
     # Note: In the following tests, since the LCAMechanism's threshold is specified
     #       it executes until the it reaches threshold.
@@ -167,7 +167,7 @@ class TestLCA:
         comp = Composition()
         comp.add_node(lca)
         result = comp.run(inputs={lca:[1,0.5,0]})
-        assert np.allclose(result, [[0.52490032, 0.42367594, 0.32874867]])
+        np.testing.assert_allclose(result, [[0.52490032, 0.42367594, 0.32874867]])
 
     @pytest.mark.composition
     def test_LCAMechanism_threshold_with_max_vs_avg(self):
@@ -175,7 +175,7 @@ class TestLCA:
         comp = Composition()
         comp.add_node(lca)
         result = comp.run(inputs={lca:[1,0.5,0]})
-        assert np.allclose(result, [[0.51180475, 0.44161738, 0.37374946]])
+        np.testing.assert_allclose(result, [[0.51180475, 0.44161738, 0.37374946]])
 
     @pytest.mark.composition
     @pytest.mark.lca_mechanism
@@ -186,7 +186,7 @@ class TestLCA:
         comp.add_node(lca)
 
         result = comp.run(inputs={lca:[0,1,2]}, execution_mode=comp_mode)
-        assert np.allclose(result, [[0.19153799, 0.5, 0.80846201]])
+        np.testing.assert_allclose(result, [[0.19153799, 0.5, 0.80846201]])
         if comp_mode is pnl.ExecutionMode.Python:
             assert lca.num_executions_before_finished == 18
         if benchmark.enabled:
@@ -213,7 +213,7 @@ class TestLCA:
         response2 = ProcessingMechanism(size=2)
         comp2.add_linear_processing_pathway([lca_termination,response2])
         result2 = comp2.run(inputs={lca_termination:[1,0]}, execution_mode=comp_mode)
-        assert np.allclose(result1, result2)
+        np.testing.assert_allclose(result1, result2)
 
     @pytest.mark.composition
     def test_equivalance_of_threshold_and_termination_specifications_max_vs_next(self):
@@ -235,7 +235,7 @@ class TestLCA:
         response2 = ProcessingMechanism(size=3)
         comp2.add_linear_processing_pathway([lca_termination,response2])
         result2 = comp2.run(inputs={lca_termination:[1,0.5,0]})
-        assert np.allclose(result1, result2)
+        np.testing.assert_allclose(result1, result2)
 
     # def test_LCAMechanism_threshold_with_str(self):
     #     lca = LCAMechanism(size=2, threshold=0.7, threshold_criterion='MY_OUTPUT_PORT',
@@ -245,7 +245,7 @@ class TestLCA:
     #     comp.add_linear_processing_pathway([lca,response])
     #     comp.scheduler.add_condition(response, WhenFinished(lca))
     #     result = comp.run(inputs={lca:[1,0]})
-    #     assert np.allclose(result, [[0.71463572, 0.28536428]])
+    #     np.testing.assert_allclose(result, [[0.71463572, 0.28536428]])
     #
     # def test_LCAMechanism_threshold_with_int(self):
     #     lca = LCAMechanism(size=2, threshold=0.7, threshold_criterion=1, output_ports=[RESULT, 'MY_OUTPUT_PORT'])
@@ -254,7 +254,7 @@ class TestLCA:
     #     comp.add_linear_processing_pathway([lca,response])
     #     comp.scheduler.add_condition(response, WhenFinished(lca))
     #     result = comp.run(inputs={lca:[1,0]})
-    #     assert np.allclose(result, [[0.71463572, 0.28536428]])
+    #     np.testing.assert_allclose(result, [[0.71463572, 0.28536428]])
 
     @pytest.mark.composition
     @pytest.mark.lca_mechanism
@@ -264,7 +264,7 @@ class TestLCA:
         comp1 = Composition()
         comp1.add_node(lca)
         result1 = comp1.run(inputs={lca:[1, -1]}, execution_mode=comp_mode)
-        assert np.allclose(result1, [[0.52497918747894, 0.47502081252106]])
+        np.testing.assert_allclose(result1, [[0.52497918747894, 0.47502081252106]])
 
 
 class TestLCAReset:
@@ -284,9 +284,9 @@ class TestLCAReset:
         C = Composition(pathways=[L])
 
         L.reset_stateful_function_when = Never()
-        assert np.allclose(L.integrator_function.previous_value, 0.5)
-        assert np.allclose(L.initial_value, 0.5)
-        assert np.allclose(L.integrator_function.initializer, 0.5)
+        np.testing.assert_allclose(L.integrator_function.previous_value, 0.5)
+        np.testing.assert_allclose(L.initial_value, 0.5)
+        np.testing.assert_allclose(L.integrator_function.initializer, 0.5)
 
         C.run(inputs={L: 1.0},
               num_trials=2,
@@ -302,17 +302,17 @@ class TestLCAReset:
         # Trial 2    |   variable = 1.0 + 1.55
         # integration: 1.55 + (0.1*1.55 + 2.55)*1.0 + 0.0 = 4.255
         #  linear fn: 4.255*1.0 = 4.255
-        assert np.allclose(L.integrator_function.parameters.previous_value.get(C), 3.755)
+        np.testing.assert_allclose(L.integrator_function.parameters.previous_value.get(C), 3.755)
 
         L.integrator_function.reset(0.9, context=C)
 
-        assert np.allclose(L.integrator_function.parameters.previous_value.get(C), 0.9)
-        assert np.allclose(L.parameters.value.get(C), 3.755)
+        np.testing.assert_allclose(L.integrator_function.parameters.previous_value.get(C), 0.9)
+        np.testing.assert_allclose(L.parameters.value.get(C), 3.755)
 
         L.reset(0.5, context=C)
 
-        assert np.allclose(L.integrator_function.parameters.previous_value.get(C), 0.5)
-        assert np.allclose(L.parameters.value.get(C), 0.5)
+        np.testing.assert_allclose(L.integrator_function.parameters.previous_value.get(C), 0.5)
+        np.testing.assert_allclose(L.parameters.value.get(C), 0.5)
 
         C.run(inputs={L: 1.0},
               num_trials=2)
@@ -322,9 +322,9 @@ class TestLCAReset:
         # Trial 4    |   variable = 1.0 + 2.05
         # integration: 2.05 + (0.1*2.05 + 3.05)*1.0 + 0.0 = 5.305
         #  linear fn: 5.305*1.0 = 5.305
-        assert np.allclose(L.integrator_function.parameters.previous_value.get(C), 4.705)
-        assert np.allclose(L.initial_value, 0.5)
-        assert np.allclose(L.integrator_function.initializer, 0.5)
+        np.testing.assert_allclose(L.integrator_function.parameters.previous_value.get(C), 4.705)
+        np.testing.assert_allclose(L.initial_value, 0.5)
+        np.testing.assert_allclose(L.integrator_function.initializer, 0.5)
 
 class TestClip:
 
@@ -333,8 +333,8 @@ class TestClip:
                          function=Linear,
                          leak=0.5,
                          integrator_mode=False)
-        assert np.allclose(L.execute(3.0), 2.0)
-        assert np.allclose(L.execute(-3.0), -2.0)
+        np.testing.assert_allclose(L.execute(3.0), 2.0)
+        np.testing.assert_allclose(L.execute(-3.0), -2.0)
 
     def test_clip_array(self):
         L = LCAMechanism(default_variable=[[0.0, 0.0, 0.0]],
@@ -350,5 +350,5 @@ class TestClip:
                          leak=0.5,
                          function=Linear,
                          integrator_mode=False)
-        assert np.allclose(L.execute([[-5.0, -1.0, 5.0], [5.0, -5.0, 1.0], [1.0, 5.0, 5.0]]),
+        np.testing.assert_allclose(L.execute([[-5.0, -1.0, 5.0], [5.0, -5.0, 1.0], [1.0, 5.0, 5.0]]),
                            [[-2.0, -1.0, 2.0], [2.0, -2.0, 1.0], [1.0, 2.0, 2.0]])

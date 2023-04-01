@@ -53,7 +53,7 @@ def test_simplified_greedy_agent(benchmark, comp_mode):
         agent_comp.add_projection(projection)
 
     run_results = benchmark(agent_comp.run, inputs={player:[[619,177]],prey:[[419,69]]}, execution_mode=comp_mode)
-    assert np.allclose(run_results, [[-200, -108]])
+    np.testing.assert_allclose(run_results, [[-200, -108]])
 
 @pytest.mark.model
 @pytest.mark.benchmark(group="Greedy Agant Random")
@@ -88,7 +88,7 @@ def test_simplified_greedy_agent_random(benchmark, comp_mode):
         agent_comp.add_projection(projection)
 
     run_results = benchmark(agent_comp.run, inputs={player:[[619, 177]], prey:[[419, 69]]}, execution_mode=comp_mode)
-    assert np.allclose(run_results, [[-199.5484223217141, -107.79361870517444]])
+    np.testing.assert_allclose(run_results, [[-199.5484223217141, -107.79361870517444]])
 
 @pytest.mark.model
 @pytest.mark.benchmark(group="Predator Prey")

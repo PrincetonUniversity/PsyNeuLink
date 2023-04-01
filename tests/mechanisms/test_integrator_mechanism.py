@@ -105,36 +105,36 @@ class TestReset:
         #  returns previous_value + rate*variable + noise
         # so in this case, returns 10.0
         I.execute(10)
-        assert np.allclose(I.value, 10.0)
-        assert np.allclose(I.output_port.value, 10.0)
+        np.testing.assert_allclose(I.value, 10.0)
+        np.testing.assert_allclose(I.output_port.value, 10.0)
 
         # reset function
         I.function.reset(5.0)
-        assert np.allclose(I.function.value, 5.0)
-        assert np.allclose(I.value, 10.0)
-        assert np.allclose(I.output_ports[0].value, 10.0)
+        np.testing.assert_allclose(I.function.value, 5.0)
+        np.testing.assert_allclose(I.value, 10.0)
+        np.testing.assert_allclose(I.output_ports[0].value, 10.0)
 
         # reset function without value spec
         I.function.reset()
-        assert np.allclose(I.function.value, 0.0)
-        assert np.allclose(I.value, 10.0)
-        assert np.allclose(I.output_ports[0].value, 10.0)
+        np.testing.assert_allclose(I.function.value, 0.0)
+        np.testing.assert_allclose(I.value, 10.0)
+        np.testing.assert_allclose(I.output_ports[0].value, 10.0)
 
         # reset mechanism
         I.reset(4.0)
-        assert np.allclose(I.function.value, 4.0)
-        assert np.allclose(I.value, 4.0)
-        assert np.allclose(I.output_ports[0].value, 4.0)
+        np.testing.assert_allclose(I.function.value, 4.0)
+        np.testing.assert_allclose(I.value, 4.0)
+        np.testing.assert_allclose(I.output_ports[0].value, 4.0)
 
         I.execute(1)
-        assert np.allclose(I.value, 5.0)
-        assert np.allclose(I.output_ports[0].value, 5.0)
+        np.testing.assert_allclose(I.value, 5.0)
+        np.testing.assert_allclose(I.output_ports[0].value, 5.0)
 
         # reset mechanism without value spec
         I.reset()
-        assert np.allclose(I.function.value, 0.0)
-        assert np.allclose(I.value, 0.0)
-        assert np.allclose(I.output_ports[0].value, 0.0)
+        np.testing.assert_allclose(I.function.value, 0.0)
+        np.testing.assert_allclose(I.value, 0.0)
+        np.testing.assert_allclose(I.output_ports[0].value, 0.0)
 
     def test_Adaptive_valid(self):
         I = IntegratorMechanism(
@@ -147,37 +147,37 @@ class TestReset:
         #  returns (1-rate)*previous_value + rate*variable + noise
         # so in this case, returns 0.5*0 + 0.5*10 + 0 = 5.0
         I.execute(10)
-        assert np.allclose(I.value, 5.0)
-        assert np.allclose(I.output_port.value, 5.0)
+        np.testing.assert_allclose(I.value, 5.0)
+        np.testing.assert_allclose(I.output_port.value, 5.0)
 
         # reset function
         I.function.reset(1.0)
-        assert np.allclose(I.function.value, 1.0)
-        assert np.allclose(I.value, 5.0)
-        assert np.allclose(I.output_ports[0].value, 5.0)
+        np.testing.assert_allclose(I.function.value, 1.0)
+        np.testing.assert_allclose(I.value, 5.0)
+        np.testing.assert_allclose(I.output_ports[0].value, 5.0)
 
         # reset function without value spec
         I.function.reset()
-        assert np.allclose(I.function.value, 0.0)
-        assert np.allclose(I.value, 5.0)
-        assert np.allclose(I.output_ports[0].value, 5.0)
+        np.testing.assert_allclose(I.function.value, 0.0)
+        np.testing.assert_allclose(I.value, 5.0)
+        np.testing.assert_allclose(I.output_ports[0].value, 5.0)
 
         # reset mechanism
         I.reset(2.0)
-        assert np.allclose(I.function.value, 2.0)
-        assert np.allclose(I.value, 2.0)
-        assert np.allclose(I.output_ports[0].value, 2.0)
+        np.testing.assert_allclose(I.function.value, 2.0)
+        np.testing.assert_allclose(I.value, 2.0)
+        np.testing.assert_allclose(I.output_ports[0].value, 2.0)
 
         I.execute(1.0)
         #  (1-0.5)*2.0 + 0.5*1.0 + 0 = 1.5
-        assert np.allclose(I.value, 1.5)
-        assert np.allclose(I.output_ports[0].value, 1.5)
+        np.testing.assert_allclose(I.value, 1.5)
+        np.testing.assert_allclose(I.output_ports[0].value, 1.5)
 
         # reset mechanism without value spec
         I.reset()
-        assert np.allclose(I.function.value, 0.0)
-        assert np.allclose(I.value, 0.0)
-        assert np.allclose(I.output_ports[0].value, 0.0)
+        np.testing.assert_allclose(I.function.value, 0.0)
+        np.testing.assert_allclose(I.value, 0.0)
+        np.testing.assert_allclose(I.output_ports[0].value, 0.0)
 
     def test_Accumulator_warning(self):
         regexp = r"AccumulatorIntegrator does not use its variable;  value passed .* will be ignored"
@@ -194,37 +194,37 @@ class TestReset:
         #  returns previous_value + rate + noise
         # so in this case, returns 0.0 + 1.0
         I.execute(1000)
-        assert np.allclose(I.value, 1.0)
-        assert np.allclose(I.output_port.value, 1.0)
+        np.testing.assert_allclose(I.value, 1.0)
+        np.testing.assert_allclose(I.output_port.value, 1.0)
 
         # reset function
         I.function.reset(2.0)
-        assert np.allclose(I.function.value, 2.0)
-        assert np.allclose(I.value, 1.0)
-        assert np.allclose(I.output_ports[0].value, 1.0)
+        np.testing.assert_allclose(I.function.value, 2.0)
+        np.testing.assert_allclose(I.value, 1.0)
+        np.testing.assert_allclose(I.output_ports[0].value, 1.0)
 
         # reset function without value spec
         I.function.reset()
-        assert np.allclose(I.function.value, 0.0)
-        assert np.allclose(I.value, 1.0)
-        assert np.allclose(I.output_ports[0].value, 1.0)
+        np.testing.assert_allclose(I.function.value, 0.0)
+        np.testing.assert_allclose(I.value, 1.0)
+        np.testing.assert_allclose(I.output_ports[0].value, 1.0)
 
         # reset mechanism
         I.reset(2.0)
-        assert np.allclose(I.function.value, 2.0)
-        assert np.allclose(I.value, 2.0)
-        assert np.allclose(I.output_ports[0].value, 2.0)
+        np.testing.assert_allclose(I.function.value, 2.0)
+        np.testing.assert_allclose(I.value, 2.0)
+        np.testing.assert_allclose(I.output_ports[0].value, 2.0)
 
         I.execute(1000)
         #  2.0 + 1.0 = 3.0
-        assert np.allclose(I.value, 3.0)
-        assert np.allclose(I.output_ports[0].value, 3.0)
+        np.testing.assert_allclose(I.value, 3.0)
+        np.testing.assert_allclose(I.output_ports[0].value, 3.0)
 
         # reset mechanism without value spec
         I.reset()
-        assert np.allclose(I.function.value, 0.0)
-        assert np.allclose(I.value, 0.0)
-        assert np.allclose(I.output_ports[0].value, 0.0)
+        np.testing.assert_allclose(I.function.value, 0.0)
+        np.testing.assert_allclose(I.value, 0.0)
+        np.testing.assert_allclose(I.output_ports[0].value, 0.0)
 
     def test_OU_valid(self):
         I = IntegratorMechanism(
@@ -236,37 +236,37 @@ class TestReset:
         # decay=1.0, initializer=0.0, rate=1.0, time_step_size=1.0, noise=0.0
         # returns 0.0 + (1.0*0.0 - 1.0*10.0*1.0) + 0.0 = -10.0
         I.execute(2.0)
-        assert np.allclose(I.value[0], -2.0)
-        assert np.allclose(I.output_port.value, -2.0)
+        np.testing.assert_allclose(I.value[0], -2.0)
+        np.testing.assert_allclose(I.output_port.value, -2.0)
 
         # reset function
         I.function.reset(5.0, 0.0)
-        assert np.allclose(I.function.value[0], 5.0)
-        assert np.allclose(I.value[0], -2.0)
-        assert np.allclose(I.output_ports[0].value, -2.0)
+        np.testing.assert_allclose(I.function.value[0], 5.0)
+        np.testing.assert_allclose(I.value[0], -2.0)
+        np.testing.assert_allclose(I.output_ports[0].value, -2.0)
 
         # reset function without value spec
         I.function.reset()
-        assert np.allclose(I.function.value[0], 0.0)
-        assert np.allclose(I.value[0], -2.0)
-        assert np.allclose(I.output_ports[0].value, -2.0)
+        np.testing.assert_allclose(I.function.value[0], 0.0)
+        np.testing.assert_allclose(I.value[0], -2.0)
+        np.testing.assert_allclose(I.output_ports[0].value, -2.0)
 
         # reset mechanism
         I.reset(4.0, 0.0)
-        assert np.allclose(I.function.value[0], 4.0)
-        assert np.allclose(I.value[0], 4.0)
-        assert np.allclose(I.output_ports[0].value, 4.0)
+        np.testing.assert_allclose(I.function.value[0], 4.0)
+        np.testing.assert_allclose(I.value[0], 4.0)
+        np.testing.assert_allclose(I.output_ports[0].value, 4.0)
 
         I.execute(1.0)
         # 4.0 + (1.0 * 4.0 - 1.0 * 1.0) * 1.0 = 4 + 3 = 7
-        assert np.allclose(I.value[0], 7.0)
-        assert np.allclose(I.output_ports[0].value, 7.0)
+        np.testing.assert_allclose(I.value[0], 7.0)
+        np.testing.assert_allclose(I.output_ports[0].value, 7.0)
 
         # reset mechanism without value spec
         I.reset()
-        assert np.allclose(I.function.value[0], 0.0)
-        assert np.allclose(I.value[0][0], 0.0)
-        assert np.allclose(I.output_ports[0].value[0], 0.0)
+        np.testing.assert_allclose(I.function.value[0], 0.0)
+        np.testing.assert_allclose(I.value[0][0], 0.0)
+        np.testing.assert_allclose(I.output_ports[0].value[0], 0.0)
 
     def test_Accumulator_valid(self):
         I = IntegratorMechanism(
@@ -278,37 +278,37 @@ class TestReset:
         # initializer = 0.0, rate = 1.0, noise = 0.0, increment = 0.1
         # returns 0.0*1.0 + 0.0 + 0.1 = 0.1
         I.execute(10000)
-        assert np.allclose(I.value, 0.1)
-        assert np.allclose(I.output_port.value, 0.1)
+        np.testing.assert_allclose(I.value, 0.1)
+        np.testing.assert_allclose(I.output_port.value, 0.1)
 
         # reset function
         I.function.reset(2.0)
-        assert np.allclose(I.function.value, 2.0)
-        assert np.allclose(I.value, 0.1)
-        assert np.allclose(I.output_ports[0].value, 0.1)
+        np.testing.assert_allclose(I.function.value, 2.0)
+        np.testing.assert_allclose(I.value, 0.1)
+        np.testing.assert_allclose(I.output_ports[0].value, 0.1)
 
         # reset function without value spec
         I.function.reset()
-        assert np.allclose(I.function.value, 0.0)
-        assert np.allclose(I.value, 0.1)
-        assert np.allclose(I.output_ports[0].value, 0.1)
+        np.testing.assert_allclose(I.function.value, 0.0)
+        np.testing.assert_allclose(I.value, 0.1)
+        np.testing.assert_allclose(I.output_ports[0].value, 0.1)
 
         # reset mechanism
         I.reset(5.0)
-        assert np.allclose(I.function.value, 5.0)
-        assert np.allclose(I.value, 5.0)
-        assert np.allclose(I.output_ports[0].value, 5.0)
+        np.testing.assert_allclose(I.function.value, 5.0)
+        np.testing.assert_allclose(I.value, 5.0)
+        np.testing.assert_allclose(I.output_ports[0].value, 5.0)
 
         I.execute(10000)
         #  5.0 * 1.0 + 0.0 + 0.1
-        assert np.allclose(I.value, 5.1)
-        assert np.allclose(I.output_ports[0].value, 5.1)
+        np.testing.assert_allclose(I.value, 5.1)
+        np.testing.assert_allclose(I.output_ports[0].value, 5.1)
 
         # reset mechanism without value spec
         I.reset()
-        assert np.allclose(I.function.value, 0.0)
-        assert np.allclose(I.value, 0.0)
-        assert np.allclose(I.output_ports[0].value, 0.0)
+        np.testing.assert_allclose(I.function.value, 0.0)
+        np.testing.assert_allclose(I.value, 0.0)
+        np.testing.assert_allclose(I.output_ports[0].value, 0.0)
 
     def test_LCIIntegrator_valid(self):
         I = IntegratorMechanism(
@@ -320,37 +320,37 @@ class TestReset:
         # initializer=0.0, rate=1.0, time_step_size=0.1, noise=0.0
         # returns 0.0 + (1.0*0.0 + 2.0)*0.1 = 2.0
         I.execute(2.0)
-        assert np.allclose(I.value, 0.2)
-        assert np.allclose(I.output_port.value, 0.2)
+        np.testing.assert_allclose(I.value, 0.2)
+        np.testing.assert_allclose(I.output_port.value, 0.2)
 
         # reset function
         I.function.reset(5.0)
-        assert np.allclose(I.function.value, 5.0)
-        assert np.allclose(I.value, 0.2)
-        assert np.allclose(I.output_ports[0].value, 0.2)
+        np.testing.assert_allclose(I.function.value, 5.0)
+        np.testing.assert_allclose(I.value, 0.2)
+        np.testing.assert_allclose(I.output_ports[0].value, 0.2)
 
         # reset function without value spec
         I.function.reset()
-        assert np.allclose(I.function.value, 0.0)
-        assert np.allclose(I.value, 0.2)
-        assert np.allclose(I.output_ports[0].value, 0.2)
+        np.testing.assert_allclose(I.function.value, 0.0)
+        np.testing.assert_allclose(I.value, 0.2)
+        np.testing.assert_allclose(I.output_ports[0].value, 0.2)
 
         # reset mechanism
         I.reset(4.0)
-        assert np.allclose(I.function.value, 4.0)
-        assert np.allclose(I.value, 4.0)
-        assert np.allclose(I.output_ports[0].value, 4.0)
+        np.testing.assert_allclose(I.function.value, 4.0)
+        np.testing.assert_allclose(I.value, 4.0)
+        np.testing.assert_allclose(I.output_ports[0].value, 4.0)
 
         I.execute(1.0)
         # 4.0 + (1.0*4.0 + 1.0)*0.1 + 0.0
-        assert np.allclose(I.value, 3.7)
-        assert np.allclose(I.output_ports[0].value, 3.7)
+        np.testing.assert_allclose(I.value, 3.7)
+        np.testing.assert_allclose(I.output_ports[0].value, 3.7)
 
         # reset mechanism without value spec
         I.reset()
-        assert np.allclose(I.function.value, 0.0)
-        assert np.allclose(I.value, 0.0)
-        assert np.allclose(I.output_ports[0].value, 0.0)
+        np.testing.assert_allclose(I.function.value, 0.0)
+        np.testing.assert_allclose(I.value, 0.0)
+        np.testing.assert_allclose(I.output_ports[0].value, 0.0)
 
     def test_reset_not_integrator(self):
 
@@ -408,7 +408,7 @@ class TestIntegratorFunctions:
         ex = pytest.helpers.get_mech_execution(I, mech_mode)
 
         val = benchmark(ex, [5])
-        assert np.allclose(val, [[2.5], [2.5]])
+        np.testing.assert_allclose(val, [[2.5], [2.5]])
 
     @pytest.mark.mimo
     @pytest.mark.mechanism
@@ -425,7 +425,7 @@ class TestIntegratorFunctions:
         ex = pytest.helpers.get_mech_execution(I, mech_mode)
 
         val = benchmark(ex, [[1], [2]])
-        assert np.allclose(val, [[5], [3]])
+        np.testing.assert_allclose(val, [[5], [3]])
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -475,7 +475,7 @@ class TestIntegratorFunctions:
         ex = pytest.helpers.get_mech_execution(I, mech_mode)
 
         val = benchmark(ex, [1.0 for i in range(VECTOR_SIZE)])
-        assert np.allclose(val, [[5.0 for i in range(VECTOR_SIZE)]])
+        np.testing.assert_allclose(val, [[5.0 for i in range(VECTOR_SIZE)]])
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -533,7 +533,7 @@ class TestIntegratorFunctions:
         # P = Process(pathway=[I])
         # 10 + 10*0.5 + 0 + 10 = 25
         val = I.execute(1)
-        assert np.allclose([[25.], [0.5]], val)
+        np.testing.assert_allclose([[25.], [0.5]], val)
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -607,7 +607,7 @@ class TestIntegratorFunctions:
 
         ex([10])
         val = benchmark(ex, [10])
-        assert np.allclose(val, [[7.5]])
+        np.testing.assert_allclose(val, [[7.5]])
 
 class TestIntegratorInputs:
     # Part 1: VALID INPUT:
@@ -765,7 +765,7 @@ class TestIntegratorRate:
         )
         # P = Process(pathway=[I])
         val = I.execute(10.0)
-        assert np.allclose([[50.0], [1.0]], val)
+        np.testing.assert_allclose([[50.0], [1.0]], val)
 
     # rate = list, integration_type = simple
 
@@ -1146,7 +1146,7 @@ class TestIntegratorNoise:
         )
 
         val = I.execute(10.0)
-        assert np.allclose(val, [[4.29013944], [ 1.        ]])
+        np.testing.assert_allclose(val, [[4.29013944], [ 1.        ]])
 
 # COMMENTED OUT UNTIL OU INTEGRATOR IS VALIDATED
     @pytest.mark.mechanism
@@ -1218,7 +1218,7 @@ class TestStatefulness:
 
         C.run(inputs={I1: [[1.0]], I2: [[1.0]]}, num_trials=7, execution_mode=comp_mode)
 
-        assert np.allclose(expected, C.results)
+        np.testing.assert_allclose(expected, C.results)
 
     @pytest.mark.composition
     def test_reset_stateful_function_when(self):
@@ -1240,7 +1240,7 @@ class TestStatefulness:
                             [np.array([0.875]), np.array([0.9375])],
                             [np.array([0.9375]), np.array([0.96875])]]
 
-        assert np.allclose(expected_results, C.results)
+        np.testing.assert_allclose(expected_results, C.results)
 
 
 class TestDualAdaptiveIntegrator:

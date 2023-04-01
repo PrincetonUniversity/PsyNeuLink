@@ -45,18 +45,18 @@ class TestProcessingMechanismFunctions:
         ex = pytest.helpers.get_mech_execution(PM, mech_mode)
 
         res = benchmark(ex, variable)
-        assert np.allclose(res, [[1., 2., 3., 4.]])
+        np.testing.assert_allclose(res, [[1., 2., 3., 4.]])
 
     def test_processing_mechanism_linear_function(self):
 
         PM1 = ProcessingMechanism()
         PM1.execute(1.0)
-        assert np.allclose(PM1.value, 1.0)
+        np.testing.assert_allclose(PM1.value, 1.0)
 
         PM2 = ProcessingMechanism(function=Linear(slope=2.0,
                                                   intercept=1.0))
         PM2.execute(1.0)
-        assert np.allclose(PM2.value, 3.0)
+        np.testing.assert_allclose(PM2.value, 3.0)
 
     @pytest.mark.parametrize(
         "function,expected", [
@@ -103,19 +103,19 @@ class TestProcessingMechanismFunctions:
         PM1 = ProcessingMechanism(function=Distance,
                                   default_variable=[[0,0], [0,0]])
         PM1.execute([[1, 2], [3, 4]])
-        # assert np.allclose(PM1.value, 1.0)
+        # np.testing.assert_allclose(PM1.value, 1.0)
 
     def test_processing_mechanism_Hebbian_function(self):
         PM1 = ProcessingMechanism(function=Hebbian,
                                   default_variable=[[0.0], [0.0], [0.0]])
         PM1.execute([[1.0], [2.0], [3.0]])
-        # assert np.allclose(PM1.value, 1.0)
+        # np.testing.assert_allclose(PM1.value, 1.0)
 
     def test_processing_mechanism_Reinforcement_function(self):
         PM1 = ProcessingMechanism(function=Reinforcement,
                                   default_variable=[[0.0], [0.0], [0.0]])
         PM1.execute([[1.0], [2.0], [3.0]])
-        # assert np.allclose(PM1.value, 1.0)
+        # np.testing.assert_allclose(PM1.value, 1.0)
 
     # COMMENTING OUT BECAUSE BACK PROP FN DOES NOT WORK WITH UNRESTRICTED MECHANISM
     # def test_processing_mechanism_BackPropagation_function(self):
@@ -123,13 +123,13 @@ class TestProcessingMechanismFunctions:
     #                                          default_variable=[[0.0], [0.0], [0.0]])
     #     PM1.execute([[1.0], [2.0], [3.0]])
     #     PM1.execute(1.0)
-    #     # assert np.allclose(PM1.value, 1.0)
+    #     # np.testing.assert_allclose(PM1.value, 1.0)
 
     def test_processing_mechanism_TDLearning_function(self):
         PM1 = ProcessingMechanism(function=TDLearning,
                                   default_variable=[[0.0], [0.0], [0.0]])
         PM1.execute([[1.0], [2.0], [3.0]])
-        # assert np.allclose(PM1.value, 1.0)
+        # np.testing.assert_allclose(PM1.value, 1.0)
 
     def test_processing_mechanism_multiple_input_ports(self):
         PM1 = ProcessingMechanism(size=[4, 4], function=LinearCombination, input_ports=['input_1', 'input_2'])
@@ -147,13 +147,13 @@ class TestLinearMatrixFunction:
         PM_default = ProcessingMechanism(function=LinearMatrix())
         PM_default.execute(1.0)
 
-        assert np.allclose(PM_default.value, 1.0)
+        np.testing.assert_allclose(PM_default.value, 1.0)
 
         PM_default_len_2_var = ProcessingMechanism(function=LinearMatrix(default_variable=[[0.0, 0.0]]),
                                                    default_variable=[[0.0, 0.0]])
         PM_default_len_2_var.execute([[1.0, 2.0]])
 
-        assert np.allclose(PM_default_len_2_var.value, [[1.0, 2.0]])
+        np.testing.assert_allclose(PM_default_len_2_var.value, [[1.0, 2.0]])
 
         PM_default_2d_var = ProcessingMechanism(function=LinearMatrix(default_variable=[[0.0, 0.0],
                                                                                         [0.0, 0.0],
@@ -169,19 +169,19 @@ class TestLinearMatrixFunction:
                                    [0.0, 2.0],
                                    [3.0, 0.0]])
 
-        assert np.allclose(PM_default_2d_var.value, [[1.0, 0.0],
+        np.testing.assert_allclose(PM_default_2d_var.value, [[1.0, 0.0],
                                                      [0.0, 2.0],
                                                      [3.0, 0.0]])
 
         # PM_float = ProcessingMechanism(function=LinearMatrix(matrix=4.0))
         # PM_float.execute(1.0)
         #
-        # assert np.allclose(PM_float.value, 4.0)
+        # np.testing.assert_allclose(PM_float.value, 4.0)
 
         PM_1d_list = ProcessingMechanism(function=LinearMatrix(matrix=[4.0]))
         PM_1d_list.execute(1.0)
 
-        assert np.allclose(PM_1d_list.value, 4.0)
+        np.testing.assert_allclose(PM_1d_list.value, 4.0)
 
         PM_2d_list = ProcessingMechanism(function=LinearMatrix(matrix=[[4.0, 5.0],
                                                                        [6.0, 7.0],
@@ -197,24 +197,24 @@ class TestLinearMatrixFunction:
                             [0.0, 0.0, 1.0, 0.0],
                             [0.0, 0.0, 0.0, 1.0]])
 
-        assert np.allclose(PM_2d_list.value, [[4.0, 5.0],
+        np.testing.assert_allclose(PM_2d_list.value, [[4.0, 5.0],
                                               [8.0, 9.0],
                                               [10.0, 11.0]])
 
         PM_1d_array = ProcessingMechanism(function=LinearMatrix(matrix=np.array([4.0])))
         PM_1d_array.execute(1.0)
 
-        assert np.allclose(PM_1d_array.value, 4.0)
+        np.testing.assert_allclose(PM_1d_array.value, 4.0)
 
         PM_2d_array = ProcessingMechanism(function=LinearMatrix(matrix=np.array([[4.0]])))
         PM_2d_array.execute(1.0)
 
-        assert np.allclose(PM_2d_array.value, 4.0)
+        np.testing.assert_allclose(PM_2d_array.value, 4.0)
 
         PM_matrix = ProcessingMechanism(function=LinearMatrix(matrix=np.matrix([[4.0]])))
         PM_matrix.execute(1.0)
 
-        assert np.allclose(PM_matrix.value, 4.0)
+        np.testing.assert_allclose(PM_matrix.value, 4.0)
 
     def test_invalid_matrix_specs(self):
 
@@ -260,7 +260,7 @@ class TestProcessingMechanismStandardOutputPorts:
         ex = pytest.helpers.get_mech_execution(PM1, mech_mode)
 
         res = benchmark(ex, var)
-        assert np.allclose(res, expected)
+        np.testing.assert_allclose(res, expected)
 
     # FIXME: These variants don't compile (use UDFs)
     @pytest.mark.parametrize("op, expected", [(MEAN, [2.33333333]),
@@ -274,4 +274,4 @@ class TestProcessingMechanismStandardOutputPorts:
         PM1 = ProcessingMechanism(default_variable=[0, 0, 0], output_ports=[op])
         var = [1, 2, 4] if op in {MEAN, MEDIAN, STANDARD_DEVIATION, VARIANCE} else [1, 2, -4]
         PM1.execute(var)
-        assert np.allclose(PM1.output_ports[0].value, expected)
+        np.testing.assert_allclose(PM1.output_ports[0].value, expected)

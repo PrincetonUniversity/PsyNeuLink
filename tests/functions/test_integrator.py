@@ -292,7 +292,7 @@ def test_DriftOnASphere_identicalness_against_reference_implementation():
         return ctxt
     results_sd = spherical_drift()
 
-    assert np.allclose(np.array(results_dos), np.array(results_sd))
+    np.testing.assert_allclose(np.array(results_dos), np.array(results_sd))
 
 
 # FIX: CROSS WITH INITIALIZER SIZE:

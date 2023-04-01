@@ -23,7 +23,7 @@ class TestTargetSpecs:
         comp1.learn(inputs={A: 1.0,
                             p1.target: 0.0},
                  num_trials=2)
-        assert np.allclose(comp1.results, [[[1.]], [[0.9]]])
+        np.testing.assert_allclose(comp1.results, [[[1.]], [[0.9]]])
 
         # Repeat with no target assignment (should use default_variable)
         C = TransferMechanism(name="learning-process-mech-C")
@@ -34,7 +34,7 @@ class TestTargetSpecs:
         comp2.learn(inputs={C: 1.0},
                    num_trials=2)
         # Should be same with default target specification
-        assert np.allclose(comp2.results, comp1.results)
+        np.testing.assert_allclose(comp2.results, comp1.results)
 
     def test_target_dict_spec_single_trial_scalar_and_lists_rl(self):
         A = TransferMechanism(name="learning-process-mech-A")
@@ -52,7 +52,7 @@ class TestTargetSpecs:
         comp.learn(inputs={A: 1.0,
                            p.target:[[2.0]]})
 
-        assert np.allclose(comp.results, [[[1.]], [[1.]], [[1.05]], [[1.0975]]])
+        np.testing.assert_allclose(comp.results, [[[1.]], [[1.]], [[1.05]], [[1.0975]]])
 
     def test_target_dict_spec_single_trial_scalar_and_lists_bp(self):
         A = TransferMechanism(name="learning-process-mech-A")
@@ -63,7 +63,7 @@ class TestTargetSpecs:
         # Confirm that targets are ignored in run (vs learn)
         comp.run(inputs={A: 1.0,
                          p.target:2.0})
-        assert np.allclose(comp.results, [[[1.]]])
+        np.testing.assert_allclose(comp.results, [[[1.]]])
         comp.learn(inputs={A: 1.0,
                            p.target:2.0})
         comp.learn(inputs={A: 1.0,
@@ -71,7 +71,7 @@ class TestTargetSpecs:
         comp.learn(inputs={A: 1.0,
                            p.target:[[2.0]]})
 
-        assert np.allclose(comp.results, [[[1.]], [[1.]], [[1.21]], [[1.40873161]]])
+        np.testing.assert_allclose(comp.results, [[[1.]], [[1.]], [[1.21]], [[1.40873161]]])
 
     def test_target_dict_spec_multi_trial_lists_rl(self):
         A = TransferMechanism(name="learning-process-mech-A")
@@ -82,7 +82,7 @@ class TestTargetSpecs:
                            p.target: [[4.0], [5.0], [6.0]]})
         comp.learn(inputs={A: [1.0, 2.0, 3.0],
                            p.target: [[[4.0]], [[5.0]], [[6.0]]]})
-        assert np.allclose(comp.results,
+        np.testing.assert_allclose(comp.results,
                            [[[1.]], [[2.6]], [[5.34]],
                             [[1.978]], [[4.3604]], [[6.92436]]])
 
@@ -101,7 +101,7 @@ class TestTargetSpecs:
                            p.target: [[3.0, 4.0], [5.0, 6.0], [7.0, 8.0]]})
         comp.learn(inputs={A: [1.0, 2.0, 3.0],
                            p.target: [[[3.0, 4.0]], [[5.0, 6.0]], [[7.0, 8.0]]]})
-        assert np.allclose(comp.results,
+        np.testing.assert_allclose(comp.results,
                            [[[1., 1.]],
                             [[1.2075, 1.265]],
                             [[1.41003122, 1.54413183]], [[3.64504691, 4.13165454]], [[8.1607109 , 9.54419477]],
@@ -142,7 +142,7 @@ class TestTargetSpecs:
     #     target.log.set_log_conditions('variable')
     #
     #     comp.learn(inputs=input_function, num_trials=3)
-    #     assert np.allclose(comp.results, [[[2., 2.]], [[2.4, 2.8]], [[2.72, 3.44]]])
+    #     np.testing.assert_allclose(comp.results, [[[2., 2.]], [[2.4, 2.8]], [[2.72, 3.44]]])
 
     def test_dict_target_spec_converging_pathways(self):
         A = TransferMechanism(name="converging-learning-pathways-mech-A")
@@ -162,7 +162,7 @@ class TestTargetSpecs:
                            D: 6.0,
                            p1.target: [7.0, 8.0]
                            })
-        assert np.allclose(comp.results,[[[3., 3.]], [[11.85  , 12.7725]]])
+        np.testing.assert_allclose(comp.results,[[[3., 3.]], [[11.85  , 12.7725]]])
 
     def test_function_target_spec_converging_pathways(self):
         A = TransferMechanism(name="converging-learning-pathways-mech-A")
@@ -187,7 +187,7 @@ class TestTargetSpecs:
             }
         comp.learn(inputs=input_function,
                    num_trials=2)
-        assert np.allclose(comp.results,[[[3., 3.]], [[11.85  , 12.7725]]])
+        np.testing.assert_allclose(comp.results,[[[3., 3.]], [[11.85  , 12.7725]]])
 
     def test_dict_target_spec_diverging_pathways(self):
         A = TransferMechanism(name="diverging-learning-pathways-mech-A")
@@ -211,7 +211,7 @@ class TestTargetSpecs:
             }
         comp.learn(inputs=input_function,
                    num_trials=2)
-        assert np.allclose(comp.results,[[[1.], [1.]], [[2.42], [3.38]]])
+        np.testing.assert_allclose(comp.results,[[[1.], [1.]], [[2.42], [3.38]]])
 
     def test_function_target_spec_divergin_pathways(self):
         A = TransferMechanism(name="diverging-learning-pathways-mech-A")
@@ -230,7 +230,7 @@ class TestTargetSpecs:
                          p1.target: 2.0,
                          p2.target: 4.0
                          })
-        assert np.allclose(comp.results,[[[1.], [1.]], [[2.42], [3.38]]])
+        np.testing.assert_allclose(comp.results,[[[1.], [1.]], [[2.42], [3.38]]])
 
     def test_dict_target_spec_divering_pathways_with_only_one_target(self):
         # First test with both targets (but use default_variale for second for comparison with missing target)
@@ -247,7 +247,7 @@ class TestTargetSpecs:
                             p2.target: 2.0
                             },
                     num_trials=2)
-        assert np.allclose(comp1.results,[[[1.], [1.]], [[0.81], [1.21]]])
+        np.testing.assert_allclose(comp1.results,[[[1.], [1.]], [[0.81], [1.21]]])
 
         F = TransferMechanism(name="diverging-learning-pathways-mech-F")
         G = TransferMechanism(name="diverging-learning-pathways-mech-G")
@@ -262,7 +262,7 @@ class TestTargetSpecs:
                             p4.target: 2.0
                             },
                     num_trials=2)
-        assert np.allclose(comp2.results, comp1.results)
+        np.testing.assert_allclose(comp2.results, comp1.results)
 
     def test_target_spec_over_nesting_of_items_in_target_value_error(self):
         A = TransferMechanism(name="learning-process-mech-A")
@@ -399,14 +399,14 @@ class TestLearningPathwayMethods:
         comp1.learn(inputs={A: 1.0,
                     comp1.pathways[0].target: 0.0},
                     num_trials=2)
-        assert np.allclose(comp1.results, [[[1.]], [[0.9]]])
+        np.testing.assert_allclose(comp1.results, [[[1.]], [[0.9]]])
 
         comp2 = Composition()
         comp2.add_backpropagation_learning_pathway(pathway=[A,B], name='P1')
         comp2.learn(inputs={A: 1.0},
                     targets={B: 0.0},
                     num_trials=2)
-        assert np.allclose(comp2.results, comp1.results)
+        np.testing.assert_allclose(comp2.results, comp1.results)
 
     @pytest.mark.parametrize('execution_mode',
                              [pnlvm.ExecutionMode.LLVM, pnlvm.ExecutionMode.PyTorch])
@@ -507,7 +507,7 @@ class TestHebbian:
 
         activity = Hebb2.value
 
-        assert np.allclose(activity, [[1.86643089, 0., 0., 1.86643089, 0., 0., 1.86643089, 0., 0.]])
+        np.testing.assert_allclose(activity, [[1.86643089, 0., 0., 1.86643089, 0., 0., 1.86643089, 0., 0.]])
 
 
 class TestReinforcement:
@@ -1484,8 +1484,8 @@ class TestReinforcement:
             0.0, 0.0
         ]
 
-        assert np.allclose(trial_1_expected, delta_vals[0][0])
-        assert np.allclose(trial_30_expected, delta_vals[29][0])
+        np.testing.assert_allclose(trial_1_expected, delta_vals[0][0])
+        np.testing.assert_allclose(trial_30_expected, delta_vals[29][0])
 
         # Pause Learning
         comp.run(inputs={sample_mechanism: samples[0:3]})
@@ -1502,7 +1502,7 @@ class TestReinforcement:
             0.07237361605659998, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
         ]
 
-        assert np.allclose(trial_50_expected, delta_vals[49][0])
+        np.testing.assert_allclose(trial_50_expected, delta_vals[49][0])
 
     def test_reinforcement_too_many_nodes(self):
         A = TransferMechanism()
@@ -1767,7 +1767,7 @@ class TestBackPropLearning:
         inputs = {T1:[1,0], target:[1]}
         C.learning_components[2].learning_rate.base = 0.5
         C.learn(inputs=inputs, num_trials=2)
-        assert np.allclose(C.learning_results, [[[0.52497919]], [[0.55439853]]])
+        np.testing.assert_allclose(C.learning_results, [[[0.52497919]], [[0.55439853]]])
 
     @pytest.mark.pytorch
     def test_back_prop(self):
@@ -2109,12 +2109,11 @@ class TestBackPropLearning:
         # Do use autodiff_mode here. This is the tested result
         result_autodiff = xor_autodiff.learn(inputs=inputs_dict, execution_mode=autodiff_mode)
 
-        assert np.allclose(in_to_hidden_autodiff.parameters.matrix.get(xor_autodiff),
+        np.testing.assert_allclose(in_to_hidden_autodiff.parameters.matrix.get(xor_autodiff),
                            in_to_hidden_comp.get_mod_matrix(xor_comp))
-        assert np.allclose(hidden_to_out_autodiff.parameters.matrix.get(xor_autodiff),
+        np.testing.assert_allclose(hidden_to_out_autodiff.parameters.matrix.get(xor_autodiff),
                            hidden_to_out_comp.get_mod_matrix(xor_comp))
-        assert np.allclose(result_comp, result_autodiff)
-
+        np.testing.assert_allclose(result_comp, result_autodiff)
 
 
     @pytest.mark.parametrize('configuration', [
