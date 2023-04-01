@@ -1685,7 +1685,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         if field_weights is None:
             # Could be from get_memory called from COMMAND LINE without field_weights
             field_weights = self._get_current_parameter_value('distance_field_weights', context)
-        # Set item in field_weights to None if it is None or an empty list:
+        # Set any items in field_weights to None if they are None or an empty list:
         field_weights = np.atleast_1d([None if
                                        fw is None or fw == [] or isinstance(fw, np.ndarray) and fw.tolist()==[]
                                        else fw
