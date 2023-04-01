@@ -696,6 +696,17 @@ class TestContentAddressableMemory:
         assert np.all(retrieved==np.array([[1,2,3],[4,5,6]]))
         assert c.distances_by_field == [0.0, None]
 
+        # Test with [] as field weight
+        c.distance_field_weights=[[],1]
+        retrieved = c([[1,2,3],[4,5,10]])
+        assert np.all(retrieved==np.array([[1,2,10],[4,5,10]]))
+        assert c.distances_by_field == [None, 0.0]
+
+        c.distance_field_weights=[1, []]
+        retrieved = c([[1,2,3],[4,5,10]])
+        assert np.all(retrieved==np.array([[1,2,3],[4,5,6]]))
+        assert c.distances_by_field == [0.0, None]
+
     # FIX: COULD CONDENSE THESE TESTS BY PARAMETERIZING FIELD-WEIGHTS AND ALSO INCLUDE DISTANCE METRIC AS A PARAM
     def test_ContentAddressableMemory_parametric_distances(self):
 

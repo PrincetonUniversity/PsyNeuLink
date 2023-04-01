@@ -1685,15 +1685,13 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         if field_weights is None:
             # Could be from get_memory called from COMMAND LINE without field_weights
             field_weights = self._get_current_parameter_value('distance_field_weights', context)
-        field_weights = np.atleast_1d(field_weights)
-
+        # Set item in field_weights to None if it is None or an empty list:
+        field_weights = np.atleast_1d([None if
+                                       fw is None or fw == [] or isinstance(fw, np.ndarray) and fw.tolist()==[]
+                                       else fw
+                                       for fw in field_weights])
         if granularity == 'per_field':
             # Note: this is just used for reporting, and not determining storage or retrieval
-
-            # # Replace None's with 0 to allow multiplication
-            # old_distances_by_field = np.array([distance_fct([cue[i], candidate[i]])
-            #                                for i in range(num_fields)]
-            #                               ) * np.array([f if f is not None else 0 for f in field_weights])
             # Report None if any element of cue, candidate or field_weights is None or empty list:
             distances_by_field = np.array([None]*num_fields)
             # If field_weights is scalar, splay out as array of length num_fields so can iterate through all of them
