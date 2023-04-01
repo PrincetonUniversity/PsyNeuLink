@@ -1696,21 +1696,14 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             #                               ) * np.array([f if f is not None else 0 for f in field_weights])
             # Report None if any element of cue, candidate or field_weights is None or empty list:
             distances_by_field = np.array([None]*num_fields)
-            for i in range(num_fields):
-                if all([(item is not None and item is not []) for item in [cue[i], candidate[i], field_weights]]):
-                    distances_by_field[i] = distance_fct([cue[i], candidate[i]])
-            # Replace None's in field_weights with 0 to allow multiplication
-            distances_by_field = distances_by_field * np.array([f if f is not None else 0 for f in field_weights])
-            # distances_by_field = np.array([distance_fct([cue[i], candidate[i]])
-            #                                if all([(item is not None and item != []) for item in [cue[i], candidate[i], field_weights]]) else None]
-            #                                for i in range(num_fields))
             # If field_weights is scalar, splay out as array of length num_fields so can iterate through all of them
             if len(field_weights)==1:
                 field_weights = np.full(num_fields, field_weights[0])
-            # Replace 0's with None's for fields with None in field_weights
-            distances_by_field = np.array([distances_by_field[i]
-                                           if f is not None else None for i,f in enumerate(field_weights)])
-            return distances_by_field
+            for i in range(num_fields):
+                if not any([item is None or item == [] or isinstance(item, np.ndarray) and item.tolist() == []
+                            for item in [cue[i], candidate[i], field_weights[i]]]):
+                    distances_by_field[i] = distance_fct([cue[i], candidate[i]]) * field_weights[i]
+            return list(distances_by_field)
 
         elif granularity == 'full_entry':
             # Use first element as scalar if it is a homogenous array (i.e., all elements are the same)
