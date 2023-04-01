@@ -472,7 +472,7 @@ def _get_task_input(nback_level):
 def _get_training_inputs(network:AutodiffComposition,
                          num_training_sets_per_epoch:int=NUM_TRAINING_SETS_PER_EPOCH,
                          num_epochs:int=1,
-                         nback_levels:int=NBACK_LEVELS,
+                         nback_levels:list=NBACK_LEVELS,
                          foils_allowed_before:bool=True,
                          return_generator:bool=True
                          )->(dict, list, int):
@@ -596,7 +596,7 @@ def _get_training_inputs(network:AutodiffComposition,
     # Get sequence of conditions
     conditions = []
     for n in range(num_training_sets_per_epoch):
-        for l in nback_levels:
+        for l in range(len(nback_levels)):
             for i in range(num_stim):
                 for trial_type in TrialTypes:
                     conditions.append(trial_type.name)
@@ -804,6 +804,8 @@ def train_network(network:AutodiffComposition,
                                  foils_allowed_before=FOILS_ALLOWED_BEFORE,
                                  num_epochs=num_epochs,
                                  nback_levels=NBACK_LEVELS)
+    else:
+        batch_size = len(training_set[MODEL_STIMULUS_INPUT])
 
     minibatch_size = minibatch_size or batch_size
     print(f'num training stimuli per training set: {minibatch_size//NUM_TRAINING_SETS_PER_EPOCH}')
