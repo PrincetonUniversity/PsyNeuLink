@@ -3,7 +3,7 @@ Nback Model
 
 **"When Working Memory is Just Working, Not Memory"** (`Beukers et al., 2022 <https://psyarxiv.com/jtw5p>`_)
 
-Script: :download:`nback.py <../../psyneulink/library/models/Beukers_et_al_2022/nback.py>`
+Script: :download:`nback.py <../../Scripts/Models (Under Development)/Beukers_et_al_2022/nback.py>`
 
 Example of Jupyter Notebook: `BeukersNBackModel_NB`
 
@@ -12,7 +12,7 @@ Example of Jupyter Notebook: `BeukersNBackModel_NB`
 .. toctree::
    :maxdepth: 1
 
-   `Jupyter Notebook <../../psyneulink/library/models/Beukers_et_al_2022/nback_nb.ipynb>`
+   `Jupyter Notebook <../../Scripts/Models (Under Development)/Beukers_et_al_2022/nback_nb.ipynb>`
 
 
 .. automodule:: psyneulink.library.models.Beukers_et_al_2022.nback
