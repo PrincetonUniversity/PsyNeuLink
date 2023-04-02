@@ -166,7 +166,10 @@ def test_transfer_derivative(func, variable, params, expected, benchmark, func_m
         assert False, "unknown function mode: {}".format(func_mode)
 
     res = benchmark(ex, variable)
+    # FIX: THIS FAILS FOR func_mode=Python, MAX_VAL and MAX_INDICATOR:
+    #      EXPECTS 2d BUT ONLY 1D IS RETURNED
     np.testing.assert_allclose(res, expected, rtol=1e-5, atol=1e-8)
+
 
 # FIX: JDC MODIFED PER JAN -- CHECK
 derivative_out_test_data = [

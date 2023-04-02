@@ -550,12 +550,12 @@ class TestConnectCompositionsViaCIMS:
         ocomp = Composition(name='ocomp', pathways=[icomp])
         cm = ControlMechanism(
             name='control_mechanism',
-            control_signals=
-            ControlSignal(projections=[(SLOPE, ib)])
+            control_signals=ControlSignal(projections=[(SLOPE, ib)])
         )
         icomp.add_linear_processing_pathway([ia, ib])
         ocomp.add_linear_processing_pathway([cm, icomp])
-        res = ocomp.run([[2], [2], [2]])
+        res = ocomp.run({icomp:[[2],[2], [2]],
+                         cm:[[2],[2],[2]]})
         np.testing.assert_allclose(res, [[4]])
         np.testing.assert_allclose(ocomp.results, [[[4]], [[4]], [[4]]])
         assert len(ib.mod_afferents) == 1

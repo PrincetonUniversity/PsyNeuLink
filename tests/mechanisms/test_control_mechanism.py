@@ -189,11 +189,13 @@ class TestControlMechanism:
 
         stim_list[Control_Mechanism]=[0.0]
         results = comp.learn(num_trials=1, inputs=stim_list)
+        # FIX: ??WHY IS THE FOLLOWING 3D:
         expected_results = [[[0.5, 0.5, 0.5]]]
         np.testing.assert_allclose(results, expected_results)
 
         stim_list[Control_Mechanism]=[2.0]
         results = comp.learn(num_trials=1, inputs=stim_list)
+        # FIX: ??WHEREAS THIS IS 2D:
         expected_results = [[0.96941429, 0.9837254 , 0.99217549]]
         np.testing.assert_allclose(results, expected_results)
 
@@ -204,7 +206,7 @@ class TestControlMechanism:
         comp.add_nodes([(mech, pnl.NodeRole.INPUT), (control_mech, pnl.NodeRole.INPUT)])
         results = comp.run(inputs={mech:[[2],[2],[2]], control_mech:[2]}, num_trials=2, execution_mode=comp_mode)
 
-        np.testing.assert_allclose(control_mech.parameters.control_allocation.get(), [1, 1, 1])
+        np.testing.assert_allclose(control_mech.parameters.control_allocation.get(), [[1], [1], [1]])
         np.testing.assert_allclose(results, [[4],[4],[4]])
 
 
@@ -217,7 +219,7 @@ class TestControlMechanism:
         comp.add_nodes([(mech, pnl.NodeRole.INPUT), (control_mech, pnl.NodeRole.INPUT)])
         results = comp.run(inputs={mech:[[2]], control_mech:[3]}, num_trials=2, execution_mode=comp_mode)
 
-        np.testing.assert_allclose(control_mech.parameters.control_allocation.get(), [[1]])
+        np.testing.assert_allclose(control_mech.parameters.control_allocation.get(), [[1],[1],[1]])
         np.testing.assert_allclose(results, [[6],[6],[6]])
 
     def test_control_signal_default_allocation_specification(self):
@@ -239,7 +241,7 @@ class TestControlMechanism:
         comp = pnl.Composition()
         comp.add_nodes([m1,m2,m3])
         comp.add_controller(c1)
-        np.testing.assert_allclose(c1.parameters.control_allocation.get(), [10, 10, 10])
+        np.testing.assert_allclose(c1.parameters.control_allocation.get(), [[10], [10], [10]])
         assert c1.control_signals[0].value == [10] # defaultControlAllocation should be assigned
                                                    # (as no default_allocation from pnl.ControlMechanism)
         assert m1.parameter_ports[pnl.SLOPE].value == [1]
