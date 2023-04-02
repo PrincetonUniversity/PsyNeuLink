@@ -94,21 +94,12 @@ A few other restrictions apply to the construction and modification of AutodiffC
 Execution
 ---------
 
-COMMENT:
-- Execute learn method using Execute_mode == Python (uses Python) or LLVMRun (direct compilation) using
-
-It can be run just as a standard Composition would - using `learn <AutodiffComposition.learn>` for learning mode,
-and `run <AutodiffComposition.run>` for test mode.
-FIX: CHECK WITH SAMYAK THAT THIS IS CORRECT
-COMMENT
-
 An AutodiffComposition's `run <Composition.run>`, `execute <Composition.execute>`, and `learn <Composition.learn>`
 methods are the same as for a `Composition`.  However, the **execution_mode** in the `learn <Composition.learn>`
 method has different effects than for a standard Composition, that determine whether it uses `LLVM compilation
 <AutodiffComposition_LLVM>` or `translation to PyTorch <AutodiffComposition_PyTorch>` to execute learning.
-This `table <Composition_Compilation_Table>` provides a summary and comparison of these different modes of execution,
-that are described in greater detail below.
-
+These are each described in greater detail below, and summarized in this `table <Composition_Compilation_Table>`
+which provides a comparison of the different modes of execution for an AutodiffComposition and standard `Composition`.
 
 .. _AutodiffComposition_LLVM:
 
@@ -128,41 +119,6 @@ the constructor (see `AutodiffComposition <AutodiffComposition_Class_Reference>`
        because LLVM compilation supports the use of modulation in PsyNeuLink models (as compared to `PyTorch mode
        <AutodiffComposition_PyTorch>`; see `note <AutodiffComposition_PyTorch_Note>` below).
 
-
-COMMENT:
-The advantage of using an AutodiffComposition is that it allows a model to be implemented in PsyNeuLink, and then
-exploit the acceleration of optimized implementations of learning. This can be achieved by executing the `learn
-<Composition.learn>` method in one of two modes (specified using its **execution_mode** argument):  using direct
-compilation (**execution_mode** = `ExecutionMode.LLVMRun`); or by automatically translating the model to `PyTorch
-<https://pytorch.org>`_ for training (**execution_mode** = `ExecutionMode.PyTorch`). The advantage of these modes is
-that they can provide up to three orders of magnitude speed-up in training a model. However, there are restrictions
-on the kinds of Compositions that be implemented in this way.  The features of the different ways to implement and
-execute learning are outlined in the following table, and described in more detail in `AutodiffComposition`.
-  TABLE:
-    * AutodiffComposition:
-        * Execute_mode.Python:
-            - execution:
-              - executes `learn <Composition.learn>` using PyTorch
-              - executes `run <Composition.run>` using Python
-            - advantage: - fast (but slightly slower than direct compilation)
-            - disadvantage :broader support (RNN including LSTM, convnet, ?transformer?)
-        * Execute_mode.LLVNRun:
-            - execution: executes `learn <Composition.learn>` *and* `run <Composition.run>` in compiled mode
-            - advantage: fastest (direct compilation of PNL code)
-            - disadvantage: but (currently) more limited; not suppored:
-                            * RNN (including LSTM)
-                            * convnet (though "in the wings")
-                            * transformer
-                            * ?external memory
-    * Composition:
-        - execution: executes `learn <Composition.learn>` *and* `run <Composition.run>` in Python mode
-        - disadvantage: learning is extremely slow
-        - advantage:
-          - broadest support (including RL, TDLearning, Hebbian, Kohonen / SOM)
-          - can be used to implement effects of modulation and control during learning
-          - useful for examination of individual operations (e.g., for teaching purposes)
-COMMENT
-
 .. _AutodiffComposition_PyTorch:
 
 *PyTorch mode*
@@ -181,8 +137,16 @@ maps <https://github.com/giannisnik/som>`_).
     .. note::
        While specifying `ExecutionMode.PyTorch` in the `learn <Composition.learn>`  method of an AutodiffComposition
        causes it to use PyTorch for training, specifying this in the `run <Compositon.run>` method causes it to be
-       executing using the *Python* interpreter (and not PyTorch);  this is so that any modulation can take effect
+       executed using the *Python* interpreter (and not PyTorch);  this is so that any modulation can take effect
        during execution (see `AutodiffComposition_Nested_Modulation` below), which is not supported by PyTorch.
+
+    .. warning::
+      * Specifying `ExecutionMode.LLVM` or `ExecutionMode.PyTorch` in the learn() method of a standard
+        `Composition` causes an error.
+
+    .. note::
+      * Specifying `ExecutionMode.Python` in the learn() method of a `AutodiffComposition` is treated as a
+        synonym of `ExecutionMode.PyTorch` (see table).
 
 .. technical_note::
    `ExecutionMode.PyTorch` is a synonym for `ExecutionMode.Python`, that is provided for clarity of the user interface:
@@ -191,7 +155,6 @@ maps <https://github.com/giannisnik/som>`_).
    for `run <Composition.run>`.  The use of `ExecutionMode.PyTorch` is simply to make it clear that, during learning,
    it will use PyTorch. This contrasts with the use of `ExecutionMode.LLVMrun`, in which case both the `learn
    <Composition.learn>` and `run <Composition.run>` methods use LLVM compilation.
-
 
 .. _AutodiffComposition_Nested_Modulation:
 
@@ -362,15 +325,21 @@ class AutodiffComposition(Composition):
     Attributes
     ----------
 
-    losses : list of floats
-        tracks the average for each weight update (i.e. each minibatch)
-
     optimizer : PyTorch optimizer function
         the optimizer used for training. Depends on the **optimizer_type**, **learning_rate**, and **weight_decay**
         arguments from initialization.
 
     loss : PyTorch loss function
         the loss function used for training. Depends on the **loss_spec** argument from initialization.
+
+    losses : list of floats
+        tracks the average loss after each weight update (i.e. each minibatch) during learning.
+
+    last_saved_weights : path
+        path for file to which weights were last saved.
+
+    last_loaded_weights : path
+        path for file from which weights were last loaded.
 
     """
 
@@ -419,6 +388,8 @@ class AutodiffComposition(Composition):
         self.loss = None
         self.disable_learning = disable_learning
         self._runtime_learning_rate = None
+        self.last_saved_weights = None
+        self.last_loaded_weights = None
 
         # keeps track of average loss per epoch
         self.losses = []
@@ -492,8 +463,11 @@ class AutodiffComposition(Composition):
             # and therefore requires a wrapper function to properly package inputs.
             cross_entropy_loss = nn.CrossEntropyLoss()
             return lambda x, y: cross_entropy_loss(
-                    x.unsqueeze(0),
-                    y.type(torch.LongTensor)
+                    # x.unsqueeze(0),
+                    x,
+                    # y.type(torch.LongTensor)
+                    # torch.argmax(y.type(torch.LongTensor))
+                    y.type(x.type())
             )
         elif loss_spec == Loss.L1:
             return nn.L1Loss(reduction='sum')
@@ -560,7 +534,7 @@ class AutodiffComposition(Composition):
 
     def _update_learning_parameters(self, context):
         """
-        Updates parameters based on trials run since last update.
+        Updates parameters (weights) based on trials run since last update.
         """
         optimizer = self.parameters.optimizer._get(context=context)
         optimizer.zero_grad()
@@ -764,12 +738,13 @@ class AutodiffComposition(Composition):
         Path
 
         """
+        error_msg = f" (for saving weight matrices for '{self.name}') is not a legal path."
+
         if path:
             try:
                 path = Path(path)
             except:
-                raise AutodiffCompositionError(f"'{path}' (for saving weight matrices of ({self.name}) "
-                                               f"is not a legal path.")
+                raise AutodiffCompositionError(f"'{path}'{error_msg}")
         else:
             try:
                 if directory:
@@ -781,11 +756,10 @@ class AutodiffComposition(Composition):
                 else:
                     path = Path(os.path.join(path, f'{self.name}_matrix_wts.pnl'))
             except IsADirectoryError:
-                raise AutodiffCompositionError(f"'{path}' (for saving weight matrices of ({self.name}) "
-                                               f"is not a legal path.")
+                raise AutodiffCompositionError(f"'{path}'{error_msg}")
         proj_state = {
-            # p.name: p.parameters.matrix.get(context=context)
-            p.name: p.matrix.base
+            p.name: p.parameters.matrix.get(context=context)
+            # p.name: p.matrix.base
             for p in self.projections
             if not (isinstance(p, ModulatoryProjection_Base)
                     or isinstance(p.sender.owner, CompositionInterfaceMechanism)
@@ -795,12 +769,18 @@ class AutodiffComposition(Composition):
                     or p.sender.owner in self.get_nodes_by_role(NodeRole.LEARNING)
                     or p.receiver.owner in self.get_nodes_by_role(NodeRole.LEARNING)
                 )}
-        torch.save(proj_state, path)
+        try:
+            torch.save(proj_state, path)
+        except IsADirectoryError:
+            raise AutodiffCompositionError(f"'{path}'{error_msg}")
+
+        self.last_saved_weights = path
+
         return path
 
     @handle_external_context(fallback_most_recent=True)
     def load(self, path:PosixPath=None, directory:str=None, filename:str=None, context=None):
-        """Loads all weights matrices for all MappingProjections in the AutodiffComposition from file
+        """Loads all weight matrices for all MappingProjections in the AutodiffComposition from file
         Arguments
         ---------
         path: Path : default None
@@ -814,10 +794,10 @@ class AutodiffComposition(Composition):
            Matrices must be stored in
            `PyTorch state_dict <https://pytorch.org/tutorials/beginner/saving_loading_models.html>`_ format.
         """
+        error_msg = f" (for loading weight matrices for '{self.name}') is not a legal path."
         if path:
             if not isinstance(path,Path):
-                raise AutodiffCompositionError(f"'{path}' (for saving weight matrices of ({self.name}) "
-                                               f"is not a legal path.")
+                raise AutodiffCompositionError(f"'{path}'{error_msg}")
         else:
             try:
                 if directory:
@@ -829,9 +809,14 @@ class AutodiffComposition(Composition):
                 else:
                     path = Path(os.path.join(path , f'{self.name}_matrix_wts.pnl'))
             except IsADirectoryError:
-                raise AutodiffCompositionError(f"'{path}' (for saving weight matrices of ({self.name}) "
-                                               f"is not a legal path.")
-        state = torch.load(path)
+                raise AutodiffCompositionError(f"'{path}'{error_msg}")
+        try:
+            state = torch.load(path)
+        except FileNotFoundError:
+            raise AutodiffCompositionError(f"'{path}'{error_msg}")
+
+        self.last_loaded_weights = path
+
         for projection in [p for p in self.projections
                            if not (isinstance(p, ModulatoryProjection_Base)
                                    or isinstance(p.sender.owner, CompositionInterfaceMechanism)
@@ -849,8 +834,8 @@ class AutodiffComposition(Composition):
             projection.matrix.base = matrix
             projection.parameters.matrix.set(matrix, context=context, override=True)
             projection.parameter_ports['matrix'].parameters.value.set(matrix, context=context, override=True)
+
         self._build_pytorch_representation(context=context, refresh=True)
-    # MODIFIED 11/8/22 END
 
     def _get_state_ids(self):
         return super()._get_state_ids() + ["optimizer"]

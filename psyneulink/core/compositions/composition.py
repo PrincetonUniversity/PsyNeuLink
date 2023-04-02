@@ -677,23 +677,29 @@ Composition, it can be executed calling the Composition's `learn <Composition.le
 *Configuring Learning in a Composition*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-There are three ways of configuring learning in a Composition:
+There are three ways of configuring learning in a Composition, using:
 
-i) using `standard PsyNeuLink Components <Composition_Learning_Standard>`
+i) `standard PsyNeuLink Components <Composition_Learning_Standard>`, for presentational and/or instructional purposes;
 
-ii) using the `AutodiffComposition <Composition_Learning_AutodiffComposition>` -- a specialized subclass of Composition
-    that executes learning using `PyTorch <https://pytorch.org>`_
+ii) an `AutodiffComposition <Composition_Learning_AutodiffComposition>`, a subclass of Composition
+    that executes learning efficiently;
 
-iii) using `UserDefinedFunctions <UserDefinedFunction>`.
+iii) `UserDefinedFunctions <Composition_Learning_UDF>`, that provide full flexiblity.
 
-The advantage of using standard PsyNeuLink compoments is that it assigns each operation involved in learning to a
-dedicated Component. This helps make clear exactly what those operations are, the sequence in which they are carried
-out, and how they interact with one another.  However, this can also make execution inefficient, due to the overhead
-incurred by distributing the calculations over different Components.  If more efficient computation is critical,
-then the `AutodiffComposition` can be used to execute a compatible PsyNeuLink Composition in PyTorch, or one or more
-`UserDefinedFunctions <UserDefinedFunction>` can be assigned to either PyTorch functions or those in any other Python
-environment that implements learning and accepts and returns tensors. Each of these approaches is described in more
-detail below.
+Implementing learning using PsyNeuLink compoments is meant as a complement to more standard implementations of
+learning in neural networks, such as `PyTorch <https://pytorch.org/>`_ or `TensorFlow <https://www.tensorflow.org>`_,
+that assigns each operation involved in learning to a dedicated Component. This helps make clear exactly what those
+operations are, the sequence in which they are carried out, and how they interact with one another, which can be
+useful in instructional settings, where each computation associtated with learning can be individually examined.
+However, the cost is that execution is extremely inefficient (due to the lack of parallelization). To execute learning
+on a scale typical of standard deep learning applicatons, an `AutodiffComposition` should be used.  This can executed
+using either `direct compilation <AutodiffComposition_LLVM>` or by translating the model to, and execiting it using
+`PyTorch <AutodiffComposition_PyTorch>`.  Both of these provide as much as three orders of magnitude acceleration
+(comparable to standard machine learning environments).  Finally, for full flexiblity, learning can be impelmented
+using one or more `UserDefinedFunctions <UserDefinedFunction>`, that can be assigned to PyTorch functions, or ones in
+any other Python environment that implements learning and accepts and returns tensors. Each of these approaches is
+described in more detail in the three sections that follow, and summarized in a `table <Composition_Compilation_Table>`
+that compares their advantages and disadvantages.
 
 .. _Composition_Learning_Standard:
 
@@ -971,12 +977,12 @@ is no need to specify any `learning components <Composition_Learning_Components>
 <Autodiff_Learning_Components_Warning>`) -- an AutodiffComposition automatically creates backpropagation
 `learning pathways <Composition_Learning_Pathway>` from all input to all output `Nodes <Composition_Nodes>`.
 While learning in an AutodiffComposition is restricted to the `BackPropagation` learning algorithm, its `loss
-function can be specified (using the **loss_spec** parameter of its constructor), which implements different kinds of
-`supervised learning <Composition_Learning_Supervised>` (for example, `Loss.MSE` can be used for regression,
+function <Loss>` can be specified (using the **loss_spec** parameter of its constructor), which implements different
+kinds of `supervised learning <Composition_Learning_Supervised>` (for example, `Loss.MSE` can be used for regression,
 or `Loss.CROSS_ENTROPY` for classification).
 
-The advantage of using an AutodiffComposition is that it allows a model to be implemented in PsyNeuLink, and then
-exploit the acceleration of optimized implementations of learning. This can be achieved by executing the `learn
+The advantage of using an AutodiffComposition is that it allows a model to be implemented in PsyNeuLink, while
+exploiting the acceleration of optimized implementations of learning. This can be achieved by executing the `learn
 <Composition.learn>` method in one of two modes (specified using its **execution_mode** argument):  using direct
 compilation (**execution_mode** = `ExecutionMode.LLVMRun`); or by automatically translating the model to `PyTorch
 <https://pytorch.org>`_ for training (**execution_mode** = `ExecutionMode.PyTorch`). The advantage of these modes is
@@ -984,30 +990,47 @@ that they can provide up to three orders of magnitude speed-up in training a mod
 on the kinds of Compositions that be implemented in this way.  The features of the different ways to implement and
 execute learning are outlined in the following table, and described in more detail in `AutodiffComposition`.
 
+  .. warning::
+    * `ExecutionMode.LLVM` and `ExecutionMode.PyTorch` can only be used in the `learn <AutodiffComposition.learn>`
+      method of an `AutodiffComposition`;  specifying them in the `learn <Composition.learn>`()` method of a standard
+      `Composition` causes an error.
+
+|
 .. _Composition_Compilation_Table:
 
+**Comparison of Learning Modes**
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 .. table::
-    :align: left
+   :widths: 5 34 33 33
 
-    +-----------------+------------------------+------------------------------------------------+
-    |                 |  **Composition**       |          **AutodiffComposition**               |
-    +-----------------+------------------------+-----------------------+------------------------+
-    |                 |      *Python*          | *Direct Compilation*  |         *PyTorch*      |
-    +=================+========================+=======================+========================+
-    | execution_mode =| `ExecutionMode.Python` |`ExecutionMode.LLVMRun`|`ExecutionMode.PyTorch` |
-    +-----------------+------------------------+-----------------------+------------------------+
-    |  *learn()*      |  Python interpreted    |   LLVM compiled       |     PyTorch compiled   |
-    |                 |                        |                       |                        |
-    |  *run()*        |  Python interpreted    |   LLVM compiled       |     Python interpreted |
-    +-----------------+------------------------+-----------------------+------------------------+
-    |  *Speed:*       |       slow             |      fastest          |           fast         |
-    +-----------------+------------------------+-----------------------+------------------------+
-    |                 |* Backpropagation       | * Backpropagation     |* Backpropagation       |
-    |                 |* Reinforcement learning|                       |* RNN, inclduing LSTM   |
-    |  *Supports:*    |* Unspervised learning  |                       |* Unsupervised learning |
-    |                 |* modulation, inspection|                       |                        |
-    +-----------------+------------------------+-----------------------+------------------------+
-
+   +--------------------+------------------------------------+-----------------------------------------------+
+   |                    |**Composition**                     |**AutodiffComposition**                        |
+   +--------------------+------------------------------------+-----------------------+-----------------------+
+   |                    |*Python*                            |*Direct Compilation*   |*PyTorch*              |
+   +====================+====================================+=======================+=======================+
+   |execution_mode=     |`ExecutionMode.Python`              |`ExecutionMode.LLVMRun`|`ExecutionMode.LLVMRun`|
+   +--------------------+------------------------------------+-----------------------+-----------------------+
+   |`learn()            |                                    |                       |                       |
+   |<Composition.learn>`|Python interpreted                  |LLVM compiled          |PyTorch compiled       |
+   |                    |                                    |                       |                       |
+   |`run()              |                                    |                       |                       |
+   |<Composition.run>`  |Python interpreted                  |LLVM compiled          |Python interpreted     |
+   +--------------------+------------------------------------+-----------------------+-----------------------+
+   |*Speed:*            |slow                                |fastest                |fast                   |
+   +--------------------+------------------------------------+-----------------------+-----------------------+
+   |                    |`BackPropagation`                   |Backpropagation        |Backpropagation        |
+   |                    |                                    |                       |                       |
+   |                    |`Reinforcement` learning            |                       |RNN, inclduing LSTM    |
+   |                    |                                    |                       |                       |
+   |*Supports:*         |`Unspervised learning               |                       |Unsupervised learning  |
+   |                    |<Composition_Learning_Unsupervised>`|                       |                       |
+   |                    |                                    |                       |                       |
+   |                    |`Modulation                         |                       |                       |
+   |                    |<ModulatorySignal_Modulation>`      |                       |                       |
+   |                    |                                    |                       |                       |
+   |                    |Inspection                          |                       |                       |
+   +--------------------+------------------------------------+-----------------------+-----------------------+
 
 .. _Composition_Learning_UDF:
 
@@ -1019,8 +1042,8 @@ environment that supports learning can be assigned as the `function <Mechanism_B
 <Mechanism>`, in which case it is automatically  wrapped as `UserDefinedFunction`.  For example, the `forward and
 backward methods <https://pytorch.org/docs/master/notes/extending.html>`_ of a PyTorch object can be assigned in this
 way.  The advanatage of this approach is that it can be applied to any Python function that adheres to the requirements
-of a `UserDefinedFunction`. It must be carefully coordinated with the execution of other learning-related Components in
-the Composition, to insure that each function is called at the appropriate times during execution.  Furthermore, as
+of a `UserDefinedFunction`. It must be carefully coordinated with the execution of other learning-related Components
+in the Composition, to insure that each function is called at the appropriate times during execution.  Furthermore, as
 with an `AutodiffComposition`, the internal constituents of the object (e.g., intermediates layers of a neural network
 model) are not accessible to other Components in the Composition (e.g., as a source of information or for modulation).
 
@@ -2831,8 +2854,7 @@ from psyneulink.core.scheduling.scheduler import Scheduler, SchedulingMode
 from psyneulink.core.scheduling.time import Time, TimeScale
 from psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism import \
     AutoAssociativeLearningMechanism
-from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import \
-    ComparatorMechanism, OUTCOME, MSE, SSE, L0, L1, CROSS_ENTROPY
+from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 from psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism import \
     PredictionErrorMechanism
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
@@ -3683,6 +3705,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         components used for learning; those are contained in `learning_components
         <Composition.learning_components>` attribute.
 
+    is_nested : bool
+        True of Composition is `nested <Composition_Nested>` in another (outer) Compositon.
+
     results : list[list[list]]
         a list of the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` `Nodes <Composition_Nodes>`
         in the Composition for every `TRIAL <TimeScale.TRIAL>` executed in a call to `run <Composition.run>`.
@@ -3839,6 +3864,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.default_execution_id = self.name
         self.execution_ids = {self.default_execution_id}
+        self._executed_from_command_line = False
 
         self.projections = ContentAddressableList(component_type=Component)
 
@@ -7207,7 +7233,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def add_linear_learning_pathway(self,
                                     pathway,
                                     learning_function:LearningFunction,
-                                    loss_function=None,
+                                    loss_spec=None,
                                     learning_rate:tc.any(int,float)=0.05,
                                     error_function=LinearCombination,
                                     learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=AFTER,
@@ -7258,7 +7284,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies the type of `LearningFunction` to use for the `LearningMechanism` constructued for each
             `MappingProjection` in the **pathway**.
 
-        loss_function : Loss : default Loss.MSE
+        loss_spec : Loss : default Loss.MSE
             specifies the loss function used if `BackPropagation` is specified as the **learning_function**
             (see `add_backpropagation_learning_pathway <Composition.add_backpropagation_learning_pathway>`).
 
@@ -7333,7 +7359,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return self._create_backpropagation_learning_pathway(pathway,
                                                                  learning_rate,
                                                                  error_function,
-                                                                 loss_function,
+                                                                 loss_spec,
                                                                  learning_update,
                                                                  name=pathway_name,
                                                                  default_projection_matrix=default_projection_matrix,
@@ -7518,7 +7544,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                              pathway,
                                              learning_rate=0.05,
                                              error_function=None,
-                                             loss_function:tc.enum(Loss)=Loss.MSE,
+                                             loss_spec:tc.enum(Loss)=Loss.MSE,
                                              learning_update:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=AFTER,
                                              default_projection_matrix=None,
                                              name:str=None):
@@ -7539,7 +7565,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies the function assigned to `ComparatorMechanism` used to compute the error from the target and the
             output (`value <Mechanism_Base.value>`) of the `TARGET` (last) Mechanism in the **pathway**).
 
-        loss_function : Loss : default Loss.MSE
+        loss_spec : Loss : default Loss.MSE
             specifies the loss function used in computing the error term;  see `Loss` for values.
 
         learning_update : Optional[bool|ONLINE|AFTER] : default AFTER
@@ -7567,7 +7593,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return self.add_linear_learning_pathway(pathway,
                                                 learning_rate=learning_rate,
                                                 learning_function=BackPropagation,
-                                                loss_function=loss_function,
+                                                loss_spec=loss_spec,
                                                 error_function=error_function,
                                                 learning_update=learning_update,
                                                 default_projection_matrix=default_projection_matrix,
@@ -7667,7 +7693,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                       target={NAME: TARGET,
                                                               VARIABLE: [0.]},
                                                       function=error_function,
-                                                      output_ports=[OUTCOME, MSE],
+                                                      output_ports=[OUTCOME, Loss.MSE.name],
                                                       )
             learning_mechanism = LearningMechanism(
                                     function=learning_function(
@@ -7744,7 +7770,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                   target={NAME: TARGET,
                                                           VARIABLE: [0.]},
                                                   function=error_function,
-                                                  output_ports=[OUTCOME, MSE],
+                                                  output_ports=[OUTCOME, Loss.MSE.name],
                                                   )
 
         learning_mechanism = \
@@ -7797,7 +7823,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                  pathway,
                                                  learning_rate=0.05,
                                                  error_function=None,
-                                                 loss_function=Loss.MSE,
+                                                 loss_spec=Loss.MSE,
                                                  learning_update=AFTER,
                                                  default_projection_matrix=None,
                                                  name=None,
@@ -7806,8 +7832,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # FIX: LEARNING CONSOLIDATION - Can get rid of this:
         if not error_function:
             error_function = LinearCombination()
-        if not loss_function:
-            loss_function = Loss.MSE
+        if not loss_spec:
+            loss_spec = Loss.MSE
 
         # Add pathway to graph and get its full specification (includes all ProcessingMechanisms and MappingProjections)
         # Pass ContextFlags.INITIALIZING so that it can be passed on to _analyze_graph() and then
@@ -7857,7 +7883,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self._create_terminal_backprop_learning_components(input_source,
                                                                        output_source,
                                                                        error_function,
-                                                                       loss_function,
+                                                                       loss_spec,
                                                                        learned_projection,
                                                                        learning_rate,
                                                                        learning_update,
@@ -7915,7 +7941,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._create_terminal_backprop_learning_components(input_source,
                                                                    output_source,
                                                                    error_function,
-                                                                   loss_function,
+                                                                   loss_spec,
                                                                    learned_projection,
                                                                    learning_rate,
                                                                    learning_update,
@@ -8013,13 +8039,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     NodeRole.TARGET not in self.get_roles_by_node(n) for p in bfs(n)]
         for pathway in pathways:
             self.add_backpropagation_learning_pathway(pathway=pathway,
-                                                      loss_function=self.loss_spec)
+                                                      loss_spec=self.loss_spec)
 
     def _create_terminal_backprop_learning_components(self,
                                                       input_source,
                                                       output_source,
                                                       error_function,
-                                                      loss_function,
+                                                      loss_spec,
                                                       learned_projection,
                                                       learning_rate,
                                                       learning_update,
@@ -8037,19 +8063,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Otherwise, create new ones
         except KeyError:
-            # # MODIFIED 11/12/22 OLD:
-            # target_mechanism = ProcessingMechanism(name='Target',
-            #                                        default_variable=output_source.output_ports[0].value)
-            # objective_mechanism = ComparatorMechanism(name='Comparator',
-            #                                           target={NAME: TARGET,
-            #                                                   VARIABLE: target_mechanism.output_ports[0].value},
-            #                                           sample={NAME: SAMPLE,
-            #                                                   VARIABLE: output_source.output_ports[0].value,
-            #                                                   WEIGHT: -1},
-            #                                           function=error_function,
-            #                                           output_ports=[OUTCOME, Loss.MSE],
-            #                                           )
-            # # MODIFIED 11/12/22 NEW:
             target_mechanism = ProcessingMechanism(name='Target',
                                                    default_variable=output_source.output_ports[0].value)
             # Base for object_mechanism output_ports:
@@ -8057,34 +8070,34 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     VARIABLE: output_source.output_ports[0].value}
             target={NAME: TARGET,
                     VARIABLE: target_mechanism.output_ports[0].value}
-            if loss_function == Loss.CROSS_ENTROPY:
+            if loss_spec == Loss.CROSS_ENTROPY:
                 # error function:  use LinearCombination to implement cross_entropy: (SoftMax(sample), SoftMax(target))
                 sample.update({FUNCTION: SoftMax(output=ALL)})
+                # [JDC 12/4/22]: FIX: IS THIS COORRECT, OR SHOULD IT BE ASSUMED TO BE A ONE-HOT AND COMPLAIN IF NOT?
                 target.update({FUNCTION: SoftMax(output=ALL)})
                 error_function = LinearCombination(operation=CROSS_ENTROPY)
-                output_ports = [OUTCOME, SUM]
+                output_ports = [OUTCOME, SUM.upper()]
             else:
                 # error_function: use default for Comparator (LinearCombination) =>  target - sample
                 sample.update({WEIGHT: -1})
-                if loss_function == Loss.L0:
-                    output_ports = [OUTCOME, SUM]
-                elif loss_function == Loss.SSE:
-                    output_ports = [OUTCOME, SSE]
+                if loss_spec == Loss.L0:
+                    output_ports = [OUTCOME, SUM.upper()]
+                elif loss_spec == Loss.SSE:
+                    output_ports = [OUTCOME, Loss.SSE.name]
                 else:
-                    output_ports = [OUTCOME, MSE]
+                    output_ports = [OUTCOME, Loss.MSE.name]
             objective_mechanism = ComparatorMechanism(name='Comparator',
                                                       sample=sample,
                                                       target=target,
                                                       function=error_function,
                                                       output_ports=output_ports)
-            # MODIFIED 11/12/22 END
 
         learning_function = BackPropagation(default_variable=[input_source.output_ports[0].value,
                                                               output_source.output_ports[0].value,
                                                               objective_mechanism.output_ports[0].value],
                                             activation_derivative_fct=output_source.function.derivative,
                                             learning_rate=learning_rate,
-                                            loss_function=loss_function)
+                                            loss_spec=loss_spec)
 
         learning_mechanism = LearningMechanism(function=learning_function,
                                                default_variable=[input_source.output_ports[0].value,
@@ -8150,7 +8163,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             learning_function = BackPropagation(default_variable=[input_source.output_ports[0].value,
                                                                   output_source.output_ports[0].value,
                                                                   error_signal_template[0]],
-                                                loss_function=None,
+                                                loss_spec=None,
                                                 activation_derivative_fct=output_source.function.derivative,
                                                 learning_rate=learning_rate)
 
@@ -9722,9 +9735,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             skip_analyze_graph=False,
             report_output:ReportOutput=ReportOutput.OFF,
             report_params:ReportParams=ReportParams.OFF,
-            report_progress=ReportProgress.OFF,
-            report_simulations=ReportSimulations.OFF,
-            report_to_devices=None,
+            report_progress:ReportProgress=ReportProgress.OFF,
+            report_simulations:ReportSimulations=ReportSimulations.OFF,
+            report_to_devices:ReportDevices=None,
             animate=False,
             log=False,
             scheduler=None,
@@ -9956,9 +9969,9 @@ _
             trials.
 
         """
-        # MODIFIED 3/28/22 OLD:
+        if context.source == ContextFlags.COMMAND_LINE:
+            self._executed_from_command_line = True
         context.source = ContextFlags.COMPOSITION
-        # MODIFIED 3/28/22 END
         execution_phase = context.execution_phase
         context.execution_phase = ContextFlags.PREPARING
 
@@ -10706,18 +10719,29 @@ _
                 # These are meant to be assigned in run method;  needed here for direct call to execute method
                 self._animate = False
 
+            # [JDC 12/4/22]: FIX ALL OF THIS REPLACED BY REFERENCES TO self.is_nested
             # IMPLEMENTATION NOTE:
             # KAM 4/29/19
             # The nested var is set to True if the Composition is nested in another Composition, otherwise False
             # Later on, this is used to determine:
             #   (1) whether to initialize from context
             #   (2) whether to assign values to CIM from input dict (if not nested) or simply execute CIM (if nested)
-            # JDC 3/28/22:
-            #    This currently prevents a Composition that is nested within another to be tested on its own
-            #    Would be good to figure out a way to accomodate that
-            nested = False
-            if len(self.input_CIM.path_afferents) > 0:
-                nested = True
+            # nested = False
+            # # MODIFIED 12/1/22 OLD:
+            # if len(self.input_CIM.path_afferents) > 0:
+            # if self.is_nested:
+            #     nested = True
+            # MODIFIED 12/1/22 NEW:  FIX: EFFORT TO ADDRESS ABOVE ISSUE;  NEEDS TESTING  CALL OF NESTED COMPOSITION
+            # if len(self.input_CIM.path_afferents) > 0 and context.composition != self:
+            #     nested = True
+            # # MODIFIED 12/1/22 NEWER:
+            # if self.is_nested and not self._executed_from_command_line:
+            #     nested = True
+            # # MODIFIED 12/1/22 NEWEST:
+            # nested = self.is_nested and not self._executed_from_command_line
+            # # MODIFIED 12/1/22 FINAL?
+            # nested = self.is_nested
+            # MODIFIED 12/1/22 END
 
             runtime_params = self._parse_runtime_params_conditions(runtime_params)
 
@@ -10730,7 +10754,7 @@ _
 
             # if execute was called from command line and no inputs were specified,
             # assign default inputs to highest level composition (i.e. not on any nested Compositions)
-            if not inputs and not nested and ContextFlags.COMMAND_LINE in context.source:
+            if not inputs and not self.is_nested and ContextFlags.COMMAND_LINE in context.source:
                 inputs = self._instantiate_input_dict({})
             # Skip initialization if possible (for efficiency):
             # - and(context has not changed
@@ -10750,7 +10774,7 @@ _
                 # initialize from base context but don't overwrite any values already set for this context
                 if (
                     not skip_initialization
-                    and not nested
+                    and not self.is_nested
                     or context is None
                     and context.execution_phase is not ContextFlags.SIMULATION_MODE
                 ):
@@ -10881,18 +10905,22 @@ _
                 # FIXME: parameter_CIM should be executed here as well,
                 #        but node execution of nested compositions with
                 #        outside control is not supported yet.
-                assert not nested or len(self.parameter_CIM.afferents) == 0
+                assert not self.is_nested or len(self.parameter_CIM.afferents) == 0
 
-            elif nested:
+            elif self.is_nested:
 
+                # [JDC 12/2/22]: FIX NONE OF THIS SEEMS TO BE NEEDED ANY LONGER (AT LEAST TO PASS TESTS)
                 # MODIFIED 3/28/22 CURRENT:
-                # IMPLEMENTATION NOTE: context.string set in Mechanism.execute
-                direct_call = (f"{context.source.name} EXECUTING" not in context.string)
-                # MODIFIED 3/28/22 NEW:
-                # direct_call = (context.source == ContextFlags.COMMAND_LINE)
+                # # IMPLEMENTATION NOTE: context.string set in Mechanism.execute
+                # executed_from_command_line = (f"{context.source.name} EXECUTING" not in context.string)
+                # # MODIFIED 3/28/22 NEW:  CALL OF NESTED COMPOSITION
+                # executed_from_command_line = (context.source == ContextFlags.COMMAND_LINE)
+                # # MODIFIED 12/3/22 NEWER:
+                # executed_from_command_line = self._executed_from_command_line
                 # MODIFIED 3/28/22 END
                 simulation = ContextFlags.SIMULATION_MODE in context.runmode
-                if simulation or direct_call:
+                # if simulation or executed_from_command_line:
+                if simulation or self._executed_from_command_line:
                     # For simulations, or direct call to nested Composition (e.g., from COMMAND_LINE to test it)
                     #  assign inputs if they not provided (e.g., # autodiff)
                     if inputs is not None:
@@ -11170,7 +11198,7 @@ _
                             if node is not self.controller:
                                 mech_context = copy(context)
                                 mech_context.source = ContextFlags.COMPOSITION
-                                if nested and node in self.get_nodes_by_role(NodeRole.INPUT):
+                                if self.is_nested and node in self.get_nodes_by_role(NodeRole.INPUT):
                                     for port in node.input_ports:
                                         port._update(context=context)
                                 node.execute(context=mech_context,
@@ -11182,6 +11210,9 @@ _
                         if self._is_learning(context):
                             context.replace_flag(ContextFlags.LEARNING, ContextFlags.PROCESSING)
                         context.remove_flag(ContextFlags.PROCESSING)
+
+                        # IMPLEMENTATION NOTE: PAUSE / BREAK POINT FOR EXECUTION OF INDIVIDUAL NODES
+                        assert True
 
                     # EXECUTE A NESTED COMPOSITION ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -12355,6 +12386,15 @@ _
         return ContentAddressableList(component_type=Projection,
                                       list=[p.component for p in self.graph.vertices
                                             if p.feedback is EdgeType.FEEDBACK])
+
+    @property
+    def is_nested(self):
+        """Determine whether Composition is nested in another
+        Used in run() to decide whether to:
+            (1) initialize from context
+            (2) assign values to CIM from input dict (if not nested) or simply execute CIM (if nested)
+        """
+        return len(self.input_CIM.path_afferents) > 0
 
     @property
     def _all_nodes(self):

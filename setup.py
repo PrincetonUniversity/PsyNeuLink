@@ -35,7 +35,7 @@ setup(
     url='https://github.com/PrincetonUniversity/PsyNeuLink',
 
     # Author details
-    author='Jonathan Cohen, Princeton University, Intel',
+    author='Jonathan Cohen, Princeton University',
     author_email='jdc@princeton.edu',
 
     # Choose your license

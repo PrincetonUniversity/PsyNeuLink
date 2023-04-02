@@ -168,7 +168,7 @@ class TestControlMechanism:
         comp = pnl.Composition()
         backprop_pathway = comp.add_backpropagation_learning_pathway(
             pathway=pathway,
-            loss_function=None,
+            loss_spec=None,
         )
         # c.add_linear_processing_pathway(pathway=z)
         comp.add_node(Control_Mechanism)
