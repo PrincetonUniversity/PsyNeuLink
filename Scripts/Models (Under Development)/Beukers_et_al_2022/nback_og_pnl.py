@@ -795,6 +795,8 @@ def train_network(network:AutodiffComposition,
                                  foils_allowed_before=FOILS_ALLOWED_BEFORE,
                                  num_epochs=num_epochs,
                                  nback_levels=NBACK_LEVELS)
+    else:
+        batch_size = len(training_set[MODEL_STIMULUS_INPUT])
 
     minibatch_size = minibatch_size or batch_size
     print(f'num training stimuli per training set: {minibatch_size//NUM_TRAINING_SETS_PER_EPOCH}')
