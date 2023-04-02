@@ -3188,7 +3188,8 @@ class OptimizationControlMechanism(ControlMechanism):
 
     def _apply_control_allocation(self, control_allocation, runtime_params, context):
         """Update values to `control_signals <ControlMechanism.control_signals>`
-        based on specified `control_allocation <ControlMechanism.control_allocation>`"""
+        based on specified `control_allocation <ControlMechanism.control_allocation>`
+        """
         # IMPLEMENTATION NOTE:
         #  Need to set value of ControlMechanism (rather than variables of ControlSignals)
         #  since OutputPort uses _output_port_variable_getter() to parse its variable_spec
