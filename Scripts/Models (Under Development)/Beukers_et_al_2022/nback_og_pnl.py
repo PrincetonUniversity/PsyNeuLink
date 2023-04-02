@@ -588,7 +588,7 @@ def _get_training_inputs(network:AutodiffComposition,
     # Get sequence of conditions
     conditions = []
     for n in range(num_training_sets_per_epoch):
-        for l in nback_levels:
+        for l in range(len(nback_levels)):
             for i in range(num_stim):
                 for trial_type in TrialTypes:
                     conditions.append(trial_type.name)
