@@ -485,8 +485,8 @@ class TestFullModels:
         p = [input_layer, input_weights, hidden_layer_1, middle_weights, hidden_layer_2, output_weights, output_layer]
         backprop_pathway = comp.add_backpropagation_learning_pathway(
             pathway=p,
-            # loss_function=pnl.Loss.SSE,
-            loss_function=pnl.Loss.L0,
+            # loss_spec=pnl.Loss.SSE,
+            loss_spec=pnl.Loss.L0,
             learning_rate=1.
         )
 

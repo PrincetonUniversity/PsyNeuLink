@@ -382,7 +382,6 @@ the `intensity <ControlSignal.intensity>` of which is also ``3``, the value of t
 as shown below::
 
     >>> comp.run(inputs={mech:[3]}, num_trials=2)
-    <BLANKLINE>
     [array([3.])]
     >>> ctl_mech_A.control_signals[0].intensity_cost
     array([8103.08392758])

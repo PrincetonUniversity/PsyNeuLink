@@ -644,6 +644,7 @@ class Projection_Base(Projection):
                  weight=None,
                  exponent=None,
                  function=None,
+                 exclude_in_autodiff=False,
                  params=None,
                  name=None,
                  prefs=None,
@@ -706,6 +707,7 @@ class Projection_Base(Projection):
             return
 
         self.receiver = receiver
+        self._exclude_from_autodiff = exclude_in_autodiff
 
          # Register with ProjectionRegistry or create one
         register_category(entry=self,

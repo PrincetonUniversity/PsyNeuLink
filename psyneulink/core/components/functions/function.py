@@ -697,6 +697,7 @@ class Function_Base(Function):
                                     params=params,
                                     target_set=target_set,
                                     )
+        # Execute function
         try:
             value = self._function(variable=variable,
                                    context=context,

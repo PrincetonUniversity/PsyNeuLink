@@ -163,13 +163,7 @@ from psyneulink.core.globals.utilities import \
     NumericCollections, is_value_spec, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, recursive_update
 from psyneulink.core.globals.utilities import safe_len
 
-__all__ = ['ComparatorMechanism', 'ComparatorMechanismError', 'MSE', 'SSE', 'SSE', 'L0', 'L1', 'CROSS_ENTROPY']
-
-MSE = Loss.MSE.name
-SSE = Loss.SSE.name
-L0 = Loss.L0.name
-L1 = Loss.L1.name
-CROSS_ENTROPY = Loss.CROSS_ENTROPY.name
+__all__ = ['ComparatorMechanism', 'ComparatorMechanismError']
 
 class ComparatorMechanismError(MechanismError):
     pass
@@ -324,15 +318,15 @@ class ComparatorMechanism(ObjectiveMechanism):
     # ComparatorMechanism parameter and control signal assignments):
 
     standard_output_ports = ObjectiveMechanism.standard_output_ports.copy()
-    standard_output_ports.extend([{NAME: SUM,
+    standard_output_ports.extend([{NAME: SUM.upper(),
                                    FUNCTION: lambda x: np.sum(x)},
-                                  {NAME: SSE,
+                                  {NAME: Loss.SSE.name,
                                    FUNCTION: lambda x: np.sum(x * x)},
-                                  {NAME: MSE,
+                                  {NAME: Loss.MSE.name,
                                    FUNCTION: lambda x: np.sum(x * x) / safe_len(x)}]
                                  )
     standard_output_port_names = ObjectiveMechanism.standard_output_port_names.copy()
-    standard_output_port_names.extend([SUM, Loss.SSE.name, Loss.MSE.name])
+    standard_output_port_names.extend([SUM.upper(), Loss.SSE.name, Loss.MSE.name])
 
     @check_user_specified
     @beartype

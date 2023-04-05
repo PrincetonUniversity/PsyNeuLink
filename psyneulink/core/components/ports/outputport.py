@@ -1640,7 +1640,7 @@ class StandardOutputPorts():
     def get_port_dict(self, name:str):
         """Return a copy of the named OutputPort dict
         """
-        if next((item for item in self.names if name is item), None):
+        if next((item for item in self.names if name == item), None):
             # assign dict to owner's output_port list
             return self.data[self.names.index(name)].copy()
         # raise StandardOutputPortsError("{} not recognized as name of {} for {}".

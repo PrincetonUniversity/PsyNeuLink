@@ -178,7 +178,7 @@ class ContextFlags(enum.IntFlag):
     DEFAULT_MODE = enum.auto()
     """Default mode"""
     LEARNING_MODE = enum.auto()
-    """Set during `compositon.learn`"""
+    """Set during `composition.learn`"""
     SIMULATION_MODE = enum.auto()
     """Set during simulation by Composition.controller"""
 
@@ -351,16 +351,17 @@ class Context():
         self._runmode = runmode
 
         if flags:
+            owner_str = f" for {self.owner.name}" if self.owner else ""
             if (execution_phase and not (flags & ContextFlags.EXECUTION_PHASE_MASK & execution_phase)):
-                raise ContextError("Conflict in assignment to flags ({}) and execution_phase ({}) arguments "
-                                   "of Context for {}".
-                                   format(ContextFlags._get_context_string(flags & ContextFlags.EXECUTION_PHASE_MASK),
-                                          ContextFlags._get_context_string(flags, EXECUTION_PHASE), self.owner.name))
+                raise ContextError(f"Conflict in assignment to flags "
+                                   f"({ContextFlags._get_context_string(flags & ContextFlags.EXECUTION_PHASE_MASK)}) "
+                                   f"and execution_phase ({ContextFlags._get_context_string(flags, EXECUTION_PHASE)}) "
+                                   f"arguments of Context{owner_str}.")
             if not (flags & ContextFlags.SOURCE_MASK & source):
-                raise ContextError("Conflict in assignment to flags ({}) and source ({}) arguments of Context for {}".
-                                   format(ContextFlags._get_context_string(flags & ContextFlags.SOURCE_MASK),
-                                          ContextFlags._get_context_string(flags, SOURCE),
-                                          self.owner.name))
+                raise ContextError(f"Conflict in assignment to flags "
+                                   f"({ContextFlags._get_context_string(flags & ContextFlags.SOURCE_MASK)}) "
+                                   f"and source ({ContextFlags._get_context_string(flags, SOURCE)}) "
+                                   f"arguments of Context{owner_str}.")
         if execution_id is NotImplemented:
             subsecond_res = 10 ** 6
             cur_time = py_time.time()

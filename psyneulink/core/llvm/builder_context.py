@@ -190,6 +190,14 @@ class LLVMBuilderContext:
         else:
             assert False, "Unknown PRNG type!"
 
+    def get_binomial_dist_function_by_state(self, state):
+        if len(state.type.pointee) == 5:
+            return self.import_llvm_function("__pnl_builtin_mt_rand_binomial")
+        elif len(state.type.pointee) == 7:
+            return self.import_llvm_function("__pnl_builtin_philox_rand_binomial")
+        else:
+            assert False, "Unknown PRNG type!"
+
     def get_normal_dist_function_by_state(self, state):
         if len(state.type.pointee) == 5:
             return self.import_llvm_function("__pnl_builtin_mt_rand_normal")

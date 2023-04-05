@@ -1696,7 +1696,7 @@ class BackPropagation(LearningFunction):
         default_variable=None,                           \
         activation_derivative_fct=Logistic().derivative, \
         learning_rate=None,                              \
-        loss_function=None,                              \
+        loss_spec=None,                              \
         params=None,                                     \
         name=None,                                       \
         prefs=None)
@@ -1804,7 +1804,7 @@ class BackPropagation(LearningFunction):
         supersedes any specification for the `Process` and/or `System` to which the function's
         `owner <Function.owner>` belongs (see `learning_rate <BackPropagation.learning_rate>` for details).
 
-    loss_function : Loss : default None
+    loss_spec : Loss : default None
         specifies the operation to apply to the error signal (i.e., method of calculating the derivative of the errror
         with respect to activation) before computing weight changes.
 
@@ -1863,7 +1863,7 @@ class BackPropagation(LearningFunction):
     default_learning_rate : float
         the value used for the `learning_rate <BackPropagation.learning_rate>` if it is not otherwise specified.
 
-    loss_function : Loss or None
+    loss_spec : Loss or None
         the operation to apply to the error signal (i.e., method of calculating the derivative of the errror
         with respect to activation) before computing weight changes.
 
@@ -1928,8 +1928,8 @@ class BackPropagation(LearningFunction):
                     :default value: 1.0
                     :type: ``float``
 
-                loss_function
-                    see `loss_function <BackPropagation.loss_function>`
+                loss_spec
+                    see `loss_spec <BackPropagation.loss_spec>`
 
                     :default value: None
                     :type:
@@ -1940,7 +1940,7 @@ class BackPropagation(LearningFunction):
                              pnl_internal=True,
                              constructor_argument='default_variable')
         learning_rate = Parameter(1.0, modulable=True)
-        loss_function = Parameter(None, read_only=True)
+        loss_spec = Parameter(None, read_only=True)
         activation_input = Parameter([0], read_only=True, getter=_activation_input_getter)
         activation_output = Parameter([0], read_only=True, getter=_activation_output_getter)
         error_signal = Parameter([0], read_only=True, getter=_error_signal_getter)
@@ -1956,7 +1956,7 @@ class BackPropagation(LearningFunction):
                  activation_derivative_fct: Optional[Union[types.FunctionType, types.MethodType]]=None,
                  # learning_rate: Optional[ValidParamSpecType] = None,
                  learning_rate=None,
-                 loss_function=None,
+                 loss_spec=None,
                  params=None,
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None):
@@ -1971,7 +1971,7 @@ class BackPropagation(LearningFunction):
             activation_derivative_fct=activation_derivative_fct,
             error_matrix=error_matrix,
             learning_rate=learning_rate,
-            loss_function=loss_function,
+            loss_spec=loss_spec,
             params=params,
             owner=owner,
             prefs=prefs,
@@ -2158,11 +2158,11 @@ class BackPropagation(LearningFunction):
         activation_input = np.array(activation_input).reshape(len(activation_input), 1)
 
         # Derivative of error with respect to output activity (contribution of each output unit to the error above)
-        loss_function = self.parameters.loss_function.get(context)
-        if loss_function == Loss.MSE:
+        loss_spec = self.parameters.loss_spec.get(context)
+        if loss_spec == Loss.MSE:
             num_output_units = self._get_current_parameter_value(ERROR_SIGNAL, context).shape[0]
             dE_dA = np.dot(error_matrix, self._get_current_parameter_value(ERROR_SIGNAL, context)) / num_output_units * 2
-        elif loss_function == Loss.SSE:
+        elif loss_spec == Loss.SSE:
             dE_dA = np.dot(error_matrix, self._get_current_parameter_value(ERROR_SIGNAL, context)) * 2
         else:
             # Use L0 (this applies to hidden layers)
