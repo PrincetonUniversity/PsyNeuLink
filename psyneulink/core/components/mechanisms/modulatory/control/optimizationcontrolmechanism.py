@@ -3021,7 +3021,7 @@ class OptimizationControlMechanism(ControlMechanism):
             return [defaultControlAllocation]
 
         # Assign default control_allocation if it is not yet specified (presumably first trial)
-        control_allocation = self.control_allocation
+        control_allocation = self.parameters.control_allocation._get(context)
         if control_allocation is None:
             control_allocation = [c.defaults.variable for c in self.control_signals]
 
@@ -3065,7 +3065,7 @@ class OptimizationControlMechanism(ControlMechanism):
         self.agent_rep._clean_up_as_agent_rep(frozen_context, alt_controller=alt_controller)
 
         # optimal_control_allocation = np.array(optimal_control_allocation).reshape((len(self.defaults.value), 1))
-        optimal_control_allocation = np.array(optimal_control_allocation).reshape((len(self.control_allocation),1))
+        optimal_control_allocation = np.array(optimal_control_allocation).reshape((len(control_allocation), 1))
         if self.function.save_samples:
             self.saved_samples = saved_samples
         if self.function.save_values:
