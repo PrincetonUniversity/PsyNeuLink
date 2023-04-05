@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Keywords &mdash; PsyNeuLink 0.13.0.0+42.g752be67f1 documentation</title>
+  <title>Keywords &mdash; PsyNeuLink 0.13.0.0+45.g1b4f2d7a5 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.13.0.0+42
+                  0.13.0.0+45
                 </div>
               
             
@@ -205,9 +205,10 @@
 <dt class="sig sig-object py" id="psyneulink.core.globals.keywords.Loss">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.globals.keywords.</span></span><span class="sig-name descname"><span class="pre">Loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.keywords.Loss" title="Permalink to this definition">¶</a></dt>
 <dd><p>Loss function used for <a class="reference internal" href="Composition.html#composition-learning"><span class="std std-ref">learning</span></a>.</p>
-<p>Each keyword specifies a loss function used for learning in a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> or <a class="reference internal" href="AutodiffComposition.html"><span class="doc">AutodiffComposition</span></a>,
-and the comparable loss functions used by <a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.PyTorch" title="psyneulink.core.llvm.__init__.ExecutionMode.PyTorch"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">PyTorch</span></code></a> when an AutodiffComposition is executed in
-<a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.PyTorch" title="psyneulink.core.llvm.__init__.ExecutionMode.PyTorch"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode.PyTorch</span></code></a> mode.</p>
+<p>Used to specify the <strong>loss_spec</strong> argument of the constructor for an <a class="reference internal" href="AutodiffComposition.html"><span class="doc">AutodiffComposition</span></a>,
+or in the <a class="reference internal" href="Composition.html#composition-learning-methods"><span class="std std-ref">learning methods</span></a> used to construct <a class="reference internal" href="Composition.html#composition-learning-pathway"><span class="std std-ref">learning pathways</span></a> in a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>. Each keyword specifies a loss function used
+for learning, and the comparable <a class="reference external" href="https://pytorch.org/docs/stable/nn.html#loss-functions">loss functions</a>
+used by <a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.PyTorch" title="psyneulink.core.llvm.__init__.ExecutionMode.PyTorch"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">PyTorch</span></code></a> when an AutodiffComposition is executed in <a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.PyTorch" title="psyneulink.core.llvm.__init__.ExecutionMode.PyTorch"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode.PyTorch</span></code></a> mode.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.globals.keywords.Loss.L0">
 <span class="sig-name descname"><span class="pre">L0</span></span><a class="headerlink" href="#psyneulink.core.globals.keywords.Loss.L0" title="Permalink to this definition">¶</a></dt>
@@ -320,6 +321,12 @@ one from each array:</p>
 <span class="sig-name descname"><span class="pre">DIFFERENCE</span></span><a class="headerlink" href="#psyneulink.core.globals.keywords.DistanceMetrics.DIFFERENCE" title="Permalink to this definition">¶</a></dt>
 <dd><p>(can also be referenced as <em>L0</em>)</p>
 <p><span class="math notranslate nohighlight">\(d = \sum\limits^{len}(|a_1-a_2|)\)</span></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.globals.keywords.DistanceMetrics.DOT_PRODUCT">
+<span class="sig-name descname"><span class="pre">DOT_PRODUCT</span></span><a class="headerlink" href="#psyneulink.core.globals.keywords.DistanceMetrics.DOT_PRODUCT" title="Permalink to this definition">¶</a></dt>
+<dd><p><span class="math notranslate nohighlight">\(d = \sum\limits^{len}\(a_1 * a_2)}\)</span></p>
 </dd></dl>
 
 <dl class="py attribute">

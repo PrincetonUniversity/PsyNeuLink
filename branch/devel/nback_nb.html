@@ -1,0 +1,788 @@
+
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>&lt;no title&gt; &mdash; PsyNeuLink 0.13.0.0+45.g1b4f2d7a5 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+  <!-- Preload the theme fonts -->
+
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-book.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/IBMPlexMono/IBMPlexMono-Medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-medium-italic.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/IBMPlexMono/IBMPlexMono-SemiBold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+
+<!-- Preload the katex fonts -->
+
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Math-Italic.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Main-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Main-Bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size1-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size4-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size2-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size3-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Caligraphic-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+</head>
+
+<div class="container-fluid header-holder tutorials-header" id="header-holder">
+  <div class="container">
+    <div class="header-container">
+      <a class="header-logo" href="https://princetonuniversity.github.io/PsyNeuLink/"></a>
+<!--      <a class="header-logo"></a>-->
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://github.com/PrincetonUniversity/PsyNeuLink">Github</a>
+          </li>
+        </ul>
+      </div>
+
+      <a class="main-menu-open-button" href="#" data-behavior="open-mobile-menu"></a>
+    </div>
+
+  </div>
+</div>
+
+
+<body class="psyneulink-body">
+
+   
+
+    
+
+    <div class="table-of-contents-link-wrapper">
+      <span>Table of Contents</span>
+      <a href="#" class="toggle-table-of-contents" data-behavior="toggle-table-of-contents"></a>
+    </div>
+
+    <nav data-toggle="wy-nav-shift" class="psyneulink-left-menu" id="psyneulink-left-menu">
+      <div class="psyneulink-side-scroll">
+        <div class="psyneulink-menu psyneulink-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          <div class="psyneulink-left-menu-search">
+            
+
+            
+              
+              
+                <div class="version">
+                  0.13.0.0+45
+                </div>
+              
+            
+
+            
+
+
+  
+
+
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search Docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+            
+          </div>
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
+<li class="toctree-l1"><a class="reference internal" href="BasicsAndPrimer.html">Basics and Primer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ContributorsGuide.html">Contributors Guide</a></li>
+</ul>
+
+            
+          
+          <div class="psyneulink-dev-mode-toggle">
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div class="psyneulink-container">
+      <div class="psyneulink-page-level-bar" id="psyneulink-page-level-bar">
+        <div class="psyneulink-breadcrumbs-wrapper">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="psyneulink-breadcrumbs">
+    
+      <li>
+        <a href="index.html">
+          
+            Docs
+          
+        </a> &gt;
+      </li>
+
+        
+      <li>&lt;no title&gt;</li>
+    
+  </ul>
+
+  
+</div>
+        </div>
+
+        <div class="psyneulink-shortcuts-wrapper" id="psyneulink-shortcuts-wrapper">
+          Shortcuts
+        </div>
+      </div>
+
+      <section data-toggle="wy-nav-shift" id="psyneulink-content-wrap" class="psyneulink-content-wrap">
+        <div class="psyneulink-content-left">
+
+        
+          
+          <div class="rst-content">
+          
+            <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
+             <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
+              
+  <dl>
+<dt>{</dt><dd><dl>
+<dt>“cells”: [</dt><dd><dl>
+<dt>{</dt><dd><p>“cell_type”: “markdown”,
+“source”: [</p>
+<blockquote>
+<div><p>“# NBackModelNotebook”</p>
+</div></blockquote>
+<p>],
+“metadata”: {</p>
+<blockquote>
+<div><p>“collapsed”: false,
+“pycharm”: {</p>
+<blockquote>
+<div><p>“name”: “#%% mdn”</p>
+</div></blockquote>
+<p>}</p>
+</div></blockquote>
+<p>}</p>
+</dd>
+</dl>
+<p>},
+{</p>
+<blockquote>
+<div><p>“cell_type”: “code”,
+“execution_count”: 1,
+“outputs”: [</p>
+<blockquote>
+<div><dl>
+<dt>{</dt><dd><p>“name”: “stderr”,
+“output_type”: “stream”,
+“text”: [</p>
+<blockquote>
+<div><p>“usage: ipykernel_launcher.py [-h] [–no-plot] [–threshold THRESHOLD]n”,
+”                             [–settle-trials SETTLE_TRIALS]n”,
+“ipykernel_launcher.py: error: unrecognized arguments: -f /Users/jdc/Library/Jupyter/runtime/kernel-80749002-641a-49c5-9f4c-4376abab6a11.jsonn”</p>
+</div></blockquote>
+<p>]</p>
+</dd>
+</dl>
+<p>},
+{</p>
+<blockquote>
+<div><p>“ename”: “SystemExit”,
+“evalue”: “2”,
+“output_type”: “error”,
+“traceback”: [</p>
+<blockquote>
+<div><p>“An exception has occurred, use %tb to see the full traceback.n”,
+“u001B[0;31mSystemExitu001B[0mu001B[0;31m:u001B[0m 2n”</p>
+</div></blockquote>
+<p>]</p>
+</div></blockquote>
+<p>},
+{</p>
+<blockquote>
+<div><p>“name”: “stderr”,
+“output_type”: “stream”,
+“text”: [</p>
+<blockquote>
+<div><p>“/Users/jdc/anaconda/envs/python39/lib/python3.9/site-packages/IPython/core/interactiveshell.py:3452: UserWarning: To exit: use ‘exit’, ‘quit’, or Ctrl-D.n”,
+”  warn(&quot;To exit: use ‘exit’, ‘quit’, or Ctrl-D.&quot;, stacklevel=1)n”</p>
+</div></blockquote>
+<p>]</p>
+</div></blockquote>
+<p>}</p>
+</div></blockquote>
+<p>],
+“source”: [</p>
+<blockquote>
+<div><p>“from psyneulink.library.models.Beukers_et_al_2022.nback import \n”,
+”    construct_model, train_network, run_model, analyze_resultsn”,
+“from psyneulink import <a href="#id1"><span class="problematic" id="id2">*</span></a>”</p>
+</div></blockquote>
+<p>],
+“metadata”: {</p>
+<blockquote>
+<div><p>“collapsed”: false,
+“pycharm”: {</p>
+<blockquote>
+<div><p>“name”: “#%%n”</p>
+</div></blockquote>
+<p>}</p>
+</div></blockquote>
+<p>}</p>
+</div></blockquote>
+<p>},
+{</p>
+<blockquote>
+<div><p>“cell_type”: “markdown”,
+“source”: [],
+“metadata”: {</p>
+<blockquote>
+<div><p>“collapsed”: false</p>
+</div></blockquote>
+<p>}</p>
+</div></blockquote>
+<p>},
+{</p>
+<blockquote>
+<div><p>“cell_type”: “code”,
+“execution_count”: null,
+“outputs”: [],
+“source”: [</p>
+<blockquote>
+<div><p>“MAX_NBACK_LEVELS = 3n”,
+“NUM_STIM = 8 # number of different stimuli in stimulus set -  QUESTION: WHY ISN&quot;T THIS EQUAL TO STIM_SIZE OR VICE VERSA?n”,
+“FFN_TRANSFER_FUNCTION = ReLU”</p>
+</div></blockquote>
+<p>],
+“metadata”: {</p>
+<blockquote>
+<div><p>“collapsed”: false,
+“pycharm”: {</p>
+<blockquote>
+<div><p>“name”: “#%%n”</p>
+</div></blockquote>
+<p>}</p>
+</div></blockquote>
+<p>}</p>
+</div></blockquote>
+<p>},
+{</p>
+<blockquote>
+<div><p>“cell_type”: “markdown”,
+“source”: [</p>
+<blockquote>
+<div><p>“### Constructor parameters:  (values are from nback-paper)”</p>
+</div></blockquote>
+<p>],
+“metadata”: {</p>
+<blockquote>
+<div><p>“collapsed”: false</p>
+</div></blockquote>
+<p>}</p>
+</div></blockquote>
+<p>},
+{</p>
+<blockquote>
+<div><p>“cell_type”: “code”,
+“source”: [</p>
+<blockquote>
+<div><p>“STIM_SIZE = 8                            # length of stimulus vectorn”,
+“CONTEXT_SIZE = 25                        # length of context vectorn”,
+“HIDDEN_SIZE = STIM_SIZE*4                # dimension of hidden units in ffn”,
+“NBACK_LEVELS = [2,3]                     # Currently restricted to thesen”,
+“NUM_NBACK_LEVELS = len(NBACK_LEVELS)n”,
+“CONTEXT_DRIFT_NOISE = 0.0                # noise used by DriftOnASphereIntegrator (function of Context mech)n”,
+“RANDOM_WEIGHTS_INITIALIZATION=\n”,
+”    RandomMatrix(center=0.0, range=0.1)  # Matrix spec used to initialize all Projectionsn”,
+“RETRIEVAL_SOFTMAX_TEMP = 1/8             # express as gain # precision of retrieval processn”,
+“RETRIEVAL_HAZARD_RATE = 0.04             # rate of re=sampling of em following non-match in a pass through ffnn”,
+“RETRIEVAL_STIM_WEIGHT = 0.05             # weighting of stimulus field in retrieval from emn”,
+“RETRIEVAL_CONTEXT_WEIGHT \n”,
+”    = 1-RETRIEVAL_STIM_WEIGHT            # weighting of context field in retrieval from emn”,
+“DECISION_SOFTMAX_TEMP=1”</p>
+</div></blockquote>
+<p>],
+“metadata”: {</p>
+<blockquote>
+<div><p>“collapsed”: false,
+“pycharm”: {</p>
+<blockquote>
+<div><p>“name”: “#%%n”</p>
+</div></blockquote>
+<p>}</p>
+</div></blockquote>
+<p>},
+“execution_count”: null,
+“outputs”: []</p>
+</div></blockquote>
+<p>},
+{</p>
+<blockquote>
+<div><p>“cell_type”: “markdown”,
+“source”: [</p>
+<blockquote>
+<div><p>“### Training parameters:”</p>
+</div></blockquote>
+<p>],
+“metadata”: {</p>
+<blockquote>
+<div><p>“collapsed”: false</p>
+</div></blockquote>
+<p>}</p>
+</div></blockquote>
+<p>},
+{</p>
+<blockquote>
+<div><p>“cell_type”: “code”,
+“source”: [</p>
+<blockquote>
+<div><p>“NUM_EPOCHS = 6250    # nback-paper: 400,000 &#64; one trial per epoch = 6,250 &#64; 64 trials per epochn”,
+“LEARNING_RATE =0.001  # nback-paper: .001n”,
+“n”,
+“#### Execution parameters:n”,
+“CONTEXT_DRIFT_RATE=.1 # drift rate used for DriftOnASphereIntegrator (function of Context mech) on each trialn”,
+“NUM_TRIALS = 48 # number of stimuli presented in a trial sequencen”,
+“REPORT_OUTPUT = ReportOutput.OFF   # Sets console output during runn”,
+“REPORT_PROGRESS = ReportProgress.OFF  # Sets console progress bar during runn”,
+“ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution”</p>
+</div></blockquote>
+<p>],
+“metadata”: {</p>
+<blockquote>
+<div><p>“collapsed”: false,
+“pycharm”: {</p>
+<blockquote>
+<div><p>“name”: “#%%n”</p>
+</div></blockquote>
+<p>}</p>
+</div></blockquote>
+<p>},
+“execution_count”: null,
+“outputs”: []</p>
+</div></blockquote>
+<p>},
+{</p>
+<blockquote>
+<div><p>“cell_type”: “markdown”,
+“source”: [</p>
+<blockquote>
+<div><p>“### Names of Compositions and Mechanisms:”</p>
+</div></blockquote>
+<p>],
+“metadata”: {</p>
+<blockquote>
+<div><p>“collapsed”: false</p>
+</div></blockquote>
+<p>}</p>
+</div></blockquote>
+<p>},
+{</p>
+<blockquote>
+<div><p>“cell_type”: “code”,
+“source”: [</p>
+<blockquote>
+<div><p>“NBACK_MODEL = &quot;N-back Model&quot;n”,
+“FFN_COMPOSITION = &quot;WORKING MEMORY (fnn)&quot;n”,
+“FFN_STIMULUS_INPUT = &quot;CURRENT STIMULUS&quot;n”,
+“FFN_CONTEXT_INPUT = &quot;CURRENT CONTEXT&quot;n”,
+“FFN_STIMULUS_RETRIEVED = &quot;RETRIEVED STIMULUS&quot;n”,
+“FFN_CONTEXT_RETRIEVED = &quot;RETRIEVED CONTEXT&quot;n”,
+“FFN_TASK = &quot;CURRENT TASK&quot;n”,
+“FFN_HIDDEN = &quot;HIDDEN LAYER&quot;n”,
+“FFN_OUTPUT = &quot;DECISION LAYER&quot;n”,
+“MODEL_STIMULUS_INPUT =’STIM’n”,
+“MODEL_CONTEXT_INPUT = ‘CONTEXT’n”,
+“MODEL_TASK_INPUT = &quot;TASK&quot;n”,
+“EM = &quot;EPISODIC MEMORY (dict)&quot;n”,
+“CONTROLLER = &quot;READ/WRITE CONTROLLER&quot;”</p>
+</div></blockquote>
+<p>],
+“metadata”: {</p>
+<blockquote>
+<div><p>“collapsed”: false,
+“pycharm”: {</p>
+<blockquote>
+<div><p>“name”: “#%%n”</p>
+</div></blockquote>
+<p>}</p>
+</div></blockquote>
+<p>},
+“execution_count”: null,
+“outputs”: []</p>
+</div></blockquote>
+<p>},
+{</p>
+<blockquote>
+<div><p>“cell_type”: “markdown”,
+“metadata”: {</p>
+<blockquote>
+<div><dl class="simple">
+<dt>“pycharm”: {</dt><dd><p>“name”: “#%% mdn”</p>
+</dd>
+</dl>
+<p>}</p>
+</div></blockquote>
+<p>},
+“source”: [</p>
+<blockquote>
+<div><p>“## Construct the model:”</p>
+</div></blockquote>
+<p>]</p>
+</div></blockquote>
+<p>},
+{</p>
+<blockquote>
+<div><p>“cell_type”: “code”,
+“execution_count”: null,
+“metadata”: {</p>
+<blockquote>
+<div><dl class="simple">
+<dt>“pycharm”: {</dt><dd><p>“name”: “#%%n”</p>
+</dd>
+</dl>
+<p>}</p>
+</div></blockquote>
+<p>},
+“outputs”: [],
+“source”: [</p>
+<blockquote>
+<div><p>“clear_registry()n”,
+“nback_model = construct_model(stim_size=10)”</p>
+</div></blockquote>
+<p>]</p>
+</div></blockquote>
+<p>},
+{</p>
+<blockquote>
+<div><p>“cell_type”: “markdown”,
+“source”: [</p>
+<blockquote>
+<div><p>“## Train the model:”</p>
+</div></blockquote>
+<p>],
+“metadata”: {</p>
+<blockquote>
+<div><p>“collapsed”: false,
+“pycharm”: {</p>
+<blockquote>
+<div><p>“name”: “#%% mdn”</p>
+</div></blockquote>
+<p>}</p>
+</div></blockquote>
+<p>}</p>
+</div></blockquote>
+<p>},
+{</p>
+<blockquote>
+<div><p>“cell_type”: “code”,
+“execution_count”: null,
+“metadata”: {</p>
+<blockquote>
+<div><dl class="simple">
+<dt>“pycharm”: {</dt><dd><p>“name”: “#%%n”</p>
+</dd>
+</dl>
+<p>}</p>
+</div></blockquote>
+<p>},
+“outputs”: [],
+“source”: [</p>
+<blockquote>
+<div><p>“ffn = nback_model.nodes[‘WORKING MEMORY (fnn)’]n”,
+“train_network(ffn, num_epochs=6250)”</p>
+</div></blockquote>
+<p>]</p>
+</div></blockquote>
+<p>},
+{</p>
+<blockquote>
+<div><p>“cell_type”: “markdown”,
+“metadata”: {},
+“source”: [</p>
+<blockquote>
+<div><p>“## Run the model:”</p>
+</div></blockquote>
+<p>]</p>
+</div></blockquote>
+<p>},
+{</p>
+<blockquote>
+<div><p>“cell_type”: “code”,
+“metadata”: {</p>
+<blockquote>
+<div><dl class="simple">
+<dt>“pycharm”: {</dt><dd><p>“name”: “#%%n”</p>
+</dd>
+</dl>
+<p>}</p>
+</div></blockquote>
+<p>},
+“source”: [</p>
+<blockquote>
+<div><p>“results = run_model(nback_model)”</p>
+</div></blockquote>
+<p>],
+“execution_count”: null,
+“outputs”: []</p>
+</div></blockquote>
+<p>},
+{</p>
+<blockquote>
+<div><p>“cell_type”: “markdown”,
+“source”: [</p>
+<blockquote>
+<div><p>“## Analyze the results:”</p>
+</div></blockquote>
+<p>],
+“metadata”: {</p>
+<blockquote>
+<div><p>“collapsed”: false,
+“pycharm”: {</p>
+<blockquote>
+<div><p>“name”: “#%% mdn”</p>
+</div></blockquote>
+<p>}</p>
+</div></blockquote>
+<p>}</p>
+</div></blockquote>
+<p>},
+{</p>
+<blockquote>
+<div><p>“cell_type”: “code”,
+“execution_count”: null,
+“outputs”: [],
+“source”: [</p>
+<blockquote>
+<div><p>“coded_responses, stats = analyze_results(results,n”,
+”                                         num_trials=NUM_TRIALS,n”,
+”                                         nback_levels=NBACK_LEVELS)n”,
+“n”</p>
+</div></blockquote>
+<p>],
+“metadata”: {</p>
+<blockquote>
+<div><p>“collapsed”: false,
+“pycharm”: {</p>
+<blockquote>
+<div><p>“name”: “#%%n”</p>
+</div></blockquote>
+<p>}</p>
+</div></blockquote>
+<p>}</p>
+</div></blockquote>
+<p>}</p>
+</dd>
+</dl>
+<p>],
+“metadata”: {</p>
+<blockquote>
+<div><dl class="simple">
+<dt>“kernelspec”: {</dt><dd><p>“display_name”: “Python 3 (ipykernel)”,
+“language”: “python”,
+“name”: “python3”</p>
+</dd>
+</dl>
+<p>},
+“language_info”: {</p>
+<blockquote>
+<div><dl class="simple">
+<dt>“codemirror_mode”: {</dt><dd><p>“name”: “ipython”,
+“version”: 3</p>
+</dd>
+</dl>
+<p>},
+“file_extension”: “.py”,
+“mimetype”: “text/x-python”,
+“name”: “python”,
+“nbconvert_exporter”: “python”,
+“pygments_lexer”: “ipython3”,
+“version”: “3.9.7”</p>
+</div></blockquote>
+<p>}</p>
+</div></blockquote>
+<p>},
+“nbformat”: 4,
+“nbformat_minor”: 1</p>
+</dd>
+</dl>
+<p>}</p>
+
+
+             </article>
+             
+            </div>
+            <footer>
+  
+
+  
+
+    <hr>
+
+  
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Jonathan D. Cohen.
+
+    </p>
+  </div>
+    
+      <div>
+        Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+      </div>
+     
+
+</footer>
+
+          </div>
+        </div>
+
+        <div class="psyneulink-content-right" id="psyneulink-content-right">
+          <div class="psyneulink-right-menu" id="psyneulink-right-menu">
+            <div class="psyneulink-side-scroll" id="psyneulink-side-scroll-right">
+              <ul class="simple">
+</ul>
+
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+  
+
+
+  
+
+     
+       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+         <script src="_static/jquery.js"></script>
+         <script src="_static/underscore.js"></script>
+         <script src="_static/doctools.js"></script>
+     
+
+  
+
+  <script type="text/javascript" src="_static/js/vendor/popper.min.js"></script>
+  <script type="text/javascript" src="_static/js/vendor/bootstrap.min.js"></script>
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+  <!-- Begin Footer -->
+
+  <footer class="site-footer" id="docs-tutorials-resources">
+    <div class="container footer-container">
+      <div class="footer-logo-wrapper">
+        <a href="https://princetonuniversity.github.io/PsyNeuLink/" class="footer-logo"></a>
+      </div>
+
+  </footer>
+
+  
+
+  <!-- End Footer -->
+
+  <!-- Begin Mobile Menu -->
+
+  <div class="mobile-main-menu">
+    <div class="container-fluid">
+      <div class="container mobile-logo-container">
+        <div class="mobile-main-menu-header-container">
+          <a class="header-logo" href="https://princetonuniversity.github.io/PsyNeuLink/" aria-label="PsyNeuLink"></a>
+          <a class="main-menu-close-button" href="#" data-behavior="close-mobile-menu"></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="mobile-main-menu-links-container">
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://github.com/PrincetonUniversity/PsyNeuLink">Github</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- End Mobile Menu -->
+
+  <script type="text/javascript" src="_static/js/vendor/anchor.min.js"></script>
+
+  <script type="text/javascript">
+    $(document).ready(function() {
+      mobileMenu.bind();
+      mobileTOC.bind();
+      psyneulinkAnchors.bind();
+      sideMenus.bind();
+      scrollToAnchor.bind();
+      highlightNavigation.bind();
+      mainMenuDropdown.bind();
+
+      // Add class to links that have code blocks, since we cannot create links in code blocks
+      $("article.psyneulink-article a span.pre").each(function(e) {
+        $(this).closest("a").addClass("has-code");
+      });
+    })
+  </script>
+</body>
+</html>

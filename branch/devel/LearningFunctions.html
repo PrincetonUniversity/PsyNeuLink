@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LearningFunctions &mdash; PsyNeuLink 0.13.0.0+42.g752be67f1 documentation</title>
+  <title>LearningFunctions &mdash; PsyNeuLink 0.13.0.0+45.g1b4f2d7a5 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.13.0.0+42
+                  0.13.0.0+45
                 </div>
               
             
@@ -1331,7 +1331,7 @@ arguments of the constructor.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BackPropagation">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.learningfunctions.</span></span><span class="sig-name descname"><span class="pre">BackPropagation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation_derivative_fct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Logistic().derivative</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.learningfunctions.</span></span><span class="sig-name descname"><span class="pre">BackPropagation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation_derivative_fct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Logistic().derivative</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_spec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate and return a matrix of weight changes and weighted error signal from arrays of inputs, outputs and error
 terms.</p>
 <p>This implements the standard form of the <a class="reference external" href="https://en.wikipedia.org/wiki/Backpropagation">backpropagation learning algorithm</a>, using a form of loss determined by the <a class="reference internal" href="LearningMechanism.html#learningmechanism-input-error-signal"><span class="std std-ref">error_signal</span></a> of the <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanism</span></a> to which it is assigned.</p>
@@ -1375,7 +1375,7 @@ element of <a class="reference internal" href="#psyneulink.core.components.funct
 <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">activation_output</span></code></a>.</p></li>
 <li><p><strong>learning_rate</strong> (<em>float : default default_learning_rate</em>) – supersedes any specification for the <code class="xref any docutils literal notranslate"><span class="pre">Process</span></code> and/or <code class="xref any docutils literal notranslate"><span class="pre">System</span></code> to which the function’s
 <code class="xref any docutils literal notranslate"><span class="pre">owner</span></code> belongs (see <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.learning_rate" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> for details).</p></li>
-<li><p><strong>loss_function</strong> (<em>Loss : default None</em>) – specifies the operation to apply to the error signal (i.e., method of calculating the derivative of the errror
+<li><p><strong>loss_spec</strong> (<em>Loss : default None</em>) – specifies the operation to apply to the error signal (i.e., method of calculating the derivative of the errror
 with respect to activation) before computing weight changes.</p></li>
 <li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -1490,8 +1490,8 @@ the system to which it belongs is used. If all are <code class="xref any docutil
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BackPropagation.loss_function">
-<span class="sig-name descname"><span class="pre">loss_function</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.loss_function" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BackPropagation.loss_spec">
+<span class="sig-name descname"><span class="pre">loss_spec</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.loss_spec" title="Permalink to this definition">¶</a></dt>
 <dd><p>the operation to apply to the error signal (i.e., method of calculating the derivative of the errror
 with respect to activation) before computing weight changes.</p>
 <dl class="field-list simple">

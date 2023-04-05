@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ControlSignal &mdash; PsyNeuLink 0.13.0.0+42.g752be67f1 documentation</title>
+  <title>ControlSignal &mdash; PsyNeuLink 0.13.0.0+45.g1b4f2d7a5 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.13.0.0+42
+                  0.13.0.0+45
                 </div>
               
             
@@ -523,7 +523,6 @@ of <code class="docutils literal notranslate"><span class="pre">ctl_mech_A</span
 the <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">intensity</span></code></a> of which is also <code class="docutils literal notranslate"><span class="pre">3</span></code>, the value of the <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity_cost" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity_cost"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">intensity_cost</span></code></a> for <code class="docutils literal notranslate"><span class="pre">ctl_mech_A</span></code> is e ^ (allocation (3) * value of ctl_mech_B (also 3)) = e^9,
 as shown below:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="n">mech</span><span class="p">:[</span><span class="mi">3</span><span class="p">]},</span> <span class="n">num_trials</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-
 <span class="go">[array([3.])]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ctl_mech_A</span><span class="o">.</span><span class="n">control_signals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">intensity_cost</span>
 <span class="go">array([8103.08392758])</span>

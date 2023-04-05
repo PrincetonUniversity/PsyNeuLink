@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutodiffComposition &mdash; PsyNeuLink 0.13.0.0+42.g752be67f1 documentation</title>
+  <title>AutodiffComposition &mdash; PsyNeuLink 0.13.0.0+45.g1b4f2d7a5 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.13.0.0+42
+                  0.13.0.0+45
                 </div>
               
             
@@ -290,8 +290,8 @@ has been executed. Unlike an ordinary Composition, AutodiffComposition does not 
 <p>An AutodiffComposition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a>, <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.execute" title="psyneulink.core.compositions.composition.Composition.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a>, and <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a>
 methods are the same as for a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>.  However, the <strong>execution_mode</strong> in the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a>
 method has different effects than for a standard Composition, that determine whether it uses <a class="reference internal" href="#autodiffcomposition-llvm"><span class="std std-ref">LLVM compilation</span></a> or <a class="reference internal" href="#autodiffcomposition-pytorch"><span class="std std-ref">translation to PyTorch</span></a> to execute learning.
-This <a class="reference internal" href="Composition.html#composition-compilation-table"><span class="std std-ref">table</span></a> provides a summary and comparison of these different modes of execution,
-that are described in greater detail below.</p>
+These are each described in greater detail below, and summarized in this <a class="reference internal" href="Composition.html#composition-compilation-table"><span class="std std-ref">table</span></a>
+which provides a comparison of the different modes of execution for an AutodiffComposition and standard <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>.</p>
 <section id="llvm-mode">
 <span id="autodiffcomposition-llvm"></span><h3><em>LLVM mode</em><a class="headerlink" href="#llvm-mode" title="Permalink to this headline">¶</a></h3>
 <p>This is specified by setting <strong>execution_mode</strong> = <a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.LLVMRun" title="psyneulink.core.llvm.__init__.ExecutionMode.LLVMRun"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode.LLVMRun</span></code></a> in the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method
@@ -322,8 +322,22 @@ maps</a>).</p>
 <p class="admonition-title">Note</p>
 <p>While specifying <a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.PyTorch" title="psyneulink.core.llvm.__init__.ExecutionMode.PyTorch"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode.PyTorch</span></code></a> in the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a>  method of an AutodiffComposition
 causes it to use PyTorch for training, specifying this in the <code class="xref any docutils literal notranslate"><span class="pre">run</span></code> method causes it to be
-executing using the <em>Python</em> interpreter (and not PyTorch);  this is so that any modulation can take effect
+executed using the <em>Python</em> interpreter (and not PyTorch);  this is so that any modulation can take effect
 during execution (see <a class="reference internal" href="#autodiffcomposition-nested-modulation"><span class="std std-ref">Nested Execution and Modulation</span></a> below), which is not supported by PyTorch.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<ul class="simple">
+<li><p>Specifying <a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.LLVM" title="psyneulink.core.llvm.__init__.ExecutionMode.LLVM"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode.LLVM</span></code></a> or <a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.PyTorch" title="psyneulink.core.llvm.__init__.ExecutionMode.PyTorch"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode.PyTorch</span></code></a> in the learn() method of a standard
+<a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> causes an error.</p></li>
+</ul>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>Specifying <a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.Python" title="psyneulink.core.llvm.__init__.ExecutionMode.Python"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode.Python</span></code></a> in the learn() method of a <a class="reference internal" href="#"><span class="doc">AutodiffComposition</span></a> is treated as a
+synonym of <a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.PyTorch" title="psyneulink.core.llvm.__init__.ExecutionMode.PyTorch"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode.PyTorch</span></code></a> (see table).</p></li>
+</ul>
 </div>
 </div></blockquote>
 <div class="technical-note docutils container">
@@ -413,17 +427,6 @@ see and <a class="reference internal" href="Composition.html#composition-class-r
 </dd>
 </dl>
 <dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.losses">
-<span class="sig-name descname"><span class="pre">losses</span></span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.losses" title="Permalink to this definition">¶</a></dt>
-<dd><p>tracks the average for each weight update (i.e. each minibatch)</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>list of floats</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.optimizer">
 <span class="sig-name descname"><span class="pre">optimizer</span></span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.optimizer" title="Permalink to this definition">¶</a></dt>
 <dd><p>the optimizer used for training. Depends on the <strong>optimizer_type</strong>, <strong>learning_rate</strong>, and <strong>weight_decay</strong>
@@ -446,6 +449,39 @@ arguments from initialization.</p>
 </dl>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.losses">
+<span class="sig-name descname"><span class="pre">losses</span></span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.losses" title="Permalink to this definition">¶</a></dt>
+<dd><p>tracks the average loss after each weight update (i.e. each minibatch) during learning.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list of floats</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.last_saved_weights">
+<span class="sig-name descname"><span class="pre">last_saved_weights</span></span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.last_saved_weights" title="Permalink to this definition">¶</a></dt>
+<dd><p>path for file to which weights were last saved.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>path</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.last_loaded_weights">
+<span class="sig-name descname"><span class="pre">last_loaded_weights</span></span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.last_loaded_weights" title="Permalink to this definition">¶</a></dt>
+<dd><p>path for file from which weights were last loaded.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>path</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.Parameters">
 <em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">Parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">owner</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.Parameters" title="Permalink to this definition">¶</a></dt>
@@ -454,7 +490,7 @@ arguments from initialization.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._update_learning_parameters">
 <span class="sig-name descname"><span class="pre">_update_learning_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._update_learning_parameters" title="Permalink to this definition">¶</a></dt>
-<dd><p>Updates parameters based on trials run since last update.</p>
+<dd><p>Updates parameters (weights) based on trials run since last update.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -633,7 +669,7 @@ in the AutodiffComposition are saved.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.load">
 <span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.load" title="Permalink to this definition">¶</a></dt>
-<dd><p>Loads all weights matrices for all MappingProjections in the AutodiffComposition from file
+<dd><p>Loads all weight matrices for all MappingProjections in the AutodiffComposition from file
 :type path: <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">PosixPath</span></code>]
 :param path: Path for file in which <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrices</span></code></a> are stored.</p>
 <blockquote>

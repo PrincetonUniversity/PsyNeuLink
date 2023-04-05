@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferFunctions &mdash; PsyNeuLink 0.13.0.0+42.g752be67f1 documentation</title>
+  <title>TransferFunctions &mdash; PsyNeuLink 0.13.0.0+45.g1b4f2d7a5 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.13.0.0+42
+                  0.13.0.0+45
                 </div>
               
             
@@ -211,6 +211,8 @@
 <li><p><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Angle" title="psyneulink.core.components.functions.transferfunctions.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a></p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Gaussian" title="psyneulink.core.components.functions.transferfunctions.Gaussian"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Gaussian</span></code></a></p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.GaussianDistort" title="psyneulink.core.components.functions.transferfunctions.GaussianDistort"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GaussianDistort</span></code></a></p></li>
+<li><p><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.BinomialDistort" title="psyneulink.core.components.functions.transferfunctions.BinomialDistort"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BinomialDistort</span></code></a></p></li>
+<li><p><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Dropout" title="psyneulink.core.components.functions.transferfunctions.Dropout"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Dropout</span></code></a></p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax" title="psyneulink.core.components.functions.transferfunctions.SoftMax"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SoftMax</span></code></a></p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearMatrix</span></code></a></p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TransferWithCosts</span></code></a></p></li>
@@ -332,6 +334,256 @@ arguments of the constructor.</p></li>
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.Angle._angle">
 <span class="sig-name descname"><span class="pre">_angle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Angle._angle" title="Permalink to this definition">¶</a></dt>
 <dd><p>Take nd value and return n+1d coordinates for angle on a sphere</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.BinomialDistort">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.transferfunctions.</span></span><span class="sig-name descname"><span class="pre">BinomialDistort</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.BinomialDistort" title="Permalink to this definition">¶</a></dt>
+<dd><p id="binomialdistort"><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.BinomialDistort._function" title="psyneulink.core.components.functions.transferfunctions.BinomialDistort._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a> returns <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.BinomialDistort.variable" title="psyneulink.core.components.functions.transferfunctions.BinomialDistort.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> with elements randomly
+zeroed with probability <strong>p</strong>:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}if \ \ rand[0,1] &gt; p: output_i=0 \\
+else: \ output_i = variable_i\end{split}\]</div>
+<p><code class="xref any docutils literal notranslate"><span class="pre">derivative</span></code> returns <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.BinomialDistort.variable" title="psyneulink.core.components.functions.transferfunctions.BinomialDistort.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>default_variable</strong> (<em>number</em><em> or </em><em>array : default class_defaults.variable</em>) – specifies a template for the value(s) used as the mean of the Guassian distribution from which each sample is
+drawn.</p></li>
+<li><p><strong>p</strong> (<em>float : default 0.5</em>) – specifies the probability with which each element of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.BinomialDistort.variable" title="psyneulink.core.components.functions.transferfunctions.BinomialDistort.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> is replaced with zero.</p></li>
+<li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</p></li>
+<li><p><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</p></li>
+<li><p><strong>name</strong> (str : default see <code class="xref any docutils literal notranslate"><span class="pre">name</span></code>) – specifies the name of the Function.</p></li>
+<li><p><strong>prefs</strong> (<em>PreferenceSet</em><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">prefs</span></code></a> for details).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.BinomialDistort.variable">
+<span class="sig-name descname"><span class="pre">variable</span></span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.BinomialDistort.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>each element determines mean of the Gaussian distribution from which each sample is drawn.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>number or array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.BinomialDistort.p">
+<span class="sig-name descname"><span class="pre">p</span></span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.BinomialDistort.p" title="Permalink to this definition">¶</a></dt>
+<dd><p>the probability with which each element of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.BinomialDistort.variable" title="psyneulink.core.components.functions.transferfunctions.BinomialDistort.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> is replaced with zero.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.BinomialDistort.random_state">
+<span class="sig-name descname"><span class="pre">random_state</span></span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.BinomialDistort.random_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>private pseudorandom number generator</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>numpy.RandomState</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.BinomialDistort.owner">
+<span class="sig-name descname"><span class="pre">owner</span></span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.BinomialDistort.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component">Component</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.BinomialDistort.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.BinomialDistort.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a default is
+assigned by FunctionRegistry (see <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a> for conventions used for default and duplicate names).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.BinomialDistort.prefs">
+<span class="sig-name descname"><span class="pre">prefs</span></span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.BinomialDistort.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p>the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
+constructor, a default is assigned using <code class="xref any docutils literal notranslate"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a>
+for details).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>PreferenceSet or specification dict : Function.classPreferences</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.BinomialDistort._function">
+<span class="sig-name descname"><span class="pre">_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.BinomialDistort._function" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>variable</strong> (<em>number</em><em> or </em><em>array : default class_defaults.variable</em>) – a single value or array to be randomly zeroed.</p></li>
+<li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>variable with elements zeroed with probability p</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>number or array</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.Dropout">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.transferfunctions.</span></span><span class="sig-name descname"><span class="pre">Dropout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Dropout" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Dropout._function" title="psyneulink.core.components.functions.transferfunctions.Dropout._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a> returns <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Dropout.variable" title="psyneulink.core.components.functions.transferfunctions.Dropout.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> with elements randomly zeroed with
+probability <strong>p</strong> during learning; otherwise functions as <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Identity" title="psyneulink.core.components.functions.transferfunctions.Identity"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Identity</span></code></a> Function.  During learning, the output
+of the function is scaled by <span class="math notranslate nohighlight">\(\frac{1}{(1-p)}\)</span>, which implements the inverse scaling form of <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Dropout.html?highlight=dropout">dropout</a> used by by PyTorch.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}if \ (context.runmode == ContextFlags.LEARNING\_MODE) \ and \ (rand[0,1] &gt; p):  output_i = 0 \\
+else: \ output_i = \frac{1}{(1-p)}variable_i\end{split}\]</div>
+<p><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Dropout.derivative" title="psyneulink.core.components.functions.transferfunctions.Dropout.derivative"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">derivative</span></code></a> returns <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Dropout.variable" title="psyneulink.core.components.functions.transferfunctions.Dropout.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>default_variable</strong> (<em>number</em><em> or </em><em>array : default class_defaults.variable</em>) – specifies a template for the value to be transformed.</p></li>
+<li><p><strong>p</strong> (<em>float : default 0.5</em>) – specifies the probability with which each element of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Dropout.variable" title="psyneulink.core.components.functions.transferfunctions.Dropout.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> is replaced with zero.</p></li>
+<li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</p></li>
+<li><p><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</p></li>
+<li><p><strong>name</strong> (str : default see <code class="xref any docutils literal notranslate"><span class="pre">name</span></code>) – specifies the name of the Function.</p></li>
+<li><p><strong>prefs</strong> (<em>PreferenceSet</em><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">prefs</span></code></a> for details).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.Dropout.variable">
+<span class="sig-name descname"><span class="pre">variable</span></span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Dropout.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>contains value to be transformed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>number or array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.Dropout.p">
+<span class="sig-name descname"><span class="pre">p</span></span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Dropout.p" title="Permalink to this definition">¶</a></dt>
+<dd><p>the probability with which each element of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Dropout.variable" title="psyneulink.core.components.functions.transferfunctions.Dropout.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> is replaced with zero.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.Dropout.random_state">
+<span class="sig-name descname"><span class="pre">random_state</span></span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Dropout.random_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>private pseudorandom number generator</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>numpy.RandomState</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.Dropout.owner">
+<span class="sig-name descname"><span class="pre">owner</span></span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Dropout.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component">Component</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.Dropout.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Dropout.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a default is
+assigned by FunctionRegistry (see <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a> for conventions used for default and duplicate names).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.Dropout.prefs">
+<span class="sig-name descname"><span class="pre">prefs</span></span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Dropout.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p>the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
+constructor, a default is assigned using <code class="xref any docutils literal notranslate"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a>
+for details).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>PreferenceSet or specification dict : Function.classPreferences</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.Dropout._function">
+<span class="sig-name descname"><span class="pre">_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Dropout._function" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>variable</strong> (<em>number</em><em> or </em><em>array : default class_defaults.variable</em>) – a single value or array to be randomly zeroed.</p></li>
+<li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>During learning, variable with elements zeroed with probability p, else scaled by <span class="math notranslate nohighlight">\(frac{1}{(1-p)}\)</span>;</p></li>
+<li><p><strong>otherwise returns variable</strong> (<em>number or array</em>)</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.Dropout.derivative">
+<span class="sig-name descname"><span class="pre">derivative</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Dropout.derivative" title="Permalink to this definition">¶</a></dt>
+<dd><p>Derivative of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Dropout._function" title="psyneulink.core.components.functions.transferfunctions.Dropout._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a> at <strong>input</strong>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>input</strong> (<em>number</em><em> or </em><em>array</em>) – value of the input to the Dropouput function at which derivative is to be taken.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>variable</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>number or array</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -638,7 +890,7 @@ for details).</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>variable</strong> (<em>number</em><em> or </em><em>array : default class_defaults.variable</em>) – a single value or array to be transformed.</p></li>
+<li><p><strong>variable</strong> (<em>number</em><em> or </em><em>array : default class_defaults.variable</em>) – a single value or array to be distorted by Guassian distribution.</p></li>
 <li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</p></li>
