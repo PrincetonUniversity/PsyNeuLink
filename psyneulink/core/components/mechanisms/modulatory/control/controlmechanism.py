@@ -729,7 +729,7 @@ def _control_allocation_getter(owning_component=None, context=None):
     try:
         return [v.parameters.variable._get(context) for v in owning_component.control_signals]
     except (TypeError, AttributeError):
-        return [defaultControlAllocation]
+        return owning_component.defaults.control_allocation
 
 
 class ControlMechanism(ModulatoryMechanism_Base):
