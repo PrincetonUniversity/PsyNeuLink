@@ -2537,14 +2537,14 @@ class BinomialDistort(TransferFunction):  #-------------------------------------
         bounds = (None, None)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 p: tc.optional(tc.optional(parameter_spec)) = None,
+                 p: Optional[ValidParamSpecType] = None,
                  seed=None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs: Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -2757,13 +2757,13 @@ class Dropout(TransferFunction):  #
         seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 p: tc.optional(tc.optional(parameter_spec)) = None,
+                 p: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs: Optional[ValidPrefSet]  = None):
         self.binomial_distort = BinomialDistort(default_variable=default_variable, p=p)
 
         super().__init__(
