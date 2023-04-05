@@ -609,7 +609,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import ContentAddressableList, convert_to_list, convert_to_np_array, is_iterable
+from psyneulink.core.globals.utilities import ContentAddressableList, convert_all_elements_to_np_array, convert_to_list, convert_to_np_array, is_iterable
 
 __all__ = [
     'CONTROL_ALLOCATION', 'GATING_ALLOCATION', 'ControlMechanism', 'ControlMechanismError',
@@ -1801,7 +1801,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         Can be overridden by a subclass if it determines its value in some other way (see OCM for example).
         Note: this is used to determine the number of ControlSignals
         """
-        self.defaults.value = np.array(self.function.value, dtype=object)
+        self.defaults.value = convert_all_elements_to_np_array(self.function.parameters.value._get(context))
         self.parameters.value._set(copy.deepcopy(self.defaults.value), context)
         return self.defaults.value
 
