@@ -731,6 +731,10 @@ class Reduce(CombinationFunction):  # ------------------------------------------
             if scale is not None and not np.isscalar(scale):
                 return "scale must be a scalar"
 
+        def _validate_offset(self, offset):
+            if offset is not None and not np.isscalar(offset):
+                return "vector offset is not supported"
+
 
     @check_user_specified
     @beartype
@@ -746,12 +750,6 @@ class Reduce(CombinationFunction):  # ------------------------------------------
                  params=None,
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None):
-
-        if scale is not None and not np.isscalar(scale):
-            raise ValueError("scale must be a scalar")
-
-        if offset is not None and not np.isscalar(offset):
-            raise ValueError("vector offset is not supported")
 
         super().__init__(
             default_variable=default_variable,
