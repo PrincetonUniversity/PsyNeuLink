@@ -67,8 +67,8 @@ class TestCompositionMethods:
                                     minibatch_size=minibatch_size,
                                     execution_mode=autodiff_mode)
 
-
-        assert len(results) == 4 // minibatch_size
+        assert len(results) == 1
+        assert len(xor.learning_results) == 4 // minibatch_size
 
     def test_composition_level_stateful_function_resets(self):
         A = pnl.TransferMechanism(

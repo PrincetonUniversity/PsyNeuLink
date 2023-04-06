@@ -189,13 +189,11 @@ class TestControlMechanism:
 
         stim_list[Control_Mechanism]=[0.0]
         results = comp.learn(num_trials=1, inputs=stim_list)
-        # FIX: ??WHY IS THE FOLLOWING 3D:
-        expected_results = [[[0.5, 0.5, 0.5]]]
+        expected_results = [[0.5, 0.5, 0.5]]
         np.testing.assert_allclose(results, expected_results)
 
         stim_list[Control_Mechanism]=[2.0]
         results = comp.learn(num_trials=1, inputs=stim_list)
-        # FIX: ??WHEREAS THIS IS 2D:
         expected_results = [[0.96941429, 0.9837254 , 0.99217549]]
         np.testing.assert_allclose(results, expected_results)
 

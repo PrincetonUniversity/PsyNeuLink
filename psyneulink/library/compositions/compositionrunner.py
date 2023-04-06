@@ -230,10 +230,10 @@ class CompositionRunner():
             skip_initialization = True
 
         num_epoch_results = num_trials // minibatch_size # number of results expected from final epoch
-        # return results from last epoch
-        results = self._composition.parameters.results.get(context)[-1 * num_epoch_results:]
-
-        return results
+        # assign results from last epoch to learning_results and return that
+        self._composition.parameters.learning_results.set(
+            self._composition.parameters.results.get(context)[-1 * num_epoch_results:], context)
+        return self._composition.parameters.results.get(context)[-1 * num_epoch_results]
 
 class EarlyStopping(object):
     def __init__(self, mode='min', min_delta=0, patience=10):
