@@ -102,7 +102,9 @@ Class Reference
 import numbers
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional
 
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.nonstateful.transferfunctions import LinearMatrix
@@ -113,7 +115,7 @@ from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.keywords import AUTO_ASSOCIATIVE_PROJECTION, DEFAULT_MATRIX, HOLLOW_MATRIX, FUNCTION, OWNER_MECH
 from psyneulink.core.globals.parameters import SharedParameter, Parameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
 __all__ = [
@@ -236,7 +238,7 @@ class AutoAssociativeProjection(MappingProjection):
     classPreferenceLevel = PreferenceLevel.TYPE
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  owner=None,
                  sender=None,
@@ -245,7 +247,7 @@ class AutoAssociativeProjection(MappingProjection):
                  function=None,
                  params=None,
                  name=None,
-                 prefs: tc.optional(is_pref_set) = None,
+                 prefs:  Optional[ValidPrefSet] = None,
                  **kwargs
                  ):
 

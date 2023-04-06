@@ -325,7 +325,7 @@ Class Reference
 import warnings
 from enum import Enum
 
-import typecheck as tc
+from psyneulink._typing import Literal
 
 from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
@@ -342,7 +342,7 @@ __all__ = [
 PathwayRegistry= {}
 
 
-def _is_pathway_entry_spec(entry, desired_type:tc.enum(NODE, PROJECTION, ANY)):
+def _is_pathway_entry_spec(entry, desired_type: Literal['NODE', 'Projection', 'any']):
     """Test whether pathway entry is specified type (NODE or PROJECTION)"""
     from psyneulink.core.components.projections.projection import _is_projection_spec
     node_types = (Mechanism, Composition)

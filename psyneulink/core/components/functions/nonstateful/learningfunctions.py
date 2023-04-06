@@ -26,12 +26,13 @@ import types
 from collections import namedtuple
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union, Literal, Callable
 
 from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.function import (
     DEFAULT_SEED, Function_Base, FunctionError, _random_state_getter, _seed_setter,
-    is_function_type,
 )
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Logistic, SoftMax
 from psyneulink.core.globals.context import handle_external_context
@@ -40,7 +41,7 @@ from psyneulink.core.globals.keywords import \
     KOHONEN_FUNCTION, GAUSSIAN, LINEAR, EXPONENTIAL, HEBBIAN_FUNCTION, RL_FUNCTION, BACKPROPAGATION_FUNCTION, \
     MATRIX, Loss
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.utilities import is_numeric, scalar_distance, convert_to_np_array
 
 __all__ = ['LearningFunction', 'Kohonen', 'Hebbian', 'ContrastiveHebbian',
@@ -458,7 +459,7 @@ class BayesGLM(LearningFunction):
                  params=None,
                  owner=None,
                  seed=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         self.user_specified_default_variable = default_variable
 
@@ -778,12 +779,12 @@ class Kohonen(LearningFunction):  # --------------------------------------------
     @check_user_specified
     def __init__(self,
                  default_variable=None,
-                 # learning_rate: tc.optional(tc.optional(parameter_spec)) = None,
+                 # learning_rate: Optional[ValidParamSpecType] = None,
                  learning_rate=None,
-                 distance_function:tc.any(tc.enum(GAUSSIAN, LINEAR, EXPONENTIAL), is_function_type)=None,
+                 distance_function: Union[Literal['gaussian', 'linear', 'exponential'], Callable] = None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1053,7 +1054,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
                  learning_rate=None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1283,11 +1284,11 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
     @check_user_specified
     def __init__(self,
                  default_variable=None,
-                 # learning_rate: tc.optional(tc.optional(parameter_spec)) = None,
+                 # learning_rate: Optional[ValidParamSpecType] = None,
                  learning_rate=None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1591,11 +1592,11 @@ class Reinforcement(LearningFunction):  # --------------------------------------
     @check_user_specified
     def __init__(self,
                  default_variable=None,
-                 # learning_rate: tc.optional(tc.optional(parameter_spec)) = None,
+                 # learning_rate: Optional[ValidParamSpecType] = None,
                  learning_rate=None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1949,16 +1950,16 @@ class BackPropagation(LearningFunction):
     default_learning_rate = 1.0
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 activation_derivative_fct: tc.optional(tc.optional(tc.any(types.FunctionType, types.MethodType)))=None,
-                 # learning_rate: tc.optional(tc.optional(parameter_spec)) = None,
+                 activation_derivative_fct: Optional[Union[types.FunctionType, types.MethodType]]=None,
+                 # learning_rate: Optional[ValidParamSpecType] = None,
                  learning_rate=None,
                  loss_spec=None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         error_matrix = np.zeros((len(default_variable[LEARNING_ACTIVATION_OUTPUT]),
                                  len(default_variable[LEARNING_ERROR_OUTPUT])))

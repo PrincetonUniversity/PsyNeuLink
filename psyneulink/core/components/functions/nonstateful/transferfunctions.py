@@ -70,7 +70,9 @@ from enum import IntFlag
 from math import e, pi, sqrt
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union, Callable
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import parameter_keywords
@@ -94,8 +96,8 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import \
     FunctionParameter, Parameter, get_validator_by_function, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import \
-    REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, is_pref_set
-from psyneulink.core.globals.utilities import parameter_spec, safe_len
+    REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, ValidPrefSet
+from psyneulink.core.globals.utilities import ValidParamSpecType, safe_len
 
 __all__ = ['Angle', 'BinomialDistort', 'Dropout', 'Exponential', 'Gaussian', 'GaussianDistort', 'Identity',
            'Linear', 'LinearMatrix', 'Logistic', 'ReLU', 'SoftMax', 'Tanh', 'TransferFunction', 'TransferWithCosts'
@@ -220,12 +222,12 @@ class Identity(TransferFunction):  # -------------------------------------------
     }
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
         super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
@@ -388,14 +390,14 @@ class Linear(TransferFunction):  # ---------------------------------------------
         intercept = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 slope: tc.optional(tc.optional(parameter_spec)) = None,
-                 intercept: tc.optional(tc.optional(parameter_spec)) = None,
+                 slope: Optional[ValidParamSpecType] = None,
+                 intercept: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -650,16 +652,16 @@ class Exponential(TransferFunction):  # ----------------------------------------
         bounds = (0, None)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 rate: tc.optional(parameter_spec) = None,
-                 scale: tc.optional(parameter_spec) = None,
-                 bias: tc.optional(parameter_spec) = None,
-                 offset: tc.optional(parameter_spec) = None,
+                 rate: Optional[ValidParamSpecType] = None,
+                 scale: Optional[ValidParamSpecType] = None,
+                 bias: Optional[ValidParamSpecType] = None,
+                 offset: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
         super().__init__(
             default_variable=default_variable,
             rate=rate,
@@ -941,17 +943,17 @@ class Logistic(TransferFunction):  # -------------------------------------------
         bounds = (0, 1)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 gain: tc.optional(parameter_spec) = None,
+                 gain: Optional[ValidParamSpecType] = None,
                  x_0=None,
                  bias=None,
-                 offset: tc.optional(parameter_spec) = None,
-                 scale: tc.optional(parameter_spec) = None,
+                 offset: Optional[ValidParamSpecType] = None,
+                 scale: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
         super().__init__(
             default_variable=default_variable,
             gain=gain,
@@ -1261,17 +1263,17 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         bounds = (0, 1)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 gain: tc.optional(parameter_spec) = None,
+                 gain: Optional[ValidParamSpecType] = None,
                  x_0=None,
                  bias=None,
-                 offset: tc.optional(parameter_spec) = None,
-                 scale: tc.optional(parameter_spec) = None,
+                 offset: Optional[ValidParamSpecType] = None,
+                 scale: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
         super().__init__(
             default_variable=default_variable,
             gain=gain,
@@ -1526,15 +1528,15 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         bounds = (None, None)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 gain: tc.optional(parameter_spec) = None,
-                 bias: tc.optional(parameter_spec) = None,
-                 leak: tc.optional(parameter_spec) = None,
+                 gain: Optional[ValidParamSpecType] = None,
+                 bias: Optional[ValidParamSpecType] = None,
+                 leak: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
         super().__init__(
             default_variable=default_variable,
             gain=gain,
@@ -1745,12 +1747,12 @@ class Angle(TransferFunction):  # ----------------------------------------------
                 return f"must be list or 1d array of length 2 or greater."
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -2036,16 +2038,16 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         bounds = (None, None)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 standard_deviation: tc.optional(parameter_spec) = None,
-                 bias: tc.optional(parameter_spec) = None,
-                 scale: tc.optional(parameter_spec) = None,
-                 offset: tc.optional(parameter_spec) = None,
+                 standard_deviation: Optional[ValidParamSpecType] = None,
+                 bias: Optional[ValidParamSpecType] = None,
+                 scale: Optional[ValidParamSpecType] = None,
+                 offset: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
         super().__init__(
             default_variable=default_variable,
             standard_deviation=standard_deviation,
@@ -2310,17 +2312,17 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         bounds = (None, None)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 variance: tc.optional(parameter_spec) = None,
-                 bias: tc.optional(parameter_spec) = None,
-                 scale: tc.optional(parameter_spec) = None,
-                 offset: tc.optional(parameter_spec) = None,
+                 variance: Optional[ValidParamSpecType] = None,
+                 bias: Optional[ValidParamSpecType] = None,
+                 scale: Optional[ValidParamSpecType] = None,
+                 offset: Optional[ValidParamSpecType] = None,
                  seed=None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -2535,14 +2537,14 @@ class BinomialDistort(TransferFunction):  #-------------------------------------
         bounds = (None, None)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 p: tc.optional(tc.optional(parameter_spec)) = None,
+                 p: Optional[ValidParamSpecType] = None,
                  seed=None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs: Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -2755,13 +2757,13 @@ class Dropout(TransferFunction):  #
         seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 p: tc.optional(tc.optional(parameter_spec)) = None,
+                 p: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs: Optional[ValidPrefSet]  = None):
         self.binomial_distort = BinomialDistort(default_variable=default_variable, p=p)
 
         super().__init__(
@@ -3013,15 +3015,15 @@ class SoftMax(TransferFunction):
                 return 'not one of {0}'.format(options)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 gain: tc.optional(parameter_spec) = None,
+                 gain: Optional[ValidParamSpecType] = None,
                  output=None,
                  per_item=None,
-                 params: tc.optional(tc.optional(dict)) = None,
+                 params: Optional[dict] = None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         try:
             # needed because one_hot_function is initialized here based
@@ -3481,13 +3483,13 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     #     return False
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  matrix=None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         # Note: this calls _validate_variable and _validate_params which are overridden below;
         #       the latter implements the matrix if required
@@ -4487,19 +4489,19 @@ class TransferWithCosts(TransferFunction):
         )
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 transfer_fct:tc.optional(is_function_type)=None,
-                 enabled_cost_functions:tc.optional(tc.any(CostFunctions, list))=None,
-                 intensity_cost_fct:tc.optional(is_function_type)=None,
-                 adjustment_cost_fct:tc.optional(is_function_type)=None,
-                 duration_cost_fct:tc.optional(is_function_type)=None,
-                 combine_costs_fct:tc.optional(is_function_type)=None,
+                 transfer_fct: Optional[Callable] = None,
+                 enabled_cost_functions: Optional[Union[CostFunctions, list]] = None,
+                 intensity_cost_fct: Optional[Callable] = None,
+                 adjustment_cost_fct: Optional[Callable] = None,
+                 duration_cost_fct: Optional[Callable] = None,
+                 combine_costs_fct: Optional[Callable] = None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs: Optional[ValidPrefSet] = None):
 
         # if size:
         #     if default_variable is None:
@@ -4700,8 +4702,8 @@ class TransferWithCosts(TransferFunction):
             and enabled_cost_functions == CostFunctions.NONE
         )
 
-    @tc.typecheck
-    def assign_costs(self, cost_functions: tc.any(CostFunctions, list), execution_context=None):
+    @beartype
+    def assign_costs(self, cost_functions: Union[CostFunctions, list], execution_context=None):
         """Assigns specified functions; all others are disabled.
 
         Arguments
@@ -4719,8 +4721,8 @@ class TransferWithCosts(TransferFunction):
         self.parameters.enabled_cost_functions.set(CostFunctions.NONE, execution_context)
         return self.enable_costs(cost_functions, execution_context)
 
-    @tc.typecheck
-    def enable_costs(self, cost_functions: tc.any(CostFunctions, list), execution_context=None):
+    @beartype
+    def enable_costs(self, cost_functions: Union[CostFunctions, list], execution_context=None):
         """Enable specified `cost functions <TransferWithCosts_Cost_Functions>`;
         settings for all other cost functions are left intact.
 
@@ -4743,8 +4745,8 @@ class TransferWithCosts(TransferFunction):
         self.parameters.enabled_cost_functions.set(enabled_cost_functions, execution_context)
         return enabled_cost_functions
 
-    @tc.typecheck
-    def disable_costs(self, cost_functions: tc.any(CostFunctions, list), execution_context=None):
+    @beartype
+    def disable_costs(self, cost_functions: Union[CostFunctions, list], execution_context=None):
         """Disable specified `cost functions <TransferWithCosts_Cost_Functions>`;
         settings for all other cost functions are left intact.
 
@@ -4766,9 +4768,9 @@ class TransferWithCosts(TransferFunction):
         self.parameters.enabled_cost_functions.set(enabled_cost_functions, execution_context)
         return enabled_cost_functions
 
-    def toggle_cost(self, cost_function_name:tc.any(str, CostFunctions),
-                             assignment:bool=ON,
-                             execution_context=None):
+    def toggle_cost(self, cost_function_name: Union[str, CostFunctions],
+                    assignment: bool = ON,
+                    execution_context=None):
         """Enable/disable a `cost functions <TransferWithCosts_Cost_Functions>`.
 
         Arguments

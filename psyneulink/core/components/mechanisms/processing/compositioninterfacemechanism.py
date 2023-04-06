@@ -111,7 +111,9 @@ Class Reference
 import warnings
 from collections.abc import Iterable
 
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union
 
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
@@ -123,7 +125,7 @@ from psyneulink.core.globals.context import ContextFlags, handle_external_contex
 from psyneulink.core.globals.keywords import COMPOSITION_INTERFACE_MECHANISM, INPUT_PORTS, OUTPUT_PORTS, \
     PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
 __all__ = ['CompositionInterfaceMechanism']
@@ -175,17 +177,17 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         function = Parameter(Identity, stateful=False, loggable=False)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 input_ports: tc.optional(tc.optional(tc.any(Iterable, Mechanism, OutputPort, InputPort))) = None,
+                 input_ports: Optional[Union[Iterable, Mechanism, OutputPort, InputPort]] = None,
                  function=None,
                  composition=None,
                  port_map=None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None):
+                 prefs:   Optional[ValidPrefSet] = None):
 
         if default_variable is None and size is None:
             default_variable = self.class_defaults.variable

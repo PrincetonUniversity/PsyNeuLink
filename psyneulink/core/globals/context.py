@@ -91,7 +91,9 @@ from collections import defaultdict, namedtuple
 from queue import Queue
 
 import time as py_time  # "time" is declared below
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union, Literal, Set, List
 
 from psyneulink.core.globals.keywords import CONTEXT, CONTROL, EXECUTING, EXECUTION_PHASE, FLAGS, INITIALIZING, LEARNING, SEPARATOR_BAR, SOURCE, VALIDATE
 from psyneulink.core.globals.utilities import get_deepcopy_with_shared
@@ -185,12 +187,12 @@ class ContextFlags(enum.IntFlag):
     ALL_FLAGS = INITIALIZATION_MASK | EXECUTION_PHASE_MASK | SOURCE_MASK | RUN_MODE_MASK
 
     @classmethod
-    @tc.typecheck
+    @beartype
     def _get_context_string(cls, condition_flags,
-                            fields:tc.any(tc.enum(EXECUTION_PHASE,
-                                                  SOURCE), set, list)={EXECUTION_PHASE,
-                                                                       SOURCE},
-                            string:tc.optional(str)=None):
+                            fields: Union[Literal['execution_phase', 'source'],
+                                          Set[Literal['execution_phase', 'source']],
+                                          List[Literal['execution_phase', 'source']]] = {EXECUTION_PHASE, SOURCE},
+                            string: Optional[str] = None):
         """Return string with the names of flags that are set in **condition_flags**
 
         If **fields** is specified, then only the names of the flag(s) in the specified field(s) are returned.
@@ -536,8 +538,9 @@ class Context():
 
         self._change_flags(old, new, operation=replace)
 
-@tc.typecheck
-def _get_context(context:tc.any(ContextFlags, Context, str)):
+
+@beartype
+def _get_context(context: Union[ContextFlags, Context, str]):
     """Set flags based on a string of ContextFlags keywords
     If context is already a ContextFlags mask, return that
     Otherwise, return mask with flags set corresponding to keywords in context

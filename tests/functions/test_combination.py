@@ -3,6 +3,8 @@ import pytest
 
 import psyneulink as pnl
 import psyneulink.core.llvm as pnlvm
+from psyneulink import ParameterError
+
 
 class TestRearrange:
 
@@ -207,10 +209,10 @@ def test_reduce_function(variable, operation, exponents, weights, scale, offset,
                        weights=weights,
                        scale=scale,
                        offset=offset)
-    except ValueError as e:
-        if not np.isscalar(scale) and "The truth value of an array" in str(e):
+    except ParameterError as e:
+        if not np.isscalar(scale) and "scale must be a scalar" in str(e):
             pytest.xfail("vector scale is not supported")
-        if not np.isscalar(offset) and "The truth value of an array" in str(e):
+        if not np.isscalar(offset) and "vector offset is not supported" in str(e):
             pytest.xfail("vector offset is not supported")
         raise e from None
 

@@ -387,12 +387,14 @@ from collections import OrderedDict, namedtuple
 from collections.abc import MutableMapping
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union, Literal
 
 from psyneulink.core.globals.context import ContextFlags, _get_time, handle_external_context
 from psyneulink.core.globals.context import time as time_object
 from psyneulink.core.globals.keywords import ALL, CONTEXT, EID_SIMULATION, FUNCTION_PARAMETER_PREFIX, MODULATED_PARAMETER_PREFIX, TIME, VALUE
-from psyneulink.core.globals.utilities import AutoNumber, ContentAddressableList, is_component
+from psyneulink.core.globals.utilities import AutoNumber, ContentAddressableList
 
 __all__ = [
     'EntriesDict', 'Log', 'LogEntry', 'LogError', 'LogCondition'
@@ -907,7 +909,7 @@ class Log:
             else:
                 assign_delivery_condition(item[0], item[1])
 
-    @tc.typecheck
+    @beartype
     @handle_external_context()
     def _deliver_values(self, entries, context=None):
         from psyneulink.core.globals.parameters import parse_context
@@ -941,13 +943,13 @@ class Log:
 
         context.source = original_source
 
-    @tc.typecheck
+    @beartype
     def _log_value(
-        self,
-        value,
-        time=None,
-        condition:tc.optional(LogCondition)=None,
-        context=None,
+            self,
+            value,
+            time=None,
+            condition: Optional[LogCondition] = None,
+            context=None,
 
     ):
         """Add LogEntry to an entry in the Log
@@ -1000,7 +1002,7 @@ class Log:
                 time = time or _get_time(self.owner, condition)
                 self.entries[self.owner.name] = LogEntry(time, condition_string, value)
 
-    @tc.typecheck
+    @beartype
     @handle_external_context()
     def log_values(self, entries, context=None):
         from psyneulink.core.globals.parameters import parse_context
@@ -1119,11 +1121,11 @@ class Log:
                     # MODIFIED 6/15/20 END
                 assert True
 
-    @tc.typecheck
+    @beartype
     def print_entries(self,
-                      entries:tc.optional(tc.any(str, list, is_component))=ALL,
-                      width:int=120,
-                      display:tc.any(tc.enum(TIME, CONTEXT, VALUE, ALL), list)=ALL,
+                      entries: Optional[Union[str, list, 'Component']] = 'all',
+                      width: int = 120,
+                      display: Union[Literal['time', 'context', 'value', 'all'], list] = 'all',
                       contexts=NotImplemented,
                       exclude_sims=False,
                       # long_context=False
@@ -1294,7 +1296,8 @@ class Log:
                     if len(datum[eid]) > 1:
                         print("\n")
 
-    @tc.typecheck
+
+    @beartype
     def nparray(self,
                 entries=None,
                 header:bool=True,
@@ -1535,8 +1538,9 @@ class Log:
 
         return log_dict
 
-    @tc.typecheck
-    def csv(self, entries=None, owner_name:bool=False, quotes:tc.optional(tc.any(bool, str))="\'", contexts=NotImplemented, exclude_sims=False):
+    @beartype
+    def csv(self, entries=None, owner_name: bool = False, quotes: Optional[Union[bool, str]] = "\'",
+            contexts=NotImplemented, exclude_sims=False):
         """
         csv(                           \
             entries=None,              \
@@ -1883,7 +1887,7 @@ class CompositionLog(Log):
             return param
 
 
-def _log_trials_and_runs(composition, curr_condition: tc.enum(LogCondition.TRIAL, LogCondition.RUN), context):
+def _log_trials_and_runs(composition, curr_condition: Literal[LogCondition.TRIAL, LogCondition.RUN], context):
     # FIX: ALSO CHECK TIME FOR scheduler_learning, AND CHECK DATE FOR BOTH, AND USE WHICHEVER IS LATEST
     # FIX:  BUT WHAT IF THIS PARTICULAR COMPONENT WAS RUN IN THE LAST TIME_STEP??
     for mech in composition.mechanisms:

@@ -530,8 +530,11 @@ import warnings
 from enum import Enum
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
 
+from psyneulink._typing import Optional, Union, Literal, Type
+
+from psyneulink.core.components.shellclasses import Port
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError
@@ -542,13 +545,13 @@ from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    ADDITIVE, AFTER, ASSERT, ENABLED, INPUT_PORTS, \
+    ADDITIVE, ASSERT, ENABLED, INPUT_PORTS, \
     LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \
-    MATRIX, NAME, ONLINE, OUTPUT_PORT, OWNER_VALUE, PARAMS, PROJECTIONS, SAMPLE, PORT_TYPE, VARIABLE
+    MATRIX, NAME, OUTPUT_PORT, OWNER_VALUE, PARAMS, PROJECTIONS, SAMPLE, PORT_TYPE, VARIABLE
 from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import ContentAddressableList, convert_to_np_array, is_numeric, parameter_spec, \
+from psyneulink.core.globals.utilities import ContentAddressableList, convert_to_np_array, is_numeric, ValidParamSpecType, \
     convert_to_list
 
 __all__ = [
@@ -577,6 +580,10 @@ def _is_learning_spec(spec, include_matrix_spec=True):
                                        include_matrix_spec=include_matrix_spec)
     except:
         return False
+
+
+ValidLearningSpecType = Union[Literal['LEARNING', 'ENABLED'], Port, Type[Port]]
+
 
 class LearningType(Enum):
     """
@@ -996,22 +1003,22 @@ class LearningMechanism(ModulatoryMechanism_Base):
         )
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
-                 # default_variable:tc.any(list, np.ndarray),
+                 # default_variable:Union[list, np.ndarray],
                  default_variable=None,
                  size=None,
-                 error_sources:tc.optional(tc.any(Mechanism, list))=None,
+                 error_sources: Optional[Union[Mechanism, list]] = None,
                  function=None,
-                 learning_signals:tc.optional(tc.optional(list)) = None,
+                 learning_signals: Optional[list] = None,
                  output_ports=None,
-                 modulation:tc.optional(str)=None,
-                 learning_rate:tc.optional(parameter_spec)=None,
-                 learning_enabled:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=None,
+                 modulation: Optional[str] = None,
+                 learning_rate: Optional[ValidParamSpecType] = None,
+                 learning_enabled: Optional[Union[bool, Literal['online', 'after']]] = None,
                  in_composition=False,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
+                 prefs: Optional[ValidPrefSet] = None,
                  **kwargs
                  ):
         # IMPLEMENTATION NOTE:
@@ -1381,7 +1388,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
     #         return self._learning_enabled
     #
     # @learning_enabled.setter
-    # def learning_enabled(self, assignment:tc.any(bool, tc.enum(ONLINE, AFTER))):
+    # def learning_enabled(self, assignment: Optional[Union[bool, Literal['online', 'after']]] = None):
     #     self._learning_enabled = assignment
 
     @property

@@ -400,7 +400,9 @@ Class Reference
 import warnings
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union, Callable
 
 # FIX: EVCControlMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCControlMechanism
 #            SHOULD THEY BE LIMITED TO EVC??
@@ -422,7 +424,7 @@ from psyneulink.core.globals.keywords import \
     RECEIVER, FUNCTION
 from psyneulink.core.globals.parameters import FunctionParameter, Parameter, get_validator_by_function, \
     check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.sampleiterator import SampleSpec, SampleIterator
 from psyneulink.core.globals.sampleiterator import is_sample_spec
@@ -788,24 +790,24 @@ class ControlSignal(ModulatorySignal):
     #endregion
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  owner=None,
                  reference_value=None,
                  default_allocation=None,
                  size=None,
                  transfer_function=None,
-                 cost_options:tc.optional(tc.any(CostFunctions, list))=None,
-                 intensity_cost_function:tc.optional(is_function_type)=None,
-                 adjustment_cost_function:tc.optional(is_function_type)=None,
-                 duration_cost_function:tc.optional(is_function_type)=None,
-                 combine_costs_function:tc.optional(is_function_type)=None,
+                 cost_options: Optional[Union[CostFunctions, list]] = None,
+                 intensity_cost_function:Optional[Callable] = None,
+                 adjustment_cost_function:Optional[Callable] = None,
+                 duration_cost_function:Optional[Callable] = None,
+                 combine_costs_function:Optional[Callable] = None,
                  allocation_samples=None,
-                 modulation:tc.optional(str)=None,
+                 modulation:Optional[str]=None,
                  control=None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
+                 prefs:   Optional[ValidPrefSet] = None,
                  **kwargs):
 
         try:

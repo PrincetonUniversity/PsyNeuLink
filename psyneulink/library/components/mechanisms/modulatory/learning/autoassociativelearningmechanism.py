@@ -92,10 +92,11 @@ Class Reference
 """
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union, Callable
 
 from psyneulink.core.components.component import parameter_keywords
-from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.nonstateful.learningfunctions import Hebbian
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
     ACTIVATION_INPUT, LearningMechanism, LearningMechanismError, LearningTiming, LearningType
@@ -105,9 +106,9 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     ADDITIVE, AUTOASSOCIATIVE_LEARNING_MECHANISM, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, NAME, OWNER_VALUE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import is_numeric, parameter_spec
+from psyneulink.core.globals.utilities import is_numeric, ValidParamSpecType
 
 __all__ = [
     'AutoAssociativeLearningMechanism', 'AutoAssociativeLearningMechanismError', 'DefaultTrainingMechanism',
@@ -316,17 +317,17 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
     classPreferenceLevel = PreferenceLevel.TYPE
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
-                 default_variable:tc.any(list, np.ndarray),
+                 default_variable: Union[list, np.ndarray],
                  size=None,
-                 function: tc.optional(is_function_type) = None,
-                 learning_signals:tc.optional(tc.optional(list)) = None,
-                 modulation:tc.optional(str)=None,
-                 learning_rate:tc.optional(parameter_spec)=None,
+                 function: Optional[Callable] = None,
+                 learning_signals: Optional[list] = None,
+                 modulation: Optional[str] = None,
+                 learning_rate: Optional[ValidParamSpecType] = None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
+                 prefs: Optional[ValidPrefSet] = None,
                  **kwargs
                  ):
 

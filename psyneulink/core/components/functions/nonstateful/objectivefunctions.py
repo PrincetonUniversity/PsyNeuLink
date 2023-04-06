@@ -22,20 +22,21 @@ Functions that return a scalar evaluation of their input.
 import functools
 
 import numpy as np
-import typecheck as tc
-import types
+from beartype import beartype
+
+from psyneulink._typing import Optional, Callable
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import EPSILON, FunctionError, Function_Base, get_matrix
 from psyneulink.core.globals.keywords import \
     CORRELATION, COSINE, COSINE_SIMILARITY, CROSS_ENTROPY, \
-    DEFAULT_VARIABLE, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DistanceMetrics, DOT_PRODUCT, \
+    DEFAULT_VARIABLE, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DOT_PRODUCT, \
     ENERGY, ENTROPY, EUCLIDEAN, HOLLOW_MATRIX, MATRIX, MAX_ABS_DIFF, \
     NORMED_L0_SIMILARITY, OBJECTIVE_FUNCTION_TYPE, SIZE, STABILITY_FUNCTION
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
-from psyneulink.core.globals.utilities import is_distance_metric, safe_len, convert_to_np_array
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
+from psyneulink.core.globals.utilities import DistanceMetricLiteral, safe_len, convert_to_np_array
 from psyneulink.core.globals.utilities import is_iterable
 
 
@@ -207,18 +208,18 @@ class Stability(ObjectiveFunction):
         normalize = Parameter(False, stateful=False)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  size=None,
                  matrix=None,
                  # metric:is_distance_metric=None,
-                 metric: tc.optional(tc.any(tc.enum(ENERGY, ENTROPY), is_distance_metric)) = None,
-                 transfer_fct: tc.optional(tc.optional(tc.any(types.FunctionType, types.MethodType))) = None,
-                 normalize: tc.optional(bool) = None,
+                 metric: Optional[DistanceMetricLiteral] = None,
+                 transfer_fct: Optional[Callable] = None,
+                 normalize: Optional[bool] = None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         if size:
             if default_variable is None:
@@ -783,14 +784,14 @@ class Distance(ObjectiveFunction):
         metric = Parameter(DIFFERENCE, stateful=False)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 metric: tc.optional(DistanceMetrics._is_metric) = None,
-                 normalize: tc.optional(bool) = None,
+                 metric: Optional[DistanceMetricLiteral] = None,
+                 normalize: Optional[bool] = None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
         super().__init__(
             default_variable=default_variable,
             metric=metric,

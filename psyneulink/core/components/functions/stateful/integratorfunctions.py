@@ -29,7 +29,9 @@ Functions that integrate current value of input with previous value.
 import warnings
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union, Callable
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
@@ -49,8 +51,8 @@ from psyneulink.core.globals.keywords import \
     MULTIPLICATIVE_PARAM, NOISE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_PORTS, PRODUCT, \
     RATE, REST, SIMPLE_INTEGRATOR_FUNCTION, SUM, TIME_STEP_SIZE, THRESHOLD, VARIABLE, MODEL_SPEC_ID_MDF_VARIABLE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
-from psyneulink.core.globals.utilities import parameter_spec, all_within_range, \
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
+from psyneulink.core.globals.utilities import ValidParamSpecType, all_within_range, \
     convert_all_elements_to_np_array, parse_valid_identifier
 
 __all__ = ['SimpleIntegrator', 'AdaptiveIntegrator', 'DriftDiffusionIntegrator', 'DriftOnASphereIntegrator',
@@ -221,15 +223,15 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         initializer = Parameter(np.array([0]), pnl_internal=True)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  rate=None,
                  noise=None,
                  initializer=None,
-                 params: tc.optional(tc.optional(dict)) = None,
+                 params: Optional[dict] = None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None,
+                 prefs:  Optional[ValidPrefSet] = None,
                  context=None,
                  **kwargs):
 
@@ -552,16 +554,16 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         increment = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  rate=None,
                  increment=None,
                  noise=None,
                  initializer=None,
-                 params: tc.optional(tc.optional(dict)) = None,
+                 params: Optional[dict] = None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -829,16 +831,16 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 rate: tc.optional(parameter_spec) = None,
+                 rate: Optional[ValidParamSpecType] = None,
                  noise=None,
                  offset=None,
                  initializer=None,
-                 params: tc.optional(tc.optional(dict)) = None,
+                 params: Optional[dict] = None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
         super().__init__(
             default_variable=default_variable,
             rate=rate,
@@ -1065,16 +1067,16 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  rate=None,
                  noise=None,
                  offset=None,
                  initializer=None,
-                 params: tc.optional(tc.optional(dict)) = None,
+                 params: Optional[dict] = None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1578,7 +1580,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
 
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  # rate: parameter_spec = 0.5,
@@ -1594,9 +1596,9 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
                  long_term_rate=None,
                  operation=None,
                  offset=None,
-                 params: tc.optional(tc.optional(dict)) = None,
+                 params: Optional[dict] = None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -2020,19 +2022,19 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
         min_val = Parameter(-1.0, function_arg=True)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 rate: tc.optional(parameter_spec) = None,
-                 decay: tc.optional(parameter_spec) = None,
-                 rest: tc.optional(parameter_spec) = None,
-                 max_val: tc.optional(parameter_spec) = None,
-                 min_val: tc.optional(parameter_spec) = None,
+                 rate: Optional[ValidParamSpecType] = None,
+                 decay: Optional[ValidParamSpecType] = None,
+                 rest: Optional[ValidParamSpecType] = None,
+                 max_val: Optional[ValidParamSpecType] = None,
+                 min_val: Optional[ValidParamSpecType] = None,
                  noise=None,
                  initializer=None,
-                 params: tc.optional(tc.optional(dict)) = None,
+                 params: Optional[dict] = None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None,
+                 prefs:  Optional[ValidPrefSet] = None,
                  # **kwargs
                  ):
 
@@ -2430,24 +2432,43 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
             else:
                 return initializer
 
+        def _validate_rate(self, rate):
+            # Make sure rate is a 1D array or scalar
+            if rate is not None:
+                if isinstance(rate, np.ndarray):
+                    if rate.ndim > 1:
+                        return f"incompatible value ({rate}) for rate parameter, must be 1D array or scalar"
+                else:
+                    if not np.isscalar(rate) and type(rate) != list:
+                        return f"incompatible value ({rate}) for rate parameter, must be 1D array or scalar"
+
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(
         self,
         default_variable=None,
-        rate: tc.optional(parameter_spec) = None,
+        rate: Optional[Union[ValidParamSpecType, Callable]] = None,
         noise=None,
-        offset: tc.optional(parameter_spec) = None,
+        offset: Optional[ValidParamSpecType] = None,
         starting_value=None,
         non_decision_time=None,
         threshold=None,
         time_step_size=None,
         seed=None,
-        params: tc.optional(tc.optional(dict)) = None,
+        params: Optional[dict] = None,
         owner=None,
-        prefs: tc.optional(is_pref_set) = None,
+        prefs:  Optional[ValidPrefSet] = None,
         **kwargs
     ):
+
+        # Make sure rate is a 1D array or scalar
+        if rate is not None:
+            if isinstance(rate, np.ndarray):
+                if rate.ndim > 1:
+                    raise ValueError(f"incompatible value ({rate}) for rate parameter, must be 1D array or scalar")
+            else:
+                if not np.isscalar(rate) and type(rate) != list:
+                    raise ValueError(f"incompatible value ({rate}) for rate parameter, must be 1D array or scalar")
 
         # Assign here as default, for use in initialization of function
         super().__init__(
@@ -2989,12 +3010,12 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
             return noise
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 rate: tc.optional(parameter_spec) = None,
+                 rate: Optional[ValidParamSpecType] = None,
                  noise=None,
-                 offset: tc.optional(parameter_spec) = None,
+                 offset: Optional[ValidParamSpecType] = None,
                  starting_point=None,
                  # threshold=None,
                  time_step_size=None,
@@ -3002,9 +3023,9 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
                  initializer=None,
                  angle_function=None,
                  seed=None,
-                 params: tc.optional(tc.optional(dict)) = None,
+                 params: Optional[dict] = None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None,
+                 prefs:  Optional[ValidPrefSet] = None,
                  **kwargs):
 
         # Assign here as default, for use in initialization of function
@@ -3501,22 +3522,23 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
             else:
                 return initializer
 
+
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(
         self,
         default_variable=None,
-        rate: tc.optional(parameter_spec) = None,
+        rate: Optional[ValidParamSpecType] = None,
         decay=None,
         noise=None,
-        offset: tc.optional(parameter_spec) = None,
+        offset: Optional[ValidParamSpecType] = None,
         non_decision_time=None,
         time_step_size=None,
         starting_value=None,
-        params: tc.optional(tc.optional(dict)) = None,
+        params: Optional[dict] = None,
         seed=None,
         owner=None,
-        prefs: tc.optional(is_pref_set) = None,
+        prefs:  Optional[ValidPrefSet] = None,
         **kwargs
     ):
 
@@ -3800,17 +3822,17 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         time_step_size = Parameter(0.1, modulable=True, function_arg=True)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 leak: tc.optional(parameter_spec) = None,
+                 leak: Optional[ValidParamSpecType] = None,
                  noise=None,
                  offset=None,
                  time_step_size=None,
                  initializer=None,
-                 params: tc.optional(tc.optional(dict)) = None,
+                 params: Optional[dict] = None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None,
+                 prefs:  Optional[ValidPrefSet] = None,
                  **kwargs):
 
         # IMPLEMENTATION NOTE:  For backward compatibility of LeakyFun in tests/functions/test_integrator.py
@@ -4482,7 +4504,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         )
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  # scale=1.0,
@@ -4506,9 +4528,9 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
                  mode=None,
                  uncorrelated_activity=None,
                  integration_method=None,
-                 params: tc.optional(tc.optional(dict)) = None,
+                 params: Optional[dict] = None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None,
+                 prefs:  Optional[ValidPrefSet] = None,
                  **kwargs):
 
         # These may be passed (as standard IntegratorFunction args) but are not used by FitzHughNagumo

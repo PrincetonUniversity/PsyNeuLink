@@ -2783,21 +2783,23 @@ import typing
 import warnings
 from copy import deepcopy, copy
 from inspect import isgenerator, isgeneratorfunction
-from typing import Union
 
 import graph_scheduler
 import networkx
 import numpy as np
 import pint
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union, Literal, Type, Callable
+
 from PIL import Image
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentError, ComponentsMeta
 from psyneulink.core.components.functions.fitfunctions import make_likelihood_function
-from psyneulink.core.components.functions.function import is_function_type, RandomMatrix
+from psyneulink.core.components.functions.function import is_function_type, Function, RandomMatrix
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import \
-    LinearCombination, PredictionErrorDeltaFunction
+        LinearCombination, PredictionErrorDeltaFunction
 from psyneulink.core.components.functions.nonstateful.learningfunctions import \
     LearningFunction, Reinforcement, BackPropagation, TDLearning
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity, Logistic, SoftMax
@@ -3807,14 +3809,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pathways=None,
             nodes=None,
             projections=None,
-            allow_probes:Union[bool, CONTROL]=True,
-            include_probes_in_output:bool=False,
-            disable_learning:bool=False,
-            controller:ControlMechanism=None,
+            allow_probes: Union[bool, CONTROL] = True,
+            include_probes_in_output: bool = False,
+            disable_learning: bool = False,
+            controller: ControlMechanism = None,
             enable_controller=None,
-            controller_mode:tc.enum(BEFORE,AFTER)=AFTER,
+            controller_mode: Literal['before', 'after'] = 'after',
             controller_time_scale=TimeScale.TRIAL,
-            controller_condition:Condition=Always(),
+            controller_condition: Condition = Always(),
             retain_old_simulation_data=None,
             show_graph_attributes=None,
             name=None,
@@ -5179,7 +5181,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             break
         return external_modulators
 
-    tc.typecheck
+    @beartype
     def _create_CIM_ports(self, context=None):
         """
             - remove the default InputPort and OutputPort from the CIMs if this is the first time that real
@@ -5546,8 +5548,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _get_nested_node_CIM_port(self,
                                   node: Mechanism,
-                                  node_port: tc.any(InputPort, OutputPort),
-                                  role: tc.enum(NodeRole.INPUT, NodeRole.PROBE, NodeRole.OUTPUT)
+                                  node_port: Union[InputPort, OutputPort],
+                                  role: Literal[NodeRole.INPUT, NodeRole.PROBE, NodeRole.OUTPUT]
                                   ):
         """Check for node in nested Composition
         Assign NodeRole.PROBE to relevant nodes if allow_probes is specified (see handle_probes below)
@@ -7229,16 +7231,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     # region ------------------------------------ LEARNING -------------------------------------------------------------
 
+    @beartype
     @handle_external_context()
     def add_linear_learning_pathway(self,
                                     pathway,
-                                    learning_function:LearningFunction,
-                                    loss_spec=None,
-                                    learning_rate:tc.any(int,float)=0.05,
+                                    learning_function: Union[Type[LearningFunction], LearningFunction, Callable] = None,
+                                    loss_spec: Optional[Loss] = Loss.MSE,
+                                    learning_rate: Union[int, float] = 0.05,
                                     error_function=LinearCombination,
-                                    learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=AFTER,
+                                    learning_update: Union[bool, Literal['online', 'after']] = 'after',
                                     default_projection_matrix=None,
-                                    name:str=None,
+                                    name: Optional[str] = None,
                                     context=None):
         """Implement learning pathway (including necessary `learning components <Composition_Learning_Components>`.
 
@@ -7430,14 +7433,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._analyze_graph()
         return learning_pathway
 
-
+    @beartype
     def add_reinforcement_learning_pathway(self,
-                                           pathway,
-                                           learning_rate=0.05,
-                                           error_function=None,
-                                           learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE,
+                                           pathway: Union[list, 'psyneulink.core.compositions.pathway.Pathway'],
+                                           learning_rate: Union[float, int] = 0.05,
+                                           error_function: Optional[Function] = None,
+                                           learning_update: Union[bool, Literal['online', 'after']] = 'online',
                                            default_projection_matrix=None,
-                                           name:str=None):
+                                           name: Optional[str] = None):
         """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`Reinforcement`
 
         Arguments
@@ -7486,13 +7489,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                 default_projection_matrix=default_projection_matrix,
                                                 name=name)
 
+    @beartype
     def add_td_learning_pathway(self,
-                                pathway,
-                                learning_rate=0.05,
-                                error_function=None,
-                                learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE,
+                                pathway: Union[list, 'psyneulink.core.compositions.pathway.Pathway'],
+                                learning_rate: Union[int, float] = 0.05,
+                                error_function: Optional[Function] = None,
+                                learning_update: Union[bool, Literal['online', 'after']] = 'online',
                                 default_projection_matrix=None,
-                                name:str=None):
+                                name: Optional[str] = None):
         """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`TDLearning`
 
         Arguments
@@ -7540,14 +7544,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                 default_projection_matrix=default_projection_matrix,
                                                 name=name)
 
+    @beartype
     def add_backpropagation_learning_pathway(self,
-                                             pathway,
-                                             learning_rate=0.05,
-                                             error_function=None,
-                                             loss_spec:tc.enum(Loss)=Loss.MSE,
-                                             learning_update:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=AFTER,
+                                             pathway: Union[list, 'psyneulink.core.compositions.pathway.Pathway'],
+                                             learning_rate: Union[int, float] = 0.05,
+                                             error_function: Optional[Function] = None,
+                                             loss_spec: Optional[Loss] = Loss.MSE,
+                                             learning_update: Optional[Union[bool, Literal['online', 'after']]] = 'after',
                                              default_projection_matrix=None,
-                                             name:str=None):
+                                             name: str = None):
         """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`Backpropagation`
 
         Arguments
@@ -8361,8 +8366,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # region ------------------------------------- CONTROL -------------------------------------------------------------
     # ******************************************************************************************************************
 
+    @beartype
     @handle_external_context()
-    def add_controller(self, controller:ControlMechanism, context=None):
+    def add_controller(self, controller: ControlMechanism, context=None):
         """
         Add a `ControlMechanism` as the `controller <Composition.controller>` of the Composition.
 
@@ -10052,9 +10058,7 @@ _
 
         inputs, num_inputs_sets = self._parse_run_inputs(inputs, context)
 
-        if num_trials is not None:
-            num_trials = num_trials
-        else:
+        if num_trials is None:
             num_trials = num_inputs_sets
 
         scheduler._reset_counts_total(TimeScale.RUN, context.execution_id)
@@ -10343,21 +10347,21 @@ _
     def learn(
             self,
             inputs: dict,
-            targets: tc.optional(dict) = None,
-            num_trials: tc.optional(int) = None,
+            targets: Optional[dict] = None,
+            num_trials: Optional[int] = None,
             epochs: int = 1,
             learning_rate = None,
             minibatch_size: int = 1,
-            patience: tc.optional(int) = None,
+            patience: Optional[int] = None,
             min_delta: int = 0,
-            context: tc.optional(Context) = None,
-            execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
+            context: Optional[Context] = None,
+            execution_mode: pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
             randomize_minibatches=False,
-            call_before_minibatch = None,
-            call_after_minibatch = None,
+            call_before_minibatch=None,
+            call_after_minibatch=None,
             *args,
             **kwargs
-            ):
+    ):
         """
             Runs the composition in learning mode - that is, any components with disable_learning False will be
             executed in learning mode. See `Composition_Learning` for details.

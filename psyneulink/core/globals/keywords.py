@@ -130,6 +130,9 @@ __all__ = [
 import operator
 from enum import Enum, auto
 
+from psyneulink._typing import Literal
+
+
 class MatrixKeywords:
     """
     Attributes
@@ -189,6 +192,9 @@ RANDOM_CONNECTIVITY_MATRIX = "RandomConnectivityMatrix"
 AUTO_ASSIGN_MATRIX = 'AutoAssignMatrix'
 DEFAULT_MATRIX = AUTO_ASSIGN_MATRIX
 # DEFAULT_MATRIX = IDENTITY_MATRIX
+
+MatrixKeywordLiteral = Literal["IdentityMatrix", "HollowMatrix", "InverseHollowMatrix", "FullConnectivityMatrix",
+                               "RandomConnectivityMatrix", "AutoAssignMatrix"]
 
 MATRIX_KEYWORDS = MatrixKeywords()
 MATRIX_KEYWORD_SET = MATRIX_KEYWORDS._set()
@@ -282,7 +288,7 @@ CORRELATION = 'correlation'
 COSINE = 'cosine'
 COSINE_SIMILARITY = 'cosine'
 PEARSON = 'Pearson'
-ENTROPY = 'cross-entropy'
+ENTROPY = 'entropy'
 CROSS_ENTROPY = 'cross-entropy'
 ENERGY = 'energy'
 
@@ -989,7 +995,6 @@ COMBINE = 'combine'
 CONCATENATE = 'concatenate'
 SEPARATE = 'separate'
 SUM = 'sum'
-DIFFERENCE = DIFFERENCE # Defined above for DISTANCE_METRICS
 PRODUCT = 'product'
 QUOTIENT = 'quotient'
 SUBTRACTION = 'subtraction'
