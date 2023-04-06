@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.13.0.0+47.g2efaa98d3 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.11.0.0+190.ga3d2d1997 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.13.0.0+47
+                  0.11.0.0+190
                 </div>
               
             
@@ -4055,7 +4055,7 @@ see <a class="reference internal" href="MappingProjection.html#mappingprojection
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition.add_linear_learning_pathway">
-<span class="sig-name descname"><span class="pre">add_linear_learning_pathway</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">pathway</span></em>, <em class="sig-param"><span class="pre">learning_function</span></em>, <em class="sig-param"><span class="pre">loss_spec=None</span></em>, <em class="sig-param"><span class="pre">learning_rate=0.05</span></em>, <em class="sig-param"><span class="pre">error_function=&lt;class</span> <span class="pre">'psyneulink.core.components.functions.nonstateful.combinationfunctions.LinearCombination'&gt;</span></em>, <em class="sig-param"><span class="pre">learning_update='after'</span></em>, <em class="sig-param"><span class="pre">default_projection_matrix=None</span></em>, <em class="sig-param"><span class="pre">name=None</span></em>, <em class="sig-param"><span class="pre">context=None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_linear_learning_pathway" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">add_linear_learning_pathway</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">pathway</span></em>, <em class="sig-param"><span class="pre">learning_function=None</span></em>, <em class="sig-param"><span class="pre">loss_spec=Loss.MSE</span></em>, <em class="sig-param"><span class="pre">learning_rate=0.05</span></em>, <em class="sig-param"><span class="pre">error_function=&lt;class</span> <span class="pre">'psyneulink.core.components.functions.nonstateful.combinationfunctions.LinearCombination'&gt;</span></em>, <em class="sig-param"><span class="pre">learning_update='after'</span></em>, <em class="sig-param"><span class="pre">default_projection_matrix=None</span></em>, <em class="sig-param"><span class="pre">name=None</span></em>, <em class="sig-param"><span class="pre">context=None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_linear_learning_pathway" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implement learning pathway (including necessary <a class="reference internal" href="#composition-learning-components"><span class="std std-ref">learning components</span></a>.</p>
 <p>Generic method for implementing a learning pathway.  Calls <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.add_linear_processing_pathway" title="psyneulink.core.compositions.composition.Composition.add_linear_processing_pathway"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">add_linear_processing_pathway</span></code></a> to implement
 the processing components including, if necessary, the MappingProjections between Mechanisms.  All of the
@@ -4844,7 +4844,7 @@ Any reduction less than this value is considered to be a bad epoch.
 Used for early stopping of training, in combination with <code class="xref any docutils literal notranslate"><span class="pre">patience</span></code>.</p></li>
 <li><p><strong>scheduler</strong> (<a class="reference internal" href="Scheduler.html#psyneulink.core.scheduling.scheduler.Scheduler" title="psyneulink.core.scheduling.scheduler.Scheduler"><em>Scheduler</em></a>) – the scheduler object that owns the conditions that will instruct the execution of the Composition
 If not specified, the Composition will use its automatically generated scheduler.</p></li>
-<li><p><strong>context</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">optional</span></code>]) – context will be set to self.default_execution_id if unspecified</p></li>
+<li><p><strong>context</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="Context.html#psyneulink.core.globals.context.Context" title="psyneulink.core.globals.context.Context"><code class="xref py py-class docutils literal notranslate"><span class="pre">Context</span></code></a>]) – context will be set to self.default_execution_id if unspecified</p></li>
 <li><p><strong>call_before_minibatch</strong> (<em>callable</em>) – called before each minibatch is executed</p></li>
 <li><p><strong>call_after_minibatch</strong> (<em>callable</em>) – called after each minibatch is executed</p></li>
 <li><p><strong>report_output</strong> (<em>ReportOutput : default ReportOutput.OFF</em>) – specifies whether to show output of the Composition and its <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Nodes</span></a> trial-by-trial
