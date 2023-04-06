@@ -140,17 +140,17 @@ class TestTrainingCorrectness:
             [[0], [1], [1], [0]])
 
         if calls == 'single':
-            results = benchmark(xor.learn, inputs={"inputs": {xor_in:xor_inputs},
-                                        "targets": {xor_out:xor_targets},
-                                        "epochs": eps}, execution_mode=autodiff_mode)
-
+            benchmark(xor.learn, inputs={"inputs": {xor_in:xor_inputs},
+                                         "targets": {xor_out:xor_targets},
+                                         "epochs": eps}, execution_mode=autodiff_mode)
         else:
             input_dict = {"inputs": {xor_in: xor_inputs},
                           "targets": {xor_out: xor_targets},
                           "epochs": 1}
             for i in range(eps - 1):
                 xor.learn(inputs=input_dict, execution_mode=autodiff_mode)
-            results = benchmark(xor.learn, inputs=input_dict, execution_mode=autodiff_mode)
+            benchmark(xor.learn, inputs=input_dict, execution_mode=autodiff_mode)
+        results = xor.learning_results
 
         assert len(results) == len(expected)
         for r, t in zip(results, expected):
@@ -2519,8 +2519,8 @@ class TestNested:
         no_training_input = {xor_autodiff: no_training_input_dict}
 
         learning_context = Context()
-        result1 = xor_autodiff.learn(inputs=input_dict, execution_mode=autodiff_mode, epochs=num_epochs, context=learning_context, patience=patience, min_delta=min_delta)
-        result1 = np.array(result1).flatten()
+        xor_autodiff.learn(inputs=input_dict, execution_mode=autodiff_mode, epochs=num_epochs, context=learning_context, patience=patience, min_delta=min_delta)
+        result1 = np.array(xor_autodiff.learning_results).flatten()
         np.testing.assert_allclose(result1, np.array(xor_targets).flatten(), atol=0.1)
         result2 = parentComposition.run(inputs=no_training_input, execution_mode=autodiff_mode, context=learning_context)
 
