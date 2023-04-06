@@ -2432,6 +2432,16 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
             else:
                 return initializer
 
+        def _validate_rate(self, rate):
+            # Make sure rate is a 1D array or scalar
+            if rate is not None:
+                if isinstance(rate, np.ndarray):
+                    if rate.ndim > 1:
+                        return f"incompatible value ({rate}) for rate parameter, must be 1D array or scalar"
+                else:
+                    if not np.isscalar(rate) and type(rate) != list:
+                        return f"incompatible value ({rate}) for rate parameter, must be 1D array or scalar"
+
     @check_user_specified
     @beartype
     def __init__(
@@ -2450,15 +2460,6 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         prefs:  Optional[ValidPrefSet] = None,
         **kwargs
     ):
-
-        # Make sure rate is a 1D array or scalar
-        if rate is not None:
-            if isinstance(rate, np.ndarray):
-                if rate.ndim > 1:
-                    raise ValueError(f"incompatible value ({rate}) for rate parameter, must be 1D array or scalar")
-            else:
-                if not np.isscalar(rate) and type(rate) != list:
-                    raise ValueError(f"incompatible value ({rate}) for rate parameter, must be 1D array or scalar")
 
         # Assign here as default, for use in initialization of function
         super().__init__(
