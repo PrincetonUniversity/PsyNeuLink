@@ -2461,6 +2461,15 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         **kwargs
     ):
 
+        # Make sure rate is a 1D array or scalar
+        if rate is not None:
+            if isinstance(rate, np.ndarray):
+                if rate.ndim > 1:
+                    raise ValueError(f"incompatible value ({rate}) for rate parameter, must be 1D array or scalar")
+            else:
+                if not np.isscalar(rate) and type(rate) != list:
+                    raise ValueError(f"incompatible value ({rate}) for rate parameter, must be 1D array or scalar")
+
         # Assign here as default, for use in initialization of function
         super().__init__(
             default_variable=default_variable,
