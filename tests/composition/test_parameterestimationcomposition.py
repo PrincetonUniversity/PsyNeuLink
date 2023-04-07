@@ -3,26 +3,10 @@ import pandas as pd
 import pytest
 
 import psyneulink as pnl
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import (
-    LinearCombination,
-    Concatenate,
-)
-from psyneulink.core.components.functions.nonstateful.distributionfunctions import (
-    DriftDiffusionAnalytical,
-)
+
 from psyneulink.core.components.functions.nonstateful.fitfunctions import (
     PECOptimizationFunction,
 )
-from psyneulink.core.components.projections.modulatory.controlprojection import (
-    ControlProjection,
-)
-from psyneulink.library.components.mechanisms.processing.integrator.ddm import (
-    DDM,
-    DECISION_VARIABLE,
-    RESPONSE_TIME,
-    PROBABILITY_UPPER_THRESHOLD,
-)
-
 
 
 input_node_1 = pnl.ProcessingMechanism(size=1)
