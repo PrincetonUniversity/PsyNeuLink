@@ -841,23 +841,25 @@ class ParameterEstimationComposition(Composition):
         # PEC.get_input_format()), and rearranges them so that each node gets a full trial's worth of inputs.
         inputs_dict = self.controller.parameters.state_feature_values._get(context)
 
+        if len(inputs_dict) == 0:
+            raise ValueError("No inputs were specified for the PEC.")
+
         for state_input_port, value in zip(
             self.controller.state_input_ports, inputs_dict.values()
         ):
             state_input_port.parameters.value._set(value, context)
-        # Need to pass restructured inputs dict to run
-        # kwargs['inputs'] = {self.nodes[0]: list(inputs_dict.values())}
+
         kwargs.pop("inputs", None)
 
-        self.controller.parameters.num_trials_per_estimate.set(len(inputs_dict[list(inputs_dict.keys())[0]]), context=context)
+        num_trials_per_estimate = len(inputs_dict[list(inputs_dict.keys())[0]])
+        self.controller.parameters.num_trials_per_estimate.set(num_trials_per_estimate, context=context)
 
         # Run the composition as normal
         results = super(ParameterEstimationComposition, self).run(*args, **kwargs)
 
         # IMPLEMENTATION NOTE: has not executed OCM after first call
         if hasattr(self.controller, 'optimal_control_allocation'):
-            # Assign optimalize_parameter_values and optimal_value
-            #    (remove randomization dimension)
+            # Assign optimized_parameter_values and optimal_value    (remove randomization dimension)
             self.optimized_parameter_values = self.controller.optimal_control_allocation[:-1]
             self.optimal_value = self.controller.optimal_net_outcome
 
