@@ -454,9 +454,15 @@ class TestTrainingCorrectness:
 
 
         # for res, exp in zip(results, expected):
-        for res, exp in zip(sem_net.learning_results, expected):
-            for r, e in zip(res, exp):
-                np.testing.assert_allclose(r, e, atol=1e-07, rtol=1e-07)
+        if pytest.helpers.llvm_current_fp_precision() == 'fp32' and \
+                   autodiff_mode != pnl.ExecutionMode.Python:
+            for res, exp in zip(sem_net.learning_results, expected):
+                for r, e in zip(res, exp):
+                    np.testing.assert_allclose(r, e, atol=1e-06, rtol=1e-06)
+        else:
+            for res, exp in zip(sem_net.learning_results, expected):
+                for r, e in zip(res, exp):
+                    np.testing.assert_allclose(r, e)
 
     def test_pytorch_equivalence_with_autodiff_composition(self, autodiff_mode):
         iSs = np.array(
