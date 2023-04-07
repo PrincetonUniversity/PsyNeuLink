@@ -189,7 +189,7 @@ class TestControlMechanism:
 
         stim_list[Control_Mechanism]=[0.0]
         results = comp.learn(num_trials=1, inputs=stim_list)
-        expected_results = [[[0.5, 0.5, 0.5]]]
+        expected_results = [[0.5, 0.5, 0.5]]
         assert np.allclose(results, expected_results)
 
         stim_list[Control_Mechanism]=[2.0]

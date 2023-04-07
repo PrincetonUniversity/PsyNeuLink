@@ -34,7 +34,7 @@ class CompositionRunner():
         if isinstance(self._composition, AutodiffComposition):
             return self._composition._get_total_loss(num_trials, context)
         total_loss = 0
-        for terminal_sequence in self._composition._terminal_bacAkprop_sequences.values():
+        for terminal_sequence in self._composition._terminal_backprop_sequences.values():
             comparator = terminal_sequence[OBJECTIVE_MECHANISM, ]
             total_loss += comparator.value[0][0]
 
@@ -235,10 +235,12 @@ class CompositionRunner():
             skip_initialization = True
 
         num_epoch_results = num_trials // minibatch_size # number of results expected from final epoch
-        # return results from last epoch
-        results = self._composition.parameters.results.get(context)[-1 * num_epoch_results:]
-
-        return results
+        # return self._composition.parameters.results.get(context)[-1 * num_epoch_results:]
+        # assign results from last *epoch* to learning_results
+        self._composition.parameters.learning_results._set(
+            self._composition.parameters.results.get(context)[-1 * num_epoch_results:], context)
+        # return result of last *trial* (as usual for a call to run)
+        return self._composition.parameters.results.get(context)[-1]
 
 class EarlyStopping(object):
     def __init__(self, mode='min', min_delta=0, patience=10):

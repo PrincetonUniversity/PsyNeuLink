@@ -936,8 +936,8 @@ When the `learn <Composition.learn>` method is used, all Components *unrelated* 
 way as with the `run <Composition.run>` method.  If the Composition has any `nested Composition <Composition_Nested>`
 that have `learning Pathways <Composition_Learning_Pathway>`, then learning also occurs on all of those for which
 the `disable_learning <Composition.disable_learning>` attribute is False.  This is true even if the `disable_learning
-<Composition.disable_learning>` attribute is True for which the Composition on which the  `learn <Composition.learn>`
-method was called.
+<Composition.disable_learning>` attribute is True for the Composition on which the  `learn <Composition.learn>` method
+was called.
 
 When a Composition is run that contains one or more `learning Pathways <Composition_Learning_Pathway>`, all of the
 ProcessingMechanisms for a pathway are executed first, and then its `learning components
@@ -960,6 +960,11 @@ ProcessingMechanisms for a pathway are executed first, and then its `learning co
         made until after it has executed.  Thus, as with `execution of a Projection <Projection_Execution>`, those
         changes will not be observed in the values of their `matrix <MappingProjection.matrix>` parameters until after
         they are next executed (see `Lazy Evaluation <Component_Lazy_Updating>` for an explanation of "lazy" updating).
+
+The Compositon's `learn <Composition.learn>` method takes all of the same arguments as its `run <Composition.run>`
+method, as well as additonal ones that are specific to learning.  Also like `run <Composition.run>`, it returns the
+`output_values <Composition.output_values>` of the Composition after the last trial of execution.  The results for the
+last epoch of learning are stored in its `learning_results <Composition.learning_results>` attribute.
 
 .. _Composition_Learning_AutodiffComposition:
 
@@ -3713,7 +3718,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     results : list[list[list]]
         a list of the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` `Nodes <Composition_Nodes>`
         in the Composition for every `TRIAL <TimeScale.TRIAL>` executed in a call to `run <Composition.run>`.
-        Each item in the outermos list is a list of values for a given trial; each item within a trial corresponds
+        Each item in the outermost list is a list of values for a given trial; each item within a trial corresponds
         to the `output_values <Mechanism_Base.output_values>` of an `OUTPUT` Mechanism for that trial.
 
     output_values : list[list]
@@ -3722,6 +3727,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         `execution methods <Composition_Execution_Methods>`, and the value returned by that method; this is the
         same as `results <Composition.results>`\\[0], and provides consistency of access to the values of a
         Composition's Nodes when one or more is a `nested Composition <Composition_Nested>`.
+
+    learning_results : list[list[list]]
+        a list of the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` `Nodes <Composition_Nodes>`
+        in the Composition for every `TRIAL <TimeScale.TRIAL>` of the last epoch of learning executed in a call to
+        `learn <Composition.learn>`. Each item in the outermost list is a list of values for a given trial; each item
+        within a trial corresponds to the `output_values <Mechanism_Base.output_values>` of an `OUTPUT` Mechanism
+        for that trial.
 
     simulation_results : list[list[list]]
         a list of the `results <Composition.results>` for `simulations <OptimizationControlMechanism_Execution>`
@@ -3776,6 +3788,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     :default value: None
                     :type:
 
+                learning_results
+                    see `learning_results <Composition.learning_results>`
+
+                    :default value: []
+                    :type: ``list``
+
                 results
                     see `results <Composition.results>`
 
@@ -3795,6 +3813,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     :type: ``list``
         """
         results = Parameter([], loggable=False, pnl_internal=True)
+        learning_results = Parameter([], loggable=False, pnl_internal=True)
         simulation_results = Parameter([], loggable=False, pnl_internal=True)
         retain_old_simulation_data = Parameter(False, stateful=False, loggable=False, pnl_internal=True)
         input_specification = Parameter(None, stateful=False, loggable=False, pnl_internal=True)
@@ -10458,7 +10477,12 @@ _
             Returns
             ---------
 
-            the results of the final epoch of training : list
+            the results of the last trial of training : list
+
+            .. note::
+               the results of the final epoch of training are stored in the Composition's `learning_results
+               <Composition.learning_results>` attribute.
+
         """
         from psyneulink.library.compositions import CompositionRunner
         from psyneulink.library.compositions import AutodiffComposition
@@ -10495,7 +10519,7 @@ _
                         f'as the target attribute of the relevant pathway in {comp.name}.pathways. '
                     )
 
-        learning_results = runner.run_learning(
+        result = runner.run_learning(
             inputs=inputs,
             targets=targets,
             num_trials=num_trials,
@@ -10512,7 +10536,7 @@ _
             *args, **kwargs)
 
         context.remove_flag(ContextFlags.LEARNING_MODE)
-        return learning_results
+        return result
 
     def _execute_controller(self,
                             relative_order=AFTER,
