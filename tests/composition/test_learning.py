@@ -2512,7 +2512,6 @@ class TestBackPropLearning:
                                           learning_rate=1)
         comp.add_backpropagation_learning_pathway(pathway=word_pathway,
                                           learning_rate=1)
-        # comp.show_graph(show_learning=True)
 
         # RUN MODEL ---------------------------------------------------------------------------
 
