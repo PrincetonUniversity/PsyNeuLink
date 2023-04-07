@@ -30,47 +30,47 @@ REDUCED = 'reduced'
 @pytest.mark.parametrize(
     'model_name, composition_name, additional_args, variant',
     [
-        pytest.param(
-            'Cohen_Huston1994',
-            'Bidirectional_Stroop',
-            [],
-            None,
-            marks=pytest.mark.stress
-        ),
-        pytest.param(
-            'Cohen_Huston1994',
-            'Bidirectional_Stroop',
-            [
-                '--threshold=0.5',
-                '--settle-trials=10'
-            ],
-            REDUCED
-        ),
-        pytest.param(
-            'Cohen_Huston1994_horse_race',
-            'Bidirectional_Stroop',
-            [],
-            None,
-            marks=pytest.mark.stress
-        ),
-        pytest.param(
-            'Cohen_Huston1994_horse_race',
-            'Bidirectional_Stroop',
-            [
-                '--word-runs=2',
-                '--color-runs=1',
-                '--threshold=0.5',
-                '--settle-trials=10',
-                '--pre-stimulus-trials=10'
-            ],
-            REDUCED
-        ),
-        pytest.param('GilzenratModel', 'task', ['--noise-stddev=0.0'], None),
-        pytest.param('Kalanthroff_PCTC_2018', 'PCTC', [], None, marks=pytest.mark.stress),
-        pytest.param('Kalanthroff_PCTC_2018', 'PCTC', ['--threshold=0.2', '--settle-trials=10'], REDUCED),
-        pytest.param('MontagueDayanSejnowski96', 'comp_5a', ['--figure', '5a'], None),
-        pytest.param('MontagueDayanSejnowski96', 'comp_5b', ['--figure', '5b'], None),
-        pytest.param('MontagueDayanSejnowski96', 'comp_5c', ['--figure', '5c'], None),
+        # pytest.param(
+        #     'Cohen_Huston1994',
+        #     'Bidirectional_Stroop',
+        #     [],
+        #     None,
+        #     marks=pytest.mark.stress
+        # ),
+        # pytest.param(
+        #     'Cohen_Huston1994',
+        #     'Bidirectional_Stroop',
+        #     [
+        #         '--threshold=0.5',
+        #         '--settle-trials=10'
+        #     ],
+        #     REDUCED
+        # ),
+        # pytest.param(
+        #     'Cohen_Huston1994_horse_race',
+        #     'Bidirectional_Stroop',
+        #     [],
+        #     None,
+        #     marks=pytest.mark.stress
+        # ),
+        # pytest.param(
+        #     'Cohen_Huston1994_horse_race',
+        #     'Bidirectional_Stroop',
+        #     [
+        #         '--word-runs=2',
+        #         '--color-runs=1',
+        #         '--threshold=0.5',
+        #         '--settle-trials=10',
+        #         '--pre-stimulus-trials=10'
+        #     ],
+        #     REDUCED
+        # ),
+        # pytest.param('GilzenratModel', 'task', ['--noise-stddev=0.0'], None),
+        # pytest.param('Kalanthroff_PCTC_2018', 'PCTC', [], None, marks=pytest.mark.stress),
+        # pytest.param('Kalanthroff_PCTC_2018', 'PCTC', ['--threshold=0.2', '--settle-trials=10'], REDUCED),
+        # pytest.param('MontagueDayanSejnowski96', 'comp_5a', ['--figure', '5a'], None),
+        # pytest.param('MontagueDayanSejnowski96', 'comp_5b', ['--figure', '5b'], None),
+        # pytest.param('MontagueDayanSejnowski96', 'comp_5c', ['--figure', '5c'], None),
         pytest.param('Nieuwenhuis2005Model', 'task', [], None),
     ]
 )

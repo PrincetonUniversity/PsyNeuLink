@@ -34,7 +34,7 @@ class CompositionRunner():
         if isinstance(self._composition, AutodiffComposition):
             return self._composition._get_total_loss(num_trials, context)
         total_loss = 0
-        for terminal_sequence in self._composition._terminal_bacAkprop_sequences.values():
+        for terminal_sequence in self._composition._terminal_backprop_sequences.values():
             comparator = terminal_sequence[OBJECTIVE_MECHANISM, ]
             total_loss += comparator.value[0][0]
 
