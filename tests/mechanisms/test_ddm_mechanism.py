@@ -1,6 +1,5 @@
 import numpy as np
 import pytest
-import typecheck
 
 import psyneulink as pnl
 import psyneulink.core.llvm as pnlvm
@@ -473,7 +472,7 @@ def test_DDM_rate(benchmark, rate, expected, mech_mode):
 
 
 def test_DDM_rate_fn():
-    with pytest.raises(typecheck.framework.InputParameterError) as error_text:
+    with pytest.raises(ValueError) as error_text:
         stim = [10]
         T = DDM(
             name='DDM',
@@ -688,7 +687,7 @@ def test_DDM_threshold_modulation_analytical(comp_mode):
     control = pnl.ControlMechanism(control_signals=[(pnl.THRESHOLD, M)])
 
     C = pnl.Composition()
-    C.add_node(M, required_roles=[pnl.NodeRole.ORIGIN, pnl.NodeRole.TERMINAL])
+    C.add_node(M, required_roles=[pnl.NodeRole.INPUT, pnl.NodeRole.OUTPUT])
     C.add_node(control)
     inputs = {M:[1], control:[3]}
     val = C.run(inputs, num_trials=1, execution_mode=comp_mode)
@@ -710,7 +709,7 @@ def test_DDM_threshold_modulation_integrator(comp_mode):
             control_signals=[(pnl.THRESHOLD, M)])
 
     C = pnl.Composition()
-    C.add_node(M, required_roles=[pnl.NodeRole.ORIGIN, pnl.NodeRole.TERMINAL])
+    C.add_node(M, required_roles=[pnl.NodeRole.INPUT, pnl.NodeRole.OUTPUT])
     C.add_node(control)
     inputs = {M:[1], control:[3]}
     val = C.run(inputs, num_trials=1, execution_mode=comp_mode)

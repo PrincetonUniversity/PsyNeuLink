@@ -73,9 +73,12 @@ of a Composition's `controller <Composition_Controller>`), by specifying a `Repo
 Learning
 --------
 
-Output and progress reporting can include execution during `learning <Composition_Learning>` `TRIALS <TimeScale.TRIAL>`
-by specifying a `ReportLearning` option in the **report_learning** argument of a Composition's `run
-<Composition.run>` or `learn <Composition.run>` methods.
+Output and progress reporting can be enabled during `learning <Composition_Learning>` by specifying a `ReportOutput`
+and/or `ReportProgress` option in, repsectively, the **report_output** and/or **report_progress** argument(s) of the
+Composition's `learn <Composition.learn>` method.  For learning using a standard Composition, reporting occurs
+after every `TRIAL <TimeScale.TRIAL>` is executed;  for learning using an `AutodiffComposition`, which uses either
+`direct compilation <AutodiffComposition_LLVM>` or `translation to Pytorch <AutodiffComposition_PyTorch>`,
+reporting occurs just before learning begins and once it ends.
 
 .. _Report_To_Device:
 
@@ -147,7 +150,7 @@ import types
 import warnings
 from enum import Enum, Flag, auto
 from io import StringIO
-from typing import Union, Optional
+from psyneulink._typing import Union, Optional
 
 import numpy as np
 from rich import print, box
@@ -164,8 +167,7 @@ from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.globals.utilities import convert_to_list
 
 __all__ = ['Report', 'ReportOutput', 'ReportParams', 'ReportProgress', 'ReportDevices', 'ReportSimulations',
-           'ReportLearning', 'CONSOLE', 'CONTROLLED', 'LOGGED', 'MODULATED', 'MONITORED', 'RECORD', 'DIVERT',
-           'PNL_VIEW', ]
+           'CONSOLE', 'CONTROLLED', 'LOGGED', 'MODULATED', 'MONITORED', 'RECORD', 'DIVERT', 'PNL_VIEW', ]
 
 # Used to specify self._run_mode (specified as roots, that are conjugated in messages)
 DEFAULT = 'Execut'
@@ -394,31 +396,6 @@ class ReportSimulations(Enum):
 
     ON
         enable output and progress reporting of simulations.
-    """
-
-    OFF = 0
-    ON = 1
-
-
-class ReportLearning(Enum):
-    """
-    Options used in the **report_learning** argument of a `Composition`\'s `run <Composition.run>` and `learn
-    <Composition.learn>` methods, to specify whether `learning <Composition_Learning>` `TRIALS
-    <TimeScale.TRIAL>` are included in output and progress reporting (see `Report_Learning` for additional
-    information).
-
-    .. technical_note::
-        Use of these options is expected in the **report_progress** constructor for the `Report` object,
-        and are used as the values of its `_report_learning <Report._report_learning>` attribute.
-
-    Attributes
-    ----------
-
-    OFF
-        suppress output and progress during `learning <Composition_Learning>`.
-
-    ON
-        enable output and progress reporting during `learning <Composition_Learning>`.
     """
 
     OFF = 0
@@ -720,7 +697,8 @@ class Report:
             cls._report_progress = report_progress
             cls._report_output = report_output
             cls._report_params = report_params
-            cls._reporting_enabled = report_output is not ReportOutput.OFF or cls._report_progress
+            # cls._reporting_enabled = report_output is not ReportOutput.OFF or cls._report_progress
+            cls._reporting_enabled = report_output is not ReportOutput.OFF or report_progress is not ReportProgress.OFF
             cls._report_simulations = report_simulations
             cls._rich_console = ReportDevices.CONSOLE in cls._report_to_devices
             cls._rich_divert = ReportDevices.DIVERT in cls._report_to_devices
@@ -845,6 +823,9 @@ class Report:
             assert False, "Report.start_progress() called without a Composition specified in 'comp'."
         if num_trials is None:
             assert False, "Report.start_progress() called with num_trials unspecified."
+
+        if not self._reporting_enabled:
+            return
 
         self._context = context
 
@@ -1606,9 +1587,7 @@ class Report:
                         # params_string = (f"params:")
                         params_string = ''
                     param_value_str = str(param_value).__str__().strip('[]')
-                    if isinstance(qualification, str):
-                        qualification = qualification
-                    else:
+                    if not isinstance(qualification, str):
                         qualification = ''
                     if params_string:
                         params_string += '\n'
@@ -1639,9 +1618,7 @@ class Report:
                             if not params_string:
                                 # params_string = (f"params:")
                                 params_string = ''
-                            if isinstance(qualification, str):
-                                qualification = qualification
-                            else:
+                            if not isinstance(qualification, str):
                                 qualification = ''
                             if function_params_string:
                                 function_params_string += '\n'
@@ -1739,20 +1716,18 @@ class Report:
         if self._use_rich:
 
             # MODIFIED 11/12/22 NEW:
-            if content == 'run_start' and COMPILED_REPORT in reports and self._run_mode == LEARNING:
+            # if content == 'run_start' and COMPILED_REPORT in reports and self._run_mode == LEARNING:
+            if content == 'run_start' and self._run_mode == LEARNING:
                 composition_type_name = list(self.output_reports.keys())[0].componentCategory
                 composition_name = list(self.output_reports.keys())[0].name
                 message = f"{composition_type_name} '{composition_name}' training " \
                           f"{output_report.num_trials} trials using PyTorch..."
-                # Method 1: (direct print)
-                # self._rich_progress.console.print(message)
-                output_report.run_report = message
-                # Method 2: (ensure it is also recorded if that is enabled)
+                # Method 1: (ensure it is also recorded if that is enabled)
                 if self._record_reports:
                     with self._recording_console.capture() as capture:
                         self._recording_console.print(node_report)
                     self._recorded_reports += capture.get()
-                # Method 3: (shadow standard processing)
+                # Method 2: (shadow standard processing)
                 # self._rich_progress.update(output_report.rich_task_id,
                 #                            total=1,
                 #                            description=message,
@@ -1808,6 +1783,8 @@ class Report:
             # # MODIFIED 11/12/22 NEWER
             if COMPILED_REPORT in reports:
                 self._print_and_record_reports(COMPILED_REPORT, output_report)
+            elif LEARN_REPORT in reports:
+                self._print_and_record_reports(LEARN_REPORT, output_report)
             else:
                 self._print_and_record_reports(PROGRESS_REPORT)
             # MODIFIED 11/12/22 END
@@ -1831,7 +1808,7 @@ class Report:
 
         # Print and record output reports as they are created (progress reports are printed by _rich_progress.console)
         # MODIFIED 11/12/22 OLD:
-        if report_type in {EXECUTE_REPORT, RUN_REPORT, COMPILED_REPORT}:
+        if report_type in {EXECUTE_REPORT, RUN_REPORT, COMPILED_REPORT, LEARN_REPORT}:
         # # MODIFIED 11/12/22 NEW:
         # if any(report in {EXECUTE_REPORT, RUN_REPORT, COMPILED_REPORT} for report in report_type):
         # MODIFIED 11/12/22 END
@@ -1840,7 +1817,7 @@ class Report:
                 if output_report.trial_report and report_type == EXECUTE_REPORT:
                     self._rich_progress.console.print(output_report.trial_report)
                     self._rich_progress.console.print('')
-                elif output_report.run_report and report_type in {RUN_REPORT, COMPILED_REPORT}:
+                elif output_report.run_report and report_type in {RUN_REPORT, COMPILED_REPORT, LEARN_REPORT}:
                     self._rich_progress.console.print(output_report.run_report)
                     self._rich_progress.console.print('')
             # Record output reports as they are created

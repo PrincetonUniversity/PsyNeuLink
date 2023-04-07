@@ -191,7 +191,9 @@ import sys
 from collections.abc import Iterable
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union
 
 from psyneulink.core.components.functions.nonstateful.objectivefunctions import Distance, MAX_ABS_DIFF
 from psyneulink.core.components.functions.nonstateful.selectionfunctions import max_vs_avg, max_vs_next, MAX_VS_NEXT, MAX_VS_AVG
@@ -203,7 +205,7 @@ from psyneulink.core.globals.keywords import \
     CONVERGENCE, FUNCTION, GREATER_THAN_OR_EQUAL, LCA_MECHANISM, LESS_THAN_OR_EQUAL, MATRIX, NAME, \
     RESULT, TERMINATION_THRESHOLD, TERMINATION_MEASURE, TERMINATION_COMPARISION_OP, VALUE, INVERSE_HOLLOW_MATRIX, AUTO
 from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
     RecurrentTransferMechanism, _recurrent_transfer_mechanism_matrix_getter, _recurrent_transfer_mechanism_matrix_setter
 
@@ -437,11 +439,11 @@ class LCAMechanism(RecurrentTransferMechanism):
                                     FUNCTION:max_vs_avg}])
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 size:tc.optional(tc.any(int, list, np.array))=None,
-                 input_ports:tc.optional(tc.any(list, dict))=None,
+                 size: Optional[Union[int, list, np.ndarray]] = None,
+                 input_ports: Optional[Union[list, dict]] = None,
                  function=None,
                  initial_value=None,
                  leak=None,
@@ -452,11 +454,11 @@ class LCAMechanism(RecurrentTransferMechanism):
                  integrator_mode=None,
                  time_step_size=None,
                  clip=None,
-                 output_ports:tc.optional(tc.any(str, Iterable))=None,
+                 output_ports: Optional[Union[str, Iterable]] = None,
                  integrator_function=None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
+                 prefs: Optional[ValidPrefSet] = None,
                  **kwargs):
         """Instantiate LCAMechanism
         """

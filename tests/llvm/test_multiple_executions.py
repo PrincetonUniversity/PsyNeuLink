@@ -9,7 +9,6 @@ from psyneulink.core.components.functions.nonstateful.transferfunctions import L
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.compositions.composition import Composition
-from psyneulink.core.scheduling.scheduler import Scheduler
 import psyneulink.core.globals.keywords as kw
 
 SIZE=10
@@ -36,8 +35,7 @@ def test_function(benchmark, executions, func_mode):
         e = pnlvm.execution.FuncExecution(f, [None for _ in range(executions)]).cuda_execute
 
     res = benchmark(e, var)
-    assert np.allclose(res, [expected for _ in range(executions)])
-    assert executions == 1 or len(res) == executions
+    np.testing.assert_allclose(res, [expected for _ in range(executions)])
 
 @pytest.mark.multirun
 @pytest.mark.mechanism
@@ -57,7 +55,7 @@ def test_mechanism(benchmark, executions, mech_mode):
     var = [[10.0 for _ in range(SIZE)] for _ in range(executions)]
     expected = [[8.0 for i in range(SIZE)]]
     if mech_mode == 'Python':
-        e = T.execute if executions ==1 else lambda x : [T.execute(x[i]) for i in range(executions)]
+        e = T.execute if executions == 1 else lambda x : [T.execute(xi) for xi in x]
     elif mech_mode == 'LLVM':
         e = pnlvm.execution.MechExecution(T, [None for _ in range(executions)]).execute
     elif mech_mode == 'PTX':
@@ -67,8 +65,7 @@ def test_mechanism(benchmark, executions, mech_mode):
         expected = [expected for _ in range(executions)]
 
     res = benchmark(e, var)
-    assert np.allclose(res, expected)
-    assert len(res) == executions
+    np.testing.assert_allclose(res, expected)
 
 
 @pytest.mark.multirun
@@ -91,13 +88,11 @@ def test_nested_composition_execution(benchmark, executions, mode):
     inner_comp = Composition(name="inner_comp")
     inner_comp.add_linear_processing_pathway([A, B])
     inner_comp._analyze_graph()
-    sched = Scheduler(composition=inner_comp)
 
     outer_comp = Composition(name="outer_comp")
     outer_comp.add_node(inner_comp)
 
     outer_comp._analyze_graph()
-    sched = Scheduler(composition=outer_comp)
 
     # The input dict should assign inputs origin nodes (inner_comp in this case)
     var = {inner_comp: [[1.0]]}
@@ -119,9 +114,11 @@ def test_nested_composition_execution(benchmark, executions, mode):
         e.cuda_execute(var)
         res = e.extract_node_output(outer_comp.output_CIM)
         benchmark(e.cuda_execute, var)
+    else:
+        assert False, "Unknown mode: {}".format(mode)
 
-    assert np.allclose(res, [expected for _ in range(executions)])
-    assert len(res) == executions
+    expected = [expected for _ in range(executions)] if executions > 1 else expected
+    np.testing.assert_allclose(res, expected)
 
 
 @pytest.mark.multirun
@@ -144,13 +141,11 @@ def test_nested_composition_run(benchmark, executions, mode):
     inner_comp = Composition(name="inner_comp")
     inner_comp.add_linear_processing_pathway([A, B])
     inner_comp._analyze_graph()
-    sched = Scheduler(composition=inner_comp)
 
     outer_comp = Composition(name="outer_comp")
     outer_comp.add_node(inner_comp)
 
     outer_comp._analyze_graph()
-    sched = Scheduler(composition=outer_comp)
 
     # The input dict should assign inputs origin nodes (inner_comp in this case)
     var = {inner_comp: [[[2.0]]]}
@@ -158,8 +153,13 @@ def test_nested_composition_run(benchmark, executions, mode):
     if executions > 1:
         var = [var for _ in range(executions)]
     if mode == 'Python':
-        e = outer_comp.run if executions == 1 else lambda x : [outer_comp.run(x[i], context=i) for i in range(executions)]
+        e = outer_comp.run if executions == 1 else lambda x: [outer_comp.run(x[i], context=i) for i in range(executions)]
         res = e(var)
+
+        # Composition.run returns only the result of the last trail,
+        # unlike results for all trials reported by CompExecution.run below
+        expected = expected[0]
+
         benchmark(e, var)
     elif mode == 'LLVM':
         e = pnlvm.execution.CompExecution(outer_comp, [None for _ in range(executions)])
@@ -169,9 +169,12 @@ def test_nested_composition_run(benchmark, executions, mode):
         e = pnlvm.execution.CompExecution(outer_comp, [None for _ in range(executions)])
         res = e.cuda_run(var, 1, 1)
         benchmark(e.cuda_run, var, 1, 1)
+    else:
+        assert False, "Unknown mode: {}".format(mode)
 
-    assert np.allclose(res, [expected for _ in range(executions)])
-    assert len(res) == executions or executions == 1
+    expected = [expected for _ in range(executions)] if executions > 1 else expected
+    np.testing.assert_allclose(res, expected)
+
 
 @pytest.mark.multirun
 @pytest.mark.nested
@@ -193,13 +196,11 @@ def test_nested_composition_run_trials_inputs(benchmark, executions, mode):
     inner_comp = Composition(name="inner_comp")
     inner_comp.add_linear_processing_pathway([A, B])
     inner_comp._analyze_graph()
-    sched = Scheduler(composition=inner_comp)
 
     outer_comp = Composition(name="outer_comp")
     outer_comp.add_node(inner_comp)
 
     outer_comp._analyze_graph()
-    sched = Scheduler(composition=outer_comp)
 
     # The input dict should assign inputs origin nodes (inner_comp in this case)
     var = {inner_comp: [[[2.0]], [[3.0]]]}
@@ -207,13 +208,14 @@ def test_nested_composition_run_trials_inputs(benchmark, executions, mode):
     if executions > 1:
         var = [var for _ in range(executions)]
     if mode == 'Python':
-        def f(v, num_trials, res=False):
+        def f(v, num_trials, copy_results=False):
             results = []
             for i in range(executions):
                 outer_comp.run(v[i], context=i, num_trials=num_trials)
-                if res: # copy the results immediately, otherwise it's empty
+                if copy_results: # copy the results immediately, otherwise it's empty
                     results.append(outer_comp.results.copy())
-            return results
+            return results[0] if len(results) == 1 else results
+
         res = f(var, 4, True) if executions > 1 else f([var], 4, True)
         benchmark(f if executions > 1 else outer_comp.run, var, num_trials=4)
     elif mode == 'LLVM':
@@ -224,6 +226,8 @@ def test_nested_composition_run_trials_inputs(benchmark, executions, mode):
         e = pnlvm.execution.CompExecution(outer_comp, [None for _ in range(executions)])
         res = e.cuda_run(var, 4, 2)
         benchmark(e.cuda_run, var, 4, 2)
+    else:
+        assert False, "Unknown mode: {}".format(mode)
 
-    assert np.allclose(res, [expected for _ in range(executions)])
-    assert len(res) == executions or executions == 1
+    expected = [expected for _ in range(executions)] if executions > 1 else expected
+    np.testing.assert_allclose(res, expected)

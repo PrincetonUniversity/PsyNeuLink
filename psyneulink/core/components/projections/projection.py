@@ -401,11 +401,13 @@ import warnings
 from collections import namedtuple, defaultdict
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union, Type, Literal, Any, Dict, Tuple
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import ComponentError
-from psyneulink.core.components.functions.function import get_matrix
+from psyneulink.core.components.functions.function import get_matrix, ValidMatrixSpecType
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.functions.nonstateful.transferfunctions import LinearMatrix
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import _is_modulatory_spec
@@ -642,6 +644,7 @@ class Projection_Base(Projection):
                  weight=None,
                  exponent=None,
                  function=None,
+                 exclude_in_autodiff=False,
                  params=None,
                  name=None,
                  prefs=None,
@@ -704,6 +707,7 @@ class Projection_Base(Projection):
             return
 
         self.receiver = receiver
+        self._exclude_from_autodiff = exclude_in_autodiff
 
          # Register with ProjectionRegistry or create one
         register_category(entry=self,
@@ -747,6 +751,8 @@ class Projection_Base(Projection):
         if hasattr(self.receiver, "afferents_info"):
             if self not in self.receiver.afferents_info:
                 self.receiver.afferents_info[self] = ConnectionInfo()
+
+        self._creates_scheduling_dependency = True
 
        # Validate variable, function and params
         # Note: pass name of Projection (to override assignment of componentName in super.__init__)
@@ -1170,8 +1176,20 @@ class Projection_Base(Projection):
             )
 
 
-@tc.typecheck
-def _is_projection_spec(spec, proj_type:tc.optional(type)=None, include_matrix_spec=True):
+ProjSpecType = Union[
+    Projection, Port,
+    Type[Projection], Type[Port],
+    Literal['pathway', 'LEARNING', 'LearningSignal', 'LearningProjection', 'control',
+            'ControlSignal', 'ControlProjection', 'gate', 'GatingSignal', 'GatingProjection'],
+    ValidMatrixSpecType,
+    Dict[Literal['PROJECTION_TYPE', 'sender', 'receiver', 'matrix'], Any],
+]
+
+ProjSpecTypeWithTuple = Union[ProjSpecType, Tuple[ProjSpecType, Union[Literal['MappingProjection']]]]
+
+
+@beartype
+def _is_projection_spec(spec, proj_type: Optional[Type] = None, include_matrix_spec=True):
     """Evaluate whether spec is a valid Projection specification
 
     Return `True` if spec is any of the following:
@@ -1243,6 +1261,7 @@ def _is_projection_spec(spec, proj_type:tc.optional(type)=None, include_matrix_s
         #             return True
 
     return False
+
 
 def _is_projection_subclass(spec, keyword):
     """Evaluate whether spec is a valid specification of type
@@ -1850,13 +1869,14 @@ def _parse_connection_specs(connectee_port_type,
 
     return connect_with_ports
 
-@tc.typecheck
+
+@beartype
 def _validate_connection_request(
-        owner,                                   # Owner of Port seeking connection
-        connect_with_ports:list,                # Port to which connection is being sought
-        projection_spec:_is_projection_spec,     # projection specification
-        projection_socket:str,                   # socket of Projection to be connected to target port
-        connectee_port:tc.optional(type)=None): # Port for which connection is being sought
+        owner,  # Owner of Port seeking connection
+        connect_with_ports: list,  # Port to which connection is being sought
+        projection_spec, #: _is_projection_spec,  # projection specification
+        projection_socket: str,  # socket of Projection to be connected to target port
+        connectee_port: Optional[Type] = None):  # Port for which connection is being sought
     """Validate that a Projection specification is compatible with the Port to which a connection is specified
 
     Carries out undirected validation (i.e., without knowing whether the connectee is the sender or receiver).
@@ -2011,7 +2031,8 @@ def _get_projection_value_shape(sender, matrix):
     return np.zeros(matrix.shape[np.atleast_1d(sender.value).ndim :])
 
 # IMPLEMENTATION NOTE: MOVE THIS TO ModulatorySignals WHEN THAT IS IMPLEMENTED
-@tc.typecheck
+@check_user_specified
+@beartype
 def _validate_receiver(sender_mech:Mechanism,
                        projection:Projection,
                        expected_owner_type:type,

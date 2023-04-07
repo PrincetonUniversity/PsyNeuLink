@@ -74,7 +74,11 @@ Extensions of Core objects
 - arguments_of_constructors, instance_attributes and instance_methods:
       lowercase and underscore separator(s) [constructor_arg, method_arg, object_attribute]
 - keywords:
-    all capitals and underscore separator(s) [KEY_WORD]
+  - all capitals and underscore separator(s) [KEY_WORD]
+  - assigned values:
+     - argument of a method or function: lower case [KEY_WORD = 'argument_value']
+     - names of a Components: upper case [KEY_WORD = 'NAME'] 
+
 DEPRECATED:
     - internal keywords:
         prepend kw followed by camelCase [kwKeyword]

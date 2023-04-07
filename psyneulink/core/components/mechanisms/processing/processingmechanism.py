@@ -88,7 +88,9 @@ Class Reference
 
 from collections.abc import Iterable
 
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union
 import numpy as np
 
 from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
@@ -100,7 +102,7 @@ from psyneulink.core.globals.keywords import \
     FUNCTION, MAX_ABS_INDICATOR, MAX_ABS_ONE_HOT, MAX_ABS_VAL, MAX_INDICATOR, MAX_ONE_HOT, MAX_VAL, MEAN, MEDIAN, \
     NAME, PROB, PROCESSING_MECHANISM, PREFERENCE_SET_NAME, STANDARD_DEVIATION, VARIANCE, VARIABLE, OWNER_VALUE
 from psyneulink.core.globals.parameters import check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
 __all__ = [
@@ -278,16 +280,16 @@ class ProcessingMechanism(ProcessingMechanism_Base):
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 input_ports:tc.optional(tc.any(Iterable, Mechanism, OutputPort, InputPort))=None,
-                 output_ports:tc.optional(tc.any(str, Iterable))=None,
+                 input_ports:Optional[Union[Iterable, Mechanism, OutputPort, InputPort]]=None,
+                 output_ports:Optional[Union[str, Iterable]]=None,
                  function=None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
+                 prefs:   Optional[ValidPrefSet] = None,
                  **kwargs):
         super(ProcessingMechanism, self).__init__(default_variable=default_variable,
                                                   size=size,

@@ -188,16 +188,18 @@ Class Reference
 """
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional
 
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal, ModulatorySignalError
 from psyneulink.core.components.ports.outputport import PRIMARY
 from psyneulink.core.globals.keywords import \
     LEARNING_PROJECTION, LEARNING_SIGNAL, OUTPUT_PORT_PARAMS, PARAMETER_PORT, PARAMETER_PORTS, RECEIVER
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import parameter_spec
+from psyneulink.core.globals.utilities import ValidParamSpecType
 
 __all__ = [
     'LearningSignal', 'LearningSignalError',
@@ -329,7 +331,7 @@ class LearningSignal(ModulatorySignal):
         learning_rate = None
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  owner=None,
                  reference_value=None,
@@ -338,12 +340,12 @@ class LearningSignal(ModulatorySignal):
                  index=PRIMARY,
                  assign=None,
                  function=None,
-                 learning_rate: tc.optional(tc.optional(parameter_spec)) = None,
-                 modulation:tc.optional(str)=None,
+                 learning_rate: Optional[ValidParamSpecType] = None,
+                 modulation:Optional[str]=None,
                  modulates=None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
+                 prefs:   Optional[ValidPrefSet] = None,
                  **kwargs):
 
         # FIX: 5/26/16

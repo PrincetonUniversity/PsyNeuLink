@@ -18,7 +18,7 @@ import numpy as np
 import os
 import re
 import time
-from typing import Set
+from psyneulink._typing import Set
 import weakref
 
 from psyneulink.core.scheduling.time import Time, TimeScale
@@ -63,8 +63,11 @@ _builtin_intrinsics = frozenset(('pow', 'log', 'exp', 'tanh', 'coth', 'csch',
 
 class _node_wrapper():
     def __init__(self, composition, node):
-        self._comp = composition
+        self._comp = weakref.proxy(composition)
         self._node = node
+
+    def __repr__(self):
+        return "Node wrapper for node '{}' in composition '{}'".format(self._node, self._comp)
 
     def _gen_llvm_function(self, *, ctx, tags:frozenset):
         return codegen.gen_node_wrapper(ctx, self._comp, self._node, tags=tags)
@@ -184,6 +187,14 @@ class LLVMBuilderContext:
         elif len(state.type.pointee) == 7:
             # we have different versions based on selected FP precision
             return self.import_llvm_function("__pnl_builtin_philox_rand_{}".format(str(self.float_ty)))
+        else:
+            assert False, "Unknown PRNG type!"
+
+    def get_binomial_dist_function_by_state(self, state):
+        if len(state.type.pointee) == 5:
+            return self.import_llvm_function("__pnl_builtin_mt_rand_binomial")
+        elif len(state.type.pointee) == 7:
+            return self.import_llvm_function("__pnl_builtin_philox_rand_binomial")
         else:
             assert False, "Unknown PRNG type!"
 
@@ -403,7 +414,7 @@ class LLVMBuilderContext:
     def get_node_wrapper(self, composition, node):
         cache = getattr(composition, '_node_wrappers', None)
         if cache is None:
-            cache = dict()
+            cache = weakref.WeakKeyDictionary()
             setattr(composition, '_node_wrappers', cache)
         return cache.setdefault(node, _node_wrapper(composition, node))
 

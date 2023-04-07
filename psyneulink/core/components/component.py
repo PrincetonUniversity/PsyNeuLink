@@ -3362,6 +3362,92 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         pass
 
     @property
+    def _sender_ports(self):
+        """
+        Returns:
+            ContentAddressableList: list containing Ports on this object
+            that can send Projections
+        """
+        from psyneulink.core.components.shellclasses import Port
+
+        ports = []
+        try:
+            ports.extend(self.output_ports)
+        except AttributeError:
+            pass
+
+        return ContentAddressableList(Port, list=ports)
+
+    @property
+    def _receiver_ports(self):
+        """
+        Returns:
+            ContentAddressableList: list containing Ports on this object
+            that can receive Projections
+        """
+        from psyneulink.core.components.shellclasses import Port
+
+        ports = []
+        try:
+            ports.extend(self.input_ports)
+        except AttributeError:
+            pass
+
+        try:
+            ports.extend(self.parameter_ports)
+        except AttributeError:
+            pass
+
+        return ContentAddressableList(Port, list=ports)
+
+    def _get_matching_projections(self, component, projections, filter_component_is_sender):
+        from psyneulink.core.components.shellclasses import Projection
+
+        if filter_component_is_sender:
+            def proj_matches_component(proj):
+                return proj.sender.owner == component or proj.sender == component
+        else:
+            def proj_matches_component(proj):
+                return proj.receiver.owner == component or proj.receiver == component
+
+        if component:
+            projections = filter(proj_matches_component, projections)
+
+        return ContentAddressableList(Projection, list=list(projections))
+
+    def get_afferents(self, from_component=None):
+        """
+        Args:
+            from_component (Component, optional): if specified, filters
+            returned list to contain only afferents originating from
+            *from_component* or one of its Ports. Defaults to None.
+
+        Returns:
+            ContentAddressableList: list of afferent Projections to this
+            Component
+        """
+        projections = itertools.chain(*[p.all_afferents for p in self._receiver_ports])
+        return self._get_matching_projections(
+            from_component, projections, filter_component_is_sender=True
+        )
+
+    def get_efferents(self, to_component=None):
+        """
+        Args:
+            to_component (Component, optional): if specified, filters
+            returned list to contain only efferents ending at
+            *to_component* or one of its Ports. Defaults to None.
+
+        Returns:
+            ContentAddressableList: list of efferent Projections from
+            this Component
+        """
+        projections = itertools.chain(*[p.efferents for p in self._sender_ports])
+        return self._get_matching_projections(
+            to_component, projections, filter_component_is_sender=False
+        )
+
+    @property
     def name(self):
         try:
             return self._name

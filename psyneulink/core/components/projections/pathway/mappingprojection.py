@@ -286,6 +286,8 @@ import copy
 import numpy as np
 from typing import Union
 
+from psyneulink._typing import Optional
+
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.stateful.integratorfunctions import AccumulatorIntegrator
 from psyneulink.core.components.functions.nonstateful.transferfunctions import LinearMatrix
@@ -299,7 +301,7 @@ from psyneulink.core.globals.keywords import \
     OUTPUT_PORT, VALUE
 from psyneulink.core.globals.log import ContextFlags
 from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
 __all__ = [
@@ -451,7 +453,7 @@ class MappingProjection(PathwayProjection_Base):
                  function=None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
+                 prefs: Optional[ValidPrefSet] = None,
                  context=None,
                  learnable=True,
                  **kwargs):

@@ -64,6 +64,7 @@ class TestACConstructor:
 
 
 @pytest.mark.pytorch
+@pytest.mark.composition
 def test_autodiff_forward(autodiff_mode):
     # create xor model mechanisms and projections
     xor_in = TransferMechanism(name='xor_in',
@@ -96,6 +97,7 @@ def test_autodiff_forward(autodiff_mode):
 
 @pytest.mark.pytorch
 @pytest.mark.accorrectness
+@pytest.mark.composition
 class TestTrainingCorrectness:
 
     # test whether xor model created as autodiff composition learns properly
@@ -1457,6 +1459,7 @@ class TestTrainingIdenticalness():
 
 @pytest.mark.pytorch
 @pytest.mark.acmisc
+@pytest.mark.composition
 class TestMiscTrainingFunctionality:
 
     # test whether pytorch parameters are initialized to be identical to the Autodiff Composition's
@@ -1560,10 +1563,10 @@ class TestMiscTrainingFunctionality:
         # assert np.allclose(pt_weights_out_bp, pt_weights_out_ap)
 
     @pytest.mark.parametrize(
-        'loss', [Loss.L1, Loss.POISSON_NLL]
+        'loss', [Loss.MSE, Loss.L1, Loss.POISSON_NLL, Loss.CROSS_ENTROPY]
     )
     def test_various_loss_specs(self, loss, autodiff_mode):
-        if autodiff_mode is not pnl.ExecutionMode.Python:
+        if autodiff_mode is not pnl.ExecutionMode.Python and loss in [Loss.POISSON_NLL, Loss.L1]:
             pytest.skip("Loss spec not yet implemented!")
 
         xor_in = TransferMechanism(name='xor_in',
@@ -1606,6 +1609,7 @@ class TestMiscTrainingFunctionality:
                             "epochs": 10}, execution_mode=autodiff_mode)
 
     def test_pytorch_loss_spec(self, autodiff_mode):
+
         if autodiff_mode is not pnl.ExecutionMode.Python:
             pytest.skip("Loss spec not yet implemented!")
 
@@ -2452,6 +2456,7 @@ class TestACLogging:
 
 @pytest.mark.pytorch
 @pytest.mark.acnested
+@pytest.mark.composition
 class TestNested:
 
     @pytest.mark.parametrize(
@@ -3186,8 +3191,34 @@ class TestBatching:
         adc.add_linear_processing_pathway([m1, p, m2])
         adc._build_pytorch_representation()
 
-        classes = torch.Tensor([2, 1])
-        target = torch.Tensor([1])
+        # The following is based on earlier version of PyTorch that only allows
+        # class (index) based target specification (rather than one-hot) for cross-entropy loss:
+        # classes = torch.Tensor([2, 1])
+        # target = torch.Tensor([1])
+        # # Equation for loss taken from https://pytorch.org/docs/stable/nn.html#torch.nn.CrossEntropyLoss
+        # assert np.allclose(adc.loss(classes, target).detach().numpy(), -1 + np.log(np.exp(2) + np.exp(1)))
+        # assert np.allclose(adc.loss(output, target).detach().numpy(), -1 + np.log(np.exp(2) + np.exp(1)))
 
-        # Equation for loss taken from https://pytorch.org/docs/stable/nn.html#torch.nn.CrossEntropyLoss
-        assert np.allclose(adc.loss(classes, target).detach().numpy(), -1 + np.log(np.exp(2) + np.exp(1)))
+        # Current implementation uses one-hot target specification:
+        output = [2,1]
+        target = [0,1]
+
+        o = np.array(output)
+        t = np.array(target)
+        sm = pnl.SoftMax()
+        logit = pnl.Logistic()
+
+        # Compute cross-entropy loss as documented for `PyTorchCrossEntropyLoss using target class probabilies vector
+        # (see https://pytorch.org/docs/stable/generated/torch.nn.CrossEntropyLoss.html);
+        # avoids "inf" value for entries = 0 in target vector
+        ce_numpy = -np.sum(np.log( np.exp(o) / np.sum(np.exp(o))) * t)
+
+        # Compute cross-entropy loss using standard mathematical formulation
+        #  which can return an "inf" value for entries = 0 in target vector
+        ce_pnl = np.sum(pnl.LinearCombination(operation=pnl.CROSS_ENTROPY)([sm(logit(o)),t]))
+
+        output = torch.Tensor(output)
+        target = torch.Tensor(target)
+        ce_torch = adc.loss(output, target).detach().numpy()
+
+        assert np.allclose(ce_numpy, ce_torch)

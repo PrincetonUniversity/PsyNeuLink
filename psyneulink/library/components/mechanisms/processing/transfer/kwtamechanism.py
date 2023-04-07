@@ -183,13 +183,15 @@ import warnings
 from collections.abc import Iterable
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union
 
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Logistic
 from psyneulink.core.globals.keywords import KWTA_MECHANISM, K_VALUE, RATIO, RESULT, THRESHOLD
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
-from psyneulink.core.globals.utilities import is_numeric_or_none
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
+from psyneulink.core.globals.utilities import NumericCollections
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import get_auto_matrix, get_hetero_matrix
@@ -341,30 +343,30 @@ class KWTAMechanism(RecurrentTransferMechanism):
         inhibition_only = True
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  size=None,
                  function=None,
                  matrix=None,
-                 auto: is_numeric_or_none=None,
-                 hetero: is_numeric_or_none=None,
+                 auto: Optional[NumericCollections] = None,
+                 hetero: Optional[NumericCollections] = None,
                  integrator_function=None,
                  initial_value=None,
-                 noise: tc.optional(is_numeric_or_none) = None,
-                 integration_rate: tc.optional(is_numeric_or_none) = None,
+                 noise: Optional[NumericCollections] = None,
+                 integration_rate: Optional[NumericCollections] = None,
                  integrator_mode=None,
-                 k_value: tc.optional(is_numeric_or_none) = None,
-                 threshold: tc.optional(is_numeric_or_none) = None,
-                 ratio: tc.optional(is_numeric_or_none) = None,
+                 k_value: Optional[NumericCollections] = None,
+                 threshold: Optional[NumericCollections] = None,
+                 ratio: Optional[NumericCollections] = None,
                  average_based=None,
                  inhibition_only=None,
                  clip=None,
-                 input_ports:tc.optional(tc.optional(tc.any(list, dict))) = None,
-                 output_ports:tc.optional(tc.any(str, Iterable))=None,
+                 input_ports: Optional[Union[list, dict]] = None,
+                 output_ports:Optional[Union[str, Iterable]] = None,
                  params=None,
                  name=None,
-                 prefs: tc.optional(is_pref_set) = None,
+                 prefs:  Optional[ValidPrefSet] = None,
                  **kwargs
                  ):
         # this defaults the matrix to be an identity matrix (self excitation)
@@ -654,7 +656,8 @@ class KWTAMechanism(RecurrentTransferMechanism):
         # return output_vector
         # #endregion
 
-    # @tc.typecheck
+    # @check_user_specified
+    # @beartype
     # def _instantiate_recurrent_projection(self,
     #                                       mech: Mechanism_Base,
     #                                       matrix=FULL_CONNECTIVITY_MATRIX,

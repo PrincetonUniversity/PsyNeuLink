@@ -34,8 +34,9 @@ when the CombinationFunction is used as the function of an InputPort or OutputPo
 import numbers
 
 import numpy as np
-import typecheck as tc
-from typing import Union
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union, Literal
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import Function_Base, FunctionError, FunctionOutputType
@@ -44,11 +45,11 @@ from psyneulink.core.globals.keywords import \
     CROSS_ENTROPY, DEFAULT_VARIABLE, EXPONENTS, LINEAR_COMBINATION_FUNCTION, MULTIPLICATIVE_PARAM, OFFSET, OPERATION, \
     PREDICTION_ERROR_DELTA_FUNCTION, PRODUCT, REARRANGE_FUNCTION, REDUCE_FUNCTION, SCALE, SUM, WEIGHTS, \
     PREFERENCE_SET_NAME
-from psyneulink.core.globals.utilities import convert_to_np_array, is_numeric, np_array_less_than_2d, parameter_spec
+from psyneulink.core.globals.utilities import convert_to_np_array, is_numeric, np_array_less_than_2d, ValidParamSpecType
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import \
-    REPORT_OUTPUT_PREF, is_pref_set, PreferenceEntry, PreferenceLevel
+    REPORT_OUTPUT_PREF, ValidPrefSet, PreferenceEntry, PreferenceLevel
 
 __all__ = ['CombinationFunction', 'Concatenate', 'CombineMeans', 'Rearrange', 'Reduce', 'LinearCombination',
            'PredictionErrorDeltaFunction']
@@ -203,14 +204,14 @@ class Concatenate(CombinationFunction):  # -------------------------------------
         changes_shape = Parameter(True, stateful=False, loggable=False, pnl_internal=True)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 scale: tc.optional(parameter_spec) = None,
-                 offset: tc.optional(parameter_spec) = None,
+                 scale: Optional[ValidParamSpecType] = None,
+                 offset: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -423,15 +424,15 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 scale: tc.optional(parameter_spec) = None,
-                 offset: tc.optional(parameter_spec) = None,
-                 arrangement:tc.optional(tc.any(int, tuple, list))=None,
+                 scale: Optional[ValidParamSpecType] = None,
+                 offset: Optional[ValidParamSpecType] = None,
+                 arrangement:Optional[Union[int, tuple, list]]=None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -726,20 +727,29 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         changes_shape = Parameter(True, stateful=False, loggable=False, pnl_internal=True)
 
+        def _validate_scale(self, scale):
+            if scale is not None and not np.isscalar(scale):
+                return "scale must be a scalar"
+
+        def _validate_offset(self, offset):
+            if offset is not None and not np.isscalar(offset):
+                return "vector offset is not supported"
+
+
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
-                 # weights: tc.optional(parameter_spec)=None,
-                 # exponents: tc.optional(parameter_spec)=None,
+                 # weights:  Optional[ValidParamSpecType] = None,
+                 # exponents:  Optional[ValidParamSpecType] = None,
                  weights=None,
                  exponents=None,
                  default_variable=None,
-                 operation: tc.optional(tc.enum(SUM, PRODUCT)) = None,
-                 scale: tc.optional(parameter_spec) = None,
-                 offset: tc.optional(parameter_spec) = None,
+                 operation: Optional[Literal['sum', 'product']] = None,
+                 scale: Optional[ValidParamSpecType] = None,
+                 offset: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1170,20 +1180,19 @@ class LinearCombination(
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 # weights: tc.optional(parameter_spec)=None,
-                 # exponents: tc.optional(parameter_spec)=None,
+                 # weights:  Optional[ValidParamSpecType] = None,
+                 # exponents:  Optional[ValidParamSpecType] = None,
                  weights=None,
                  exponents=None,
-                 operation: tc.optional(tc.enum(SUM, PRODUCT, CROSS_ENTROPY)) = None,
-                 # operation: Union[SUM, PRODUCT, CROSS_ENTROPY] = None,
+                 operation: Optional[Literal['sum', 'product', 'cross-entropy']] = None,
                  scale=None,
                  offset=None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1710,19 +1719,19 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 # weights:tc.optional(parameter_spec)=None,
-                 # exponents:tc.optional(parameter_spec)=None,
+                 # weights: Optional[ValidParamSpecType] = None,
+                 # exponents: Optional[ValidParamSpecType] = None,
                  weights=None,
                  exponents=None,
-                 operation: tc.optional(tc.enum(SUM, PRODUCT)) = None,
+                 operation: Optional[Literal['sum', 'product']] = None,
                  scale=None,
                  offset=None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1970,13 +1979,13 @@ class PredictionErrorDeltaFunction(CombinationFunction):
         gamma = Parameter(1.0, modulable=True)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 gamma: tc.optional(tc.optional(float)) = None,
+                 gamma: Optional[float] = None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,

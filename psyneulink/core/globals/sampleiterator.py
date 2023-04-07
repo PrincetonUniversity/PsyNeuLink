@@ -21,7 +21,9 @@ from inspect import isclass
 from numbers import Number
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union, Callable
 
 __all__ = ['SampleSpec', 'SampleIterator']
 
@@ -148,14 +150,14 @@ class SampleSpec:
 
     """
 
-    @tc.typecheck
+    @beartype
     def __init__(self,
-                 start: tc.optional(tc.any(int, float))=None,
-                 stop: tc.optional(tc.any(int, float))=None,
-                 step: tc.optional(tc.any(int, float))=None,
-                 num: tc.optional(int)=None,
-                 function: tc.optional(callable)=None,
-                 precision: tc.optional(int)=None,
+                 start: Optional[Union[int, float]] = None,
+                 stop: Optional[Union[int, float]] = None,
+                 step: Optional[Union[int, float]] = None,
+                 num: Optional[int] = None,
+                 function: Optional[Callable] = None,
+                 precision: Optional[int] = None,
                  custom_spec=None
                  ):
 

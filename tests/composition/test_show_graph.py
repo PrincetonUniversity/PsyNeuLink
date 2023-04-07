@@ -72,7 +72,7 @@ class TestSimpleCompositions:
 
 class TestNested:
     def test_multiple_projections_to_node_of_nested_composition(self):
-        '''This is based on the Nback script'''
+        '''This is based on the nback script'''
 
         stim = TransferMechanism(name='STIM', size=5)
         context = TransferMechanism(name='CONTEXT', size=5)

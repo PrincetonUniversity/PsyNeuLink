@@ -619,7 +619,9 @@ import types
 import warnings
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union
 
 from psyneulink.core.components.component import Component, ComponentError
 from psyneulink.core.components.functions.function import Function
@@ -632,7 +634,7 @@ from psyneulink.core.globals.keywords import \
     VALUE, VARIABLE, \
     output_port_spec_to_parameter_name, INPUT_PORT_VARIABLES
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
     convert_to_np_array, is_numeric, iscompatible, make_readonly_property, recursive_update, parse_valid_identifier
@@ -902,7 +904,7 @@ class OutputPort(Port_Base):
     #endregion
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     @handle_external_context()
     def __init__(self,
                  owner=None,
@@ -913,7 +915,7 @@ class OutputPort(Port_Base):
                  projections=None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
+                 prefs:   Optional[ValidPrefSet] = None,
                  index=None,
                  assign=None,
                  **kwargs):
@@ -1060,7 +1062,7 @@ class OutputPort(Port_Base):
     def _parse_function_variable(self, variable, context=None):
         return _parse_output_port_variable(variable, self.owner)
 
-    @tc.typecheck
+    @beartype
     def _parse_port_specific_specs(self, owner, port_dict, port_specific_spec):
         """Get variable spec and/or connections specified in an OutputPort specification tuple
 
@@ -1536,11 +1538,12 @@ class StandardOutputPorts():
 
     keywords = {PRIMARY, SEQUENTIAL, ALL}
 
-    @tc.typecheck
+    @check_user_specified
+    @beartype
     def __init__(self,
-                 owner:Component,
-                 output_port_dicts:list,
-                 indices:tc.optional(tc.any(int, str, list))=None):
+                 owner: Component,
+                 output_port_dicts: list,
+                 indices: Optional[Union[int, str, list]]):
         self.owner = owner
         self.data = self._instantiate_std_port_list(output_port_dicts, indices)
 
@@ -1628,23 +1631,23 @@ class StandardOutputPorts():
 
         return dict_list
 
-    @tc.typecheck
-    def add_port_dicts(self, output_port_dicts:list, indices:tc.optional(tc.any(int, str, list))=None):
+    @beartype
+    def add_port_dicts(self, output_port_dicts: list, indices: Optional[Union[int, str, list]] = None):
         self.data.extend(self._instantiate_std_port_list(output_port_dicts, indices))
         assert True
 
-    @tc.typecheck
+    @beartype
     def get_port_dict(self, name:str):
         """Return a copy of the named OutputPort dict
         """
-        if next((item for item in self.names if name is item), None):
+        if next((item for item in self.names if name == item), None):
             # assign dict to owner's output_port list
             return self.data[self.names.index(name)].copy()
         # raise StandardOutputPortsError("{} not recognized as name of {} for {}".
         #                                 format(name, StandardOutputPorts.__class__.__name__, self.owner.name))
         return None
 
-    # @tc.typecheck
+    # @beartype
     # def get_dict(self, name:str):
     #     return self.data[self.names.index(name)].copy()
     #
@@ -1691,7 +1694,7 @@ def _parse_output_port_function(owner, output_port_name, function, params_dict_a
             return lambda x: function(x[OWNER_VALUE][0])
     return function
 
-@tc.typecheck
+@beartype
 def _maintain_backward_compatibility(d:dict, name, owner):
     """Maintain compatibility with use of INDEX, ASSIGN and CALCULATE in OutputPort specification"""
 

@@ -586,9 +586,10 @@ import uuid
 import warnings
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
 
-from psyneulink.core.components.functions.function import Function_Base, is_function_type
+from psyneulink._typing import Optional, Union, Callable, Literal, Iterable
+
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import Concatenate
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
@@ -607,9 +608,9 @@ from psyneulink.core.globals.keywords import \
     OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PARAMS, PORT_TYPE, PRODUCT, PROJECTION_TYPE, PROJECTIONS, \
     SEPARATE, SIZE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import ContentAddressableList, convert_to_list, convert_to_np_array, is_iterable
+from psyneulink.core.globals.utilities import ContentAddressableList, convert_to_list, convert_to_np_array
 
 __all__ = [
     'CONTROL_ALLOCATION', 'GATING_ALLOCATION', 'ControlMechanism', 'ControlMechanismError',
@@ -1211,28 +1212,24 @@ class ControlMechanism(ModulatoryMechanism_Base):
             # validate_monitored_port_spec(self._owner, input_ports)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputPort))=None,
+                 monitor_for_control: Optional[Union[Iterable, Mechanism, OutputPort]] = None,
                  objective_mechanism=None,
-                 allow_probes:bool = False,
-                 outcome_input_ports_option:tc.optional(tc.enum(CONCATENATE, COMBINE, SEPARATE))=None,
+                 allow_probes: bool = False,
+                 outcome_input_ports_option: Optional[Literal['concatenate', 'combine', 'separate']] = None,
                  function=None,
-                 default_allocation:tc.optional(tc.any(int, float, list, np.ndarray))=None,
-                 control:tc.optional(tc.any(is_iterable,
-                                            ParameterPort,
-                                            InputPort,
-                                            OutputPort,
-                                            ControlSignal))=None,
-                 modulation:tc.optional(str)=None,
-                 combine_costs:tc.optional(is_function_type)=None,
-                 compute_reconfiguration_cost:tc.optional(is_function_type)=None,
+                 default_allocation: Optional[Union[int, float, list, np.ndarray]] = None,
+                 control: Optional[Union[Iterable, ParameterPort, InputPort, OutputPort, ControlSignal]] = None,
+                 modulation: Optional[str] = None,
+                 combine_costs: Optional[Callable] = None,
+                 compute_reconfiguration_cost: Optional[Callable] = None,
                  compute_net_outcome=None,
                  params=None,
                  name=None,
-                 prefs:tc.optional(is_pref_set)=None,
+                 prefs: Optional[ValidPrefSet] = None,
                  **kwargs
                  ):
 
@@ -1815,7 +1812,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                               f"has one or more {projection_type.__name__}s redundant with ones already on "
                               f"an existing {ControlSignal.__name__} ({existing_ctl_sig.name}).")
 
-    def _remove_default_control_signal(self, type:tc.enum(CONTROL_SIGNAL, GATING_SIGNAL)):
+    def _remove_default_control_signal(self, type: Literal['ControlSignal', 'GatingSignal']):
         if type == CONTROL_SIGNAL:
             ctl_sig_attribute = self.control_signals
         elif type == GATING_SIGNAL:
@@ -1823,13 +1820,66 @@ class ControlMechanism(ModulatoryMechanism_Base):
         else:
             assert False, \
                 f"PROGRAM ERROR:  bad 'type' arg ({type})passed to " \
-                    f"{ControlMechanism.__name__}._remove_default_control_signal" \
-                    f"(should have been caught by typecheck"
+                f"{ControlMechanism.__name__}._remove_default_control_signal" \
+                f"(should have been caught by typecheck"
 
-        if (len(ctl_sig_attribute)==1
-                and ctl_sig_attribute[0].name==type + '-0'
+        if (len(ctl_sig_attribute) == 1
+                and ctl_sig_attribute[0].name == type + '-0'
                 and not ctl_sig_attribute[0].efferents):
             self.remove_ports(ctl_sig_attribute[0])
+
+    def show(self):
+        """Display the OutputPorts monitored by ControlMechanism's `objective_mechanism
+        <ControlMechanism.objective_mechanism>` and the parameters modulated by its `control_signals
+        <ControlMechanism.control_signals>`.
+        """
+
+        print("\n---------------------------------------------------------")
+
+        print("\n{0}".format(self.name))
+        print("\n\tMonitoring the following Mechanism OutputPorts:")
+        for port in self.objective_mechanism.input_ports:
+            for projection in port.path_afferents:
+                monitored_port = projection.sender
+                monitored_port_Mech = projection.sender.owner
+                # ContentAddressableList
+                monitored_port_index = self.monitored_output_ports.index(monitored_port)
+
+                weight = self.monitored_output_ports_weights_and_exponents[monitored_port_index][0]
+                exponent = self.monitored_output_ports_weights_and_exponents[monitored_port_index][1]
+
+                print("\t\t{0}: {1} (exp: {2}; wt: {3})".
+                      format(monitored_port_Mech.name, monitored_port.name, weight, exponent))
+
+        try:
+            if self.control_signals:
+                print("\n\tControlling the following Mechanism parameters:".format(self.name))
+                # Sort for consistency of output:
+                port_Names_sorted = sorted(self.control_signals.names)
+                for port_Name in port_Names_sorted:
+                    for projection in self.control_signals[port_Name].efferents:
+                        print("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
+        except:
+            pass
+
+        try:
+            if self.gating_signals:
+                print("\n\tGating the following Ports:".format(self.name))
+                # Sort for consistency of output:
+                port_Names_sorted = sorted(self.gating_signals.names)
+                for port_Name in port_Names_sorted:
+                    for projection in self.gating_signals[port_Name].efferents:
+                        print("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
+        except:
+            pass
+
+        print("\n---------------------------------------------------------")
+
+    def _add_process(self, process, role:str):
+        assert False
+        super()._add_process(process, role)
+        if self.objective_mechanism:
+            self.objective_mechanism._add_process(process, role)
 
     def add_to_monitor(self, monitor_specs, context=None):
         """Instantiate OutputPorts to be monitored by ControlMechanism's `objective_mechanism
@@ -1847,7 +1897,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         output_ports = self.objective_mechanism.add_to_monitor(monitor_specs=monitor_specs, context=context)
 
     # FIX: 11/15/21 SHOULDN'T THIS BE PUT ON COMPOSITION??
-    def _activate_projections_for_compositions(self, composition=None):
+    def _activate_projections_for_compositions(self, composition=None, context=None):
         """Activate eligible Projections to or from Nodes in Composition.
         If Projection is to or from a node NOT (yet) in the Composition,
         assign it the node's aux_components attribute but do not activate it.
@@ -1895,7 +1945,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
             proj._activate_for_compositions(composition)
 
         for proj in deeply_nested_aux_components.values():
-            composition.add_projection(proj, sender=proj.sender, receiver=proj.receiver)
+            composition.add_projection(proj, sender=proj.sender, receiver=proj.receiver, context=context)
 
         # Add any remaining afferent Projections that have been assigned and are from nodes in composition
         remaining_projections = set(self.projections) - dependent_projections - set(self.composition.projections)

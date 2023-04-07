@@ -1084,7 +1084,9 @@ from inspect import isclass
 from numbers import Number
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union, Literal, Type
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentError
@@ -1673,9 +1675,9 @@ class Mechanism_Base(Mechanism):
     # def __new__(cls, *args, **kwargs):
     # def __new__(cls, name=NotImplemented, params=NotImplemented, context=None):
 
-    @tc.typecheck
-    @abc.abstractmethod
     @check_user_specified
+    @beartype
+    @abc.abstractmethod
     def __init__(self,
                  default_variable=None,
                  size=None,
@@ -3277,21 +3279,21 @@ class Mechanism_Base(Mechanism):
 
         return builder
 
-    @tc.typecheck
+    @beartype
     def _show_structure(self,
-                        show_functions:bool=False,
-                        show_mech_function_params:bool=False,
-                        show_port_function_params:bool=False,
-                        show_values:bool=False,
-                        use_labels:bool=False,
-                        show_headers:bool=False,
-                        show_roles:bool=False,
-                        show_conditions:bool=False,
+                        show_functions: bool = False,
+                        show_mech_function_params: bool = False,
+                        show_port_function_params: bool = False,
+                        show_values: bool = False,
+                        use_labels: bool = False,
+                        show_headers: bool = False,
+                        show_roles: bool = False,
+                        show_conditions: bool = False,
                         composition=None,
-                        compact_cim:bool=False,
-                        condition:tc.optional(Condition)=None,
-                        node_border:str="1",
-                        output_fmt:tc.enum('pdf','struct')='pdf',
+                        compact_cim: bool = False,
+                        condition: Optional[Condition] = None,
+                        node_border: str = "1",
+                        output_fmt: Literal['pdf', 'struct'] = 'pdf',
                         context=None
                         ):
         """Generate a detailed display of a the structure of a Mechanism.
@@ -3465,9 +3467,9 @@ class Mechanism_Base(Mechanism):
             return f'<td port="{self.name}" colspan="{cols}">' + \
                    mech_name + mech_roles + mech_condition + mech_function + mech_value + '</td>'
 
-        @tc.typecheck
-        def port_table(port_list:ContentAddressableList,
-                        port_type:tc.enum(InputPort, ParameterPort, OutputPort)):
+        @beartype
+        def port_table(port_list: ContentAddressableList,
+                       port_type: Union[Type[InputPort], Type[ParameterPort], Type[OutputPort]]):
             """Return html with table for each port in port_list, including functions and/or values as specified
 
             Each table has a header cell and and inner table with cells for each port in the list
@@ -3623,8 +3625,7 @@ class Mechanism_Base(Mechanism):
 
     # def remove_projection(self, projection):
     #     pass
-
-    @tc.typecheck
+    @beartype
     def _get_port_name(self, port:Port):
         if isinstance(port, InputPort):
             port_type = InputPort.__name__
@@ -3637,7 +3638,7 @@ class Mechanism_Base(Mechanism):
                 f'{InputPort.__name__}, {ParameterPort.__name__} or {OutputPort.__name__}'
         return port_type + '-' + port.name
 
-    @tc.typecheck
+    @beartype
     @handle_external_context()
     def add_ports(self, ports, update_variable=True, context=None):
         """
@@ -3731,7 +3732,7 @@ class Mechanism_Base(Mechanism):
         return {INPUT_PORTS: instantiated_input_ports,
                 OUTPUT_PORTS: instantiated_output_ports}
 
-    @tc.typecheck
+    @beartype
     def remove_ports(self, ports, context=REMOVE_PORTS):
         """
         remove_ports(ports)
@@ -3902,9 +3903,8 @@ class Mechanism_Base(Mechanism):
             return self.input_ports.index(port)
         raise MechanismError("{} is not an InputPort of {}.".format(port.name, self.name))
 
-    # @tc.typecheck
-    # def _get_port_value_labels(self, port_type:tc.any(InputPort, OutputPort)):
-    def _get_port_value_labels(self, port_type, context=None):
+    @beartype
+    def _get_port_value_labels(self, port_type: Union[Type[InputPort], Type[OutputPort]], context=None):
         """Return list of labels for the value of each Port of specified port_type.
         If the labels_dict has subdicts (one for each Port), get label for the value of each Port from its subdict.
         If the labels dict does not have subdicts, then use the same dict for the only (or all) Port(s)
@@ -4298,7 +4298,7 @@ class MechanismList(UserList):
         return self.mechs[item]
 
     def __setitem__(self, key, value):
-        raise ("MechanismList is read only ")
+        raise KeyError("MechanismList is read only ")
 
     def __len__(self):
         return (len(self.mechs))
