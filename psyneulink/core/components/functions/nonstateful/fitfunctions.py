@@ -560,19 +560,21 @@ class PECOptimizationFunction(OptimizationFunction):
                                 f"Eval-Time: {elapsed} (seconds)"
                             )
 
+                        # We need to update the progress bar differently depending on whether we are doing
+                        # the first generation (which is twice as long) or not.
                         if self.num_evals < 2 * evals_per_iteration:
-                            max_evals = 2 * evals_per_iteration + 1
+                            max_evals = 2 * evals_per_iteration
                             progress.tasks[like_eval_task].total = max_evals
                             eval_task_str = f"|-- Iteration {self.gen_count} ..."
                             progress.tasks[like_eval_task].description = eval_task_str
                             progress.update(like_eval_task, completed=self.num_evals % max_evals)
                         else:
-                            max_evals = evals_per_iteration + 1
+                            max_evals = evals_per_iteration
                             progress.tasks[like_eval_task].total = max_evals
                             eval_task_str = f"|-- Iteration {self.gen_count} ..."
                             progress.tasks[like_eval_task].description = eval_task_str
                             progress.update(like_eval_task,
-                                            completed=(self.num_evals - (2 * evals_per_iteration + 1)) % max_evals)
+                                            completed=(self.num_evals - (2 * evals_per_iteration)) % max_evals)
 
                     return p
 
