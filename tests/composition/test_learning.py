@@ -1742,8 +1742,8 @@ class TestBackPropLearning:
         target = learning_pathway.target
         inputs = {T1:[1,0], target:[1]}
         C.learning_components[2].learning_rate.base = 0.5
-        result = C.learn(inputs=inputs, num_trials=2)
-        assert np.allclose(result, [[[0.52497919]], [[0.55439853]]])
+        C.learn(inputs=inputs, num_trials=2)
+        assert np.allclose(C.learning_results, [[[0.52497919]], [[0.55439853]]])
 
     @pytest.mark.pytorch
     def test_back_prop(self):
@@ -2518,10 +2518,11 @@ class TestBackPropLearning:
 
         # print('\nEXECUTING COMPOSITION-----------------------\n')
         target = comp.get_nodes_by_role(pnl.NodeRole.TARGET)[0]
-        results_comp = comp.learn(inputs={color_comp: [[1, 1]],
-                                          word_comp: [[-2, -2]],
-                                          target: [[1, 1]]},
-                                  num_trials=num_trials)
+        comp.learn(inputs={color_comp: [[1, 1]],
+                           word_comp: [[-2, -2]],
+                           target: [[1, 1]]},
+                   num_trials=num_trials)
+        results_comp = comp.learning_results
         # print('\nCOMPOSITION RESULTS')
         # print(f'Results: {comp.results}')
         # print(f'color_to_hidden_comp: {comp.projections[0].get_mod_matrix(comp)}')

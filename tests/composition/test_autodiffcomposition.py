@@ -452,9 +452,11 @@ class TestTrainingCorrectness:
                     0.23886036, 0.24575353, 0.25715595, 0.24334699], [0.99925183, 0.51889063, 0.25712839, 0.25460613, 0.49597306,
                     0.26739429, 0.25464059, 0.25453138, 0.49761396]]]
 
-        for res, exp in zip(results, expected):
+
+        # for res, exp in zip(results, expected):
+        for res, exp in zip(sem_net.learning_results, expected):
             for r, e in zip(res, exp):
-                assert np.allclose(r, e)
+                np.testing.assert_allclose(r, e)
 
     def test_pytorch_equivalence_with_autodiff_composition(self, autodiff_mode):
         iSs = np.array(
@@ -1693,10 +1695,7 @@ class TestMiscTrainingFunctionality:
             [[0], [1], [1], [0]])
 
         # train model for a few epochs
-        # results_before_proc = xor.run(inputs={xor_in:xor_inputs},
-        #                               targets={xor_out:xor_targets},
-        #                               epochs=10)
-        results_before_proc = benchmark(xor.learn, inputs={"inputs": {xor_in:xor_inputs},
+        benchmark(xor.learn, inputs={"inputs": {xor_in:xor_inputs},
                                                            "targets": {xor_out:xor_targets},
                                                            "epochs": 10}, execution_mode=autodiff_mode)
 
@@ -1708,7 +1707,7 @@ class TestMiscTrainingFunctionality:
             expected = [[[0.9918830394744873]], [[0.9982172846794128]], [[0.9978305697441101]], [[0.9994590878486633]]]
         # FIXME: LLVM version is broken with learning rate == 1.5
         if learning_rate != 1.5 or autodiff_mode == pnl.ExecutionMode.Python:
-            assert np.allclose(results_before_proc, expected)
+            assert np.allclose(xor.learning_results, expected)
 
 
     # test whether pytorch parameters and projections are kept separate (at diff. places in memory)
