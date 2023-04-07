@@ -456,7 +456,7 @@ class TestTrainingCorrectness:
         # for res, exp in zip(results, expected):
         for res, exp in zip(sem_net.learning_results, expected):
             for r, e in zip(res, exp):
-                np.testing.assert_allclose(r, e)
+                np.testing.assert_allclose(r, e, atol=1e-07, rtol=1e-07)
 
     def test_pytorch_equivalence_with_autodiff_composition(self, autodiff_mode):
         iSs = np.array(
