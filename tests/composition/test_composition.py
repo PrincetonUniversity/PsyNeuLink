@@ -122,7 +122,7 @@ class TestConstructor:
         # Run with learning
         target = c.pathways['LEARNING_PATHWAY'].target
         result = c(inputs={A:[[1],[100]],B:[[2],[1]],target:[[3],[300]]})
-        np.testing.assert_allclose(result, [[[1.], [0.73105858]], [[100.], [0.62507661]]])
+        np.testing.assert_allclose(c.learning_results, [[[1.], [0.73105858]], [[100.], [0.62507661]]])
 
 
 class TestAddMechanism:
@@ -7291,15 +7291,15 @@ class TestNodeRoles:
         mech = ProcessingMechanism(name='my_mech')
         ctl_mech_A = ControlMechanism(monitor_for_control=mech,
                                       control_signals=ControlSignal(modulates=(INTERCEPT,mech),
-                                                                    cost_options=CostFunctions.INTENSITY))
+                                                                    cost_options=CostFunctions.INTENSITY),
+                                      name="ctl_mech_A")
         ctl_mech_B = ControlMechanism(monitor_for_control=mech,
                                       control_signals=ControlSignal(modulates=ctl_mech_A.control_signals[0],
-                                                                    modulation=INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM))
+                                                                    modulation=INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM),
+                                      name="ctl_mech_B")
         comp = Composition(pathways=[mech, (ctl_mech_A, NodeRole.OUTPUT), (ctl_mech_B, NodeRole.OUTPUT)])
         assert {mech, ctl_mech_A, ctl_mech_B} == set(comp.get_nodes_by_role(NodeRole.OUTPUT))
-        # Current instantiation always assigns ctl_mech_B as TERMINAL in this case;
-        # this is here to flag any violation of this in the future, in case that is not intended
-        assert {ctl_mech_B} == set(comp.get_nodes_by_role(NodeRole.TERMINAL))
+        assert {ctl_mech_A, ctl_mech_B} == set(comp.get_nodes_by_role(NodeRole.TERMINAL))
 
     def test_LEARNING_hebbian(self):
         A = RecurrentTransferMechanism(name='A', size=2, enable_learning=True)

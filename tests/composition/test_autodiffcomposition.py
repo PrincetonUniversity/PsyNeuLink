@@ -140,17 +140,17 @@ class TestTrainingCorrectness:
             [[0], [1], [1], [0]])
 
         if calls == 'single':
-            results = benchmark(xor.learn, inputs={"inputs": {xor_in:xor_inputs},
-                                        "targets": {xor_out:xor_targets},
-                                        "epochs": eps}, execution_mode=autodiff_mode)
-
+            benchmark(xor.learn, inputs={"inputs": {xor_in:xor_inputs},
+                                         "targets": {xor_out:xor_targets},
+                                         "epochs": eps}, execution_mode=autodiff_mode)
         else:
             input_dict = {"inputs": {xor_in: xor_inputs},
                           "targets": {xor_out: xor_targets},
                           "epochs": 1}
             for i in range(eps - 1):
                 xor.learn(inputs=input_dict, execution_mode=autodiff_mode)
-            results = benchmark(xor.learn, inputs=input_dict, execution_mode=autodiff_mode)
+            benchmark(xor.learn, inputs=input_dict, execution_mode=autodiff_mode)
+        results = xor.learning_results
 
         assert len(results) == len(expected)
         for r, t in zip(results, expected):
@@ -452,7 +452,9 @@ class TestTrainingCorrectness:
                     0.23886036, 0.24575353, 0.25715595, 0.24334699], [0.99925183, 0.51889063, 0.25712839, 0.25460613, 0.49597306,
                     0.26739429, 0.25464059, 0.25453138, 0.49761396]]]
 
-        for res, exp in zip(results, expected):
+
+        # for res, exp in zip(results, expected):
+        for res, exp in zip(sem_net.learning_results, expected):
             for r, e in zip(res, exp):
                 np.testing.assert_allclose(r, e)
 
@@ -1692,10 +1694,7 @@ class TestMiscTrainingFunctionality:
             [[0], [1], [1], [0]])
 
         # train model for a few epochs
-        # results_before_proc = xor.run(inputs={xor_in:xor_inputs},
-        #                               targets={xor_out:xor_targets},
-        #                               epochs=10)
-        results_before_proc = benchmark(xor.learn, inputs={"inputs": {xor_in:xor_inputs},
+        benchmark(xor.learn, inputs={"inputs": {xor_in:xor_inputs},
                                                            "targets": {xor_out:xor_targets},
                                                            "epochs": 10}, execution_mode=autodiff_mode)
 
@@ -1707,7 +1706,7 @@ class TestMiscTrainingFunctionality:
             expected = [[[0.9918830394744873]], [[0.9982172846794128]], [[0.9978305697441101]], [[0.9994590878486633]]]
         # FIXME: LLVM version is broken with learning rate == 1.5
         if learning_rate != 1.5 or autodiff_mode == pnl.ExecutionMode.Python:
-            np.testing.assert_allclose(results_before_proc, expected)
+            np.testing.assert_allclose(xor.learning_results, expected)
 
 
     # test whether pytorch parameters and projections are kept separate (at diff. places in memory)
@@ -2519,8 +2518,10 @@ class TestNested:
         no_training_input = {xor_autodiff: no_training_input_dict}
 
         learning_context = Context()
-        result1 = xor_autodiff.learn(inputs=input_dict, execution_mode=autodiff_mode, epochs=num_epochs, context=learning_context, patience=patience, min_delta=min_delta)
-        result1 = np.array(result1).flatten()
+        # result1 = xor_autodiff.learn(inputs=input_dict, execution_mode=autodiff_mode, epochs=num_epochs, context=learning_context, patience=patience, min_delta=min_delta)
+        # result1 = np.array(result1).flatten()
+        xor_autodiff.learn(inputs=input_dict, execution_mode=autodiff_mode, epochs=num_epochs, context=learning_context, patience=patience, min_delta=min_delta)
+        result1 = np.array(xor_autodiff.learning_results).flatten()
         np.testing.assert_allclose(result1, np.array(xor_targets).flatten(), atol=0.1)
         result2 = parentComposition.run(inputs=no_training_input, execution_mode=autodiff_mode, context=learning_context)
 
