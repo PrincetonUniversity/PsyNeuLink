@@ -1,4 +1,4 @@
-jupyter<=1.0.0
+jupyter<1.0.1
 packaging<24.0
 pytest<7.2.3
 pytest-benchmark<4.0.1
