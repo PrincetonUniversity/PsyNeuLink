@@ -6,7 +6,6 @@ fastkde>=1.0.19, <1.0.21
 graph-scheduler>=0.2.0, <1.1.2
 graphviz<0.21.0
 grpcio<1.43.0
-grpcio-tools<1.43.0
 leabra-psyneulink<0.3.3
 llvmlite<0.40
 matplotlib<3.7.2
