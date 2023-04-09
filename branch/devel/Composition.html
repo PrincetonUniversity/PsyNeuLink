@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.11.0.0+191.gd9a613b08 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.11.0.0+201.g57a848221 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.11.0.0+191
+                  0.11.0.0+201
                 </div>
               
             
@@ -1039,8 +1039,8 @@ one that projects to the ComparatorMechanism and assigned as the <a class="refer
 When the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method is used, all Components <em>unrelated</em> to learning are executed in the same
 way as with the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> method.  If the Composition has any <a class="reference internal" href="#composition-nested"><span class="std std-ref">nested Composition</span></a>
 that have <a class="reference internal" href="#composition-learning-pathway"><span class="std std-ref">learning Pathways</span></a>, then learning also occurs on all of those for which
-the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.disable_learning" title="psyneulink.core.compositions.composition.Composition.disable_learning"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">disable_learning</span></code></a> attribute is False.  This is true even if the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.disable_learning" title="psyneulink.core.compositions.composition.Composition.disable_learning"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">disable_learning</span></code></a> attribute is True for which the Composition on which the  <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a>
-method was called.</p>
+the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.disable_learning" title="psyneulink.core.compositions.composition.Composition.disable_learning"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">disable_learning</span></code></a> attribute is False.  This is true even if the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.disable_learning" title="psyneulink.core.compositions.composition.Composition.disable_learning"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">disable_learning</span></code></a> attribute is True for the Composition on which the  <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method
+was called.</p>
 <p>When a Composition is run that contains one or more <a class="reference internal" href="#composition-learning-pathway"><span class="std std-ref">learning Pathways</span></a>, all of the
 ProcessingMechanisms for a pathway are executed first, and then its <a class="reference internal" href="#composition-learning-components"><span class="std std-ref">learning components</span></a>.  This is shown in an animation of the XOR network from the <code class="xref any docutils literal notranslate"><span class="pre">example</span> <span class="pre">above</span></code>:</p>
 <blockquote id="composition-learning-animation-figure">
@@ -1061,6 +1061,10 @@ changes will not be observed in the values of their <a class="reference internal
 they are next executed (see <a class="reference internal" href="Component.html#component-lazy-updating"><span class="std std-ref">Lazy Evaluation</span></a> for an explanation of “lazy” updating).</p>
 </div>
 </div></blockquote>
+<p>The Compositon’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method takes all of the same arguments as its <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a>
+method, as well as additonal ones that are specific to learning.  Also like <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a>, it returns the
+<a class="reference internal" href="#id23" title="psyneulink.core.compositions.composition.Composition.output_values"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_values</span></code></a> of the Composition after the last trial of execution.  The results for the
+last epoch of learning are stored in its <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.learning_results" title="psyneulink.core.compositions.composition.Composition.learning_results"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_results</span></code></a> attribute.</p>
 </section>
 </section>
 </section>
@@ -3251,7 +3255,7 @@ components used for learning; those are contained in <a class="reference interna
 <span class="sig-name descname"><span class="pre">results</span></span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.results" title="Permalink to this definition">¶</a></dt>
 <dd><p>a list of the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_values</span></code></a> of the <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a> <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Nodes</span></a>
 in the Composition for every <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> executed in a call to <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a>.
-Each item in the outermos list is a list of values for a given trial; each item within a trial corresponds
+Each item in the outermost list is a list of values for a given trial; each item within a trial corresponds
 to the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_values</span></code></a> of an <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a> Mechanism for that trial.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -3271,6 +3275,21 @@ Composition’s Nodes when one or more is a <a class="reference internal" href="
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>list[list]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition.learning_results">
+<span class="sig-name descname"><span class="pre">learning_results</span></span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.learning_results" title="Permalink to this definition">¶</a></dt>
+<dd><p>a list of the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_values</span></code></a> of the <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a> <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Nodes</span></a>
+in the Composition for every <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> of the last epoch of learning executed in a call to
+<a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a>. Each item in the outermost list is a list of values for a given trial; each item
+within a trial corresponds to the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_values</span></code></a> of an <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a> Mechanism
+for that trial.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list[list[list]]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -4859,10 +4878,11 @@ details and <a class="reference internal" href="Report.html#psyneulink.core.comp
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>the results of the final epoch of training</strong></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>list</p>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>the results of the last trial of training</strong> (<em>list</em>)</p></li>
+<li><p><em>.. note::</em> – the results of the final epoch of training are stored in the Composition’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.learning_results" title="psyneulink.core.compositions.composition.Composition.learning_results"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_results</span></code></a> attribute.</p></li>
+</ul>
+</p>
 </dd>
 </dl>
 </dd></dl>
