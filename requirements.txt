@@ -1,5 +1,5 @@
 autograd<1.6
-beartype<0.13.0
+beartype<0.14.0
 dill<0.3.7
 elfi<0.8.7
 fastkde>=1.0.19, <1.0.21
