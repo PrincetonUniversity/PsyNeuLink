@@ -642,10 +642,17 @@ class TestContentAddressableMemory:
         if warning_msg:
             with pytest.warns(UserWarning, match=warning_msg):
                 c = ContentAddressableMemory(initializer=initializer)
-                np.all(c.memory==convert_all_elements_to_np_array(expected_memory))
         else:
             c = ContentAddressableMemory(initializer=initializer)
-            np.all(c.memory==convert_all_elements_to_np_array(expected_memory))
+
+        # Some test cases return dtype=object for rugged arrays.
+        # There's no np.testing function that handles the case correctly
+        expected_memory = convert_all_elements_to_np_array(expected_memory)
+        assert len(c.memory) == len(expected_memory)
+        for m, e in zip(c.memory, expected_memory):
+            assert len(m) == len(e)
+            for x, y in zip(m, e):
+                np.testing.assert_array_equal(x, y)
 
     def test_ContentAddressableMemory_simple_distances(self):
 
@@ -662,49 +669,49 @@ class TestContentAddressableMemory:
         )
 
         # Test distance (for retrieved item) and distances_by_field
-        retrieved = c([[1,2,4],[4,5,9]])
-        assert np.all(retrieved==np.array([[1,2,5],[4,5,8]]))
+        retrieved = c([[1, 2, 4], [4, 5, 9]])
+        np.testing.assert_equal(retrieved, [[1, 2, 5], [4, 5, 8]])
         assert c.distance == Distance(metric=COSINE)([retrieved,[[1,2,4],[4,5,9]]])
         assert np.allclose(c.distances_by_field, [0.00397616, 0.00160159])
 
         # Test distance_field_weights as scalar
         c.distance_field_weights=[2.5]
-        retrieved = c([[1,2,4],[4,5,9]])
-        assert np.all(retrieved==np.array([[1,2,5],[4,5,8]]))
+        retrieved = c([[1, 2, 4], [4, 5, 9]])
+        np.testing.assert_equal(retrieved, [[1, 2, 5], [4, 5, 8]])
         assert c.distance == 2.5 * Distance(metric=COSINE)([retrieved,[[1,2,4],[4,5,9]]])
         assert np.allclose(c.distances_by_field, [2.5 * 0.00397616, 2.5 * 0.00160159])
 
         # Test with 0 as field weight
         c.distance_field_weights=[1,0]
-        retrieved = c([[1,2,3],[4,5,10]])
-        assert np.all(retrieved==np.array([[1,2,3],[4,5,6]]))
+        retrieved = c([[1, 2, 3], [4, 5, 10]])
+        np.testing.assert_equal(retrieved, [[1, 2, 3], [4, 5, 6]])
         assert c.distances_by_field == [0.0, 0.0]
 
         c.distance_field_weights=[0,1]
-        retrieved = c([[1,2,3],[4,5,10]])
-        assert np.all(retrieved==np.array([[1,2,10],[4,5,10]]))
+        retrieved = c([[1, 2, 3], [4, 5, 10]])
+        np.testing.assert_equal(retrieved, [[1, 2, 10], [4, 5, 10]])
         assert c.distances_by_field == [0.0, 0.0]
 
         # Test with None as field weight
         c.distance_field_weights=[None,1]
-        retrieved = c([[1,2,3],[4,5,10]])
-        assert np.all(retrieved==np.array([[1,2,10],[4,5,10]]))
+        retrieved = c([[1, 2, 3], [4, 5, 10]])
+        np.testing.assert_equal(retrieved, [[1, 2, 10], [4, 5, 10]])
         assert c.distances_by_field == [None, 0.0]
 
         c.distance_field_weights=[1, None]
-        retrieved = c([[1,2,3],[4,5,10]])
-        assert np.all(retrieved==np.array([[1,2,3],[4,5,6]]))
+        retrieved = c([[1, 2, 3], [4, 5, 10]])
+        np.testing.assert_equal(retrieved, [[1, 2, 3], [4, 5, 6]])
         assert c.distances_by_field == [0.0, None]
 
         # Test with [] as field weight
         c.distance_field_weights=[[],1]
-        retrieved = c([[1,2,3],[4,5,10]])
-        assert np.all(retrieved==np.array([[1,2,10],[4,5,10]]))
+        retrieved = c([[1, 2, 3], [4, 5, 10]])
+        np.testing.assert_equal(retrieved, [[1, 2, 10], [4, 5, 10]])
         assert c.distances_by_field == [None, 0.0]
 
         c.distance_field_weights=[1, []]
-        retrieved = c([[1,2,3],[4,5,10]])
-        assert np.all(retrieved==np.array([[1,2,3],[4,5,6]]))
+        retrieved = c([[1, 2, 3], [4, 5, 10]])
+        np.testing.assert_equal(retrieved, [[1, 2, 3], [4, 5, 6]])
         assert c.distances_by_field == [0.0, None]
 
     # FIX: COULD CONDENSE THESE TESTS BY PARAMETERIZING FIELD-WEIGHTS AND ALSO INCLUDE DISTANCE METRIC AS A PARAM
@@ -729,15 +736,15 @@ class TestContentAddressableMemory:
 
         # Test distances with evenly weighted fields
         retrieved = c(stimuli[0])
-        np.all(retrieved==stimuli[0])
+        np.testing.assert_equal(retrieved, stimuli[0])
         assert np.allclose(c.distances_to_entries, [0, distances[0], distances[1]])
 
         retrieved = c(stimuli[1])
-        np.all(retrieved==stimuli[1])
+        np.testing.assert_equal(retrieved, stimuli[1])
         assert np.allclose(c.distances_to_entries, [distances[0], 0, distances[2]])
 
         retrieved = c(stimuli[2])
-        np.all(retrieved==stimuli[2])
+        np.testing.assert_equal(retrieved, stimuli[2])
         assert np.allclose(c.distances_to_entries, [distances[1], distances[2], 0])
 
         # Test distances using distance_field_weights
@@ -753,24 +760,24 @@ class TestContentAddressableMemory:
             distances = np.squeeze(np.sum(distances, axis=0) / len([f for f in fw if f]))
 
             retrieved = c(stimuli[0])
-            np.all(retrieved==stimuli[0])
+            np.testing.assert_equal(retrieved, stimuli[0])
             assert np.allclose(c.distances_to_entries, [0, distances[0], distances[1]])
 
             retrieved = c(stimuli[1])
-            np.all(retrieved==stimuli[1])
+            np.testing.assert_equal(retrieved, stimuli[1])
             assert np.allclose(c.distances_to_entries, [distances[0], 0, distances[2]])
 
             retrieved = c(stimuli[2])
-            np.all(retrieved==stimuli[2])
+            np.testing.assert_equal(retrieved, stimuli[2])
             assert np.allclose(c.distances_to_entries, [distances[1], distances[2], 0])
 
         # Test distances_by_fields
         c.distance_field_weights=[1,1]
         stim = [[8,9,10],[11,12,13]]
         retrieved = c(stim)
-        np.all(retrieved==np.array([[7,8,9],[10,11,12]]))
+        np.testing.assert_equal(retrieved, [[7, 8, 9], [10, 11, 12]])
         distances_by_field = [Distance(metric=COSINE)([retrieved[i], stim[i]]) for i in range(2)]
-        np.allclose(c.distances_by_field, distances_by_field)
+        np.testing.assert_equal(c.distances_by_field, distances_by_field)
 
     # Test of ContentAddressableMemory without LLVM:
     def test_ContentAddressableMemory_with_initializer_and_equal_field_sizes(self):
@@ -824,8 +831,8 @@ class TestContentAddressableMemory:
 
         c.equidistant_entries_select = OLDEST  # Should return A
         retrieved = c.get_memory(stimuli[stim])
-        retrieved_label = [k for k,v in stimuli.items()
-                         if np.all([v[i] == retrieved[i] for i in range(len(v))])] or [None]
+        retrieved_label = [k for k, v in stimuli.items()
+                           if np.all([vi == retrieved[i] for i, vi in enumerate(v)])] or [None]
         assert retrieved_label == ['A']
 
         c.equidistant_entries_select = NEWEST  # Should return D
@@ -841,8 +848,7 @@ class TestContentAddressableMemory:
             retrieved = c(stimuli[stim])
         retrieved_label = retrieve_label_helper(retrieved, stimuli)
         assert retrieved_label == [None]
-        expected = np.array([[0,0,0],[0,0,0]])
-        assert np.all(expected==retrieved)
+        np.testing.assert_equal(retrieved, [[0, 0, 0], [0, 0, 0]])
 
     def test_ContentAddressableMemory_with_initializer_and_diff_field_sizes(self):
 
@@ -893,9 +899,15 @@ class TestContentAddressableMemory:
 
         retrieved_label = retrieve_label_helper(retrieved, stimuli)
         assert retrieved_label == [None]
-        expected = np.array([np.array([0,0,0]),np.array([0,0,0,0])], dtype=object)
-        retrieved = np.array(retrieved, dtype=object)
-        assert np.all(np.alltrue(x) for x in np.equal(expected,retrieved, dtype=object))
+
+        expected = convert_all_elements_to_np_array([[0, 0, 0], [0, 0, 0, 0]])
+
+        # There's no np.testing function that handles the rugged arrays correctly
+        assert len(retrieved) == len(expected)
+        for m, e in zip(retrieved, expected):
+            assert len(m) == len(e)
+            for x, y in zip(m, e):
+                np.testing.assert_array_equal(x, y)
 
     def test_ContentAddressableMemory_without_initializer_and_equal_field_sizes(self):
 
@@ -992,9 +1004,15 @@ class TestContentAddressableMemory:
 
         retrieved_label = retrieve_label_helper(retrieved, stimuli)
         assert retrieved_label == [None]
-        expected = np.array([np.array([0,0,0]),np.array([0,0,0,0])], dtype=object)
-        retrieved = np.array(retrieved, dtype=object)
-        assert np.all(np.alltrue(np.array(x) for x in np.equal(expected, retrieved, dtype=object)))
+
+        expected = convert_all_elements_to_np_array([[0, 0, 0], [0, 0, 0, 0]])
+
+        # There's no np.testing function that handles the rugged arrays correctly
+        assert len(retrieved) == len(expected)
+        for m, e in zip(retrieved, expected):
+            assert len(m) == len(e)
+            for x, y in zip(m, e):
+                np.testing.assert_array_equal(x, y)
 
     def test_ContentAddressableMemory_with_duplicate_entry_in_initializer_warning(self):
 

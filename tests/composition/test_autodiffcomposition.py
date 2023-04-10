@@ -2387,19 +2387,17 @@ class TestACLogging:
 
         expected_length = len(xor_inputs) * num_epochs
 
-        assert np.all(in_np_dict_vals[0:4] == xor_inputs)
-        assert np.all(np.array(in_np_vals) == in_np_dict_vals)
+        np.testing.assert_equal(in_np_dict_vals[0:4], xor_inputs)
+        np.testing.assert_equal(in_np_vals, in_np_dict_vals)
         assert in_np_dict_vals.shape == (expected_length, xor_in.size)
 
         assert hid_map_np_dict_mats.shape == (expected_length, xor_in.size, xor_hid.size)
-        assert hid_map_np_mats.shape == hid_map_np_dict_mats.shape
-        assert np.all(hid_map_np_mats[3] == hid_map_np_dict_mats[3])  # CW: 3 is arbitrary. you can use any index
+        np.testing.assert_equal(hid_map_np_mats, hid_map_np_dict_mats)
 
         assert hid_np_dict_vals.shape == (expected_length, xor_hid.size)
 
         assert out_map_np_dict_mats.shape == (expected_length, xor_hid.size, xor_out.size)
-        assert out_map_np_mats.shape == out_map_np_dict_mats.shape
-        assert np.all(out_map_np_mats[3] == out_map_np_dict_mats[3])
+        np.testing.assert_equal(out_map_np_mats, out_map_np_dict_mats)
 
         assert out_np_dict_vals.shape == (expected_length, xor_out.size)
 
