@@ -1988,28 +1988,23 @@ class TestBackPropLearning:
             # which WILL FAIL unless you gather higher precision values to use as reference
             np.testing.assert_allclose(val, expected, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))
 
-    models = ['PYTORCH','LLVM']
-    @pytest.mark.parametrize('models', models, ids=[x for x in models])
     @pytest.mark.pytorch
-    def test_xor_training_identicalness_standard_composition_vs_PyTorch_and_LLVM(self, models):
+    @pytest.mark.composition
+    @pytest.mark.parametrize('learning_rate', [10])
+    def test_xor_training_identicalness_standard_composition_vs_PyTorch_and_LLVM(self, learning_rate, autodiff_mode):
         """Test equality of results for running 3-layered xor network using System, Composition and Autodiff"""
+
+        if pytest.helpers.llvm_current_fp_precision() == 'fp32' and autodiff_mode != pnl.ExecutionMode.PyTorch:
+            pytest.skip("Comparison to Python works only when using the same fp precision!")
 
         num_epochs=2
 
-        xor_inputs = np.array(  # the inputs we will provide to the model
-            [[0, 0],
-             [0, 1],
-             [1, 0],
-             [1, 1]])
+        xor_inputs = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
 
-        xor_targets = np.array(  # the outputs we wish to see from the model
-            [[0],
-             [1],
-             [1],
-             [0]])
+        xor_targets = np.array([[0], [1], [1], [0]])
 
-        in_to_hidden_matrix = np.random.rand(2,10)
-        hidden_to_out_matrix = np.random.rand(10,1)
+        in_to_hidden_matrix = np.random.rand(2, 10)
+        hidden_to_out_matrix = np.random.rand(10, 1)
 
         # SET UP MODELS --------------------------------------------------------------------------------
 
@@ -2043,105 +2038,59 @@ class TestBackPropLearning:
                                                                           hidden_comp,
                                                                           hidden_to_out_comp,
                                                                           output_comp],
-                                                                         learning_rate=10)
+                                                                         learning_rate=learning_rate)
         target_mech = backprop_pathway.target
         inputs_dict = {"inputs": {input_comp:xor_inputs},
                        "targets": {output_comp:xor_targets},
                        "epochs": num_epochs}
+        # Don't use autodiff_mode from above,
+        # this is the true/Python result
         result_comp = xor_comp.learn(inputs=inputs_dict)
 
-        # AutodiffComposition using LLVM
-        if 'LLVM' in models:
+        # Build equivalent Autodiff composition
+        input_autodiff = pnl.TransferMechanism(name='input',
+                                   default_variable=np.zeros(2))
 
-            input_LLVM = pnl.TransferMechanism(name='input',
-                                       default_variable=np.zeros(2))
+        hidden_autodiff = pnl.TransferMechanism(name='hidden',
+                                    default_variable=np.zeros(10),
+                                    function=pnl.Logistic())
 
-            hidden_LLVM = pnl.TransferMechanism(name='hidden',
-                                        default_variable=np.zeros(10),
-                                        function=pnl.Logistic())
+        output_autodiff = pnl.TransferMechanism(name='output',
+                                    default_variable=np.zeros(1),
+                                    function=pnl.Logistic())
 
-            output_LLVM = pnl.TransferMechanism(name='output',
-                                        default_variable=np.zeros(1),
-                                        function=pnl.Logistic())
+        in_to_hidden_autodiff = pnl.MappingProjection(name='in_to_hidden',
+                                    matrix=in_to_hidden_matrix.copy(),
+                                    sender=input_autodiff,
+                                    receiver=hidden_autodiff)
 
-            in_to_hidden_LLVM = pnl.MappingProjection(name='in_to_hidden',
-                                        matrix=in_to_hidden_matrix.copy(),
-                                        sender=input_LLVM,
-                                        receiver=hidden_LLVM)
+        hidden_to_out_autodiff = pnl.MappingProjection(name='hidden_to_out',
+                                    matrix=hidden_to_out_matrix.copy(),
+                                    sender=hidden_autodiff,
+                                    receiver=output_autodiff)
 
-            hidden_to_out_LLVM = pnl.MappingProjection(name='hidden_to_out',
-                                        matrix=hidden_to_out_matrix.copy(),
-                                        sender=hidden_LLVM,
-                                        receiver=output_LLVM)
+        xor_autodiff = pnl.AutodiffComposition(learning_rate=learning_rate, optimizer_type='sgd')
 
-            xor_LLVM = pnl.AutodiffComposition(learning_rate=10,
-                                               optimizer_type='sgd')
+        xor_autodiff.add_node(input_autodiff)
+        xor_autodiff.add_node(hidden_autodiff)
+        xor_autodiff.add_node(output_autodiff)
 
-            xor_LLVM.add_node(input_LLVM)
-            xor_LLVM.add_node(hidden_LLVM)
-            xor_LLVM.add_node(output_LLVM)
+        xor_autodiff.add_projection(sender=input_autodiff, projection=in_to_hidden_autodiff, receiver=hidden_autodiff)
+        xor_autodiff.add_projection(sender=hidden_autodiff, projection=hidden_to_out_autodiff, receiver=output_autodiff)
+        xor_autodiff.infer_backpropagation_learning_pathways()
 
-            xor_LLVM.add_projection(sender=input_LLVM, projection=in_to_hidden_LLVM, receiver=hidden_LLVM)
-            xor_LLVM.add_projection(sender=hidden_LLVM, projection=hidden_to_out_LLVM, receiver=output_LLVM)
-            xor_LLVM.infer_backpropagation_learning_pathways()
+        inputs_dict = {"inputs": {input_autodiff:xor_inputs},
+                       "targets": {output_autodiff:xor_targets},
+                       "epochs": num_epochs}
+        # Do use autodiff_mode here. This is the tested result
+        result_autodiff = xor_autodiff.learn(inputs=inputs_dict, execution_mode=autodiff_mode)
 
-            inputs_dict = {"inputs": {input_LLVM:xor_inputs},
-                           "targets": {output_LLVM:xor_targets},
-                           "epochs": num_epochs}
-            result_LLVM = xor_LLVM.learn(inputs=inputs_dict, execution_mode=pnlvm.ExecutionMode.LLVMRun)
+        assert np.allclose(in_to_hidden_autodiff.parameters.matrix.get(xor_autodiff),
+                           in_to_hidden_comp.get_mod_matrix(xor_comp))
+        assert np.allclose(hidden_to_out_autodiff.parameters.matrix.get(xor_autodiff),
+                           hidden_to_out_comp.get_mod_matrix(xor_comp))
+        assert np.allclose(result_comp, result_autodiff)
 
-            assert np.allclose(in_to_hidden_LLVM.parameters.matrix.get(xor_LLVM),
-                               in_to_hidden_comp.get_mod_matrix(xor_comp))
-            assert np.allclose(hidden_to_out_LLVM.parameters.matrix.get(xor_LLVM),
-                               hidden_to_out_comp.get_mod_matrix(xor_comp))
-            assert np.allclose(result_comp, result_LLVM)
-
-        # AutodiffComposition using PyTorch
-        elif 'PYTORCH' in models:
-
-            input_PYTORCH = pnl.TransferMechanism(name='input',
-                                       default_variable=np.zeros(2))
-
-            hidden_PYTORCH = pnl.TransferMechanism(name='hidden',
-                                        default_variable=np.zeros(10),
-                                        function=pnl.Logistic())
-
-            output_PYTORCH = pnl.TransferMechanism(name='output',
-                                        default_variable=np.zeros(1),
-                                        function=pnl.Logistic())
-
-            in_to_hidden_PYTORCH = pnl.MappingProjection(name='in_to_hidden',
-                                        matrix=in_to_hidden_matrix.copy(),
-                                        sender=input_PYTORCH,
-                                        receiver=hidden_PYTORCH)
-
-            hidden_to_out_PYTORCH = pnl.MappingProjection(name='hidden_to_out',
-                                        matrix=hidden_to_out_matrix.copy(),
-                                        sender=hidden_PYTORCH,
-                                        receiver=output_PYTORCH)
-
-            xor_PYTORCH = pnl.AutodiffComposition(learning_rate=10,
-                                                  optimizer_type='sgd')
-
-            xor_PYTORCH.add_node(input_PYTORCH)
-            xor_PYTORCH.add_node(hidden_PYTORCH)
-            xor_PYTORCH.add_node(output_PYTORCH)
-
-            xor_PYTORCH.add_projection(sender=input_PYTORCH, projection=in_to_hidden_PYTORCH, receiver=hidden_PYTORCH)
-            xor_PYTORCH.add_projection(sender=hidden_PYTORCH, projection=hidden_to_out_PYTORCH, receiver=output_PYTORCH)
-            xor_PYTORCH.infer_backpropagation_learning_pathways()
-
-            inputs_dict = {"inputs": {input_PYTORCH:xor_inputs},
-                           "targets": {output_PYTORCH:xor_targets},
-                           "epochs": num_epochs}
-            result_PYTORCH = xor_PYTORCH.learn(inputs=inputs_dict,
-                                               execution_mode=pnlvm.ExecutionMode.PyTorch)
-
-            assert np.allclose(in_to_hidden_PYTORCH.parameters.matrix.get(xor_PYTORCH),
-                               in_to_hidden_comp.get_mod_matrix(xor_comp))
-            assert np.allclose(hidden_to_out_PYTORCH.parameters.matrix.get(xor_PYTORCH),
-                               hidden_to_out_comp.get_mod_matrix(xor_comp))
-            assert np.allclose(result_comp, result_PYTORCH)
 
 
     @pytest.mark.parametrize('configuration', [
