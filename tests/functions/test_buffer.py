@@ -57,9 +57,7 @@ class TestBuffer():
         B.execute([7, 8, 9])
         val = benchmark(B.execute, [10, 11, 12])
         expected_val = [[24, 4.693117564500052, 46], [17, 7.744647273059847, 29], [10, 11, 12]]
-        for v_v, v_e in zip(val, expected_val):
-            for v, e in zip(v_v, v_e):
-                np.testing.assert_allclose(v, e)
+        np.testing.assert_allclose(val, expected_val)
 
     def test_buffer_standalone_noise_function_invocation(self):
         class CallCount:
@@ -81,9 +79,7 @@ class TestBuffer():
 
         assert counter_f.count == 4
         expected_val = [[24, 12.0, 46], [17, 12.0, 29], [10, 11, 12]]
-        for v_v, v_e in zip(val, expected_val):
-            for v, e in zip(v_v, v_e):
-                np.testing.assert_allclose(v, e)
+        np.testing.assert_allclose(val, expected_val)
 
     @pytest.mark.benchmark(group="BufferFunction")
     def test_buffer_initializer_len_3(self, benchmark):
