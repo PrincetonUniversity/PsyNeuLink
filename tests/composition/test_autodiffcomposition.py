@@ -26,6 +26,10 @@ logger = logging.getLogger(__name__)
 # Unit tests for functions of AutodiffComposition class that are new (not in Composition)
 # or override functions in Composition
 
+def _single_learn_results(composition, *args, **kwargs):
+    composition.learn(*args, **kwargs)
+    return composition.learning_results
+
 @pytest.mark.pytorch
 @pytest.mark.acconstructor
 class TestACConstructor:
@@ -123,8 +127,7 @@ class TestTrainingCorrectness:
         hid_map = MappingProjection(matrix=np.random.rand(2, 10))
         out_map = MappingProjection(matrix=np.random.rand(10, 1))
 
-        xor = AutodiffComposition(optimizer_type=opt,
-                                  learning_rate=0.1)
+        xor = AutodiffComposition(optimizer_type=opt, learning_rate=0.1)
 
         xor.add_node(xor_in)
         xor.add_node(xor_hid)
@@ -133,28 +136,24 @@ class TestTrainingCorrectness:
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
-        xor_inputs = np.array(  # the inputs we will provide to the model
-            [[0, 0], [0, 1], [1, 0], [1, 1]])
-
-        xor_targets = np.array(  # the outputs we wish to see from the model
-            [[0], [1], [1], [0]])
+        input_dict = {"inputs": {xor_in: np.array([[0, 0], [0, 1], [1, 0], [1, 1]])},
+                      "targets": {xor_out: np.array([[0], [1], [1], [0]])}}
 
         if calls == 'single':
-            benchmark(xor.learn, inputs={"inputs": {xor_in:xor_inputs},
-                                         "targets": {xor_out:xor_targets},
-                                         "epochs": eps}, execution_mode=autodiff_mode)
+            input_dict["epochs"] = eps
+            results = benchmark(_single_learn_results, xor, inputs=input_dict, execution_mode=autodiff_mode)
         else:
-            input_dict = {"inputs": {xor_in: xor_inputs},
-                          "targets": {xor_out: xor_targets},
-                          "epochs": 1}
+            input_dict["epochs"] = 1
             for i in range(eps - 1):
                 xor.learn(inputs=input_dict, execution_mode=autodiff_mode)
-            benchmark(xor.learn, inputs=input_dict, execution_mode=autodiff_mode)
-        results = xor.learning_results
+            results = benchmark(_single_learn_results, xor, inputs=input_dict, execution_mode=autodiff_mode)
 
-        assert len(results) == len(expected)
-        for r, t in zip(results, expected):
-            assert np.allclose(r[0], t)
+        if pytest.helpers.llvm_current_fp_precision() == 'fp32' and autodiff_mode != pnl.ExecutionMode.PyTorch:
+            accuracy_args = {"atol": 1e-8, "rtol": 1e-6}
+        else:
+            accuracy_args = {}
+
+        np.testing.assert_allclose(results, expected, **accuracy_args)
 
 
     # tests whether semantic network created as autodiff composition learns properly
@@ -325,9 +324,12 @@ class TestTrainingCorrectness:
                 targets_dict[out_sig_can].append(truth_can[i])
 
         # TRAIN THE MODEL
-        results = benchmark(sem_net.learn, inputs={'inputs': inputs_dict,
-                                                   'targets': targets_dict,
-                                                   'epochs': eps}, execution_mode=autodiff_mode)
+        results = benchmark(_single_learn_results,
+                            sem_net,
+                            inputs={'inputs': inputs_dict,
+                                    'targets': targets_dict,
+                                    'epochs': eps},
+                            execution_mode=autodiff_mode)
 
         # CHECK CORRECTNESS
         expected = [[[0.13455769, 0.12924714, 0.13288172, 0.1404659 , 0.14305814,
@@ -453,16 +455,16 @@ class TestTrainingCorrectness:
                     0.26739429, 0.25464059, 0.25453138, 0.49761396]]]
 
 
-        # for res, exp in zip(results, expected):
-        if pytest.helpers.llvm_current_fp_precision() == 'fp32' and \
-                   autodiff_mode != pnl.ExecutionMode.Python:
-            for res, exp in zip(sem_net.learning_results, expected):
-                for r, e in zip(res, exp):
-                    np.testing.assert_allclose(r, e, atol=1e-06, rtol=1e-06)
+        if pytest.helpers.llvm_current_fp_precision() == 'fp32' and autodiff_mode != pnl.ExecutionMode.Python:
+            accuracy_args = {"atol": 1e-8, "rtol": 1e-6}
         else:
-            for res, exp in zip(sem_net.learning_results, expected):
-                for r, e in zip(res, exp):
-                    np.testing.assert_allclose(r, e)
+            accuracy_args = {}
+
+        # The results are in a ragged array, we need to check components explictly
+        for res, exp in zip(results, expected):
+            for r, e in zip(res, exp):
+                np.testing.assert_allclose(r, e, **accuracy_args)
+
 
     def test_pytorch_equivalence_with_autodiff_composition(self, autodiff_mode):
         iSs = np.array(
@@ -1694,16 +1696,13 @@ class TestMiscTrainingFunctionality:
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
-        xor_inputs = np.array(  # the inputs we will provide to the model
-            [[0, 0], [0, 1], [1, 0], [1, 1]])
-
-        xor_targets = np.array(  # the outputs we wish to see from the model
-            [[0], [1], [1], [0]])
-
         # train model for a few epochs
-        benchmark(xor.learn, inputs={"inputs": {xor_in:xor_inputs},
-                                                           "targets": {xor_out:xor_targets},
-                                                           "epochs": 10}, execution_mode=autodiff_mode)
+        results = benchmark(_single_learn_results,
+                            xor,
+                            inputs={"inputs": {xor_in: [[0, 0], [0, 1], [1, 0], [1, 1]]},
+                                    "targets": {xor_out: [[0], [1], [1], [0]]},
+                                    "epochs": 10},
+                            execution_mode=autodiff_mode)
 
         # fp32 results are different due to rounding
         if pytest.helpers.llvm_current_fp_precision() == 'fp32' and \
@@ -1713,7 +1712,7 @@ class TestMiscTrainingFunctionality:
             expected = [[[0.9918830394744873]], [[0.9982172846794128]], [[0.9978305697441101]], [[0.9994590878486633]]]
         # FIXME: LLVM version is broken with learning rate == 1.5
         if learning_rate != 1.5 or autodiff_mode == pnl.ExecutionMode.PyTorch:
-            assert np.allclose(xor.learning_results, expected)
+            np.testing.assert_allclose(results, expected)
 
 
     # test whether pytorch parameters and projections are kept separate (at diff. places in memory)

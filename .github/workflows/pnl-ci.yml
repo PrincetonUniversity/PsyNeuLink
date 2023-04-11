@@ -65,9 +65,13 @@ jobs:
 
           # fp32 run on linux python 3.8
           - python-version: '3.8'
-            python-architecture: 'x64'
             os: ubuntu
             extra-args: '--fp-precision=fp32'
+
+          # --benchmark-enable run on macos python 3.8
+          - python-version: '3.8'
+            os: macos
+            extra-args: '--benchmark-enable -m benchmark -n0 --benchmark-min-rounds=2 --benchmark-max-time=0.001 --benchmark-warmup=off'
 
           # add python 3.8 build on macos since 3.7 is broken
           # https://github.com/actions/virtual-environments/issues/4230
