@@ -63,8 +63,8 @@ def test_gating_with_composition():
 
     stim_list[Gating_Mechanism]=[0.0]
     results = comp.learn(num_trials=1, inputs=stim_list)
-    expected_results = [[[0.5, 0.5, 0.5]]]
-    assert np.allclose(results, expected_results)
+    expected_results = [[0.5, 0.5, 0.5]]
+    np.testing.assert_allclose(results, expected_results)
 
     stim_list[Gating_Mechanism]=[2.0]
     results = comp.learn(num_trials=1, inputs=stim_list)
