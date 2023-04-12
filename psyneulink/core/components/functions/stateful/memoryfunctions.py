@@ -1242,7 +1242,10 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             distance_function = distance_function(default_variable=test_var)
             fct_msg = 'Function type'
         else:
-            distance_function.defaults.variable = [test_var,test_var]
+            if np.array(test_var).shape[0] == 1:
+                distance_function.defaults.variable = [test_var,test_var]
+            else:
+                distance_function.defaults.variable = test_var
             distance_function._instantiate_value(context)
             fct_msg = 'Function'
 
