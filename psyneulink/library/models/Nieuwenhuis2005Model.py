@@ -202,7 +202,7 @@ stim_list_dict = {input_layer: time}
 # show the system
 # task.show_graph()
 
-# run the system
+# run the Composition
 task.run(stim_list_dict, num_trials=trials)
 
 
