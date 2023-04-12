@@ -383,7 +383,8 @@ class PECOptimizationFunction(OptimizationFunction):
         for i, arg in enumerate(args):
 
             # Map the args in order of the fittable parameters
-            if i < len(search_space) - 1:
+            len_search_space = len(search_space) if self.owner.num_estimates is None else len(search_space) - 1
+            if i < len_search_space:
                 assert search_space[i].num == 1, (
                     "Search space for this dimension must be a single value, during search "
                     "we will change the value but not the shape."
@@ -461,9 +462,12 @@ class PECOptimizationFunction(OptimizationFunction):
             # Get the optimal function value and sample
             optimal_value = results["optimal_value"]
 
+            optimal_sample = list(results["fitted_params"].values())
+
             # Replace randomization dimension to match expected dimension of output_values of OCM. This is ugly but
             # necessary.
-            optimal_sample = list(results["fitted_params"].values()) + [0.0]
+            if self.owner.num_estimates is not None:
+                optimal_sample = optimal_sample + [0.0]
 
         return optimal_sample, optimal_value, saved_samples, saved_values
 
@@ -652,10 +656,11 @@ class PECOptimizationFunction(OptimizationFunction):
         Returns:
             A dict mapping parameter names to (lower, upper) bounds.
         """
+
         if self.owner is not None:
             acs = [
-                cs.allocation_samples
-                for i, cs in enumerate(self.owner.control_signals)
+                cs.specification
+                for i, cs in enumerate(self._full_search_space)
                 if i != self.randomization_dimension
             ]
 

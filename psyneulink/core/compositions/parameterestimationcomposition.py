@@ -167,7 +167,12 @@ import warnings
 import numpy as np
 import pandas as pd
 
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union, Dict, List, Callable, Literal
+
 import psyneulink.core.llvm as pnllvm
+from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.compositions.composition import Composition, CompositionError
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \
     OptimizationControlMechanism
@@ -486,21 +491,22 @@ class ParameterEstimationComposition(Composition):
 
     @handle_external_context()
     @check_user_specified
+    @beartype
     def __init__(
         self,
-        parameters,  # OCM control_signals
-        outcome_variables,  # OCM monitor_for_control
-        optimization_function,  # function of OCM
-        model=None,
-        data=None,
+        parameters: Dict,
+        outcome_variables: Union[List[Mechanism], Mechanism, List[OutputPort], OutputPort],
+        optimization_function: Union[PECOptimizationFunction, Literal['differential_evolution'], Literal['grid_search']],
+        model: Optional[Composition] = None,
+        data: Optional[pd.DataFrame] = None,
         data_categorical_dims=None,
-        objective_function=None,  # function of OCM ObjectiveMechanism
-        num_estimates=1,  # num seeds per parameter combination (i.e., of OCM allocation_samples)
-        num_trials_per_estimate=None,  # num trials per run of model for each combination of parameters
-        initial_seed=None,
-        same_seed_for_all_parameter_combinations=None,
-        name=None,
-        context=None,
+        objective_function: Optional[Callable] = None,
+        num_estimates: int = 1,
+        num_trials_per_estimate: Optional[int] = None,
+        initial_seed: Optional[int] = None,
+        same_seed_for_all_parameter_combinations: Optional[bool] = None,
+        name: Optional[str] = None,
+        context: Optional[Context] = None,
         **kwargs,
     ):
 
