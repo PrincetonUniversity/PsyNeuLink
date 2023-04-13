@@ -476,9 +476,9 @@ class TestLog:
 
         assert list(log_dict_T1.keys()) == [PS.default_execution_id]
 
-        assert np.allclose(expected_values_T1, log_dict_T1[PS.default_execution_id]['value'])
-        assert np.allclose(expected_slopes_T1, log_dict_T1[PS.default_execution_id]['mod_slope'])
-        assert np.allclose(expected_results_T1, log_dict_T1[PS.default_execution_id]['RESULT'])
+        np.testing.assert_allclose(expected_values_T1, log_dict_T1[PS.default_execution_id]['value'])
+        np.testing.assert_allclose(expected_slopes_T1, log_dict_T1[PS.default_execution_id]['mod_slope'])
+        np.testing.assert_allclose(expected_results_T1, log_dict_T1[PS.default_execution_id]['RESULT'])
 
         assert list(log_dict_T1[PS.default_execution_id].keys()) == \
                ['Run', 'Trial', 'Pass', 'Time_step', 'value', 'mod_slope', 'RESULT']
@@ -697,12 +697,12 @@ class TestLog:
         assert list(log_dict_T1.keys()) == [COMP.default_execution_id]
         sys_log_dict = log_dict_T1[COMP.default_execution_id]
 
-        assert np.allclose(expected_run_T1, sys_log_dict['Run'])
-        assert np.allclose(expected_trial_T1, sys_log_dict['Trial'])
-        assert np.allclose(expected_time_step_T1, sys_log_dict['Time_step'])
-        assert np.allclose(expected_values_T1, sys_log_dict['value'])
-        assert np.allclose(expected_slopes_T1, sys_log_dict['mod_slope'])
-        assert np.allclose(expected_results_T1, sys_log_dict['RESULT'])
+        np.testing.assert_allclose(expected_run_T1, sys_log_dict['Run'])
+        np.testing.assert_allclose(expected_trial_T1, sys_log_dict['Trial'])
+        np.testing.assert_allclose(expected_time_step_T1, sys_log_dict['Time_step'])
+        np.testing.assert_allclose(expected_values_T1, sys_log_dict['value'])
+        np.testing.assert_allclose(expected_slopes_T1, sys_log_dict['mod_slope'])
+        np.testing.assert_allclose(expected_results_T1, sys_log_dict['RESULT'])
 
         # T2 log after zero-th run --------------------------------------------
 
@@ -718,12 +718,12 @@ class TestLog:
         assert list(log_dict_T2.keys()) == [COMP.default_execution_id]
         sys_log_dict = log_dict_T2[COMP.default_execution_id]
 
-        assert np.allclose(expected_run_T2, sys_log_dict['Run'])
-        assert np.allclose(expected_trial_T2, sys_log_dict['Trial'])
-        assert np.allclose(expected_time_step_T2, sys_log_dict['Time_step'])
-        assert np.allclose(expected_values_T2, sys_log_dict['value'])
-        assert np.allclose(expected_slopes_T2, sys_log_dict['mod_slope'])
-        assert np.allclose(expected_results_T2, sys_log_dict['RESULT'])
+        np.testing.assert_allclose(expected_run_T2, sys_log_dict['Run'])
+        np.testing.assert_allclose(expected_trial_T2, sys_log_dict['Trial'])
+        np.testing.assert_allclose(expected_time_step_T2, sys_log_dict['Time_step'])
+        np.testing.assert_allclose(expected_values_T2, sys_log_dict['value'])
+        np.testing.assert_allclose(expected_slopes_T2, sys_log_dict['mod_slope'])
+        np.testing.assert_allclose(expected_results_T2, sys_log_dict['RESULT'])
 
         # RUN ONE  |  TRIALS ZERO, ONE, TWO -------------------------------------
 
@@ -744,12 +744,12 @@ class TestLog:
         expected_slopes_T1_2 = expected_slopes_T1 + expected_slopes_T1
         expected_results_T1_2 = expected_results_T1 + expected_results_T1
 
-        # assert np.allclose(expected_run_T1_2, sys_log_dict['Run'])
-        # assert np.allclose(expected_trial_T1_2, sys_log_dict['Trial'])
-        # assert np.allclose(expected_time_step_T1_2, sys_log_dict['Time_step'])
-        assert np.allclose(expected_values_T1_2, sys_log_dict['value'])
-        assert np.allclose(expected_slopes_T1_2, sys_log_dict['mod_slope'])
-        assert np.allclose(expected_results_T1_2, sys_log_dict['RESULT'])
+        # np.testing.assert_allclose(expected_run_T1_2, sys_log_dict['Run'])
+        # np.testing.assert_allclose(expected_trial_T1_2, sys_log_dict['Trial'])
+        # np.testing.assert_allclose(expected_time_step_T1_2, sys_log_dict['Time_step'])
+        np.testing.assert_allclose(expected_values_T1_2, sys_log_dict['value'])
+        np.testing.assert_allclose(expected_slopes_T1_2, sys_log_dict['mod_slope'])
+        np.testing.assert_allclose(expected_results_T1_2, sys_log_dict['RESULT'])
 
         # T2 log after first run -------------------------------------------
 
@@ -765,12 +765,12 @@ class TestLog:
         expected_slopes_T2_2 = [[2.0], [2.0], [2.0]] + expected_slopes_T2
         expected_results_T2_2 = [[2.0, 4.0], [6.0, 8.0], [10.0, 12.0]] + expected_results_T2
 
-        # assert np.allclose(expected_run_T2_2, sys_log_dict['Run'])
-        # assert np.allclose(expected_trial_T2_2, sys_log_dict['Trial'])
-        # assert np.allclose(expected_time_step_T2_2, sys_log_dict['Time_step'])
-        assert np.allclose(expected_values_T2_2, sys_log_dict['value'])
-        assert np.allclose(expected_slopes_T2_2, sys_log_dict['mod_slope'])
-        assert np.allclose(expected_results_T2_2, sys_log_dict['RESULT'])
+        # np.testing.assert_allclose(expected_run_T2_2, sys_log_dict['Run'])
+        # np.testing.assert_allclose(expected_trial_T2_2, sys_log_dict['Trial'])
+        # np.testing.assert_allclose(expected_time_step_T2_2, sys_log_dict['Time_step'])
+        np.testing.assert_allclose(expected_values_T2_2, sys_log_dict['value'])
+        np.testing.assert_allclose(expected_slopes_T2_2, sys_log_dict['mod_slope'])
+        np.testing.assert_allclose(expected_results_T2_2, sys_log_dict['RESULT'])
 
     def test_log_dictionary_with_scheduler(self):
         T1 = pnl.TransferMechanism(name='log_test_T1',
@@ -804,19 +804,19 @@ class TestLog:
                                                                     'mod_slope']
 
         # Check values T1
-        assert np.allclose(sys_log_dict["Run"], [[0], [0], [0]])
-        assert np.allclose(sys_log_dict["Trial"], [[0], [0], [0]])
-        assert np.allclose(sys_log_dict["Time_step"], [[0], [0], [0]])
-        assert np.allclose(sys_log_dict["RESULT"], [[0.5], [0.75], [0.875]])
-        assert np.allclose(sys_log_dict["value"], [[[0.5]], [[0.75]], [[0.875]]])
-        assert np.allclose(sys_log_dict["mod_slope"], [[1], [1], [1]])
+        np.testing.assert_allclose(sys_log_dict["Run"], [[0], [0], [0]])
+        np.testing.assert_allclose(sys_log_dict["Trial"], [[0], [0], [0]])
+        np.testing.assert_allclose(sys_log_dict["Time_step"], [[0], [0], [0]])
+        np.testing.assert_allclose(sys_log_dict["RESULT"], [[0.5], [0.75], [0.875]])
+        np.testing.assert_allclose(sys_log_dict["value"], [[[0.5]], [[0.75]], [[0.875]]])
+        np.testing.assert_allclose(sys_log_dict["mod_slope"], [[1], [1], [1]])
 
         # Check values T2
-        assert np.allclose(log_dict_T2[COMP.default_execution_id]["Run"], [[0], [0], [0]])
-        assert np.allclose(log_dict_T2[COMP.default_execution_id]["Trial"], [[0], [0], [0]])
-        assert np.allclose(log_dict_T2[COMP.default_execution_id]["Time_step"], [[1], [1], [1]])
-        assert np.allclose(log_dict_T2[COMP.default_execution_id]["value"], [[[3]], [[4.5]], [[5.25]]])
-        assert np.allclose(log_dict_T2[COMP.default_execution_id]["mod_slope"], [[6], [6], [6]])
+        np.testing.assert_allclose(log_dict_T2[COMP.default_execution_id]["Run"], [[0], [0], [0]])
+        np.testing.assert_allclose(log_dict_T2[COMP.default_execution_id]["Trial"], [[0], [0], [0]])
+        np.testing.assert_allclose(log_dict_T2[COMP.default_execution_id]["Time_step"], [[1], [1], [1]])
+        np.testing.assert_allclose(log_dict_T2[COMP.default_execution_id]["value"], [[[3]], [[4.5]], [[5.25]]])
+        np.testing.assert_allclose(log_dict_T2[COMP.default_execution_id]["mod_slope"], [[6], [6], [6]])
 
     def test_log_array_with_scheduler(self):
         T1 = pnl.TransferMechanism(name='log_test_T1',
@@ -912,8 +912,8 @@ class TestLog:
 
         # # Check values T1
         assert len(sys_log_dict["Run"]) == 59
-        assert np.allclose(sys_log_dict["Pass"][30], 30)
-        assert np.allclose(sys_log_dict["Time_step"][30], 0)
+        np.testing.assert_allclose(sys_log_dict["Pass"][30], 30)
+        np.testing.assert_allclose(sys_log_dict["Time_step"][30], 0)
         assert abs(sys_log_dict["value"][58]) >= 0.95
         assert abs(sys_log_dict["value"][57]) < 0.95
 
@@ -974,12 +974,12 @@ class TestLog:
         assert log_dict['Pass'] == [[1], [1], [1]] if scheduler_conditions else [[0], [0], [0]]
         assert log_dict['Time_step'] == [[1], [1], [1]]
         # floats in value, so use np.allclose
-        assert np.allclose(log_dict['value'], [[[0.52466739, 0.47533261]] * 3])
+        np.testing.assert_allclose(log_dict['value'], [[[0.52466739, 0.47533261]] for _ in range(3)])
         if multi_run:
             comp.run(inputs={m0: [[1, 0], [1, 0], [1, 0]]})
             log_dict = lca.log.nparray_dictionary()['Composition-0']
             assert log_dict['Run'] == [[0], [0], [0], [1], [1], [1]]
-            assert np.allclose(log_dict['value'], [[[0.52466739, 0.47533261]] * 6])
+            np.testing.assert_allclose(log_dict['value'], [[[0.52466739, 0.47533261]] for _ in range(6)])
 
     def test_log_with_non_full_execution_id_entries(self):
         t = pnl.TransferMechanism()
@@ -1022,15 +1022,15 @@ class TestClearLog:
 
         # Confirm that values were logged correctly
         sys_log_dict = log_dict_T_1[COMP.default_execution_id]
-        assert np.allclose(sys_log_dict['RESULT'], np.array([[1.0, 1.0]]))
-        assert np.allclose(sys_log_dict['mod_noise'], np.array([[0.0]]))
+        np.testing.assert_allclose(sys_log_dict['RESULT'], np.array([[1.0, 1.0]]))
+        np.testing.assert_allclose(sys_log_dict['mod_noise'], np.array([[0.0]]))
 
         sys_log_dict = log_dict_T_2[COMP.default_execution_id]
-        assert np.allclose(sys_log_dict['RESULT'], np.array([[1.0, 1.0]]))
-        assert np.allclose(sys_log_dict['mod_slope'], np.array([[1.0]]))
+        np.testing.assert_allclose(sys_log_dict['RESULT'], np.array([[1.0, 1.0]]))
+        np.testing.assert_allclose(sys_log_dict['mod_slope'], np.array([[1.0]]))
 
         sys_log_dict = log_dict_PJ[COMP.default_execution_id]
-        assert np.allclose(sys_log_dict['mod_matrix'], np.array([[1.0, 0.0], [0.0, 1.0]]))
+        np.testing.assert_allclose(sys_log_dict['mod_matrix'], np.array([[[1.0, 0.0], [0.0, 1.0]]]))
 
         # KDM 10/3/18: below was changed to delete_entry=True because it's not implemented in Parameter logs,
         # and it's not clear this option results in much difference than just deleting the entries and
@@ -1053,7 +1053,7 @@ class TestClearLog:
         assert log_dict_T_2 == OrderedDict()
 
         # Confirm that PJ log values were not affected by changes to T_1 and T_2's logs
-        assert np.allclose(log_dict_PJ[COMP.default_execution_id]['mod_matrix'], np.array([[1.0, 0.0], [0.0, 1.0]]))
+        np.testing.assert_allclose(log_dict_PJ[COMP.default_execution_id]['mod_matrix'], np.array([[[1.0, 0.0], [0.0, 1.0]]]))
 
         # Run system again
         COMP.run(inputs={T_1: [2.0, 2.0]})
@@ -1065,21 +1065,21 @@ class TestClearLog:
 
         # Confirm that T_1 log values only include most recent run
         sys_log_dict = log_dict_T_1[COMP.default_execution_id]
-        assert np.allclose(sys_log_dict['RESULT'], np.array([[2.0, 2.0]]))
-        assert np.allclose(sys_log_dict['mod_noise'], np.array([[0.0]]))
+        np.testing.assert_allclose(sys_log_dict['RESULT'], np.array([[2.0, 2.0]]))
+        np.testing.assert_allclose(sys_log_dict['mod_noise'], np.array([[0.0]]))
         # NOTE: "Run" value still incremented, but only the most recent one is returned (# runs does not reset to zero)
-        assert np.allclose(sys_log_dict['Run'], np.array([[1]]))
+        np.testing.assert_allclose(sys_log_dict['Run'], np.array([[1]]))
 
         # Confirm that T_2 log values only include most recent run
         sys_log_dict = log_dict_T_2[COMP.default_execution_id]
-        assert np.allclose(sys_log_dict['RESULT'], np.array([[2.0, 2.0]]))
-        assert np.allclose(sys_log_dict['mod_slope'], np.array([[1.0]]))
-        assert np.allclose(sys_log_dict['Run'], np.array([[1]]))
+        np.testing.assert_allclose(sys_log_dict['RESULT'], np.array([[2.0, 2.0]]))
+        np.testing.assert_allclose(sys_log_dict['mod_slope'], np.array([[1.0]]))
+        np.testing.assert_allclose(sys_log_dict['Run'], np.array([[1]]))
 
         # Confirm that PJ log values include all runs
         sys_log_dict = log_dict_PJ[COMP.default_execution_id]
-        assert np.allclose(sys_log_dict['mod_matrix'], np.array([[[1.0, 0.0], [0.0, 1.0]], [[1.0, 0.0], [0.0, 1.0]]]))
-        assert np.allclose(sys_log_dict['Run'], np.array([[0], [1]]))
+        np.testing.assert_allclose(sys_log_dict['mod_matrix'], np.array([[[1.0, 0.0], [0.0, 1.0]], [[1.0, 0.0], [0.0, 1.0]]]))
+        np.testing.assert_allclose(sys_log_dict['Run'], np.array([[0], [1]]))
 
     @pytest.mark.parametrize(
         'insertion_eids, deletion_eids, log_is_empty',

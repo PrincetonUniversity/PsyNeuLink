@@ -136,6 +136,6 @@ def test_moving_average(mode):
     comp.run(inputs=stim_list_dict)
 
     if mode == 'elfi':
-        assert np.allclose(comp.controller.value, [[0.5314349], [0.19140103]])
+        np.testing.assert_allclose(comp.controller.value, [[0.5314349], [0.19140103]])
     if mode == 'GridSearch':
-        assert np.allclose(comp.controller.value, [[0.5], [0.3]])
+        np.testing.assert_allclose(comp.controller.value, [[0.5], [0.3]])

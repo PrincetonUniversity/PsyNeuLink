@@ -30,60 +30,60 @@ class TestReset:
         #  returns previous_value + rate * variable * time_step_size  + noise
         #  0.0 + 1.0 * 1.0 * 1.0 + 0.0
         D.execute(1.0)
-        assert np.allclose(np.asfarray(D.value),  [[1.0], [1.0]])
-        assert np.allclose(D.output_ports[0].value[0], 1.0)
-        assert np.allclose(D.output_ports[1].value[0], 1.0)
+        np.testing.assert_allclose(np.asfarray(D.value),  [[1.0], [1.0]])
+        np.testing.assert_allclose(D.output_ports[0].value[0], 1.0)
+        np.testing.assert_allclose(D.output_ports[1].value[0], 1.0)
 
         # reset function
         D.function.reset(2.0, 0.1)
-        assert np.allclose(D.function.value[0], 2.0)
-        assert np.allclose(D.function.previous_value, 2.0)
-        assert np.allclose(D.function.previous_time, 0.1)
-        assert np.allclose(np.asfarray(D.value),  [[1.0], [1.0]])
-        assert np.allclose(D.output_ports[0].value[0], 1.0)
-        assert np.allclose(D.output_ports[1].value[0], 1.0)
+        np.testing.assert_allclose(D.function.value[0], 2.0)
+        np.testing.assert_allclose(D.function.previous_value, 2.0)
+        np.testing.assert_allclose(D.function.previous_time, 0.1)
+        np.testing.assert_allclose(np.asfarray(D.value),  [[1.0], [1.0]])
+        np.testing.assert_allclose(D.output_ports[0].value[0], 1.0)
+        np.testing.assert_allclose(D.output_ports[1].value[0], 1.0)
 
         # reset function without value spec
         D.function.reset()
-        assert np.allclose(D.function.value[0], 0.0)
-        assert np.allclose(D.function.previous_value, 0.0)
-        assert np.allclose(D.function.previous_time, 0.0)
-        assert np.allclose(np.asfarray(D.value), [[1.0], [1.0]])
-        assert np.allclose(D.output_ports[0].value[0], 1.0)
-        assert np.allclose(D.output_ports[1].value[0], 1.0)
+        np.testing.assert_allclose(D.function.value[0], 0.0)
+        np.testing.assert_allclose(D.function.previous_value, 0.0)
+        np.testing.assert_allclose(D.function.previous_time, 0.0)
+        np.testing.assert_allclose(np.asfarray(D.value), [[1.0], [1.0]])
+        np.testing.assert_allclose(D.output_ports[0].value[0], 1.0)
+        np.testing.assert_allclose(D.output_ports[1].value[0], 1.0)
 
         # reset mechanism
         D.reset(2.0, 0.1)
-        assert np.allclose(D.function.value[0], 2.0)
-        assert np.allclose(D.function.previous_value, 2.0)
-        assert np.allclose(D.function.previous_time, 0.1)
-        assert np.allclose(np.asfarray(D.value), [[2.0], [0.1]])
-        assert np.allclose(D.output_ports[0].value, 2.0)
-        assert np.allclose(D.output_ports[1].value, 0.1)
+        np.testing.assert_allclose(D.function.value[0], 2.0)
+        np.testing.assert_allclose(D.function.previous_value, 2.0)
+        np.testing.assert_allclose(D.function.previous_time, 0.1)
+        np.testing.assert_allclose(np.asfarray(D.value), [[2.0], [0.1]])
+        np.testing.assert_allclose(D.output_ports[0].value, 2.0)
+        np.testing.assert_allclose(D.output_ports[1].value, 0.1)
 
         D.execute(1.0)
         #  2.0 + 1.0 = 3.0 ; 0.1 + 1.0 = 1.1
-        assert np.allclose(np.asfarray(D.value), [[3.0], [1.1]])
-        assert np.allclose(D.output_ports[0].value[0], 3.0)
-        assert np.allclose(D.output_ports[1].value[0], 1.1)
+        np.testing.assert_allclose(np.asfarray(D.value), [[3.0], [1.1]])
+        np.testing.assert_allclose(D.output_ports[0].value[0], 3.0)
+        np.testing.assert_allclose(D.output_ports[1].value[0], 1.1)
 
         # reset mechanism without value spec
         D.reset()
-        assert np.allclose(D.function.value[0], 0.0)
-        assert np.allclose(D.function.previous_value, 0.0)
-        assert np.allclose(D.function.previous_time, 0.0)
-        assert np.allclose(D.output_ports[0].value[0], 0.0)
-        assert np.allclose(D.output_ports[1].value[0], 0.0)
+        np.testing.assert_allclose(D.function.value[0], 0.0)
+        np.testing.assert_allclose(D.function.previous_value, 0.0)
+        np.testing.assert_allclose(D.function.previous_time, 0.0)
+        np.testing.assert_allclose(D.output_ports[0].value[0], 0.0)
+        np.testing.assert_allclose(D.output_ports[1].value[0], 0.0)
 
         # reset only decision variable
         D.function.initializer = 1.0
         D.function.non_decision_time = 0.0
         D.reset()
-        assert np.allclose(D.function.value[0], 1.0)
-        assert np.allclose(D.function.previous_value, 1.0)
-        assert np.allclose(D.function.previous_time, 0.0)
-        assert np.allclose(D.output_ports[0].value[0], 1.0)
-        assert np.allclose(D.output_ports[1].value[0], 0.0)
+        np.testing.assert_allclose(D.function.value[0], 1.0)
+        np.testing.assert_allclose(D.function.previous_value, 1.0)
+        np.testing.assert_allclose(D.function.previous_time, 0.0)
+        np.testing.assert_allclose(D.output_ports[0].value[0], 1.0)
+        np.testing.assert_allclose(D.output_ports[1].value[0], 0.0)
 
 
 class TestThreshold:
@@ -133,7 +133,7 @@ class TestThreshold:
 
         # decision variable accumulation stops
         # time accumulation does not stop
-        assert np.allclose(results, [[[b], [a + 1.0]] for a,b in enumerate(expected)])
+        np.testing.assert_allclose(results, [[[b], [a + 1.0]] for a,b in enumerate(expected)])
 
     # def test_threshold_stops_accumulation_multiple_variables(self):
     #     D = IntegratorMechanism(name='DDM',
@@ -152,7 +152,7 @@ class TestThreshold:
     #         decision_variables_c.append(output[0][2])
     #
     #     # decision variable accumulation stops
-    #     assert np.allclose(decision_variables_a, [2.0, 4.0, 5.0, 5.0, 5.0])
+    #     np.testing.assert_allclose(decision_variables_a, [2.0, 4.0, 5.0, 5.0, 5.0])
 
 
     @pytest.mark.composition
@@ -193,13 +193,13 @@ class TestInputPorts:
         comp = Composition()
         comp.add_linear_processing_pathway(pathway=[input_mech, [[1],[-1]], ddm])
         result = comp.run(inputs={input_mech:[1,0]})
-        assert np.allclose(ddm.output_ports[0].value, [1])
-        assert np.allclose(ddm.output_ports[1].value, [1])
-        assert np.allclose(ddm.value,
+        np.testing.assert_allclose(ddm.output_ports[0].value, [1])
+        np.testing.assert_allclose(ddm.output_ports[1].value, [1])
+        np.testing.assert_allclose(ddm.value,
                            [[1.00000000e+00], [1.19932930e+00], [9.99664650e-01], [3.35350130e-04],
                             [1.19932930e+00], [2.48491374e-01], [1.48291009e+00], [1.19932930e+00],
                             [2.48491374e-01], [1.48291009e+00]])
-        assert np.allclose(result, [[1.]])
+        np.testing.assert_allclose(result, [[1.0], [1.0]])
 
     def test_array_mode(self):
         input_mech = ProcessingMechanism(size=2)
@@ -212,13 +212,13 @@ class TestInputPorts:
         comp = Composition()
         comp.add_linear_processing_pathway(pathway=[input_mech, ddm])
         result = comp.run(inputs={input_mech:[1,0]})
-        assert np.allclose(ddm.output_ports[0].value, [1,0])
-        assert np.allclose(ddm.output_ports[1].value, [1,0])
-        assert np.allclose(ddm.value,
+        np.testing.assert_allclose(ddm.output_ports[0].value, [1,0])
+        np.testing.assert_allclose(ddm.output_ports[1].value, [1,0])
+        np.testing.assert_allclose(ddm.value,
                            [[1.00000000e+00], [1.19932930e+00], [9.99664650e-01], [3.35350130e-04],
                             [1.19932930e+00], [2.48491374e-01], [1.48291009e+00], [1.19932930e+00],
                             [2.48491374e-01], [1.48291009e+00]])
-        assert np.allclose(result, [[1., 0.]])
+        np.testing.assert_allclose(result, [[1., 0.], [1.0, 0.0]])
 
 class TestOutputPorts:
 
@@ -256,7 +256,7 @@ def test_DDM_Integrator_Bogacz(benchmark, mech_mode, prng):
 
     ex(stim)
     val = benchmark(ex, stim)[0]
-    assert np.allclose(val, [1.0])
+    np.testing.assert_allclose(val, [1.0])
 
 # ------------------------------------------------------------------------------------------------
 # # TEST 3
@@ -304,7 +304,7 @@ def test_DDM_noise(mech_mode, benchmark, noise, expected):
 
     ex([10])
     val = benchmark(ex, [10])
-    assert np.allclose(val[0][0], expected)
+    np.testing.assert_allclose(val[0][0], expected)
 
 # ------------------------------------------------------------------------------------------------
 
@@ -650,8 +650,8 @@ def test_DDM_in_composition(benchmark, comp_mode):
 
     # FIXME: Python version returns dtype=object
     val = np.asfarray(val)
-    assert np.allclose(val[0], [2.0])
-    assert np.allclose(val[1], [0.2])
+    np.testing.assert_allclose(val[0], [2.0])
+    np.testing.assert_allclose(val[1], [0.2])
 
 
 @pytest.mark.composition
@@ -672,8 +672,8 @@ def test_DDM_threshold_modulation_analytical(comp_mode):
     val = C.run(inputs, num_trials=1, execution_mode=comp_mode)
 
     # Default modulation is 'multiplicative so the threshold is 20 * 3
-    assert np.allclose(val[0], [60.0])
-    assert np.allclose(val[1], [60.2])
+    np.testing.assert_allclose(val[0], [60.0])
+    np.testing.assert_allclose(val[1], [60.2])
 
 
 @pytest.mark.composition
@@ -693,8 +693,8 @@ def test_DDM_threshold_modulation_integrator(comp_mode):
     inputs = {M:[1], control:[3]}
     val = C.run(inputs, num_trials=1, execution_mode=comp_mode)
 
-    assert np.allclose(val[0], [60.0])
-    assert np.allclose(val[1], [60.0])
+    np.testing.assert_allclose(val[0], [60.0])
+    np.testing.assert_allclose(val[1], [60.0])
 
 
 @pytest.mark.composition
@@ -722,7 +722,7 @@ def test_ddm_is_finished(comp_mode, noise, threshold, expected_results):
     results = comp.run([0], execution_mode=comp_mode)
 
     results = [x for x in np.array(results).flatten()] #HACK: The result is an object dtype in Python comp_mode for some reason?
-    assert np.allclose(results, np.array(expected_results).flatten())
+    np.testing.assert_allclose(results, np.array(expected_results).flatten())
 
 
 def test_sequence_of_DDM_mechs_in_Composition_Pathway():
@@ -799,5 +799,5 @@ def test_DDMMechanism_LCA_equivalent(comp_mode):
     comp2 = Composition()
     comp2.add_node(ddm)
     result2 = comp2.run(inputs={ddm:[1]}, execution_mode=comp_mode)
-    assert np.allclose(np.asfarray(result2[0]), [0.1])
-    assert np.allclose(np.asfarray(result2[1]), [0.1])
+    np.testing.assert_allclose(np.asfarray(result2[0]), [0.1])
+    np.testing.assert_allclose(np.asfarray(result2[1]), [0.1])

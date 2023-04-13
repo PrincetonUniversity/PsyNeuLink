@@ -225,7 +225,7 @@ class TestCompositionRuntimeParams:
         C.run(inputs={T: 2.0})
 
         # results reflect runtime_param used for noise only on trial 1
-        assert np.allclose(C.results, [np.array([[2.]]),     # Trial 0 - condition not satisfied yet
+        np.testing.assert_allclose(C.results, [np.array([[2.]]),     # Trial 0 - condition not satisfied yet
                                        np.array([[12.]]),    # Trial 1 - condition satisfied
                                        np.array([[2.]]),     # Trial 2 - condition no longer satisfied (not sticky)
                                        np.array([[2.]]),     # Trial 3 - condition no longer satisfied (not sticky)
@@ -251,7 +251,7 @@ class TestCompositionRuntimeParams:
         C.run(inputs={T: 2.0})
 
         # results reflect runtime_param used for noise only on trials 2 and 3
-        assert np.allclose(C.results, [np.array([[2.]]),      # Trial 0 - condition not satisfied yet
+        np.testing.assert_allclose(C.results, [np.array([[2.]]),      # Trial 0 - condition not satisfied yet
                                        np.array([[2.]]),      # Trial 1 - condition not satisfied yet
                                        np.array([[12.]]),     # Trial 2 - condition satisfied
                                        np.array([[12.]]),     # Trial 3 - condition satisfied (sticky)
@@ -275,7 +275,7 @@ class TestCompositionRuntimeParams:
         C.run(inputs={T: 2.0})
 
         # results reflect runtime_param used for noise only on trials 1, 3 and 4
-        assert np.allclose(C.results,[np.array([[2.]]),      # Trial 0 - NOT condition 0, NOT condition 1
+        np.testing.assert_allclose(C.results,[np.array([[2.]]),      # Trial 0 - NOT condition 0, NOT condition 1
                                       np.array([[12.]]),     # Trial 1 - condition 0, NOT condition 1
                                       np.array([[2.]]),      # Trial 2 - NOT condition 0, NOT condition 1
                                       np.array([[12.]]),     # Trial 3 - NOT condition 0, condition 1
@@ -303,7 +303,7 @@ class TestCompositionRuntimeParams:
         C.run(inputs={T: 2.0})
 
         # results reflect runtime_param used for slope only on trials 1, 3 and 4
-        assert np.allclose(C.results,[np.array([[2.]]),      # Trial 0 - NOT condition 0, NOT condition 1
+        np.testing.assert_allclose(C.results,[np.array([[2.]]),      # Trial 0 - NOT condition 0, NOT condition 1
                                       np.array([[20.]]),     # Trial 1 - condition 0, NOT condition 1
                                       np.array([[2.]]),      # Trial 2 - NOT condition 0, NOT condition 1
                                       np.array([[20.]]),     # Trial 3 - NOT condition 0, condition 1
@@ -334,7 +334,7 @@ class TestCompositionRuntimeParams:
         C.run(inputs={T: 2.0})
 
         # results reflect runtime_param used for slope only on trials 1, 3 and 4
-        assert np.allclose(C.results,[np.array([[2.]]),      # Trial 0 - neither condition met
+        np.testing.assert_allclose(C.results,[np.array([[2.]]),      # Trial 0 - neither condition met
                                       np.array([[20.]]),     # Trial 1 - slope condition met, intercept not met
                                       np.array([[3.]]),      # Trial 2 - slope condition not met, intercept met
                                       np.array([[21.]]),      # Trial 3 - both conditions met
@@ -381,7 +381,7 @@ class TestCompositionRuntimeParams:
         # run again to insure restored default for noise after last run
         C.run(inputs={T1: 2.0}, )
 
-        assert np.allclose(C.results,[np.array([[40.5]]),   # Trial 0 - no conditions met (2*5*4)+0.5
+        np.testing.assert_allclose(C.results,[np.array([[40.5]]),   # Trial 0 - no conditions met (2*5*4)+0.5
                                       np.array([[24.5]]),   # Trial 1 - only T1.slope condition met (2*3*4)+0.5
                                       np.array([[41.5]]),   # Trial 2 - only T2.intercept condition met (2*5*4)+1+0.5
                                       np.array([[2000.5]]), # Trial 3 - only T2 INPUT_PORT_PARAMS conditions met
@@ -473,7 +473,7 @@ class TestCompositionRuntimeParams:
         # Final Run: insure restored default for noise after last run
         C.run(inputs={T1: 2.0}, )
 
-        assert np.allclose(C.results,[   # Conditions satisfied:
+        np.testing.assert_allclose(C.results,[   # Conditions satisfied:
             np.array([[40.5]]),  # Run 0 Trial 0: no conditions (2*5*4)+0.5
             np.array([[24.5]]),  # Run 0 Trial 1: only T1.slope condition (2*3*4)+0.5
             np.array([[41.5]]),  # Run 0 Trial 2: only T2.intercept condition (2*5*4)+1+0.5
@@ -520,7 +520,7 @@ class TestCompositionRuntimeParams:
                       }}},
               num_trials=6
               )
-        assert np.allclose(C.results,[   # Conditions satisfied:          CM calculates: TARGET-SAMPLE:
+        np.testing.assert_allclose(C.results,[   # Conditions satisfied:          CM calculates: TARGET-SAMPLE:
             np.array([[-136.0]]), # Trial 0: CM SAMPLE InputPort variable (5*4*2.5 - 83*2)
             np.array([[987]]),    # Trial 1: CM TARGET InputPort value    (999 - 2*3*2)
             np.array([[909]]),    # Trial 2: CM TARGET InputPort value + CM Inputports SAMPLE fct scale: (999 - 2*3*15)
@@ -573,7 +573,7 @@ class TestCompositionRuntimeParams:
               num_trials=5
               )
 
-        assert np.allclose(C.results,[         # Conditions satisfied:
+        np.testing.assert_allclose(C.results,[         # Conditions satisfied:
             np.array([[2]]),   # Run 0, Trial 0: None (2 input; no control since that requires a cycle)
             np.array([[4]]),   # Run 0, Trial 1: None (2 input * 2 control gathered last cycle)
             np.array([[8]]),   # Run 0, Trial 2: None (2 input * 4 control gathered last cycle)
@@ -650,7 +650,7 @@ class TestCompositionRuntimeParams:
               },
               num_trials=13
               )
-        assert np.allclose(C.results,[         # OutputPort Conditions satisfied:
+        np.testing.assert_allclose(C.results,[         # OutputPort Conditions satisfied:
             np.array([[5]]),      # Run 0, Trial 0:  See above
             np.array([[6]]),      # Run 1, Trial 0:  See above
             np.array([[24.5]]),   # Run 2, Trial 0:  See above

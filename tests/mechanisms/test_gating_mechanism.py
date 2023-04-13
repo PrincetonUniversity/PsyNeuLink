@@ -59,17 +59,17 @@ def test_gating_with_composition():
                         [[0.81331773, 0.85008207, 0.88157851]],
                         [[0.81168332, 0.84886047, 0.88161468]]]
 
-    assert np.allclose(comp.results, expected_results)
+    np.testing.assert_allclose(comp.results, expected_results)
 
     stim_list[Gating_Mechanism]=[0.0]
     results = comp.learn(num_trials=1, inputs=stim_list)
-    expected_results = [[[0.5, 0.5, 0.5]]]
-    assert np.allclose(results, expected_results)
+    expected_results = [[0.5, 0.5, 0.5]]
+    np.testing.assert_allclose(results, expected_results)
 
     stim_list[Gating_Mechanism]=[2.0]
     results = comp.learn(num_trials=1, inputs=stim_list)
     expected_results = [[0.96941429, 0.9837254 , 0.99217549]]
-    assert np.allclose(results, expected_results)
+    np.testing.assert_allclose(results, expected_results)
 
 def test_gating_with_UDF_with_composition():
     def my_linear_fct(

@@ -78,5 +78,5 @@ def test_basic(variable, metric, normalize, fail, expected, benchmark, func_mode
 
     res = benchmark(EX, variable)
 
-    assert np.allclose(res, expected)
+    np.testing.assert_allclose(res, expected, rtol=1e-5, atol=1e-8)
     assert np.isscalar(res) or len(res) == 1 or (metric == kw.PEARSON and res.size == 4)

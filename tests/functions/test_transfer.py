@@ -107,7 +107,7 @@ def test_execute(func, variable, params, expected, benchmark, func_mode):
     ex = pytest.helpers.get_func_execution(f, func_mode)
 
     res = benchmark(ex, variable)
-    assert np.allclose(res, expected)
+    np.testing.assert_allclose(res, expected, rtol=1e-5, atol=1e-8)
 
 
 tanh_derivative_helper = (RAND1 * (test_var + RAND2) + RAND3)
@@ -214,40 +214,42 @@ def test_transfer_derivative_out(func, variable, params, expected, benchmark, fu
         assert False, "unknown function mode: {}".format(func_mode)
 
     res = benchmark(ex, variable)
+    # FIX: THIS FAILS FOR func_mode=Python, func=SoftMax, and kw.PER_ITEM:True:
+    #      EXPECTS 2d BUT ONLY 1D IS RETURNED
     assert np.allclose(res, expected)
 
 def test_transfer_with_costs_function():
     f = Functions.TransferWithCosts()
     result = f(1)
-    assert np.allclose(result, 1)
+    np.testing.assert_allclose(result, 1)
     f.toggle_cost(Functions.CostFunctions.INTENSITY)
     f = Functions.TransferWithCosts(enabled_cost_functions=Functions.CostFunctions.INTENSITY)
     result = f(2)
-    assert np.allclose(result, 2)
-    assert np.allclose(f.intensity_cost, 7.38905609893065)
+    np.testing.assert_allclose(result, 2)
+    np.testing.assert_allclose(f.intensity_cost, 7.38905609893065)
     assert f.adjustment_cost is None
     assert f.duration_cost is None
-    assert np.allclose(f.combined_costs, 7.38905609893065)
+    np.testing.assert_allclose(f.combined_costs, 7.38905609893065)
     f.toggle_cost(Functions.CostFunctions.ADJUSTMENT)
     result = f(3)
-    assert np.allclose(result, 3)
-    assert np.allclose(f.intensity_cost, 20.085536923187668)
-    assert np.allclose(f.adjustment_cost, 1)
+    np.testing.assert_allclose(result, 3)
+    np.testing.assert_allclose(f.intensity_cost, 20.085536923187668)
+    np.testing.assert_allclose(f.adjustment_cost, 1)
     assert f.duration_cost is None
-    assert np.allclose(f.combined_costs, 21.085536923187668)
+    np.testing.assert_allclose(f.combined_costs, 21.085536923187668)
     f.toggle_cost(Functions.CostFunctions.DURATION)
     result = f(5)
-    assert np.allclose(result, 5)
-    assert np.allclose(f.intensity_cost, 148.413159102576603)
-    assert np.allclose(f.adjustment_cost, 2)
-    assert np.allclose(f.duration_cost, 5)
-    assert np.allclose(f.combined_costs, 155.413159102576603)
+    np.testing.assert_allclose(result, 5)
+    np.testing.assert_allclose(f.intensity_cost, 148.413159102576603)
+    np.testing.assert_allclose(f.adjustment_cost, 2)
+    np.testing.assert_allclose(f.duration_cost, 5)
+    np.testing.assert_allclose(f.combined_costs, 155.413159102576603)
     result = f(1)
-    assert np.allclose(result, 1)
-    assert np.allclose(f.intensity_cost, 2.718281828459045)
-    assert np.allclose(f.adjustment_cost, 4)
-    assert np.allclose(f.duration_cost, 6)
-    assert np.allclose(f.combined_costs, 12.718281828459045)
+    np.testing.assert_allclose(result, 1)
+    np.testing.assert_allclose(f.intensity_cost, 2.718281828459045)
+    np.testing.assert_allclose(f.adjustment_cost, 4)
+    np.testing.assert_allclose(f.duration_cost, 6)
+    np.testing.assert_allclose(f.combined_costs, 12.718281828459045)
 
 
 @pytest.mark.parametrize(

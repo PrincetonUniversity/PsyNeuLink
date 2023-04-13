@@ -181,9 +181,11 @@ def test_nested_composition_run(benchmark, executions, mode):
 @pytest.mark.composition
 @pytest.mark.benchmark
 @pytest.mark.parametrize("executions", [1, 10, 100])
-@pytest.mark.parametrize("mode", ['Python',
-                                  pytest.param('LLVM', marks=pytest.mark.llvm),
-                                  pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+@pytest.mark.parametrize("mode", [
+    'Python',
+    pytest.param('LLVM', marks=pytest.mark.llvm),
+    pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])
+])
 def test_nested_composition_run_trials_inputs(benchmark, executions, mode):
     benchmark.group = "Nested Composition mutliple trials/inputs multirun {}".format(executions)
 
