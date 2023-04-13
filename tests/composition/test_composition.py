@@ -3156,17 +3156,18 @@ class TestRunInputSpecifications:
         A = TransferMechanism(name='a', default_variable=[[0.0], [0.0,0.0]])
         C = Composition(pathways=[A])
         output = C.run(inputs={A: [[1.0], [2.0, 2.0]]})
-        for i,j in zip(output,[[1.0],[2.0,2.0]]):
-            np.allclose(i,j)
+
+        for res, exp in zip(output, [[1.0], [2.0, 2.0]]):
+            np.testing.assert_allclose(res, exp)
 
     def test_heterogeneous_variables_two_trials(self):
         # from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
         A = TransferMechanism(name='a', default_variable=[[0.0], [0.0,0.0]])
         C = Composition(pathways=[A])
         C.run(inputs={A: [[[1.1], [2.1, 2.1]], [[1.2], [2.2, 2.2]]]})
-        for i,j in zip(C.results,[[[1.1], [2.1, 2.1]], [[1.2], [2.2, 2.2]]]):
-            for k,l in zip(i,j):
-                np.allclose(k,l)
+        for res, exp in zip(C.results, [[[1.1], [2.1, 2.1]], [[1.2], [2.2, 2.2]]]):
+            for r, e in zip(res, exp):
+                np.testing.assert_allclose(r, e)
 
     def test_3_origins(self):
         comp = Composition()
