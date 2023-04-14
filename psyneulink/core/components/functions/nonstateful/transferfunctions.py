@@ -3175,11 +3175,6 @@ class SoftMax(TransferFunction):
         assert self.output in {MAX_VAL, MAX_INDICATOR}, \
             "Derivative of SoftMax is only implemented for MAX_VAL and MAX_INDICATOR! ({})".format(self.output)
 
-        if not pnlvm.helpers.is_scalar(arg_out.type.pointee.element):
-            assert len(arg_out.type.pointee) == 1
-            arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            all_out = builder.gep(all_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
-
         max_pos_ptr = builder.alloca(ctx.int32_ty)
         builder.store(max_pos_ptr.type.pointee(-1), max_pos_ptr)
         max_val_ptr = builder.alloca(arg_out.type.pointee.element)
@@ -4839,17 +4834,7 @@ class TransferWithCosts(TransferFunction):
         trans_p = pnlvm.helpers.get_param_ptr(builder, self, params, transfer_f.name)
         trans_s = pnlvm.helpers.get_state_ptr(builder, self, state, transfer_f.name)
         trans_in = arg_in
-        if trans_in.type != trans_f.args[2].type:
-            warnings.warn("Shape mismatch: {} input does not match the transfer function ({}): {} vs. {}".format(
-                          self, transfer_f.get(), self.defaults.variable, transfer_f.get().defaults.variable),
-                          pnlvm.PNLCompilerWarning)
-            trans_in = builder.gep(trans_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
         trans_out = arg_out
-        if trans_out.type != trans_f.args[3].type:
-            warnings.warn("Shape mismatch: {} output does not match the transfer function ({}): {} vs. {}".format(
-                          self, transfer_f.get(), self.defaults.value, transfer_f.get().defaults.value),
-                          pnlvm.PNLCompilerWarning)
-            trans_out = builder.gep(trans_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
         builder.call(trans_f, [trans_p, trans_s, trans_in, trans_out])
 
         # TODO: Implement cost calculations
