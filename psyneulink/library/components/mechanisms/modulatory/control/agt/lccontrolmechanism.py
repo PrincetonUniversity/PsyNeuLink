@@ -759,7 +759,7 @@ class LCControlMechanism(ControlMechanism):
                                                           f"argument for {self.name} contained a Mechanism ({mech}) "
                                                           f"that does not have a {repr(MULTIPLICATIVE_PARAM)}.")
 
-    def _instantiate_control_signals(self, context=None):
+    def _instantiate_output_ports(self, context=None):
         """Instantiate ControlSignals and assign ControlProjections to Mechanisms in self.modulated_mechanisms
 
         If **modulated_mechanisms** argument of constructor was specified as *ALL*, assign all ProcessingMechanisms
@@ -797,16 +797,18 @@ class LCControlMechanism(ControlMechanism):
             self.parameters.control._set([{PROJECTIONS: ctl_sig_projs}], context)
             self.parameters.control_allocation.default_value = self.value[0]
 
-        super()._instantiate_control_signals(context=context)
-
-
-    def _instantiate_output_ports(self, context=None):
-        """Override to instantiate ControlSignals and
-        assign ControlProjections to Mechanisms in self.modulated_mechanisms
-        """
-        self._instantiate_control_signals(context=context)
         super()._instantiate_output_ports(context=context)
         self.aux_components.extend(self.control_projections)
+
+    def _check_for_composition(self, context=None):
+        # FIX 5/17/20:
+        #  IN _instantiate_output_ports:
+        #     BREAK OUT NEW METHOD:  _add_modulated_mechanisms
+        #     IF modulated_mechanisms IS SPECIFICED AS A COMPOSITION, SET FLAG;
+        #  HERE:
+        #     IF FLAG IS FOUND HERE, GO THROUGH ALL MECHANISMS OF COMP AGAIN AND ADD ANY THAT ARE NOT ARLREADY ASSIGNED
+        #     ONLY NOW, CALL COMPOSITION TO CREATE THE PROJECTIONS
+        pass
 
     def _execute(
         self,
