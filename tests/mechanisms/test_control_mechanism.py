@@ -87,9 +87,13 @@ class TestLCControlMechanism:
         val = benchmark(EX, [10.0])
         # All values are the same because LCControlMechanism assigns all of its ControlSignals to the same value
         # (the 1st item of its function's value).
-        # FIX: 6/6/19 - Python returns 3d array but LLVM returns 2d array
-        #               (np.allclose bizarrely passes for LLVM because all the values are the same)
-        assert np.allclose(val, [[[3.00139776]], [[3.00139776]], [[3.00139776]], [[3.00139776]]])
+        expected = [[3.001397762387422], [3.001397762387422], [3.001397762387422], [3.001397762387422]]
+        # The difference in result shape is caused by shape mismatch in output port values.
+        # The default shape is 1D, giving 2D overall result in compiled mode.
+        # The true results are 2D per port, giving 3D overall result in Python mode.
+        if mech_mode == 'Python':
+            expected = [[ex] for ex in expected]
+        np.testing.assert_allclose(val, expected)
 
     @pytest.mark.composition
     def test_lc_control_modulated_mechanisms_all(self):

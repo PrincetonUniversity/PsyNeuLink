@@ -439,8 +439,19 @@ class TestIntegratorFunctions:
 
         ex(var)
         val = benchmark(ex, var)
-        # FIX: FOR mech_mode==Python ELEMENTS OF val ARE 2D NOT 1D ARRAYS
-        assert np.allclose(val, [[0.10501801629915011], [0.10501801629915011], [0.10501801629915011]])
+
+        expected = [[0.10501801629915011], [0.10501801629915011], [0.10501801629915011]]
+        # The difference in results is caused by a shape mismatch;
+        # default output port values are 1D, giving 2D results in compiled mode
+        # in reality Python returns 2D value per output port for a 3D result
+        if mech_mode == 'Python':
+            expected = [[e] for e in expected]
+
+        if mech_mode != 'python' and pytest.helpers.llvm_current_fp_precision() == 'fp32':
+            tolerance = {'rtol': 1e-7, 'atol': 1e-8}
+        else:
+            tolerance = {}
+        np.testing.assert_allclose(val, expected, **tolerance)
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -454,16 +465,16 @@ class TestIntegratorFunctions:
 
         ex(var)
         val = benchmark(ex, var)
-        np.testing.assert_allclose(
-            val,
-            [
-                [[0.10501801629915011, 0.3151109244983909]],
-                [[0.10501801629915011, 0.3151109244983909]],
-                [[0.10501801629915011, 0.3151109244983909]],
-            ],
-            rtol=1e-5,
-            atol=1e-8,
-        )
+
+        if mech_mode != 'python' and pytest.helpers.llvm_current_fp_precision() == 'fp32':
+            tolerance = {'rtol': 1e-7, 'atol': 1e-8}
+        else:
+            tolerance = {}
+        np.testing.assert_allclose(val,
+                                   [[[0.10501801629915011, 0.3151109244983909]],
+                                    [[0.10501801629915011, 0.3151109244983909]],
+                                    [[0.10501801629915011, 0.3151109244983909]]],
+                                   **tolerance)
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
