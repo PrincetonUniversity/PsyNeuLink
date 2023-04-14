@@ -1668,6 +1668,13 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
     def _instantiate_output_ports(self, context=None):
 
+    # ---------------------------------------------------
+    # FIX 5/23/17: PROJECTIONS AND PARAMS SHOULD BE PASSED BY ASSIGNING TO PORT SPECIFICATION DICT
+    # FIX          UPDATE parse_port_spec TO ACCOMODATE (param, ControlSignal) TUPLE
+    # FIX          TRACK DOWN WHERE PARAMS ARE BEING HANDED OFF TO ControlProjection
+    # FIX                   AND MAKE SURE THEY ARE NOW ADDED TO ControlSignal SPECIFICATION DICT
+    # ---------------------------------------------------
+
         self._register_control_signal_type(context=None)
 
         if self.control:

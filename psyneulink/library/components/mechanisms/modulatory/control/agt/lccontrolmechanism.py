@@ -759,20 +759,6 @@ class LCControlMechanism(ControlMechanism):
                                                           f"argument for {self.name} contained a Mechanism ({mech}) "
                                                           f"that does not have a {repr(MULTIPLICATIVE_PARAM)}.")
 
-    def _instantiate_output_ports(self, context=None):
-        """Override to insure that ControlSignals are instantiated even thought self.control is not specified
-         LCControlMechanism automatically assigns ControlSignals, so no control specification is needed in constructor
-         super._instantiate_output_ports does not call _instantiate_control_signals if self.control is not specified;
-         so, override is needed to insure _instantiate_control_signals is called
-        """
-        self._register_control_signal_type(context=None)
-        self._instantiate_control_signals(context=context)
-        # IMPLEMENTATION NOTE:
-        #   skip ControlMechanism._instantiate_output_ports, since now that self.control is specified,
-        #   it would call _instantiate_control_signals, which is already done
-        super(ControlMechanism, self)._instantiate_output_ports(context=context)
-        self.aux_components.extend(self.control_projections)
-
     def _instantiate_control_signals(self, context=None):
         """Instantiate ControlSignals and assign ControlProjections to Mechanisms in self.modulated_mechanisms
 
@@ -812,6 +798,15 @@ class LCControlMechanism(ControlMechanism):
             self.parameters.control_allocation.default_value = self.value[0]
 
         super()._instantiate_control_signals(context=context)
+
+
+    def _instantiate_output_ports(self, context=None):
+        """Override to instantiate ControlSignals and
+        assign ControlProjections to Mechanisms in self.modulated_mechanisms
+        """
+        self._instantiate_control_signals(context=context)
+        super()._instantiate_output_ports(context=context)
+        self.aux_components.extend(self.control_projections)
 
     def _execute(
         self,
