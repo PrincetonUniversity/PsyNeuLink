@@ -1131,7 +1131,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         """
         # This must be a list, as there may be more than one (e.g., one per control_signal)
         variable = Parameter(np.array([[defaultControlAllocation]]), pnl_internal=True, constructor_argument='default_variable')
-        value = Parameter(np.array([defaultControlAllocation]),pnl_internal=True)
+        value = Parameter(np.array([defaultControlAllocation]), pnl_internal=True)
         default_allocation = None
         control_allocation = Parameter(np.array([defaultControlAllocation]),
                                        read_only=True,
