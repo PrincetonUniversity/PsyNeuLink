@@ -164,8 +164,6 @@ def test_nested_composition_run(benchmark, executions, mode):
     elif mode == 'LLVM':
         e = pnlvm.execution.CompExecution(outer_comp, [None for _ in range(executions)])
         res = e.run(var, 1, 1)
-        if executions == 1:
-            res = [res]
         benchmark(e.run, var, 1, 1)
     elif mode == 'PTX':
         e = pnlvm.execution.CompExecution(outer_comp, [None for _ in range(executions)])
@@ -225,9 +223,6 @@ def test_nested_composition_run_trials_inputs(benchmark, executions, mode):
     elif mode == 'LLVM':
         e = pnlvm.execution.CompExecution(outer_comp, [None for _ in range(executions)])
         res = e.run(var, 4, 2)
-        # FIX: NEED TO FORCE EXTRA DIMENSION FOR RESULT IF ONLY ON EXECUTION
-        if executions == 1:
-            res = [res]
         benchmark(e.run, var, 4, 2)
     elif mode == 'PTX':
         e = pnlvm.execution.CompExecution(outer_comp, [None for _ in range(executions)])

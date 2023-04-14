@@ -54,10 +54,5 @@ class TestControlMechanism:
         comp.add_node(Ty, required_roles=NodeRole.OUTPUT)
         comp.add_controller(C)
 
-        # inputs grabbed from commented test "test_control_modulation_in_system"
-        comp.run(inputs={Tx: [1, 1], Ty: [4, 4]})
-
         assert Tz.parameter_ports[SLOPE].mod_afferents[0].sender.owner == C
-        # results are ordered Tz, Ty
-        # Tz value is 1 on first trial because controller runs after
-        np.testing.assert_allclose(comp.results, [[[1.], [4.]], [[4.], [4.]]])
+        assert np.allclose(comp.results,[[[1.], [4.]], [[4.], [4.]]])

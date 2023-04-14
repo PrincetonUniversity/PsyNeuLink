@@ -121,7 +121,7 @@ def run_stab_flex(taskTrain, stimulusTrain, cueTrain,
 
     # Cue-To-Stimulus Interval Layer
     # Origin Node
-    cueInterval = pnl.TransferMechanism(dsize=1,
+    cueInterval = pnl.TransferMechanism(size=1,
                                         function=pnl.Linear(slope=1, intercept=0),
                                         output_ports=[pnl.RESULT],
                                         name='Cue-Stimulus Interval')
