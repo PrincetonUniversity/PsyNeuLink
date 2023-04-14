@@ -3175,11 +3175,6 @@ class SoftMax(TransferFunction):
         assert self.output in {MAX_VAL, MAX_INDICATOR}, \
             "Derivative of SoftMax is only implemented for MAX_VAL and MAX_INDICATOR! ({})".format(self.output)
 
-        if not pnlvm.helpers.is_scalar(arg_out.type.pointee.element):
-            assert len(arg_out.type.pointee) == 1
-            arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            all_out = builder.gep(all_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
-
         max_pos_ptr = builder.alloca(ctx.int32_ty)
         builder.store(max_pos_ptr.type.pointee(-1), max_pos_ptr)
         max_val_ptr = builder.alloca(arg_out.type.pointee.element)
