@@ -775,7 +775,9 @@ from collections import defaultdict
 from collections.abc import Iterable
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union, Type
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import ComponentError, DefaultsFlexibility, component_keywords
@@ -1001,10 +1003,10 @@ class Port_Base(Port):
     classPreferenceLevel = PreferenceLevel.CATEGORY
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     @abc.abstractmethod
     def __init__(self,
-                 owner:tc.any(Mechanism, Projection),
+                 owner: Union[Mechanism, Projection],
                  variable=None,
                  size=None,
                  projections=None,
@@ -2590,16 +2592,16 @@ def _instantiate_port_list(owner,
 
     return ports
 
-@tc.typecheck
-def _instantiate_port(port_type:_is_port_class,           # Port's type
-                       owner:tc.any(Mechanism, Projection),  # Port's owner
-                       reference_value,                      # constraint for Port's value and default for variable
-                       name:tc.optional(str)=None,           # port's name if specified
-                       variable=None,                        # used as default value for port if specified
-                       params=None,                          # port-specific params
-                       prefs=None,
-                       context=None,
-                       **port_spec):                        # captures *port_spec* arg and any other non-standard ones
+@beartype
+def _instantiate_port(port_type: Type[Port],  # Port's type
+                      owner: Union[Mechanism, Projection],  # Port's owner
+                      reference_value,  # constraint for Port's value and default for variable
+                      name: Optional[str] = None,  # port's name if specified
+                      variable=None,  # used as default value for port if specified
+                      params=None,  # port-specific params
+                      prefs=None,
+                      context=None,
+                      **port_spec):                        # captures *port_spec* arg and any other non-standard ones
     """Instantiate a Port of specified type, with a value that is compatible with reference_value
 
     This is the interface between the various ways in which a port can be specified and the Port's constructor
@@ -2819,7 +2821,7 @@ PORT_SPEC_INDEX = 0
 #          THESE CAN BE USED BY THE InputPort's LinearCombination Function
 #          (AKIN TO HOW THE MECHANISM'S FUNCTION COMBINES InputPort VALUES)
 #          THIS WOULD ALLOW FULLY GENEREAL (HIEARCHICALLY NESTED) ALGEBRAIC COMBINATION OF INPUT VALUES TO A MECHANISM
-@tc.typecheck
+@beartype
 def _parse_port_spec(port_type=None,
                       owner=None,
                       reference_value=None,
@@ -3369,14 +3371,14 @@ def _parse_port_spec(port_type=None,
 
 # FIX: REPLACE mech_port_attribute WITH DETERMINATION FROM port_type
 # FIX:          ONCE PORT CONNECTION CHARACTERISTICS HAVE BEEN IMPLEMENTED IN REGISTRY
-@tc.typecheck
+@beartype
 def _get_port_for_socket(owner,
-                          connectee_port_type:tc.optional(_is_port_class)=None,
-                          port_spec=None,
-                          port_types:tc.optional(tc.any(list, _is_port_class))=None,
-                          mech:tc.optional(Mechanism)=None,
-                          mech_port_attribute:tc.optional(tc.any(str, list))=None,
-                          projection_socket:tc.optional(tc.any(str, set))=None):
+                         connectee_port_type: Optional[Type[Port]] = None,
+                         port_spec=None,
+                         port_types: Optional[Union[list, Type[Port]]] = None,
+                         mech: Optional[Mechanism] = None,
+                         mech_port_attribute: Optional[Union[str, list]] = None,
+                         projection_socket: Optional[Union[str, set]] = None):
     """Take some combination of Mechanism, port name (string), Projection, and projection_socket, and return
     specified Port(s)
 

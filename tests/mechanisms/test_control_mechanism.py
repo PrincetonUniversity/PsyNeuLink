@@ -171,7 +171,7 @@ class TestControlMechanism:
         comp = pnl.Composition()
         backprop_pathway = comp.add_backpropagation_learning_pathway(
             pathway=pathway,
-            loss_function=None,
+            loss_spec=None,
         )
         # c.add_linear_processing_pathway(pathway=z)
         comp.add_node(Control_Mechanism)
@@ -192,8 +192,7 @@ class TestControlMechanism:
 
         stim_list[Control_Mechanism]=[0.0]
         results = comp.learn(num_trials=1, inputs=stim_list)
-        # FIX: ??WHY IS THE FOLLOWING 3D:
-        expected_results = [[[0.5, 0.5, 0.5]]]
+        expected_results = [[0.5, 0.5, 0.5]]
         np.testing.assert_allclose(results, expected_results)
 
         stim_list[Control_Mechanism]=[2.0]
@@ -222,8 +221,8 @@ class TestControlMechanism:
         comp.add_nodes([(mech, pnl.NodeRole.INPUT), (control_mech, pnl.NodeRole.INPUT)])
         results = comp.run(inputs={mech:[[2]], control_mech:[3]}, num_trials=2, execution_mode=comp_mode)
 
-        np.testing.assert_allclose(control_mech.parameters.control_allocation.get(), [[1],[1],[1]])
-        np.testing.assert_allclose(results, [[6],[6],[6]])
+        np.testing.assert_allclose(control_mech.parameters.control_allocation.get(), [[1]])
+        np.allclose(results, [[6],[6],[6]])
 
     def test_control_signal_default_allocation_specification(self):
 

@@ -188,12 +188,14 @@ import warnings
 from collections.abc import Iterable
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union, Callable, Literal
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import _get_parametervalue_attr
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
-from psyneulink.core.components.functions.function import Function, get_matrix, is_function_type
+from psyneulink.core.components.functions.function import Function, get_matrix
 from psyneulink.core.components.functions.nonstateful.learningfunctions import Hebbian
 from psyneulink.core.components.functions.nonstateful.objectivefunctions import Stability
 from psyneulink.core.components.functions.stateful.integratorfunctions import AdaptiveIntegrator
@@ -211,10 +213,10 @@ from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import \
     AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_PORT, MATRIX, NAME, RECURRENT_TRANSFER_MECHANISM, RESULT
 from psyneulink.core.globals.parameters import Parameter, SharedParameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.registry import register_instance, remove_instance_from_registry
 from psyneulink.core.globals.socket import ConnectionInfo
-from psyneulink.core.globals.utilities import is_numeric_or_none, parameter_spec
+from psyneulink.core.globals.utilities import NumericCollections, ValidParamSpecType
 from psyneulink.core.scheduling.condition import Condition, WhenFinished
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism import \
@@ -641,13 +643,13 @@ class RecurrentTransferMechanism(TransferMechanism):
     standard_output_port_names.extend([ENERGY_OUTPUT_PORT_NAME, ENTROPY_OUTPUT_PORT_NAME])
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 input_ports:tc.optional(tc.optional(tc.any(list, dict))) = None,
+                 input_ports: Optional[Union[list, dict]] = None,
                  has_recurrent_input_port=None,
-                 combination_function: tc.optional(is_function_type) = None,
+                 combination_function: Optional[Callable] = None,
                  function=None,
                  matrix=None,
                  auto=None,
@@ -655,18 +657,17 @@ class RecurrentTransferMechanism(TransferMechanism):
                  integrator_mode=None,
                  integrator_function=None,
                  initial_value=None,
-                 integration_rate: is_numeric_or_none=None,
+                 integration_rate: Optional[NumericCollections] = None,
                  noise=None,
                  clip=None,
-                 enable_learning: tc.optional(bool) = None,
-                 learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
-                 learning_function: tc.optional(tc.any(is_function_type)) = None,
-                 learning_condition:tc.optional(tc.any(Condition, TimeScale,
-                                                       tc.enum(UPDATE, CONVERGENCE)))=None,
-                 output_ports:tc.optional(tc.any(str, Iterable))=None,
+                 enable_learning: Optional[bool] = None,
+                 learning_rate: Optional[Union[ValidParamSpecType, bool]] = None,
+                 learning_function: Optional[Callable] = None,
+                 learning_condition: Optional[Union[Condition, TimeScale, Literal['UPDATE', 'CONVERGENCE']]] = None,
+                 output_ports: Optional[Union[str, Iterable]] = None,
                  params=None,
                  name=None,
-                 prefs: is_pref_set=None,
+                 prefs: Optional[ValidPrefSet] = None,
                  **kwargs):
         """Instantiate RecurrentTransferMechanism
         """
@@ -1059,7 +1060,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             return
 
     # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
-    @tc.typecheck
+    @beartype
     def _instantiate_recurrent_projection(self,
                                           mech: Mechanism_Base,
                                           # this typecheck was failing, I didn't want to fix (7/19/17 CW)
@@ -1103,7 +1104,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION WHEN THAT IS IMPLEMENTED
     def _instantiate_learning_mechanism(self,
-                                        activity_vector:tc.any(list, np.array),
+                                        activity_vector: Union[list, np.array],
                                         learning_function,
                                         learning_rate,
                                         learning_condition,
@@ -1145,10 +1146,9 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     @handle_external_context()
     def configure_learning(self,
-                           learning_function:tc.optional(tc.any(is_function_type))=None,
-                           learning_rate:tc.optional(tc.any(numbers.Number, list, np.ndarray, np.matrix))=None,
-                           learning_condition:tc.any(Condition, TimeScale,
-                                                     tc.enum(UPDATE, CONVERGENCE))=None,
+                           learning_function: Optional[Callable] = None,
+                           learning_rate: Optional[Union[numbers.Number, list, np.ndarray, np.matrix]] = None,
+                           learning_condition: Union[Condition, TimeScale, Literal['UPDATE', 'CONVERGENCE']] = None,
                            context=None):
         """Provide user-accessible-interface to _instantiate_learning_mechanism
 

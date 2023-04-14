@@ -38,12 +38,20 @@ def gaussian_distort_helper(seed):
     return RAND4 * state.normal(test_var + RAND1, RAND2) + RAND3
 
 
+def binomial_distort_helper(seed):
+    state = np.random.RandomState([seed])
+    # compensate for construction
+    state.binomial(1, p=RAND1, size=len(test_var))
+    return state.binomial(1, p=(1 - RAND1), size=len(test_var)) * test_var
+
+
 test_data = [
     pytest.param(Functions.Linear, test_var, {kw.SLOPE:RAND1, kw.INTERCEPT:RAND2}, test_var * RAND1 + RAND2, id="LINEAR"),
     pytest.param(Functions.Exponential, test_var, {kw.SCALE:RAND1, kw.RATE:RAND2}, RAND1 * np.exp(RAND2 * test_var), id="EXPONENTIAL"),
     pytest.param(Functions.Logistic, test_var, {kw.GAIN:RAND1, kw.X_0:RAND2, kw.OFFSET:RAND3, kw.SCALE:RAND4}, logistic_helper, id="LOGISTIC"),
     pytest.param(Functions.Tanh, test_var, {kw.GAIN:RAND1, kw.BIAS:RAND2, kw.X_0:RAND3, kw.OFFSET:RAND4}, tanh_helper, id="TANH"),
     pytest.param(Functions.ReLU, test_var, {kw.GAIN:RAND1, kw.BIAS:RAND2, kw.LEAK:RAND3}, relu_helper, id="RELU"),
+
     # Angle doesn't have a helper using 'test_var', hardcode the input as well
     pytest.param(Functions.Angle, [0.5488135,  0.71518937, 0.60276338, 0.54488318, 0.4236548,
                                    0.64589411, 0.43758721, 0.891773, 0.96366276, 0.38344152], {},
@@ -51,9 +59,11 @@ test_data = [
                   0.08091079, 0.21657281, 0.19296643, 0.21343805, 0.92738261, 0.00483101],
                  id="ANGLE"),
 
+    # Distort
     pytest.param(Functions.Gaussian, test_var, {kw.STANDARD_DEVIATION:RAND1, kw.BIAS:RAND2, kw.SCALE:RAND3, kw.OFFSET:RAND4}, gaussian_helper, id="GAUSSIAN"),
     pytest.param(Functions.GaussianDistort, test_var, {kw.BIAS: RAND1, kw.VARIANCE:RAND2, kw.OFFSET:RAND3, kw.SCALE:RAND4 }, gaussian_distort_helper(0), id="GAUSSIAN DISTORT GLOBAL SEED"),
     pytest.param(Functions.GaussianDistort, test_var, {kw.BIAS: RAND1, kw.VARIANCE:RAND2, kw.OFFSET:RAND3, kw.SCALE:RAND4, 'seed':0 }, gaussian_distort_helper(0), id="GAUSSIAN DISTORT"),
+    pytest.param(Functions.BinomialDistort, test_var, {'seed':0, 'p':RAND1 }, binomial_distort_helper(0), id="BINOMIAL DISTORT"),
 
     # SoftMax 1D input
     pytest.param(Functions.SoftMax, test_var, {kw.GAIN:RAND1, kw.PER_ITEM:False}, softmax_helper, id="SOFT_MAX ALL"),
@@ -78,9 +88,13 @@ test_data = [
     pytest.param(Functions.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_INDICATOR, kw.PER_ITEM: True},
                  np.where(softmax_helper2 == np.max(softmax_helper2), 1, 0), id="SOFT_MAX MAX_INDICATOR PER_ITEM"),
 
+    # Linear Matrix
     pytest.param(Functions.LinearMatrix, test_var, {kw.MATRIX:test_matrix}, np.dot(test_var, test_matrix), id="LINEAR_MATRIX SQUARE"),
     pytest.param(Functions.LinearMatrix, test_var, {kw.MATRIX:test_matrix_l}, np.dot(test_var, test_matrix_l), id="LINEAR_MATRIX WIDE"),
     pytest.param(Functions.LinearMatrix, test_var, {kw.MATRIX:test_matrix_s}, np.dot(test_var, test_matrix_s), id="LINEAR_MATRIX TALL"),
+
+    # Dropout is just identity in non-learning mode
+    pytest.param(Functions.Dropout, test_var, {}, test_var, id="DROPOUT"),
 ]
 
 @pytest.mark.function
@@ -200,6 +214,8 @@ def test_transfer_derivative_out(func, variable, params, expected, benchmark, fu
         assert False, "unknown function mode: {}".format(func_mode)
 
     res = benchmark(ex, variable)
+    # FIX: THIS FAILS FOR func_mode=Python, func=SoftMax, and kw.PER_ITEM:True:
+    #      EXPECTS 2d BUT ONLY 1D IS RETURNED
     assert np.allclose(res, expected)
 
 def test_transfer_with_costs_function():

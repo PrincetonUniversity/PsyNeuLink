@@ -75,9 +75,10 @@ import warnings
 from collections.abc import Iterable
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
 
-from psyneulink.core.components.functions.function import is_function_type
+from psyneulink._typing import Optional, Union, Callable
+
 from psyneulink.core.components.functions.nonstateful.learningfunctions import Kohonen
 from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
@@ -91,8 +92,8 @@ from psyneulink.core.globals.keywords import \
     DEFAULT_MATRIX, FUNCTION, GAUSSIAN, IDENTITY_MATRIX, KOHONEN_MECHANISM, \
     LEARNING_SIGNAL, MATRIX, MAX_INDICATOR, NAME, OWNER_VALUE, OWNER_VARIABLE, RESULT, VARIABLE
 from psyneulink.core.globals.parameters import Parameter, SharedParameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
-from psyneulink.core.globals.utilities import is_numeric_or_none, parameter_spec
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
+from psyneulink.core.globals.utilities import NumericCollections, ValidParamSpecType
 from psyneulink.library.components.mechanisms.modulatory.learning.kohonenlearningmechanism import KohonenLearningMechanism
 
 __all__ = [
@@ -271,7 +272,7 @@ class KohonenMechanism(TransferMechanism):
                                    ])
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  size=None,
@@ -279,17 +280,17 @@ class KohonenMechanism(TransferMechanism):
                  # selection_function=OneHot(mode=MAX_INDICATOR),  # RE-INSTATE WHEN IMPLEMENT NHot function
                  integrator_function=None,
                  initial_value=None,
-                 noise: tc.optional(is_numeric_or_none) = None,
-                 integration_rate: tc.optional(is_numeric_or_none) = None,
+                 noise: Optional[NumericCollections] = None,
+                 integration_rate: Optional[NumericCollections] = None,
                  integrator_mode=None,
                  clip=None,
                  enable_learning=None,
-                 learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
-                 learning_function: tc.optional(is_function_type) = None,
-                 learned_projection:tc.optional(MappingProjection)=None,
-                 additional_output_ports:tc.optional(tc.any(str, Iterable))=None,
+                 learning_rate: Optional[Union[ValidParamSpecType, bool]] = None,
+                 learning_function: Optional[Callable] = None,
+                 learned_projection: Optional[MappingProjection] = None,
+                 additional_output_ports: Optional[Union[str, Iterable]] = None,
                  name=None,
-                 prefs: tc.optional(is_pref_set) = None,
+                 prefs: Optional[ValidPrefSet] = None,
                  **kwargs
                  ):
         # # Default output_ports is specified in constructor as a string rather than a list
@@ -347,9 +348,9 @@ class KohonenMechanism(TransferMechanism):
     # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION WHEN THAT IS IMPLEMENTED
     @handle_external_context()
     def configure_learning(self,
-                           learning_function:tc.optional(tc.any(is_function_type))=None,
-                           learning_rate:tc.optional(tc.any(numbers.Number, list, np.ndarray, np.matrix))=None,
-                           learned_projection:tc.optional(MappingProjection)=None,
+                           learning_function: Optional[Callable] = None,
+                           learning_rate: Optional[Union[numbers.Number, list, np.ndarray, np.matrix]] = None,
+                           learned_projection: Optional[MappingProjection] = None,
                            context=None):
         """Provide user-accessible-interface to _instantiate_learning_mechanism
 

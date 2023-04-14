@@ -521,10 +521,9 @@ class TestControlSpecification:
                 [[15.], [15.0], [0.0], [3.84279648], [0.81637827]]]
 
         for simulation in range(len(expected_sim_results_array)):
-            # np.testing.assert_allclose(expected_sim_results_array[simulation],
-            #                    # Note: Skip decision variable OutputPort
-            #                    comp.simulation_results[simulation][0:3] + comp.simulation_results[simulation][4:6])
-            assert True
+            np.testing.assert_allclose(expected_sim_results_array[simulation],
+                               # Note: Skip decision variable OutputPort
+                               comp.simulation_results[simulation][0:3] + comp.simulation_results[simulation][4:6])
 
         expected_results_array = [
             [[20.0], [20.0], [0.0], [1.0], [2.378055160151634], [0.9820137900379085]],
@@ -2467,9 +2466,9 @@ class TestControlMechanisms:
             def get_val(s, dty):
                 return prngs[s].random(dtype=dty)
 
-        dty = np.float32 if pytest.helpers.llvm_current_fp_precision() == 'fp32' else np.float64
+        dty = np.float32 if pytest.helpers.llvm_current_fp_precision() == 'fp32' and comp_mode != pnl.ExecutionMode.Python else np.float64
         expected = [get_val(s, dty) for s in seeds] * 2
-        np.testing.assert_allclose(np.squeeze(comp.results[:len(seeds) * 2]), expected)
+        np.testing.assert_allclose(np.squeeze(comp.results[:len(seeds) * 2]), expected, rtol=1e-5, atol=1e-8)
 
     @pytest.mark.benchmark
     @pytest.mark.control
@@ -2497,7 +2496,8 @@ class TestControlMechanisms:
         # cycle over the seeds twice setting and resetting the random state
         benchmark(comp.run, inputs={ctl_mech:seeds, mech:5.0}, num_trials=len(seeds) * 2, execution_mode=comp_mode)
 
-        precision = pytest.helpers.llvm_current_fp_precision()
+        # Python uses fp64 irrespective of the pytest precision setting
+        precision = 'fp64' if comp_mode == pnl.ExecutionMode.Python else pytest.helpers.llvm_current_fp_precision()
         if prng == 'Default':
             np.testing.assert_allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[100, 21], [100, 23], [100, 20]] * 2)
         elif prng == 'Philox' and precision == 'fp64':
@@ -2609,7 +2609,8 @@ class TestControlMechanisms:
         # cycle over the seeds twice setting and resetting the random state
         benchmark(comp.run, inputs={ctl_mech:seeds, mech:0.1}, num_trials=len(seeds) * 2, execution_mode=comp_mode)
 
-        precision = pytest.helpers.llvm_current_fp_precision()
+        # Python uses fp64 irrespective of the pytest precision setting
+        precision = 'fp64' if comp_mode == pnl.ExecutionMode.Python else pytest.helpers.llvm_current_fp_precision()
         if prng == 'Default':
             np.testing.assert_allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[-1, 3.99948962], [1, 3.99948962], [-1, 3.99948962]] * 2)
         elif prng == 'Philox' and precision == 'fp64':

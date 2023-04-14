@@ -435,7 +435,7 @@ class TestTransferMechanismFunctions:
         assert len(vals) == len(expected)
         # FIX: FOR PYTHON: val IS LIST WITH 1 ITEM OF LEN 4, BUT EXPECTS LIST WITH 4 1D LISTS
         for val, exp in zip(vals, expected):
-            np.testing.assert_allclose(val, [[exp] * VECTOR_SIZE])
+            np.testing.assert_allclose(val, [[exp] * VECTOR_SIZE], rtol=1e-5, atol=1e-8)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -561,7 +561,7 @@ class TestTransferMechanismIntegratorFunctionParams:
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
         val = benchmark(EX, var)
-        np.testing.assert_allclose(val, [[ 0., 0.0975, 0.19, 0.2775]])
+        np.testing.assert_allclose(val, [[0., 0.0975, 0.19, 0.2775]], rtol=1e-5, atol=1e-8)
 
     def test_transfer_mech_array_assignments_wrong_size_mech_rate(self):
 

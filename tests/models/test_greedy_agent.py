@@ -229,7 +229,7 @@ def test_predator_prey(benchmark, mode, ocm_mode, prng, samples, fp_type):
         if mode == pnl.ExecutionMode.Python and not benchmark.enabled:
             # FIXME: The results are 'close' for both Philox and MT,
             #        because they're dominated by costs
-        # FIX: REQUIRES TOLERANCE OF 1e-5
+            # FIX: Requires 1e-5 tolerance
             np.testing.assert_allclose(np.asfarray(ocm.function.saved_values).flatten(),
                                        [-2.66258741, -22027.9970321, -22028.17515945, -44053.59867802,
                                         -22028.06045185, -44053.4048842, -44053.40736234, -66078.90687915],

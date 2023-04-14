@@ -586,9 +586,10 @@ import uuid
 import warnings
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
 
-from psyneulink.core.components.functions.function import Function_Base, is_function_type
+from psyneulink._typing import Optional, Union, Callable, Literal, Iterable
+
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import Concatenate
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
@@ -607,9 +608,9 @@ from psyneulink.core.globals.keywords import \
     OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PARAMS, PORT_TYPE, PRODUCT, PROJECTION_TYPE, PROJECTIONS, \
     SEPARATE, SIZE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import ContentAddressableList, convert_all_elements_to_np_array, convert_to_list, convert_to_np_array, is_iterable
+from psyneulink.core.globals.utilities import ContentAddressableList, convert_all_elements_to_np_array, convert_to_list, convert_to_np_array
 
 __all__ = [
     'CONTROL_ALLOCATION', 'GATING_ALLOCATION', 'ControlMechanism', 'ControlMechanismError',
@@ -1232,28 +1233,24 @@ class ControlMechanism(ModulatoryMechanism_Base):
             # validate_monitored_port_spec(self._owner, input_ports)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputPort))=None,
+                 monitor_for_control: Optional[Union[Iterable, Mechanism, OutputPort]] = None,
                  objective_mechanism=None,
-                 allow_probes:bool = False,
-                 outcome_input_ports_option:tc.optional(tc.enum(CONCATENATE, COMBINE, SEPARATE))=None,
+                 allow_probes: bool = False,
+                 outcome_input_ports_option: Optional[Literal['concatenate', 'combine', 'separate']] = None,
                  function=None,
-                 default_allocation:tc.optional(tc.any(int, float, list, np.ndarray))=None,
-                 control:tc.optional(tc.any(is_iterable,
-                                            ParameterPort,
-                                            InputPort,
-                                            OutputPort,
-                                            ControlSignal))=None,
-                 modulation:tc.optional(str)=None,
-                 combine_costs:tc.optional(is_function_type)=None,
-                 compute_reconfiguration_cost:tc.optional(is_function_type)=None,
+                 default_allocation: Optional[Union[int, float, list, np.ndarray]] = None,
+                 control: Optional[Union[Iterable, ParameterPort, InputPort, OutputPort, ControlSignal]] = None,
+                 modulation: Optional[str] = None,
+                 combine_costs: Optional[Callable] = None,
+                 compute_reconfiguration_cost: Optional[Callable] = None,
                  compute_net_outcome=None,
                  params=None,
                  name=None,
-                 prefs:tc.optional(is_pref_set)=None,
+                 prefs: Optional[ValidPrefSet] = None,
                  **kwargs
                  ):
 
@@ -1912,7 +1909,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         if self.objective_mechanism:
             self.objective_mechanism._add_process(process, role)
 
-    def _remove_default_control_signal(self, type:tc.enum(CONTROL_SIGNAL, GATING_SIGNAL)):
+    def _remove_default_control_signal(self, type: Literal['ControlSignal', 'GatingSignal']):
         if type == CONTROL_SIGNAL:
             ctl_sig_attribute = self.control_signals
         elif type == GATING_SIGNAL:

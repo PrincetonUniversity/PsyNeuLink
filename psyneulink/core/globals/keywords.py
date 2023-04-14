@@ -29,7 +29,8 @@ __all__ = [
     'ADDITIVE', 'ADDITIVE_PARAM', 'AFTER', 'ALL', 'ALLOCATION_SAMPLES', 'ALLOW_PROBES', 'ANGLE', 'ANGLE_FUNCTION',
     'ANY', 'ARGUMENT_THERAPY_FUNCTION', 'ARRANGEMENT', 'ASSERT', 'ASSIGN', 'ASSIGN_VALUE', 'AUTO','AUTO_ASSIGN_MATRIX',
     'AUTO_ASSOCIATIVE_PROJECTION', 'HAS_INITIALIZERS', 'AUTOASSOCIATIVE_LEARNING_MECHANISM', 'AUTODIFF_COMPOSITION',
-    'BACKPROPAGATION_FUNCTION', 'BEFORE', 'BETA', 'BIAS', 'BOLD', 'BOTH', 'BOUNDS', 'BUFFER_FUNCTION',
+    'BACKPROPAGATION_FUNCTION', 'BINOMIAL_DISTORT_FUNCTION',
+    'BEFORE', 'BETA', 'BIAS', 'BOLD', 'BOTH', 'BOUNDS', 'BUFFER_FUNCTION',
     'CHANGED', 'CLAMP_INPUT', 'COMBINATION_FUNCTION_TYPE', 'COMBINE', 'COMBINE_MEANS_FUNCTION',
     'COMBINE_OUTCOME_AND_COST_FUNCTION', 'COMMAND_LINE', 'comparison_operators', 'COMPARATOR_MECHANISM', 'COMPONENT',
     'COMPONENT_INIT', 'COMPONENT_PREFERENCE_SET', 'COMPOSITION', 'COMPOSITION_FUNCTION_APPROXIMATOR',
@@ -43,8 +44,9 @@ __all__ = [
     'DEFAULT_PREFERENCE_SET_OWNER', 'DEFAULT_PROCESSING_MECHANISM', 'DEFAULT_VARIABLE',
     'DEFERRED_ASSIGNMENT', 'DEFERRED_DEFAULT_NAME', 'DEFERRED_INITIALIZATION', 'DICT', 'DictionaryMemory_FUNCTION',
     'DIFFERENCE', 'DIFFERENCE', 'DIFFUSION', 'DIRECT', 'DISABLE', 'DISABLE_PARAM', 'DIST_FUNCTION_TYPE', 'DIST_MEAN',
-    'DIST_SHAPE', 'DISTANCE_FUNCTION', 'DISTANCE_METRICS', 'DISTRIBUTION_FUNCTION_TYPE', 'DIVISION',
-    'DRIFT_DIFFUSION_INTEGRATOR_FUNCTION', 'DRIFT_ON_A_SPHERE_INTEGRATOR_FUNCTION', 'DUAL_ADAPTIVE_INTEGRATOR_FUNCTION',
+    'DIST_SHAPE', 'DISTANCE_FUNCTION', 'DISTANCE_METRICS', 'DISTRIBUTION_FUNCTION_TYPE', 'DIVISION', 'DOT_PRODUCT',
+    'DRIFT_DIFFUSION_INTEGRATOR_FUNCTION', 'DRIFT_ON_A_SPHERE_INTEGRATOR_FUNCTION', 'DROPOUT_FUNCTION',
+    'DUAL_ADAPTIVE_INTEGRATOR_FUNCTION',
     'EFFERENTS', 'EID_SIMULATION', 'EID_FROZEN', 'EITHER', 'ENABLE_CONTROLLER', 'ENABLED', 'ENERGY', 'ENTROPY',
     'EPISODIC_MEMORY_MECHANISM', 'EPOCHS', 'EQUAL', 'ERROR_DERIVATIVE_FUNCTION', 'EUCLIDEAN',
     'EVC_MECHANISM', 'EVC_SIMULATION',  'EXAMPLE_FUNCTION_TYPE',
@@ -128,6 +130,9 @@ __all__ = [
 import operator
 from enum import Enum, auto
 
+from psyneulink._typing import Literal
+
+
 class MatrixKeywords:
     """
     Attributes
@@ -188,6 +193,9 @@ AUTO_ASSIGN_MATRIX = 'AutoAssignMatrix'
 DEFAULT_MATRIX = AUTO_ASSIGN_MATRIX
 # DEFAULT_MATRIX = IDENTITY_MATRIX
 
+MatrixKeywordLiteral = Literal["IdentityMatrix", "HollowMatrix", "InverseHollowMatrix", "FullConnectivityMatrix",
+                               "RandomConnectivityMatrix", "AutoAssignMatrix"]
+
 MATRIX_KEYWORDS = MatrixKeywords()
 MATRIX_KEYWORD_SET = MATRIX_KEYWORDS._set()
 MATRIX_KEYWORD_VALUES = MATRIX_KEYWORDS._values()
@@ -211,6 +219,9 @@ class DistanceMetrics:
     DIFFERENCE
         (can also be referenced as *L0*)\n
         :math:`d = \\sum\\limits^{len}(|a_1-a_2|)`
+
+    DOT_PRODUCT
+        :math:`d = \\sum\\limits^{len}\\(a_1 * a_2)}`
 
     EUCLIDEAN
         (can also be referenced as *L1*)\n
@@ -236,6 +247,7 @@ class DistanceMetrics:
         self.DIFFERENCE = DIFFERENCE
         self.L0 = L0
         self.NORMED_L0_SIMILARITY = NORMED_L0_SIMILARITY
+        self.DOT_PRODUCT = DOT_PRODUCT
         self.EUCLIDEAN = EUCLIDEAN
         self.L1 = L1
         self.ANGLE = ANGLE
@@ -268,6 +280,7 @@ DIFFERENCE = 'difference'
 L0 = DIFFERENCE
 NORMED_L0_SIMILARITY = 'normed_L0_similarity'
 MAX_ABS_DIFF = 'max_abs_diff'
+DOT_PRODUCT = 'dot_product'
 EUCLIDEAN = 'euclidean'
 L1 = EUCLIDEAN
 ANGLE = 'angle'
@@ -275,7 +288,7 @@ CORRELATION = 'correlation'
 COSINE = 'cosine'
 COSINE_SIMILARITY = 'cosine'
 PEARSON = 'Pearson'
-ENTROPY = 'cross-entropy'
+ENTROPY = 'entropy'
 CROSS_ENTROPY = 'cross-entropy'
 ENERGY = 'energy'
 
@@ -284,17 +297,18 @@ DISTANCE_METRICS_SET = DISTANCE_METRICS._set()
 DISTANCE_METRICS_VALUES = DISTANCE_METRICS._values()
 DISTANCE_METRICS_NAMES = DISTANCE_METRICS._names()
 
-ENERGY = 'energy'
-ENTROPY = 'entropy'
+# ENTROPY = 'entropy'
 CONVERGENCE = 'CONVERGENCE'
 
 
 class Loss(Enum):
     """Loss function used for `learning <Composition_Learning>`.
 
-    Each keyword specifies a loss function used for learning in a `Composition` or `AutodiffComposition`,
-    and the comparable loss functions used by `PyTorch` when an AutodiffComposition is executed in
-    `ExecutionMode.PyTorch` mode.
+    Used to specify the **loss_spec** argument of the constructor for an `AutodiffComposition`,
+    or in the `learning methods <Composition_Learning_Methods>` used to construct `learning pathways
+    <Composition_Learning_Pathway>` in a `Composition`. Each keyword specifies a loss function used
+    for learning, and the comparable `loss functions <https://pytorch.org/docs/stable/nn.html#loss-functions>`_
+    used by `PyTorch` when an AutodiffComposition is executed in `ExecutionMode.PyTorch` mode.
     COMMENT:
     Get latex for remaining equations from https://blmoistawinde.github.io/ml_equations_latex/#cross-entropy
     COMMENT
@@ -339,6 +353,7 @@ class Loss(Enum):
     KL_DIV = auto()
     NLL = auto()
     POISSON_NLL = auto()
+    SUM = L0
 
 
 # **********************************************************************************************************************
@@ -634,6 +649,8 @@ RELU_FUNCTION = "ReLU Function"
 ANGLE_FUNCTION = 'Angle Function'
 GAUSSIAN_FUNCTION = "Gaussian Function"
 GAUSSIAN_DISTORT_FUNCTION = "GaussianDistort Function"
+BINOMIAL_DISTORT_FUNCTION = 'BinomialDistort Function'
+DROPOUT_FUNCTION = 'Dropout Function'
 SOFTMAX_FUNCTION = 'SoftMax Function'
 LINEAR_MATRIX_FUNCTION = "LinearMatrix Function"
 TRANSFER_WITH_COSTS_FUNCTION = "TransferWithCosts Function"
@@ -978,7 +995,6 @@ COMBINE = 'combine'
 CONCATENATE = 'concatenate'
 SEPARATE = 'separate'
 SUM = 'sum'
-DIFFERENCE = DIFFERENCE # Defined above for DISTANCE_METRICS
 PRODUCT = 'product'
 QUOTIENT = 'quotient'
 SUBTRACTION = 'subtraction'
@@ -1005,6 +1021,7 @@ STANDARD_DEVIATION = 'standard_deviation'
 VARIANCE = 'variance'
 
 # Note:  These are used only as names of StandardOutputPorts (hence upper case)
+
 MAX_VAL = 'MAX_VAL'
 MAX_ABS_VAL = 'MAX_ABS_VAL'
 MAX_ONE_HOT = 'MAX_ONE_HOT'
@@ -1017,7 +1034,7 @@ MIN_INDICATOR = 'MIN_INDICATOR'
 MIN_ABS_INDICATOR = 'MIN_ABS_INDICATOR'
 PROB = 'PROB'
 PROB_INDICATOR = 'PROB_INDICATOR'
-MUTUAL_ENTROPY = 'mutual entropy'
+MUTUAL_ENTROPY = 'MUTUAL_ENTROPY'
 PER_ITEM = 'per_item'
 
 INITIALIZER = 'initializer'

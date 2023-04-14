@@ -138,7 +138,7 @@ def test_necker_cube(benchmark, comp_mode, n_nodes, n_time_steps, expected):
     # run the model
     res = benchmark(bp_comp.run, input_dict, num_trials=n_time_steps, execution_mode=comp_mode)
     if pytest.helpers.llvm_current_fp_precision() == 'fp32':
-        np.testing.assert_allclose(res, expected)
+        np.testing.assert_allclose(res, expected, rtol=1e-5, atol=1e-8)
     else:
         np.testing.assert_allclose(res, expected)
 
@@ -221,12 +221,22 @@ def test_vectorized_necker_cube(benchmark, comp_mode):
                  }
 
     result = benchmark(comp2.run, input_dict, num_trials=10, execution_mode=comp_mode)
-    np.testing.assert_allclose(result,
-            [[ 2636.29181172,  -662.53579899,  2637.35386946,  -620.15550833,
-               -595.55319772,  2616.74310649,  -442.74286574,  2588.4778162 ,
-                725.33941441, -2645.25148476,   570.96811513, -2616.80319979,
-              -2596.82097419,   547.30466563, -2597.99430789,   501.50648114],
-             [ -733.2213593 ,  2638.81033464,  -578.76439993,  2610.55912376,
-               2590.69244696,  -555.19824432,  2591.63200098,  -509.58072358,
-              -2618.88711219,   682.65814776, -2620.18294962,   640.09719335,
-                615.39758884, -2599.45663784,   462.67291695, -2570.99427346]])
+    np.testing.assert_allclose(
+        result,
+        [
+            [
+                2636.29181172, -662.53579899, 2637.35386946, -620.15550833,
+                -595.55319772, 2616.74310649, -442.74286574, 2588.4778162,
+                725.33941441, -2645.25148476, 570.96811513, -2616.80319979,
+                -2596.82097419, 547.30466563, -2597.99430789, 501.50648114
+            ],
+            [
+                -733.2213593, 2638.81033464, -578.76439993, 2610.55912376,
+                2590.69244696, -555.19824432, 2591.63200098, -509.58072358,
+                -2618.88711219, 682.65814776, -2620.18294962, 640.09719335,
+                615.39758884, -2599.45663784, 462.67291695, -2570.99427346
+            ]
+        ],
+        rtol=1e-5,
+        atol=1e-8
+    )

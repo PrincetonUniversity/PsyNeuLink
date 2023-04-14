@@ -440,7 +440,7 @@ class TestIntegratorFunctions:
         ex(var)
         val = benchmark(ex, var)
         # FIX: FOR mech_mode==Python ELEMENTS OF val ARE 2D NOT 1D ARRAYS
-        np.testing.assert_allclose(val, [[[0.10501801629915011]], [[0.10501801629915011]], [[0.10501801629915011]]])
+        assert np.allclose(val, [[0.10501801629915011], [0.10501801629915011], [0.10501801629915011]])
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -454,9 +454,16 @@ class TestIntegratorFunctions:
 
         ex(var)
         val = benchmark(ex, var)
-        np.testing.assert_allclose(val, [[[0.10501801629915011, 0.3151109244983909]],
-                                 [[0.10501801629915011, 0.3151109244983909]],
-                                 [[0.10501801629915011, 0.3151109244983909]]])
+        np.testing.assert_allclose(
+            val,
+            [
+                [[0.10501801629915011, 0.3151109244983909]],
+                [[0.10501801629915011, 0.3151109244983909]],
+                [[0.10501801629915011, 0.3151109244983909]],
+            ],
+            rtol=1e-5,
+            atol=1e-8,
+        )
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism

@@ -182,11 +182,12 @@ import inspect
 import warnings
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union, Callable, Literal
 
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
-from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation, Reinforcement
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import LearningMechanism
@@ -201,11 +202,11 @@ from psyneulink.core.components.shellclasses import ShellClass
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, \
-    MATRIX, PARAMETER_PORT, PROJECTION_SENDER, ONLINE, AFTER
+    MATRIX, PARAMETER_PORT, PROJECTION_SENDER
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import iscompatible, parameter_spec
+from psyneulink.core.globals.utilities import iscompatible, ValidParamSpecType
 
 __all__ = [
     'DefaultTrainingMechanism', 'LearningProjection', 'LearningProjectionError',
@@ -437,21 +438,21 @@ class LearningProjection(ModulatoryProjection_Base):
     projection_sender = LearningMechanism
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
-                 sender:tc.optional(tc.any(LearningSignal, LearningMechanism))=None,
-                 receiver:tc.optional(tc.any(ParameterPort, MappingProjection))=None,
-                 error_function:tc.optional(is_function_type)=None,
-                 learning_function:tc.optional(is_function_type)=None,
+                 sender: Optional[Union[LearningSignal, LearningMechanism]] = None,
+                 receiver: Optional[Union[ParameterPort, MappingProjection]] = None,
+                 error_function: Optional[Callable] = None,
+                 learning_function: Optional[Callable] = None,
                  # FIX: 10/3/17 - TEST IF THIS OK AND REINSTATE IF SO
-                 # learning_signal_params:tc.optional(dict)=None,
-                 learning_rate:tc.optional(tc.any(parameter_spec))=None,
-                 learning_enabled:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=None,
+                 # learning_signal_params:Optional[dict]=None,
+                 learning_rate: Optional[ValidParamSpecType] = None,
+                 learning_enabled: Optional[Union[bool, Literal['online', 'after']]] = None,
                  weight=None,
                  exponent=None,
-                 params:tc.optional(dict)=None,
+                 params: Optional[dict] = None,
                  name=None,
-                 prefs:is_pref_set=None,
+                 prefs: Optional[ValidPrefSet] = None,
                  **kwargs
                  ):
 

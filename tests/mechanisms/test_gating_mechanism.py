@@ -44,7 +44,7 @@ def test_gating_with_composition():
     pathway = [Input_Layer, Input_Weights, Hidden_Layer_1, Hidden_Layer_2, Output_Layer]
     comp = Composition()
     backprop_pathway = comp.add_backpropagation_learning_pathway(pathway=pathway,
-                                                                 loss_function=None)
+                                                                 loss_spec=None)
     # c.add_linear_processing_pathway(pathway=z)
     comp.add_node(Gating_Mechanism)
 
@@ -63,12 +63,12 @@ def test_gating_with_composition():
 
     stim_list[Gating_Mechanism]=[0.0]
     results = comp.learn(num_trials=1, inputs=stim_list)
-    expected_results = [[[0.5, 0.5, 0.5]]]
+    expected_results = [[0.5, 0.5, 0.5]]
     np.testing.assert_allclose(results, expected_results)
 
     stim_list[Gating_Mechanism]=[2.0]
     results = comp.learn(num_trials=1, inputs=stim_list)
-    expected_results = [[[0.96941429, 0.9837254 , 0.99217549]]]
+    expected_results = [[0.96941429, 0.9837254 , 0.99217549]]
     np.testing.assert_allclose(results, expected_results)
 
 def test_gating_with_UDF_with_composition():

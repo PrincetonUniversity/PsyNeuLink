@@ -163,19 +163,21 @@ Class Reference
 ---------------
 
 """
-from typing import Iterable
+from psyneulink._typing import Iterable
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union
 
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import PredictionErrorDeltaFunction
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.keywords import PREDICTION_ERROR_MECHANISM, SAMPLE, TARGET
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PREFERENCE_SET_NAME
-from psyneulink.core.globals.utilities import is_numeric
+from psyneulink.core.globals.utilities import NumericCollections
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism, ComparatorMechanismError
 
 __all__ = [
@@ -284,20 +286,16 @@ class PredictionErrorMechanism(ComparatorMechanism):
         target = None
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
-                 sample: tc.optional(tc.any(OutputPort, Mechanism_Base, dict,
-                                            is_numeric,
-                                            str)) = None,
-                 target: tc.optional(tc.any(OutputPort, Mechanism_Base, dict,
-                                            is_numeric,
-                                            str)) = None,
+                 sample: Optional[Union[OutputPort, Mechanism_Base, dict, NumericCollections, str]] = None,
+                 target: Optional[Union[OutputPort, Mechanism_Base, dict, NumericCollections, str]] = None,
                  function=None,
-                 output_ports: tc.optional(tc.optional(tc.any(str, Iterable))) = None,
-                 learning_rate: tc.optional(is_numeric) = None,
+                 output_ports: Optional[Union[str, Iterable]] = None,
+                 learning_rate: Optional[NumericCollections] = None,
                  params=None,
                  name=None,
-                 prefs: tc.optional(is_pref_set) = None,
+                 prefs:  Optional[ValidPrefSet] = None,
                  **kwargs
                  ):
 

@@ -53,20 +53,25 @@ jobs:
         extra-args: ['']
         os: [ubuntu, macos, windows]
         include:
-          # add 32-bit build on windows
-          - python-version: '3.8'
-            python-architecture: 'x86'
-            os: windows
-
           # code-coverage build on macos python 3.9
           - python-version: '3.9'
             os: macos
             extra-args: '--cov=psyneulink'
 
-          # fp32 compiled run on linux python 3.9
-          - python-version: '3.9'
+          # add 32-bit build on windows
+          - python-version: '3.8'
+            python-architecture: 'x86'
+            os: windows
+
+          # fp32 run on linux python 3.8
+          - python-version: '3.8'
             os: ubuntu
-            extra-args: '-m llvm --fp-precision=fp32'
+            extra-args: '--fp-precision=fp32'
+
+          # --benchmark-enable run on macos python 3.8
+          - python-version: '3.8'
+            os: macos
+            extra-args: '--benchmark-enable -m benchmark -n0 --benchmark-min-rounds=2 --benchmark-max-time=0.001 --benchmark-warmup=off'
 
           # add python 3.8 build on macos since 3.7 is broken
           # https://github.com/actions/virtual-environments/issues/4230

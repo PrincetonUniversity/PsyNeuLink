@@ -181,7 +181,9 @@ Class Reference
 """
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union
 
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import \
     ControlMechanism, ControlMechanismError, _control_allocation_getter
@@ -192,7 +194,7 @@ from psyneulink.core.globals.keywords import \
     CONTROL, CONTROL_SIGNALS, GATE, GATING_PROJECTION, GATING_SIGNAL, GATING_SIGNALS, \
     INIT_EXECUTE_METHOD_ONLY, MONITOR_FOR_CONTROL, PORT_TYPE, PROJECTIONS, PROJECTION_TYPE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import ContentAddressableList, convert_to_list
 
@@ -438,18 +440,18 @@ class GatingMechanism(ControlMechanism):
         )
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_gating_allocation=None,
                  size=None,
                  monitor_for_gating=None,
                  function=None,
-                 default_allocation:tc.optional(tc.any(int, float, list, np.ndarray))=None,
-                 gate:tc.optional(tc.optional(list)) = None,
-                 modulation:tc.optional(str)=None,
+                 default_allocation: Optional[Union[int, float, list, np.ndarray]] = None,
+                 gate: Optional[list] = None,
+                 modulation: Optional[str] = None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
+                 prefs: Optional[ValidPrefSet] = None,
                  **kwargs):
 
         gate = convert_to_list(gate) or []
