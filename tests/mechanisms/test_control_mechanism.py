@@ -284,7 +284,7 @@ class TestControlMechanism:
         comp = pnl.Composition()
         comp.add_nodes([m1,m2,m3])
         comp.add_controller(c2)
-        np.testing.assert_allclose(c2.parameters.control_allocation.get(), [10, 10, 10])
+        np.testing.assert_allclose(c2.parameters.control_allocation.get(), [[10], [10], [10]])
         assert c2.control_signals[0].value == [4]        # default_allocation from pnl.ControlMechanism assigned
         assert m1.parameter_ports[pnl.SLOPE].value == [10]  # has not yet received pnl.ControlSignal value
         assert c2.control_signals[1].value == [5]        # default_allocation from pnl.ControlSignal assigned (converted scalar)
