@@ -726,7 +726,6 @@ def _net_outcome_getter(owning_component=None, context=None):
         return [0]
 
 def _control_allocation_getter(owning_component=None, context=None):
-    # return self.output_values
     try:
         return [v.parameters.variable._get(context) for v in owning_component.control_signals]
     except (TypeError, AttributeError):
@@ -1136,8 +1135,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
         control_allocation = Parameter(np.array([defaultControlAllocation]),
                                        read_only=True,
                                        getter=_control_allocation_getter,
-                                       # structural=True,
-                                       # pnl_internal=True,
                                        )
         combine_costs = Parameter(np.sum, stateful=False, loggable=False)
         costs = Parameter(None, read_only=True, getter=_control_mechanism_costs_getter)
@@ -1708,7 +1705,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
             # If number of control_signals is same as number of items in function's value,
             #    assign each ControlSignal to the corresponding item of the function's value
-            # if len_fct_value == len(self.control):
             if len(self.control) == control_allocation_len:
                 control_signal._variable_spec = (OWNER_VALUE, i)
 
