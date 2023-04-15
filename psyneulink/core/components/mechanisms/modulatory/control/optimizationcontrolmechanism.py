@@ -3063,7 +3063,6 @@ class OptimizationControlMechanism(ControlMechanism):
         # clean up frozen values after execution
         self.agent_rep._clean_up_as_agent_rep(frozen_context, alt_controller=alt_controller)
 
-        # optimal_control_allocation = np.array(optimal_control_allocation).reshape((len(self.defaults.value), 1))
         optimal_control_allocation = np.array(optimal_control_allocation).reshape((len(control_allocation), 1))
         if self.function.save_samples:
             self.saved_samples = saved_samples
