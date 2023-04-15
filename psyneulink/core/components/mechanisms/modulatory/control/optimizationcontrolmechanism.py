@@ -2897,9 +2897,10 @@ class OptimizationControlMechanism(ControlMechanism):
                 - (Optimization) function returns additional information (e.g., GridSearch)
                 - _execute() method processes the value returned by the OptimizationFunction (to incorporate costs)
         """
-        self.defaults.value = np.array(self.control_allocation)
+        control_allocation = self.parameters.control_allocation._get(context)
+        self.defaults.value = np.array(control_allocation)
         self.parameters.value._set(copy.deepcopy(self.defaults.value), context)
-        return self.control_allocation
+        return control_allocation
 
     def _create_randomization_control_signal(self, context):
         if self.num_estimates:
