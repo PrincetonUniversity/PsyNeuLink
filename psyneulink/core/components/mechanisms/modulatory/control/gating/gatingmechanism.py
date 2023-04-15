@@ -425,8 +425,6 @@ class GatingMechanism(ControlMechanism):
                                        read_only=True,
                                        aliases='gating_allocation',
                                        getter=_control_allocation_getter,
-                                       # structural=True,
-                                       # pnl_internal=True,
                                        )
         output_ports = Parameter(
             None,
