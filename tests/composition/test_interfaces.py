@@ -513,7 +513,7 @@ class TestConnectCompositionsViaCIMS:
         assert len(comp.input_CIM.user_added_ports['input_ports']) == 0
         assert len(comp.input_CIM.user_added_ports['output_ports']) == 0
 
-    def test_parameter_CIM_port_order(self):
+    def test_parameter_CIM_port_order(self) -> object:
         # Note:  CIM_port order is also tested in TestNodes and test_simplified_necker_cube()
 
         # Inner Composition
@@ -569,9 +569,8 @@ class TestConnectCompositionsViaCIMS:
             }
         )
         # linear combination of cm output and run inputs to icomp
-        # results in effective input of 2+2=4, then this is multiplied
-        # by the controlled slope of ib (2), resulting in 8
-        np.testing.assert_array_almost_equal(ocomp.results, [[[8]], [[8]], [[8]]])
+        # results in effect input of 2 that is multiplied by the controlled slope of ib (2), resulting in 4
+        np.testing.assert_allclose(ocomp.results, [[[4.0]], [[4.0]], [[4.0]]])
         assert len(ib.mod_afferents) == 1
         assert ib.mod_afferents[0].sender == icomp.parameter_CIM.output_port
         assert icomp.parameter_CIM_ports[ib.parameter_ports['slope']][0].path_afferents[0].sender == cm.output_port

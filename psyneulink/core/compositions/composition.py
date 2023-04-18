@@ -6964,8 +6964,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     projs = {self.add_projection(sender=s, receiver=r,
                                                  default_matrix=default_projection_matrix,
                                                  allow_duplicates=False)
-                            for r in receivers for s in senders}
-                    # MODIFIED 11/2/22 END
+                            # for r in receivers for s in senders}
+                            # Ignore ControlMechanisms, since they are not allowed to send MappingProjections
+                            for r in receivers for s in senders if not isinstance(s, ControlMechanism)}
                     if all(projs):
                         projs = projs.pop() if len(projs) == 1 else projs
                         projections.append(projs)
