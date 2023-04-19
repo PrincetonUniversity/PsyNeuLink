@@ -577,6 +577,8 @@ class TestConnectCompositionsViaCIMS:
         # by the controlled slope of ib (2), resulting in 8
         np.testing.assert_array_almost_equal(ocomp.results, [[[8]], [[8]], [[8]]])
         assert len(ib.mod_afferents) == 1
+        # Verify that MappingProjection from cm to icomp (for which warning was elicited above) is in place
+        assert cm.control_signals[0].efferents[0].receiver.owner == icomp.input_CIM
         assert ib.mod_afferents[0].sender == icomp.parameter_CIM.output_port
         assert icomp.parameter_CIM_ports[ib.parameter_ports['slope']][0].path_afferents[0].sender == cm.output_port
         assert cm in ocomp.graph_processing.dependency_dict[icomp]
@@ -606,6 +608,8 @@ class TestConnectCompositionsViaCIMS:
         assert len(ib.mod_afferents) == 1
         assert ib.mod_afferents[0].sender == icomp.parameter_CIM.output_port
         assert icomp.parameter_CIM_ports[ib.parameter_ports['slope']][0].path_afferents[0].sender == cm.output_port
+        # Verify that only Projections from cm are to parameter_CIM (and not to icomp.input_CIM)
+        assert all([proj.receiver.owner == icomp.parameter_CIM for proj in cm.efferents])
         assert cm not in ocomp.graph_processing.dependency_dict[icomp]
 
     def test_nested_control_projection_count_controller(self):
