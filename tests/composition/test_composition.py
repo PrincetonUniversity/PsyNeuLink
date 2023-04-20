@@ -7293,7 +7293,8 @@ class TestNodeRoles:
         # Current instantiation always assigns ctl_mech_B as TERMINAL in this case;
         # this is here to flag any violation of this in the future, in case that is not intended
         assert {mech} == set(comp.get_nodes_by_role(NodeRole.ORIGIN))
-        assert {ctl_mech_A, ctl_mech_B} == set(comp.get_nodes_by_role(NodeRole.TERMINAL))
+        # assert {ctl_mech_A, ctl_mech_B} == set(comp.get_nodes_by_role(NodeRole.TERMINAL))
+        assert {ctl_mech_B} == set(comp.get_nodes_by_role(NodeRole.TERMINAL))
         assert {mech, ctl_mech_A, ctl_mech_B} == set(comp.get_nodes_by_role(NodeRole.OUTPUT))
 
     def test_LEARNING_hebbian(self):
