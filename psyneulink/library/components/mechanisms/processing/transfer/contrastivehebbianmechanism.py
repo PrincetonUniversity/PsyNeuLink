@@ -333,9 +333,12 @@ from collections.abc import Iterable
 
 import copy
 import numpy as np
-import typecheck as tc
+from beartype import beartype
 
-from psyneulink.core.components.functions.function import get_matrix, is_function_type
+from psyneulink._typing import Optional, Union, Callable, Literal
+
+
+from psyneulink.core.components.functions.function import get_matrix
 from psyneulink.core.components.functions.nonstateful.learningfunctions import ContrastiveHebbian, Hebbian
 from psyneulink.core.components.functions.nonstateful.objectivefunctions import Distance
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, MechanismError
@@ -344,8 +347,8 @@ from psyneulink.core.globals.keywords import \
     CONTRASTIVE_HEBBIAN_MECHANISM, COUNT, FUNCTION, HARD_CLAMP, HOLLOW_MATRIX, MAX_ABS_DIFF, NAME, \
     SIZE, SOFT_CLAMP, TARGET, VARIABLE
 from psyneulink.core.globals.parameters import Parameter, SharedParameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
-from psyneulink.core.globals.utilities import is_numeric_or_none, parameter_spec
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
+from psyneulink.core.globals.utilities import ValidParamSpecType, NumericCollections
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
     CONVERGENCE, RECURRENT, RECURRENT_INDEX, RecurrentTransferMechanism
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
@@ -975,16 +978,16 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     standard_output_port_names = [i['name'] for i in standard_output_ports]
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
-                 input_size:int,
-                 hidden_size:tc.optional(int)=None,
-                 target_size:tc.optional(int)=None,
-                 separated: tc.optional(bool) = None,
-                 mode:tc.optional(tc.enum(SIMPLE_HEBBIAN))=None,
-                 continuous: tc.optional(bool) = None,
-                 clamp:tc.optional(tc.enum(SOFT_CLAMP, HARD_CLAMP))=None,
-                 combination_function:tc.optional(is_function_type)=None,
+                 input_size: int,
+                 hidden_size: Optional[int] = None,
+                 target_size: Optional[int] = None,
+                 separated: Optional[bool] = None,
+                 mode: Optional[Literal['SIMPLE_HEBBIAN']] = None,
+                 continuous: Optional[bool] = None,
+                 clamp: Optional[Literal['soft_clamp', 'hard_clamp']] = None,
+                 combination_function: Optional[Callable] = None,
                  function=None,
                  matrix=None,
                  auto=None,
@@ -992,23 +995,23 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                  integrator_function=None,
                  initial_value=None,
                  noise=None,
-                 integration_rate: is_numeric_or_none=None,
-                 integrator_mode: tc.optional(bool) = None,
+                 integration_rate: Optional[NumericCollections] = None,
+                 integrator_mode: Optional[bool] = None,
                  clip=None,
-                 minus_phase_termination_condition:tc.optional(tc.enum(CONVERGENCE, COUNT))=None,
-                 minus_phase_termination_threshold: tc.optional(float) = None,
-                 plus_phase_termination_condition:tc.optional(tc.enum(CONVERGENCE, COUNT))=None,
-                 plus_phase_termination_threshold: tc.optional(float) = None,
-                 phase_convergence_function: tc.optional(tc.any(is_function_type)) = None,
-                 max_passes:tc.optional(int)=None,
-                 enable_learning: tc.optional(bool) = None,
-                 learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
-                 learning_function: tc.optional(tc.any(is_function_type)) = None,
-                 additional_input_ports:tc.optional(tc.optional(tc.any(list, dict))) = None,
-                 additional_output_ports:tc.optional(tc.any(str, Iterable))=None,
+                 minus_phase_termination_condition: Optional[Literal['CONVERGENCE', 'COUNT']] = None,
+                 minus_phase_termination_threshold: Optional[float] = None,
+                 plus_phase_termination_condition: Optional[Literal['CONVERGENCE', 'COUNT']] = None,
+                 plus_phase_termination_threshold: Optional[float] = None,
+                 phase_convergence_function: Optional[Callable] = None,
+                 max_passes: Optional[int] = None,
+                 enable_learning: Optional[bool] = None,
+                 learning_rate: Optional[Union[ValidParamSpecType, bool]] = None,
+                 learning_function: Optional[Callable] = None,
+                 additional_input_ports: Optional[Union[list, dict]] = None,
+                 additional_output_ports: Optional[Union[str, Iterable]] = None,
                  params=None,
                  name=None,
-                 prefs: is_pref_set=None,
+                 prefs: Optional[ValidPrefSet] = None,
                  **kwargs):
         """Instantiate ContrastiveHebbianMechanism
         """
@@ -1143,7 +1146,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         if self._target_included:
             self.parameters.output_activity._set(self.input_ports[TARGET].socket_template, context)
 
-    @tc.typecheck
+    @beartype
     def _instantiate_recurrent_projection(self,
                                           mech: Mechanism,
                                           # this typecheck was failing, I didn't want to fix (7/19/17 CW)

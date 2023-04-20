@@ -148,7 +148,9 @@ import warnings
 from enum import Enum, IntEnum
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union, Callable
 
 from psyneulink.core.components.component import Component, ComponentError, DefaultsFlexibility
 from psyneulink.core.components.shellclasses import Function, Mechanism
@@ -157,16 +159,17 @@ from psyneulink.core.globals.keywords import (
     ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, EXAMPLE_FUNCTION_TYPE, FULL_CONNECTIVITY_MATRIX,
     FUNCTION_COMPONENT_CATEGORY, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, HOLLOW_MATRIX,
     IDENTITY_MATRIX, INVERSE_HOLLOW_MATRIX, NAME, PREFERENCE_SET_NAME, RANDOM_CONNECTIVITY_MATRIX, VALUE, VARIABLE,
-    MODEL_SPEC_ID_MDF_VARIABLE
+    MODEL_SPEC_ID_MDF_VARIABLE, MatrixKeywordLiteral
 )
 from psyneulink.core.globals.mdf import _get_variable_parameter_name
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import REPORT_OUTPUT_PREF, is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import REPORT_OUTPUT_PREF, ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import (
     convert_to_np_array, get_global_seed, is_instance_or_subclass, object_has_single_value, parameter_spec, parse_valid_identifier, safe_len,
-    SeededRandomState, contains_type, is_numeric, random_matrix
+    SeededRandomState, contains_type, is_numeric, NumericCollections,
+    random_matrix
 )
 
 __all__ = [
@@ -694,6 +697,7 @@ class Function_Base(Function):
                                     params=params,
                                     target_set=target_set,
                                     )
+        # Execute function
         try:
             value = self._function(variable=variable,
                                    context=context,
@@ -795,7 +799,7 @@ class Function_Base(Function):
                     raise FunctionError(f"Can't convert value ({value}: 2D np.ndarray object "
                                         f"with more than one array) to 1D array.")
             elif value.ndim == 1:
-                value = value
+                pass
             elif value.ndim == 0:
                 value = np.atleast_1d(value)
             else:
@@ -1048,7 +1052,7 @@ class ArgumentTherapy(Function_Base):
                  pertincacity=Manner.CONTRARIAN,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1193,13 +1197,13 @@ class EVCAuxiliaryFunction(Function_Base):
        }
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  function,
                  variable=None,
                  params=None,
                  owner=None,
-                 prefs:is_pref_set=None,
+                 prefs:   Optional[ValidPrefSet] = None,
                  context=None):
         self.aux_function = function
 
@@ -1338,3 +1342,8 @@ def get_matrix(specification, rows=1, cols=1, context=None):
 
     # Specification not recognized
     return None
+
+
+# Valid types for a matrix specification, note this is does not ensure that ND arrays are 1D or 2D like the
+# above code does.
+ValidMatrixSpecType = Union[MatrixKeywordLiteral, Callable, str, NumericCollections, np.matrix]

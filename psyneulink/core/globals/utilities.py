@@ -102,7 +102,6 @@ import collections
 import copy
 import inspect
 import logging
-import numbers
 import psyneulink
 import re
 import time
@@ -110,7 +109,10 @@ import warnings
 import weakref
 import types
 import typing
-import typecheck as tc
+from beartype import beartype
+
+from numbers import Number
+from psyneulink._typing import Optional, Union, Literal, Type, List, Tuple
 
 from enum import Enum, EnumMeta, IntEnum
 from collections.abc import Mapping
@@ -290,7 +292,7 @@ def parameter_spec(param, numeric_only=None):
         param = param.__name__
     elif isinstance(param, Component):
         param = param.__class__.__name__
-    if (isinstance(param, (numbers.Number,
+    if (isinstance(param, (Number,
                            np.ndarray,
                            list,
                            tuple,
@@ -304,6 +306,47 @@ def parameter_spec(param, numeric_only=None):
                 return False
         return True
     return False
+
+
+NumericCollections = Union[Number, List[List[Number]], List[Number],
+                           Tuple[Number], Tuple[Tuple[Number]], np.ndarray]
+
+
+# A set of all valid parameter specification types
+ValidParamSpecType = Union[
+    Number,
+    np.ndarray,
+    list,
+    tuple,
+    dict,
+    types.FunctionType,
+    'psyneulink.core.components.shellclasses.Projection',
+    'psyneulink.core.components.mechanisms.ControlMechanism',
+    Type['psyneulink.core.components.mechanisms.ControlMechanism'],
+    'psyneulink.core.components.projections.ControlProjection',
+    Type['psyneulink.core.components.projections.ControlProjection'],
+    'psyneulink.core.components.ports.ControlSignal',
+    Type['psyneulink.core.components.ports.ControlSignal'],
+    'psyneulink.core.components.mechanisms.GatingMechanism',
+    Type['psyneulink.core.components.mechanisms.GatingMechanism'],
+    'psyneulink.core.components.projections.GatingProjection',
+    Type['psyneulink.core.components.projections.GatingProjection'],
+    'psyneulink.core.components.ports.GatingSignal',
+    Type['psyneulink.core.components.ports.GatingSignal'],
+    'psyneulink.core.components.mechanisms.LearningMechanism',
+    Type['psyneulink.core.components.mechanisms.LearningMechanism'],
+    'psyneulink.core.components.projections.LearningProjection',
+    Type['psyneulink.core.components.projections.LearningProjection'],
+    'psyneulink.core.components.ports.LearningSignal',
+    Type['psyneulink.core.components.ports.LearningSignal'],
+    'psyneulink.library.components.projections.AutoAssociativeProjection',
+    Type['psyneulink.library.components.projections.AutoAssociativeProjection'],
+    'psyneulink.core.components.projections.MappingProjection',
+    Type['psyneulink.core.components.projections.MappingProjection'],
+    'psyneulink.library.components.projections.MaskedMappingProjection',
+    Type['psyneulink.library.components.projections.MaskedMappingProjection'],
+    Literal['LEARNING', 'bias', 'control', 'gain', 'gate', 'leak', 'offset', 'ControlSignal', 'ControlProjection'],
+]
 
 
 def all_within_range(x, min, max):
@@ -332,7 +375,7 @@ def is_numeric(x):
 
 def is_number(x):
     return (
-        isinstance(x, numbers.Number)
+        isinstance(x, Number)
         and not isinstance(x, (bool, Enum))
     )
 
@@ -372,6 +415,21 @@ def is_distance_metric(s):
         return True
     else:
         return False
+
+
+# Allowed distance metrics literals
+DistanceMetricLiteral = Literal[
+    'max_abs_diff',
+    'difference',
+    'normed_L0_similarity',
+    'euclidean',
+    'angle',
+    'correlation',
+    'cosine',
+    'entropy',
+    'cross-entropy',
+    'energy'
+]
 
 
 def is_iterable(x):
@@ -448,12 +506,6 @@ def iscompatible(candidate, reference=None, **kargs):
         # ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
         pass
 
-    # If the two are the same thing, can settle it right here
-    # This is a common pattern for tests that use the same structure
-    # as default variable and variable
-    if reference is not None and candidate is reference:
-        return True
-
     # If args not provided, assign to default values
     # if not specified in args, use these:
     #     args[kwCompatibilityType] = list
@@ -492,7 +544,7 @@ def iscompatible(candidate, reference=None, **kargs):
         else:
             match_length = 0
         # If reference is not a number, then don't require the candidate to be one
-        if not isinstance(reference, numbers.Number):
+        if not isinstance(reference, Number):
             number_only = False
         else:
             number_only = kargs[kwCompatibilityNumeric]
@@ -519,7 +571,7 @@ def iscompatible(candidate, reference=None, **kargs):
     #   should be added as option in future (i.e., to disallow it)
     if (isinstance(candidate, match_type) or
             (isinstance(candidate, (list, np.ndarray)) and (issubclass(match_type, (list, np.ndarray)))) or
-            (is_number(candidate) and issubclass(match_type,numbers.Number)) or
+            (is_number(candidate) and issubclass(match_type, Number)) or
             # IMPLEMENTATION NOTE: Allow UserDict types to match dict (make this an option in the future)
             (isinstance(candidate, UserDict) and match_type is dict) or
             # IMPLEMENTATION NOTE: Allow UserList types to match list (make this an option in the future)
@@ -568,7 +620,7 @@ def iscompatible(candidate, reference=None, **kargs):
                     if not is_number(value):
                         try:
                             # True for autograd ArrayBox (and maybe other types?)
-                            # if isinstance(value._value, numbers.Number):
+                            # if isinstance(value._value, Number):
                             from autograd.numpy.numpy_boxes import ArrayBox
                             if isinstance(value, ArrayBox):
                                 return True
@@ -601,7 +653,7 @@ def iscompatible(candidate, reference=None, **kargs):
                         return True
                     # IMPLEMENTATION NOTE:  ??No longer needed given recursive call above
                     # Deal with ints in one and floats in the other
-                    # # elif all((isinstance(c, numbers.Number) and isinstance(r, numbers.Number))
+                    # # elif all((isinstance(c, Number) and isinstance(r, Number))
                     # #          for c, r in cr):
                     # #     return True
                 else:
@@ -638,8 +690,8 @@ def powerset(iterable):
     s = list(iterable)
     return chain.from_iterable(combinations(s, r) for r in range(len(s) + 1))
 
-@tc.typecheck
-def tensor_power(items, levels:tc.optional(range)=None, flat=False):
+@beartype
+def tensor_power(items, levels: Optional[range] = None, flat=False):
     """return tensor product for all members of powerset of items
 
     levels specifies a range of set levels to return;  1=first order terms, 2=2nd order terms, etc.
@@ -1438,7 +1490,7 @@ class ContentAddressableList(UserList):
 def is_value_spec(spec):
     from psyneulink.core.components.component import Component
 
-    if isinstance(spec, (numbers.Number, np.ndarray)):
+    if isinstance(spec, (Number, np.ndarray)):
         return True
     elif (
         isinstance(spec, list)
@@ -1679,7 +1731,8 @@ def safe_equals(x, y):
                 return all([safe_equals(x[i], y[i]) for i in subelements])
 
 
-@tc.typecheck
+
+@beartype
 def _get_arg_from_stack(arg_name:str):
     # Get arg from the stack
 

@@ -1073,14 +1073,14 @@ import ast
 import copy
 import warnings
 from collections.abc import Iterable
-from typing import Union
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union, Callable
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility, Component
-from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.nonstateful.optimizationfunctions import \
     GridSearch, OBJECTIVE_FUNCTION, SEARCH_SPACE, RANDOMIZATION_DIMENSION
 from psyneulink.core.components.functions.nonstateful.transferfunctions import CostFunctions
@@ -1738,23 +1738,21 @@ class OptimizationControlMechanism(ControlMechanism):
 
     @handle_external_context()
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  agent_rep=None,
-                 state_features: tc.optional((tc.any(str, Iterable, InputPort,
-                                                     OutputPort, Mechanism)))=SHADOW_INPUTS,
+                 state_features: Optional[Union[str, Iterable, InputPort, OutputPort, Mechanism]] = SHADOW_INPUTS,
                  # state_feature_default=None,
-                 state_feature_default: tc.optional((tc.any(str, Iterable,
-                                                            InputPort, OutputPort,Mechanism)))=SHADOW_INPUTS,
-                 state_feature_function: tc.optional(tc.optional(tc.any(dict, is_function_type)))=None,
+                 state_feature_default: Optional[Union[str, Iterable, InputPort, OutputPort, Mechanism]] = SHADOW_INPUTS,
+                 state_feature_function: Optional[Union[dict, Callable]]=None,
                  function=None,
                  num_estimates=None,
                  random_variables=None,
                  initial_seed=None,
                  same_seed_for_all_allocations=None,
                  num_trials_per_estimate=None,
-                 search_function: tc.optional(tc.optional(tc.any(is_function_type)))=None,
-                 search_termination_function: tc.optional(tc.optional(tc.any(is_function_type)))=None,
+                 search_function: Optional[Callable]=None,
+                 search_termination_function: Optional[Callable]=None,
                  search_statefulness=None,
                  context=None,
                  **kwargs):
@@ -2899,9 +2897,10 @@ class OptimizationControlMechanism(ControlMechanism):
                 - (Optimization) function returns additional information (e.g., GridSearch)
                 - _execute() method processes the value returned by the OptimizationFunction (to incorporate costs)
         """
-        self.defaults.value = np.array(self.control_allocation)
+        control_allocation = self.parameters.control_allocation._get(context)
+        self.defaults.value = np.array(control_allocation)
         self.parameters.value._set(copy.deepcopy(self.defaults.value), context)
-        return self.control_allocation
+        return control_allocation
 
     def _create_randomization_control_signal(self, context):
         if self.num_estimates:
@@ -3021,7 +3020,7 @@ class OptimizationControlMechanism(ControlMechanism):
             return [defaultControlAllocation]
 
         # Assign default control_allocation if it is not yet specified (presumably first trial)
-        control_allocation = self.control_allocation
+        control_allocation = self.parameters.control_allocation._get(context)
         if control_allocation is None:
             control_allocation = [c.defaults.variable for c in self.control_signals]
 
@@ -3064,8 +3063,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # clean up frozen values after execution
         self.agent_rep._clean_up_as_agent_rep(frozen_context, alt_controller=alt_controller)
 
-        # optimal_control_allocation = np.array(optimal_control_allocation).reshape((len(self.defaults.value), 1))
-        optimal_control_allocation = np.array(optimal_control_allocation).reshape((len(self.control_allocation),1))
+        optimal_control_allocation = np.array(optimal_control_allocation).reshape((len(control_allocation), 1))
         if self.function.save_samples:
             self.saved_samples = saved_samples
         if self.function.save_values:

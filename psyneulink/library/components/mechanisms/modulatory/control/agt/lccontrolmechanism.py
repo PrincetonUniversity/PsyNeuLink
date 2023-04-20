@@ -296,7 +296,9 @@ Class Reference
 ---------------
 
 """
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union, Iterable
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.stateful.integratorfunctions import FitzHughNagumoIntegrator
@@ -308,9 +310,9 @@ from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.keywords import \
     INIT_EXECUTE_METHOD_ONLY, MULTIPLICATIVE_PARAM, PROJECTIONS
 from psyneulink.core.globals.parameters import Parameter, ParameterAlias, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import is_iterable, convert_to_list
+from psyneulink.core.globals.utilities import convert_to_list
 
 __all__ = [
     'CONTROL_SIGNAL_NAME', 'LCControlMechanism', 'LCControlMechanismError',
@@ -660,38 +662,37 @@ class LCControlMechanism(ControlMechanism):
         modulated_mechanisms = Parameter(None, stateful=False, loggable=False)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
-                 monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputPort))=None,
-                 # modulated_mechanisms:tc.optional(tc.optional(tc.any(list,str))) = None,
+                 objective_mechanism: Optional[Union[ObjectiveMechanism, list]] = None,
+                 monitor_for_control: Optional[Union[Iterable, Mechanism, OutputPort]] = None,
                  modulated_mechanisms=None,
-                 modulation:tc.optional(str)=None,
+                 modulation: Optional[str] = None,
                  integration_method="RK4",
                  initial_w_FitzHughNagumo=0.0,
                  initial_v_FitzHughNagumo=0.0,
                  time_step_size_FitzHughNagumo=0.05,
-                 t_0_FitzHughNagumo=0.0,
-                 a_v_FitzHughNagumo=-1 / 3,
-                 b_v_FitzHughNagumo=0.0,
-                 c_v_FitzHughNagumo=1.0,
-                 d_v_FitzHughNagumo=0.0,
-                 e_v_FitzHughNagumo=-1.0,
-                 f_v_FitzHughNagumo=1.0,
-                 time_constant_v_FitzHughNagumo=1.0,
-                 a_w_FitzHughNagumo=1.0,
-                 b_w_FitzHughNagumo=-0.8,
-                 c_w_FitzHughNagumo=0.7,
-                 threshold_FitzHughNagumo=-1.0,
-                 time_constant_w_FitzHughNagumo=12.5,
-                 mode_FitzHughNagumo=1.0,
-                 uncorrelated_activity_FitzHughNagumo=0.0,
+                 t_0_FitzHughNagumo: float = 0.0,
+                 a_v_FitzHughNagumo: float = -1 / 3,
+                 b_v_FitzHughNagumo: float = 0.0,
+                 c_v_FitzHughNagumo: float = 1.0,
+                 d_v_FitzHughNagumo: float = 0.0,
+                 e_v_FitzHughNagumo: float = -1.0,
+                 f_v_FitzHughNagumo: float = 1.0,
+                 time_constant_v_FitzHughNagumo:float = 1.0,
+                 a_w_FitzHughNagumo:float = 1.0,
+                 b_w_FitzHughNagumo: float = -0.8,
+                 c_w_FitzHughNagumo: float = 0.7,
+                 threshold_FitzHughNagumo: float = -1.0,
+                 time_constant_w_FitzHughNagumo: float = 12.5,
+                 mode_FitzHughNagumo: float = 1.0,
+                 uncorrelated_activity_FitzHughNagumo: float = 0.0,
                  base_level_gain=None,
                  scaling_factor_gain=None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None
+                 prefs: Optional[ValidPrefSet] = None
                  ):
 
         super().__init__(
@@ -885,14 +886,14 @@ class LCControlMechanism(ControlMechanism):
 
     # 5/8/20: ELIMINATE SYSTEM
     # SEEMS TO STILL BE USED BY SOME MODELS;  DELETE WHEN THOSE ARE UPDATED
-    # @tc.typecheck
+    # @beartype
     # def _add_system(self, system, role:str):
     #     super()._add_system(system, role)
     #     if isinstance(self.modulated_mechanisms, str) and self.modulated_mechanisms == ALL:
     #         # Call with ContextFlags.COMPONENT so that OutputPorts are replaced rather than added
     #         self._instantiate_output_ports(context=Context(source=ContextFlags.COMPONENT))
 
-    @tc.typecheck
+    @beartype
     def add_modulated_mechanisms(self, mechanisms:list):
         """Add ControlProjections to the specified Mechanisms.
         """
@@ -911,7 +912,8 @@ class LCControlMechanism(ControlMechanism):
             # self.aux_components.append(ControlProjection(sender=self.control_signals[0],
             #                                              receiver=parameter_port))
 
-    @tc.typecheck
+    @check_user_specified
+    @beartype
     def remove_modulated_mechanisms(self, mechanisms:list):
         """Remove the ControlProjections to the specified Mechanisms.
         """

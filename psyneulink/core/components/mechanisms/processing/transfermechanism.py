@@ -824,7 +824,9 @@ import warnings
 from collections.abc import Iterable
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union, Literal
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination, SUM
@@ -849,10 +851,10 @@ from psyneulink.core.globals.keywords import \
     NAME, NOISE, NUM_EXECUTIONS_BEFORE_FINISHED, OWNER_VALUE, RESET, RESULT, RESULTS, \
     SELECTION_FUNCTION_TYPE, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE
 from psyneulink.core.globals.parameters import Parameter, FunctionParameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
-    all_within_range, append_type_to_name, iscompatible, is_comparison_operator, convert_to_np_array, safe_equals, parse_valid_identifier
+    all_within_range, append_type_to_name, iscompatible, convert_to_np_array, safe_equals, parse_valid_identifier
 from psyneulink.core.scheduling.time import TimeScale
 
 __all__ = [
@@ -1280,11 +1282,11 @@ class TransferMechanism(ProcessingMechanism_Base):
                        f" {','.join(comparison_operators.keys())}."
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 input_ports:tc.optional(tc.any(Iterable, Mechanism, OutputPort, InputPort))=None,
+                 input_ports: Optional[Union[Iterable, Mechanism, OutputPort, InputPort]] = None,
                  function=None,
                  noise=None,
                  clip=None,
@@ -1294,12 +1296,12 @@ class TransferMechanism(ProcessingMechanism_Base):
                  integration_rate=None,
                  on_resume_integrator_mode=None,
                  termination_measure=None,
-                 termination_threshold:tc.optional(tc.any(int, float))=None,
-                 termination_comparison_op: tc.optional(tc.any(str, is_comparison_operator)) = None,
-                 output_ports:tc.optional(tc.any(str, Iterable))=None,
+                 termination_threshold: Optional[Union[int, float]] = None,
+                 termination_comparison_op: Optional[Union[str, Literal['<', '<=', '>', '>=', '==', '!=']]] = None,
+                 output_ports: Optional[Union[str, Iterable]] = None,
                  params=None,
                  name=None,
-                 prefs: tc.optional(is_pref_set) = None,
+                 prefs: Optional[ValidPrefSet] = None,
                  **kwargs):
         """Assign type-level preferences and call super.__init__
         """

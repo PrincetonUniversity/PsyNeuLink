@@ -25,7 +25,9 @@ Functions that selects a subset of elements to maintain or transform, while null
 __all__ = ['SelectionFunction', 'OneHot', 'max_vs_avg', 'max_vs_next', 'MAX_VS_NEXT', 'MAX_VS_AVG']
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Literal
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
@@ -38,7 +40,7 @@ from psyneulink.core.globals.keywords import \
     MODE, ONE_HOT_FUNCTION, PROB, PROB_INDICATOR, SELECTION_FUNCTION_TYPE, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import \
-    REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, is_pref_set
+    REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, ValidPrefSet
 
 
 MAX_VS_NEXT = 'max_vs_next'
@@ -202,16 +204,16 @@ class OneHot(SelectionFunction):
                 return 'not one of {0}'.format(options)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 mode: tc.optional(tc.enum(MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR,
-                               MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR, MIN_ABS_INDICATOR,
-                               PROB, PROB_INDICATOR))=None,
+                 mode: Optional[Literal['MAX_VAL', 'MAX_ABS_VAL', 'MAX_INDICATOR', 'MAX_ABS_INDICATOR',
+                               'MIN_VAL', 'MIN_ABS_VAL', 'MIN_INDICATOR', 'MIN_ABS_INDICATOR',
+                               'PROB', 'PROB_INDICATOR']] = None,
                  seed=None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         reset_variable_shape_flexibility = False
         if mode in {PROB, PROB_INDICATOR} and default_variable is None:

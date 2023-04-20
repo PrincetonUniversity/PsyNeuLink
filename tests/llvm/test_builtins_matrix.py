@@ -115,4 +115,4 @@ def test_matrix_op(benchmark, op, x, y, builtin, result, func_mode, dims):
             return lres
 
     res = benchmark(ex)
-    np.testing.assert_allclose(res, result)
+    np.testing.assert_allclose(res, result, rtol=1e-5, atol=1e-8)

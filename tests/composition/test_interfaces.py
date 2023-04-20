@@ -13,7 +13,7 @@ from psyneulink.core.components.ports.modulatorysignals.controlsignal import Con
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.compositions.composition import Composition, CompositionError
+from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.utilities import convert_all_elements_to_np_array
 from psyneulink.core.globals.keywords import INTERCEPT, NOISE, SLOPE
@@ -144,8 +144,6 @@ class TestConnectCompositionsViaCIMS:
         }
 
 
-        sched = Scheduler(composition=comp1)
-
         comp2 = Composition(name="second_composition")
 
         A2 = TransferMechanism(name="A2",
@@ -158,8 +156,6 @@ class TestConnectCompositionsViaCIMS:
         comp2.add_node(B2)
 
         comp2.add_projection(MappingProjection(sender=A2, receiver=B2), A2, B2)
-
-        sched = Scheduler(composition=comp2)
 
         comp3 = Composition(name="outer_composition")
         comp3.add_node(comp1)
@@ -517,7 +513,7 @@ class TestConnectCompositionsViaCIMS:
         assert len(comp.input_CIM.user_added_ports['input_ports']) == 0
         assert len(comp.input_CIM.user_added_ports['output_ports']) == 0
 
-    def test_parameter_CIM_port_order(self):
+    def test_parameter_CIM_port_order(self) -> object:
         # Note:  CIM_port order is also tested in TestNodes and test_simplified_necker_cube()
 
         # Inner Composition
@@ -541,26 +537,80 @@ class TestConnectCompositionsViaCIMS:
         assert NOISE in icomp.parameter_CIM.output_ports.names[1]
         assert SLOPE in icomp.parameter_CIM.output_ports.names[2]
 
-    def test_parameter_CIM_routing_from_ControlMechanism(self):
+    @pytest.fixture
+    def parameter_CIM_routing_composition(self):
         # Inner Composition
         ia = TransferMechanism(name='ia')
         ib = TransferMechanism(name='ib')
-        icomp = Composition(name='icomp', pathways=[ia])
+        icomp = Composition(name='icomp', pathways=[ia, ib])
         # Outer Composition
-        ocomp = Composition(name='ocomp', pathways=[icomp])
+        ocomp = Composition(name='ocomp')
         cm = ControlMechanism(
             name='control_mechanism',
             control_signals=ControlSignal(projections=[(SLOPE, ib)])
         )
-        icomp.add_linear_processing_pathway([ia, ib])
-        ocomp.add_linear_processing_pathway([cm, icomp])
-        res = ocomp.run({icomp:[[2],[2], [2]],
-                         cm:[[2],[2],[2]]})
-        np.testing.assert_allclose(res, [[4]])
-        np.testing.assert_allclose(ocomp.results, [[[4]], [[4]], [[4]]])
+        return ia, ib, cm, icomp, ocomp
+
+    def test_parameter_CIM_routing_from_ControlMechanism_pathway_explicit(
+        self, parameter_CIM_routing_composition
+    ):
+        ia, ib, cm, icomp, ocomp = parameter_CIM_routing_composition
+        warning_msg = f"A MappingProjection has been created from a ControlSignal of 'control_mechanism' " \
+                      f"-- specified in 'pathway' arg for add_linear_procesing_pathway method of 'ocomp' -- " \
+                      f"to another Mechanism in that pathway.  " \
+                      f"If this is not the intended behavior, add 'control_mechanism' separately to 'ocomp'."
+        with pytest.warns(UserWarning, match=warning_msg):
+            ocomp.add_linear_processing_pathway([cm, icomp])
+        ocomp._analyze_graph()
+        input_nodes = ocomp.get_nodes_by_role(NodeRole.INPUT)
+        assert cm in input_nodes
+        assert icomp in input_nodes
+
+        ocomp.run(
+            inputs={
+                cm: [[2], [2], [2]],
+                icomp: [[2], [2], [2]],
+            }
+        )
+        # linear combination of cm output and run inputs to icomp
+        # results in effective input of 2+2=4, then this is multiplied
+        # by the controlled slope of ib (2), resulting in 8
+        np.testing.assert_array_almost_equal(ocomp.results, [[[8]], [[8]], [[8]]])
+        assert len(ib.mod_afferents) == 1
+        # Verify that MappingProjection from cm to icomp (for which warning was elicited above) is in place
+        assert cm.control_signals[0].efferents[0].receiver.owner == icomp.input_CIM
+        assert ib.mod_afferents[0].sender == icomp.parameter_CIM.output_port
+        assert icomp.parameter_CIM_ports[ib.parameter_ports['slope']][0].path_afferents[0].sender == cm.output_port
+        assert cm in ocomp.graph_processing.dependency_dict[icomp]
+
+    def test_parameter_CIM_routing_from_ControlMechanism_pathway_implicit(
+        self, parameter_CIM_routing_composition
+    ):
+        ia, ib, cm, icomp, ocomp = parameter_CIM_routing_composition
+        ocomp.add_node(cm)
+        ocomp.add_node(icomp)
+
+        ocomp._analyze_graph()
+        input_nodes = ocomp.get_nodes_by_role(NodeRole.INPUT)
+        assert cm in input_nodes
+        assert icomp in input_nodes
+
+        ocomp.run(
+            inputs={
+                cm: [[2], [2], [2]],
+                icomp: [[2], [2], [2]],
+            }
+        )
+        # first trial result for icomp is 2 because cm and icomp run
+        # simultaneously, so the value of cm control signals is still
+        # cm's default (1) and not its input (2)
+        np.testing.assert_allclose(ocomp.results, [[[2]], [[4]], [[4]]])
         assert len(ib.mod_afferents) == 1
         assert ib.mod_afferents[0].sender == icomp.parameter_CIM.output_port
         assert icomp.parameter_CIM_ports[ib.parameter_ports['slope']][0].path_afferents[0].sender == cm.output_port
+        # Verify that only Projections from cm are to parameter_CIM (and not to icomp.input_CIM)
+        assert all([proj.receiver.owner == icomp.parameter_CIM for proj in cm.efferents])
+        assert cm not in ocomp.graph_processing.dependency_dict[icomp]
 
     def test_nested_control_projection_count_controller(self):
         # Inner Composition

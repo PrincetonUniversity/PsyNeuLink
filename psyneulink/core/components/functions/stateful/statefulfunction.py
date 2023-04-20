@@ -22,7 +22,9 @@ import numbers
 import warnings
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility, _has_initializers_setter, ComponentsMeta
@@ -31,7 +33,7 @@ from psyneulink.core.components.functions.function import Function_Base, Functio
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import STATEFUL_FUNCTION_TYPE, STATEFUL_FUNCTION, NOISE, RATE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.utilities import iscompatible, convert_to_np_array, contains_type
 
 __all__ = ['StatefulFunction']
@@ -219,15 +221,15 @@ class StatefulFunction(Function_Base): #  --------------------------------------
 
     @handle_external_context()
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  rate=None,
                  noise=None,
                  initializer=None,
-                 params: tc.optional(tc.optional(dict)) = None,
+                 params: Optional[dict] = None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None,
+                 prefs:  Optional[ValidPrefSet] = None,
                  context=None,
                  **kwargs
                  ):
@@ -516,14 +518,6 @@ class StatefulFunction(Function_Base): #  --------------------------------------
             initializer = getattr(self.parameters, a).initializer
             source_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, initializer)
             dest_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, a)
-            if source_ptr.type != dest_ptr.type:
-                warnings.warn("Shape mismatch: stateful param does not match the initializer: "
-                              "{}({}) vs. {}({}).".format(initializer, source_ptr.type, a, dst_ptr.type),
-                              pnlvm.PNLCompilerWarning)
-                # Take a guess that dest just has an extra dimension
-                assert len(dest_ptr.type.pointee) == 1
-                dest_ptr = builder.gep(dest_ptr, [ctx.int32_ty(0),
-                                                  ctx.int32_ty(0)])
             builder.store(builder.load(source_ptr), dest_ptr)
 
         return builder

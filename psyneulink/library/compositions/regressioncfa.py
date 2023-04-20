@@ -75,7 +75,9 @@ Class Reference
 
 """
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union
 
 from enum import Enum
 from itertools import product
@@ -249,7 +251,7 @@ class RegressionCFA(CompositionFunctionApproximator):
     def __init__(self,
                  name=None,
                  update_weights=None,
-                 prediction_terms:tc.optional(list)=None):
+                 prediction_terms:Optional[list]=None):
 
         self._instantiate_prediction_terms(prediction_terms)
 
@@ -468,10 +470,10 @@ class RegressionCFA(CompositionFunctionApproximator):
                 return list([s for s in powerset(x) if len(s)>1])
 
             def error_for_too_few_terms(term):
-                spec_type = {'FF':'state_feature_values', 'CC':'control_signals'}
-                raise RegressionCFAError("Specification of {} for {} arg of {} "
-                                                "requires at least two {} be specified".
-                                                format('PV.' + term, repr(PREDICTION_TERMS), self.name, spec_type(term)))
+                spec_type = {'FF': 'state_feature_values', 'CC': 'control_signals'}
+                raise RegressionCFAError(f"Specification of {'PV.' + term} for {repr(PREDICTION_TERMS)} arg of "
+                                         f"{self.name} requires at least two {spec_type[term]} be specified")
+
 
             F = PV.F.value
             C = PV.C.value
@@ -577,7 +579,7 @@ class RegressionCFA(CompositionFunctionApproximator):
 
             self.vector = np.zeros(i)
 
-        def __call__(self, terms:tc.any(PV, list))->tc.any(PV, tuple):
+        def __call__(self, terms: Union[PV, list]) -> Union[PV, tuple]:
             """Return subvector(s) for specified term(s)"""
             if not isinstance(terms, list):
                 return self.idx[terms.value]

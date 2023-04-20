@@ -1030,7 +1030,7 @@ class TestClearLog:
         np.testing.assert_allclose(sys_log_dict['mod_slope'], np.array([[1.0]]))
 
         sys_log_dict = log_dict_PJ[COMP.default_execution_id]
-        np.testing.assert_allclose(sys_log_dict['mod_matrix'], np.array([[1.0, 0.0], [0.0, 1.0]]))
+        np.testing.assert_allclose(sys_log_dict['mod_matrix'], np.array([[[1.0, 0.0], [0.0, 1.0]]]))
 
         # KDM 10/3/18: below was changed to delete_entry=True because it's not implemented in Parameter logs,
         # and it's not clear this option results in much difference than just deleting the entries and
@@ -1053,7 +1053,7 @@ class TestClearLog:
         assert log_dict_T_2 == OrderedDict()
 
         # Confirm that PJ log values were not affected by changes to T_1 and T_2's logs
-        np.testing.assert_allclose(log_dict_PJ[COMP.default_execution_id]['mod_matrix'], np.array([[1.0, 0.0], [0.0, 1.0]]))
+        np.testing.assert_allclose(log_dict_PJ[COMP.default_execution_id]['mod_matrix'], np.array([[[1.0, 0.0], [0.0, 1.0]]]))
 
         # Run system again
         COMP.run(inputs={T_1: [2.0, 2.0]})
@@ -1253,7 +1253,7 @@ class TestFullModels:
         p = [input_layer, input_weights, hidden_layer_1, middle_weights, hidden_layer_2, output_weights, output_layer]
         backprop_pathway = comp.add_backpropagation_learning_pathway(
             pathway=p,
-            loss_function=pnl.Loss.L0,
+            loss_spec=pnl.Loss.L0,
             learning_rate=1.
         )
 

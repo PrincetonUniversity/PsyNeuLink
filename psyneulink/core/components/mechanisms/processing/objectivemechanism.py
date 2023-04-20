@@ -367,7 +367,9 @@ import warnings
 from collections import namedtuple
 from collections.abc import Iterable
 
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union
 
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
@@ -380,7 +382,7 @@ from psyneulink.core.globals.keywords import \
     CONTROL, EXPONENT, EXPONENTS, LEARNING, MATRIX, NAME, OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, \
     PARAMS, PREFERENCE_SET_NAME, PROJECTION, PROJECTIONS, PORT_TYPE, VARIABLE, WEIGHT, WEIGHTS
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.utilities import ContentAddressableList
 
@@ -560,16 +562,16 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
     # FIX:  TYPECHECK MONITOR TO LIST OR ZIP OBJECT
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  monitor=None,
                  default_variable=None,
                  size=None,
                  function=None,
-                 output_ports:tc.optional(tc.any(str, Iterable))=None,
+                 output_ports: Optional[Union[str, Iterable]] = None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
+                 prefs: Optional[ValidPrefSet] = None,
                  **kwargs):
 
         # For backward compatibility
@@ -863,12 +865,12 @@ def _parse_monitor_specs(monitor_specs):
 # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
 #                      ??MAYBE INTEGRATE INTO Port MODULE (IN _instantate_port)
 # KAM commented out _instantiate_monitoring_projections 9/28/18 to avoid confusion because it never gets called
-# @tc.typecheck
+# @beartype
 # def _instantiate_monitoring_projections(
 #     owner,
-#     sender_list: tc.any(list, ContentAddressableList),
-#     receiver_list: tc.any(list, ContentAddressableList),
-#     receiver_projection_specs: tc.optional(list)=None,
+#     sender_list: Union[list, ContentAddressableList],
+#     receiver_list: Union[list, ContentAddressableList],
+#     receiver_projection_specs: Optional[list]=None,
 #     system=None,
 #     context=None
 # ):

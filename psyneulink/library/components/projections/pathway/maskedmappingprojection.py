@@ -66,7 +66,9 @@ Class Reference
 """
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union, Literal
 
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.function import get_matrix
@@ -74,7 +76,7 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.components.projections.projection import projection_keywords
 from psyneulink.core.globals.keywords import MASKED_MAPPING_PROJECTION, MATRIX
 from psyneulink.core.globals.parameters import check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
 __all__ = [
@@ -171,17 +173,17 @@ class MaskedMappingProjection(MappingProjection):
     classPreferenceLevel = PreferenceLevel.TYPE
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  sender=None,
                  receiver=None,
                  matrix=None,
-                 mask:tc.optional(tc.any(int,float,list,np.ndarray,np.matrix))=None,
-                 mask_operation: tc.optional(tc.enum(ADD, MULTIPLY, EXPONENTIATE)) = None,
+                 mask: Optional[Union[int, float, list, np.ndarray, np.matrix]] = None,
+                 mask_operation: Optional[Literal['add', 'multiply', 'exponentiate']] = None,
                  function=None,
                  params=None,
                  name=None,
-                 prefs: tc.optional(is_pref_set) = None,
+                 prefs: Optional[ValidPrefSet] = None,
                  **kwargs):
 
         super().__init__(

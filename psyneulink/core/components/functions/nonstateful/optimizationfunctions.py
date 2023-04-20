@@ -36,7 +36,9 @@ import warnings
 from numbers import Number
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union, Callable, Literal
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import (
@@ -47,7 +49,7 @@ from psyneulink.core.globals.context import ContextFlags, handle_external_contex
 from psyneulink.core.globals.defaults import MPI_IMPLEMENTATION
 from psyneulink.core.globals.keywords import \
     BOUNDS, GRADIENT_OPTIMIZATION_FUNCTION, GRID_SEARCH_FUNCTION, GAUSSIAN_PROCESS_FUNCTION, \
-    OPTIMIZATION_FUNCTION_TYPE, OWNER, VALUE, VARIABLE
+    OPTIMIZATION_FUNCTION_TYPE, OWNER, VALUE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.utilities import call_with_pruned_args
@@ -404,19 +406,19 @@ class OptimizationFunction(Function_Base):
         saved_values = Parameter([], read_only=True, pnl_internal=True)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(
         self,
         default_variable=None,
-        objective_function:tc.optional(is_function_type)=None,
-        aggregation_function:tc.optional(is_function_type)=None,
-        search_function:tc.optional(is_function_type)=None,
+        objective_function:Optional[Callable] = None,
+        aggregation_function:Optional[Callable] = None,
+        search_function:Optional[Callable] = None,
         search_space=None,
         randomization_dimension=None,
-        search_termination_function:tc.optional(is_function_type)=None,
-        save_samples:tc.optional(bool)=None,
-        save_values:tc.optional(bool)=None,
-        max_iterations:tc.optional(int)=None,
+        search_termination_function:Optional[Callable] = None,
+        save_samples:Optional[bool]=None,
+        save_values:Optional[bool]=None,
+        max_iterations:Optional[int]=None,
         params=None,
         owner=None,
         prefs=None,
@@ -1104,20 +1106,20 @@ class GradientOptimization(OptimizationFunction):
                 return -1
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 objective_function:tc.optional(is_function_type)=None,
-                 gradient_function:tc.optional(is_function_type)=None,
-                 direction:tc.optional(tc.enum(ASCENT, DESCENT))=None,
+                 objective_function: Optional[Callable] = None,
+                 gradient_function: Optional[Callable] = None,
+                 direction: Optional[Literal['ascent', 'descent']] = None,
                  search_space=None,
-                 step_size:tc.optional(tc.any(int, float))=None,
-                 annealing_function:tc.optional(is_function_type)=None,
-                 convergence_criterion:tc.optional(tc.enum(VARIABLE, VALUE))=None,
-                 convergence_threshold:tc.optional(tc.any(int, float))=None,
-                 max_iterations:tc.optional(int)=None,
-                 save_samples:tc.optional(bool)=None,
-                 save_values:tc.optional(bool)=None,
+                 step_size: Optional[Union[int, float]] = None,
+                 annealing_function: Optional[Callable] = None,
+                 convergence_criterion: Optional[Literal['variable', 'value']] = None,
+                 convergence_threshold: Optional[Union[int, float]] = None,
+                 max_iterations: Optional[int] = None,
+                 save_samples: Optional[bool] = None,
+                 save_values: Optional[bool] = None,
                  params=None,
                  owner=None,
                  prefs=None):
@@ -1509,14 +1511,14 @@ class GridSearch(OptimizationFunction):
     # TODO: should save_values be in the constructor if it's ignored?
     # is False or True the correct value?
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 objective_function:tc.optional(is_function_type)=None,
+                 objective_function: Optional[Callable] = None,
                  search_space=None,
-                 direction:tc.optional(tc.enum(MAXIMIZE, MINIMIZE))=None,
-                 save_samples:tc.optional(bool)=None,
-                 save_values:tc.optional(bool)=None,
+                 direction: Optional[Literal['maximize', 'minimize']] = None,
+                 save_samples: Optional[bool] = None,
+                 save_values: Optional[bool] = None,
                  # tolerance=0.,
                  select_randomly_from_optimal_values=None,
                  seed=None,
@@ -1672,7 +1674,7 @@ class GridSearch(OptimizationFunction):
                 ctx.int32_ty]
         builder = ctx.create_llvm_function(args, self, tags=tags)
 
-        params, state_features, min_sample_ptr, samples_ptr, min_value_ptr, values_ptr, opt_count_ptr, start, stop = builder.function.args
+        params, state, min_sample_ptr, samples_ptr, min_value_ptr, values_ptr, opt_count_ptr, start, stop = builder.function.args
         for p in builder.function.args[:-2]:
             p.attributes.add('noalias')
 
@@ -1680,7 +1682,7 @@ class GridSearch(OptimizationFunction):
         # remove the attribute for 'samples_ptr'.
         samples_ptr.attributes.remove('nonnull')
 
-        random_state = pnlvm.helpers.get_state_ptr(builder, self, state_features,
+        random_state = pnlvm.helpers.get_state_ptr(builder, self, state,
                                                    self.parameters.random_state.name)
         select_random_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
                                                         self.parameters.select_randomly_from_optimal_values.name)
@@ -1750,7 +1752,7 @@ class GridSearch(OptimizationFunction):
         builder.ret_void()
         return builder.function
 
-    def _gen_llvm_function_body(self, ctx, builder, params, state_features, arg_in, arg_out, *, tags:frozenset):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         controller = self._get_optimized_controller()
         if controller is not None:
             assert controller.function is self
@@ -1793,7 +1795,7 @@ class GridSearch(OptimizationFunction):
             extra_args = [comp_input, comp_args[2]]
         else:
             obj_func = ctx.import_llvm_function(self.objective_function)
-            obj_state_ptr = pnlvm.helpers.get_state_ptr(builder, self, state_features,
+            obj_state_ptr = pnlvm.helpers.get_state_ptr(builder, self, state,
                                                         "objective_function")
             obj_param_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
                                                         "objective_function")
@@ -1850,7 +1852,7 @@ class GridSearch(OptimizationFunction):
             # the argument pointers are already offset, so use range <0,1)
             min_tags = tags.union({"select_min", "evaluate_type_objective"})
             select_min_f = ctx.import_llvm_function(self, tags=min_tags)
-            b.call(select_min_f, [params, state_features, min_sample_ptr, sample_ptr,
+            b.call(select_min_f, [params, state, min_sample_ptr, sample_ptr,
                                   min_value_ptr, value_ptr, opt_count_ptr,
                                   ctx.int32_ty(0), ctx.int32_ty(1)])
 
@@ -2250,13 +2252,13 @@ class GaussianProcess(OptimizationFunction):
     # TODO: should save_values be in the constructor if it's ignored?
     # is False or True the correct value?
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 objective_function:tc.optional(is_function_type)=None,
+                 objective_function: Optional[Callable] = None,
                  search_space=None,
-                 direction:tc.optional(tc.enum(MAXIMIZE, MINIMIZE))=None,
-                 save_values:tc.optional(bool)=None,
+                 direction: Optional[Literal['maximize', 'minimize']] = None,
+                 save_values: Optional[bool] = None,
                  params=None,
                  owner=None,
                  prefs=None,
@@ -2511,7 +2513,7 @@ class ParamEstimationFunction(OptimizationFunction):
         save_values = True
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  priors,
                  observed,
@@ -2523,7 +2525,7 @@ class ParamEstimationFunction(OptimizationFunction):
                  n_sim=None,
                  seed=None,
                  default_variable=None,
-                 objective_function:tc.optional(is_function_type)=None,
+                 objective_function:Optional[Callable] = None,
                  search_space=None,
                  params=None,
                  owner=None,

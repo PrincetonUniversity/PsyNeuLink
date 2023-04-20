@@ -91,7 +91,9 @@ from collections import defaultdict, namedtuple
 from queue import Queue
 
 import time as py_time  # "time" is declared below
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union, Literal, Set, List
 
 from psyneulink.core.globals.keywords import CONTEXT, CONTROL, EXECUTING, EXECUTION_PHASE, FLAGS, INITIALIZING, LEARNING, SEPARATOR_BAR, SOURCE, VALIDATE
 from psyneulink.core.globals.utilities import get_deepcopy_with_shared
@@ -176,7 +178,7 @@ class ContextFlags(enum.IntFlag):
     DEFAULT_MODE = enum.auto()
     """Default mode"""
     LEARNING_MODE = enum.auto()
-    """Set during `compositon.learn`"""
+    """Set during `composition.learn`"""
     SIMULATION_MODE = enum.auto()
     """Set during simulation by Composition.controller"""
 
@@ -185,12 +187,12 @@ class ContextFlags(enum.IntFlag):
     ALL_FLAGS = INITIALIZATION_MASK | EXECUTION_PHASE_MASK | SOURCE_MASK | RUN_MODE_MASK
 
     @classmethod
-    @tc.typecheck
+    @beartype
     def _get_context_string(cls, condition_flags,
-                            fields:tc.any(tc.enum(EXECUTION_PHASE,
-                                                  SOURCE), set, list)={EXECUTION_PHASE,
-                                                                       SOURCE},
-                            string:tc.optional(str)=None):
+                            fields: Union[Literal['execution_phase', 'source'],
+                                          Set[Literal['execution_phase', 'source']],
+                                          List[Literal['execution_phase', 'source']]] = {EXECUTION_PHASE, SOURCE},
+                            string: Optional[str] = None):
         """Return string with the names of flags that are set in **condition_flags**
 
         If **fields** is specified, then only the names of the flag(s) in the specified field(s) are returned.
@@ -349,16 +351,17 @@ class Context():
         self._runmode = runmode
 
         if flags:
+            owner_str = f" for {self.owner.name}" if self.owner else ""
             if (execution_phase and not (flags & ContextFlags.EXECUTION_PHASE_MASK & execution_phase)):
-                raise ContextError("Conflict in assignment to flags ({}) and execution_phase ({}) arguments "
-                                   "of Context for {}".
-                                   format(ContextFlags._get_context_string(flags & ContextFlags.EXECUTION_PHASE_MASK),
-                                          ContextFlags._get_context_string(flags, EXECUTION_PHASE), self.owner.name))
+                raise ContextError(f"Conflict in assignment to flags "
+                                   f"({ContextFlags._get_context_string(flags & ContextFlags.EXECUTION_PHASE_MASK)}) "
+                                   f"and execution_phase ({ContextFlags._get_context_string(flags, EXECUTION_PHASE)}) "
+                                   f"arguments of Context{owner_str}.")
             if not (flags & ContextFlags.SOURCE_MASK & source):
-                raise ContextError("Conflict in assignment to flags ({}) and source ({}) arguments of Context for {}".
-                                   format(ContextFlags._get_context_string(flags & ContextFlags.SOURCE_MASK),
-                                          ContextFlags._get_context_string(flags, SOURCE),
-                                          self.owner.name))
+                raise ContextError(f"Conflict in assignment to flags "
+                                   f"({ContextFlags._get_context_string(flags & ContextFlags.SOURCE_MASK)}) "
+                                   f"and source ({ContextFlags._get_context_string(flags, SOURCE)}) "
+                                   f"arguments of Context{owner_str}.")
         if execution_id is NotImplemented:
             subsecond_res = 10 ** 6
             cur_time = py_time.time()
@@ -535,8 +538,9 @@ class Context():
 
         self._change_flags(old, new, operation=replace)
 
-@tc.typecheck
-def _get_context(context:tc.any(ContextFlags, Context, str)):
+
+@beartype
+def _get_context(context: Union[ContextFlags, Context, str]):
     """Set flags based on a string of ContextFlags keywords
     If context is already a ContextFlags mask, return that
     Otherwise, return mask with flags set corresponding to keywords in context

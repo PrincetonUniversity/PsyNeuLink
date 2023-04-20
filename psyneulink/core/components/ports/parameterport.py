@@ -370,7 +370,9 @@ import warnings
 from copy import deepcopy
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional
 
 from psyneulink.core.components.component import Component, parameter_keywords
 from psyneulink.core.components.functions.function import FunctionError, get_param_value_for_keyword
@@ -383,7 +385,7 @@ from psyneulink.core.globals.keywords import \
     LEARNING_SIGNAL, LEARNING_SIGNALS, MECHANISM, NAME, PARAMETER_PORT, PARAMETER_PORT_PARAMS, PATHWAY_PROJECTION, \
     PROJECTION, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, VALUE
 from psyneulink.core.globals.parameters import ParameterBase, ParameterAlias, SharedParameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities \
     import ContentAddressableList, ReadOnlyOrderedDict, is_iterable, is_numeric, is_value_spec, iscompatible, \
@@ -696,8 +698,8 @@ class ParameterPort(Port_Base):
 
     #endregion
 
-    tc.typecheck
     @check_user_specified
+    @beartype
     def __init__(self,
                  owner,
                  reference_value=None,
@@ -708,7 +710,7 @@ class ParameterPort(Port_Base):
                  params=None,
                  name=None,
                  parameter_name=None,
-                 prefs:is_pref_set=None,
+                 prefs:   Optional[ValidPrefSet] = None,
                  **kwargs):
 
         # If context is not COMPONENT or CONSTRUCTOR, raise exception
@@ -799,7 +801,7 @@ class ParameterPort(Port_Base):
     def _get_all_projections(self):
         return self.mod_afferents
 
-    @tc.typecheck
+    @beartype
     def _parse_port_specific_specs(self, owner, port_dict, port_specific_spec):
         """Get connections specified in a ParameterPort specification tuple
 

@@ -1416,7 +1416,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "enabled_cost_functions", "control_signal_costs",
                      "default_allocation", "same_seed_for_all_allocations",
                      "search_statefulness", "initial_seed", "combine",
-                     "smoothing_factor",
+                     "smoothing_factor","learning_results"
                      }
         # Mechanism's need few extra entires:
         # * matrix -- is never used directly, and is flatened below

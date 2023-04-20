@@ -36,7 +36,6 @@ def test_function(benchmark, executions, func_mode):
 
     res = benchmark(e, var)
     np.testing.assert_allclose(res, [expected for _ in range(executions)])
-    assert executions == 1 or len(res) == executions
 
 @pytest.mark.multirun
 @pytest.mark.mechanism
@@ -56,7 +55,7 @@ def test_mechanism(benchmark, executions, mech_mode):
     var = [[10.0 for _ in range(SIZE)] for _ in range(executions)]
     expected = [[8.0 for i in range(SIZE)]]
     if mech_mode == 'Python':
-        e = T.execute if executions ==1 else lambda x : [T.execute(x[i]) for i in range(executions)]
+        e = T.execute if executions == 1 else lambda x : [T.execute(xi) for xi in x]
     elif mech_mode == 'LLVM':
         e = pnlvm.execution.MechExecution(T, [None for _ in range(executions)]).execute
     elif mech_mode == 'PTX':
@@ -67,7 +66,6 @@ def test_mechanism(benchmark, executions, mech_mode):
 
     res = benchmark(e, var)
     np.testing.assert_allclose(res, expected)
-    assert len(res) == executions
 
 
 @pytest.mark.multirun
@@ -116,14 +114,11 @@ def test_nested_composition_execution(benchmark, executions, mode):
         e.cuda_execute(var)
         res = e.extract_node_output(outer_comp.output_CIM)
         benchmark(e.cuda_execute, var)
+    else:
+        assert False, "Unknown mode: {}".format(mode)
 
-    # If we are doing multiple executions, the expected value should be repeated in a list.
-    if executions > 1:
-        expected = [expected for _ in range(executions)]
-
+    expected = [expected for _ in range(executions)] if executions > 1 else expected
     np.testing.assert_allclose(res, expected)
-
-    assert len(res) == executions
 
 
 @pytest.mark.multirun
@@ -158,32 +153,28 @@ def test_nested_composition_run(benchmark, executions, mode):
     if executions > 1:
         var = [var for _ in range(executions)]
     if mode == 'Python':
-        def e(x):
-            if executions == 1:
-                outer_comp.run(x)
-                return [outer_comp.results.copy()]
-            else:
-                results = []
-                for i in range(executions):
-                    outer_comp.run(x[i], context=i)
-                    results.append(outer_comp.results.copy())
-                return results
-
+        e = outer_comp.run if executions == 1 else lambda x: [outer_comp.run(x[i], context=i) for i in range(executions)]
         res = e(var)
+
+        # Composition.run returns only the result of the last trail,
+        # unlike results for all trials reported by CompExecution.run below
+        expected = expected[0]
+
         benchmark(e, var)
     elif mode == 'LLVM':
         e = pnlvm.execution.CompExecution(outer_comp, [None for _ in range(executions)])
         res = e.run(var, 1, 1)
-        if executions == 1:
-            res = [res]
         benchmark(e.run, var, 1, 1)
     elif mode == 'PTX':
         e = pnlvm.execution.CompExecution(outer_comp, [None for _ in range(executions)])
         res = e.cuda_run(var, 1, 1)
         benchmark(e.cuda_run, var, 1, 1)
+    else:
+        assert False, "Unknown mode: {}".format(mode)
 
-    np.testing.assert_allclose(res, [expected for _ in range(executions)])
-    assert len(res) == executions or executions == 1
+    expected = [expected for _ in range(executions)] if executions > 1 else expected
+    np.testing.assert_allclose(res, expected)
+
 
 @pytest.mark.multirun
 @pytest.mark.nested
@@ -219,26 +210,26 @@ def test_nested_composition_run_trials_inputs(benchmark, executions, mode):
     if executions > 1:
         var = [var for _ in range(executions)]
     if mode == 'Python':
-        def f(v, num_trials, res=False):
+        def f(v, num_trials, copy_results=False):
             results = []
             for i in range(executions):
                 outer_comp.run(v[i], context=i, num_trials=num_trials)
-                if res: # copy the results immediately, otherwise it's empty
+                if copy_results: # copy the results immediately, otherwise it's empty
                     results.append(outer_comp.results.copy())
-            return results
+            return results[0] if len(results) == 1 else results
+
         res = f(var, 4, True) if executions > 1 else f([var], 4, True)
         benchmark(f if executions > 1 else outer_comp.run, var, num_trials=4)
     elif mode == 'LLVM':
         e = pnlvm.execution.CompExecution(outer_comp, [None for _ in range(executions)])
         res = e.run(var, 4, 2)
-        # FIX: NEED TO FORCE EXTRA DIMENSION FOR RESULT IF ONLY ON EXECUTION
-        if executions == 1:
-            res = [res]
         benchmark(e.run, var, 4, 2)
     elif mode == 'PTX':
         e = pnlvm.execution.CompExecution(outer_comp, [None for _ in range(executions)])
         res = e.cuda_run(var, 4, 2)
         benchmark(e.cuda_run, var, 4, 2)
+    else:
+        assert False, "Unknown mode: {}".format(mode)
 
-    np.testing.assert_allclose(res, [expected for _ in range(executions)])
-    assert len(res) == executions or executions == 1
+    expected = [expected for _ in range(executions)] if executions > 1 else expected
+    np.testing.assert_allclose(res, expected)

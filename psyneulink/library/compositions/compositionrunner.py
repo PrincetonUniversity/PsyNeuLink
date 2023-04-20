@@ -11,14 +11,15 @@ import numpy as np
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.compositions.composition import Composition
+from psyneulink.core.compositions.report import Report, ReportProgress, ReportDevices, LEARN_REPORT, PROGRESS_REPORT
 from psyneulink.core.globals.keywords import OBJECTIVE_MECHANISM, TRAINING_SET
 from inspect import isgeneratorfunction
 
 __all__ = ["CompositionRunner"]
 
-def inf_yield_none():
+def inf_yield_val(val=None):
     while True:
-        yield None
+        yield val
 
 class CompositionRunner():
 
@@ -76,6 +77,7 @@ class CompositionRunner():
                 if call_after_minibatch:
                     call_after_minibatch()
 
+                # Update weights if not in LLVM Mode
                 if not self._is_llvm_mode:
                     self._composition._update_learning_parameters(context)
 
@@ -168,17 +170,19 @@ class CompositionRunner():
         if isinstance(targets, dict) or callable(targets):
             targets = [targets]
         elif targets is None:
-            targets = inf_yield_none()
+            targets = inf_yield_val(targets)
 
         if isgeneratorfunction(epochs):
             epochs = epochs()
 
         if (not isinstance(epochs, list) and not isinstance(epochs, tuple)):
-            epochs = [epochs]
+            epochs = inf_yield_val(epochs)
         elif epochs is None:
-            epochs = inf_yield_none()
+            epochs = inf_yield_val(1)
 
         skip_initialization = False
+
+        # FIX JDC 12/10/22: PUT with Report HERE, TREATING OUTER LOOP AS RUN, AND RUN AS TRIAL
 
         for stim_input, stim_target, stim_epoch in zip(inputs, targets, epochs):
             if not callable(stim_input) and 'epochs' in stim_input:
@@ -220,6 +224,7 @@ class CompositionRunner():
             # Those test rely on the extra iteration that exits the iterator.
             # (Passing num_trials * stim_epoch + 1 works)
             run_trials = num_trials * stim_epoch if self._is_llvm_mode else None
+
             self._composition.run(inputs=minibatched_input,
                                   num_trials=run_trials,
                                   skip_initialization=skip_initialization,

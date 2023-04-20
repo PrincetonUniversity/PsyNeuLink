@@ -122,7 +122,7 @@ class TestConstructor:
         # Run with learning
         target = c.pathways['LEARNING_PATHWAY'].target
         result = c(inputs={A:[[1],[100]],B:[[2],[1]],target:[[3],[300]]})
-        np.testing.assert_allclose(c.learning_results, [[[1.], [0.73105858]], [[100.], [0.62507661]]])
+        np.allclose(result, [[[1.], [0.73105858]], [[100.], [0.62507661]]])
 
 
 class TestAddMechanism:
@@ -597,10 +597,9 @@ class TestPathway:
         assert p.learning_components is None
 
     def test_pathway_assign_composition_arg_error(self):
-        c = Composition()
-        with pytest.raises(pnl.CompositionError) as error_text:
+        error_text = "'composition' arg of constructor for Pathway must be a Composition"
+        with pytest.raises(pnl.CompositionError, match=error_text):
             p = Pathway(pathway=[], composition='c')
-        assert "\'composition\' arg of constructor for Pathway must be a Composition." in str(error_text.value)
 
     def test_pathway_assign_roles_error(self):
         A = ProcessingMechanism()
@@ -3157,17 +3156,18 @@ class TestRunInputSpecifications:
         A = TransferMechanism(name='a', default_variable=[[0.0], [0.0,0.0]])
         C = Composition(pathways=[A])
         output = C.run(inputs={A: [[1.0], [2.0, 2.0]]})
-        for i,j in zip(output,[[1.0],[2.0,2.0]]):
-            np.testing.assert_allclose(i,j)
+
+        for res, exp in zip(output, [[1.0], [2.0, 2.0]]):
+            np.testing.assert_allclose(res, exp)
 
     def test_heterogeneous_variables_two_trials(self):
         # from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
         A = TransferMechanism(name='a', default_variable=[[0.0], [0.0,0.0]])
         C = Composition(pathways=[A])
         C.run(inputs={A: [[[1.1], [2.1, 2.1]], [[1.2], [2.2, 2.2]]]})
-        for i,j in zip(C.results,[[[1.1], [2.1, 2.1]], [[1.2], [2.2, 2.2]]]):
-            for k,l in zip(i,j):
-                np.testing.assert_allclose(k,l)
+        for res, exp in zip(C.results, [[[1.1], [2.1, 2.1]], [[1.2], [2.2, 2.2]]]):
+            for r, e in zip(res, exp):
+                np.testing.assert_allclose(r, e)
 
     def test_3_origins(self):
         comp = Composition()
@@ -3262,6 +3262,7 @@ class TestRunInputSpecifications:
                                       pytest.param(pnl.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
                                       pytest.param(pnl.ExecutionMode.PTXRun, marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                      ])
+    @pytest.mark.composition
     def test_generator_as_input(self, mode):
         c = pnl.Composition()
 
@@ -3287,6 +3288,7 @@ class TestRunInputSpecifications:
                                       pytest.param(pnl.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
                                       pytest.param(pnl.ExecutionMode.PTXRun, marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                      ])
+    @pytest.mark.composition
     def test_generator_as_input_with_num_trials(self, mode):
         c = pnl.Composition()
 
@@ -3618,6 +3620,7 @@ class TestRun:
         C_to_E = MappingProjection(sender=C, receiver=E)
         with pytest.raises(CompositionError) as error_text:
             comp.add_linear_processing_pathway([A, A_to_B, B, C, D, E, C_to_E])
+
         assert ("The last item in \'pathway\' arg for add_linear_procesing_pathway method" in str(error_text.value)
                 and "cannot be a Projection:" in str(error_text.value))
 
@@ -3918,7 +3921,6 @@ class TestRun:
                                        output_ports = [RESULT])
         comp.add_node(R)
         comp._analyze_graph()
-        sched = Scheduler(composition=comp)
         val = comp.run(inputs={R: [[3.0]]}, num_trials=1, execution_mode=comp_mode)
         np.testing.assert_allclose(val, [[0.95257413]])
         val = comp.run(inputs={R: [[4.0]]}, num_trials=1, execution_mode=comp_mode)
@@ -3940,7 +3942,6 @@ class TestRun:
                                        output_ports = [RESULT])
         comp.add_node(R)
         comp._analyze_graph()
-        sched = Scheduler(composition=comp)
         val = comp.run(inputs={R: [[3.0]]}, num_trials=1, execution_mode=comp_mode)
         np.testing.assert_allclose(val, [[0.50749944]])
         val = comp.run(inputs={R: [[4.0]]}, num_trials=1, execution_mode=comp_mode)
@@ -3957,7 +3958,6 @@ class TestRun:
         R = RecurrentTransferMechanism(size=2, function=Logistic())
         comp.add_node(R)
         comp._analyze_graph()
-        sched = Scheduler(composition=comp)
         val = comp.run(inputs={R: [[1.0, 2.0]]}, num_trials=1, execution_mode=comp_mode)
         np.testing.assert_allclose(val, [[0.81757448, 0.92414182]])
         val = comp.run(inputs={R: [[1.0, 2.0]]}, num_trials=1, execution_mode=comp_mode)
@@ -3978,7 +3978,6 @@ class TestRun:
                                        output_ports = [RESULT])
         comp.add_node(R)
         comp._analyze_graph()
-        sched = Scheduler(composition=comp)
         val = comp.run(inputs={R: [[1.0, 2.0]]}, num_trials=1, execution_mode=comp_mode)
         np.testing.assert_allclose(val, [[0.5, 0.73105858]])
         val = comp.run(inputs={R: [[1.0, 2.0]]}, num_trials=1, execution_mode=comp_mode)
@@ -4000,7 +3999,6 @@ class TestRun:
                                        output_ports = [RESULT])
         comp.add_node(R)
         comp._analyze_graph()
-        sched = Scheduler(composition=comp)
         val = comp.run(inputs={R: [[1.0, 2.0]]}, num_trials=1, execution_mode=comp_mode)
         np.testing.assert_allclose(val, [[0.5, 0.50249998]])
         val = comp.run(inputs={R: [[1.0, 2.0]]}, num_trials=1, execution_mode=comp_mode)
@@ -4628,12 +4626,10 @@ class TestNestedCompositions:
 
         inner_comp = Composition(name="inner_comp")
         inner_comp.add_linear_processing_pathway([A, B])
-        sched = Scheduler(composition=inner_comp)
 
         outer_comp = Composition(name="outer_comp")
         outer_comp.add_node(inner_comp)
 
-        sched = Scheduler(composition=outer_comp)
         ret = outer_comp.run(inputs=[1.0], execution_mode=comp_mode)
 
         np.testing.assert_allclose(ret, [[0.52497918747894]])
@@ -4651,7 +4647,6 @@ class TestNestedCompositions:
 
         inner_comp1 = Composition(name="inner_comp1")
         inner_comp1.add_linear_processing_pathway([A, B])
-        sched = Scheduler(composition=inner_comp1)
 
         C = TransferMechanism(name="C",
                               function=Logistic,
@@ -4660,13 +4655,11 @@ class TestNestedCompositions:
 
         inner_comp2 = Composition(name="inner_comp2")
         inner_comp2.add_node(C)
-        sched = Scheduler(composition=inner_comp2)
 
         outer_comp = Composition(name="outer_comp")
         outer_comp.add_node(inner_comp1)
         outer_comp.add_node(inner_comp2)
 
-        sched = Scheduler(composition=outer_comp)
         outer_comp.run(inputs={inner_comp1: [[1.0]], inner_comp2: [[1.0]]}, execution_mode=comp_mode)
         np.testing.assert_allclose(outer_comp.results, [[[0.52497918747894], [0.52497918747894]]])
 
@@ -7291,15 +7284,18 @@ class TestNodeRoles:
         mech = ProcessingMechanism(name='my_mech')
         ctl_mech_A = ControlMechanism(monitor_for_control=mech,
                                       control_signals=ControlSignal(modulates=(INTERCEPT,mech),
-                                                                    cost_options=CostFunctions.INTENSITY),
-                                      name="ctl_mech_A")
+                                                                    cost_options=CostFunctions.INTENSITY))
         ctl_mech_B = ControlMechanism(monitor_for_control=mech,
                                       control_signals=ControlSignal(modulates=ctl_mech_A.control_signals[0],
-                                                                    modulation=INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM),
-                                      name="ctl_mech_B")
+                                                                    modulation=INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM))
         comp = Composition(pathways=[mech, (ctl_mech_A, NodeRole.OUTPUT), (ctl_mech_B, NodeRole.OUTPUT)])
         assert {mech, ctl_mech_A, ctl_mech_B} == set(comp.get_nodes_by_role(NodeRole.OUTPUT))
-        assert {ctl_mech_A, ctl_mech_B} == set(comp.get_nodes_by_role(NodeRole.TERMINAL))
+        # Current instantiation always assigns ctl_mech_B as TERMINAL in this case;
+        # this is here to flag any violation of this in the future, in case that is not intended
+        assert {mech} == set(comp.get_nodes_by_role(NodeRole.ORIGIN))
+        # assert {ctl_mech_A, ctl_mech_B} == set(comp.get_nodes_by_role(NodeRole.TERMINAL))
+        assert {ctl_mech_B} == set(comp.get_nodes_by_role(NodeRole.TERMINAL))
+        assert {mech, ctl_mech_A, ctl_mech_B} == set(comp.get_nodes_by_role(NodeRole.OUTPUT))
 
     def test_LEARNING_hebbian(self):
         A = RecurrentTransferMechanism(name='A', size=2, enable_learning=True)

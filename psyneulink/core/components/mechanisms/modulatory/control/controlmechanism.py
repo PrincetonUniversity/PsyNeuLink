@@ -586,9 +586,10 @@ import uuid
 import warnings
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
 
-from psyneulink.core.components.functions.function import Function_Base, is_function_type
+from psyneulink._typing import Optional, Union, Callable, Literal, Iterable
+
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import Concatenate
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
@@ -607,9 +608,9 @@ from psyneulink.core.globals.keywords import \
     OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PARAMS, PORT_TYPE, PRODUCT, PROJECTION_TYPE, PROJECTIONS, \
     SEPARATE, SIZE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import ContentAddressableList, convert_to_list, convert_to_np_array, is_iterable
+from psyneulink.core.globals.utilities import ContentAddressableList, convert_all_elements_to_np_array, convert_to_list, convert_to_np_array
 
 __all__ = [
     'CONTROL_ALLOCATION', 'GATING_ALLOCATION', 'ControlMechanism', 'ControlMechanismError',
@@ -725,11 +726,10 @@ def _net_outcome_getter(owning_component=None, context=None):
         return [0]
 
 def _control_allocation_getter(owning_component=None, context=None):
-    # return self.output_values
     try:
         return [v.parameters.variable._get(context) for v in owning_component.control_signals]
     except (TypeError, AttributeError):
-        return [defaultControlAllocation]
+        return owning_component.defaults.control_allocation
 
 
 class ControlMechanism(ModulatoryMechanism_Base):
@@ -1130,13 +1130,11 @@ class ControlMechanism(ModulatoryMechanism_Base):
         """
         # This must be a list, as there may be more than one (e.g., one per control_signal)
         variable = Parameter(np.array([[defaultControlAllocation]]), pnl_internal=True, constructor_argument='default_variable')
-        value = Parameter(np.array([defaultControlAllocation]),pnl_internal=True)
+        value = Parameter(np.array([defaultControlAllocation]), pnl_internal=True)
         default_allocation = None
         control_allocation = Parameter(np.array([defaultControlAllocation]),
                                        read_only=True,
                                        getter=_control_allocation_getter,
-                                       # structural=True,
-                                       # pnl_internal=True,
                                        )
         combine_costs = Parameter(np.sum, stateful=False, loggable=False)
         costs = Parameter(None, read_only=True, getter=_control_mechanism_costs_getter)
@@ -1232,28 +1230,24 @@ class ControlMechanism(ModulatoryMechanism_Base):
             # validate_monitored_port_spec(self._owner, input_ports)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputPort))=None,
+                 monitor_for_control: Optional[Union[Iterable, Mechanism, OutputPort]] = None,
                  objective_mechanism=None,
-                 allow_probes:bool = False,
-                 outcome_input_ports_option:tc.optional(tc.enum(CONCATENATE, COMBINE, SEPARATE))=None,
+                 allow_probes: bool = False,
+                 outcome_input_ports_option: Optional[Literal['concatenate', 'combine', 'separate']] = None,
                  function=None,
-                 default_allocation:tc.optional(tc.any(int, float, list, np.ndarray))=None,
-                 control:tc.optional(tc.any(is_iterable,
-                                            ParameterPort,
-                                            InputPort,
-                                            OutputPort,
-                                            ControlSignal))=None,
-                 modulation:tc.optional(str)=None,
-                 combine_costs:tc.optional(is_function_type)=None,
-                 compute_reconfiguration_cost:tc.optional(is_function_type)=None,
+                 default_allocation: Optional[Union[int, float, list, np.ndarray]] = None,
+                 control: Optional[Union[Iterable, ParameterPort, InputPort, OutputPort, ControlSignal]] = None,
+                 modulation: Optional[str] = None,
+                 combine_costs: Optional[Callable] = None,
+                 compute_reconfiguration_cost: Optional[Callable] = None,
                  compute_net_outcome=None,
                  params=None,
                  name=None,
-                 prefs:tc.optional(is_pref_set)=None,
+                 prefs: Optional[ValidPrefSet] = None,
                  **kwargs
                  ):
 
@@ -1668,6 +1662,13 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
     def _instantiate_output_ports(self, context=None):
 
+    # ---------------------------------------------------
+    # FIX 5/23/17: PROJECTIONS AND PARAMS SHOULD BE PASSED BY ASSIGNING TO PORT SPECIFICATION DICT
+    # FIX          UPDATE parse_port_spec TO ACCOMODATE (param, ControlSignal) TUPLE
+    # FIX          TRACK DOWN WHERE PARAMS ARE BEING HANDED OFF TO ControlProjection
+    # FIX                   AND MAKE SURE THEY ARE NOW ADDED TO ControlSignal SPECIFICATION DICT
+    # ---------------------------------------------------
+
         self._register_control_signal_type(context=None)
 
         if self.control:
@@ -1704,7 +1705,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
             # If number of control_signals is same as number of items in function's value,
             #    assign each ControlSignal to the corresponding item of the function's value
-            # if len_fct_value == len(self.control):
             if len(self.control) == control_allocation_len:
                 control_signal._variable_spec = (OWNER_VALUE, i)
 
@@ -1794,7 +1794,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         Can be overridden by a subclass if it determines its value in some other way (see OCM for example).
         Note: this is used to determine the number of ControlSignals
         """
-        self.defaults.value = np.array(self.function.value, dtype=object)
+        self.defaults.value = convert_all_elements_to_np_array(self.function.parameters.value._get(context))
         self.parameters.value._set(copy.deepcopy(self.defaults.value), context)
         return self.defaults.value
 
@@ -1905,7 +1905,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         if self.objective_mechanism:
             self.objective_mechanism._add_process(process, role)
 
-    def _remove_default_control_signal(self, type:tc.enum(CONTROL_SIGNAL, GATING_SIGNAL)):
+    def _remove_default_control_signal(self, type: Literal['ControlSignal', 'GatingSignal']):
         if type == CONTROL_SIGNAL:
             ctl_sig_attribute = self.control_signals
         elif type == GATING_SIGNAL:
