@@ -555,8 +555,12 @@ class TestConnectCompositionsViaCIMS:
         self, parameter_CIM_routing_composition
     ):
         ia, ib, cm, icomp, ocomp = parameter_CIM_routing_composition
-        ocomp.add_linear_processing_pathway([cm, icomp])
-
+        warning_msg = f"A MappingProjection has been created from a ControlSignal of 'control_mechanism' " \
+                      f"-- specified in 'pathway' arg for add_linear_procesing_pathway method of 'ocomp' -- " \
+                      f"to another Mechanism in that pathway.  " \
+                      f"If this is not the intended behavior, add 'control_mechanism' separately to 'ocomp'."
+        with pytest.warns(UserWarning, match=warning_msg):
+            ocomp.add_linear_processing_pathway([cm, icomp])
         ocomp._analyze_graph()
         input_nodes = ocomp.get_nodes_by_role(NodeRole.INPUT)
         assert cm in input_nodes
@@ -572,6 +576,8 @@ class TestConnectCompositionsViaCIMS:
         # results in effect input of 2 that is multiplied by the controlled slope of ib (2), resulting in 4
         np.testing.assert_allclose(ocomp.results, [[[4.0]], [[4.0]], [[4.0]]])
         assert len(ib.mod_afferents) == 1
+        # Verify that MappingProjection from cm to icomp (for which warning was elicited above) is in place
+        assert cm.control_signals[0].efferents[0].receiver.owner == icomp.input_CIM
         assert ib.mod_afferents[0].sender == icomp.parameter_CIM.output_port
         assert icomp.parameter_CIM_ports[ib.parameter_ports['slope']][0].path_afferents[0].sender == cm.output_port
         assert cm in ocomp.graph_processing.dependency_dict[icomp]
@@ -601,6 +607,8 @@ class TestConnectCompositionsViaCIMS:
         assert len(ib.mod_afferents) == 1
         assert ib.mod_afferents[0].sender == icomp.parameter_CIM.output_port
         assert icomp.parameter_CIM_ports[ib.parameter_ports['slope']][0].path_afferents[0].sender == cm.output_port
+        # Verify that only Projections from cm are to parameter_CIM (and not to icomp.input_CIM)
+        assert all([proj.receiver.owner == icomp.parameter_CIM for proj in cm.efferents])
         assert cm not in ocomp.graph_processing.dependency_dict[icomp]
 
     def test_nested_control_projection_count_controller(self):

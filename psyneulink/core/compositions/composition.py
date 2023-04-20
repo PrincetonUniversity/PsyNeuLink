@@ -6947,6 +6947,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # Replace any nested Compositions with their INPUT Nodes
                     node = (self._get_nested_nodes_with_same_roles_at_all_levels(node, include_roles, exclude_roles)
                                 if isinstance(node, Composition) else [node])
+                    if not node:
+                        raise CompositionError(f"A nested Composition ('{list(entry)[0].name}') "
+                                               f"included in {pathway_arg_str} is empty; "
+                                               f"(i.e., does not have any nodes assigned to it yet).")
                     nodes.extend(node)
                 return nodes
 
@@ -6964,9 +6968,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     projs = {self.add_projection(sender=s, receiver=r,
                                                  default_matrix=default_projection_matrix,
                                                  allow_duplicates=False)
-                            # for r in receivers for s in senders}
-                            # Ignore ControlMechanisms, since they are not allowed to send MappingProjections
-                            for r in receivers for s in senders if not isinstance(s, ControlMechanism)}
+                            for r in receivers for s in senders}
+                    # Warn about assignment of MappingProjections from ControlMechanisms
+                    for cm in [s for s in senders if isinstance(s, ControlMechanism)]:
+                        warnings.warn(f"A {MappingProjection.__name__} has been created from a "
+                                      f"{ControlSignal.__name__} of '{cm.name}' -- specified {pathway_arg_str} -- "
+                                      f"to another {Mechanism.__name__} in that pathway.  If this is not the "
+                                      f"intended behavior, add '{cm.name}' separately to '{self.name}'.")
                     if all(projs):
                         projs = projs.pop() if len(projs) == 1 else projs
                         projections.append(projs)
