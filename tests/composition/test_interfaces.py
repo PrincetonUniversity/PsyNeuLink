@@ -573,8 +573,9 @@ class TestConnectCompositionsViaCIMS:
             }
         )
         # linear combination of cm output and run inputs to icomp
-        # results in effect input of 2 that is multiplied by the controlled slope of ib (2), resulting in 4
-        np.testing.assert_allclose(ocomp.results, [[[4.0]], [[4.0]], [[4.0]]])
+        # results in effective input of 2+2=4, then this is multiplied
+        # by the controlled slope of ib (2), resulting in 8
+        np.testing.assert_array_almost_equal(ocomp.results, [[[8]], [[8]], [[8]]])
         assert len(ib.mod_afferents) == 1
         # Verify that MappingProjection from cm to icomp (for which warning was elicited above) is in place
         assert cm.control_signals[0].efferents[0].receiver.owner == icomp.input_CIM
