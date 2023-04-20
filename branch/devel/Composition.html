@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.11.0.0+276.g47b6fea9 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.11.0.0+277.gfff1d288 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.11.0.0+276
+                  0.11.0.0+277
                 </div>
               
             
@@ -2526,7 +2526,7 @@ When looking for values after a run, it’s important to know the execution cont
 <span class="gp">&gt;&gt;&gt; </span>    <span class="n">integration_rate</span><span class="o">=</span><span class="mf">0.5</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">)</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span> <span class="o">=</span> <span class="n">Composition</span><span class="p">(</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="n">pathways</span><span class="o">=</span><span class="p">[[</span><span class="n">A</span><span class="p">,</span> <span class="n">C</span><span class="p">],</span> <span class="p">[</span><span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">]]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="p">)</span>
@@ -2538,22 +2538,22 @@ When looking for values after a run, it’s important to know the execution cont
 <span class="gp">&gt;&gt;&gt; </span>            <span class="n">B</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">]},</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="n">num_trials</span><span class="o">=</span><span class="mi">3</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="p">)</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Trial 1: 0.5, Trial 2: 0.75, Trial 3: 0.875</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># [[0.875]]</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># The Mechanisms&#39; stateful functions are now in their default states, which is identical</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># to their states prior to Trial 1. Thus, if we call run again with the same inputs,</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># we see the same results that we saw on Trial 1.</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="n">A</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">],</span>
 <span class="gp">&gt;&gt;&gt; </span>            <span class="n">B</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">]},</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="p">)</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Trial 3: 0.5</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># [[0.5]]</span>
@@ -2565,29 +2565,29 @@ When looking for values after a run, it’s important to know the execution cont
 <span class="gp">&gt;&gt;&gt; </span>            <span class="n">B</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">]},</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="n">num_trials</span><span class="o">=</span><span class="mi">3</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="p">)</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.875</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># [[0.875]]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Mechanism B is currently identical to Mechanism A</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># [[0.875]]</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Reset Mechanism A to 0.5 and Mechanism B to 0.75, corresponding to their values at the end of</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># trials 0 and 1, respectively. Thus, if we call run again with the same inputs, the values of the</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Mechanisms will match their values after trials 1 and 2, respectively.</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">reset</span><span class="p">({</span><span class="n">A</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
 <span class="gp">&gt;&gt;&gt; </span>            <span class="n">B</span><span class="p">:</span> <span class="mf">0.75</span><span class="p">})</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="n">A</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">],</span>
 <span class="gp">&gt;&gt;&gt; </span>            <span class="n">B</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">]},</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="p">)</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Trial 3: 0.75</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># [[0.75]]</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Trial 3: 0.875</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># [[0.875]]</span>
@@ -2608,7 +2608,7 @@ When looking for values after a run, it’s important to know the execution cont
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Trial 0: 0.5, Trial 1: 0.5, Trial 2: 0.75, Trial 3: 0.875, Trial 4: 0.9375</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># [[0.9375]]</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Mechanism B - resets to its default (0) at the beginning of Trial 2. Its value at the end of Trial 2 will</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># be exactly one step of integration forward from its default.</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.5, Trial 3: 0.75. Trial 4: 0.875</span>
@@ -2635,7 +2635,7 @@ When looking for values after a run, it’s important to know the execution cont
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.875, Trial 3: 0.75, Trial 4:  0.875</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># [[0.875]]</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Mechanism B - resets to 0.5 at the beginning of Trial 4. Its value at the end of Trial 4 will</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># be exactly one step of integration forward from 0.5.</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.875, Trial 3: 0.9375. Trial 4: 0.75</span>

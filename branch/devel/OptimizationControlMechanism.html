@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OptimizationControlMechanism &mdash; PsyNeuLink 0.11.0.0+276.g47b6fea9 documentation</title>
+  <title>OptimizationControlMechanism &mdash; PsyNeuLink 0.11.0.0+277.gfff1d288 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.11.0.0+276
+                  0.11.0.0+277
                 </div>
               
             
@@ -1648,10 +1648,25 @@ If monitor_for_control is specified as an ObjectiveMechanism, warn and move to o
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._instantiate_control_signals">
 <span class="sig-name descname"><span class="pre">_instantiate_control_signals</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._instantiate_control_signals" title="Permalink to this definition">¶</a></dt>
-<dd><p>Size control_allocation and assign modulatory_signals</p>
-<p>Set size of control_allocation equal to number of modulatory_signals.
-Assign each modulatory_signal sequentially to corresponding item of control_allocation.
-Assign RANDOMIZATION_CONTROL_SIGNAL for random_variables</p>
+<dd><p>Subclasses can override for class-specific implementation (see OptimizationControlMechanism for example)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._set_mechanism_value">
+<span class="sig-name descname"><span class="pre">_set_mechanism_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._set_mechanism_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set Mechanism’s value from control_allocation.
+OCM uses optimal_control_allocation (returned by its _execute() method), which is isomorphic to
+self.control_allocation, as its value.
+IMPLEMENTATION NOTE:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>This is because the OCM’s:</dt><dd><ul class="simple">
+<li><p>(Optimization) function returns additional information (e.g., GridSearch)</p></li>
+<li><p>_execute() method processes the value returned by the OptimizationFunction (to incorporate costs)</p></li>
+</ul>
+</dd>
+</dl>
+</div></blockquote>
 </dd></dl>
 
 <dl class="py method">
@@ -1669,7 +1684,7 @@ Assign RANDOMIZATION_CONTROL_SIGNAL for random_variables</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._execute">
 <span class="sig-name descname"><span class="pre">_execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runtime_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._execute" title="Permalink to this definition">¶</a></dt>
-<dd><p>Find control_allocation that optimizes net_outcome of agent_rep.evaluate().</p>
+<dd><p>Return control_allocation that optimizes net_outcome of agent_rep.evaluate().</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1692,6 +1707,13 @@ and, if <strong>return_results</strong> is True, also an array with the <a class
 then <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.num_estimates" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.num_estimates"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">num_estimates</span></code></a> is passed to it to handle execution and
 estimation as determined by its implementation, and returns a single estimated net_outcome.</p>
 <p>(See <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.evaluate" title="psyneulink.core.compositions.composition.Composition.evaluate"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">evaluate</span></code></a> for additional details.)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._apply_control_allocation">
+<span class="sig-name descname"><span class="pre">_apply_control_allocation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">control_allocation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runtime_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._apply_control_allocation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update values to <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_signals" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_signals"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">control_signals</span></code></a>
+based on specified <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">control_allocation</span></code></a></p>
 </dd></dl>
 
 <dl class="py method">
