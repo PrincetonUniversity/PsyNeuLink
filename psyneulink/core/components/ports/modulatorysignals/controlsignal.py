@@ -161,16 +161,16 @@ assigned to the `last_intensity` attribute.
 <ModulatorySignal.variable>`, and is used by its `function <ControlSignal.function>` to generate an `intensity`.
 The default `function <ControlSignal.function>` for a ControlSignal is `TransferWithCosts`.  This is a
 `Function` that supplements its core `TransferFunction` (specified by its `transfer_fct
-<TransferWithCosts.transfer_fct>` with a set of cost functions that can be used to compute the ControlSignal's `cost
-attributes <ControlSignal_Costs>`.  The default `transfer_fct <TransferWithCosts.transfer_fct>`> for TransferWithCosts
+<TransferWithCosts.transfer_fct>`) with a set of cost functions that can be used to compute the ControlSignal's `cost
+attributes <ControlSignal_Costs>`.  The default `transfer_fct <TransferWithCosts.transfer_fct>` for `TransferWithCosts`
 is an identity function (`Linear` with `slope <Linear.slope>` \\=1 and `intercept <Linear.intercept>`\\=0), that simply
 assigns the ControlSignal's `allocation <ControlSignal.allocation>` as its `intensity <ControlSignal.intensity>`.
-However, the TransferWithCosts function can be specified as **function** argument in the ControlSignal's constructor,
-with a different function specified for the **transfer_fct** argument of the TransferWithCosts's constructor (e.g.,
-`Exponential`, or any other function that takes and returns a scalar value or 1d array).  The TransferWithCosts' `cost
-functions <TransferWithCosts_Cost_Functions>` can also be assigned using its own constructor.  A function other than
-TransferWithCosts can also be assigned as the ControlSignal's `function <ControlSignal.function>`, however in that
-case, the ControlSignal's costs can't be computed and will all be assigned None.
+However, the `TransferWithCosts` function can be specified using its constructor in the **function** argument of the
+ControlSignal's constructor, with a different `TransferFunction` specified for the **transfer_fct** argument of the
+`TransferWithCosts`\\'s constructor (e.g.,`Exponential`, or any other function that takes and returns a scalar value
+or 1d array).  The `TransferWithCosts`\\'s `cost functions <TransferWithCosts_Cost_Functions>` can also be assigned
+using its constructor. A function other than `TransferWithCosts` can also be assigned to the ControlSignal's
+**function** argument, however in that case the ControlSignal's costs can't be computed and will all be assigned None.
 
 *Intensity (value)*. The result of the function is assigned as the value of the ControlSignal's `intensity`
 attribute, which serves as the ControlSignal's `value <ControlSignal.value>` (also referred to as `control_signal`).

@@ -39,7 +39,7 @@ used to modulate the `ParameterPort(s) <ParameterPort>` of one or more Mechanism
 the parameter(s) of the `function(s) <Mechanism_Base.function>` of those Mechanism(s). However, a ControlMechanism
 can also be used to modulate the function of `InputPorts <InputPort>` and/or `OutputPort <OutputPorts>`,
 much like a `GatingMechanism`.  A ControlMechanism's `function <ControlMechanism.function>` calculates a
-`control_allocation <ControlMechanism.control_allocation>`: a list of values provided to each of its `control_signals
+`control_allocation <ControlMechanism.control_allocation>`: one or more values used as inputs for its `control_signals
 <ControlMechanism.control_signals>`.  Its control_signals are `ControlSignal` OutputPorts that are used to modulate
 the parameters of other Mechanisms' `function <Mechanism_Base.function>` (see `ControlSignal_Modulation` for a more
 detailed description of how modulation operates).  A ControlMechanism can be configured to monitor the outputs of
@@ -376,20 +376,20 @@ determine its `control_allocation <ControlMechanism.control_allocation>`.
 ~~~~~~~~~~
 
 A ControlMechanism's `function <ControlMechanism.function>` uses its `outcome <ControlMechanism.outcome>`
-attribute (the `value <InputPort.value>` of its *OUTCOME* `InputPort`) to generate a `control_allocation
-<ControlMechanism.control_allocation>`.  By default, its `function <ControlMechanism.function>` is assigned
-the `Identity`, which takes a single value as its input, and copies it to the output, this assigns the value of
-each item of `control_allocation <ControlMechanism.control_allocation>`.  This item is assigned as
-the allocation for the all `ControlSignal` in `control_signals <ControlMechanism.control_signals>`. This
-distributes the ControlMechanism's input as the allocation to each of its `control_signals
-<ControlMechanism.control_signals>`.
-This same behavior also applies to any custom function assigned to a
-ControlMechanism that returns a 2d array with a single item in its outer dimension (axis 0).  If a function is
-assigned that returns a 2d array with more than one item, and it has the same number of `control_signals
-<ControlMechanism.control_signals>`, then each ControlSignal is assigned to the corresponding item of the function's
-value.  However, these default behaviors can be modified by specifying that individual ControlSignals reference
-different items in `control_allocation` as their `variable <Projection_Base.variable>`
-(see `OutputPort_Custom_Variable`).
+attribute (the `value <InputPort.value>` of its *OUTCOME* `InputPort`) to generate one or more values used
+for ControlMechanism's `control_allocation <ControlMechanism.control_allocation>`.  By default, its `function
+<ControlMechanism.function>` is assigned the `Identity` Function, which takes a single value as its input and returns
+it as its output.  That is then used as the ControlSignal's `control_allocation <ControlMechanism.control_allocation>`,
+which in turn is assigned as the allocation for all of the ControlMechanism's `control_signals
+<ControlMechanism.control_signals>`. That is, by default, the ControlMechanism's input is distributed as the
+allocation to each of its `control_signals <ControlMechanism.control_signals>`. This same behavior also occurs for
+any custom function assigned to a ControlMechanism that returns a 2d array with a single item in its outer dimension
+(axis 0).  If a function is assigned that returns a 2d array with more than one item, and the number of those items
+(i.e., the length of the 2d array) is the same as the number of `control_signals <ControlMechanism.control_signals>`,
+then each item is assigned to a corresponding `ControlSignal` (in the order in which they are specified in the
+**control_signals** argument of the ControlMechanism's constructor).  However, these default behaviors can be modified
+by specifying that individual ControlSignals reference different items in the ControlMechanism's `value
+<Mechanism_Base.value>` (see `OutputPort_Custom_Variable`).
 
 .. _ControlMechanism_Output:
 
@@ -610,7 +610,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import ContentAddressableList, convert_to_list, convert_to_np_array
+from psyneulink.core.globals.utilities import ContentAddressableList, convert_all_elements_to_np_array, convert_to_list, convert_to_np_array
 
 __all__ = [
     'CONTROL_ALLOCATION', 'GATING_ALLOCATION', 'ControlMechanism', 'ControlMechanismError',
@@ -724,6 +724,12 @@ def _net_outcome_getter(owning_component=None, context=None):
         )
     except TypeError:
         return [0]
+
+def _control_allocation_getter(owning_component=None, context=None):
+    try:
+        return [v.parameters.variable._get(context) for v in owning_component.control_signals]
+    except (TypeError, AttributeError):
+        return owning_component.defaults.control_allocation
 
 
 class ControlMechanism(ModulatoryMechanism_Base):
@@ -912,14 +918,15 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
     control_allocation : 2d array
         each item is the value assigned as the `allocation <ControlSignal.allocation>` for the corresponding
-        ControlSignal listed in the `control_signals` attribute;  the control_allocation is the same as the
-        ControlMechanism's `value <Mechanism_Base.value>` attribute).
+        ControlSignal listed in the `control_signals <ControlMechanism.control_signals>` attribute (that is,
+        it is a list of the values of the `variable <OutputPort.variable>` attributes of the ControlMechanism's
+        `ControlSignals <ControlSignal>`).
 
     control_signals : ContentAddressableList[ControlSignal]
         list of the `ControlSignals <ControlSignal>` for the ControlMechanism, including any inherited from a
         `Composition` for which it is a `controller <Composition.controller>` (same as ControlMechanism's
         `output_ports <Mechanism_Base.output_ports>` attribute); each sends a `ControlProjection`
-        to the `ParameterPort` for the parameter it controls
+        to the `ParameterPort` for the parameter it controls.
 
     compute_reconfiguration_cost : Function, function or method
         function used to compute the ControlMechanism's `reconfiguration_cost  <ControlMechanism.reconfiguration_cost>`;
@@ -1026,6 +1033,13 @@ class ControlMechanism(ModulatoryMechanism_Base):
                     :default value: None
                     :type:
 
+                control_allocation
+                    see `control_allocation <ControlMechanism.control_signal_costs>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
                 control_signal_costs
                     see `control_signal_costs <ControlMechanism.control_signal_costs>`
 
@@ -1116,8 +1130,12 @@ class ControlMechanism(ModulatoryMechanism_Base):
         """
         # This must be a list, as there may be more than one (e.g., one per control_signal)
         variable = Parameter(np.array([[defaultControlAllocation]]), pnl_internal=True, constructor_argument='default_variable')
-        value = Parameter(np.array([defaultControlAllocation]), aliases='control_allocation', pnl_internal=True)
+        value = Parameter(np.array([defaultControlAllocation]), pnl_internal=True)
         default_allocation = None
+        control_allocation = Parameter(np.array([defaultControlAllocation]),
+                                       read_only=True,
+                                       getter=_control_allocation_getter,
+                                       )
         combine_costs = Parameter(np.sum, stateful=False, loggable=False)
         costs = Parameter(None, read_only=True, getter=_control_mechanism_costs_getter)
         control_signal_costs = Parameter(None, read_only=True, pnl_internal=True)
@@ -1680,17 +1698,14 @@ class ControlMechanism(ModulatoryMechanism_Base):
         #     assign each control_signal to the corresponding item of the function's value
         # - a different number of items than number of control_signals,
         #     leave things alone, and allow any errant indices for control_signals to be caught later.
-        self.defaults.value = np.array(self.function.value)
-        self.parameters.value._set(copy.deepcopy(self.defaults.value), context)
-
-        len_fct_value = len(self.function.value)
+        control_allocation_len = len(self._set_mechanism_value(context))
 
         # Assign each ControlSignal's variable_spec to index of ControlMechanism's value
         for i, control_signal in enumerate(self.control):
 
             # If number of control_signals is same as number of items in function's value,
             #    assign each ControlSignal to the corresponding item of the function's value
-            if len_fct_value == len(self.control):
+            if len(self.control) == control_allocation_len:
                 control_signal._variable_spec = (OWNER_VALUE, i)
 
             if not isinstance(control_signal.owner_value_index, int):
@@ -1756,8 +1771,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
             # if control allocation is a single value specified from
             # default_variable for example, it should be used here
             # instead of the "global default" defaultControlAllocation
-            if len(self.defaults.control_allocation) == 1:
-                allocation_parameter_default = copy.deepcopy(self.defaults.control_allocation)
+            if len(self.defaults.value) == 1:
+                allocation_parameter_default = copy.deepcopy(self.defaults.value)
             else:
                 allocation_parameter_default = copy.deepcopy(defaultControlAllocation)
 
@@ -1772,6 +1787,16 @@ class ControlMechanism(ModulatoryMechanism_Base):
         if not type(control_signal) in convert_to_list(self.outputPortTypes):
             raise ProjectionError(f'{type(control_signal)} inappropriate for {self.name}')
         return control_signal
+
+    def _set_mechanism_value(self, context):
+        """Set Mechanism's value.
+        By default, use value returned by ControlMechanism's function.
+        Can be overridden by a subclass if it determines its value in some other way (see OCM for example).
+        Note: this is used to determine the number of ControlSignals
+        """
+        self.defaults.value = convert_all_elements_to_np_array(self.function.parameters.value._get(context))
+        self.parameters.value._set(copy.deepcopy(self.defaults.value), context)
+        return self.defaults.value
 
     def _check_for_duplicates(self, control_signal, control_signals, context):
         """
@@ -1963,15 +1988,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
                               f"efferent of '{self.name}' -- May be as yet unaccounted for condition."
             if node in composition._get_all_nodes():
                 proj._activate_for_compositions(composition)
-
-    def _apply_control_allocation(self, control_allocation, runtime_params, context):
-        """Update values to `control_signals <ControlMechanism.control_signals>`
-        based on specified `control_allocation <ControlMechanism.control_allocation>`
-        (used by controller of a Composition in simulations)
-        """
-        value = [a for a in control_allocation]
-        self.parameters.value._set(value, context)
-        self._update_output_ports(runtime_params, context)
 
     @property
     def monitored_output_ports(self):

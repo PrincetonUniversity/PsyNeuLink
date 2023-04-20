@@ -177,7 +177,7 @@ class TestControlMechanism:
         # c.add_linear_processing_pathway(pathway=z)
         comp.add_node(Control_Mechanism)
 
-        assert np.allclose(Control_Mechanism.parameters.control_allocation.get(), [0, 0, 0])
+        np.testing.assert_allclose(np.asfarray(Control_Mechanism.parameters.control_allocation.get()), [[0], [0], [0]])
 
         stim_list = {
             Input_Layer: [[-1, 30]],
@@ -208,8 +208,8 @@ class TestControlMechanism:
         comp.add_nodes([(mech, pnl.NodeRole.INPUT), (control_mech, pnl.NodeRole.INPUT)])
         results = comp.run(inputs={mech:[[2],[2],[2]], control_mech:[2]}, num_trials=2, execution_mode=comp_mode)
 
-        assert np.allclose(control_mech.parameters.control_allocation.get(), [1, 1, 1])
-        np.allclose(results, [[4],[4],[4]])
+        np.testing.assert_allclose(control_mech.parameters.control_allocation.get(), [[1], [1], [1]])
+        np.testing.assert_allclose(results, [[4], [4], [4]])
 
 
     def test_control_of_all_output_ports(self, comp_mode):
@@ -221,8 +221,8 @@ class TestControlMechanism:
         comp.add_nodes([(mech, pnl.NodeRole.INPUT), (control_mech, pnl.NodeRole.INPUT)])
         results = comp.run(inputs={mech:[[2]], control_mech:[3]}, num_trials=2, execution_mode=comp_mode)
 
-        np.testing.assert_allclose(control_mech.parameters.control_allocation.get(), [[1]])
-        np.allclose(results, [[6],[6],[6]])
+        np.testing.assert_allclose(control_mech.parameters.control_allocation.get(), [[1], [1], [1]])
+        np.testing.assert_allclose(results, [[6], [6], [6]])
 
     def test_control_signal_default_allocation_specification(self):
 
@@ -243,7 +243,7 @@ class TestControlMechanism:
         comp = pnl.Composition()
         comp.add_nodes([m1,m2,m3])
         comp.add_controller(c1)
-        assert np.allclose(c1.parameters.control_allocation.get(), [10, 10, 10])
+        np.testing.assert_allclose(c1.parameters.control_allocation.get(), [[10], [10], [10]])
         assert c1.control_signals[0].value == [10] # defaultControlAllocation should be assigned
                                                    # (as no default_allocation from pnl.ControlMechanism)
         assert m1.parameter_ports[pnl.SLOPE].value == [1]
@@ -283,7 +283,7 @@ class TestControlMechanism:
         comp = pnl.Composition()
         comp.add_nodes([m1,m2,m3])
         comp.add_controller(c2)
-        assert np.allclose(c2.parameters.control_allocation.get(), [10, 10, 10])
+        np.testing.assert_allclose(c2.parameters.control_allocation.get(), [[10], [10], [10]])
         assert c2.control_signals[0].value == [4]        # default_allocation from pnl.ControlMechanism assigned
         assert m1.parameter_ports[pnl.SLOPE].value == [10]  # has not yet received pnl.ControlSignal value
         assert c2.control_signals[1].value == [5]        # default_allocation from pnl.ControlSignal assigned (converted scalar)
