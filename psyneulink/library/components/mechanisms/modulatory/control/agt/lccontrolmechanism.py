@@ -810,7 +810,18 @@ class LCControlMechanism(ControlMechanism):
             for mech, mult_param_name in zip(self.modulated_mechanisms, multiplicative_param_names):
                 ctl_sig_projs.append((mult_param_name, mech))
             self.parameters.control._set([{PROJECTIONS: ctl_sig_projs}], context)
+            # FIX: CONSIDER MOVING THIS OUT OF CONDITIONALS
             self.parameters.control_allocation.default_value = self.value[0]
+        # MODIFIED 4/21/23 NEW:
+        else:
+
+            # FIX: CONSIDER MOVING THIS OUT OF CONDITIONALS
+            self.parameters.control_allocation.default_value = self.value[0]
+            # FIX: ASSIGN CONTROL_SIGNAL TO FIRST ITEM (gain) OF FUNCTION'S VALUE
+            #      CONSIDER OVERRIDE OF _set_mechanism_value TO ASSIGN FIRST ITEM (gain) OF FUNCTION'S VALUE
+            #      INSTANTIATE OUTPUT_PORTS FOR OTHER THREE VALUES OF FUNCTION
+            #      DOCUMENT ALL OF THIS
+        # MODIFIED 4/21/22 END
 
         super()._instantiate_control_signals(context=context)
 
