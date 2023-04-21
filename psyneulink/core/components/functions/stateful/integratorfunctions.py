@@ -4803,7 +4803,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
                  variable=None,
                  context=None,
                  params=None,
-                 ):
+                 ) -> (np.ndarray, np.ndarray, np.ndarray):
         """
 
         Arguments
@@ -4817,7 +4817,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         Returns
         -------
 
-        current value of v , current value of w : float, list, or array
+        current value of v , current value of w, current time_step of integration : ndarray
 
         """
 

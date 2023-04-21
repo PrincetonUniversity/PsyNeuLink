@@ -296,6 +296,8 @@ Class Reference
 ---------------
 
 """
+import copy
+import numpy as np
 from beartype import beartype
 
 from psyneulink._typing import Optional, Union, Iterable
@@ -308,7 +310,7 @@ from psyneulink.core.components.projections.modulatory.controlprojection import 
 from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.keywords import \
-    INIT_EXECUTE_METHOD_ONLY, MULTIPLICATIVE_PARAM, PROJECTIONS
+    INIT_EXECUTE_METHOD_ONLY, MULTIPLICATIVE_PARAM, NAME, OWNER_VALUE, PORT_TYPE, PROJECTIONS, VARIABLE
 from psyneulink.core.globals.parameters import Parameter, ParameterAlias, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -769,9 +771,12 @@ class LCControlMechanism(ControlMechanism):
         self._register_control_signal_type(context=None)
         self._instantiate_control_signals(context=context)
         # IMPLEMENTATION NOTE:
-        #   skip ControlMechanism._instantiate_output_ports, since now that self.control is specified,
+        #   skip ControlMechanism._instantiate_output_ports() since, now that self.control is specified,
         #   it would call _instantiate_control_signals, which is already done
         super(ControlMechanism, self)._instantiate_output_ports(context=context)
+        # self.add_ports([{PORT_TYPE: OutputPort, NAME: 'V', VARIABLE: (OWNER_VALUE, 0)},
+        #                 {PORT_TYPE: OutputPort, NAME: 'W', VARIABLE: (OWNER_VALUE, 1)},
+        #                 {PORT_TYPE: OutputPort, NAME: 'TIME_STEP', VARIABLE: (OWNER_VALUE, 2)},])
         self.aux_components.extend(self.control_projections)
 
     def _instantiate_control_signals(self, context=None):
@@ -810,20 +815,26 @@ class LCControlMechanism(ControlMechanism):
             for mech, mult_param_name in zip(self.modulated_mechanisms, multiplicative_param_names):
                 ctl_sig_projs.append((mult_param_name, mech))
             self.parameters.control._set([{PROJECTIONS: ctl_sig_projs}], context)
-            # FIX: CONSIDER MOVING THIS OUT OF CONDITIONALS
-            self.parameters.control_allocation.default_value = self.value[0]
-        # MODIFIED 4/21/23 NEW:
+
+        # Otherwise, implement a single ControlSignal with first item of function's value (gain) as its variable
         else:
+            # FIX: MAY NOT BE NEEDED IF _execute() ONLY RETURNS ONE VALUE,
+            #  AND VALUES RETURNED BY FHN ARE ASSIGNED AS NON-CONTROLSIGNAL OUTPUT_PORTS
+            self.parameters.control._set([{VARIABLE: (OWNER_VALUE, 0)}],context)
 
-            # FIX: CONSIDER MOVING THIS OUT OF CONDITIONALS
-            self.parameters.control_allocation.default_value = self.value[0]
-            # FIX: ASSIGN CONTROL_SIGNAL TO FIRST ITEM (gain) OF FUNCTION'S VALUE
-            #      CONSIDER OVERRIDE OF _set_mechanism_value TO ASSIGN FIRST ITEM (gain) OF FUNCTION'S VALUE
-            #      INSTANTIATE OUTPUT_PORTS FOR OTHER THREE VALUES OF FUNCTION
-            #      DOCUMENT ALL OF THIS
-        # MODIFIED 4/21/22 END
-
+        self.parameters.control_allocation.default_value = self.value[0]
         super()._instantiate_control_signals(context=context)
+
+    # def _set_mechanism_value(self, context):
+    #     """Set Mechanism's value from control_allocation.
+    #     This is needed because the LCControlMechanism's:
+    #         - function (FitzHughNagumo) returns additional information
+    #         - _execute() method processes the first value returned by the function to generate gain
+    #     """
+    #     control_allocation = self.parameters.control_allocation._get(context)
+    #     self.defaults.value = np.array(control_allocation)
+    #     self.parameters.value._set(copy.deepcopy(self.defaults.value), context)
+    #     return control_allocation
 
     def _execute(
         self,
@@ -831,20 +842,23 @@ class LCControlMechanism(ControlMechanism):
         context=None,
         runtime_params=None,
 
-    ):
+    ) -> (np.ndarray, np.ndarray, np.ndarray, np.ndarray):
         """Updates LCControlMechanism's ControlSignal based on input and mode parameter value
         """
         output_values = super()._execute(
             variable=variable,
             context=context,
             runtime_params=runtime_params,
-
         )
 
         gain_t = self.parameters.scaling_factor_gain._get(context) * output_values[1] \
                  + self.parameters.base_level_gain._get(context)
 
+        # # MODIFIED 4/21/23 OLD:
         return gain_t, output_values[0], output_values[1], output_values[2]
+        # # MODIFIED 4/21/23 NEW:
+        # return gain_t
+        # MODIFIED 4/21/23 END
 
     def _gen_llvm_mechanism_functions(self, ctx, builder, m_base_params, m_params, m_state, m_in,
                                       m_val, ip_output, *, tags:frozenset):

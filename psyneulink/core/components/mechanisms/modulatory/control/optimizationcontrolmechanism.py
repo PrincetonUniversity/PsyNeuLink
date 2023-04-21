@@ -1568,6 +1568,21 @@ class OptimizationControlMechanism(ControlMechanism):
         `execution contexts <Composition_Execution_Context>`.  If *search_statefulness* is False, calls for each
         `control_allocation <ControlMechanism.control_allocation>` will not be executed as independent simulations;
         rather, all will be run in the same (original) execution context.
+
+    value : 2d np.array
+        the `optimal_control_allocation <OptimizationControlMechanism.optimal_control_allocation>` returned by the
+        `OptimizationFunction <OptimizationControlMechanism.function>` assigned as the OptimizationControlMechanism's
+        `function <OptimizationControlMechanism.function>`, which is the `net_outcome
+        <ControlMechanism.net_outcome>` of the `agent_rep <OptimizationControlMechanism.agent_rep>`.
+
+        .. technical_note::
+           This uses only the first value returned by the `OptimizationFunction <OptimizationControlMechanism.function>`
+           which also may return the value associated with the `optimal_control_allocation
+           <OptimizationControlMechanism.optimal_control_allocation>` as well as the full set of `control_allocations
+           <ControlMechanism.control_allocation>` and corresponding values (if the *save_samples* and/or *save_values*
+           arguments of the OptimizationControlMechanism's constructor are `True`);  these are stored in the
+           OptimizationControlMechanism's `saved_samples <OptimizationControlMechanism.saved_samples>` and
+           `saved_values <OptimizationControlMechanism.saved_values>` attributes, respectively.
     """
 
     componentType = OPTIMIZATION_CONTROL_MECHANISM
@@ -2892,10 +2907,9 @@ class OptimizationControlMechanism(ControlMechanism):
         """Set Mechanism's value from control_allocation.
         OCM uses optimal_control_allocation (returned by its _execute() method), which is isomorphic to
         self.control_allocation, as its value.
-        IMPLEMENTATION NOTE:
-            This is because the OCM's:
-                - (Optimization) function returns additional information (e.g., GridSearch)
-                - _execute() method processes the value returned by the OptimizationFunction (to incorporate costs)
+        This is needed because the OCM's:
+            - function (an OptimizationFunction) can return additional information (e.g., GridSearch)
+            - _execute() method processes the value returned by the OptimizationFunction (to incorporate costs)
         """
         control_allocation = self.parameters.control_allocation._get(context)
         self.defaults.value = np.array(control_allocation)
@@ -3012,7 +3026,7 @@ class OptimizationControlMechanism(ControlMechanism):
         if self.agent_rep_type == COMPOSITION_FUNCTION_APPROXIMATOR:
             self._initialize_composition_function_approximator(context)
 
-    def _execute(self, variable=None, context=None, runtime_params=None):
+    def _execute(self, variable=None, context=None, runtime_params=None)->np.ndarray:
         """Return control_allocation that optimizes net_outcome of agent_rep.evaluate().
         """
 
