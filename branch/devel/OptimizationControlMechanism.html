@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OptimizationControlMechanism &mdash; PsyNeuLink 0.11.0.0+279.g66147093 documentation</title>
+  <title>OptimizationControlMechanism &mdash; PsyNeuLink 0.11.0.0+280.g1f200fbd documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.11.0.0+279
+                  0.11.0.0+280
                 </div>
               
             
@@ -1377,6 +1377,26 @@ rather, all will be run in the same (original) execution context.</p>
 </dl>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.value">
+<span class="sig-name descname"><span class="pre">value</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.value" title="Permalink to this definition">¶</a></dt>
+<dd><p>the <code class="xref any docutils literal notranslate"><span class="pre">optimal_control_allocation</span></code> returned by the
+<a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.function" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OptimizationFunction</span></code></a> assigned as the OptimizationControlMechanism’s
+<a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.function" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>, which is the <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">net_outcome</span></code></a> of the <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.agent_rep" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.agent_rep"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">agent_rep</span></code></a>.</p>
+<div class="technical-note docutils container">
+<p>This uses only the first value returned by the <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.function" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OptimizationFunction</span></code></a>
+which also may return the value associated with the <code class="xref any docutils literal notranslate"><span class="pre">optimal_control_allocation</span></code> as well as the full set of <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">control_allocations</span></code></a> and corresponding values (if the <em>save_samples</em> and/or <em>save_values</em>
+arguments of the OptimizationControlMechanism’s constructor are <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>);  these are stored in the
+OptimizationControlMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.saved_samples" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.saved_samples"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">saved_samples</span></code></a> and
+<a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.saved_values" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.saved_values"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">saved_values</span></code></a> attributes, respectively.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>2d np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._validate_params">
 <span class="sig-name descname"><span class="pre">_validate_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._validate_params" title="Permalink to this definition">¶</a></dt>
@@ -1657,15 +1677,12 @@ If monitor_for_control is specified as an ObjectiveMechanism, warn and move to o
 <dd><p>Set Mechanism’s value from control_allocation.
 OCM uses optimal_control_allocation (returned by its _execute() method), which is isomorphic to
 self.control_allocation, as its value.
-IMPLEMENTATION NOTE:</p>
+This is needed because the OCM’s:</p>
 <blockquote>
-<div><dl class="simple">
-<dt>This is because the OCM’s:</dt><dd><ul class="simple">
-<li><p>(Optimization) function returns additional information (e.g., GridSearch)</p></li>
+<div><ul class="simple">
+<li><p>function (an OptimizationFunction) can return additional information (e.g., GridSearch)</p></li>
 <li><p>_execute() method processes the value returned by the OptimizationFunction (to incorporate costs)</p></li>
 </ul>
-</dd>
-</dl>
 </div></blockquote>
 </dd></dl>
 
@@ -1685,6 +1702,11 @@ IMPLEMENTATION NOTE:</p>
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._execute">
 <span class="sig-name descname"><span class="pre">_execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runtime_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._execute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return control_allocation that optimizes net_outcome of agent_rep.evaluate().</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">

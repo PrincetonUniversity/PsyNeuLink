@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>IntegratorFunctions &mdash; PsyNeuLink 0.11.0.0+279.g66147093 documentation</title>
+  <title>IntegratorFunctions &mdash; PsyNeuLink 0.11.0.0+280.g1f200fbd documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.11.0.0+279
+                  0.11.0.0+280
                 </div>
               
             
@@ -1199,11 +1199,9 @@ reinitialization steps.</p>
 <a class="reference external" href="https://en.wikipedia.org/wiki/Ornstein%E2%80%93Uhlenbeck_process">Ornstein Uhlenbeck process</a>:</p>
 <div class="math notranslate nohighlight">
 \[previous\_value + (decay \cdot  previous\_value) - (rate \cdot variable) + \mathcal{N}(\sigma^2)\]</div>
-<p>where
-..  math:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>\<span class="n">sigma</span><span class="o">^</span><span class="mi">2</span> <span class="o">=</span>\<span class="n">sqrt</span><span class="p">{</span><span class="n">time</span>\<span class="n">_step</span>\<span class="n">_size</span> \<span class="n">cdot</span> <span class="n">noise</span><span class="p">}</span>
-</pre></div>
-</div>
+<p>where</p>
+<div class="math notranslate nohighlight">
+\[\sigma^2 =\sqrt{time\_step\_size \cdot noise}\]</div>
 <p><em>Modulatory Parameters:</em></p>
 <div class="line-block">
 <div class="line"><em>MULTIPLICATIVE_PARAM:</em> <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.AdaptiveIntegrator.rate" title="psyneulink.core.components.functions.stateful.integratorfunctions.AdaptiveIntegrator.rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">rate</span></code></a></div>
@@ -2057,10 +2055,10 @@ function.  Values specified for parameters in the dictionary override any assign
 arguments of the constructor.</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>current value of v , current value of w</strong></p>
+<dd class="field-even"><p><strong>current value of v , current value of w, current time_step of integration</strong></p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>float, list, or array</p>
+<dd class="field-odd"><p>ndarray</p>
 </dd>
 </dl>
 </dd></dl>

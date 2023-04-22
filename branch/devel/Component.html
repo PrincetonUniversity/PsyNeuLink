@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Component &mdash; PsyNeuLink 0.11.0.0+279.g66147093 documentation</title>
+  <title>Component &mdash; PsyNeuLink 0.11.0.0+280.g1f200fbd documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.11.0.0+279
+                  0.11.0.0+280
                 </div>
               
             
@@ -381,15 +381,22 @@ specifications above as its value, as in the following example:</p>
 </div>
 </li>
 </ul>
-<ul class="simple" id="component-value">
-<li><p><strong>value</strong> - the <a class="reference internal" href="#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> attribute contains the result (return value) of the Component’s
-<a class="reference internal" href="#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> after the function is called.</p></li>
+<ul id="component-value">
+<li><p><strong>value</strong> - the <a class="reference internal" href="#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> attribute generally contains the result (return value) of the Component’s
+<a class="reference internal" href="#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> after the function is called, though some Components may override this to return
+other values.</p>
+<blockquote>
+<div><div class="technical-note docutils container">
+<p>In general, Components that have an execute() method may use this to assign the <a class="reference internal" href="ControlProjection.html#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.value" title="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the Component
+(e.g., <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Mechanism_Base</span></code></a>; see <a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">OptimizationControlMechanism</span></a> and <a class="reference internal" href="LCControlMechanism.html"><span class="doc">LCControlMechanism</span></a> for examples).</p>
+</div>
+</div></blockquote>
+</li>
 </ul>
 <ul class="simple" id="component-log">
-<li><p><strong>log</strong> - the <a class="reference internal" href="#psyneulink.core.components.component.Component.log" title="psyneulink.core.components.component.Component.log"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">log</span></code></a> attribute contains the Component’s <a class="reference internal" href="Log.html"><span class="doc">Log</span></a>, that can be used to record its
-<a class="reference internal" href="#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>, as well as that of Components that belong to it, during initialization, validation,
-execution and learning.  It also has four convenience methods – <a class="reference internal" href="Log.html#id0" title="psyneulink.core.globals.log.Log.loggable_items"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">loggable_items</span></code></a>, <a class="reference internal" href="Log.html#psyneulink.core.globals.log.Log.set_log_conditions" title="psyneulink.core.globals.log.Log.set_log_conditions"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">set_log_conditions</span></code></a>, <code class="xref any docutils literal notranslate"><span class="pre">log_values</span></code> and <a class="reference internal" href="Log.html#id2" title="psyneulink.core.globals.log.Log.logged_items"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">logged_items</span></code></a> – that provide access to the
-corresponding methods of its Log, used to identify, configure and track items for logging.</p></li>
+<li><p><strong>log</strong> - the <a class="reference internal" href="#psyneulink.core.components.component.Component.log" title="psyneulink.core.components.component.Component.log"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">log</span></code></a> attribute contains the Component’s <a class="reference internal" href="Log.html"><span class="doc">Log</span></a>, that can be used to record its <a class="reference internal" href="#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>, as well as that of Components that belong to it, during initialization, validation, execution
+and learning.  It also has four convenience methods – <a class="reference internal" href="Log.html#id0" title="psyneulink.core.globals.log.Log.loggable_items"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">loggable_items</span></code></a>, <a class="reference internal" href="Log.html#psyneulink.core.globals.log.Log.set_log_conditions" title="psyneulink.core.globals.log.Log.set_log_conditions"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">set_log_conditions</span></code></a>, <code class="xref any docutils literal notranslate"><span class="pre">log_values</span></code> and <a class="reference internal" href="Log.html#id2" title="psyneulink.core.globals.log.Log.logged_items"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">logged_items</span></code></a> – that provide
+access to the corresponding methods of its Log, used to identify, configure and track items for logging.</p></li>
 </ul>
 <ul class="simple" id="component-name">
 <li><p><strong>name</strong> - the <a class="reference internal" href="#psyneulink.core.components.component.Component.name" title="psyneulink.core.components.component.Component.name"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">name</span></code></a> attribute contains the name assigned to the Component when it was created.
