@@ -802,7 +802,7 @@ class LCControlMechanism(ControlMechanism):
         # IMPLEMENTATION NOTE:
         #   skip ControlMechanism._instantiate_output_ports() since, now that self.control is specified,
         #   it would call _instantiate_control_signals, which is already done
-        super(LCControlMechanism, self)._instantiate_output_ports(context=context)
+        super(ControlMechanism, self)._instantiate_output_ports(context=context)
         self.aux_components.extend(self.control_projections)
 
     def _instantiate_control_signals(self, context=None):
