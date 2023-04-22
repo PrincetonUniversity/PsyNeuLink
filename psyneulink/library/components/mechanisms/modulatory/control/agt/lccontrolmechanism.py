@@ -774,9 +774,6 @@ class LCControlMechanism(ControlMechanism):
         #   skip ControlMechanism._instantiate_output_ports() since, now that self.control is specified,
         #   it would call _instantiate_control_signals, which is already done
         super(ControlMechanism, self)._instantiate_output_ports(context=context)
-        # self.add_ports([{PORT_TYPE: OutputPort, NAME: 'V', VARIABLE: (OWNER_VALUE, 0)},
-        #                 {PORT_TYPE: OutputPort, NAME: 'W', VARIABLE: (OWNER_VALUE, 1)},
-        #                 {PORT_TYPE: OutputPort, NAME: 'TIME_STEP', VARIABLE: (OWNER_VALUE, 2)},])
         self.aux_components.extend(self.control_projections)
 
     def _instantiate_control_signals(self, context=None):
@@ -825,17 +822,6 @@ class LCControlMechanism(ControlMechanism):
         self.parameters.control_allocation.default_value = self.value[0]
         super()._instantiate_control_signals(context=context)
 
-    # def _set_mechanism_value(self, context):
-    #     """Set Mechanism's value from control_allocation.
-    #     This is needed because the LCControlMechanism's:
-    #         - function (FitzHughNagumo) returns additional information
-    #         - _execute() method processes the first value returned by the function to generate gain
-    #     """
-    #     control_allocation = self.parameters.control_allocation._get(context)
-    #     self.defaults.value = np.array(control_allocation)
-    #     self.parameters.value._set(copy.deepcopy(self.defaults.value), context)
-    #     return control_allocation
-
     def _execute(
         self,
         variable=None,
@@ -854,11 +840,7 @@ class LCControlMechanism(ControlMechanism):
         gain_t = self.parameters.scaling_factor_gain._get(context) * output_values[1] \
                  + self.parameters.base_level_gain._get(context)
 
-        # # MODIFIED 4/21/23 OLD:
         return gain_t, output_values[0], output_values[1], output_values[2]
-        # # MODIFIED 4/21/23 NEW:
-        # return gain_t
-        # MODIFIED 4/21/23 END
 
     def _gen_llvm_mechanism_functions(self, ctx, builder, m_base_params, m_params, m_state, m_in,
                                       m_val, ip_output, *, tags:frozenset):
