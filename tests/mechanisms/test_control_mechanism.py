@@ -85,9 +85,7 @@ class TestLCControlMechanism:
         EX = pytest.helpers.get_mech_execution(LC, mech_mode)
 
         val = benchmark(EX, [10.0])
-        # All values are the same because LCControlMechanism assigns all of its ControlSignals to the same value
-        # (the 1st item of its function's value).
-        expected = [[3.001397762387422], [3.001397762387422], [3.001397762387422], [3.001397762387422]]
+        expected = [[3.001397762387422]]
         # The difference in result shape is caused by shape mismatch in output port values.
         # The default shape is 1D, giving 2D overall result in compiled mode.
         # The true results are 2D per port, giving 3D overall result in Python mode.

@@ -127,7 +127,7 @@ decision_pathway = pnl.Pathway(
 LC = pnl.LCControlMechanism(
     integration_method="EULER",       # We set the integration method to Euler like in the paper
     threshold_FitzHughNagumo=a,                  # Here we use the Euler method for integration and we want to set the parameters,
-    uncorrelated_activity_FitzHughNagumo=d,      # for the FitzHugh–Nagumo system.
+    uncorrelated_activity_FitzHughNagumo=d,      # for the FitzHugh–Nagumo Composition.
     time_step_size_FitzHughNagumo=dt,
     mode_FitzHughNagumo=C,
     time_constant_v_FitzHughNagumo=tau_v,
@@ -161,7 +161,7 @@ LC = pnl.LCControlMechanism(
 # Log value of LC
 LC.set_log_conditions('value')
 
-# Set initial gain to G + k*initial_w, when the System runs the very first time,
+# Set initial gain to G + k*initial_w, when the Composition runs the very first time,
 # since the decison layer executes before the LC and hence needs one initial gain value to start with.
 for output_port in LC.output_ports:
     output_port.parameters.value.set(output_port.value * (G + k * initial_w), override=True)
@@ -199,14 +199,14 @@ time = np.concatenate((stimulus_T1, stimulus_T2, stimulus_T3, stimulus_T4, stimu
 # assign inputs to input_layer (Origin Mechanism) for each trial
 stim_list_dict = {input_layer: time}
 
-# show the system
+# show the Composition
 # task.show_graph()
 
-# run the system
+# run the Composition
 task.run(stim_list_dict, num_trials=trials)
 
 
-# This displays a diagram of the System
+# This displays a diagram of the Composition
 # task.show_graph()
 
 LC_results = LC.log.nparray()[1][1]        # get logged results

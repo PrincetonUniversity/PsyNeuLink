@@ -350,7 +350,8 @@ dimension (axis 0) for each of the Mechanism's `input_ports <Mechanism_Base.inpu
 Mechanism's `value <Mechanism_Base.value>` attribute which is  also at least a 2d array.  The Mechanism's `value
 <Mechanism_Base.value>` is referenced by its `OutputPorts <Mechanism_OutputPorts>` to generate their own `value
 <OutputPort.value>` attributes, each of which is assigned as the value of an item of the list in the Mechanism's
-`output_values <Mechanism_Base.output_values>` attribute (see `Mechanism_OutputPorts` below).
+`output_values <Mechanism_Base.output_values>` attribute (see `Mechanism_OutputPorts` below), which is the value
+returned by a call to the Mechanism's `execute <Mechanism_Base.execute>` method.
 
 .. note::
    The input to a Mechanism is not necessarily the same as the input to its `function <Mechanism_Base.function>`. The
@@ -1343,7 +1344,8 @@ class Mechanism_Base(Mechanism):
         name of a parameter of the function, and its value is the parameter's value.
 
     value : 2d np.array [array(float64)]
-        result of the Mechanism's `function <Mechanism_Base.function>`.  It is always at least a 2d np.array, with the
+        result of the Mechanism's `execute` method, which is usually (but not always) the `value <Function.value>`
+        of it `function <Mechanism_Base.function>`.  It is always at least a 2d np.array, with the
         items of axis 0 corresponding to the values referenced by the corresponding `index <OutputPort.index>`
         attribute of the Mechanism's `OutputPorts <OutputPort>`.  The first item is generally referenced by the
         Mechanism's `primary OutputPort <OutputPort_Primary>` (i.e., the one in the its `output_port
