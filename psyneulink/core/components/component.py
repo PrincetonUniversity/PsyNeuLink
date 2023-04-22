@@ -168,7 +168,7 @@ with the one exception of `prefs <Component_Prefs>`.
 .. _Component_Value:
 
 * **value** - the `value <Component.value>` attribute generally contains the result (return value) of the Component's
-  `function <Component.function>` after the function is called, though some Components may override this to return 
+  `function <Component.function>` after the function is called, though some Components may override this to return
   other values.
 
       .. technical_note::

@@ -350,7 +350,8 @@ dimension (axis 0) for each of the Mechanism's `input_ports <Mechanism_Base.inpu
 Mechanism's `value <Mechanism_Base.value>` attribute which is  also at least a 2d array.  The Mechanism's `value
 <Mechanism_Base.value>` is referenced by its `OutputPorts <Mechanism_OutputPorts>` to generate their own `value
 <OutputPort.value>` attributes, each of which is assigned as the value of an item of the list in the Mechanism's
-`output_values <Mechanism_Base.output_values>` attribute (see `Mechanism_OutputPorts` below).
+`output_values <Mechanism_Base.output_values>` attribute (see `Mechanism_OutputPorts` below), which is the value
+returned by a call to the Mechanism's `execute <Mechanism_Base.execute>` method.
 
 .. note::
    The input to a Mechanism is not necessarily the same as the input to its `function <Mechanism_Base.function>`. The
