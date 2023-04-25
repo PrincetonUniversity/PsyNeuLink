@@ -12,7 +12,7 @@ matplotlib<3.7.2
 modeci_mdf<0.5, >=0.3.4; (platform_machine == 'AMD64' or platform_machine == 'x86_64') and platform_python_implementation == 'CPython' and implementation_name == 'cpython'
 networkx<3.2
 numpy<1.22.5, >=1.19.0
-pandas<2.0.1
+pandas<2.0.2
 pillow<9.6.0
 pint<0.21.0
 protobuf<3.20.4
