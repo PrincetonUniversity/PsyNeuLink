@@ -84,8 +84,8 @@ def test_grid_search(obj_func, metric, normalize, direction, selection, benchmar
 
     res = benchmark(EX, variable)
 
-    assert np.allclose(res[0], result[0])
-    assert np.allclose(res[1], result[1])
+    np.testing.assert_allclose(res[0], result[0], rtol=1e-5, atol=1e-8)
+    np.testing.assert_allclose(res[1], result[1], rtol=1e-5, atol=1e-8)
     if func_mode == 'Python':
-        assert np.allclose(res[2], result[2])
-        assert np.allclose(res[3], result[3])
+        np.testing.assert_allclose(res[2], result[2], rtol=1e-5, atol=1e-8)
+        np.testing.assert_allclose(res[3], result[3], rtol=1e-5, atol=1e-8)

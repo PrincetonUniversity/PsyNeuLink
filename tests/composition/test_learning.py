@@ -23,7 +23,7 @@ class TestTargetSpecs:
         comp1.learn(inputs={A: 1.0,
                             p1.target: 0.0},
                  num_trials=2)
-        assert np.allclose(comp1.results, [[[1.]], [[0.9]]])
+        np.testing.assert_allclose(comp1.results, [[[1.]], [[0.9]]])
 
         # Repeat with no target assignment (should use default_variable)
         C = TransferMechanism(name="learning-process-mech-C")
@@ -34,7 +34,7 @@ class TestTargetSpecs:
         comp2.learn(inputs={C: 1.0},
                    num_trials=2)
         # Should be same with default target specification
-        assert np.allclose(comp2.results, comp1.results)
+        np.testing.assert_allclose(comp2.results, comp1.results)
 
     def test_target_dict_spec_single_trial_scalar_and_lists_rl(self):
         A = TransferMechanism(name="learning-process-mech-A")
@@ -44,7 +44,7 @@ class TestTargetSpecs:
         # Confirm that targets are ignored in run (vs learn)
         comp.run(inputs={A: 1.0,
                          p.target:2.0})
-        assert np.allclose(comp.results, [[[1.]], [[1.]], [[1.]]])
+        np.testing.assert_allclose(comp.results, [[[1.]]])
         comp.learn(inputs={A: 1.0,
                            p.target:2.0})
         comp.learn(inputs={A: 1.0,
@@ -52,7 +52,7 @@ class TestTargetSpecs:
         comp.learn(inputs={A: 1.0,
                            p.target:[[2.0]]})
 
-        assert np.allclose(comp.results, [[[1.]], [[1.]], [[1.05]], [[1.0975]]])
+        np.testing.assert_allclose(comp.results, [[[1.]], [[1.]], [[1.05]], [[1.0975]]])
 
     def test_target_dict_spec_single_trial_scalar_and_lists_bp(self):
         A = TransferMechanism(name="learning-process-mech-A")
@@ -63,7 +63,7 @@ class TestTargetSpecs:
         # Confirm that targets are ignored in run (vs learn)
         comp.run(inputs={A: 1.0,
                          p.target:2.0})
-        assert np.allclose(comp.results, [[[1.]]])
+        np.testing.assert_allclose(comp.results, [[[1.]]])
         comp.learn(inputs={A: 1.0,
                            p.target:2.0})
         comp.learn(inputs={A: 1.0,
@@ -71,7 +71,7 @@ class TestTargetSpecs:
         comp.learn(inputs={A: 1.0,
                            p.target:[[2.0]]})
 
-        assert np.allclose(comp.results, [[[1.]], [[1.]], [[1.21]], [[1.40873161]]])
+        np.testing.assert_allclose(comp.results, [[[1.]], [[1.]], [[1.21]], [[1.40873161]]])
 
     def test_target_dict_spec_multi_trial_lists_rl(self):
         A = TransferMechanism(name="learning-process-mech-A")
@@ -82,7 +82,7 @@ class TestTargetSpecs:
                            p.target: [[4.0], [5.0], [6.0]]})
         comp.learn(inputs={A: [1.0, 2.0, 3.0],
                            p.target: [[[4.0]], [[5.0]], [[6.0]]]})
-        assert np.allclose(comp.results,
+        np.testing.assert_allclose(comp.results,
                            [[[1.]], [[2.6]], [[5.34]],
                             [[1.978]], [[4.3604]], [[6.92436]]])
 
@@ -101,7 +101,7 @@ class TestTargetSpecs:
                            p.target: [[3.0, 4.0], [5.0, 6.0], [7.0, 8.0]]})
         comp.learn(inputs={A: [1.0, 2.0, 3.0],
                            p.target: [[[3.0, 4.0]], [[5.0, 6.0]], [[7.0, 8.0]]]})
-        assert np.allclose(comp.results,
+        np.testing.assert_allclose(comp.results,
                            [[[1., 1.]],
                             [[1.2075, 1.265]],
                             [[1.41003122, 1.54413183]], [[3.64504691, 4.13165454]], [[8.1607109 , 9.54419477]],
@@ -142,7 +142,7 @@ class TestTargetSpecs:
     #     target.log.set_log_conditions('variable')
     #
     #     comp.learn(inputs=input_function, num_trials=3)
-    #     assert np.allclose(comp.results, [[[2., 2.]], [[2.4, 2.8]], [[2.72, 3.44]]])
+    #     np.testing.assert_allclose(comp.results, [[[2., 2.]], [[2.4, 2.8]], [[2.72, 3.44]]])
 
     def test_dict_target_spec_converging_pathways(self):
         A = TransferMechanism(name="converging-learning-pathways-mech-A")
@@ -162,7 +162,7 @@ class TestTargetSpecs:
                            D: 6.0,
                            p1.target: [7.0, 8.0]
                            })
-        assert np.allclose(comp.results,[[[3., 3.]], [[11.85  , 12.7725]]])
+        np.testing.assert_allclose(comp.results,[[[3., 3.]], [[11.85  , 12.7725]]])
 
     def test_function_target_spec_converging_pathways(self):
         A = TransferMechanism(name="converging-learning-pathways-mech-A")
@@ -187,7 +187,7 @@ class TestTargetSpecs:
             }
         comp.learn(inputs=input_function,
                    num_trials=2)
-        assert np.allclose(comp.results,[[[3., 3.]], [[11.85  , 12.7725]]])
+        np.testing.assert_allclose(comp.results,[[[3., 3.]], [[11.85  , 12.7725]]])
 
     def test_dict_target_spec_diverging_pathways(self):
         A = TransferMechanism(name="diverging-learning-pathways-mech-A")
@@ -211,7 +211,7 @@ class TestTargetSpecs:
             }
         comp.learn(inputs=input_function,
                    num_trials=2)
-        assert np.allclose(comp.results,[[[1.], [1.]], [[2.42], [3.38]]])
+        np.testing.assert_allclose(comp.results,[[[1.], [1.]], [[2.42], [3.38]]])
 
     def test_function_target_spec_divergin_pathways(self):
         A = TransferMechanism(name="diverging-learning-pathways-mech-A")
@@ -230,7 +230,7 @@ class TestTargetSpecs:
                          p1.target: 2.0,
                          p2.target: 4.0
                          })
-        assert np.allclose(comp.results,[[[1.], [1.]], [[2.42], [3.38]]])
+        np.testing.assert_allclose(comp.results,[[[1.], [1.]], [[2.42], [3.38]]])
 
     def test_dict_target_spec_divering_pathways_with_only_one_target(self):
         # First test with both targets (but use default_variale for second for comparison with missing target)
@@ -247,7 +247,7 @@ class TestTargetSpecs:
                             p2.target: 2.0
                             },
                     num_trials=2)
-        assert np.allclose(comp1.results,[[[1.], [1.]], [[0.81], [1.21]]])
+        np.testing.assert_allclose(comp1.results,[[[1.], [1.]], [[0.81], [1.21]]])
 
         F = TransferMechanism(name="diverging-learning-pathways-mech-F")
         G = TransferMechanism(name="diverging-learning-pathways-mech-G")
@@ -262,7 +262,7 @@ class TestTargetSpecs:
                             p4.target: 2.0
                             },
                     num_trials=2)
-        assert np.allclose(comp2.results, comp1.results)
+        np.testing.assert_allclose(comp2.results, comp1.results)
 
     def test_target_spec_over_nesting_of_items_in_target_value_error(self):
         A = TransferMechanism(name="learning-process-mech-A")
@@ -399,14 +399,14 @@ class TestLearningPathwayMethods:
         comp1.learn(inputs={A: 1.0,
                     comp1.pathways[0].target: 0.0},
                     num_trials=2)
-        assert np.allclose(comp1.results, [[[1.]], [[0.9]]])
+        np.testing.assert_allclose(comp1.results, [[[1.]], [[0.9]]])
 
         comp2 = Composition()
         comp2.add_backpropagation_learning_pathway(pathway=[A,B], name='P1')
         comp2.learn(inputs={A: 1.0},
                     targets={B: 0.0},
                     num_trials=2)
-        assert np.allclose(comp2.results, comp1.results)
+        np.testing.assert_allclose(comp2.results, comp1.results)
 
     @pytest.mark.parametrize('execution_mode',
                              [pnlvm.ExecutionMode.LLVM, pnlvm.ExecutionMode.PyTorch])
@@ -507,7 +507,7 @@ class TestHebbian:
 
         activity = Hebb2.value
 
-        assert np.allclose(activity, [[1.86643089, 0., 0., 1.86643089, 0., 0., 1.86643089, 0., 0.]])
+        np.testing.assert_allclose(activity, [[1.86643089, 0., 0., 1.86643089, 0., 0., 1.86643089, 0., 0.]])
 
 
 class TestReinforcement:
@@ -542,10 +542,15 @@ class TestReinforcement:
         comp.learn(inputs=inputs_dict)
 
 
-        assert np.allclose(learning_mechanism.value, [np.array([0.4275, 0.]), np.array([0.4275, 0.])])
-        assert np.allclose(action_selection.value, [[1.], [2.30401336], [0.97340301], [0.02659699], [2.30401336],
-                                                    [2.08614798], [1.85006765], [2.30401336], [2.08614798],
-                                                    [1.85006765]])
+        np.testing.assert_allclose(learning_mechanism.value, [np.array([0.4275, 0.]), np.array([0.4275, 0.])], rtol=1e-5, atol=1e-8)
+        np.testing.assert_allclose(
+            action_selection.value,
+            [
+                [1.], [2.30401336], [0.97340301], [0.02659699], [2.30401336],
+                [2.08614798], [1.85006765], [2.30401336], [2.08614798], [1.85006765]
+            ],
+            rtol=1e-5, atol=1e-8
+        )
 
     def test_reinforcement_fixed_targets(self):
         input_layer = pnl.TransferMechanism(size=2,
@@ -563,8 +568,12 @@ class TestReinforcement:
         c.learn(inputs={input_layer: [[1, 1], [1, 1]]},
                 targets={action_selection: [[10.], [10.]]})
 
-        assert np.allclose(action_selection.value, [[1.], [2.30401336], [0.97340301], [0.02659699], [2.30401336],
-                                                    [2.08614798], [1.85006765], [2.30401336], [2.08614798], [1.85006765]])
+        np.testing.assert_allclose(
+            action_selection.value,
+            [[1.], [2.30401336], [0.97340301], [0.02659699], [2.30401336],
+            [2.08614798], [1.85006765], [2.30401336], [2.08614798], [1.85006765]],
+            rtol=1e-5, atol=1e-8,
+        )
 
     def test_prediction_error_delta_first_run(self):
         learning_rate = 0.3
@@ -1373,27 +1382,42 @@ class TestReinforcement:
         comp.learn(inputs=inputs_dict)
 
 
-        assert np.allclose(learning_mechanism.value, [np.array([0.4275, 0.]), np.array([0.4275, 0.])])
-        assert np.allclose(action_selection.value, [[1.], [2.30401336], [0.97340301], [0.02659699], [2.30401336],
-                                                    [2.08614798], [1.85006765], [2.30401336], [2.08614798],
-                                                    [1.85006765]])
+        np.testing.assert_allclose(learning_mechanism.value, [np.array([0.4275, 0.]), np.array([0.4275, 0.])], rtol=1e-5, atol=1e-8)
+        np.testing.assert_allclose(
+            action_selection.value,
+            [
+                [1.], [2.30401336], [0.97340301], [0.02659699], [2.30401336],
+                [2.08614798], [1.85006765], [2.30401336], [2.08614798], [1.85006765]
+            ],
+            rtol=1e-5, atol=1e-8
+        )
 
         # Pause learning -- values are the same as the previous trial (because we pass in the same inputs)
         inputs_dict = {input_layer: [[1., 1.], [1., 1.]]}
         comp.run(inputs=inputs_dict)
-        assert np.allclose(learning_mechanism.value, [np.array([0.4275, 0.]), np.array([0.4275, 0.])])
-        assert np.allclose(action_selection.value, [[1.], [2.30401336], [0.97340301], [0.02659699], [2.30401336],
-                                                    [2.08614798], [1.85006765], [2.30401336], [2.08614798],
-                                                    [1.85006765]])
+        np.testing.assert_allclose(learning_mechanism.value, [np.array([0.4275, 0.]), np.array([0.4275, 0.])], rtol=1e-5, atol=1e-8)
+        np.testing.assert_allclose(
+            action_selection.value,
+            [
+                [1.], [2.30401336], [0.97340301], [0.02659699], [2.30401336],
+                [2.08614798], [1.85006765], [2.30401336], [2.08614798], [1.85006765]
+            ],
+            rtol=1e-5, atol=1e-8
+        )
 
         # Resume learning
         inputs_dict = {input_layer: [[1., 1.], [1., 1.]],
                        target_mechanism: [[10.], [10.]]}
         comp.learn(inputs=inputs_dict)
-        assert np.allclose(learning_mechanism.value, [np.array([0.38581875, 0.]), np.array([0.38581875, 0.])])
-        assert np.allclose(action_selection.value, [[1.], [0.978989672], [0.99996], [0.0000346908466], [0.978989672],
-                                                    [0.118109771], [1.32123733], [0.978989672], [0.118109771],
-                                                    [1.32123733]])
+        np.testing.assert_allclose(learning_mechanism.value, [np.array([0.38581875, 0.]), np.array([0.38581875, 0.])], rtol=1e-5, atol=1e-8)
+        np.testing.assert_allclose(
+            action_selection.value,
+            [
+                [1.], [0.978989672], [0.99996], [0.0000346908466], [0.978989672],
+                [0.118109771], [1.32123733], [0.978989672], [0.118109771], [1.32123733]
+            ],
+            rtol=1e-5, atol=1e-8
+        )
 
     def test_td_enabled_learning_false(self):
 
@@ -1460,8 +1484,8 @@ class TestReinforcement:
             0.0, 0.0
         ]
 
-        assert np.allclose(trial_1_expected, delta_vals[0][0])
-        assert np.allclose(trial_30_expected, delta_vals[29][0])
+        np.testing.assert_allclose(trial_1_expected, delta_vals[0][0])
+        np.testing.assert_allclose(trial_30_expected, delta_vals[29][0])
 
         # Pause Learning
         comp.run(inputs={sample_mechanism: samples[0:3]})
@@ -1478,7 +1502,7 @@ class TestReinforcement:
             0.07237361605659998, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
         ]
 
-        assert np.allclose(trial_50_expected, delta_vals[49][0])
+        np.testing.assert_allclose(trial_50_expected, delta_vals[49][0])
 
     def test_reinforcement_too_many_nodes(self):
         A = TransferMechanism()
@@ -1742,8 +1766,8 @@ class TestBackPropLearning:
         target = learning_pathway.target
         inputs = {T1:[1,0], target:[1]}
         C.learning_components[2].learning_rate.base = 0.5
-        result = C.learn(inputs=inputs, num_trials=2)
-        assert np.allclose(result, [[[0.52497919]], [[0.55439853]]])
+        C.learn(inputs=inputs, num_trials=2)
+        np.testing.assert_allclose(C.learning_results, [[[0.52497919]], [[0.55439853]]])
 
     @pytest.mark.pytorch
     def test_back_prop(self):
@@ -1988,28 +2012,23 @@ class TestBackPropLearning:
             # which WILL FAIL unless you gather higher precision values to use as reference
             np.testing.assert_allclose(val, expected, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))
 
-    models = ['PYTORCH','LLVM']
-    @pytest.mark.parametrize('models', models, ids=[x for x in models])
     @pytest.mark.pytorch
-    def test_xor_training_identicalness_standard_composition_vs_PyTorch_and_LLVM(self, models):
+    @pytest.mark.composition
+    @pytest.mark.parametrize('learning_rate', [10])
+    def test_xor_training_identicalness_standard_composition_vs_PyTorch_and_LLVM(self, learning_rate, autodiff_mode):
         """Test equality of results for running 3-layered xor network using System, Composition and Autodiff"""
+
+        if pytest.helpers.llvm_current_fp_precision() == 'fp32' and autodiff_mode != pnl.ExecutionMode.PyTorch:
+            pytest.skip("Comparison to Python works only when using the same fp precision!")
 
         num_epochs=2
 
-        xor_inputs = np.array(  # the inputs we will provide to the model
-            [[0, 0],
-             [0, 1],
-             [1, 0],
-             [1, 1]])
+        xor_inputs = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
 
-        xor_targets = np.array(  # the outputs we wish to see from the model
-            [[0],
-             [1],
-             [1],
-             [0]])
+        xor_targets = np.array([[0], [1], [1], [0]])
 
-        in_to_hidden_matrix = np.random.rand(2,10)
-        hidden_to_out_matrix = np.random.rand(10,1)
+        in_to_hidden_matrix = np.random.rand(2, 10)
+        hidden_to_out_matrix = np.random.rand(10, 1)
 
         # SET UP MODELS --------------------------------------------------------------------------------
 
@@ -2043,105 +2062,58 @@ class TestBackPropLearning:
                                                                           hidden_comp,
                                                                           hidden_to_out_comp,
                                                                           output_comp],
-                                                                         learning_rate=10)
+                                                                         learning_rate=learning_rate)
         target_mech = backprop_pathway.target
         inputs_dict = {"inputs": {input_comp:xor_inputs},
                        "targets": {output_comp:xor_targets},
                        "epochs": num_epochs}
+        # Don't use autodiff_mode from above,
+        # this is the true/Python result
         result_comp = xor_comp.learn(inputs=inputs_dict)
 
-        # AutodiffComposition using LLVM
-        if 'LLVM' in models:
+        # Build equivalent Autodiff composition
+        input_autodiff = pnl.TransferMechanism(name='input',
+                                   default_variable=np.zeros(2))
 
-            input_LLVM = pnl.TransferMechanism(name='input',
-                                       default_variable=np.zeros(2))
+        hidden_autodiff = pnl.TransferMechanism(name='hidden',
+                                    default_variable=np.zeros(10),
+                                    function=pnl.Logistic())
 
-            hidden_LLVM = pnl.TransferMechanism(name='hidden',
-                                        default_variable=np.zeros(10),
-                                        function=pnl.Logistic())
+        output_autodiff = pnl.TransferMechanism(name='output',
+                                    default_variable=np.zeros(1),
+                                    function=pnl.Logistic())
 
-            output_LLVM = pnl.TransferMechanism(name='output',
-                                        default_variable=np.zeros(1),
-                                        function=pnl.Logistic())
+        in_to_hidden_autodiff = pnl.MappingProjection(name='in_to_hidden',
+                                    matrix=in_to_hidden_matrix.copy(),
+                                    sender=input_autodiff,
+                                    receiver=hidden_autodiff)
 
-            in_to_hidden_LLVM = pnl.MappingProjection(name='in_to_hidden',
-                                        matrix=in_to_hidden_matrix.copy(),
-                                        sender=input_LLVM,
-                                        receiver=hidden_LLVM)
+        hidden_to_out_autodiff = pnl.MappingProjection(name='hidden_to_out',
+                                    matrix=hidden_to_out_matrix.copy(),
+                                    sender=hidden_autodiff,
+                                    receiver=output_autodiff)
 
-            hidden_to_out_LLVM = pnl.MappingProjection(name='hidden_to_out',
-                                        matrix=hidden_to_out_matrix.copy(),
-                                        sender=hidden_LLVM,
-                                        receiver=output_LLVM)
+        xor_autodiff = pnl.AutodiffComposition(learning_rate=learning_rate, optimizer_type='sgd')
 
-            xor_LLVM = pnl.AutodiffComposition(learning_rate=10,
-                                               optimizer_type='sgd')
+        xor_autodiff.add_node(input_autodiff)
+        xor_autodiff.add_node(hidden_autodiff)
+        xor_autodiff.add_node(output_autodiff)
 
-            xor_LLVM.add_node(input_LLVM)
-            xor_LLVM.add_node(hidden_LLVM)
-            xor_LLVM.add_node(output_LLVM)
+        xor_autodiff.add_projection(sender=input_autodiff, projection=in_to_hidden_autodiff, receiver=hidden_autodiff)
+        xor_autodiff.add_projection(sender=hidden_autodiff, projection=hidden_to_out_autodiff, receiver=output_autodiff)
+        xor_autodiff.infer_backpropagation_learning_pathways()
 
-            xor_LLVM.add_projection(sender=input_LLVM, projection=in_to_hidden_LLVM, receiver=hidden_LLVM)
-            xor_LLVM.add_projection(sender=hidden_LLVM, projection=hidden_to_out_LLVM, receiver=output_LLVM)
-            xor_LLVM.infer_backpropagation_learning_pathways()
+        inputs_dict = {"inputs": {input_autodiff:xor_inputs},
+                       "targets": {output_autodiff:xor_targets},
+                       "epochs": num_epochs}
+        # Do use autodiff_mode here. This is the tested result
+        result_autodiff = xor_autodiff.learn(inputs=inputs_dict, execution_mode=autodiff_mode)
 
-            inputs_dict = {"inputs": {input_LLVM:xor_inputs},
-                           "targets": {output_LLVM:xor_targets},
-                           "epochs": num_epochs}
-            result_LLVM = xor_LLVM.learn(inputs=inputs_dict, execution_mode=pnlvm.ExecutionMode.LLVMRun)
-
-            assert np.allclose(in_to_hidden_LLVM.parameters.matrix.get(xor_LLVM),
-                               in_to_hidden_comp.get_mod_matrix(xor_comp))
-            assert np.allclose(hidden_to_out_LLVM.parameters.matrix.get(xor_LLVM),
-                               hidden_to_out_comp.get_mod_matrix(xor_comp))
-            assert np.allclose(result_comp, result_LLVM)
-
-        # AutodiffComposition using PyTorch
-        elif 'PYTORCH' in models:
-
-            input_PYTORCH = pnl.TransferMechanism(name='input',
-                                       default_variable=np.zeros(2))
-
-            hidden_PYTORCH = pnl.TransferMechanism(name='hidden',
-                                        default_variable=np.zeros(10),
-                                        function=pnl.Logistic())
-
-            output_PYTORCH = pnl.TransferMechanism(name='output',
-                                        default_variable=np.zeros(1),
-                                        function=pnl.Logistic())
-
-            in_to_hidden_PYTORCH = pnl.MappingProjection(name='in_to_hidden',
-                                        matrix=in_to_hidden_matrix.copy(),
-                                        sender=input_PYTORCH,
-                                        receiver=hidden_PYTORCH)
-
-            hidden_to_out_PYTORCH = pnl.MappingProjection(name='hidden_to_out',
-                                        matrix=hidden_to_out_matrix.copy(),
-                                        sender=hidden_PYTORCH,
-                                        receiver=output_PYTORCH)
-
-            xor_PYTORCH = pnl.AutodiffComposition(learning_rate=10,
-                                                  optimizer_type='sgd')
-
-            xor_PYTORCH.add_node(input_PYTORCH)
-            xor_PYTORCH.add_node(hidden_PYTORCH)
-            xor_PYTORCH.add_node(output_PYTORCH)
-
-            xor_PYTORCH.add_projection(sender=input_PYTORCH, projection=in_to_hidden_PYTORCH, receiver=hidden_PYTORCH)
-            xor_PYTORCH.add_projection(sender=hidden_PYTORCH, projection=hidden_to_out_PYTORCH, receiver=output_PYTORCH)
-            xor_PYTORCH.infer_backpropagation_learning_pathways()
-
-            inputs_dict = {"inputs": {input_PYTORCH:xor_inputs},
-                           "targets": {output_PYTORCH:xor_targets},
-                           "epochs": num_epochs}
-            result_PYTORCH = xor_PYTORCH.learn(inputs=inputs_dict,
-                                               execution_mode=pnlvm.ExecutionMode.PyTorch)
-
-            assert np.allclose(in_to_hidden_PYTORCH.parameters.matrix.get(xor_PYTORCH),
-                               in_to_hidden_comp.get_mod_matrix(xor_comp))
-            assert np.allclose(hidden_to_out_PYTORCH.parameters.matrix.get(xor_PYTORCH),
-                               hidden_to_out_comp.get_mod_matrix(xor_comp))
-            assert np.allclose(result_comp, result_PYTORCH)
+        np.testing.assert_allclose(in_to_hidden_autodiff.parameters.matrix.get(xor_autodiff),
+                           in_to_hidden_comp.get_mod_matrix(xor_comp))
+        np.testing.assert_allclose(hidden_to_out_autodiff.parameters.matrix.get(xor_autodiff),
+                           hidden_to_out_comp.get_mod_matrix(xor_comp))
+        np.testing.assert_allclose(result_comp, result_autodiff)
 
 
     @pytest.mark.parametrize('configuration', [
@@ -2512,16 +2484,16 @@ class TestBackPropLearning:
                                           learning_rate=1)
         comp.add_backpropagation_learning_pathway(pathway=word_pathway,
                                           learning_rate=1)
-        # comp.show_graph(show_learning=True)
 
         # RUN MODEL ---------------------------------------------------------------------------
 
         # print('\nEXECUTING COMPOSITION-----------------------\n')
         target = comp.get_nodes_by_role(pnl.NodeRole.TARGET)[0]
-        results_comp = comp.learn(inputs={color_comp: [[1, 1]],
-                                          word_comp: [[-2, -2]],
-                                          target: [[1, 1]]},
-                                  num_trials=num_trials)
+        comp.learn(inputs={color_comp: [[1, 1]],
+                           word_comp: [[-2, -2]],
+                           target: [[1, 1]]},
+                   num_trials=num_trials)
+        results_comp = comp.learning_results
         # print('\nCOMPOSITION RESULTS')
         # print(f'Results: {comp.results}')
         # print(f'color_to_hidden_comp: {comp.projections[0].get_mod_matrix(comp)}')
@@ -2763,7 +2735,7 @@ class TestBackPropLearning:
                              0.05186586, 0.05829845, 0.05179337, 0.03504668, 0.05379566,
                              0.07103772, 0.03544133, 0.03019486, 0.12605846, 0.03976812])
 
-        assert np.allclose(comparator, np.array(mnet.parameters.results.get(mnet)[-15:]).reshape(225))
+        np.testing.assert_allclose(comparator, np.array(mnet.parameters.results.get(mnet)[-15:]).reshape(225), rtol=1e-5, atol=1e-8)
 
 
 def validate_learning_mechs(comp):

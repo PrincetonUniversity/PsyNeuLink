@@ -3159,14 +3159,21 @@ class SoftMax(TransferFunction):
             all_out = builder.alloca(arg_out.type.pointee)
             builder = self._gen_llvm_function_body(ctx, builder, params, state, arg_in, all_out, output_type=ALL, tags=forward_tags)
 
-        # The rest of the algorithm is for MAX_VAL and MAX_INDICATOR only
+        if self.parameters.per_item.get():
+            assert isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType)
+            assert isinstance(arg_out.type.pointee.element, pnlvm.ir.ArrayType)
+            for i in range(arg_in.type.pointee.count):
+                inner_all_out = builder.gep(all_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
+                inner_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
+                builder = self.__gen_llvm_apply_derivative(ctx, builder, params, state, inner_all_out, inner_out, tags=tags)
+            return builder
+        else:
+            return self.__gen_llvm_apply_derivative(ctx, builder, params, state, all_out, arg_out, tags=tags)
+
+    def __gen_llvm_apply_derivative(self, ctx, builder, params, state, all_out, arg_out, *, tags:frozenset):
+
         assert self.output in {MAX_VAL, MAX_INDICATOR}, \
             "Derivative of SoftMax is only implemented for MAX_VAL and MAX_INDICATOR! ({})".format(self.output)
-
-        if not pnlvm.helpers.is_scalar(arg_out.type.pointee.element):
-            assert len(arg_out.type.pointee) == 1
-            arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            all_out = builder.gep(all_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
         max_pos_ptr = builder.alloca(ctx.int32_ty)
         builder.store(max_pos_ptr.type.pointee(-1), max_pos_ptr)
@@ -3292,44 +3299,51 @@ class SoftMax(TransferFunction):
         else:
             assert not np.any(np.equal(0, output))
 
-        sm = np.squeeze(output)
-        size = len(sm)
-        assert (len(output) == 1 and len(output[0]) == size) or len(output) == size
+        per_item = self._get_current_parameter_value(PER_ITEM, context)
+        if not per_item:
+            output = [output]
 
-        output_type = self._get_current_parameter_value(OUTPUT_TYPE, context)
-        if output_type == ALL:
-            # Return full Jacobian matrix of derivatives using Kronecker's delta method:
-            derivative = np.empty([size, size])
-            for i, j in np.ndindex(size, size):
-                if i == j:
-                    d = 1
-                else:
-                    d = 0
-                derivative[j, i] = sm[i] * (d - sm[j])
-        elif output_type in {MAX_VAL, MAX_INDICATOR}:
-            # Return 1d array of derivatives for max element (i.e., the one chosen by SoftMax)
-            derivative = np.empty(size)
-            # Get the element of output returned as non-zero (max val) when output_type is not ALL
-            # IMPLEMENTATION NOTES:
-            #    if there is a tie for max, this chooses the item in sm with the lowest index in sm:
-            index_of_max = int(np.where(sm == np.max(sm))[-1][0])
-            #    the following would randomly choose a value in case of a tie,
-            #    but may cause problems with compilation:
-            # index_of_max = np.where(sm == np.max(sm))[0]
-            # if len(index_of_max)>1:
-            #     index_of_max = int(np.random.choice(index_of_max))
-            max_val = sm[index_of_max]
-            for i in range(size):
-                if i == index_of_max:
-                    d = 1
-                else:
-                    d = 0
-                derivative[i] = sm[i] * (d - max_val)
-        else:
-            raise FunctionError("Can't assign derivative for SoftMax function{} since OUTPUT_TYPE is PROB "
-                                "(and therefore the relevant element is ambiguous)".format(self.owner_name))
+        result = []
+        for sm in output:
+            size = len(sm)
 
-        return derivative
+            output_type = self._get_current_parameter_value(OUTPUT_TYPE, context)
+            if output_type == ALL:
+                # Return full Jacobian matrix of derivatives using Kronecker's delta method:
+                derivative = np.empty([size, size])
+                for i, j in np.ndindex(size, size):
+                    if i == j:
+                        d = 1
+                    else:
+                        d = 0
+                    derivative[j, i] = sm[i] * (d - sm[j])
+            elif output_type in {MAX_VAL, MAX_INDICATOR}:
+                # Return 1d array of derivatives for max element (i.e., the one chosen by SoftMax)
+                derivative = np.empty(size)
+                # Get the element of output returned as non-zero (max val) when output_type is not ALL
+                # IMPLEMENTATION NOTES:
+                #    if there is a tie for max, this chooses the item in sm with the lowest index in sm:
+                index_of_max = int(np.where(sm == np.max(sm))[-1][0])
+                #    the following would randomly choose a value in case of a tie,
+                #    but may cause problems with compilation:
+                # index_of_max = np.where(sm == np.max(sm))[0]
+                # if len(index_of_max)>1:
+                #     index_of_max = int(np.random.choice(index_of_max))
+                max_val = sm[index_of_max]
+                for i in range(size):
+                    if i == index_of_max:
+                        d = 1
+                    else:
+                        d = 0
+                    derivative[i] = sm[i] * (d - max_val)
+            else:
+                raise FunctionError("Can't assign derivative for SoftMax function{} since OUTPUT_TYPE is PROB "
+                                    "(and therefore the relevant element is ambiguous)".format(self.owner_name))
+
+            result.append(derivative)
+
+        assert per_item or len(result) == 1
+        return result[0] if not per_item else result
 
 
 # **********************************************************************************************************************
@@ -4820,17 +4834,7 @@ class TransferWithCosts(TransferFunction):
         trans_p = pnlvm.helpers.get_param_ptr(builder, self, params, transfer_f.name)
         trans_s = pnlvm.helpers.get_state_ptr(builder, self, state, transfer_f.name)
         trans_in = arg_in
-        if trans_in.type != trans_f.args[2].type:
-            warnings.warn("Shape mismatch: {} input does not match the transfer function ({}): {} vs. {}".format(
-                          self, transfer_f.get(), self.defaults.variable, transfer_f.get().defaults.variable),
-                          pnlvm.PNLCompilerWarning)
-            trans_in = builder.gep(trans_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
         trans_out = arg_out
-        if trans_out.type != trans_f.args[3].type:
-            warnings.warn("Shape mismatch: {} output does not match the transfer function ({}): {} vs. {}".format(
-                          self, transfer_f.get(), self.defaults.value, transfer_f.get().defaults.value),
-                          pnlvm.PNLCompilerWarning)
-            trans_out = builder.gep(trans_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
         builder.call(trans_f, [trans_p, trans_s, trans_in, trans_out])
 
         # TODO: Implement cost calculations

@@ -48,7 +48,7 @@ def test_random_int(benchmark, mode):
         assert False, "Unknown mode: {}".format(mode)
 
     res = [f(), f()]
-    assert np.allclose(res, [3626764237, 1654615998])
+    np.testing.assert_allclose(res, [3626764237, 1654615998])
     benchmark(f)
 
 
@@ -94,7 +94,7 @@ def test_random_float(benchmark, mode):
         assert False, "Unknown mode: {}".format(mode)
 
     res = [f(), f()]
-    assert np.allclose(res, [0.8444218515250481, 0.7579544029403025])
+    np.testing.assert_allclose(res, [0.8444218515250481, 0.7579544029403025])
     benchmark(f)
 
 
@@ -135,7 +135,7 @@ def test_random_normal(benchmark, mode):
         assert False, "Unknown mode: {}".format(mode)
 
     res = [f(), f()]
-    assert np.allclose(res, [0.4644982638709743, 0.6202001216069017])
+    np.testing.assert_allclose(res, [0.4644982638709743, 0.6202001216069017], rtol=1e-5, atol=1e-8)
     benchmark(f)
 
 @pytest.mark.benchmark(group="Marsenne Twister Binomial distribution")

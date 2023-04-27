@@ -55,5 +55,5 @@ def test_debug_comp(mode, debug_env):
         expected2 = expected1
 
 
-    assert np.allclose(expected1, output1[0][0])
-    assert np.allclose(expected2, output2[0][0])
+    np.testing.assert_allclose(expected1, output1[0][0])
+    np.testing.assert_allclose(expected2, output2[0][0])

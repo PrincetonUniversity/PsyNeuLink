@@ -185,7 +185,8 @@ from beartype import beartype
 
 from psyneulink._typing import Optional, Union
 
-from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism, ControlMechanismError
+from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import \
+    ControlMechanism, ControlMechanismError, _control_allocation_getter
 from psyneulink.core.components.ports.modulatorysignals.gatingsignal import GatingSignal
 from psyneulink.core.components.ports.port import _parse_port_spec
 from psyneulink.core.globals.defaults import defaultGatingAllocation
@@ -417,10 +418,14 @@ class GatingMechanism(ControlMechanism):
         # This must be a list, as there may be more than one (e.g., one per control_signal)
         value = Parameter(
             np.array([defaultGatingAllocation]),
-            aliases=['control_allocation', 'gating_allocation'],
             pnl_internal=True
         )
 
+        control_allocation = Parameter(np.array([defaultGatingAllocation]),
+                                       read_only=True,
+                                       aliases='gating_allocation',
+                                       getter=_control_allocation_getter,
+                                       )
         output_ports = Parameter(
             None,
             stateful=False,

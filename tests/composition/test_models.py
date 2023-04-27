@@ -465,19 +465,19 @@ class TestModels:
     #         return results
     #
     #     res = run()
-    #     assert np.allclose(res[0], [0.04946301, 0.04946301, 0.03812533])
-    #     assert np.allclose(res[1], [0.20351701, 0.11078586, 0.04995664])
-    #     assert np.allclose(res[2], [0.04946301, 0.04946301, 0.03812533])
-    #     assert np.allclose(res[3], [0.11168014, 0.20204928, 0.04996308])
-    #     assert np.allclose(res[4], [0.05330691, 0.05330691, 0.03453411])
-    #     assert np.allclose(res[5], [0.11327619, 0.11238362, 0.09399782])
+    #     np.testing.assert_allclose(res[0], [0.04946301, 0.04946301, 0.03812533])
+    #     np.testing.assert_allclose(res[1], [0.20351701, 0.11078586, 0.04995664])
+    #     np.testing.assert_allclose(res[2], [0.04946301, 0.04946301, 0.03812533])
+    #     np.testing.assert_allclose(res[3], [0.11168014, 0.20204928, 0.04996308])
+    #     np.testing.assert_allclose(res[4], [0.05330691, 0.05330691, 0.03453411])
+    #     np.testing.assert_allclose(res[5], [0.11327619, 0.11238362, 0.09399782])
     #
     #     if mode == 'LLVM':
     #         return
     #     r2 = response_layer.log.nparray_dictionary('DECISION_ENERGY')  # get logged DECISION_ENERGY dictionary
     #     energy = r2['DECISION_ENERGY']  # save logged DECISION_ENERGY
     #
-    #     assert np.allclose(energy[:450],
+    #     np.testing.assert_allclose(energy[:450],
     #                        [0.9907482, 0.98169891, 0.97284822, 0.96419228, 0.95572727, 0.94744946,
     #                         0.93935517, 0.93144078, 0.92370273, 0.91613752, 0.90874171, 0.90151191,
     #                         0.89444481, 0.88753715, 0.88078573, 0.8741874, 0.8677391, 0.86143779,

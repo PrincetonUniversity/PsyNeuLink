@@ -50,7 +50,11 @@ all_acc = np.array([])
 for threshold_i in all_thresholds:
 
     # Update the parameters of the composition
-    comp.nodes["DDM"].function.threshold.base = threshold_i
+    #comp.nodes["DDM"].function.threshold.base = threshold_i
+
+    context = pnl.Context()
+
+    comp.nodes["DDM"].function.parameters.threshold.set(threshold_i, context)
 
     # Generate sample data to
     switchFrequency = 0.5
@@ -71,7 +75,7 @@ for threshold_i in all_thresholds:
         correctInfo: [[np.array([correctResponse[i]])] for i in range(num_trials)]
     }
 
-    comp.run(inputs, execution_mode=pnl.ExecutionMode.LLVMRun)
+    comp.run(inputs, execution_mode=pnl.ExecutionMode.LLVMRun, context=context)
     results = comp.results
 
     data_to_fit = pd.DataFrame(

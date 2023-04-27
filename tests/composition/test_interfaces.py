@@ -29,36 +29,36 @@ class TestExecuteCIM:
         assert output == 2.0
 
         output = I.execute([1.0, 2.0,3.0])
-        assert np.allclose([1.0, 2.0,3.0], output)
+        np.testing.assert_allclose([1.0, 2.0,3.0], output)
 
         output = I.execute([[1.0, 2.0], [3.0]])
 
-        assert np.allclose([1.0, 2.0], output[0])
-        assert np.allclose([3.0], output[1])
+        np.testing.assert_allclose([1.0, 2.0], output[0])
+        np.testing.assert_allclose([3.0], output[1])
 
     def test_standalone_CIM(self):
 
         cim = CompositionInterfaceMechanism()
         cim.execute(2.0)
-        assert np.allclose(cim.value, [2.0])
+        np.testing.assert_allclose(cim.value, [[2.0]])
 
     def test_assign_value(self):
         cim = CompositionInterfaceMechanism()
         cim.defaults.variable = [2.0]
         cim.execute()
-        assert np.allclose(cim.value, [2.0])
+        np.testing.assert_allclose(cim.value, [[2.0]])
 
     def test_standalone_CIM_multiple_input_ports(self):
 
         cim = CompositionInterfaceMechanism(default_variable=[[0.0], [0.0], [0.0]])
         cim.execute([[1.0], [2.0], [3.0]])
-        assert np.allclose(cim.value, [[1.0], [2.0], [3.0]])
+        np.testing.assert_allclose(cim.value, [[1.0], [2.0], [3.0]])
 
     def test_standalone_processing_multiple_input_ports(self):
 
         processing_mech = ProcessingMechanism(default_variable=[[0.0], [0.0], [0.0]])
         processing_mech.execute([[1.0], [2.0], [3.0]])
-        assert np.allclose(processing_mech.value, [[1.0], [2.0], [3.0]])
+        np.testing.assert_allclose(processing_mech.value, [[1.0], [2.0], [3.0]])
 
 
     def test_one_input_port_one_output_port(self):
@@ -85,7 +85,7 @@ class TestExecuteCIM:
             scheduler=sched
         )
 
-        assert np.allclose([30], output)
+        np.testing.assert_allclose([[30]], output)
 
     def test_two_input_ports_two_output_ports(self):
 
@@ -114,11 +114,11 @@ class TestExecuteCIM:
             scheduler=sched
         )
 
-        assert np.allclose([[30.], [36.]], output)
+        np.testing.assert_allclose([[30.], [36.]], output)
 
 
-        # assert np.allclose([30.], comp.output_CIM.output_ports[1].value)
-        # assert np.allclose([36.], comp.output_CIM.output_ports[2].value)
+        # np.testing.assert_allclose([30.], comp.output_CIM.output_ports[1].value)
+        # np.testing.assert_allclose([36.], comp.output_CIM.output_ports[2].value)
 
 class TestConnectCompositionsViaCIMS:
 
@@ -177,12 +177,12 @@ class TestConnectCompositionsViaCIMS:
         # comp3:
         # input = 5.0
         # output = 180.0
-        res = comp3.run(inputs={comp1: [[5.]]}, execution_mode=comp_mode)
-        assert np.allclose(res, [[[180.0]]])
+        comp3.run(inputs={comp1: [[5.]]}, execution_mode=comp_mode)
+        np.testing.assert_allclose(comp3.results, [[[180.0]]])
         if comp_mode is pnlvm.ExecutionMode.Python:
-            assert np.allclose(comp1.output_port.parameters.value.get(comp3), [30.0])
-            assert np.allclose(comp2.output_port.parameters.value.get(comp3), [180.0])
-            assert np.allclose(comp3.output_port.parameters.value.get(comp3), [180.0])
+            np.testing.assert_allclose(comp1.output_port.parameters.value.get(comp3), [30.0])
+            np.testing.assert_allclose(comp2.output_port.parameters.value.get(comp3), [180.0])
+            np.testing.assert_allclose(comp3.output_port.parameters.value.get(comp3), [180.0])
 
     @pytest.mark.nested
     @pytest.mark.composition
@@ -241,11 +241,11 @@ class TestConnectCompositionsViaCIMS:
             execution_mode=comp_mode
         )
 
-        assert np.allclose(output, [[[180.], [1800.]]])
+        np.testing.assert_allclose(output, [[180.], [1800.]])
         if comp_mode is pnlvm.ExecutionMode.Python:
-            assert np.allclose(inner_composition_1.get_output_values(outer_composition), [[30.], [300.]])
-            assert np.allclose(inner_composition_2.get_output_values(outer_composition), [[180.], [1800.]])
-            assert np.allclose(outer_composition.get_output_values(outer_composition), [[180.], [1800.]])
+            np.testing.assert_allclose(inner_composition_1.get_output_values(outer_composition), [[30.], [300.]])
+            np.testing.assert_allclose(inner_composition_2.get_output_values(outer_composition), [[180.], [1800.]])
+            np.testing.assert_allclose(outer_composition.get_output_values(outer_composition), [[180.], [1800.]])
 
     @pytest.mark.nested
     @pytest.mark.composition
@@ -310,18 +310,18 @@ class TestConnectCompositionsViaCIMS:
             scheduler=sched,
             execution_mode=comp_mode
         )
-        assert np.allclose(output, [[[36.]]])
+        np.testing.assert_allclose(output, [[36.]])
 
         if comp_mode is pnlvm.ExecutionMode.Python:
-            assert np.allclose(A.get_output_values(outer_composition), [[1.0]])
-            assert np.allclose(B.get_output_values(outer_composition), [[2.0]])
-            assert np.allclose(C.get_output_values(outer_composition), [[9.0]])
-            assert np.allclose(A2.get_output_values(outer_composition), [[3.0]])
-            assert np.allclose(B2.get_output_values(outer_composition), [[3.0]])
-            assert np.allclose(inner_composition_1.get_output_values(outer_composition), [[9.0]])
-            assert np.allclose(inner_composition_2.get_output_values(outer_composition), [[3.0]])
-            assert np.allclose(mechanism_d.get_output_values(outer_composition), [[36.0]])
-            assert np.allclose(outer_composition.get_output_values(outer_composition), [[36.0]])
+            np.testing.assert_allclose(A.get_output_values(outer_composition), [[1.0]])
+            np.testing.assert_allclose(B.get_output_values(outer_composition), [[2.0]])
+            np.testing.assert_allclose(C.get_output_values(outer_composition), [[9.0]])
+            np.testing.assert_allclose(A2.get_output_values(outer_composition), [[3.0]])
+            np.testing.assert_allclose(B2.get_output_values(outer_composition), [[3.0]])
+            np.testing.assert_allclose(inner_composition_1.get_output_values(outer_composition), [[9.0]])
+            np.testing.assert_allclose(inner_composition_2.get_output_values(outer_composition), [[3.0]])
+            np.testing.assert_allclose(mechanism_d.get_output_values(outer_composition), [[36.0]])
+            np.testing.assert_allclose(outer_composition.get_output_values(outer_composition), [[36.0]])
 
     @pytest.mark.nested
     @pytest.mark.composition
@@ -410,7 +410,7 @@ class TestConnectCompositionsViaCIMS:
         # inner composition 2 = 0.25*12.5 = 3.125
         # outer composition = (3.125 + 12.75) * 3.0 = 47.625
 
-        assert np.allclose(output, np.array([47.625]))
+        np.testing.assert_allclose(output, np.array([[47.625]]))
 
     def test_input_specification_multiple_nested_compositions(self):
 
@@ -466,11 +466,11 @@ class TestConnectCompositionsViaCIMS:
                     scheduler=sched)
 
         # level_0 output = 2.0 * (1.0 + 2.0) = 6.0
-        assert np.allclose(level_0.get_output_values(level_2), [6.0])
+        np.testing.assert_allclose(level_0.get_output_values(level_2), [[6.0]])
         # level_1 output = 2.0 * (1.0 + 6.0) = 14.0
-        assert np.allclose(level_1.get_output_values(level_2), [14.0])
+        np.testing.assert_allclose(level_1.get_output_values(level_2), [[14.0]])
         # level_2 output = 2.0 * (1.0 + 2.0 + 14.0) = 34.0
-        assert np.allclose(level_2.get_output_values(level_2), [34.0])
+        np.testing.assert_allclose(level_2.get_output_values(level_2), [[34.0]])
 
     def test_warning_on_custom_cim_ports(self):
 
@@ -513,7 +513,7 @@ class TestConnectCompositionsViaCIMS:
         assert len(comp.input_CIM.user_added_ports['input_ports']) == 0
         assert len(comp.input_CIM.user_added_ports['output_ports']) == 0
 
-    def test_parameter_CIM_port_order(self):
+    def test_parameter_CIM_port_order(self) -> object:
         # Note:  CIM_port order is also tested in TestNodes and test_simplified_necker_cube()
 
         # Inner Composition
@@ -555,8 +555,12 @@ class TestConnectCompositionsViaCIMS:
         self, parameter_CIM_routing_composition
     ):
         ia, ib, cm, icomp, ocomp = parameter_CIM_routing_composition
-        ocomp.add_linear_processing_pathway([cm, icomp])
-
+        warning_msg = f"A MappingProjection has been created from a ControlSignal of 'control_mechanism' " \
+                      f"-- specified in 'pathway' arg for add_linear_procesing_pathway method of 'ocomp' -- " \
+                      f"to another Mechanism in that pathway.  " \
+                      f"If this is not the intended behavior, add 'control_mechanism' separately to 'ocomp'."
+        with pytest.warns(UserWarning, match=warning_msg):
+            ocomp.add_linear_processing_pathway([cm, icomp])
         ocomp._analyze_graph()
         input_nodes = ocomp.get_nodes_by_role(NodeRole.INPUT)
         assert cm in input_nodes
@@ -573,6 +577,8 @@ class TestConnectCompositionsViaCIMS:
         # by the controlled slope of ib (2), resulting in 8
         np.testing.assert_array_almost_equal(ocomp.results, [[[8]], [[8]], [[8]]])
         assert len(ib.mod_afferents) == 1
+        # Verify that MappingProjection from cm to icomp (for which warning was elicited above) is in place
+        assert cm.control_signals[0].efferents[0].receiver.owner == icomp.input_CIM
         assert ib.mod_afferents[0].sender == icomp.parameter_CIM.output_port
         assert icomp.parameter_CIM_ports[ib.parameter_ports['slope']][0].path_afferents[0].sender == cm.output_port
         assert cm in ocomp.graph_processing.dependency_dict[icomp]
@@ -602,6 +608,8 @@ class TestConnectCompositionsViaCIMS:
         assert len(ib.mod_afferents) == 1
         assert ib.mod_afferents[0].sender == icomp.parameter_CIM.output_port
         assert icomp.parameter_CIM_ports[ib.parameter_ports['slope']][0].path_afferents[0].sender == cm.output_port
+        # Verify that only Projections from cm are to parameter_CIM (and not to icomp.input_CIM)
+        assert all([proj.receiver.owner == icomp.parameter_CIM for proj in cm.efferents])
         assert cm not in ocomp.graph_processing.dependency_dict[icomp]
 
     def test_nested_control_projection_count_controller(self):
@@ -662,9 +670,9 @@ class TestInputCIMOutputPortToOriginOneToMany:
 
         comp.run(inputs={A: [[1.23]]})
 
-        assert np.allclose(A.parameters.value.get(comp), [[1.23]])
-        assert np.allclose(B.parameters.value.get(comp), [[1.23]])
-        assert np.allclose(C.parameters.value.get(comp), [[1.23]])
+        np.testing.assert_allclose(A.parameters.value.get(comp), [[1.23]])
+        np.testing.assert_allclose(B.parameters.value.get(comp), [[1.23]])
+        np.testing.assert_allclose(C.parameters.value.get(comp), [[1.23]])
 
     def test_origin_input_source_true_no_input(self):
         A = ProcessingMechanism(name='A')
@@ -679,9 +687,9 @@ class TestInputCIMOutputPortToOriginOneToMany:
 
         comp.run(inputs={A: [[1.23]]})
 
-        assert np.allclose(A.parameters.value.get(comp), [[1.23]])
-        assert np.allclose(B.parameters.value.get(comp), [[1.23]])
-        assert np.allclose(C.parameters.value.get(comp), [[4.56]])
+        np.testing.assert_allclose(A.parameters.value.get(comp), [[1.23]])
+        np.testing.assert_allclose(B.parameters.value.get(comp), [[1.23]])
+        np.testing.assert_allclose(C.parameters.value.get(comp), [[4.56]])
 
     def test_mix_and_match_input_sources(self):
         A = ProcessingMechanism(name='A')
@@ -701,9 +709,9 @@ class TestInputCIMOutputPortToOriginOneToMany:
 
         comp.run(inputs=input_dict)
 
-        assert np.allclose(A.parameters.value.get(comp), [[2.]])
-        assert np.allclose(B.parameters.value.get(comp), [[3.], [1.]])
-        assert np.allclose(C.parameters.value.get(comp), [[1.], [2.], [3.]])
+        np.testing.assert_allclose(A.parameters.value.get(comp), [[2.]])
+        np.testing.assert_allclose(B.parameters.value.get(comp), [[3.], [1.]])
+        np.testing.assert_allclose(C.parameters.value.get(comp), [[1.], [2.], [3.]])
 
     def test_non_origin_partial_input_spec(self):
         A = ProcessingMechanism(name='A',
@@ -716,7 +724,7 @@ class TestInputCIMOutputPortToOriginOneToMany:
         comp.add_linear_processing_pathway([A, B])
 
         comp.run(inputs={A: [[1.23]]})
-        assert np.allclose(B.get_input_values(comp), [[2.46], [1.23]])
+        np.testing.assert_allclose(B.get_input_values(comp), [[2.46], [1.23]])
 
 class TestInputSpec:
 
@@ -746,9 +754,9 @@ class TestInputSpec:
                          B: inputs_to_B},
                  call_after_trial=call_after_trial)
 
-        assert np.allclose(results_A, [[[1.0]], [[1.0]], [[1.0]], [[1.0]]])
-        assert np.allclose(results_B, [[[1.0]], [[2.0]], [[3.0]], [[4.0]]])
-        assert np.allclose(results_C, [[[2.0]], [[3.0]], [[4.0]], [[5.0]]])
+        np.testing.assert_allclose(results_A, [[[1.0]], [[1.0]], [[1.0]], [[1.0]]])
+        np.testing.assert_allclose(results_B, [[[1.0]], [[2.0]], [[3.0]], [[4.0]]])
+        np.testing.assert_allclose(results_C, [[[2.0]], [[3.0]], [[4.0]], [[5.0]]])
 
     def test_valid_only_one_node_provides_input_spec(self):
         A = ProcessingMechanism(name="A",
@@ -775,9 +783,9 @@ class TestInputSpec:
         comp.run(inputs={B: inputs_to_B},
                  call_after_trial=call_after_trial)
 
-        assert np.allclose(results_A, [[[1.5]], [[1.5]], [[1.5]], [[1.5]]])
-        assert np.allclose(results_B, [[[1.0]], [[2.0]], [[3.0]], [[4.0]]])
-        assert np.allclose(results_C, [[[2.5]], [[3.5]], [[4.5]], [[5.5]]])
+        np.testing.assert_allclose(results_A, [[[1.5]], [[1.5]], [[1.5]], [[1.5]]])
+        np.testing.assert_allclose(results_B, [[[1.0]], [[2.0]], [[3.0]], [[4.0]]])
+        np.testing.assert_allclose(results_C, [[[2.5]], [[3.5]], [[4.5]], [[5.5]]])
 
     def test_invalid_mismatched_input_lens(self):
         A = ProcessingMechanism(name="A")
@@ -803,10 +811,10 @@ class TestInputSpec:
         comp.add_node(A)
 
         comp.run(inputs={A: 5.0})
-        assert np.allclose(comp.results, [[5.0]])
+        np.testing.assert_allclose(comp.results, [[[5.0]]])
 
         comp.run(inputs={A: [5.0, 10.0, 15.0]})
-        assert np.allclose(comp.results, [[[5.0]], [[5.0]], [[10.0]], [[15.0]]])
+        np.testing.assert_allclose(comp.results, [[[5.0]], [[5.0]], [[10.0]], [[15.0]]])
 
 
 class TestSimplifedNestedCompositionSyntax:
@@ -841,11 +849,11 @@ class TestSimplifedNestedCompositionSyntax:
         # comp3:  input = 5.0   |  output = 180.0
 
         res = outer.run(inputs={inner1: [[5.]]})
-        assert np.allclose(res, [[[180.0]]])
+        np.testing.assert_allclose(res, [[180.0]])
 
-        assert np.allclose(inner1.output_port.parameters.value.get(outer), [30.0])
-        assert np.allclose(inner2.output_port.parameters.value.get(outer), [180.0])
-        assert np.allclose(outer.output_port.parameters.value.get(outer), [180.0])
+        np.testing.assert_allclose(inner1.output_port.parameters.value.get(outer), [30.0])
+        np.testing.assert_allclose(inner2.output_port.parameters.value.get(outer), [180.0])
+        np.testing.assert_allclose(outer.output_port.parameters.value.get(outer), [180.0])
 
     def test_connect_outer_composition_to_only_input_node_in_inner_comp_option2(self):
         inner1 = Composition(name="inner")
@@ -882,11 +890,11 @@ class TestSimplifedNestedCompositionSyntax:
         # comp3:  input = 5.0   |  output = 180.0
 
         res = outer.run(inputs={inner1: [[5.]]})
-        assert np.allclose(res, [[[180.0]]])
+        np.testing.assert_allclose(res, [[180.0]])
 
-        assert np.allclose(inner1.output_port.parameters.value.get(outer), [30.0])
-        assert np.allclose(inner2.output_port.parameters.value.get(outer), [180.0])
-        assert np.allclose(outer.output_port.parameters.value.get(outer), [180.0])
+        np.testing.assert_allclose(inner1.output_port.parameters.value.get(outer), [30.0])
+        np.testing.assert_allclose(inner2.output_port.parameters.value.get(outer), [180.0])
+        np.testing.assert_allclose(outer.output_port.parameters.value.get(outer), [180.0])
 
     def test_connect_outer_composition_to_only_input_node_in_inner_comp_option3(self):
 
@@ -919,11 +927,11 @@ class TestSimplifedNestedCompositionSyntax:
         # comp3:  input = 5.0   |  output = 180.0
 
         res = outer.run(inputs={inner1: [[5.]]})
-        assert np.allclose(res, [[[180.0]]])
+        np.testing.assert_allclose(res, [[180.0]])
 
-        assert np.allclose(inner1.output_port.parameters.value.get(outer), [30.0])
-        assert np.allclose(inner2.output_port.parameters.value.get(outer), [180.0])
-        assert np.allclose(outer.output_port.parameters.value.get(outer), [180.0])
+        np.testing.assert_allclose(inner1.output_port.parameters.value.get(outer), [30.0])
+        np.testing.assert_allclose(inner2.output_port.parameters.value.get(outer), [180.0])
+        np.testing.assert_allclose(outer.output_port.parameters.value.get(outer), [180.0])
 
     def test_connect_outer_composition_to_all_input_nodes_in_inner_comp(self):
 
@@ -955,11 +963,11 @@ class TestSimplifedNestedCompositionSyntax:
         outer1.run(inputs={inner1: [[1.]]},
                    context=eid)
 
-        assert np.allclose(A1.parameters.value.get(eid), [[2.0]])
-        assert np.allclose(B1.parameters.value.get(eid), [[6.0]])
+        np.testing.assert_allclose(A1.parameters.value.get(eid), [[2.0]])
+        np.testing.assert_allclose(B1.parameters.value.get(eid), [[6.0]])
 
         for node in [A2, B2, C2]:
-            assert np.allclose(node.parameters.value.get(eid), [[6.0]])
+            np.testing.assert_allclose(node.parameters.value.get(eid), [[6.0]])
 
 @pytest.mark.parametrize(
     # expected_input_shape: one input per source input_port

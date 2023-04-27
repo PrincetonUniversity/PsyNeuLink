@@ -26,9 +26,9 @@ class TestKWTAInputs:
             size=3
         )
         np.testing.assert_allclose(K.value, K.defaults.value)
-        assert np.allclose(K.defaults.variable, [[0., 0., 0.]])
+        np.testing.assert_allclose(K.defaults.variable, [[0., 0., 0.]])
         assert K.size == [3]
-        assert np.allclose(K.matrix.base, [[5, 0, 0], [0, 5, 0], [0, 0, 5]])
+        np.testing.assert_allclose(K.matrix.base, [[5, 0, 0], [0, 5, 0], [0, 0, 5]])
         assert K.recurrent_projection.sender is K.output_port
         assert K.recurrent_projection.receiver is K.input_port
 
@@ -38,9 +38,9 @@ class TestKWTAInputs:
             default_variable=[0, 0, 0, 0]
         )
         val = K.execute([10, 12, 0, -1])
-        assert np.allclose(val, [[0.9933071490757153, 0.9990889488055994, 0.0066928509242848554, 0.0024726231566347743]])
+        np.testing.assert_allclose(val, [[0.9933071490757153, 0.9990889488055994, 0.0066928509242848554, 0.0024726231566347743]])
         val = K.execute([1, 2, 3, 0])
-        assert np.allclose(val, [[0.3775406687981454, 0.6224593312018546, 0.8175744761936437, 0.18242552380635635]])
+        np.testing.assert_allclose(val, [[0.3775406687981454, 0.6224593312018546, 0.8175744761936437, 0.18242552380635635]])
 
     def test_kwta_no_inputs(self):
         K = KWTAMechanism(
@@ -48,7 +48,7 @@ class TestKWTAInputs:
         )
         assert K.defaults.variable == [[0]]
         val = K.execute([10])
-        assert np.allclose(val, [[0.5]])
+        np.testing.assert_allclose(val, [[0.5]])
 
     def test_kwta_inputs_list_of_strings(self):
         with pytest.raises(MechanismError) as error_text:
@@ -109,7 +109,7 @@ class TestKWTAFunction:
             k_value=2
         )
         val = K.execute(input = [1, 2, 3])
-        assert np.allclose(val, [[0.2689414213699951, 0.7310585786300049, 0.9525741268224334]])
+        np.testing.assert_allclose(val, [[0.2689414213699951, 0.7310585786300049, 0.9525741268224334]])
 
     def test_kwta_log_offset(self):
         K = KWTAMechanism(
@@ -119,7 +119,7 @@ class TestKWTAFunction:
             k_value=2
         )
         val = K.execute(input=[1, 2, 3])
-        assert np.allclose(val, [[0.425557483188341, 0.6681877721681662, 0.84553473491646523]])
+        np.testing.assert_allclose(val, [[0.425557483188341, 0.6681877721681662, 0.84553473491646523]])
 
     # the inhibition would have to be positive in order to get the desired activity level: thus, inhibition is set to 0
     def test_kwta_log_gain_offset(self):
@@ -130,7 +130,7 @@ class TestKWTAFunction:
             k_value=1
         )
         val = K.execute(input = [.1, -4])
-        assert np.allclose(val, [[0.017636340339722684, 0.039165722796764356]])
+        np.testing.assert_allclose(val, [[0.017636340339722684, 0.039165722796764356]])
 
     def test_kwta_linear(self): # inhibition would be positive: so instead it is set to zero
         K = KWTAMechanism(
@@ -141,7 +141,7 @@ class TestKWTAFunction:
             function=Linear
         )
         val = K.execute(input=[1, 3, 4])
-        assert np.allclose(val, [[1, 3, 4]])
+        np.testing.assert_allclose(val, [[1, 3, 4]])
 
     def test_kwta_linear_slope(self):
         K = KWTAMechanism(
@@ -152,7 +152,7 @@ class TestKWTAFunction:
             function=Linear(slope=2)
         )
         val = K.execute(input=[1, 3, 4, 2, 1])
-        assert np.allclose(val, [[-2, 2, 4, 0, -2]])
+        np.testing.assert_allclose(val, [[-2, 2, 4, 0, -2]])
 
     def test_kwta_linear_system(self):
         K=KWTAMechanism(
@@ -174,7 +174,7 @@ class TestKWTAMatrix:
                     matrix=m
                 )
                 val = K.execute([10, 10, 10, 10])
-                assert np.allclose(val, [[.5, .5, .5, .5]])
+                np.testing.assert_allclose(val, [[.5, .5, .5, .5]])
 
     def test_kwta_matrix_auto_hetero_spec(self):
         K = KWTAMechanism(
@@ -183,7 +183,7 @@ class TestKWTAMatrix:
             auto=3,
             hetero=2
         )
-        assert np.allclose(K.recurrent_projection.matrix.base, [[3, 2, 2, 2], [2, 3, 2, 2], [2, 2, 3, 2], [2, 2, 2, 3]])
+        np.testing.assert_allclose(K.recurrent_projection.matrix.base, [[3, 2, 2, 2], [2, 3, 2, 2], [2, 2, 3, 2], [2, 2, 2, 3]])
 
     def test_kwta_matrix_hetero_spec(self):
         K = KWTAMechanism(
@@ -191,7 +191,7 @@ class TestKWTAMatrix:
             size=3,
             hetero=-.5,
         )
-        assert np.allclose(K.recurrent_projection.matrix.base, [[5, -.5, -.5], [-.5, 5, -.5], [-.5, -.5, 5]])
+        np.testing.assert_allclose(K.recurrent_projection.matrix.base, [[5, -.5, -.5], [-.5, 5, -.5], [-.5, -.5, 5]])
 
     def test_kwta_matrix_auto_spec(self):
         K = KWTAMechanism(
@@ -199,7 +199,7 @@ class TestKWTAMatrix:
             size=3,
             auto=-.5,
         )
-        assert np.allclose(K.recurrent_projection.matrix.base, [[-.5, 0, 0], [0, -.5, 0], [0, 0, -.5]])
+        np.testing.assert_allclose(K.recurrent_projection.matrix.base, [[-.5, 0, 0], [0, -.5, 0], [0, 0, -.5]])
 
 
 class TestKWTARatio:
@@ -214,10 +214,10 @@ class TestKWTARatio:
                         prefs=TestKWTARatio.simple_prefs)
 
         c.run(inputs = {K: [2, 4, 1, 6]})
-        assert np.allclose(K.parameters.value.get(c), [[0.2689414213699951, 0.7310585786300049,
+        np.testing.assert_allclose(K.parameters.value.get(c), [[0.2689414213699951, 0.7310585786300049,
                                                         0.11920292202211755, 0.9525741268224334]])
         c.run(inputs = {K: [1, 2, 3, 4]})
-        assert np.allclose(K.parameters.value.get(c), [[0.09271329298112314, 0.7368459299092773,
+        np.testing.assert_allclose(K.parameters.value.get(c), [[0.09271329298112314, 0.7368459299092773,
                                                         0.2631540700907225, 0.9842837170829899]])
 
 
@@ -231,10 +231,10 @@ class TestKWTARatio:
                         prefs=TestKWTARatio.simple_prefs)
 
         c.run(inputs = {K: [2, 4, 1, 6]})
-        assert np.allclose(K.parameters.value.get(c), [[0.5, 0.8807970779778823,
+        np.testing.assert_allclose(K.parameters.value.get(c), [[0.5, 0.8807970779778823,
                                                         0.2689414213699951, 0.9820137900379085]])
         c.run(inputs = {K: [1, 2, 3, 4]})
-        assert np.allclose(K.parameters.value.get(c), [[0.30054433998850033, 0.8868817857039745,
+        np.testing.assert_allclose(K.parameters.value.get(c), [[0.30054433998850033, 0.8868817857039745,
                                                         0.5, 0.9897010588046231]])
 
 
@@ -248,10 +248,10 @@ class TestKWTARatio:
                         prefs=TestKWTARatio.simple_prefs)
 
         c.run(inputs = {K: [2, 4, 1, 6]})
-        assert np.allclose(K.parameters.value.get(c), [[0.11920292202211755, 0.5,
+        np.testing.assert_allclose(K.parameters.value.get(c), [[0.11920292202211755, 0.5,
                                                         0.04742587317756678, 0.8807970779778823]])
         c.run(inputs = {K: [1, 2, 3, 4]})
-        assert np.allclose(K.parameters.value.get(c), [[0.051956902301427035, 0.5,
+        np.testing.assert_allclose(K.parameters.value.get(c), [[0.051956902301427035, 0.5,
                                                         0.22048012438199008, 0.9802370486903237]])
 
     # answers for this tests should be exactly 70% of the way between the answers for ratio=0 and ratio=1
@@ -266,10 +266,10 @@ class TestKWTARatio:
                         prefs=TestKWTARatio.simple_prefs)
 
         c.run(inputs={K: [2, 4, 1, 6]})
-        assert np.allclose(K.parameters.value.get(c), [[0.19781611144141834, 0.6456563062257956,
+        np.testing.assert_allclose(K.parameters.value.get(c), [[0.19781611144141834, 0.6456563062257956,
                                                         0.08317269649392241, 0.9308615796566533]])
         c.run(inputs={K: [1, 2, 3, 4]})
-        assert np.allclose(K.parameters.value.get(c), [[0.06324086143390241, 0.6326786177649943,
+        np.testing.assert_allclose(K.parameters.value.get(c), [[0.06324086143390241, 0.6326786177649943,
                                                         0.21948113371757957, 0.9814716617176014]])
 
 
@@ -303,7 +303,7 @@ class TestKWTAKValue:
                         prefs=TestKWTARatio.simple_prefs)
 
         c.run(inputs={K: [1, 2, 3, 4]})
-        assert np.allclose(K.parameters.value.get(c), [[0.18242552380635635, 0.3775406687981454,
+        np.testing.assert_allclose(K.parameters.value.get(c), [[0.18242552380635635, 0.3775406687981454,
                                                         0.6224593312018546, 0.8175744761936437]])
 
 
@@ -317,7 +317,7 @@ class TestKWTAKValue:
                         prefs=TestKWTARatio.simple_prefs)
 
         c.run(inputs={K: [1, 2, 2, 3, 3, 4]})
-        assert np.allclose(K.parameters.value.get(c), [[0.18242552380635635, 0.3775406687981454,
+        np.testing.assert_allclose(K.parameters.value.get(c), [[0.18242552380635635, 0.3775406687981454,
                                                         0.3775406687981454, 0.6224593312018546,
                                                         0.6224593312018546, 0.8175744761936437]])
 
@@ -404,7 +404,7 @@ class TestKWTAThreshold:
                         prefs=TestKWTARatio.simple_prefs)
 
         c.run(inputs={K: [1, 2, 3, 4]})
-        assert np.allclose(K.parameters.value.get(c), [[0.07585818002124355, 0.18242552380635635,
+        np.testing.assert_allclose(K.parameters.value.get(c), [[0.07585818002124355, 0.18242552380635635,
                                                         0.3775406687981454, 0.6224593312018546]])
 
     def test_kwta_threshold_float(self):
@@ -417,7 +417,7 @@ class TestKWTAThreshold:
                         prefs=TestKWTARatio.simple_prefs)
 
         c.run(inputs={K: [1, 2, 3, 3]})
-        assert np.allclose(K.parameters.value.get(c), [[0.2689414213699951, 0.5,
+        np.testing.assert_allclose(K.parameters.value.get(c), [[0.2689414213699951, 0.5,
                                                         0.7310585786300049, 0.7310585786300049]])
 
 
@@ -444,7 +444,7 @@ class TestKWTALongTerm:
             c.run(inputs=kwta_input)
             print('\ntrial number', i)
             print('K.parameters.value.get(c): ', K.parameters.value.get(c))
-        assert np.allclose(K.parameters.value.get(c), [[0.012938850123312412, 0.022127587008877226,
+        np.testing.assert_allclose(K.parameters.value.get(c), [[0.012938850123312412, 0.022127587008877226,
                                                         0.039010157367582114, 0.039010157367582114,
                                                         0.039010157367582114, 0.19055156271846602,
                                                         0.19055156271846602, 0.969124504436019,
@@ -456,7 +456,7 @@ class TestKWTALongTerm:
             c.run(inputs=kwta_input2)
             print('\ntrial number', i)
             print('K.parameters.value.get(c): ', K.parameters.value.get(c))
-        assert np.allclose(K.parameters.value.get(c), [[0.13127237999481228, 0.13130057846907178,
+        np.testing.assert_allclose(K.parameters.value.get(c), [[0.13127237999481228, 0.13130057846907178,
                                                         0.1313653354768465, 0.1313653354768465,
                                                         0.1313653354768465, 0.5863768938723602,
                                                         0.5863768938723602, 0.8390251365605804,
@@ -479,7 +479,7 @@ class TestKWTAAverageBased:
                         prefs=TestKWTARatio.simple_prefs)
         kwta_input = {K: [[1, 2, 3, 4]]}
         c.run(inputs=kwta_input)
-        assert np.allclose(K.parameters.value.get(c), [[-1.5, -0.5, 0.5, 1.5]])
+        np.testing.assert_allclose(K.parameters.value.get(c), [[-1.5, -0.5, 0.5, 1.5]])
 
     def test_kwta_average_k_1(self):
         K = KWTAMechanism(
@@ -494,7 +494,7 @@ class TestKWTAAverageBased:
                         prefs=TestKWTARatio.simple_prefs)
         kwta_input = {K: [[1, 2, 3, 4]]}
         c.run(inputs=kwta_input)
-        assert np.allclose(K.parameters.value.get(c), [[-2, -1, 0, 1]])
+        np.testing.assert_allclose(K.parameters.value.get(c), [[-2, -1, 0, 1]])
 
     def test_kwta_average_k_1_ratio_0_2(self):
         K = KWTAMechanism(
@@ -510,7 +510,7 @@ class TestKWTAAverageBased:
                         prefs=TestKWTARatio.simple_prefs)
         kwta_input = {K: [[1, 2, 3, 4]]}
         c.run(inputs=kwta_input)
-        assert np.allclose(K.parameters.value.get(c), [[-2.6, -1.6, -0.6000000000000001, 0.3999999999999999]])
+        np.testing.assert_allclose(K.parameters.value.get(c), [[-2.6, -1.6, -0.6000000000000001, 0.3999999999999999]])
 
     def test_kwta_average_k_1_ratio_0_8(self):
         K = KWTAMechanism(
@@ -526,24 +526,24 @@ class TestKWTAAverageBased:
                         prefs=TestKWTARatio.simple_prefs)
         kwta_input = {K: [[1, 2, 3, 4]]}
         c.run(inputs=kwta_input)
-        assert np.allclose(K.parameters.value.get(c), [[-1.4, -0.3999999999999999, 0.6000000000000001, 1.6]])
+        np.testing.assert_allclose(K.parameters.value.get(c), [[-1.4, -0.3999999999999999, 0.6000000000000001, 1.6]])
 
 # class TestClip:
 #     def test_clip_float(self):
 #         K = KWTA(clip=[-2.0, 2.0],
 #                  integrator_mode=False)
-#         assert np.allclose(K.execute(3.0), 2.0)
-#         assert np.allclose(K.execute(-3.0), -2.0)
+#         np.testing.assert_allclose(K.execute(3.0), 2.0)
+#         np.testing.assert_allclose(K.execute(-3.0), -2.0)
 #
 #     def test_clip_array(self):
 #         K = KWTA(default_variable=[[0.0, 0.0, 0.0]],
 #                  clip=[-2.0, 2.0],
 #                  integrator_mode=False)
-#         assert np.allclose(K.execute([3.0, 0.0, -3.0]), [2.0, 0.0, -2.0])
+#         np.testing.assert_allclose(K.execute([3.0, 0.0, -3.0]), [2.0, 0.0, -2.0])
 #
 #     def test_clip_2d_array(self):
 #         K = KWTA(default_variable=[[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
 #                  clip=[-2.0, 2.0],
 #                  integrator_mode=False)
-#         assert np.allclose(K.execute([[-5.0, -1.0, 5.0], [5.0, -5.0, 1.0], [1.0, 5.0, 5.0]]),
+#         np.testing.assert_allclose(K.execute([[-5.0, -1.0, 5.0], [5.0, -5.0, 1.0], [1.0, 5.0, 5.0]]),
 #                            [[-2.0, -1.0, 2.0], [2.0, -2.0, 1.0], [1.0, 2.0, 2.0]])

@@ -167,17 +167,22 @@ with the one exception of `prefs <Component_Prefs>`.
 
 .. _Component_Value:
 
-* **value** - the `value <Component.value>` attribute contains the result (return value) of the Component's
-  `function <Component.function>` after the function is called.
+* **value** - the `value <Component.value>` attribute generally contains the result (return value) of the Component's
+  `function <Component.function>` after the function is called, though some Components may override this to return
+  other values.
+
+      .. technical_note::
+         In general, Components that have an execute() method may use this to assign the `value` of the Component
+         (e.g., `Mechanism_Base`; see `OptimizationControlMechanism` and `LCControlMechanism` for examples).
 ..
 
 .. _Component_Log:
 
-* **log** - the `log <Component.log>` attribute contains the Component's `Log`, that can be used to record its
-  `value <Component.value>`, as well as that of Components that belong to it, during initialization, validation,
-  execution and learning.  It also has four convenience methods -- `loggable_items <Log.loggable_items>`, `set_log_conditions
-  <Log.set_log_conditions>`, `log_values <Log.log_values>` and `logged_items <Log.logged_items>` -- that provide access to the
-  corresponding methods of its Log, used to identify, configure and track items for logging.
+* **log** - the `log <Component.log>` attribute contains the Component's `Log`, that can be used to record its `value
+  <Component.value>`, as well as that of Components that belong to it, during initialization, validation, execution
+  and learning.  It also has four convenience methods -- `loggable_items <Log.loggable_items>`, `set_log_conditions
+  <Log.set_log_conditions>`, `log_values <Log.log_values>` and `logged_items <Log.logged_items>` -- that provide
+  access to the corresponding methods of its Log, used to identify, configure and track items for logging.
 ..
 
 .. _Component_Name:
@@ -1417,6 +1422,10 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "default_allocation", "same_seed_for_all_allocations",
                      "search_statefulness", "initial_seed", "combine",
                      "random_variables", "smoothing_factor"
+                     # not used in compiled learning
+                     "learning_results", "learning_signal", "learning_signals",
+                     "error_matrix", "error_signal", "activation_input",
+                     "activation_output"
                      }
         # Mechanism's need few extra entires:
         # * matrix -- is never used directly, and is flatened below
