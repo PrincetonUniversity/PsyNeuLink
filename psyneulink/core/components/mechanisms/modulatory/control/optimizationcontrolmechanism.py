@@ -1585,11 +1585,6 @@ class OptimizationControlMechanism(ControlMechanism):
         `control_allocation <ControlMechanism.control_allocation>` will not be executed as independent simulations;
         rather, all will be run in the same (original) execution context.
 
-    return_results: bool : False
-        if True, the complete simulation results are returned when invoking
-        `evaluate_agent_rep <OptimizationControlMechanism.evaluate_agent_rep>` calls. This is nescessary when using a
-        ParameterEstimationCompostion for parameter estimation via data fitting.
-
     value : 2d np.array
         the `optimal_control_allocation <OptimizationControlMechanism.optimal_control_allocation>` returned by the
         `OptimizationFunction <OptimizationControlMechanism.function>` assigned as the OptimizationControlMechanism's
@@ -1604,6 +1599,12 @@ class OptimizationControlMechanism(ControlMechanism):
            arguments of the OptimizationControlMechanism's constructor are `True`);  these are stored in the
            OptimizationControlMechanism's `saved_samples <OptimizationControlMechanism.saved_samples>` and
            `saved_values <OptimizationControlMechanism.saved_values>` attributes, respectively.
+
+    return_results: bool : False
+        if True, the complete simulation results are returned when invoking
+        `evaluate_agent_rep <OptimizationControlMechanism.evaluate_agent_rep>` calls. This is nescessary when using a
+        ParameterEstimationCompostion for parameter estimation via data fitting.
+
     """
 
     componentType = OPTIMIZATION_CONTROL_MECHANISM

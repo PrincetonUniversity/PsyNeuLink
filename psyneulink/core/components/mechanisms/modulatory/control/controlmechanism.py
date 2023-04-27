@@ -1989,15 +1989,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
             if node in composition._get_all_nodes():
                 proj._activate_for_compositions(composition)
 
-    def _apply_control_allocation(self, control_allocation, runtime_params, context):
-        """Update values to `control_signals <ControlMechanism.control_signals>`
-        based on specified `control_allocation <ControlMechanism.control_allocation>`
-        (used by controller of a Composition in simulations)
-        """
-        value = [a for a in control_allocation]
-        self.parameters.value._set(value, context)
-        self._update_output_ports(runtime_params, context)
-
     @property
     def monitored_output_ports(self):
         try:
