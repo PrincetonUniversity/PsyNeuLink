@@ -3003,9 +3003,8 @@ class OptimizationControlMechanism(ControlMechanism):
                 # search_space must be a SampleIterator
                 function_search_space.append(SampleIterator(randomization_seed_mod_values))
 
-            self.defaults.value = np.tile(self.defaults.value, (len(self.output_ports), 1))
+            self.defaults.value = np.insert(self.defaults.value, len(self.defaults.value), self.defaults.value[0], 0)
             self.parameters.value._set(copy.deepcopy(self.defaults.value), context)
-
 
     def _instantiate_function(self, function, function_params=None, context=None):
         # this indicates a significant peculiarity of OCM, in that its function
