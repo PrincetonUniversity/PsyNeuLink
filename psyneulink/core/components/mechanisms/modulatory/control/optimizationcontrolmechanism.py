@@ -2950,6 +2950,7 @@ class OptimizationControlMechanism(ControlMechanism):
         self.parameters.value._set(copy.deepcopy(self.defaults.value), context)
         return control_allocation
 
+
     def _create_randomization_control_signal(self, context):
         if self.num_estimates:
             # must be SampleSpec in allocation_samples arg
@@ -3001,6 +3002,10 @@ class OptimizationControlMechanism(ControlMechanism):
 
                 # search_space must be a SampleIterator
                 function_search_space.append(SampleIterator(randomization_seed_mod_values))
+
+            self.defaults.value = np.tile(self.defaults.value, (len(self.output_ports), 1))
+            self.parameters.value._set(copy.deepcopy(self.defaults.value), context)
+
 
     def _instantiate_function(self, function, function_params=None, context=None):
         # this indicates a significant peculiarity of OCM, in that its function
