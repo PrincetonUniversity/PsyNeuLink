@@ -3022,7 +3022,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             value = self.execute(variable=default_variable, context=context)
         except TypeError as e:
             # don't hide other TypeErrors
-            if "execute() got an unexpected keyword argument 'variable'" != str(e):
+            if "execute() got an unexpected keyword argument 'variable'" not in str(e):
                 raise
 
             try:
