@@ -3601,11 +3601,8 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                             [[0.0475], [0.35801411], [0.99999998], [1.77215519e-08]],
                             [[0.0475], [0.89706881], [0.97981972], [0.02018028]]])
 
-    # @pytest.mark.parametrize('num_estimates',[None, 1, 2] )
-    # @pytest.mark.parametrize('rand_var',[False, True] )
-    # FIX: JDC RESTORE THE PARAMETERS ABOVE ONCE RANDOM_CONTROL_SIGNAL BUG IS FIXED
-    @pytest.mark.parametrize('num_estimates',[1] )
-    @pytest.mark.parametrize('rand_var',[True] )
+    @pytest.mark.parametrize('num_estimates',[None, 1, 2] )
+    @pytest.mark.parametrize('rand_var',[False, True] )
     def test_model_based_num_estimates(self, num_estimates, rand_var):
 
         A = pnl.ProcessingMechanism(name='A')
