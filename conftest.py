@@ -5,6 +5,7 @@ import numpy as np
 import psyneulink
 import pytest
 import re
+import sys
 
 from psyneulink import clear_registry, primary_registries
 from psyneulink.core import llvm as pnlvm
@@ -13,7 +14,14 @@ from psyneulink.core.globals.utilities import set_global_seed
 
 try:
     import torch
-    pytorch_available = True
+
+    # If we are on windows and using Python 3.10, despite it importing correctly, PyTorch is currently broken,
+    # see https://pytorch.org/get-started/locally/ showing lack of support.
+    if sys.platform.startswith("win32") and sys.version_info >= (3, 10):
+        pytorch_available = False
+    else:
+        pytorch_available = True
+
 except ImportError:
     pytorch_available = False
 
