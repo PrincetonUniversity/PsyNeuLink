@@ -11,9 +11,9 @@ sys.path.append(".")
 from stability_flexibility_nn import make_stab_flex, generate_trial_sequence
 
 # Let's make things reproducible
-#pnl_seed = None
+pnl_seed = None
 trial_seq_seed = None
-#set_global_seed(pnl_seed)
+set_global_seed(pnl_seed)
 
 # High-level parameters that impact duration of parameter estimation
 num_trials = 512

@@ -5,7 +5,7 @@ import psyneulink as pnl
 import pandas as pd
 
 from psyneulink.core.globals.utilities import set_global_seed
-from psyneulink.core.components.functions.nonstateful.optimizationfunctions import GridSearch
+
 
 sys.path.append(".")
 
