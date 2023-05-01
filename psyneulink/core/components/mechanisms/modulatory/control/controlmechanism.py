@@ -1900,12 +1900,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         print("\n---------------------------------------------------------")
 
-    def _add_process(self, process, role:str):
-        assert False
-        super()._add_process(process, role)
-        if self.objective_mechanism:
-            self.objective_mechanism._add_process(process, role)
-
     def add_to_monitor(self, monitor_specs, context=None):
         """Instantiate OutputPorts to be monitored by ControlMechanism's `objective_mechanism
         <ControlMechanism.objective_mechanism>`.
