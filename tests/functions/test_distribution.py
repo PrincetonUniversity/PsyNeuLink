@@ -34,8 +34,9 @@ dda_expected_small = (0.5828813465336954, 0.04801236718458773,
 # Numpy 1.22+ uses new/optimized implementation of FP routines
 # on processors that support AVX512 since 1.22 [0]
 # [0] https://github.com/numpy/numpy/commit/1eff1c543a8f1e9d7ea29182b8c76db5a2efc3c2
-if sys.platform.startswith("win") or sys.platform.startswith("darwin") or \
-    ( pversion.parse(np.version.version) >= pversion.parse('1.22') and pytest.helpers.numpy_uses_avx512()):
+if sys.platform.startswith("win") or \
+   sys.platform.startswith("darwin") or \
+   (pversion.parse(np.version.version) >= pversion.parse('1.22') and pytest.helpers.numpy_uses_avx512()):
     dda_expected_small = (0.5828813465336954, 0.04801236718458773,
                           0.5324710838150166, 0.09633802135385469, 6.117763080882898,
                           1.58212076767016, 0.5392724012504414, 1.8064031532265)
@@ -46,11 +47,16 @@ normal_expected_philox = (0.5910357654927911)
 uniform_expected_philox = (0.6043448764869507)
 
 llvm_expected = {'fp64': {}, 'fp32': {}}
+
+# LLVM computes slightly different results from Python/numpy even for fp64
 llvm_expected['fp64'][dda_expected_small] = (0.5828813465336954, 0.04801236718458773,
                                              0.5324710838085324, 0.09633788030213193, 6.0183026674990625,
                                              1.5821207675877176, 0.5392731084412705, 1.843608020219776)
 
-# add fp32 results
+# DDA fp32 results are noticeably different due to lower precision.
+llvm_expected['fp32'][dda_expected_default] = (1.9774975776672363, 0.012242687866091728,
+                                               1.9774975776672363, 1.3147677183151245, 1.792930245399475,
+                                               1.9774975776672363, 1.3147677183151245, 1.792930245399475)
 llvm_expected['fp32'][dda_expected_random] = (0.42365485429763794, 0.0,
                                               0.5173675417900085, 0.069428451359272, 6.302595138549805,
                                               1.4934077262878418, 0.42889538407325745, 1.7739042043685913)
@@ -58,6 +64,8 @@ llvm_expected['fp32'][dda_expected_negative] = (0.4236549735069275, 5.9604644775
                                                 0.5173678398132324, 0.06942932307720184, 6.302994251251221,
                                                 1.4934080839157104, 0.4288962781429291, 1.7739406824111938)
 llvm_expected['fp32'][dda_expected_small] = None
+
+# Philox uses different algorithm for fp32 (consumes fewer bits of entropy)
 llvm_expected['fp32'][normal_expected_philox] = (0.5655658841133118)
 llvm_expected['fp32'][uniform_expected_philox] = (0.6180108785629272)
 
@@ -110,14 +118,15 @@ test_data = [
 @pytest.mark.parametrize("func, variable, params, prng, llvm_skip, expected", test_data)
 def test_execute(func, variable, params, prng, llvm_skip, expected, benchmark, func_mode):
     benchmark.group = "TransferFunction " + func.componentName
+
     if func_mode != 'Python':
         precision = pytest.helpers.llvm_current_fp_precision()
-        # PTX needs only one special case, this is not worth adding
-        # it to the mechanism above
+        # PTX needs only one special case, this is not worth adding it to the mechanism above
         if func_mode == "PTX" and precision == 'fp32' and expected is dda_expected_negative:
             expected = (0.4236549735069275, 5.960464477539063e-08,
                         0.5173678398132324, 0.06942932307720184, 6.302994728088379,
                         1.4934064149856567, 0.4288918972015381, 1.7737658023834229)
+
         expected = llvm_expected.get(precision, {}).get(expected, expected)
 
     if expected is None:
@@ -130,7 +139,4 @@ def test_execute(func, variable, params, prng, llvm_skip, expected, benchmark, f
     ex = pytest.helpers.get_func_execution(f, func_mode)
     res = benchmark(ex, variable)
 
-    if pytest.helpers.llvm_current_fp_precision() == 'fp32':
-        np.testing.assert_allclose(res, expected, rtol=1e-5, atol=1e-8)
-    else:
-        np.testing.assert_allclose(res, expected)
+    np.testing.assert_allclose(res, expected)
