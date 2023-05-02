@@ -1421,7 +1421,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "enabled_cost_functions", "control_signal_costs",
                      "default_allocation", "same_seed_for_all_allocations",
                      "search_statefulness", "initial_seed", "combine",
-                     "smoothing_factor",
+                     "random_variables", "smoothing_factor",
                      # not used in compiled learning
                      "learning_results", "learning_signal", "learning_signals",
                      "error_matrix", "error_signal", "activation_input",

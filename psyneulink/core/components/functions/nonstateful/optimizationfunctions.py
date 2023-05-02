@@ -16,10 +16,6 @@ Contents
 * `GradientOptimization`
 * `GridSearch`
 * `GaussianProcess`
-COMMENT:
-uncomment this when ParamEstimationFunction is ready for users
-* `ParamEstimationFunction`
-COMMENT
 
 Overview
 --------
@@ -31,7 +27,6 @@ Functions that return the sample of a variable yielding the optimized value of a
 import contextlib
 # from fractions import Fraction
 import itertools
-import sys
 import warnings
 from numbers import Number
 
@@ -96,12 +91,16 @@ class OptimizationFunction(Function_Base):
     prefs=None)
 
     Provides an interface to subclasses and external optimization functions. The default `function
-    <OptimizationFunction.function>` executes iteratively, generating samples from `search_space
-    <OptimizationFunction.search_space>` using `search_function <OptimizationFunction.search_function>`,
-    evaluating them using `objective_function <OptimizationFunction.objective_function>`, and reporting the
-    value of each using `report_value <OptimizationFunction.report_value>` until terminated by
-    `search_termination_function <OptimizationFunction.search_termination_function>`. Subclasses can override
+    <OptimizationFunction.function>` raises a not implemented exception. Subclasses must implement
+    the default function. The `_evaluate <OptimizationFunction._evaluate>` method implements the default procedure
+    of generating samples from `search_space <OptimizationFunction.search_space>` using
+    `search_function <OptimizationFunction.search_function>`, evaluating them using
+    `objective_function <OptimizationFunction.objective_function>`, and reporting the value of each using
+    `report_value <OptimizationFunction.report_value>` until terminated by
+    `search_termination_function <OptimizationFunction.search_termination_function>`. Subclasses must override
     `function <OptimizationFunction.function>` to implement their own optimization function or call an external one.
+    The base class method `_evaluate <OptimizationFunction._evaluate>` maybe be used to implement the optimization
+    procedure.
 
     Samples in `search_space <OptimizationFunction.search_space>` are assumed to be a list of one or more
     `SampleIterator` objects.
@@ -110,7 +109,7 @@ class OptimizationFunction(Function_Base):
 
     **Default Optimization Procedure**
 
-    When `function <OptimizationFunction.function>` is executed, it iterates over the following steps:
+    When `_evaluate <OptimizationFunction._evaluate>` is executed, it iterates over the following steps:
 
         - get sample from `search_space <OptimizationFunction.search_space>` by calling `search_function
           <OptimizationFunction.search_function>`;
@@ -146,7 +145,7 @@ class OptimizationFunction(Function_Base):
     .. note::
 
         An OptimizationFunction or any of its subclasses can be created by calling its constructor.  This provides
-        runnable defaults for all of its arguments (see below). However these do not yield useful results, and are
+        runnable defaults for all of its arguments (see below). However, these do not yield useful results, and are
         meant simply to allow the  constructor of the OptimziationFunction to be used to specify some but not all of
         its parameters when specifying the OptimizationFunction in the constructor for another Component. For
         example, an OptimizationFunction may use for its `objective_function <OptimizationFunction.objective_function>`
@@ -159,10 +158,10 @@ class OptimizationFunction(Function_Base):
         their `function <Mechanism_Base.function>` (such as the `OptimizationControlMechanism`), but will require it be
         done explicitly for Components for which that is not the case. A warning is issued if defaults are used for
         the arguments of an OptimizationFunction or its subclasses;  this can be suppressed by specifying the
-        relevant argument(s) as `NotImplemnted`.
+        relevant argument(s) as `NotImplemented`.
 
     .. technical_note::
-       - Constructors of subclasses should include **kwargs in their constructor method, to accomodate arguments
+       - Constructors of subclasses should include **kwargs in their constructor method, to accommodate arguments
          required by some subclasses but not others (e.g., search_space needed by `GridSearch` but not
          `GradientOptimization`) so that subclasses can be used interchangeably by OptimizationControlMechanism.
 
@@ -598,7 +597,7 @@ class OptimizationFunction(Function_Base):
         raise NotImplementedError("OptimizationFunction._function is not implemented and "
                                   "should be overridden by subclasses.")
 
-    def _evaluate(self, variable=None, context=None, params=None):
+    def _evaluate(self, variable=None, context=None, params=None, fit_evaluate=False):
         """
         Evaluate all the sample in a `search_space <OptimizationFunction.search_space>` with the agent_rep. The
         evaluation is done either serially (_sequential_evaluate) or in parallel (_grid_evaluate). This method should
@@ -632,9 +631,37 @@ class OptimizationFunction(Function_Base):
         if self.owner and self.owner.parameters.comp_execution_mode._get(context) != 'Python' and \
           ContextFlags.PROCESSING in context.flags:
             all_samples = [s for s in itertools.product(*self.search_space)]
-            all_values, num_evals = self._grid_evaluate(self.owner, context)
+            all_values, num_evals = self._grid_evaluate(self.owner, context, fit_evaluate)
             assert len(all_values) == num_evals
             assert len(all_samples) == num_evals
+
+            if fit_evaluate:
+                all_values = np.ctypeslib.as_array(all_values)
+                # print("OLD DTYPE:", all_values.dtype)
+                # print("OLD SHAPE:", all_values.shape)
+
+                def _get_builtin_dtype(dtype):
+    #                print("CHECKING:", dtype, "FIELDS:", dtype.names, "SUBDTYPE:", dtype.subdtype, "BASE:", dtype.base)
+                    if dtype.isbuiltin:
+                        return dtype
+
+                    if dtype.subdtype is not None:
+                        return dtype.base
+
+                    subdtypes = (v[0] for v in dtype.fields.values())
+                    first_builtin = _get_builtin_dtype(next(subdtypes))
+                    assert all(_get_builtin_dtype(sdt) is first_builtin for sdt in subdtypes)
+                    return first_builtin
+
+                dtype = _get_builtin_dtype(all_values.dtype)
+                # Ignore the shape of the output structure
+                all_values = all_values.view(dtype=dtype).reshape((*all_values.shape[0:2], -1))
+                # print("NEW DTYPE:", all_values.dtype)
+                # print("NEW SHAPE:", all_values.shape)
+
+                # Re-arrange dimensions to match Python
+                all_values = np.transpose(all_values, (1, 2, 0))
+
             last_sample = last_value = None
         # Otherwise, default sequential sampling
         else:
@@ -650,30 +677,38 @@ class OptimizationFunction(Function_Base):
                                                                                          context)
 
         # If  aggregation_function is specified and there is a randomization dimension specified
-        # in the control signals; use the aggregation function aggregate over the samples generated
+        # in the control signals; use the aggregation function to aggregate over the samples generated
         # for different randomized values of the control signal
         if self.aggregation_function and \
                 self.parameters.randomization_dimension._get(context) and \
                 self.parameters.num_estimates._get(context) is not None:
 
-            # FIXME: This is easy to support in hybrid mode. We just need to convert ctype results
-            #        returned from _grid_evaluate to numpy
-            assert not self.owner or self.owner.parameters.comp_execution_mode._get(context) == 'Python', \
-                   "Aggregation function not supported in compiled mode!"
+            # Reshape all_values so that aggregation can be performed over randomization dimension
+            num_estimates = int(self.parameters.num_estimates._get(context))
+            num_evals = np.prod([d.num for d in self.search_space])
+            num_param_combs = num_evals // num_estimates
 
-            # Reshape all the values we encountered to group those that correspond to the same parameter values
-            # can be aggregated.
-            all_values = np.reshape(all_values, (-1, self.parameters.num_estimates._get(context)))
+            # if in compiled model, all_values comes from _grid_evaluate, so convert ctype double array to numpy
+            if self.owner and self.owner.parameters.comp_execution_mode._get(context) != 'Python':
+                num_outcomes = len(all_values) // num_evals
+                all_values = np.ctypeslib.as_array(all_values).reshape((num_outcomes, num_evals))
+                all_samples = np.array(all_samples).transpose()
+            else:
+                num_outcomes = all_values.shape[0]
+
+            all_values = np.reshape(all_values.transpose(), (num_param_combs, num_estimates, num_outcomes))
 
             # Since we are aggregating over the randomized value of the control allocation, we also need to drop the
             # randomized dimension from the samples. That is, we don't want to return num_estimates samples for each
             # control allocation. This line below just grabs the first one (seed == 1) for each control allocation.
-            all_samples = all_samples[:, all_samples[1, :] == all_samples[1, 0]]
+            all_samples = all_samples[:, all_samples[self.randomization_dimension, :] == all_samples[self.randomization_dimension, 0]]
 
             # If num_estimates is not None, then one of the control signals is modulating the random seed. We will
-            # groupby this signal and average the values to compute the estimated value.
+            # aggregate over this dimension.
             aggregated_values = np.atleast_2d(self.aggregation_function(all_values))
-            returned_values = aggregated_values
+
+            # Transpose the aggregated values matrix so it is (num_outputs, num_param_combs), this matches all_samples then
+            returned_values = np.transpose(aggregated_values)
 
         else:
             returned_values = all_values
@@ -725,6 +760,12 @@ class OptimizationFunction(Function_Base):
             # Get value of sample
             current_value = call_with_pruned_args(self.objective_function, current_sample, context=context)
 
+            # If the value returned by the objective function is a tuple, then we are using PEC and the
+            # evaluate_agent_rep function is returning the net_outcome, results tuple. We want the results
+            # in this case.
+            if type(current_value) is tuple:
+                current_value = np.squeeze(np.array(current_value[1]))
+
             # Convert the sample and values to numpy arrays even if they are scalars
             current_sample = np.atleast_1d(current_sample)
             current_value = np.atleast_1d(current_value)
@@ -732,7 +773,7 @@ class OptimizationFunction(Function_Base):
             evaluated_samples.append(current_sample)
             estimated_values.append(current_value)
 
-            self._report_value(current_value)
+            # self._report_value(current_value)
             iteration += 1
             max_iterations = self.parameters.max_iterations._get(context)
             if max_iterations and iteration > max_iterations:
@@ -754,10 +795,9 @@ class OptimizationFunction(Function_Base):
         evaluated_samples = np.stack(evaluated_samples, axis=-1)
 
         # FIX: 11/3/21: ??MODIFY TO RETURN SAME AS _grid_evaluate
-        # return current_sample, current_value, evaluated_samples, estimated_values
         return current_sample, current_value, evaluated_samples, estimated_values
 
-    def _grid_evaluate(self, ocm, context):
+    def _grid_evaluate(self, ocm, context, get_results:bool):
         """Helper method for evaluation of a grid of samples from search space via LLVM backends."""
         # If execution mode is not Python, the search space has to be static
         def _is_static(it:SampleIterator):
@@ -783,13 +823,44 @@ class OptimizationFunction(Function_Base):
         comp_exec = pnlvm.execution.CompExecution(ocm.agent_rep, [context.execution_id])
         execution_mode = ocm.parameters.comp_execution_mode._get(context)
         if execution_mode == "PTX":
-            outcomes = comp_exec.cuda_evaluate(inputs, num_inputs_sets, num_evals)
+            outcomes = comp_exec.cuda_evaluate(inputs, num_inputs_sets, num_evals, get_results)
         elif execution_mode == "LLVM":
-            outcomes = comp_exec.thread_evaluate(inputs, num_inputs_sets, num_evals)
+            outcomes = comp_exec.thread_evaluate(inputs, num_inputs_sets, num_evals, get_results)
         else:
             assert False, f"Unknown execution mode for {ocm.name}: {execution_mode}."
 
         return outcomes, num_evals
+
+    def reset_grid(self):
+        """Reset iterators in `search_space <GridSearch.search_space>"""
+        for s in self.search_space:
+            s.reset()
+        self.grid = itertools.product(*[s for s in self.search_space])
+
+    def _traverse_grid(self, variable, sample_num, context=None):
+        """Get next sample from grid.
+        This is assigned as the `search_function <OptimizationFunction.search_function>` of the `OptimizationFunction`.
+        """
+        if self.is_initializing:
+            return [signal.start for signal in self.search_space]
+        try:
+            sample = next(self.grid)
+        except StopIteration:
+            raise OptimizationFunctionError("Expired grid in {} run from {} "
+                                            "(execution_count: {}; num_iterations: {})".
+                format(self.__class__.__name__, self.owner.name,
+                       self.owner.parameters.execution_count.get(), self.num_iterations))
+        return sample
+
+    def _grid_complete(self, variable, value, iteration, context=None):
+        """Return False when search of grid is complete
+        This is assigned as the `search_termination_function <OptimizationFunction.search_termination_function>`
+        of the `OptimizationFunction`.
+        """
+        try:
+            return iteration == self.num_iterations
+        except AttributeError:
+            return True
 
     def _report_value(self, new_value):
         """Report value returned by `objective_function <OptimizationFunction.objective_function>` for sample."""
@@ -1370,7 +1441,7 @@ class GridSearch(OptimizationFunction):
 
     **Grid Search Procedure**
 
-    When `function <GridSearch.function>` is executed, it iterates over the folowing steps:
+    When `function <GridSearch.function>` is executed, it iterates over the following steps:
 
         - get next sample from `search_space <GridSearch.search_space>`;
         ..
@@ -1595,12 +1666,6 @@ class GridSearch(OptimizationFunction):
 
         self.num_iterations = np.product([i.num for i in sample_iterators])
 
-    def reset_grid(self):
-        """Reset iterators in `search_space <GridSearch.search_space>"""
-        for s in self.search_space:
-            s.reset()
-        self.grid = itertools.product(*[s for s in self.search_space])
-
     def _get_optimized_controller(self):
         # self.objective_function may be a bound method of
         # OptimizationControlMechanism
@@ -1791,8 +1856,11 @@ class GridSearch(OptimizationFunction):
             assert all(input_initialized), \
               "Not all inputs to the simulated composition are initialized: {}".format(input_initialized)
 
-            # Extra args: input and data
-            extra_args = [comp_input, comp_args[2]]
+            num_inputs = builder.alloca(obj_func.args[6].type.pointee, name="num_sim_inputs")
+            builder.store(num_inputs.type.pointee(1), num_inputs)
+
+            # Extra args: input, data, number of inputs
+            extra_args = [comp_input, comp_args[2], num_inputs]
         else:
             obj_func = ctx.import_llvm_function(self.objective_function)
             obj_state_ptr = pnlvm.helpers.get_state_ptr(builder, self, state,
@@ -1914,10 +1982,10 @@ class GridSearch(OptimizationFunction):
 
             # FIX:  INITIALIZE TO FULL LENGTH AND ASSIGN DEFAULT VALUES (MORE EFFICIENT):
             samples = np.array([[]])
-            sample_optimal = np.empty_like(self.search_space[0])
+            optimal_sample = np.empty_like(self.search_space[0])
             values = np.array([])
-            value_optimal = float('-Infinity')
-            sample_value_max_tuple = (sample_optimal, value_optimal)
+            optimal_value = float('-Infinity')
+            sample_value_max_tuple = (optimal_sample, optimal_value)
 
             # Set up progress bar
             _show_progress = False
@@ -1946,19 +2014,19 @@ class GridSearch(OptimizationFunction):
 
                 # Evaluate for optimal value
                 if direction == MAXIMIZE:
-                    value_optimal = max(value, value_optimal)
+                    optimal_value = max(value, optimal_value)
                 elif direction == MINIMIZE:
-                    value_optimal = min(value, value_optimal)
+                    optimal_value = min(value, optimal_value)
                 else:
                     assert False, "PROGRAM ERROR: bad value for {} arg of {}: {}".\
                         format(repr(DIRECTION),self.name,direction)
 
                 # FIX: PUT ERROR HERE IF value AND/OR value_max ARE EMPTY (E.G., WHEN EXECUTION_ID IS WRONG)
                 # If value is optimal, store corresponing sample
-                if value == value_optimal:
+                if value == optimal_value:
                     # Keep track of port values and allocation policy associated with EVC max
-                    sample_optimal = sample
-                    sample_value_max_tuple = (sample_optimal, value_optimal)
+                    optimal_sample = sample
+                    sample_value_max_tuple = (optimal_sample, optimal_value)
 
                 # Save samples and/or values if specified
                 if self.save_values:
@@ -1975,7 +2043,7 @@ class GridSearch(OptimizationFunction):
             max_tuples = Comm.allgather(sample_value_max_tuple)
             # get tuple with "value_max of maxes"
             max_value_of_max_tuples = max(max_tuples, key=lambda max_tuple: max_tuple[1])
-            # get value_optimal, port values and allocation policy associated with "max of maxes"
+            # get optimal_value, port values and allocation policy associated with "max of maxes"
             return_optimal_sample = max_value_of_max_tuples[0]
             return_optimal_value = max_value_of_max_tuples[1]
 
@@ -1998,7 +2066,16 @@ class GridSearch(OptimizationFunction):
 
             # Compiled version
             ocm = self._get_optimized_controller()
+            # if ocm is not None and ocm.parameters.comp_execution_mode._get(context) in {"PTX", "LLVM"}:
             if ocm is not None and ocm.parameters.comp_execution_mode._get(context) in {"PTX", "LLVM"}:
+
+                # If we have a numpy array, convert back to ctypes
+                if isinstance(all_values, np.ndarray):
+                    ct_values = all_values.flatten().ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+                    num_values = len(all_values.flatten())
+                else:
+                    ct_values = all_values
+                    num_values = len(ct_values)
 
                 # Reduce array of values to min/max
                 # select_min params are:
@@ -2009,18 +2086,19 @@ class GridSearch(OptimizationFunction):
                 ct_state = bin_func.byref_arg_types[1](*self._get_state_initializer(context))
                 ct_opt_sample = bin_func.byref_arg_types[2](float("NaN"))
                 ct_alloc = None # NULL for samples
-                ct_values = all_values
                 ct_opt_value = bin_func.byref_arg_types[4]()
                 ct_opt_count = bin_func.byref_arg_types[6](0)
                 ct_start = bin_func.c_func.argtypes[7](0)
-                ct_stop = bin_func.c_func.argtypes[8](len(ct_values))
+                ct_stop = bin_func.c_func.argtypes[8](num_values)
 
                 bin_func(ct_param, ct_state, ct_opt_sample, ct_alloc, ct_opt_value,
                          ct_values, ct_opt_count, ct_start, ct_stop)
 
-                value_optimal = ct_opt_value.value
-                sample_optimal = np.ctypeslib.as_array(ct_opt_sample)
-                all_values = np.ctypeslib.as_array(ct_values)
+                optimal_value = ct_opt_value.value
+                optimal_sample = np.ctypeslib.as_array(ct_opt_sample)
+
+                if not isinstance(all_values, np.ndarray):
+                    all_values = np.ctypeslib.as_array(ct_values)
 
                 # These are normally stored in the parent function (OptimizationFunction).
                 # Since we didn't  call super()._function like the python path,
@@ -2033,21 +2111,24 @@ class GridSearch(OptimizationFunction):
             # Python version
             else:
 
-
-                if all_values.size != all_samples.shape[-1]:
-                    raise ValueError(f"OptimizationFunction Error: {self}._evaluate returned mismatched sizes for "
+                if all_values.shape[-1] != all_samples.shape[-1]:
+                    raise ValueError(f"GridSearch Error: {self}._evaluate returned mismatched sizes for "
                                      f"samples and values. This is likely due to a bug in the implementation of "
                                      f"{self.__class__} _evaluate method.")
+
+                if all_values.shape[0] > 1:
+                    raise ValueError(f"GridSearch Error: {self}._evaluate returned values with more than one element. "
+                                     "GridSearch currently does not support optimizing over multiple output values.")
 
                 # Find the optimal value(s)
                 optimal_value_count = 1
                 value_sample_pairs = zip(all_values.flatten(),
                                          [all_samples[:,i] for i in range(all_samples.shape[1])])
-                value_optimal, sample_optimal = next(value_sample_pairs)
+                optimal_value, optimal_sample = next(value_sample_pairs)
 
                 select_randomly = self.parameters.select_randomly_from_optimal_values._get(context)
                 for value, sample in value_sample_pairs:
-                    if select_randomly and np.allclose(value, value_optimal):
+                    if select_randomly and np.allclose(value, optimal_value):
                         optimal_value_count += 1
 
                         # swap with probability = 1/optimal_value_count in order to achieve
@@ -2057,11 +2138,11 @@ class GridSearch(OptimizationFunction):
                         random_value = random_state.rand()
 
                         if random_value < probability:
-                            value_optimal, sample_optimal = value, sample
+                            optimal_value, optimal_sample = value, sample
 
-                    elif (value > value_optimal and direction == MAXIMIZE) or \
-                            (value < value_optimal and direction == MINIMIZE):
-                        value_optimal, sample_optimal = value, sample
+                    elif (value > optimal_value and direction == MAXIMIZE) or \
+                            (value < optimal_value and direction == MINIMIZE):
+                        optimal_value, optimal_sample = value, sample
                         optimal_value_count = 1
 
             if self.parameters.save_samples._get(context):
@@ -2071,32 +2152,7 @@ class GridSearch(OptimizationFunction):
                 self.parameters.saved_values._set(all_values, context)
                 return_all_values = all_values
 
-        return sample_optimal, value_optimal, return_all_samples, return_all_values
-
-    def _traverse_grid(self, variable, sample_num, context=None):
-        """Get next sample from grid.
-        This is assigned as the `search_function <OptimizationFunction.search_function>` of the `OptimizationFunction`.
-        """
-        if self.is_initializing:
-            return [signal.start for signal in self.search_space]
-        try:
-            sample = next(self.grid)
-        except StopIteration:
-            raise OptimizationFunctionError("Expired grid in {} run from {} "
-                                            "(execution_count: {}; num_iterations: {})".
-                format(self.__class__.__name__, self.owner.name,
-                       self.owner.parameters.execution_count.get(), self.num_iterations))
-        return sample
-
-    def _grid_complete(self, variable, value, iteration, context=None):
-        """Return False when search of grid is complete
-        This is assigned as the `search_termination_function <OptimizationFunction.search_termination_function>`
-        of the `OptimizationFunction`.
-        """
-        try:
-            return iteration == self.num_iterations
-        except AttributeError:
-            return True
+        return optimal_sample, optimal_value, return_all_samples, return_all_values
 
 
 class GaussianProcess(OptimizationFunction):

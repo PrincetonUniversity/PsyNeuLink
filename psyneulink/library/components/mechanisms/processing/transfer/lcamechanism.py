@@ -186,6 +186,8 @@ Class Reference
 
 import logging
 import warnings
+import sys
+
 from collections.abc import Iterable
 
 import numpy as np
@@ -506,6 +508,9 @@ class LCAMechanism(RecurrentTransferMechanism):
         # Implemented for backward compatibility or, if kept, ease of use
         termination_threshold, termination_measure, termination_comparison_op = self._parse_threshold_args(kwargs)
         # MODIFIED 10/26/19 END
+
+        # Set maximum executions absurdly large to avoid early termination
+        self.max_executions_before_finished = sys.maxsize
 
         super().__init__(
             default_variable=default_variable,

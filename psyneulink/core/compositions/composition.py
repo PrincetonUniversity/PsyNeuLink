@@ -2801,7 +2801,6 @@ from PIL import Image
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentError, ComponentsMeta
-from psyneulink.core.components.functions.fitfunctions import make_likelihood_function
 from psyneulink.core.components.functions.function import is_function_type, Function, RandomMatrix
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import \
         LinearCombination, PredictionErrorDeltaFunction
@@ -6923,12 +6922,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     items_to_delete.append(pathway[i - 1])
         for item in items_to_delete:
             if isinstance(item, ControlMechanism):
-                arg_name = f'in the {repr(MONITOR_FOR_CONTROL)} of its constructor'
+                if item.objective_mechanism:
+                    msg = f' since it has an ObjectiveMechanism that was specified in its constructor'
+                else:
+                    msg = f' since there were ones already specified in ' \
+                          f'the {repr(MONITOR_FOR_CONTROL)} of its constructor'
             else:
-                arg_name = f'either in the {repr(MONITOR)} arg of its constructor, ' \
+                msg = f' since there were ones already specified either in ' \
+                           f'the {repr(MONITOR)} arg of its constructor, ' \
                            f'or in the {repr(MONITOR_FOR_CONTROL)} arg of its associated {ControlMechanism.__name__}'
-            warnings.warn(f'No new {Projection.__name__}s were added to {item.name} that was included in '
-                          f'the {pathway_arg_str}, since there were ones already specified {arg_name}.')
+            warnings.warn(f"No new {Projection.__name__}s were added to '{item.name}' "
+                          f"that was included in the {pathway_arg_str},{msg}.")
             del pathway[pathway.index(item)]
 
         # Then, loop through pathway and validate that the Mechanism-Projection relationships make sense
@@ -7234,10 +7238,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                               f"one already in {self.name}: {pathway}; it will be ignored.")
                 return existing_pathway
             #
-            # Shorter because it contained one or more ControlMechanisms with monitor_for_control specified.
-            elif explicit_pathway == [m for m in pathway
-                                      if not (isinstance(m, ControlMechanism)
-                                              or (isinstance(m, tuple) and isinstance(m[0], ControlMechanism)))]:
+            # Shorter because it contained one or more ControlMechanisms with monitor_for_control specified
+            #    or an ObjectiveMechanism that projects to a ControlMechanism.
+            elif explicit_pathway == [m for m in pathway if not (
+                    (isinstance(m, ControlMechanism)
+                      or (isinstance(m, tuple) and isinstance(m[0], ControlMechanism))
+                     or (isinstance(m, ObjectiveMechanism) and m.control_mechanism)))]:
                 pass
             else:
                 # Otherwise, something has gone wrong
@@ -8963,10 +8969,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Update input ports in order to get correct value for "outcome" (from objective mech)
         controller._update_input_ports(runtime_params, context)
 
-        # FIX: REFACTOR TO CREATE ARRAY OF INPUT_PORT VALUES FOR OUTCOME_INPUT_PORTS
-        outcome_is_array = controller.num_outcome_input_ports > 1
-        if not outcome_is_array:
+        # If outcome comes from a single input_port on controller, then get its value
+        #    (note: it is allowed to be a 1d array with len > 1)
+        if controller.num_outcome_input_ports <= 1:
+            # FIX: 12/15/22
+            #  THIS IS None IF self.controller_mode = AFTER (WHICH IS THE CASE IF agent_rep = model FOR PEC)
+            #  BELOW, THAT FORCES OUTCOME TO BE 0.0 EVEN IF IT IS A 1D ARRAY (I.E., NOT JUST A SCALAR)
+            #  (2D ARRAY RULED OUT ABOVE)
             outcome = controller.input_port.parameters.value._get(context)
+        # If outcome comes from more than one input_port on controller, then wrap them in an outer list
         else:
             outcome = []
             for i in range(controller.num_outcome_input_ports):
@@ -8978,8 +8989,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Compute net outcome based on the cost of the simulated control allocation (usually, net = outcome - cost)
             net_outcome = controller.compute_net_outcome(outcome, total_cost)
 
+        # If we are doing data fitting, we need to return the full simulation results (result for each trial)
         if return_results:
-            return net_outcome, result
+            return net_outcome, self.results
         else:
             return net_outcome
 
@@ -9391,7 +9403,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            f"{bad_entry_names}.")
 
     def _instantiate_input_dict(self, inputs):
-        """Implement dict with all INPUT Node of Composition as keys and their assigned inputs or defaults as values
+        """Implement dict with all INPUT Nodes of Composition as keys and their assigned inputs or defaults as values
         **inputs** can contain specifications for inputs to InputPorts, Mechanisms and/or nested Compositions,
             that can be at any level of nesting within self.
         Consolidate any entries of **inputs** with InputPorts as keys to Mechanism or Composition entries
@@ -9410,6 +9422,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Construct input_dict from input_nodes of self
         for INPUT_Node in input_nodes:
+
+            # MODIFIED 12/11/22 NEW:
+            if not inputs:
+                input_dict[INPUT_Node] = INPUT_Node.external_input_shape
+                continue
+            # MODIFIED 12/11/22 END
 
             # If entry is for an INPUT_Node of self, assign the entry directly to input_dict and proceed to next
             if INPUT_Node in inputs:
@@ -9478,7 +9496,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             node_input = np.empty(tuple([max_num_trials] +
                                         list(np.array(mech.external_input_shape).shape)),
                                   dtype='object').tolist()
-            # - move ports to outer access for processing below
+            # - move ports to outer axis for processing below
             node_input = np.swapaxes(np.atleast_3d(np.array(node_input, dtype=object)),0,1).tolist()
 
             # Assign specs to ports of INPUT_Node, using ones in input_port_entries or defaults
@@ -10078,7 +10096,8 @@ _
         self.rich_diverted_reports = None
         self.recorded_reports = None
 
-        self._assign_execution_ids(context)
+        if context.execution_id is None:
+            self._assign_execution_ids(context)
 
         scheduler._init_counts(execution_id=context.execution_id)
 
@@ -10298,20 +10317,19 @@ _
                 else:
                     result_copy = trial_output
 
-                if ContextFlags.SIMULATION_MODE not in context.runmode:
-                    results.append(result_copy)
-                    self.parameters.results._set(results, context)
+                results.append(result_copy)
+                self.parameters.results._set(results, context)
 
-                    if not self.parameters.retain_old_simulation_data._get():
-                        if self.controller is not None:
-                            # if any other special parameters store simulation info that needs to be cleaned up
-                            # consider dedicating a function to it here
-                            # this will not be caught above because it resides in the base context (context)
-                            if not self.parameters.simulation_results.retain_old_simulation_data:
-                                self.parameters.simulation_results._get(context).clear()
+                if not self.parameters.retain_old_simulation_data._get():
+                    if self.controller is not None:
+                        # if any other special parameters store simulation info that needs to be cleaned up
+                        # consider dedicating a function to it here
+                        # this will not be caught above because it resides in the base context (context)
+                        if not self.parameters.simulation_results.retain_old_simulation_data:
+                            self.parameters.simulation_results._get(context).clear()
 
-                            if not self.controller.parameters.simulation_ids.retain_old_simulation_data:
-                                self.controller.parameters.simulation_ids._get(context).clear()
+                        if not self.controller.parameters.simulation_ids.retain_old_simulation_data:
+                            self.controller.parameters.simulation_ids._get(context).clear()
 
                 if call_after_trial:
                     call_with_pruned_args(call_after_trial, context=context)
@@ -10574,13 +10592,14 @@ _
 
                 # Report controller engagement before executing simulations
                 #    so it appears before them for ReportOutput.TERSE
-                report(self,
-                       EXECUTE_REPORT,
-                       report_num=report_num,
-                       scheduler=execution_scheduler,
-                       content='controller_start',
-                       context=context,
-                       node=self.controller)
+                if report is not None:
+                    report(self,
+                           EXECUTE_REPORT,
+                           report_num=report_num,
+                           scheduler=execution_scheduler,
+                           content='controller_start',
+                           context=context,
+                           node=self.controller)
 
                 if self.controller and not execution_mode & pnlvm.ExecutionMode.COMPILED:
                     context.execution_phase = ContextFlags.PROCESSING
@@ -10602,13 +10621,14 @@ _
 
                 # Report controller execution after executing simulations
                 #    so it includes the results for ReportOutput.FULL
-                report(self,
-                       CONTROLLER_REPORT,
-                       report_num=report_num,
-                       scheduler=execution_scheduler,
-                       content='controller_end',
-                       context=context,
-                       node=self.controller)
+                if report is not None:
+                    report(self,
+                           CONTROLLER_REPORT,
+                           report_num=report_num,
+                           scheduler=execution_scheduler,
+                           content='controller_end',
+                           context=context,
+                           node=self.controller)
 
     @handle_external_context(execution_phase=ContextFlags.PROCESSING)
     def execute(
@@ -12504,13 +12524,6 @@ _
         self._show_graph._animate_execution(active_items, context)
 
     # endregion SHOW_GRAPH
-
-    def make_likelihood_function(self, *args, **kwargs):
-        """
-        This method invokes :func:`~psyneulink.core.components.functions.fitfunctions.make_likelihood_function`
-        on the composition.
-        """
-        return make_likelihood_function(composition=self, *args, **kwargs)
 
 
 def get_compositions():

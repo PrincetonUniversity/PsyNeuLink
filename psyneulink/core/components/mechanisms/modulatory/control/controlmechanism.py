@@ -1379,6 +1379,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 raise ControlMechanismError(f"Invalid specification for '{CONTROL}' argument of {self.name}:"
                                             f"({ctl_spec})")
 
+    # FIX: 2/11/23 SHOULDN'T THIS BE PUT ON COMPOSITION NOW?
     # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
     def _instantiate_objective_mechanism(self, input_ports=None, context=None):
         """
@@ -1754,8 +1755,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         from psyneulink.core.components.projections.projection import ProjectionError
 
         try:
-            # set the default by implicit shape defined by one of the
-            # allocation_samples if possible
+            # set the default by implicit shape defined by one of the allocation_samples if possible
             try:
                 allocation_parameter_default = control_signal_spec._init_args['allocation_samples'][0]
             except AttributeError:
@@ -1837,6 +1837,22 @@ class ControlMechanism(ModulatoryMechanism_Base):
                               f"has one or more {projection_type.__name__}s redundant with ones already on "
                               f"an existing {ControlSignal.__name__} ({existing_ctl_sig.name}).")
 
+    def _remove_default_control_signal(self, type: Literal['ControlSignal', 'GatingSignal']):
+        if type == CONTROL_SIGNAL:
+            ctl_sig_attribute = self.control_signals
+        elif type == GATING_SIGNAL:
+            ctl_sig_attribute = self.gating_signals
+        else:
+            assert False, \
+                f"PROGRAM ERROR:  bad 'type' arg ({type})passed to " \
+                f"{ControlMechanism.__name__}._remove_default_control_signal" \
+                f"(should have been caught by typecheck"
+
+        if (len(ctl_sig_attribute) == 1
+                and ctl_sig_attribute[0].name == type + '-0'
+                and not ctl_sig_attribute[0].efferents):
+            self.remove_ports(ctl_sig_attribute[0])
+
     def show(self):
         """Display the OutputPorts monitored by ControlMechanism's `objective_mechanism
         <ControlMechanism.objective_mechanism>` and the parameters modulated by its `control_signals
@@ -1898,28 +1914,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
         OutputPorts must belong to Mechanisms in the same `System` as the ControlMechanism.
         """
         output_ports = self.objective_mechanism.add_to_monitor(monitor_specs=monitor_specs, context=context)
-
-    def _add_process(self, process, role:str):
-        assert False
-        super()._add_process(process, role)
-        if self.objective_mechanism:
-            self.objective_mechanism._add_process(process, role)
-
-    def _remove_default_control_signal(self, type: Literal['ControlSignal', 'GatingSignal']):
-        if type == CONTROL_SIGNAL:
-            ctl_sig_attribute = self.control_signals
-        elif type == GATING_SIGNAL:
-            ctl_sig_attribute = self.gating_signals
-        else:
-            assert False, \
-                f"PROGRAM ERROR:  bad 'type' arg ({type})passed to " \
-                    f"{ControlMechanism.__name__}._remove_default_control_signal" \
-                    f"(should have been caught by typecheck"
-
-        if (len(ctl_sig_attribute)==1
-                and ctl_sig_attribute[0].name==type + '-0'
-                and not ctl_sig_attribute[0].efferents):
-            self.remove_ports(ctl_sig_attribute[0])
 
     # FIX: 11/15/21 SHOULDN'T THIS BE PUT ON COMPOSITION??
     def _activate_projections_for_compositions(self, composition=None, context=None):

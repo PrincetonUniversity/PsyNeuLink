@@ -1026,7 +1026,7 @@ def gen_composition_run(ctx, composition, *, tags:frozenset):
 
     # simulation does not care about the output
     # it extracts results of the controller objective mechanism
-    if simulation:
+    if simulation and "simulation_results" not in tags:
         data_out.attributes.remove('nonnull')
 
     if not simulation and "const_data" in debug_env:
@@ -1103,11 +1103,11 @@ def gen_composition_run(ctx, composition, *, tags:frozenset):
     data_in_ptr = builder.gep(data_in, [input_idx])
 
     # Call execution
-    exec_tags = tags.difference({"run"})
+    exec_tags = tags.difference({"run", "simulation_results"})
     exec_f = ctx.import_llvm_function(composition, tags=exec_tags)
     builder.call(exec_f, [state, params, data_in_ptr, data, cond])
 
-    if not simulation:
+    if not simulation or "simulation_results" in tags:
         # Extract output_CIM result
         idx = composition._get_node_index(composition.output_CIM)
         result_ptr = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(0),

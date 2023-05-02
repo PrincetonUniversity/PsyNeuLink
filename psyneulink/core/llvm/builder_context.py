@@ -478,8 +478,8 @@ def _gen_cuda_kernel_wrapper_module(function):
     assert decl_f.is_declaration
     orig_args = function.type.pointee.args
 
-    # remove indices if this is grid_evauate_ranged
-    is_grid_ranged = len(orig_args) == 7 and isinstance(orig_args[2], ir.IntType)
+    # remove indices if this is grid_evaluate_ranged
+    is_grid_ranged = len(orig_args) == 8 and isinstance(orig_args[2], ir.IntType)
     if is_grid_ranged:
         orig_args = orig_args[:2] + orig_args[4:]
 
@@ -515,7 +515,7 @@ def _gen_cuda_kernel_wrapper_module(function):
         if isinstance(a.type, ir.PointerType):
             a.attributes.add('noalias')
 
-    def _upload_to_shared(b, ptr, name):
+    def _upload_to_shared(b, ptr, length, name):
         shared = ir.GlobalVariable(module, ptr.type.pointee,
                                    name=function.name + "_shared_" + name,
                                    addrspace=3)
@@ -533,6 +533,7 @@ def _gen_cuda_kernel_wrapper_module(function):
         obj_size_f = module.declare_intrinsic("llvm.objectsize.i32", [], obj_size_ty)
         # the params are: obj pointer, 0 on unknown size, NULL is unknown, size at runtime
         obj_size = b.call(obj_size_f, [ptr_dst, bool_ty(1), bool_ty(0), bool_ty(0)])
+        obj_size = b.mul(obj_size, length)
 
         if "unaligned_copy" not in debug_env:
             copy_ty = ir.IntType(32)
@@ -557,10 +558,12 @@ def _gen_cuda_kernel_wrapper_module(function):
         return b, shared_ptr
 
     if is_grid_ranged and "cuda_no_shared" not in debug_env:
-        builder, args[0] = _upload_to_shared(builder, args[0], "params")
-        builder, args[1] = _upload_to_shared(builder, args[1], "state")
-        builder, args[3] = _upload_to_shared(builder, args[3], "inputs")
-        builder, args[4] = _upload_to_shared(builder, args[4], "data")
+        one = ir.IntType(32)(1)
+        builder, args[0] = _upload_to_shared(builder, args[0], one, "params")
+        builder, args[1] = _upload_to_shared(builder, args[1], one, "state")
+        builder, args[4] = _upload_to_shared(builder, args[4], one, "data")
+        # arg[5] (orig_arg[7]) is the number of inputs
+        builder, args[3] = _upload_to_shared(builder, args[3], builder.load(args[5]), "inputs")
 
     # Check global id and exit if we're over
     should_quit = builder.icmp_unsigned(">=", global_id, kernel_func.args[-1])
