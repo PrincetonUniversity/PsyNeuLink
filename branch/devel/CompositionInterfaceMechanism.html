@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>CompositionInterfaceMechanism &mdash; PsyNeuLink 0.11.0.0+302.g8ee402978 documentation</title>
+  <title>CompositionInterfaceMechanism &mdash; PsyNeuLink 0.11.0.0+676.gdef0ab6b3 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.11.0.0+302
+                  0.11.0.0+676
                 </div>
               
             
@@ -388,6 +388,17 @@ Port specification(s) can be an Port object or the name of one.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_source_node_for_input_CIM">
+<span class="sig-name descname"><span class="pre">_get_source_node_for_input_CIM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">port</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_source_node_for_input_CIM" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return Port, Node and Composition  for source of projection to input_CIM from (possibly nested) outer comp
+<strong>port</strong> InputPort or OutputPort of the input_CIM from which the local projection projects;
+<strong>comp</strong> Composition at which to begin the search (or continue it when called recursively;</p>
+<blockquote>
+<div><p>assumes the current CompositionInterfaceMechanism’s Composition by default</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_destination_info_from_input_CIM">
 <span class="sig-name descname"><span class="pre">_get_destination_info_from_input_CIM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">port</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_destination_info_from_input_CIM" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return Port, Node and Composition for “ultimate” destination of projection to <strong>port</strong>.
@@ -408,6 +419,20 @@ Port specification(s) can be an Port object or the name of one.</p>
 <strong>port</strong>: InputPort or OutputPort of the parameter_CIM to which the ControlSignal projects;</p>
 <blockquote>
 <div><p>used to find destination (key) in parameter_CIM’s port_map.</p>
+</div></blockquote>
+<dl class="simple">
+<dt><strong>comp</strong>: Composition at which to begin the search (or continue it when called recursively);</dt><dd><p>assumes the Composition for the parameter_CIM to which <strong>port</strong> belongs by default.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_source_of_modulation_for_parameter_CIM">
+<span class="sig-name descname"><span class="pre">_get_source_of_modulation_for_parameter_CIM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">port</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_source_of_modulation_for_parameter_CIM" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return ControlSignal, Node and Composition that projects to a ParameterPort from (possibly nested) outer comp
+<strong>port</strong>: InputPort or OutputPort of the parameter_CIM from which the local ControlSignal projects;</p>
+<blockquote>
+<div><p>used to find source (key) in parameter_CIM’s port_map.</p>
 </div></blockquote>
 <dl class="simple">
 <dt><strong>comp</strong>: Composition at which to begin the search (or continue it when called recursively);</dt><dd><p>assumes the Composition for the parameter_CIM to which <strong>port</strong> belongs by default.</p>

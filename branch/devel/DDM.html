@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>DDM &mdash; PsyNeuLink 0.11.0.0+302.g8ee402978 documentation</title>
+  <title>DDM &mdash; PsyNeuLink 0.11.0.0+676.gdef0ab6b3 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.11.0.0+302
+                  0.11.0.0+676
                 </div>
               
             
@@ -312,7 +312,7 @@ can also be created and assigned.</p>
 <a class="reference internal" href="#ddm-execution"><span class="std std-ref">Execution</span></a> for details). In addition to <a class="reference internal" href="#ddm-decision-variable"><span class="std std-ref">DECISION_VARIABLE</span></a> and
 <a class="reference internal" href="#ddm-response-time"><span class="std std-ref">RESPONSE_TIME</span></a>, the Function returns an accuracy value (represented in the
 <a class="reference internal" href="#ddm-probability-upper-threshold"><span class="std std-ref">PROBABILITY_UPPER_THRESHOLD</span></a> OutputPort), and an error rate value (in the
-<a class="reference internal" href="#ddm-probability-lower-threshold"><span class="std std-ref">PROBABaILITY_LOWER_THRESHOLD</span></a> OutputPort, and moments (mean, variance, and skew)
+<a class="reference internal" href="#ddm-probability-lower-threshold"><span class="std std-ref">PROBABIILITY_LOWER_THRESHOLD</span></a> OutputPort, and moments (mean, variance, and skew)
 for conditional (correctpositive or incorrectnegative) response time distributions. These are; the mean RT for
 correct responses  (<a class="reference internal" href="#ddm-rt-correct-mean"><span class="std std-ref">RT_CORRECT_MEAN</span></a>, the RT variance for correct responses
 (<a class="reference internal" href="#ddm-rt-correct-variance"><span class="std std-ref">RT_CORRECT_VARIANCE</span></a>, the RT skew for correct responses
@@ -544,6 +544,16 @@ to execute in the current <a class="reference internal" href="Time.html#psyneuli
 the DDM <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>’s threshold attribute, the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a> at which that occurred.</p></li>
 </ul>
 <p>Corresponds to the 2nd item of the DDM’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.value" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>.</p>
+</dd>
+</dl>
+<dl class="simple" id="ddm-decision-outcome">
+<dt><em>DECISION_OUTCOME</em><span class="classifier">float</span></dt><dd><ul class="simple">
+<li><p><a class="reference internal" href="#ddm-analytic-mode"><span class="std std-ref">analytic mode</span></a>: 1.0 if the value of the threshold crossed by the decision variable on the
+current TRIAL (which is either the value of the DDM <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>’s threshold attribute or its
+negative) is positive, 0 otherwise.</p></li>
+<li><p><a class="reference internal" href="#ddm-integration-mode"><span class="std std-ref">integration mode</span></a>: 1if the value of the decision variable at the current
+TIME_STEP of execution is positive, 0 otherwise.</p></li>
+</ul>
 </dd>
 </dl>
 <dl id="ddm-probability-upper-threshold">
