@@ -127,6 +127,87 @@ def test_pec_run_input_formats(input_format, inputs_dict, error_msg):
         pec.run(inputs=inputs_dict)
 
 
+def test_parameter_optimization_ddm(func_mode):
+    """Test parameter optimization of a DDM in integrator mode"""
+
+    if func_mode == "Python":
+        pytest.skip(
+            "Test not yet implemented for Python. Parameter estimate is too slow."
+        )
+        return
+
+    # High-level parameters the impact performance of the test
+    num_trials = 50
+    time_step_size = 0.01
+    num_estimates = 40000
+
+    ddm_params = dict(
+        starting_value=0.0,
+        rate=0.3,
+        noise=1.0,
+        threshold=0.6,
+        non_decision_time=0.15,
+        time_step_size=time_step_size,
+    )
+
+    # Create a simple one mechanism composition containing a DDM in integrator mode.
+    decision = pnl.DDM(
+        function=pnl.DriftDiffusionIntegrator(**ddm_params),
+        output_ports=[pnl.DECISION_OUTCOME, pnl.RESPONSE_TIME],
+        name="DDM",
+    )
+
+    comp = pnl.Composition(pathways=decision)
+
+    def reward_rate(sim_data):
+        """
+        Objective function for PEC to optimize. This function takes in the simulation data,
+        a 3D array of shape (num_trials, num_estimates, num_outcome_vars), and returns a
+        scalar value that is the reward rate.
+        """
+        return np.mean(sim_data[:, :, 0][:] / sim_data[:, :, 1][:])
+
+    fit_parameters = {
+        ("threshold", decision): np.linspace(0.01, 0.5, 10),  # Threshold
+    }
+
+    pec = pnl.ParameterEstimationComposition(
+        name="pec",
+        nodes=comp,
+        parameters=fit_parameters,
+        outcome_variables=[
+            decision.output_ports[pnl.DECISION_OUTCOME],
+            decision.output_ports[pnl.RESPONSE_TIME],
+        ],
+        objective_function=reward_rate,
+        optimization_function='differential_evolution',
+        num_estimates=num_estimates,
+        initial_seed=42,
+    )
+    pec.controller.parameters.comp_execution_mode.set(func_mode)
+
+    # Let's generate an "experimental" dataset to fit. This is a parameter recovery test
+    # Lets make 10% of the trials have a positive stimulus drift rate, and the other 90%
+    # have a negative stimulus drift rate.
+    # trial_inputs = np.ones((num_trials, 1))
+    rng = np.random.default_rng(12345)
+    trial_inputs = rng.choice(
+        [5.0, -5.0], size=(num_trials, 1), p=[0.10, 0.9], replace=True
+    )
+
+    # Make the first and last input positive for sure. This helps make sure inputs are really getting
+    # passed to the composition correctly during parameter fitting, and we aren't just getting a single
+    # trials worth of a cached input.
+    trial_inputs[0] = np.abs(trial_inputs[0])
+    trial_inputs[-1] = np.abs(trial_inputs[-1])
+
+    inputs_dict = {decision: trial_inputs}
+
+    ret = pec.run(inputs={comp: trial_inputs})
+
+    np.testing.assert_allclose(pec.optimized_parameter_values, [0.010363518438648106])
+
+
 # func_mode is a hacky wa to get properly marked; Python, LLVM, and CUDA
 def test_parameter_estimation_ddm_mle(func_mode):
     """Test parameter estimation of a DDM in integrator mode with MLE."""
@@ -223,7 +304,7 @@ def test_parameter_estimation_ddm_mle(func_mode):
     # We won't recover the parameters accurately but we can check
     # against hardcoded values to make sure we are reproducing
     # the same search trajectory from a known working example.
-    assert np.allclose(
+    np.testing.assert_allclose(
         pec.optimized_parameter_values,
         [0.222727, 0.597613, 0.122772],
     )
