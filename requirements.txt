@@ -1,5 +1,5 @@
 autograd<1.6
-beartype<0.14.0
+beartype<0.15.0
 dill<0.3.7
 fastkde>=1.0.24, <1.0.25
 graph-scheduler>=0.2.0, <1.1.3
