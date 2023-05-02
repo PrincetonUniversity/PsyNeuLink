@@ -45,7 +45,7 @@ A `ParameterEstimationComposition` is a subclass of `Composition` that is used t
 <ParameterEstimationComposition.parameters>` of a `model <ParameterEstimationComposition.model>` Composition,
 in order to fit the `outputs <ParameterEstimationComposition.outcome_variables>`
 of the `model <ParameterEstimationComposition.model>` to a set of data (`ParameterEstimationComposition_Data_Fitting`),
-or to optimize its `net_outcome <ControlMechanism.net_outcome>` according to an `objective_function`
+or to optimize a scalar `objective_function`
 (`ParameterEstimationComposition_Optimization`). In either case, when the ParameterEstimationComposition is `run
 <Composition.run>` with a given set of `inputs <Composition_Execution_Inputs>`, it returns the set of
 parameter values in its `optimized_parameter_values <ParameterEstimationComposition.optimized_parameter_values>`
@@ -235,19 +235,6 @@ def _same_seed_for_all_parameter_combinations_setter(
 
 class ParameterEstimationComposition(Composition):
     """
-    Composition(                           \
-        parameters,
-        outcome_variables,
-        model=None,
-        data=None,
-        objective_function=None,
-        optimization_function=None,
-        num_estimates=1,
-        number_trials_per_estimate=None,
-        initial_seed=None,
-        same_seed_for_all_parameter_combinations=False
-        )
-
     Subclass of `Composition` that estimates specified parameters either to fit the results of a Composition
     to a set of data or to optimize a specified function.
 
@@ -260,26 +247,26 @@ class ParameterEstimationComposition(Composition):
     Arguments
     ---------
 
-    parameters : dict[Parameter:Union[Iterator, Function, List, value]
+    parameters :
         specifies the parameters of the `model <ParameterEstimationComposition.model>` used for
         `ParameterEstimationComposition_Data_Fitting` or `ParameterEstimationComposition_Optimization`, and either
         the range of values to be evaluated for each parameter, or priors that define a distribution over those.
 
-    outcome_variables : list[Composition output nodes]
+    outcome_variables :
         specifies the `OUTPUT` `Nodes <Composition_Nodes>` of the `model <ParameterEstimationComposition.model>`,
         the `values <Mechanism_Base.value>` of which are either compared to a specified **data** when the
         ParameterEstimationComposition is used for `ParameterEstimationComposition_Data_Fitting`, or used by the
         `optimization_function <ParameterEstimationComposition.optimization_function>` for
         `ParameterEstimationComposition_Optimization`.
 
-    model : Composition : default None
+    model :
         specifies an external `Composition` for which parameters are to be `fit to data
         <ParameterEstimationComposition_Data_Fitting>` or `optimized <ParameterEstimationComposition_Optimization>`
         according to a specified `objective_function <ParameterEstimationComposition.objective_function>`.
         If **model** is None (the default), the ParameterEstimationComposition itself is used (see
         `model <ParameterEstimationComposition_Model>` for additional information).
 
-    data : array : default None
+    data :
         specifies the data to be fit when the ParameterEstimationComposition is used for
         `ParameterEstimationComposition_Data_Fitting`;  structure must conform to format of
         **outcome_variables** (see `data <ParameterEstimationComposition.data>` for additional information).
@@ -869,7 +856,11 @@ class ParameterEstimationComposition(Composition):
             self.optimized_parameter_values = self.controller.optimal_control_allocation[:-1]
             self.optimal_value = self.controller.optimal_net_outcome
 
-        return results
+        # Assign the optimal parameter values to the results object. Make it 2D so that it is consistent with results
+        # from Composition
+        self.results = np.atleast_2d(self.optimized_parameter_values)
+
+        return self.results
 
     @handle_external_context()
     def log_likelihood(self, *args, inputs=None, context=None) -> float:
