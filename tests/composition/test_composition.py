@@ -122,7 +122,7 @@ class TestConstructor:
         # Run with learning
         target = c.pathways['LEARNING_PATHWAY'].target
         result = c(inputs={A:[[1],[100]],B:[[2],[1]],target:[[3],[300]]})
-        np.allclose(result, [[[1.], [0.73105858]], [[100.], [0.62507661]]])
+        np.testing.assert_allclose(c.results[-2:], [[[1.], [0.73105858]], [[100.], [0.62768661]]])
 
 
 class TestAddMechanism:
