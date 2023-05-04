@@ -380,3 +380,14 @@ def test_pec_bad_outcome_var_spec():
             num_trials_per_estimate=10,
         )
     assert "The number of columns in the data to fit must match" in str(ex)
+
+
+def test_pec_controller_specified():
+    """Test that an exception is raised if a controller is specified for the PEC."""
+    with pytest.raises(ValueError):
+        pnl.ParameterEstimationComposition(
+            parameters={},
+            outcome_variables=[],
+            optimization_function='differential_evolution',
+            controller=pnl.ControlMechanism()
+        )

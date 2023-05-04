@@ -37,34 +37,24 @@ Contents
 Overview
 --------
 
-COMMENT:
-    ADD MENTION THAT THIS ALLOWS FITTING AND OPTIMIZING "LIKELIHOOD-FREE" MODELS.
-COMMENT
-
 A `ParameterEstimationComposition` is a subclass of `Composition` that is used to estimate specified `parameters
 <ParameterEstimationComposition.parameters>` of a `model <ParameterEstimationComposition.model>` Composition,
 in order to fit the `outputs <ParameterEstimationComposition.outcome_variables>`
-of the `model <ParameterEstimationComposition.model>` to a set of data (`ParameterEstimationComposition_Data_Fitting`),
-or to optimize a scalar `objective_function`
-(`ParameterEstimationComposition_Optimization`). In either case, when the ParameterEstimationComposition is `run
-<Composition.run>` with a given set of `inputs <Composition_Execution_Inputs>`, it returns the set of
-parameter values in its `optimized_parameter_values <ParameterEstimationComposition.optimized_parameter_values>`
-attribute that it estimates best satisfy either of those conditions, and the results of running the `model
-<ParameterEstimationComposition.model>` with those parameters in its `results <ParameterEstimationComposition.results>`
-attribute.  The arguments below are used to configure a ParameterEstimationComposition for either
-`ParameterEstimationComposition_Data_Fitting` or `ParameterEstimationComposition_Optimization`, followed by
-sections that describe arguments specific to each.
+of the `model <ParameterEstimationComposition.model>` to a set of data (`ParameterEstimationComposition_Data_Fitting`)
+via likelihood maximization using kernel density estimation (KDE), or to optimize a user provided scalar
+`objective_function` (`ParameterEstimationComposition_Optimization`). In either case, when the
+ParameterEstimationComposition is `run <Composition.run>` with a given set of `inputs <Composition_Execution_Inputs>`,
+it returns the set of parameter values in its `optimized_parameter_values
+<ParameterEstimationComposition.optimized_parameter_values>` attribute that it estimates best satisfy either of those
+conditions. The `results <ParameterEstimationComposition.results>` attribute are also set to the optimal parameter
+values.  The arguments below are used to configure a ParameterEstimationComposition for either
+`ParameterEstimationComposition_Data_Fitting` or `ParameterEstimationComposition_Optimization`, followed by sections
+that describe arguments specific to each.
 
     .. _ParameterEstimationComposition_Model:
 
     * **model** - specifies the `Composition` for which the specifies `parameters
       <ParameterEstimationComposition.parameters>` are to be estimated.
-      COMMENT:  TBI
-      Alternatively, the model to be fit can be constructed
-      within the ParameterEstimationComposition itself, using the **nodes** and/or **pathways** arguments of its
-      constructor (see `Composition_Constructor` for additional details).   The **model** argument
-      or the **nodes**, **pathways**, and/or **projections** arguments must be specified, but not both.
-      COMMENT
 
       .. note::
          Neither the **controller** nor any of its associated arguments can be specified in the constructor for a
@@ -496,6 +486,11 @@ class ParameterEstimationComposition(Composition):
         context: Optional[Context] = None,
         **kwargs,
     ):
+
+        # We don't allow user specified controllers in PEC
+        if 'controller' in kwargs:
+            raise ValueError("controller argument cannot be specified in a ParameterEstimationComposition. PEC sets "
+                             "up its own controller for executing its parameter estimation process.")
 
         # If the number of trials per estimate is not specified and we are fitting to data then
         # get it from the data.
@@ -949,10 +944,11 @@ def _pec_ocm_state_feature_values_getter(owning_component=None, context=None) ->
 
 
 class PEC_OCM(OptimizationControlMechanism):
-    """OptimizationControlMechanism specialized for use with ParameterEstimationComposition
+    """
+    OptimizationControlMechanism specialized for use with ParameterEstimationComposition
     Assign inputs passed to run method of ParameterEstimationComposition directly as values of
-      PEC_OCM's state_input_ports (this allows a full set of trials' worth of inputs to be used in each
-      run of the Composition being estimated or optimized.
+    PEC_OCM's state_input_ports (this allows a full set of trials' worth of inputs to be used in each
+    run of the Composition being estimated or optimized.
     set_pec_inputs_cache(): called by PEC to cache inputs passed to its run method
     _pec_ocm_state_feature_values_getter(): overrides state_feature_values_getter of OptimizationControlMechanism
       to return input dict for simulation that incluces all trials' worth of inputs for each node.
