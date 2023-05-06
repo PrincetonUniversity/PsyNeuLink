@@ -262,7 +262,7 @@ ddi_termination_conds = [
 
 # construct test data manually instead of with multiple @pytest.mark.parametrize
 # so that other functions can use more appropriate termination conds
-individual_functions_test_data = [
+individual_functions_ddi_test_data = [
     (
         pnl.IntegratorMechanism,
         pnl.DriftDiffusionIntegrator(rate=0.5, offset=1, non_decision_time=1, seed=0),
@@ -270,11 +270,28 @@ individual_functions_test_data = [
     ) + (x,)
     for x in ddi_termination_conds
 ]
+individual_functions_fhn_test_data = [
+    (
+        pnl.IntegratorMechanism,
+        pnl.FitzHughNagumoIntegrator,
+        'None',
+        'pnl.AfterNCalls(A, 10)',
+    ),
+    (
+        pnl.IntegratorMechanism,
+        pnl.FitzHughNagumoIntegrator(integration_method='EULER'),
+        'None',
+        'pnl.AfterNCalls(A, 10)',
+    )
+]
 
 
 @pytest.mark.parametrize(
     'mech_type, function, runtime_params, trial_termination_cond',
-    individual_functions_test_data
+    [
+        *individual_functions_ddi_test_data,
+        *individual_functions_fhn_test_data,
+    ]
 )
 def test_mdf_equivalence_individual_functions(mech_type, function, runtime_params, trial_termination_cond):
     import modeci_mdf.execution_engine as ee

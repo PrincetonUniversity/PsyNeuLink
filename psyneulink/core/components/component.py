@@ -3959,6 +3959,17 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         return params
 
     @property
+    def _mdf_model_nonstateful_parameters(self):
+        parameters = self._mdf_model_parameters
+
+        return {
+            self._model_spec_id_parameters: {
+                k: v for k, v in parameters[self._model_spec_id_parameters].items()
+                if (k not in self.parameters or getattr(self.parameters, k).initializer is None)
+            }
+        }
+
+    @property
     def _mdf_metadata(self):
         all_parameters = self._get_mdf_parameters()
         try:
