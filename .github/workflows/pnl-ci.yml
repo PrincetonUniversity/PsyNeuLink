@@ -58,6 +58,12 @@ jobs:
             os: macos
             extra-args: '--cov=psyneulink'
 
+          # --forked run of python only tests
+          # Python tests are enough to test potential naming issues
+          - python-version: '3.9'
+            os: ubuntu
+            extra-args: '--forked -m "not llvm"'
+
           # add 32-bit build on windows
           - python-version: '3.8'
             python-architecture: 'x86'
@@ -141,10 +147,10 @@ jobs:
     - name: Upload test results
       uses: actions/upload-artifact@v3
       with:
-        name: test-results-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}-${{ matrix.extra-args }}
+        name: test-results-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}
         path: tests_out.xml
         retention-days: 5
-      if: success() || failure()
+      if: (success() || failure()) && ! contains(matrix.extra-args, 'forked')
 
     - name: Upload coveralls code coverage
       if: contains(matrix.extra-args, '--cov=psyneulink')
