@@ -61,6 +61,9 @@ class RegistryError(Exception):
 
 _register_auto_name_prefix = ""
 
+def _get_auto_name_prefix():
+    return _register_auto_name_prefix
+
 def register_category(entry,
                       base_class,
                       name=None,
