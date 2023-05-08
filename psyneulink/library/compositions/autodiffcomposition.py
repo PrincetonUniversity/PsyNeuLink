@@ -251,6 +251,7 @@ import logging
 import os
 import warnings
 import numpy as np
+from packaging import version
 from pathlib import Path, PosixPath
 
 try:
@@ -456,19 +457,15 @@ class AutodiffComposition(Composition):
         elif loss_spec == Loss.SSE:
             return nn.MSELoss(reduction='sum')
         elif loss_spec == Loss.CROSS_ENTROPY:
+            if version.parse(torch.version.__version__) >= version.parse('1.12.0'):
+                return nn.CrossEntropyLoss()
+
             # Cross entropy loss is used for multiclass categorization and needs inputs in shape
             # ((# minibatch_size, C), targets) where C is a 1-d vector of probabilities for each potential category
             # and where target is a 1d vector of type long specifying the index to the target category. This
             # formatting is different from most other loss functions available to autodiff compositions,
             # and therefore requires a wrapper function to properly package inputs.
-            cross_entropy_loss = nn.CrossEntropyLoss()
-            return lambda x, y: cross_entropy_loss(
-                    # x.unsqueeze(0),
-                    x,
-                    # y.type(torch.LongTensor)
-                    # torch.argmax(y.type(torch.LongTensor))
-                    y.type(x.type())
-            )
+            return lambda x, y: nn.CrossEntropyLoss()(torch.atleast_2d(x), torch.atleast_2d(y.type(x.type())))
         elif loss_spec == Loss.L1:
             return nn.L1Loss(reduction='sum')
         elif loss_spec == Loss.NLL:
