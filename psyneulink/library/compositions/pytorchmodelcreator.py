@@ -1,4 +1,6 @@
 import graph_scheduler
+import torch
+import torch.nn as nn
 
 from psyneulink.core.components.component import Component, ComponentsMeta
 from psyneulink.core.compositions.composition import NodeRole
@@ -11,22 +13,11 @@ from psyneulink.core.globals.keywords import TARGET_MECHANISM, Loss
 from psyneulink.core.globals.utilities import get_deepcopy_with_shared
 from .pytorchcomponents import *
 
-try:
-    import torch
-    from torch import nn
-    torch_available = True
-except ImportError:
-    torch_available = False
-
 __all__ = ['PytorchModelCreator']
 
 class PytorchModelCreator(torch.nn.Module):
     # sets up parameters of model & the information required for forward computation
     def __init__(self, composition, device, context=None):
-
-        if not torch_available:
-            raise Exception('Pytorch python module (torch) is not installed. Please install it with '
-                            '`pip install torch` or `pip3 install torch`')
 
         super(PytorchModelCreator, self).__init__()
 

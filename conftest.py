@@ -7,23 +7,17 @@ import pytest
 import re
 import sys
 
-from psyneulink import clear_registry, primary_registries
+from psyneulink import clear_registry, primary_registries, torch_available
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.globals.utilities import set_global_seed
 
-
 try:
     import torch
-
-    # If we are on windows and using Python 3.10, despite it importing correctly, PyTorch is currently broken,
-    # see https://pytorch.org/get-started/locally/ showing lack of support.
-    if sys.platform.startswith("win32") and sys.version_info >= (3, 10):
-        pytorch_available = False
-    else:
-        pytorch_available = True
-
 except ImportError:
-    pytorch_available = False
+    pass
+else:
+    # Check that torch is usable if installed
+    assert torch_available, "Torch module is available, but not usable by PNL"
 
 # def pytest_addoption(parser):
 #     parser.addoption(
@@ -57,7 +51,7 @@ def pytest_runtest_setup(item):
     if 'cuda' in item.keywords and not pnlvm.ptx_enabled:
         pytest.skip('PTX engine not enabled/available')
 
-    if 'pytorch' in item.keywords and not pytorch_available:
+    if 'pytorch' in item.keywords and not torch_available:
         pytest.skip('pytorch not available')
 
     doctest.ELLIPSIS_MARKER = "[...]"
@@ -122,7 +116,7 @@ def pytest_runtest_call(item):
     set_global_seed(seed)
 
     if 'pytorch' in item.keywords:
-        assert pytorch_available
+        assert torch_available
         torch.manual_seed(seed)
 
 
