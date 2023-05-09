@@ -11,9 +11,9 @@ sys.path.append(".")
 from stability_flexibility_nn import make_stab_flex, generate_trial_sequence
 
 # Let's make things reproducible
-pnl_seed = None
-trial_seq_seed = None
-set_global_seed(pnl_seed)
+#pnl_seed = None
+trial_seq_seed = 1
+#set_global_seed(pnl_seed)
 
 # High-level parameters that impact duration of parameter estimation
 num_trials = 512
@@ -23,13 +23,13 @@ num_estimates = 100
 sf_params = dict(
     gain=3.0,
     leak=3.0,
-    competition=2.0,
+    competition=3.0,
     lca_time_step_size=time_step_size,
     non_decision_time=0.2,
     stim_hidden_wt=1.5,
     starting_value=0.0,
     threshold=0.1,
-    ddm_noise=np.sqrt(0.1),
+    ddm_noise=0.1,
     lca_noise=0.0,
     hidden_resp_wt=2.0,
     ddm_time_step_size=time_step_size,
@@ -42,19 +42,30 @@ stimulusInput = comp.nodes["Stimulus Input"]
 cueInterval = comp.nodes["Cue-Stimulus Interval"]
 correctInfo = comp.nodes["Correct Response Info"]
 
-all_thresholds = np.linspace(0.001, 0.3, 3)
+all_thresholds = np.linspace(0.001, 0.05, 50)
+all_thresholds = np.repeat(all_thresholds, 50)
+all_gains = np.linspace(1.0, 10.0, 50)
+all_gains = np.tile(all_gains, 50)
+
+all_thresholds = np.repeat(all_thresholds, 3)
+all_gains = np.repeat(all_gains, 3)
+
 all_rr = np.array([])
 all_rt = np.array([])
 all_acc = np.array([])
+progress_counter = 0
 
-for threshold_i in all_thresholds:
+df = pd.DataFrame({'threshold':all_thresholds, 'gain':all_gains})
+
+for i in np.arange(7500):
+
+    progress_counter = progress_counter + 1
+    print(progress_counter)
 
     # Update the parameters of the composition
-    #comp.nodes["DDM"].function.threshold.base = threshold_i
-
     context = pnl.Context()
-
-    comp.nodes["DDM"].function.parameters.threshold.set(threshold_i, context)
+    comp.nodes["DDM"].function.parameters.threshold.set(all_thresholds[i], context)
+    comp.nodes["Task Activations [C1, C2]"].function.parameters.gain.set(all_gains[i], context)
 
     # Generate sample data to
     switchFrequency = 0.5
@@ -93,7 +104,11 @@ for threshold_i in all_thresholds:
     all_rt = np.append(all_rt, rt_i)
     all_acc = np.append(all_acc, acc_i)
 
-print(all_thresholds)
+#print(all_thresholds)
+#print(all_gains)
 print(all_rr)
 print(all_rt)
 print(all_acc)
+
+results = pd.DataFrame({'threshold': all_thresholds, 'gain': all_gains, 'reward_rate': all_rr, 'rt': all_rt, 'acc': all_acc})
+results.to_csv('sim_results.csv')

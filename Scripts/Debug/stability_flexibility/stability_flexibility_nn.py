@@ -230,9 +230,7 @@ def make_stab_flex(
     stabilityFlexibility.add_node(decisionMaker)
 
     # Projection Creation
-    stabilityFlexibility.add_projection(sender=taskInput, receiver=controlModule,
-                                        projection=pnl.MappingProjection(matrix=np.array([[1, 0], [0, 1]]))
-                                        )
+    stabilityFlexibility.add_projection(sender=taskInput, receiver=controlModule)
     stabilityFlexibility.add_projection(sender=stimulusInput, receiver=stimulusWeighting,
                                         projection=pnl.MappingProjection(matrix=np.array([[1, 0, 0, 0],
                                                                                           [0, 1, 0, 0],
