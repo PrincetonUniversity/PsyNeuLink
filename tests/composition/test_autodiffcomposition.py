@@ -1573,9 +1573,12 @@ class TestMiscTrainingFunctionality:
         # np.testing.assert_allclose(pt_weights_out_bp, pt_weights_out_ap)
 
     @pytest.mark.parametrize(
-        'loss', [Loss.MSE, Loss.L1, Loss.POISSON_NLL, Loss.CROSS_ENTROPY]
+        'loss, expected', [(Loss.MSE, [[[0.99330509]], [[0.99933169]], [[0.99933169]], [[0.9998504]]]),
+                           (Loss.L1, []),
+                           (Loss.POISSON_NLL, []),
+                           (Loss.CROSS_ENTROPY, [[[0.99330715]], [[0.99933202]], [[0.99933202]], [[0.99985049]]])]
     )
-    def test_various_loss_specs(self, loss, autodiff_mode):
+    def test_loss_specs(self, loss, expected, autodiff_mode):
         if autodiff_mode is not pnl.ExecutionMode.Python and loss in [Loss.POISSON_NLL, Loss.L1]:
             pytest.skip("Loss spec not yet implemented!")
 
@@ -1602,21 +1605,16 @@ class TestMiscTrainingFunctionality:
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
-        xor_inputs = np.array(  # the inputs we will provide to the model
-            [[0, 0],
-             [0, 1],
-             [1, 0],
-             [1, 1]])
+        xor_inputs = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
 
-        xor_targets = np.array(  # the outputs we wish to see from the model
-            [[0],
-             [1],
-             [1],
-             [0]])
+        xor_targets = np.array([[0], [1], [1], [0]])
 
         xor.learn(inputs = {"inputs": {xor_in:xor_inputs},
                             "targets": {xor_out:xor_targets},
                             "epochs": 10}, execution_mode=autodiff_mode)
+
+        tol = {'atol': 2e-6, 'rtol': 2e-6} if autodiff_mode != pnl.ExecutionMode.Python and loss == Loss.CROSS_ENTROPY else {}
+        np.testing.assert_allclose(xor.learning_results, expected, **tol)
 
     def test_pytorch_loss_spec(self, autodiff_mode):
 

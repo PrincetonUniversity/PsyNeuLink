@@ -885,20 +885,20 @@ class Function_Base(Function):
         model.functions.append(self_model)
 
         # assign stateful parameters
-        for param, index in self._mdf_stateful_parameter_indices.items():
-            initializer_name = getattr(self.parameters, param).initializer
-
+        for name, index in self._mdf_stateful_parameter_indices.items():
             # in this case, parameter gets updated to its function's final value
+            param = getattr(self.parameters, name)
+
             try:
-                initializer_value = self_model.args[initializer_name]
+                initializer_value = self_model.args[param.initializer]
             except KeyError:
-                initializer_value = self_model.metadata[initializer_name]
+                initializer_value = self_model.metadata[param.initializer]
 
             index_str = f'[{index}]' if index is not None else ''
 
             model.parameters.append(
                 mdf.Parameter(
-                    id=param,
+                    id=param.mdf_name if param.mdf_name is not None else param.name,
                     default_initial_value=initializer_value,
                     value=f'{self_model.id}{index_str}'
                 )
