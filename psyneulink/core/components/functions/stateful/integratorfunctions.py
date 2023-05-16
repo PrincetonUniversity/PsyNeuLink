@@ -4314,6 +4314,12 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
     """
 
     componentName = FITZHUGHNAGUMO_INTEGRATOR_FUNCTION
+    _mdf_stateful_parameter_indices = {
+        'previous_v': 0,
+        'previous_w': 1,
+        'previous_time': 2,
+    }
+    _mdf_result_function_id = 'integration_result'
 
     class Parameters(IntegratorFunction.Parameters):
         """
@@ -4489,8 +4495,8 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         initial_w = 0.0
         initial_v = 0.0
         t_0 = 0.0
-        previous_w = Parameter(np.array([1.0]), initializer='initial_w', pnl_internal=True)
-        previous_v = Parameter(np.array([1.0]), initializer='initial_v', pnl_internal=True)
+        previous_w = Parameter(np.array([1.0]), initializer='initial_w', pnl_internal=True, mdf_name='w')
+        previous_v = Parameter(np.array([1.0]), initializer='initial_v', pnl_internal=True, mdf_name='v')
         previous_time = Parameter(0.0, initializer='t_0', pnl_internal=True)
 
         # this should be removed because it's unused, but this will
@@ -5154,3 +5160,123 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         res = super().stateful_attributes
         res.remove('previous_value')
         return res
+
+    def _assign_to_mdf_model(self, model, input_id):
+        import modeci_mdf.mdf as mdf
+
+        args = self._mdf_model_nonstateful_parameters[self._model_spec_id_parameters]
+
+        slope_v_expression = (
+            '(a_v * (v ** 3) + (1 + threshold) * b_v * (v ** 2)'
+            + ' + (-threshold) * c_v * v + d_v + e_v * w'
+            + f' + f_v * {input_id}) / time_constant_v'
+        )
+        slope_w_expression = (
+            '(mode * a_w * v + b_w * w + c_w + (1 - mode) * uncorrelated_activity) / time_constant_w'
+        )
+
+        if self.integration_method == 'RK4':
+            runge_kutta_4_v_approx_1 = mdf.Function(
+                id='runge_kutta_4_v_approx_1',
+                value=slope_v_expression,
+                args=args,
+            )
+            runge_kutta_4_v_approx_2 = mdf.Function(
+                id='runge_kutta_4_v_approx_2',
+                value=slope_v_expression,
+                args={
+                    **args,
+                    'v': 'v + (0.5 * time_step_size * runge_kutta_4_v_approx_1)',
+                },
+            )
+            runge_kutta_4_v_approx_3 = mdf.Function(
+                id='runge_kutta_4_v_approx_3',
+                value=slope_v_expression,
+                args={
+                    **args,
+                    'v': 'v + (0.5 * time_step_size * runge_kutta_4_v_approx_2)',
+                },
+            )
+            runge_kutta_4_v_approx_4 = mdf.Function(
+                id='runge_kutta_4_v_approx_4',
+                value=slope_v_expression,
+                args={
+                    **args,
+                    'v': 'v + (time_step_size * runge_kutta_4_v_approx_3)',
+                },
+            )
+            runge_kutta_4_w_approx_1 = mdf.Function(
+                id='runge_kutta_4_w_approx_1',
+                value=slope_w_expression,
+                args=args,
+            )
+            runge_kutta_4_w_approx_2 = mdf.Function(
+                id='runge_kutta_4_w_approx_2',
+                value=slope_w_expression,
+                args={
+                    **args,
+                    'w': 'w + (0.5 * time_step_size * runge_kutta_4_w_approx_1)',
+                },
+            )
+            runge_kutta_4_w_approx_3 = mdf.Function(
+                id='runge_kutta_4_w_approx_3',
+                value=slope_w_expression,
+                args={
+                    **args,
+                    'w': 'w + (0.5 * time_step_size * runge_kutta_4_w_approx_2)',
+                },
+            )
+            runge_kutta_4_w_approx_4 = mdf.Function(
+                id='runge_kutta_4_w_approx_4',
+                value=slope_w_expression,
+                args={
+                    **args,
+                    'w': 'w + (time_step_size * runge_kutta_4_w_approx_3)',
+                },
+            )
+            runge_kutta_result = mdf.Function(
+                id=self._mdf_result_function_id,
+                value='[' + ', '.join([
+                    'v + (time_step_size / 6)'
+                    + ' * (runge_kutta_4_v_approx_1 + 2 * (runge_kutta_4_v_approx_2 + runge_kutta_4_v_approx_3)'
+                    + ' + runge_kutta_4_v_approx_4)',
+                    'w + (time_step_size / 6)'
+                    + ' * (runge_kutta_4_w_approx_1 + 2 * (runge_kutta_4_w_approx_2 + runge_kutta_4_w_approx_3)'
+                    + ' + runge_kutta_4_w_approx_4)',
+                ]) + ']',
+                args=args,
+            )
+
+            model.functions.extend([
+                runge_kutta_4_v_approx_1, runge_kutta_4_v_approx_2,
+                runge_kutta_4_v_approx_3, runge_kutta_4_v_approx_4,
+                runge_kutta_4_w_approx_1, runge_kutta_4_w_approx_2,
+                runge_kutta_4_w_approx_3, runge_kutta_4_w_approx_4,
+                runge_kutta_result,
+            ])
+        elif self.integration_method == 'EULER':
+            euler_v_approx = mdf.Function(
+                id='euler_v_approx',
+                value=slope_v_expression,
+                args=args,
+            )
+            euler_w_approx = mdf.Function(
+                id='euler_w_approx',
+                value=slope_w_expression,
+                args=args,
+            )
+            euler_result = mdf.Function(
+                id=self._mdf_result_function_id,
+                value='[v + time_step_size * euler_v_approx, w + time_step_size * euler_w_approx]',
+                args=args,
+            )
+            model.functions.extend([
+                euler_v_approx, euler_w_approx, euler_result
+            ])
+        else:
+            assert False, 'Integration method should already be validated to either RK4 or EULER'
+
+        return super()._assign_to_mdf_model(model, self._mdf_result_function_id)
+
+    def as_expression(self):
+        return f'{self._mdf_result_function_id}[0], {self._mdf_result_function_id}[1], previous_time + time_step_size'

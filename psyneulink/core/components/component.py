@@ -534,7 +534,7 @@ from psyneulink.core.globals.parameters import \
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet, VERBOSE_PREF
 from psyneulink.core.globals.preferences.preferenceset import \
     PreferenceLevel, PreferenceSet, _assign_prefs
-from psyneulink.core.globals.registry import register_category
+from psyneulink.core.globals.registry import register_category, _get_auto_name_prefix
 from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, convert_all_elements_to_np_array, convert_to_np_array, get_deepcopy_with_shared, \
@@ -1778,8 +1778,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
     def _assign_deferred_init_name(self, name):
 
-        name = "{} [{}]".format(name,DEFERRED_INITIALIZATION) if name \
-          else "{} {}".format(DEFERRED_INITIALIZATION,self.__class__.__name__)
+        name = "{} [{}]".format(name, DEFERRED_INITIALIZATION) if name \
+          else "{}{} {}".format(_get_auto_name_prefix(), DEFERRED_INITIALIZATION, self.__class__.__name__)
 
         # Register with ProjectionRegistry or create one
         register_category(entry=self,
@@ -3957,6 +3957,17 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         }
 
         return params
+
+    @property
+    def _mdf_model_nonstateful_parameters(self):
+        parameters = self._mdf_model_parameters
+
+        return {
+            self._model_spec_id_parameters: {
+                k: v for k, v in parameters[self._model_spec_id_parameters].items()
+                if (k not in self.parameters or getattr(self.parameters, k).initializer is None)
+            }
+        }
 
     @property
     def _mdf_metadata(self):
