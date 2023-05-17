@@ -41,6 +41,15 @@ if sys.platform.startswith("win") or \
                           0.5324710838150166, 0.09633802135385469, 6.117763080882898,
                           1.58212076767016, 0.5392724012504414, 1.8064031532265)
 
+# Numpy 1.23+ reimplemented tanh to roughly follow SVML but not enough to match
+# the above results [1,2]
+# [1] https://github.com/numpy/numpy/pull/20363
+# [2] https://github.com/numpy/numpy/commit/75edab9f7a7d95ecc62efc1b3b92642b6d45762d
+elif pversion.parse(np.version.version) >= pversion.parse('1.23'):
+    dda_expected_small = (0.5828813465336954, 0.04801236718458773,
+                          0.5324710838150166, 0.09633801169277778, 6.111024594252574,
+                          1.58212076767016, 0.5392724012504414, 1.8064031532265)
+
 normal_expected_mt = (1.0890232855122397)
 uniform_expected_mt = (0.6879771504250405)
 normal_expected_philox = (0.5910357654927911)
