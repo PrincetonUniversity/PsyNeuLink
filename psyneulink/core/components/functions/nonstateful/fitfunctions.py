@@ -238,13 +238,33 @@ def simulation_likelihood(
 
 class PECOptimizationFunction(OptimizationFunction):
     """
-    A class for performing parameter estimation for a composition.
+    A subclass of OptimizationFunction that is used to interface with the PEC. This class is used to specify the
+    search method to utilize for optimization or data fitting. It is not to be confused with the `objective_function`
+    that defines the optimization problem to be solved.
+
+    Arguments
+    ---------
+
+    method :
+        The search method to use for optimization. The following methods are currently supported:
+
+            - 'differential_evolution' : Differential evolution
+
+    objective_function :
+        The objective function to use for optimization. This is the function that defines the optimization problem the
+        PEC is trying to solve. The function is used to evaluate the `values <Mechanism_Base.value>` of the
+        `outcome_variables <ParameterEstimationComposition.outcome_variables>`, according to which combinations of
+        `parameters <ParameterEstimationComposition.parameters>` are assessed; this must be an `Callable`
+        that takes a 3D array as its only argument, the shape of which must be (**num_estimates**, **num_trials**,
+        number of **outcome_variables**).  The function should specify how to aggregate the value of each
+        **outcome_variable** over **num_estimates** and/or **num_trials** if either is greater than 1.
+
     """
 
     def __init__(
         self,
-        method,
-        objective_function=None,
+        method: str,
+        objective_function: Callable = None,
         data_fiting_mode=False,
         search_space=None,
         save_samples: Optional[bool] = None,

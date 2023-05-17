@@ -37,34 +37,24 @@ Contents
 Overview
 --------
 
-COMMENT:
-    ADD MENTION THAT THIS ALLOWS FITTING AND OPTIMIZING "LIKELIHOOD-FREE" MODELS.
-COMMENT
-
 A `ParameterEstimationComposition` is a subclass of `Composition` that is used to estimate specified `parameters
 <ParameterEstimationComposition.parameters>` of a `model <ParameterEstimationComposition.model>` Composition,
 in order to fit the `outputs <ParameterEstimationComposition.outcome_variables>`
-of the `model <ParameterEstimationComposition.model>` to a set of data (`ParameterEstimationComposition_Data_Fitting`),
-or to optimize its `net_outcome <ControlMechanism.net_outcome>` according to an `objective_function`
-(`ParameterEstimationComposition_Optimization`). In either case, when the ParameterEstimationComposition is `run
-<Composition.run>` with a given set of `inputs <Composition_Execution_Inputs>`, it returns the set of
-parameter values in its `optimized_parameter_values <ParameterEstimationComposition.optimized_parameter_values>`
-attribute that it estimates best satisfy either of those conditions, and the results of running the `model
-<ParameterEstimationComposition.model>` with those parameters in its `results <ParameterEstimationComposition.results>`
-attribute.  The arguments below are used to configure a ParameterEstimationComposition for either
-`ParameterEstimationComposition_Data_Fitting` or `ParameterEstimationComposition_Optimization`, followed by
-sections that describe arguments specific to each.
+of the `model <ParameterEstimationComposition.model>` to a set of data (`ParameterEstimationComposition_Data_Fitting`)
+via likelihood maximization using kernel density estimation (KDE), or to optimize a user provided scalar
+`objective_function` (`ParameterEstimationComposition_Optimization`). In either case, when the
+ParameterEstimationComposition is `run <Composition.run>` with a given set of `inputs <Composition_Execution_Inputs>`,
+it returns the set of parameter values in its `optimized_parameter_values
+<ParameterEstimationComposition.optimized_parameter_values>` attribute that it estimates best satisfy either of those
+conditions. The `results <ParameterEstimationComposition.results>` attribute are also set to the optimal parameter
+values.  The arguments below are used to configure a ParameterEstimationComposition for either
+`ParameterEstimationComposition_Data_Fitting` or `ParameterEstimationComposition_Optimization`, followed by sections
+that describe arguments specific to each.
 
     .. _ParameterEstimationComposition_Model:
 
-    * **model** - specifies the `Composition` for which the specifies `parameters
+    * **model** - specifies the `Composition` whose `parameters
       <ParameterEstimationComposition.parameters>` are to be estimated.
-      COMMENT:  TBI
-      Alternatively, the model to be fit can be constructed
-      within the ParameterEstimationComposition itself, using the **nodes** and/or **pathways** arguments of its
-      constructor (see `Composition_Constructor` for additional details).   The **model** argument
-      or the **nodes**, **pathways**, and/or **projections** arguments must be specified, but not both.
-      COMMENT
 
       .. note::
          Neither the **controller** nor any of its associated arguments can be specified in the constructor for a
@@ -72,22 +62,26 @@ sections that describe arguments specific to each.
 
     * **parameters** - specifies the `parameters <ParameterEstimationComposition.parameters>` of the `model
       <ParameterEstimationComposition.model>` to be estimated.  These are specified in a dict, in which the key
-      of each entry specifies a parameter to estimate, and its value either a range of values to sample for that
-      parameter or a distribution from which to draw them.
+      of each entry specifies a parameter to estimate, and its value is a list values to sample for that
+      parameter.
 
     * **outcome_variables** - specifies the `OUTPUT` `Nodes <Composition_Nodes>` of the `model
       <ParameterEstimationComposition.model>`, the `values <Mechanism_Base.value>` of which are used to evaluate the
-      fit of the different combinations of `parameter <ParameterEstimationComposition.parameters>` values sampled.
+      fit of the different combinations of `parameter <ParameterEstimationComposition.parameters>` values sampled. An
+      important limitation of the PEC is that the `outcome_variables <ParameterEstimationComposition.outcome_variables>`
+      must be a subset of the output ports of the `model <ParameterEstimationComposition.model>`'s `terminal Mechanism.
 
     * **optimization_function** - specifies the function used to search over the combinations of `parameter
-      <ParameterEstimationComposition.parameters>` values to be estimated. This can be any `OptimizationFunction`;
-      `DifferentialEvolution` is used by default.
-
-    * **num_trials** - specifies the number of trials executed when the `model <ParameterEstimationComposition.model>`
-      is run for each estimate of a combination of `parameter <ParameterEstimationComposition.parameters>` values.
+      <ParameterEstimationComposition.parameters>` values to be estimated. This must be either an instance of
+      `PECOptimizationFunction` or a string name of one of the supported optimizers.
 
     * **num_estimates** - specifies the number of independent samples that are estimated for a given combination of
       `parameter <ParameterEstimationComposition.parameters>` values.
+
+    * **num_trials_per_estimate** - specifies the number of trials executed when the `model <ParameterEstimationComposition.model>`
+      is run for each estimate of a combination of `parameter <ParameterEstimationComposition.parameters>` values.
+      Typically, this can be left unspecified and the `model <Composition>` will be run until all trials of inputs are
+      exhausted.
 
 .. _ParameterEstimationComposition_Data_Fitting:
 
@@ -96,22 +90,24 @@ Data Fitting
 
 The ParameterEstimationComposition can be used to find a set of parameters for the `model
 <ParameterEstimationComposition.model>` such that, when it is run with a given set of inputs, its results
-best match a specified set of empirical data.  This requires that the **data** argument be specified:
+best match (maximum likelihood) a specified set of empirical data. This requires that the **data** argument be
+specified:
 
     .. _ParameterEstimationComposition_Data:
 
     * **data** - specifies the data to which the `outcome_variables <ParameterEstimationComposition.outcome_variables>`
       are fit in the estimation process.  They must be in a format that aligns with the specification of
-      the `outcome_variables <ParameterEstimationComposition.outcome_variables>`.
-      COMMENT:
-          FIX:  GET MORE FROM DAVE HERE
-      COMMENT
+      the `outcome_variables <ParameterEstimationComposition.outcome_variables>`. The parameter data should be a
+      pandas DataFrame where each column corresponds to one of the
+      `outcome_variables <ParameterEstimationComposition.outcome_variables>`. If one of the outcome variables should be
+      treated as a categorical variable (e.g. a decision value in a two-alternative forced choice task modeled by a
+      DDM), the it should be specified as a pandas Categorical variable.
 
     .. technical_note::
-    * **objective_function** - `LogLikelihoodFunction` is automatically assigned for data fitting; this compares the
-    ` values <Mechanism_Base.value>` of the `outcome_variables <ParameterEstimationComposition.outcome_variables>` with
-      the corresponding **data** values, and searches over values of the `parameters
-      <ParameterEstimationComposition.parameters>` that maximize the fit.
+    * **objective_function** - A function that computes the sum of the log likelihood of the data is automatically
+      assigned for data fitting purposes and should not need to be specified. This function uses a kernel density
+      estimation of the data to compute the likelihood of the data given the model. If you would like to use your own
+      estimation of the likelhood, see `ParameterEstimationComposition_Optimization` below.
 
     .. warning::
        The **objective_function** argument should NOT be specified for data fitting; specifying both the
@@ -131,8 +127,8 @@ requires that the **objective_function** argument be specified:
 
     * **objective_function** - specifies a function used to evaluate the `values <Mechanism_Base.value>` of the
       `outcome_variables <ParameterEstimationComposition.outcome_variables>`, according to which combinations of
-      `parameters <ParameterEstimationComposition.parameters>` are assessed; this must be an `OptimizationFunction`
-      that takes a 3D array as its only argument, the shape of which must be (**num_estimates**, **num_trials**,
+      `parameters <ParameterEstimationComposition.parameters>` are assessed; this must be an `Callable`
+      that takes a 3D array as its only argument, the shape of which will be (**num_estimates**, **num_trials**,
       number of **outcome_variables**).  The function should specify how to aggregate the value of each
       **outcome_variable** over **num_estimates** and/or **num_trials** if either is greater than 1.
 
@@ -145,13 +141,13 @@ requires that the **objective_function** argument be specified:
 Supported Optimizers
 --------------------
 
-TBD
+- `DifferentialEvolution <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.differential_evolution.html`_
 
 Structure
 ---------
 
 .. technical_note::
-   ParameterEstimationComposition uses an `PEC_OCM` as its `controller <Composition.controller>` -- a specialized
+   ParameterEstimationComposition uses a `PEC_OCM` as its `controller <Composition.controller>` -- a specialized
    subclass of `OptimizationControlMechanism` that intercepts inputs provided to the `run
    <ParameterEstimationComposition.run>` method of the ParameterEstimationComposition, and assigns them directly
    to the `state_feature_values` of the PEC_OCM when it executes.
@@ -235,19 +231,6 @@ def _same_seed_for_all_parameter_combinations_setter(
 
 class ParameterEstimationComposition(Composition):
     """
-    Composition(                           \
-        parameters,
-        outcome_variables,
-        model=None,
-        data=None,
-        objective_function=None,
-        optimization_function=None,
-        num_estimates=1,
-        number_trials_per_estimate=None,
-        initial_seed=None,
-        same_seed_for_all_parameter_combinations=False
-        )
-
     Subclass of `Composition` that estimates specified parameters either to fit the results of a Composition
     to a set of data or to optimize a specified function.
 
@@ -260,35 +243,39 @@ class ParameterEstimationComposition(Composition):
     Arguments
     ---------
 
-    parameters : dict[Parameter:Union[Iterator, Function, List, value]
-        specifies the parameters of the `model <ParameterEstimationComposition.model>` used for
-        `ParameterEstimationComposition_Data_Fitting` or `ParameterEstimationComposition_Optimization`, and either
-        the range of values to be evaluated for each parameter, or priors that define a distribution over those.
+    parameters :
+        specifies the `parameters <ParameterEstimationComposition.parameters>` of the `model
+        <ParameterEstimationComposition.model>` to be estimated.  These are specified in a dict, in which the key
+        of each entry specifies a parameter to estimate, and its value is a list values to sample for that
+        parameter.
 
-    outcome_variables : list[Composition output nodes]
-        specifies the `OUTPUT` `Nodes <Composition_Nodes>` of the `model <ParameterEstimationComposition.model>`,
-        the `values <Mechanism_Base.value>` of which are either compared to a specified **data** when the
-        ParameterEstimationComposition is used for `ParameterEstimationComposition_Data_Fitting`, or used by the
-        `optimization_function <ParameterEstimationComposition.optimization_function>` for
-        `ParameterEstimationComposition_Optimization`.
+    outcome_variables :
+        specifies the `OUTPUT` `Nodes <Composition_Nodes>` of the `model
+        <ParameterEstimationComposition.model>`, the `values <Mechanism_Base.value>` of which are used to evaluate the
+        fit of the different combinations of `parameter <ParameterEstimationComposition.parameters>` values sampled. An
+        important limitation of the PEC is that the `outcome_variables <ParameterEstimationComposition.outcome_variables>`
+        must be a subset of the output ports of the `model <ParameterEstimationComposition.model>`'s `terminal Mechanism.
 
-    model : Composition : default None
+    model :
         specifies an external `Composition` for which parameters are to be `fit to data
         <ParameterEstimationComposition_Data_Fitting>` or `optimized <ParameterEstimationComposition_Optimization>`
         according to a specified `objective_function <ParameterEstimationComposition.objective_function>`.
-        If **model** is None (the default), the ParameterEstimationComposition itself is used (see
-        `model <ParameterEstimationComposition_Model>` for additional information).
 
-    data : array : default None
-        specifies the data to be fit when the ParameterEstimationComposition is used for
-        `ParameterEstimationComposition_Data_Fitting`;  structure must conform to format of
-        **outcome_variables** (see `data <ParameterEstimationComposition.data>` for additional information).
+    data :
+        specifies the data to which the `outcome_variables <ParameterEstimationComposition.outcome_variables>`
+        are fit in the estimation process.  They must be in a format that aligns with the specification of
+        the `outcome_variables <ParameterEstimationComposition.outcome_variables>`. The parameter data should be a
+        pandas DataFrame where each column corresponds to one of the
+        `outcome_variables <ParameterEstimationComposition.outcome_variables>`. If one of the outcome variables should be
+        treated as a categorical variable (e.g. a decision value in a two-alternative forced choice task modeled by a
+        DDM), the it should be specified as a pandas Categorical variable.
 
     data_categorical_dims : Union[Iterable] : default None
         specifies the dimensions of the data that are categorical. If a list of boolean values is provided, it is
         assumed to be a mask for the categorical data dimensions and must have the same length as columns in data. If
         it is an iterable of integers, it is assumed to be a list of the categorical dimensions indices. If it is None,
-        all data dimensions are assumed to be continuous.
+        all data dimensions are assumed to be continuous. Alternatively, if data is a pandas DataFrame, then the columns
+        which have Category dtype are assumed to be categorical.
 
     objective_function : ObjectiveFunction, function or method
         specifies the function used by **optimization_function** (see `objective_function
@@ -298,9 +285,9 @@ class ParameterEstimationComposition(Composition):
         `outcome_variables <ParameterEstimationComposition.outcome_variables>`.
 
     optimization_function : OptimizationFunction, function or method : default or MaximumLikelihood or GridSearch
-        specifies the function used to evaluate the `fit to data <ParameterEstimationComposition_Data_Fitting>`
-        (default: `MaximumLikelihood`) or to `optimize <ParameterEstimationComposition_Optimization>` the parameters of
-        the `model <ParameterEstimationComposition.model>` (default: `GridSearch`)according to **`objective_function**.
+        specifies the function used to search over the combinations of `parameter
+        <ParameterEstimationComposition.parameters>` values to be estimated. This must be either an instance of
+      `PECOptimizationFunction` or a string name of one of the supported optimizers.
 
     num_estimates : int : default 1
         specifies the number of estimates made for a each combination of `parameter <ParameterEstimationComposition>`
@@ -509,6 +496,11 @@ class ParameterEstimationComposition(Composition):
         context: Optional[Context] = None,
         **kwargs,
     ):
+
+        # We don't allow user specified controllers in PEC
+        if 'controller' in kwargs:
+            raise ValueError("controller argument cannot be specified in a ParameterEstimationComposition. PEC sets "
+                             "up its own controller for executing its parameter estimation process.")
 
         # If the number of trials per estimate is not specified and we are fitting to data then
         # get it from the data.
@@ -958,10 +950,11 @@ def _pec_ocm_state_feature_values_getter(owning_component=None, context=None) ->
 
 
 class PEC_OCM(OptimizationControlMechanism):
-    """OptimizationControlMechanism specialized for use with ParameterEstimationComposition
+    """
+    OptimizationControlMechanism specialized for use with ParameterEstimationComposition
     Assign inputs passed to run method of ParameterEstimationComposition directly as values of
-      PEC_OCM's state_input_ports (this allows a full set of trials' worth of inputs to be used in each
-      run of the Composition being estimated or optimized.
+    PEC_OCM's state_input_ports (this allows a full set of trials' worth of inputs to be used in each
+    run of the Composition being estimated or optimized.
     set_pec_inputs_cache(): called by PEC to cache inputs passed to its run method
     _pec_ocm_state_feature_values_getter(): overrides state_feature_values_getter of OptimizationControlMechanism
       to return input dict for simulation that incluces all trials' worth of inputs for each node.
