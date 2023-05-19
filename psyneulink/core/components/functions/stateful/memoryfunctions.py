@@ -1342,12 +1342,6 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     def _instantiate_attributes_before_function(self, function=None, context=None):
         self._initialize_previous_value(self.parameters.initializer._get(context), context)
 
-        if isinstance(self.distance_function, type):
-            self.distance_function = self.distance_function(context=context)
-
-        if isinstance(self.selection_function, type):
-            self.selection_function = self.selection_function(context=context)
-
     @handle_external_context(fallback_most_recent=True)
     def reset(self, new_value=None, context=None):
         """
