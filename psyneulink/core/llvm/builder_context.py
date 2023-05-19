@@ -23,7 +23,7 @@ import weakref
 
 from psyneulink.core.scheduling.time import Time, TimeScale
 from psyneulink.core.globals.sampleiterator import SampleIterator
-from psyneulink.core.globals.utilities import ContentAddressableList
+from psyneulink.core.globals.utilities import ContentAddressableList, unproxy_weakproxy
 from psyneulink.core import llvm as pnlvm
 
 from . import codegen
@@ -75,6 +75,13 @@ class _node_wrapper():
 def _comp_cached(func):
     @functools.wraps(func)
     def wrapper(bctx, obj):
+        if isinstance(obj, weakref.ProxyTypes):
+            # only call for ProxyTypes because this won't fail on most
+            # objects, but specifically not on 'super()' referenced
+            # below, which would return the original object super() was
+            # called with, resulting in caching the wrong thing here
+            obj = unproxy_weakproxy(obj)
+
         try:
             obj_cache = bctx._cache.setdefault(obj, dict())
         except TypeError:  # 'super()' references can't be cached
