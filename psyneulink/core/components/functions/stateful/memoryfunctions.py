@@ -1244,13 +1244,6 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             test_var = self.get_previous_value(context)[0]
         else:
             test_var = self.defaults.variable
-        if isinstance(distance_function, type):
-            distance_function = distance_function(default_variable=test_var)
-            fct_msg = 'Function type'
-        else:
-            distance_function.defaults.variable = [test_var,test_var]
-            distance_function._instantiate_value(context)
-            fct_msg = 'Function'
 
         if (isinstance(distance_function, Distance)
                 and distance_function.metric == COSINE
@@ -1266,7 +1259,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             try:
                 distance_result = self._get_distance(test_var, test_var, field_weights, granularity, context=context)
             except:
-                raise FunctionError(f"{fct_msg} specified for {repr(DISTANCE_FUNCTION)} arg of "
+                raise FunctionError(f"Function specified for {repr(DISTANCE_FUNCTION)} arg of "
                                     f"{self.__class__.__name__} ({distance_function}) must accept an array "
                                     f"with two lists or 1d arrays, or a 2d array, as its argument.")
             if granularity == 'full_entry' and not np.isscalar(distance_result):
@@ -1289,17 +1282,10 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         test_var = np.asfarray([distance_result if i==0
                                 else np.zeros_like(distance_result)
                                 for i in range(self._get_current_parameter_value('max_entries', context))])
-        if isinstance(selection_function, type):
-            selection_function = selection_function(default_variable=test_var, context=context)
-            fct_string = 'Function type'
-        else:
-            selection_function.defaults.variable = test_var
-            selection_function._instantiate_value(context)
-            fct_string = 'Function'
         try:
             result = np.asarray(selection_function(test_var, context=context))
         except e:
-            raise FunctionError(f'{fct_string} specified for {repr(SELECTION_FUNCTION)} arg of {self.__class__} '
+            raise FunctionError(f'Function specified for {repr(SELECTION_FUNCTION)} arg of {self.__class__} '
                                 f'({selection_function}) must accept a 1d array as its argument')
         if result.shape != test_var.shape:
             raise FunctionError(f'Value returned by {repr(SELECTION_FUNCTION)} specified for {self.__class__} '
