@@ -1221,6 +1221,9 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             self.parameters.memory_num_fields.set(self.previous_value.shape[1], override=True)
             self.parameters.memory_field_shapes.set([item.shape for item in self.previous_value[0]], override=True)
 
+    def _parse_distance_function_variable(self, variable, context=None):
+        return convert_all_elements_to_np_array([variable, variable])
+
     def _parse_selection_function_variable(self, variable, context=None):
         # this should be replaced in the future with the variable
         # argument when function ordering (and so ordering of parsers)
@@ -1719,9 +1722,6 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             assert False, f"PROGRAM ERROR: call to 'ContentAddressableMemory.get_distance()' method " \
                           f"with invalid 'granularity' argument ({granularity});  " \
                           f"should be 'full_entry' or 'per_field."
-
-    def _parse_distance_function_variable(self, variable):
-        return convert_to_np_array([variable[0], variable[0]])
 
     @classmethod
     def _enforce_memory_shape(cls, memory):
