@@ -1224,11 +1224,8 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     def _parse_distance_function_variable(self, variable, context=None):
         return convert_all_elements_to_np_array([variable, variable])
 
-    def _parse_selection_function_variable(self, variable, context=None):
-        # this should be replaced in the future with the variable
-        # argument when function ordering (and so ordering of parsers)
-        # is made explicit
-        distance_result = self.distance_function.parameters.value._get(context)
+    def _parse_selection_function_variable(self, variable, context=None, distance_result=None):
+        distance_result = self.distance_function(self._parse_distance_function_variable(variable), context=context)
         # TEST PRINT:
         # print(distance_result, self.distance_function.defaults.value)
         return np.asfarray([
