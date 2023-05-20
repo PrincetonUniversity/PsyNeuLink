@@ -1111,7 +1111,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
         distance_function = Parameter(Distance(metric=COSINE), stateful=False, loggable=False)
-        selection_function = Parameter(OneHot(mode=MIN_INDICATOR), stateful=False, loggable=False)
+        selection_function = Parameter(OneHot(mode=MIN_INDICATOR), stateful=False, loggable=False, dependencies='distance_function')
         distance = Parameter(0, stateful=True, read_only=True)
         distances_by_field = Parameter([0], stateful=True, read_only=True)
         distances_to_entries = Parameter([0], stateful=True, read_only=True)
