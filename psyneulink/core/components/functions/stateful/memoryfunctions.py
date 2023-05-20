@@ -1275,21 +1275,26 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                                     f"if {repr(DISTANCE_FIELD_WEIGHTS)} is a non-homogenous list or array"
                                     f"(i.e., not all elements are the same.")
 
-        # FIX: 4/5/21 SHOULD VALIDATE NOISE AND RATE HERE AS WELL?
+            # Default to full memory
+            selection_function = self.selection_function
+            test_var = np.asfarray([
+                distance_result if i == 0 else np.zeros_like(distance_result)
+                for i in range(self._get_current_parameter_value('max_entries', context))
+            ])
+            try:
+                result = np.asarray(selection_function(test_var, context=context))
+            except Exception as e:
+                raise FunctionError(
+                    f'Function specified for {repr(SELECTION_FUNCTION)} arg of {self.__class__} '
+                    f'({selection_function}) must accept a 1d array as its argument'
+                ) from e
+            if result.shape != test_var.shape:
+                raise FunctionError(
+                    f'Value returned by {repr(SELECTION_FUNCTION)} specified for {self.__class__} '
+                    f'({result}) must return an array of the same length it receives'
+                )
 
-        # Default to full memory
-        selection_function = self.selection_function
-        test_var = np.asfarray([distance_result if i==0
-                                else np.zeros_like(distance_result)
-                                for i in range(self._get_current_parameter_value('max_entries', context))])
-        try:
-            result = np.asarray(selection_function(test_var, context=context))
-        except e:
-            raise FunctionError(f'Function specified for {repr(SELECTION_FUNCTION)} arg of {self.__class__} '
-                                f'({selection_function}) must accept a 1d array as its argument')
-        if result.shape != test_var.shape:
-            raise FunctionError(f'Value returned by {repr(SELECTION_FUNCTION)} specified for {self.__class__} '
-                                f'({result}) must return an array of the same length it receives')
+        # FIX: 4/5/21 SHOULD VALIDATE NOISE AND RATE HERE AS WELL?
 
     @handle_external_context()
     def _update_default_variable(self, new_default_variable, context=None):
