@@ -1206,6 +1206,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             duplicate_threshold=duplicate_threshold,
             equidistant_entries_select=equidistant_entries_select,
             distance_function=distance_function,
+            selection_function=selection_function,
             distance_field_weights=distance_field_weights,
             rate=rate,
             noise=noise,
