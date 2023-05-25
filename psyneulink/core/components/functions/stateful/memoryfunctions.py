@@ -1111,7 +1111,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
         distance_function = Parameter(Distance(metric=COSINE), stateful=False, loggable=False)
-        selection_function = Parameter(OneHot(mode=MIN_INDICATOR), stateful=False, loggable=False)
+        selection_function = Parameter(OneHot(mode=MIN_INDICATOR), stateful=False, loggable=False, dependencies='distance_function')
         distance = Parameter(0, stateful=True, read_only=True)
         distances_by_field = Parameter([0], stateful=True, read_only=True)
         distances_to_entries = Parameter([0], stateful=True, read_only=True)
@@ -1206,6 +1206,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             duplicate_threshold=duplicate_threshold,
             equidistant_entries_select=equidistant_entries_select,
             distance_function=distance_function,
+            selection_function=selection_function,
             distance_field_weights=distance_field_weights,
             rate=rate,
             noise=noise,
@@ -1220,11 +1221,11 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             self.parameters.memory_num_fields.set(self.previous_value.shape[1], override=True)
             self.parameters.memory_field_shapes.set([item.shape for item in self.previous_value[0]], override=True)
 
-    def _parse_selection_function_variable(self, variable, context=None):
-        # this should be replaced in the future with the variable
-        # argument when function ordering (and so ordering of parsers)
-        # is made explicit
-        distance_result = self.distance_function.parameters.value._get(context)
+    def _parse_distance_function_variable(self, variable, context=None):
+        return convert_all_elements_to_np_array([variable, variable])
+
+    def _parse_selection_function_variable(self, variable, context=None, distance_result=None):
+        distance_result = self.distance_function(self._parse_distance_function_variable(variable), context=context)
         # TEST PRINT:
         # print(distance_result, self.distance_function.defaults.value)
         return np.asfarray([
@@ -1240,13 +1241,6 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             test_var = self.get_previous_value(context)[0]
         else:
             test_var = self.defaults.variable
-        if isinstance(distance_function, type):
-            distance_function = distance_function(default_variable=test_var)
-            fct_msg = 'Function type'
-        else:
-            distance_function.defaults.variable = [test_var,test_var]
-            distance_function._instantiate_value(context)
-            fct_msg = 'Function'
 
         if (isinstance(distance_function, Distance)
                 and distance_function.metric == COSINE
@@ -1262,7 +1256,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             try:
                 distance_result = self._get_distance(test_var, test_var, field_weights, granularity, context=context)
             except:
-                raise FunctionError(f"{fct_msg} specified for {repr(DISTANCE_FUNCTION)} arg of "
+                raise FunctionError(f"Function specified for {repr(DISTANCE_FUNCTION)} arg of "
                                     f"{self.__class__.__name__} ({distance_function}) must accept an array "
                                     f"with two lists or 1d arrays, or a 2d array, as its argument.")
             if granularity == 'full_entry' and not np.isscalar(distance_result):
@@ -1278,28 +1272,26 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                                     f"if {repr(DISTANCE_FIELD_WEIGHTS)} is a non-homogenous list or array"
                                     f"(i.e., not all elements are the same.")
 
-        # FIX: 4/5/21 SHOULD VALIDATE NOISE AND RATE HERE AS WELL?
+            # Default to full memory
+            selection_function = self.selection_function
+            test_var = np.asfarray([
+                distance_result if i == 0 else np.zeros_like(distance_result)
+                for i in range(self._get_current_parameter_value('max_entries', context))
+            ])
+            try:
+                result = np.asarray(selection_function(test_var, context=context))
+            except Exception as e:
+                raise FunctionError(
+                    f'Function specified for {repr(SELECTION_FUNCTION)} arg of {self.__class__} '
+                    f'({selection_function}) must accept a 1d array as its argument'
+                ) from e
+            if result.shape != test_var.shape:
+                raise FunctionError(
+                    f'Value returned by {repr(SELECTION_FUNCTION)} specified for {self.__class__} '
+                    f'({result}) must return an array of the same length it receives'
+                )
 
-        # Default to full memory
-        selection_function = self.selection_function
-        test_var = np.asfarray([distance_result if i==0
-                                else np.zeros_like(distance_result)
-                                for i in range(self._get_current_parameter_value('max_entries', context))])
-        if isinstance(selection_function, type):
-            selection_function = selection_function(default_variable=test_var, context=context)
-            fct_string = 'Function type'
-        else:
-            selection_function.defaults.variable = test_var
-            selection_function._instantiate_value(context)
-            fct_string = 'Function'
-        try:
-            result = np.asarray(selection_function(test_var, context=context))
-        except e:
-            raise FunctionError(f'{fct_string} specified for {repr(SELECTION_FUNCTION)} arg of {self.__class__} '
-                                f'({selection_function}) must accept a 1d array as its argument')
-        if result.shape != test_var.shape:
-            raise FunctionError(f'Value returned by {repr(SELECTION_FUNCTION)} specified for {self.__class__} '
-                                f'({result}) must return an array of the same length it receives')
+        # FIX: 4/5/21 SHOULD VALIDATE NOISE AND RATE HERE AS WELL?
 
     @handle_external_context()
     def _update_default_variable(self, new_default_variable, context=None):
@@ -1340,12 +1332,6 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
         self._initialize_previous_value(self.parameters.initializer._get(context), context)
-
-        if isinstance(self.distance_function, type):
-            self.distance_function = self.distance_function(context=context)
-
-        if isinstance(self.selection_function, type):
-            self.selection_function = self.selection_function(context=context)
 
     @handle_external_context(fallback_most_recent=True)
     def reset(self, new_value=None, context=None):
@@ -1724,9 +1710,6 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             assert False, f"PROGRAM ERROR: call to 'ContentAddressableMemory.get_distance()' method " \
                           f"with invalid 'granularity' argument ({granularity});  " \
                           f"should be 'full_entry' or 'per_field."
-
-    def _parse_distance_function_variable(self, variable):
-        return convert_to_np_array([variable[0], variable[0]])
 
     @classmethod
     def _enforce_memory_shape(cls, memory):
