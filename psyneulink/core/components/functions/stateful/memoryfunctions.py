@@ -1233,6 +1233,188 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             for i in range(self.defaults.max_entries)
         ])
 
+    def _get_state_ids(self):
+        return super()._get_state_ids() + ["ring_memory"]
+
+    def _get_state_struct_type(self, ctx):
+        # Construct a ring buffer
+        max_entries = self.parameters.max_entries.get()
+        key_type = ctx.convert_python_struct_to_llvm_ir(self.defaults.variable)
+        keys_struct = pnlvm.ir.ArrayType(key_type, max_entries)
+        val_type = ctx.convert_python_struct_to_llvm_ir(self.defaults.variable)
+        vals_struct = pnlvm.ir.ArrayType(val_type, max_entries)
+        ring_buffer_struct = pnlvm.ir.LiteralStructType((
+            keys_struct, vals_struct, ctx.int32_ty, ctx.int32_ty))
+        generic_struct = ctx.get_state_struct_type(super())
+        return pnlvm.ir.LiteralStructType((*generic_struct,
+                                           ring_buffer_struct))
+
+    def _get_state_initializer(self, context):
+        _memory = self.parameters.previous_value._get(context)
+        # # HACK: manually initialize with zero vector
+        # This should happen automatically?
+        if _memory is None:
+            _memory = self.uniform_entry(0, context)
+        mem_init = pnlvm._tupleize([_memory[0], _memory[1], 0, 0])
+        return (*super()._get_state_initializer(context), mem_init)
+
+
+
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+        # arg_in = cue
+        # arg_out = retrieved val
+
+        # PRNG
+        rand_struct = ctx.get_random_state_ptr(builder, self, state, params)
+        uniform_f = ctx.get_uniform_dist_function_by_state(rand_struct)
+
+        # Ring buffer
+        buffer_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "ring_memory")
+        keys_ptr = builder.gep(buffer_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        vals_ptr = builder.gep(buffer_ptr, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        count_ptr = builder.gep(buffer_ptr, [ctx.int32_ty(0), ctx.int32_ty(2)])
+        wr_ptr = builder.gep(buffer_ptr, [ctx.int32_ty(0), ctx.int32_ty(3)])
+
+        # Zero output
+        builder.store(arg_out.type.pointee(None), arg_out)
+
+        # Check retrieval probability
+        retr_ptr = builder.alloca(ctx.bool_ty)
+        builder.store(retr_ptr.type.pointee(1), retr_ptr)
+        retr_prob_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, RETRIEVAL_PROB)
+
+        # Prob can be [x] if we are part of a mechanism
+        retr_prob = pnlvm.helpers.load_extract_scalar_array_one(builder, retr_prob_ptr)
+        retr_rand = builder.fcmp_ordered('<', retr_prob, retr_prob.type(1.0))
+
+        max_entries = len(vals_ptr.type.pointee)
+        entries = builder.load(count_ptr)
+        entries = pnlvm.helpers.uint_min(builder, entries, max_entries)
+        # The call to random function needs to be after check to match python
+        with builder.if_then(retr_rand):
+            rand_ptr = builder.alloca(ctx.float_ty)
+            builder.call(uniform_f, [rand_struct, rand_ptr])
+            rand = builder.load(rand_ptr)
+            passed = builder.fcmp_ordered('<', rand, retr_prob)
+            builder.store(passed, retr_ptr)
+
+        # Retrieve
+        retr = builder.load(retr_ptr)
+        with builder.if_then(retr, likely=True):
+            # get_memory
+
+            # Determine distances
+
+            # load distance function
+            distance_f = ctx.import_llvm_function(self.distance_function)
+            distance_params = pnlvm.helpers.get_param_ptr(builder, self, params, "distance_function")
+            distance_state = pnlvm.helpers.get_state_ptr(builder, self, state, "distance_function")
+            distance_arg_in = builder.alloca(distance_f.args[2].type.pointee)
+
+            builder.store(builder.load(arg_in),
+                          builder.gep(distance_arg_in, [ctx.int32_ty(0),
+                                                        ctx.int32_ty(0),
+                                                        ]))
+            selection_arg_in = builder.alloca(pnlvm.ir.ArrayType(distance_f.args[3].type.pointee, max_entries))
+
+            # Get distances between query_key and all keys in memory
+            with pnlvm.helpers.for_loop_zero_inc(builder, entries, "distance_loop") as (b, idx):
+                compare_ptr = b.gep(keys_ptr, [ctx.int32_ty(0), idx])
+                b.store(b.load(compare_ptr),
+                        b.gep(distance_arg_in, [ctx.int32_ty(0), ctx.int32_ty(1)]))
+                distance_arg_out = b.gep(selection_arg_in, [ctx.int32_ty(0), idx])
+                b.call(distance_f, [distance_params, distance_state,
+                                    distance_arg_in, distance_arg_out])
+
+            selection_f = ctx.import_llvm_function(self.selection_function)
+            selection_params = pnlvm.helpers.get_param_ptr(builder, self, params, "selection_function")
+            selection_state = pnlvm.helpers.get_state_ptr(builder, self, state, "selection_function")
+            selection_arg_out = builder.alloca(selection_f.args[3].type.pointee)
+            builder.call(selection_f, [selection_params, selection_state,
+                                       selection_arg_in, selection_arg_out])
+
+            # Find the selected index
+            selected_idx_ptr = builder.alloca(ctx.int32_ty)
+            builder.store(ctx.int32_ty(0), selected_idx_ptr)
+            with pnlvm.helpers.for_loop_zero_inc(builder, entries, "distance_loop") as (b,idx):
+                selection_val = b.load(b.gep(selection_arg_out, [ctx.int32_ty(0), idx]))
+                non_zero = b.fcmp_ordered('!=', selection_val, selection_val.type(0))
+                with b.if_then(non_zero):
+                    b.store(idx, selected_idx_ptr)
+
+            selected_idx = builder.load(selected_idx_ptr)
+            selected_val = builder.load(builder.gep(vals_ptr, [ctx.int32_ty(0),
+                                                               selected_idx]))
+            # add to returned output
+            builder.store(selected_val, arg_out)
+
+        # Check storage probability
+        store_ptr = builder.alloca(ctx.bool_ty)
+        builder.store(store_ptr.type.pointee(1), store_ptr)
+        store_prob_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, STORAGE_PROB)
+
+        # Prob can be [x] if we are part of a mechanism
+        store_prob = pnlvm.helpers.load_extract_scalar_array_one(builder, store_prob_ptr)
+        store_rand = builder.fcmp_ordered('<', store_prob, store_prob.type(1.0))
+
+        # The call to random function needs to be behind jump to match python
+        # code
+        with builder.if_then(store_rand):
+            rand_ptr = builder.alloca(ctx.float_ty)
+            builder.call(uniform_f, [rand_struct, rand_ptr])
+            rand = builder.load(rand_ptr)
+            passed = builder.fcmp_ordered('<', rand, store_prob)
+            builder.store(passed, store_ptr)
+
+        # Store
+        store = builder.load(store_ptr)
+        with builder.if_then(store, likely=True):
+
+            # Check if such key already exists
+            is_new_key_ptr = builder.alloca(ctx.bool_ty)
+            builder.store(is_new_key_ptr.type.pointee(1), is_new_key_ptr)
+            with pnlvm.helpers.for_loop_zero_inc(builder, entries, "distance_loop") as (b,idx):
+                cmp_key_ptr = b.gep(keys_ptr, [ctx.int32_ty(0), idx])
+
+                # Vector compare
+                # TODO: move this to helpers
+                key_differs_ptr = b.alloca(ctx.bool_ty)
+                b.store(key_differs_ptr.type.pointee(0), key_differs_ptr)
+                for (var_key_element, cmp_key_element) in pnlvm.helpers.recursive_iterate_arrays(ctx, b, arg_in, cmp_key_ptr):
+                    element_differs = b.fcmp_unordered('!=',
+                                                       b.load(var_key_element),
+                                                       b.load(cmp_key_element))
+                    key_differs = b.load(key_differs_ptr)
+                    key_differs = b.or_(key_differs, element_differs)
+                    b.store(key_differs, key_differs_ptr)
+
+                key_differs = b.load(key_differs_ptr)
+                is_new_key = b.load(is_new_key_ptr)
+                is_new_key = b.and_(is_new_key, key_differs)
+                b.store(is_new_key, is_new_key_ptr)
+
+            # Add new key + val if does not exist yet
+            is_new_key = builder.load(is_new_key_ptr)
+            with builder.if_then(is_new_key):
+                write_idx = builder.load(wr_ptr)
+
+                store_key_ptr = builder.gep(keys_ptr, [ctx.int32_ty(0), write_idx])
+                store_val_ptr = builder.gep(vals_ptr, [ctx.int32_ty(0), write_idx])
+
+                builder.store(builder.load(arg_in), store_key_ptr)
+                builder.store(builder.load(arg_out), store_val_ptr)
+
+                # Update counters
+                write_idx = builder.add(write_idx, write_idx.type(1))
+                write_idx = builder.urem(write_idx, write_idx.type(max_entries))
+                builder.store(write_idx, wr_ptr)
+
+                count = builder.load(count_ptr)
+                count = builder.add(count, count.type(1))
+                builder.store(count, count_ptr)
+
+        return builder
+
     def _validate(self, context=None):
         """Validate distance_function, selection_function and memory store"""
         distance_function = self.distance_function

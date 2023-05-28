@@ -139,8 +139,6 @@ test_data = [
 def test_basic(func, variable, params, expected, benchmark, func_mode):
     if func is Functions.Buffer and func_mode != 'Python':
         pytest.skip("Not implemented")
-    if func is Functions.ContentAddressableMemory and func_mode != 'Python':
-        pytest.skip("Not implemented")
 
     benchmark.group = func.componentName
     f = func(default_variable=variable, **params)

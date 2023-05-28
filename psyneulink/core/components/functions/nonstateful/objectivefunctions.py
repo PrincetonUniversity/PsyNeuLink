@@ -38,6 +38,7 @@ from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.utilities import DistanceMetricLiteral, safe_len, convert_to_np_array
 from psyneulink.core.globals.utilities import is_iterable
+import llvmlite
 
 
 __all__ = ['ObjectiveFunction', 'Stability', 'Distance', 'Energy', 'Entropy']
@@ -977,6 +978,19 @@ class Distance(ObjectiveFunction):
         assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
         assert isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType)
         assert arg_in.type.pointee.count == 2
+
+        # Flatten input array if it is 2D
+        def get_shape(v):
+            try:
+                c = v.count
+                return (c,) + get_shape(v.element)
+            except Exception as e:
+                return ()
+
+        argin_shape = get_shape(arg_in.type.pointee)
+        if len(argin_shape) > 2:
+            argin_dim = functools.reduce(lambda x, y: x * y, argin_shape[1:], 1)
+            arg_in = builder.bitcast(arg_in, llvmlite.ir.ArrayType(llvmlite.ir.ArrayType(ctx.float_ty, argin_dim), 2).as_pointer())
 
         v1 = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
         v2 = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(0)])
