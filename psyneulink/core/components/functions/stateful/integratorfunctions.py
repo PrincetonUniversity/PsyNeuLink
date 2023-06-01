@@ -53,7 +53,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.utilities import ValidParamSpecType, all_within_range, \
-    convert_all_elements_to_np_array, parse_valid_identifier
+    convert_all_elements_to_np_array, parse_valid_identifier, safe_len
 
 __all__ = ['SimpleIntegrator', 'AdaptiveIntegrator', 'DriftDiffusionIntegrator', 'DriftOnASphereIntegrator',
            'OrnsteinUhlenbeckIntegrator', 'FitzHughNagumoIntegrator', 'AccumulatorIntegrator',
@@ -276,7 +276,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
             # If param is in Parameter class for function and it is a function_arg:
             if (param in self.parameters.names() and getattr(self.parameters, param).function_arg
                     and getattr(self.parameters, param)._user_specified):
-                if value is not None and isinstance(value, (list, np.ndarray)) and len(value)>1:
+                if value is not None and isinstance(value, (list, np.ndarray)) and safe_len(value)>1:
                     # Store ones with length > 1 in dict for evaluation below
                     params_to_check.update({param:value})
 
@@ -305,7 +305,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
             values_with_a_len = [param.default_value for param in self.parameters if
                                  param.function_arg and
                                  isinstance(param.default_value, (list, np.ndarray)) and
-                                 len(param.default_value)>1]
+                                 safe_len(param.default_value)>1]
             # One or more parameters are specified with length > 1 in the inner dimension
             if values_with_a_len:
                 # If shape already matches,
@@ -2427,6 +2427,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         random_draw = Parameter()
 
         def _parse_initializer(self, initializer):
+            initializer = np.array(initializer)
             if initializer.ndim > 1:
                 return np.atleast_1d(initializer.squeeze())
             else:
@@ -2997,6 +2998,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
 
         def _parse_initializer(self, initializer):
             """Assign initial value as array of random values of length dimension-1"""
+            initializer = np.array(initializer)
             initializer_dim = self.dimension.default_value - 1
             if initializer.ndim != 1 or len(initializer) != initializer_dim:
                 initializer = np.random.random(initializer_dim)
@@ -3519,6 +3521,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         )
 
         def _parse_initializer(self, initializer):
+            initializer = np.array(initializer)
             if initializer.ndim > 1:
                 return np.atleast_1d(initializer.squeeze())
             else:
