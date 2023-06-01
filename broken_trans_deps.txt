@@ -15,3 +15,9 @@ onnx != 1.14.0
 # torch wheels for win32 python3.10 are built against numpy>=1.23
 # https://github.com/pytorch/pytorch/issues/100690
 torch !=2.0.1, !=2.0.0, !=1.13.*, !=1.12.*; python_version == '3.10' and platform_system == 'Windows'
+
+# cattrs==23.1.1 requires typing_extensions>=4, but doesn't reflect this in
+# dependencies. Only affects python 3.7
+# https://github.com/python-attrs/cattrs/issues/372
+# PNL is restricted to typing_extension <4 because of dependence on old rich<10.13
+cattrs != 23.1.1; python_version < '3.8'
