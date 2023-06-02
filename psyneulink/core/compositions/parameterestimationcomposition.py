@@ -186,7 +186,7 @@ from psyneulink.core.globals.context import (
     handle_external_context,
 )
 from psyneulink.core.globals.keywords import BEFORE, OVERRIDE
-from psyneulink.core.globals.parameters import Parameter, check_user_specified
+from psyneulink.core.globals.parameters import Parameter, SharedParameter, check_user_specified
 from psyneulink.core.globals.utilities import convert_to_list
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.core.components.ports.outputport import OutputPort
@@ -207,38 +207,6 @@ CONTROLLER_SPECIFICATION_ARGS = {
 
 class ParameterEstimationCompositionError(CompositionError):
     pass
-
-
-def _initial_seed_getter(owning_component, context=None):
-    try:
-        return owning_component.controller.parameters.initial_seed._get(context)
-    except AttributeError:
-        return None
-
-
-def _initial_seed_setter(value, owning_component, context=None):
-    owning_component.controller.parameters.initial_seed.set(value, context)
-    return value
-
-
-def _same_seed_for_all_parameter_combinations_getter(owning_component, context=None):
-    try:
-        return (
-            owning_component.controller.parameters.same_seed_for_all_allocations._get(
-                context
-            )
-        )
-    except AttributeError:
-        return None
-
-
-def _same_seed_for_all_parameter_combinations_setter(
-    value, owning_component, context=None
-):
-    owning_component.controler.parameters.same_seed_for_all_allocations.set(
-        value, context
-    )
-    return value
 
 
 class ParameterEstimationComposition(Composition):
@@ -473,20 +441,8 @@ class ParameterEstimationComposition(Composition):
         """
 
         # FIX: 11/32/21 CORRECT INITIAlIZATIONS?
-        initial_seed = Parameter(
-            None,
-            loggable=False,
-            pnl_internal=True,
-            getter=_initial_seed_getter,
-            setter=_initial_seed_setter,
-        )
-        same_seed_for_all_parameter_combinations = Parameter(
-            False,
-            loggable=False,
-            pnl_internal=True,
-            getter=_same_seed_for_all_parameter_combinations_getter,
-            setter=_same_seed_for_all_parameter_combinations_setter,
-        )
+        initial_seed = SharedParameter(attribute_name='controller')
+        same_seed_for_all_parameter_combinations = SharedParameter(attribute_name='controller')
 
     @handle_external_context()
     @check_user_specified
