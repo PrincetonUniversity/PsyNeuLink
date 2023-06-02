@@ -130,7 +130,6 @@ def test_parameter_optimization_ddm(func_mode):
         pytest.skip(
             "Test not yet implemented for Python. Parameter estimate is too slow."
         )
-        return
 
     # High-level parameters the impact performance of the test
     num_trials = 50
@@ -212,7 +211,6 @@ def test_parameter_estimation_ddm_mle(func_mode):
         pytest.skip(
             "Test not yet implemented for Python. Parameter estimate is too slow."
         )
-        return
 
     # High-level parameters the impact performance of the test
     num_trials = 50
