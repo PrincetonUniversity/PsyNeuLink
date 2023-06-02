@@ -7,13 +7,13 @@ from scipy.optimize import differential_evolution
 from beartype import beartype
 
 from psyneulink.core.globals import SampleIterator
-from psyneulink.core.globals.context import ContextFlags, handle_external_context
+from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.components.functions.nonstateful.optimizationfunctions import (
     OptimizationFunction,
     OptimizationFunctionError,
     SEARCH_SPACE,
 )
-from psyneulink.core.globals.parameters import check_user_specified
+from psyneulink.core.globals.parameters import SharedParameter, check_user_specified
 
 from psyneulink._typing import (
     Dict,
@@ -288,6 +288,8 @@ class PECOptimizationFunction(OptimizationFunction):
 
 
     """
+    class Parameters(OptimizationFunction.Parameters):
+        initial_seed = SharedParameter(attribute_name='owner')
 
     @check_user_specified
     @beartype
@@ -506,7 +508,7 @@ class PECOptimizationFunction(OptimizationFunction):
             f = self._make_objective_func(context=context)
 
             # Run the MLE optimization
-            results = self._fit(obj_func=f)
+            results = self._fit(obj_func=f, context=context)
 
             # Get the optimal function value and sample
             optimal_value = results["optimal_value"]
@@ -538,9 +540,10 @@ class PECOptimizationFunction(OptimizationFunction):
         self,
         obj_func: Callable,
         display_iter: bool = True,
+        context: Context = None,
     ):
         if self.method == "differential_evolution":
-            return self._fit_differential_evolution(obj_func, display_iter)
+            return self._fit_differential_evolution(obj_func, display_iter, context)
         elif isinstance(self.method, optuna.samplers.BaseSampler):
             return self._fit_optuna(
                 obj_func=obj_func, opt_func=self.method, display_iter=display_iter
@@ -631,6 +634,7 @@ class PECOptimizationFunction(OptimizationFunction):
         self,
         obj_func: Callable,
         display_iter: bool = True,
+        context: Context = None,
     ):
         """
         Implementation of search using scipy's differential_evolution algorithm.
@@ -643,7 +647,7 @@ class PECOptimizationFunction(OptimizationFunction):
 
         # Get a seed to pass to scipy for its search. Make this dependent on the seed of the
         # OCM
-        seed_for_scipy = self.owner.initial_seed
+        seed_for_scipy = self._get_current_parameter_value('initial_seed', context)
 
         direction = 1 if self.direction == "minimize" else -1
 
