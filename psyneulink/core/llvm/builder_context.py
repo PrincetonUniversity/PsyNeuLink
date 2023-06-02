@@ -134,13 +134,20 @@ class LLVMBuilderContext:
         return self._modules[-1]
 
     def print_stats(self):
+        def _hit_rate(reqs, misses):
+            return round((reqs - misses) / reqs * 100, 2)
+
         print("LLVM codegen stats for context:", hex(id(self)))
         print("  Last compiled generation: {}".format(self._llvm_generation))
-        print("  Object function cache: {} hits, {} misses".format(self._stats["function_cache_requests"] - self._stats["function_cache_misses"], self._stats["function_cache_misses"]))
+
+        req_stat = self._stats["function_cache_requests"]
+        miss_stat = self._stats["function_cache_misses"]
+        print("  Object function cache: {} requests, {} misses (hr: {}%)".format(req_stat, miss_stat, _hit_rate(req_stat, miss_stat)))
         for stat in ("input", "output", "param", "state", "data"):
             req_stat = self._stats["get_{}_struct_type_requests".format(stat)]
             miss_stat = self._stats["get_{}_struct_type_misses".format(stat)]
-            print("  Total {} struct types requested from global context: {}, generated: {}".format(stat, req_stat, miss_stat))
+            print("  Total {} struct types requested from global context: {}, generated: {} (hr: {}%)".format(
+                  stat, req_stat, miss_stat, _hit_rate(req_stat, miss_stat)))
         print("  Total python types converted by global context: {}".format(self._stats["types_converted"]))
 
 
