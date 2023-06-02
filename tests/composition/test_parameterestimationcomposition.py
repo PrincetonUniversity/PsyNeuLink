@@ -300,8 +300,7 @@ def test_parameter_estimation_ddm_mle(func_mode):
     # the same search trajectory from a known working example.
     np.testing.assert_allclose(
         pec.optimized_parameter_values,
-        [0.222727, 0.597613, 0.122772],
-        rtol=1e-5,
+        [0.2227273962084888, 0.5976130662377002, 0.1227723651473831],
     )
 
 
