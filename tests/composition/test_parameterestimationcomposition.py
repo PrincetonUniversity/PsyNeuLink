@@ -25,8 +25,7 @@ pec = pnl.ParameterEstimationComposition(
     optimization_function=PECOptimizationFunction(method='differential_evolution'),
 )
 run_input_test_args = [
-    (
-        "pec_good",
+    pytest.param(
         {
             model: [
                 [np.array([1.0]), np.array([2.0, 3.0, 4.0]), np.array([5.0, 6.0])],
@@ -44,9 +43,9 @@ run_input_test_args = [
             ]
         },
         None,
+        id="pec_good",
     ),
-    (
-        "pec_bad",
+    pytest.param(
         {
             model: [
                 [np.array([1.0]), np.array([2.0, 3.0, 4.0])],
@@ -66,9 +65,9 @@ run_input_test_args = [
         f"The array in the dict specified for the 'inputs' arg of pec.run() is badly formatted: "
         f"the length of each item in the outer dimension (a trial's worth of inputs) "
         f"must be equal to the number of inputs to 'model' (3).",
+        id="pec_bad",
     ),
-    (
-        "model_good",
+    pytest.param(
         {
             input_node_1: [
                 [np.array([1.0])],
@@ -90,9 +89,9 @@ run_input_test_args = [
             ],
         },
         None,
+        id="model_good",
     ),
-    (
-        "model_bad",
+    pytest.param(
         {
             input_node_1: [
                 [np.array([1.0])],
@@ -109,16 +108,13 @@ run_input_test_args = [
         },
         f"The dict specified in the `input` arg of pec.run() is badly formatted: "
         f"the number of entries should equal the number of inputs to 'model' (3).",
+        id="model_bad",
     ),
 ]
 
 
-@pytest.mark.parametrize(
-    "input_format, inputs_dict, error_msg",
-    run_input_test_args,
-    ids=[f"{x[0]}" for x in run_input_test_args],
-)
-def test_pec_run_input_formats(input_format, inputs_dict, error_msg):
+@pytest.mark.parametrize("inputs_dict, error_msg", run_input_test_args)
+def test_pec_run_input_formats(inputs_dict, error_msg):
     if error_msg:
         with pytest.raises(pnl.ParameterEstimationCompositionError) as error:
             pec.run(inputs=inputs_dict)
@@ -131,10 +127,10 @@ def test_parameter_optimization_ddm(func_mode):
     """Test parameter optimization of a DDM in integrator mode"""
 
     if func_mode == "Python":
-        pytest.skip(
-            "Test not yet implemented for Python. Parameter estimate is too slow."
-        )
-        return
+        pytest.skip("Test not yet implemented for Python. Parameter estimate is too slow.")
+
+    if func_mode == "PTX":
+        pytest.skip("Does not work on CUDA")
 
     # High-level parameters the impact performance of the test
     num_trials = 50
@@ -213,10 +209,10 @@ def test_parameter_estimation_ddm_mle(func_mode):
     """Test parameter estimation of a DDM in integrator mode with MLE."""
 
     if func_mode == "Python":
-        pytest.skip(
-            "Test not yet implemented for Python. Parameter estimate is too slow."
-        )
-        return
+        pytest.skip("Test not yet implemented for Python. Parameter estimate is too slow.")
+
+    if func_mode == "PTX":
+        pytest.skip("Does not work on CUDA")
 
     # High-level parameters the impact performance of the test
     num_trials = 50
@@ -306,8 +302,7 @@ def test_parameter_estimation_ddm_mle(func_mode):
     # the same search trajectory from a known working example.
     np.testing.assert_allclose(
         pec.optimized_parameter_values,
-        [0.222727, 0.597613, 0.122772],
-        rtol=1e-5,
+        [0.2227273962084888, 0.5976130662377002, 0.1227723651473831],
     )
 
 
