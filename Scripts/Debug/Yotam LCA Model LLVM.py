@@ -22,6 +22,16 @@ MNET2_BIN_EXECUTE="LLVMRun"
 LCA_BIN_EXECUTE=os.getenv("LCA", "LLVMRun")
 RUN_TOTAL=True
 
+def _get_execution_mode(bin_execute):
+    if bin_execute.lower() == 'llvmrun':
+        return pnl.ExecutionMode.LLVMRun
+    elif bin_execute.lower() == 'pytorch':
+        return pnl.ExecutionMode.PyTorch
+    elif bin_execute.lower() == 'python':
+        return pnl.ExecutionMode.Python
+
+    assert False, "Unknown execution mode: {}".format(bin_execute)
+
 # read in bipartite graph, return graph object, number of possible tasks, number of
 # input dimensions and number of output dimensions.
 # file format Ni No (input dimension number, output dimension number)
@@ -171,12 +181,12 @@ def get_trained_network(bipartite_graph, num_features=3, num_hidden=200, epochs=
     mnet.learn(
         inputs=input_set,
         minibatch_size=1,
-        bin_execute=MNET_BIN_EXECUTE,
+        execution_mode=_get_execution_mode(MNET_BIN_EXECUTE),
         patience=patience,
         min_delta=min_delt,
     )
     t2 = time.time()
-    print("training 1:", MNET_BIN_EXECUTE, t2-t1)
+    print("training 1 time:", MNET_BIN_EXECUTE, t2 - t1)
 
     # Apply LCA transform (values from Sebastian's code -- supposedly taken from the original LCA paper from Marius & Jay)
     if attach_LCA:
@@ -293,12 +303,12 @@ def get_trained_network_multLCA(bipartite_graph, num_features=3, num_hidden=200,
     mnet.learn(
         inputs=input_set,
         minibatch_size=input_set['epochs'],
-        bin_execute=MNET_BIN_EXECUTE,
+        execution_mode=_get_execution_mode(MNET_BIN_EXECUTE),
         patience=patience,
         min_delta=min_delt,
     )
     t2 = time.time()
-    print("training 2:", MNET_BIN_EXECUTE, t2-t1)
+    print("training 2 time:", MNET_BIN_EXECUTE, t2 - t1)
 
     for projection in mnet.projections:
         if hasattr(projection.parameters, 'matrix'):
@@ -487,9 +497,10 @@ def evaluate_net_perf_lca(mnet_lca, test_tasks, all_tasks, num_features, num_inp
         }
         print('running LCA total')
         t1 = time.time()
-        mnet_lca.run( { mnet_lca.nodes['mnet'] : inputs_total }, bin_execute=LCA_BIN_EXECUTE)
+        mnet_lca.run({mnet_lca.nodes['mnet']: inputs_total},
+                     execution_mode=_get_execution_mode(LCA_BIN_EXECUTE))
         t2 = time.time()
-        print("LCA total:", LCA_BIN_EXECUTE, t2 - t1)
+        print("LCA run total time:", LCA_BIN_EXECUTE, t2 - t1)
     # Run the outer composition, one point at a time (for debugging purposes)
     for i in range(num_test_points):
         if RUN_TOTAL:
@@ -504,9 +515,10 @@ def evaluate_net_perf_lca(mnet_lca, test_tasks, all_tasks, num_features, num_inp
 
         print('running LCA', i)
         t1 = time.time()
-        mnet_lca.run( { mnet_lca.nodes['mnet'] : input_set['inputs'] }, bin_execute=LCA_BIN_EXECUTE )
+        mnet_lca.run({mnet_lca.nodes['mnet']: input_set['inputs']},
+                     execution_mode=_get_execution_mode(LCA_BIN_EXECUTE))
         t2 = time.time()
-        print("LCA:", LCA_BIN_EXECUTE, t2 - t1)
+        print("LCA time:", LCA_BIN_EXECUTE, t2 - t1)
         iterations = mnet_lca.nodes['lca'].num_executions_before_finished if LCA_BIN_EXECUTE == "Python" else ugly_get_compile_param_value(mnet_lca, 'lca', 'num_executions_before_finished')
         print("ITERATIONS:", iterations)
         print('input: ', input_test_pts[i, :])
@@ -617,9 +629,9 @@ def evaluate_net_perf_mse(mnet, test_tasks, all_tasks, num_features, num_input_d
 
     print("running mnet2:", MNET2_BIN_EXECUTE)
     t1 = time.time()
-    mnet.run(input_set, bin_execute=MNET2_BIN_EXECUTE)
+    mnet.run(input_set, execution_mode=_get_execution_mode(MNET2_BIN_EXECUTE))
     t2 = time.time()
-    print("mnet2:", MNET2_BIN_EXECUTE, t2-t1)
+    print("mnet2 time:", MNET2_BIN_EXECUTE, t2 - t1)
 
     # Retrieve results
     output_test_pts = np.array(mnet.parameters.results.get(mnet)[-num_test_points:]).reshape(num_test_points, output_layer_size)
