@@ -2061,10 +2061,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
                 if parameter_obj.modulable:
                     # later, validate this
-                    modulable_param_parser = self.parameters._get_prefixed_method(
-                        parse=True,
-                        modulable=True
-                    )
+                    modulable_param_parser = self.parameters._get_parse_method('modulable')
                     if modulable_param_parser is not None:
                         parsed = modulable_param_parser(name, value)
 
@@ -2692,10 +2689,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                             try:
                                 target_set[param_name] = param_value.copy()
                             except AttributeError:
-                                modulable_param_parser = self.parameters._get_prefixed_method(
-                                    parse=True,
-                                    modulable=True
-                                )
+                                modulable_param_parser = self.parameters._get_parse_method('modulable')
                                 if modulable_param_parser is not None:
                                     param_value = modulable_param_parser(param_name, param_value)
                                     target_set[param_name] = param_value
