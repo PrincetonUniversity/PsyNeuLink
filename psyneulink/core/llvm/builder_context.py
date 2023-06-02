@@ -41,8 +41,8 @@ _struct_count = 0
 @atexit.register
 def module_count():
     if "stat" in debug_env:
-        print("Total LLVM modules: ", len(_all_modules))
-        print("Total structures generated: ", _struct_count)
+        print("Active LLVM modules: ", len(_all_modules))
+        print("Total ctype structures created: ", _struct_count)
 
 
 _BUILTIN_PREFIX = "__pnl_builtin_"
