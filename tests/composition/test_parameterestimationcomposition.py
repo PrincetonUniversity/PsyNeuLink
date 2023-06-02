@@ -25,8 +25,7 @@ pec = pnl.ParameterEstimationComposition(
     optimization_function=PECOptimizationFunction(method='differential_evolution'),
 )
 run_input_test_args = [
-    (
-        "pec_good",
+    pytest.param(
         {
             model: [
                 [np.array([1.0]), np.array([2.0, 3.0, 4.0]), np.array([5.0, 6.0])],
@@ -44,9 +43,9 @@ run_input_test_args = [
             ]
         },
         None,
+        id="pec_good",
     ),
-    (
-        "pec_bad",
+    pytest.param(
         {
             model: [
                 [np.array([1.0]), np.array([2.0, 3.0, 4.0])],
@@ -66,9 +65,9 @@ run_input_test_args = [
         f"The array in the dict specified for the 'inputs' arg of pec.run() is badly formatted: "
         f"the length of each item in the outer dimension (a trial's worth of inputs) "
         f"must be equal to the number of inputs to 'model' (3).",
+        id="pec_bad",
     ),
-    (
-        "model_good",
+    pytest.param(
         {
             input_node_1: [
                 [np.array([1.0])],
@@ -90,9 +89,9 @@ run_input_test_args = [
             ],
         },
         None,
+        id="model_good",
     ),
-    (
-        "model_bad",
+    pytest.param(
         {
             input_node_1: [
                 [np.array([1.0])],
@@ -109,16 +108,13 @@ run_input_test_args = [
         },
         f"The dict specified in the `input` arg of pec.run() is badly formatted: "
         f"the number of entries should equal the number of inputs to 'model' (3).",
+        id="model_bad",
     ),
 ]
 
 
-@pytest.mark.parametrize(
-    "input_format, inputs_dict, error_msg",
-    run_input_test_args,
-    ids=[f"{x[0]}" for x in run_input_test_args],
-)
-def test_pec_run_input_formats(input_format, inputs_dict, error_msg):
+@pytest.mark.parametrize("inputs_dict, error_msg", run_input_test_args)
+def test_pec_run_input_formats(inputs_dict, error_msg):
     if error_msg:
         with pytest.raises(pnl.ParameterEstimationCompositionError) as error:
             pec.run(inputs=inputs_dict)
