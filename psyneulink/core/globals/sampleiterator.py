@@ -189,17 +189,17 @@ class SampleSpec:
                                                 .format(repr('step'), repr('num'), repr('function')))
             else:
                 if not np.isclose(num, 1.0 + (stop - start) / step):
-                    raise SampleIteratorError("The {} ({}) and {} ({}} values specified are not comaptible."
+                    raise SampleIteratorError("The {} ({}) and {} ({}) values specified are not comaptible."
                                                     .format(repr('step'), step, repr('num'), num))
 
         elif callable(function):
             _validate_function(self, function)
 
             if start is not None:
-                raise SampleIteratorError("Only one of {} ({}) and {} ({}} may be specified."
+                raise SampleIteratorError("Only one of {} ({}) and {} ({}) may be specified."
                                                 .format(repr('start'), start, repr('function'), function))
             if step is not None:
-                raise SampleIteratorError("Only one of {} ({}) and {} ({}} may be specified."
+                raise SampleIteratorError("Only one of {} ({}) and {} ({}) may be specified."
                                                 .format(repr('step'), step, repr('function'), function))
         else:
             raise SampleIteratorError("{} is not a valid function for {}."
