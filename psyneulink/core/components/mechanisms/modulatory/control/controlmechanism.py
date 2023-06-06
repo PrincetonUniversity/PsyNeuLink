@@ -1772,10 +1772,10 @@ class ControlMechanism(ModulatoryMechanism_Base):
             # default_variable for example, it should be used here
             # instead of the "global default" defaultControlAllocation
             if len(self.defaults.value) == 1:
-                allocation_parameter_default = copy.deepcopy(self.defaults.value)
+                allocation_parameter_default = copy.deepcopy(self.defaults.value[0])
             else:
                 allocation_parameter_default = copy.deepcopy(defaultControlAllocation)
-
+            # allocation_parameter_default = copy.deepcopy(defaultControlAllocation)
         control_signal = _instantiate_port(port_type=ControlSignal,
                                            owner=self,
                                            variable=self.defaults.default_allocation  # User specified value

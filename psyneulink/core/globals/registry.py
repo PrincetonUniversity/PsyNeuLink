@@ -398,7 +398,7 @@ def clear_registry(registry=None):
     .. note::
        This method should be used with caution.  It is used primarily in unit tests, to insure consistency of naming
        within a given test.  Calling it outside of testing may allow new Components of the same type to be created with
-       exactly the same PsyNeuLink name as exsiting ones within the same Python namespace.
+       exactly the same PsyNeuLink name as existing ones within the same Python namespace.
 
     """
     from psyneulink import primary_registries
