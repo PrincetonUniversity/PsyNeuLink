@@ -6773,10 +6773,12 @@ class TestResetValues:
 
         comp.run(inputs={A: [[1.0], [1.0]]})
 
+        # All mechanism values are 2D but B has two elements,
+        # extract element 0 out of each.
         run_1_values = [
-            A.parameters.value.get(comp),
+            A.parameters.value.get(comp)[0],
             B.parameters.value.get(comp)[0],
-            C.parameters.value.get(comp)
+            C.parameters.value.get(comp)[0]
         ]
 
         # "Save state" code from EVCaux
@@ -6802,25 +6804,26 @@ class TestResetValues:
         # Allow values to continue accumulating so that we can set them back to the saved state
         comp.run(inputs={A: [[1.0], [1.0]]})
 
-        run_2_values = [A.parameters.value.get(comp),
+        # All mechanism values are 2D but B has two elements,
+        # extract element 0 out of each.
+        run_2_values = [A.parameters.value.get(comp)[0],
                         B.parameters.value.get(comp)[0],
-                        C.parameters.value.get(comp)]
+                        C.parameters.value.get(comp)[0]]
 
         comp.run(
             inputs={A: [[1.0], [1.0]]},
             reset_stateful_functions_to=reinitialization_values
         )
 
-        run_3_values = [A.parameters.value.get(comp),
+        # All mechanism values are 2D but B has two elements,
+        # extract element 0 out of each.
+        run_3_values = [A.parameters.value.get(comp)[0],
                         B.parameters.value.get(comp)[0],
-                        C.parameters.value.get(comp)]
+                        C.parameters.value.get(comp)[0]]
 
-        np.testing.assert_allclose(np.asfarray(run_2_values),
-                           np.asfarray(run_3_values))
-        np.testing.assert_allclose(np.asfarray(run_1_values),
-                           [np.array([0.36]), np.array([0.056]), np.array([0.056])])
-        np.testing.assert_allclose(np.asfarray(run_2_values),
-                           [np.array([0.5904]), np.array([0.16384]), np.array([0.16384])])
+        np.testing.assert_allclose(run_2_values, run_3_values)
+        np.testing.assert_allclose(np.asfarray(run_1_values), [[0.36], [0.056], [0.056]])
+        np.testing.assert_allclose(np.asfarray(run_2_values), [[0.5904], [0.16384], [0.16384]])
 
 
 class TestNodeRoles:
