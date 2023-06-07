@@ -334,6 +334,13 @@ class ParameterError(Exception):
     pass
 
 
+def _get_prefixed_method(obj, prefix, name, sep=''):
+    try:
+        return getattr(obj, f'{prefix}{sep}{name}')
+    except AttributeError:
+        return None
+
+
 def get_validator_by_function(function):
     """
         Arguments
@@ -2290,41 +2297,23 @@ class ParametersBase(ParametersTemplate):
             )
         )
 
-    def _get_prefixed_method(
-        self,
-        parse=False,
-        validate=False,
-        modulable=False,
-        parameter_name=None
-    ):
+    def _get_parse_method(self, parameter):
         """
-            Returns the parsing or validation method for the Parameter named
-            **parameter_name** or for any modulable Parameter
+        Returns:
+            the parsing method for the **parameter** or for any Parameter
+            attribute (ex: 'modulable') if it exists, or None if it does
+            not
         """
+        return _get_prefixed_method(self, self._parsing_method_prefix, parameter)
 
-        if (
-            parse and validate
-            or (not parse and not validate)
-        ):
-            raise ValueError('Exactly one of parse or validate must be True')
-
-        if parse:
-            prefix = self._parsing_method_prefix
-        elif validate:
-            prefix = self._validation_method_prefix
-
-        if (
-            modulable and parameter_name is not None
-            or not modulable and parameter_name is None
-        ):
-            raise ValueError('modulable must be True or parameter_name must be specified, but not both.')
-
-        if modulable:
-            suffix = 'modulable'
-        elif parameter_name is not None:
-            suffix = parameter_name
-
-        return getattr(self, '{0}{1}'.format(prefix, suffix))
+    def _get_validate_method(self, parameter):
+        """
+        Returns:
+            the validation method for the **parameter** or for any
+            Parameter attribute (ex: 'modulable') if it exists, or None
+            if it does not
+        """
+        return _get_prefixed_method(self, self._validation_method_prefix, parameter)
 
     def _validate(self, attr, value):
         err_msg = None
@@ -2337,15 +2326,12 @@ class ParametersBase(ParametersTemplate):
                     valid_types
                 )
 
-        try:
-            validation_method = self._get_prefixed_method(validate=True, parameter_name=attr)
+        validation_method = self._get_validate_method(attr)
+        if validation_method is not None:
             err_msg = validation_method(value)
+            # specifically check for False because None indicates a valid assignment
             if err_msg is False:
                 err_msg = '{0} returned False'.format(validation_method)
-
-        except AttributeError:
-            # parameter does not have a validation method
-            pass
 
         if err_msg is not None:
             raise ParameterError(
@@ -2358,7 +2344,7 @@ class ParametersBase(ParametersTemplate):
             )
 
     def _parse(self, attr, value):
-        try:
-            return self._get_prefixed_method(parse=True, parameter_name=attr)(value)
-        except AttributeError:
-            return value
+        parse_method = self._get_parse_method(attr)
+        if parse_method is not None:
+            value = parse_method(value)
+        return value

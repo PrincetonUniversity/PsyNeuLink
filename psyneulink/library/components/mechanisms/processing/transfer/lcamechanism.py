@@ -422,7 +422,7 @@ class LCAMechanism(RecurrentTransferMechanism):
         def _validate_competition(self, competition):
             if competition < 0:
                 warnings.warn(
-                    f"The 'competition' arg specified for {self.name} is a negative value ({competition}); "
+                    f"The 'competition' arg specified for {self._owner.name} is a negative value ({competition}); "
                     f"note that this will result in a matrix that has positive off-diagonal elements "
                     f"since 'competition' is assumed to specify the magnitude of inhibition."
                 )
