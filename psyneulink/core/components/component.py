@@ -3433,7 +3433,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 if 'Multiple ParameterPorts' in str(e):
                     raise
 
-        return parameter._get(context)
+        return parameter._get(context, modulated=True)
 
     def _reset_runtime_parameters(self, context):
         if context.execution_id in self._runtime_params_reset:

@@ -260,7 +260,9 @@ You should avoid using `dot notation <Parameter_Dot_Notation>` in internal code,
 +------------------+---------------+--------------------------------------------+-----------------------------------------+
 |      getter      |     None      |hook that allows overriding the retrieval of|kwargs self, owning_component, and       |
 |                  |               |values based on a supplied method           |context will be passed in if your        |
-|                  |               |(e.g. _output_port_variable_getter)         |method uses them.                        |
+|                  |               |(e.g. _output_port_variable_getter)         |method uses them. modulated=True will be |
+|                  |               |                                            |passed in when modulated values are      |
+|                  |               |                                            |requested.                               |
 |                  |               |                                            |self: the Parameter calling the setter   |
 |                  |               |                                            |owning_component: the Component to which |
 |                  |               |                                            |    the Parameter belongs                |
