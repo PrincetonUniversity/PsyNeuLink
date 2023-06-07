@@ -229,7 +229,9 @@ def test_helper_all_close(mode, var1, var2, atol, rtol):
     (pnlvm.ir.DoubleType(), "%lf", [x *.5 for x in range(0, 5)]),
     ], ids=["i32", "i64", "double"])
 def test_helper_printf(capfd, ir_argtype, format_spec, values_to_check):
-    format_str = f"Hello {(format_spec+' ')*len(values_to_check)} \n"
+
+    format_str = f"Hello {(format_spec + ' ') * len(values_to_check)}\n"
+
     with pnlvm.LLVMBuilderContext.get_current() as ctx:
         func_ty = ir.FunctionType(ir.VoidType(), [])
         ir_values_to_check = [ir_argtype(i) for i in values_to_check]
@@ -242,9 +244,8 @@ def test_helper_printf(capfd, ir_argtype, format_spec, values_to_check):
         builder.ret_void()
 
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
-
-
     bin_f()
+
     # Printf is buffered in libc.
     libc = ctypes.util.find_library("msvcrt" if sys.platform == "win32" else "c")
     libc = ctypes.CDLL(libc)
@@ -252,8 +253,11 @@ def test_helper_printf(capfd, ir_argtype, format_spec, values_to_check):
 
     # Convert format specifier to Python compatible
     python_format_spec = {"%lld":"%ld"}.get(format_spec, format_spec)
-    python_format_str = f"Hello {(python_format_spec+' ')*len(values_to_check)} \n"
-    assert capfd.readouterr().out == python_format_str % tuple(values_to_check)
+
+    # The string below omits the newline character used above and the check below
+    # uses 'startswith' to avoid issues with different newline encoding across OSes.
+    python_format_str = f"Hello {(python_format_spec + ' ') * len(values_to_check)}"
+    assert capfd.readouterr().out.startswith(python_format_str % tuple(values_to_check))
 
 class TestHelperTypegetters:
     FLOAT_TYPE = pnlvm.ir.FloatType()
