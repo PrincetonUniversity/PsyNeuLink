@@ -4394,8 +4394,7 @@ class ParameterValue:
 
     @property
     def modulated(self):
-        # TODO: consider making this
-        # self._parameter.port.is_modulated(self._owner.most_recent_context)
+        # TODO: consider using self._parameter.port.has_modulation
         # because the port existing doesn't necessarily mean modulation
         # is actually happening
         if self._parameter.port is not None:

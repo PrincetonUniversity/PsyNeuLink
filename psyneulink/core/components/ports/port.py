@@ -2324,10 +2324,12 @@ class Port_Base(Port):
     def _assign_default_port_Name(self):
         return False
 
-    @handle_external_context()
-    def is_modulated(self, context):
+    def has_modulation(self, composition) -> bool:
+        """Returns True if this Port has an active incoming modulatory
+        projection in **composition** or False if it does not.
+        """
         for ma in self.mod_afferents:
-            if self.afferents_info[ma].is_active_in_composition(context.composition):
+            if self.afferents_info[ma].is_active_in_composition(composition):
                 return True
 
         return False

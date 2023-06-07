@@ -351,15 +351,17 @@ def _seed_setter(value, owning_component, context):
     return int(value)
 
 
-def _random_state_getter(self, owning_component, context):
+def _random_state_getter(self, owning_component, context, modulated=False):
 
     seed_param = owning_component.parameters.seed
     try:
-        is_modulated = seed_param.port.is_modulated(context)
+        has_modulation = seed_param.port.has_modulation(context.composition)
     except AttributeError:
-        is_modulated = False
+        has_modulation = False
 
-    if is_modulated:
+    # 'has_modulation' indicates that seed has an active modulatory projection
+    # 'modulated' indicates that the modulated value is requested
+    if has_modulation and modulated:
         seed_value = [int(owning_component._get_current_parameter_value(seed_param, context))]
     else:
         seed_value = [int(seed_param._get(context=context))]
