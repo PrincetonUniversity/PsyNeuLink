@@ -411,7 +411,7 @@ specify a  default allocation for ControlSignals that have not been assigned the
 determine its `intensity <ControlSignal.intensity>`, which is then assigned to the `value <ControlProjection.value>`
 of the ControlSignal's `ControlProjection`.   The `value <ControlProjection.value>` of the ControlProjection is used
 by the `ParameterPort` to which it projects to modify the value of the parameter it controls (see
-`ControlSignal_Modulation` for description of how a ControlSignal modulates the value of a parameter).
+`ControlSignal_Modulation` for a description of how a ControlSignal modulates the value of a parameter).
 
 .. _ControlMechanism_Costs_NetOutcome:
 
@@ -1772,7 +1772,10 @@ class ControlMechanism(ModulatoryMechanism_Base):
             # default_variable for example, it should be used here
             # instead of the "global default" defaultControlAllocation
             if len(self.defaults.value) == 1:
-                allocation_parameter_default = copy.deepcopy(self.defaults.value)
+                if self.defaults.default_allocation is not None:
+                    allocation_parameter_default = copy.deepcopy(self.defaults.default_allocation)
+                else:
+                    allocation_parameter_default = copy.deepcopy(self.defaults.control_allocation)
             else:
                 allocation_parameter_default = copy.deepcopy(defaultControlAllocation)
 
