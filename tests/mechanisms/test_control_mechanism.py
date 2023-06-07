@@ -230,14 +230,13 @@ class TestControlMechanism:
 
         # default_allocation *not* specified in constructor of pnl.ControlMechanism,
         #     so should be set to defaultControlAllocation (=[1])
-        c1 = pnl.ControlMechanism(
-            name='C1',
-            default_variable=[10],
-            control_signals=[pnl.ControlSignal(modulates=(pnl.SLOPE, m1)),  # test for assignment to defaultControlAllocation
-                             pnl.ControlSignal(default_allocation=2,  # test for scalar assignment
-                                               modulates=(pnl.SLOPE, m2)),
-                             pnl.ControlSignal(default_allocation=[3],  # test for array assignment
-                                               modulates=(pnl.SLOPE, m3))])
+        c1 = pnl.ControlMechanism(name='C1',
+                                  default_variable=[10],
+                                  control_signals=[pnl.ControlSignal(modulates=(pnl.SLOPE, m1)), # test for assignment to defaultControlAllocation
+                                                   pnl.ControlSignal(default_allocation=2,       # test for scalar assignment
+                                                                     modulates=(pnl.SLOPE, m2)),
+                                                   pnl.ControlSignal(default_allocation=[3],     # test for array assignment
+                                                                     modulates=(pnl.SLOPE, m3))])
         comp = pnl.Composition()
         comp.add_nodes([m1,m2,m3])
         comp.add_controller(c1)

@@ -2357,12 +2357,12 @@ class TestControlMechanisms:
     @pytest.mark.composition
     @pytest.mark.parametrize("modulation, expected", [
                               (pnl.OVERRIDE, 0.2),
-                              # (pnl.DISABLE, 0.5),
-                              # (pnl.MULTIPLICATIVE, 0.1),
-                              # (pnl.ADDITIVE, 0.7),
+                              (pnl.DISABLE, 0.5),
+                              (pnl.MULTIPLICATIVE, 0.1),
+                              (pnl.ADDITIVE, 0.7),
                              ])
     @pytest.mark.parametrize("specification", [pnl.OWNER_VALUE,
-                                               # (pnl.OWNER_VALUE, 0)
+                                               (pnl.OWNER_VALUE, 0)
                                                ])
     def test_control_of_mech_output_port(self, comp_mode, modulation, expected, specification):
         mech = pnl.TransferMechanism(output_ports=[pnl.OutputPort(variable=specification)])
