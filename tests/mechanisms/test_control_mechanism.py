@@ -228,35 +228,45 @@ class TestControlMechanism:
         m2 = pnl.ProcessingMechanism()
         m3 = pnl.ProcessingMechanism()
 
-        # default_allocation not specified in constructor of pnl.ControlMechanism,
-        #     so should be set to defaultControlAllocation (=[1]) if not specified in pnl.ControlSignal constructor
+        # default_allocation *not* specified in constructor of pnl.ControlMechanism,
+        #     so should be set to defaultControlAllocation (=[1])
         c1 = pnl.ControlMechanism(
-                name='C1',
-                default_variable=[10],
-                control_signals=[pnl.ControlSignal(modulates=(pnl.SLOPE, m1)),  # test for assignment to defaultControlAllocation
-                                 pnl.ControlSignal(default_allocation=2,  # test for scalar assignment
-                                                   modulates=(pnl.SLOPE, m2)),
-                                 pnl.ControlSignal(default_allocation=[3],  # test for array assignment
-                                                   modulates=(pnl.SLOPE, m3))])
+            name='C1',
+            default_variable=[10],
+            control_signals=[pnl.ControlSignal(modulates=(pnl.SLOPE, m1)),  # test for assignment to defaultControlAllocation
+                             pnl.ControlSignal(default_allocation=2,  # test for scalar assignment
+                                               modulates=(pnl.SLOPE, m2)),
+                             pnl.ControlSignal(default_allocation=[3],  # test for array assignment
+                                               modulates=(pnl.SLOPE, m3))])
         comp = pnl.Composition()
         comp.add_nodes([m1,m2,m3])
         comp.add_controller(c1)
+        # Default controL_allocation should = defaultControlAllocation (since default_allocation arg was not specified)
+        np.testing.assert_allclose(c1.defaults.control_allocation, [1])
+        # Initial control_allocation should reflect the default input ([10])
         np.testing.assert_allclose(c1.parameters.control_allocation.get(), [[10], [10], [10]])
-        assert c1.control_signals[0].value == [10] # defaultControlAllocation should be assigned
-                                                   # (as no default_allocation from pnl.ControlMechanism)
+        # Initial values of the ControlSignals should reflect *their* default assignments (since not yet executed)
+        # and parameters they modulate (SLOPE) should reflect *their* initial values (1)
+        assert c1.control_signals[0].value == [1] # defaultControlAllocation ([1]) should be assigned,
+                                                   # as no default_allocation from pnl.ControlMechanism
         assert m1.parameter_ports[pnl.SLOPE].value == [1]
         assert c1.control_signals[1].value == [2]      # default_allocation from pnl.ControlSignal (converted scalar)
         assert m2.parameter_ports[pnl.SLOPE].value == [1]
         assert c1.control_signals[2].value == [3]      # default_allocation from pnl.ControlSignal
         assert m3.parameter_ports[pnl.SLOPE].value == [1]
         result = comp.run(inputs={m1:[2],m2:[3],m3:[4]})
-        np.testing.assert_allclose(result, [[20.], [6.], [12.]])
+        # Result should reflect:
+        # 1) use of initial ControlSignal values to set parmeters
+        # 2) updating of the ControlSignal values ([10]'s) from ControlMechanism's default_variable
+        #     (since it does not have any other source of input control_allocation)
+        np.testing.assert_allclose(result, [[2.], [6.], [12.]])
         assert c1.control_signals[0].value == [10]
-        assert m1.parameter_ports[pnl.SLOPE].value == [10]
+        assert m1.parameter_ports[pnl.SLOPE].value == [1]
         assert c1.control_signals[1].value == [10]
         assert m2.parameter_ports[pnl.SLOPE].value == [2]
         assert c1.control_signals[2].value == [10]
         assert m3.parameter_ports[pnl.SLOPE].value == [3]
+        # Results should now reflect use of updated ControlSignal values to set parmeters
         result = comp.run(inputs={m1:[2],m2:[3],m3:[4]})
         np.testing.assert_allclose(result, [[20.], [30.], [40.]])
         assert c1.control_signals[0].value == [10]
