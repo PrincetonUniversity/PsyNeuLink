@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Parameters &mdash; PsyNeuLink 0.11.0.0+734.gf4850b5b documentation</title>
+  <title>Parameters &mdash; PsyNeuLink 0.11.0.0+739.g1582baa9 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.11.0.0+734
+                  0.11.0.0+739
                 </div>
               
             
@@ -1098,10 +1098,27 @@ refers to another <a class="reference internal" href="#psyneulink.core.globals.p
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.globals.parameters.</span></span><span class="sig-name descname"><span class="pre">ParametersBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">owner</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.ParametersBase" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base class for inner <a class="reference internal" href="#"><span class="doc">Parameters</span></a> classes on Components (see <code class="xref any docutils literal notranslate"><span class="pre">Component.Parameters</span></code> for example)</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.core.globals.parameters.ParametersBase._get_prefixed_method">
-<span class="sig-name descname"><span class="pre">_get_prefixed_method</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modulable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.ParametersBase._get_prefixed_method" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the parsing or validation method for the Parameter named
-<strong>parameter_name</strong> or for any modulable Parameter</p>
+<dt class="sig sig-object py" id="psyneulink.core.globals.parameters.ParametersBase._get_parse_method">
+<span class="sig-name descname"><span class="pre">_get_parse_method</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.ParametersBase._get_parse_method" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the parsing method for the <strong>parameter</strong> or for any Parameter
+attribute (ex: ‘modulable’) if it exists, or None if it does
+not</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.globals.parameters.ParametersBase._get_validate_method">
+<span class="sig-name descname"><span class="pre">_get_validate_method</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.ParametersBase._get_validate_method" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the validation method for the <strong>parameter</strong> or for any
+Parameter attribute (ex: ‘modulable’) if it exists, or None
+if it does not</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
