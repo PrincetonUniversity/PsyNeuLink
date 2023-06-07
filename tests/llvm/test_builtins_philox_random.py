@@ -19,7 +19,7 @@ SEED = 0
 def test_random_int64(benchmark, mode, seed, expected):
     res = []
     if mode == 'numpy':
-        state = np.random.Philox([np.uint64(seed)])
+        state = np.random.Philox([np.int64(seed).astype(np.uint64)])
         prng = np.random.Generator(state)
         def f():
             # Get uint range [0, MAX] to avoid any intermediate caching of random bits
@@ -31,7 +31,7 @@ def test_random_int64(benchmark, mode, seed, expected):
         init_fun(state, seed)
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_int64')
-        out = ctypes.c_longlong()
+        out = ctypes.c_ulonglong()
         def f():
             gen_fun(state, out)
             return np.uint64(out.value)
@@ -75,10 +75,10 @@ def test_random_int32(benchmark, mode):
         init_fun(state, SEED)
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_int32')
-        out = ctypes.c_int()
+        out = ctypes.c_uint()
         def f():
             gen_fun(state, out)
-            return np.uint32(out.value)
+            return out.value
     elif mode == 'PTX':
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_init')
         state_size = ctypes.sizeof(init_fun.byref_arg_types[0])
