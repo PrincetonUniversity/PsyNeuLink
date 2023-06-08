@@ -227,6 +227,19 @@ def _mdf_obj_from_dict(d):
     return None
 
 
+def _get_parameters_from_mdf_base_object(model, pnl_type):
+    model_params = getattr(model, pnl_type._model_spec_id_parameters)
+
+    if isinstance(model_params, list):
+        parameters = {p.id: p.value for p in model_params}
+    elif isinstance(model_params, dict):
+        parameters = dict(model_params)
+    else:
+        parameters = {}
+
+    return parameters
+
+
 def _parse_component_type(model_obj):
     def get_pnl_component_type(s):
         from psyneulink.core.components.component import ComponentsMeta
@@ -543,29 +556,19 @@ def _generate_component_string(
 
     is_user_defined_function = False
     try:
-        parameters = dict(getattr(component_model, component_type._model_spec_id_parameters))
+        parameters = _get_parameters_from_mdf_base_object(component_model, component_type)
     except AttributeError:
         is_user_defined_function = True
-    except TypeError:
-        parameters = {}
 
     if is_user_defined_function or component_type is UserDefinedFunction:
         custom_func = component_type
         component_type = UserDefinedFunction
-        try:
-            parameters = dict(getattr(component_model, component_type._model_spec_id_parameters))
-        except TypeError:
-            parameters = {}
+        parameters = _get_parameters_from_mdf_base_object(component_model, component_type)
         parameters['custom_function'] = f'{custom_func}'
         try:
             del component_model.metadata['custom_function']
         except KeyError:
             pass
-
-    try:
-        parameters.update(getattr(component_model, component_type._model_spec_id_parameters))
-    except TypeError:
-        pass
 
     try:
         # args in function dict
