@@ -1153,13 +1153,15 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         """
         # This must be a list, as there may be more than one (e.g., one per control_signal)
-        variable = Parameter(np.array([[defaultControlAllocation]]), pnl_internal=True, constructor_argument='default_variable')
+        variable = Parameter(np.array([[defaultControlAllocation]]), pnl_internal=True,
+                             # JDC 6/9/23 FIX: ADDED:
+                             constructor_argument='default_variable')
         value = Parameter(np.array([defaultControlAllocation]), pnl_internal=True)
         default_allocation = None
         control_allocation = Parameter(np.array([defaultControlAllocation]),
                                        read_only=True,
                                        getter=_control_allocation_getter,
-                                       )
+                                       constructor_argument='default_allocation')
         combine_costs = Parameter(np.sum, stateful=False, loggable=False)
         costs = Parameter(None, read_only=True, getter=_control_mechanism_costs_getter)
         control_signal_costs = Parameter(None, read_only=True, pnl_internal=True)
@@ -1795,6 +1797,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
             # if control allocation is a single value specified from
             # default_variable for example, it should be used here
             # instead of the "global default" defaultControlAllocation
+            # FIX: JDC 6/9/23 CHANGE THIS TO self.defaults.control_allocation or self.control_allocation??
+            #       ALSO, CONSOLIDATE default_allocation and defaults.control_allocation?? (SEE ABOVE)
             if len(self.defaults.value) == 1:
                 if self.defaults.default_allocation is not None:
                     allocation_parameter_default = copy.deepcopy(self.defaults.default_allocation)
