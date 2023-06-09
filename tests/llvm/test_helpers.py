@@ -212,11 +212,11 @@ def test_helper_all_close(mode, var1, var2, atol, rtol):
         ct_ty = ctypes.POINTER(bin_f.byref_arg_types[0])
         ct_vec1 = vec1.ctypes.data_as(ct_ty)
         ct_vec2 = vec2.ctypes.data_as(ct_ty)
-        res = ctypes.c_int32()
+        res = ctypes.c_uint32()
 
         bin_f(ct_vec1, ct_vec2, ctypes.byref(res))
     else:
-        res = np.array([5], dtype=np.int32)
+        res = np.array([5], dtype=np.uint32)
         bin_f.cuda_wrap_call(vec1, vec2, res)
         res = res[0]
 

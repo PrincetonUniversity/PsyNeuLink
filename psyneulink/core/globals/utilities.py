@@ -1022,6 +1022,14 @@ def convert_to_np_array(value, dimension=None):
                     return np.asarray(value)
                 except np.VisibleDeprecationWarning:
                     return np.asarray(value, dtype=object)
+                except ValueError as e:
+                    # numpy 1.24 removed the above deprecation and raises
+                    # ValueError instead. Note that the below call can still
+                    # raise other ValueErrors
+                    if 'The requested array has an inhomogeneous shape' in str(e):
+                        return np.asarray(value, dtype=object)
+                    raise
+
             except ValueError as e:
                 msg = str(e)
                 if 'cannot guess the desired dtype from the input' in msg:
