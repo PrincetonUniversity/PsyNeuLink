@@ -2387,7 +2387,6 @@ class Port_Base(Port):
             elif afferent.sender.modulation == DISABLE:
                 name = None
             elif afferent.sender.modulation == OVERRIDE:
-                # Directly store the value in the output array
                 assert f_mod_ptr.type == arg_out.type, \
                     "Shape mismatch: Value of '{}' for '{}' ({}) " \
                     "should match value of '{}'s '{}' ({})".format(afferent.sender.name,
@@ -2396,6 +2395,7 @@ class Port_Base(Port):
                                                                    self.owner.name,
                                                                    self.name,
                                                                    afferent.defaults.value)
+                # Directly store the value in the output array
                 builder.store(builder.load(f_mod_ptr), arg_out)
                 return builder
             else:
