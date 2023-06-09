@@ -782,7 +782,7 @@ class TestControlSpecification:
 
         controller = pnl.ControlMechanism(
             name='controller',
-            default_variable=5
+            default_allocation=5
         )
 
         outer_comp = pnl.Composition(
@@ -798,7 +798,7 @@ class TestControlSpecification:
     def test_hanging_control_spec_nearest_controller(self):
         inner_controller = pnl.ControlMechanism(
             name='inner_controller',
-            default_variable=5
+            default_allocation=5
         )
 
         inner_comp = pnl.Composition(
@@ -808,7 +808,7 @@ class TestControlSpecification:
 
         outer_controller = pnl.ControlMechanism(
             name='outer_controller',
-            default_variable=10
+            default_allocation=10
         )
 
         outer_comp = pnl.Composition(
@@ -2361,15 +2361,18 @@ class TestControlMechanisms:
                               (pnl.MULTIPLICATIVE, 0.1),
                               (pnl.ADDITIVE, 0.7),
                              ])
-    @pytest.mark.parametrize("specification", [ pnl.OWNER_VALUE, (pnl.OWNER_VALUE, 0)])
+    @pytest.mark.parametrize("specification", [pnl.OWNER_VALUE,
+                                               (pnl.OWNER_VALUE, 0)
+                                               ])
     def test_control_of_mech_output_port(self, comp_mode, modulation, expected, specification):
         mech = pnl.TransferMechanism(output_ports=[pnl.OutputPort(variable=specification)])
-        control_mech = pnl.ControlMechanism(
-                control_signals=pnl.ControlSignal(modulation=modulation,
-                                                  modulates=mech.output_port))
+        control_mech = pnl.ControlMechanism(control_signals=pnl.ControlSignal(modulation=modulation,
+                                                                              modulates=mech.output_port),
+                                            default_allocation=mech.value if specification is pnl.OWNER_VALUE else mech.value[0]
+                                            )
         comp = pnl.Composition()
         comp.add_nodes([(mech, pnl.NodeRole.INPUT), (control_mech, pnl.NodeRole.INPUT)])
-        inputs = {mech:[[0.5]], control_mech:[0.2]}
+        inputs = {mech:[[0.5]], control_mech:[[0.2]]}
         results = comp.run(inputs=inputs, num_trials=1, execution_mode=comp_mode)
         np.testing.assert_allclose(results, expected)
 
@@ -3933,7 +3936,7 @@ class TestControlTimeScales:
         a = pnl.ProcessingMechanism()
         b = pnl.ProcessingMechanism()
         c = pnl.ControlMechanism(
-            default_variable=1,
+            default_allocation=1,
             function=pnl.SimpleIntegrator,
             control=pnl.ControlSignal(modulates=(pnl.SLOPE, b))
         )
@@ -3961,7 +3964,7 @@ class TestControlTimeScales:
         a = pnl.ProcessingMechanism()
         b = pnl.ProcessingMechanism()
         c = pnl.ControlMechanism(
-            default_variable=1,
+            default_allocation=1,
             function=pnl.SimpleIntegrator,
             control=pnl.ControlSignal(modulates=(pnl.SLOPE, b))
         )
@@ -3989,7 +3992,7 @@ class TestControlTimeScales:
         a = pnl.ProcessingMechanism()
         b = pnl.ProcessingMechanism()
         c = pnl.ControlMechanism(
-            default_variable=1,
+            default_allocation=1,
             function=pnl.SimpleIntegrator,
             control=pnl.ControlSignal(modulates=(pnl.SLOPE, b))
         )
@@ -4029,7 +4032,7 @@ class TestControlTimeScales:
         a = pnl.ProcessingMechanism()
         b = pnl.ProcessingMechanism()
         c = pnl.ControlMechanism(
-            default_variable=1,
+            default_allocation=1,
             function=pnl.SimpleIntegrator,
             control=pnl.ControlSignal(modulates=(pnl.SLOPE, b))
         )
@@ -4075,7 +4078,7 @@ class TestControlTimeScales:
         a = pnl.ProcessingMechanism()
         b = pnl.ProcessingMechanism()
         c = pnl.ControlMechanism(
-            default_variable=1,
+            default_allocation=1,
             function=pnl.SimpleIntegrator,
             control=pnl.ControlSignal(modulates=(pnl.SLOPE, b))
         )
@@ -4103,7 +4106,7 @@ class TestControlTimeScales:
         a = pnl.ProcessingMechanism()
         b = pnl.ProcessingMechanism()
         c = pnl.ControlMechanism(
-            default_variable=1,
+            default_allocation=1,
             function=pnl.SimpleIntegrator,
             control=pnl.ControlSignal(modulates=(pnl.SLOPE, b))
         )
@@ -4133,7 +4136,7 @@ class TestControlTimeScales:
         a = pnl.ProcessingMechanism()
         b = pnl.ProcessingMechanism()
         c = pnl.ControlMechanism(
-            default_variable=1,
+            default_allocation=1,
             function=pnl.SimpleIntegrator,
             control=pnl.ControlSignal(modulates=(pnl.SLOPE, b))
         )
@@ -4168,7 +4171,7 @@ class TestControlTimeScales:
         a = pnl.ProcessingMechanism()
         b = pnl.ProcessingMechanism()
         c = pnl.ControlMechanism(
-            default_variable=1,
+            default_allocation=1,
             function=pnl.SimpleIntegrator,
             control=pnl.ControlSignal(modulates=(pnl.SLOPE, b))
         )

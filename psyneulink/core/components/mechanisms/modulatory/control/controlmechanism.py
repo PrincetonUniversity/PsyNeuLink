@@ -402,16 +402,40 @@ The OutputPorts of a ControlMechanism are `ControlSignals <ControlSignal>` (list
 corresponding parameter.  The ControlSignals are listed in the `control_signals <ControlMechanism.control_signals>`
 attribute;  since they are a type of `OutputPort`, they are also listed in the ControlMechanism's `output_ports
 <Mechanism_Base.output_ports>` attribute. The parameters modulated by a ControlMechanism's ControlSignals can be
-displayed using its `show <ControlMechanism.show>` method. By default, each `ControlSignal` is assigned as its
-`allocation <ControlSignal.allocation>` the value of the  corresponding item of the ControlMechanism's
-`control_allocation <ControlMechanism.control_allocation>`;  however, subtypes of ControlMechanism may assign
-allocations differently. The `default_allocation  <ControlMechanism.default_allocation>` attribute can be used to
-specify a  default allocation for ControlSignals that have not been assigned their own `default_allocation
-<ControlSignal.default_allocation>`. The `allocation <ControlSignal.allocation>` is used by each ControlSignal to
-determine its `intensity <ControlSignal.intensity>`, which is then assigned to the `value <ControlProjection.value>`
-of the ControlSignal's `ControlProjection`.   The `value <ControlProjection.value>` of the ControlProjection is used
-by the `ParameterPort` to which it projects to modify the value of the parameter it controls (see
-`ControlSignal_Modulation` for description of how a ControlSignal modulates the value of a parameter).
+displayed using its `show <ControlMechanism.show>` method.
+
+By default, each `ControlSignal` is assigned as its `allocation <ControlSignal.allocation>` the value of the
+corresponding item of the ControlMechanism's `control_allocation <ControlMechanism.control_allocation>`;  however,
+subtypes of ControlMechanism may assign allocations differently. The `default_allocation
+<ControlMechanism.default_allocation>` attribute can be used to specify a  default allocation for ControlSignals that
+have not been assigned their own `default_allocation <ControlSignal.default_allocation>`.
+
+.. warning::
+    the **default_variable** argument of the ControlMechanism's constructor is **not** used to specify a default
+    allocation;  the **default_allocation** argument must be used for that purpose.  The **default_variable** argument
+    should only be used to specify the format of the `value <ControlMechanism.value>` of the ControlMechanism's
+    `input_port (see `Mechanism_InputPorts` for additional details), and its default input when it does not receive
+    any Projections (see `default_variable <Component_Variable>` for additional details).
+
+.. note::
+   While specifying **default_allocation** will take effect the first time the ControlMechanism is executed,
+   a value specified for **default_variable** will not take effect (i.e., in determining `control_allocation
+   <ControlMechanism.control_allocation>` or `value <ControlSignal.value>`\\s of the ControlSignals) until after
+   the ControlMechahnism is executed, and thus will not influence the parameters it controls until the next round of
+   execution (see `Composition_Timing` for a detailed description of the sequence of events during a Composition's
+   execution).
+
+COMMENT:
+    The `value <ControlSignal.value>` of a ControlSignal is not necessarily the same as its `allocation.
+    <ControlSignal.allocation>`  The former is the result of the ControlSignal's `function <ControlSignal.function>`,
+    which is executed when the ControlSignal is updated;  the latter is the value assigned to the ControlSignal's
+COMMENT
+
+The `allocation <ControlSignal.allocation>` is used by each ControlSignal to determine its `intensity
+<ControlSignal.intensity>`, which is then assigned to the `value <ControlProjection.value>`
+of the ControlSignal's `ControlProjection`.   The `value <ControlProjection.value>` of the ControlProjection
+is used by the `ParameterPort` to which it projects to modify the value of the parameter it controls (see
+`ControlSignal_Modulation` for a description of how a ControlSignal modulates the value of a parameter).
 
 .. _ControlMechanism_Costs_NetOutcome:
 
@@ -1772,7 +1796,10 @@ class ControlMechanism(ModulatoryMechanism_Base):
             # default_variable for example, it should be used here
             # instead of the "global default" defaultControlAllocation
             if len(self.defaults.value) == 1:
-                allocation_parameter_default = copy.deepcopy(self.defaults.value)
+                if self.defaults.default_allocation is not None:
+                    allocation_parameter_default = copy.deepcopy(self.defaults.default_allocation)
+                else:
+                    allocation_parameter_default = copy.deepcopy(self.defaults.control_allocation)
             else:
                 allocation_parameter_default = copy.deepcopy(defaultControlAllocation)
 

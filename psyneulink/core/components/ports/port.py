@@ -2387,13 +2387,15 @@ class Port_Base(Port):
             elif afferent.sender.modulation == DISABLE:
                 name = None
             elif afferent.sender.modulation == OVERRIDE:
+                assert f_mod_ptr.type == arg_out.type, \
+                    "Shape mismatch: Value of '{}' for '{}' ({}) " \
+                    "should match value of '{}'s '{}' ({})".format(afferent.sender.name,
+                                                                   afferent.sender.owner.name,
+                                                                   self.defaults.value,
+                                                                   self.owner.name,
+                                                                   self.name,
+                                                                   afferent.defaults.value)
                 # Directly store the value in the output array
-                if f_mod_ptr.type != arg_out.type:
-                    assert len(f_mod_ptr.type.pointee) == 1
-                    warnings.warn("Shape mismatch: Overriding modulation should match parameter port output: {} vs. {}".format(
-                                  afferent.defaults.value, self.defaults.value),
-                                  pnlvm.PNLCompilerWarning)
-                    f_mod_ptr = builder.gep(f_mod_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
                 builder.store(builder.load(f_mod_ptr), arg_out)
                 return builder
             else:
