@@ -2388,17 +2388,15 @@ class Port_Base(Port):
                 name = None
             elif afferent.sender.modulation == OVERRIDE:
                 # Directly store the value in the output array
-                try:
-                    builder.store(builder.load(f_mod_ptr), arg_out)
-                except:
-                    raise PortError("Shape mismatch: Value of '{}' for '{}' ({}) should match value of '{}'s '{}' ({})".
-                                    format(afferent.sender.name,
-                                           afferent.sender.owner.name,
-                                           self.defaults.value,
-                                           self.owner.name,
-                                           self.name,
-                                           afferent.defaults.value),
-                                    pnlvm.PNLCompilerWarning)
+                assert f_mod_ptr.type == arg_out.type, \
+                    "Shape mismatch: Value of '{}' for '{}' ({}) " \
+                    "should match value of '{}'s '{}' ({})".format(afferent.sender.name,
+                                                                   afferent.sender.owner.name,
+                                                                   self.defaults.value,
+                                                                   self.owner.name,
+                                                                   self.name,
+                                                                   afferent.defaults.value)
+                builder.store(builder.load(f_mod_ptr), arg_out)
                 return builder
             else:
                 assert False, "Unsupported modulation parameter: {}".format(afferent.sender.modulation)
