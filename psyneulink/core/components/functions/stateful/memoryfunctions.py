@@ -2563,6 +2563,11 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
             raise FunctionError(f'Value returned by {repr(SELECTION_FUNCTION)} specified for {self.__class__} '
                                 f'({result}) must return an array of the same length it receives')
 
+    def _get_default_entry(self, context):
+        key = [0] * self.parameters.key_size._get(context)
+        val = [0] * self.parameters.val_size._get(context)
+        return [key, val]
+
     def _initialize_previous_value(self, initializer, context=None):
         """Ensure that initializer is appropriate for assignment as memory attribute and assign as previous_value
 
@@ -2691,8 +2696,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
             # QUESTION: SHOULD IT RETURN 0's VECTOR OR NOT RETRIEVE AT ALL (LEAVING VALUE & OutputPort FROM LAST TRIAL)?
             #           CURRENT PROBLEM WITH LATTER IS THAT IT CAUSES CRASH ON INIT, SINCE NOT OUTPUT_PORT
             #           SO, WOULD HAVE TO RETURN ZEROS ON INIT AND THEN SUPPRESS AFTERWARDS, AS MOCKED UP BELOW
-            memory = [[0]* self.parameters.key_size._get(context), [0]* self.parameters.val_size._get(context)]
-
+            memory = self._get_default_entry(context)
         # Store variable to dict:
         rate = self._get_current_parameter_value(RATE, context)
         if rate is not None:
@@ -2759,11 +2763,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
 
         # if no memory, return the zero vector
         if len(_memory[KEYS]) == 0:
-            # zeros_key = [0] * self.parameters.key_size.get(context)
-            # zeros_val = [0] * self.parameters.val_size.get(context)
-            zeros_key = [0] * self.parameters.key_size.get(context)
-            zeros_val = [0] * self.parameters.val_size.get(context)
-            return [zeros_key, zeros_val]
+            return self._get_default_entry(context)
 
         # Get distances between query_key and all keys in memory
         distances = [self.distance_function([query_key, list(m)]) for m in _memory[KEYS]]
@@ -2784,8 +2784,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
                             for other in indices_of_selected_items[1:])):
                 warnings.warn(f'More than one item matched key ({query_key}) in memory for {self.name} of '
                               f'{self.owner.name} even though {repr("duplicate_keys")} is False')
-                return [[0]* self.parameters.key_size._get(context),
-                        [0]* self.parameters.val_size._get(context)]
+                return self._get_default_entry(context)
             if self.equidistant_keys_select == RANDOM:
                 random_state = self._get_current_parameter_value('random_state', context)
                 index_of_selected_item = random_state.choice(indices_of_selected_items)
