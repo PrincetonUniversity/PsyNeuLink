@@ -8,10 +8,10 @@ from psyneulink.core import llvm as pnlvm
 @pytest.mark.llvm
 @pytest.mark.parametrize('mode', ['CPU',
                                   pytest.param('PTX', marks=pytest.mark.cuda)])
-@pytest.mark.parametrize('val', [np.int8(0x7e),
-                                 np.int16(0x7eec),
-                                 np.int32(0x7eedbeee),
-                                 np.int64(0x7eedcafedeadbeee)
+@pytest.mark.parametrize('val', [np.uint8(0x7e),
+                                 np.uint16(0x7eec),
+                                 np.uint32(0x7eedbeee),
+                                 np.uint64(0x7eedcafedeadbeee)
                                 ], ids=lambda x: str(x.dtype))
 def test_integer_broadcast(mode, val):
     custom_name = None

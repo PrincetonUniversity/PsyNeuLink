@@ -636,13 +636,13 @@ def _convert_llvm_ir_to_ctype(t: ir.Type):
         if t.width == 1:
             return ctypes.c_bool
         elif t.width == 8:
-            return ctypes.c_int8
+            return ctypes.c_uint8
         elif t.width == 16:
-            return ctypes.c_int16
+            return ctypes.c_uint16
         elif t.width == 32:
-            return ctypes.c_int32
+            return ctypes.c_uint32
         elif t.width == 64:
-            return ctypes.c_int64
+            return ctypes.c_uint64
         else:
             assert False, "Unknown integer type: {}".format(type_t)
     elif type_t is ir.DoubleType:
