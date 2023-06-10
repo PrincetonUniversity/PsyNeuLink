@@ -63,7 +63,7 @@ class TestProcessingMechanismFunctions:
         "function,expected", [
             (LinearCombination, [[1.]]),
             (Reduce, [[1.]]),
-            (CombineMeans, [1.0]),
+            (CombineMeans, [[1.0]]),
             (Exponential, [[2.71828183]]),
             (Logistic, [[0.73105858]]),
             (SoftMax, [[1, ]]),

@@ -49,7 +49,7 @@ from psyneulink.core.globals.keywords import \
     CROSS_ENTROPY, DEFAULT_VARIABLE, EXPONENTS, LINEAR_COMBINATION_FUNCTION, MULTIPLICATIVE_PARAM, OFFSET, OPERATION, \
     PREDICTION_ERROR_DELTA_FUNCTION, PRODUCT, REARRANGE_FUNCTION, REDUCE_FUNCTION, SCALE, SUM, WEIGHTS, \
     PREFERENCE_SET_NAME
-from psyneulink.core.globals.utilities import convert_to_np_array, is_numeric, np_array_less_than_2d, ValidParamSpecType
+from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, convert_to_np_array, is_numeric, np_array_less_than_2d, ValidParamSpecType
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import \
@@ -1972,9 +1972,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         # if np_array_less_than_2d(variable):
         #     return (variable * scale) + offset
 
-        means = np.array([[None]] * len(variable))
-        for i, item in enumerate(variable):
-            means[i] = np.mean(item)
+        means = convert_all_elements_to_np_array([np.mean(item) for item in variable])
 
         # FIX FOR EFFICIENCY: CHANGE THIS AND WEIGHTS TO TRY/EXCEPT // OR IS IT EVEN NECESSARY, GIVEN VALIDATION ABOVE??
         # Apply exponents if they were specified
