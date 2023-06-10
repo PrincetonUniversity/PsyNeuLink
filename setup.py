@@ -52,7 +52,7 @@ setup(
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Build Tools',
 
-        # This project is liscensed as follows
+        # This project is licensed as follows
         'License :: OSI Approved :: Apache Software License',
 
         # Supported Python Versions
@@ -61,6 +61,7 @@ setup(
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
     ],
 
     # Require recent python

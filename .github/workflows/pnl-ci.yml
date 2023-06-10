@@ -48,7 +48,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.7', '3.10']
+        python-version: ['3.7', '3.11']
         python-architecture: ['x64']
         extra-args: ['']
         os: [ubuntu, macos, windows]
@@ -69,13 +69,13 @@ jobs:
             python-architecture: 'x86'
             os: windows
 
-          # fp32 run on linux python 3.8
-          - python-version: '3.8'
+          # fp32 run on linux python 3.10
+          - python-version: '3.10'
             os: ubuntu
             extra-args: '--fp-precision=fp32'
 
-          # --benchmark-enable run on macos python 3.8
-          - python-version: '3.8'
+          # --benchmark-enable run on macos python 3.10
+          - python-version: '3.10'
             os: macos
             extra-args: '--benchmark-enable -m benchmark -n0 --benchmark-min-rounds=2 --benchmark-max-time=0.001 --benchmark-warmup=off'
 
