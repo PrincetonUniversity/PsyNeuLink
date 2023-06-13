@@ -2046,14 +2046,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                     and parameter_obj.constructor_argument not in self._user_specified_args
                 ):
                     continue
-
-                if (
-                    (
-                        name in self._user_specified_args
-                        or parameter_obj.constructor_argument in self._user_specified_args
-                    )
-                    and (value is not None or parameter_obj.specify_none)
-                ):
+                elif value is not None or parameter_obj.specify_none:
                     parameter_obj._user_specified = True
 
                 if parameter_obj.structural:
