@@ -12,12 +12,12 @@ class TestComponent:
     def test_detection_of_illegal_arg_in_kwargs(self):
         with pytest.raises(pnl.ComponentError) as error_text:
             pnl.ProcessingMechanism(flim_flam=1)
-        assert "Unrecognized argument in constructor for ProcessingMechanism-0 (type: ProcessingMechanism): 'flim_flam'"
+        assert "Unrecognized argument in constructor for ProcessingMechanism-0 (type: ProcessingMechanism): 'flim_flam'" in str(error_text)
 
     def test_detection_of_illegal_args_in_kwargs(self):
         with pytest.raises(pnl.ComponentError) as error_text:
             pnl.ProcessingMechanism(name='MY_MECH', flim_flam=1, grumblabble=2)
-        assert "Unrecognized arguments in constructor for MY_MECH (type: ProcessingMechanism): 'flim_flam, grumblabble'"
+        assert "Unrecognized arguments in constructor for MY_MECH (type: ProcessingMechanism): 'flim_flam, grumblabble'" in str(error_text)
 
     def test_component_execution_counts_for_standalone_mechanism(self):
 
