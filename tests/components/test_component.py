@@ -126,6 +126,13 @@ class TestComponent:
 
 
 class TestConstructorArguments:
+    class ComponentWithConstructorArg(pnl.Mechanism_Base):
+        class Parameters(pnl.Mechanism_Base.Parameters):
+            cca_param = pnl.Parameter('A', constructor_argument='cca_constr')
+
+        def __init__(self, default_variable=None, **kwargs):
+            super().__init__(default_variable=default_variable, **kwargs)
+
     @pytest.mark.parametrize(
         'cls_',
         [
@@ -161,9 +168,28 @@ class TestConstructorArguments:
         'cls_, param_name, argument_name, param_value',
         [
             (pnl.TransferMechanism, 'variable', 'default_variable', [[10]]),
+            (ComponentWithConstructorArg, 'cca_param', 'cca_constr', 1),
         ]
     )
     @pytest.mark.parametrize('params_dict_entry', [NotImplemented, 'params'])
     def test_valid_argument(self, cls_, param_name, argument_name, param_value, params_dict_entry):
         obj = cls_(**nest_dictionary({argument_name: param_value}, params_dict_entry))
         np.testing.assert_array_equal(getattr(obj.defaults, param_name), param_value)
+
+    @pytest.mark.parametrize(
+        'cls_, argument_name, param_value',
+        [
+            (ComponentWithConstructorArg, 'cca_param', 1),
+            (pnl.TransferMechanism, 'variable', [[10]]),
+        ]
+    )
+    @pytest.mark.parametrize('params_dict_entry', [None, 'params'])
+    def test_invalid_argument(self, cls_, argument_name, param_value, params_dict_entry):
+        params = {argument_name: param_value}
+        if params_dict_entry is not None:
+            params = {params_dict_entry: params}
+
+        with pytest.raises(pnl.ComponentError) as err:
+            cls_(**params)
+        assert 'Unrecognized argument in constructor' in str(err)
+        assert f"(type: {cls_.__name__}): '{argument_name}'" in str(err)

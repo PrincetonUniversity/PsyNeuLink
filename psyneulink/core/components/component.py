@@ -1134,7 +1134,6 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             **{
                 'function': function,
                 'size': size,
-                'variable': default_variable,
                 'default_variable': default_variable,
                 'function_params': function_params
             },
@@ -1152,6 +1151,15 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             }
         else:
             self._handle_illegal_kwargs(**parameter_values)
+
+        # self.parameters here still references <class>.parameters, but
+        # only flags are needed to add original parameter names
+        for p in self.parameters:
+            if p.name not in parameter_values:
+                try:
+                    parameter_values[p.name] = parameter_values[p.constructor_argument]
+                except KeyError:
+                    pass
 
         self._initialize_parameters(
             context=context,
@@ -1705,9 +1713,14 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
     def _handle_illegal_kwargs(self, **kwargs):
         allowed_kwargs = self.standard_constructor_args.union(
-            self.parameters.names(show_all=True),
-            get_all_explicit_arguments(self.__class__, '__init__'),
+            get_all_explicit_arguments(self.__class__, '__init__')
         )
+        for p in self.parameters:
+            # restrict to constructor argument, if both are desired, use alias
+            if p.constructor_argument is not None:
+                allowed_kwargs.add(p.constructor_argument)
+            else:
+                allowed_kwargs.add(p.name)
 
         illegal_args = [
             k for k in kwargs
