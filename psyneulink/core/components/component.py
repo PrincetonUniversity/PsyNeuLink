@@ -912,7 +912,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     componentCategory = None
     componentType = None
 
-    standard_constructor_args = [RESET_STATEFUL_FUNCTION_WHEN, EXECUTE_UNTIL_FINISHED, MAX_EXECUTIONS_BEFORE_FINISHED]
+    standard_constructor_args = {RESET_STATEFUL_FUNCTION_WHEN, EXECUTE_UNTIL_FINISHED, MAX_EXECUTIONS_BEFORE_FINISHED}
 
     # helper attributes for MDF model spec
     _model_spec_id_parameters = 'parameters'
@@ -1701,17 +1701,15 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         return variable
 
     def _handle_illegal_kwargs(self, **kwargs):
-        illegal_args = [
-            arg
-            for arg in kwargs.keys()
-            if arg not in (
-                self.standard_constructor_args
-                + self.parameters.names(show_all=True)
-                # arguments to constructor
-                + list(get_all_explicit_arguments(self.__class__, '__init__'))
-            )
-        ]
+        allowed_kwargs = self.standard_constructor_args.union(
+            self.parameters.names(show_all=True),
+            get_all_explicit_arguments(self.__class__, '__init__'),
+        )
 
+        illegal_args = [
+            k for k in kwargs
+            if k not in allowed_kwargs and k in self._user_specified_args
+        ]
         if illegal_args:
             plural = ''
             if len(illegal_args) > 1:
