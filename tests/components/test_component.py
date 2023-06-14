@@ -2,6 +2,34 @@ import numpy as np
 import psyneulink as pnl
 import pytest
 
+
+def nest_dictionary(elem, keys=NotImplemented):
+    """
+    Args:
+        elem
+        keys (object, iterable, optional)
+
+    Returns:
+        dict: **elem** if **keys** is NotImplemented, or a dictionary
+        containing **elem** nested by **keys**
+    """
+    if keys is NotImplemented:
+        return elem
+
+    if isinstance(keys, str):
+        keys = [keys]
+
+    try:
+        iter(keys)
+    except TypeError:
+        keys = [keys]
+
+    res = elem
+    for k in reversed(keys):
+        res = {k: res}
+    return res
+
+
 class TestComponent:
 
     def test_detection_of_legal_arg_in_kwargs(self):
@@ -95,3 +123,47 @@ class TestComponent:
         default_result = c.execute(5)
 
         assert pnl.safe_equals(c.execute(5, context='new'), default_result)
+
+
+class TestConstructorArguments:
+    @pytest.mark.parametrize(
+        'cls_',
+        [
+            pnl.ProcessingMechanism,
+            pytest.param(
+                pnl.IntegratorMechanism,
+                marks=pytest.mark.xfail(reason='size currently unsupported at all on IntegratorMechanism')
+            )
+        ]
+    )
+    @pytest.mark.parametrize('params_dict_entry', [NotImplemented, 'params'])
+    def test_size(self, cls_, params_dict_entry):
+        c = cls_(**nest_dictionary({'size': 5}, params_dict_entry))
+        assert len(c.defaults.variable[-1]) == 5
+
+    @pytest.mark.parametrize(
+        'cls_, function_params, expected_values',
+        [
+            (pnl.ProcessingMechanism, {'slope': 2}, NotImplemented),
+        ]
+    )
+    @pytest.mark.parametrize('params_dict_entry', [NotImplemented, 'params'])
+    def test_function_params(self, cls_, function_params, expected_values, params_dict_entry):
+        m = cls_(**nest_dictionary({'function_params': function_params}, params_dict_entry))
+
+        if expected_values is NotImplemented:
+            expected_values = function_params
+
+        for k, v in expected_values.items():
+            np.testing.assert_array_equal(getattr(m.function.defaults, k), v)
+
+    @pytest.mark.parametrize(
+        'cls_, param_name, argument_name, param_value',
+        [
+            (pnl.TransferMechanism, 'variable', 'default_variable', [[10]]),
+        ]
+    )
+    @pytest.mark.parametrize('params_dict_entry', [NotImplemented, 'params'])
+    def test_valid_argument(self, cls_, param_name, argument_name, param_value, params_dict_entry):
+        obj = cls_(**nest_dictionary({argument_name: param_value}, params_dict_entry))
+        np.testing.assert_array_equal(getattr(obj.defaults, param_name), param_value)

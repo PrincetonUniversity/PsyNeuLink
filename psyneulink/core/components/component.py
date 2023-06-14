@@ -527,7 +527,7 @@ from psyneulink.core.globals.keywords import \
     MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS, \
     MODEL_SPEC_ID_MDF_VARIABLE, \
     MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_PORTS, OWNER, PARAMS, PREFS_ARG, \
-    RESET_STATEFUL_FUNCTION_WHEN, VALUE, VARIABLE
+    RESET_STATEFUL_FUNCTION_WHEN, SIZE, VALUE, VARIABLE
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.globals.parameters import \
     Defaults, SharedParameter, Parameter, ParameterAlias, ParameterError, ParametersBase, check_user_specified, copy_parameter_value
@@ -912,7 +912,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     componentCategory = None
     componentType = None
 
-    standard_constructor_args = {RESET_STATEFUL_FUNCTION_WHEN, EXECUTE_UNTIL_FINISHED, MAX_EXECUTIONS_BEFORE_FINISHED}
+    standard_constructor_args = {EXECUTE_UNTIL_FINISHED, FUNCTION_PARAMS, MAX_EXECUTIONS_BEFORE_FINISHED, RESET_STATEFUL_FUNCTION_WHEN, SIZE}
 
     # helper attributes for MDF model spec
     _model_spec_id_parameters = 'parameters'
@@ -1100,6 +1100,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                  name=None,
                  reset_stateful_function_when=None,
                  prefs=None,
+                 function_params=None,
                  **kwargs):
         """Assign default preferences; enforce required params; validate and instantiate params and execute method
 
@@ -1121,10 +1122,26 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         else:
             self.reset_stateful_function_when = Never()
 
-        try:
-            function_params = copy.copy(param_defaults[FUNCTION_PARAMS])
-        except (KeyError, TypeError):
+        if function_params is None:
             function_params = {}
+
+        # allow override of standard arguments with arguments specified
+        # in params (here, param_defaults) argument
+        # (if there are duplicates, later lines override previous)
+        # add named arguments here so that values from param_defaults
+        # can override them.
+        parameter_values = {
+            **{
+                'function': function,
+                'size': size,
+                'variable': default_variable,
+                'default_variable': default_variable,
+                'function_params': function_params
+            },
+            **kwargs,
+            **(param_defaults if param_defaults is not None else {}),
+        }
+        function_params = parameter_values['function_params']
 
         # if function is string, assume any unknown kwargs are for the
         # corresponding UDF expression
@@ -1134,19 +1151,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 **function_params
             }
         else:
-            self._handle_illegal_kwargs(**kwargs)
-
-        # allow override of standard arguments with arguments specified in
-        # params (here, param_defaults) argument
-        # (if there are duplicates, later lines override previous)
-        parameter_values = {
-            **{
-                'function': function,
-                'variable': default_variable
-            },
-            **kwargs,
-            **(param_defaults if param_defaults is not None else {}),
-        }
+            self._handle_illegal_kwargs(**parameter_values)
 
         self._initialize_parameters(
             context=context,
@@ -1155,8 +1160,6 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
         var = call_with_pruned_args(
             self._handle_default_variable,
-            default_variable=default_variable,
-            size=size,
             **parameter_values
         )
         if var is None:
