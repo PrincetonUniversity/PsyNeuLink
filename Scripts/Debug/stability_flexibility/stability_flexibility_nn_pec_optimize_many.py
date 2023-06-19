@@ -109,6 +109,8 @@ ret = pec.run(inputs=inputs)
 print("Optimal parameters: ", pec.optimized_parameter_values)
 print("Optimal Reward Rate: ", pec.optimal_value)
 
+comp.nodes[5].output_ports[0].parameters.value.set(np.array([[1.]]), context=pnl.Context(execution_id='pec'), override=True)
+
 print("Running the PEC again")
 ret = pec.run(inputs=inputs)
 print("Optimal parameters: ", pec.optimized_parameter_values)
