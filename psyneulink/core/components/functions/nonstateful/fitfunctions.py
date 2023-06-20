@@ -13,6 +13,7 @@ from psyneulink.core.components.functions.nonstateful.optimizationfunctions impo
     OptimizationFunctionError,
     SEARCH_SPACE,
 )
+from psyneulink.core.globals.parameters import check_user_specified
 
 from psyneulink._typing import Dict, Tuple, Callable, List, Optional, Union, Type, Literal
 
@@ -277,6 +278,7 @@ class PECOptimizationFunction(OptimizationFunction):
 
     """
 
+    @check_user_specified
     @beartype
     def __init__(
         self,
