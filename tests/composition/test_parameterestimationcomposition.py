@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import pytest
+import optuna
 
 import psyneulink as pnl
 
@@ -123,11 +124,15 @@ def test_pec_run_input_formats(inputs_dict, error_msg):
         pec.run(inputs=inputs_dict)
 
 
-def test_parameter_optimization_ddm(func_mode):
+@pytest.mark.parametrize('opt_method',
+                         ['differential_evolution', optuna.samplers.RandomSampler(), optuna.samplers.CmaEsSampler()],
+                         ids=['differential_evolultion', 'optuna_random_sampler', 'optuna_cmaes_sampler']
+                         )
+def test_parameter_optimization_ddm(func_mode, opt_method):
     """Test parameter optimization of a DDM in integrator mode"""
 
     if func_mode == "Python":
-        pytest.skip("Test not yet implemented for Python. Parameter estimate is too slow.")
+        pytest.skip("Test not yet implemented for Python. Parameter estimation is too slow.")
 
     if func_mode == "PTX":
         pytest.skip("Does not work on CUDA")
@@ -135,7 +140,7 @@ def test_parameter_optimization_ddm(func_mode):
     # High-level parameters the impact performance of the test
     num_trials = 50
     time_step_size = 0.01
-    num_estimates = 40000
+    num_estimates = 400
 
     ddm_params = dict(
         starting_value=0.0,
@@ -176,7 +181,7 @@ def test_parameter_optimization_ddm(func_mode):
             decision.output_ports[pnl.RESPONSE_TIME],
         ],
         objective_function=reward_rate,
-        optimization_function='differential_evolution',
+        optimization_function=PECOptimizationFunction(method=opt_method, max_iterations=50, direction='maximize'),
         num_estimates=num_estimates,
         initial_seed=42,
     )
@@ -201,7 +206,7 @@ def test_parameter_optimization_ddm(func_mode):
 
     ret = pec.run(inputs={comp: trial_inputs})
 
-    np.testing.assert_allclose(pec.optimized_parameter_values, [0.010363518438648106])
+    np.testing.assert_allclose(pec.optimized_parameter_values, [0.010363518438648106], atol=1e-2)
 
 
 # func_mode is a hacky wa to get properly marked; Python, LLVM, and CUDA

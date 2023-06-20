@@ -789,6 +789,8 @@ class ParameterEstimationComposition(Composition):
 
         if data is not None:
             optimization_function.data_fitting_mode = True
+        else:
+            optimization_function.data_fitting_mode = False
 
         # I wish I had a cleaner way to do this. The optimization function doesn't have any way to figure out which
         # indices it needs from composition output. This needs to be passed down from the PEC.
