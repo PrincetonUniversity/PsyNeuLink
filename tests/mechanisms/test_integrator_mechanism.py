@@ -1062,7 +1062,7 @@ class TestIntegratorNoise:
     @pytest.mark.integrator_mechanism
     def test_integrator_simple_noise_fn_noise_shaped(self):
         I = IntegratorMechanism(
-            variable=[[0], [0], [0]],
+            default_variable=[[0], [0], [0]],
             name='IntegratorMechanism',
             function=SimpleIntegrator(
                 default_variable=[[0], [0], [0]],

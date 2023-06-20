@@ -1326,7 +1326,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
             monitor_for_control=monitor_for_control,
             outcome_input_ports_option=outcome_input_ports_option,
             control=control,
-            output_ports=control,
             objective_mechanism=objective_mechanism,
             default_allocation=default_allocation,
             combine_costs=combine_costs,

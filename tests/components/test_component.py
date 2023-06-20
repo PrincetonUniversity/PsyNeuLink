@@ -2,6 +2,34 @@ import numpy as np
 import psyneulink as pnl
 import pytest
 
+
+def nest_dictionary(elem, keys=NotImplemented):
+    """
+    Args:
+        elem
+        keys (object, iterable, optional)
+
+    Returns:
+        dict: **elem** if **keys** is NotImplemented, or a dictionary
+        containing **elem** nested by **keys**
+    """
+    if keys is NotImplemented:
+        return elem
+
+    if isinstance(keys, str):
+        keys = [keys]
+
+    try:
+        iter(keys)
+    except TypeError:
+        keys = [keys]
+
+    res = elem
+    for k in reversed(keys):
+        res = {k: res}
+    return res
+
+
 class TestComponent:
 
     def test_detection_of_legal_arg_in_kwargs(self):
@@ -12,12 +40,12 @@ class TestComponent:
     def test_detection_of_illegal_arg_in_kwargs(self):
         with pytest.raises(pnl.ComponentError) as error_text:
             pnl.ProcessingMechanism(flim_flam=1)
-        assert "Unrecognized argument in constructor for ProcessingMechanism-0 (type: ProcessingMechanism): 'flim_flam'"
+        assert "Unrecognized argument in constructor for ProcessingMechanism-0 (type: ProcessingMechanism): 'flim_flam'" in str(error_text)
 
     def test_detection_of_illegal_args_in_kwargs(self):
         with pytest.raises(pnl.ComponentError) as error_text:
             pnl.ProcessingMechanism(name='MY_MECH', flim_flam=1, grumblabble=2)
-        assert "Unrecognized arguments in constructor for MY_MECH (type: ProcessingMechanism): 'flim_flam, grumblabble'"
+        assert "Unrecognized arguments in constructor for MY_MECH (type: ProcessingMechanism): 'flim_flam, grumblabble'" in str(error_text)
 
     def test_component_execution_counts_for_standalone_mechanism(self):
 
@@ -95,3 +123,73 @@ class TestComponent:
         default_result = c.execute(5)
 
         assert pnl.safe_equals(c.execute(5, context='new'), default_result)
+
+
+class TestConstructorArguments:
+    class ComponentWithConstructorArg(pnl.Mechanism_Base):
+        class Parameters(pnl.Mechanism_Base.Parameters):
+            cca_param = pnl.Parameter('A', constructor_argument='cca_constr')
+
+        def __init__(self, default_variable=None, **kwargs):
+            super().__init__(default_variable=default_variable, **kwargs)
+
+    @pytest.mark.parametrize(
+        'cls_',
+        [
+            pnl.ProcessingMechanism,
+            pytest.param(
+                pnl.IntegratorMechanism,
+                marks=pytest.mark.xfail(reason='size currently unsupported at all on IntegratorMechanism')
+            )
+        ]
+    )
+    @pytest.mark.parametrize('params_dict_entry', [NotImplemented, 'params'])
+    def test_size(self, cls_, params_dict_entry):
+        c = cls_(**nest_dictionary({'size': 5}, params_dict_entry))
+        assert len(c.defaults.variable[-1]) == 5
+
+    @pytest.mark.parametrize(
+        'cls_, function_params, expected_values',
+        [
+            (pnl.ProcessingMechanism, {'slope': 2}, NotImplemented),
+        ]
+    )
+    @pytest.mark.parametrize('params_dict_entry', [NotImplemented, 'params'])
+    def test_function_params(self, cls_, function_params, expected_values, params_dict_entry):
+        m = cls_(**nest_dictionary({'function_params': function_params}, params_dict_entry))
+
+        if expected_values is NotImplemented:
+            expected_values = function_params
+
+        for k, v in expected_values.items():
+            np.testing.assert_array_equal(getattr(m.function.defaults, k), v)
+
+    @pytest.mark.parametrize(
+        'cls_, param_name, argument_name, param_value',
+        [
+            (pnl.TransferMechanism, 'variable', 'default_variable', [[10]]),
+            (ComponentWithConstructorArg, 'cca_param', 'cca_constr', 1),
+        ]
+    )
+    @pytest.mark.parametrize('params_dict_entry', [NotImplemented, 'params'])
+    def test_valid_argument(self, cls_, param_name, argument_name, param_value, params_dict_entry):
+        obj = cls_(**nest_dictionary({argument_name: param_value}, params_dict_entry))
+        np.testing.assert_array_equal(getattr(obj.defaults, param_name), param_value)
+
+    @pytest.mark.parametrize(
+        'cls_, argument_name, param_value',
+        [
+            (ComponentWithConstructorArg, 'cca_param', 1),
+            (pnl.TransferMechanism, 'variable', [[10]]),
+        ]
+    )
+    @pytest.mark.parametrize('params_dict_entry', [None, 'params'])
+    def test_invalid_argument(self, cls_, argument_name, param_value, params_dict_entry):
+        params = {argument_name: param_value}
+        if params_dict_entry is not None:
+            params = {params_dict_entry: params}
+
+        with pytest.raises(pnl.ComponentError) as err:
+            cls_(**params)
+        assert 'Unrecognized argument in constructor' in str(err)
+        assert f"(type: {cls_.__name__}): '{argument_name}'" in str(err)
