@@ -204,13 +204,9 @@ class TestConstructorArguments:
             (pnl.TransferMechanism, 'variable', [[10]]),
         ]
     )
-    @pytest.mark.parametrize('params_dict_entry', [None, 'params'])
+    @pytest.mark.parametrize('params_dict_entry', [NotImplemented, 'params'])
     def test_invalid_argument(self, cls_, argument_name, param_value, params_dict_entry):
-        params = {argument_name: param_value}
-        if params_dict_entry is not None:
-            params = {params_dict_entry: params}
-
         with pytest.raises(pnl.ComponentError) as err:
-            cls_(**params)
+            cls_(**nest_dictionary({argument_name: param_value}, params_dict_entry))
         assert 'Unrecognized argument in constructor' in str(err)
         assert f"(type: {cls_.__name__}): '{argument_name}'" in str(err)
