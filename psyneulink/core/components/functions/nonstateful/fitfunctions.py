@@ -15,7 +15,16 @@ from psyneulink.core.components.functions.nonstateful.optimizationfunctions impo
 )
 from psyneulink.core.globals.parameters import check_user_specified
 
-from psyneulink._typing import Dict, Tuple, Callable, List, Optional, Union, Type, Literal
+from psyneulink._typing import (
+    Dict,
+    Tuple,
+    Callable,
+    List,
+    Optional,
+    Union,
+    Type,
+    Literal,
+)
 
 
 import time
@@ -28,7 +37,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-__all__ = ['PECOptimizationFunction', 'BadLikelihoodWarning', 'PECObjectiveFuncWarning']
+__all__ = ["PECOptimizationFunction", "BadLikelihoodWarning", "PECObjectiveFuncWarning"]
 
 
 def get_param_str(params):
@@ -44,7 +53,10 @@ def get_param_str(params):
     The string version of the parameter dict
 
     """
-    return ", ".join(f"{name.replace('PARAMETER_CIM_', '')}={value:.5f}" for name, value in params.items())
+    return ", ".join(
+        f"{name.replace('PARAMETER_CIM_', '')}={value:.5f}"
+        for name, value in params.items()
+    )
 
 
 class PECObjectiveFuncWarning(UserWarning):
@@ -52,6 +64,7 @@ class PECObjectiveFuncWarning(UserWarning):
     A custom warning that is used to signal when the objective function could not be evaluated for some reason.
     This is usually caused when parameter values cause degenerate simulation results (no variance in values).
     """
+
     pass
 
 
@@ -61,6 +74,7 @@ class BadLikelihoodWarning(PECObjectiveFuncWarning):
     This is usually caused when parameter values cause degenerate simulation results (no variance in values).
     It can also be caused when experimental data is not matching any of the simulation results.
     """
+
     pass
 
 
@@ -144,7 +158,6 @@ def simulation_likelihood(
         # Compute a separate KDE for each combination of categorical variables.
         dens_u = {}
         for category in categories:
-
             # Get the subset of simulations that correspond to this category
             dsub = s[cat_sim_data[trial] == category]
 
@@ -186,14 +199,12 @@ def simulation_likelihood(
 
     # If we are passed experimental data, evaluate the KDE at the experimental data points
     if exp_data is not None:
-
         # For numerical reasons, make zero probability a really small value. This is because we are taking logs
         # of the probabilities at the end.
         ZERO_PROB = 1e-10
 
         kdes_eval = np.zeros((len(exp_data),))
         for trial in range(len(exp_data)):
-
             # Extract the categorical values for this experimental trial
             exp_trial_cat = exp_data[trial, categorical_dims]
 
@@ -282,16 +293,15 @@ class PECOptimizationFunction(OptimizationFunction):
     @beartype
     def __init__(
         self,
-        method: Union[Literal['differential_evolution'], optuna.samplers.BaseSampler],
+        method: Union[Literal["differential_evolution"], optuna.samplers.BaseSampler],
         objective_function: Optional[Callable] = None,
         search_space=None,
         save_samples: Optional[bool] = None,
         save_values: Optional[bool] = None,
         max_iterations: int = 500,
-        direction: Literal['maximize', 'minimize'] = "maximize",
+        direction: Literal["maximize", "minimize"] = "maximize",
         **kwargs,
     ):
-
         self.method = method
         self.direction = direction
 
@@ -380,9 +390,7 @@ class PECOptimizationFunction(OptimizationFunction):
             if i != randomization_dimension:
                 search_space[i] = SampleIterator([next(search_space[i])])
 
-        super().reset(
-            search_space=search_space, context=context, **kwargs
-        )
+        super().reset(search_space=search_space, context=context, **kwargs)
         owner_str = ""
         if self.owner:
             owner_str = f" of {self.owner.name}"
@@ -420,9 +428,12 @@ class PECOptimizationFunction(OptimizationFunction):
         # randomization dimension, which should be the last sample iterator in the search space list.
         search_space = self.parameters.search_space._get(context)
         for i, arg in enumerate(args):
-
             # Map the args in order of the fittable parameters
-            len_search_space = len(search_space) if self.owner.num_estimates is None else len(search_space) - 1
+            len_search_space = (
+                len(search_space)
+                if self.owner.num_estimates is None
+                else len(search_space) - 1
+            )
             if i < len_search_space:
                 assert search_space[i].num == 1, (
                     "Search space for this dimension must be a single value, during search "
@@ -484,7 +495,6 @@ class PECOptimizationFunction(OptimizationFunction):
         saved_values = []
 
         if not self.is_initializing:
-
             ocm = self.owner
             if ocm is None:
                 raise ValueError(
@@ -512,29 +522,43 @@ class PECOptimizationFunction(OptimizationFunction):
 
     @property
     def obj_func_desc_str(self):
-        return 'Log-Likelihood' if self.data_fitting_mode else 'Obj-Func-Value'
+        return "Log-Likelihood" if self.data_fitting_mode else "Obj-Func-Value"
 
     @property
     def opt_task_desc_str(self):
         direction_str = "Maximizing" if self.direction == "maximize" else "Minimizing"
-        task_disp = "Maximum Likelihood Estimation" if self.data_fitting_mode else f"{direction_str} Objective Function"
-        return  f"{task_disp} (num_estimates={self.num_estimates}) ..."
+        task_disp = (
+            "Maximum Likelihood Estimation"
+            if self.data_fitting_mode
+            else f"{direction_str} Objective Function"
+        )
+        return f"{task_disp} (num_estimates={self.num_estimates}) ..."
 
     def _fit(
         self,
         obj_func: Callable,
         display_iter: bool = True,
     ):
-
         if self.method == "differential_evolution":
             return self._fit_differential_evolution(obj_func, display_iter)
         elif isinstance(self.method, optuna.samplers.BaseSampler):
-            return self._fit_optuna(obj_func=obj_func, opt_func=self.method, display_iter=display_iter)
+            return self._fit_optuna(
+                obj_func=obj_func, opt_func=self.method, display_iter=display_iter
+            )
         else:
             raise ValueError(f"Invalid optimization_function method: {self.method}")
 
-    def _make_obj_func_wrapper(self, progress, display_iter, warns, warns_with_params, obj_func,
-                               like_eval_task=None, evals_per_iteration=None, ignore_direction=False):
+    def _make_obj_func_wrapper(
+        self,
+        progress,
+        display_iter,
+        warns,
+        warns_with_params,
+        obj_func,
+        like_eval_task=None,
+        evals_per_iteration=None,
+        ignore_direction=False,
+    ):
         """
         Create a wrapper function for the objective function that keeps track of progress and warnings.
         """
@@ -558,16 +582,10 @@ class PECOptimizationFunction(OptimizationFunction):
 
             # Are we displaying each iteration
             if display_iter:
-
                 # If we got a warning generating the objective function value, report it
-                if (
-                        len(warns) > 0
-                        and warns[-1].category == PECObjectiveFuncWarning
-                ):
+                if len(warns) > 0 and warns[-1].category == PECObjectiveFuncWarning:
                     progress.console.print(f"Warning: ", style="bold red")
-                    progress.console.print(
-                        f"{warns[-1].message}", style="bold red"
-                    )
+                    progress.console.print(f"{warns[-1].message}", style="bold red")
                     progress.console.print(
                         f"{get_param_str(params)}, {self.obj_func_desc_str}: {obj_val}, "
                         f"Eval-Time: {elapsed} (seconds)",
@@ -584,7 +602,6 @@ class PECOptimizationFunction(OptimizationFunction):
                 # Certain algorithms like differential evolution evaluate the objective function multiple times per
                 # iteration. We need to update the progress bar accordingly.
                 if evals_per_iteration is not None:
-
                     # We need to update the progress bar differently depending on whether we are doing
                     # the first generation (which is twice as long) or not.
                     if self.num_evals < 2 * evals_per_iteration:
@@ -592,20 +609,29 @@ class PECOptimizationFunction(OptimizationFunction):
                         progress.tasks[like_eval_task].total = max_evals
                         eval_task_str = f"|-- Iteration {self.gen_count} ..."
                         progress.tasks[like_eval_task].description = eval_task_str
-                        progress.update(like_eval_task, completed=self.num_evals % max_evals)
+                        progress.update(
+                            like_eval_task, completed=self.num_evals % max_evals
+                        )
                     else:
                         max_evals = evals_per_iteration
                         progress.tasks[like_eval_task].total = max_evals
                         eval_task_str = f"|-- Iteration {self.gen_count} ..."
                         progress.tasks[like_eval_task].description = eval_task_str
-                        progress.update(like_eval_task,
-                                        completed=(self.num_evals - (2 * evals_per_iteration)) % max_evals)
+                        progress.update(
+                            like_eval_task,
+                            completed=(self.num_evals - (2 * evals_per_iteration))
+                            % max_evals,
+                        )
 
                 return p
 
         return objfunc_wrapper
 
-    def _fit_differential_evolution(self, obj_func: Callable, display_iter: bool = True,):
+    def _fit_differential_evolution(
+        self,
+        obj_func: Callable,
+        display_iter: bool = True,
+    ):
         """
         Implementation of search using scipy's differential_evolution algorithm.
         """
@@ -622,12 +648,11 @@ class PECOptimizationFunction(OptimizationFunction):
         direction = 1 if self.direction == "minimize" else -1
 
         with Progress(
-                "[progress.description]{task.description}",
-                BarColumn(),
-                "Completed: [progress.percentage]{task.percentage:>3.0f}%",
-                TimeRemainingColumn(),
+            "[progress.description]{task.description}",
+            BarColumn(),
+            "Completed: [progress.percentage]{task.percentage:>3.0f}%",
+            TimeRemainingColumn(),
         ) as progress:
-
             opt_task = progress.add_task(self.opt_task_desc_str, total=100)
 
             # This is the number of evaluations we need per search iteration.
@@ -636,16 +661,23 @@ class PECOptimizationFunction(OptimizationFunction):
 
             if display_iter:
                 eval_task_str = f"|-- Iteration 1 ..."
-                like_eval_task = progress.add_task(eval_task_str, total=evals_per_iteration)
+                like_eval_task = progress.add_task(
+                    eval_task_str, total=evals_per_iteration
+                )
 
             progress.update(opt_task, completed=0)
 
             warns_with_params = []
             with warnings.catch_warnings(record=True) as warns:
-
-                objfunc_wrapper = self._make_obj_func_wrapper(progress, display_iter, warns,
-                                                              warns_with_params, obj_func, like_eval_task,
-                                                              evals_per_iteration)
+                objfunc_wrapper = self._make_obj_func_wrapper(
+                    progress,
+                    display_iter,
+                    warns,
+                    warns_with_params,
+                    obj_func,
+                    like_eval_task,
+                    evals_per_iteration,
+                )
 
                 def progress_callback(x, convergence):
                     params = dict(zip(self.fit_param_names, x))
@@ -697,18 +729,18 @@ class PECOptimizationFunction(OptimizationFunction):
 
         return output_dict
 
-    def _fit_optuna(self,
-                    obj_func: Callable,
-                    opt_func: Union[optuna.samplers.BaseSampler, Type[optuna.samplers.BaseSampler]],
-                    display_iter: bool = True):
-
+    def _fit_optuna(
+        self,
+        obj_func: Callable,
+        opt_func: Union[optuna.samplers.BaseSampler, Type[optuna.samplers.BaseSampler]],
+        display_iter: bool = True,
+    ):
         with Progress(
-                "[progress.description]{task.description}",
-                BarColumn(),
-                "Completed: [progress.percentage]{task.percentage:>3.0f}%",
-                TimeRemainingColumn(),
+            "[progress.description]{task.description}",
+            BarColumn(),
+            "Completed: [progress.percentage]{task.percentage:>3.0f}%",
+            TimeRemainingColumn(),
         ) as progress:
-
             max_iterations = self.parameters.max_iterations.get()
 
             opt_task = progress.add_task(self.opt_task_desc_str, total=max_iterations)
@@ -716,13 +748,17 @@ class PECOptimizationFunction(OptimizationFunction):
 
             warns_with_params = []
             with warnings.catch_warnings(record=True) as warns:
-
                 # Create a wrapper for the objective function that will let us catch warnings and record progress.
                 # For optuna, we can ignore the direction of search because it is handled by the Optuna API when
                 # setting up the optimization.
-                objfunc_wrapper = self._make_obj_func_wrapper(progress=progress, display_iter=display_iter, warns=warns,
-                                                              warns_with_params=warns_with_params, obj_func=obj_func,
-                                                              ignore_direction=True)
+                objfunc_wrapper = self._make_obj_func_wrapper(
+                    progress=progress,
+                    display_iter=display_iter,
+                    warns=warns,
+                    warns_with_params=warns_with_params,
+                    obj_func=obj_func,
+                    ignore_direction=True,
+                )
 
                 # Optuna has an interface where the objective function calls the API to get
                 # the current values for the parameter rather than them being passed
@@ -769,11 +805,19 @@ class PECOptimizationFunction(OptimizationFunction):
                 # Turn off optuna logging except for errors or warnings, it doesn't work well with our PNL progress bar
                 optuna.logging.set_verbosity(optuna.logging.WARNING)
 
-                study = optuna.create_study(sampler=self.method, direction=self.direction)
-                study.optimize(objfunc_wrapper_wrapper, n_trials=max_iterations, callbacks=[progress_callback])
+                study = optuna.create_study(
+                    sampler=self.method, direction=self.direction
+                )
+                study.optimize(
+                    objfunc_wrapper_wrapper,
+                    n_trials=max_iterations,
+                    callbacks=[progress_callback],
+                )
 
             # Bind the fitted parameters to their names
-            fitted_params = dict(zip(list(self.fit_param_names), study.best_params.values()))
+            fitted_params = dict(
+                zip(list(self.fit_param_names), study.best_params.values())
+            )
 
         # Save all the results
         output_dict = {
@@ -825,7 +869,12 @@ class PECOptimizationFunction(OptimizationFunction):
 
             steps = [float(s[0]) for s in steps]
 
-            return dict(zip(self.fit_param_names, ((l, u, s) for (l, u), s in zip(bounds, steps))))
+            return dict(
+                zip(
+                    self.fit_param_names,
+                    ((l, u, s) for (l, u), s in zip(bounds, steps)),
+                )
+            )
         else:
             return None
 
