@@ -14,7 +14,9 @@ from psyneulink.core.components.functions.nonstateful.optimizationfunctions impo
     SEARCH_SPACE,
 )
 
-from typing import Dict, Tuple, Callable, List, Optional, Union, Type, Literal
+from psyneulink._typing import Dict, Tuple, Callable, List, Optional, Union, Type, Literal
+
+
 import time
 import numpy as np
 
