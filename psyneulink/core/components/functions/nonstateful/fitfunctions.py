@@ -623,7 +623,7 @@ class PECOptimizationFunction(OptimizationFunction):
                             % max_evals,
                         )
 
-                return p
+            return p
 
         return objfunc_wrapper
 
