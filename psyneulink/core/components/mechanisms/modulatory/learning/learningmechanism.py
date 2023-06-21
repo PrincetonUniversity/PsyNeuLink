@@ -546,7 +546,7 @@ from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ADDITIVE, ASSERT, ENABLED, INPUT_PORTS, \
-    LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \
+    LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \
     MATRIX, NAME, OUTPUT_PORT, OWNER_VALUE, PARAMS, PROJECTIONS, SAMPLE, PORT_TYPE, VARIABLE
 from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
@@ -1227,15 +1227,11 @@ class LearningMechanism(ModulatoryMechanism_Base):
         # Instantiate LearningSignals and assign to self.output_ports
         for learning_signal in self.learning_signals:
             # Instantiate LearningSignal
-
-            params = {LEARNED_PARAM: MATRIX}
-
             # Parses learning_signal specifications (in call to Port._parse_port_spec)
             #    and any embedded Projection specifications (in call to <Port>._instantiate_projections)
             learning_signal = _instantiate_port(port_type=LearningSignal,
                                                  owner=self,
                                                  variable=(OWNER_VALUE,0),
-                                                 params=params,
                                                  reference_value=self.parameters.learning_signal._get(context),
                                                  modulation=self.defaults.modulation,
                                                  # port_spec=self.learning_signal)
