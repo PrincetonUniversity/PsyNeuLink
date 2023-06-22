@@ -37,9 +37,13 @@ jobs:
             pnl-version: 'base'
           - os: windows-latest
             pnl-version: 'base'
-          - python-version: 3.8
+          - python-version: '3.8'
             pnl-version: 'base'
-          - python-version: 3.9
+          - python-version: '3.9'
+            pnl-version: 'base'
+          - python-version: '3.10'
+            pnl-version: 'base'
+          - python-version: '3.11'
             pnl-version: 'base'
 
     outputs:
