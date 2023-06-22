@@ -1,4 +1,4 @@
-autograd<1.6
+autograd<1.7
 beartype<0.15.0
 dill<0.3.7
 fastkde>=1.0.24, <1.0.25
