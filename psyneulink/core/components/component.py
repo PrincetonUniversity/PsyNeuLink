@@ -1720,8 +1720,12 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         )
         for p in self.parameters:
             # restrict to constructor argument, if both are desired, use alias
-            if p.constructor_argument is not None:
+            if p.constructor_argument is not None and p.constructor_argument != p.name:
                 allowed_kwargs.add(p.constructor_argument)
+                try:
+                    allowed_kwargs.remove(p.name)
+                except KeyError:
+                    pass
             else:
                 allowed_kwargs.add(p.name)
 
