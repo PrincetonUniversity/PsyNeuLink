@@ -78,7 +78,9 @@ jobs:
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
-        python-version: ${{ matrix.python-version }}
+        # Block python3.7.17 on macos. see:
+        # https://github.com/actions/setup-python/issues/682
+        python-version: ${{ (matrix.os == 'macos-latest' && matrix.python-version == '3.7') && '3.7.16' || matrix.python-version }}
         architecture: ${{ matrix.python-architecture }}
 
     - name: Get pip cache location
