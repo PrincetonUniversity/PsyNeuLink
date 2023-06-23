@@ -2176,6 +2176,9 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
         if param_defaults is not None:
             for name, value in copy.copy(param_defaults).items():
+                if name in alias_names:
+                    continue
+
                 try:
                     parameter_obj = getattr(self.parameters, name)
                 except AttributeError:
