@@ -1244,6 +1244,12 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
             return control_allocation
 
+        def _parse_monitor_for_control(self, monitor_for_control):
+            if monitor_for_control is not None:
+                monitor_for_control = convert_to_list(monitor_for_control)
+
+            return monitor_for_control
+
         def _validate_input_ports(self, input_ports):
             if input_ports is None:
                 return
@@ -1279,7 +1285,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
                  ):
 
         control = convert_to_list(control) or []
-        monitor_for_control = convert_to_list(monitor_for_control) or []
         self.allow_probes = allow_probes
         self._sim_counts = {}
 
@@ -1288,7 +1293,10 @@ class ControlMechanism(ModulatoryMechanism_Base):
             if MONITOR_FOR_MODULATION in kwargs:
                 args = kwargs.pop(MONITOR_FOR_MODULATION)
                 if args:
-                    monitor_for_control.extend(convert_to_list(args))
+                    try:
+                        monitor_for_control.extend(convert_to_list(args))
+                    except AttributeError:
+                        monitor_for_control = convert_to_list(args)
 
             # Only allow one of CONTROL, MODULATORY_SIGNALS OR CONTROL_SIGNALS to be specified
             # These are synonyms, but allowing several to be specified and trying to combine the specifications
@@ -1348,13 +1356,15 @@ class ControlMechanism(ModulatoryMechanism_Base):
                                                        target_set=target_set,
                                                        context=context)
 
-        if (MONITOR_FOR_CONTROL in target_set
-                and target_set[MONITOR_FOR_CONTROL] is not None
-                and any(item for item in target_set[MONITOR_FOR_CONTROL]
-                        if (isinstance(item, ObjectiveMechanism) or item is ObjectiveMechanism))):
-            raise ControlMechanismError(f"The '{MONITOR_FOR_CONTROL}' arg of '{self.name}' contains a specification for"
-                                        f" an {ObjectiveMechanism.componentType} ({target_set[MONITOR_FOR_CONTROL]}).  "
-                                        f"This should be specified in its '{OBJECTIVE_MECHANISM}' argument.")
+        monitor_for_control = self.defaults.monitor_for_control
+        if monitor_for_control is not None:
+            for item in monitor_for_control:
+                if item is ObjectiveMechanism or isinstance(item, ObjectiveMechanism):
+                    raise ControlMechanismError(
+                        f"The '{MONITOR_FOR_CONTROL}' arg of '{self.name}' contains a specification for"
+                        f" an {ObjectiveMechanism.componentType} ({monitor_for_control}).  "
+                        f"This should be specified in its '{OBJECTIVE_MECHANISM}' argument."
+                    )
 
         if (OBJECTIVE_MECHANISM in target_set and
                 target_set[OBJECTIVE_MECHANISM] is not None
