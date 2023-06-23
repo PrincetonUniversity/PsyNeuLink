@@ -1254,6 +1254,26 @@ class ControlMechanism(ModulatoryMechanism_Base):
             if input_ports is None:
                 return
 
+        def _validate_output_ports(self, control):
+            if control is None:
+                return
+
+            if not isinstance(control, list):
+                return 'should have been converted to a list'
+
+            port_types = self._owner.outputPortTypes
+            for ctl_spec in control:
+                ctl_spec = _parse_port_spec(
+                    port_type=port_types, owner=self._owner, port_spec=ctl_spec
+                )
+                if not (
+                    isinstance(ctl_spec, port_types)
+                    or (
+                        isinstance(ctl_spec, dict) and ctl_spec[PORT_TYPE] == port_types
+                    )
+                ):
+                    return 'invalid port specification'
+
             # FIX 5/28/20:
             # TODO: uncomment this method or remove this block entirely.
             # This validation check was never being run due to an
@@ -1284,7 +1304,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
                  **kwargs
                  ):
 
-        control = convert_to_list(control) or []
         self.allow_probes = allow_probes
         self._sim_counts = {}
 
@@ -1399,21 +1418,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
                                             f"({target_set[OBJECTIVE_MECHANISM].name}) must be an "
                                             f"{ObjectiveMechanism.componentType} or a list of Mechanisms and/or "
                                             f"OutputPorts to be monitored for control.")
-
-        if CONTROL in target_set and target_set[CONTROL]:
-            control = target_set[CONTROL]
-            self._validate_control_arg(control)
-
-    def _validate_control_arg(self, control):
-        """Treat control arg separately so it can be overridden by subclassses (e.g., GatingMechanism)"""
-        assert isinstance(control, list), \
-            f"PROGRAM ERROR: control arg {control} of {self.name} should have been converted to a list."
-        for ctl_spec in control:
-            ctl_spec = _parse_port_spec(port_type=ControlSignal, owner=self, port_spec=ctl_spec)
-            if not (isinstance(ctl_spec, ControlSignal)
-                    or (isinstance(ctl_spec, dict) and ctl_spec[PORT_TYPE] == ControlSignal)):
-                raise ControlMechanismError(f"Invalid specification for '{CONTROL}' argument of {self.name}:"
-                                            f"({ctl_spec})")
 
     # FIX: 2/11/23 SHOULDN'T THIS BE PUT ON COMPOSITION NOW?
     # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
