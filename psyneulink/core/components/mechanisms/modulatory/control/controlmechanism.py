@@ -1202,8 +1202,10 @@ class ControlMechanism(ModulatoryMechanism_Base):
             def is_2tuple(o):
                 return isinstance(o, tuple) and len(o) == 2
 
-            if not isinstance(output_ports, list):
-                output_ports = [output_ports]
+            if output_ports is None:
+                return output_ports
+
+            output_ports = convert_to_list(output_ports)
 
             for i in range(len(output_ports)):
                 # handle 2-item tuple
