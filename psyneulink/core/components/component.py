@@ -2085,6 +2085,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                     defaults[name] = value
 
         for k in defaults:
+            if defaults[k] is None:
+                continue
             defaults[k] = copy_parameter_value(
                 defaults[k],
                 shared_types=shared_types
