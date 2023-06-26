@@ -1150,12 +1150,12 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 **function_params
             }
         else:
-            self._handle_illegal_kwargs(**parameter_values)
+            self._validate_arguments(parameter_values)
 
         # self.parameters here still references <class>.parameters, but
         # only flags are needed to add original parameter names
         for p in self.parameters:
-            if p.name not in parameter_values:
+            if p.constructor_argument is not None and p.constructor_argument != p.name:
                 try:
                     parameter_values[p.name] = parameter_values[p.constructor_argument]
                 except KeyError:
@@ -1714,7 +1714,18 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
         return variable
 
-    def _handle_illegal_kwargs(self, **kwargs):
+    def _get_allowed_arguments(self) -> set:
+        """
+        Returns a set of argument names that can be passed into
+        __init__, directly or through params dictionaries
+
+        Includes:
+            - all Parameter constructor_argument names
+            - all Parameter names except for those that have a
+              constructor_argument
+            - all ParameterAlias names
+            - all other explicitly specified named arguments in __init__
+        """
         allowed_kwargs = self.standard_constructor_args.union(
             get_all_explicit_arguments(self.__class__, '__init__')
         )
@@ -1729,18 +1740,20 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             else:
                 allowed_kwargs.add(p.name)
 
-        illegal_args = [
+            if p.aliases is not None:
+                if isinstance(p.aliases, str):
+                    allowed_kwargs.add(p.aliases)
+                else:
+                    allowed_kwargs = allowed_kwargs.union(p.aliases)
+
+        return allowed_kwargs
+
+    def _get_illegal_arguments(self, **kwargs) -> set:
+        allowed_kwargs = self._get_allowed_arguments()
+        return {
             k for k in kwargs
             if k not in allowed_kwargs and k in self._user_specified_args
-        ]
-        if illegal_args:
-            plural = ''
-            if len(illegal_args) > 1:
-                plural = 's'
-            raise ComponentError(
-                f"Unrecognized argument{plural} in constructor for {self.name} "
-                f"(type: {self.__class__.__name__}): {repr(', '.join(illegal_args))}"
-            )
+        }
 
     # breaking self convention here because when storing the args,
     # "self" is often among them. To avoid needing to preprocess to
@@ -2025,6 +2038,90 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                                       target_set=target_set,
                                       context=context)
 
+    def _validate_arguments(self, parameter_values):
+        """
+        Raises errors for illegal specifications of arguments to
+        __init__:
+            - original Parameter name when Parameter has a
+              constructor_argument
+            - arguments that don't correspond to Parameters or other
+              arguments to __init__
+            - non-equal values of a Parameter and a corresponding
+              ParameterAlias
+        """
+        def create_illegal_argument_error(illegal_arg_strs):
+            plural = 's' if len(illegal_arg_strs) > 1 else ''
+            base_err = f"Illegal argument{plural} in constructor (type: {type(self).__name__}):"
+            return ComponentError('\n\t'.join([base_err] + illegal_arg_strs), component=self)
+
+        def alias_conflicts(alias, passed_name):
+            # some aliases share name with constructor_argument
+            if alias.name == passed_name:
+                return False
+
+            try:
+                a_val = parameter_values[alias.name]
+                s_val = parameter_values[passed_name]
+            except KeyError:
+                return False
+
+            if safe_equals(a_val, s_val):
+                return False
+
+            # both specified, not equal -> conflict
+            alias_specified = (
+                alias.name in self._user_specified_args
+                and (a_val is not None or alias.specify_none)
+            )
+            source_specified = (
+                passed_name in self._user_specified_args
+                and (s_val is not None or alias.source.specify_none)
+            )
+            return alias_specified and source_specified
+
+        illegal_passed_args = self._get_illegal_arguments(**parameter_values)
+
+        conflicting_aliases = []
+        unused_constructor_args = {}
+        for p in self.parameters:
+            if p.name in illegal_passed_args:
+                assert p.constructor_argument is not None
+                unused_constructor_args[p.name] = p.constructor_argument
+
+            if isinstance(p, ParameterAlias):
+                if p.source.constructor_argument is None:
+                    passed_name = p.source.name
+                else:
+                    passed_name = p.source.constructor_argument
+
+                if alias_conflicts(p, passed_name):
+                    conflicting_aliases.append((p.source.name, passed_name, p.name))
+
+        # raise constructor arg errors
+        if len(unused_constructor_args) > 0:
+            raise create_illegal_argument_error([
+                f"'{arg}': must use '{constr_arg}' instead"
+                for arg, constr_arg in unused_constructor_args.items()
+            ])
+
+        # raise generic illegal argument error
+        unknown_args = illegal_passed_args.difference(unused_constructor_args)
+        if len(unknown_args) > 0:
+            raise create_illegal_argument_error([f"'{a}'" for a in unknown_args])
+
+        # raise alias conflict error
+        # can standardize these with above error, but leaving for now for consistency
+        if len(conflicting_aliases) > 0:
+            source, passed, alias = conflicting_aliases[0]
+            constr_arg_str = f' ({source})' if source != passed else ''
+            raise ComponentError(
+                f"Multiple values ({alias}: {parameter_values[alias]}"
+                f"\t{passed}: {parameter_values[passed]}) "
+                f"assigned to identical Parameters. {alias} is an alias "
+                f"of {passed}{constr_arg_str}",
+                component=self,
+            )
+
     def _initialize_parameters(self, context=None, **param_defaults):
         from psyneulink.core.components.shellclasses import (
             Composition_Base, Function, Mechanism, Port, Process_Base,
@@ -2105,18 +2202,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             )
 
         for p in filter(lambda x: isinstance(x, ParameterAlias), self.parameters):
-            if _is_user_specified(p):
-                if _is_user_specified(p.source):
-                    if param_defaults[p.name] is not param_defaults[p.source.name]:
-                        raise ComponentError(
-                            f"Multiple values ({p.name}: {param_defaults[p.name]}"
-                            f"\t{p.source.name}: {param_defaults[p.source.name]}) "
-                            f"assigned to identical Parameters. {p.name} is an alias "
-                            f"of {p.source.name}",
-                            component=self,
-                        )
-                else:
-                    param_defaults[p.source.name] = param_defaults[p.name]
+            if _is_user_specified(p) and not _is_user_specified(p.source):
+                param_defaults[p.source.name] = param_defaults[p.name]
 
         for p in filter(lambda x: not isinstance(x, (ParameterAlias, SharedParameter)), self.parameters._in_dependency_order):
             # copy spec so it is not overwritten later
