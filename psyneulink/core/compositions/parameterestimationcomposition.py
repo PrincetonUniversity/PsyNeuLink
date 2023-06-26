@@ -170,11 +170,21 @@ from psyneulink._typing import Optional, Union, Dict, List, Callable, Literal
 import psyneulink.core.llvm as pnllvm
 from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.compositions.composition import Composition, CompositionError
-from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \
-    OptimizationControlMechanism
-from psyneulink.core.components.functions.nonstateful.fitfunctions import PECOptimizationFunction, simulation_likelihood
-from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
-from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
+from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import (
+    OptimizationControlMechanism,
+)
+from psyneulink.core.components.functions.nonstateful.fitfunctions import (
+    PECOptimizationFunction,
+    simulation_likelihood,
+)
+from psyneulink.core.components.ports.modulatorysignals.controlsignal import (
+    ControlSignal,
+)
+from psyneulink.core.globals.context import (
+    Context,
+    ContextFlags,
+    handle_external_context,
+)
 from psyneulink.core.globals.keywords import BEFORE, OVERRIDE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.utilities import convert_to_list
@@ -213,8 +223,10 @@ def _initial_seed_setter(value, owning_component, context=None):
 
 def _same_seed_for_all_parameter_combinations_getter(owning_component, context=None):
     try:
-        return owning_component.controller.parameters.same_seed_for_all_allocations._get(
-            context
+        return (
+            owning_component.controller.parameters.same_seed_for_all_allocations._get(
+                context
+            )
         )
     except AttributeError:
         return None
@@ -482,8 +494,14 @@ class ParameterEstimationComposition(Composition):
     def __init__(
         self,
         parameters: Dict,
-        outcome_variables: Union[List[Mechanism], Mechanism, List[OutputPort], OutputPort],
-        optimization_function: Union[PECOptimizationFunction, Literal['differential_evolution'], Literal['grid_search']],
+        outcome_variables: Union[
+            List[Mechanism], Mechanism, List[OutputPort], OutputPort
+        ],
+        optimization_function: Union[
+            PECOptimizationFunction,
+            Literal["differential_evolution"],
+            Literal["grid_search"],
+        ],
         model: Optional[Composition] = None,
         data: Optional[pd.DataFrame] = None,
         data_categorical_dims=None,
@@ -496,11 +514,12 @@ class ParameterEstimationComposition(Composition):
         context: Optional[Context] = None,
         **kwargs,
     ):
-
         # We don't allow user specified controllers in PEC
-        if 'controller' in kwargs:
-            raise ValueError("controller argument cannot be specified in a ParameterEstimationComposition. PEC sets "
-                             "up its own controller for executing its parameter estimation process.")
+        if "controller" in kwargs:
+            raise ValueError(
+                "controller argument cannot be specified in a ParameterEstimationComposition. PEC sets "
+                "up its own controller for executing its parameter estimation process."
+            )
 
         # If the number of trials per estimate is not specified and we are fitting to data then
         # get it from the data.
@@ -671,7 +690,6 @@ class ParameterEstimationComposition(Composition):
             )
 
     def _validate_params(self, args):
-
         kwargs = args.pop("kwargs")
         pec_name = (
             f"{self.__class__.__name__} '{args.pop('name', None)}'"
@@ -739,7 +757,6 @@ class ParameterEstimationComposition(Composition):
         same_seed_for_all_parameter_combinations,
         context=None,
     ):
-
         # # Parse **parameters** into ControlSignals specs
         control_signals = []
         for param, allocation in parameters.items():
@@ -776,19 +793,29 @@ class ParameterEstimationComposition(Composition):
             objective_function = f
 
         if optimization_function is None:
-            warnings.warn('optimization_function argument to PEC was not specified, defaulting to gridsearch, this is slow!')
-            optimization_function = PECOptimizationFunction(method='gridsearch', objective_function=objective_function)
+            warnings.warn(
+                "optimization_function argument to PEC was not specified, defaulting to gridsearch, this is slow!"
+            )
+            optimization_function = PECOptimizationFunction(
+                method="gridsearch", objective_function=objective_function
+            )
         elif type(optimization_function) == str:
-            optimization_function = PECOptimizationFunction(method=optimization_function, objective_function=objective_function)
+            optimization_function = PECOptimizationFunction(
+                method=optimization_function, objective_function=objective_function
+            )
         elif not isinstance(optimization_function, PECOptimizationFunction):
-            raise ParameterEstimationCompositionError("optimization_function for PEC must either be either a valid "
-                                                      "string for a supported optimization method or an instance of "
-                                                      "PECOptimizationFunction.")
+            raise ParameterEstimationCompositionError(
+                "optimization_function for PEC must either be either a valid "
+                "string for a supported optimization method or an instance of "
+                "PECOptimizationFunction."
+            )
         else:
             optimization_function.set_pec_objective_function(objective_function)
 
         if data is not None:
             optimization_function.data_fitting_mode = True
+        else:
+            optimization_function.data_fitting_mode = False
 
         # I wish I had a cleaner way to do this. The optimization function doesn't have any way to figure out which
         # indices it needs from composition output. This needs to be passed down from the PEC.
@@ -813,7 +840,6 @@ class ParameterEstimationComposition(Composition):
 
     @handle_external_context()
     def run(self, *args, **kwargs):
-
         # Clear any old results from the composition
         if self.results is not None:
             self.results.clear()
@@ -850,15 +876,19 @@ class ParameterEstimationComposition(Composition):
         kwargs.pop("inputs", None)
 
         num_trials_per_estimate = len(inputs_dict[list(inputs_dict.keys())[0]])
-        self.controller.parameters.num_trials_per_estimate.set(num_trials_per_estimate, context=context)
+        self.controller.parameters.num_trials_per_estimate.set(
+            num_trials_per_estimate, context=context
+        )
 
         # Run the composition as normal
         results = super(ParameterEstimationComposition, self).run(*args, **kwargs)
 
         # IMPLEMENTATION NOTE: has not executed OCM after first call
-        if hasattr(self.controller, 'optimal_control_allocation'):
+        if hasattr(self.controller, "optimal_control_allocation"):
             # Assign optimized_parameter_values and optimal_value    (remove randomization dimension)
-            self.optimized_parameter_values = self.controller.optimal_control_allocation[:-1]
+            self.optimized_parameter_values = (
+                self.controller.optimal_control_allocation[:-1]
+            )
             self.optimal_value = self.controller.optimal_net_outcome
 
         return results

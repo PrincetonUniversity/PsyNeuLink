@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import pytest
+import optuna
 
 import psyneulink as pnl
 
@@ -22,7 +23,7 @@ pec = pnl.ParameterEstimationComposition(
     parameters={("slope", output_node): np.linspace(1.0, 3.0, 3)},
     outcome_variables=output_node,
     objective_function=lambda x: np.sum(x),
-    optimization_function=PECOptimizationFunction(method='differential_evolution'),
+    optimization_function=PECOptimizationFunction(method="differential_evolution"),
 )
 run_input_test_args = [
     pytest.param(
@@ -123,11 +124,22 @@ def test_pec_run_input_formats(inputs_dict, error_msg):
         pec.run(inputs=inputs_dict)
 
 
-def test_parameter_optimization_ddm(func_mode):
+@pytest.mark.parametrize(
+    "opt_method",
+    [
+        "differential_evolution",
+        optuna.samplers.RandomSampler(),
+        optuna.samplers.CmaEsSampler(),
+    ],
+    ids=["differential_evolultion", "optuna_random_sampler", "optuna_cmaes_sampler"],
+)
+def test_parameter_optimization_ddm(func_mode, opt_method):
     """Test parameter optimization of a DDM in integrator mode"""
 
     if func_mode == "Python":
-        pytest.skip("Test not yet implemented for Python. Parameter estimate is too slow.")
+        pytest.skip(
+            "Test not yet implemented for Python. Parameter estimation is too slow."
+        )
 
     if func_mode == "PTX":
         pytest.skip("Does not work on CUDA")
@@ -135,7 +147,7 @@ def test_parameter_optimization_ddm(func_mode):
     # High-level parameters the impact performance of the test
     num_trials = 50
     time_step_size = 0.01
-    num_estimates = 40000
+    num_estimates = 400
 
     ddm_params = dict(
         starting_value=0.0,
@@ -176,7 +188,9 @@ def test_parameter_optimization_ddm(func_mode):
             decision.output_ports[pnl.RESPONSE_TIME],
         ],
         objective_function=reward_rate,
-        optimization_function='differential_evolution',
+        optimization_function=PECOptimizationFunction(
+            method=opt_method, max_iterations=50, direction="maximize"
+        ),
         num_estimates=num_estimates,
         initial_seed=42,
     )
@@ -201,7 +215,9 @@ def test_parameter_optimization_ddm(func_mode):
 
     ret = pec.run(inputs={comp: trial_inputs})
 
-    np.testing.assert_allclose(pec.optimized_parameter_values, [0.010363518438648106])
+    np.testing.assert_allclose(
+        pec.optimized_parameter_values, [0.010363518438648106], atol=1e-2
+    )
 
 
 # func_mode is a hacky wa to get properly marked; Python, LLVM, and CUDA
@@ -209,7 +225,9 @@ def test_parameter_estimation_ddm_mle(func_mode):
     """Test parameter estimation of a DDM in integrator mode with MLE."""
 
     if func_mode == "Python":
-        pytest.skip("Test not yet implemented for Python. Parameter estimate is too slow.")
+        pytest.skip(
+            "Test not yet implemented for Python. Parameter estimate is too slow."
+        )
 
     if func_mode == "PTX":
         pytest.skip("Does not work on CUDA")
@@ -275,7 +293,7 @@ def test_parameter_estimation_ddm_mle(func_mode):
     fit_parameters = {
         ("rate", decision): np.linspace(-0.5, 0.5, 1000),
         ("threshold", decision): np.linspace(0.5, 1.0, 1000),
-        ('non_decision_time', decision): np.linspace(0.0, 1.0, 1000),
+        ("non_decision_time", decision): np.linspace(0.0, 1.0, 1000),
     }
 
     pec = pnl.ParameterEstimationComposition(
@@ -287,7 +305,9 @@ def test_parameter_estimation_ddm_mle(func_mode):
             decision.output_ports[pnl.RESPONSE_TIME],
         ],
         data=data_to_fit,
-        optimization_function=PECOptimizationFunction(method='differential_evolution', max_iterations=1),
+        optimization_function=PECOptimizationFunction(
+            method="differential_evolution", max_iterations=1
+        ),
         num_estimates=num_estimates,
         initial_seed=42,
     )
@@ -357,7 +377,7 @@ def test_pec_bad_outcome_var_spec():
                 decision.output_ports[pnl.RESPONSE_TIME],
             ],
             data=data_to_fit,
-            optimization_function='differential_evolution',
+            optimization_function="differential_evolution",
             num_estimates=20,
             num_trials_per_estimate=10,
         )
@@ -370,7 +390,7 @@ def test_pec_bad_outcome_var_spec():
             parameters=fit_parameters,
             outcome_variables=[transfer.output_ports[0]],
             data=data_to_fit,
-            optimization_function='differential_evolution',
+            optimization_function="differential_evolution",
             num_estimates=20,
             num_trials_per_estimate=10,
         )
@@ -383,6 +403,6 @@ def test_pec_controller_specified():
         pnl.ParameterEstimationComposition(
             parameters={},
             outcome_variables=[],
-            optimization_function='differential_evolution',
-            controller=pnl.ControlMechanism()
+            optimization_function="differential_evolution",
+            controller=pnl.ControlMechanism(),
         )

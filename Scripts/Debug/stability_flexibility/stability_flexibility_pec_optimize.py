@@ -3,6 +3,7 @@ import sys
 import numpy as np
 import psyneulink as pnl
 import pandas as pd
+import optuna
 
 from psyneulink.core.globals.utilities import set_global_seed
 
@@ -91,7 +92,7 @@ decisionGate = comp.nodes["DECISION_GATE"]
 responseGate = comp.nodes["RESPONSE_GATE"]
 
 fit_parameters = {
-    ("threshold", decisionMaker): np.linspace(0.01, 0.5, 10),  # Threshold
+    ("threshold", decisionMaker): np.linspace(0.01, 0.5, 100),  # Threshold
 }
 
 
@@ -113,7 +114,9 @@ pec = pnl.ParameterEstimationComposition(
         responseGate.output_ports[0],
     ],
     objective_function=reward_rate,
-    optimization_function='differential_evolution',
+    optimization_function=pnl.PECOptimizationFunction(method=optuna.samplers.CmaEsSampler(),
+                                                      max_iterations=50,
+                                                      direction='minimize'),
     num_estimates=num_estimates,
 )
 
