@@ -66,7 +66,7 @@ TranferFunction Class References
 import numbers
 import types
 import warnings
-from enum import IntFlag
+from enum import Flag, auto
 from math import e, pi, sqrt
 
 import numpy as np
@@ -3979,7 +3979,7 @@ costFunctionNames = [INTENSITY_COST_FUNCTION,
                      COMBINE_COSTS_FUNCTION]
 
 
-class CostFunctions(IntFlag):
+class CostFunctions(Flag):
     """Options for selecting constituent cost functions to be used by a `TransferWithCosts` Function.
 
     These can be used alone or in combination with one another, by enabling or disabling each using the
@@ -4013,9 +4013,9 @@ class CostFunctions(IntFlag):
 
     """
     NONE          = 0
-    INTENSITY     = 1 << 1
-    ADJUSTMENT    = 1 << 2
-    DURATION      = 1 << 3
+    INTENSITY     = auto()
+    ADJUSTMENT    = auto()
+    DURATION      = auto()
     ALL           = INTENSITY | ADJUSTMENT | DURATION
     DEFAULTS      = NONE
 
