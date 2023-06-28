@@ -1122,44 +1122,9 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         else:
             self.reset_stateful_function_when = Never()
 
-        if function_params is None:
-            function_params = {}
-
-        # allow override of standard arguments with arguments specified
-        # in params (here, param_defaults) argument
-        # (if there are duplicates, later lines override previous)
-        # add named arguments here so that values from param_defaults
-        # can override them.
-        parameter_values = {
-            **{
-                'function': function,
-                'size': size,
-                'default_variable': default_variable,
-                'function_params': function_params
-            },
-            **kwargs,
-            **(param_defaults if param_defaults is not None else {}),
-        }
-        function_params = parameter_values['function_params']
-
-        # if function is string, assume any unknown kwargs are for the
-        # corresponding UDF expression
-        if isinstance(function, (types.FunctionType, str)):
-            function_params = {
-                **kwargs,
-                **function_params
-            }
-        else:
-            self._validate_arguments(parameter_values)
-
-        # self.parameters here still references <class>.parameters, but
-        # only flags are needed to add original parameter names
-        for p in self.parameters:
-            if p.constructor_argument is not None and p.constructor_argument != p.name:
-                try:
-                    parameter_values[p.name] = parameter_values[p.constructor_argument]
-                except KeyError:
-                    pass
+        parameter_values, function_params = self._parse_arguments(
+            default_variable, param_defaults, size, function, function_params, kwargs
+        )
 
         self._initialize_parameters(
             context=context,
@@ -2122,6 +2087,64 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 component=self,
             )
 
+    def _parse_arguments(
+        self, default_variable, param_defaults, size, function, function_params, kwargs
+    ):
+        if function_params is None:
+            function_params = {}
+
+        # allow override of standard arguments with arguments specified
+        # in params (here, param_defaults) argument
+        # (if there are duplicates, later lines override previous)
+        # add named arguments here so that values from param_defaults
+        # can override them.
+        parameter_values = {
+            **{
+                'function': function,
+                'size': size,
+                'default_variable': default_variable,
+                'function_params': function_params
+            },
+            **kwargs,
+            **(param_defaults if param_defaults is not None else {}),
+        }
+        function_params = parameter_values['function_params']
+
+        # if function is a standard python function or string, assume
+        # any unknown kwargs are for the corresponding UDF.
+        # Validation will happen there.
+        if isinstance(function, (types.FunctionType, str)):
+            function_params = {
+                **kwargs,
+                **function_params
+            }
+        else:
+            self._validate_arguments(parameter_values)
+
+        # self.parameters here still references <class>.parameters, but
+        # only unchanging attributes are needed here
+        for p in self.parameters:
+            if p.constructor_argument is not None and p.constructor_argument != p.name:
+                try:
+                    parameter_values[p.name] = parameter_values[p.constructor_argument]
+                except KeyError:
+                    pass
+                else:
+                    # the value itself isn't used elsewhere
+                    self._user_specified_args[p.name] = f'FROM_{p.constructor_argument}'
+
+            if isinstance(p, ParameterAlias):
+                if p.source.name not in self._user_specified_args:
+                    # if alias conflicts with source, error thrown in _validate_arguments
+                    try:
+                        parameter_values[p.source.name] = parameter_values[p.name]
+                    except KeyError:
+                        pass
+                    else:
+                        self._user_specified_args[p.source.name] = f'FROM_{p.name}'
+
+        return parameter_values, function_params
+
     def _initialize_parameters(self, context=None, **param_defaults):
         from psyneulink.core.components.shellclasses import (
             Composition_Base, Function, Mechanism, Port, Process_Base,
@@ -2194,16 +2217,6 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             )
 
         self.defaults = Defaults(owner=self, **defaults)
-
-        def _is_user_specified(parameter):
-            return (
-                parameter.name in param_defaults
-                and param_defaults[parameter.name] is not None
-            )
-
-        for p in filter(lambda x: isinstance(x, ParameterAlias), self.parameters):
-            if _is_user_specified(p) and not _is_user_specified(p.source):
-                param_defaults[p.source.name] = param_defaults[p.name]
 
         for p in filter(lambda x: not isinstance(x, (ParameterAlias, SharedParameter)), self.parameters._in_dependency_order):
             # copy spec so it is not overwritten later
