@@ -229,7 +229,7 @@ derivative_out_test_data = [
 @pytest.mark.parametrize("func, variable, params, expected", derivative_out_test_data, ids=lambda x: getattr(x, 'name', None) or getattr(x, 'get', lambda p, q: None)(kw.OUTPUT_TYPE, None))
 def test_transfer_derivative_out(func, variable, params, expected, benchmark, func_mode):
     if func == Functions.SoftMax and params[kw.OUTPUT_TYPE] == kw.ALL and func_mode != "Python":
-        pytest.skip("Compiled derivative using 'ALL' is not implemented")
+        pytest.skip("Compiled SoftMax derivative using 'ALL' is not implemented")
 
     f = func(default_variable=variable, **params)
     benchmark.group = "TransferFunction " + func.componentName + " Derivative"
@@ -245,7 +245,7 @@ def test_transfer_derivative_out(func, variable, params, expected, benchmark, fu
 
     res = benchmark(ex, variable)
 
-    # Logistic needs reduced accuracy in single precision mode
+    # Logistic needs reduced accuracy in single precision mode because it uses exp()
     if func_mode != 'Python' and func is Functions.Logistic and pytest.helpers.llvm_current_fp_precision() == 'fp32':
         tolerance = {'rtol': 1e-7, 'atol': 1e-8}
     else:
@@ -258,6 +258,7 @@ def test_transfer_with_costs_function():
     result = f(1)
     np.testing.assert_allclose(result, 1)
     f.toggle_cost(Functions.CostFunctions.INTENSITY)
+
     f = Functions.TransferWithCosts(enabled_cost_functions=Functions.CostFunctions.INTENSITY)
     result = f(2)
     np.testing.assert_allclose(result, 2)
@@ -265,6 +266,7 @@ def test_transfer_with_costs_function():
     assert f.adjustment_cost is None
     assert f.duration_cost is None
     np.testing.assert_allclose(f.combined_costs, 7.38905609893065)
+
     f.toggle_cost(Functions.CostFunctions.ADJUSTMENT)
     result = f(3)
     np.testing.assert_allclose(result, 3)
@@ -272,6 +274,7 @@ def test_transfer_with_costs_function():
     np.testing.assert_allclose(f.adjustment_cost, 1)
     assert f.duration_cost is None
     np.testing.assert_allclose(f.combined_costs, 21.085536923187668)
+
     f.toggle_cost(Functions.CostFunctions.DURATION)
     result = f(5)
     np.testing.assert_allclose(result, 5)
