@@ -1,12 +1,13 @@
 import contextlib
 import doctest
 import io
+import itertools
 import numpy as np
-import psyneulink
 import pytest
 import re
 import sys
 
+import psyneulink
 from psyneulink import clear_registry, primary_registries, torch_available
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.globals.utilities import set_global_seed
@@ -245,6 +246,13 @@ def expand_np_ndarray(arr):
                 nested_elem = [nested_elem]
             results_list.extend(nested_elem)
     return results_list
+
+@pytest.helpers.register
+def power_set(s):
+    """Set of all potential subsets."""
+
+    vals = list(s)
+    return (c for l in range(len(vals) + 1) for c in itertools.combinations(vals, l))
 
 
 # flag when run from pytest
