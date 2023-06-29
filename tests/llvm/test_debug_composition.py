@@ -1,7 +1,6 @@
 import numpy as np
 import os
 import pytest
-from itertools import combinations
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
@@ -11,7 +10,7 @@ from psyneulink.core.compositions.composition import Composition
 
 debug_options = ["const_input=[[[7]]]", "const_input", "const_params", "const_data", "const_state",
                  "stat", "time_stat", "unaligned_copy"]
-options_combinations = (";".join(("", *c)) for i in range(len(debug_options) + 1) for c in combinations(debug_options, i))
+options_combinations = (";".join(c) for c in pytest.helpers.power_set(debug_options))
 
 @pytest.mark.composition
 @pytest.mark.parametrize("mode", [pytest.param(pnlvm.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
