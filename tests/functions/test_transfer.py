@@ -1,6 +1,8 @@
+import functools
 import numpy as np
 import pytest
 
+import psyneulink as pnl
 import psyneulink.core.components.functions.nonstateful.transferfunctions as Functions
 import psyneulink.core.globals.keywords as kw
 import psyneulink.core.llvm as pnlvm
@@ -253,7 +255,77 @@ def test_transfer_derivative_out(func, variable, params, expected, benchmark, fu
 
     np.testing.assert_allclose(res, expected, **tolerance)
 
-def test_transfer_with_costs_function():
+
+def combine_costs(costs):
+    return functools.reduce(lambda x, y: x | y, costs, pnl.CostFunctions.NONE)
+
+@pytest.mark.parametrize("cost_functions", map(combine_costs, pytest.helpers.power_set(cf for cf in pnl.CostFunctions if cf != pnl.CostFunctions.NONE)))
+@pytest.mark.benchmark
+def test_transfer_with_costs(cost_functions, func_mode, benchmark):
+
+    f = Functions.TransferWithCosts(enabled_cost_functions=cost_functions)
+
+    def check(cost_function, if_enabled, if_disabled, observed):
+        if cost_function in cost_functions:
+            assert np.array_equal(observed, if_enabled)
+        else:
+            assert np.array_equal(observed, if_disabled)
+
+            # HACK: workaround intensity cost returning [1] when disabled
+            nonlocal total_cost
+            total_cost -= observed or 0
+
+    ex = pytest.helpers.get_func_execution(f, func_mode)
+
+    res = ex(10)
+    total_cost = (f.intensity_cost or 0) + (f.adjustment_cost or 0) + (f.duration_cost or 0)
+
+    assert res == [10]
+    if func_mode == "Python":
+        # TODO: Why is intensity cost returning [1] if other costs are enabled?
+        check(pnl.CostFunctions.INTENSITY,
+              [22026.465794806703],
+              None if cost_functions == pnl.CostFunctions.NONE else [1],
+              f.intensity_cost)
+        check(pnl.CostFunctions.ADJUSTMENT, [10], None, f.adjustment_cost)
+        check(pnl.CostFunctions.DURATION, [10], None, f.duration_cost)
+        assert np.array_equal(total_cost, f.combined_costs or 0)
+
+
+    # Second run with positive adjustment
+    res = ex(15)
+    total_cost = (f.intensity_cost or 0) + (f.adjustment_cost or 0) + (f.duration_cost or 0)
+
+    assert res == [15]
+    if func_mode == "Python":
+        # TODO: Why is intensity cost returning [1] if other costs are enabled?
+        check(pnl.CostFunctions.INTENSITY,
+              [3269017.372472108],
+              None if cost_functions == pnl.CostFunctions.NONE else [1],
+              f.intensity_cost)
+        check(pnl.CostFunctions.ADJUSTMENT, [5], None, f.adjustment_cost)
+        check(pnl.CostFunctions.DURATION, [25], None, f.duration_cost)
+        assert np.array_equal(total_cost, f.combined_costs or 0)
+
+    # Third run with negative adjustment
+    res = ex(7)
+    total_cost = (f.intensity_cost or 0) + (f.adjustment_cost or 0) + (f.duration_cost or 0)
+
+    assert res == [7]
+    if func_mode == "Python":
+        # TODO: Why is intensity cost returning [1] if other costs are enabled?
+        check(pnl.CostFunctions.INTENSITY,
+              [1096.6331584284583],
+              None if cost_functions == pnl.CostFunctions.NONE else [1],
+              f.intensity_cost)
+        check(pnl.CostFunctions.ADJUSTMENT, [8], None, f.adjustment_cost)
+        check(pnl.CostFunctions.DURATION, [32], None, f.duration_cost)
+        assert np.array_equal(total_cost, f.combined_costs or 0)
+
+    benchmark(ex, 10)
+
+
+def test_transfer_with_costs_toggle():
     f = Functions.TransferWithCosts()
     result = f(1)
     np.testing.assert_allclose(result, 1)
