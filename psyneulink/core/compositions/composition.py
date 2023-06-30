@@ -10212,8 +10212,7 @@ _
 
                     if self._is_learning(context):
                         # copies back matrix to pnl from param struct (after learning)
-                        _comp_ex.writeback_params_to_pnl(context=context,
-                                                         params=_comp_ex._param_struct,
+                        _comp_ex.writeback_params_to_pnl(params=_comp_ex._param_struct,
                                                          ids="llvm_param_ids",
                                                          condition=lambda p: p.name == "matrix")
 

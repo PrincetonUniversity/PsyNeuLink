@@ -114,20 +114,16 @@ class Execution:
         return struct
 
 
-    def writeback_params_to_pnl(self, context=None, component=None, params=None, ids:str=None, condition:callable=lambda p: True):
-
-        if component is None:
-            component = self._obj
+    def writeback_params_to_pnl(self, params=None, ids:str=None, condition:callable=lambda p: True):
 
         assert (params is None) == (ids is None), "Either both 'params' and 'ids' have to be set or neither"
 
         if params is None:
             # Default to stateful params
-            assert component is self._obj
             params = self._state_struct
             ids = "llvm_state_ids"
 
-        self._copy_params_to_pnl(context, component, params, ids, condition)
+        self._copy_params_to_pnl(self._execution_contexts[0], self._obj, params, ids, condition)
 
 
     def _copy_params_to_pnl(self, context, component, params, ids:str, condition:callable):
@@ -189,11 +185,21 @@ class Execution:
 
                 # Writeback parameter value if the condition matches
                 elif condition(pnl_param):
-                    value = _convert_ctype_to_python(compiled_attribute_param)
-                    # Unflatten the matrix
-                    # FIXME: this seems to break something when generalized for all attributes
-                    value = np.array(value).reshape(pnl_param._get(context).shape)
-                    pnl_param._set(value, context=context)
+                    value = np.ctypeslib.as_array(compiled_attribute_param)
+
+                    # Stateful parameters include history, get the most recent value
+                    if "state" in ids:
+                        value = value[-1]
+
+                    # Replace empty structures with None
+                    if ctypes.sizeof(compiled_attribute_param) == 0:
+                        value = None
+                    else:
+                        # Try to match the shape of the old value
+                        old_value = pnl_param.get(context)
+                        if hasattr(old_value, 'shape'):
+                            value = value.reshape(old_value.shape)
+                    pnl_param.set(value, context=context)
 
 
 class CUDAExecution(Execution):
