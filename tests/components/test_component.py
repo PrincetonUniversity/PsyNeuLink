@@ -126,7 +126,7 @@ class TestComponent:
 
 
 class TestConstructorArguments:
-    class ComponentWithConstructorArg(pnl.Mechanism_Base):
+    class NewTestMech(pnl.Mechanism_Base):
         class Parameters(pnl.Mechanism_Base.Parameters):
             cca_param = pnl.Parameter('A', constructor_argument='cca_constr')
 
@@ -189,7 +189,7 @@ class TestConstructorArguments:
         'cls_, param_name, argument_name, param_value',
         [
             (pnl.TransferMechanism, 'variable', 'default_variable', [[10]]),
-            (ComponentWithConstructorArg, 'cca_param', 'cca_constr', 1),
+            (NewTestMech, 'cca_param', 'cca_constr', 1),
         ]
     )
     @pytest.mark.parametrize('params_dict_entry', [NotImplemented, 'params'])
@@ -200,7 +200,7 @@ class TestConstructorArguments:
     @pytest.mark.parametrize(
         'cls_, argument_name, param_value',
         [
-            (ComponentWithConstructorArg, 'cca_param', 1),
+            (NewTestMech, 'cca_param', 1),
             (pnl.TransferMechanism, 'variable', [[10]]),
         ]
     )
