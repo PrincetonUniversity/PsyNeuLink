@@ -263,11 +263,14 @@ def combine_costs(costs):
 @pytest.mark.benchmark
 def test_transfer_with_costs(cost_functions, func_mode, benchmark):
 
+    if func_mode == "PTX":
+        pytest.skip("Synchronization of stateful params not supported on CUDA!")
+
     f = Functions.TransferWithCosts(enabled_cost_functions=cost_functions)
 
     def check(cost_function, if_enabled, if_disabled, observed):
         if cost_function in cost_functions:
-            assert np.array_equal(observed, if_enabled)
+            np.testing.assert_allclose(observed, if_enabled)
         else:
             assert np.array_equal(observed, if_disabled)
 
@@ -281,14 +284,19 @@ def test_transfer_with_costs(cost_functions, func_mode, benchmark):
     total_cost = (f.intensity_cost or 0) + (f.adjustment_cost or 0) + (f.duration_cost or 0)
 
     assert res == [10]
+
+    # TODO : Intensity cost is [1] even when disabled
+    # https://github.com/PrincetonUniversity/PsyNeuLink/issues/2711
+    check(pnl.CostFunctions.INTENSITY,
+          [22026.465794806703],
+          None if cost_functions == pnl.CostFunctions.NONE else [1],
+          f.intensity_cost)
+    check(pnl.CostFunctions.ADJUSTMENT, [10], None, f.adjustment_cost)
+    check(pnl.CostFunctions.DURATION, [10], None, f.duration_cost)
+
+    # TODO: Combined costs are not supported in compiled mode
+    # https://github.com/PrincetonUniversity/PsyNeuLink/issues/2712
     if func_mode == "Python":
-        # TODO: Why is intensity cost returning [1] if other costs are enabled?
-        check(pnl.CostFunctions.INTENSITY,
-              [22026.465794806703],
-              None if cost_functions == pnl.CostFunctions.NONE else [1],
-              f.intensity_cost)
-        check(pnl.CostFunctions.ADJUSTMENT, [10], None, f.adjustment_cost)
-        check(pnl.CostFunctions.DURATION, [10], None, f.duration_cost)
         assert np.array_equal(total_cost, f.combined_costs or 0)
 
 
@@ -297,29 +305,40 @@ def test_transfer_with_costs(cost_functions, func_mode, benchmark):
     total_cost = (f.intensity_cost or 0) + (f.adjustment_cost or 0) + (f.duration_cost or 0)
 
     assert res == [15]
+
+    # TODO : Intensity cost is [1] even when disabled
+    # https://github.com/PrincetonUniversity/PsyNeuLink/issues/2711
+    check(pnl.CostFunctions.INTENSITY,
+          [3269017.372472108],
+          None if cost_functions == pnl.CostFunctions.NONE else [1],
+          f.intensity_cost)
+    check(pnl.CostFunctions.ADJUSTMENT, [5], None, f.adjustment_cost)
+    check(pnl.CostFunctions.DURATION, [25], None, f.duration_cost)
+
+    # TODO: Combined costs are not supported in compiled mode
+    # https://github.com/PrincetonUniversity/PsyNeuLink/issues/2712
     if func_mode == "Python":
-        # TODO: Why is intensity cost returning [1] if other costs are enabled?
-        check(pnl.CostFunctions.INTENSITY,
-              [3269017.372472108],
-              None if cost_functions == pnl.CostFunctions.NONE else [1],
-              f.intensity_cost)
-        check(pnl.CostFunctions.ADJUSTMENT, [5], None, f.adjustment_cost)
-        check(pnl.CostFunctions.DURATION, [25], None, f.duration_cost)
         assert np.array_equal(total_cost, f.combined_costs or 0)
+
 
     # Third run with negative adjustment
     res = ex(7)
     total_cost = (f.intensity_cost or 0) + (f.adjustment_cost or 0) + (f.duration_cost or 0)
 
     assert res == [7]
+
+    # TODO : Intensity cost is [1] even when disabled
+    # https://github.com/PrincetonUniversity/PsyNeuLink/issues/2711
+    check(pnl.CostFunctions.INTENSITY,
+          [1096.6331584284583],
+          None if cost_functions == pnl.CostFunctions.NONE else [1],
+          f.intensity_cost)
+    check(pnl.CostFunctions.ADJUSTMENT, [8], None, f.adjustment_cost)
+    check(pnl.CostFunctions.DURATION, [32], None, f.duration_cost)
+
+    # TODO: Combined costs are not supported in compiled mode
+    # https://github.com/PrincetonUniversity/PsyNeuLink/issues/2712
     if func_mode == "Python":
-        # TODO: Why is intensity cost returning [1] if other costs are enabled?
-        check(pnl.CostFunctions.INTENSITY,
-              [1096.6331584284583],
-              None if cost_functions == pnl.CostFunctions.NONE else [1],
-              f.intensity_cost)
-        check(pnl.CostFunctions.ADJUSTMENT, [8], None, f.adjustment_cost)
-        check(pnl.CostFunctions.DURATION, [32], None, f.duration_cost)
         assert np.array_equal(total_cost, f.combined_costs or 0)
 
     benchmark(ex, 10)

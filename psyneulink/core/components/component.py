@@ -1334,7 +1334,9 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         # FIXME: MAGIC LIST, Use stateful tag for this
         whitelist = {"previous_time", "previous_value", "previous_v",
                      "previous_w", "random_state",
-                     "input_ports", "output_ports"}
+                     "input_ports", "output_ports",
+                     "adjustment_cost", "intensity_cost", "duration_cost",
+                     "intensity"}
         # Prune subcomponents (which are enabled by type rather than a list)
         # that should be omitted
         blacklist = { "objective_mechanism", "agent_rep", "projections"}
@@ -1354,7 +1356,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             blacklist.update(['combination_function'])
 
         def _is_compilation_state(p):
-            #FIXME: This should use defaults instead of 'p.get'
+            # FIXME: This should use defaults instead of 'p.get'
             return p.name not in blacklist and \
                    not isinstance(p, (ParameterAlias, SharedParameter)) and \
                    (p.name in whitelist or isinstance(p.get(), Component))
@@ -1374,6 +1376,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
     def _get_state_initializer(self, context):
         def _convert(p):
+            # FIXME: This should use defaults instead of 'p.get'
             x = p.get(context)
             if isinstance(x, np.random.RandomState):
                 # Skip first element of random state (id string)
@@ -1404,7 +1407,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "num_executions_before_finished", "num_executions",
                      "variable", "value", "saved_values", "saved_samples",
                      "integrator_function_value", "termination_measure_value",
-                     "execution_count",
+                     "execution_count", "intensity", "combined_costs",
+                     "adjustment_cost", "intensity_cost", "duration_cost",
                      # Invalid types
                      "input_port_variables", "results", "simulation_results",
                      "monitor_for_control", "state_feature_values", "simulation_ids",
@@ -1420,15 +1424,14 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      # duplicate
                      "allocation_samples", "control_allocation_search_space",
                      # not used in computation
-                     "auto", "hetero", "cost", "costs", "combined_costs",
-                     "control_signal", "intensity", "competition",
+                     "auto", "hetero", "cost", "costs",
+                     "control_signal", "competition",
                      "has_recurrent_input_port", "enable_learning",
                      "enable_output_type_conversion", "changes_shape",
                      "output_type", "bounds", "internal_only",
                      "require_projection_in_composition", "default_input",
                      "shadow_inputs", "compute_reconfiguration_cost",
                      "reconfiguration_cost", "net_outcome", "outcome",
-                     "adjustment_cost", "intensity_cost", "duration_cost",
                      "enabled_cost_functions", "control_signal_costs",
                      "default_allocation", "same_seed_for_all_allocations",
                      "search_statefulness", "initial_seed", "combine",
@@ -1455,7 +1458,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
         def _is_compilation_param(p):
             if p.name not in blacklist and not isinstance(p, (ParameterAlias, SharedParameter)):
-                #FIXME: this should use defaults
+                # FIXME: this should use defaults
                 val = p.get()
                 # Check if the value type is valid for compilation
                 return not isinstance(val, (str, ComponentsMeta,

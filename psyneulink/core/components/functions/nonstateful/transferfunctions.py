@@ -4836,6 +4836,39 @@ class TransferWithCosts(TransferFunction):
         trans_in = arg_in
         trans_out = arg_out
         builder.call(trans_f, [trans_p, trans_s, trans_in, trans_out])
+        intensity_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, self.parameters.intensity.name)
 
-        # TODO: Implement cost calculations
+        costs = [(self.parameters.intensity_cost_fct, CostFunctions.INTENSITY, self.parameters.intensity_cost),
+                 (self.parameters.adjustment_cost_fct, CostFunctions.ADJUSTMENT, self.parameters.adjustment_cost),
+                 (self.parameters.duration_cost_fct, CostFunctions.DURATION, self.parameters.duration_cost)]
+
+        for (func, flag, out) in costs:
+
+            # The check for enablement is structural and has to be done in Python.
+            # If a cost function is not enabled the cost parameter is None
+            if flag in self.parameters.enabled_cost_functions.get():
+                cost_f = ctx.import_llvm_function(func.get())
+                cost_p = pnlvm.helpers.get_param_ptr(builder, self, params, func.name)
+                cost_s = pnlvm.helpers.get_state_ptr(builder, self, state, func.name)
+                cost_out = pnlvm.helpers.get_state_ptr(builder, self, state, out.name)
+                cost_in = trans_out
+
+                if flag == CostFunctions.ADJUSTMENT:
+                    old_intensity = pnlvm.helpers.load_extract_scalar_array_one(builder, intensity_ptr)
+                    new_intensity = pnlvm.helpers.load_extract_scalar_array_one(builder, trans_out)
+                    adjustment = builder.fsub(new_intensity, old_intensity)
+
+                    fabs_f = ctx.get_builtin("fabs", [adjustment.type])
+                    adjustment = builder.call(fabs_f, [adjustment])
+
+                    cost_in = builder.alloca(cost_in.type.pointee)
+                    builder.store(adjustment, builder.gep(cost_in, [ctx.int32_ty(0), ctx.int32_ty(0)]))
+
+                builder.call(cost_f, [cost_p, cost_s, cost_in, cost_out])
+
+        # TODO: combine above costs via a call to combine_costs_fct
+        # depends on: https://github.com/PrincetonUniversity/PsyNeuLink/issues/2712
+
+        builder.store(builder.load(trans_out), intensity_ptr)
+
         return builder
