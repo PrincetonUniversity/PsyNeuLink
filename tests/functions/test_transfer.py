@@ -259,7 +259,7 @@ def test_transfer_derivative_out(func, variable, params, expected, benchmark, fu
 def combine_costs(costs):
     return functools.reduce(lambda x, y: x | y, costs, pnl.CostFunctions.NONE)
 
-@pytest.mark.parametrize("cost_functions", map(combine_costs, pytest.helpers.power_set(cf for cf in pnl.CostFunctions if cf != pnl.CostFunctions.NONE)))
+@pytest.mark.parametrize("cost_functions", map(combine_costs, pytest.helpers.power_set(cf for cf in pnl.CostFunctions if cf != pnl.CostFunctions.NONE and cf != pnl.CostFunctions.ALL)))
 @pytest.mark.benchmark
 def test_transfer_with_costs(cost_functions, func_mode, benchmark):
 
