@@ -1150,7 +1150,7 @@ class ControlSignal(ModulatorySignal):
                                                  "function")
 
         # FIXME: This allows INTENSITY and NONE
-        assert self.cost_options & ~CostFunctions.INTENSITY == 0
+        assert self.cost_options & ~CostFunctions.INTENSITY == CostFunctions.NONE
 
         cfunc = ctx.import_llvm_function(self.function.combine_costs_fct)
         cfunc_in = builder.alloca(cfunc.args[2].type.pointee,
