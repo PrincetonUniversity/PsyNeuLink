@@ -239,6 +239,10 @@ class CUDAExecution(Execution):
             return jit_engine.pycuda.driver.mem_alloc(4)
         return jit_engine.pycuda.driver.to_device(bytes(data))
 
+    def download_to(self, dst, source, name='other'):
+        bounce = self.download_ctype(source, type(dst), name)
+        ctypes.memmove(ctypes.addressof(dst), ctypes.addressof(bounce), ctypes.sizeof(dst))
+
     def download_ctype(self, source, ty, name='other'):
         self._downloaded_bytes[name] += ctypes.sizeof(ty)
         out_buf = bytearray(ctypes.sizeof(ty))
@@ -290,8 +294,9 @@ class CUDAExecution(Execution):
                                  threads=len(self._execution_contexts))
 
         # Copy the result from the device
-        ct_res = self.download_ctype(self._cuda_out, type(self._ct_vo), 'result')
-        return _convert_ctype_to_python(ct_res)
+        self.download_to(self._ct_vo, self._cuda_out, 'result')
+        self.download_to(self._state_struct, self._cuda_state_struct, 'state')
+        return _convert_ctype_to_python(self._ct_vo)
 
 
 class FuncExecution(CUDAExecution):

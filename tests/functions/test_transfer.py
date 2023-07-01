@@ -263,9 +263,6 @@ def combine_costs(costs):
 @pytest.mark.benchmark
 def test_transfer_with_costs(cost_functions, func_mode, benchmark):
 
-    if func_mode == "PTX":
-        pytest.skip("Synchronization of stateful params not supported on CUDA!")
-
     f = Functions.TransferWithCosts(enabled_cost_functions=cost_functions)
 
     def check(cost_function, if_enabled, if_disabled, observed):
