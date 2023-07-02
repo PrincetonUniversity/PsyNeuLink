@@ -433,15 +433,19 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
     .. _ContentAddressableMemory_Retrieval:
 
-    **Retrieval**. Entries are retrieved from `memory <ContentAddressableMemory.memory>` based on their distance from
-    `variable <ContentAddressableMemory.variable>`, used as the cue for retrieval. The distance is computed using the
-    `distance_function <ContentAddressableMemory.distance_function>`, which compares `variable
-    <ContentAddressableMemory.variable>` with each entry in `memory <ContentAddressableMemory.storage_prob>` as full
-    vectors (i.e., with all fields of each concatenated into a single array), or by computing the distance of each
-    field in `variable <ContentAddressableMemory.variable>` with the corresponding ones of each entry in `memory
-    <ContentAddressableMemory.memory>`, and then averaging those distances, possibly weighted by coefficients specified
-    in `distance_field_weights <ContentAddressableMemory.distance_field_weights>`. The distances computed between
-    `variable `<ContentAddressableMemory.variable>` and each entry in `memory <ContentAddressableMemory.memory>` are
+    **Retrieval**. Entries are retrieved from `memory <ContentAddressableMemory.memory>` based on their distance
+    from `variable <ContentAddressableMemory.variable>`, used as the cue for retrieval. The distance is computed
+    using the `distance_function <ContentAddressableMemory.distance_function>`, which compares `variable
+    <ContentAddressableMemory.variable>` with each entry in `memory <ContentAddressableMemory.storage_prob>`.
+    If memories have more than one field, then the distances are computed in one of two ways: i) as full
+    vectors (i.e., with all fields of each concatenated into a single array) if `distance_field_weights
+    <ContentAddressableMemory.distance_field_weights>` is a single scalar value or a list of identical values);
+    or field-by-field, if `distance_field_weights <ContentAddressableMemory.distance_field_weights>` is a list of
+    non-identical values, by computing the distance of each field in `variable <ContentAddressableMemory.variable>`
+    with the corresponding ones of each entry in `memory <ContentAddressableMemory.memory>`, and then averaging
+    those distances weighted by the coefficients specified in `distance_field_weights
+    <ContentAddressableMemory.distance_field_weights>`. The distances computed between `variable
+    `<ContentAddressableMemory.variable>` and each entry in `memory <ContentAddressableMemory.memory>` are then
     used by `selection_function <ContentAddressableMemory.selection_function>` to determine which entry is retrieved.
     The distance used for the last retrieval (i.e., between `variable <ContentAddressableMemory.variable>` and the
     entry retrieved), the distances of each of their corresponding fields (weighted by `distance_field_weights
@@ -519,8 +523,8 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             entry in `memory <ContentAddressableMemory.memory>`, and then using `distance_function
             <ContentAddressableMemory.distance_function>` to compute the distance betwen them.
 
-          * if `distance_field_weights <ContentAddressableMemory.distance_field_weights>` is an array of scalars with
-            different values, then `variable <ContentAddressableMemory.variable>` is compared with each entry in `memory
+          * if `distance_field_weights <ContentAddressableMemory.distance_field_weights>` is an array of non-identical
+            scalars , then `variable <ContentAddressableMemory.variable>` is compared with each entry in `memory
             <ContentAddressableMemory.memory>` by using `distance_function <ContentAddressableMemory.distance_function>`
             to compute the distance of each item in `variable <ContentAddressableMemory.variable>` with the
             corresponding field of the entry in memory, and then averaging those distances weighted by the

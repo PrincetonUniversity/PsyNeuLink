@@ -988,6 +988,11 @@ def get_alias_property_setter(name, attr=None):
 
 #region NUMPY ARRAY METHODS ******************************************************************************************
 
+def are_all_entries_same(arr):
+    """Return True if all entries in arr are the same, False otherwise"""
+    unique_values = np.unique(arr)
+    return len(unique_values) == 1
+
 def np_array_less_than_2d(array):
     if not isinstance(array, np.ndarray):
         raise UtilitiesError("Argument to np_array_less_than_2d() ({0}) must be an np.ndarray".format(array))
@@ -1062,7 +1067,6 @@ def convert_to_np_array(value, dimension=None):
 
     return value
 
-
 def object_has_single_value(obj):
     """
         Returns
@@ -1080,7 +1084,6 @@ def object_has_single_value(obj):
             return False
 
     return True
-
 
 def type_match(value, value_type):
     if isinstance(value, value_type):
