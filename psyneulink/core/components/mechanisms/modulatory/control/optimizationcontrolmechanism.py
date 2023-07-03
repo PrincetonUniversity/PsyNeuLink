@@ -3315,7 +3315,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 data_out = builder.gep(op_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
             if data_in.type != data_out.type:
-                warnings.warn("Shape mismatch: Allocation sample '{}' ({}) doesn't match input port input ({}).".format(
+                warnings.warn("Shape mismatch: Allocation sample '{}' ({}) doesn't match output port input ({}).".format(
                                i, self.parameters.control_allocation_search_space.get(), op.defaults.variable),
                                pnlvm.PNLCompilerWarning)
                 assert len(data_out.type.pointee) == 1
