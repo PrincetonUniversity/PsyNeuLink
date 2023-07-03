@@ -57,10 +57,12 @@ from psyneulink.core.components.functions.nonstateful.transferfunctions import S
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import Concatenate
 from psyneulink.core.compositions.composition import Composition, CompositionError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import GatingMechanism
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.keywords import EM_COMPOSITION, NAME, FUNCTION, PROJECTIONS
+from psyneulink.core.globals.keywords import \
+    EM_COMPOSITION, FUNCTION, IDENTITY_MATRIX, NAME, PROJECTIONS, RESULT, SIZE, VALUE
 
 __all__ = [
     'EMComposition'
@@ -143,9 +145,9 @@ class EMComposition(Composition):
         pytorch_representation = None
     @check_user_specified
     def __init__(self,
-                 memory_template:Union[list, np.ndarray]=(2,1),
+                 memory_template:Union[list, np.ndarray]=[[0],[0]],
                  field_names:Optional[list]=None,
-                 field_weights:tuple=(1,0),
+                 field_weights:tuple=None,
                  learn_weights:bool=True,
                  memory_capacity:int=1000,
                  learning_rate:Optional[float]=None,
@@ -153,40 +155,51 @@ class EMComposition(Composition):
                  name="EM_composition"):
 
         # memory_template must specify a 2D array:
-        if np.array(memory_template).dim != 2:
+        if np.array(memory_template).ndim != 2:
             raise EMCompositionError(f"The 'memory_template' arg for {name} ({memory_template}) "
                                      f"must be list of lists or a 2d array.")
 
+        if field_weights is None:
+            if len(memory_template) == 1:
+                field_weights = [1]
+            else:
+                # Default is to all fields as keys except the last one, which is the value
+                num_fields = len(memory_template)
+                field_weights = [1] * num_fields
+                field_weights[-1] = 0
+
         # If field weights has more than one value it must match the first dimension (axis 0) of memory_template:
-        if len(self.field_weights) > 1 and len(field_weights) != len(memory_template):
+        if len(field_weights) > 1 and len(field_weights) != len(memory_template):
             raise EMCompositionError(f"The number of items ({len(field_weights)}) "
                                      f"in the 'field_weights' arg for {name} must match the number of items "
                                      f"({len(memory_template)}) in the outer dimension of its 'memory_template' arg.")
 
+        self.memory_template = memory_template.copy()
+        self.num_fields = len(memory_template)
+        self.field_weights = field_weights
+        # self.field_names = field_names.copy()
+
         self.concatenate_keys = len(self.field_weights) == 1 or np.all(self.field_weights == self.field_weights[0])
-        self.num_fields = len(self.field_weights)
         self.num_keys = len([i for i in self.field_weights if i != 0])
         self.num_values = self.num_fields - self.num_keys
-
-        self.memory_template = memory_template.copy()
-        self.field_names = field_names.copy()
-        self.field_weights = field_weights
         self.learn_weights = learn_weights
         self.learning_rate = learning_rate # FIX: MAKE THIS A PARAMETER
         self.memory_capacity = memory_capacity # FIX: MAKE THIS A READ-ONLY PARAMETER
         self.disable_learning = disable_learning
 
-        super().__init__(name=name)
+        super().__init__(name=name,
+                         pathway=self._create_components())
 
 
     def _create_components(self):
         self.key_input_nodes = self._create_key_input_nodes()
         self.value_input_nodes = self._create_value_input_nodes()
-        self.match_node = self._create_match_node()
+        self.match_nodes = self._create_match_nodes()
+        self.retrieval_gating_node = self._create_retrieval_gating_node()
         self.retrieval_weighting_node = self._create_retrieval_weighting_node()
         self.retrieval_nodes = self._create_retrieval_nodes()
-        nodes = self.key_input_nodes + self.value_input_nodes \
-                + [self.match_node, self.retrieval_weighting_node] \
+        nodes = self.key_input_nodes + self.value_input_nodes + self.match_nodes \
+                + [self.retrieval_weighting_node] \
                 + self.retrieval_nodes
         # Return as a set since Projections are specified in the construction of each node
         return set(nodes)
@@ -195,7 +208,7 @@ class EMComposition(Composition):
         """Create layer with one Input node for each key in the memory template."""
         
         # Get indices of field_weights that specify keys:
-        key_indices = np.where(np.array(self.field_weights) != 0)
+        key_indices = np.nonzero(self.field_weights)[0]
 
         assert len(key_indices) == self.num_keys, \
             f"PROGRAM ERROR: number of keys ({self.num_keys}) does not match number of " \
@@ -211,7 +224,7 @@ class EMComposition(Composition):
         """Create layer with one Input node for each key in the memory template."""
 
         # Get indices of field_weights that specify keys:
-        value_indices = np.where(np.array(self.field_weights) == 0)
+        value_indices = np.where(np.array(self.field_weights) == 0)[0]
 
         assert len(value_indices) == self.num_values, \
             f"PROGRAM ERROR: number of values ({self.num_values}) does not match number of " \
@@ -223,8 +236,8 @@ class EMComposition(Composition):
 
         return value_input_nodes
 
-    def _create_match_node(self):
-        """Create layer that computes the similarity between the input and each item in memory,
+    def _create_match_nodes(self):
+        """Create nodes that, for each key field, compute the similarity between the input and each item in memory
         and return softmax over those similarities.
 
         If self.concatenate_keys is True, then all inputs for keys are concatenated into a single vector that is
@@ -235,48 +248,81 @@ class EMComposition(Composition):
 
         # Get indices of field_weights that specify keys:
         key_indices = np.where(np.array(self.field_weights) != 0)
+        key_weights = [self.field_weights[i] for i in key_indices[0]]
 
-        assert len(key_indices) == self.num_keys, \
+        assert len(key_indices[0]) == self.num_keys, \
             f"PROGRAM ERROR: number of keys ({self.num_keys}) does not match number of " \
             f"non-zero values in field_weights ({len(key_indices)})."
 
         if self.concatenate_keys:
             # One node for single key that concatenates all inputs
-            match_node = [TransferMechanism(size=self.num_keys * self.memory_capacity,
+            match_nodes = [TransferMechanism(size=self.num_keys * self.memory_capacity,
                                              input_ports={NAME: 'CONCATENATED_INPUTS',
                                                           FUNCTION: Concatenate()},
                                              function=SoftMax(gain=self.softmax_temperature(self.field_weights)),
+                                             output_ports=[RESULT,
+                                                           {VALUE: key_weights[0],
+                                                            NAME: 'KEY_WEIGHT'}],
                                              name='match_node')]
         else:
             # One node for each key
-            match_node = [TransferMechanism(size=self.memory_capacity,
-                                             input_ports=[m.output_port for m in self.key_input_nodes],
-                                             function=SoftMax(gain=self.softmax_temperature(self.field_weights)),
+            match_nodes = [TransferMechanism(input_ports={SIZE:self.memory_capacity,
+                                                          PROJECTIONS: self.key_input_nodes[i].output_port},
+                                             function=SoftMax(),
+                                             output_ports=[RESULT,
+                                                           {VALUE: key_weights[0],
+                                                            NAME: 'KEY_WEIGHT'}],
                                              name='match_node_' + str(i))
                            for i in range(self.num_keys)]
 
-        return match_node
+        return match_nodes
+
+    def _create_retrieval_gating_node(self):
+        """Create GatingMechanism that weights each key's contribution to the retrieval."""
+        retrieval_gating_node = GatingMechanism(default_allocation=[1] * self.num_keys,
+                                                # FIX: THIS SHOULD WORK
+                                                # input_ports=[m.output_ports['KEY_WEIGHT'] for m in self.match_nodes],
+                                                input_ports=[{FUNCTION: Concatenate(),
+                                                              PROJECTIONS: [m.output_ports['KEY_WEIGHT']
+                                                                            for m in self.match_nodes]}],
+                                                gating_signals=[m.output_port for m in self.match_nodes],
+                                                name='retrieval_gating_node')
 
     def _create_retrieval_weighting_node(self):
         """Create layer that computes the weighting of each item in memory."""
 
-        if self.concatenate_keys:
-            # Only one match_node node (with set of softmax weights across all concatenated keys)
-            retrieval_weighting_node = TransferMechanism(input_ports=self.match_node[0].output_port)
+        # if self.concatenate_keys:
+        #     # Only one match_node node (with set of softmax weights across all concatenated keys)
+        #     retrieval_weighting_node = TransferMechanism(input_ports=self.match_node[0].output_port)
+        #
+        # else:
+        #     # Sum softmax values for each key weighted by the corresponding field_weight value
+        #     key_weights = [w for w in self.field_weights if w != 0]
+        #     # Assign an InputPort for each key,
+        #     #   that receives a MappingProjection from the corresponding node in the match_node
+        #     #   with a weight matrix that is initialized with the corresponding field_weight value
+        #     input_ports = [{PROJECTIONS: MappingProjection(sender = m,#.output_port,
+        #                                                    matrix = np.identity(self.memory_capacity) * key_weights[0],
+        #                                                    learnable = self.learn_weights)}
+        #                    for i, m in enumerate(self.match_nodes)]
+        #     retrieval_weighting_node = TransferMechanism(input_ports=input_ports,
+        #                                                   name='retrieval_weighting_node')
+        # else:
+        #     # Sum softmax values for each key weighted by the corresponding field_weight value
+        #     key_weights = [w for w in self.field_weights if w != 0]
+        #     # Assign an InputPort for each key,
+        #     #   that receives a MappingProjection from the corresponding node in the match_node
+        #     #   with a weight matrix that is initialized with the corresponding field_weight value
+        #     input_ports = [{PROJECTIONS: MappingProjection(sender = m,#.output_port,
+        #                                                    matrix = np.identity(self.memory_capacity) * key_weights[0],
+        #                                                    learnable = self.learn_weights)}
+        #                    for i, m in enumerate(self.match_nodes)]
+        #     retrieval_weighting_node = TransferMechanism(input_ports=input_ports,
+        #                                                   name='retrieval_weighting_node')
 
-        else:
-            # Sum softmax values for each key weighted by the corresponding field_weight value 
-            key_weights = [w for w in self.field_weights if w != 0]
-            # Assign an InputPort for each key,
-            #   that receives a MappingProjection from the corresponding node in the match_node
-            #   with a weight matrix that is initialized with the corresponding field_weight value
-            input_ports = [{PROJECTIONS: MappingProjection(sender = m.output_port,
-                                                           matrix = key_weights[i],
-                                                           learnable = self.learn_weights)}
-                           for i, m in enumerate(self.match_node)]
-            retrieval_weighting_node = TransferMechanism(input_ports=input_ports,
-                                                          name='retrieval_weighting_node')
-        
+        projections = [MappingProjection(sender=m.output_port,matrix=IDENTITY_MATRIX) for m in self.match_nodes]
+        retrieval_weighting_node = TransferMechanism(input_port={PROJECTIONS:projections})
+
         assert len(retrieval_weighting_node.output_port) == self.memory_capacity,\
             f'PROGRAM ERROR: number of items in retrieval_weighting_node ({len(retrieval_weighting_node.output_port)})' \
             f'does not match memory_capacity ({self.memory_capacity})'

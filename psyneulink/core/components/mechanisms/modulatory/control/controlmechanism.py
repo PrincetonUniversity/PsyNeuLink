@@ -1315,6 +1315,9 @@ class ControlMechanism(ModulatoryMechanism_Base):
                                                     f"These are synonyms, but only one should be used to avoid "
                                                     f"creating unnecessary and/or duplicated Components.")
                     control = convert_to_list(args)
+            if 'default_control_allocation' in kwargs:
+                raise ControlMechanismError(f"'default_allocation' should be used in place of "
+                                            f"'default_control_allocation'.")
 
         super(ControlMechanism, self).__init__(
             default_variable=default_variable,

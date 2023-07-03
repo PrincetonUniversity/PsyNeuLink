@@ -1382,8 +1382,8 @@ class Port_Base(Port):
                     # If the Projection already has Port as its sender,
                     #    it must be the same as the one specified in the connection spec
                     if isinstance(proj_sender, Port) and proj_sender != port:
-                        raise PortError("Projection assigned to {} of {} from {} already has a sender ({})".
-                                         format(self.name, self.owner.name, port.name, proj_sender.name))
+                        raise PortError(f"Projection assigned to {self.name} of {self.owner.name} from {port.name} "
+                                        f"already has a sender ({proj_sender.name}).")
                     # If the Projection has a Mechanism specified as its sender:
                     elif isinstance(port, Port):
                         #    Connection spec (port) is specified as a Port,
