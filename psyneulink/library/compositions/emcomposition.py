@@ -62,7 +62,7 @@ from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.keywords import \
-    EM_COMPOSITION, FUNCTION, IDENTITY_MATRIX, NAME, PROJECTIONS, RESULT, SIZE, VALUE
+    EM_COMPOSITION, FUNCTION, IDENTITY_MATRIX, NAME, OUTCOME, PROJECTIONS, RESULT, SIZE, VALUE
 
 __all__ = [
     'EMComposition'
@@ -280,11 +280,13 @@ class EMComposition(Composition):
     def _create_retrieval_gating_node(self):
         """Create GatingMechanism that weights each key's contribution to the retrieval."""
         retrieval_gating_node = GatingMechanism(default_allocation=[1] * self.num_keys,
-                                                # FIX: THIS SHOULD WORK
+                                                # FIX: THIS SHOULD WORK:
                                                 # input_ports=[m.output_ports['KEY_WEIGHT'] for m in self.match_nodes],
                                                 input_ports=[{FUNCTION: Concatenate(),
                                                               PROJECTIONS: [m.output_ports['KEY_WEIGHT']
-                                                                            for m in self.match_nodes]}],
+                                                                            for m in self.match_nodes],
+                                                              # NAME: OUTCOME
+                                                              }],
                                                 gating_signals=[m.output_port for m in self.match_nodes],
                                                 name='retrieval_gating_node')
 
