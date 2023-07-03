@@ -3444,13 +3444,12 @@ class OptimizationControlMechanism(ControlMechanism):
 
         # Apply allocation sample to simulation data
         assert len(self.output_ports) == len(allocation_sample.type.pointee)
-        idx = self.agent_rep._get_node_index(self)
-        ocm_out = builder.gep(comp_data, [ctx.int32_ty(0), ctx.int32_ty(0),
-                                          ctx.int32_ty(idx)])
+        controller_out = builder.gep(comp_data, [ctx.int32_ty(0), ctx.int32_ty(0),
+                                                 ctx.int32_ty(controller_idx)])
         for i, _ in enumerate(self.output_ports):
-            idx = ctx.int32_ty(i)
-            sample_ptr = builder.gep(allocation_sample, [ctx.int32_ty(0), idx])
-            sample_dst = builder.gep(ocm_out, [ctx.int32_ty(0), idx, ctx.int32_ty(0)])
+            op_idx = ctx.int32_ty(i)
+            sample_ptr = builder.gep(allocation_sample, [ctx.int32_ty(0), op_idx])
+            sample_dst = builder.gep(controller_out, [ctx.int32_ty(0), op_idx, ctx.int32_ty(0)])
             if sample_ptr.type != sample_dst.type:
                 assert len(sample_dst.type.pointee) == 1
                 sample_dst = builder.gep(sample_dst, [ctx.int32_ty(0),
@@ -3508,11 +3507,11 @@ class OptimizationControlMechanism(ControlMechanism):
             assert self.objective_mechanism, f"objective_mechanism on OptimizationControlMechanism cannot be None " \
                                              f"in compiled mode"
 
-            idx = self.agent_rep._get_node_index(self.objective_mechanism)
+            obj_idx = self.agent_rep._get_node_index(self.objective_mechanism)
             # Mechanisms' results are stored in the first substructure
             objective_op_ptr = builder.gep(comp_data, [ctx.int32_ty(0),
                                                        ctx.int32_ty(0),
-                                                       ctx.int32_ty(idx)])
+                                                       ctx.int32_ty(obj_idx)])
             # Objective mech output shape should be 1 single element 2d array
             objective_val_ptr = builder.gep(objective_op_ptr,
                                             [ctx.int32_ty(0), ctx.int32_ty(0),
