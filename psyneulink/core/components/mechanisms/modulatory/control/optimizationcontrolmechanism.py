@@ -3446,15 +3446,27 @@ class OptimizationControlMechanism(ControlMechanism):
         assert len(self.output_ports) == len(allocation_sample.type.pointee)
         controller_out = builder.gep(comp_data, [ctx.int32_ty(0), ctx.int32_ty(0),
                                                  ctx.int32_ty(controller_idx)])
-        for i, _ in enumerate(self.output_ports):
+        all_op_state = pnlvm.helpers.get_state_ptr(builder, self,
+                                                   controller_state, "output_ports")
+        all_op_params = pnlvm.helpers.get_param_ptr(builder, self,
+                                                    controller_params, "output_ports")
+        for i, op in enumerate(self.output_ports):
             op_idx = ctx.int32_ty(i)
+
+            op_f = ctx.import_llvm_function(op, tags=frozenset({"simulation"}))
+            op_state = builder.gep(all_op_state, [ctx.int32_ty(0), op_idx])
+            op_params = builder.gep(all_op_params, [ctx.int32_ty(0), op_idx])
+            op_in = builder.alloca(op_f.args[2].type.pointee)
+            op_out = builder.gep(controller_out, [ctx.int32_ty(0), op_idx])
+
+            # FIXME: Allocation samples are generated as scalars but
+            #        output ports consume 1d arrays
             sample_ptr = builder.gep(allocation_sample, [ctx.int32_ty(0), op_idx])
-            sample_dst = builder.gep(controller_out, [ctx.int32_ty(0), op_idx, ctx.int32_ty(0)])
-            if sample_ptr.type != sample_dst.type:
-                assert len(sample_dst.type.pointee) == 1
-                sample_dst = builder.gep(sample_dst, [ctx.int32_ty(0),
-                                                      ctx.int32_ty(0)])
+            sample_dst = builder.gep(op_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
             builder.store(builder.load(sample_ptr), sample_dst)
+            builder.call(op_f, [op_params, op_state, op_in, op_out])
+
 
         # Get simulation function
         agent_tags = {"run", "simulation"}
