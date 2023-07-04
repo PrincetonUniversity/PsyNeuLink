@@ -50,6 +50,7 @@ Class Reference
 ---------------
 """
 import numpy as np
+import warnings
 
 from psyneulink._typing import Optional, Union
 
@@ -146,6 +147,8 @@ class EMComposition(Composition):
                  field_weights:tuple=None,
                  learn_weights:bool=True,
                  memory_capacity:int=1000,
+                 decay_memories:bool=False,
+                 memory_decay_rate:Optional[float]=None,
                  learning_rate:Optional[float]=None,
                  name="EM_composition"):
 
@@ -169,17 +172,25 @@ class EMComposition(Composition):
                                      f"in the 'field_weights' arg for {name} must match the number of items "
                                      f"({len(memory_template)}) in the outer dimension of its 'memory_template' arg.")
 
+        # Memory structure (field) parameters
         self.memory_template = memory_template.copy()
         self.num_fields = len(memory_template)
         self.field_weights = field_weights
         # self.field_names = field_names.copy()
+        self.learn_weights = learn_weights
+        self.learning_rate = learning_rate # FIX: MAKE THIS A PARAMETER
+
+        # Memory management parameters
+        self.memory_capacity = memory_capacity # FIX: MAKE THIS A READ-ONLY PARAMETER
+        self.decay_memories = decay_memories # FIX: MAKE THIS A PARAMETER
+        self.memory_decay_rate = memory_decay_rate or 1 / self.memory_capacity # FIX: MAKE THIS A PARAMETER
+        if self.decay_memories and memory_decay_rate == 0.0:
+            raise warnings.warn(f"The 'decay_memories' arg was set to True but 'memory_decay_rate' was set to 0.0; "
+                                f"default of 1/memory_capacity ({self.memory_decay_rate}) will be used instead.")
 
         self.concatenate_keys = len(self.field_weights) == 1 or np.all(self.field_weights == self.field_weights[0])
         self.num_keys = len([i for i in self.field_weights if i != 0])
         self.num_values = self.num_fields - self.num_keys
-        self.learn_weights = learn_weights
-        self.learning_rate = learning_rate # FIX: MAKE THIS A PARAMETER
-        self.memory_capacity = memory_capacity # FIX: MAKE THIS A READ-ONLY PARAMETER
 
         pathway = self._construct_pathway()
 
@@ -302,7 +313,8 @@ class EMComposition(Composition):
         return match_nodes
 
     def _construct_retrieval_gating_nodes(self):
-        """Create GatingMechanisms that weight each key's contribution to the retrieved values."""
+        """Create GatingMechanisms that weight each key's contribution to the retrieved values.
+        """
         retrieval_gating_nodes = [GatingMechanism(#input_ports=key_match_pair[0].output_ports['RESULT'],
                                                   input_ports={PROJECTIONS: key_match_pair[0].output_ports['RESULT'],
                                                                NAME: 'OUTCOME'},
@@ -314,7 +326,8 @@ class EMComposition(Composition):
         return retrieval_gating_nodes
 
     def _construct_retrieval_weighting_node(self):
-        """Create layer that computes the weighting of each item in memory."""
+        """Create layer that computes the weighting of each item in memory.
+        """
         # FIX: THIS SHOULD WORK:
         # retrieval_weighting_node = TransferMechanism(input_ports=[{PROJECTIONS: [m.output_port for m in self.match_nodes]}])
         retrieval_weighting_node = TransferMechanism(input_ports=[m.output_port for m in self.match_nodes],
@@ -327,8 +340,8 @@ class EMComposition(Composition):
         return retrieval_weighting_node
 
     def _construct_retrieval_nodes(self):
-        """Create layer that reports the value field(s) for the item(s) matched in memory."""
-        
+        """Create layer that reports the value field(s) for the item(s) matched in memory.
+        """
         retrieval_nodes = [TransferMechanism(size=self.memory_capacity,
                                              # input_ports=self.value_input_nodes[i],
                                              input_ports=self.retrieval_weighting_node,
@@ -337,7 +350,8 @@ class EMComposition(Composition):
         return retrieval_nodes
 
     def _set_learnability_of_projections(self):
-        """Turn off learning for all Projections except afferents to retrieval_gating_nodes."""
+        """Turn off learning for all Projections except afferents to retrieval_gating_nodes.
+        """
         for node in self.nodes:
             for input_port in node.input_ports:
                 for proj in input_port.path_afferents:
@@ -362,7 +376,8 @@ class EMComposition(Composition):
             proj.execute() # For clarity, ensure that it reports modulated value as zero as well
             
     def softmax_temperature(self, values, epsilon=1e-8):
-        """Compute the softmax temperature based on length of vector and number of (near) zero values."""
+        """Compute the softmax temperature based on length of vector and number of (near) zero values.
+        """
         n = len(values)
         num_zero = np.count_nonzero(values < epsilon)
         num_non_zero = n - num_zero
@@ -370,18 +385,35 @@ class EMComposition(Composition):
         return gain
 
     def execute(self, inputs, **kwargs):
-        """Set input to weights of Projection to match_node."""
+        """Set input to weights of Projection to match_node.
+        """
         super().execute(**kwargs)
         self._store_memory(inputs)
 
     def _store_memory(self, inputs):
-        """Store inputs in memory as weights of Projections to match_nodes (keys) and retrieval_nodes (values)."""
+        """Store inputs in memory as weights of Projections to match_nodes (keys) and retrieval_nodes (values).
+        """
         key_inputs = inputs[:self.num_keys]
         value_inputs = inputs[self.num_keys:]
-        for i, key_input_pair in enumerate(zip(key_inputs,self.key_input_nodes)):
-            # Assign input to key_input_node as weights of first empty row of matrix of Projection to match_node
-            key_input_pair[1].efferents[0].matrix.base[i] = key_input_pair[0]
-        for i, value_retrieval_pair in enumerate(zip(value_inputs, self.retieval_nodes)):
-            # Assign input to value_input_node as weights of first empty row of matrix of Projection 
-            # to from retrieval_weighting_node to retrieval_node
-            value_retrieval_pair[1].path_afferents[0].matrix.base[i] = value_retrieval_pair[0]
+
+        # Store memories of keys
+        for memory, key_input_node in zip(key_inputs, self.key_input_nodes):
+            # Memory = key_input;
+            #   assign as weights for first empty row of Projection.matrix from key_input_node to match_node
+            memories = key_input_node.efferents[0]
+            if self.decay_memories:
+                memory.matrix.base *= self.memory_decay_rate
+            # Get least used slot (i.e., weakest memory = row of matrix with lowest weights)
+            idx_of_min = np.argmin(memories.matrix.base.sum(axis=1))
+            memories.matrix.base[idx_of_min] = memory
+
+        # Store memories of values
+        for memory, retrieval_node in zip(value_inputs, self.retieval_nodes):
+            # Memory = value_input;
+            #   assign as weights for 1st empty row of Projection.matrix from retrieval_weighting_node to retrieval_node
+            memories = retrieval_node.path_afferents[0]
+            if self.decay_memories:
+                memories.matrix.base *= self.memory_decay_rate
+            # Get least used slot (i.e., weakest memory = row of matrix with lowest weights)
+            idx_of_min = np.argmin(memories.matrix.base.sum(axis=1))
+            memories.matrix.base[min] = memory
