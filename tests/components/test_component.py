@@ -173,6 +173,7 @@ class TestConstructorArguments:
                 pnl.ProcessingMechanism, pnl.LeakyCompetingIntegrator, {'invalid_arg': 0}, {},
                 marks=pytest.mark.xfail(reason='kwargs are not passed up __init__, are just for backward compatibility for single parameter')
             ),
+            (pnl.ProcessingMechanism, pnl.Linear, {'invalid_arg': 0}, "unexpected keyword argument 'invalid_arg'"),
         ]
     )
     @pytest.mark.parametrize('params_dict_entry', [NotImplemented, 'params'])
