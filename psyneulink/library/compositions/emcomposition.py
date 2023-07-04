@@ -62,7 +62,7 @@ from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.keywords import \
-    EM_COMPOSITION, FUNCTION, IDENTITY_MATRIX, NAME, OUTCOME, PROJECTIONS, RESULT, SIZE, VALUE
+    EM_COMPOSITION, FUNCTION, IDENTITY_MATRIX, NAME, OUTCOME, PROJECTIONS, RESULT, SIZE, VALUE, ZEROS_MATRIX
 
 __all__ = [
     'EMComposition'
@@ -188,7 +188,7 @@ class EMComposition(Composition):
 
         # Turn of learning for all Projections except inputs to retrieval_gating_nodes
         self._set_learnability_of_projections()
-        assert True
+        self._initialize_memory()
 
     def _construct_pathway(self):
         """Construct pathway for EMComposition"""
@@ -209,7 +209,10 @@ class EMComposition(Composition):
         return pathway
 
     def _construct_key_input_nodes(self):
-        """Create layer with one Input node for each key in the memory template."""
+        """Create one node for each key to be used as cue for retrieval (and then stored) in memory.
+        Used to assign new set of weights for Projection for key_input_node[i] -> match_node[i]
+        where i is selected randomly without replacement from (0->memory_capacity)
+        """
         
         # Get indices of field_weights that specify keys:
         key_indices = np.nonzero(self.field_weights)[0]
@@ -226,7 +229,10 @@ class EMComposition(Composition):
         return key_input_nodes
 
     def _construct_value_input_nodes(self):
-        """Create layer with one Input node for each key in the memory template."""
+        """Create one input node for each value to be stored in memory.
+        Used to assign new set of weights for Projection for retrieval_weighting_node -> retrieval_node[i]
+        where i is selected randomly without replacement from (0->memory_capacity)
+        """
 
         # Get indices of field_weights that specify keys:
         value_indices = np.where(np.array(self.field_weights) == 0)[0]
@@ -272,14 +278,26 @@ class EMComposition(Composition):
                                              name='MATCH NODE')]
         else:
             # One node for each key
-            match_nodes = [TransferMechanism(input_ports={SIZE:self.memory_capacity,
-                                                          PROJECTIONS: self.key_input_nodes[i].output_port},
-                                             function=SoftMax(),
-                                             output_ports=[RESULT,
-                                                           {VALUE: key_weights[0],
-                                                            NAME: 'KEY_WEIGHT'}],
-                                             name='MATCH_NODE ' + str(i))
-                           for i in range(self.num_keys)]
+            match_nodes = [
+                TransferMechanism(
+                    input_ports=
+                    {
+                        SIZE:self.memory_capacity,
+                        PROJECTIONS: self.key_input_nodes[i].output_port
+                        # PROJECTIONS:
+                        #     MappingProjection(
+                        #         sender=self.key_input_nodes[i].output_port,
+                        #         matrix=ZEROS_MATRIX)
+                    },
+                    # (self.memory_capacity,
+                    #  MappingProjection(sender=self.key_input_nodes[i].output_port, matrix=ZEROS_MATRIX)),
+                    function=SoftMax(),
+                    output_ports=[RESULT,
+                                  {VALUE: key_weights[0],
+                                   NAME: 'KEY_WEIGHT'}],
+                    name='MATCH_NODE ' + str(i))
+                for i in range(self.num_keys)
+            ]
 
         return match_nodes
 
@@ -309,10 +327,11 @@ class EMComposition(Composition):
         return retrieval_weighting_node
 
     def _construct_retrieval_nodes(self):
-        """Create layer that reports the value field(s) for the item matched in memory."""
+        """Create layer that reports the value field(s) for the item(s) matched in memory."""
         
         retrieval_nodes = [TransferMechanism(size=self.memory_capacity,
-                                             input_ports=self.value_input_nodes[i],
+                                             # input_ports=self.value_input_nodes[i],
+                                             input_ports=self.retrieval_weighting_node,
                                              name= 'VALUE NODE' if self.num_values == 1 else f'VALUE NODE {i}')
                            for i in range(self.num_values)]
         return retrieval_nodes
@@ -327,6 +346,21 @@ class EMComposition(Composition):
                     else:
                         proj.learnable = False
 
+    def _initialize_memory(self):
+        """Initialize memory by zeroing weights from:
+        - key_input_node(s) to match_node(s) and
+        - retrieval_weight_node to retrieval_node(s) .
+        """
+        for key_node, proj in zip(self.key_input_nodes, [key_node.efferents[0]
+                                                         for key_node in self.key_input_nodes]):
+            proj.matrix.base = np.zeros_like(key_node.efferents[0].matrix.base)
+            proj.execute() # For clarity, ensure that it reports modulated value as zero as well
+
+        for retrieval_node, proj in zip(self.retrieval_nodes, [retrieval_node.path_afferents[0]
+                                                               for retrieval_node in self.retrieval_nodes]):
+            proj.matrix.base = np.zeros_like(retrieval_node.path_afferents[0].matrix.base)
+            proj.execute() # For clarity, ensure that it reports modulated value as zero as well
+            
     def softmax_temperature(self, values, epsilon=1e-8):
         """Compute the softmax temperature based on length of vector and number of (near) zero values."""
         n = len(values)
@@ -335,6 +369,19 @@ class EMComposition(Composition):
         gain = 1 + np.exp(1/num_non_zero) * (num_zero/n)
         return gain
 
-    def execute(self, **kwargs):
+    def execute(self, inputs, **kwargs):
         """Set input to weights of Projection to match_node."""
         super().execute(**kwargs)
+        self._store_memory(inputs)
+
+    def _store_memory(self, inputs):
+        """Store inputs in memory as weights of Projections to match_nodes (keys) and retrieval_nodes (values)."""
+        key_inputs = inputs[:self.num_keys]
+        value_inputs = inputs[self.num_keys:]
+        for i, key_input_pair in enumerate(zip(key_inputs,self.key_input_nodes)):
+            # Assign input to key_input_node as weights of first empty row of matrix of Projection to match_node
+            key_input_pair[1].efferents[0].matrix.base[i] = key_input_pair[0]
+        for i, value_retrieval_pair in enumerate(zip(value_inputs, self.retieval_nodes)):
+            # Assign input to value_input_node as weights of first empty row of matrix of Projection 
+            # to from retrieval_weighting_node to retrieval_node
+            value_retrieval_pair[1].path_afferents[0].matrix.base[i] = value_retrieval_pair[0]
