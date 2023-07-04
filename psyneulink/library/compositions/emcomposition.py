@@ -128,10 +128,6 @@ class EMComposition(Composition):
     learning_rate : float : default 0.001
         the learning rate passed to the optimizer if none is specified in the learn method of the EMComposition.
 
-    disable_learning : bool: default False
-        specifies whether the EMComposition should disable learning when run in `learning mode
-        <Composition.learn>`.
-
     Attributes
     ----------
 
@@ -151,7 +147,6 @@ class EMComposition(Composition):
                  learn_weights:bool=True,
                  memory_capacity:int=1000,
                  learning_rate:Optional[float]=None,
-                 disable_learning:bool=False,
                  name="EM_composition"):
 
         # memory_template must specify a 2D array:
@@ -185,26 +180,35 @@ class EMComposition(Composition):
         self.learn_weights = learn_weights
         self.learning_rate = learning_rate # FIX: MAKE THIS A PARAMETER
         self.memory_capacity = memory_capacity # FIX: MAKE THIS A READ-ONLY PARAMETER
-        self.disable_learning = disable_learning
 
-        super().__init__(name=name,
-                         pathway=self._create_components())
+        pathway = self._construct_pathway()
 
+        super().__init__(pathway,
+                         name=name)
 
-    def _create_components(self):
-        self.key_input_nodes = self._create_key_input_nodes()
-        self.value_input_nodes = self._create_value_input_nodes()
-        self.match_nodes = self._create_match_nodes()
-        self.retrieval_gating_node = self._create_retrieval_gating_node()
-        self.retrieval_weighting_node = self._create_retrieval_weighting_node()
-        self.retrieval_nodes = self._create_retrieval_nodes()
-        nodes = self.key_input_nodes + self.value_input_nodes + self.match_nodes \
-                + [self.retrieval_weighting_node] \
-                + self.retrieval_nodes
-        # Return as a set since Projections are specified in the construction of each node
-        return set(nodes)
+        # Turn of learning for all Projections except inputs to retrieval_gating_nodes
+        self._set_learnability_of_projections()
+        assert True
 
-    def _create_key_input_nodes(self):
+    def _construct_pathway(self):
+        """Construct pathway for EMComposition"""
+
+        # Construct nodes of Composition
+        self.key_input_nodes = self._construct_key_input_nodes()
+        self.value_input_nodes = self._construct_value_input_nodes()
+        self.match_nodes = self._construct_match_nodes()
+        self.retrieval_gating_nodes = self._construct_retrieval_gating_nodes()
+        self.retrieval_weighting_node = self._construct_retrieval_weighting_node()
+        self.retrieval_nodes = self._construct_retrieval_nodes()
+
+        # Construct pathway as a set of nodes, since Projections are specified in the construction of each node
+        pathway = set(self.key_input_nodes + self.value_input_nodes + self.match_nodes \
+                + [self.retrieval_weighting_node]
+                + self.retrieval_gating_nodes + self.retrieval_nodes)
+
+        return pathway
+
+    def _construct_key_input_nodes(self):
         """Create layer with one Input node for each key in the memory template."""
         
         # Get indices of field_weights that specify keys:
@@ -215,12 +219,13 @@ class EMComposition(Composition):
             f"non-zero values in field_weights ({len(key_indices)})."
 
         key_input_nodes = [TransferMechanism(size=len(self.memory_template[key_indices[i]]),
-                                             name='key_input_node_' + str(i))
+                                               name= 'KEY INPUT NODE' if self.num_keys == 1
+                                               else f'KEY INPUT NODE {i}')
                        for i in range(self.num_keys)]
 
         return key_input_nodes
 
-    def _create_value_input_nodes(self):
+    def _construct_value_input_nodes(self):
         """Create layer with one Input node for each key in the memory template."""
 
         # Get indices of field_weights that specify keys:
@@ -231,12 +236,13 @@ class EMComposition(Composition):
             f"non-zero values in field_weights ({len(value_indices)})."
 
         value_input_nodes = [TransferMechanism(size=len(self.memory_template[value_indices[i]]),
-                                             name='value_input_node_' + str(i))
+                                               name= 'VALUE INPUT NODE' if self.num_values == 1
+                                               else f'VALUE INPUT NODE {i}')
                            for i in range(self.num_values)]
 
         return value_input_nodes
 
-    def _create_match_nodes(self):
+    def _construct_match_nodes(self):
         """Create nodes that, for each key field, compute the similarity between the input and each item in memory
         and return softmax over those similarities.
 
@@ -263,7 +269,7 @@ class EMComposition(Composition):
                                              output_ports=[RESULT,
                                                            {VALUE: key_weights[0],
                                                             NAME: 'KEY_WEIGHT'}],
-                                             name='match_node')]
+                                             name='MATCH NODE')]
         else:
             # One node for each key
             match_nodes = [TransferMechanism(input_ports={SIZE:self.memory_capacity,
@@ -272,74 +278,54 @@ class EMComposition(Composition):
                                              output_ports=[RESULT,
                                                            {VALUE: key_weights[0],
                                                             NAME: 'KEY_WEIGHT'}],
-                                             name='match_node_' + str(i))
+                                             name='MATCH_NODE ' + str(i))
                            for i in range(self.num_keys)]
 
         return match_nodes
 
-    def _create_retrieval_gating_node(self):
-        """Create GatingMechanism that weights each key's contribution to the retrieval."""
-        retrieval_gating_node = GatingMechanism(default_allocation=[1] * self.num_keys,
-                                                # FIX: THIS SHOULD WORK:
-                                                # input_ports=[m.output_ports['KEY_WEIGHT'] for m in self.match_nodes],
-                                                input_ports=[{FUNCTION: Concatenate(),
-                                                              PROJECTIONS: [m.output_ports['KEY_WEIGHT']
-                                                                            for m in self.match_nodes],
-                                                              NAME: OUTCOME
-                                                              }],
-                                                gate=[m.output_ports[1] for m in self.match_nodes],
-                                                # gating_signals=[m.output_port for m in self.match_nodes],
-                                                name='retrieval_gating_node')
+    def _construct_retrieval_gating_nodes(self):
+        """Create GatingMechanisms that weight each key's contribution to the retrieved values."""
+        retrieval_gating_nodes = [GatingMechanism(#input_ports=key_match_pair[0].output_ports['RESULT'],
+                                                  input_ports={PROJECTIONS: key_match_pair[0].output_ports['RESULT'],
+                                                               NAME: 'OUTCOME'},
+                                                 gate=[key_match_pair[1].output_ports[1]],
+                                                 # name=f'RETRIEVAL GATING NODE {i}')
+                                                 name= 'RETRIEVAL GATING NODE' if self.num_keys == 1
+                                                 else f'RETRIEVAL GATING NODE {i}')
+                                 for i, key_match_pair in enumerate(zip(self.key_input_nodes, self.match_nodes))]
+        return retrieval_gating_nodes
 
-    def _create_retrieval_weighting_node(self):
+    def _construct_retrieval_weighting_node(self):
         """Create layer that computes the weighting of each item in memory."""
+        # FIX: THIS SHOULD WORK:
+        # retrieval_weighting_node = TransferMechanism(input_ports=[{PROJECTIONS: [m.output_port for m in self.match_nodes]}])
+        retrieval_weighting_node = TransferMechanism(input_ports=[m.output_port for m in self.match_nodes],
+                                                     name='RETRIEVAL WEIGHTING NODE')
 
-        # if self.concatenate_keys:
-        #     # Only one match_node node (with set of softmax weights across all concatenated keys)
-        #     retrieval_weighting_node = TransferMechanism(input_ports=self.match_node[0].output_port)
-        #
-        # else:
-        #     # Sum softmax values for each key weighted by the corresponding field_weight value
-        #     key_weights = [w for w in self.field_weights if w != 0]
-        #     # Assign an InputPort for each key,
-        #     #   that receives a MappingProjection from the corresponding node in the match_node
-        #     #   with a weight matrix that is initialized with the corresponding field_weight value
-        #     input_ports = [{PROJECTIONS: MappingProjection(sender = m,#.output_port,
-        #                                                    matrix = np.identity(self.memory_capacity) * key_weights[0],
-        #                                                    learnable = self.learn_weights)}
-        #                    for i, m in enumerate(self.match_nodes)]
-        #     retrieval_weighting_node = TransferMechanism(input_ports=input_ports,
-        #                                                   name='retrieval_weighting_node')
-        # else:
-        #     # Sum softmax values for each key weighted by the corresponding field_weight value
-        #     key_weights = [w for w in self.field_weights if w != 0]
-        #     # Assign an InputPort for each key,
-        #     #   that receives a MappingProjection from the corresponding node in the match_node
-        #     #   with a weight matrix that is initialized with the corresponding field_weight value
-        #     input_ports = [{PROJECTIONS: MappingProjection(sender = m,#.output_port,
-        #                                                    matrix = np.identity(self.memory_capacity) * key_weights[0],
-        #                                                    learnable = self.learn_weights)}
-        #                    for i, m in enumerate(self.match_nodes)]
-        #     retrieval_weighting_node = TransferMechanism(input_ports=input_ports,
-        #                                                   name='retrieval_weighting_node')
-
-        projections = [MappingProjection(sender=m.output_port,matrix=IDENTITY_MATRIX) for m in self.match_nodes]
-        retrieval_weighting_node = TransferMechanism(input_port={PROJECTIONS:projections})
-
-        assert len(retrieval_weighting_node.output_port) == self.memory_capacity,\
+        assert len(retrieval_weighting_node.output_port.value) == self.memory_capacity,\
             f'PROGRAM ERROR: number of items in retrieval_weighting_node ({len(retrieval_weighting_node.output_port)})' \
             f'does not match memory_capacity ({self.memory_capacity})'
                                                             
         return retrieval_weighting_node
 
-    def _create_retrieval_nodes(self):
+    def _construct_retrieval_nodes(self):
         """Create layer that reports the value field(s) for the item matched in memory."""
         
         retrieval_nodes = [TransferMechanism(size=self.memory_capacity,
-                                             input_port=self.value_input_nodes[i],
-                                             name='value_node_' + str(i))
+                                             input_ports=self.value_input_nodes[i],
+                                             name= 'VALUE NODE' if self.num_values == 1 else f'VALUE NODE {i}')
                            for i in range(self.num_values)]
         return retrieval_nodes
+
+    def _set_learnability_of_projections(self):
+        """Turn off learning for all Projections except afferents to retrieval_gating_nodes."""
+        for node in self.nodes:
+            for input_port in node.input_ports:
+                for proj in input_port.path_afferents:
+                    if node in self.retrieval_gating_nodes:
+                        proj.learnable = self.learn_weights
+                    else:
+                        proj.learnable = False
 
     def softmax_temperature(self, values, epsilon=1e-8):
         """Compute the softmax temperature based on length of vector and number of (near) zero values."""
