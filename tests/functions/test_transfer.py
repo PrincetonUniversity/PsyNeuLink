@@ -1,6 +1,8 @@
+import functools
 import numpy as np
 import pytest
 
+import psyneulink as pnl
 import psyneulink.core.components.functions.nonstateful.transferfunctions as Functions
 import psyneulink.core.globals.keywords as kw
 import psyneulink.core.llvm as pnlvm
@@ -229,7 +231,7 @@ derivative_out_test_data = [
 @pytest.mark.parametrize("func, variable, params, expected", derivative_out_test_data, ids=lambda x: getattr(x, 'name', None) or getattr(x, 'get', lambda p, q: None)(kw.OUTPUT_TYPE, None))
 def test_transfer_derivative_out(func, variable, params, expected, benchmark, func_mode):
     if func == Functions.SoftMax and params[kw.OUTPUT_TYPE] == kw.ALL and func_mode != "Python":
-        pytest.skip("Compiled derivative using 'ALL' is not implemented")
+        pytest.skip("Compiled SoftMax derivative using 'ALL' is not implemented")
 
     f = func(default_variable=variable, **params)
     benchmark.group = "TransferFunction " + func.componentName + " Derivative"
@@ -245,7 +247,7 @@ def test_transfer_derivative_out(func, variable, params, expected, benchmark, fu
 
     res = benchmark(ex, variable)
 
-    # Logistic needs reduced accuracy in single precision mode
+    # Logistic needs reduced accuracy in single precision mode because it uses exp()
     if func_mode != 'Python' and func is Functions.Logistic and pytest.helpers.llvm_current_fp_precision() == 'fp32':
         tolerance = {'rtol': 1e-7, 'atol': 1e-8}
     else:
@@ -253,11 +255,98 @@ def test_transfer_derivative_out(func, variable, params, expected, benchmark, fu
 
     np.testing.assert_allclose(res, expected, **tolerance)
 
-def test_transfer_with_costs_function():
+
+def combine_costs(costs):
+    return functools.reduce(lambda x, y: x | y, costs, pnl.CostFunctions.NONE)
+
+@pytest.mark.parametrize("cost_functions", map(combine_costs, pytest.helpers.power_set(cf for cf in pnl.CostFunctions if cf != pnl.CostFunctions.NONE and cf != pnl.CostFunctions.ALL)))
+@pytest.mark.benchmark
+def test_transfer_with_costs(cost_functions, func_mode, benchmark):
+
+    f = Functions.TransferWithCosts(enabled_cost_functions=cost_functions)
+
+    def check(cost_function, if_enabled, if_disabled, observed):
+        if cost_function in cost_functions:
+            np.testing.assert_allclose(observed, if_enabled)
+        else:
+            assert np.array_equal(observed, if_disabled)
+
+            # HACK: workaround intensity cost returning [1] when disabled
+            nonlocal total_cost
+            total_cost -= observed or 0
+
+    ex = pytest.helpers.get_func_execution(f, func_mode)
+
+    res = ex(10)
+    total_cost = (f.intensity_cost or 0) + (f.adjustment_cost or 0) + (f.duration_cost or 0)
+
+    assert res == [10]
+
+    # TODO : Intensity cost is [1] even when disabled
+    # https://github.com/PrincetonUniversity/PsyNeuLink/issues/2711
+    check(pnl.CostFunctions.INTENSITY,
+          [22026.465794806703],
+          None if cost_functions == pnl.CostFunctions.NONE else [1],
+          f.intensity_cost)
+    check(pnl.CostFunctions.ADJUSTMENT, [10], None, f.adjustment_cost)
+    check(pnl.CostFunctions.DURATION, [10], None, f.duration_cost)
+
+    # TODO: Combined costs are not supported in compiled mode
+    # https://github.com/PrincetonUniversity/PsyNeuLink/issues/2712
+    if func_mode == "Python":
+        assert np.array_equal(total_cost, f.combined_costs or 0)
+
+
+    # Second run with positive adjustment
+    res = ex(15)
+    total_cost = (f.intensity_cost or 0) + (f.adjustment_cost or 0) + (f.duration_cost or 0)
+
+    assert res == [15]
+
+    # TODO : Intensity cost is [1] even when disabled
+    # https://github.com/PrincetonUniversity/PsyNeuLink/issues/2711
+    check(pnl.CostFunctions.INTENSITY,
+          [3269017.372472108],
+          None if cost_functions == pnl.CostFunctions.NONE else [1],
+          f.intensity_cost)
+    check(pnl.CostFunctions.ADJUSTMENT, [5], None, f.adjustment_cost)
+    check(pnl.CostFunctions.DURATION, [25], None, f.duration_cost)
+
+    # TODO: Combined costs are not supported in compiled mode
+    # https://github.com/PrincetonUniversity/PsyNeuLink/issues/2712
+    if func_mode == "Python":
+        assert np.array_equal(total_cost, f.combined_costs or 0)
+
+
+    # Third run with negative adjustment
+    res = ex(7)
+    total_cost = (f.intensity_cost or 0) + (f.adjustment_cost or 0) + (f.duration_cost or 0)
+
+    assert res == [7]
+
+    # TODO : Intensity cost is [1] even when disabled
+    # https://github.com/PrincetonUniversity/PsyNeuLink/issues/2711
+    check(pnl.CostFunctions.INTENSITY,
+          [1096.6331584284583],
+          None if cost_functions == pnl.CostFunctions.NONE else [1],
+          f.intensity_cost)
+    check(pnl.CostFunctions.ADJUSTMENT, [8], None, f.adjustment_cost)
+    check(pnl.CostFunctions.DURATION, [32], None, f.duration_cost)
+
+    # TODO: Combined costs are not supported in compiled mode
+    # https://github.com/PrincetonUniversity/PsyNeuLink/issues/2712
+    if func_mode == "Python":
+        assert np.array_equal(total_cost, f.combined_costs or 0)
+
+    benchmark(ex, 10)
+
+
+def test_transfer_with_costs_toggle():
     f = Functions.TransferWithCosts()
     result = f(1)
     np.testing.assert_allclose(result, 1)
     f.toggle_cost(Functions.CostFunctions.INTENSITY)
+
     f = Functions.TransferWithCosts(enabled_cost_functions=Functions.CostFunctions.INTENSITY)
     result = f(2)
     np.testing.assert_allclose(result, 2)
@@ -265,6 +354,7 @@ def test_transfer_with_costs_function():
     assert f.adjustment_cost is None
     assert f.duration_cost is None
     np.testing.assert_allclose(f.combined_costs, 7.38905609893065)
+
     f.toggle_cost(Functions.CostFunctions.ADJUSTMENT)
     result = f(3)
     np.testing.assert_allclose(result, 3)
@@ -272,6 +362,7 @@ def test_transfer_with_costs_function():
     np.testing.assert_allclose(f.adjustment_cost, 1)
     assert f.duration_cost is None
     np.testing.assert_allclose(f.combined_costs, 21.085536923187668)
+
     f.toggle_cost(Functions.CostFunctions.DURATION)
     result = f(5)
     np.testing.assert_allclose(result, 5)

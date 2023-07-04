@@ -285,9 +285,10 @@ class EMComposition(Composition):
                                                 input_ports=[{FUNCTION: Concatenate(),
                                                               PROJECTIONS: [m.output_ports['KEY_WEIGHT']
                                                                             for m in self.match_nodes],
-                                                              # NAME: OUTCOME
+                                                              NAME: OUTCOME
                                                               }],
-                                                gating_signals=[m.output_port for m in self.match_nodes],
+                                                gate=[m.output_ports[1] for m in self.match_nodes],
+                                                # gating_signals=[m.output_port for m in self.match_nodes],
                                                 name='retrieval_gating_node')
 
     def _create_retrieval_weighting_node(self):
