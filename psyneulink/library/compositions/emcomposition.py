@@ -56,7 +56,7 @@ from psyneulink._typing import Optional, Union
 
 from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import Concatenate
-from psyneulink.core.compositions.composition import Composition, CompositionError
+from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import GatingMechanism
 from psyneulink.core.components.ports.inputport import InputPort
@@ -68,6 +68,22 @@ from psyneulink.core.globals.keywords import \
 __all__ = [
     'EMComposition'
 ]
+
+
+def _memory_getter(owning_component=None, context=None): # FIX: MAKE THIS A PARAMETER
+    """Return memory as a list of the memories stored in the memory nodes.
+    """
+    memory = None
+    for key_node in owning_component.key_input_nodes:
+        memory_field = key_node.efferents[0].parameters.matrix.get(context).transpose()
+        if memory is None:
+            memory = memory_field
+        else:
+            memory = np.concatenate((memory, memory_field),axis=1)
+    for retrieval_node in owning_component.retrieval_nodes:
+        memory = np.concatenate((memory, retrieval_node.path_afferents[0].parameters.matrix.get(context)),axis=1)
+    return memory
+
 
 class EMCompositionError(CompositionError):
 
@@ -95,7 +111,11 @@ class EMComposition(Composition):
          mechanism that can adaptively use its limited capacity as sensibly as possible, by re-cycling the units
          that have the least used memories.
     - TEST ADPATIVE TEMPERATURE (SEE BELOW)
-    - ADD ALL ARGS FOR CONTENTADDRESSABLEMEMORY FUNCTION TO INIT, AND MAKE THEM Parameters
+    - ADD ALL PARAMETERS FOR CONTENTADDRESSABLEMEMORY FUNCTION
+    - MAKE "_store_memory" METHOD USE LEARNING INSTEAD OF ASSIGNMENT (per Steven's Hebban / DPP model?)
+    - EXCLUDE VALUE_INPUT NODES FROM OUTPUT NODES
+    - ADD OUTPUT NODES FOR ALL KEYS (IN ADDITION TO OUTPUT NODES FOR VALUES:
+      - NAME THEM WITH KEY NAME UNLESS EXPLICITLY SPECIFIED AS A VALUE (I.E., FIELD_WEIGHT = 0)
 
     Arguments
     ---------
@@ -138,8 +158,8 @@ class EMComposition(Composition):
     componentCategory = EM_COMPOSITION
     class Parameters(Composition.Parameters):
         learning_rate = Parameter(.001, fallback_default=True)
-        losses = Parameter([])
         pytorch_representation = None
+        memory = Parameter(None, loggable=True, getter=_memory_getter)
     @check_user_specified
     def __init__(self,
                  memory_template:Union[list, np.ndarray]=[[0],[0]],
@@ -198,6 +218,8 @@ class EMComposition(Composition):
         super().__init__(pathway,
                          name=name)
 
+        for node in self.value_input_nodes:
+            self.exclude_node_roles(node, NodeRole.OUTPUT)
         # Turn of learning for all Projections except inputs to retrieval_gating_nodes
         self._set_learnability_of_projections()
         self._initialize_memory()
@@ -418,23 +440,3 @@ class EMComposition(Composition):
                 idx_of_min = np.argmin(memories.sum(axis=1))
                 memories[idx_of_min] = np.array(memory)
                 self.retrieval_nodes[idx].path_afferents[0].parameters.matrix.set(memories, context)
-        assert True
-    @property
-    def memory(self): # FIX: MAKE THIS A PARAMETER
-        """Return memory as a list of the memories stored in the memory nodes.
-        """
-        memory = np.empty((self.memory_capacity, self.memory_dim))
-        i = 0
-        for key_node in self.key_input_nodes:
-            memory_field = key_node.efferents[0].parameters.matrix.get()
-            l = len(memory_field)
-            memory[:,i:i+l] = memory_field.transpose()
-            i += l
-        for retrieval_node in self.retrieval_nodes:
-            memory_field = retrieval_node.path_afferents[0].parameters.matrix.get()
-            l = len(memory_field.transpose())
-            memory[:,i:i+l] = memory_field
-            i += l
-        return memory
-
-
