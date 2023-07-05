@@ -185,6 +185,11 @@ class Execution:
 
                 # Writeback parameter value if the condition matches
                 elif condition(pnl_param):
+
+                    # TODO: Reconstruct Python RandomState
+                    if attribute == "random_state":
+                        continue
+
                     value = np.ctypeslib.as_array(compiled_attribute_param)
 
                     # Stateful parameters include history, get the most recent value
