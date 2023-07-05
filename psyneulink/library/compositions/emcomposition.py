@@ -229,7 +229,7 @@ class EMComposition(Composition):
         for node in self.value_input_nodes:
             self.exclude_node_roles(node, NodeRole.OUTPUT)
 
-        # Turn of learning for all Projections except inputs to retrieval_gating_nodes
+        # Turn off learning for all Projections except inputs to retrieval_gating_nodes
         self._set_learnability_of_projections()
         self._initialize_memory()
 
