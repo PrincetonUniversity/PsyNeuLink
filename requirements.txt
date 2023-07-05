@@ -14,7 +14,7 @@ numpy>=1.19.0, <1.24.4
 optuna<3.3.0
 packaging<24.0
 pandas<2.0.4
-pillow<9.6.0
+pillow<10.1.0
 pint<0.22.0
 protobuf<3.20.4
 rich>=10.1, <10.13
