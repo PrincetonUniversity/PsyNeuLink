@@ -191,6 +191,7 @@ class EMComposition(Composition):
         self.concatenate_keys = len(self.field_weights) == 1 or np.all(self.field_weights == self.field_weights[0])
         self.num_keys = len([i for i in self.field_weights if i != 0])
         self.num_values = self.num_fields - self.num_keys
+        self.memory_dim = np.array(self.memory_template).size
 
         pathway = self._construct_pathway()
 
@@ -342,7 +343,7 @@ class EMComposition(Composition):
     def _construct_retrieval_nodes(self):
         """Create layer that reports the value field(s) for the item(s) matched in memory.
         """
-        retrieval_nodes = [TransferMechanism(size=self.memory_capacity,
+        retrieval_nodes = [TransferMechanism(size=len(self.value_input_nodes[i].variable[0]),
                                              # input_ports=self.value_input_nodes[i],
                                              input_ports=self.retrieval_weighting_node,
                                              name= 'VALUE NODE' if self.num_values == 1 else f'VALUE NODE {i}')
@@ -384,36 +385,56 @@ class EMComposition(Composition):
         gain = 1 + np.exp(1/num_non_zero) * (num_zero/n)
         return gain
 
-    def execute(self, inputs, **kwargs):
+    def execute(self, inputs, context, **kwargs):
         """Set input to weights of Projection to match_node.
         """
-        super().execute(**kwargs)
-        self._store_memory(inputs)
+        results = super().execute(inputs, **kwargs)
+        self._store_memory(inputs, context)
+        return results
 
-    def _store_memory(self, inputs):
+    def _store_memory(self, inputs, context):
         """Store inputs in memory as weights of Projections to match_nodes (keys) and retrieval_nodes (values).
         """
-        key_inputs = inputs[:self.num_keys]
-        value_inputs = inputs[self.num_keys:]
+        for input_node, memory in inputs.items():
+            # Memory = key_input or value_input;
+            if input_node in self.key_input_nodes:
+                # For key_input:
+                #   assign as weights for first empty row of Projection.matrix from key_input_node to match_node
+                memories = input_node.efferents[0].parameters.matrix.get(context)
+                if self.decay_memories:
+                    memories *= self.memory_decay_rate
+                # Get least used slot (i.e., weakest memory = row of matrix with lowest weights)
+                idx_of_min = np.argmin(memories.sum(axis=0))
+                memories[:,idx_of_min] = np.array(memory)
+                input_node.efferents[0].parameters.matrix.set(memories, context)
+            if input_node in self.value_input_nodes:
+                # For value_input;
+                #   assign as weights for 1st empty row of Projection.matrix from retrieval_weighting_node to retrieval_node
+                idx = self.value_input_nodes.index(input_node)
+                memories = self.retrieval_nodes[idx].path_afferents[0].parameters.matrix.get(context)
+                if self.decay_memories:
+                    memories *= self.memory_decay_rate
+                # Get least used slot (i.e., weakest memory = row of matrix with lowest weights)
+                idx_of_min = np.argmin(memories.sum(axis=1))
+                memories[idx_of_min] = np.array(memory)
+                self.retrieval_nodes[idx].path_afferents[0].parameters.matrix.set(memories, context)
+        assert True
+    @property
+    def memory(self): # FIX: MAKE THIS A PARAMETER
+        """Return memory as a list of the memories stored in the memory nodes.
+        """
+        memory = np.empty((self.memory_capacity, self.memory_dim))
+        i = 0
+        for key_node in self.key_input_nodes:
+            memory_field = key_node.efferents[0].parameters.matrix.get()
+            l = len(memory_field)
+            memory[:,i:i+l] = memory_field.transpose()
+            i += l
+        for retrieval_node in self.retrieval_nodes:
+            memory_field = retrieval_node.path_afferents[0].parameters.matrix.get()
+            l = len(memory_field.transpose())
+            memory[:,i:i+l] = memory_field
+            i += l
+        return memory
 
-        # Store memories of keys
-        for memory, key_input_node in zip(key_inputs, self.key_input_nodes):
-            # Memory = key_input;
-            #   assign as weights for first empty row of Projection.matrix from key_input_node to match_node
-            memories = key_input_node.efferents[0]
-            if self.decay_memories:
-                memory.matrix.base *= self.memory_decay_rate
-            # Get least used slot (i.e., weakest memory = row of matrix with lowest weights)
-            idx_of_min = np.argmin(memories.matrix.base.sum(axis=1))
-            memories.matrix.base[idx_of_min] = memory
 
-        # Store memories of values
-        for memory, retrieval_node in zip(value_inputs, self.retieval_nodes):
-            # Memory = value_input;
-            #   assign as weights for 1st empty row of Projection.matrix from retrieval_weighting_node to retrieval_node
-            memories = retrieval_node.path_afferents[0]
-            if self.decay_memories:
-                memories.matrix.base *= self.memory_decay_rate
-            # Get least used slot (i.e., weakest memory = row of matrix with lowest weights)
-            idx_of_min = np.argmin(memories.matrix.base.sum(axis=1))
-            memories.matrix.base[min] = memory
