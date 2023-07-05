@@ -113,10 +113,6 @@ class EMComposition(Composition):
     - TEST ADPATIVE TEMPERATURE (SEE BELOW)
     - ADD ALL PARAMETERS FOR CONTENTADDRESSABLEMEMORY FUNCTION
     - MAKE "_store_memory" METHOD USE LEARNING INSTEAD OF ASSIGNMENT (per Steven's Hebban / DPP model?)
-    - SUPPRESS WARNING FOR NO EFFERENTS FOR BELOW USING: require_projection_in_composition
-      - "MATCH NODE N[KEY_WEIGHT]"
-      - "VALUE INPUT N[RESULT]"
-      - "RETRIEVAL WEIGHTING NODE[RESULT_N]"
     - ADD OUTPUT NODES FOR ALL KEYS (IN ADDITION TO OUTPUT NODES FOR VALUES:
       - NAME THEM WITH KEY NAME UNLESS EXPLICITLY SPECIFIED AS A VALUE (I.E., FIELD_WEIGHT = 0)
 
@@ -221,8 +217,18 @@ class EMComposition(Composition):
         super().__init__(pathway,
                          name=name)
 
+        # Suppress warnings for no efferent Projections
+        for node in self.value_input_nodes:
+            node.output_ports['RESULT'].parameters.require_projection_in_composition.set(False, override=True)
+        for node in self.match_nodes:
+            node.output_ports['KEY_WEIGHT'].parameters.require_projection_in_composition.set(False, override=True)
+        for port in self.retrieval_weighting_node.output_ports:
+            if 'RESULT' in port.name:
+                port.parameters.require_projection_in_composition.set(False, override=True)
+
         for node in self.value_input_nodes:
             self.exclude_node_roles(node, NodeRole.OUTPUT)
+
         # Turn of learning for all Projections except inputs to retrieval_gating_nodes
         self._set_learnability_of_projections()
         self._initialize_memory()
