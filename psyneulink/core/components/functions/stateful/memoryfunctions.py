@@ -436,7 +436,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     **Retrieval**. Entries are retrieved from `memory <ContentAddressableMemory.memory>` based on their distance
     from `variable <ContentAddressableMemory.variable>`, used as the cue for retrieval. The distance is computed
     using the `distance_function <ContentAddressableMemory.distance_function>`, which compares `variable
-    <ContentAddressableMemory.variable>` with each entry in `memory <ContentAddressableMemory.storage_prob>`.
+    <ContentAddressableMemory.variable>` with each entry in `memory <ContentAddressableMemory.memory>`.
     If memories have more than one field, then the distances are computed in one of two ways: i) as full
     vectors (i.e., with all fields of each concatenated into a single array) if `distance_field_weights
     <ContentAddressableMemory.distance_field_weights>` is a single scalar value or a list of identical values);

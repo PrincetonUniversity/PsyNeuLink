@@ -9,6 +9,15 @@
 # ********************************************* EMComposition *************************************************
 
 
+# ISSUES:
+# - IMPLEMENTATION OF GENERALIZATION OF FIELDS (KEYS = FIELD WEIGHT != 0)
+# - WHEN TO CONCATENATE KEYS (EXPLICITLY, OR ALL FIELD WEIGHTS ARE THE SAME FOR KEYS)?
+# - IMPLEMENTATION OF STORAGE IN PYTORCH AND/OR AS LEARNING PROCESS (HEBBIAN?)
+# - CONFIDENCE COMPUTATION
+# - MEMORY DECAY (SEE BELOW)
+# - ADAPTIVE TEMPERATURE (SEE BELOW)
+# - ACCESSIBILITY OF DISTANCES (SEE BELOW)
+
 # TODO:
 # - DECAY WEIGHTS BY:
 #   ? 1-SOFTMAX / N (WHERE N = NUMBER OF ITEMS IN MEMORY)
@@ -23,6 +32,7 @@
 # - MAKE "_store_memory" METHOD USE LEARNING INSTEAD OF ASSIGNMENT (per Steven's Hebban / DPP model?)
 # - ADD OUTPUT NODES FOR ALL KEYS (IN ADDITION TO OUTPUT NODES FOR VALUES ANDa
 #      NAME THEM WITH KEY NAME UNLESS EXPLICITLY SPECIFIED AS A VALUE (I.E., FIELD_WEIGHT = 0)
+# - ADD MEMORY_DECAY TO ContentAddressableMemory FUNCTION (and compiled version by Samyak)
 
 
 """
@@ -31,12 +41,12 @@ Contents
 --------
 
   * `EMComposition_Overview`
+     - `Organization <EMComposition_Organization>`
+     - `Operation <EMComposition_Operation>`
   * `EMComposition_Creation`
-    * `EMComposition_Memory_Template`
-    * `EMComposition_Field_weights`
-    * `EMComposition_Field_Names`
-    * `EMComposition_Memory_Capacity`
-    * `EMComposition_Learn_Weights`
+     - `Fields <EMComposition_Fields>`
+     - `Capacity <EMComposition_Capacity>`
+     - `Learning <EMComposition_Learning>`
   * `EMComposition_Structure`
   * `EMComposition_Execution`
   * `EMComposition_Examples`
@@ -48,11 +58,62 @@ Contents
 Overview
 --------
 
-Implements a differentiable version of an `EpisodicMemoryMechanism` as a `Composition`, that can serve as a form
-of episodic, or external memory in an `AutodiffComposition` capable of learning. It implements all of the functions
-of a `ContentAddressableMemory` `Function` used by an `EpisodicMemoryMechanism`, and takes all of the same arguments,
-as well as a **memory_template** argument that specifies the shape of the items to be stored in the EMComposition's
-memory (see `EMComposition_Creation` below for additional details).
+The EMComposition implements a configurable, content-addressable form of episodic, or eternal memory, that emulates
+the functionality  of an `EpisodicMemoryMechanism` -- reproducing all of the functionality of its
+`ContentAddressableMemory` `Function` -- in the form of an `AutodiffComposition` that is capable of learning its
+`field_weights <EMComposition.field_weights>` (i.e., that weight the keys used to retrieve items from
+memory), and that adds the capability for `memory_decay <EMComposition_Memory_Decay>`.  Its `memory
+<EMComposition.memory>` is configured using the **memory_template** argument of its constructor, which defines how
+each entry in `memory <EMComposition.memory>` is structured (i.e., the number of fields it has, and the length of
+each field), as described below.  The inputs to its `key_input_nodes <EMComposition.key_input_nodes>` are used to
+retrieve entries from `memory <EMComposition.memory>`, and its `retrieval_nodes <EMComposition.retrieval_nodes>`
+report the results of retrieval.
+
+.. _EMComposition_Organization:
+
+**Organization**
+
+*Entries and Fields*. Each entry in memory can have an arbitrary number of fields, and each field can have an arbitrary
+length.  However, all entries must have the same number of fields, and the corresponding fields must all have the same
+length across entries. Fields can be weighted to determine the influence they have on retrieval, using the
+`field_weights <ContentAddressableMemory.memory>` parameter (see `retrieval <EMComposition_Retrieval>` below). The
+number and shape of the fields in each entry is specified in the **memory_template** argument of the EMComposition's
+constructor (see `memory_template <EMComposition_Fields>`).
+
+.. _EMComposition_Operation:
+
+**Operation**
+
+*Retrieval.*  Entries are retrieved from `memory <ContentAddressableMemory.memory>` based on their
+distance from the cues usde for retrieval, computed as the dot product of the cue and each entry in `memory
+<EMComposition.memory>`. If memories have more than one field, then the dot products for each field are computed in
+one of two ways:
+
+  * **as a single vector** if the `field_weights <EMComposition.field_weights>` parameter is a single
+    value or all of its non-zero values (i.e., the weights for the keys) are all the same; in that case, all of the
+    key fields in the cue are concatenated into a single vector, and the dot product is computed for that vector and
+    the similarly concatenated key fields of each entry in `memory <EMComposition.memory>`. ii) if `field_weights
+    <EMComposition.field_weights>`;
+
+  * **field-by-field** if there is more than one non-zero value in `field_weights <EMComposition.field_weights>` and
+    they are not all identical;  in this case, the dot product is computed between each key field in the cue and the
+    the corresponding ones of each entry in `memory <ContentAddressableMemory.memory>`, and those dot products are
+    then averaged, weighted by the corresponding values of `field_weights <EMComposition.field_weights>`.
+
+  The distances computed between the cue and each entry in `memory <EMComposition.memory>` are then used to compute
+  a weighted average of all entries in `memory <EMComposition.memory>` that is then returned as the `result
+  <Composition.result>` of the EMComposition's `execution <Composition_Execution>`.
+  COMMENT:
+  TBD:
+  The distances used for the last retrieval is stored in XXXX and the distances of each of their corresponding fields
+  (weighted by `distance_field_weights <ContentAddressableMemory.distance_field_weights>`), are returned in XXX,
+  respectively.
+  COMMENT
+
+*Storage.*  The `inputs <Composition_Input_External_InputPorts>` to the EMComposition's are stored in `memory
+<EMComposition.memory>` after each execution, with a probability determined by `storage_prob
+<EMComposition.storage_prob>`.  If `memory_decay <EMComposition.memory_decay>` is specified, then the `memory
+<EMComposition.memory>` is decayed by that amount after each execution.
 
 .. _EMComposition_Creation:
 
@@ -64,10 +125,13 @@ ADD:
 - memory_template = TUPLE -> initializes with zeros; restricted to regular array
 - memory_template = list or 2d array: can be used to store create a ragged array and/or or store initial value
 
-An EMComposition is created by calling its constructor.  This can take all of the arguments of a `Composition`,
-in addition to the following arguments:
+An EMComposition is created by calling its constructor, that takes the following arguments:
 
-  .. _EMComposition_Memory_Template:
+  .. _EMComposition_Fields:
+
+* *Field Specification*
+
+
 
   * **memory_template** : This specifies the shape of the items to be stored in the EMComposition's memory, and can be
     specified in any of the following ways:
@@ -98,7 +162,6 @@ in addition to the following arguments:
        and a list or 2d array is interpreted as a template that allows fields of
           different lengths to be specified (i.e., items to be encoded can be ragged arrays).
 
-  .. _EMComposition_Field_Weights:
 
   * **field_weights** : this is used both to
     specify which fields are used as keys, and to initialize the Projections to the `retrieval_weighting_node
@@ -117,8 +180,7 @@ in addition to the following arguments:
 
   * **field_names** : this is used both to
 
-
-  .. _EMComposition_Memory_Capacity:
+  .. _EMComposition_Capacity:
 
   * **memory_capacity**: specifies the maximum number of items that can be stored in the EMComposition's memory.
 
@@ -126,10 +188,11 @@ in addition to the following arguments:
 
   * **memory_decay_rate**: specifies the rate at which items in the EMComposition's memory decay.
 
-  .. _EMComposition_Learn_Weights:
+  .. _EMComposition_Learning:
 
   * **learn_weights** : specifies whether the weights specified in **field_weights** are learned during training.
 
+  * **learning_rate** : specifies the rate at which **field_weights** are learned if learn_weights is True.
 
 
 .. _EMComposition_Structure:
@@ -169,6 +232,7 @@ from psyneulink.core.components.functions.nonstateful.combinationfunctions impor
 from psyneulink.core.components.functions.function import \
     DEFAULT_SEED, FunctionError, _random_state_getter, _seed_setter, EPSILON, _noise_setter
 from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
+from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import GatingMechanism
 from psyneulink.core.components.ports.inputport import InputPort
@@ -208,12 +272,25 @@ class EMCompositionError(CompositionError):
         return repr(self.error_value)
 
 
-class EMComposition(Composition):
+class EMComposition(AutodiffComposition):
     """
-    Subclass of `Composition` that implements the functions of an `EpisodicMemoryMechanism` in a differentiable form.
+    EMComposition(                  \
+        memory_template=[[0],[0]],  \
+        field_names=None,           \
+        field_weights=None,         \
+        learn_weights=True,         \
+        learning_rate=True,         \
+        memory_capacity=1000,       \
+        decay_memories=False,       \
+        memory_decay_rate=None,     \
+        storage_prob=None,          \
+        name="EM_composition"       \
+        )
 
-    All of the arguments of the `ContentAddressableMemory` `Function` can be specified in the constructor for the
-    EMComposition.  In addition, the following arguments can be specified:
+    Subclass of `AutodiffComposition` that implements the functions of an `EpisodicMemoryMechanism` in a
+    differentiable form and in which it `field_weights <EMComposition.field_weights>` parameter can be learned.
+
+    Takes only the following arguments, all of which are optional
 
     Arguments
     ---------
@@ -222,16 +299,28 @@ class EMComposition(Composition):
         specifies the shape of an items to be stored in the EMComposition's memory;
         see `EMComposition_Memory_Template` for details.
 
-    memory_capacity : int : default 1000
-        specifies the number of items that can be stored in the EMComposition's memory;
-        see `EMComposition_Memory_Capacity` for details.
-
     field_weights : tuple : default (1,0)
         specifies the relative weight assigned to each key when matching an item in memory'
         see `EMComposition_Field_Weights` for details.
 
     learn_weights : bool : default False
-        specified whether field_weights are learnable during training.
+        specifies whether `field_weights <EMCompostion.field_weights>` are learnable during training.
+
+    learning_rate : float : default .01
+        specifies rate at which`field_weights <EMCompostion.field_weights>` are learned if **learn_weights** is True.
+
+    memory_capacity : int : default 1000
+        specifies the number of items that can be stored in the EMComposition's memory;
+        see `EMComposition_Memory_Capacity` for details.
+
+    decay_memories : bool : default False
+        specifies whether memories decay with each execution of the EMComposition;
+        see `EMComposition_Memory_Capacity` for details.
+
+    memory_decay_rate : float : default 1 / `memory_capacity <EMComposition.memory_capacity>`
+        specifies the rate at which items in the EMComposition's memory decay;
+        see `EMComposition_Memory_Capacity` for details.
+
 
     Attributes
     ----------
@@ -240,10 +329,21 @@ class EMComposition(Composition):
     """
 
     componentCategory = EM_COMPOSITION
-    class Parameters(Composition.Parameters):
-        learning_rate = Parameter(.001, fallback_default=True)
-        pytorch_representation = None
+    class Parameters(AutodiffComposition.Parameters):
+        """
+            Attributes
+            ----------
+
+                learning_rate
+                    see `learning_results <EMComposition.learning_rate>`
+
+                    :default value: []
+                    :type: ``list``
+
+        """
+
         memory = Parameter(None, loggable=True, getter=_memory_getter)
+        learning_rate = Parameter(.001, fallback_default=True)
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
@@ -260,6 +360,7 @@ class EMComposition(Composition):
                  field_names:Optional[list]=None,
                  field_weights:tuple=None,
                  learn_weights:bool=True,
+                 learning_rate:float=None,
                  memory_capacity:int=1000,
                  decay_memories:bool=False,
                  memory_decay_rate:Optional[float]=None,
@@ -308,8 +409,9 @@ class EMComposition(Composition):
             raise warnings.warn(f"The 'decay_memories' arg was set to True but 'memory_decay_rate' was set to 0.0; "
                                 f"default of 1/memory_capacity ({self.memory_decay_rate}) will be used instead.")
 
-        self.concatenate_keys = len(self.field_weights) == 1 or np.all(self.field_weights == self.field_weights[0])
-        self.num_keys = len([i for i in self.field_weights if i != 0])
+        keys_weights = [i for i in self.field_weights if i != 0]
+        self.num_keys = len(keys_weights)
+        self.concatenate_keys = if len(self.field_weights) == 1 or  np.all(keys_weights == keys_weights[0])
         self.num_values = self.num_fields - self.num_keys
         self.memory_dim = np.array(self.memory_template).size
 
@@ -327,6 +429,7 @@ class EMComposition(Composition):
             if 'RESULT' in port.name:
                 port.parameters.require_projection_in_composition.set(False, override=True)
 
+        # Suppress value_input_nodes as OUTPUT nodes of the Composition
         for node in self.value_input_nodes:
             self.exclude_node_roles(node, NodeRole.OUTPUT)
 
@@ -338,6 +441,7 @@ class EMComposition(Composition):
         """Construct pathway for EMComposition"""
 
         # Construct nodes of Composition
+        # FIX: ??MAKE THESE PARAMETERS:
         self.key_input_nodes = self._construct_key_input_nodes()
         self.value_input_nodes = self._construct_value_input_nodes()
         self.match_nodes = self._construct_match_nodes()
