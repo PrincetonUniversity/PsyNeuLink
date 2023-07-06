@@ -8,6 +8,23 @@
 
 # ********************************************* EMComposition *************************************************
 
+
+# TODO:
+# - DECAY WEIGHTS BY:
+#   ? 1-SOFTMAX / N (WHERE N = NUMBER OF ITEMS IN MEMORY)
+#   or
+#      1/N (where N=number of items in memory, and thus gets smaller as N gets
+#      larger) on each storage (to some asymptotic minimum value), and store the new memory to the unit with the
+#      smallest weights (randomly selected among “ties" [i.e., within epsilon of each other]), I think we have a
+#      mechanism that can adaptively use its limited capacity as sensibly as possible, by re-cycling the units
+#      that have the least used memories.
+# - TEST ADAPTIVE TEMPERATURE (SEE BELOW)
+# - ADD ADDITIONAL PARAMETERS FROM CONTENTADDRESSABLEMEMORY FUNCTION
+# - MAKE "_store_memory" METHOD USE LEARNING INSTEAD OF ASSIGNMENT (per Steven's Hebban / DPP model?)
+# - ADD OUTPUT NODES FOR ALL KEYS (IN ADDITION TO OUTPUT NODES FOR VALUES ANDa
+#      NAME THEM WITH KEY NAME UNLESS EXPLICITLY SPECIFIED AS A VALUE (I.E., FIELD_WEIGHT = 0)
+
+
 """
 
 Contents
@@ -15,6 +32,12 @@ Contents
 
   * `EMComposition_Overview`
   * `EMComposition_Creation`
+    * `EMComposition_Memory_Template`
+    * `EMComposition_Field_weights`
+    * `EMComposition_Field_Names`
+    * `EMComposition_Memory_Capacity`
+    * `EMComposition_Learn_Weights`
+  * `EMComposition_Structure`
   * `EMComposition_Execution`
   * `EMComposition_Examples`
   * `EMComposition_Class_Reference`
@@ -27,17 +50,104 @@ Overview
 
 Implements a differentiable version of an `EpisodicMemoryMechanism` as a `Composition`, that can serve as a form
 of episodic, or external memory in an `AutodiffComposition` capable of learning. It implements all of the functions
-of a `ContentAddressableMemory` `Function` used by an `EpisodicMemoryMechanism`, and takes all of the same arguments.
+of a `ContentAddressableMemory` `Function` used by an `EpisodicMemoryMechanism`, and takes all of the same arguments,
+as well as a **memory_template** argument that specifies the shape of the items to be stored in the EMComposition's
+memory (see `EMComposition_Creation` below for additional details).
 
 .. _EMComposition_Creation:
 
 Creation
 --------
 
+ADD:
+- DEFAULT CONFIGURATION IS AS DICTIONARY WITH LAST FIELD AS THE VALUE
+- memory_template = TUPLE -> initializes with zeros; restricted to regular array
+- memory_template = list or 2d array: can be used to store create a ragged array and/or or store initial value
+
+An EMComposition is created by calling its constructor.  This can take all of the arguments of a `Composition`,
+in addition to the following arguments:
+
+  .. _EMComposition_Memory_Template:
+
+  * **memory_template** : This specifies the shape of the items to be stored in the EMComposition's memory, and can be
+    specified in any of the following ways:
+
+      * **2-item tuple** -- this is interpreted as an np.array shape specification, in which the first item specifies
+        the number of fields in each memory entry, and the second item specifies the length of each field.  For example,
+        the following specification:
+
+          (2,3)
+
+        specifies that each item to be stored in the EMComposition's memory has two fields, each of length 3.  This
+        specification is equivalent to the following:
+
+          [[0,0,0],[0,0,0]]
+
+      * **list** or **np.array** -- this is interpreted as a template for the items to be stored in the EMComposition's
+        memory, in which each item is a list of the same length.  For example, the following specification:
+
+          [[0,0,0],[0,0,0]]
+
+      specifies that each item to be stored in the EMComposition's memory has two fields, each of length 3.  This
+      specification is equivalent to the following:
+
+          (2,3)
+
+      as a 2-item tuple, list, or 2d array.  If it is a tuple
+
+       and a list or 2d array is interpreted as a template that allows fields of
+          different lengths to be specified (i.e., items to be encoded can be ragged arrays).
+
+  .. _EMComposition_Field_Weights:
+
+  * **field_weights** : this is used both to
+    specify which fields are used as keys, and to initialize the Projections to the `retrieval_weighting_node
+    <EMComposition.retrieval_weighting_node>`.  The number of values specified must match the number of fields specified
+    in the memory_template. Non zero values must be positive, and are used to specify keys — fields that are used
+    to match items in memory for retieval.  If a single value is
+    specified, it is applied to all fields.  If more than a single value is specified, the number must match the
+    number of items in the first dimension (axis 0) of **memory_template**. If all items are identical, the field
+    weights are treated as a single field (this is identical to specifying a single value, but can be used to allow
+    different keys to receive independent inputs from the network);  in this case, all keys are concatenated before
+    a match is made in memory If the items in **field_weights** are non-identical, they are applied to the
+    corresponding fields during the matching process.  If a zero is specified, that field is not used in the
+    matching process, but the value= corresponding to memory that is selected is still returned; this implements
+    a "dictionary" in which the fields with non-zero weights are keys and the one(s) with zero weights are values.
+    If **learn_weights** is True, the weights are learned during training;  otherwise they remain fixed.
+
+  * **field_names** : this is used both to
+
+
+  .. _EMComposition_Memory_Capacity:
+
+  * **memory_capacity**: specifies the maximum number of items that can be stored in the EMComposition's memory.
+
+  * **decay_memories**: specifies whether the EMComposition's memory decays over time.
+
+  * **memory_decay_rate**: specifies the rate at which items in the EMComposition's memory decay.
+
+  .. _EMComposition_Learn_Weights:
+
+  * **learn_weights** : specifies whether the weights specified in **field_weights** are learned during training.
+
+
+
+.. _EMComposition_Structure:
+
+Structure
+---------
+
+* **memory** -- stores the items encoded by the EMComposition.
+
+
+
 .. _EMComposition_Execution:
 
 Execution
 ---------
+The arguments of the `run <EMComposition.run>` and `execute <EMComposition.execute>` methods are the same as those
+of a `Composition`.  The only difference in execution is that the values of the key_input_value and value_input_value
+nodes are assigned in place of the weakest entry in the EMComposition's memory.
 
 .. _EMComposition_Examples:
 
@@ -56,6 +166,8 @@ from psyneulink._typing import Optional, Union
 
 from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import Concatenate
+from psyneulink.core.components.functions.function import \
+    DEFAULT_SEED, FunctionError, _random_state_getter, _seed_setter, EPSILON, _noise_setter
 from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import GatingMechanism
@@ -63,12 +175,14 @@ from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.keywords import \
-    EM_COMPOSITION, FUNCTION, IDENTITY_MATRIX, NAME, OUTCOME, PROJECTIONS, RESULT, SIZE, VALUE, ZEROS_MATRIX
+    EM_COMPOSITION, FUNCTION, MULTIPLICATIVE_PARAM, NAME, PROJECTIONS, RESULT, SIZE, VALUE
+from psyneulink.core.globals.utilities import all_within_range
 
 __all__ = [
     'EMComposition'
 ]
 
+STORAGE_PROB = 'storage_prob'
 
 def _memory_getter(owning_component=None, context=None): # FIX: MAKE THIS A PARAMETER
     """Return memory as a list of the memories stored in the memory nodes.
@@ -101,52 +215,23 @@ class EMComposition(Composition):
     All of the arguments of the `ContentAddressableMemory` `Function` can be specified in the constructor for the
     EMComposition.  In addition, the following arguments can be specified:
 
-    TODO:
-    - DECAY WEIGHTS BY:
-      ? 1-SOFTMAX / N (WHERE N = NUMBER OF ITEMS IN MEMORY)
-      or
-         1/N (where N=number of items in memory, and thus gets smaller as N gets
-         larger) on each storage (to some asymptotic minimum value), and store the new memory to the unit with the
-         smallest weights (randomly selected among “ties" [i.e., within epsilon of each other]), I think we have a
-         mechanism that can adaptively use its limited capacity as sensibly as possible, by re-cycling the units
-         that have the least used memories.
-    - TEST ADPATIVE TEMPERATURE (SEE BELOW)
-    - ADD ALL PARAMETERS FOR CONTENTADDRESSABLEMEMORY FUNCTION
-    - MAKE "_store_memory" METHOD USE LEARNING INSTEAD OF ASSIGNMENT (per Steven's Hebban / DPP model?)
-    - ADD OUTPUT NODES FOR ALL KEYS (IN ADDITION TO OUTPUT NODES FOR VALUES:
-      - NAME THEM WITH KEY NAME UNLESS EXPLICITLY SPECIFIED AS A VALUE (I.E., FIELD_WEIGHT = 0)
-
     Arguments
     ---------
 
-    memory_template : list or 2d array : default [[0],[0]]
-        specifies the shape of an items to be stored in the EMComposition's memory;  a template (vs. a shape tuple) is
-        used to allow fields of different lengths to be specified (i.e., items to be encoded can be ragged arrays).
+    memory_template : 2-item tuple, list, or 2d array : default [[0],[0]]
+        specifies the shape of an items to be stored in the EMComposition's memory;
+        see `EMComposition_Memory_Template` for details.
 
     memory_capacity : int : default 1000
-        specifies the number of items that can be stored in the EMComposition's memory.
+        specifies the number of items that can be stored in the EMComposition's memory;
+        see `EMComposition_Memory_Capacity` for details.
 
     field_weights : tuple : default (1,0)
-        specifies the relative weight assigned to each key when matching an item in memory. this is used both to
-        specify which fields are used as keys, and to initialize the Projections to the `retrieval_weighting_node
-        <EMComposition.retrieval_weighting_node>`.  The number of values specified must match the number of fields specified
-        in the memory_template. Non zero values must be positive, and are used to specify keys — fields that are used
-        to match items in memory for retieval.  If a single value is
-        specified, it is applied to all fields.  If more than a single value is specified, the number must match the
-        number of items in the first dimension (axis 0) of **memory_template**. If all items are identical, the field
-        weights are treated as a single field (this is identical to specifying a single value, but can be used to allow
-        different keys to receive independent inputs from the network);  in this case, all keys are concatenated before
-        a match is made in memory If the items in **field_weights** are non-identical, they are applied to the
-        corresponding fields during the matching process.  If a zero is specified, that field is not used in the
-        matching process, but the value= corresponding to memory that is selected is still returned; this implements
-        a "dictionary" in which the fields with non-zero weights are keys and the one(s) with zero weights are values.
-        If **learn_weights** is True, the weights are learned during training;  otherwise they remain fixed.
+        specifies the relative weight assigned to each key when matching an item in memory'
+        see `EMComposition_Field_Weights` for details.
 
     learn_weights : bool : default False
         specified whether field_weights are learnable during training.
-
-    learning_rate : float : default 0.001
-        the learning rate passed to the optimizer if none is specified in the learn method of the EMComposition.
 
     Attributes
     ----------
@@ -159,22 +244,37 @@ class EMComposition(Composition):
         learning_rate = Parameter(.001, fallback_default=True)
         pytorch_representation = None
         memory = Parameter(None, loggable=True, getter=_memory_getter)
+        storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
+        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
+
+        def _validate_storage_prob(self, storage_prob):
+            storage_prob = float(storage_prob)
+            if not all_within_range(storage_prob, 0, 1):
+                return f"must be a float in the interval [0,1]."
+
+
     @check_user_specified
     def __init__(self,
-                 memory_template:Union[list, np.ndarray]=[[0],[0]],
+                 memory_template:Union[tuple, list, np.ndarray]=[[0],[0]],
                  field_names:Optional[list]=None,
                  field_weights:tuple=None,
                  learn_weights:bool=True,
                  memory_capacity:int=1000,
                  decay_memories:bool=False,
                  memory_decay_rate:Optional[float]=None,
-                 learning_rate:Optional[float]=None,
+                 storage_prob:float=None,
                  name="EM_composition"):
 
+        if isinstance(memory_template, tuple):
+            memory_template = np.zeros(memory_template)
+        else:
+            memory_template = np.array(memory_template)
+
         # memory_template must specify a 2D array:
-        if np.array(memory_template).ndim != 2:
+        if memory_template.ndim != 2:
             raise EMCompositionError(f"The 'memory_template' arg for {name} ({memory_template}) "
-                                     f"must be list of lists or a 2d array.")
+                                     f"must specifiy a list of lists or a 2d array.")
 
         if field_weights is None:
             if len(memory_template) == 1:
@@ -197,7 +297,8 @@ class EMComposition(Composition):
         self.field_weights = field_weights
         # self.field_names = field_names.copy()
         self.learn_weights = learn_weights
-        self.learning_rate = learning_rate # FIX: MAKE THIS A PARAMETER
+        # self.learning_rate = learning_rate # FIX: MAKE THIS A PARAMETER
+        self.storage_prob = storage_prob
 
         # Memory management parameters
         self.memory_capacity = memory_capacity # FIX: MAKE THIS A READ-ONLY PARAMETER
@@ -426,6 +527,13 @@ class EMComposition(Composition):
     def _store_memory(self, inputs, context):
         """Store inputs in memory as weights of Projections to match_nodes (keys) and retrieval_nodes (values).
         """
+        storage_prob = np.array(self._get_current_parameter_value(STORAGE_PROB, context)).astype(float)
+        random_state = self._get_current_parameter_value('random_state', context)
+
+        if storage_prob == 0.0 or (storage_prob > 0.0 and storage_prob < random_state.uniform()):
+
+            return
+
         for input_node, memory in inputs.items():
             # Memory = key_input or value_input;
             if input_node in self.key_input_nodes:
