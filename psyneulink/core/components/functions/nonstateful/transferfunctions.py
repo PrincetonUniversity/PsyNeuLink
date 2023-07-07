@@ -3855,9 +3855,13 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         input_length = ctx.int32_ty(arg_in.type.pointee.count)
         output_length = ctx.int32_ty(arg_out.type.pointee.count)
 
-        if normalize:
-            # FIX: NORMALIZE vec_in and matrix here
-            pass
+        # if normalize:
+        #     if vec_in is not zeros:
+        #     # FIX: NORMALIZE vec_in and matrix here
+        #         vec_in_sum = fsum(builder, vec_in)
+        #         vec_in = fdiv(builder, vec_in, vec_in_sum)
+        #     if matrix is not zeros:
+        #     # FIX: NORMALIZE matrix here
 
         builtin = ctx.import_llvm_function("__pnl_builtin_vxm")
         builder.call(builtin, [vec_in, matrix, input_length, output_length, vec_out])

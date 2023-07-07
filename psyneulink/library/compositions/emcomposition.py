@@ -189,7 +189,7 @@ An EMComposition is created by calling its constructor, that takes the following
 
   * **decay_memories**: specifies whether the EMComposition's memory decays over time.
 
-  * **memory_decay_rate**: specifies the rate at which items in the EMComposition's memory decay.
+  * **decay_rate**: specifies the rate at which items in the EMComposition's memory decay.
 
   .. _EMComposition_Learning:
 
@@ -286,8 +286,8 @@ class EMComposition(AutodiffComposition):
         learning_rate=True,         \
         memory_capacity=1000,       \
         decay_memories=False,       \
-        memory_decay_rate=None,     \
-        storage_prob=None,          \
+        decay_rate=.001,            \
+        storage_prob=1.0,           \
         name="EM_composition"       \
         )
 
@@ -321,7 +321,7 @@ class EMComposition(AutodiffComposition):
         specifies whether memories decay with each execution of the EMComposition;
         see `EMComposition_Memory_Capacity` for details.
 
-    memory_decay_rate : float : default 1 / `memory_capacity <EMComposition.memory_capacity>`
+    decay_rate : float : default 1 / `memory_capacity <EMComposition.memory_capacity>`
         specifies the rate at which items in the EMComposition's memory decay;
         see `EMComposition_Memory_Capacity` for details.
 
@@ -338,17 +338,59 @@ class EMComposition(AutodiffComposition):
             Attributes
             ----------
 
-                memory
-                    see `memory <EMComposition.memory>`
+                learn_weights
+                    see `learn_weights <EMComposition.learn_weights>`
 
-                    :default value: None
-                    :type: ``numpy.ndarray``
+                    :default value: True
+                    :type: ``bool``
 
                 learning_rate
                     see `learning_results <EMComposition.learning_rate>`
 
                     :default value: []
                     :type: ``list``
+
+                memory
+                    see `memory <EMComposition.memory>`
+
+                    :default value: None
+                    :type: ``numpy.ndarray``
+
+                memory_capacity
+                    see `memory_capacity <EMComposition.memory_capacity>`
+
+                    :default value: 1000
+                    :type: ``int``
+
+                memory_template
+                    see `memory_template <EMComposition.memory_template>`
+
+                    :default value: [[0], [0]]
+                    :type: ``numpy.ndarray``
+
+                decay_memories
+                    see `decay_memories <EMComposition.decay_memories>`
+
+                    :default value: False
+                    :type: ``bool``
+
+                decay_rate
+                    see `decay_rate <EMComposition.decay_rate>`
+
+                    :default value: 0.001
+                    :type: ``float``
+
+                field_names
+                    see `field_names <EMComposition.field_names>`
+
+                    :default value: None
+                    :type: ``list``
+
+                field_weights
+                    see `field_weights <EMComposition.field_weights>`
+
+                    :default value: None
+                    :type: ``numpy.ndarray``
 
                 normalize_memories
                     see `normalize_memories <EMComposition.normalize_memories>`
@@ -369,13 +411,30 @@ class EMComposition(AutodiffComposition):
                     :type: ``float``
 
         """
-
-        memory = Parameter(None, loggable=True, getter=_memory_getter)
+        memory = Parameter(None, loggable=True, getter=_memory_getter, structural=True)
+        memory_template = Parameter([[0],[0]], structural=True)
+        memory_capacity = Parameter(1000, structural=True)
+        field_weights = Parameter(None, structural=True, dependencies=memory_template)
+        field_names = Parameter(None, structural=True)
+        decay_memories = Parameter(False, loggable=True, modulable=True, fallback_default=True)
+        decay_rate = Parameter(.001, loggable=True, modulable=True, fallback_default=True)
+        normalize_memories = Parameter(True, loggable=False, fallback_default=True)
+        learning_weights = Parameter(True, fallback_default=True)
         learning_rate = Parameter(.001, fallback_default=True)
-        normalize_memories = Parameter(True, loggable=False)
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
+
+        def _validate_field_weights(self, field_weights):
+            assert True
+            # decay_rate = float(decay_rate)
+            # if not all_within_range(decay_rate, 0, 1):
+            #     return f"must be a float in the interval [0,1]."
+
+        def _validate_decay_rate(self, decay_rate):
+            decay_rate = float(decay_rate)
+            if not all_within_range(decay_rate, 0, 1):
+                return f"must be a float in the interval [0,1]."
 
         def _validate_storage_prob(self, storage_prob):
             storage_prob = float(storage_prob)
@@ -392,8 +451,8 @@ class EMComposition(AutodiffComposition):
                  learning_rate:float=None,
                  memory_capacity:int=1000,
                  decay_memories:bool=False,
-                 memory_decay_rate:Optional[float]=None,
-                 normalize_memories=None,
+                 decay_rate:Optional[float]=None,
+                 normalize_memories=True,
                  storage_prob:float=None,
                  name="EM_composition"):
 
@@ -434,10 +493,10 @@ class EMComposition(AutodiffComposition):
         # Memory management parameters
         self.memory_capacity = memory_capacity # FIX: MAKE THIS A READ-ONLY PARAMETER
         self.decay_memories = decay_memories # FIX: MAKE THIS A PARAMETER
-        self.memory_decay_rate = memory_decay_rate or 1 / self.memory_capacity # FIX: MAKE THIS A PARAMETER
-        if self.decay_memories and memory_decay_rate == 0.0:
-            raise warnings.warn(f"The 'decay_memories' arg was set to True but 'memory_decay_rate' was set to 0.0; "
-                                f"default of 1/memory_capacity ({self.memory_decay_rate}) will be used instead.")
+        self.decay_rate = decay_rate or 1 / self.memory_capacity # FIX: MAKE THIS A PARAMETER
+        if self.decay_memories and decay_rate == 0.0:
+            raise warnings.warn(f"The 'decay_memories' arg was set to True but 'decay_rate' was set to 0.0; "
+                                f"default of 1/memory_capacity ({self.decay_rate}) will be used instead.")
 
         keys_weights = [i for i in self.field_weights if i != 0]
         self.num_keys = len(keys_weights)
@@ -682,7 +741,7 @@ class EMComposition(AutodiffComposition):
                 #   assign as weights for first empty row of Projection.matrix from key_input_node to match_node
                 memories = input_node.efferents[0].parameters.matrix.get(context)
                 if self.decay_memories:
-                    memories *= self.memory_decay_rate
+                    memories *= self.decay_rate
                 # Get least used slot (i.e., weakest memory = row of matrix with lowest weights)
                 idx_of_min = np.argmin(memories.sum(axis=0))
                 memories[:,idx_of_min] = np.array(memory)
@@ -693,7 +752,7 @@ class EMComposition(AutodiffComposition):
                 idx = self.value_input_nodes.index(input_node)
                 memories = self.retrieval_nodes[idx].path_afferents[0].parameters.matrix.get(context)
                 if self.decay_memories:
-                    memories *= self.memory_decay_rate
+                    memories *= self.decay_rate
                 # Get least used slot (i.e., weakest memory = row of matrix with lowest weights)
                 idx_of_min = np.argmin(memories.sum(axis=1))
                 memories[idx_of_min] = np.array(memory)
