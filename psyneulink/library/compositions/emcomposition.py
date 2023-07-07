@@ -510,6 +510,16 @@ class EMComposition(AutodiffComposition):
         else:
             memory_template = np.array(memory_template)
 
+        # Deal with default field_weights
+        if field_weights is None:
+            if len(memory_template) == 1:
+                field_weights = [1]
+            else:
+                # Default is to all fields as keys except the last one, which is the value
+                num_fields = len(memory_template)
+                field_weights = [1] * num_fields
+                field_weights[-1] = 0
+
         self._validate_memory_structure(memory_template, field_weights, field_names, name)
 
         # Memory structure (field) attributes (not Parameters)
@@ -568,16 +578,6 @@ class EMComposition(AutodiffComposition):
             raise EMCompositionError(f"The 'memory_template' arg for {name} ({memory_template}) "
                                      f"must specifiy a list of lists or a 2d array.")
 
-        # Deal with default field_weights
-        if field_weights is None:
-            if len(memory_template) == 1:
-                field_weights = [1]
-            else:
-                # Default is to all fields as keys except the last one, which is the value
-                num_fields = len(memory_template)
-                field_weights = [1] * num_fields
-                field_weights[-1] = 0
-
         # If field weights has more than one value it must match the first dimension (axis 0) of memory_template:
         if len(field_weights) > 1 and len(field_weights) != len(memory_template):
             raise EMCompositionError(f"The number of items ({len(field_weights)}) "
@@ -622,8 +622,7 @@ class EMComposition(AutodiffComposition):
             f"non-zero values in field_weights ({len(key_indices)})."
 
         key_input_nodes = [TransferMechanism(size=len(self.memory_template[key_indices[i]]),
-                                               name= 'KEY INPUT NODE' if self.num_keys == 1
-                                               else f'KEY INPUT NODE {i}')
+                                               name= 'KEY INPUT' if self.num_keys == 1 else f'KEY {i} INPUT')
                        for i in range(self.num_keys)]
 
         return key_input_nodes
@@ -642,8 +641,7 @@ class EMComposition(AutodiffComposition):
             f"non-zero values in field_weights ({len(value_indices)})."
 
         value_input_nodes = [TransferMechanism(size=len(self.memory_template[value_indices[i]]),
-                                               name= 'VALUE INPUT NODE' if self.num_values == 1
-                                               else f'VALUE INPUT NODE {i}')
+                                               name= 'VALUE INPUT' if self.num_values == 1 else f'VALUE {i} INPUT')
                            for i in range(self.num_values)]
 
         return value_input_nodes
@@ -733,7 +731,7 @@ class EMComposition(AutodiffComposition):
         """Create layer that reports the value field(s) for the item(s) matched in memory.
         """
         def _get_retrieval_node_name(node_type, len, i):
-            return f'RETRIEVED {node_type} NODE' if len == 1 else f'RETRIEVED {node_type} NODE {i}'
+            return f'{node_type} RETRIEVED' if len == 1 else f'{node_type} {i} RETRIEVED'
 
         self.retrieved_key_nodes = [TransferMechanism(size=len(self.key_input_nodes[i].variable[0]),
                                                       input_ports=self.retrieval_weighting_node,
