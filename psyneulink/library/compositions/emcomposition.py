@@ -243,7 +243,7 @@ from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.keywords import \
-    AUTO, EM_COMPOSITION, FUNCTION, MULTIPLICATIVE_PARAM, NAME, PROJECTIONS, RESULT, SIZE, VALUE, ZEROS_MATRIX
+    AUTO, CONTROL, EM_COMPOSITION, FUNCTION, MULTIPLICATIVE_PARAM, NAME, PROJECTIONS, RESULT, SIZE, VALUE
 from psyneulink.core.globals.utilities import all_within_range
 
 __all__ = [
@@ -337,7 +337,7 @@ class EMComposition(AutodiffComposition):
 
     value_input_nodes : list[TransferMechanism]
 
-    match_nodes : list[TransferMechanism]
+    softmax_nodes : list[TransferMechanism]
 
     retrieval_nodes : list[TransferMechanism]
 
@@ -485,7 +485,7 @@ class EMComposition(AutodiffComposition):
                     return f"must be a float in the interval [0,1]."
 
         def _validate_softmax_gain(self, softmax_gain):
-            if softmax_gain is not AUTO and not isinstance(softmax_gain, (float, int)):
+            if softmax_gain not in {AUTO, CONTROL} and not isinstance(softmax_gain, (float, int)):
                 return f"must be a scalar or the keyword 'AUTO'."
 
         def _validate_storage_prob(self, storage_prob):
@@ -539,6 +539,9 @@ class EMComposition(AutodiffComposition):
             self.parameters.decay_rate.set(decay_rate or 1 / self.memory_capacity)
         if softmax_temp in (None, AUTO):
             self.parameters.softmax_gain.set(AUTO)
+        elif softmax_temp == CONTROL:
+            # It will be set adaptively
+            self.parameters.softmax_gain.set(None)
         else:
             self.parameters.softmax_gain.set(1/softmax_temp)
 
@@ -562,7 +565,7 @@ class EMComposition(AutodiffComposition):
         # Suppress warnings for no efferent Projections
         for node in self.value_input_nodes:
             node.output_ports['RESULT'].parameters.require_projection_in_composition.set(False, override=True)
-        for node in self.match_nodes:
+        for node in self.softmax_nodes:
             node.output_ports['KEY_WEIGHT'].parameters.require_projection_in_composition.set(False, override=True)
         for port in self.retrieval_weighting_node.output_ports:
             if 'RESULT' in port.name:
@@ -578,7 +581,7 @@ class EMComposition(AutodiffComposition):
 
         # Set normalization if specified
         if self.normalize_memories:
-            for node in self.match_nodes:
+            for node in self.softmax_nodes:
                 node.input_ports[0].path_afferents[0].function.parameters.normalize.set(True)
 
     def _validate_memory_structure(self, memory_template, field_weights, field_names, name):
@@ -608,13 +611,13 @@ class EMComposition(AutodiffComposition):
         # Construct nodes of Composition
         self.key_input_nodes = self._construct_key_input_nodes()
         self.value_input_nodes = self._construct_value_input_nodes()
-        self.match_nodes = self._construct_match_nodes()
+        self.softmax_nodes = self._construct_match_nodes()
         self.retrieval_gating_nodes = self._construct_retrieval_gating_nodes()
         self.retrieval_weighting_node = self._construct_retrieval_weighting_node()
         self.retrieval_nodes = self._construct_retrieval_nodes()
 
         # Construct pathway as a set of nodes, since Projections are specified in the construction of each node
-        pathway = set(self.key_input_nodes + self.value_input_nodes + self.match_nodes \
+        pathway = set(self.key_input_nodes + self.value_input_nodes + self.softmax_nodes \
                 + [self.retrieval_weighting_node]
                 + self.retrieval_gating_nodes + self.retrieval_nodes)
 
@@ -678,20 +681,28 @@ class EMComposition(AutodiffComposition):
             f"PROGRAM ERROR: number of keys ({self.num_keys}) does not match number of " \
             f"non-zero values in field_weights ({len(key_indices)})."
 
+        # If softmax_gain is specified as AUTO or CONTROL, then set to None for now
+        if self.parameters.softmax_gain.get() in {AUTO, CONTROL}:
+            softmax_gain = None
+        # Otherwise, assign specified value
+        else:
+            softmax_gain = self.parameters.softmax_gain.get()
+
         if self.concatenate_keys:
-            # One node for single key that concatenates all inputs
-            match_nodes = [TransferMechanism(size=self.num_keys * self.memory_capacity,
+            # One node that concatenates inputs from all keys
+            softmax_nodes = [TransferMechanism(size=self.num_keys * self.memory_capacity,
                                              input_ports={NAME: 'CONCATENATED_INPUTS',
-                                                          FUNCTION: Concatenate()},
+                                                          FUNCTION: Concatenate(),
+                                                          PROJECTIONS: self.key_input_nodes},
                                              # function=SoftMax(gain=self.softmax_temperature(self.field_weights)),
-                                             function=SoftMax(gain=self.parameters.softmax_gain.get()),
+                                             function=SoftMax(gain=softmax_gain),
                                              output_ports=[RESULT,
                                                            {VALUE: key_weights[0],
                                                             NAME: 'KEY_WEIGHT'}],
-                                             name='MATCH NODE')]
+                                             name='SOFTMAX NODE')]
         else:
             # One node for each key
-            match_nodes = [
+            softmax_nodes = [
                 TransferMechanism(
                     input_ports=
                     {
@@ -705,15 +716,15 @@ class EMComposition(AutodiffComposition):
                     },
                     # (self.memory_capacity,
                     #  MappingProjection(sender=self.key_input_nodes[i].output_port, matrix=ZEROS_MATRIX)),
-                    function=SoftMax(),
+                    function=SoftMax(gain=softmax_gain),
                     output_ports=[RESULT,
                                   {VALUE: key_weights[0],
                                    NAME: 'KEY_WEIGHT'}],
-                    name='MATCH_NODE ' + str(i))
+                    name='SOFTMAX NODE ' + str(i))
                 for i in range(self.num_keys)
             ]
 
-        return match_nodes
+        return softmax_nodes
 
     def _construct_retrieval_gating_nodes(self):
         """Create GatingMechanisms that weight each key's contribution to the retrieved values.
@@ -725,15 +736,15 @@ class EMComposition(AutodiffComposition):
                                                  # name=f'RETRIEVAL GATING NODE {i}')
                                                  name= 'RETRIEVAL GATING NODE' if self.num_keys == 1
                                                  else f'RETRIEVAL GATING NODE {i}')
-                                 for i, key_match_pair in enumerate(zip(self.key_input_nodes, self.match_nodes))]
+                                 for i, key_match_pair in enumerate(zip(self.key_input_nodes, self.softmax_nodes))]
         return retrieval_gating_nodes
 
     def _construct_retrieval_weighting_node(self):
         """Create layer that computes the weighting of each item in memory.
         """
         # FIX: THIS SHOULD WORK:
-        # retrieval_weighting_node = TransferMechanism(input_ports=[{PROJECTIONS: [m.output_port for m in self.match_nodes]}])
-        retrieval_weighting_node = TransferMechanism(input_ports=[m.output_port for m in self.match_nodes],
+        # retrieval_weighting_node = TransferMechanism(input_ports=[{PROJECTIONS: [m.output_port for m in self.softmax_nodes]}])
+        retrieval_weighting_node = TransferMechanism(input_ports=[m.output_port for m in self.softmax_nodes],
                                                      name='RETRIEVAL WEIGHTING NODE')
 
         assert len(retrieval_weighting_node.output_port.value) == self.memory_capacity,\
@@ -796,7 +807,7 @@ class EMComposition(AutodiffComposition):
         return results
 
     def _store_memory(self, inputs, context):
-        """Store inputs in memory as weights of Projections to match_nodes (keys) and retrieval_nodes (values).
+        """Store inputs in memory as weights of Projections to softmax_nodes (keys) and retrieval_nodes (values).
         """
         storage_prob = np.array(self._get_current_parameter_value(STORAGE_PROB, context)).astype(float)
         random_state = self._get_current_parameter_value('random_state', context)
@@ -822,13 +833,13 @@ class EMComposition(AutodiffComposition):
 
                 # Set gain of match_node adaptively
                 if self.parameters.softmax_gain.get(context) is AUTO:
-                    match_node = self.match_nodes[self.key_input_nodes.index(input_node)]
+                    match_node = self.softmax_nodes[self.key_input_nodes.index(input_node)]
                     assert match_node == input_node.efferents[0].receiver.owner,\
                         f'PROGRAM ERROR: match_node ({match_node}) is not the owner ' \
                         f'of the Projection from key_input_node ({input_node})'
-                    gain = self._get_softmax_gain(np.linalg.norm(memories, axis=0))
-                    # gain = self._get_softmax_gain(match_node.value[0])
-                    match_node.function.parameters.gain.set(gain, context)
+                    gain_by_weights = self._get_softmax_gain(np.linalg.norm(memories, axis=0))
+                    # gain_by_activity = self._get_softmax_gain(match_node.input_values[0])
+                    match_node.function.parameters.gain.set(gain_by_weights, context)
                     assert True
 
             if input_node in self.value_input_nodes:
@@ -849,5 +860,8 @@ class EMComposition(AutodiffComposition):
         n = len(values)
         num_zero = np.count_nonzero(values < epsilon)
         num_non_zero = n - num_zero
-        gain = 1 + np.exp(1/num_non_zero) * (num_zero/n)
+        if num_non_zero == 0:
+            gain = 1
+        else:
+            gain = 1 + np.exp(1/num_non_zero) * (num_zero/n)
         return gain
