@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ControlMechanism &mdash; PsyNeuLink 0.11.0.0+799.g8d5573c20 documentation</title>
+  <title>ControlMechanism &mdash; PsyNeuLink 0.11.0.0+800.gfdab14f17 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.11.0.0+799
+                  0.11.0.0+800
                 </div>
               
             
@@ -480,7 +480,8 @@ attribute;  since they are a type of <a class="reference internal" href="OutputP
 displayed using its <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.show" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.show"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show</span></code></a> method.</p>
 <p>By default, each <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> is assigned as its <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.allocation" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">allocation</span></code></a> the value of the
 corresponding item of the ControlMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">control_allocation</span></code></a>;  however,
-subtypes of ControlMechanism may assign allocations differently. The <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.default_allocation" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.default_allocation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">default_allocation</span></code></a> attribute can be used to specify a  default allocation for ControlSignals that
+subtypes of ControlMechanism may assign allocations differently. The <strong>default_allocation</strong> argument of the
+ControlMechanism’s constructor can be used to specify a default allocation for ControlSignals that
 have not been assigned their own <code class="xref any docutils literal notranslate"><span class="pre">default_allocation</span></code>.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
@@ -639,8 +640,6 @@ is specified, in the ObjectiveMechanism’s <strong>monitor</strong> argument (s
 from items specified in <strong>monitor_for_control</strong> are each assigned their own <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> (<em>SEPARATE</em>)
 or to a single <em>OUTCOME</em> InputPort (<em>CONCATENATE</em>, <em>COMBINE</em>); (see <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.outcome_input_ports_option" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.outcome_input_ports_option"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">outcome_input_ports_option</span></code></a> for additional details.</p></li>
 <li><p><strong>function</strong> (<em>TransferFunction : default Linear</em><em>(</em><em>slope=1</em><em>, </em><em>intercept=0</em><em>)</em>) – specifies function used to combine values of monitored OutputPorts.</p></li>
-<li><p><strong>default_allocation</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>1d array : None</em>) – specifies the default_allocation of any <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_signals" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_signals"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">control_signals</span></code></a> for
-which the <strong>default_allocation</strong> was not specified in its constructor (see <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.default_allocation" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.default_allocation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">default_allocation</span></code></a> for additional details).</p></li>
 <li><p><strong>control</strong> (<em>ControlSignal specification</em><em> or </em><em>list</em><em>[</em><em>ControlSignal specification</em><em>, </em><em>...</em><em>]</em>) – specifies the parameters to be controlled by the ControlMechanism; a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> is created for each
 (see <a class="reference internal" href="ControlSignal.html#controlsignal-specification"><span class="std std-ref">Specifying ControlSignals</span></a> for details of specification).</p></li>
 <li><p><strong>modulation</strong> (<em>str : MULTIPLICATIVE</em>) – specifies the default form of modulation used by the ControlMechanism’s <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a>,
