@@ -34,6 +34,9 @@
 #      NAME THEM WITH KEY NAME UNLESS EXPLICITLY SPECIFIED AS A VALUE (I.E., FIELD_WEIGHT = 0)
 # - ADD MEMORY_DECAY TO ContentAddressableMemory FUNCTION (and compiled version by Samyak)
 
+# FIX: COMPILE
+#      LinearMatrix to add normalization
+#      _store() method to assign weights to memory
 
 """
 
@@ -229,6 +232,7 @@ from psyneulink._typing import Optional, Union
 
 from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import Concatenate
+from psyneulink.core.components.functions.nonstateful.transferfunctions import LinearMatrix
 from psyneulink.core.components.functions.function import \
     DEFAULT_SEED, FunctionError, _random_state_getter, _seed_setter, EPSILON, _noise_setter
 from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
@@ -239,7 +243,7 @@ from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.keywords import \
-    EM_COMPOSITION, FUNCTION, MULTIPLICATIVE_PARAM, NAME, PROJECTIONS, RESULT, SIZE, VALUE
+    EM_COMPOSITION, FUNCTION, MULTIPLICATIVE_PARAM, NAME, PROJECTIONS, RESULT, SIZE, VALUE, ZEROS_MATRIX
 from psyneulink.core.globals.utilities import all_within_range
 
 __all__ = [
@@ -411,7 +415,7 @@ class EMComposition(AutodiffComposition):
 
         keys_weights = [i for i in self.field_weights if i != 0]
         self.num_keys = len(keys_weights)
-        self.concatenate_keys = if len(self.field_weights) == 1 or  np.all(keys_weights == keys_weights[0])
+        self.concatenate_keys = len(self.field_weights) == 1 or  np.all(keys_weights == keys_weights[0])
         self.num_values = self.num_fields - self.num_keys
         self.memory_dim = np.array(self.memory_template).size
 
@@ -535,7 +539,8 @@ class EMComposition(AutodiffComposition):
                         # PROJECTIONS:
                         #     MappingProjection(
                         #         sender=self.key_input_nodes[i].output_port,
-                        #         matrix=ZEROS_MATRIX)
+                        #         matrix=ZEROS_MATRIX,
+                        #         function=LinearMatrix(normalize=True))
                     },
                     # (self.memory_capacity,
                     #  MappingProjection(sender=self.key_input_nodes[i].output_port, matrix=ZEROS_MATRIX)),
@@ -546,6 +551,8 @@ class EMComposition(AutodiffComposition):
                     name='MATCH_NODE ' + str(i))
                 for i in range(self.num_keys)
             ]
+            for node in match_nodes:
+                node.input_ports[0].path_afferents[0].function.parameters.normalize.set(True)
 
         return match_nodes
 
