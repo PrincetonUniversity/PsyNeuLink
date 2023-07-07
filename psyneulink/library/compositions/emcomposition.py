@@ -442,7 +442,7 @@ class EMComposition(AutodiffComposition):
 
         """
         memory = Parameter(None, loggable=True, getter=_memory_getter, structural=True)
-        # memory_template = Parameter([[0],[0]], structural=True)
+        # memory_template = Parameter([[0],[0]], structural=True, valid_types=(tuple, list, np.ndarray))
         memory_capacity = Parameter(1000, structural=True)
         field_weights = Parameter(None, structural=True)
         field_names = Parameter(None, structural=True)
@@ -681,6 +681,7 @@ class EMComposition(AutodiffComposition):
             f"PROGRAM ERROR: number of keys ({self.num_keys}) does not match number of " \
             f"non-zero values in field_weights ({len(key_indices)})."
 
+
         # If softmax_gain is specified as AUTO or CONTROL, then set to None for now
         if self.parameters.softmax_gain.get() in {AUTO, CONTROL}:
             softmax_gain = None
@@ -690,7 +691,7 @@ class EMComposition(AutodiffComposition):
 
         if self.concatenate_keys:
             # One node that concatenates inputs from all keys
-            softmax_nodes = [TransferMechanism(size=self.num_keys * self.memory_capacity,
+            match_nodes = [TransferMechanism(size=self.num_keys * self.memory_capacity,
                                              input_ports={NAME: 'CONCATENATED_INPUTS',
                                                           FUNCTION: Concatenate(),
                                                           PROJECTIONS: self.key_input_nodes},
@@ -702,7 +703,7 @@ class EMComposition(AutodiffComposition):
                                              name='SOFTMAX NODE')]
         else:
             # One node for each key
-            softmax_nodes = [
+            match_nodes = [
                 TransferMechanism(
                     input_ports=
                     {
@@ -724,7 +725,29 @@ class EMComposition(AutodiffComposition):
                 for i in range(self.num_keys)
             ]
 
-        return softmax_nodes
+        softmax_nodes = [
+            TransferMechanism(
+                input_ports=
+                {
+                    SIZE:self.memory_capacity,
+                    PROJECTIONS: self.key_input_nodes[i].output_port
+                    # PROJECTIONS:
+                    #     MappingProjection(
+                    #         sender=self.key_input_nodes[i].output_port,
+                    #         matrix=ZEROS_MATRIX,
+                    #         function=LinearMatrix(normalize=True))
+                },
+                # (self.memory_capacity,
+                #  MappingProjection(sender=self.key_input_nodes[i].output_port, matrix=ZEROS_MATRIX)),
+                function=SoftMax(gain=softmax_gain),
+                output_ports=[RESULT,
+                              {VALUE: key_weights[0],
+                               NAME: 'KEY_WEIGHT'}],
+                name='SOFTMAX NODE ' + str(i))
+            for i in range(self.num_keys)
+        ]
+
+        return match_nodes + softmax_nodes
 
     def _construct_retrieval_gating_nodes(self):
         """Create GatingMechanisms that weight each key's contribution to the retrieved values.

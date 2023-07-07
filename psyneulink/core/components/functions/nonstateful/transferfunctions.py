@@ -3506,7 +3506,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         """
         variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable', mdf_name='A')
         matrix = Parameter(None, modulable=True, mdf_name='B')
-        normalize = Parameter(False, mdf_name='normalize')
+        normalize = Parameter(False)
         bounds = None
 
     # def is_matrix_spec(m):
