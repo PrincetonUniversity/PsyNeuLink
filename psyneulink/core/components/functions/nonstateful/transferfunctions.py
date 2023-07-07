@@ -3430,8 +3430,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     normalize : bool : default False
         specifies whether to normalize the result of `function <LinearCombination.function>` by dividing it by the
-        product of the norm of each of its two input arrays (see `normalize <LinearCombination.normalize>` for
-        details).
+        norm of `variable <LinearMatrix.variable>` x the norm of `matrix <LinearMatrix.matrix>`.
 
     bounds : None
 
@@ -3465,8 +3464,9 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         columns correspond to elements of the output array (inner index).
 
     normalize : bool
-        if `True`, the result of `function <LinearCombination.function>` is normalized by dividing it by the product
-        of the norm of its `variable <LinearMatrix.variable>` by the norm of the `matrix <LinearMatrix.matrix>`.
+        determines whether the result of `function <LinearCombination.function>` is normalized, by dividing it by the
+        norm of `variable <LinearMatrix.variable>` x the norm of `matrix <LinearMatrix.matrix>`.
+
 
     owner : Component
         `component <Component>` to which the Function has been assigned.

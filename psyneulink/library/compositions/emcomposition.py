@@ -338,16 +338,41 @@ class EMComposition(AutodiffComposition):
             Attributes
             ----------
 
+                memory
+                    see `memory <EMComposition.memory>`
+
+                    :default value: None
+                    :type: ``numpy.ndarray``
+
                 learning_rate
                     see `learning_results <EMComposition.learning_rate>`
 
                     :default value: []
                     :type: ``list``
 
+                normalize_memories
+                    see `normalize_memories <EMComposition.normalize_memories>`
+
+                    :default value: True
+                    :type: ``bool``
+
+                random_state
+                    see `random_state <NormalDist.random_state>`
+
+                    :default value: None
+                    :type: ``numpy.random.RandomState``
+
+                storage_prob
+                    see `storage_prob <EMComposition.storage_prob>`
+
+                    :default value: 1.0
+                    :type: ``float``
+
         """
 
         memory = Parameter(None, loggable=True, getter=_memory_getter)
         learning_rate = Parameter(.001, fallback_default=True)
+        normalize_memories = Parameter(True, loggable=False)
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
@@ -368,6 +393,7 @@ class EMComposition(AutodiffComposition):
                  memory_capacity:int=1000,
                  decay_memories:bool=False,
                  memory_decay_rate:Optional[float]=None,
+                 normalize_memories=None,
                  storage_prob:float=None,
                  name="EM_composition"):
 
@@ -440,6 +466,12 @@ class EMComposition(AutodiffComposition):
         # Turn off learning for all Projections except inputs to retrieval_gating_nodes
         self._set_learnability_of_projections()
         self._initialize_memory()
+
+        # Set normalization if specified
+        if self.normalize_memories:
+            for node in self.match_nodes:
+                node.input_ports[0].path_afferents[0].function.parameters.normalize.set(True)
+
 
     def _construct_pathway(self):
         """Construct pathway for EMComposition"""
@@ -551,8 +583,6 @@ class EMComposition(AutodiffComposition):
                     name='MATCH_NODE ' + str(i))
                 for i in range(self.num_keys)
             ]
-            for node in match_nodes:
-                node.input_ports[0].path_afferents[0].function.parameters.normalize.set(True)
 
         return match_nodes
 
