@@ -185,20 +185,26 @@ class Execution:
 
                 # Writeback parameter value if the condition matches
                 elif condition(pnl_param):
-                    value = np.ctypeslib.as_array(compiled_attribute_param)
 
-                    # Stateful parameters include history, get the most recent value
-                    if "state" in ids:
-                        value = value[-1]
+                    # TODO: Reconstruct Python RandomState
+                    if attribute == "random_state":
+                        continue
 
                     # Replace empty structures with None
                     if ctypes.sizeof(compiled_attribute_param) == 0:
                         value = None
                     else:
+                        value = np.ctypeslib.as_array(compiled_attribute_param)
+
+                        # Stateful parameters include history, get the most recent value
+                        if "state" in ids:
+                            value = value[-1]
+
                         # Try to match the shape of the old value
                         old_value = pnl_param.get(context)
                         if hasattr(old_value, 'shape'):
                             value = value.reshape(old_value.shape)
+
                     pnl_param.set(value, context=context)
 
 

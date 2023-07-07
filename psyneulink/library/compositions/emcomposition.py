@@ -14,6 +14,8 @@
 # - CONFIDENCE COMPUTATION
 
 # TODO:
+# - ACCESSIBILITY OF DISTANCES (SEE BELOW): MAKE IT A LOGGABLE PARAMETER (I.E., WITH APPROPRIATE SETTER)
+#   ADD COMPILED VERSION OF NORMED LINEAR_COMBINATION FUNCTION TO LinearCombination FUNCTION: dot / (norm a * norm b)
 # - DECAY WEIGHTS BY:
 #   ? 1-SOFTMAX / N (WHERE N = NUMBER OF ITEMS IN MEMORY)
 #   or
@@ -22,17 +24,13 @@
 #      smallest weights (randomly selected among “ties" [i.e., within epsilon of each other]), I think we have a
 #      mechanism that can adaptively use its limited capacity as sensibly as possible, by re-cycling the units
 #      that have the least used memories.
-# - TEST ADAPTIVE TEMPERATURE (SEE BELOW)
-# - ADD ADDITIONAL PARAMETERS FROM CONTENTADDRESSABLEMEMORY FUNCTION
+# - ADAPTIVE TEMPERATURE:
+#   - ADD COMPUTATION OF GAIN TO _store_memory METHOD
 # - MAKE "_store_memory" METHOD USE LEARNING INSTEAD OF ASSIGNMENT (per Steven's Hebban / DPP model?)
-# - ADD MEMORY_DECAY TO ContentAddressableMemory FUNCTION (and compiled version by Samyak)
-# - ADD NORMING LAYER JUST AFTER KEY_INPUT_NODES, WITH RETRIEVAL_GATING_NODES RECIEVING INPUTS EITHER FROM NORMING
-#   LAYER OR DIRECTION FROM INPUT
-#   ADD COMPILED VERSION OF NORMED LINEAR_COMBINATION FUNCTION TO LinearCombination FUNCTION: dot / (norm a * norm b)
-# - ADAPTIVE TEMPERATURE (SEE BELOW)
+# - ADD ADDITIONAL PARAMETERS FROM CONTENTADDRESSABLEMEMORY FUNCTION
 #   - KAMESH FOR FORMULA
-#   - ADD SCALE PARAMETER TO SOFTMAX FUNCTION THAT SCALES GAIN RETURNED
-# - ACCESSIBILITY OF DISTANCES (SEE BELOW): MAKE IT A LOGGABLE PARAMETER (I.E., WITH APPROPRIATE SETTER)
+#   - ADD SOFTMAX TEMP PARAMETER (with None = Auto) SCALE PARAMETER TO SOFTMAX FUNCTION THAT SCALES GAIN RETURNED
+# - ADD MEMORY_DECAY TO ContentAddressableMemory FUNCTION (and compiled version by Samyak)
 
 # FIX: COMPILE
 #      LinearMatrix to add normalization
@@ -245,7 +243,7 @@ from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.keywords import \
-    EM_COMPOSITION, FUNCTION, MULTIPLICATIVE_PARAM, NAME, PROJECTIONS, RESULT, SIZE, VALUE, ZEROS_MATRIX
+    AUTO, EM_COMPOSITION, FUNCTION, MULTIPLICATIVE_PARAM, NAME, PROJECTIONS, RESULT, SIZE, VALUE, ZEROS_MATRIX
 from psyneulink.core.globals.utilities import all_within_range
 
 __all__ = [
@@ -432,6 +430,10 @@ class EMComposition(AutodiffComposition):
                     :default value: None
                     :type: ``numpy.random.RandomState``
 
+                softmax_gain
+                    :default value: 1.0
+                    :type: ``float``
+
                 storage_prob
                     see `storage_prob <EMComposition.storage_prob>`
 
@@ -451,6 +453,7 @@ class EMComposition(AutodiffComposition):
         learning_weights = Parameter(True, fallback_default=True)
         learning_rate = Parameter(.001, fallback_default=True)
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        softmax_gain = Parameter(1.0, modulable=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
 
@@ -481,6 +484,10 @@ class EMComposition(AutodiffComposition):
                 if not all_within_range(decay_rate, 0, 1):
                     return f"must be a float in the interval [0,1]."
 
+        def _validate_softmax_gain(self, softmax_gain):
+            if softmax_gain is not AUTO and not isinstance(softmax_gain, (float, int)):
+                return f"must be a scalar or the keyword 'AUTO'."
+
         def _validate_storage_prob(self, storage_prob):
             storage_prob = float(storage_prob)
             if not all_within_range(storage_prob, 0, 1):
@@ -495,8 +502,9 @@ class EMComposition(AutodiffComposition):
                  learning_rate:float=None,
                  memory_capacity:int=1000,
                  decay_memories:bool=True,
-                 decay_rate:Optional[float]=None,
+                 decay_rate:float=None,
                  normalize_memories=True,
+                 softmax_temp:float=None,
                  storage_prob:float=None,
                  name="EM_composition"):
 
@@ -529,7 +537,10 @@ class EMComposition(AutodiffComposition):
         # Memory management parameters
         if self.parameters.decay_memories.get() and self.parameters.decay_rate.get() is None:
             self.parameters.decay_rate.set(decay_rate or 1 / self.memory_capacity)
-        self.storage_prob = storage_prob
+        if softmax_temp in (None, AUTO):
+            self.parameters.softmax_gain.set(AUTO)
+        else:
+            self.parameters.softmax_gain.set(1/softmax_temp)
 
         # Memory field attributes
         keys_weights = [i for i in self.field_weights if i != 0]
@@ -672,7 +683,8 @@ class EMComposition(AutodiffComposition):
             match_nodes = [TransferMechanism(size=self.num_keys * self.memory_capacity,
                                              input_ports={NAME: 'CONCATENATED_INPUTS',
                                                           FUNCTION: Concatenate()},
-                                             function=SoftMax(gain=self.softmax_temperature(self.field_weights)),
+                                             # function=SoftMax(gain=self.softmax_temperature(self.field_weights)),
+                                             function=SoftMax(gain=self.parameters.softmax_gain.get()),
                                              output_ports=[RESULT,
                                                            {VALUE: key_weights[0],
                                                             NAME: 'KEY_WEIGHT'}],
@@ -776,15 +788,6 @@ class EMComposition(AutodiffComposition):
             proj.matrix.base = np.zeros_like(retrieval_node.path_afferents[0].matrix.base)
             proj.execute() # For clarity, ensure that it reports modulated value as zero as well
             
-    def softmax_temperature(self, values, epsilon=1e-8):
-        """Compute the softmax temperature based on length of vector and number of (near) zero values.
-        """
-        n = len(values)
-        num_zero = np.count_nonzero(values < epsilon)
-        num_non_zero = n - num_zero
-        gain = 1 + np.exp(1/num_non_zero) * (num_zero/n)
-        return gain
-
     def execute(self, inputs, context, **kwargs):
         """Set input to weights of Projection to match_node.
         """
@@ -804,6 +807,7 @@ class EMComposition(AutodiffComposition):
 
         for input_node, memory in inputs.items():
             # Memory = key_input or value_input;
+            # memories = weights of Projection from input_node to match_node or retrieval_node for given field
             if input_node in self.key_input_nodes:
                 # For key_input:
                 #   assign as weights for first empty row of Projection.matrix from key_input_node to match_node
@@ -814,6 +818,16 @@ class EMComposition(AutodiffComposition):
                 idx_of_min = np.argmin(memories.sum(axis=0))
                 memories[:,idx_of_min] = np.array(memory)
                 input_node.efferents[0].parameters.matrix.set(memories, context)
+
+                # Set gain of match_node adaptively
+                if self.parameters.softmax_gain.get(context) is AUTO:
+                    match_node = self.match_nodes[self.key_input_nodes.index(input_node)]
+                    assert match_node == input_node.efferents[0].receiver.owner,\
+                        f'PROGRAM ERROR: match_node ({match_node}) is not the owner ' \
+                        f'of the Projection from key_input_node ({input_node})'
+                    gain = self._get_softmax_gain(np.linalg.norm(memories, axis=0))
+                    match_node.function.parameters.gain.set(gain, context)
+
             if input_node in self.value_input_nodes:
                 # For value_input;
                 #   assign as weights for 1st empty row of Projection.matrix from retrieval_weighting_node to retrieval_node
@@ -825,3 +839,12 @@ class EMComposition(AutodiffComposition):
                 idx_of_min = np.argmin(memories.sum(axis=1))
                 memories[idx_of_min] = np.array(memory)
                 self.retrieval_nodes[idx].path_afferents[0].parameters.matrix.set(memories, context)
+
+    def _get_softmax_gain(self, values, epsilon=1e-8):
+        """Compute the softmax gain based on length of vector and number of (near) zero values.
+        """
+        n = len(values)
+        num_zero = np.count_nonzero(values < epsilon)
+        num_non_zero = n - num_zero
+        gain = 1 + np.exp(1/num_non_zero) * (num_zero/n)
+        return gain

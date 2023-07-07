@@ -696,6 +696,7 @@ class LCControlMechanism(ControlMechanism):
     @beartype
     def __init__(self,
                  default_variable=None,
+                 default_allocation: Optional[Union[int, float, list, np.ndarray]] = None,
                  objective_mechanism: Optional[Union[ObjectiveMechanism, list]] = None,
                  monitor_for_control: Optional[Union[Iterable, Mechanism, OutputPort]] = None,
                  modulated_mechanisms=None,
@@ -723,11 +724,12 @@ class LCControlMechanism(ControlMechanism):
                  scaling_factor_gain=None,
                  params=None,
                  name=None,
-                 prefs: Optional[ValidPrefSet] = None
+                 prefs: Optional[ValidPrefSet] = None,
                  ):
 
         super().__init__(
             default_variable=default_variable,
+            default_allocation=default_allocation,
             objective_mechanism=objective_mechanism,
             monitor_for_control=monitor_for_control,
             function=FitzHughNagumoIntegrator(

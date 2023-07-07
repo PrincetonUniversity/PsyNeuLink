@@ -406,8 +406,8 @@ displayed using its `show <ControlMechanism.show>` method.
 
 By default, each `ControlSignal` is assigned as its `allocation <ControlSignal.allocation>` the value of the
 corresponding item of the ControlMechanism's `control_allocation <ControlMechanism.control_allocation>`;  however,
-subtypes of ControlMechanism may assign allocations differently. The `default_allocation
-<ControlMechanism.default_allocation>` attribute can be used to specify a  default allocation for ControlSignals that
+subtypes of ControlMechanism may assign allocations differently. The **default_allocation** argument of the
+ControlMechanism's constructor can be used to specify a default allocation for ControlSignals that
 have not been assigned their own `default_allocation <ControlSignal.default_allocation>`.
 
 .. warning::
@@ -835,11 +835,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
     function : TransferFunction : default Linear(slope=1, intercept=0)
         specifies function used to combine values of monitored OutputPorts.
 
-    default_allocation : number, list or 1d array : None
-        specifies the default_allocation of any `control_signals <ControlMechanism.control_signals>` for
-        which the **default_allocation** was not specified in its constructor (see `default_allocation
-        <ControlMechanism.default_allocation>` for additional details).
-
     control : ControlSignal specification or list[ControlSignal specification, ...]
         specifies the parameters to be controlled by the ControlMechanism; a `ControlSignal` is created for each
         (see `ControlSignal_Specification` for details of specification).
@@ -1078,12 +1073,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
                     :type:
                     :read only: True
 
-                default_allocation
-                    see `default_allocation <ControlMechanism.default_allocation>`
-
-                    :default value: None
-                    :type:
-
                 input_ports
                     see `input_ports <Mechanism_Base.input_ports>`
 
@@ -1153,13 +1142,13 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         """
         # This must be a list, as there may be more than one (e.g., one per control_signal)
-        variable = Parameter(np.array([[defaultControlAllocation]]), pnl_internal=True, constructor_argument='default_variable')
+        variable = Parameter(np.array([[defaultControlAllocation]]), pnl_internal=True,
+                             constructor_argument='default_variable')
         value = Parameter(np.array([defaultControlAllocation]), pnl_internal=True)
-        default_allocation = None
         control_allocation = Parameter(np.array([defaultControlAllocation]),
                                        read_only=True,
                                        getter=_control_allocation_getter,
-                                       )
+                                       constructor_argument='default_allocation')
         combine_costs = Parameter(np.sum, stateful=False, loggable=False)
         costs = Parameter(None, read_only=True, getter=_control_mechanism_costs_getter)
         control_signal_costs = Parameter(None, read_only=True, pnl_internal=True)
@@ -1240,6 +1229,18 @@ class ControlMechanism(ModulatoryMechanism_Base):
                     assert True
 
             return output_ports
+
+        def _parse_control_allocation(self, control_allocation):
+            if (
+                isinstance(control_allocation, (float, int))
+                or (
+                    isinstance(control_allocation, np.ndarray)
+                    and control_allocation.dtype.kind in 'iufc'  # numeric type
+                )
+            ):
+                control_allocation = np.atleast_1d(control_allocation)
+
+            return control_allocation
 
         def _validate_input_ports(self, input_ports):
             if input_ports is None:
@@ -1797,18 +1798,16 @@ class ControlMechanism(ModulatoryMechanism_Base):
             # if control allocation is a single value specified from
             # default_variable for example, it should be used here
             # instead of the "global default" defaultControlAllocation
-            if len(self.defaults.value) == 1:
-                if self.defaults.default_allocation is not None:
-                    allocation_parameter_default = copy.deepcopy(self.defaults.default_allocation)
-                else:
-                    allocation_parameter_default = copy.deepcopy(self.defaults.control_allocation)
+            # FIX: JDC 6/9/23 CHANGE THIS TO self.defaults.control_allocation or self.control_allocation??
+            #       ALSO, CONSOLIDATE default_allocation and defaults.control_allocation?? (SEE ABOVE)
+            if len(self.defaults.control_allocation) == 1:
+                allocation_parameter_default = copy.deepcopy(self.defaults.control_allocation)
             else:
                 allocation_parameter_default = copy.deepcopy(defaultControlAllocation)
 
         control_signal = _instantiate_port(port_type=ControlSignal,
                                            owner=self,
-                                           variable=self.defaults.default_allocation  # User specified value
-                                                    or allocation_parameter_default,  # Parameter default
+                                           variable=allocation_parameter_default,
                                            reference_value=allocation_parameter_default,
                                            modulation=self.defaults.modulation,
                                            port_spec=control_signal_spec,

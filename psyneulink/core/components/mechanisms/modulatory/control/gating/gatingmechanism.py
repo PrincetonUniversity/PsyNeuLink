@@ -424,6 +424,7 @@ class GatingMechanism(ControlMechanism):
         control_allocation = Parameter(np.array([defaultGatingAllocation]),
                                        read_only=True,
                                        aliases='gating_allocation',
+                                       constructor_argument='default_allocation',
                                        getter=_control_allocation_getter,
                                        )
         output_ports = Parameter(
@@ -513,8 +514,7 @@ class GatingMechanism(ControlMechanism):
 
         gating_signal = _instantiate_port(port_type=GatingSignal,
                                                owner=self,
-                                               variable=self.default_allocation           # User specified value
-                                                        or allocation_parameter_default,  # Parameter default
+                                               variable=allocation_parameter_default,
                                                reference_value=allocation_parameter_default,
                                                modulation=self.defaults.modulation,
                                                port_spec=gating_signal_spec,
