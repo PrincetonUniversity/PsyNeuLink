@@ -37,9 +37,11 @@
 # - ADD MEMORY_DECAY TO ContentAddressableMemory FUNCTION (and compiled version by Samyak)
 # - ADD NORMING LAYER JUST AFTER KEY_INPUT_NODES, WITH RETRIEVAL_GATING_NODES RECIEVING INPUTS EITHER FROM NORMING
 #   LAYER OR DIRECTION FROM INPUT
-#   - WRITE NORMED VECTOR INTO MEMORY, NOT KEY_INPUT
-#   OR - ADD NORMED LINEAR_COMBINATION FUNCTION TO LinearCombination FUNCTION: dot / (norm a * norm b)
+#   ADD COMPILED VERSION OF NORMED LINEAR_COMBINATION FUNCTION TO LinearCombination FUNCTION: dot / (norm a * norm b)
 
+# FIX: COMPILE
+#      LinearMatrix to add normalization
+#      _store() method to assign weights to memory
 
 """
 
@@ -194,7 +196,7 @@ An EMComposition is created by calling its constructor, that takes the following
 
   * **decay_memories**: specifies whether the EMComposition's memory decays over time.
 
-  * **memory_decay_rate**: specifies the rate at which items in the EMComposition's memory decay.
+  * **decay_rate**: specifies the rate at which items in the EMComposition's memory decay.
 
   .. _EMComposition_Learning:
 
@@ -237,6 +239,7 @@ from psyneulink._typing import Optional, Union
 
 from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import Concatenate
+from psyneulink.core.components.functions.nonstateful.transferfunctions import LinearMatrix
 from psyneulink.core.components.functions.function import \
     DEFAULT_SEED, FunctionError, _random_state_getter, _seed_setter, EPSILON, _noise_setter
 from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
@@ -247,7 +250,7 @@ from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.keywords import \
-    EM_COMPOSITION, FUNCTION, MULTIPLICATIVE_PARAM, NAME, PROJECTIONS, RESULT, SIZE, VALUE
+    EM_COMPOSITION, FUNCTION, MULTIPLICATIVE_PARAM, NAME, PROJECTIONS, RESULT, SIZE, VALUE, ZEROS_MATRIX
 from psyneulink.core.globals.utilities import all_within_range
 
 __all__ = [
@@ -284,14 +287,14 @@ class EMComposition(AutodiffComposition):
     """
     EMComposition(                  \
         memory_template=[[0],[0]],  \
-        field_names=None,           \
         field_weights=None,         \
+        field_names=None,           \
         learn_weights=True,         \
         learning_rate=True,         \
         memory_capacity=1000,       \
-        decay_memories=False,       \
-        memory_decay_rate=None,     \
-        storage_prob=None,          \
+        decay_memories=True,        \
+        decay_rate=.001,            \
+        storage_prob=1.0,           \
         name="EM_composition"       \
         )
 
@@ -309,7 +312,11 @@ class EMComposition(AutodiffComposition):
 
     field_weights : tuple : default (1,0)
         specifies the relative weight assigned to each key when matching an item in memory'
-        see `EMComposition_Field_Weights` for details.
+        see `EMComposition_Fields` for details.
+
+    field_names : list : default None
+        specifies the optional names assigned to each field in the memory_template;'
+        see `EMComposition_Fields` for details.
 
     learn_weights : bool : default False
         specifies whether `field_weights <EMCompostion.field_weights>` are learnable during training.
@@ -321,11 +328,11 @@ class EMComposition(AutodiffComposition):
         specifies the number of items that can be stored in the EMComposition's memory;
         see `EMComposition_Memory_Capacity` for details.
 
-    decay_memories : bool : default False
+    decay_memories : bool : default True
         specifies whether memories decay with each execution of the EMComposition;
         see `EMComposition_Memory_Capacity` for details.
 
-    memory_decay_rate : float : default 1 / `memory_capacity <EMComposition.memory_capacity>`
+    decay_rate : float : default 1 / `memory_capacity <EMComposition.memory_capacity>`
         specifies the rate at which items in the EMComposition's memory decay;
         see `EMComposition_Memory_Capacity` for details.
 
@@ -333,7 +340,35 @@ class EMComposition(AutodiffComposition):
     Attributes
     ----------
 
+    key_input_nodes : list[TransferMechanism]
 
+    value_input_nodes : list[TransferMechanism]
+
+    match_nodes : list[TransferMechanism]
+
+    retrieval_nodes : list[TransferMechanism]
+
+    retrieval_weighting_node : TransferMechanism
+
+    retrieval_gating_nodes : list[GatingMechanism]
+
+    memory : 2d np.array
+
+    field_weights : list[float]
+
+    field_names : list[str]
+
+    learn_weights : bool
+
+    learning_rate : float
+
+    memory_capacity : int
+
+    decay_memories : bool
+
+    decay_rate : float
+
+    storage_prob : float
     """
 
     componentCategory = EM_COMPOSITION
@@ -342,25 +377,119 @@ class EMComposition(AutodiffComposition):
             Attributes
             ----------
 
+                learn_weights
+                    see `learn_weights <EMComposition.learn_weights>`
+
+                    :default value: True
+                    :type: ``bool``
+
                 learning_rate
                     see `learning_results <EMComposition.learning_rate>`
 
                     :default value: []
                     :type: ``list``
 
-        """
+                memory
+                    see `memory <EMComposition.memory>`
 
-        memory = Parameter(None, loggable=True, getter=_memory_getter)
+                    :default value: None
+                    :type: ``numpy.ndarray``
+
+                memory_capacity
+                    see `memory_capacity <EMComposition.memory_capacity>`
+
+                    :default value: 1000
+                    :type: ``int``
+
+                decay_memories
+                    see `decay_memories <EMComposition.decay_memories>`
+
+                    :default value: False
+                    :type: ``bool``
+
+                decay_rate
+                    see `decay_rate <EMComposition.decay_rate>`
+
+                    :default value: 0.001
+                    :type: ``float``
+
+                field_names
+                    see `field_names <EMComposition.field_names>`
+
+                    :default value: None
+                    :type: ``list``
+
+                field_weights
+                    see `field_weights <EMComposition.field_weights>`
+
+                    :default value: None
+                    :type: ``numpy.ndarray``
+
+                normalize_memories
+                    see `normalize_memories <EMComposition.normalize_memories>`
+
+                    :default value: True
+                    :type: ``bool``
+
+                random_state
+                    see `random_state <NormalDist.random_state>`
+
+                    :default value: None
+                    :type: ``numpy.random.RandomState``
+
+                storage_prob
+                    see `storage_prob <EMComposition.storage_prob>`
+
+                    :default value: 1.0
+                    :type: ``float``
+
+        """
+        memory = Parameter(None, loggable=True, getter=_memory_getter, structural=True)
+        # memory_template = Parameter([[0],[0]], structural=True)
+        memory_capacity = Parameter(1000, structural=True)
+        field_weights = Parameter(None, structural=True)
+        field_names = Parameter(None, structural=True)
+        decay_memories = Parameter(True, loggable=True, modulable=True, fallback_default=True)
+        decay_rate = Parameter(None, loggable=True, modulable=True, fallback_default=True,
+                               dependencies='decay_memories')
+        normalize_memories = Parameter(True, loggable=False, fallback_default=True)
+        learning_weights = Parameter(True, fallback_default=True)
         learning_rate = Parameter(.001, fallback_default=True)
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
 
+        # def _validate_memory_template(self, memory_template):
+        #     if not isinstance(memory_template, (list, tuple, np.ndarray)):
+        #         return f"must be a list, tuple, or array."
+        #
+        # def _parse_memory_template(self, memory_template):
+        #     if isinstance(memory_template, tuple):
+        #         return np.zeros(memory_template)
+        #     else:
+        #         return np.array(memory_template)
+
+        def _validate_field_weights(self, field_weights):
+            if not np.atleast_1d(field_weights).ndim == 1:
+                return f"must be a scalar, list of scalars, or 1d array."
+
+        def _validate_field_names(self, field_names):
+            if field_names and not all(isinstance(item, str) for item in field_names):
+                return f"must be a list of strings."
+
+        def _validate_decay_rate(self, decay_rate):
+            if decay_rate is not None:
+                decay_rate = float(decay_rate)
+                if self.decay_memories.get() and decay_rate == 0.0:
+                    return f"is 0.0 and 'decay_memories' arg is True; set it to a positive value " \
+                           f"or to None to use the default of 1/memory_capacity."
+                if not all_within_range(decay_rate, 0, 1):
+                    return f"must be a float in the interval [0,1]."
+
         def _validate_storage_prob(self, storage_prob):
             storage_prob = float(storage_prob)
             if not all_within_range(storage_prob, 0, 1):
                 return f"must be a float in the interval [0,1]."
-
 
     @check_user_specified
     def __init__(self,
@@ -370,8 +499,9 @@ class EMComposition(AutodiffComposition):
                  learn_weights:bool=True,
                  learning_rate:float=None,
                  memory_capacity:int=1000,
-                 decay_memories:bool=False,
-                 memory_decay_rate:Optional[float]=None,
+                 decay_memories:bool=True,
+                 decay_rate:Optional[float]=None,
+                 normalize_memories=True,
                  storage_prob:float=None,
                  name="EM_composition"):
 
@@ -380,48 +510,27 @@ class EMComposition(AutodiffComposition):
         else:
             memory_template = np.array(memory_template)
 
-        # memory_template must specify a 2D array:
-        if memory_template.ndim != 2:
-            raise EMCompositionError(f"The 'memory_template' arg for {name} ({memory_template}) "
-                                     f"must specifiy a list of lists or a 2d array.")
+        self._validate_memory_structure(memory_template, field_weights, field_names, name)
 
-        if field_weights is None:
-            if len(memory_template) == 1:
-                field_weights = [1]
-            else:
-                # Default is to all fields as keys except the last one, which is the value
-                num_fields = len(memory_template)
-                field_weights = [1] * num_fields
-                field_weights[-1] = 0
-
-        # If field weights has more than one value it must match the first dimension (axis 0) of memory_template:
-        if len(field_weights) > 1 and len(field_weights) != len(memory_template):
-            raise EMCompositionError(f"The number of items ({len(field_weights)}) "
-                                     f"in the 'field_weights' arg for {name} must match the number of items "
-                                     f"({len(memory_template)}) in the outer dimension of its 'memory_template' arg.")
-
-        # Memory structure (field) parameters
-        self.memory_template = memory_template.copy()
+        # Memory structure (field) attributes (not Parameters)
+        self.memory_template = memory_template.copy() # copy to avoid gotcha since default is a list (mutable)
+        self.memory_capacity = memory_capacity # FIX: MAKE THIS A READ-ONLY PARAMETER
+        self.memory_dim = np.array(memory_template).size
         self.num_fields = len(memory_template)
         self.field_weights = field_weights
-        # self.field_names = field_names.copy()
+        self.field_names = field_names.copy() if field_names is not None else None
         self.learn_weights = learn_weights
-        # self.learning_rate = learning_rate # FIX: MAKE THIS A PARAMETER
-        self.storage_prob = storage_prob
 
         # Memory management parameters
-        self.memory_capacity = memory_capacity # FIX: MAKE THIS A READ-ONLY PARAMETER
-        self.decay_memories = decay_memories # FIX: MAKE THIS A PARAMETER
-        self.memory_decay_rate = memory_decay_rate or 1 / self.memory_capacity # FIX: MAKE THIS A PARAMETER
-        if self.decay_memories and memory_decay_rate == 0.0:
-            raise warnings.warn(f"The 'decay_memories' arg was set to True but 'memory_decay_rate' was set to 0.0; "
-                                f"default of 1/memory_capacity ({self.memory_decay_rate}) will be used instead.")
+        if self.parameters.decay_memories.get() and self.parameters.decay_rate.get() is None:
+            self.parameters.decay_rate.set(decay_rate or 1 / self.memory_capacity)
+        self.storage_prob = storage_prob
 
+        # Memory field attributes
         keys_weights = [i for i in self.field_weights if i != 0]
         self.num_keys = len(keys_weights)
         self.concatenate_keys = len(self.field_weights) == 1 or  np.all(keys_weights == keys_weights[0])
         self.num_values = self.num_fields - self.num_keys
-        self.memory_dim = np.array(self.memory_template).size
 
         pathway = self._construct_pathway()
 
@@ -445,11 +554,46 @@ class EMComposition(AutodiffComposition):
         self._set_learnability_of_projections()
         self._initialize_memory()
 
+        # Set normalization if specified
+        if self.normalize_memories:
+            for node in self.match_nodes:
+                node.input_ports[0].path_afferents[0].function.parameters.normalize.set(True)
+
+    def _validate_memory_structure(self, memory_template, field_weights, field_names, name):
+        """Validate the memory_template, field_weights, and field_names arguments
+        """
+
+        # memory_template must specify a 2D array:
+        if memory_template.ndim != 2:
+            raise EMCompositionError(f"The 'memory_template' arg for {name} ({memory_template}) "
+                                     f"must specifiy a list of lists or a 2d array.")
+
+        # Deal with default field_weights
+        if field_weights is None:
+            if len(memory_template) == 1:
+                field_weights = [1]
+            else:
+                # Default is to all fields as keys except the last one, which is the value
+                num_fields = len(memory_template)
+                field_weights = [1] * num_fields
+                field_weights[-1] = 0
+
+        # If field weights has more than one value it must match the first dimension (axis 0) of memory_template:
+        if len(field_weights) > 1 and len(field_weights) != len(memory_template):
+            raise EMCompositionError(f"The number of items ({len(field_weights)}) "
+                                     f"in the 'field_weights' arg for {name} must match the number of items "
+                                     f"({len(memory_template)}) in the outer dimension of its 'memory_template' arg.")
+
+        # If field weights has more than one value it must match the first dimension (axis 0) of memory_template:
+        if field_names and len(field_names) != len(memory_template):
+            raise EMCompositionError(f"The number of items ({len(field_names)}) "
+                                     f"in the 'field_names' arg for {name} must match the number of items "
+                                     f"({len(memory_template)}) in the outer dimension of its 'memory_template' arg.")
+
     def _construct_pathway(self):
         """Construct pathway for EMComposition"""
 
         # Construct nodes of Composition
-        # FIX: ??MAKE THESE PARAMETERS:
         self.key_input_nodes = self._construct_key_input_nodes()
         self.value_input_nodes = self._construct_value_input_nodes()
         self.match_nodes = self._construct_match_nodes()
@@ -543,7 +687,8 @@ class EMComposition(AutodiffComposition):
                         # PROJECTIONS:
                         #     MappingProjection(
                         #         sender=self.key_input_nodes[i].output_port,
-                        #         matrix=ZEROS_MATRIX)
+                        #         matrix=ZEROS_MATRIX,
+                        #         function=LinearMatrix(normalize=True))
                     },
                     # (self.memory_capacity,
                     #  MappingProjection(sender=self.key_input_nodes[i].output_port, matrix=ZEROS_MATRIX)),
@@ -587,12 +732,20 @@ class EMComposition(AutodiffComposition):
     def _construct_retrieval_nodes(self):
         """Create layer that reports the value field(s) for the item(s) matched in memory.
         """
-        retrieval_nodes = [TransferMechanism(size=len(self.value_input_nodes[i].variable[0]),
-                                             # input_ports=self.value_input_nodes[i],
-                                             input_ports=self.retrieval_weighting_node,
-                                             name= 'VALUE NODE' if self.num_values == 1 else f'VALUE NODE {i}')
-                           for i in range(self.num_values)]
-        return retrieval_nodes
+        def _get_retrieval_node_name(node_type, len, i):
+            return f'RETRIEVED {node_type} NODE' if len == 1 else f'RETRIEVED {node_type} NODE {i}'
+
+        self.retrieved_key_nodes = [TransferMechanism(size=len(self.key_input_nodes[i].variable[0]),
+                                                      input_ports=self.retrieval_weighting_node,
+                                                      name=_get_retrieval_node_name("KEY", self.num_keys, i))
+                                    for i in range(self.num_keys)]
+
+        self.retrieved_value_nodes = [TransferMechanism(size=len(self.value_input_nodes[i].variable[0]),
+                                                        input_ports=self.retrieval_weighting_node,
+                                                        name= _get_retrieval_node_name("VALUE", self.num_values, i))
+                                      for i in range(self.num_values)]
+
+        return self.retrieved_key_nodes + self.retrieved_value_nodes
 
     def _set_learnability_of_projections(self):
         """Turn off learning for all Projections except afferents to retrieval_gating_nodes.
@@ -653,7 +806,7 @@ class EMComposition(AutodiffComposition):
                 #   assign as weights for first empty row of Projection.matrix from key_input_node to match_node
                 memories = input_node.efferents[0].parameters.matrix.get(context)
                 if self.decay_memories:
-                    memories *= self.memory_decay_rate
+                    memories *= self.decay_rate
                 # Get least used slot (i.e., weakest memory = row of matrix with lowest weights)
                 idx_of_min = np.argmin(memories.sum(axis=0))
                 memories[:,idx_of_min] = np.array(memory)
@@ -664,7 +817,7 @@ class EMComposition(AutodiffComposition):
                 idx = self.value_input_nodes.index(input_node)
                 memories = self.retrieval_nodes[idx].path_afferents[0].parameters.matrix.get(context)
                 if self.decay_memories:
-                    memories *= self.memory_decay_rate
+                    memories *= self.decay_rate
                 # Get least used slot (i.e., weakest memory = row of matrix with lowest weights)
                 idx_of_min = np.argmin(memories.sum(axis=1))
                 memories[idx_of_min] = np.array(memory)

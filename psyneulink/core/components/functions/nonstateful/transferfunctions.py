@@ -90,7 +90,7 @@ from psyneulink.core.globals.keywords import \
     GAIN, GAUSSIAN_DISTORT_FUNCTION, GAUSSIAN_FUNCTION, HAS_INITIALIZERS, HOLLOW_MATRIX, \
     IDENTITY_FUNCTION, IDENTITY_MATRIX, INTERCEPT, LEAK, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, \
     TANH_FUNCTION, MATRIX_KEYWORD_NAMES, MATRIX, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, MULTIPLICATIVE_PARAM, \
-    OFF, OFFSET, ON, PER_ITEM, PROB, PRODUCT, OUTPUT_TYPE, PROB_INDICATOR, \
+    NORMALIZE, OFF, OFFSET, ON, PER_ITEM, PROB, PRODUCT, OUTPUT_TYPE, PROB_INDICATOR, \
     RATE, RECEIVER, RELU_FUNCTION, SCALE, SLOPE, SOFTMAX_FUNCTION, STANDARD_DEVIATION, SUM, \
     TRANSFER_FUNCTION_TYPE, TRANSFER_WITH_COSTS_FUNCTION, VARIANCE, VARIABLE, X_0, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import \
@@ -3355,6 +3355,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     LinearMatrix(          \
          default_variable, \
          matrix=None,      \
+         normalize=False,  \
          params=None,      \
          owner=None,       \
          name=None,        \
@@ -3369,6 +3370,11 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     .. math::
         variable \\bullet matrix
+
+    If **normalize** is True, the result is normalized by the product of the norms of the variable and matrix:
+
+    .. math::
+        \\frac{variable \\bullet matrix}{\\|variable\\| \\cdot \\|matrix\\|}
 
     COMMENT:  [CONVERT TO FIGURE]
         ----------------------------------------------------------------------------------------------------------
@@ -3422,6 +3428,10 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
             - matrix keywords are not valid matrix specifications
 
+    normalize : bool : default False
+        specifies whether to normalize the result of `function <LinearCombination.function>` by dividing it by the
+        norm of `variable <LinearMatrix.variable>` x the norm of `matrix <LinearMatrix.matrix>`.
+
     bounds : None
 
     params : Dict[param keyword: param value] : default None
@@ -3453,6 +3463,11 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         Rows correspond to elements of the input array (outer index), and
         columns correspond to elements of the output array (inner index).
 
+    normalize : bool
+        determines whether the result of `function <LinearCombination.function>` is normalized, by dividing it by the
+        norm of `variable <LinearMatrix.variable>` x the norm of `matrix <LinearMatrix.matrix>`.
+
+
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
@@ -3482,9 +3497,16 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
                     :default value: None
                     :type:
+
+                normalize
+                    see `normalize <LinearMatrix.normalize>`
+
+                    :default value: False
+                    :type: bool
         """
         variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable', mdf_name='A')
         matrix = Parameter(None, modulable=True, mdf_name='B')
+        normalize = Parameter(False, mdf_name='normalize')
         bounds = None
 
     # def is_matrix_spec(m):
@@ -3501,6 +3523,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     def __init__(self,
                  default_variable=None,
                  matrix=None,
+                 normalize=None,
                  params=None,
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None):
@@ -3511,6 +3534,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         super().__init__(
             default_variable=default_variable,
             matrix=matrix,
+            normalize=normalize,
             params=params,
             owner=owner,
             prefs=prefs,
@@ -3821,6 +3845,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
         matrix = pnlvm.helpers.get_param_ptr(builder, self, params, MATRIX)
+        normalize = pnlvm.helpers.get_param_ptr(builder, self, params, NORMALIZE)
 
         # Convert array pointer to pointer to the fist element
         matrix = builder.gep(matrix, [ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -3829,6 +3854,15 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
         input_length = ctx.int32_ty(arg_in.type.pointee.count)
         output_length = ctx.int32_ty(arg_out.type.pointee.count)
+
+        # if normalize:
+        #     if vec_in is not zeros:
+        #     # FIX: NORMALIZE vec_in and matrix here
+        #         vec_in_sum = fsum(builder, vec_in)
+        #         vec_in = fdiv(builder, vec_in, vec_in_sum)
+        #     if matrix is not zeros:
+        #     # FIX: NORMALIZE matrix here
+
         builtin = ctx.import_llvm_function("__pnl_builtin_vxm")
         builder.call(builtin, [vec_in, matrix, input_length, output_length, vec_out])
         return builder
@@ -3857,8 +3891,15 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             length of the array returned equals the number of columns of `matrix <LinearMatrix.matrix>`.
 
         """
+        vector = np.array(variable)
         matrix = self._get_current_parameter_value(MATRIX, context)
-        result = np.dot(variable, matrix)
+        normalize = self._get_current_parameter_value(NORMALIZE, context)
+        if normalize:
+            if np.any(vector):
+                vector = vector / np.linalg.norm(vector)
+            if np.any(matrix):
+                matrix = matrix / np.linalg.norm(matrix,axis=-1,keepdims=True)
+        result = np.dot(vector, matrix)
         return self.convert_output_type(result)
 
     @staticmethod
