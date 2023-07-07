@@ -815,7 +815,8 @@ class EMComposition(AutodiffComposition):
                 if self.decay_memories:
                     memories *= self.decay_rate
                 # Get least used slot (i.e., weakest memory = row of matrix with lowest weights)
-                idx_of_min = np.argmin(memories.sum(axis=0))
+                # idx_of_min = np.argmin(memories.sum(axis=0))
+                idx_of_min = np.argmin(np.linalg.norm(memories, axis=0))
                 memories[:,idx_of_min] = np.array(memory)
                 input_node.efferents[0].parameters.matrix.set(memories, context)
 
@@ -826,7 +827,9 @@ class EMComposition(AutodiffComposition):
                         f'PROGRAM ERROR: match_node ({match_node}) is not the owner ' \
                         f'of the Projection from key_input_node ({input_node})'
                     gain = self._get_softmax_gain(np.linalg.norm(memories, axis=0))
+                    # gain2 = self._get_softmax_gain(match_node.value[0])
                     match_node.function.parameters.gain.set(gain, context)
+                    assert True
 
             if input_node in self.value_input_nodes:
                 # For value_input;
