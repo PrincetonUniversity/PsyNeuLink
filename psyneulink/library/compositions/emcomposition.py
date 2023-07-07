@@ -10,13 +10,15 @@
 
 
 # ISSUES:
-# - IMPLEMENTATION OF GENERALIZATION OF FIELDS (KEYS = FIELD WEIGHT != 0)
-# - WHEN TO CONCATENATE KEYS (EXPLICITLY, OR ALL FIELD WEIGHTS ARE THE SAME FOR KEYS)?
+# √ IMPLEMENTATION OF GENERALIZATION OF FIELDS (KEYS = FIELD WEIGHT != 0)
+# √ WHEN TO CONCATENATE KEYS (EXPLICITLY, OR ALL FIELD WEIGHTS ARE THE SAME FOR KEYS)?
 # - IMPLEMENTATION OF STORAGE IN PYTORCH AND/OR AS LEARNING PROCESS (HEBBIAN?)
 # - CONFIDENCE COMPUTATION
-# - MEMORY DECAY (SEE BELOW)
-# - ADAPTIVE TEMPERATURE (SEE BELOW)
-# - ACCESSIBILITY OF DISTANCES (SEE BELOW)
+# √ MEMORY DECAY (SEE BELOW)
+# √ ADAPTIVE TEMPERATURE (SEE BELOW)
+#   - KAMESH
+#   - ADD SCALE PARAMETER TO SOFTMAX FUNCTION THAT SCALES GAIN RETURNED
+# - ACCESSIBILITY OF DISTANCES (SEE BELOW): MAKE IT A LOGGABLE PARAMETER (I.E., WITH APPROPRIATE SETTER)
 
 # TODO:
 # - DECAY WEIGHTS BY:
@@ -33,6 +35,10 @@
 # - ADD OUTPUT NODES FOR ALL KEYS (IN ADDITION TO OUTPUT NODES FOR VALUES ANDa
 #      NAME THEM WITH KEY NAME UNLESS EXPLICITLY SPECIFIED AS A VALUE (I.E., FIELD_WEIGHT = 0)
 # - ADD MEMORY_DECAY TO ContentAddressableMemory FUNCTION (and compiled version by Samyak)
+# - ADD NORMING LAYER JUST AFTER KEY_INPUT_NODES, WITH RETRIEVAL_GATING_NODES RECIEVING INPUTS EITHER FROM NORMING
+#   LAYER OR DIRECTION FROM INPUT
+#   - WRITE NORMED VECTOR INTO MEMORY, NOT KEY_INPUT
+#   OR - ADD NORMED LINEAR_COMBINATION FUNCTION TO LinearCombination FUNCTION: dot / (norm a * norm b)
 
 
 """
@@ -98,7 +104,9 @@ one of two ways:
   * **field-by-field** if there is more than one non-zero value in `field_weights <EMComposition.field_weights>` and
     they are not all identical;  in this case, the dot product is computed between each key field in the cue and the
     the corresponding ones of each entry in `memory <ContentAddressableMemory.memory>`, and those dot products are
-    then averaged, weighted by the corresponding values of `field_weights <EMComposition.field_weights>`.
+    then softmaxed, and that softamxed vector is multplied by the corresponding values of `field_weights
+    <EMComposition.field_weights>`, which are then summed to produce the distance for each entry in `memory
+    <EMComposition.memory>`.
 
   The distances computed between the cue and each entry in `memory <EMComposition.memory>` are then used to compute
   a weighted average of all entries in `memory <EMComposition.memory>` that is then returned as the `result
@@ -411,7 +419,7 @@ class EMComposition(AutodiffComposition):
 
         keys_weights = [i for i in self.field_weights if i != 0]
         self.num_keys = len(keys_weights)
-        self.concatenate_keys = if len(self.field_weights) == 1 or  np.all(keys_weights == keys_weights[0])
+        self.concatenate_keys = len(self.field_weights) == 1 or  np.all(keys_weights == keys_weights[0])
         self.num_values = self.num_fields - self.num_keys
         self.memory_dim = np.array(self.memory_template).size
 
