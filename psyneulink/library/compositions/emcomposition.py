@@ -827,7 +827,7 @@ class EMComposition(AutodiffComposition):
                         f'PROGRAM ERROR: match_node ({match_node}) is not the owner ' \
                         f'of the Projection from key_input_node ({input_node})'
                     gain = self._get_softmax_gain(np.linalg.norm(memories, axis=0))
-                    # gain2 = self._get_softmax_gain(match_node.value[0])
+                    # gain = self._get_softmax_gain(match_node.value[0])
                     match_node.function.parameters.gain.set(gain, context)
                     assert True
 
@@ -843,7 +843,7 @@ class EMComposition(AutodiffComposition):
                 memories[idx_of_min] = np.array(memory)
                 self.retrieval_nodes[idx].path_afferents[0].parameters.matrix.set(memories, context)
 
-    def _get_softmax_gain(self, values, epsilon=1e-8):
+    def _get_softmax_gain(self, values, epsilon=1e-3):
         """Compute the softmax gain based on length of vector and number of (near) zero values.
         """
         n = len(values)
