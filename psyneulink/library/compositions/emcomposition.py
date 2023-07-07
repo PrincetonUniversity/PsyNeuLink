@@ -10,15 +10,8 @@
 
 
 # ISSUES:
-# √ IMPLEMENTATION OF GENERALIZATION OF FIELDS (KEYS = FIELD WEIGHT != 0)
-# √ WHEN TO CONCATENATE KEYS (EXPLICITLY, OR ALL FIELD WEIGHTS ARE THE SAME FOR KEYS)?
 # - IMPLEMENTATION OF STORAGE IN PYTORCH AND/OR AS LEARNING PROCESS (HEBBIAN?)
 # - CONFIDENCE COMPUTATION
-# √ MEMORY DECAY (SEE BELOW)
-# √ ADAPTIVE TEMPERATURE (SEE BELOW)
-#   - KAMESH
-#   - ADD SCALE PARAMETER TO SOFTMAX FUNCTION THAT SCALES GAIN RETURNED
-# - ACCESSIBILITY OF DISTANCES (SEE BELOW): MAKE IT A LOGGABLE PARAMETER (I.E., WITH APPROPRIATE SETTER)
 
 # TODO:
 # - DECAY WEIGHTS BY:
@@ -32,12 +25,14 @@
 # - TEST ADAPTIVE TEMPERATURE (SEE BELOW)
 # - ADD ADDITIONAL PARAMETERS FROM CONTENTADDRESSABLEMEMORY FUNCTION
 # - MAKE "_store_memory" METHOD USE LEARNING INSTEAD OF ASSIGNMENT (per Steven's Hebban / DPP model?)
-# - ADD OUTPUT NODES FOR ALL KEYS (IN ADDITION TO OUTPUT NODES FOR VALUES ANDa
-#      NAME THEM WITH KEY NAME UNLESS EXPLICITLY SPECIFIED AS A VALUE (I.E., FIELD_WEIGHT = 0)
 # - ADD MEMORY_DECAY TO ContentAddressableMemory FUNCTION (and compiled version by Samyak)
 # - ADD NORMING LAYER JUST AFTER KEY_INPUT_NODES, WITH RETRIEVAL_GATING_NODES RECIEVING INPUTS EITHER FROM NORMING
 #   LAYER OR DIRECTION FROM INPUT
 #   ADD COMPILED VERSION OF NORMED LINEAR_COMBINATION FUNCTION TO LinearCombination FUNCTION: dot / (norm a * norm b)
+# - ADAPTIVE TEMPERATURE (SEE BELOW)
+#   - KAMESH FOR FORMULA
+#   - ADD SCALE PARAMETER TO SOFTMAX FUNCTION THAT SCALES GAIN RETURNED
+# - ACCESSIBILITY OF DISTANCES (SEE BELOW): MAKE IT A LOGGABLE PARAMETER (I.E., WITH APPROPRIATE SETTER)
 
 # FIX: COMPILE
 #      LinearMatrix to add normalization
@@ -541,6 +536,12 @@ class EMComposition(AutodiffComposition):
         self.num_keys = len(keys_weights)
         self.concatenate_keys = len(self.field_weights) == 1 or  np.all(keys_weights == keys_weights[0])
         self.num_values = self.num_fields - self.num_keys
+        if self.field_names:
+            self.key_names = self.field_names[:self.num_keys]
+            self.value_names = self.field_names[self.num_keys:]
+        else:
+            self.key_names = [f'KEY {i}' for i in range(self.num_keys)] if self.num_keys > 1 else ['KEY']
+            self.value_names = [f'VALUE {i}' for i in range(self.num_values)] if self.num_values > 1 else ['VALUE']
 
         pathway = self._construct_pathway()
 
@@ -622,7 +623,8 @@ class EMComposition(AutodiffComposition):
             f"non-zero values in field_weights ({len(key_indices)})."
 
         key_input_nodes = [TransferMechanism(size=len(self.memory_template[key_indices[i]]),
-                                               name= 'KEY INPUT' if self.num_keys == 1 else f'KEY {i} INPUT')
+                                               # name= 'KEY INPUT' if self.num_keys == 1 else f'KEY {i} INPUT')
+                                               name= f'{self.key_names[i]} INPUT')
                        for i in range(self.num_keys)]
 
         return key_input_nodes
@@ -641,7 +643,8 @@ class EMComposition(AutodiffComposition):
             f"non-zero values in field_weights ({len(value_indices)})."
 
         value_input_nodes = [TransferMechanism(size=len(self.memory_template[value_indices[i]]),
-                                               name= 'VALUE INPUT' if self.num_values == 1 else f'VALUE {i} INPUT')
+                                               # name= 'VALUE INPUT' if self.num_values == 1 else f'VALUE {i} INPUT')
+                                               name= f'{self.value_names[i]} INPUT')
                            for i in range(self.num_values)]
 
         return value_input_nodes
@@ -730,17 +733,19 @@ class EMComposition(AutodiffComposition):
     def _construct_retrieval_nodes(self):
         """Create layer that reports the value field(s) for the item(s) matched in memory.
         """
-        def _get_retrieval_node_name(node_type, len, i):
-            return f'{node_type} RETRIEVED' if len == 1 else f'{node_type} {i} RETRIEVED'
-
+        # def _get_retrieval_node_name(node_type, len, i):
+        #     return f'{node_type} RETRIEVED' if len == 1 else f'{node_type} {i} RETRIEVED'
+        #
         self.retrieved_key_nodes = [TransferMechanism(size=len(self.key_input_nodes[i].variable[0]),
                                                       input_ports=self.retrieval_weighting_node,
-                                                      name=_get_retrieval_node_name("KEY", self.num_keys, i))
+                                                      # name=_get_retrieval_node_name("KEY", self.num_keys, i))
+                                                      name= f'{self.key_names[i]} RETRIEVED')
                                     for i in range(self.num_keys)]
 
         self.retrieved_value_nodes = [TransferMechanism(size=len(self.value_input_nodes[i].variable[0]),
                                                         input_ports=self.retrieval_weighting_node,
-                                                        name= _get_retrieval_node_name("VALUE", self.num_values, i))
+                                                        # name= _get_retrieval_node_name("VALUE", self.num_values, i))
+                                                        name= f'{self.value_names[i]} RETRIEVED')
                                       for i in range(self.num_values)]
 
         return self.retrieved_key_nodes + self.retrieved_value_nodes
