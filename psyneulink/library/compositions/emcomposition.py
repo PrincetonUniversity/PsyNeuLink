@@ -24,7 +24,10 @@
 #      smallest weights (randomly selected among “ties" [i.e., within epsilon of each other]), I think we have a
 #      mechanism that can adaptively use its limited capacity as sensibly as possible, by re-cycling the units
 #      that have the least used memories.
-# - MAKE "_store_memory" METHOD USE LEARNING INSTEAD OF ASSIGNMENT (per Steven's Hebban / DPP model?)
+# - MAKE "_store_memory" METHOD USE LEARNING INSTEAD OF ASSIGNMENT
+#   - make LearningMechanism that, instead of error, simply adds relevant input to weights (with all others = 0)
+#   - (relationship to Steven's Hebban / DPP model?):
+
 # - ADD ADDITIONAL PARAMETERS FROM CONTENTADDRESSABLEMEMORY FUNCTION
 # - ADAPTIVE TEMPERATURE: KAMESH FOR FORMULA
 # - ADD MEMORY_DECAY TO ContentAddressableMemory FUNCTION (and compiled version by Samyak)
