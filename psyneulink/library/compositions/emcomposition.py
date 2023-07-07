@@ -24,12 +24,9 @@
 #      smallest weights (randomly selected among “ties" [i.e., within epsilon of each other]), I think we have a
 #      mechanism that can adaptively use its limited capacity as sensibly as possible, by re-cycling the units
 #      that have the least used memories.
-# - ADAPTIVE TEMPERATURE:
-#   - ADD COMPUTATION OF GAIN TO _store_memory METHOD
 # - MAKE "_store_memory" METHOD USE LEARNING INSTEAD OF ASSIGNMENT (per Steven's Hebban / DPP model?)
 # - ADD ADDITIONAL PARAMETERS FROM CONTENTADDRESSABLEMEMORY FUNCTION
-#   - KAMESH FOR FORMULA
-#   - ADD SOFTMAX TEMP PARAMETER (with None = Auto) SCALE PARAMETER TO SOFTMAX FUNCTION THAT SCALES GAIN RETURNED
+# - ADAPTIVE TEMPERATURE: KAMESH FOR FORMULA
 # - ADD MEMORY_DECAY TO ContentAddressableMemory FUNCTION (and compiled version by Samyak)
 
 # FIX: COMPILE
@@ -232,18 +229,18 @@ from psyneulink._typing import Optional, Union
 
 from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import Concatenate
-from psyneulink.core.components.functions.nonstateful.transferfunctions import LinearMatrix
 from psyneulink.core.components.functions.function import \
     DEFAULT_SEED, FunctionError, _random_state_getter, _seed_setter, EPSILON, _noise_setter
-from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
+from psyneulink.core.compositions.composition import CompositionError, NodeRole
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import GatingMechanism
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.keywords import \
-    AUTO, CONTROL, EM_COMPOSITION, FUNCTION, MULTIPLICATIVE_PARAM, NAME, PROJECTIONS, RESULT, SIZE, VALUE
+    AUTO, CONTROL, EM_COMPOSITION, FUNCTION, GAIN, MULTIPLICATIVE_PARAM, NAME, PROJECTIONS, RESULT, SIZE, VALUE
 from psyneulink.core.globals.utilities import all_within_range
 
 __all__ = [
@@ -468,7 +465,7 @@ class EMComposition(AutodiffComposition):
         #         return np.array(memory_template)
 
         def _validate_field_weights(self, field_weights):
-            if not np.atleast_1d(field_weights).ndim == 1:
+            if field_weights is not None and not np.atleast_1d(field_weights).ndim == 1:
                 return f"must be a scalar, list of scalars, or 1d array."
 
         def _validate_field_names(self, field_names):
@@ -541,7 +538,7 @@ class EMComposition(AutodiffComposition):
             self.parameters.softmax_gain.set(AUTO)
         elif softmax_temp == CONTROL:
             # It will be set adaptively
-            self.parameters.softmax_gain.set(None)
+            self.parameters.softmax_gain.set(CONTROL)
         else:
             self.parameters.softmax_gain.set(1/softmax_temp)
 
@@ -567,7 +564,7 @@ class EMComposition(AutodiffComposition):
             node.output_ports['RESULT'].parameters.require_projection_in_composition.set(False, override=True)
         for node in self.softmax_nodes:
             node.output_ports['KEY_WEIGHT'].parameters.require_projection_in_composition.set(False, override=True)
-        for port in self.retrieval_weighting_node.output_ports:
+        for port in self.retrieval_weighting_node[0].output_ports:
             if 'RESULT' in port.name:
                 port.parameters.require_projection_in_composition.set(False, override=True)
 
@@ -605,25 +602,27 @@ class EMComposition(AutodiffComposition):
                                      f"in the 'field_names' arg for {name} must match the number of items "
                                      f"({len(memory_template)}) in the outer dimension of its 'memory_template' arg.")
 
-    def _construct_pathway(self):
+    def _construct_pathway(self)->set:
         """Construct pathway for EMComposition"""
 
         # Construct nodes of Composition
         self.key_input_nodes = self._construct_key_input_nodes()
         self.value_input_nodes = self._construct_value_input_nodes()
-        self.softmax_nodes = self._construct_match_nodes()
+        self.match_nodes = self._construct_match_nodes()
+        self.softmax_nodes = self._construct_softmax_nodes()
+        self.softmax_control_nodes = self._construct_softmax_control_nodes()
         self.retrieval_gating_nodes = self._construct_retrieval_gating_nodes()
         self.retrieval_weighting_node = self._construct_retrieval_weighting_node()
         self.retrieval_nodes = self._construct_retrieval_nodes()
 
         # Construct pathway as a set of nodes, since Projections are specified in the construction of each node
-        pathway = set(self.key_input_nodes + self.value_input_nodes + self.softmax_nodes \
-                + [self.retrieval_weighting_node]
-                + self.retrieval_gating_nodes + self.retrieval_nodes)
+        pathway = set(self.key_input_nodes + self.value_input_nodes
+                      + self.match_nodes + self.softmax_control_nodes + self.softmax_nodes \
+                      + self.retrieval_weighting_node + self.retrieval_gating_nodes + self.retrieval_nodes)
 
         return pathway
 
-    def _construct_key_input_nodes(self):
+    def _construct_key_input_nodes(self)->list:
         """Create one node for each key to be used as cue for retrieval (and then stored) in memory.
         Used to assign new set of weights for Projection for key_input_node[i] -> match_node[i]
         where i is selected randomly without replacement from (0->memory_capacity)
@@ -643,7 +642,7 @@ class EMComposition(AutodiffComposition):
 
         return key_input_nodes
 
-    def _construct_value_input_nodes(self):
+    def _construct_value_input_nodes(self)->list:
         """Create one input node for each value to be stored in memory.
         Used to assign new set of weights for Projection for retrieval_weighting_node -> retrieval_node[i]
         where i is selected randomly without replacement from (0->memory_capacity)
@@ -663,31 +662,15 @@ class EMComposition(AutodiffComposition):
 
         return value_input_nodes
 
-    def _construct_match_nodes(self):
-        """Create nodes that, for each key field, compute the similarity between the input and each item in memory
-        and return softmax over those similarities.
+    def _construct_match_nodes(self)->list:
+        """Create nodes that, for each key field, compute the similarity between the input and each item in memory.
+        Each element of the output represents the similarity between the key_input and one item in memory.
 
         If self.concatenate_keys is True, then all inputs for keys are concatenated into a single vector that is
         the input to a single TransferMechanism;  otherwise, each key has its own TransferMechanism.  The size of
         the input to each TransferMechanism is the number of items allowed in memory, and the weights to each element
         in the weight matrix is a single memory.
         """
-
-        # Get indices of field_weights that specify keys:
-        key_indices = np.where(np.array(self.field_weights) != 0)
-        key_weights = [self.field_weights[i] for i in key_indices[0]]
-
-        assert len(key_indices[0]) == self.num_keys, \
-            f"PROGRAM ERROR: number of keys ({self.num_keys}) does not match number of " \
-            f"non-zero values in field_weights ({len(key_indices)})."
-
-
-        # If softmax_gain is specified as AUTO or CONTROL, then set to None for now
-        if self.parameters.softmax_gain.get() in {AUTO, CONTROL}:
-            softmax_gain = None
-        # Otherwise, assign specified value
-        else:
-            softmax_gain = self.parameters.softmax_gain.get()
 
         if self.concatenate_keys:
             # One node that concatenates inputs from all keys
@@ -696,11 +679,7 @@ class EMComposition(AutodiffComposition):
                                                           FUNCTION: Concatenate(),
                                                           PROJECTIONS: self.key_input_nodes},
                                              # function=SoftMax(gain=self.softmax_temperature(self.field_weights)),
-                                             function=SoftMax(gain=softmax_gain),
-                                             output_ports=[RESULT,
-                                                           {VALUE: key_weights[0],
-                                                            NAME: 'KEY_WEIGHT'}],
-                                             name='SOFTMAX NODE')]
+                                             name='MATCH NODE')]
         else:
             # One node for each key
             match_nodes = [
@@ -717,20 +696,52 @@ class EMComposition(AutodiffComposition):
                     },
                     # (self.memory_capacity,
                     #  MappingProjection(sender=self.key_input_nodes[i].output_port, matrix=ZEROS_MATRIX)),
-                    function=SoftMax(gain=softmax_gain),
-                    output_ports=[RESULT,
-                                  {VALUE: key_weights[0],
-                                   NAME: 'KEY_WEIGHT'}],
-                    name='SOFTMAX NODE ' + str(i))
+                    name=f'MATCH NODE {i}')
                 for i in range(self.num_keys)
             ]
+
+        return match_nodes
+
+    def _construct_softmax_control_nodes(self)->list:
+        """Create nodes that set the softmax gain (inverse temperature) for each softmax_node."""
+        if self.parameters.softmax_gain.get() != CONTROL:
+            return []
+        softmax_control_nodes = [
+            ControlMechanism(monitor_for_control=self.match_nodes[i],
+                             control_signals=[(GAIN, self.softmax_nodes[i])],
+                             name='SOFTMAX GAIN CONTROL' if self.num_keys == 1
+                             else f'SOFTMAX GAIN CONTROL {i}')
+
+            for i in range(self.num_keys)]
+        return softmax_control_nodes
+
+    def _construct_softmax_nodes(self)->list:
+        # FIX:
+        """Create nodes that, for each key field, compute the softmax over the similarities between the input and the
+        memories in the corresponding match_node.
+        """
+
+        # Get indices of field_weights that specify keys:
+        key_indices = np.where(np.array(self.field_weights) != 0)
+        key_weights = [self.field_weights[i] for i in key_indices[0]]
+
+        assert len(key_indices[0]) == self.num_keys, \
+            f"PROGRAM ERROR: number of keys ({self.num_keys}) does not match number of " \
+            f"non-zero values in field_weights ({len(key_indices)})."
+
+        # If softmax_gain is specified as AUTO or CONTROL, then set to None for now
+        if self.parameters.softmax_gain.get() in {AUTO, CONTROL}:
+            softmax_gain = None
+        # Otherwise, assign specified value
+        else:
+            softmax_gain = self.parameters.softmax_gain.get()
 
         softmax_nodes = [
             TransferMechanism(
                 input_ports=
                 {
                     SIZE:self.memory_capacity,
-                    PROJECTIONS: self.key_input_nodes[i].output_port
+                    PROJECTIONS: self.match_nodes[i].output_port
                     # PROJECTIONS:
                     #     MappingProjection(
                     #         sender=self.key_input_nodes[i].output_port,
@@ -747,9 +758,9 @@ class EMComposition(AutodiffComposition):
             for i in range(self.num_keys)
         ]
 
-        return match_nodes + softmax_nodes
+        return softmax_nodes
 
-    def _construct_retrieval_gating_nodes(self):
+    def _construct_retrieval_gating_nodes(self)->list:
         """Create GatingMechanisms that weight each key's contribution to the retrieved values.
         """
         retrieval_gating_nodes = [GatingMechanism(#input_ports=key_match_pair[0].output_ports['RESULT'],
@@ -757,12 +768,12 @@ class EMComposition(AutodiffComposition):
                                                                NAME: 'OUTCOME'},
                                                  gate=[key_match_pair[1].output_ports[1]],
                                                  # name=f'RETRIEVAL GATING NODE {i}')
-                                                 name= 'RETRIEVAL GATING NODE' if self.num_keys == 1
-                                                 else f'RETRIEVAL GATING NODE {i}')
+                                                 name= 'RETRIEVAL WEIGHTING NODE' if self.num_keys == 1
+                                                 else f'RETRIEVAL WEIGHTING NODE {i}')
                                  for i, key_match_pair in enumerate(zip(self.key_input_nodes, self.softmax_nodes))]
         return retrieval_gating_nodes
 
-    def _construct_retrieval_weighting_node(self):
+    def _construct_retrieval_weighting_node(self)->list:
         """Create layer that computes the weighting of each item in memory.
         """
         # FIX: THIS SHOULD WORK:
@@ -774,9 +785,9 @@ class EMComposition(AutodiffComposition):
             f'PROGRAM ERROR: number of items in retrieval_weighting_node ({len(retrieval_weighting_node.output_port)})' \
             f'does not match memory_capacity ({self.memory_capacity})'
                                                             
-        return retrieval_weighting_node
+        return [retrieval_weighting_node]
 
-    def _construct_retrieval_nodes(self):
+    def _construct_retrieval_nodes(self)->list:
         """Create layer that reports the value field(s) for the item(s) matched in memory.
         """
         # def _get_retrieval_node_name(node_type, len, i):
@@ -856,13 +867,10 @@ class EMComposition(AutodiffComposition):
 
                 # Set gain of match_node adaptively
                 if self.parameters.softmax_gain.get(context) is AUTO:
-                    match_node = self.softmax_nodes[self.key_input_nodes.index(input_node)]
-                    assert match_node == input_node.efferents[0].receiver.owner,\
-                        f'PROGRAM ERROR: match_node ({match_node}) is not the owner ' \
-                        f'of the Projection from key_input_node ({input_node})'
+                    softmax_node = self.softmax_nodes[self.key_input_nodes.index(input_node)]
                     gain_by_weights = self._get_softmax_gain(np.linalg.norm(memories, axis=0))
                     # gain_by_activity = self._get_softmax_gain(match_node.input_values[0])
-                    match_node.function.parameters.gain.set(gain_by_weights, context)
+                    softmax_node.function.parameters.gain.set(gain_by_weights, context)
                     assert True
 
             if input_node in self.value_input_nodes:
