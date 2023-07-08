@@ -26,7 +26,7 @@
 #      that have the least used memories.
 # - MAKE "_store_memory" METHOD USE LEARNING INSTEAD OF ASSIGNMENT
 #   - make LearningMechanism that, instead of error, simply adds relevant input to weights (with all others = 0)
-#   - (relationship to Steven's Hebban / DPP model?):
+#   - (relationship to Steven's Hebbian / DPP model?):
 
 # - ADD ADDITIONAL PARAMETERS FROM CONTENTADDRESSABLEMEMORY FUNCTION
 # - ADAPTIVE TEMPERATURE: KAMESH FOR FORMULA
@@ -47,6 +47,7 @@ Contents
   * `EMComposition_Creation`
      - `Fields <EMComposition_Fields>`
      - `Capacity <EMComposition_Capacity>`
+     - `Storage and Retrieval <EMComposition_Retrieval_Storage>`
      - `Learning <EMComposition_Learning>`
   * `EMComposition_Structure`
   * `EMComposition_Execution`
@@ -134,8 +135,6 @@ An EMComposition is created by calling its constructor, that takes the following
 
 * *Field Specification*
 
-
-
   * **memory_template** : This specifies the shape of the items to be stored in the EMComposition's memory, and can be
     specified in any of the following ways:
 
@@ -165,7 +164,6 @@ An EMComposition is created by calling its constructor, that takes the following
        and a list or 2d array is interpreted as a template that allows fields of
           different lengths to be specified (i.e., items to be encoded can be ragged arrays).
 
-
   * **field_weights** : this is used both to
     specify which fields are used as keys, and to initialize the Projections to the `retrieval_weighting_node
     <EMComposition.retrieval_weighting_node>`.  The number of values specified must match the number of fields specified
@@ -183,13 +181,27 @@ An EMComposition is created by calling its constructor, that takes the following
 
   * **field_names** : this is used both to
 
-  .. _EMComposition_Capacity:
+.. _EMComposition_Capacity:
+  
+* *Capacity*
 
   * **memory_capacity**: specifies the maximum number of items that can be stored in the EMComposition's memory.
 
   * **decay_memories**: specifies whether the EMComposition's memory decays over time.
 
   * **decay_rate**: specifies the rate at which items in the EMComposition's memory decay.
+
+
+  .. _EMComposition_Retrieval_Storage:
+
+* *Retrieval and Storage*
+
+  * **storage_prob** : specifies the probability that the EMComposition will store an item in memory
+  
+  * **normalize_memories** : specifies whether cues and memories are normalized before computing their similarity
+
+  * **softmax_gain** : specifies the temperature used for softmaxing the dot products of cues and memories.
+
 
   .. _EMComposition_Learning:
 
@@ -266,6 +278,18 @@ def _memory_getter(owning_component=None, context=None): # FIX: MAKE THIS A PARA
         memory = np.concatenate((memory, retrieval_node.path_afferents[0].parameters.matrix.get(context)),axis=1)
     return memory
 
+def get_softmax_gain(values, epsilon=1e-3):
+    """Compute the softmax gain based on length of vector and number of (near) zero values.
+    """
+    values = np.squeeze(values)
+    n = len(values)
+    num_zero = np.count_nonzero(values < epsilon)
+    num_non_zero = n - num_zero
+    if num_non_zero == 0:
+        gain = 1
+    else:
+        gain = 1 + np.exp(1/num_non_zero) * (num_zero/n)
+    return gain
 
 class EMCompositionError(CompositionError):
 
@@ -311,23 +335,32 @@ class EMComposition(AutodiffComposition):
         specifies the optional names assigned to each field in the memory_template;'
         see `EMComposition_Fields` for details.
 
+    normalize_memories : bool : default True
+        specifies whether cues and memories are normalized before computing their dot product (similarity);
+        see `EMComposition_Retrieval_Storage` for additional details.
+
+    softmax_gain : float : default CONTROL
+        specifies the temperature used for softmaxing the dot products of cues and memories;
+        see `EMComposition_Retrieval_Storage` for additional details.
+
     learn_weights : bool : default False
-        specifies whether `field_weights <EMCompostion.field_weights>` are learnable during training.
+        specifies whether `field_weights <EMCompostion.field_weights>` are learnable during training;
+        see `EMComposition_Learning` for additional details.
 
     learning_rate : float : default .01
         specifies rate at which`field_weights <EMCompostion.field_weights>` are learned if **learn_weights** is True.
 
     memory_capacity : int : default 1000
         specifies the number of items that can be stored in the EMComposition's memory;
-        see `EMComposition_Memory_Capacity` for details.
+        see `EMComposition_Capacity` for details.
 
     decay_memories : bool : default True
         specifies whether memories decay with each execution of the EMComposition;
-        see `EMComposition_Memory_Capacity` for details.
+        see `EMComposition_Capacity` for details.
 
     decay_rate : float : default 1 / `memory_capacity <EMComposition.memory_capacity>`
         specifies the rate at which items in the EMComposition's memory decay;
-        see `EMComposition_Memory_Capacity` for details.
+        see `EMComposition_Capacity` for details.
 
 
     Attributes
@@ -350,6 +383,10 @@ class EMComposition(AutodiffComposition):
     field_weights : list[float]
 
     field_names : list[str]
+
+    normalize_memories : bool
+
+    softmax_gain : float
 
     learn_weights : bool
 
@@ -431,8 +468,9 @@ class EMComposition(AutodiffComposition):
                     :type: ``numpy.random.RandomState``
 
                 softmax_gain
-                    :default value: 1.0
-                    :type: ``float``
+                    see `random_state <EMComposition.softmax_gain>`
+                    :default value: CONTROL
+                    :type: ``float or AUTO or CONTROL``
 
                 storage_prob
                     see `storage_prob <EMComposition.storage_prob>`
@@ -453,7 +491,7 @@ class EMComposition(AutodiffComposition):
         learning_weights = Parameter(True, fallback_default=True)
         learning_rate = Parameter(.001, fallback_default=True)
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        softmax_gain = Parameter(1.0, modulable=True)
+        softmax_gain = Parameter(CONTROL, modulable=True, fallback_default=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
 
@@ -486,7 +524,7 @@ class EMComposition(AutodiffComposition):
 
         def _validate_softmax_gain(self, softmax_gain):
             if softmax_gain not in {AUTO, CONTROL} and not isinstance(softmax_gain, (float, int)):
-                return f"must be a scalar or the keyword 'AUTO'."
+                return f"must be a scalar or the keyword 'AUTO' or 'CONTROL'."
 
         def _validate_storage_prob(self, storage_prob):
             storage_prob = float(storage_prob)
@@ -503,8 +541,8 @@ class EMComposition(AutodiffComposition):
                  memory_capacity:int=1000,
                  decay_memories:bool=True,
                  decay_rate:float=None,
-                 normalize_memories=True,
-                 softmax_temp:float=None,
+                 normalize_memories:bool=True,
+                 softmax_gain:Union[float, AUTO, CONTROL]=CONTROL,
                  storage_prob:float=None,
                  name="EM_composition"):
 
@@ -537,13 +575,13 @@ class EMComposition(AutodiffComposition):
         # Memory management parameters
         if self.parameters.decay_memories.get() and self.parameters.decay_rate.get() is None:
             self.parameters.decay_rate.set(decay_rate or 1 / self.memory_capacity)
-        if softmax_temp in (None, AUTO):
-            self.parameters.softmax_gain.set(AUTO)
-        elif softmax_temp == CONTROL:
-            # It will be set adaptively
-            self.parameters.softmax_gain.set(CONTROL)
-        else:
-            self.parameters.softmax_gain.set(1/softmax_temp)
+        # if softmax_gain in (None):
+        #     self.parameters.softmax_gain.set(AUTO)
+        # elif softmax_gain == CONTROL:
+        #     # It will be set adaptively
+        #     self.parameters.softmax_gain.set(CONTROL)
+        # else:
+        #     self.parameters.softmax_gain.set(1/softmax_temperature)
 
         # Memory field attributes
         keys_weights = [i for i in self.field_weights if i != 0]
@@ -681,7 +719,7 @@ class EMComposition(AutodiffComposition):
                                              input_ports={NAME: 'CONCATENATED_INPUTS',
                                                           FUNCTION: Concatenate(),
                                                           PROJECTIONS: self.key_input_nodes},
-                                             # function=SoftMax(gain=self.softmax_temperature(self.field_weights)),
+                                             # function=SoftMax(gain=self.softmax_gain(self.field_weights)),
                                              name='MATCH NODE')]
         else:
             # One node for each key
@@ -712,6 +750,7 @@ class EMComposition(AutodiffComposition):
         softmax_control_nodes = [
             ControlMechanism(monitor_for_control=self.match_nodes[i],
                              control_signals=[(GAIN, self.softmax_nodes[i])],
+                             function=get_softmax_gain,
                              name='SOFTMAX GAIN CONTROL' if self.num_keys == 1
                              else f'SOFTMAX GAIN CONTROL {i}')
 
@@ -888,14 +927,3 @@ class EMComposition(AutodiffComposition):
                 memories[idx_of_min] = np.array(memory)
                 self.retrieval_nodes[idx].path_afferents[0].parameters.matrix.set(memories, context)
 
-    def _get_softmax_gain(self, values, epsilon=1e-3):
-        """Compute the softmax gain based on length of vector and number of (near) zero values.
-        """
-        n = len(values)
-        num_zero = np.count_nonzero(values < epsilon)
-        num_non_zero = n - num_zero
-        if num_non_zero == 0:
-            gain = 1
-        else:
-            gain = 1 + np.exp(1/num_non_zero) * (num_zero/n)
-        return gain
