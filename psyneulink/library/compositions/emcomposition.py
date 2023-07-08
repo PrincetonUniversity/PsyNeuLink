@@ -318,7 +318,7 @@ def _memory_getter(owning_component=None, context=None): # FIX: MAKE THIS A PARA
 #     gain = scale * (offset + (weighting * transformed_entropy))
 #     return gain, num_zeros, entropy, SoftMax(gain=gain)(v)
 
-def get_softmax_gain(v, scale=1, base=1, entropy_weighting=.1, entropy_transform='LOG')->float:
+def get_softmax_gain(v, scale=1, base=1, entropy_weighting=.1)->float:
     """Compute the softmax gain (inverse temperature) based on the entropy of the distribution of values.
     scale * (base + (entropy_weighting * log(entropy(logistic(v))))))))
     """
