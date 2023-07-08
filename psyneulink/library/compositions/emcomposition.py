@@ -278,18 +278,57 @@ def _memory_getter(owning_component=None, context=None): # FIX: MAKE THIS A PARA
         memory = np.concatenate((memory, retrieval_node.path_afferents[0].parameters.matrix.get(context)),axis=1)
     return memory
 
-def get_softmax_gain(values, epsilon=1e-3):
-    """Compute the softmax gain based on length of vector and number of (near) zero values.
+# def get_softmax_gain(values, epsilon=1e-3):
+#     """Compute the softmax gain (inverse temperature) based on length of vector and number of (near) zero values.
+#     Thresholds for near-zero values is specified by **epsilon**.
+#     """
+#     values = np.squeeze(values)
+#     n = len(values)
+#     num_zero = np.count_nonzero(values < epsilon)
+#     num_non_zero = n - num_zero
+#     if num_non_zero == 0:
+#         gain = 1
+#     else:
+#         gain = 1 + np.exp(1/num_non_zero) * (num_zero/n)
+#     return gain
+
+# def get_softmax_gain(v, offset=1, scale=1, weighting=.1, entropy_transform='LOG')->float:
+#     """Compute the softmax gain (inverse temperature) based on the entropy of the distribution of values.
+#     Best params set: {'v':input,
+#                       'offset':1,
+#                       'scale':1,
+#                       'weighting':1,
+#                       'entropy_transform':'LOG'}
+#     """
+#     v = np.squeeze(v)
+#     def logistic(x):
+#         return 1 / (1 + np.exp(-1 * x))
+#     def entropy_by_element(x):
+#         entropy = -1 * np.sum(x * np.log(x))
+#         return entropy
+#     l = logistic(v)
+#     # entropy = entropy_of_mean(l)
+#     entropy = entropy_by_element(l)
+#     if entropy_transform == 'LOG':
+#         transformed_entropy = logistic(entropy)
+#     elif entropy_transform == 'LOGISTIC':
+#         transformed_entropy = np.log(entropy)
+#     else:
+#         assert False, 'BAD entropy_transform'
+#     gain = scale * (offset + (weighting * transformed_entropy))
+#     return gain, num_zeros, entropy, SoftMax(gain=gain)(v)
+
+def get_softmax_gain(v, scale=1, base=1, entropy_weighting=.1, entropy_transform='LOG')->float:
+    """Compute the softmax gain (inverse temperature) based on the entropy of the distribution of values.
+    scale * (base + (entropy_weighting * log(entropy(logistic(v))))))))
     """
-    values = np.squeeze(values)
-    n = len(values)
-    num_zero = np.count_nonzero(values < epsilon)
-    num_non_zero = n - num_zero
-    if num_non_zero == 0:
-        gain = 1
-    else:
-        gain = 1 + np.exp(1/num_non_zero) * (num_zero/n)
+    v = np.squeeze(v)
+    gain = scale * (base +
+                    (entropy_weighting *
+                     np.log(
+                         -1 * np.sum((1 / (1 + np.exp(-1 * v))) * np.log(1 / (1 + np.exp(-1 * v)))))))
     return gain
+
 
 class EMCompositionError(CompositionError):
 
