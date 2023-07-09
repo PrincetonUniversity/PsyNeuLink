@@ -353,6 +353,23 @@ class TestInputPortSpec:
         T.execute()
 
     # ------------------------------------------------------------------------------------------------
+    # TEST 14b
+    # Standalone Projection specification using port
+
+    def test_projection_list(self):
+        R2 = TransferMechanism(size=3)
+        P = MappingProjection(sender=R2.output_port)
+        T = TransferMechanism(
+            size=2,
+            input_ports=[P]
+        )
+        np.testing.assert_array_equal(T.defaults.variable, np.array([[0, 0]]))
+        assert len(T.input_ports) == 1
+        assert len(T.input_port.path_afferents[0].sender.defaults.variable) == 3
+        assert len(T.input_port.defaults.variable) == 2
+        T.execute()
+
+    # ------------------------------------------------------------------------------------------------
     # TEST 15
     # Projection specification in Tuple
 

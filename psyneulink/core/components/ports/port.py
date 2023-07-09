@@ -1281,9 +1281,7 @@ class Port_Base(Port):
               ModulatorySignal: _instantiate_projections_from_port (.efferents)
         """
 
-        raise PortError("{} must implement _instantiate_projections (called for {})".
-                         format(self.__class__.__name__,
-                                self.name))
+        raise PortError("f{self.__class__.__name__} must implement _instantiate_projections (called for {self.name}).")
 
     # FIX: MOVE TO InputPort AND ParameterPort OR...
     # IMPLEMENTATION NOTE:  MOVE TO COMPOSITION ONCE THAT IS IMPLEMENTED
@@ -1372,8 +1370,9 @@ class Port_Base(Port):
 
                 # validate receiver
                 if proj_receiver is not None and proj_receiver != self:
-                    raise PortError("Projection ({}) assigned to {} of {} already has a receiver ({})".
-                                     format(projection_type.__name__, self.name, self.owner.name, proj_receiver.name))
+                    raise PortError(f"Projection ({projection_type.__name__}) "
+                                    f"assigned to '{self.name}' of '{self.owner.name}' "
+                                    f"already has a receiver ('{proj_receiver.owner.name}[{proj_receiver.name}]').")
                 projection._init_args[RECEIVER] = self
 
 
@@ -1382,14 +1381,19 @@ class Port_Base(Port):
                     # If the Projection already has Port as its sender,
                     #    it must be the same as the one specified in the connection spec
                     if isinstance(proj_sender, Port) and proj_sender != port:
-                        raise PortError(f"Projection assigned to {self.name} of {self.owner.name} from {port.name} "
-                                        f"already has a sender ({proj_sender.name}).")
+                        raise PortError(f"Projection assigned to '{self.name}' of '{self.owner.name}' from {port.name} "
+                                        # f"already has a sender ({proj_sender.name}).")
+                                        f"already has a sender ('{proj_sender.owner.name}[{proj_sender.name}]').")
                     # If the Projection has a Mechanism specified as its sender:
                     elif isinstance(port, Port):
                         #    Connection spec (port) is specified as a Port,
                         #    so validate that Port belongs to Mechanism and is of the correct type
                         sender = _get_port_for_socket(owner=self.owner,
-                                                       mech=proj_sender,
+                                                      # # MODIFIED JDC 7/8/23 OLD:
+                                                      #  mech=proj_sender,
+                                                      # MODIFIED JDC 7/8/23 NEW:
+                                                       mech=proj_sender.owner,
+                                                      # MODIFIED JDC 7/8/23 END
                                                        port_spec=port,
                                                        port_types=port.__class__,
                                                        projection_socket=SENDER)
@@ -1420,8 +1424,8 @@ class Port_Base(Port):
                 elif inspect.isclass(sender) and issubclass(sender, Port):
                     sender_name = sender.__name__
                 else:
-                    raise PortError("SENDER of {} to {} of {} is neither a Port or Port class".
-                                     format(projection_type.__name__, self.name, self.owner.name))
+                    raise PortError(f"SENDER of {projection_type.__name__} to {self.name} of {self.owner.name} "
+                                    f"is neither a Port or Port class.")
                 projection._assign_default_projection_name(port=self,
                                                            sender_name=sender_name,
                                                            receiver_name=self.name)
@@ -2883,13 +2887,24 @@ def _parse_port_spec(port_type=None,
         # If it is a Port specification dictionary
         if isinstance(port_spec[PORT_SPEC_ARG], dict):
 
-            # If the Port specification is a Projection that has a sender already assigned,
+            # If the Port specification has a Projection that has a sender already assigned,
             #    then return that Port with the Projection assigned to it
             #    (this occurs, for example, if an instantiated ControlSignal is used to specify a parameter
+            # FIX: JDC 7/8/23 ??WHAT IF PORT SPECIFICATION DICT HAS OTHER SPECS, SUCH AS SIZE?
+            #      POSSIBLY THIS SHOULD ONLY BE CALLED IF DICT CONTAINS *ONLY* A PROJECTION SPEC?
             try:
-                assert len(port_spec[PORT_SPEC_ARG][PROJECTIONS])==1
-                projection = port_spec[PORT_SPEC_ARG][PROJECTIONS][0]
-                port = projection.sender
+                projection = port_spec[PORT_SPEC_ARG][PROJECTIONS]
+                if isinstance(projection, list):
+                    assert len(port_spec[PORT_SPEC_ARG][PROJECTIONS])==1
+                    projection = port_spec[PORT_SPEC_ARG][PROJECTIONS][0]
+                # MODIFIED JDC 7/8/23 OLD:
+                    port = projection.sender
+                # MODIFIED JDC 7/8/23 NEW:
+                # MODIFIED JDC 7/8/23 END
+                if projection.initialization_status == ContextFlags.DEFERRED_INIT:
+                    port = projection._init_args[SENDER]
+                else:
+                    port = projection.sender
                 if port.initialization_status == ContextFlags.DEFERRED_INIT:
                     port._init_args[PROJECTIONS] = projection
                 else:
@@ -3449,9 +3464,13 @@ def _get_port_for_socket(owner,
                  None)
         if s:
             try:
-                # Return Port associated with projection_socket if proj_spec is an actual Projection
-                port = getattr(proj_spec, projection_socket)
-                return port
+                if proj_spec.initialization_status == ContextFlags.DEFERRED_INIT:
+                    port = proj_spec._init_args[projection_socket]
+                    return port
+                else:
+                    # Return Port associated with projection_socket if proj_spec is an actual Projection
+                    port = getattr(proj_spec, projection_socket)
+                    return port
             except AttributeError:
                 # Otherwise, return first port_type (s)
                 return s
@@ -3529,10 +3548,6 @@ def _get_port_for_socket(owner,
                 if port is None:
                     raise PortError("PROGRAM ERROR: {} attribute(s) not found on {}'s type ({})".
                                      format(mech_port_attribute, mech.name, mech.__class__.__name__))
-
-    # # Get
-    # elif isinstance(port_spec, type) and issubclass(port_spec, Mechanism):
-
 
     # Get port from Projection specification (exclude matrix spec in test as it can't be used to determine the port)
     elif _is_projection_spec(port_spec, include_matrix_spec=False):

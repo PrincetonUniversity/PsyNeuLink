@@ -31,6 +31,7 @@
 # - ADD ADDITIONAL PARAMETERS FROM CONTENTADDRESSABLEMEMORY FUNCTION
 # - ADAPTIVE TEMPERATURE: KAMESH FOR FORMULA
 # - ADD MEMORY_DECAY TO ContentAddressableMemory FUNCTION (and compiled version by Samyak)
+# - MAKE memory_template A CONSTRUCTOR ARGUMENT FOR default_variable
 
 # FIX: COMPILE
 #      LinearMatrix to add normalization
@@ -242,20 +243,22 @@ import warnings
 
 from psyneulink._typing import Optional, Union
 
-from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
+from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax, LinearMatrix
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import Concatenate
 from psyneulink.core.components.functions.function import \
-    DEFAULT_SEED, FunctionError, _random_state_getter, _seed_setter, EPSILON, _noise_setter
+    DEFAULT_SEED, _random_state_getter, _seed_setter
 from psyneulink.core.compositions.composition import CompositionError, NodeRole
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import GatingMechanism
+from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import LearningMechanism
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.keywords import \
-    AUTO, CONTROL, EM_COMPOSITION, FUNCTION, GAIN, MULTIPLICATIVE_PARAM, NAME, PROJECTIONS, RESULT, SIZE, VALUE
+    AUTO, CONTROL, EM_COMPOSITION, FUNCTION, GAIN, \
+    MULTIPLICATIVE_PARAM, NAME, PROJECTIONS, RESULT, SIZE, VALUE, ZEROS_MATRIX
 from psyneulink.core.globals.utilities import all_within_range
 
 __all__ = [
@@ -614,13 +617,6 @@ class EMComposition(AutodiffComposition):
         # Memory management parameters
         if self.parameters.decay_memories.get() and self.parameters.decay_rate.get() is None:
             self.parameters.decay_rate.set(decay_rate or 1 / self.memory_capacity)
-        # if softmax_gain in (None):
-        #     self.parameters.softmax_gain.set(AUTO)
-        # elif softmax_gain == CONTROL:
-        #     # It will be set adaptively
-        #     self.parameters.softmax_gain.set(CONTROL)
-        # else:
-        #     self.parameters.softmax_gain.set(1/softmax_temperature)
 
         # Memory field attributes
         keys_weights = [i for i in self.field_weights if i != 0]
@@ -694,6 +690,7 @@ class EMComposition(AutodiffComposition):
         self.retrieval_gating_nodes = self._construct_retrieval_gating_nodes()
         self.retrieval_weighting_node = self._construct_retrieval_weighting_node()
         self.retrieval_nodes = self._construct_retrieval_nodes()
+        # self.storage_nodes = self._construct_storage_nodes()
 
         # Construct pathway as a set of nodes, since Projections are specified in the construction of each node
         pathway = set(self.key_input_nodes + self.value_input_nodes
@@ -767,15 +764,16 @@ class EMComposition(AutodiffComposition):
                     input_ports=
                     {
                         SIZE:self.memory_capacity,
-                        PROJECTIONS: self.key_input_nodes[i].output_port
-                        # PROJECTIONS:
-                        #     MappingProjection(
-                        #         sender=self.key_input_nodes[i].output_port,
-                        #         matrix=ZEROS_MATRIX,
-                        #         function=LinearMatrix(normalize=True))
+                        # PROJECTIONS: self.key_input_nodes[i].output_port
+                        PROJECTIONS:
+                            MappingProjection(
+                                sender=self.key_input_nodes[i].output_port,
+                                matrix=ZEROS_MATRIX,
+                                # matrix=np.zeros((len(self.key_input_nodes[i].value[0]),self.memory_capacity)),
+                                function=LinearMatrix(normalize=True))
                     },
                     # (self.memory_capacity,
-                    #  MappingProjection(sender=self.key_input_nodes[i].output_port, matrix=ZEROS_MATRIX)),
+                    # [MappingProjection(sender=self.key_input_nodes[i].output_port, matrix=ZEROS_MATRIX)],
                     name=f'MATCH NODE {i}')
                 for i in range(self.num_keys)
             ]
@@ -855,7 +853,7 @@ class EMComposition(AutodiffComposition):
         return retrieval_gating_nodes
 
     def _construct_retrieval_weighting_node(self)->list:
-        """Create layer that computes the weighting of each item in memory.
+        """Create nodes that compute the weighting of each item in memory.
         """
         # FIX: THIS SHOULD WORK:
         # retrieval_weighting_node = TransferMechanism(input_ports=[{PROJECTIONS: [m.output_port for m in self.softmax_nodes]}])
@@ -869,7 +867,7 @@ class EMComposition(AutodiffComposition):
         return [retrieval_weighting_node]
 
     def _construct_retrieval_nodes(self)->list:
-        """Create layer that reports the value field(s) for the item(s) matched in memory.
+        """Create nodes that report the value field(s) for the item(s) matched in memory.
         """
         # def _get_retrieval_node_name(node_type, len, i):
         #     return f'{node_type} RETRIEVED' if len == 1 else f'{node_type} {i} RETRIEVED'
@@ -887,6 +885,25 @@ class EMComposition(AutodiffComposition):
                                       for i in range(self.num_values)]
 
         return self.retrieved_key_nodes + self.retrieved_value_nodes
+
+    def _construct_storage_nodes(self)->list:
+        """Create LearningMechanisms that store the input values in memory.
+        Memories are stored by adding the current input to each field to the corresponding row of the matrix
+        for the Projection from the key_input_node to the matching_node for keys, and from the value_input_node to
+        the retrieval node for values.
+        """
+        # FIX: ASSIGN RELEVANT PROJECTIONS TO LEARNING MECHANISM ATTRIBUTES, AND ASSIGN FUNCTION THAT USES THOSE
+        self.key_storage_nodes = [LearningMechanism(size=len(self.key_input_nodes[i].value[0]),
+                                                    input_ports=self.key_input_nodes[i].output_port,
+                                                    name= f'{self.key_names[i]} STORAGE')
+                                  for i in range(self.num_keys)]
+
+        self.value_storage_nodes = [LearningMechanism(size=len(self.value_input_nodes[i].value[0]),
+                                                      name= f'{self.value_names[i]} STORAGE')
+                                    for i in range(self.num_values)]
+
+        return self.key_storage_nodes + self.value_storage_nodes
+
 
     def _set_learnability_of_projections(self):
         """Turn off learning for all Projections except afferents to retrieval_gating_nodes.
