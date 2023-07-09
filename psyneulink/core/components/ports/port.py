@@ -2891,21 +2891,15 @@ def _parse_port_spec(port_type=None,
             # FIX: JDC 7/8/23 ??WHAT IF PORT SPECIFICATION DICT HAS OTHER SPECS, SUCH AS SIZE?
             #      POSSIBLY THIS SHOULD ONLY BE CALLED IF DICT CONTAINS *ONLY* A PROJECTION SPEC?
             try:
-                # # MODIFIED JDC 7/8/23 OLD:
-                # assert len(port_spec[PORT_SPEC_ARG][PROJECTIONS])==1
-                # projection = port_spec[PORT_SPEC_ARG][PROJECTIONS][0]
-                # port = projection.sender
-                # MODIFIED JDC 7/8/23 NEW:
                 projection = port_spec[PORT_SPEC_ARG][PROJECTIONS]
                 if isinstance(projection, list):
                     assert len(port_spec[PORT_SPEC_ARG][PROJECTIONS])==1
                     projection = port_spec[PORT_SPEC_ARG][PROJECTIONS][0]
                     port = projection.sender
-                if projection.initialization_status == ContextFlags.DEFERRED_INIT:
+                elif projection.initialization_status == ContextFlags.DEFERRED_INIT:
                     port = projection._init_args[SENDER]
                 else:
                     port = projection.sender
-                # MODIFIED JDC 7/8/23 END
                 if port.initialization_status == ContextFlags.DEFERRED_INIT:
                     port._init_args[PROJECTIONS] = projection
                 else:
@@ -3165,9 +3159,9 @@ def _parse_port_spec(port_type=None,
 
         if isinstance(port_specification, (list, set)):
             port_specific_specs = ProjectionTuple(port=port_specification,
-                                              weight=None,
-                                              exponent=None,
-                                              projection=port_type)
+                                                  weight=None,
+                                                  exponent=None,
+                                                  projection=port_type)
 
         # Port specification is a tuple
         elif isinstance(port_specification, tuple):
@@ -3237,13 +3231,8 @@ def _parse_port_spec(port_type=None,
                                 port = port_attr[port]
                             except:
                                 name = owner.name if 'unnamed' not in owner.name else 'a ' + owner.__class__.__name__
-                                raise PortError("Unrecognized name ({}) for {} "
-                                                 "of {} in specification of {} "
-                                                 "for {}".format(port,
-                                                                 PORTS,
-                                                                 mech.name,
-                                                                 port_type.__name__,
-                                                                 name))
+                                raise PortError("Unrecognized name ({port}) for {PORTS} of {mech.name} "
+                                                "in specification of {port_type.__name__} for {name}.")
                             # If port_spec was a tuple, put port back in as its first item and use as projection spec
                             if isinstance(port_spec, tuple):
                                 port = (port,) + port_spec[1:]

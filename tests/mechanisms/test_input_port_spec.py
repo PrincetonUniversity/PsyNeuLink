@@ -339,7 +339,7 @@ class TestInputPortSpec:
     # TEST 14
     # Standalone Projection specification with Mechanism as sender
 
-    def test_projection_list(self):
+    def test_projection_list_mech_as_send(self):
         R2 = TransferMechanism(size=3)
         P = MappingProjection(sender=R2)
         T = TransferMechanism(
@@ -356,7 +356,7 @@ class TestInputPortSpec:
     # TEST 14b
     # Standalone Projection specification with Port as sender
 
-    def test_projection_list(self):
+    def test_projection_list_port_as_sender(self):
         R2 = TransferMechanism(size=3)
         P = MappingProjection(sender=R2.output_port)
         T = TransferMechanism(
