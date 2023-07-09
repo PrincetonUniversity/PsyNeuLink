@@ -428,7 +428,7 @@ from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
 from psyneulink.core.globals.socket import ConnectionInfo
 from psyneulink.core.globals.utilities import \
-    ContentAddressableList, is_matrix, is_numeric, parse_valid_identifier
+    ContentAddressableList, is_matrix, is_numeric, parse_valid_identifier, convert_to_list
 
 __all__ = [
     'Projection_Base', 'projection_keywords', 'PROJECTION_SPEC_KEYWORDS',
@@ -1776,6 +1776,9 @@ def _parse_connection_specs(connectee_port_type,
                                               mech=mech,
                                               mech_port_attribute=mech_port_attribute,
                                               projection_socket=projection_socket)
+                assert isinstance(port, Port) or all([p in port_types for p in convert_to_list(port)]), \
+                    f'PROGRAM ERROR:  ' \
+                    f'projection._get_port_for_socket() returned {port} which is not a Port or allowed Port Type.'
             except PortError as e:
                 raise ProjectionError(f"Problem with specification for {Port.__name__} in {Projection.__name__} "
                                       f"specification{(' for ' + owner.name) if owner else ' '}: " + e.error_value)
