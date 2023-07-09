@@ -14,6 +14,7 @@
 # - CONFIDENCE COMPUTATION
 
 # TODO:
+# - TEST concatenate_keys (fields_weights = scalar or all the same values)
 # - ACCESSIBILITY OF DISTANCES (SEE BELOW): MAKE IT A LOGGABLE PARAMETER (I.E., WITH APPROPRIATE SETTER)
 #   ADD COMPILED VERSION OF NORMED LINEAR_COMBINATION FUNCTION TO LinearCombination FUNCTION: dot / (norm a * norm b)
 # - DECAY WEIGHTS BY:
@@ -652,10 +653,10 @@ class EMComposition(AutodiffComposition):
         self._set_learnability_of_projections()
         self._initialize_memory()
 
-        # Set normalization if specified
-        if self.normalize_memories:
-            for node in self.softmax_nodes:
-                node.input_ports[0].path_afferents[0].function.parameters.normalize.set(True)
+        # # Set normalization if specified
+        # if self.normalize_memories:
+        #     for node in self.softmax_nodes:
+        #         node.input_ports[0].path_afferents[0].function.parameters.normalize.set(True)
 
     def _validate_memory_structure(self, memory_template, field_weights, field_names, name):
         """Validate the memory_template, field_weights, and field_names arguments
@@ -750,28 +751,35 @@ class EMComposition(AutodiffComposition):
         """
 
         if self.concatenate_keys:
+            matrix = np.zeros((np.sum([len(key_node.value[0]) for key_node in self.key_input_nodes]),
+                               self.memory_capacity))
             # One node that concatenates inputs from all keys
             match_nodes = [TransferMechanism(size=self.num_keys * self.memory_capacity,
                                              input_ports={NAME: 'CONCATENATED_INPUTS',
                                                           FUNCTION: Concatenate(),
-                                                          PROJECTIONS: self.key_input_nodes},
+                                                          # PROJECTIONS: self.key_input_nodes},
+                                                          PROJECTIONS:
+                                                              MappingProjection(
+                                                                  sender=self.key_input_nodes[i].output_port,
+                                                                  # matrix=ZEROS_MATRIX,
+                                                                  matrix=matrix,
+                                                                  function=LinearMatrix(
+                                                                      normalize=self.normalize_memories))},
                                              # function=SoftMax(gain=self.softmax_gain(self.field_weights)),
                                              name='MATCH NODE')]
         else:
             # One node for each key
+            matrix = np.zeros((len(self.key_input_nodes[i].value[0]),self.memory_capacity))
             match_nodes = [
                 TransferMechanism(
                     input_ports=
                     {
                         SIZE:self.memory_capacity,
                         # PROJECTIONS: self.key_input_nodes[i].output_port
-                        PROJECTIONS:
-                            MappingProjection(
-                                sender=self.key_input_nodes[i].output_port,
-                                matrix=ZEROS_MATRIX,
-                                # matrix=np.zeros((len(self.key_input_nodes[i].value[0]),self.memory_capacity)),
-                                function=LinearMatrix(normalize=True))
-                    },
+                        PROJECTIONS: MappingProjection(sender=self.key_input_nodes[i].output_port,
+                                                       # matrix=ZEROS_MATRIX,
+                                                       matrix=matrix,
+                                                       function=LinearMatrix(normalize=self.normalize_memories))},
                     # (self.memory_capacity,
                     # [MappingProjection(sender=self.key_input_nodes[i].output_port, matrix=ZEROS_MATRIX)],
                     name=f'MATCH NODE {i}')

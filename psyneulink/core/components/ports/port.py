@@ -1389,11 +1389,7 @@ class Port_Base(Port):
                         #    Connection spec (port) is specified as a Port,
                         #    so validate that Port belongs to Mechanism and is of the correct type
                         sender = _get_port_for_socket(owner=self.owner,
-                                                      # # MODIFIED JDC 7/8/23 OLD:
-                                                      #  mech=proj_sender,
-                                                      # MODIFIED JDC 7/8/23 NEW:
-                                                       mech=proj_sender.owner,
-                                                      # MODIFIED JDC 7/8/23 END
+                                                       mech=proj_sender,
                                                        port_spec=port,
                                                        port_types=port.__class__,
                                                        projection_socket=SENDER)
@@ -2897,10 +2893,7 @@ def _parse_port_spec(port_type=None,
                 if isinstance(projection, list):
                     assert len(port_spec[PORT_SPEC_ARG][PROJECTIONS])==1
                     projection = port_spec[PORT_SPEC_ARG][PROJECTIONS][0]
-                # MODIFIED JDC 7/8/23 OLD:
                     port = projection.sender
-                # MODIFIED JDC 7/8/23 NEW:
-                # MODIFIED JDC 7/8/23 END
                 if projection.initialization_status == ContextFlags.DEFERRED_INIT:
                     port = projection._init_args[SENDER]
                 else:
