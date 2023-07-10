@@ -15,6 +15,10 @@
 
 # TODO:
 # - TEST concatenate_keys (fields_weights = scalar or all the same values)
+# - FIX ZERO-WEIGHTS handling
+# - DEAL WITH ALL KEY WEIGHTS THE SAME BUT DON'T WANT TO CONCATENATE:
+#         MAKE CONCATENTAION AN EXPLICIT PARAMETER? BUT KEEP DEFAULT OF FIELD WEIGHT IS SCALAR?
+# - WRITE TESTS
 # - ACCESSIBILITY OF DISTANCES (SEE BELOW): MAKE IT A LOGGABLE PARAMETER (I.E., WITH APPROPRIATE SETTER)
 #   ADD COMPILED VERSION OF NORMED LINEAR_COMBINATION FUNCTION TO LinearCombination FUNCTION: dot / (norm a * norm b)
 # - DECAY WEIGHTS BY:
@@ -603,6 +607,9 @@ class EMComposition(AutodiffComposition):
                 num_fields = len(memory_template)
                 field_weights = [1] * num_fields
                 field_weights[-1] = 0
+        field_weights = np.atleast_1d(field_weights)
+        if len(field_weights) == 1:
+            field_weights = np.repeat(field_weights, len(memory_template))
 
         self._validate_memory_structure(memory_template, field_weights, field_names, name)
 
@@ -727,7 +734,7 @@ class EMComposition(AutodiffComposition):
         """
 
         # Get indices of field_weights that specify keys:
-        value_indices = np.where(np.array(self.field_weights) == 0)[0]
+        value_indices = np.where(self.field_weights == 0)[0]
 
         assert len(value_indices) == self.num_values, \
             f"PROGRAM ERROR: number of values ({self.num_values}) does not match number of " \
@@ -751,34 +758,39 @@ class EMComposition(AutodiffComposition):
         """
 
         if self.concatenate_keys:
-            matrix = np.zeros((np.sum([len(key_node.value[0]) for key_node in self.key_input_nodes]),
-                               self.memory_capacity))
+            sum_of_key_lengths = np.sum([len(key_node.value[0]) for key_node in self.key_input_nodes])
+            # matrix = np.zeros((sum_of_key_lengths,
+            #                    self.memory_capacity))
             # One node that concatenates inputs from all keys
-            match_nodes = [TransferMechanism(size=self.num_keys * self.memory_capacity,
+            match_nodes = [TransferMechanism(size=sum_of_key_lengths,
                                              input_ports={NAME: 'CONCATENATED_INPUTS',
+                                                          # SIZE: sum_of_key_lengths,
                                                           FUNCTION: Concatenate(),
                                                           # PROJECTIONS: self.key_input_nodes},
                                                           PROJECTIONS:
-                                                              MappingProjection(
+                                                              [MappingProjection(
                                                                   sender=self.key_input_nodes[i].output_port,
                                                                   # matrix=ZEROS_MATRIX,
-                                                                  matrix=matrix,
+                                                                  matrix=np.zeros((len(self.key_input_nodes[i].value[0]),
+                                                                                   sum_of_key_lengths)),
                                                                   function=LinearMatrix(
-                                                                      normalize=self.normalize_memories))},
+                                                                      normalize=self.normalize_memories))
+                                                                  for i in range(self.num_keys)]},
                                              # function=SoftMax(gain=self.softmax_gain(self.field_weights)),
                                              name='MATCH NODE')]
         else:
             # One node for each key
-            matrix = np.zeros((len(self.key_input_nodes[i].value[0]),self.memory_capacity))
             match_nodes = [
                 TransferMechanism(
                     input_ports=
                     {
                         SIZE:self.memory_capacity,
                         # PROJECTIONS: self.key_input_nodes[i].output_port
-                        PROJECTIONS: MappingProjection(sender=self.key_input_nodes[i].output_port,
+                        PROJECTIONS: MappingProjection(sender=self.key_input_nodes[i],
+                                                       # sender=self.key_input_nodes[i].output_port,
                                                        # matrix=ZEROS_MATRIX,
-                                                       matrix=matrix,
+                                                       matrix=np.zeros((len(self.key_input_nodes[i].value[0]),
+                                                                        self.memory_capacity)),
                                                        function=LinearMatrix(normalize=self.normalize_memories))},
                     # (self.memory_capacity,
                     # [MappingProjection(sender=self.key_input_nodes[i].output_port, matrix=ZEROS_MATRIX)],
@@ -793,13 +805,13 @@ class EMComposition(AutodiffComposition):
         if self.parameters.softmax_gain.get() != CONTROL:
             return []
         softmax_control_nodes = [
-            ControlMechanism(monitor_for_control=self.match_nodes[i],
+            ControlMechanism(monitor_for_control=match_node,
                              control_signals=[(GAIN, self.softmax_nodes[i])],
                              function=get_softmax_gain,
                              name='SOFTMAX GAIN CONTROL' if self.num_keys == 1
                              else f'SOFTMAX GAIN CONTROL {i}')
 
-            for i in range(self.num_keys)]
+            for i, match_node in enumerate(self.match_nodes)]
         return softmax_control_nodes
 
     def _construct_softmax_nodes(self)->list:
@@ -828,7 +840,7 @@ class EMComposition(AutodiffComposition):
                 input_ports=
                 {
                     SIZE:self.memory_capacity,
-                    PROJECTIONS: self.match_nodes[i].output_port
+                    PROJECTIONS: match_node.output_port
                     # PROJECTIONS:
                     #     MappingProjection(
                     #         sender=self.key_input_nodes[i].output_port,
@@ -842,7 +854,7 @@ class EMComposition(AutodiffComposition):
                               {VALUE: key_weights[0],
                                NAME: 'KEY_WEIGHT'}],
                 name='SOFTMAX NODE ' + str(i))
-            for i in range(self.num_keys)
+            for i, match_node in enumerate(self.match_nodes)
         ]
 
         return softmax_nodes
