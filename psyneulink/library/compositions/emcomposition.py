@@ -14,11 +14,12 @@
 # - CONFIDENCE COMPUTATION
 
 # TODO:
-# - TEST concatenate_keys (fields_weights = scalar or all the same values)
 # - FIX ZERO-WEIGHTS handling
-# - DEAL WITH ALL KEY WEIGHTS THE SAME BUT DON'T WANT TO CONCATENATE:
-#         MAKE CONCATENTAION AN EXPLICIT PARAMETER? BUT KEEP DEFAULT OF FIELD WEIGHT IS SCALAR?
-# - WRITE TESTS
+# - FIX: ALL KEY WEIGHTS THE SAME BUT DON'T WANT TO CONCATENATE:
+#         MAKE CONCATENATION AN EXPLICIT PARAMETER, BUT KEEP IT AS DEFAULT WHEN FIELD WEIGHT IS A SCALAR
+# - FIX: WRITE TESTS
+# - FIX: MappingProjection with sender specified as OutputPort
+# - FIX: WHY IS Concatenate NOT WORKING AS FUNCTION OF AN INPUTPORT (WASN'T THAT USED IN CONTEXT OF BUFFER?)
 # - ACCESSIBILITY OF DISTANCES (SEE BELOW): MAKE IT A LOGGABLE PARAMETER (I.E., WITH APPROPRIATE SETTER)
 #   ADD COMPILED VERSION OF NORMED LINEAR_COMBINATION FUNCTION TO LinearCombination FUNCTION: dot / (norm a * norm b)
 # - DECAY WEIGHTS BY:
@@ -254,6 +255,7 @@ from psyneulink.core.components.functions.function import \
     DEFAULT_SEED, _random_state_getter, _seed_setter
 from psyneulink.core.compositions.composition import CompositionError, NodeRole
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
+from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import GatingMechanism
@@ -262,7 +264,7 @@ from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.keywords import \
-    AUTO, CONTROL, EM_COMPOSITION, FUNCTION, GAIN, \
+    AUTO, CONTROL, EM_COMPOSITION, FUNCTION, GAIN, IDENTITY_MATRIX, \
     MULTIPLICATIVE_PARAM, NAME, PROJECTIONS, RESULT, SIZE, VALUE, ZEROS_MATRIX
 from psyneulink.core.globals.utilities import all_within_range
 
@@ -276,12 +278,15 @@ def _memory_getter(owning_component=None, context=None): # FIX: MAKE THIS A PARA
     """Return memory as a list of the memories stored in the memory nodes.
     """
     memory = None
-    for key_node in owning_component.key_input_nodes:
-        memory_field = key_node.efferents[0].parameters.matrix.get(context).transpose()
-        if memory is None:
-            memory = memory_field
-        else:
-            memory = np.concatenate((memory, memory_field),axis=1)
+    if owning_component.concatenate_keys:
+        memory = owning_component.match_nodes[0].path_afferents[0].parameters.matrix.get(context).transpose()
+    else:
+        for key_node in owning_component.key_input_nodes:
+            memory_field = key_node.efferents[0].parameters.matrix.get(context).transpose()
+            if memory is None:
+                memory = memory_field
+            else:
+                memory = np.concatenate((memory, memory_field),axis=1)
     for retrieval_node in owning_component.retrieval_nodes:
         memory = np.concatenate((memory, retrieval_node.path_afferents[0].parameters.matrix.get(context)),axis=1)
     return memory
@@ -692,6 +697,7 @@ class EMComposition(AutodiffComposition):
         # Construct nodes of Composition
         self.key_input_nodes = self._construct_key_input_nodes()
         self.value_input_nodes = self._construct_value_input_nodes()
+        self.concatenate_keys_node = self._construct_concatenate_keys_node()
         self.match_nodes = self._construct_match_nodes()
         self.softmax_nodes = self._construct_softmax_nodes()
         self.softmax_control_nodes = self._construct_softmax_control_nodes()
@@ -701,7 +707,7 @@ class EMComposition(AutodiffComposition):
         # self.storage_nodes = self._construct_storage_nodes()
 
         # Construct pathway as a set of nodes, since Projections are specified in the construction of each node
-        pathway = set(self.key_input_nodes + self.value_input_nodes
+        pathway = set(self.key_input_nodes + self.value_input_nodes + self.concatenate_keys_node
                       + self.match_nodes + self.softmax_control_nodes + self.softmax_nodes \
                       + self.retrieval_weighting_node + self.retrieval_gating_nodes + self.retrieval_nodes)
 
@@ -747,6 +753,34 @@ class EMComposition(AutodiffComposition):
 
         return value_input_nodes
 
+    def _construct_concatenate_keys_node(self)->list:
+        """Create node that concatenates the inputs for all keys into a single vector
+        Used to create a matrix for Projectoin from match / memory weights from concatenate_node -> match_node
+        """
+        sum_of_key_lengths = np.sum([len(key_node.value[0]) for key_node in self.key_input_nodes])
+        # matrix = np.zeros((sum_of_key_lengths,
+        #                    self.memory_capacity))
+        # One node that concatenates inputs from all keys
+        if not self.concatenate_keys:
+            return []
+        else:
+            return [ProcessingMechanism(#size=sum_of_key_lengths,
+                                        function=Concatenate,
+                                        input_ports=[{NAME: 'CONCATENATE_KEYS',
+                                                      SIZE: len(self.key_input_nodes[i].output_port.value),
+                                                      PROJECTIONS: MappingProjection(
+                                                          sender=self.key_input_nodes[i].output_port,
+                                                          # sender=self.key_input_nodes[i],
+                                                          matrix=IDENTITY_MATRIX)}
+                                                     # # matrix=ZEROS_MATRIX,
+                                                     # matrix=np.zeros((len(self.key_input_nodes[i].value[0]),
+                                                     #                  len(self.key_input_nodes[i].value[0]))),
+                                                     # function=LinearMatrix(
+                                                     #     normalize=self.normalize_memories))
+                                                     for i in range(self.num_keys)],
+                                        name='CONCATENATE KEYS')]
+            assert True
+
     def _construct_match_nodes(self)->list:
         """Create nodes that, for each key field, compute the similarity between the input and each item in memory.
         Each element of the output represents the similarity between the key_input and one item in memory.
@@ -758,26 +792,23 @@ class EMComposition(AutodiffComposition):
         """
 
         if self.concatenate_keys:
-            sum_of_key_lengths = np.sum([len(key_node.value[0]) for key_node in self.key_input_nodes])
-            # matrix = np.zeros((sum_of_key_lengths,
-            #                    self.memory_capacity))
-            # One node that concatenates inputs from all keys
-            match_nodes = [TransferMechanism(size=sum_of_key_lengths,
-                                             input_ports={NAME: 'CONCATENATED_INPUTS',
-                                                          # SIZE: sum_of_key_lengths,
-                                                          FUNCTION: Concatenate(),
-                                                          # PROJECTIONS: self.key_input_nodes},
-                                                          PROJECTIONS:
-                                                              [MappingProjection(
-                                                                  sender=self.key_input_nodes[i].output_port,
-                                                                  # matrix=ZEROS_MATRIX,
-                                                                  matrix=np.zeros((len(self.key_input_nodes[i].value[0]),
-                                                                                   sum_of_key_lengths)),
-                                                                  function=LinearMatrix(
-                                                                      normalize=self.normalize_memories))
-                                                                  for i in range(self.num_keys)]},
-                                             # function=SoftMax(gain=self.softmax_gain(self.field_weights)),
-                                             name='MATCH NODE')]
+            sender = self.concatenate_keys_node[0]
+            sender_size = len(sender.value[0])
+            receiver_size = self.memory_capacity
+            match_nodes = [
+                TransferMechanism(
+                    input_ports={NAME: 'CONCATENATED_INPUTS',
+                                 SIZE: self.memory_capacity,
+                                 # PROJECTIONS: source},
+                                 PROJECTIONS: MappingProjection(sender=sender,
+                                                                # sender=source.output_port,
+                                                                # matrix=ZEROS_MATRIX,
+                                                                matrix=np.zeros((sender_size,receiver_size)),
+                                                                function=LinearMatrix(
+                                                                    normalize=self.normalize_memories))},
+
+                    # function=SoftMax(gain=self.softmax_gain(self.field_weights)),
+            name='MATCH')]
         else:
             # One node for each key
             match_nodes = [
@@ -794,10 +825,9 @@ class EMComposition(AutodiffComposition):
                                                        function=LinearMatrix(normalize=self.normalize_memories))},
                     # (self.memory_capacity,
                     # [MappingProjection(sender=self.key_input_nodes[i].output_port, matrix=ZEROS_MATRIX)],
-                    name=f'MATCH NODE {i}')
+                    name=f'MATCH KEY {i}')
                 for i in range(self.num_keys)
             ]
-
         return match_nodes
 
     def _construct_softmax_control_nodes(self)->list:
@@ -853,7 +883,7 @@ class EMComposition(AutodiffComposition):
                 output_ports=[RESULT,
                               {VALUE: key_weights[0],
                                NAME: 'KEY_WEIGHT'}],
-                name='SOFTMAX NODE ' + str(i))
+                name='SOFTMAX' + str(i))
             for i, match_node in enumerate(self.match_nodes)
         ]
 
@@ -862,14 +892,18 @@ class EMComposition(AutodiffComposition):
     def _construct_retrieval_gating_nodes(self)->list:
         """Create GatingMechanisms that weight each key's contribution to the retrieved values.
         """
-        retrieval_gating_nodes = [GatingMechanism(#input_ports=key_match_pair[0].output_ports['RESULT'],
-                                                  input_ports={PROJECTIONS: key_match_pair[0].output_ports['RESULT'],
-                                                               NAME: 'OUTCOME'},
-                                                 gate=[key_match_pair[1].output_ports[1]],
-                                                 # name=f'RETRIEVAL GATING NODE {i}')
-                                                 name= 'RETRIEVAL WEIGHTING NODE' if self.num_keys == 1
-                                                 else f'RETRIEVAL WEIGHTING NODE {i}')
-                                 for i, key_match_pair in enumerate(zip(self.key_input_nodes, self.softmax_nodes))]
+        # FIX: CONSIDER USING THIS FOR INPUT GATING OF MATCH NODE(S)?
+        if self.concatenate_keys:
+            retrieval_gating_nodes = []
+        else:
+            retrieval_gating_nodes = [GatingMechanism(#input_ports=key_match_pair[0].output_ports['RESULT'],
+                                                      input_ports={PROJECTIONS: key_match_pair[0].output_ports['RESULT'],
+                                                                   NAME: 'OUTCOME'},
+                                                     gate=[key_match_pair[1].output_ports[1]],
+                                                     # name=f'RETRIEVAL GATING NODE {i}')
+                                                     name= 'RETRIEVAL WEIGHTING' if self.num_keys == 1
+                                                     else f'RETRIEVAL WEIGHTING {i}')
+                                     for i, key_match_pair in enumerate(zip(self.key_input_nodes, self.softmax_nodes))]
         return retrieval_gating_nodes
 
     def _construct_retrieval_weighting_node(self)->list:
@@ -878,7 +912,7 @@ class EMComposition(AutodiffComposition):
         # FIX: THIS SHOULD WORK:
         # retrieval_weighting_node = TransferMechanism(input_ports=[{PROJECTIONS: [m.output_port for m in self.softmax_nodes]}])
         retrieval_weighting_node = TransferMechanism(input_ports=[m.output_port for m in self.softmax_nodes],
-                                                     name='RETRIEVAL WEIGHTING NODE')
+                                                     name='WEIGHT RETRIEVALS')
 
         assert len(retrieval_weighting_node.output_port.value) == self.memory_capacity,\
             f'PROGRAM ERROR: number of items in retrieval_weighting_node ({len(retrieval_weighting_node.output_port)})' \
