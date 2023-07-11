@@ -128,7 +128,7 @@ __all__ = [
     'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_list', 'convert_to_np_array',
     'convert_all_elements_to_np_array', 'copy_iterable_with_shared', 'get_class_attributes', 'flatten_list',
     'get_all_explicit_arguments', 'get_modulationOperation_name', 'get_value_from_array',
-    'insert_list', 'is_matrix_spec', 'all_within_range',
+    'insert_list', 'is_matrix_keyword', 'all_within_range',
     'is_comparison_operator',  'iscompatible', 'is_component', 'is_distance_metric', 'is_iterable', 'is_matrix',
     'is_modulation_operation', 'is_numeric', 'is_numeric_or_none', 'is_number', 'is_same_function_spec', 'is_unit_interval',
     'is_value_spec',
@@ -380,14 +380,13 @@ def is_number(x):
     )
 
 
-def is_matrix_spec(m):
+def is_matrix_keyword(m):
     return isinstance(m, str) and m in MATRIX_KEYWORD_VALUES
-
 
 def is_matrix(m):
     from psyneulink.core.components.component import Component
 
-    if is_matrix_spec(m):
+    if is_matrix_keyword(m):
         return True
     if isinstance(m, (list, np.ndarray, np.matrix)):
         return True
@@ -557,7 +556,7 @@ def iscompatible(candidate, reference=None, **kargs):
 
     # # FIX??
     # # Reference is a matrix or a keyword specification for one
-    if is_matrix_spec(reference):
+    if is_matrix_keyword(reference):
         return is_matrix(candidate)
 
     # IMPLEMENTATION NOTE: This allows a number in an ndarray to match a float or int

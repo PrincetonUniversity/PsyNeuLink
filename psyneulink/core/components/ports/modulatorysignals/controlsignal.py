@@ -1077,15 +1077,6 @@ class ControlSignal(ModulatorySignal):
 
         return port_spec, params_dict
 
-    def _update(self, params=None, context=None):
-        """Update value (intensity) and costs
-        """
-        super()._update(params=params, context=context)
-
-        if self.parameters.cost_options._get(context):
-            intensity = self.parameters.value._get(context)
-            self.parameters.cost._set(self.compute_costs(intensity, context), context)
-
     def compute_costs(self, intensity, context=None):
         """Compute costs based on self.value (`intensity <ControlSignal.intensity>`)."""
         # FIX 8/30/19: NEED TO DEAL WITH DURATION_COST AS STATEFUL:  DON'T WANT TO MESS UP MAIN VALUE
