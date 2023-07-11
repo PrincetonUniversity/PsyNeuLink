@@ -778,6 +778,11 @@ class CompExecution(CUDAExecution):
         out_ty = out_el_ty * num_evaluations
 
         ct_num_inputs = bin_func.byref_arg_types[7](num_input_sets)
+        if "stat" in self._debug_env:
+            print("Evaluate result struct type size:",
+                  _pretty_size(ctypes.sizeof(out_ty)),
+                  "( evaluations:", num_evaluations, "element size:", ctypes.sizeof(out_el_ty), ")",
+                  "for", self._obj.name)
 
         # return variable as numpy array. pycuda can use it directly
         return ct_comp_param, ct_comp_state, ct_comp_data, ct_inputs, out_ty, ct_num_inputs
