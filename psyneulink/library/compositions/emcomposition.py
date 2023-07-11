@@ -800,10 +800,10 @@ class EMComposition(AutodiffComposition):
                     input_ports={NAME: 'CONCATENATED_INPUTS',
                                  SIZE: self.memory_capacity,
                                  # PROJECTIONS: source},
-                                 PROJECTIONS: MappingProjection(sender=sender,
-                                                                # sender=source.output_port,
-                                                                # matrix=ZEROS_MATRIX,
-                                                                matrix=np.zeros((sender_size,receiver_size)),
+                                 PROJECTIONS: MappingProjection(#sender=sender,
+                                                                sender=sender.output_port,
+                                                                matrix=ZEROS_MATRIX,
+                                                                # matrix=np.zeros((sender_size,receiver_size)),
                                                                 function=LinearMatrix(
                                                                     normalize=self.normalize_memories))},
 
@@ -817,11 +817,10 @@ class EMComposition(AutodiffComposition):
                     {
                         SIZE:self.memory_capacity,
                         # PROJECTIONS: self.key_input_nodes[i].output_port
-                        PROJECTIONS: MappingProjection(sender=self.key_input_nodes[i],
-                                                       # sender=self.key_input_nodes[i].output_port,
-                                                       # matrix=ZEROS_MATRIX,
-                                                       matrix=np.zeros((len(self.key_input_nodes[i].value[0]),
-                                                                        self.memory_capacity)),
+                        PROJECTIONS: MappingProjection(sender=self.key_input_nodes[i].output_port,
+                                                       matrix=ZEROS_MATRIX,
+                                                       # matrix=np.zeros((len(self.key_input_nodes[i].value[0]),
+                                                       #                  self.memory_capacity)),
                                                        function=LinearMatrix(normalize=self.normalize_memories))},
                     # (self.memory_capacity,
                     # [MappingProjection(sender=self.key_input_nodes[i].output_port, matrix=ZEROS_MATRIX)],
