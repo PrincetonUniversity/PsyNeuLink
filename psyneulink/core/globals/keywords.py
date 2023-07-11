@@ -121,7 +121,7 @@ __all__ = [
     'TRIAL', 'TRIALS_DIM',
     'UNCHANGED', 'UNIFORM_DIST_FUNCTION', 'USER_DEFINED_FUNCTION', 'USER_DEFINED_FUNCTION_TYPE',
     'VALUES', 'VALIDATE', 'VALIDATION', 'VALUE', 'VALUE_ASSIGNMENT', 'VALUE_FUNCTION', 'VARIABLE', 'VARIANCE',
-    'VECTOR', 'WALD_DIST_FUNCTION', 'WEIGHT', 'WEIGHTS', 'X_0',
+    'VECTOR', 'WALD_DIST_FUNCTION', 'WEIGHT', 'WEIGHTS', 'X_0', 'ZEROS_MATRIX'
 ]
 
 # **********************************************************************************************************************
@@ -150,6 +150,10 @@ class MatrixKeywords:
         a matrix that has a number of rows equal to the length of the sender's value, and a number of columns equal
         to the length of the receiver's value, all the elements of which are 1's.
 
+    ZEROS_MATRIX
+        a matrix that has a number of rows equal to the length of the sender's value, and a number of columns equal
+        to the length of the receiver's value, all the elements of which are 0's.
+
     RANDOM_CONNECTIVITY_MATRIX
         a matrix that has a number of rows equal to the length of the sender's value, and a number of columns equal
         to the length of the receiver's value, all the elements of which are filled with random values uniformly
@@ -169,6 +173,7 @@ class MatrixKeywords:
         self.HOLLOW_MATRIX = HOLLOW_MATRIX
         self.INVERSE_HOLLOW_MATRIX = INVERSE_HOLLOW_MATRIX
         self.FULL_CONNECTIVITY_MATRIX = FULL_CONNECTIVITY_MATRIX
+        self.ZEROS_MATRIX = ZEROS_MATRIX
         self.RANDOM_CONNECTIVITY_MATRIX = RANDOM_CONNECTIVITY_MATRIX
         self.AUTO_ASSIGN_MATRIX = AUTO_ASSIGN_MATRIX
         self.DEFAULT_MATRIX = DEFAULT_MATRIX
@@ -188,6 +193,7 @@ IDENTITY_MATRIX = "IdentityMatrix"
 HOLLOW_MATRIX = "HollowMatrix"
 INVERSE_HOLLOW_MATRIX = "InverseHollowMatrix"
 FULL_CONNECTIVITY_MATRIX = "FullConnectivityMatrix"
+ZEROS_MATRIX = "ZerosMatrix"
 RANDOM_CONNECTIVITY_MATRIX = "RandomConnectivityMatrix"
 AUTO_ASSIGN_MATRIX = 'AutoAssignMatrix'
 DEFAULT_MATRIX = AUTO_ASSIGN_MATRIX

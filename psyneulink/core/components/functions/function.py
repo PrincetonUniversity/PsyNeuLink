@@ -159,7 +159,7 @@ from psyneulink.core.globals.keywords import (
     ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, EXAMPLE_FUNCTION_TYPE, FULL_CONNECTIVITY_MATRIX,
     FUNCTION_COMPONENT_CATEGORY, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, HOLLOW_MATRIX,
     IDENTITY_MATRIX, INVERSE_HOLLOW_MATRIX, NAME, PREFERENCE_SET_NAME, RANDOM_CONNECTIVITY_MATRIX, VALUE, VARIABLE,
-    MODEL_SPEC_ID_MDF_VARIABLE, MatrixKeywordLiteral
+    MODEL_SPEC_ID_MDF_VARIABLE, MatrixKeywordLiteral, ZEROS_MATRIX
 )
 from psyneulink.core.globals.mdf import _get_variable_parameter_name
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
@@ -1273,6 +1273,7 @@ def get_matrix(specification, rows=1, cols=1, context=None):
             + HOLLOW_MATRIX: 0's on diagonal, 1's elsewhere (must be square matrix), otherwise generates error
             + INVERSE_HOLLOW_MATRIX: 0's on diagonal, -1's elsewhere (must be square matrix), otherwise generates error
             + FULL_CONNECTIVITY_MATRIX: all 1's
+            + ZERO_MATRIX: all 0's
             + RANDOM_CONNECTIVITY_MATRIX (random floats uniformly distributed between 0 and 1)
             + RandomMatrix (random floats uniformly distributed around a specified center value with a specified range)
         + 2D list or np.ndarray of numbers
@@ -1306,6 +1307,9 @@ def get_matrix(specification, rows=1, cols=1, context=None):
 
     if specification == FULL_CONNECTIVITY_MATRIX:
         return np.full((rows, cols), 1.0)
+
+    if specification == ZEROS_MATRIX:
+        return np.zeros((rows, cols))
 
     if specification == IDENTITY_MATRIX:
         if rows != cols:
