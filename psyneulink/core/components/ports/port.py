@@ -2884,9 +2884,6 @@ def _parse_port_spec(port_type=None,
 
         # If it is a Port specification dictionary
         if isinstance(port_spec[PORT_SPEC_ARG], dict):
-
-        # If it is a Port specification dictionary
-        if isinstance(port_spec[PORT_SPEC_ARG], dict):
             # If the Port specification has a Projection specification (instantiated or in deferred_init)
             # (used to define its connection) then return port specified in the Projection.
             # This can either the sender or the receiver of the specified Projection, depending on the caller:
@@ -2896,25 +2893,40 @@ def _parse_port_spec(port_type=None,
             # - if the receiver is specified in the Projection, return port = sender
             #   (e.g., projection is from an OutputPort with its sender specified,
             #          so return the port = receiver -- i.e., InputPort to which Projection should be connected)
-            # FIX: JDC 7/8/23 ??WHAT IF PORT SPECIFICATION DICT HAS OTHER SPECS, SUCH AS SIZE?
-            # POSSIBLY THIS SHOULD BE CALLED ONLY IF DICT CONTAINS *ONLY* A PROJECTION SPEC?
-
-            # FIX: CHECK WHICH IS SPECIFIED IN THE PROJECTION -- SENDER OR RECEIVER - AND ASSIGN THE OTHER
-            #      RAISE EXCEPTION IF BOTH ARE SPECIFIED
+            # FIX: WHAT IF PORT SPECIFICATION DICT HAS OTHER SPECS, SUCH AS SIZE?
+            # FIX: POSSIBLY THIS SHOULD BE CALLED ONLY IF DICT CONTAINS *ONLY* A PROJECTION SPEC?
             try:
                 projection = port_spec[PORT_SPEC_ARG][PROJECTIONS]
                 if isinstance(projection, list):
                     assert len(port_spec[PORT_SPEC_ARG][PROJECTIONS])==1
                     projection = port_spec[PORT_SPEC_ARG][PROJECTIONS][0]
-                    # FIX: CAUSES TESTS FAILURES
-                    # port = projection.sender
-                    port = projection.receiver
+                if projection.initialization_status == ContextFlags.INITIALIZED:
+                    sender = projection.sender
+                    receiver = projection.receiver
                 elif projection.initialization_status == ContextFlags.DEFERRED_INIT:
-                    # port = projection._init_args[SENDER]
-                    port = projection._init_args[RECEIVER]
+                    sender = projection._init_args[SENDER]
+                    receiver = projection._init_args[RECEIVER]
                 else:
-                    # port = projection.sender
+                    assert False, f"PROGRAM ERROR: Projection ('{projection.name}') specified for" \
+                                  f" {port_type.__name__} of '{owner.name}' has unrcognized initialization_status: " \
+                                  f"{projection.initialization_status.name}"
+                # Check whether sender and/or receiver is an instantiated Port
+                sender_instantiated = isinstance(sender, Port)
+                if sender_instantiated:
+                    sender_instantiated = sender.initialization_status == ContextFlags.INITIALIZED
+                receiver_instantiated = isinstance(receiver, Port)
+                if receiver_instantiated:
+                    receiver_instantiated = receiver.initialization_status == ContextFlags.INITIALIZED
+                # Ensure that *either* sender or receiver is an instantiated Port, but *not both*
+                assert sender_instantiated ^ receiver_instantiated, \
+                    f"PROGRAM ERROR: Projection ('{projection.name}') specified for" \
+                    f" {port_type.__name__} of '{owner.name}' has both sender and receiver instantiated: " \
+                    f"sender: '{sender.name}'; receiver: '{receiver.name}'"
+                if sender_instantiated:
                     port = projection.receiver
+                else:
+                    port = projection.sender
+
                 if port.initialization_status == ContextFlags.DEFERRED_INIT:
                     port._init_args[PROJECTIONS] = projection
                 else:
@@ -2922,7 +2934,6 @@ def _parse_port_spec(port_type=None,
                 return port
             except:
                 pass
-
 
             # Use the value of any standard args specified in the Port specification dictionary
             #    to replace those explicitly specified in the call to _instantiate_port (i.e., passed in standard_args)
