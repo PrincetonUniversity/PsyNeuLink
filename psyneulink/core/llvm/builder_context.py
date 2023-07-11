@@ -546,9 +546,13 @@ def _gen_cuda_kernel_wrapper_module(function):
         ptr_src = b.bitcast(ptr, char_ptr_ty)
         ptr_dst = b.bitcast(shared_ptr, char_ptr_ty)
 
+        # the params for objectsize are:
+        # * obj pointer,
+        # * 0 on unknown size instead of -1,
+        # * NULL ptr is unknown size
+        # * evaluate size at runtime
         obj_size_ty = ir.FunctionType(ir.IntType(32), [char_ptr_ty, bool_ty, bool_ty, bool_ty])
         obj_size_f = module.declare_intrinsic("llvm.objectsize.i32", [], obj_size_ty)
-        # the params are: obj pointer, 0 on unknown size, NULL is unknown, size at runtime
         obj_size = b.call(obj_size_f, [ptr_dst, bool_ty(1), bool_ty(0), bool_ty(0)])
         obj_size = b.mul(obj_size, length)
 
@@ -576,11 +580,14 @@ def _gen_cuda_kernel_wrapper_module(function):
 
     if is_grid_ranged and "cuda_no_shared" not in debug_env:
         one = ir.IntType(32)(1)
+
+        # Upload static RO structures
         builder, args[0] = _upload_to_shared(builder, args[0], one, "params")
         builder, args[1] = _upload_to_shared(builder, args[1], one, "state")
         builder, args[4] = _upload_to_shared(builder, args[4], one, "data")
-        # arg[5] (orig_arg[7]) is the number of inputs
-        builder, args[3] = _upload_to_shared(builder, args[3], builder.load(args[5]), "inputs")
+
+        # TODO: Investigate benefit of uplaoding dynamic RO structures to
+        #       shared memory (e.g. inputs)
 
     # Check global id and exit if we're over
     should_quit = builder.icmp_unsigned(">=", global_id, kernel_func.args[-1])
