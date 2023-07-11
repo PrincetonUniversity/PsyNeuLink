@@ -573,7 +573,7 @@ class CompExecution(CUDAExecution):
                        inputs, self.__frozen_vals, self._data_struct)
 
         if "comp_node_debug" in self._debug_env:
-            print("RAN: {}. CTX: {}".format(node, self.extract_node_state(node)))
+            print("RAN: {}. State: {}".format(node, self.extract_node_state(node)))
             print("RAN: {}. Params: {}".format(node, self.extract_node_params(node)))
             print("RAN: {}. Results: {}".format(node, self.extract_node_output(node)))
 
