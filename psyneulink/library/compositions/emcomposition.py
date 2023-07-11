@@ -266,7 +266,7 @@ from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.keywords import \
-    AUTO, CONTROL, EM_COMPOSITION, FUNCTION, GAIN, IDENTITY_MATRIX, \
+    CONTROL, EM_COMPOSITION, FUNCTION, GAIN, IDENTITY_MATRIX, \
     MULTIPLICATIVE_PARAM, NAME, PROJECTIONS, RESULT, SIZE, VALUE, ZEROS_MATRIX
 from psyneulink.core.globals.utilities import all_within_range
 
@@ -537,7 +537,7 @@ class EMComposition(AutodiffComposition):
                 softmax_gain
                     see `random_state <EMComposition.softmax_gain>`
                     :default value: CONTROL
-                    :type: ``float or AUTO or CONTROL``
+                    :type: ``float or CONTROL``
 
                 storage_prob
                     see `storage_prob <EMComposition.storage_prob>`
@@ -591,8 +591,8 @@ class EMComposition(AutodiffComposition):
                     return f"must be a float in the interval [0,1]."
 
         def _validate_softmax_gain(self, softmax_gain):
-            if softmax_gain not in {AUTO, CONTROL} and not isinstance(softmax_gain, (float, int)):
-                return f"must be a scalar or the keyword 'AUTO' or 'CONTROL'."
+            if softmax_gain != CONTROL and not isinstance(softmax_gain, (float, int)):
+                return f"must be a scalar or the keyword 'CONTROL'."
 
         def _validate_storage_prob(self, storage_prob):
             storage_prob = float(storage_prob)
@@ -611,7 +611,7 @@ class EMComposition(AutodiffComposition):
                  decay_memories:bool=True,
                  decay_rate:float=None,
                  normalize_memories:bool=True,
-                 softmax_gain:Union[float, AUTO, CONTROL]=CONTROL,
+                 softmax_gain:Union[float, CONTROL]=CONTROL,
                  storage_prob:float=None,
                  name="EM_composition"):
 
@@ -619,8 +619,6 @@ class EMComposition(AutodiffComposition):
             memory_template = np.zeros(memory_template)
         else:
             memory_template = np.array(memory_template)
-
-
 
         # Deal with default field_weights
         if field_weights is None:
@@ -661,12 +659,12 @@ class EMComposition(AutodiffComposition):
             self.key_names = [f'KEY {i}' for i in range(self.num_keys)] if self.num_keys > 1 else ['KEY']
             self.value_names = [f'VALUE {i}' for i in range(self.num_values)] if self.num_values > 1 else ['VALUE']
 
-        # self.concatenate_keys = (field_weights and len(np.atleast_1d(field_weights)) == 1 or concatenate_keys)
-        # if (self.concatenate_keys and not np.all(keys_weights == keys_weights[0])):
         self.concatenate_keys = concatenate_keys or np.all(keys_weights == keys_weights[0])
         if self.concatenate_keys and not np.all(keys_weights == keys_weights[0]):
             warnings.warn(f"Field weights are not all equal, but 'concatenate_keys' is True; "
                           f"field weights will be ignored and all fields will be concatenated as keys.")
+
+        self.softmax_gain = softmax_gain
 
         pathway = self._construct_pathway()
 
@@ -856,7 +854,7 @@ class EMComposition(AutodiffComposition):
 
     def _construct_softmax_control_nodes(self)->list:
         """Create nodes that set the softmax gain (inverse temperature) for each softmax_node."""
-        if self.parameters.softmax_gain.get() != CONTROL:
+        if self.softmax_gain != CONTROL:
             return []
         softmax_control_nodes = [
             ControlMechanism(monitor_for_control=match_node,
@@ -882,8 +880,8 @@ class EMComposition(AutodiffComposition):
             f"PROGRAM ERROR: number of keys ({self.num_keys}) does not match number of " \
             f"non-zero values in field_weights ({len(key_indices)})."
 
-        # If softmax_gain is specified as AUTO or CONTROL, then set to None for now
-        if self.parameters.softmax_gain.get() in {AUTO, CONTROL}:
+        # If softmax_gain is specified as CONTROL, then set to None for now
+        if self.parameters.softmax_gain.get() == CONTROL:
             softmax_gain = None
         # Otherwise, assign specified value
         else:
@@ -907,7 +905,9 @@ class EMComposition(AutodiffComposition):
                 output_ports=[RESULT,
                               {VALUE: key_weights[0],
                                NAME: 'KEY_WEIGHT'}],
-                name='SOFTMAX' + str(i))
+                # name='SOFTMAX ' + str(i))
+               name='SOFTMAX' if len(self.match_nodes) == 1
+               else f'SOFTMAX {i}')
             for i, match_node in enumerate(self.match_nodes)
         ]
 
@@ -1041,13 +1041,13 @@ class EMComposition(AutodiffComposition):
                 memories[:,idx_of_min] = np.array(memory)
                 input_node.efferents[0].parameters.matrix.set(memories, context)
 
-                # Set gain of match_node adaptively
-                if self.parameters.softmax_gain.get(context) is AUTO:
-                    softmax_node = self.softmax_nodes[self.key_input_nodes.index(input_node)]
-                    gain_by_weights = self._get_softmax_gain(np.linalg.norm(memories, axis=0))
-                    # gain_by_activity = self._get_softmax_gain(match_node.input_values[0])
-                    softmax_node.function.parameters.gain.set(gain_by_weights, context)
-                    assert True
+                # # Set gain of match_node adaptively
+                # if self.parameters.softmax_gain.get(context) is AUTO:
+                #     softmax_node = self.softmax_nodes[self.key_input_nodes.index(input_node)]
+                #     gain_by_weights = self._get_softmax_gain(np.linalg.norm(memories, axis=0))
+                #     # gain_by_activity = self._get_softmax_gain(match_node.input_values[0])
+                #     softmax_node.function.parameters.gain.set(gain_by_weights, context)
+                #     assert True
 
             if input_node in self.value_input_nodes:
                 # For value_input;
