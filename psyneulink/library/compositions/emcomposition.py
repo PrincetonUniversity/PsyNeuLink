@@ -14,12 +14,17 @@
 # - CONFIDENCE COMPUTATION
 
 # TODO:
-# - FIX ZERO-WEIGHTS handling
 # - FIX: ALL KEY WEIGHTS THE SAME BUT DON'T WANT TO CONCATENATE:
 #         MAKE CONCATENATION AN EXPLICIT PARAMETER, BUT KEEP IT AS DEFAULT WHEN FIELD WEIGHT IS A SCALAR
 # - FIX: WRITE TESTS
 # - FIX: MappingProjection with sender specified as OutputPort
 # - FIX: WHY IS Concatenate NOT WORKING AS FUNCTION OF AN INPUTPORT (WASN'T THAT USED IN CONTEXT OF BUFFER?)
+# - FIX: COMPILE
+#      LinearMatrix to add normalization
+#      _store() method to assign weights to memory
+# - FIX: FINISH DOCSTRING
+# - FIX: DO NOT ADD CONTROLMECHANISMS IF get_softmax_function IS NOT USED
+# - WRITE TESTS FOR INPUT_PORT and MATRIX SPECS CORRECT IN LATEST BRANCHEs
 # - ACCESSIBILITY OF DISTANCES (SEE BELOW): MAKE IT A LOGGABLE PARAMETER (I.E., WITH APPROPRIATE SETTER)
 #   ADD COMPILED VERSION OF NORMED LINEAR_COMBINATION FUNCTION TO LinearCombination FUNCTION: dot / (norm a * norm b)
 # - DECAY WEIGHTS BY:
@@ -39,9 +44,6 @@
 # - ADD MEMORY_DECAY TO ContentAddressableMemory FUNCTION (and compiled version by Samyak)
 # - MAKE memory_template A CONSTRUCTOR ARGUMENT FOR default_variable
 
-# FIX: COMPILE
-#      LinearMatrix to add normalization
-#      _store() method to assign weights to memory
 
 """
 
@@ -358,6 +360,7 @@ class EMComposition(AutodiffComposition):
         memory_template=[[0],[0]],  \
         field_weights=None,         \
         field_names=None,           \
+        concatenate_keys=False,     \
         learn_weights=True,         \
         learning_rate=True,         \
         memory_capacity=1000,       \
@@ -384,8 +387,12 @@ class EMComposition(AutodiffComposition):
         see `EMComposition_Fields` for details.
 
     field_names : list : default None
-        specifies the optional names assigned to each field in the memory_template;'
+        specifies the optional names assigned to each field in the memory_template;
         see `EMComposition_Fields` for details.
+
+    concatenate_keys : bool : default False
+        specifies whether to concatenate the keys into a single field before matching them to items in
+        the corresponding fields in memory; see `EMComposition_Fields` for details.
 
     normalize_memories : bool : default True
         specifies whether cues and memories are normalized before computing their dot product (similarity);
@@ -436,6 +443,8 @@ class EMComposition(AutodiffComposition):
 
     field_names : list[str]
 
+    concatenate_keys : bool
+
     normalize_memories : bool
 
     softmax_gain : float
@@ -458,6 +467,24 @@ class EMComposition(AutodiffComposition):
         """
             Attributes
             ----------
+
+                concatenate_keys
+                    see `concatenate_keys <EMComposition.concatenate_keys>`
+
+                    :default value: False
+                    :type: ``bool``
+
+                decay_memories
+                    see `decay_memories <EMComposition.decay_memories>`
+
+                    :default value: False
+                    :type: ``bool``
+
+                decay_rate
+                    see `decay_rate <EMComposition.decay_rate>`
+
+                    :default value: 0.001
+                    :type: ``float``
 
                 learn_weights
                     see `learn_weights <EMComposition.learn_weights>`
@@ -482,18 +509,6 @@ class EMComposition(AutodiffComposition):
 
                     :default value: 1000
                     :type: ``int``
-
-                decay_memories
-                    see `decay_memories <EMComposition.decay_memories>`
-
-                    :default value: False
-                    :type: ``bool``
-
-                decay_rate
-                    see `decay_rate <EMComposition.decay_rate>`
-
-                    :default value: 0.001
-                    :type: ``float``
 
                 field_names
                     see `field_names <EMComposition.field_names>`
@@ -536,6 +551,7 @@ class EMComposition(AutodiffComposition):
         memory_capacity = Parameter(1000, structural=True)
         field_weights = Parameter(None, structural=True)
         field_names = Parameter(None, structural=True)
+        concatenate_keys = Parameter(False, structural=True)
         decay_memories = Parameter(True, loggable=True, modulable=True, fallback_default=True)
         decay_rate = Parameter(None, loggable=True, modulable=True, fallback_default=True,
                                dependencies='decay_memories')
@@ -588,6 +604,7 @@ class EMComposition(AutodiffComposition):
                  memory_template:Union[tuple, list, np.ndarray]=[[0],[0]],
                  field_names:Optional[list]=None,
                  field_weights:tuple=None,
+                 concatenate_keys:bool=False,
                  learn_weights:bool=True,
                  learning_rate:float=None,
                  memory_capacity:int=1000,
@@ -602,6 +619,8 @@ class EMComposition(AutodiffComposition):
             memory_template = np.zeros(memory_template)
         else:
             memory_template = np.array(memory_template)
+
+
 
         # Deal with default field_weights
         if field_weights is None:
@@ -634,7 +653,6 @@ class EMComposition(AutodiffComposition):
         # Memory field attributes
         keys_weights = [i for i in self.field_weights if i != 0]
         self.num_keys = len(keys_weights)
-        self.concatenate_keys = len(self.field_weights) == 1 or  np.all(keys_weights == keys_weights[0])
         self.num_values = self.num_fields - self.num_keys
         if self.field_names:
             self.key_names = self.field_names[:self.num_keys]
@@ -642,6 +660,13 @@ class EMComposition(AutodiffComposition):
         else:
             self.key_names = [f'KEY {i}' for i in range(self.num_keys)] if self.num_keys > 1 else ['KEY']
             self.value_names = [f'VALUE {i}' for i in range(self.num_values)] if self.num_values > 1 else ['VALUE']
+
+        # self.concatenate_keys = (field_weights and len(np.atleast_1d(field_weights)) == 1 or concatenate_keys)
+        # if (self.concatenate_keys and not np.all(keys_weights == keys_weights[0])):
+        self.concatenate_keys = concatenate_keys or np.all(keys_weights == keys_weights[0])
+        if self.concatenate_keys and not np.all(keys_weights == keys_weights[0]):
+            warnings.warn(f"Field weights are not all equal, but 'concatenate_keys' is True; "
+                          f"field weights will be ignored and all fields will be concatenated as keys.")
 
         pathway = self._construct_pathway()
 
@@ -772,7 +797,7 @@ class EMComposition(AutodiffComposition):
                                                           sender=self.key_input_nodes[i].output_port,
                                                           # sender=self.key_input_nodes[i],
                                                           matrix=IDENTITY_MATRIX)}
-                                                     # # matrix=ZEROS_MATRIX,
+                                                     # matrix=ZEROS_MATRIX,
                                                      # matrix=np.zeros((len(self.key_input_nodes[i].value[0]),
                                                      #                  len(self.key_input_nodes[i].value[0]))),
                                                      # function=LinearMatrix(
@@ -802,8 +827,8 @@ class EMComposition(AutodiffComposition):
                                  # PROJECTIONS: source},
                                  PROJECTIONS: MappingProjection(#sender=sender,
                                                                 sender=sender.output_port,
-                                                                matrix=ZEROS_MATRIX,
-                                                                # matrix=np.zeros((sender_size,receiver_size)),
+                                                                # matrix=ZEROS_MATRIX,
+                                                                matrix=np.zeros((sender_size,receiver_size)),
                                                                 function=LinearMatrix(
                                                                     normalize=self.normalize_memories))},
 
@@ -818,9 +843,9 @@ class EMComposition(AutodiffComposition):
                         SIZE:self.memory_capacity,
                         # PROJECTIONS: self.key_input_nodes[i].output_port
                         PROJECTIONS: MappingProjection(sender=self.key_input_nodes[i].output_port,
-                                                       matrix=ZEROS_MATRIX,
-                                                       # matrix=np.zeros((len(self.key_input_nodes[i].value[0]),
-                                                       #                  self.memory_capacity)),
+                                                       # matrix=ZEROS_MATRIX,
+                                                       matrix=np.zeros((len(self.key_input_nodes[i].value[0]),
+                                                                        self.memory_capacity)),
                                                        function=LinearMatrix(normalize=self.normalize_memories))},
                     # (self.memory_capacity,
                     # [MappingProjection(sender=self.key_input_nodes[i].output_port, matrix=ZEROS_MATRIX)],
