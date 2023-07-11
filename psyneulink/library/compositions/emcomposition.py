@@ -843,9 +843,9 @@ class EMComposition(AutodiffComposition):
                         SIZE:self.memory_capacity,
                         # PROJECTIONS: self.key_input_nodes[i].output_port
                         PROJECTIONS: MappingProjection(sender=self.key_input_nodes[i].output_port,
-                                                       # matrix=ZEROS_MATRIX,
-                                                       matrix=np.zeros((len(self.key_input_nodes[i].value[0]),
-                                                                        self.memory_capacity)),
+                                                       matrix=ZEROS_MATRIX,
+                                                       # matrix=np.zeros((len(self.key_input_nodes[i].value[0]),
+                                                       #                  self.memory_capacity)),
                                                        function=LinearMatrix(normalize=self.normalize_memories))},
                     # (self.memory_capacity,
                     # [MappingProjection(sender=self.key_input_nodes[i].output_port, matrix=ZEROS_MATRIX)],
