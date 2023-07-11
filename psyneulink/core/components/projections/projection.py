@@ -418,9 +418,11 @@ from psyneulink.core.globals.mdf import _get_variable_parameter_name
 from psyneulink.core.globals.keywords import \
     CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, EXPONENT, FUNCTION_PARAMS, GATE, GATING_PROJECTION, GATING_SIGNAL, \
     INPUT_PORT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, \
-    MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, MECHANISM, \
-    MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_RECEIVER_PORT, MODEL_SPEC_ID_SENDER_MECH, MODEL_SPEC_ID_SENDER_PORT, MODEL_SPEC_ID_METADATA, \
-    NAME, OUTPUT_PORT, OUTPUT_PORTS, PARAMS, PATHWAY, PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, \
+    MAPPING_PROJECTION, MATRIX, MECHANISM, \
+    MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_RECEIVER_PORT, \
+    MODEL_SPEC_ID_SENDER_MECH, MODEL_SPEC_ID_SENDER_PORT, MODEL_SPEC_ID_METADATA, \
+    NAME, OUTPUT_PORT, OUTPUT_PORTS, PARAMS, PATHWAY, PROJECTION, PROJECTION_PARAMS, \
+    PROJECTION_RECEIVER, PROJECTION_SENDER, PROJECTION_TYPE, \
     RECEIVER, SENDER, STANDARD_ARGS, PORT, PORTS, WEIGHT, ADD_INPUT_PORT, ADD_OUTPUT_PORT, \
     PROJECTION_COMPONENT_CATEGORY
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
@@ -428,7 +430,7 @@ from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
 from psyneulink.core.globals.socket import ConnectionInfo
 from psyneulink.core.globals.utilities import \
-    ContentAddressableList, is_matrix, is_numeric, parse_valid_identifier, convert_to_list
+    ContentAddressableList, is_matrix, is_matrix_keyword, is_numeric, parse_valid_identifier, convert_to_list
 
 __all__ = [
     'Projection_Base', 'projection_keywords', 'PROJECTION_SPEC_KEYWORDS',
@@ -740,7 +742,6 @@ class Projection_Base(Projection):
         # Assume that if receiver was specified as a Mechanism, it should be assigned to its (primary) InputPort
         # MODIFIED 11/1/17 CW: Added " hasattr(self, "prefs") and" in order to avoid errors. Otherwise, this was being
         # called and yielding an error: " AttributeError: 'MappingProjection' object has no attribute '_prefs' "
-
         if isinstance(self.receiver, Mechanism):
             if (len(self.receiver.input_ports) > 1 and hasattr(self, 'prefs') and
                     (self.prefs.verbosePref or self.receiver.prefs.verbosePref)):
@@ -794,6 +795,7 @@ class Projection_Base(Projection):
         # FIX: 10/3/17 SHOULD ADD CHECK THAT RECEIVER/SENDER SOCKET SPECIFICATIONS ARE CONSISTENT WITH
         # FIX:         PROJECTION_TYPE SPECIFIED BY THE CORRESPONDING PORT TYPES
 
+        # Validate sender
         if (PROJECTION_SENDER in target_set and
                 not (target_set[PROJECTION_SENDER] in {None, self.projection_sender})):
             # If PROJECTION_SENDER is specified it will be the sender
@@ -805,13 +807,58 @@ class Projection_Base(Projection):
             sender_string = "\'{}\' argument".format(SENDER)
         if not ((isinstance(sender, (Mechanism, Port)) or
                  (inspect.isclass(sender) and issubclass(sender, (Mechanism, Port))))):
-            raise ProjectionError("Specification of {} for {} ({}) is invalid; "
-                                  "it must be a {}, {} or a class of one of these.".
-                                  format(sender_string, self.name, sender,
-                                         Mechanism.__name__, Port.__name__))
+            raise ProjectionError(f"Specification of {sender_string} for {self.name} ({sender}) is invalid; "
+                                  "it must be a {Mechanism.__name__}, {Port.__name__} or a class of one of these.")
+
+        # Validate receiver
+        if (PROJECTION_RECEIVER in target_set and target_set[PROJECTION_RECEIVER] is not None):
+            # If PROJECTION_RECEIVER is specified it will be the receiver
+            receiver = target_set[PROJECTION_RECEIVER]
+            receiver_string = PROJECTION_RECEIVER
+        else:
+            # PROJECTION_RECEIVER is not specified or None, so receiver argument of constructor will be the receiver
+            receiver = self.receiver
+            receiver_string = "\'{}\' argument".format(RECEIVER)
+        if not ((isinstance(receiver, (Mechanism, Port)) or
+                 (inspect.isclass(receiver) and issubclass(receiver, (Mechanism, Port))))):
+            raise ProjectionError(f"Specification of {receiver_string} for {self.name} ({sender}) is invalid; "
+                                  "it must be a {Mechanism.__name__}, {Port.__name__} or a class of one of these.")
+
+        # MODIFIED JDC 7/11/23 NEW:
+        # # Validate matrix spec
+        # if MATRIX in target_set and target_set[MATRIX] is not None:
+        #     matrix = target_set[MATRIX]
+        #     # If matrix_spec is keyword and sender and receiver have been instantiated, implement matrix
+        #     #   so that it can be passed to function (e.g., LinearMatrix) if needed.
+        #     if not is_matrix(matrix):
+        #         raise ProjectionError(f"Matrix ('{matrix}') specified for '{self.name}' is not a legal matrix spec.")
+        #     if self.sender_instantiated and self.receiver_instantiated:
+        #         if isinstance(matrix, (list, np.ndarray)):
+        #             # use default value for sender if necessary
+        #             sender_len = \
+        #                 len(self.sender.value) if self.sender.value is not None \
+        #                 else  len(self.sender.defaults.value)
+        #             # reduce receiver to 1d array if necessary
+        #             receiver_len = len(np.atleast_1d(np.squeeze(self.receiver.variable)))
+        #             if matrix.shape != (sender_len, receiver_len):
+        #                 raise ProjectionError(f"Shape of matrix ('{matrix.shape}') specified for '{self.name}' "
+        #                                       f"does not shapes of its sender and/or receiver "
+        #                                       f"({(len(self.sender.value), len(self.receiver.variable))}).")
+        # MODIFIED JDC 7/11/23 END
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
+
         self._instantiate_parameter_ports(function=function, context=context)
+
+        # If Projection has a matrix parameter, it is specified as a keyword arg in the constructor,
+        #    and sender and receiver have been instantiated, then implement it:
+        if hasattr(self.parameters, MATRIX) and self.parameters.matrix._user_specified:
+            matrix = self.parameters.matrix.get(context)
+            if is_matrix_keyword(matrix):
+                if self.sender_instantiated and self.receiver_instantiated:
+                    self.parameters.matrix.set(get_matrix(self.matrix, len(self.sender.value),
+                                                          len(self.receiver.variable)),
+                                               context)
 
     def _instantiate_parameter_ports(self, function=None, context=None):
 
@@ -1033,6 +1080,20 @@ class Projection_Base(Projection):
                               format(self.__class__.__name__))
 
     @property
+    def sender_instantiated(self):
+        sender_instantiated = isinstance(self.sender, Port)
+        if sender_instantiated:
+            sender_instantiated = self.sender.initialization_status == ContextFlags.INITIALIZED
+        return sender_instantiated
+
+    @property
+    def receiver_instantiated(self):
+        receiver_instantiated = isinstance(self.receiver, Port)
+        if receiver_instantiated:
+            receiver_instantiated = self.receiver.initialization_status == ContextFlags.INITIALIZED
+        return receiver_instantiated
+
+    @property
     def parameter_ports(self):
         """Read-only access to _parameter_ports"""
         return self._parameter_ports
@@ -1239,7 +1300,7 @@ def _is_projection_spec(spec, proj_type: Optional[Type] = None, include_matrix_s
         # FIX: CHECK PORT AGAIN ALLOWABLE PORTS IF type IS SPECIFIED
         return True
     if include_matrix_spec:
-        if isinstance(spec, str) and spec in MATRIX_KEYWORD_SET:
+        if is_matrix_keyword(spec):
             return True
         if get_matrix(spec) is not None:
             return True

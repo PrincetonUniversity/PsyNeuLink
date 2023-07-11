@@ -2841,7 +2841,7 @@ from psyneulink.core.globals.keywords import \
     DEFAULT, DICT, FEEDBACK, FULL, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX, \
     INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
     LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, Loss, \
-    MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MODEL_SPEC_ID_METADATA, \
+    MATRIX, MAYBE, MODEL_SPEC_ID_METADATA, \
     MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, NODE, OBJECTIVE_MECHANISM, ONLINE, OUTCOME, \
     OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
     PARAMETER, PARAMETER_CIM_NAME, PORT, \
@@ -2854,7 +2854,7 @@ from psyneulink.core.globals.preferences.basepreferenceset import BasePreference
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, _assign_prefs
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import ContentAddressableList, call_with_pruned_args, convert_to_list, \
-    nesting_depth, convert_to_np_array, is_numeric, is_matrix, parse_valid_identifier
+    nesting_depth, convert_to_np_array, is_numeric, is_matrix, is_matrix_keyword, parse_valid_identifier
 from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Any, Condition, Never
 from psyneulink.core.scheduling.scheduler import Scheduler, SchedulingMode
 from psyneulink.core.scheduling.time import Time, TimeScale
@@ -6062,7 +6062,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         elif isinstance(projection, (np.ndarray, np.matrix, list, RandomMatrix)):
             return MappingProjection(matrix=projection, sender=sender, receiver=receiver, name=name)
         elif isinstance(projection, str):
-            if projection in MATRIX_KEYWORD_VALUES:
+            if is_matrix_keyword(projection):
                 return MappingProjection(matrix=projection, sender=sender, receiver=receiver, name=name)
             else:
                 raise CompositionError("Invalid projection ({}) specified for {}.".format(projection, self.name))

@@ -106,10 +106,10 @@ __all__ = [
     'PROCESS', 'PROCESS_COMPONENT_CATEGORY', 'PROCESS_DEFAULT_MECHANISM', 'PROCESS_DEFAULT_PROJECTION_FUNCTION',
     'PROCESS_EXECUTE', 'PROCESS_INIT', 'PROCESSES', 'PROCESSES_DIM', 'PROCESSING', 'PROCESSING_MECHANISM',
     'PROCESSING_PATHWAY', 'PRODUCT', 'PROGRESS_BAR_CHAR', 'PROJECTION', 'PROJECTION_DIRECTION', 'PROJECTION_PARAMS',
-    'PROJECTION_SENDER', 'PROJECTION_TYPE', 'PROJECTIONS', 'PROJECTION_COMPONENT_CATEGORY', 'QUOTIENT',
-    'RANDOM', 'RANDOM_CONNECTIVITY_MATRIX', 'RATE', 'RATIO', 'REARRANGE_FUNCTION', 'RECEIVER', 'RECEIVER_ARG',
-    'RECURRENT_TRANSFER_MECHANISM', 'REDUCE_FUNCTION', 'REFERENCE_VALUE', 'RESET', 'RESET_STATEFUL_FUNCTION_WHEN',
-    'RELU_FUNCTION', 'REST', 'RESULT', 'RESULT', 'ROLES', 'RL_FUNCTION', 'RUN',
+    'PROJECTION_RECEIVER', 'PROJECTION_SENDER', 'PROJECTION_TYPE', 'PROJECTIONS', 'PROJECTION_COMPONENT_CATEGORY',
+    'QUOTIENT', 'RANDOM', 'RANDOM_CONNECTIVITY_MATRIX', 'RATE', 'RATIO', 'REARRANGE_FUNCTION', 'RECEIVER',
+    'RECEIVER_ARG', 'RECURRENT_TRANSFER_MECHANISM', 'REDUCE_FUNCTION', 'REFERENCE_VALUE', 'RESET',
+    'RESET_STATEFUL_FUNCTION_WHEN', 'RELU_FUNCTION', 'REST', 'RESULT', 'RESULT', 'ROLES', 'RL_FUNCTION', 'RUN',
     'SAMPLE', 'SAVE_ALL_VALUES_AND_POLICIES', 'SCALAR', 'SCALE', 'SCHEDULER', 'SELF', 'SENDER', 'SEPARATE',
     'SEPARATOR_BAR', 'SHADOW_INPUT_NAME', 'SHADOW_INPUTS', 'SIMPLE', 'SIMPLE_INTEGRATOR_FUNCTION', 'SIMULATIONS',
     'SINGLETON', 'SIZE', 'SLOPE', 'SOFT_CLAMP', 'SOFTMAX_FUNCTION', 'SOURCE', 'STABILITY_FUNCTION',
@@ -121,7 +121,7 @@ __all__ = [
     'TRIAL', 'TRIALS_DIM',
     'UNCHANGED', 'UNIFORM_DIST_FUNCTION', 'USER_DEFINED_FUNCTION', 'USER_DEFINED_FUNCTION_TYPE',
     'VALUES', 'VALIDATE', 'VALIDATION', 'VALUE', 'VALUE_ASSIGNMENT', 'VALUE_FUNCTION', 'VARIABLE', 'VARIANCE',
-    'VECTOR', 'WALD_DIST_FUNCTION', 'WEIGHT', 'WEIGHTS', 'X_0',
+    'VECTOR', 'WALD_DIST_FUNCTION', 'WEIGHT', 'WEIGHTS', 'X_0', 'ZEROS_MATRIX'
 ]
 
 # **********************************************************************************************************************
@@ -150,6 +150,10 @@ class MatrixKeywords:
         a matrix that has a number of rows equal to the length of the sender's value, and a number of columns equal
         to the length of the receiver's value, all the elements of which are 1's.
 
+    ZEROS_MATRIX
+        a matrix that has a number of rows equal to the length of the sender's value, and a number of columns equal
+        to the length of the receiver's value, all the elements of which are 0's.
+
     RANDOM_CONNECTIVITY_MATRIX
         a matrix that has a number of rows equal to the length of the sender's value, and a number of columns equal
         to the length of the receiver's value, all the elements of which are filled with random values uniformly
@@ -169,6 +173,7 @@ class MatrixKeywords:
         self.HOLLOW_MATRIX = HOLLOW_MATRIX
         self.INVERSE_HOLLOW_MATRIX = INVERSE_HOLLOW_MATRIX
         self.FULL_CONNECTIVITY_MATRIX = FULL_CONNECTIVITY_MATRIX
+        self.ZEROS_MATRIX = ZEROS_MATRIX
         self.RANDOM_CONNECTIVITY_MATRIX = RANDOM_CONNECTIVITY_MATRIX
         self.AUTO_ASSIGN_MATRIX = AUTO_ASSIGN_MATRIX
         self.DEFAULT_MATRIX = DEFAULT_MATRIX
@@ -188,6 +193,7 @@ IDENTITY_MATRIX = "IdentityMatrix"
 HOLLOW_MATRIX = "HollowMatrix"
 INVERSE_HOLLOW_MATRIX = "InverseHollowMatrix"
 FULL_CONNECTIVITY_MATRIX = "FullConnectivityMatrix"
+ZEROS_MATRIX = "ZerosMatrix"
 RANDOM_CONNECTIVITY_MATRIX = "RandomConnectivityMatrix"
 AUTO_ASSIGN_MATRIX = 'AutoAssignMatrix'
 DEFAULT_MATRIX = AUTO_ASSIGN_MATRIX
@@ -937,9 +943,10 @@ CONTROL_PROJECTION_PARAMS = "CONTROL_PROJECTION_PARAMS"
 GATING_PROJECTION_PARAMS = 'GATING_PROJECTION_PARAMS'
 
 
-PROJECTION_SENDER = 'projection_sender'
 SENDER = 'sender'
 RECEIVER = "receiver"
+PROJECTION_SENDER = 'projection_sender'
+PROJECTION_RECEIVER = 'projection_receiver'
 PROJECTION_DIRECTION = {SENDER: 'to',
                         RECEIVER: 'from'}
 RECEIVER_ARG = 'receiver'

@@ -89,7 +89,7 @@ from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, ALL, ANGLE_FUNCTION, BIAS, BINOMIAL_DISTORT_FUNCTION, DROPOUT_FUNCTION, EXPONENTIAL_FUNCTION, \
     GAIN, GAUSSIAN_DISTORT_FUNCTION, GAUSSIAN_FUNCTION, HAS_INITIALIZERS, HOLLOW_MATRIX, \
     IDENTITY_FUNCTION, IDENTITY_MATRIX, INTERCEPT, LEAK, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, \
-    TANH_FUNCTION, MATRIX_KEYWORD_NAMES, MATRIX, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, MULTIPLICATIVE_PARAM, \
+    TANH_FUNCTION, MATRIX_KEYWORD_NAMES, MATRIX, MAX_INDICATOR, MAX_VAL, MULTIPLICATIVE_PARAM, \
     OFF, OFFSET, ON, PER_ITEM, PROB, PRODUCT, OUTPUT_TYPE, PROB_INDICATOR, \
     RATE, RECEIVER, RELU_FUNCTION, SCALE, SLOPE, SOFTMAX_FUNCTION, STANDARD_DEVIATION, SUM, \
     TRANSFER_FUNCTION_TYPE, TRANSFER_WITH_COSTS_FUNCTION, VARIANCE, VARIABLE, X_0, PREFERENCE_SET_NAME
@@ -97,7 +97,7 @@ from psyneulink.core.globals.parameters import \
     FunctionParameter, Parameter, get_validator_by_function, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, ValidPrefSet
-from psyneulink.core.globals.utilities import ValidParamSpecType, safe_len
+from psyneulink.core.globals.utilities import ValidParamSpecType, safe_len, is_matrix_keyword
 
 __all__ = ['Angle', 'BinomialDistort', 'Dropout', 'Exponential', 'Gaussian', 'GaussianDistort', 'Identity',
            'Linear', 'LinearMatrix', 'Logistic', 'ReLU', 'SoftMax', 'Tanh', 'TransferFunction', 'TransferWithCosts'
@@ -3650,7 +3650,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                     # Auto, full or random connectivity matrix requested (using keyword):
                     # Note:  assume that these will be properly processed by caller
                     #        (e.g., MappingProjection._instantiate_receiver)
-                    elif param_value in MATRIX_KEYWORD_VALUES:
+                    elif is_matrix_keyword(param_value):
                         continue
 
                     # Identity matrix requested (using keyword), so check send_len == receiver_len
@@ -3735,7 +3735,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                                             format(self.name, variable_shape, param_shape))
 
                 # keyword matrix specified - not valid outside of a projection
-                elif param_value in MATRIX_KEYWORD_VALUES:
+                elif is_matrix_keyword(param_value):
                     raise FunctionError("{} is not a valid specification for the matrix parameter of {}. Keywords "
                                         "may only be used to specify the matrix parameter of a Projection's "
                                         "LinearMatrix function. When the LinearMatrix function is implemented in a "
