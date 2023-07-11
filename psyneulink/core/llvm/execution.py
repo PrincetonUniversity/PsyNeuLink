@@ -573,7 +573,7 @@ class CompExecution(CUDAExecution):
                        inputs, self.__frozen_vals, self._data_struct)
 
         if "comp_node_debug" in self._debug_env:
-            print("RAN: {}. CTX: {}".format(node, self.extract_node_state(node)))
+            print("RAN: {}. State: {}".format(node, self.extract_node_state(node)))
             print("RAN: {}. Params: {}".format(node, self.extract_node_params(node)))
             print("RAN: {}. Results: {}".format(node, self.extract_node_output(node)))
 
@@ -635,7 +635,13 @@ class CompExecution(CUDAExecution):
         assert len(inputs) == len(self._execution_contexts)
         # Extract input for each trial and execution id
         run_inputs = ((([x] for x in self._composition._build_variable_for_input_CIM({k:v[i] for k,v in inp.items()})) for i in range(num_input_sets)) for inp in inputs)
-        return c_input(*_tupleize(run_inputs))
+        c_inputs = c_input(*_tupleize(run_inputs))
+        if "stat" in self._debug_env:
+            print("Instantiated struct: input ( size:" ,
+                  _pretty_size(ctypes.sizeof(c_inputs)), ")",
+                  "for", self._obj.name)
+
+        return c_inputs
 
     def _get_generator_run_input_struct(self, inputs, runs):
         assert len(self._execution_contexts) == 1
@@ -772,6 +778,11 @@ class CompExecution(CUDAExecution):
         out_ty = out_el_ty * num_evaluations
 
         ct_num_inputs = bin_func.byref_arg_types[7](num_input_sets)
+        if "stat" in self._debug_env:
+            print("Evaluate result struct type size:",
+                  _pretty_size(ctypes.sizeof(out_ty)),
+                  "( evaluations:", num_evaluations, "element size:", ctypes.sizeof(out_el_ty), ")",
+                  "for", self._obj.name)
 
         # return variable as numpy array. pycuda can use it directly
         return ct_comp_param, ct_comp_state, ct_comp_data, ct_inputs, out_ty, ct_num_inputs
