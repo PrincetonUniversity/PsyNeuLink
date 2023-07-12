@@ -120,10 +120,12 @@ one of two ways:
   respectively.
   COMMENT
 
-*Storage.*  The `inputs <Composition_Input_External_InputPorts>` to the EMComposition's are stored in `memory
-<EMComposition.memory>` after each execution, with a probability determined by `storage_prob
-<EMComposition.storage_prob>`.  If `memory_decay <EMComposition.memory_decay>` is specified, then the `memory
-<EMComposition.memory>` is decayed by that amount after each execution.
+*Storage.*  The `inputs <Composition_Input_External_InputPorts>` to the EMComposition's are stored
+in `memory <EMComposition.memory>` after each execution, with a probability determined by `storage_prob
+<EMComposition.storage_prob>`.  If `memory_decay <EMComposition.memory_decay>` is specified, then the
+`memory <EMComposition.memory>` is decayed by that amount after each execution.  If `memory_capacity
+<EMComposition.memory_capacity>` is exceeded, then the weakest memory (i.e., the one with the lowest norm
+over all of its fields) is overwritten.
 
 .. _EMComposition_Creation:
 
@@ -172,15 +174,15 @@ An EMComposition is created by calling its constructor, that takes the following
   .. _EMComposition_Field_Weights:
 
   * **field_weights**: specifies which fields are used as keys, and how they are weighted during retrieval. The
-    number of values specified must match the number of fields specified in **memory_template** (i.e., the size of
+    number of values specified must match the number of fields specified in **memory_template** (i.e., the size
     of its first dimension (axis 0)).  All non-zero entries must be positive, and designate **keys** — fields
-    that are used to match items in memory for retrieval (see `retrieval <EMComposition_Retrieval_Storage>` below);
-    entries of 0 designate value fields, and are ignored during the matching process, but the value of that field in
-    the retrieved item is assigned as the `value <Mechanism_Base.value>` of the corresponding `retrieval_node
+    that are used to match items in memory for retrieval (see `EMComposition_Execution` below); entries of 0
+    designate value fields, and are ignored during the matching process, but the value of that field in the
+    retrieved item is assigned as the `value <Mechanism_Base.value>` of the corresponding `retrieval_node
     <EMComposition.retrieval_nodes>`; this implements a standard "dictionary," in which the fields with non-zero
-    weights are the keys and the one(s) with zero weights are the values. If **learn_weights** is True,
-    the field_weights are learned during training; otherwise they remain fixed. The following options can be used to
-    specify **field_weights**:
+    weights are the keys and the one(s) with zero weights are the values. If **learn_weights** is True, the
+    field_weights are modified during training; otherwise they remain fixed. The following options can be used
+    to specify the **field_weights** argument:
 
     * **None** (the default): all fields except the last are treated as keys, and are weighted equally for retrieval,
       while the last field is treated as a value field;
@@ -188,11 +190,11 @@ An EMComposition is created by calling its constructor, that takes the following
     * **single entry**: its value is ignored, and all fields are treated as keys (i.e., used for
     retrieval) and are `concatenated <EMComposition_Concatenate_Keys>` and equally weighted for retrieval;
 
-    * **multiple non-zero entries: If all entries are identical, the value is ignored and the corresponding keys are
-      `concatenated <EMComposition_Concatenate_Keys>` and weighted equally for retrieval; if the non-zero entries are
-      non-identical, they are used to weight the corresponding fields during retrieval (see `retrieval
-      <EMComposition_Retrieval_Storage>` below).  In either ease, the remaing fields (with zero weights) are treated
-      as value fields.
+    * **multiple non-zero entries: If all entries are identical, the value is ignored and the corresponding
+      keys are `concatenated <EMComposition_Concatenate_Keys>` and weighted equally for retrieval; if the
+      non-zero entries are non-identical, they are used to weight the corresponding fields during retrieval
+      (see `EMComposition_Execution` below).  In either ease, the remaining fields (with zero weights) are
+      treated as value fields.
 
   .. _EMComposition_Field_Names:
 
@@ -213,39 +215,47 @@ An EMComposition is created by calling its constructor, that takes the following
 * *Capacity*
 
   * **memory_capacity**: specifies the maximum number of items that can be stored in the EMComposition's memory.
+    If this is exceeded, then the weakest memory (i.e., the one with the lowest norm over all of its fields) is
+    overwritten.
 
-  * **decay_memories**: specifies whether the EMComposition's memory decays over time.
+  * **decay_memories**: specifies whether the EMComposition's memory decays after each storage.  If it is True,
+    then all memories are decayed by the `decay_rate <EMComposition.decay_rate>` before a new one is stored.
 
-  * **decay_rate**: specifies the rate at which items in the EMComposition's memory decay.
-
+  * **decay_rate**: specifies a value by which every memory is decayed before a new one is stored, if `decay_memories
+    <EMComposition.decay_memories>` is True.  This must be a value in the interval [0,1].
 
   .. _EMComposition_Retrieval_Storage:
 
 * *Retrieval and Storage*
 
-  * **storage_prob** : specifies the probability that the EMComposition will store an item in memory
+  * **storage_prob**: specifies the probability that the EMComposition will store an item in memory on each trial;
+    must be a value in the interval [0,1].
   
-  * **normalize_memories** : specifies whether cues and memories are normalized before computing their similarity
+  * **normalize_memories**: specifies whether keys and memories are normalized before matching for retrieval
+    (see `EMComposition_Execution` for details of the matching process).
 
-  * **softmax_gain** : specifies the temperature used for softmaxing the dot products of cues and memories.
+  * **softmax_gain**: specifies the temperature used for softmax weighting of the dot products of keys and memories
+    (see `EMComposition_Execution` for details of the matching process).
 
 
   .. _EMComposition_Learning:
 
-  * **learn_weights** : specifies whether the weights specified in **field_weights** are learned during training.
+  * **learn_weights**: specifies whether the `field_weights <EMComposition.field_weights>` are learned during training.
 
-  * **learning_rate** : specifies the rate at which **field_weights** are learned if learn_weights is True.
-
+  * **learning_rate**: specifies the rate at which `field_weights <EMComposition.field_weights>` are learned during
+    if `learn_weights <EMComposition.learn_weights>` is True.
 
 .. _EMComposition_Structure:
 
 Structure
 ---------
 
+EMComposition stores its memory...
+
 * **memory** -- stores the items encoded by the EMComposition.
 
 field_weights are used to initialize the Projections to the `retrieval_weighting_node
-<EMComposition.retrieval_weighting_node>`.  T
+<EMComposition.retrieval_weighting_node>`.
 
 .. _EMComposition_Execution:
 
@@ -415,11 +425,11 @@ class EMComposition(AutodiffComposition):
 
     normalize_memories : bool : default True
         specifies whether cues and memories are normalized before computing their dot product (similarity);
-        see `EMComposition_Retrieval_Storage` for additional details.
+        see `EMComposition_Execution` for additional details.
 
     softmax_gain : float : default CONTROL
         specifies the temperature used for softmaxing the dot products of cues and memories;
-        see `EMComposition_Retrieval_Storage` for additional details.
+        see `EMComposition_Execution` for additional details.
 
     learn_weights : bool : default False
         specifies whether `field_weights <EMCompostion.field_weights>` are learnable during training;
