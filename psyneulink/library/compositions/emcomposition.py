@@ -21,7 +21,7 @@
 #      LinearMatrix to add normalization
 #      _store() method to assign weights to memory
 # - FIX: FINISH DOCSTRING
-# - FIX: ASSIGNMENT OF "AUTO" to softmax CAUSES CRASH
+# - FIX: ALLOW SOFTMAX SPEC TO BE A DICT WITH PARAMETERS FOR _get_softmax_gain() FUNCTION
 # - WRITE TESTS FOR INPUT_PORT and MATRIX SPECS CORRECT IN LATEST BRANCHEs
 # - ACCESSIBILITY OF DISTANCES (SEE BELOW): MAKE IT A LOGGABLE PARAMETER (I.E., WITH APPROPRIATE SETTER)
 #   ADD COMPILED VERSION OF NORMED LINEAR_COMBINATION FUNCTION TO LinearCombination FUNCTION: dot / (norm a * norm b)
@@ -129,107 +129,106 @@ An EMComposition is created by calling its constructor, that takes the following
 
   .. _EMComposition_Fields:
 
-* *Field Specification*
+*Field Specification*
 
-  FIX: - memory_template = TUPLE -> initializes with zeros; restricted to regular array
-       - memory_template = list or 2d array: can be used to store create a ragged array and/or or store initial value
-  .. _EMComposition_Memory_Template:
+COMMENT:
+FIX: - memory_template = TUPLE -> initializes with zeros; restricted to regular array
+   - memory_template = list or 2d array: can be used to store create a ragged array and/or or store initial value
+COMMENT
+.. _EMComposition_Memory_Template:
 
-  * **memory_template**: This specifies the shape of the items to be stored in the EMComposition's memory, and can be
-    specified in any of the following ways:
+* **memory_template**: This specifies the shape of the items to be stored in the EMComposition's memory, and can be
+  specified either as a 2-item tuple that is interpreted as an np.array shape specification, in which the first item
+  specifies the number of fields in each memory entry, and the second item specifies the length of each field; or as
+  as a list or np.array, that is interpreted as a template for a memory entry.  Using a tuple is simpler but
+  restricts all fields to have the same length, whereas using a list or np.array allows fields of different lengths.
 
-      * **2-item tuple** -- this is interpreted as an np.array shape specification, in which the first item specifies
-        the number of fields in each memory entry, and the second item specifies the length of each field.  For example,
-        the following specification:
+    For example, the following tuple::
 
-          (2,3)
+      (2,3)
 
-        specifies that each item to be stored in the EMComposition's memory has two fields, each of length 3.  This
-        specification is equivalent to the following:
+    specifies that each item to be stored in the EMComposition's memory has two fields, each of length 3.  This
+    is equivalent to the following specification as a list::
 
-          [[0,0,0],[0,0,0]]
+      [[0,0,0],[0,0,0]]
 
-      * **list** or **np.array** -- this is interpreted as a template for the items to be stored in the EMComposition's
-        memory, in which each item is a list of the same length.  For example, the following specification:
+    However, a list can be used to specify fields of different length (i.e., a ragged array), as in the following::
 
-          [[0,0,0],[0,0,0]]
+      [[0,0,0],[0,0]]
 
-      specifies that each item to be stored in the EMComposition's memory has two fields, each of length 3.  This
-      specification is equivalent to the following:
+    in which the first field is length 3 but the second is length 2.
 
-          (2,3)
+.. _EMComposition_Field_Weights:
 
-      as a 2-item tuple, list, or 2d array.  If it is a tuple
+* **field_weights**: specifies which fields are used as keys, and how they are weighted during retrieval. The
+  number of values specified must match the number of fields specified in **memory_template** (i.e., the size of
+  of its first dimension (axis 0)).  All non-zero entries must be positive, and designate *keys* -- fields
+  that are used to match items in memory for retrieval (see `retrieval <EMComposition_Retrieval_Storage>` below).
+  Entries of 0 designate *values* -- fields that are ignored during the matching process, but the values of which
+  are retrieved and assigned as the `value <Mechanism_Base.value>` of the corresponding `retrieval_node
+  <EMComposition.retrieval_nodes>`. This distinction between keys and value implements a standard "dictionary; however,
+  if all entries are non-zero, then all fields are treated as keys, implemented a full form of content-addressable
+  memory.  If **learn_weights** is True, the field_weights can be modified during training; otherwise they remain
+  fixed. The following options can be used to specify **field_weights**:
 
-       and a list or 2d array is interpreted as a template that allows fields of
-          different lengths to be specified (i.e., items to be encoded can be ragged arrays).
-
-  .. _EMComposition_Field_Weights:
-
-  * **field_weights**: specifies which fields are used as keys, and how they are weighted during retrieval. The
-    number of values specified must match the number of fields specified in **memory_template** (i.e., the size of
-    of its first dimension (axis 0)).  All non-zero entries must be positive, and designate **keys** — fields
-    that are used to match items in memory for retrieval (see `retrieval <EMComposition_Retrieval_Storage>` below);
-    entries of 0 designate value fields, and are ignored during the matching process, but the value of that field in
-    the retrieved item is assigned as the `value <Mechanism_Base.value>` of the corresponding `retrieval_node
-    <EMComposition.retrieval_nodes>`; this implements a standard "dictionary," in which the fields with non-zero
-    weights are the keys and the one(s) with zero weights are the values. If **learn_weights** is True,
-    the field_weights are learned during training; otherwise they remain fixed. The following options can be used to
-    specify **field_weights**:
-
-    * **None** (the default): all fields except the last are treated as keys, and are weighted equally for retrieval,
+    * *None* (the default): all fields except the last are treated as keys, and are weighted equally for retrieval,
       while the last field is treated as a value field;
 
-    * **single entry**: its value is ignored, and all fields are treated as keys (i.e., used for
-    retrieval) and are `concatenated <EMComposition_Concatenate_Keys>` and equally weighted for retrieval;
+    * *single entry*: its value is ignored, and all fields are treated as keys (i.e., used for
+      retrieval) and are `concatenated <EMComposition_Concatenate_Keys>` and equally weighted for retrieval;
 
-    * **multiple non-zero entries: If all entries are identical, the value is ignored and the corresponding keys are
+    * *multiple non-zero entries*: If all entries are identical, the value is ignored and the corresponding keys are
       `concatenated <EMComposition_Concatenate_Keys>` and weighted equally for retrieval; if the non-zero entries are
       non-identical, they are used to weight the corresponding fields during retrieval (see `retrieval
       <EMComposition_Retrieval_Storage>` below).  In either ease, the remaing fields (with zero weights) are treated
       as value fields.
 
-  .. _EMComposition_Field_Names:
+.. _EMComposition_Field_Names:
 
-  * **field_names**: specifies names that can be assigned to the fields.  The number of names specified must
-    match the number of fields specified in the memory_template.  If specified, the names are used to label the
-    nodes of the EMComposition.  If not specified, the fields are labeled generically as "Key 0", "Key 1", etc..
+* **field_names**: specifies names that can be assigned to the fields.  The number of names specified must
+  match the number of fields specified in the memory_template.  If specified, the names are used to label the
+  nodes of the EMComposition.  If not specified, the fields are labeled generically as "Key 0", "Key 1", etc..
 
-  .. _EMComposition_Concatenate_Keys:
+.. _EMComposition_Concatenate_Keys:
 
-  * **concatenate_keys**:  specifies whether keys are concatenated before a match is made to itmes in memory. If
-    True, all keys are concatenated (i.e., fields for which non-zero weights are specified in field_weights);  this
-    occurs even if the field_weights are not all the same value (in which case a warning is issued).  If False,
-    keys are only concatenated if all non-zero field_weights are the same value (see `field_weights
-    <EMComposition_Field_Weights> above).
+* **concatenate_keys**:  specifies whether keys are concatenated before a match is made to itmes in memory. If
+  True, all keys are concatenated (i.e., fields for which non-zero weights are specified in field_weights);  this
+  occurs even if the field_weights are not all the same value (in which case a warning is issued).  If False,
+  keys are only concatenated if all non-zero field_weights are the same value (see `field_weights
+  <EMComposition_Field_Weights> above).
 
 .. _EMComposition_Capacity:
   
-* *Capacity*
+*Capacity*
 
-  * **memory_capacity**: specifies the maximum number of items that can be stored in the EMComposition's memory.
+* **memory_capacity**: specifies the maximum number of items that can be stored in the EMComposition's memory; when
+  `memory_capacity <EMComposition.memory_capacity>` is reached, each new entry overwrites the weakest entry (i.e., the
+  one with the smallest norm across all of its fields) in `memory <EMComposition.memory>`.
 
-  * **decay_memories**: specifies whether the EMComposition's memory decays over time.
+* **decay_memories**: specifies whether the EMComposition's memory decays over time.
 
-  * **decay_rate**: specifies the rate at which items in the EMComposition's memory decay.
-
+* **decay_rate**: specifies the rate at which items in the EMComposition's memory decay;  the default rate is 1 /
+  `memory_capacity <EMComposition.memory_capacity>`, such that the oldest memories are the most likely to be replaced
+  when `memory_capacity <EMComposition.memory_capacity>` is reached.
 
   .. _EMComposition_Retrieval_Storage:
 
-* *Retrieval and Storage*
+*Retrieval and Storage*
 
-  * **storage_prob** : specifies the probability that the EMComposition will store an item in memory
-  
-  * **normalize_memories** : specifies whether keys and memories are normalized before computing their similarity
+* **storage_prob** : specifies the probability that the inputs to the EMCompositoin will be stored as an item in
+  `memory <EMComposition.memory>` on each execution.
 
-  * **softmax_gain** : specifies the temperature used for softmaxing the dot products of keys and memories.
+* **normalize_memories** : specifies whether keys and memories are normalized before computing their dot products.
 
+* **softmax_gain** : specifies the gain (inverse temperature) used for softmaxing the dot products of keys and memories
+  (see `EMComposition_Execution` below).  If a value is specified, that is used.  If the keyword *CONTROL* is specified
+  (or the value is None), then the `softmax_gain <EMComposition.softmax_gain>` function is used to adaptively set the
+  gain based on the entropy of the dot products, preserving the distribution over non-zero entries (or
+  ones not close to zero) irrespective of how many (near-)zero entries there are.
 
-  .. _EMComposition_Learning:
+* **learn_weights** : specifies whether the weights specified in **field_weights** are learnable during training.
 
-  * **learn_weights** : specifies whether the weights specified in **field_weights** are learned during training.
-
-  * **learning_rate** : specifies the rate at which **field_weights** are learned if learn_weights is True.
+* **learning_rate** : specifies the rate at which **field_weights** are learned if **learn_weights** is True.
 
 
 .. _EMComposition_Structure:
@@ -237,10 +236,46 @@ An EMComposition is created by calling its constructor, that takes the following
 Structure
 ---------
 
-* **memory** -- stores the items encoded by the EMComposition.
+.. _EMComposition_Input:
 
-field_weights are used to initialize the Projections to the `retrieval_weighting_node
-<EMComposition.retrieval_weighting_node>`.  T
+*Input*
+~~~~~~~
+
+The inputs corresponding to each key and each
+value are represented as `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` of the EMComposition (listed in its
+`key_input_nodes <EMComposition.key_input_nodes>` and `value_input_nodes <EMComposition.value_input_nodes>`
+attributes, respectively),
+
+.. _EMComposition_Memory:
+
+*Memory*
+~~~~~~~
+
+The `memory <EMComposition.memory>` attribute contains a record of the entries in the EMComposition's memory. This is
+in the form of a 2d array, in which rows (axis 0) are entries and columns (axis 1) are fields.  The number of fields
+is determined by the `memory_template <EMComposition_Memory_Template>` argument of the EMComposition's constructor,
+and the number of entries is determined by the `memory_capacity <EMComposition_Memory_Capacity>` argument.
+
+  .. technical_note::
+  The memories are actually stored in the `matrix <MappingProjection.matrix>` parameter of the `MappingProjection`
+  from each `key_input_node <EMComposition.key_input_nodes>` to the corresponding `match_node
+  <EMComposition.match_nodes>`, so that passing the value of the key_input_node through the projection produces
+  the dot produce of that input with the value of the corresponding field for each entry in memory.
+  
+
+
+
+
+FIX: TECHNICAL NOTE RE: USE OF WEIGHTS FOR MEMORY
+
+
+.. _EMComposition_Output:
+
+*Output*
+~~~~~~~
+
+and the retrieved values are represented as `OUTPUT <NodeRole.OUTPUT>` `Nodes
+<Composition_Nodes>` of the EMComposition.
 
 .. _EMComposition_Execution:
 
