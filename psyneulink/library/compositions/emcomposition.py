@@ -14,16 +14,13 @@
 # - CONFIDENCE COMPUTATION
 
 # TODO:
-# - FIX: ALL KEY WEIGHTS THE SAME BUT DON'T WANT TO CONCATENATE:
-#         MAKE CONCATENATION AN EXPLICIT PARAMETER, BUT KEEP IT AS DEFAULT WHEN FIELD WEIGHT IS A SCALAR
+# - FIX: DOCUMENT: all field weights the same: concatenate (more efficeint)
 # - FIX: WRITE TESTS
-# - FIX: MappingProjection with sender specified as OutputPort
 # - FIX: WHY IS Concatenate NOT WORKING AS FUNCTION OF AN INPUTPORT (WASN'T THAT USED IN CONTEXT OF BUFFER?)
 # - FIX: COMPILE
 #      LinearMatrix to add normalization
 #      _store() method to assign weights to memory
 # - FIX: FINISH DOCSTRING
-# - FIX: DO NOT ADD CONTROLMECHANISMS IF get_softmax_function IS NOT USED
 # - WRITE TESTS FOR INPUT_PORT and MATRIX SPECS CORRECT IN LATEST BRANCHEs
 # - ACCESSIBILITY OF DISTANCES (SEE BELOW): MAKE IT A LOGGABLE PARAMETER (I.E., WITH APPROPRIATE SETTER)
 #   ADD COMPILED VERSION OF NORMED LINEAR_COMBINATION FUNCTION TO LinearCombination FUNCTION: dot / (norm a * norm b)
@@ -711,8 +708,8 @@ class EMComposition(AutodiffComposition):
         # If field weights has more than one value it must match the first dimension (axis 0) of memory_template:
         if field_names and len(field_names) != len(memory_template):
             raise EMCompositionError(f"The number of items ({len(field_names)}) "
-                                     f"in the 'field_names' arg for {name} must match the number of items "
-                                     f"({len(memory_template)}) in the outer dimension of its 'memory_template' arg.")
+                                     f"in the 'field_names' arg for {name} must match "
+                                     f"the number of memory fields ({len(field_weights)}).")
 
     def _construct_pathway(self)->set:
         """Construct pathway for EMComposition"""
@@ -847,7 +844,7 @@ class EMComposition(AutodiffComposition):
                                                        function=LinearMatrix(normalize=self.normalize_memories))},
                     # (self.memory_capacity,
                     # [MappingProjection(sender=self.key_input_nodes[i].output_port, matrix=ZEROS_MATRIX)],
-                    name=f'MATCH KEY {i}')
+                    name=f'MATCH {self.key_names[i]}')
                 for i in range(self.num_keys)
             ]
         return match_nodes
@@ -860,7 +857,7 @@ class EMComposition(AutodiffComposition):
             ControlMechanism(monitor_for_control=match_node,
                              control_signals=[(GAIN, self.softmax_nodes[i])],
                              function=get_softmax_gain,
-                             name='SOFTMAX GAIN CONTROL' if self.num_keys == 1
+                             name='SOFTMAX GAIN CONTROL' if len(self.softmax_nodes) == 1
                              else f'SOFTMAX GAIN CONTROL {i}')
 
             for i, match_node in enumerate(self.match_nodes)]
