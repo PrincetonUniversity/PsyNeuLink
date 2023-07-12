@@ -165,6 +165,27 @@ class TestConstructorArguments:
             np.testing.assert_array_equal(getattr(m.function.defaults, k), v)
 
     @pytest.mark.parametrize(
+        'cls_, function, function_params, err_msg',
+        [
+            (pnl.ProcessingMechanism, pnl.DriftDiffusionIntegrator, {'invalid_arg': 0}, 'Unrecognized argument in constructor for DriftDiffusionIntegrator'),
+            (pnl.ProcessingMechanism, pnl.DriftDiffusionIntegrator, {'initializer': 0, 'starting_value': 1}, 'starting_value is an alias of initializer'),
+            pytest.param(
+                pnl.ProcessingMechanism, pnl.LeakyCompetingIntegrator, {'invalid_arg': 0}, {},
+                marks=pytest.mark.xfail(reason='kwargs are not passed up __init__, are just for backward compatibility for single parameter')
+            ),
+            (pnl.ProcessingMechanism, pnl.Linear, {'invalid_arg': 0}, "unexpected keyword argument 'invalid_arg'"),
+        ]
+    )
+    @pytest.mark.parametrize('params_dict_entry', [NotImplemented, 'params'])
+    def test_function_params_invalid(self, cls_, function, function_params, err_msg, params_dict_entry):
+        with pytest.raises(pnl.ComponentError) as err:
+            cls_(
+                function=function,
+                **nest_dictionary({'function_params': function_params}, params_dict_entry)
+            )
+        assert err_msg in str(err.value)
+
+    @pytest.mark.parametrize(
         'cls_, param_name, argument_name, param_value',
         [
             (pnl.TransferMechanism, 'variable', 'default_variable', [[10]]),
