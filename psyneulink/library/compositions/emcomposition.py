@@ -135,6 +135,7 @@ COMMENT:
 FIX: - memory_template = TUPLE -> initializes with zeros; restricted to regular array
    - memory_template = list or 2d array: can be used to store create a ragged array and/or or store initial value
 COMMENT
+
 .. _EMComposition_Memory_Template:
 
 * **memory_template**: This specifies the shape of the items to be stored in the EMComposition's memory, and can be
@@ -261,7 +262,7 @@ and the number of entries is determined by the `memory_capacity <EMComposition_M
   from each `key_input_node <EMComposition.key_input_nodes>` to the corresponding `match_node
   <EMComposition.match_nodes>`, so that passing the value of the key_input_node through the projection produces
   the dot produce of that input with the value of the corresponding field for each entry in memory.
-  
+
 
 
 
