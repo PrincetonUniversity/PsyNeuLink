@@ -130,18 +130,17 @@ one of two ways:
 Creation
 --------
 
-ADD:
-- DEFAULT CONFIGURATION IS AS DICTIONARY WITH LAST FIELD AS THE VALUE
-- memory_template = TUPLE -> initializes with zeros; restricted to regular array
-- memory_template = list or 2d array: can be used to store create a ragged array and/or or store initial value
-
 An EMComposition is created by calling its constructor, that takes the following arguments:
 
   .. _EMComposition_Fields:
 
 * *Field Specification*
 
-  * **memory_template** : This specifies the shape of the items to be stored in the EMComposition's memory, and can be
+  FIX: - memory_template = TUPLE -> initializes with zeros; restricted to regular array
+       - memory_template = list or 2d array: can be used to store create a ragged array and/or or store initial value
+  .. _EMComposition_Memory_Template:
+
+  * **memory_template**: This specifies the shape of the items to be stored in the EMComposition's memory, and can be
     specified in any of the following ways:
 
       * **2-item tuple** -- this is interpreted as an np.array shape specification, in which the first item specifies
@@ -170,22 +169,44 @@ An EMComposition is created by calling its constructor, that takes the following
        and a list or 2d array is interpreted as a template that allows fields of
           different lengths to be specified (i.e., items to be encoded can be ragged arrays).
 
-  * **field_weights** : this is used both to
-    specify which fields are used as keys, and to initialize the Projections to the `retrieval_weighting_node
-    <EMComposition.retrieval_weighting_node>`.  The number of values specified must match the number of fields specified
-    in the memory_template. Non zero values must be positive, and are used to specify keys — fields that are used
-    to match items in memory for retieval.  If a single value is
-    specified, it is applied to all fields.  If more than a single value is specified, the number must match the
-    number of items in the first dimension (axis 0) of **memory_template**. If all items are identical, the field
-    weights are treated as a single field (this is identical to specifying a single value, but can be used to allow
-    different keys to receive independent inputs from the network);  in this case, all keys are concatenated before
-    a match is made in memory If the items in **field_weights** are non-identical, they are applied to the
-    corresponding fields during the matching process.  If a zero is specified, that field is not used in the
-    matching process, but the value= corresponding to memory that is selected is still returned; this implements
-    a "dictionary" in which the fields with non-zero weights are keys and the one(s) with zero weights are values.
-    If **learn_weights** is True, the weights are learned during training;  otherwise they remain fixed.
+  .. _EMComposition_Field_Weights:
 
-  * **field_names** : this is used both to
+  * **field_weights**: specifies which fields are used as keys, and how they are weighted during retrieval. The
+    number of values specified must match the number of fields specified in **memory_template** (i.e., the size of
+    of its first dimension (axis 0)).  All non-zero entries must be positive, and designate **keys** — fields
+    that are used to match items in memory for retrieval (see `retrieval <EMComposition_Retrieval_Storage>` below);
+    entries of 0 designate value fields, and are ignored during the matching process, but the value of that field in
+    the retrieved item is assigned as the `value <Mechanism_Base.value>` of the corresponding `retrieval_node
+    <EMComposition.retrieval_nodes>`; this implements a standard "dictionary," in which the fields with non-zero
+    weights are the keys and the one(s) with zero weights are the values. If **learn_weights** is True,
+    the field_weights are learned during training; otherwise they remain fixed. The following options can be used to
+    specify **field_weights**:
+
+    * **None** (the default): all fields except the last are treated as keys, and are weighted equally for retrieval,
+      while the last field is treated as a value field;
+
+    * **single entry**: its value is ignored, and all fields are treated as keys (i.e., used for
+    retrieval) and are `concatenated <EMComposition_Concatenate_Keys>` and equally weighted for retrieval;
+
+    * **multiple non-zero entries: If all entries are identical, the value is ignored and the corresponding keys are
+      `concatenated <EMComposition_Concatenate_Keys>` and weighted equally for retrieval; if the non-zero entries are
+      non-identical, they are used to weight the corresponding fields during retrieval (see `retrieval
+      <EMComposition_Retrieval_Storage>` below).  In either ease, the remaing fields (with zero weights) are treated
+      as value fields.
+
+  .. _EMComposition_Field_Names:
+
+  * **field_names**: specifies names that can be assigned to the fields.  The number of names specified must
+    match the number of fields specified in the memory_template.  If specified, the names are used to label the
+    nodes of the EMComposition.  If not specified, the fields are labeled generically as "Key 0", "Key 1", etc..
+
+  .. _EMComposition_Concatenate_Keys:
+
+  * **concatenate_keys**:  specifies whether keys are concatenated before a match is made to itmes in memory. If
+    True, all keys are concatenated (i.e., fields for which non-zero weights are specified in field_weights);  this
+    occurs even if the field_weights are not all the same value (in which case a warning is issued).  If False,
+    keys are only concatenated if all non-zero field_weights are the same value (see `field_weights
+    <EMComposition_Field_Weights> above).
 
 .. _EMComposition_Capacity:
   
@@ -223,7 +244,8 @@ Structure
 
 * **memory** -- stores the items encoded by the EMComposition.
 
-
+field_weights are used to initialize the Projections to the `retrieval_weighting_node
+<EMComposition.retrieval_weighting_node>`.  T
 
 .. _EMComposition_Execution:
 
@@ -571,8 +593,11 @@ class EMComposition(AutodiffComposition):
         #         return np.array(memory_template)
 
         def _validate_field_weights(self, field_weights):
-            if field_weights is not None and not np.atleast_1d(field_weights).ndim == 1:
-                return f"must be a scalar, list of scalars, or 1d array."
+            if field_weights is not None:
+                if  not np.atleast_1d(field_weights).ndim == 1:
+                    return f"must be a scalar, list of scalars, or 1d array."
+                if any([field_weight < 0 for field_weight in field_weights]):
+                    return f"must be all be postive values."
 
         def _validate_field_names(self, field_names):
             if field_names and not all(isinstance(item, str) for item in field_names):
