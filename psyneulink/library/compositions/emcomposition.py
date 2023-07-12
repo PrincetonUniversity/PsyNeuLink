@@ -67,15 +67,19 @@ Overview
 --------
 
 The EMComposition implements a configurable, content-addressable form of episodic, or eternal memory, that emulates
-the functionality  of an `EpisodicMemoryMechanism` -- reproducing all of the functionality of its
-`ContentAddressableMemory` `Function` -- in the form of an `AutodiffComposition` that is capable of learning its
-`field_weights <EMComposition.field_weights>` (i.e., that weight the keys used to retrieve items from
-memory), and that adds the capability for `memory_decay <EMComposition_Memory_Decay>`.  Its `memory
+an `EpisodicMemoryMechanism` -- reproducing all of the functionality of its `ContentAddressableMemory` `Function` --
+in the form of an `AutodiffComposition` that is capable of learning how to differentially weight different cues used
+for retrieval,, and that adds the capability for `memory_decay <EMComposition_Memory_Decay>`. Its `memory
 <EMComposition.memory>` is configured using the **memory_template** argument of its constructor, which defines how
-each entry in `memory <EMComposition.memory>` is structured (i.e., the number of fields it has, and the length of
-each field), as described below.  The inputs to its `key_input_nodes <EMComposition.key_input_nodes>` are used to
-retrieve entries from `memory <EMComposition.memory>`, and its `retrieval_nodes <EMComposition.retrieval_nodes>`
-report the results of retrieval.
+each entry in `memory <EMComposition.memory>` is structured (the number of fields in each entry and the length of
+each field), and its **field_weights** argument that defines which fields are used as cues for retrieval -- "keys" --
+and whether and how they are differentially weighted in the match process used for retrieval, and which are treated
+as "values" that are retrieved but not used for the match process.  The inputs corresponding to each key and each
+value are represented as `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` of the EMComposition (listed in its
+`key_input_nodes <EMComposition.key_input_nodes>` and `value_input_nodes <EMComposition.value_input_nodes>`
+attributes, respectively), and the retrieved values are represented as `OUTPUT <NodeRole.OUTPUT>` `Nodes
+<Composition_Nodes>` of the EMComposition.  The `memory <EMComposition.memory>` can be accessed using its `memory
+<EMComposition.memory>` attribute.
 
 .. _EMComposition_Organization:
 
@@ -93,24 +97,24 @@ constructor (see `memory_template <EMComposition_Fields>`).
 **Operation**
 
 *Retrieval.*  Entries are retrieved from `memory <ContentAddressableMemory.memory>` based on their
-distance from the cues usde for retrieval, computed as the dot product of the cue and each entry in `memory
+distance from the keys used for retrieval, computed as the dot product of the key and each entry in `memory
 <EMComposition.memory>`. If memories have more than one field, then the dot products for each field are computed in
 one of two ways:
 
   * **as a single vector** if the `field_weights <EMComposition.field_weights>` parameter is a single
     value or all of its non-zero values (i.e., the weights for the keys) are all the same; in that case, all of the
-    key fields in the cue are concatenated into a single vector, and the dot product is computed for that vector and
+    key fields in the key are concatenated into a single vector, and the dot product is computed for that vector and
     the similarly concatenated key fields of each entry in `memory <EMComposition.memory>`. ii) if `field_weights
     <EMComposition.field_weights>`;
 
   * **field-by-field** if there is more than one non-zero value in `field_weights <EMComposition.field_weights>` and
-    they are not all identical;  in this case, the dot product is computed between each key field in the cue and the
+    they are not all identical;  in this case, the dot product is computed between each key field in the key and the
     the corresponding ones of each entry in `memory <ContentAddressableMemory.memory>`, and those dot products are
     then softmaxed, and that softamxed vector is multplied by the corresponding values of `field_weights
     <EMComposition.field_weights>`, which are then summed to produce the distance for each entry in `memory
     <EMComposition.memory>`.
 
-  The distances computed between the cue and each entry in `memory <EMComposition.memory>` are then used to compute
+  The distances computed between the key and each entry in `memory <EMComposition.memory>` are then used to compute
   a weighted average of all entries in `memory <EMComposition.memory>` that is then returned as the `result
   <Composition.result>` of the EMComposition's `execution <Composition_Execution>`.
   COMMENT:
@@ -225,9 +229,9 @@ An EMComposition is created by calling its constructor, that takes the following
 
   * **storage_prob** : specifies the probability that the EMComposition will store an item in memory
   
-  * **normalize_memories** : specifies whether cues and memories are normalized before computing their similarity
+  * **normalize_memories** : specifies whether keys and memories are normalized before computing their similarity
 
-  * **softmax_gain** : specifies the temperature used for softmaxing the dot products of cues and memories.
+  * **softmax_gain** : specifies the temperature used for softmaxing the dot products of keys and memories.
 
 
   .. _EMComposition_Learning:
@@ -414,11 +418,11 @@ class EMComposition(AutodiffComposition):
         the corresponding fields in memory; see `EMComposition_Fields` for details.
 
     normalize_memories : bool : default True
-        specifies whether cues and memories are normalized before computing their dot product (similarity);
+        specifies whether keys and memories are normalized before computing their dot product (similarity);
         see `EMComposition_Retrieval_Storage` for additional details.
 
     softmax_gain : float : default CONTROL
-        specifies the temperature used for softmaxing the dot products of cues and memories;
+        specifies the temperature used for softmaxing the dot products of keys and memories;
         see `EMComposition_Retrieval_Storage` for additional details.
 
     learn_weights : bool : default False
