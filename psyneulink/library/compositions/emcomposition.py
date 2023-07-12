@@ -90,33 +90,21 @@ length.  However, all entries must have the same number of fields, and the corre
 length across entries. Fields can be weighted to determine the influence they have on retrieval, using the
 `field_weights <ContentAddressableMemory.memory>` parameter (see `retrieval <EMComposition_Retrieval>` below). The
 number and shape of the fields in each entry is specified in the **memory_template** argument of the EMComposition's
-constructor (see `memory_template <EMComposition_Fields>`).
+constructor (see `memory_template <EMComposition_Fields>`). Which fields treated as keys (i.e., used as cues for
+retrieval) and which are treated as values (i.e., retrieved but not used for matching retrieval) is specified in the
+**field_weights** argument of the EMComposition's constructor (see `field_weights <EMComposition_Fields>`).
 
 .. _EMComposition_Operation:
 
 **Operation**
 
-*Retrieval.*  Entries are retrieved from `memory <ContentAddressableMemory.memory>` based on their
-distance from the keys used for retrieval, computed as the dot product of the key and each entry in `memory
-<EMComposition.memory>`. If memories have more than one field, then the dot products for each field are computed in
-one of two ways:
-
-  * **as a single vector** if the `field_weights <EMComposition.field_weights>` parameter is a single
-    value or all of its non-zero values (i.e., the weights for the keys) are all the same; in that case, all of the
-    key fields in the key are concatenated into a single vector, and the dot product is computed for that vector and
-    the similarly concatenated key fields of each entry in `memory <EMComposition.memory>`. ii) if `field_weights
-    <EMComposition.field_weights>`;
-
-  * **field-by-field** if there is more than one non-zero value in `field_weights <EMComposition.field_weights>` and
-    they are not all identical;  in this case, the dot product is computed between each key field in the key and the
-    the corresponding ones of each entry in `memory <ContentAddressableMemory.memory>`, and those dot products are
-    then softmaxed, and that softamxed vector is multplied by the corresponding values of `field_weights
-    <EMComposition.field_weights>`, which are then summed to produce the distance for each entry in `memory
-    <EMComposition.memory>`.
-
-  The distances computed between the key and each entry in `memory <EMComposition.memory>` are then used to compute
-  a weighted average of all entries in `memory <EMComposition.memory>` that is then returned as the `result
-  <Composition.result>` of the EMComposition's `execution <Composition_Execution>`.
+*Retrieval.*  The values retrieved from `memory <ContentAddressableMemory.memory>` (one for each field) are based on
+the relative distance of the keys from the entries in memory, computed as the dot product of each key and the
+values in the corresponding field for each entry in memory.  These dot products are then softmaxed, and those
+softmax distributions are weighted by the corresponding `field_weights <EMComposition.field_weights>` for each field
+and then combined, to produce a single softmax distribution over the entries in memory, that is used to generate a
+weighted average as the retrieved value across all fields, and returned as the `result <Composition.result>` of the
+EMComposition's `execution <Composition_Execution>`.
   COMMENT:
   TBD:
   The distances used for the last retrieval is stored in XXXX and the distances of each of their corresponding fields
@@ -124,10 +112,12 @@ one of two ways:
   respectively.
   COMMENT
 
-*Storage.*  The `inputs <Composition_Input_External_InputPorts>` to the EMComposition's are stored in `memory
+*Storage.*  The `inputs <Composition_Input_External_InputPorts>` to the EMComposition's fields are stored in `memory
 <EMComposition.memory>` after each execution, with a probability determined by `storage_prob
 <EMComposition.storage_prob>`.  If `memory_decay <EMComposition.memory_decay>` is specified, then the `memory
-<EMComposition.memory>` is decayed by that amount after each execution.
+<EMComposition.memory>` is decayed by that amount after each execution.  If `memory_capacity
+<EMComposition.memory_capacity>` has been reached, then each new memory replaces the weakest entry (i.e., the one
+with the smallest norm across all of its fields) in `memory <EMComposition.memory>`.
 
 .. _EMComposition_Creation:
 
