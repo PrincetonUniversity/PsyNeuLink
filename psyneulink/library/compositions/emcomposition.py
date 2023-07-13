@@ -204,7 +204,7 @@ An EMComposition is created by calling its constructor, that takes the following
   True, all keys are concatenated (i.e., fields for which non-zero weights are specified in field_weights);  this
   occurs even if the field_weights are not all the same value (in which case a warning is issued).  If False,
   keys are only concatenated if all non-zero field_weights are the same value (see `field_weights
-  <EMComposition_Field_Weights> above).
+  <EMComposition_Field_Weights>` above).
 
 .. _EMComposition_Memory_Capacity:
   
@@ -370,19 +370,20 @@ COMMENT
 *Learning*
 ~~~~~~~~~~
 
-If `learn <Composition.learn>` is called and the `learning_weights <EMComposition.learning_weights>` attribute is True,
+If `learn <Composition.learn>` is called and the `learn_weights <EMComposition.learn_weights>` attribute is True,
 then the `field_weights <EMComposition.field_weights>` are modified to minimize the error passed to the EMComposition
 retrieval nodes, using the learning_rate specified in the `learning_rate <EMComposition.learning_rate>` attribute. If
-`learning_weights <EMComposition.learning_weights>` is False (or run <Composition.run>` is called, then the
+`learn_weights <EMComposition.learn_weights>` is False (or `run <Composition.run>` is called, then the
 `field_weights <EMComposition.field_weights>` are not modified and the EMComposition is simply executed without any
-modification, and the error signal is passed to the nodes that project to its `input nodes <EMComposition Input>`.
+modification, and the error signal is passed to the nodes that project to its `INPUT <NodeRole.INPUT>` `Nodes
+<Composition_Nodes>`.
 
   .. note::
      Although memory storage is implemented as  a form of learning (though modification of MappingProjection
      `matrix <MappingProjection.matrix>` parameters; see `memory storage <EMComposition_Memory_Storage>`),
-     this occurs irrespective of how EMComposition is run (i.e., whether `learn <EMComposition.learn>` or `run
-     <EMComposition.run>` is called), and is not affected by the `learning_weights <EMComposition.learning_weights>`
-     or learning_rate <EMComposition.learning_rate>` attributes, which pertain only to whether the `field_weights
+     this occurs irrespective of how EMComposition is run (i.e., whether `learn <Composition.learn>` or `run
+     <Composition.run>` is called), and is not affected by the `learn_weights <EMComposition.learn_weights>`
+     or `learning_rate <EMComposition.learning_rate>` attributes, which pertain only to whether the `field_weights
      <EMComposition.field_weights>` are modified during learning.
 
 .. _EMComposition_Examples:
@@ -513,7 +514,7 @@ class EMComposition(AutodiffComposition):
         see `Learning <EMComposition_Learning>` for additional details.
 
     learning_rate : float : default .01
-        specifies rate at which`field_weights <EMComposition.field_weights>` are learned if **learn_weights** is True.
+        specifies rate at which `field_weights <EMComposition.field_weights>` are learned if **learn_weights** is True.
 
     memory_capacity : int : default 1000
         specifies the number of items that can be stored in the EMComposition's memory;
@@ -534,6 +535,8 @@ class EMComposition(AutodiffComposition):
     key_input_nodes : list[TransferMechanism]
 
     value_input_nodes : list[TransferMechanism]
+
+    match_nodes : list[TransferMechanism]
 
     softmax_nodes : list[TransferMechanism]
 
@@ -662,7 +665,7 @@ class EMComposition(AutodiffComposition):
         memory_decay_rate = Parameter(None, loggable=True, modulable=True, fallback_default=True,
                                dependencies='memory_decay')
         normalize_memories = Parameter(True, loggable=False, fallback_default=True)
-        learning_weights = Parameter(True, fallback_default=True)
+        learn_weights = Parameter(True, fallback_default=True)
         learning_rate = Parameter(.001, fallback_default=True)
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         softmax_gain = Parameter(CONTROL, modulable=True, fallback_default=True)
