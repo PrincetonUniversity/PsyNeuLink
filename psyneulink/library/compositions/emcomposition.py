@@ -17,10 +17,14 @@
 # - FIX: WRITE TESTS
 # - FIX: FINISH DOCSTRING
 # - FIX: ALLOW SOFTMAX SPEC TO BE A DICT WITH PARAMETERS FOR _get_softmax_gain() FUNCTION
+# - FIX: CONCATENATE ANY FIELDS THAT ARE THE SAME WEIGHT (FOR EFFICIENCY)
 # - FIX: WHY IS Concatenate NOT WORKING AS FUNCTION OF AN INPUTPORT (WASN'T THAT USED IN CONTEXT OF BUFFER?)
 # - FIX: COMPILE
 #      LinearMatrix to add normalization
 #      _store() method to assign weights to memory
+# - FIX: LEARNING:
+#        - ADD LEARNING MECHANISMS TO STORE MEMORY AND ADJUST WEIGHTS
+#        - DEAL WITH ERROR SIGNALS to retrieval_weighting_node OR AS PASS-THROUGH
 # - WRITE TESTS FOR INPUT_PORT and MATRIX SPECS CORRECT IN LATEST BRANCHEs
 # - ACCESSIBILITY OF DISTANCES (SEE BELOW): MAKE IT A LOGGABLE PARAMETER (I.E., WITH APPROPRIATE SETTER)
 #   ADD COMPILED VERSION OF NORMED LINEAR_COMBINATION FUNCTION TO LinearCombination FUNCTION: dot / (norm a * norm b)
@@ -259,6 +263,7 @@ in the form of a 2d array, in which rows (axis 0) are entries and columns (axis 
 is determined by the `memory_template <EMComposition_Memory_Template>` argument of the EMComposition's constructor,
 and the number of entries is determined by the `memory_capacity <EMComposition_Memory_Capacity>` argument.
 
+  .. _EMComposition_Memory_Storage:
   .. technical_note::
      The memories are actually stored in the `matrix <MappingProjection.matrix>` parameters of the `MappingProjections`
      from the `retrieval_weighting_node <EMComposition.retrieval_weighting_node>` to each of the `retrieval_nodes
@@ -283,9 +288,73 @@ The outputs corresponding to retrieved value for each field are represented as `
 
 Execution
 ---------
-The arguments of the `run <EMComposition.run>` and `execute <EMComposition.execute>` methods are the same as those
-of a `Composition`.  The only difference in execution is that the values of the key_input_value and value_input_value
+
+The arguments of the `run <Composition.run>` , `learn <Composition.learn>` and `Composition.execute`
+methods are the same as those of a `Composition`, and they can be passed any of the arguments valid for
+an `AutodiffComposition`.  The details of how the EMComposition executes are described below.
+
+*Processing*
+~~~~~~~~~~~~
+
+When the EMComposition is executed, the following sequence of operations occur:
+
+* *Concatentation*
+  If the `field_weights <EMComposition.field_weights>` are the same for all `keys <XXX>` or the `concatenate_keys
+  <EMComposition.concatenate_keys>` attribute is True, then the inputs provided to the `key_input_nodes
+  <EMComposition.key_input_nodes>` are concatenated into a single vector that is provided to
+
+
+* *Match memories by field*
+
+* *Softmax normalize matches over fields*
+
+* *Weight fields*
+
+* *Retrieve values by field*
+
+* *Decay memories*
+
+* *Store memories*
+
+------------
+inputs to its `key_input_nodes <EMComposition.key_input_nodes>` and
+`value_input_nodes <EMComposition.value_input_nodes>` are assigned the values of the corresponding items in the
+`input <Composition.input>` argument.  The `retrieval_weighting_node <EMComposition.retrieval_weighting_node>`
+computes the dot product of each key with each memory, and then applies a softmax function to each row of the
+resulting matrix.  The `retrieval_nodes <EMComposition.retrieval_nodes>` then compute the dot product of the
+softmaxed values for each memory with the corresponding value for each memory, and the result is assigned to the
+corresponding `output <Composition.output>` item.
+-------------
+
+If `learn <Composition.learn>` is called, then the
+`field_weights <EMComposition.field_weights>` are modified to minimize the error passed to the EMComposition
+retrieval nodes, using the learning_rate specified in the `learning_rate <EMComposition.learning_rate>` attribute.
+If `learn <Composition.learn>` is not called, then the `field_weights <EMComposition.field_weights>` are not
+modified and the EMComposition is simply executed without any modification, and the error signal is passed to the
+nodes that project to its `input nodes <EMComposition Input>`.
+
+The only difference in execution is that the values of the key_input_value and value_input_value
 nodes are assigned in place of the weakest entry in the EMComposition's memory.
+
+
+*Learning*
+~~~~~~~~~~
+
+If learn is called, and the `learning_weights <EMComposition.learning_weights>`
+attribute is True, then the `field_weights <EMComposition.field_weights>` are modified to minimize the
+error passed to the EMComposition retrieval nodes, using the learning_rate specified in the `learning_rate
+<EMComposition.learning_rate>` attribute.  If `learning_weights <EMComposition.learning_weights>` is False,
+then the `field_weights <EMComposition.field_weights>` are not modified and the EMComposition is simply executed
+without any modification, and the error signal is passed to the nodes that project to its `input nodes
+<EMComposition Input>`.
+
+  .. note::
+     Although memory storage is implemented as  a form of learning (though modification of MappingProjection
+     `matrix <MappingProjection.matrix>` parameters (see `EMComposition_Memory_Storage`), this occurs irrespective
+     of how EMComposition is run (i.e., whether `learn <EMComposition.learn>` or `run <EMComposition.run>` is
+     called), and is not affected by the `learning_weights <EMComposition.learning_weights>` or learning_rate
+     <EMComposition.learning_rate>` attributes, which pertain only to whether the `field_weights
+     <EMComposition.field_weights>` are modified during learning.
 
 .. _EMComposition_Examples:
 
