@@ -2124,8 +2124,15 @@ class ParametersBase(ParametersTemplate):
         for alias_name in aliases_to_create:
             setattr(self, alias_name, ParameterAlias(name=alias_name, source=getattr(self, alias_name).source))
 
-        for param, value in self.values(show_all=True).items():
+        values = self.values(show_all=True)
+        for param, value in values.items():
             self._validate(param, value.default_value)
+
+            if value.dependencies is not None:
+                value.dependencies = {getattr(d, 'name', d) for d in value.dependencies}
+                assert all(dep in values for dep in value.dependencies), (
+                    f'invalid Parameter name among {param} dependencies: {value.dependencies}'
+                )
 
         self._initializing = False
 
