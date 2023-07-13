@@ -365,6 +365,8 @@ softmaxed values for each memory with the corresponding value for each memory, a
 corresponding `output <Composition.output>` item.
 COMMENT
 
+.. _EMComposition_Learning:
+
 *Learning*
 ~~~~~~~~~~
 
@@ -508,7 +510,7 @@ class EMComposition(AutodiffComposition):
 
     learn_weights : bool : default False
         specifies whether `field_weights <EMComposition.field_weights>` are learnable during training;
-        see `EMComposition_Learning` for additional details.
+        see `Learning <EMComposition_Learning>` for additional details.
 
     learning_rate : float : default .01
         specifies rate at which`field_weights <EMComposition.field_weights>` are learned if **learn_weights** is True.
