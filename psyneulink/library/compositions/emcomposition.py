@@ -582,13 +582,17 @@ class EMComposition(AutodiffComposition):
         over fields <EMComposition_Processing>` for additional details.
 
     storage_prob : float
+        determines the probability that an item will be stored in `memory <EM_Composition.memory>`.
 
     memory_capacity : int
+        determines the number of items that can be stored in `memory <EM_Composition.memory>`; see `memory_capacity
+        <EMComposition_Memory_Capacity>` for additional details.
 
     memory_decay : bool
+        determines whether memories decay with each execution of the EMComposition.
 
     memory_decay_rate : float
-
+        determines the rate at which items in the EMComposition's memory decay.
 
     .. _EMComposition_Nodes:
 
