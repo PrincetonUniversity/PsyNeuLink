@@ -73,7 +73,7 @@ Overview
 The EMComposition implements a configurable, content-addressable form of episodic, or eternal memory, that emulates
 an `EpisodicMemoryMechanism` -- reproducing all of the functionality of its `ContentAddressableMemory` `Function` --
 in the form of an `AutodiffComposition` that is capable of learning how to differentially weight different cues used
-for retrieval,, and that adds the capability for `memory_decay <EMComposition_Memory_Decay>`. Its `memory
+for retrieval,, and that adds the capability for `memory_decay <EMComposition.memory_decay>`. Its `memory
 <EMComposition.memory>` is configured using the **memory_template** argument of its constructor, which defines how
 each entry in `memory <EMComposition.memory>` is structured (the number of fields in each entry and the length of
 each field), and its **field_weights** argument that defines which fields are used as cues for retrieval -- "keys" --
@@ -96,7 +96,7 @@ length across entries. Fields can be weighted to determine the influence they ha
 number and shape of the fields in each entry is specified in the **memory_template** argument of the EMComposition's
 constructor (see `memory_template <EMComposition_Fields>`). Which fields treated as keys (i.e., used as cues for
 retrieval) and which are treated as values (i.e., retrieved but not used for matching retrieval) is specified in the
-**field_weights** argument of the EMComposition's constructor (see `field_weights <EMComposition_Fields>`).
+**field_weights** argument of the EMComposition's constructor (see `field_weights <EMComposition_Field_Weights>`).
 
 .. _EMComposition_Operation:
 
@@ -302,7 +302,7 @@ an `AutodiffComposition`.  The details of how the EMComposition executes are des
 When the EMComposition is executed, the following sequence of operations occur:
 
 * **Concatenation**. If the `field_weights <EMComposition.field_weights>` are the same for all `keys
-  <EMComposition_Field_Weights` or the `concatenate_keys <EMComposition_Concatenate_Keys>` attribute is True,
+  <EMComposition_Field_Weights>` or the `concatenate_keys <EMComposition_Concatenate_Keys>` attribute is True,
   then the inputs provided to the `key_input_nodes <EMComposition.key_input_nodes>` are concatenated into a single
   vector in the `concatenation_node <EMComposition.concatenation_node>`, that is provided to a corresponding
   `match_node <EMComposition.match_nodes>`.
@@ -329,16 +329,16 @@ When the EMComposition is executed, the following sequence of operations occur:
   <EMComposition.retrieval_weighting_node>` is passed through the Projections to the each of the `retrieval_nodes
   <EMComposition.retrieval_nodes>` to compute the retrieved value for each field.
 
-* **Decay memories**.  If `memory_decay <EMComposition_memory_decay>` is True, then each of the memories is decayed
-  by the amount specified in `memory_decay <EMComposition_Memory_Decay>`.
+* **Decay memories**.  If `memory_decay <EMComposition.memory_decay>` is True, then each of the memories is decayed
+  by the amount specified in `memory_decay <EMComposition.memory_decay>`.
 
     .. technical_note::
        This is done by multiplying the `matrix <MappingProjection.matrix>` parameter of the `MappingProjection` from
        the `retrieval_weighting_node <EMComposition.retrieval_weighting_node>` to each of the `retrieval_nodes
        <EMComposition.retrieval_nodes>`, as well as the `matrix <MappingProjection.matrix>` parameter of the
        `MappingProjection` from each `key_input_node <EMComposition.key_input_nodes>` to the corresponding
-       `match_node <EMComposition.match_nodes>` by `memory_decay_rate <EMComposition_memory_decay_rate>`,
-        by 1 - `memory_decay_rate <EMComposition_memory_decay_rate>`.
+       `match_node <EMComposition.match_nodes>` by `memory_decay <EMComposition.memory_decay_rate>`,
+        by 1 - `memory_decay <EMComposition.memory_decay_rate>`.
 
 * **Store memories**. After the values have been retrieved, the inputs to for each field (i.e., values in the
   `key_input_nodes <EMComposition.key_input_nodes>` and `value_input_nodes <EMComposition.value_input_nodes>`)
@@ -377,10 +377,10 @@ modification, and the error signal is passed to the nodes that project to its `i
 
   .. note::
      Although memory storage is implemented as  a form of learning (though modification of MappingProjection
-     `matrix <MappingProjection.matrix>` parameters; see `EMComposition_Memory_Storage`), this occurs irrespective
-     of how EMComposition is run (i.e., whether `learn <EMComposition.learn>` or `run <EMComposition.run>` is
-     called), and is not affected by the `learning_weights <EMComposition.learning_weights>` or learning_rate
-     <EMComposition.learning_rate>` attributes, which pertain only to whether the `field_weights
+     `matrix <MappingProjection.matrix>` parameters; see `memory storage <EMComposition_Memory_Storage>`),
+     this occurs irrespective of how EMComposition is run (i.e., whether `learn <EMComposition.learn>` or `run
+     <EMComposition.run>` is called), and is not affected by the `learning_weights <EMComposition.learning_weights>`
+     or learning_rate <EMComposition.learning_rate>` attributes, which pertain only to whether the `field_weights
      <EMComposition.field_weights>` are modified during learning.
 
 .. _EMComposition_Examples:
@@ -488,15 +488,15 @@ class EMComposition(AutodiffComposition):
 
     field_weights : tuple : default (1,0)
         specifies the relative weight assigned to each key when matching an item in memory'
-        see `EMComposition_Fields` for details.
+        see `field weights <_EMComposition_Field_Weights>` for details.
 
     field_names : list : default None
         specifies the optional names assigned to each field in the memory_template;
-        see `EMComposition_Fields` for details.
+        see `field names <EMComposition_Field_Names>` for details.
 
     concatenate_keys : bool : default False
         specifies whether to concatenate the keys into a single field before matching them to items in
-        the corresponding fields in memory; see `EMComposition_Fields` for details.
+        the corresponding fields in memory; see `concatenate keys <EMComposition_Concatenate_Keys>` for details.
 
     normalize_memories : bool : default True
         specifies whether keys and memories are normalized before computing their dot product (similarity);
