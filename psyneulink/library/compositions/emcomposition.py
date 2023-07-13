@@ -208,7 +208,7 @@ An EMComposition is created by calling its constructor, that takes the following
 
 .. _EMComposition_Memory_Capacity:
   
-*Capacity*
+*Memory Capacity*
 
 * **memory_capacity**: specifies the maximum number of items that can be stored in the EMComposition's memory; when
   `memory_capacity <EMComposition.memory_capacity>` is reached, each new entry overwrites the weakest entry (i.e., the
@@ -484,11 +484,11 @@ class EMComposition(AutodiffComposition):
 
     memory_template : 2-item tuple, list, or 2d array : default [[0],[0]]
         specifies the shape of an items to be stored in the EMComposition's memory;
-        see `EMComposition_Memory_Template` for details.
+        see `memory_template <EMComposition_Memory_Template>` for details.
 
     field_weights : tuple : default (1,0)
         specifies the relative weight assigned to each key when matching an item in memory'
-        see `field weights <_EMComposition_Field_Weights>` for details.
+        see `field weights <EMComposition_Field_Weights>` for details.
 
     field_names : list : default None
         specifies the optional names assigned to each field in the memory_template;
@@ -500,30 +500,30 @@ class EMComposition(AutodiffComposition):
 
     normalize_memories : bool : default True
         specifies whether keys and memories are normalized before computing their dot product (similarity);
-        see `EMComposition_Retrieval_Storage` for additional details.
+        see `Retrieval and Storage <EMComposition_Retrieval_Storage>` for additional details.
 
     softmax_gain : float : default CONTROL
         specifies the temperature used for softmax normalizing the dot products of keys and memories;
-        see `EMComposition_Retrieval_Storage` for additional details.
+        see `Retrieval and Storage <EMComposition_Retrieval_Storage>` for additional details.
 
     learn_weights : bool : default False
-        specifies whether `field_weights <EMCompostion.field_weights>` are learnable during training;
+        specifies whether `field_weights <EMComposition.field_weights>` are learnable during training;
         see `EMComposition_Learning` for additional details.
 
     learning_rate : float : default .01
-        specifies rate at which`field_weights <EMCompostion.field_weights>` are learned if **learn_weights** is True.
+        specifies rate at which`field_weights <EMComposition.field_weights>` are learned if **learn_weights** is True.
 
     memory_capacity : int : default 1000
         specifies the number of items that can be stored in the EMComposition's memory;
-        see `EMComposition_Memory_Capacity` for details.
+        see `memory_capacity <EMComposition_Memory_Capacity>` for details.
 
     memory_decay : bool : default True
         specifies whether memories decay with each execution of the EMComposition;
-        see `EMComposition_Memory_Capacity` for details.
+        see `memory_decay <EMComposition_Memory_Capacity>` for details.
 
     memory_decay_rate : float : default 1 / `memory_capacity <EMComposition.memory_capacity>`
         specifies the rate at which items in the EMComposition's memory decay;
-        see `EMComposition_Memory_Capacity` for details.
+        see `memory_decay_rate <EMComposition_Memory_Capacity>` for details.
 
 
     Attributes
