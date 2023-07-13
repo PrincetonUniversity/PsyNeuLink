@@ -14,14 +14,19 @@
 
 # TODO:
 # - memory_field as np.array should store speciied value in memory.
+# - FIX: ALWYAS CHECK FOR ZEROS IN KEYS OR ALL MEMORIES
+# - FIX: BROADCAST MEMORY_TEMPLATE IF IT IS AN NP.ARRAY
+# - FIX: CONFIDENCE COMPUTATION (USING SIGMOID ON DOT PRODUCTS) AND REPORT THAT (EVEN ON FIRST CALL)
 # - FIX: WRITE TESTS
 # - FIX: ALLOW memory TO BE INITIALIZED USING A MATRIX OR FILL VALUE
 # - FIX: ALLOW SOFTMAX SPEC TO BE A DICT WITH PARAMETERS FOR _get_softmax_gain() FUNCTION
 # - FIX: CONCATENATE ANY FIELDS THAT ARE THE SAME WEIGHT (FOR EFFICIENCY)
 # - FIX: WHY IS Concatenate NOT WORKING AS FUNCTION OF AN INPUTPORT (WASN'T THAT USED IN CONTEXT OF BUFFER?)
 # - FIX: COMPILE
-#      LinearMatrix to add normalization
+#      - LinearMatrix to add normalization
 #      _store() method to assign weights to memory
+# - FIX: AUGMENT LINEARMATRIX NORMALIZATION SO THAT ANYTIME A ROW'S NORM IS 0 REPLACE IT WITH 1
+#  1s)
 # - FIX: LEARNING:
 #        - ADD LEARNING MECHANISMS TO STORE MEMORY AND ADJUST WEIGHTS
 #        - DEAL WITH ERROR SIGNALS to retrieval_weighting_node OR AS PASS-THROUGH
@@ -60,7 +65,12 @@ Contents
      - `Storage and Retrieval <EMComposition_Retrieval_Storage>`
      - `Learning <EMComposition_Learning>`
   * `EMComposition_Structure`
+     - `Input <EMComposition_Input>`
+     - `Memory <EMComposition_Memory>`
+     - `Output <EMComposition_Output>`
   * `EMComposition_Execution`
+     - `Processing <EMComposition_Processing>`
+     - `Learning <EMComposition_Learning>`
   * `EMComposition_Examples`
   * `EMComposition_Class_Reference`
 
@@ -103,7 +113,7 @@ retrieval) and which are treated as values (i.e., retrieved but not used for mat
 **Operation**
 
 *Retrieval.*  The values retrieved from `memory <ContentAddressableMemory.memory>` (one for each field) are based on
-the relative distance of the keys from the entries in memory, computed as the dot product of each key and the
+the relative similarity of the keys to the entries in memory, computed as the dot product of each key and the
 values in the corresponding field for each entry in memory.  These dot products are then softmaxed, and those
 softmax distributions are weighted by the corresponding `field_weights <EMComposition.field_weights>` for each field
 and then combined, to produce a single softmax distribution over the entries in memory, that is used to generate a
@@ -172,7 +182,7 @@ An EMComposition is created by calling its constructor, that takes the following
 * **field_weights**: specifies which fields are used as keys, and how they are weighted during retrieval. The
   number of values specified must match the number of fields specified in **memory_template** (i.e., the size of
   of its first dimension (axis 0)).  All non-zero entries must be positive, and designate *keys* -- fields
-  that are used to match items in memory for retrieval (see `retrieval <EMComposition_Retrieval_Storage>` below).
+  that are used to match items in memory for retrieval (see `Match memories by field <EM_CompositionProcessing>`).
   Entries of 0 designate *values* -- fields that are ignored during the matching process, but the values of which
   are retrieved and assigned as the `value <Mechanism_Base.value>` of the corresponding `retrieval_node
   <EMComposition.retrieval_nodes>`. This distinction between keys and value implements a standard "dictionary; however,
@@ -188,8 +198,8 @@ An EMComposition is created by calling its constructor, that takes the following
 
     * *multiple non-zero entries*: If all entries are identical, the value is ignored and the corresponding keys are
       `concatenated <EMComposition_Concatenate_Keys>` and weighted equally for retrieval; if the non-zero entries are
-      non-identical, they are used to weight the corresponding fields during retrieval (see `retrieval
-      <EMComposition_Retrieval_Storage>` below).  In either case, the remaining fields (with zero weights) are treated
+      non-identical, they are used to weight the corresponding fields during retrieval (see `Weight fields
+      <EMComposition_Processing>`).  In either case, the remaining fields (with zero weights) are treated
       as value fields.
 
 .. _EMComposition_Field_Names:
@@ -296,6 +306,8 @@ The arguments of the `run <Composition.run>` , `learn <Composition.learn>` and `
 methods are the same as those of a `Composition`, and they can be passed any of the arguments valid for
 an `AutodiffComposition`.  The details of how the EMComposition executes are described below.
 
+.. _EMComposition_Processing:
+
 *Processing*
 ~~~~~~~~~~~~
 
@@ -307,6 +319,7 @@ When the EMComposition is executed, the following sequence of operations occur:
   vector in the `concatenation_node <EMComposition.concatenation_node>`, that is provided to a corresponding
   `match_node <EMComposition.match_nodes>`.
 
+# FIX: ADD MENTION OF NORMALIZATION HERE
 * **Match memories by field**. The values of each `key_input_node <EMComposition.key_input_nodes>` (or the
   `concatenation_node <EMComposition.concatenation_node>` if `concatenate_keys <EMComposition_Concatenate_Keys>`
   attribute is True) are passed through the corresponding `match_node <EMComposition.match_nodes>`, which computes
@@ -314,15 +327,15 @@ When the EMComposition is executed, the following sequence of operations occur:
   for each memory in the corresponding field.
 
 * **Softmax normalize matches over fields**. The dot products of memories for each field are passed to the
-  corresponding `softmax_node <EMComposition.softmax_node>`, which applies a softmax function to normalize the
+  corresponding `softmax_node <EMComposition.softmax_nodes>`, which applies a softmax function to normalize the
   dot products of memories for each field.  If `softmax_gain <EMComposition.softmax_gain>` is specified, it is
   used as the gain (inverse temperature) for the softmax function; if it is specified as *CONTROL* or None, then
   the `softmax_gain <EMComposition.softmax_gain>` function is used to adaptively set the gain (see `softmax_gain
   <EMComposition_Softmax_Gain>` for details).
 
-* **Weight fields**. The softmax normalized dot products of memories for each field are passed to the
-  `retrieval_weighting_node <EMComposition.retrieval_weighting_node>`, which applies the `field_weight
-  <EMComposition.field_weights>` to the softmaxed dot products of memories for each field, haddamard sums
+* **Weight fields**. The softmax normalized dot products of keys and memories for each field are passed to the
+  `retrieval_weighting_node <EMComposition.retrieval_weighting_node>`, which applies the corresponding `field_weight
+  <EMComposition.field_weights>` to the softmaxed dot products of memories for each field, and then haddamard sums
   those weighted dot products to produce a single weighting for each memory.
 
 * **Retrieve values by field**. The vector of weights for each memory generated by the `retrieval_weighting_node
@@ -503,11 +516,11 @@ class EMComposition(AutodiffComposition):
 
     normalize_memories : bool : default True
         specifies whether keys and memories are normalized before computing their dot product (similarity);
-        see `Retrieval and Storage <EMComposition_Retrieval_Storage>` for additional details.
+        see `Match memories by field <EMComposition_Processing>` for additional details.
 
     softmax_gain : float : default CONTROL
         specifies the temperature used for softmax normalizing the dot products of keys and memories;
-        see `Retrieval and Storage <EMComposition_Retrieval_Storage>` for additional details.
+        see `Softmax normalize matches over fields <EMComposition_Processing>` for additional details.
 
     learn_weights : bool : default False
         specifies whether `field_weights <EMComposition.field_weights>` are learnable during training;
@@ -532,35 +545,43 @@ class EMComposition(AutodiffComposition):
     Attributes
     ----------
 
-    key_input_nodes : list[TransferMechanism]
-
-    value_input_nodes : list[TransferMechanism]
-
-    match_nodes : list[TransferMechanism]
-
-    softmax_nodes : list[TransferMechanism]
-
-    retrieval_nodes : list[TransferMechanism]
-
-    retrieval_weighting_node : TransferMechanism
-
-    retrieval_gating_nodes : list[GatingMechanism]
-
     memory : 2d np.array
 
+    .. _EMComposition_Parameters:
+
     field_weights : list[float]
+        determines which fields of the input are treated as "keys" (non-zero values), used to match entries in `memory
+        <EM_Composition.memory>` for retrieval, and which are used as "values" (zero values), that are stored and
+        retrieved from memory, but not used in the match process (see `Match memories by field`
+        <EMComposition_Processing>`;  see `field_weights <EMComposition_Field_Weights>` for additional details
+        of specification).
 
     field_names : list[str]
-
-    concatenate_keys : bool
-
-    normalize_memories : bool
-
-    softmax_gain : float
+        determines which names that can be used to label fields in `memory <EM_Composition.memory>`;  see
+        `field_names <EMComposition_Field_Names>` for additional details.
 
     learn_weights : bool
+        determines whether `field_weights <EMComposition.field_weights>` are learnable during training; see
+        `Learning <EMComposition_Learning>` for additional details.
 
     learning_rate : float
+        determines whether the rate at which `field_weights <EMComposition.field_weights>` are learned if
+        `learn_weights` is True;  see <EMComposition_Learning>` for additional details.
+
+    concatenate_keys : bool
+        determines whether keys are concatenated into a single field before matching them to items in `memory
+        <EM_Composition.memory>`; see `concatenate keys <EMComposition_Concatenate_Keys>` for additional details.
+
+    normalize_memories : bool
+        determines whether keys and memories are normalized before computing their dot product (similarity);
+        see `Match memories by field <EMComposition_Processing>` for additional details.
+
+    softmax_gain : CONTROL
+        determines gain (inverse temperature) used for softmax normalizing the dot products of keys and memories
+        by the `softmax` function of the `softmax_nodes <EMComposition.softmax_nodes>`; see `Softmax normalize matches
+        over fields <EMComposition_Processing>` for additional details.
+
+    storage_prob : float
 
     memory_capacity : int
 
@@ -568,7 +589,52 @@ class EMComposition(AutodiffComposition):
 
     memory_decay_rate : float
 
-    storage_prob : float
+
+    .. _EMComposition_Nodes:
+
+    key_input_nodes : list[TransferMechanism]
+        `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` that receive keys used to determine the item
+        to be retrieved from `memory <EM_Composition.memory>`, and then themselves stored in `memory
+        <EM_Composition.memory>` (see `Match memories by field` <EMComposition_Processing>` for additional details).
+
+    value_input_nodes : list[TransferMechanism]
+        `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` that receive values to be stored in `memory
+        <EM_Composition.memory>`; these are not used in the matching process used for retrieval
+
+    match_nodes : list[TransferMechanism]
+        `TransferMechanisms <TransferMechanism>` that receive the dot product of each key and those stored in
+        the corresponding field of `memory <EM_Composition.memory>` (see `Match memories by field`
+        <EMComposition_Processing>` for additional details).
+
+    softmax_control_nodes : list[ControlMechanism]
+        `ControlMechanisms <ControlMechanism>` that adaptively control the `softmax_gain <EMComposition.softmax_gain>`
+        for the corresponding `softmax_nodes <EM_Composition.softmax_nodes>`. These are implemented only if
+        `softmax_gain <EMComposition.softmax_gain>` is specified as *CONTROL* (see `softmax_gain
+        <EMComposition_Softmax_Gain>` for details).
+
+    softmax_nodes : list[TransferMechanism]
+        `TransferMechanisms <TransferMechanism>` that compute the softmax over the vectors received
+        from the corresponding `match_nodes <EM_Composition.match_nodes>` (see `Softmax normalize matches over fields
+        <EMComposition_Processing>` for additional details).
+
+    retrieval_gating_nodes : list[GatingMechanism]
+        `GatingMechanisms <GatingMechanism>` that uses the `field weight <EMComposition.field_weights>` for each
+        field to modulate the output of the corresponding `retrieval_node <EM_Composition.retrieval_nodes>` before
+        it is passed to the `retrieval_weighting_node <EM_Composition.retrieval_weighting_node>`.  These are
+        implemented only if differential weights are specified for the different fields in `field_weights
+        <EMComposition.field_weights>`.
+
+    retrieval_weighting_node : TransferMechanism
+        `TransferMechanism` that receives the softmax normalized dot products of the keys and memories
+        from the `softmax_nodes <EM_Composition.softmax_nodes>`, weights these using `field_weights
+        <EMComposition.field_weights>`, and haddamard sums those weighted dot products to produce a
+        single weighting for each memory.
+
+
+    retrieval_nodes : list[TransferMechanism]
+        `TransferMechanisms <TransferMechanism>` that receive the vector retrieved for each field in `memory
+        <EM_Composition.memory>` (see `Retrieve values by field` <EMComposition_Processing>` for additional details).
+
     """
 
     componentCategory = EM_COMPOSITION
