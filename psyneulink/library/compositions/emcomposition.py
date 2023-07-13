@@ -15,7 +15,7 @@
 # TODO:
 # - memory_field as np.array should store speciied value in memory.
 # - FIX: WRITE TESTS
-# - FIX: FINISH DOCSTRING
+# - FIX: ALLOW memory TO BE INITIALIZED USING A MATRIX OR FILL VALUE
 # - FIX: ALLOW SOFTMAX SPEC TO BE A DICT WITH PARAMETERS FOR _get_softmax_gain() FUNCTION
 # - FIX: CONCATENATE ANY FIELDS THAT ARE THE SAME WEIGHT (FOR EFFICIENCY)
 # - FIX: WHY IS Concatenate NOT WORKING AS FUNCTION OF AN INPUTPORT (WASN'T THAT USED IN CONTEXT OF BUFFER?)
@@ -199,7 +199,7 @@ An EMComposition is created by calling its constructor, that takes the following
 
 .. _EMComposition_Concatenate_Keys:
 
-* **concatenate_keys**:  specifies whether keys are concatenated before a match is made to itmes in memory. If
+* **concatenate_keys**:  specifies whether keys are concatenated before a match is made to items in memory. If
   True, all keys are concatenated (i.e., fields for which non-zero weights are specified in field_weights);  this
   occurs even if the field_weights are not all the same value (in which case a warning is issued).  If False,
   keys are only concatenated if all non-zero field_weights are the same value (see `field_weights
@@ -213,11 +213,11 @@ An EMComposition is created by calling its constructor, that takes the following
   `memory_capacity <EMComposition.memory_capacity>` is reached, each new entry overwrites the weakest entry (i.e., the
   one with the smallest norm across all of its fields) in `memory <EMComposition.memory>`.
 
-* **decay_memories**: specifies whether the EMComposition's memory decays over time.
+* **memory_decay**: specifies whether the EMComposition's memory decays over time.
 
-* **decay_rate**: specifies the rate at which items in the EMComposition's memory decay;  the default rate is 1 /
-  `memory_capacity <EMComposition.memory_capacity>`, such that the oldest memories are the most likely to be replaced
-  when `memory_capacity <EMComposition.memory_capacity>` is reached.
+* **memory_decay_rate**: specifies the rate at which items in the EMComposition's memory decay;  the default rate is
+  1 / `memory_capacity <EMComposition.memory_capacity>`, such that the oldest memories are the most likely to be
+  replaced when `memory_capacity <EMComposition.memory_capacity>` is reached.
 
   .. _EMComposition_Retrieval_Storage:
 
@@ -228,10 +228,10 @@ An EMComposition is created by calling its constructor, that takes the following
 
 * **normalize_memories** : specifies whether keys and memories are normalized before computing their dot products.
 
-* **softmax_gain** : specifies the gain (inverse temperature) used for softmaxing the dot products of keys and memories
-  (see `EMComposition_Execution` below).  If a value is specified, that is used.  If the keyword *CONTROL* is specified
-  (or the value is None), then the `softmax_gain <EMComposition.softmax_gain>` function is used to adaptively set the
-  gain based on the entropy of the dot products, preserving the distribution over non-(or near) zero entries
+* **softmax_gain** : specifies the gain (inverse temperature) used for softmax normalizing the dot products of keys
+  and memories (see `EMComposition_Execution` below).  If a value is specified, that is used.  If the keyword *CONTROL*
+  is (or the value is None), then the `softmax_gain <EMComposition.softmax_gain>` function is used to adaptively set
+  the gain based on the entropy of the dot products, preserving the distribution over non-(or near) zero entries
   irrespective of how many (near) zero entries there are.
 
 * **learn_weights** : specifies whether the weights specified in **field_weights** are modifiable during training.
@@ -298,25 +298,59 @@ an `AutodiffComposition`.  The details of how the EMComposition executes are des
 
 When the EMComposition is executed, the following sequence of operations occur:
 
-* *Concatentation*
-  If the `field_weights <EMComposition.field_weights>` are the same for all `keys <XXX>` or the `concatenate_keys
-  <EMComposition.concatenate_keys>` attribute is True, then the inputs provided to the `key_input_nodes
-  <EMComposition.key_input_nodes>` are concatenated into a single vector that is provided to
+* *Concatenation*. If the `field_weights <EMComposition.field_weights>` are the same for all `keys
+  <EMComposition_Field_Weights` or the `concatenate_keys <EMComposition_Concatenate_Keys>` attribute is True,
+  then the inputs provided to the `key_input_nodes <EMComposition.key_input_nodes>` are concatenated into a single
+  vector in the `concatenation_node <EMComposition.concatenation_node>`, that is provided to a corresponding
+  `match_node <EMComposition.match_nodes>`.
 
+* *Match memories by field*. The values of each `key_input_node <EMComposition.key_input_nodes>` (or the
+  `concatenation_node <EMComposition.concatenation_node>` if `concatenate_keys <EMComposition_Concatenate_Keys>`
+  attribute is True) are passed through the corresponding `match_node <EMComposition.match_nodes>`, which computes
+  the dot product of the input with each memory for the corresponding field, resulting in a vector of dot products
+  for each memory in the corresponding field.
 
-* *Match memories by field*
+* *Softmax normalize matches over fields*. The dot products of memories for each field are passed to the corresponding
+  `softmax_node <EMComposition.softmax_node>`, which applies a softmax function to normalize the dot products of
+  memories for each field.
 
-* *Softmax normalize matches over fields*
+* *Weight fields*. The softmax normalized dot products of memories for each field are passed to the
+  `retrieval_weighting_node <EMComposition.retrieval_weighting_node>`, which applies the `field_weight
+  <EMComposition.field_weights>` to the softmaxed dot products of memories for each field, haddamard sums those weighted
+  dot products to produce a single weighting for each memory.
 
-* *Weight fields*
+* *Retrieve values by field*. The vector of weights for each memory generated by the `retrieval_weighting_node
+  <EMComposition.retrieval_weighting_node>` is passed to the corresponding `retrieval_node is then passed those
+  through the Projections to the each of the `retrieval_nodes <EMComposition.retrieval_nodes>` to compute the retrieved
+  value for each field.
 
-* *Retrieve values by field*
+* *Decay memories*.  If `memory_decay <EMComposition_memory_decay>` is True, then each of the memories is decayed
+  by the amount specified in `memory_decay <EMComposition_Memory_Decay>`.
 
-* *Decay memories*
+  .. technical_note::
+     This is done by multiplying the `matrix <MappingProjection.matrix>` parameter of the `MappingProjection` from
+     the `retrieval_weighting_node <EMComposition.retrieval_weighting_node>` to each of the `retrieval_nodes
+     <EMComposition.retrieval_nodes>`, as well as the `matrix <MappingProjection.matrix>` parameter of the
+     `MappingProjection` from each `key_input_node <EMComposition.key_input_nodes>` to the corresponding
+     `match_node <EMComposition.match_nodes>` by `memory_decay_rate <EMComposition_memory_decay_rate>`,
+      by 1 - `memory_decay_rate <EMComposition_memory_decay_rate>`.
 
-* *Store memories*
+* *Store memories*. After the values have been retrieved, the inputs to for each field (i.e., values in the
+  `key_input_nodes <EMComposition.key_input_nodes>` and `value_input_nodes <EMComposition.value_input_nodes>`)
+  are added as a new entry in `memory <EMComposition.memory>`, replacing the weakest one if `memory_capacity
+  <EMComposition_Memory_Capacity>` has been reached.
 
-------------
+  .. technical_note::
+     This is done by adding the input vectors to the the corresponding rows of the `matrix <MappingProjection.matrix>`
+     of the `MappingProjection` from the `retreival_weighting_node <EMComposition.retrieval_weighting_node>` to each
+     of the `retrieval_nodes <EMComposition.retrieval_nodes>`, as well as the `matrix <MappingProjection.matrix>`
+     parameter of the `MappingProjection` from each `key_input_node <EMComposition.key_input_nodes>` to the
+     corresponding `match_node <EMComposition.match_nodes>`.  If `memory_capacity <EMComposition_Memory_Capacity>`
+     has been reached, then the weakest memory (i.e., the one with the lowest norm across all fields) is replaced by
+     the new memory.
+
+COMMENT:
+FROM CodePilot: (OF HISTORICAL INTEREST?)
 inputs to its `key_input_nodes <EMComposition.key_input_nodes>` and
 `value_input_nodes <EMComposition.value_input_nodes>` are assigned the values of the corresponding items in the
 `input <Composition.input>` argument.  The `retrieval_weighting_node <EMComposition.retrieval_weighting_node>`
@@ -324,29 +358,17 @@ computes the dot product of each key with each memory, and then applies a softma
 resulting matrix.  The `retrieval_nodes <EMComposition.retrieval_nodes>` then compute the dot product of the
 softmaxed values for each memory with the corresponding value for each memory, and the result is assigned to the
 corresponding `output <Composition.output>` item.
--------------
-
-If `learn <Composition.learn>` is called, then the
-`field_weights <EMComposition.field_weights>` are modified to minimize the error passed to the EMComposition
-retrieval nodes, using the learning_rate specified in the `learning_rate <EMComposition.learning_rate>` attribute.
-If `learn <Composition.learn>` is not called, then the `field_weights <EMComposition.field_weights>` are not
-modified and the EMComposition is simply executed without any modification, and the error signal is passed to the
-nodes that project to its `input nodes <EMComposition Input>`.
-
-The only difference in execution is that the values of the key_input_value and value_input_value
-nodes are assigned in place of the weakest entry in the EMComposition's memory.
-
+COMMENT
 
 *Learning*
 ~~~~~~~~~~
 
-If learn is called, and the `learning_weights <EMComposition.learning_weights>`
-attribute is True, then the `field_weights <EMComposition.field_weights>` are modified to minimize the
-error passed to the EMComposition retrieval nodes, using the learning_rate specified in the `learning_rate
-<EMComposition.learning_rate>` attribute.  If `learning_weights <EMComposition.learning_weights>` is False,
-then the `field_weights <EMComposition.field_weights>` are not modified and the EMComposition is simply executed
-without any modification, and the error signal is passed to the nodes that project to its `input nodes
-<EMComposition Input>`.
+If `learn <Composition.learn>` is called and the `learning_weights <EMComposition.learning_weights>` attribute is True,
+then the `field_weights <EMComposition.field_weights>` are modified to minimize the error passed to the EMComposition
+retrieval nodes, using the learning_rate specified in the `learning_rate <EMComposition.learning_rate>` attribute. If
+`learning_weights <EMComposition.learning_weights>` is False (or run <Composition.run>` is called, then the
+`field_weights <EMComposition.field_weights>` are not modified and the EMComposition is simply executed without any
+modification, and the error signal is passed to the nodes that project to its `input nodes <EMComposition Input>`.
 
   .. note::
      Although memory storage is implemented as  a form of learning (though modification of MappingProjection
@@ -397,22 +419,11 @@ __all__ = [
 STORAGE_PROB = 'storage_prob'
 
 def _memory_getter(owning_component=None, context=None): # FIX: MAKE THIS A PARAMETER
-    """Return memory as a list of the memories stored in the memory nodes.
+    """Return array of memories in which rows (axis 0) are memories for each field (axis 1).
+    These are derived from `matrix <MappingProjection.matrix>` parameter of the `afferent
+    <Mechanism_Base.afferents>` MappingProjections to each of the `retrieval_nodes <EMComposition.retrieval_nodes>`.
     """
     memory = None
-    # if owning_component.concatenate_keys:
-    #     memory = owning_component.match_nodes[0].path_afferents[0].parameters.matrix.get(context).transpose()
-    # else:
-    #     for key_node in owning_component.key_input_nodes:
-    #         memory_field = key_node.efferents[0].parameters.matrix.get(context).transpose()
-    #         if memory is None:
-    #             memory = memory_field
-    #         else:
-    #             memory = np.concatenate((memory, memory_field),axis=1)
-    # for retrieval_node in owning_component.retrieval_nodes:
-    #     memory = np.concatenate((memory, retrieval_node.path_afferents[0].parameters.matrix.get(context)),axis=1)
-    # return memory
-
     for retrieval_node in owning_component.retrieval_nodes:
         memory_field = retrieval_node.path_afferents[0].parameters.matrix.get(context)
         if memory is None:
@@ -420,48 +431,6 @@ def _memory_getter(owning_component=None, context=None): # FIX: MAKE THIS A PARA
         else:
             memory = np.concatenate((memory, memory_field),axis=1)
     return memory
-
-
-
-# def get_softmax_gain(values, epsilon=1e-3):
-#     """Compute the softmax gain (inverse temperature) based on length of vector and number of (near) zero values.
-#     Thresholds for near-zero values is specified by **epsilon**.
-#     """
-#     values = np.squeeze(values)
-#     n = len(values)
-#     num_zero = np.count_nonzero(values < epsilon)
-#     num_non_zero = n - num_zero
-#     if num_non_zero == 0:
-#         gain = 1
-#     else:
-#         gain = 1 + np.exp(1/num_non_zero) * (num_zero/n)
-#     return gain
-
-# def get_softmax_gain(v, offset=1, scale=1, weighting=.1, entropy_transform='LOG')->float:
-#     """Compute the softmax gain (inverse temperature) based on the entropy of the distribution of values.
-#     Best params set: {'v':input,
-#                       'offset':1,
-#                       'scale':1,
-#                       'weighting':1,
-#                       'entropy_transform':'LOG'}
-#     """
-#     v = np.squeeze(v)
-#     def logistic(x):
-#         return 1 / (1 + np.exp(-1 * x))
-#     def entropy_by_element(x):
-#         entropy = -1 * np.sum(x * np.log(x))
-#         return entropy
-#     l = logistic(v)
-#     # entropy = entropy_of_mean(l)
-#     entropy = entropy_by_element(l)
-#     if entropy_transform == 'LOG':
-#         transformed_entropy = logistic(entropy)
-#     elif entropy_transform == 'LOGISTIC':
-#         transformed_entropy = np.log(entropy)
-#     else:
-#         assert False, 'BAD entropy_transform'
-#     gain = scale * (offset + (weighting * transformed_entropy))
-#     return gain, num_zeros, entropy, SoftMax(gain=gain)(v)
 
 def get_softmax_gain(v, scale=1, base=1, entropy_weighting=.1)->float:
     """Compute the softmax gain (inverse temperature) based on the entropy of the distribution of values.
@@ -494,8 +463,8 @@ class EMComposition(AutodiffComposition):
         learn_weights=True,         \
         learning_rate=True,         \
         memory_capacity=1000,       \
-        decay_memories=True,        \
-        decay_rate=.001,            \
+        memory_decay=True,          \
+        memory_decay_rate=.001,     \
         storage_prob=1.0,           \
         name="EM_composition"       \
         )
@@ -529,7 +498,7 @@ class EMComposition(AutodiffComposition):
         see `EMComposition_Retrieval_Storage` for additional details.
 
     softmax_gain : float : default CONTROL
-        specifies the temperature used for softmaxing the dot products of keys and memories;
+        specifies the temperature used for softmax normalizing the dot products of keys and memories;
         see `EMComposition_Retrieval_Storage` for additional details.
 
     learn_weights : bool : default False
@@ -543,11 +512,11 @@ class EMComposition(AutodiffComposition):
         specifies the number of items that can be stored in the EMComposition's memory;
         see `EMComposition_Capacity` for details.
 
-    decay_memories : bool : default True
+    memory_decay : bool : default True
         specifies whether memories decay with each execution of the EMComposition;
         see `EMComposition_Capacity` for details.
 
-    decay_rate : float : default 1 / `memory_capacity <EMComposition.memory_capacity>`
+    memory_decay_rate : float : default 1 / `memory_capacity <EMComposition.memory_capacity>`
         specifies the rate at which items in the EMComposition's memory decay;
         see `EMComposition_Capacity` for details.
 
@@ -585,9 +554,9 @@ class EMComposition(AutodiffComposition):
 
     memory_capacity : int
 
-    decay_memories : bool
+    memory_decay : bool
 
-    decay_rate : float
+    memory_decay_rate : float
 
     storage_prob : float
     """
@@ -604,14 +573,14 @@ class EMComposition(AutodiffComposition):
                     :default value: False
                     :type: ``bool``
 
-                decay_memories
-                    see `decay_memories <EMComposition.decay_memories>`
+                memory_decay
+                    see `memory_decay <EMComposition.memory_decay>`
 
                     :default value: False
                     :type: ``bool``
 
-                decay_rate
-                    see `decay_rate <EMComposition.decay_rate>`
+                memory_decay_rate
+                    see `memory_decay_rate <EMComposition.memory_decay_rate>`
 
                     :default value: 0.001
                     :type: ``float``
@@ -682,9 +651,9 @@ class EMComposition(AutodiffComposition):
         field_weights = Parameter(None, structural=True)
         field_names = Parameter(None, structural=True)
         concatenate_keys = Parameter(False, structural=True)
-        decay_memories = Parameter(True, loggable=True, modulable=True, fallback_default=True)
-        decay_rate = Parameter(None, loggable=True, modulable=True, fallback_default=True,
-                               dependencies='decay_memories')
+        memory_decay = Parameter(True, loggable=True, modulable=True, fallback_default=True)
+        memory_decay_rate = Parameter(None, loggable=True, modulable=True, fallback_default=True,
+                               dependencies='memory_decay')
         normalize_memories = Parameter(True, loggable=False, fallback_default=True)
         learning_weights = Parameter(True, fallback_default=True)
         learning_rate = Parameter(.001, fallback_default=True)
@@ -714,13 +683,13 @@ class EMComposition(AutodiffComposition):
             if field_names and not all(isinstance(item, str) for item in field_names):
                 return f"must be a list of strings."
 
-        def _validate_decay_rate(self, decay_rate):
-            if decay_rate is not None:
-                decay_rate = float(decay_rate)
-                if self.decay_memories.get() and decay_rate == 0.0:
-                    return f"is 0.0 and 'decay_memories' arg is True; set it to a positive value " \
+        def _validate_memory_decay_rate(self, memory_decay_rate):
+            if memory_decay_rate is not None:
+                memory_decay_rate = float(memory_decay_rate)
+                if self.memory_decay.get() and memory_decay_rate == 0.0:
+                    return f"is 0.0 and 'memory_decay' arg is True; set it to a positive value " \
                            f"or to None to use the default of 1/memory_capacity."
-                if not all_within_range(decay_rate, 0, 1):
+                if not all_within_range(memory_decay_rate, 0, 1):
                     return f"must be a float in the interval [0,1]."
 
         def _validate_softmax_gain(self, softmax_gain):
@@ -741,8 +710,8 @@ class EMComposition(AutodiffComposition):
                  learn_weights:bool=True,
                  learning_rate:float=None,
                  memory_capacity:int=1000,
-                 decay_memories:bool=True,
-                 decay_rate:float=None,
+                 memory_decay:bool=True,
+                 memory_decay_rate:float=None,
                  normalize_memories:bool=True,
                  softmax_gain:Union[float, CONTROL]=CONTROL,
                  storage_prob:float=None,
@@ -778,8 +747,8 @@ class EMComposition(AutodiffComposition):
         self.learn_weights = learn_weights
 
         # Memory management parameters
-        if self.parameters.decay_memories.get() and self.parameters.decay_rate.get() is None:
-            self.parameters.decay_rate.set(decay_rate or 1 / self.memory_capacity)
+        if self.parameters.memory_decay.get() and self.parameters.memory_decay_rate.get() is None:
+            self.parameters.memory_decay_rate.set(memory_decay_rate or 1 / self.memory_capacity)
 
         # Memory field attributes
         keys_weights = [i for i in self.field_weights if i != 0]
@@ -1129,8 +1098,8 @@ class EMComposition(AutodiffComposition):
                 # For key_input:
                 #   assign as weights for first empty row of Projection.matrix from key_input_node to match_node
                 memories = input_node.efferents[0].parameters.matrix.get(context)
-                if self.decay_memories:
-                    memories *= self.decay_rate
+                if self.memory_decay:
+                    memories *= self.memory_decay_rate
                 # Get least used slot (i.e., weakest memory = row of matrix with lowest weights)
                 # idx_of_min = np.argmin(memories.sum(axis=0))
                 idx_of_min = np.argmin(np.linalg.norm(memories, axis=0))
@@ -1139,8 +1108,8 @@ class EMComposition(AutodiffComposition):
 
             # For all inputs, assign input vector to afferent weights of corresponding retrieval_node
             memories = self.retrieval_nodes[i].path_afferents[0].parameters.matrix.get(context)
-            if self.decay_memories:
-                memories *= self.decay_rate
+            if self.memory_decay:
+                memories *= self.memory_decay_rate
             # Get least used slot (i.e., weakest memory = row of matrix with lowest weights)
             idx_of_min = np.argmin(memories.sum(axis=1))
             memories[idx_of_min] = np.array(memory)
