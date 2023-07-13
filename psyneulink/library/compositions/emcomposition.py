@@ -8,21 +8,19 @@
 
 # ********************************************* EMComposition *************************************************
 
-
 # ISSUES:
 # - IMPLEMENTATION OF STORAGE IN PYTORCH AND/OR AS LEARNING PROCESS (HEBBIAN?)
 # - CONFIDENCE COMPUTATION
 
 # TODO:
 # - memory_field as np.array should store speciied value in memory.
-# - FIX: DOCUMENT: all field weights the same: concatenate (more efficeint)
 # - FIX: WRITE TESTS
+# - FIX: FINISH DOCSTRING
+# - FIX: ALLOW SOFTMAX SPEC TO BE A DICT WITH PARAMETERS FOR _get_softmax_gain() FUNCTION
 # - FIX: WHY IS Concatenate NOT WORKING AS FUNCTION OF AN INPUTPORT (WASN'T THAT USED IN CONTEXT OF BUFFER?)
 # - FIX: COMPILE
 #      LinearMatrix to add normalization
 #      _store() method to assign weights to memory
-# - FIX: FINISH DOCSTRING
-# - FIX: ALLOW SOFTMAX SPEC TO BE A DICT WITH PARAMETERS FOR _get_softmax_gain() FUNCTION
 # - WRITE TESTS FOR INPUT_PORT and MATRIX SPECS CORRECT IN LATEST BRANCHEs
 # - ACCESSIBILITY OF DISTANCES (SEE BELOW): MAKE IT A LOGGABLE PARAMETER (I.E., WITH APPROPRIATE SETTER)
 #   ADD COMPILED VERSION OF NORMED LINEAR_COMBINATION FUNCTION TO LinearCombination FUNCTION: dot / (norm a * norm b)
@@ -247,10 +245,9 @@ Structure
 *Input*
 ~~~~~~~
 
-The inputs corresponding to each key and each value are represented as `INPUT <NodeRole.INPUT>` `Nodes
-<Composition_Nodes>` of the EMComposition (listed in its
-`key_input_nodes <EMComposition.key_input_nodes>` and `value_input_nodes <EMComposition.value_input_nodes>`
-attributes, respectively),
+The inputs corresponding to each key and value field are represented as `INPUT <NodeRole.INPUT>` `Nodes
+<Composition_Nodes>` of the EMComposition, listed in its `key_input_nodes <EMComposition.key_input_nodes>`
+and `value_input_nodes <EMComposition.value_input_nodes>` attributes, respectively,
 
 .. _EMComposition_Memory:
 
@@ -263,22 +260,24 @@ is determined by the `memory_template <EMComposition_Memory_Template>` argument 
 and the number of entries is determined by the `memory_capacity <EMComposition_Memory_Capacity>` argument.
 
   .. technical_note::
-  The memories are actually stored in the `matrix <MappingProjection.matrix>` parameters of the `MappingProjections`
-  from the `retreival_weighting_node <EMComposition.retrieval_weighting_node>` to each of the `retrieval_nodes
-  <EMComposition.retrieval_nodes>`.
-  FIX XXX
-  each `key_input_node <EMComposition.key_input_nodes>` to the corresponding `match_node
-  <EMComposition.match_nodes>`, so that passing the value of the key_input_node through the projection produces
-  the dot produce of that input with the value of the corresponding field for each entry in memory.
-
+     The memories are actually stored in the `matrix <MappingProjection.matrix>` parameters of the `MappingProjections`
+     from the `retrieval_weighting_node <EMComposition.retrieval_weighting_node>` to each of the `retrieval_nodes
+     <EMComposition.retrieval_nodes>`.  Memories associated with each key are also stored in the `matrix
+     <MappingProjection.matrix>` parameters of the `MappingProjections` from the `key_input_nodes
+     <EMComposition.key_input_nodes>` to each of the corresponding `match_nodes <EMComposition.match_nodes>`.
+     This is done so that the match of each key to the memories for the corresponding field can be computed simply
+     by passing the input for each key through the Projection to the corresponding match_node and, similarly,
+     retrieivals can be computed by passiing the softmax disintributions and weighting for each field computed
+     in the `retrieval_weighting_node <EMComposition.retrieval_weighting_node>` through its Projection to each
+     `retrieval_node <EMComposition.retrieval_nodes>` to get the retreieved value for each field.
 
 .. _EMComposition_Output:
 
 *Output*
 ~~~~~~~
 
-and the retrieved values are represented as `OUTPUT <NodeRole.OUTPUT>` `Nodes
-<Composition_Nodes>` of the EMComposition.
+The outputs corresponding to retrieved value for each field are represented as `OUTPUT <NodeRole.INPUT>` `Nodes
+<Composition_Nodes>` of the EMComposition, listed in its `retrieval_nodes <EMComposition.retrieval_nodes>` attribute.
 
 .. _EMComposition_Execution:
 
@@ -1028,20 +1027,10 @@ class EMComposition(AutodiffComposition):
         - retrieval_weighting_node to retrieval_node(s)
         and then storing memory_template if it was specified as a list or array (vs. a shape)
         """
-        # FIX: REPLACE THIS WITH STORE:
         # create inputs:
         inputs = {node:memory for node, memory in zip(self.input_nodes, self.memory_template)}
         self._encode_memory(inputs)
-        # for key_node, proj in zip(self.key_input_nodes, [key_node.efferents[0]
-        #                                                  for key_node in self.key_input_nodes]):
-        #     proj.matrix.base = np.zeros_like(key_node.efferents[0].matrix.base)
-        #     proj.execute() # For clarity, ensure that it reports modulated value as zero as well
-        #
-        # for retrieval_node, proj in zip(self.retrieval_nodes, [retrieval_node.path_afferents[0]
-        #                                                        for retrieval_node in self.retrieval_nodes]):
-        #     proj.matrix.base = np.zeros_like(retrieval_node.path_afferents[0].matrix.base)
-        #     proj.execute() # For clarity, ensure that it reports modulated value as zero as well
-            
+
     def execute(self, inputs, context, **kwargs):
         """Set input to weights of Projection to match_node.
         """
@@ -1079,21 +1068,6 @@ class EMComposition(AutodiffComposition):
                 memories[:,idx_of_min] = np.array(memory)
                 input_node.efferents[0].parameters.matrix.set(memories, context)
 
-            # Store both key_input and value_input in projections from retrieval_weighting_node to retrieval_nodes
-            # if input_node in self.value_input_nodes:
-            # if input_node in self.value_input_nodes:
-            #     # For value_input;
-            #     #   assign as weights for 1st empty row of Projection.matrix from retrieval_weighting_node to retrieval_node
-            #     idx = self.value_input_nodes.index(input_node)
-            #     memories = self.retrieval_nodes[idx].path_afferents[0].parameters.matrix.get(context)
-            #     if self.decay_memories:
-            #         memories *= self.decay_rate
-            #     # Get least used slot (i.e., weakest memory = row of matrix with lowest weights)
-            #     idx_of_min = np.argmin(memories.sum(axis=1))
-            #     memories[idx_of_min] = np.array(memory)
-            #     self.retrieval_nodes[idx].path_afferents[0].parameters.matrix.set(memories, context)
-            #   assign as weights for 1st empty row of Projection.matrix from retrieval_weighting_node to retrieval_node
-
             # For all inputs, assign input vector to afferent weights of corresponding retrieval_node
             memories = self.retrieval_nodes[i].path_afferents[0].parameters.matrix.get(context)
             if self.decay_memories:
@@ -1102,4 +1076,3 @@ class EMComposition(AutodiffComposition):
             idx_of_min = np.argmin(memories.sum(axis=1))
             memories[idx_of_min] = np.array(memory)
             self.retrieval_nodes[i].path_afferents[0].parameters.matrix.set(memories, context)
-
