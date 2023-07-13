@@ -264,7 +264,7 @@ and the number of entries is determined by the `memory_capacity <EMComposition_M
 
   .. technical_note::
   The memories are actually stored in the `matrix <MappingProjection.matrix>` parameters of the `MappingProjections`
-  from the `retreival_weight_node <EMComposition.retrieval_weight_nodes>` to each of the `retrieval_nodes
+  from the `retreival_weighting_node <EMComposition.retrieval_weighting_node>` to each of the `retrieval_nodes
   <EMComposition.retrieval_nodes>`.
   FIX XXX
   each `key_input_node <EMComposition.key_input_nodes>` to the corresponding `match_node
@@ -332,18 +332,28 @@ def _memory_getter(owning_component=None, context=None): # FIX: MAKE THIS A PARA
     """Return memory as a list of the memories stored in the memory nodes.
     """
     memory = None
-    if owning_component.concatenate_keys:
-        memory = owning_component.match_nodes[0].path_afferents[0].parameters.matrix.get(context).transpose()
-    else:
-        for key_node in owning_component.key_input_nodes:
-            memory_field = key_node.efferents[0].parameters.matrix.get(context).transpose()
-            if memory is None:
-                memory = memory_field
-            else:
-                memory = np.concatenate((memory, memory_field),axis=1)
+    # if owning_component.concatenate_keys:
+    #     memory = owning_component.match_nodes[0].path_afferents[0].parameters.matrix.get(context).transpose()
+    # else:
+    #     for key_node in owning_component.key_input_nodes:
+    #         memory_field = key_node.efferents[0].parameters.matrix.get(context).transpose()
+    #         if memory is None:
+    #             memory = memory_field
+    #         else:
+    #             memory = np.concatenate((memory, memory_field),axis=1)
+    # for retrieval_node in owning_component.retrieval_nodes:
+    #     memory = np.concatenate((memory, retrieval_node.path_afferents[0].parameters.matrix.get(context)),axis=1)
+    # return memory
+
     for retrieval_node in owning_component.retrieval_nodes:
-        memory = np.concatenate((memory, retrieval_node.path_afferents[0].parameters.matrix.get(context)),axis=1)
+        memory_field = retrieval_node.path_afferents[0].parameters.matrix.get(context)
+        if memory is None:
+            memory = memory_field
+        else:
+            memory = np.concatenate((memory, memory_field),axis=1)
     return memory
+
+
 
 # def get_softmax_gain(values, epsilon=1e-3):
 #     """Compute the softmax gain (inverse temperature) based on length of vector and number of (near) zero values.
@@ -731,7 +741,7 @@ class EMComposition(AutodiffComposition):
             node.output_ports['RESULT'].parameters.require_projection_in_composition.set(False, override=True)
         for node in self.softmax_nodes:
             node.output_ports['KEY_WEIGHT'].parameters.require_projection_in_composition.set(False, override=True)
-        for port in self.retrieval_weighting_node[0].output_ports:
+        for port in self.retrieval_weighting_node.output_ports:
             if 'RESULT' in port.name:
                 port.parameters.require_projection_in_composition.set(False, override=True)
 
@@ -788,7 +798,7 @@ class EMComposition(AutodiffComposition):
         # Construct pathway as a set of nodes, since Projections are specified in the construction of each node
         pathway = set(self.key_input_nodes + self.value_input_nodes + self.concatenate_keys_node
                       + self.match_nodes + self.softmax_control_nodes + self.softmax_nodes \
-                      + self.retrieval_weighting_node + self.retrieval_gating_nodes + self.retrieval_nodes)
+                      + [self.retrieval_weighting_node] + self.retrieval_gating_nodes + self.retrieval_nodes)
 
         return pathway
 
@@ -958,18 +968,25 @@ class EMComposition(AutodiffComposition):
             f'PROGRAM ERROR: number of items in retrieval_weighting_node ({len(retrieval_weighting_node.output_port)})' \
             f'does not match memory_capacity ({self.memory_capacity})'
                                                             
-        return [retrieval_weighting_node]
+        return retrieval_weighting_node
 
     def _construct_retrieval_nodes(self)->list:
         """Create nodes that report the value field(s) for the item(s) matched in memory.
         """
-        self.retrieved_key_nodes = [TransferMechanism(size=len(self.key_input_nodes[i].variable[0]),
-                                                      input_ports=self.retrieval_weighting_node,
+
+        self.retrieved_key_nodes = [TransferMechanism(input_ports={SIZE: len(self.key_input_nodes[i].variable[0]),
+                                                                   PROJECTIONS:
+                                                                       MappingProjection(
+                                                                           sender=self.retrieval_weighting_node,
+                                                                           matrix=ZEROS_MATRIX)},
                                                       name= f'{self.key_names[i]} RETRIEVED')
                                     for i in range(self.num_keys)]
 
-        self.retrieved_value_nodes = [TransferMechanism(size=len(self.value_input_nodes[i].variable[0]),
-                                                        input_ports=self.retrieval_weighting_node,
+        self.retrieved_value_nodes = [TransferMechanism(input_ports={SIZE: len(self.value_input_nodes[i].variable[0]),
+                                                                     PROJECTIONS:
+                                                                         MappingProjection(
+                                                                             sender=self.retrieval_weighting_node,
+                                                                             matrix=ZEROS_MATRIX)},
                                                         name= f'{self.value_names[i]} RETRIEVED')
                                       for i in range(self.num_values)]
 
@@ -1008,7 +1025,7 @@ class EMComposition(AutodiffComposition):
     def _initialize_memory(self):
         """Initialize memory by zeroing weights from:
         - key_input_node(s) to match_node(s) and
-        - retrieval_weight_node to retrieval_node(s)
+        - retrieval_weighting_node to retrieval_node(s)
         and then storing memory_template if it was specified as a list or array (vs. a shape)
         """
         # FIX: REPLACE THIS WITH STORE:
