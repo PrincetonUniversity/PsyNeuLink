@@ -670,3 +670,15 @@ def test_dependent_parameter_validate():
         r"Value \(3\) assigned to parameter 'b'.*is not valid: invalid",
         str(err.value)
     )
+
+
+def test_dependency_from_parameter():
+    class NewM(pnl.ProcessingMechanism):
+        class Parameters(pnl.ProcessingMechanism.Parameters):
+            a = pnl.Parameter(None)
+            b = pnl.Parameter(None, dependencies='a')
+            c = pnl.Parameter(None, dependencies=b)
+
+    m = NewM()
+    param_order = m.parameters._in_dependency_order
+    assert param_order.index(m.parameters.c) > param_order.index(m.parameters.b)
