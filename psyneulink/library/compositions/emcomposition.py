@@ -1042,9 +1042,10 @@ class EMComposition(AutodiffComposition):
 
         # Construct pathway as a set of nodes, since Projections are specified in the construction of each node
         pathway = set(self.key_input_nodes + self.value_input_nodes
-                      + self.concatenate_keys_node if self.concatenate_keys_node is not None else []
                       + self.match_nodes + self.softmax_control_nodes + self.softmax_nodes \
                       + [self.retrieval_weighting_node] + self.retrieval_gating_nodes + self.retrieval_nodes)
+        if self.concatenate_keys_node is not None:
+            pathway.add(self.concatenate_keys_node)
 
         return pathway
 
