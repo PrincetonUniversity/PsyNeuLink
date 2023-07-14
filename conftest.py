@@ -10,7 +10,7 @@ import sys
 import psyneulink
 from psyneulink import clear_registry, primary_registries, torch_available
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.globals.utilities import set_global_seed
+from psyneulink.core.globals.utilities import is_numeric, set_global_seed
 
 try:
     import torch
@@ -301,7 +301,23 @@ def power_set(s):
     return (c for l in range(len(vals) + 1) for c in itertools.combinations(vals, l))
 
 
+def patch_parameter_set_value_numeric_check():
+    orig_parameter_set_value = psyneulink.core.globals.parameters.Parameter._set_value
+
+    def check_numeric_set_value(self, value, **kwargs):
+        assert isinstance(value, np.ndarray) or not is_numeric(value), (
+            f'{self._owner._owner}.{self.name} is being set to a numeric value.'
+            f' It must first be wrapped in a numpy array:\n\t{value}\n\t{type(value)}'
+        )
+
+        return orig_parameter_set_value(self, value, **kwargs)
+
+    psyneulink.core.globals.parameters.Parameter._set_value = check_numeric_set_value
+
+
 # flag when run from pytest
 # https://docs.pytest.org/en/stable/example/simple.html#detect-if-running-from-within-a-pytest-run
 def pytest_configure(config):
     psyneulink._called_from_pytest = True
+
+    patch_parameter_set_value_numeric_check()
