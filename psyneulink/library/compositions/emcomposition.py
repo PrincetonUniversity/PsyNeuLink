@@ -827,19 +827,23 @@ class EMComposition(AutodiffComposition):
                  storage_prob:float=None,
                  name="EM_Composition"):
 
+        # Construct memory --------------------------------------------------------------------------------
+
         self._validate_memory_specs(memory_template, memory_fill, field_weights, field_names, name)
         self._parse_memory_template(memory_template, memory_fill, memory_capacity, field_weights)
         self._parse_fields(field_weights, field_names, concatenate_keys, learn_weights, learning_rate,)
 
-        # Memory processing parameters
         if self.parameters.memory_decay.get() and self.parameters.memory_decay_rate.get() is None:
             self.parameters.memory_decay_rate.set(memory_decay_rate or 1 / self.memory_capacity)
         self.softmax_gain = softmax_gain
 
-        pathway = self._construct_pathway()
+        # Instantiate Composition -------------------------------------------------------------------------
 
+        pathway = self._construct_pathway()
         super().__init__(pathway,
                          name=name)
+
+        # Clean-up ----------------------------------------------------------------------------------------
 
         # Suppress warnings for no efferent Projections
         for node in self.value_input_nodes:
@@ -856,6 +860,10 @@ class EMComposition(AutodiffComposition):
 
         # Turn off learning for all Projections except inputs to retrieval_gating_nodes
         self._set_learnability_of_projections()
+
+    # *****************************************************************************************************************
+    # ***********************************  Memory Construction Methods  ***********************************************
+    # *****************************************************************************************************************
 
     def _validate_memory_specs(self, memory_template, memory_fill, field_weights, field_names, name):
         """Validate the memory_template, field_weights, and field_names arguments
@@ -1003,6 +1011,10 @@ class EMComposition(AutodiffComposition):
 
         self.learn_weights = learn_weights
         self.learning_rate = learning_rate
+
+    # *****************************************************************************************************************
+    # ******************************  Nodes and Pathway Construction Methods  *****************************************
+    # *****************************************************************************************************************
 
     def _construct_pathway(self)->set:
         """Construct pathway for EMComposition"""
@@ -1258,39 +1270,10 @@ class EMComposition(AutodiffComposition):
                     else:
                         proj.learnable = False
 
-    def _construct_memory(self, memory_template, memory_fill):
-        """Initialize memory by zeroing weights from:
-        - key_input_node(s) to match_node(s) and
-        - retrieval_weighting_node to retrieval_node(s)
-        and then storing memory_template if it was specified as a list or array (vs. a shape)
-        """
-        # create inputs:
-        inputs = {node:memory for node, memory in zip(self.input_nodes, self.entry_template)}
-        self._encode_memory(inputs)
+    # *****************************************************************************************************************
+    # *********************************** Execution Methods  **********************************************************
+    # *****************************************************************************************************************
 
-        if isinstance(memory_fill, tuple):
-            if memory_fill[0] != RANDOM:
-                raise EMCompositionError(f"The 'memory_fill' arg of '{self.name}' is a tuple ({memory_fill}), "
-                                         f"so the first item must be the keyword 'RANDOM'")
-                # memory_fill = np.random.uniform(*memory_fill[1:], size=memory_template.shape)
-            memory_fill = RANDOM
-            scale = memory_fill[1]
-
-        memory_field = []
-        if memory_template.ndim == 2:
-            for field in memory_template:
-                memory_field.append(np.full((self.memory_capacity, len(field)),memory_fill))
-
-
-            for i, key_input_node in enumerate(self.key_input_nodes):
-                key_input_node.output_port.value = np.zeros_like(key_input_node.output_port.value)
-                key_input_node.output
-            memory = np.array(memory_template)
-
-
-        # FIX: ASSIGN FILL
-        # ASSIGN TO PROJECTIONS FROM KEY_INPUT_NODE(S) TO MATCH_NODE(S)
-        # AND FROM RETRIEVAL_WEIGHTING_NODE TO RETRIEVAL_NODE(S)
 
     def execute(self, inputs, context, **kwargs):
         """Set input to weights of Projection to match_node."""
