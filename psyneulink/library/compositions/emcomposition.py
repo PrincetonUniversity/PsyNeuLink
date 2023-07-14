@@ -1108,7 +1108,8 @@ class EMComposition(AutodiffComposition):
 
         if self.concatenate_keys:
             # Get fields of memory structure corresponding to the keys
-            matrix = self.memory_template[:,:self.num_keys].transpose()
+            # matrix = self.memory_template[:,:self.num_keys].transpose()
+            matrix = np.concatenate([self.memory_template[:,i].transpose() for i in range(self.num_keys)])
             match_nodes = [
                 TransferMechanism(
                     input_ports={NAME: 'CONCATENATED_INPUTS',
@@ -1118,7 +1119,7 @@ class EMComposition(AutodiffComposition):
                                                                 matrix=matrix,
                                                                 function=LinearMatrix(
                                                                     normalize=self.normalize_memories))},
-            name='MATCH')]
+                    name='MATCH')]
         else:
             # One node for each key
             match_nodes = [
@@ -1273,7 +1274,6 @@ class EMComposition(AutodiffComposition):
     # *****************************************************************************************************************
     # *********************************** Execution Methods  **********************************************************
     # *****************************************************************************************************************
-
 
     def execute(self, inputs, context, **kwargs):
         """Set input to weights of Projection to match_node."""
