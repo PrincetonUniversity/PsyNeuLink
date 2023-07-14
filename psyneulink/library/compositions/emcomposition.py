@@ -14,11 +14,8 @@
 
 # TODO:
 # - memory_field as np.array should store speciied value in memory.
-# - FIX: BROADCAST MEMORY_TEMPLATE IF IT IS AN NP.ARRAY
-# - FIX: ALWAYS CHECK FOR ZEROS IN KEYS OR ALL MEMORIES FOR NORMALIZATION IN LINEAR MATRIX FUNCTION
 # - FIX: CONFIDENCE COMPUTATION (USING SIGMOID ON DOT PRODUCTS) AND REPORT THAT (EVEN ON FIRST CALL)
 # - FIX: WRITE TESTS
-# - FIX: ALLOW memory TO BE INITIALIZED USING A MATRIX OR FILL VALUE
 # - FIX: ALLOW SOFTMAX SPEC TO BE A DICT WITH PARAMETERS FOR _get_softmax_gain() FUNCTION
 # - FIX: CONCATENATE ANY FIELDS THAT ARE THE SAME WEIGHT (FOR EFFICIENCY)
 # - FIX: WHY IS Concatenate NOT WORKING AS FUNCTION OF AN INPUTPORT (WASN'T THAT USED IN CONTEXT OF BUFFER?)
@@ -784,16 +781,6 @@ class EMComposition(AutodiffComposition):
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
 
-        # def _validate_memory_template(self, memory_template):
-        #     if not isinstance(memory_template, (list, tuple, np.ndarray)):
-        #         return f"must be a list, tuple, or array."
-        #
-        # def _parse_memory_template(self, memory_template):
-        #     if isinstance(memory_template, tuple):
-        #         return np.zeros(memory_template)
-        #     else:
-        #         return np.array(memory_template)
-
         def _validate_field_weights(self, field_weights):
             if field_weights is not None:
                 if  not np.atleast_1d(field_weights).ndim == 1:
@@ -844,12 +831,10 @@ class EMComposition(AutodiffComposition):
         self._parse_memory_template(memory_template, memory_fill, memory_capacity, field_weights)
         self._parse_fields(field_weights, field_names, concatenate_keys, learn_weights, learning_rate,)
 
-        # Memory management parameters
+        # Memory processing parameters
         if self.parameters.memory_decay.get() and self.parameters.memory_decay_rate.get() is None:
             self.parameters.memory_decay_rate.set(memory_decay_rate or 1 / self.memory_capacity)
-
         self.softmax_gain = softmax_gain
-        # self._construct_memory(memory_template, memory_fill)
 
         pathway = self._construct_pathway()
 
@@ -871,11 +856,6 @@ class EMComposition(AutodiffComposition):
 
         # Turn off learning for all Projections except inputs to retrieval_gating_nodes
         self._set_learnability_of_projections()
-
-        # # Set normalization if specified
-        # if self.normalize_memories:
-        #     for node in self.softmax_nodes:
-        #         node.input_ports[0].path_afferents[0].function.parameters.normalize.set(True)
 
     def _validate_memory_specs(self, memory_template, memory_fill, field_weights, field_names, name):
         """Validate the memory_template, field_weights, and field_names arguments
