@@ -929,14 +929,14 @@ class EMComposition(AutodiffComposition):
                     entry = entry_template
                 # Fill with specified value
                 elif isinstance(memory_fill, (list, float, int)):
-                    entry = [np.full_like(field, memory_fill).tolist() for field in entry_template]
+                    entry = [np.full(len(field), memory_fill).tolist() for field in entry_template]
                 entries = [np.array(entry, dtype=object)] * num_entries
 
             return np.array(np.array(entries))
 
         # If memory_template is a tuple, create and fill full memory matrix
         if isinstance(memory_template, tuple):
-            memory = np.full(memory_template, memory_fill)
+            memory = _construct_entries(np.full(memory_template, 0), memory_capacity, memory_fill)
 
         # If memory_template is a list or array
         else:

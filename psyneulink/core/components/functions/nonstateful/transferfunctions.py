@@ -3898,7 +3898,10 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             if np.any(vector):
                 vector = vector / np.linalg.norm(vector)
             if np.any(matrix):
-                matrix = matrix / np.linalg.norm(matrix,axis=-1,keepdims=True)
+                # FIX: the axis along which norming is carried out should probably be a parameter
+                #      Also need to deal with column- (or row-) wise zeros which cause div by zero
+                # matrix = matrix / np.linalg.norm(matrix,axis=-1,keepdims=True)
+                matrix = matrix / np.linalg.norm(matrix,axis=0,keepdims=True)
         result = np.dot(vector, matrix)
         return self.convert_output_type(result)
 
