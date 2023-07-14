@@ -1111,7 +1111,7 @@ from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import rename_instance_in_registry
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleSpec
-from psyneulink.core.globals.utilities import convert_to_list, ContentAddressableList, is_numeric, object_has_single_value, try_extract_0d_array_item
+from psyneulink.core.globals.utilities import convert_to_list, convert_to_np_array, ContentAddressableList, is_numeric, object_has_single_value, try_extract_0d_array_item
 from psyneulink.core.llvm.debug import debug_env
 
 __all__ = [
@@ -2984,7 +2984,7 @@ class OptimizationControlMechanism(ControlMechanism):
                                                          modulation=OVERRIDE,
                                                          cost_options=CostFunctions.NONE,
                                                          # FIXME: Hack that Jan found to prevent some LLVM runtime errors
-                                                         default_allocation=[num_estimates])
+                                                         default_allocation=np.array([num_estimates]))
             randomization_control_signal = self._instantiate_control_signal(randomization_control_signal, context)
             randomization_control_signal_index = len(self.output_ports)
             randomization_control_signal._variable_spec = (OWNER_VALUE, randomization_control_signal_index)
@@ -3076,12 +3076,12 @@ class OptimizationControlMechanism(ControlMechanism):
         """
 
         if self.is_initializing:
-            return [defaultControlAllocation]
+            return np.asarray([defaultControlAllocation])
 
         # Assign default control_allocation if it is not yet specified (presumably first trial)
         control_allocation = self.parameters.control_allocation._get(context)
         if control_allocation is None:
-            control_allocation = [c.defaults.variable for c in self.control_signals]
+            control_allocation = convert_to_np_array([c.defaults.variable for c in self.control_signals])
 
         # Give the agent_rep a chance to adapt based on last trial's state_feature_values and control_allocation
         if hasattr(self.agent_rep, "adapt"):

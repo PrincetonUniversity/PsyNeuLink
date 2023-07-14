@@ -1179,7 +1179,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             self.parameters.current_termination_threshold._set(
                     self.parameters.minus_phase_termination_threshold._get(context), context)
             self.parameters.current_termination_condition._set(self.minus_phase_termination_condition, context)
-            self.parameters.phase_execution_count._set(0, context)
+            self.parameters.phase_execution_count._set(np.asarray(0), context)
 
         if self.parameters.is_finished_flag._get(context):
         # if self.parameters.is_finished_._get(context):
@@ -1197,7 +1197,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                                             runtime_params=runtime_params,
                                             )
 
-        self.parameters.phase_execution_count._set(self.parameters.phase_execution_count._get(context) + 1, context)
+        self.parameters.phase_execution_count._set(np.asarray(self.parameters.phase_execution_count._get(context) + 1), context)
 
         current_activity = np.squeeze(current_activity)
         # Set value of primary OutputPort to current activity
@@ -1254,7 +1254,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
             # Switch execution_phase
             self.parameters.execution_phase._set(not self.parameters.execution_phase._get(context), context)
-            self.parameters.phase_execution_count._set(0, context)
+            self.parameters.phase_execution_count._set(np.asarray(0), context)
 
         return current_activity
         # return self.current_activity

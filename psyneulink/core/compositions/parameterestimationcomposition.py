@@ -187,7 +187,7 @@ from psyneulink.core.globals.context import (
 )
 from psyneulink.core.globals.keywords import BEFORE, OVERRIDE
 from psyneulink.core.globals.parameters import Parameter, SharedParameter, check_user_specified
-from psyneulink.core.globals.utilities import convert_to_list
+from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, convert_to_list
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.core.components.ports.outputport import OutputPort
 
@@ -831,6 +831,7 @@ class ParameterEstimationComposition(Composition):
         for state_input_port, value in zip(
             self.controller.state_input_ports, inputs_dict.values()
         ):
+            value = convert_all_elements_to_np_array(value)
             state_input_port.parameters.value._set(value, context)
 
         kwargs.pop("inputs", None)

@@ -670,7 +670,7 @@ and the scalar returned is compared to **termination_threshold** using the compa
     >>> my_mech.execute([0.5, 1])
     array([[0.46875, 0.9375 ]])
     >>> my_mech.num_executions_before_finished
-    4
+    array(4)
 
 Here, ``my_mech`` continued to execute for ``5`` times, until the element of the Mechanism's `value
 <Mechanism_Base.value>` with the greatest value exceeded ``0.9``.  Note that GREATER_THAN_EQUAL is a keyword for
@@ -694,7 +694,7 @@ the **termination_comparison_op** argument is ignored (the `termination_comparis
     >>> my_mech.execute([0.5, 1])
     array([[0.375, 0.75 ]])
     >>> my_mech.num_executions_before_finished
-    2
+    array(2)
 
 As noted `above <TransferMechanism_Continued_Execution>`, it will continue to execute if it is called again,
 but only once per call::
@@ -702,11 +702,11 @@ but only once per call::
     >>> my_mech.execute([0.5, 1])
     array([[0.4375, 0.875 ]])
     >>> my_mech.num_executions_before_finished
-    1
+    array(1)
     >>> my_mech.execute([0.5, 1])
     array([[0.46875, 0.9375 ]])
     >>> my_mech.num_executions_before_finished
-    1
+    array(1)
 
 In the following example, this behavior is exploited to allow a recurrent form of TransferMechanism (``attention``)
 to integrate for a fixed number of steps (e.g., to simulate the time taken to encode an instruction regarding the
@@ -1791,6 +1791,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             previous_value = self.parameters.value.get_previous(context)
             status = measure([value, previous_value])
 
+        status = convert_all_elements_to_np_array(status)
         self.parameters.termination_measure_value._set(status, context=context, override=True)
 
         # comparator = self.parameters.termination_comparison_op._get(context)

@@ -349,7 +349,7 @@ def _seed_setter(value, owning_component, context):
 
     # Remove any old PRNG state
     owning_component.parameters.random_state.set(None, context=context)
-    return int(value)
+    return np.asarray(value)
 
 
 def _random_state_getter(self, owning_component, context, modulated=False):

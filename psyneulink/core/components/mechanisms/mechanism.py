@@ -1669,13 +1669,23 @@ class Mechanism_Base(Mechanism):
                 else:
                     spec_list.append(port)
 
+            if is_numeric(spec_list):
+                spec_list = convert_all_elements_to_np_array(spec_list)
+
             return spec_list
 
         def _parse_output_ports(self, output_ports):
-            if output_ports is not None and not isinstance(output_ports, list):
-                return [output_ports]
-            else:
-                return output_ports
+            if (
+                output_ports is not None
+                and not isinstance(output_ports, list)
+                and not (isinstance(output_ports, np.ndarray) and output_ports.ndim > 0)
+            ):
+                output_ports = [output_ports]
+
+            if is_numeric(output_ports):
+                output_ports = convert_all_elements_to_np_array(output_ports)
+
+            return output_ports
 
     # def __new__(cls, *args, **kwargs):
     # def __new__(cls, name=NotImplemented, params=NotImplemented, context=None):
@@ -2145,8 +2155,10 @@ class Mechanism_Base(Mechanism):
                 default_weights = default_weights or np.ones(len(self.input_ports))
 
             # Assign any weights specified in input_port spec
-            weights = [[input_port.defaults.weight if input_port.defaults.weight is not None else default_weight]
-                       for input_port, default_weight in zip(self.input_ports, default_weights)]
+            weights = convert_to_np_array([
+                [input_port.defaults.weight if input_port.defaults.weight is not None else default_weight]
+                for input_port, default_weight in zip(self.input_ports, default_weights)
+            ])
             self.function.parameters.weights._set(weights, context)
 
         if (
@@ -2168,14 +2180,14 @@ class Mechanism_Base(Mechanism):
                 default_exponents = default_exponents or np.ones(len(self.input_ports))
 
             # Assign any exponents specified in input_port spec
-            exponents = [
+            exponents = convert_to_np_array([
                 [
                     input_port.parameters.exponent._get(context)
                     if input_port.parameters.exponent._get(context) is not None
                     else default_exponent
                 ]
                 for input_port, default_exponent in zip(self.input_ports, default_exponents)
-            ]
+            ])
             self.function.parameters.exponents._set(exponents, context)
 
         # this may be removed when the restriction making all Mechanism values 2D np arrays is lifted
@@ -2560,7 +2572,7 @@ class Mechanism_Base(Mechanism):
 
             # MANAGE MAX_EXECUTIONS_BEFORE_FINISHED AND DETERMINE WHETHER TO BREAK
             max_executions = self.parameters.max_executions_before_finished._get(context)
-            num_executions = self.parameters.num_executions_before_finished._get(context) + 1
+            num_executions = np.asarray(self.parameters.num_executions_before_finished._get(context) + 1)
 
             self.parameters.num_executions_before_finished._set(num_executions, override=True, context=context)
 

@@ -806,7 +806,7 @@ from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.socket import ConnectionInfo
 from psyneulink.core.globals.utilities import \
-    ContentAddressableList, convert_to_np_array, get_args, is_value_spec, iscompatible, \
+    ContentAddressableList, convert_all_elements_to_np_array, convert_to_np_array, get_args, is_numeric, is_value_spec, iscompatible, \
     MODULATION_OVERRIDE, try_extract_0d_array_item, type_match
 
 __all__ = [
@@ -843,6 +843,17 @@ def _is_port_class(spec):
     if inspect.isclass(spec) and issubclass(spec, Port):
         return True
     return False
+
+
+def match_modulation_to_value(modulatory_value, reference_value):
+    modulatory_value = type_match(modulatory_value, type(reference_value))
+
+    # mimics cast to float when default is a float, which previously
+    # happened in type_match
+    if isinstance(reference_value, np.ndarray) and reference_value.ndim == 0:
+        modulatory_value = modulatory_value.reshape(reference_value.shape)
+
+    return modulatory_value
 
 
 # Note:  This is created only for assignment of default projection types for each Port subclass (see .__init__.py)
@@ -1464,7 +1475,7 @@ class Port_Base(Port):
                 elif isinstance(projection, ModulatoryProjection_Base):
                     mod_spec, mod_param_name, mod_param_value = self._get_modulated_param(projection, context=context)
                     # Match the projection's value with the value of the function parameter
-                    mod_proj_spec_value = type_match(projection.defaults.value, type(mod_param_value))
+                    mod_proj_spec_value = match_modulation_to_value(projection.defaults.value, mod_param_value)
                     if (mod_param_value is not None
                         and not iscompatible(mod_param_value, mod_proj_spec_value)):
                         raise PortError(f"Output of function for {projection.name} ({projection.defaults.value}) "
@@ -1768,7 +1779,7 @@ class Port_Base(Port):
                         # Match the projection's value with the value of the function parameter
                         # should be defaults.value?
                         try:
-                            mod_proj_spec_value = type_match(projection.value, type(mod_param_value))
+                            mod_proj_spec_value = match_modulation_to_value(projection.value, mod_param_value)
                         except TypeError as error:
                             raise PortError(f"The value for {self.name} of {self.owner.name} ({projection.value}) does "
                                             f"not match the format ({mod_param_value}) of the Parameter it modulates "
@@ -2091,12 +2102,12 @@ class Port_Base(Port):
                     # Otherwise, for efficiency, assign first OVERRIDE value encountered and return
                     else:
                         # FIX 5/8/20 [JDC]: SHOULD THIS USE set_projection_value()??
-                        self.parameters.value._set(type_match(projection_value, type(self.defaults.value)), context)
+                        self.parameters.value._set(match_modulation_to_value(projection_value, self.defaults.value), context)
                         return OVERRIDE
                 else:
                     try:
-                        mod_value = type_match(projection_value, type(mod_param_value))
-                    except TypeError:
+                        mod_value = match_modulation_to_value(projection_value, mod_param_value)
+                    except ValueError:
                         # if type_match fails, assume that the computation is
                         # valid further down the line. This was implicitly true
                         # before adding this catch block by manually setting the
@@ -2114,7 +2125,7 @@ class Port_Base(Port):
             # KDM 6/20/18: consider defining exactly when and how type_match occurs, now it seems
             # a bit handwavy just to make stuff work
             # FIX 5/8/20 [JDC]: SHOULD THIS USE set_projection_value()??
-            self.parameters.value._set(type_match(modulatory_override[1], type(self.defaults.value)), context)
+            self.parameters.value._set(match_modulation_to_value(modulatory_override[1], self.defaults.value), context)
             return OVERRIDE
 
         # AGGREGATE ModulatoryProjection VALUES  -----------------------------------------------------------------------
@@ -2170,7 +2181,7 @@ class Port_Base(Port):
 
         if mod_spec in {OVERRIDE, DISABLE}:
             mod_param_name = mod_proj.receiver.name
-            mod_param_value = mod_proj.sender.parameters.value.get(context)
+            mod_param_value = mod_proj.sender.parameters.value._get(context)
         else:
             mod_param = getattr(receiver.function.parameters, mod_spec)
             try:
@@ -2179,7 +2190,7 @@ class Port_Base(Port):
                 mod_param_name = mod_param.name
 
             # Get the value of the modulated parameter
-            mod_param_value = getattr(receiver.function.parameters, mod_spec).get(context)
+            mod_param_value = getattr(receiver.function.parameters, mod_spec)._get(context)
 
         return mod_spec, mod_param_name, mod_param_value
 
@@ -2192,14 +2203,16 @@ class Port_Base(Port):
         aliases = getattr(self.function.parameters, mod_param_name).aliases
 
         if comb_fct==MULTIPLICATIVE or any(mod_spec in aliases for mod_spec in {MULTIPLICATIVE, MULTIPLICATIVE_PARAM}):
-            return np.prod(np.array(values), axis=0)
-        if comb_fct==ADDITIVE or any(mod_spec in aliases for mod_spec in {MULTIPLICATIVE, ADDITIVE_PARAM}):
-            return np.sum(np.array(values), axis=0)
+            res = np.prod(np.array(values), axis=0)
+        elif comb_fct == ADDITIVE or any(mod_spec in aliases for mod_spec in {MULTIPLICATIVE, ADDITIVE_PARAM}):
+            res = np.sum(np.array(values), axis=0)
         elif isinstance(comb_fct, is_function_type):
-            return comb_fct(values)
+            res = comb_fct(values)
         else:
             assert False, f'PROGRAM ERROR: modulation_combination_function not properly specified ' \
                           f'for {mod_param_name} {Parameter.__name__} of {self.name}'
+
+        return convert_all_elements_to_np_array(res)
 
     @abc.abstractmethod
     def _get_variable_from_projections(self, context=None):
@@ -3361,6 +3374,9 @@ def _parse_port_spec(port_type=None,
             port_dict[VARIABLE] = port_dict[VALUE]
         else:
             port_dict[VARIABLE] = port_dict[REFERENCE_VALUE]
+
+    if is_numeric(port_dict[VARIABLE]):
+        port_dict[VARIABLE] = convert_all_elements_to_np_array(port_dict[VARIABLE])
 
     # get the Port's value from the spec function if it exists,
     # otherwise we can assume there is a default function that does not

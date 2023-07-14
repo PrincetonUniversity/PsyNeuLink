@@ -179,7 +179,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter, check_user_specified, FunctionParameter
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import is_numeric, ValidParamSpecType, all_within_range
+from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, is_numeric, all_within_range
 
 __all__ = [
     'EMStorageMechanism', 'EMStorageMechanismError',
@@ -223,8 +223,10 @@ def _memory_matrix_getter(owning_component=None, context=None)->list:
     memory_capacity = len(memory[0])
 
     # Reorganize memory so that each row is an entry and each column is a field
-    return [[memory[j][i] for j in range(num_fields)]
-              for i in range(memory_capacity)]
+    return convert_all_elements_to_np_array([
+        [memory[j][i] for j in range(num_fields)]
+        for i in range(memory_capacity)
+    ])
 
 
 class EMStorageMechanismError(LearningMechanismError):
@@ -757,8 +759,10 @@ class EMStorageMechanism(LearningMechanism):
         if memory is None or self.is_initializing:
             if self.is_initializing:
                 # Return existing matrices for field_memories  # FIX: THE FOLLOWING DOESN'T TEST FUNCTION:
-                return [learning_signal.receiver.path_afferents[0].parameters.matrix.get()
-                        for learning_signal in self.learning_signals]
+                return convert_all_elements_to_np_array([
+                    learning_signal.receiver.path_afferents[0].parameters.matrix.get()
+                    for learning_signal in self.learning_signals
+                ])
             # Raise exception if not initializing and memory is not specified
             else:
                 owner_string = ""
@@ -805,4 +809,4 @@ class EMStorageMechanism(LearningMechanism):
                                                                  decay_rate=decay_rate,
                                                                  context=context,
                                                                  runtime_params=runtime_params))
-        return value
+        return convert_all_elements_to_np_array(value)

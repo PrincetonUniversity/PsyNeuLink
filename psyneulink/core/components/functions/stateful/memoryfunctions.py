@@ -663,7 +663,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
         >>> c = ContentAddressableMemory(default_variable=[[0,0],[0,0,0]])
         >>> c([[1,2]])
-        [array([0, 0])]
+        array([[0, 0]])
 
     Since `memory <ContentAddressableMemory.memory>` was not intialized, the first call to the Function returns an
     array of zeros, formatted as specified in **defaul_variable**.  However, the input in the call to the Function
@@ -1536,7 +1536,9 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                                     f"for memory of '{self.name}{owner_name}';  should be: {field_shapes[i]}.")
 
     def uniform_entry(self, value:Union[int, float], context) -> np.ndarray:
-        return [np.full(i,value) for i in self.parameters.memory_field_shapes._get(context)]
+        return convert_all_elements_to_np_array(
+            [np.full(i, value) for i in self.parameters.memory_field_shapes._get(context)]
+        )
 
     @handle_external_context()
     def get_memory(self, cue:Union[list, np.ndarray], field_weights=None, context=None) -> np.ndarray:
@@ -1771,7 +1773,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                 if not any([item is None or np.asarray(item).size == 0
                             for item in [cue[i], candidate[i], field_weights[i]]]):
                     distances_by_field[i] = distance_fct([cue[i], candidate[i]]) * field_weights[i]
-            return list(distances_by_field)
+            return distances_by_field
 
         elif granularity == 'full_entry':
             # Use first element as scalar if it is a homogenous array (i.e., all elements are the same)
@@ -2855,6 +2857,8 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
 
         if len(d[KEYS]) > self.max_entries:
             d = np.delete(d, [KEYS], axis=1)
+
+        d = convert_all_elements_to_np_array(d)
 
         self.parameters.previous_value._set(d,context)
         self._memory = d

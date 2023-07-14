@@ -2956,7 +2956,7 @@ from psyneulink.core.globals.preferences.basepreferenceset import BasePreference
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, _assign_prefs
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import ContentAddressableList, call_with_pruned_args, convert_all_elements_to_np_array, convert_to_list, \
-    nesting_depth, convert_to_np_array, is_numeric, is_matrix, is_matrix_keyword, parse_valid_identifier
+    nesting_depth, convert_to_np_array, is_numeric, is_matrix, is_matrix_keyword, parse_valid_identifier, extended_array_equal
 from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Any, Condition, Never, AtNCalls, BeforeNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler, SchedulingMode
 from psyneulink.core.scheduling.time import Time, TimeScale
@@ -9732,7 +9732,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                 )
 
             # Get control signal costs
-            other_costs = controller.parameters.costs._get(context) or []
+            other_costs = controller.parameters.costs._get(context)
+            if other_costs is None:
+                other_costs = []
             all_costs = convert_to_np_array(other_costs + [reconfiguration_cost])
             # Compute a total for the candidate control signal(s)
             total_cost = controller.combine_costs(all_costs)
@@ -9842,14 +9844,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if buffer_animate_state:
                 self._animate = buffer_animate_state
 
-        assert result == self.get_output_values(context)
+        assert extended_array_equal(result, self.get_output_values(context))
 
         # Store simulation results on "base" composition
         if self.initialization_status != ContextFlags.INITIALIZING:
             try:
                 self.parameters.simulation_results._get(base_context).append(result)
             except AttributeError:
-                self.parameters.simulation_results._set([result], base_context)
+                self.parameters.simulation_results._set(
+                    convert_to_np_array([result]), base_context
+                )
 
         # COMPUTE net_outcome and aggregate in net_outcomes
 
@@ -11080,10 +11084,14 @@ _
                 node.parameters.num_executions._get(context)._set_by_time_scale(TimeScale.RUN, 0)
 
         if ContextFlags.SIMULATION_MODE not in context.runmode:
+            if is_numeric(inputs):
+                _input_spec = convert_all_elements_to_np_array(inputs)
+            else:
+                _input_spec = inputs
             try:
-                self.parameters.input_specification._set(copy(inputs), context)
+                self.parameters.input_specification._set(copy(_input_spec), context)
             except:
-                self.parameters.input_specification._set(inputs, context)
+                self.parameters.input_specification._set(_input_spec, context)
 
         # May be used by controller for specifying num_trials_per_simulation
         self.num_trials = num_trials
@@ -11210,6 +11218,8 @@ _
         results = self.parameters.results._get(context)
         if results is None:
             results = []
+        else:
+            results = list(results)
 
         is_simulation = (context is not None and
                          ContextFlags.SIMULATION_MODE in context.runmode)
@@ -11247,7 +11257,7 @@ _
                         assert False, "Unknown execution mode: {}".format(execution_mode)
 
                     # Update the parameter for results
-                    self.parameters.results._set(results, context)
+                    self.parameters.results._set(convert_to_np_array(results), context)
 
                     if self._is_learning(context):
                         # copies back matrix to pnl from state struct after learning
@@ -11354,7 +11364,7 @@ _
                     result_copy = trial_output
 
                 results.append(result_copy)
-                self.parameters.results._set(results, context)
+                self.parameters.results._set(convert_to_np_array(results), context)
 
                 if not self.parameters.retain_old_simulation_data._get():
                     if self.controller is not None:
@@ -12288,6 +12298,7 @@ _
                                 # Set current Python values to LLVM results
                                 data = _comp_ex.extract_frozen_node_output(data_loc)
                                 for op, v in zip(srnode.output_ports, data):
+                                    v = convert_all_elements_to_np_array(v)
                                     op.parameters.value._set(
                                       v, context, skip_history=True, skip_log=True)
 
@@ -12476,9 +12487,9 @@ _
         This allows Composition, after it has been constructed, to be run simply by calling it directly.
         """
         if not args and not kwargs:
-            if self.results:
+            try:
                 return self.results[-1]
-            else:
+            except IndexError:
                 return None
         elif (args and isinstance(args[0],dict)) or INPUTS in kwargs:
             from psyneulink.core.compositions.pathway import PathwayRole
@@ -12728,7 +12739,10 @@ _
             # Get labels for corresponding values
             values = [node.labeled_output_values for node in output_nodes]
         else:
-            values = self.results[-1] or self.output_values
+            if len(self.results) > 0 and len(self.results[-1]) > 0:
+                values = self.results[-1]
+            else:
+                values = self.output_values
 
         full_output_set = zip(output_nodes, values)
 
@@ -13271,9 +13285,11 @@ _
         return self.get_output_values(self.most_recent_context)
 
     def get_output_values(self, context=None):
-        return [output_port.parameters.value.get(context)
-                for output_port in self.output_CIM.output_ports
-                if (not self.output_CIM._sender_is_probe(output_port) or self.include_probes_in_output)]
+        return convert_all_elements_to_np_array([
+            output_port.parameters.value.get(context)
+            for output_port in self.output_CIM.output_ports
+            if (not self.output_CIM._sender_is_probe(output_port) or self.include_probes_in_output)
+        ])
 
     @property
     def shadowing_dict(self):

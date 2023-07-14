@@ -1018,7 +1018,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             self.recurrent_projection.parameter_ports["matrix"].function.previous_value = val
             self.recurrent_projection.parameter_ports["matrix"].function.reset = val
 
-        self.parameters.matrix._set(val, self.most_recent_context)
+        self.parameters.matrix.set(val, self.most_recent_context)
 
     @property
     def auto(self):
@@ -1026,7 +1026,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     @auto.setter
     def auto(self, val):
-        self.parameters.auto._set(val, self.most_recent_context)
+        self.parameters.auto.set(val, self.most_recent_context)
 
         if self.recurrent_projection is not None and 'hetero' in self._parameter_ports:
             self.recurrent_projection.parameter_ports["matrix"].function.previous_value = self.matrix
@@ -1037,7 +1037,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     @hetero.setter
     def hetero(self, val):
-        self.parameters.hetero._set(val, self.most_recent_context)
+        self.parameters.hetero.set(val, self.most_recent_context)
 
         if self.recurrent_projection is not None and 'auto' in self._parameter_ports:
             self.recurrent_projection.parameter_ports["matrix"].function.previous_value = self.matrix_param

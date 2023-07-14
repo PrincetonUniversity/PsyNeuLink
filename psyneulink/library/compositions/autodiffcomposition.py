@@ -800,7 +800,7 @@ class AutodiffComposition(Composition):
             idx = component.output_ports.index(port)
             outputs += [curr_tensor_outputs[component][idx].detach().cpu().numpy().copy().tolist()]
 
-        self.parameters.tracked_loss_count._set(self.parameters.tracked_loss_count._get(context=context) + 1,
+        self.parameters.tracked_loss_count._set(np.array(self.parameters.tracked_loss_count._get(context=context) + 1),
                                                 context=context,
                                                 skip_history=True,
                                                 skip_log=True)
@@ -818,11 +818,11 @@ class AutodiffComposition(Composition):
         optimizer = self.parameters.optimizer._get(context=context)
         optimizer.zero_grad()
 
-        tracked_loss = self.parameters.tracked_loss._get(context=context) / self.parameters.tracked_loss_count._get(context=context)
+        tracked_loss = self.parameters.tracked_loss._get(context=context) / int(self.parameters.tracked_loss_count._get(context=context))
         tracked_loss.backward(retain_graph=not self.force_no_retain_graph)
         self.parameters.losses._get(context=context).append(tracked_loss.detach().cpu().numpy()[0])
         self.parameters.tracked_loss._set(torch.zeros(1, device=self.device).double(), context=context, skip_history=True, skip_log=True)
-        self.parameters.tracked_loss_count._set(0, context=context, skip_history=True, skip_log=True)
+        self.parameters.tracked_loss_count._set(np.array(0), context=context, skip_history=True, skip_log=True)
         optimizer.step()
         self.parameters.pytorch_representation._get(context=context).detach_all()
         self.parameters.pytorch_representation._get(context).copy_weights_to_psyneulink(context)

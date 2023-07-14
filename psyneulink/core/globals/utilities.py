@@ -752,6 +752,8 @@ def convert_to_list(l):
         return list(l)
     elif isinstance(l, set):
         return list(l)
+    elif isinstance(l, np.ndarray) and l.ndim > 0:
+        return list(l)
     else:
         return [l]
 

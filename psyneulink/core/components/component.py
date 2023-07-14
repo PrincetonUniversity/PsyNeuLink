@@ -3326,6 +3326,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
         if context.source is ContextFlags.COMMAND_LINE:
             self._initialize_from_context(context, override=False)
+            if is_numeric(variable):
+                variable = convert_all_elements_to_np_array(variable)
 
         value = self._execute(variable=variable, context=context, runtime_params=runtime_params)
         self.parameters.value._set(value, context=context)

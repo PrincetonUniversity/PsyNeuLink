@@ -47,7 +47,7 @@ from psyneulink.core.globals.keywords import \
     MATRIX, Loss
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
-from psyneulink.core.globals.utilities import is_numeric, scalar_distance, convert_to_np_array, all_within_range, safe_len, is_numeric_scalar
+from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, is_numeric, scalar_distance, convert_to_np_array, all_within_range, safe_len, is_numeric_scalar
 
 __all__ = ['LearningFunction', 'Kohonen', 'Hebbian', 'ContrastiveHebbian',
            'Reinforcement', 'BayesGLM', 'BackPropagation', 'TDLearning', 'EMStorage',
@@ -956,7 +956,7 @@ class BayesGLM(LearningFunction):
         # online update rules as per the given reference
         Lambda_n = (predictors.T @ predictors) + Lambda_prior
         mu_n = np.linalg.inv(Lambda_n) @ ((predictors.T @ dependent_vars) + (Lambda_prior @ mu_prior))
-        gamma_shape_n = gamma_shape_prior + dependent_vars.shape[1]
+        gamma_shape_n = np.array(gamma_shape_prior + dependent_vars.shape[1])
         gamma_size_n = gamma_size_prior + (dependent_vars.T @ dependent_vars) \
             + (mu_prior.T @ Lambda_prior @ mu_prior) \
             - (mu_n.T @ Lambda_n @ mu_n)
@@ -1973,7 +1973,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
 
         # Construct weight change matrix with error term in proper element
         weight_change_matrix = np.diag(error_array)
-        return [error_array, error_array]
+        return convert_all_elements_to_np_array([error_array, error_array])
 
 
 class TDLearning(Reinforcement):
@@ -2556,4 +2556,4 @@ class BackPropagation(LearningFunction):
         # Weight changes = delta rule (learning rate * activity * error)
         weight_change_matrix = learning_rate * activation_input * dE_dW
 
-        return [weight_change_matrix, dE_dW]
+        return convert_all_elements_to_np_array([weight_change_matrix, dE_dW])

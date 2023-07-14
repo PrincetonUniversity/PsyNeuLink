@@ -936,7 +936,7 @@ def _DriftDiffusionAnalytical_bias_getter(owning_component=None, context=None):
     starting_value = owning_component.parameters.starting_value._get(context)
     threshold = owning_component.parameters.threshold._get(context)
     try:
-        return (starting_value + threshold) / (2 * threshold)
+        return np.asarray((starting_value + threshold) / (2 * threshold))
     except TypeError:
         return None
 
