@@ -146,31 +146,43 @@ An EMComposition is created by calling its constructor, that takes the following
 
 .. _EMComposition_Memory_Template:
 
-* **memory_template**: This specifies the shape of the items to be stored in the EMComposition's `memory
-  <EMComposition.memory>`, and can be specified in one of two ways:
+* **memory_template**: This specifies the shape of the entries to be stored in the EMComposition's `memory
+  <EMComposition.memory>`.  The default is to initialize `memory <EMComposition.memory>` with all zeros, but
+  it can be initialized with pre-specified entries using the list or array formats described below.  The
+  **memory_template* can be specified in one of three ways (see `Examples <EMComposition_Examples> `for
+  representative use cases):
 
   * tuple*: interpreted as an np.array shape specification, in which the 1st item specifies the number of fields in
-    each memory entry; the 2nd item specifies the length of each field; and an optional 3rd item specifies a fill
-    (value to be assigned to each entry). If the third item is not specified, then the fill is assumed to be 0; if
-    fill is the keyword *RANDOM*, then each entry is filled with a random value between 0 and 1, and 4th item can be
-    included to specify a multiplier applied to the random values.  This is the simplest form of specification,
-    but all fields are restricted to have the same length
+    each memory entry and the 2nd item specifies the length of each field.  The matrix is filled either with zeros or
+    with the value specified in **memory_fill** (see below).
 
-  * *list or np.array*:  interpreted as either a template for a memory entry (if it is 2d) or the full `memory
-    <EMComposition.memory>` matrix (if it is 3d).  This can be used to specify fields of different length (i.e.,
-    entries that are ragged arrays).  If a 2d template is specified, each item in the list (axis 0 of the array) is
-    used to specify the length of the corresponding field, and the template is broadcast over the third dimension to
-    generate the full matrix used to initialize `memory <EMComposition.memory>`.  If a 3d array is specified,
-    it is used to initialize `memory <EMComposition.memory>` directly. **memory_fill** can be used to specify the
-    value of actual entries.
+  * *2d list or array*:  interpreted as a template for memory entries.  This can be used to specify fields of
+    different lengths (i.e., entries that are ragged arrays), with each item in the list (axis 0 of the array) used to
+    specify the length of the corresponding field.  The template is broadcast over the third dimension to generate the
+    full matrix used to initialize `memory <EMComposition.memory>`.  If the template uses any non-zero values, then the
+    array is replicated for all entries in `memory <EMComposition.memory>`.  If the template has all zeros, then the
+    the entire `memory <EMComposition.memory>` is filled with either zeros or the value specified in **memory_fill**.
+    COMMENT:
+    template is used as the first entry in `memory <EMComposition.memory>`, and the remaining entries are filled with
+    either zeros or the value specified in **memory_fill** (see below).  If the template has all zeros, then the
+    the entire `memory <EMComposition.memory>` is filled with either zeros or the value specified in **memory_fill**.
+    COMMENT
+
+    .. note::
+       Use a 3d array (as described below) to specify a single entry, with the remainder of entries filled with zeros
+       or the value specified in **memory_fill**.
+
+  * *3d list or array*:  used to initialize `memory <EMComposition.memory>` directly. If the outer dimension of
+    the list or array (axis 0) has fewer than **memory_capacity** items, then it is filled with the remaining entries,
+    using either zeros or the value specified in **memory_fill** (see below).  If all of thespecified entries are
+    zeros and **memory_fill** is specified, then the matrix is filled with the value specified in **memory_fill**.
 
 .. _EMComposition_Memory_Fill:
 
 * **memory_fill**: specifies the value used to fill the `memory <EMComposition.memory>`, based on the shape specified
-  in the **memory_template**.  If this is specified, it overrides any values specified in **memory_template**
-  (i.e., if it is specified as a list or an array). The keyword *RANDOM* can be used to specify that each entry be
-  filled with a random value between 0 and 1; this can also be included as the first item of a tuple, in which the
-  second item specifies a scalar multiplier applied to the random values.
+  in the **memory_template** (see above).  The value can be a scalar, or a tuple to specify an interval over which
+  to draw random values to fill `memory <EMComposition.memory>` --- both should be scalars, with the first specifying
+  the lower bound and the second the upper bound.
 
 .. _EMComposition_Field_Weights:
 
@@ -205,10 +217,10 @@ An EMComposition is created by calling its constructor, that takes the following
 
 .. _EMComposition_Concatenate_Keys:
 
-* **concatenate_keys**:  specifies whether keys are concatenated before a match is made to items in memory. If
-  True, all keys are concatenated (i.e., fields for which non-zero weights are specified in field_weights);  this
-  occurs even if the field_weights are not all the same value (in which case a warning is issued).  If False,
-  keys are only concatenated if all non-zero field_weights are the same value (see `field_weights
+* **concatenate_keys**:  specifies whether keys are concatenated before a match is made to items in memory.
+  If True, all keys are concatenated (i.e., fields for which non-zero weights are specified in field_weights);
+  this occurs even if the field_weights are not all the same value (in which case a warning is issued).
+  If False, keys are concatenated only if all non-zero field_weights are the same value (see `field_weights
   <EMComposition_Field_Weights>` above).
 
 .. _EMComposition_Memory_Capacity:
@@ -828,57 +840,16 @@ class EMComposition(AutodiffComposition):
                  storage_prob:float=None,
                  name="EM_composition"):
 
-        if isinstance(memory_template, tuple):
-            memory_template = np.zeros(memory_template)
-        else:
-            memory_template = np.array(memory_template)
-        # Get shape of single entry (for use below)
-        entry_template = memory_template if memory_template.ndim == 2 else memory_template[0]
-
-        # Deal with default field_weights
-        if field_weights is None:
-            if len(entry_template) == 1:
-                field_weights = [1]
-            else:
-                # Default is to all fields as keys except the last one, which is the value
-                num_fields = len(entry_template)
-                field_weights = [1] * num_fields
-                field_weights[-1] = 0
-        field_weights = np.atleast_1d(field_weights)
-        if len(field_weights) == 1:
-            field_weights = np.repeat(field_weights, len(entry_template))
-
-        self._validate_memory_structure(memory_template, entry_template, field_weights, field_names, name)
-
-        # Memory structure (field) attributes (not Parameters)
-        self.entry_template = entry_template
-        self.memory_capacity = memory_capacity
-        self.num_fields = len(entry_template)
-        self.field_weights = field_weights
-        self.field_names = field_names.copy() if field_names is not None else None
-        self.learn_weights = learn_weights
+        self._validate_memory_specs(memory_template, memory_fill, field_weights, field_names, name)
+        self._parse_memory_template(memory_template, memory_fill, memory_capacity, field_weights)
+        self._parse_fields(field_weights, field_names, concatenate_keys, learn_weights, learning_rate,)
 
         # Memory management parameters
         if self.parameters.memory_decay.get() and self.parameters.memory_decay_rate.get() is None:
             self.parameters.memory_decay_rate.set(memory_decay_rate or 1 / self.memory_capacity)
 
-        # Memory field attributes
-        keys_weights = [i for i in self.field_weights if i != 0]
-        self.num_keys = len(keys_weights)
-        self.num_values = self.num_fields - self.num_keys
-        if self.field_names:
-            self.key_names = self.field_names[:self.num_keys]
-            self.value_names = self.field_names[self.num_keys:]
-        else:
-            self.key_names = [f'KEY {i}' for i in range(self.num_keys)] if self.num_keys > 1 else ['KEY']
-            self.value_names = [f'VALUE {i}' for i in range(self.num_values)] if self.num_values > 1 else ['VALUE']
-
-        self.concatenate_keys = concatenate_keys or np.all(keys_weights == keys_weights[0])
-        if self.concatenate_keys and not np.all(keys_weights == keys_weights[0]):
-            warnings.warn(f"Field weights are not all equal, but 'concatenate_keys' is True; "
-                          f"field weights will be ignored and all fields will be concatenated as keys.")
-
         self.softmax_gain = softmax_gain
+        # self._construct_memory(memory_template, memory_fill)
 
         pathway = self._construct_pathway()
 
@@ -900,41 +871,158 @@ class EMComposition(AutodiffComposition):
 
         # Turn off learning for all Projections except inputs to retrieval_gating_nodes
         self._set_learnability_of_projections()
-        self._initialize_memory(memory_template, memory_fill)
 
         # # Set normalization if specified
         # if self.normalize_memories:
         #     for node in self.softmax_nodes:
         #         node.input_ports[0].path_afferents[0].function.parameters.normalize.set(True)
 
-    def _validate_memory_structure(self, memory_template, entry_template, field_weights, field_names, name):
+    def _validate_memory_specs(self, memory_template, memory_fill, field_weights, field_names, name):
         """Validate the memory_template, field_weights, and field_names arguments
         """
 
         # memory_template must specify a 2D array:
-        if memory_template.ndim not in (2,3):
-            raise EMCompositionError(f"The 'memory_template' arg for {name} ({memory_template}) "
-                                     f"must specify a list or array that has 2 or 3 dimensions.")
+        if not ((isinstance(memory_template, tuple) and len(memory_template) == 2)
+                or np.array(memory_template, dtype=object).ndim in (2,3)):
+            raise EMCompositionError(f"The 'memory_template' arg for {name} ({memory_template}) must be a "
+                                     f"numpy shape specification or list or array that has 2 or 3 dimensions.")
 
-        if memory_template.ndim == 3:
-            # Ensure that, if full memory matrix is specified, all rows (entries) have the same shape
+        if isinstance(memory_template, tuple):
+            num_fields = memory_template[0]
+        else:
+            memory_template = np.array(memory_template)
+            num_fields = memory_template.shape[0] if memory_template.ndim == 2 else memory_template.shape[1]
+
+
+        if not isinstance(memory_template, tuple) and memory_template.ndim == 3:
+            # 3d array specified (i.e., template has multiple entries), so ensure all have the same shape
             for entry in memory_template:
-                if not (len(entry) == len(entry_template)
-                        and np.all([len(entry[i]) == len(entry_template[i]) for i in range(len(entry_template))])):
+                if not (len(entry) == num_fields
+                        and np.all([len(entry[i]) == len(memory_template[0][i]) for i in range(num_fields)])):
                     raise EMCompositionError(f"The 'memory_template' arg for {self.name} must specify a list "
                                              f"or 2d array that has the same shape for all entries.")
 
-        # If field weights has more than one value it must match the first dimension (axis 0) of memory_template:
-        if len(field_weights) > 1 and len(field_weights) != len(memory_template):
-            raise EMCompositionError(f"The number of items ({len(field_weights)}) "
-                                     f"in the 'field_weights' arg for {name} must match the number of items "
-                                     f"({len(memory_template)}) in the outer dimension of its 'memory_template' arg.")
+        if not (isinstance(memory_fill, (int, float)) or
+                (isinstance(memory_fill, tuple) and len(memory_fill)==2) and
+                all(isinstance(item, (int, float)) for item in memory_fill)):
+            raise EMCompositionError(f"The 'memory_fill' arg ({memory_fill}) specified for {name} "
+                                     f"must be a float, int or len tuple of ints and/or floats.")
 
-        # If field weights has more than one value it must match the first dimension (axis 0) of memory_template:
-        if field_names and len(field_names) != len(memory_template):
+        # If field_weights has more than one value it must match the first dimension (axis 0) of memory_template:
+        if len(field_weights) > 1 and len(field_weights) != num_fields:
+            raise EMCompositionError(f"The number of items ({len(field_weights)}) in the 'field_weights' arg "
+                                     f"for {name} must match the number of items in an entry of memory "
+                                     f"({num_fields}).")
+
+        # If field_names has more than one value it must match the first dimension (axis 0) of memory_template:
+        if field_names and len(field_names) != num_fields:
             raise EMCompositionError(f"The number of items ({len(field_names)}) "
                                      f"in the 'field_names' arg for {name} must match "
-                                     f"the number of memory fields ({len(field_weights)}).")
+                                     f"the number of fields ({len(field_weights)}).")
+
+
+    def _parse_memory_template(self, memory_template, memory_fill, memory_capacity, field_weights):
+        """Construct memory from memory_template and memory_fill
+        Assign self.memory_template and self.entry_template attributes"""
+
+        def _construct_entries(entry_template, num_entries, memory_fill=None):
+            """Construct memory entries from memory_template and memory_fill"""
+
+            # Random fill specification
+            if isinstance(memory_fill, tuple):
+                entries = [[np.full(len(field),
+                                    np.random.uniform(memory_fill[1], # upper bound
+                                                      memory_fill[0], # lower bound
+                                                      len(field))).tolist()
+                            for field in entry_template] for i in range(num_entries)]
+            else:
+                # Fill with zeros
+                if memory_fill is None:
+                    entry = entry_template
+                # Fill with specified value
+                elif isinstance(memory_fill, (list, float, int)):
+                    entry = [np.full_like(field, memory_fill).tolist() for field in entry_template]
+                entries = [np.array(entry, dtype=object)] * num_entries
+
+            return np.array(np.array(entries))
+
+        # If memory_template is a tuple, create and fill full memory matrix
+        if isinstance(memory_template, tuple):
+            memory = np.full(memory_template, memory_fill)
+
+        # If memory_template is a list or array
+        else:
+
+            # Determine whether template is a single entry or full/partial memory specification
+            memory_template_dim = np.asarray(memory_template, dtype=object).ndim
+            fields_equal_length = all(len(field) == len(memory_template[0]) for field in memory_template)
+            single_entry = (((memory_template_dim == 1) and not fields_equal_length) or
+                            ((memory_template_dim == 2)  and fields_equal_length))
+
+            if single_entry:
+                # If any non-zeros, replicate the entry for full matrix
+                if any(list(np.array(memory_template).flat)):
+                    memory_fill = None
+                # Otherwise, use memory_fill
+                else:
+                    memory_fill = memory_fill
+                memory = _construct_entries(memory_template, memory_capacity, memory_fill)
+
+            # If memory template is a full or partial 3d (matrix) specification
+            else:
+                # If all entries are zero, create entire memory matrix with memory_fill
+                if not any(list(np.array(memory_template).flat)):
+                    # Use first entry of zeros as template and replicate for full memory matrix
+                    memory = _construct_entries(memory_template[0], memory_capacity, memory_fill)
+                # If there are any non-zero values, keep specified entries and create rest using memory_fill
+                else:
+                    num_entries_needed = memory_capacity - len(memory_template)
+                    remaining_entries = _construct_entries(memory_template[0], num_entries_needed, memory_fill)
+                    memory = np.concatenate((memory_template, remaining_entries))
+
+        # Get shape of single entry
+        self.entry_template = memory[0]
+        self.memory_template = memory
+        self.memory_capacity = memory_capacity
+
+    def _parse_fields(self, field_weights, field_names, concatenate_keys, learn_weights, learning_rate):
+
+        # Deal with default field_weights
+        if field_weights is None:
+            if len(self.entry_template) == 1:
+                field_weights = [1]
+            else:
+                # Default is to all fields as keys except the last one, which is the value
+                num_fields = len(self.entry_template)
+                field_weights = [1] * num_fields
+                field_weights[-1] = 0
+        field_weights = np.atleast_1d(field_weights)
+        if len(field_weights) == 1:
+            field_weights = np.repeat(field_weights, len(self.entry_template))
+
+        # Memory structure (field) attributes (not Parameters)
+        self.num_fields = len(self.entry_template)
+        self.field_weights = field_weights
+        self.field_names = field_names.copy() if field_names is not None else None
+
+        # Memory field attributes
+        keys_weights = [i for i in self.field_weights if i != 0]
+        self.num_keys = len(keys_weights)
+        self.num_values = self.num_fields - self.num_keys
+        if self.field_names:
+            self.key_names = self.field_names[:self.num_keys]
+            self.value_names = self.field_names[self.num_keys:]
+        else:
+            self.key_names = [f'KEY {i}' for i in range(self.num_keys)] if self.num_keys > 1 else ['KEY']
+            self.value_names = [f'VALUE {i}' for i in range(self.num_values)] if self.num_values > 1 else ['VALUE']
+
+        self.concatenate_keys = concatenate_keys or np.all(keys_weights == keys_weights[0])
+        if self.concatenate_keys and not np.all(keys_weights == keys_weights[0]):
+            warnings.warn(f"Field weights are not all equal, but 'concatenate_keys' is True; "
+                          f"field weights will be ignored and all fields will be concatenated as keys.")
+
+        self.learn_weights = learn_weights
+        self.learning_rate = learning_rate
 
     def _construct_pathway(self)->set:
         """Construct pathway for EMComposition"""
@@ -953,7 +1041,8 @@ class EMComposition(AutodiffComposition):
         # self.storage_nodes = self._construct_storage_nodes()
 
         # Construct pathway as a set of nodes, since Projections are specified in the construction of each node
-        pathway = set(self.key_input_nodes + self.value_input_nodes + self.concatenate_keys_node
+        pathway = set(self.key_input_nodes + self.value_input_nodes
+                      + self.concatenate_keys_node if self.concatenate_keys_node is not None else []
                       + self.match_nodes + self.softmax_control_nodes + self.softmax_nodes \
                       + [self.retrieval_weighting_node] + self.retrieval_gating_nodes + self.retrieval_nodes)
 
@@ -997,22 +1086,22 @@ class EMComposition(AutodiffComposition):
 
         return value_input_nodes
 
-    def _construct_concatenate_keys_node(self)->list:
+    def _construct_concatenate_keys_node(self)->ProcessingMechanism:
         """Create node that concatenates the inputs for all keys into a single vector
         Used to create a matrix for Projectoin from match / memory weights from concatenate_node -> match_node
         """
         # One node that concatenates inputs from all keys
         if not self.concatenate_keys:
-            return []
+            return None
         else:
-            return [ProcessingMechanism(function=Concatenate,
-                                        input_ports=[{NAME: 'CONCATENATE_KEYS',
-                                                      SIZE: len(self.key_input_nodes[i].output_port.value),
-                                                      PROJECTIONS: MappingProjection(
-                                                          sender=self.key_input_nodes[i].output_port,
-                                                          matrix=IDENTITY_MATRIX)}
-                                                     for i in range(self.num_keys)],
-                                        name='CONCATENATE KEYS')]
+            return ProcessingMechanism(function=Concatenate,
+                                       input_ports=[{NAME: 'CONCATENATE_KEYS',
+                                                     SIZE: len(self.key_input_nodes[i].output_port.value),
+                                                     PROJECTIONS: MappingProjection(
+                                                         sender=self.key_input_nodes[i].output_port,
+                                                         matrix=IDENTITY_MATRIX)}
+                                                    for i in range(self.num_keys)],
+                                       name='CONCATENATE KEYS')
 
     def _construct_match_nodes(self)->list:
         """Create nodes that, for each key field, compute the similarity between the input and each item in memory.
@@ -1025,12 +1114,15 @@ class EMComposition(AutodiffComposition):
         """
 
         if self.concatenate_keys:
+            # Get fields of memory structure corresponding to the keys
+            matrix = self.memory_template[:,:self.num_keys].transpose()
             match_nodes = [
                 TransferMechanism(
                     input_ports={NAME: 'CONCATENATED_INPUTS',
                                  SIZE: self.memory_capacity,
-                                 PROJECTIONS: MappingProjection(sender=self.concatenate_keys_node[0],
-                                                                matrix=ZEROS_MATRIX,
+                                 PROJECTIONS: MappingProjection(sender=self.concatenate_keys_node,
+                                                                # matrix=ZEROS_MATRIX,
+                                                                matrix=matrix,
                                                                 function=LinearMatrix(
                                                                     normalize=self.normalize_memories))},
             name='MATCH')]
@@ -1042,7 +1134,8 @@ class EMComposition(AutodiffComposition):
                     {
                         SIZE:self.memory_capacity,
                         PROJECTIONS: MappingProjection(sender=self.key_input_nodes[i].output_port,
-                                                       matrix=ZEROS_MATRIX,
+                                                       # matrix=ZEROS_MATRIX,
+                                                       matrix=self.memory_template[:,i].transpose(),
                                                        function=LinearMatrix(normalize=self.normalize_memories))},
                     name=f'MATCH {self.key_names[i]}')
                 for i in range(self.num_keys)
@@ -1135,7 +1228,9 @@ class EMComposition(AutodiffComposition):
                                                                    PROJECTIONS:
                                                                        MappingProjection(
                                                                            sender=self.retrieval_weighting_node,
-                                                                           matrix=ZEROS_MATRIX)},
+                                                                           # matrix=ZEROS_MATRIX)
+                                                                           matrix=self.memory_template[:,i])
+                                                                   },
                                                       name= f'{self.key_names[i]} RETRIEVED')
                                     for i in range(self.num_keys)]
 
@@ -1143,7 +1238,10 @@ class EMComposition(AutodiffComposition):
                                                                      PROJECTIONS:
                                                                          MappingProjection(
                                                                              sender=self.retrieval_weighting_node,
-                                                                             matrix=ZEROS_MATRIX)},
+                                                                             # matrix=ZEROS_MATRIX)
+                                                                             matrix=self.memory_template[:,
+                                                                                    i+self.num_keys])
+                                                                     },
                                                         name= f'{self.value_names[i]} RETRIEVED')
                                       for i in range(self.num_values)]
 
@@ -1179,7 +1277,7 @@ class EMComposition(AutodiffComposition):
                     else:
                         proj.learnable = False
 
-    def _initialize_memory(self, memory_template, memory_fill):
+    def _construct_memory(self, memory_template, memory_fill):
         """Initialize memory by zeroing weights from:
         - key_input_node(s) to match_node(s) and
         - retrieval_weighting_node to retrieval_node(s)
@@ -1206,18 +1304,15 @@ class EMComposition(AutodiffComposition):
             for i, key_input_node in enumerate(self.key_input_nodes):
                 key_input_node.output_port.value = np.zeros_like(key_input_node.output_port.value)
                 key_input_node.output
-            memory = np.array(memory_template
+            memory = np.array(memory_template)
 
 
         # FIX: ASSIGN FILL
         # ASSIGN TO PROJECTIONS FROM KEY_INPUT_NODE(S) TO MATCH_NODE(S)
         # AND FROM RETRIEVAL_WEIGHTING_NODE TO RETRIEVAL_NODE(S)
 
-
-
     def execute(self, inputs, context, **kwargs):
-        """Set input to weights of Projection to match_node.
-        """
+        """Set input to weights of Projection to match_node."""
         results = super().execute(inputs, **kwargs)
         self._store_memory(inputs, context)
         return results
