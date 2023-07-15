@@ -14,11 +14,8 @@
 
 # TODO:
 # - FIX: EXAMPLES
-# - FIX: DON'T INSTANTIATE CONCATENATE KEYS IF JUST ONE KEY FIELD
 # - FIX: ALLOW memory_template TO BE 3-ITEM TUPLE IN WHICH 1ST ITEM SPECIFIES MEMORY CAPACITY
-#       DEFAULTS TO memory_capacity; IF memory_capacity IS USER-SPECIFIED AND THEY CONFLICT -> ERROR MESSAGE
-# - FIX: ADD WARNING FOR MEMORY COLUMNS WITH ZEROS AND USE OF NORMALIZED LINEARMATRIX:
-#        - SUGGEST USE OF SMALL RANDOM VALUES (IF IT IS A PROBLEM DURING INITIALIZATION)
+#        DEFAULTS TO memory_capacity; IF memory_capacity IS USER-SPECIFIED AND THEY CONFLICT -> ERROR MESSAGE
 # - FIX: LEARNING:
 #        - ADD LEARNING MECHANISMS TO STORE MEMORY AND ADJUST WEIGHTS
 #        - DEAL WITH ERROR SIGNALS to retrieval_weighting_node OR AS PASS-THROUGH
@@ -974,6 +971,14 @@ class EMComposition(AutodiffComposition):
 
         # Turn off learning for all Projections except inputs to retrieval_gating_nodes
         self._set_learnability_of_projections()
+
+        # Warn if divide by zero will occur due to memory initialization
+        if not np.any([np.any([self.memory[i][0][j]
+                               for i in range(self.memory_capacity)])
+                       for j in range(self.num_keys)]):
+            warnings.warn(f"Memory initialized with at least one field that has all zeros; "
+                          f"a divide by zero will occur if 'normalize_memories' is True. "
+                          f"This can be avoided by using 'memory_fill' to initialize memories with non-zero values.")
 
     # *****************************************************************************************************************
     # ***********************************  Memory Construction Methods  ***********************************************
