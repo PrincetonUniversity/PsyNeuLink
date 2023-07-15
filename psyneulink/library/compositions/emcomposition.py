@@ -13,10 +13,8 @@
 # - CONFIDENCE COMPUTATION
 
 # TODO:
+# - FIX: EXAMPLES
 # - FIX: DON'T INSTANTIATE CONCATENATE KEYS IF JUST ONE KEY FIELD
-# - FIX: ADD len_concatenated_key:
-#        SHOULD BE LENGTH OF concatenate_keys_node (IF ALREADY INSTANTIATED, IF NOT, TEST WHEN IT IS)
-#        REPLACE RELEVANT "len_all_keys" CODE THAT CALCULATES IT LOCALLY
 # - FIX: ALLOW memory_template TO BE 3-ITEM TUPLE IN WHICH 1ST ITEM SPECIFIES MEMORY CAPACITY
 #       DEFAULTS TO memory_capacity; IF memory_capacity IS USER-SPECIFIED AND THEY CONFLICT -> ERROR MESSAGE
 # - FIX: ADD WARNING FOR MEMORY COLUMNS WITH ZEROS AND USE OF NORMALIZED LINEARMATRIX:
@@ -340,13 +338,13 @@ When the EMComposition is executed, the following sequence of operations occur:
 * **Concatenation**. If the `field_weights <EMComposition.field_weights>` are the same for all `keys
   <EMComposition_Field_Weights>` and `concatenate_keys <EMComposition_Concatenate_Keys>` is True, then the inputs
   provided to the `key_input_nodes <EMComposition.key_input_nodes>` are concatenated into a single vector in the
-  `concatenation_node <EMComposition.concatenation_node>`, that is provided to a single `match_node
+  `concatenate_keys_node <EMComposition.concatenate_keys_node>`, that is provided to a single `match_node
   <EMComposition.match_nodes>`.
 
 # FIX: ADD MENTION OF NORMALIZATION HERE
 
 * **Match memories by field**. The values of each `key_input_node <EMComposition.key_input_nodes>` (or the
-  `concatenation_node <EMComposition.concatenation_node>` if `concatenate_keys <EMComposition_Concatenate_Keys>`
+  `concatenate_keys_node <EMComposition.concatenate_keys_node>` if `concatenate_keys <EMComposition_Concatenate_Keys>`
   attribute is True) are passed through the corresponding `match_node <EMComposition.match_nodes>`, which computes
   the dot product of the input with each memory for the corresponding field, resulting in a vector of dot products
   for each memory in the corresponding field.
@@ -756,10 +754,11 @@ class EMComposition(AutodiffComposition):
         `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` that receive values to be stored in `memory
         <EMComposition.memory>`; these are not used in the matching process used for retrieval
 
-    concatenation_node : TransferMechanism
-        `TransferMechanism` that concatenates the inputs to `key_input_nodes <EMComposition.key_input_nodes>`
-        into a single vector used for the matching processing if `concatenate keys <EMComposition.concatenate_keys>`
-        is True.
+    concatenate_keys_node : TransferMechanism
+        `TransferMechanism` that concatenates the inputs to `key_input_nodes <EMComposition.key_input_nodes>` into a
+        single vector used for the matching processing if `concatenate keys <EMComposition.concatenate_keys>` is True.
+        This is not created if the ``contatenate_keys`` argument to the EMComposition's constructor is False or is
+        overridden (see `concatenate_keys <EMComposition_Concatenate_Keys>`), or there is only one key_input_node.
 
     match_nodes : list[TransferMechanism]
         `TransferMechanisms <TransferMechanism>` that receive the dot product of each key and those stored in
@@ -1116,7 +1115,7 @@ class EMComposition(AutodiffComposition):
             self.value_names = [f'VALUE {i}' for i in range(self.num_values)] if self.num_values > 1 else ['VALUE']
 
         # self.concatenate_keys = concatenate_keys or np.all(keys_weights == keys_weights[0])
-        self.concatenate_keys = concatenate_keys and np.all(keys_weights == keys_weights[0])
+        self.concatenate_keys = concatenate_keys and self.num_keys > 1 and np.all(keys_weights == keys_weights[0])
         if concatenate_keys and not np.all(keys_weights == keys_weights[0]):
             warnings.warn(f"The 'concatenate_keys' arg for '{name}' is True but field weights ({field_weights}) "
                           f"are not all equal; concatenation will be ignored. To use concatenation, "
