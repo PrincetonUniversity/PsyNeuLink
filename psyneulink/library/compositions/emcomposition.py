@@ -100,8 +100,8 @@ attributes, respectively), and the retrieved values are represented as `OUTPUT <
 *Entries and Fields*. Each entry in memory can have an arbitrary number of fields, and each field can have an arbitrary
 length.  However, all entries must have the same number of fields, and the corresponding fields must all have the same
 length across entries. Fields can be weighted to determine the influence they have on retrieval, using the
-`field_weights <ContentAddressableMemory.memory>` parameter (see `retrieval <EMComposition_Retrieval>` below). The
-number and shape of the fields in each entry is specified in the ``memory_template`` argument of the EMComposition's
+`field_weights <ContentAddressableMemory.memory>` parameter (see `retrieval <EMComposition_Retrieval_Storage>` below).
+The number and shape of the fields in each entry is specified in the ``memory_template`` argument of the EMComposition's
 constructor (see `memory_template <EMComposition_Fields>`). Which fields treated as keys (i.e., used as cues for
 retrieval) and which are treated as values (i.e., retrieved but not used for matching retrieval) is specified in the
 ``field_weights`` argument of the EMComposition's constructor (see `field_weights <EMComposition_Field_Weights>`).
@@ -150,6 +150,12 @@ An EMComposition is created by calling its constructor, that takes the following
   ``memory_template`` can be specified in one of three ways (see `EMComposition_Examples` for
   representative use cases):
 
+  .. hint::
+     Using the default initialization of memory with all zeros and ``normalize_memories`` set to ``True``
+     (see `below <EMComposition_Retrieval_Storage>`) results in a numpy.linalg warning about divide by zero.
+     This can be ignored, as it does not affect the results of execution, but it can be averted by specifying
+     `memory_fill <EMComposition_Memory_Fill>` to use small random values (e.g., ``memory_fill=(0,.001)``).
+
   * **tuple**: interpreted as an np.array shape specification, in which the 1st item specifies the number of fields in
     each memory entry and the 2nd item specifies the length of each field.  The matrix is filled either with zeros or
     with the value specified in ``memory_fill`` (see below).
@@ -162,7 +168,7 @@ An EMComposition is created by calling its constructor, that takes the following
     the entire `memory <EMComposition.memory>` is filled with either zeros or the value specified in ``memory_fill``.
 
     .. hint::
-       To specify a single entry, with the remainder of entries filled with zeros
+       To specify a single entry, with all other entries filled with zeros
        or the value specified in ``memory_fill``, use a 3d array as described below.
 
   * **3d list or array**:  used to initialize `memory <EMComposition.memory>` directly. If the outer dimension of
@@ -764,7 +770,6 @@ class EMComposition(AutodiffComposition):
 
                     :default value: 1.0
                     :type: ``float``
-
         """
         memory = Parameter(None, loggable=True, getter=_memory_getter, structural=True)
         # memory_template = Parameter([[0],[0]], structural=True, valid_types=(tuple, list, np.ndarray))
@@ -909,7 +914,6 @@ class EMComposition(AutodiffComposition):
             raise EMCompositionError(f"The number of items ({len(field_names)}) "
                                      f"in the 'field_names' arg for {name} must match "
                                      f"the number of fields ({len(field_weights)}).")
-
 
     def _parse_memory_template(self, memory_template, memory_fill, memory_capacity, field_weights):
         """Construct memory from memory_template and memory_fill
@@ -1128,8 +1132,7 @@ class EMComposition(AutodiffComposition):
         else:
             match_nodes = [
                 TransferMechanism(
-                    input_ports=
-                    {
+                    input_ports= {
                         SIZE:self.memory_capacity,
                         PROJECTIONS: MappingProjection(sender=self.key_input_nodes[i].output_port,
                                                        matrix = np.array(
