@@ -2142,7 +2142,7 @@ class Mechanism_Base(Mechanism):
             except AttributeError:
                 default_weights = None
             if default_weights is None:
-                default_weights = default_weights or [1.0] * len(self.input_ports)
+                default_weights = default_weights or np.ones(len(self.input_ports))
 
             # Assign any weights specified in input_port spec
             weights = [[input_port.defaults.weight if input_port.defaults.weight is not None else default_weight]
@@ -2165,7 +2165,7 @@ class Mechanism_Base(Mechanism):
             except AttributeError:
                 default_exponents = None
             if default_exponents is None:
-                default_exponents = default_exponents or [1.0] * len(self.input_ports)
+                default_exponents = default_exponents or np.ones(len(self.input_ports))
 
             # Assign any exponents specified in input_port spec
             exponents = [
