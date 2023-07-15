@@ -13,6 +13,8 @@
 # - CONFIDENCE COMPUTATION
 
 # TODO:
+# - FIX: ADD WARNING FOR MEMORY COLUMNS WITH ZEROS AND USE OF NORMALIZED LINEARMATRIX:
+#        - SUGGEST USE OF SMALL RANDOM VALUES (IF IT IS A PROBLEM DURING INITIALIZATION)
 # - FIX: LEARNING:
 #        - ADD LEARNING MECHANISMS TO STORE MEMORY AND ADJUST WEIGHTS
 #        - DEAL WITH ERROR SIGNALS to retrieval_weighting_node OR AS PASS-THROUGH
@@ -942,7 +944,7 @@ class EMComposition(AutodiffComposition):
         else:
 
             # Determine whether template is a single entry or full/partial memory specification
-            memory_template_dim = np.asarray(memory_template, dtype=object).ndim
+            memory_template_dim = np.array(memory_template, dtype=object).ndim
             fields_equal_length = all(len(field) == len(memory_template[0]) for field in memory_template)
             single_entry = (((memory_template_dim == 1) and not fields_equal_length) or
                             ((memory_template_dim == 2)  and fields_equal_length))
@@ -1108,8 +1110,9 @@ class EMComposition(AutodiffComposition):
 
         if self.concatenate_keys:
             # Get fields of memory structure corresponding to the keys
-            # matrix = self.memory_template[:,:self.num_keys].transpose()
             matrix = np.concatenate([self.memory_template[:,i].transpose() for i in range(self.num_keys)])
+            # Need to convert (from dytpe=object) to float for LinearMatrix function
+            matrix = np.array(matrix).astype(float)
             match_nodes = [
                 TransferMechanism(
                     input_ports={NAME: 'CONCATENATED_INPUTS',
@@ -1128,8 +1131,8 @@ class EMComposition(AutodiffComposition):
                     {
                         SIZE:self.memory_capacity,
                         PROJECTIONS: MappingProjection(sender=self.key_input_nodes[i].output_port,
-                                                       # matrix=ZEROS_MATRIX,
-                                                       matrix=self.memory_template[:,i].transpose(),
+                                                       matrix = np.array(
+                                                           self.memory_template[:,i].transpose()).astype(float),
                                                        function=LinearMatrix(normalize=self.normalize_memories))},
                     name=f'MATCH {self.key_names[i]}')
                 for i in range(self.num_keys)

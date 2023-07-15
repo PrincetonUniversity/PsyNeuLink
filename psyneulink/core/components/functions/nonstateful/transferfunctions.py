@@ -3903,6 +3903,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 #      Replace columns (if norming axis 0) or rows (if norming axis 1) of zeros with 1's
                 # matrix = matrix / np.linalg.norm(matrix,axis=-1,keepdims=True)
                 matrix = matrix / np.linalg.norm(matrix,axis=0,keepdims=True)
+
         result = np.dot(vector, matrix)
         return self.convert_output_type(result)
 
