@@ -1100,12 +1100,12 @@ class EMComposition(AutodiffComposition):
 
     def _construct_match_nodes(self)->list:
         """Create nodes that, for each key field, compute the similarity between the input and each item in memory.
-        Each element of the output represents the similarity between the key_input and one item in memory.
-
-        If self.concatenate_keys is True, then all inputs for keys are concatenated into a single vector that is
-        the input to a single TransferMechanism;  otherwise, each key has its own TransferMechanism.  The size of
-        the input to each TransferMechanism is the number of items allowed in memory, and the weights to each element
-        in the weight matrix is a single memory.
+        - If self.concatenate_keys is True, then all inputs for keys from concatenated_keys_node are assigned a single
+            match_node, and weights from memory_template are assigned to a Projection from concatenated_keys_node to
+            that match_node.
+        - Otherwise, each key has its own match_node, and weights from memory_template are assigned to a Projection
+            from each key_input_node[i] to each match_node[i].
+        - Each element of the output represents the similarity between the key_input and one item in memory.
         """
 
         if self.concatenate_keys:
@@ -1113,18 +1113,19 @@ class EMComposition(AutodiffComposition):
             matrix = np.concatenate([self.memory_template[:,i].transpose() for i in range(self.num_keys)])
             # Need to convert (from dytpe=object) to float for LinearMatrix function
             matrix = np.array(matrix).astype(float)
+
             match_nodes = [
                 TransferMechanism(
                     input_ports={NAME: 'CONCATENATED_INPUTS',
                                  SIZE: self.memory_capacity,
                                  PROJECTIONS: MappingProjection(sender=self.concatenate_keys_node,
-                                                                # matrix=ZEROS_MATRIX,
                                                                 matrix=matrix,
                                                                 function=LinearMatrix(
                                                                     normalize=self.normalize_memories))},
                     name='MATCH')]
+
+        # One node for each key
         else:
-            # One node for each key
             match_nodes = [
                 TransferMechanism(
                     input_ports=
@@ -1137,10 +1138,12 @@ class EMComposition(AutodiffComposition):
                     name=f'MATCH {self.key_names[i]}')
                 for i in range(self.num_keys)
             ]
+
         return match_nodes
 
     def _construct_softmax_control_nodes(self)->list:
         """Create nodes that set the softmax gain (inverse temperature) for each softmax_node."""
+
         if self.softmax_gain != CONTROL:
             return []
         softmax_control_nodes = [
@@ -1151,10 +1154,10 @@ class EMComposition(AutodiffComposition):
                              else f'SOFTMAX GAIN CONTROL {i}')
 
             for i, match_node in enumerate(self.match_nodes)]
+
         return softmax_control_nodes
 
     def _construct_softmax_nodes(self)->list:
-        # FIX:
         """Create nodes that, for each key field, compute the softmax over the similarities between the input and the
         memories in the corresponding match_node.
         """
@@ -1192,6 +1195,7 @@ class EMComposition(AutodiffComposition):
     def _construct_retrieval_gating_nodes(self)->list:
         """Create GatingMechanisms that weight each key's contribution to the retrieved values.
         """
+
         # FIX: CONSIDER USING THIS FOR INPUT GATING OF MATCH NODE(S)?
         if self.concatenate_keys:
             retrieval_gating_nodes = []
@@ -1202,6 +1206,7 @@ class EMComposition(AutodiffComposition):
                                                       name= 'RETRIEVAL WEIGHTING' if self.num_keys == 1
                                                       else f'RETRIEVAL WEIGHTING {i}')
                                       for i, key_match_pair in enumerate(zip(self.key_input_nodes, self.softmax_nodes))]
+
         return retrieval_gating_nodes
 
     def _construct_retrieval_weighting_node(self)->list:
@@ -1250,6 +1255,7 @@ class EMComposition(AutodiffComposition):
         for the Projection from the key_input_node to the matching_node for keys, and from the value_input_node to
         the retrieval node for values.
         """
+
         # FIX: ASSIGN RELEVANT PROJECTIONS TO LEARNING MECHANISM ATTRIBUTES, AND ASSIGN FUNCTION THAT USES THOSE
         self.key_storage_nodes = [LearningMechanism(size=len(self.key_input_nodes[i].value[0]),
                                                     input_ports=self.key_input_nodes[i].output_port,
