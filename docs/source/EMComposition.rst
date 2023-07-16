@@ -13,3 +13,4 @@ EMComposition
 .. automodule:: psyneulink.library.compositions.emcomposition
    :members:
    :private-members:
+   :exclude-members: Parameters, execute

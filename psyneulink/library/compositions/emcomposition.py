@@ -73,10 +73,8 @@ Contents
      - `Processing <EMComposition_Processing>`
      - `Learning <EMComposition_Learning>`
   * `EMComposition_Examples`
-     - `Memory Configuration <EMComposition_Example_Memory_Template>`
-     - `Memory Configuration <EMComposition_Example_Memory_Fill>`
-     - `Memory Configuration <EMComposition_Example_Field_Weights>`
-     - `Memory Configuration <EMComposition_Example_Softmax>`
+     - `Memory Template and Fill <EMComposition_Example_Memory_Template>`
+     - `Field Weights <EMComposition_Example_Field_Weights>`
   * `EMComposition_Class_Reference`
 
 
@@ -601,30 +599,12 @@ matching process and the second field should contribute 25%::
 
     **Use of field_weights to specify relative contribution of fields to matching process.**
 
- Note that in this case, the `concatenate_keys_node <EMComposition_concatenate_keys_node>` has been replaced by a
- pair of `retreival_weights_nodes <EMComposition_retrieval_weights_nodes>`, one for each key field.  This is because
- the keys were assigned different weights;  when they are assigned equal weights, or if no weights are specified,
- and `normalize_memories <EMComposition_normalize_memories>` is `True`, then the keys are concatenated and are
- concatenated for efficiency of processing.  This can be suppressed by specifying `concatenate_keys` as `False`
- (see `concatenate_keys <EMComposition_Concatenate_Keys>` for additional details).
-
-
-COMMENT:
-
-     - `Memory Configuration <EMComposition_Example_Softmax>`
-memory to be normalized to a unit vector.  This can be avoided by specifying a different value for
-
-
-.. _EMComposition_Field_Weights:
-
-* **field_weights**: specifies which fields are used as keys, and how they are weighted during retrieval. The
-    * *None* (the default): all fields except the last are treated as keys, and are weighted equally for retrieval,
-    * *single entry*: its value is ignored, and all fields are treated as keys (i.e., used for
-    * *multiple non-zero entries*: If all entries are identical, the value is ignored and the corresponding keys are
-* **field_names**: specifies names that can be assigned to the fields.  The number of names specified must
-* **concatenate_keys**:  specifies whether keys are concatenated before a match is made to items in memory.
-
-COMMENT
+Note that in this case, the `concatenate_keys_node <EMComposition.concatenate_keys_node>` has been replaced by a
+pair of `retreival_weighting_nodes <EMComposition.retrieval_gating_nodes>`, one for each key field.  This is because
+the keys were assigned different weights;  when they are assigned equal weights, or if no weights are specified,
+and `normalize_memories <EMComposition.normalize_memories>` is `True`, then the keys are concatenated and are
+concatenated for efficiency of processing.  This can be suppressed by specifying `concatenate_keys` as `False`
+(see `concatenate_keys <EMComposition_Concatenate_Keys>` for additional details).
 
 .. _EMComposition_Class_Reference:
 
