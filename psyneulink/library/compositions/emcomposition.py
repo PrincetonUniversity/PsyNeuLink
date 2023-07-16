@@ -13,6 +13,7 @@
 # - CONFIDENCE COMPUTATION
 
 # TODO:
+# - FIX: WARNING NOT OCCURING FOR ZEROS WITH MULTIPLE ENTRIES (HAPPENS IF *ANY* KEY IS EVER ALL ZEROS)
 # - FIX: EXAMPLES
 # - FIX: ALLOW memory_template TO BE 3-ITEM TUPLE IN WHICH 1ST ITEM SPECIFIES MEMORY CAPACITY
 #        DEFAULTS TO memory_capacity; IF memory_capacity IS USER-SPECIFIED AND THEY CONFLICT -> ERROR MESSAGE
@@ -74,7 +75,7 @@ Contents
   * `EMComposition_Examples`
      - `Memory Configuration <EMComposition_Example_Memory_Template>`
      - `Memory Configuration <EMComposition_Example_Memory_Fill>`
-     - `Memory Configuration <EMComposition_Example_Fields>`
+     - `Memory Configuration <EMComposition_Example_Field_Weights>`
      - `Memory Configuration <EMComposition_Example_Softmax>`
   * `EMComposition_Class_Reference`
 
@@ -424,37 +425,7 @@ modification, and the error signal is passed to the nodes that project to its `I
 Examples
 --------
 
-COMMENT:
-    EXAMPLE OF EXMAMPLE FORMT
-
-    **Assigning a custom function to a Mechanism**
-
-    .. _UDF_Lambda_Function_Examples:
-
-    The following example assigns a simple lambda function that returns the sum of the elements of a 1d array) to a
-    `TransferMechanism`::
-
-        >>> import psyneulink as pnl
-        >>> my_mech = pnl.ProcessingMechanism(default_variable=[[0,0,0]],
-        ...                                   function=lambda x:sum(x[0]))
-        >>> my_mech.execute(input = [1, 2, 3])
-        array([[6]])
-
-    Note that the function treats its argument, x, as a 2d array, and accesses its first item for the calculation.
-
-    HEADINGS:
-     - `Memory Configuration <EMComposition_Example_Memory_Template>`
-            **Tuple specification**
-            **Entry specification**
-            **Full matrix specification**
-
-     - `Memory Configuration <EMComposition_Example_Memory_Fill>`
-     - `Memory Configuration <EMComposition_Example_Fields>`
-     - `Memory Configuration <EMComposition_Example_Softmax>`
-
-COMMENT
-
-The following provide examples of how to configure and initialize the EMComposition's `memory <EMComposition.memory>`:
+The following are examples of how to configure and initialize the EMComposition's `memory <EMComposition.memory>`:
 
 .. _EMComposition_Example_Memory_Template:
 
@@ -467,49 +438,152 @@ The following provide examples of how to configure and initialize the EMComposit
 
 The following tuple::
 
-     >>> import psyneulink as pnl
-     >>> em = EMComposition(memory_template=(2,3), memory_capacity=4)
+    >>> import psyneulink as pnl
+    >>> em = EMComposition(memory_template=(2,3), memory_capacity=4)
 
-  specifies that EMComposition's memory been able to handle 4 entries, each of which has two fields of length 3 each:
-
-    >>> em.memory
-    array([[[0., 0., 0.],
-            [0., 0., 0.],
-            [0., 0., 0.],
-            [0., 0., 0.]],
-           [[0., 0., 0.],
-            [0., 0., 0.],
-            [0., 0., 0.],
-            [0., 0., 0.]]])
-
-The above is equivalent to specifying the following ``memory_template`` using list or array::
-
-     >>> em = EMComposition(memory_template=[[0,0,0],[0,0,0]], memory_capacity=4)
-
-When a tuple is used, all fields must be of the same length.  However, a list or array can also be used to specify
-fields of different length (i.e., as a ragged array).  For example, the following
-
-     >>> em = EMComposition(memory_template=[[0,0,0],[0,0]], memory_capacity=4)
-
-specifies that EMComposition's memory been able to handle 4 entries, each of which has two fields, one of length 3
-and the other of length 2:
+  specifies that EMComposition's memory contains four entries, each of which has two fields of length 3 each:
 
     >>> em.memory
-    array([[[0., 0., 0.],
-            [0., 0.]],
-              [[0., 0., 0.],
-                [0., 0.]],
+    [[[array([0., 0., 0.]), array([0., 0., 0.])]],
+     [[array([0., 0., 0.]), array([0., 0., 0.])]],
+     [[array([0., 0., 0.]), array([0., 0., 0.])]],
+     [[array([0., 0., 0.]), array([0., 0., 0.])]]]
+
+Note that there are four enries (rows) each with two fields (columns) that is each of length 3. The number of rows
+was determined by``memory_capacity``.  The default for ``memory_capacity`` is 1000, but 4 is used here for legibility.
+The specification of ``memory_template`` above is equivalent to the following use of a list or array::
+
+    >>> em = EMComposition(memory_template=[[0,0,0],[0,0,0]], memory_capacity=4)
+
+**List or array specification**
+
+When a tuple is used, all fields have the same length (3 in the example above).  However, a list or array can
+be used to specify fields of different length (i.e., as a ragged array).  For example, the following specifies
+one field of length 3 and another of length 1::
+
+    >>> em = EMComposition(memory_template=[[0,0,0],[0]], memory_capacity=4)
+    >>> em.memory
+    [[[array([0., 0., 0.]), array([0.])]],
+     [[array([0., 0., 0.]), array([0.])]],
+     [[array([0., 0., 0.]), array([0.])]],
+     [[array([0., 0., 0.]), array([0.])]]]
+
+.. _EMComposition_Example_Memory_Fill:
+
+**Memory fill**
+
+Note that the examples above generate a warning about the use zeros to initialize the memory.  This is because the
+default value for ``memory_fill`` is ``0``, and the default value for ``normalize_memories`` is ``True``, which
+will cause a divide by zero warning when memories are normalized  While numpy handles this gracefully, albeit with
+a warning, it can be avoided by specifying a non-zero value for ``memory_fill``, such as small number::
+
+    >>> em = EMComposition(memory_template=[[0,0,0],[0]], memory_capacity=4, memory_fill=.001)
+    >>> em.memory
+    [[[array([0.001, 0.001, 0.001]), array([0.001])]],
+     [[array([0.001, 0.001, 0.001]), array([0.001])]],
+     [[array([0.001, 0.001, 0.001]), array([0.001])]],
+     [[array([0.001, 0.001, 0.001]), array([0.001])]]]
+
+Here, a single value was specified for ``memory_fill`` (which can be a float or int) that is used to fill all values.
+A tuple can also be specified, in which case it is used to generate a random number in the internval between the first
+and second values of the tuple.  For example, the following uses random values between 0 and 0.01 to fill all entries::
+
+    >>> em = EMComposition(memory_template=[[0,0,0],[0]], memory_capacity=4, memory_fill=(0,0.01))
+    >>> em.memory
+    [[[array([0.00298981, 0.00563404, 0.00444073]), array([0.00245373])]],
+     [[array([0.00148447, 0.00666486, 0.00228882]), array([0.00237541])]],
+     [[array([0.00432786, 0.00035378, 0.00265932]), array([0.00980598])]],
+     [[array([0.00151163, 0.00889032, 0.00899815]), array([0.00854529])]]]
+
+.. _EMComposition_Example_Multiple_Entries:
+
+**Multiple entries**
+
+In the examples above, a single entry was specified, and that was used as a template for initializing the remaining
+entries in memory. However, a list or array can be used to directly initialize any or all entries. For example, the
+following initializes memory with two specific entries::
+
+    >>> em = EMComposition(memory_template=[[[1,2,3],[4]],[[100,101,102],[103]]], memory_capacity=4)
+    >>> em.memory
+    [[[array([1., 2., 3.]), array([4.])]],
+     [[array([100., 101., 102.]), array([103.])]],
+     [[array([0., 0., 0.]), array([0.])]],
+     [[array([0., 0., 0.]), array([0.])]]]
+
+Note that the two entries must have exactly the same shapes. If they do not, and error will be generated.
+Also note that the remaining entries are filled with zeros (the default value for ``memory_fill``).
+Here again, ``memory_fill`` can be used to specify a different default value::
+
+    >>> em = EMComposition(memory_template=[[[7],[24,5]],[[100],[3,106]]], memory_capacity=4, memory_fill=(0,.01))
+    >>> em.memory
+    [[[array([7.]), array([24.,  5.])]],
+     [[array([100.]), array([  3., 106.])]],
+     [[array([0.00803646]), array([0.00341276, 0.00286969])]],
+     [[array([0.00143196]), array([0.00079033, 0.00710556])]]]
+
+.. _EMComposition_Example_Field_Weights:
+
+*Field Weights*
+~~~~~~~~~~~~~~~
+
+By default, all of the fields specified are keys except the last, which is treated as a "value" field -- that is,
+one that is not included in the matching process, but for which a value is retrieved along with the key fields.
+However, the ``field_weights`` argument can be used to modify this, specifying which fields should be used as keys
+as well as the relative contribution that each makes to the matching process.  All non-zero values specified in the
+``field_weights`` argument are used as keys.  For example, the following specifies that the first two fields should
+be used as keys while the last two should be used as values::
+
+    >>> em = EMComposition(memory_template=[[0,0,0],[0],[0,0],[0,0,0,0]], memory_capacity=3, field_weights=[1,1,0,0])
+    >>> em.show_graph()
+    <BLANKLINE>
+
+FIGURE HERE
 
 
 
-  Fields with
-  A list can be used to specify
-  fields of different length (i.e., a ragged array), and to initialize memory with non-zero values as in the
-  following::
 
-      [[0,0,0],[0,0]]
+, and the relative contribution of each is determined by the ratio of its
+value to the sum of all non-zero values.  For example, the following specifies that the first field should be used as
+a key, and that it should contribute 75% to the matching process, while the second field should contribute 25%::
 
-  in which the first field is length 3 but the second is length 2.  The following can be use to initialize `memory
+    >>> em = EMComposition(memory_template=[[0,0,0],[0]], memory_capacity=4, field_weights=[3,1])
+    >>> em.memory
+    [[[array([0., 0., 0.]), array([0.])]],
+     [[array([0., 0., 0.]), array([0.])]],
+     [[array([0., 0., 0.]), array([0.])]],
+     [[array([0., 0., 0.]), array([0.])]]]
+
+COMMENT:
+
+For example, the following
+
+
+specify the relative contribution of each field to the
+the last field specified in ``memory_template`` is used as the `memory <EMComposition.memory>` for
+The `field_weights <EMComposition.field_weights>` attribute can be used to specify
+the relative contribution of each
+
+
+
+     - `Memory Configuration <EMComposition_Example_Softmax>`
+
+
+
+
+
+
+
+
+
+
+
+memory to be normalized to a unit vector.  This can be avoided by specifying a different value for
+
+This can be avoided by specifying a different value for ``memory_fill``::
+
+
+
+
   <EMComposition.memory>` with small random values::
 
       np.random.rand((2,3)) /100
@@ -537,7 +611,7 @@ and the other of length 2:
 * **field_names**: specifies names that can be assigned to the fields.  The number of names specified must
 * **concatenate_keys**:  specifies whether keys are concatenated before a match is made to items in memory.
 
-
+COMMENT
 
 .. _EMComposition_Class_Reference:
 
@@ -1050,7 +1124,7 @@ class EMComposition(AutodiffComposition):
                     entry = [np.full(len(field), memory_fill).tolist() for field in entry_template]
                 entries = [np.array(entry, dtype=object)] * num_entries
 
-            return np.array(np.array(entries))
+            return np.array(np.array(entries,dtype=object), dtype=object)
 
         # If memory_template is a tuple, create and fill full memory matrix
         if isinstance(memory_template, tuple):
@@ -1064,7 +1138,7 @@ class EMComposition(AutodiffComposition):
             # memory_template specifies a single entry
             if num_entries == 1:
                 # If any non-zeros, replicate the entry for full matrix
-                if any(list(np.array(memory_template, dtype=object).flat)):
+                if any(np.array(memory_template, dtype=object).any()):
                     memory_fill = None
                 # Otherwise, use memory_fill
                 else:
@@ -1074,14 +1148,15 @@ class EMComposition(AutodiffComposition):
             # If memory template is a full or partial 3d (matrix) specification
             else:
                 # If all entries are zero, create entire memory matrix with memory_fill
-                if not any(list(np.array(memory_template).flat)):
+                if not any(list(np.array(memory_template, dtype=object).flat)):
                     # Use first entry of zeros as template and replicate for full memory matrix
                     memory = _construct_entries(memory_template[0], memory_capacity, memory_fill)
                 # If there are any non-zero values, keep specified entries and create rest using memory_fill
                 else:
                     num_entries_needed = memory_capacity - len(memory_template)
                     remaining_entries = _construct_entries(memory_template[0], num_entries_needed, memory_fill)
-                    memory = np.concatenate((memory_template, remaining_entries))
+                    memory = np.concatenate((np.array(memory_template, dtype=object),
+                                             np.array(remaining_entries, dtype=object)))
 
         # Get shape of single entry
         self.entry_template = memory[0]
@@ -1132,7 +1207,10 @@ class EMComposition(AutodiffComposition):
     def _parse_memory_shape(self, memory_template):
         """Parse shape of memory_template to determine number of entries and fields"""
         memory_template_dim = np.array(memory_template, dtype=object).ndim
-        fields_equal_length = all(len(field) == len(memory_template[0]) for field in memory_template)
+        if memory_template_dim == 1:
+            fields_equal_length = all(len(field) == len(memory_template[0]) for field in memory_template)
+        else:
+            fields_equal_length = all(len(field) == len(memory_template[0]) for field in memory_template[0])
         single_entry = (((memory_template_dim == 1) and not fields_equal_length) or
                         ((memory_template_dim == 2)  and fields_equal_length))
         num_entries = 1 if single_entry else len(memory_template)
