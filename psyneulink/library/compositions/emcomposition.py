@@ -14,7 +14,7 @@
 
 # TODO:
 # - FIX: WARNING NOT OCCURING FOR ZEROS WITH MULTIPLE ENTRIES (HAPPENS IF *ANY* KEY IS EVER ALL ZEROS)
-# - FIX: EXAMPLES
+# - FIX: MAKE CONCATENTATION=FALSE IF NORMALIZE_MEMORIES IS FALSE.
 # - FIX: ALLOW memory_template TO BE 3-ITEM TUPLE IN WHICH 1ST ITEM SPECIFIES MEMORY CAPACITY
 #        DEFAULTS TO memory_capacity; IF memory_capacity IS USER-SPECIFIED AND THEY CONFLICT -> ERROR MESSAGE
 # - FIX: LEARNING:
@@ -223,18 +223,26 @@ An EMComposition is created by calling its constructor, that takes the following
 
 .. _EMComposition_Concatenate_Keys:
 
-* **concatenate_keys**:  specifies whether keys are concatenated before a match is made to items in memory. If true
-  (the default), and the `field_weights <EMComposition.field_weights>` for all keys are equal (i.e., all non-zero
-  weights are equal -- see `field_weights <EMComposition_Field_Weights>`), then all keys are concatenated. However, if
-  the key (i.e., non-zero) `field_weights <EMComposition.field_weights>` are *not* all equal, a warning is issued and
-  concatenation does not occur (i.e., keys are treated separately). If ``concatenate_keys`` is False, keys are not
-  concatenated irrepsective of `field_weights <EMComposition.field_weights>`.
+* **concatenate_keys**:  specifies whether keys are concatenated before a match is made to items in memory.
+  This is True by default, if the `field_weights <EMComposition.field_weights>` for all keys are equal (i.e.,
+  all non-zero weights are equal -- see `field_weights <EMComposition_Field_Weights>`) and `normalize_memories
+  <EMComposition.normalize_memories>` is True (the default).  However, if the key `field_weights
+  <EMComposition.field_weights>` are *not* all equal, or ``normalize_memories`` is set to False, then a warning
+  is issued and concatenation is disabled (i.e., all keys are treated separately). If ``concatenate_keys`` is set
+  to False, then keys are not concatenated irrepsective of `field_weights <EMComposition.field_weights>` or
+  `normalize_memories <EMComposition.normalize_memories>`.
 
-  .. note::
-     If `normalize_keys <EMComposition.normalize_keys>` is True, then concatenating keys has no influence on the
-     outcome of the `matching process <EMComposition_Processing>`, however it can be more computationally efficient.
-     However, if `normalize_keys <EMComposition.normalize_keys>` is False, it can affect the outcome of the matching
-     process, since different fields may have different norms that will result in different dot products.
+      .. technical_note::
+         If `normalize_memories <EMComposition.normalize_memories>` is True, then concatenating keys has no influence
+         on the outcome of the `matching process <EMComposition_Processing>`, however it can be more computationally
+         efficient. However, if `normalize_memories <EMComposition.normalize_memories>` is False, it can affect the
+         outcome of the matching process, since different fields may have different norms that will result in different
+         dot products in the `matching process <EMComposition_Processing>`.
+
+      .. note::
+         All `key_input_nodes <EMComposition.key_input_nodes>` and `retrieval_nodes <EMComposition.retrieval_nodes>`
+         are always preserved, even when `concatenate_keys <EMComposition.concatenate_keys>` is True, so that separate
+         inputs can be provided for each key, and the value of each key can be retrieved separately.
 
 .. _EMComposition_Memory_Capacity:
   
@@ -267,9 +275,10 @@ An EMComposition is created by calling its constructor, that takes the following
   the gain based on the entropy of the dot products, preserving the distribution over non-(or near) zero entries
   irrespective of how many (near) zero entries there are.
 
-* **learn_weights** : specifies whether the weights specified in ``field_weights`` are modifiable during training.
+* **learn_weights** : specifies whether `field_weights <EMComposition.field_weights>` are modifiable during training.
 
-* **learning_rate** : specifies the rate at which ``field_weights`` are learned if ``learn_weights`` is True.
+* **learning_rate** : specifies the rate at which  `field_weights <EMComposition.field_weights>` are learned if
+  ``learn_weights`` is True.
 
 
 .. _EMComposition_Structure:
@@ -331,15 +340,17 @@ an `AutodiffComposition`.  The details of how the EMComposition executes are des
 *Processing*
 ~~~~~~~~~~~~
 
-When the EMComposition is executed, the following sequence of operations occur:
+When the EMComposition is executed, the following sequence of operations occur
+(also see `figure <EMComposition_Example_Fig>`):
 
-* **Concatenation**. If the `field_weights <EMComposition.field_weights>` are the same for all `keys
-  <EMComposition_Field_Weights>` and `concatenate_keys <EMComposition_Concatenate_Keys>` is True, then the inputs
-  provided to the `key_input_nodes <EMComposition.key_input_nodes>` are concatenated into a single vector in the
-  `concatenate_keys_node <EMComposition.concatenate_keys_node>`, that is provided to a single `match_node
-  <EMComposition.match_nodes>`.
-
-# FIX: ADD MENTION OF NORMALIZATION HERE
+* **Concatenation**. By default, if the `field_weights <EMComposition.field_weights>` are the same for all `keys
+  <EMComposition_Field_Weights>` and `normalize_memories <EMComposition.normalize_memories>` is True then, for
+  efficiency of computation, the inputs provided to the `key_input_nodes <EMComposition.key_input_nodes>` are
+  concatenated into a single vector in the `concatenate_keys_node <EMComposition.concatenate_keys_node>`, that
+  is provided to a single `match_node <EMComposition.match_nodes>`.  However, if either of these conditions is
+  not met or `concatenate_keys <EMComposition.concatenate_keys>`is False, then the input to each `key_input_node
+  <EMComposition.key_input_nodes>` is provided to its own `match_node <EMComposition.match_nodes>`
+  (see `concatenate keys <EMComposition_Concatenate_Keys>` for additional information).
 
 * **Match memories by field**. The values of each `key_input_node <EMComposition.key_input_nodes>` (or the
   `concatenate_keys_node <EMComposition.concatenate_keys_node>` if `concatenate_keys <EMComposition_Concatenate_Keys>`
@@ -428,20 +439,29 @@ Examples
 The following are examples of how to configure and initialize the EMComposition's `memory <EMComposition.memory>`:
 
 *Visualizing the EMComposition*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-As with any `Composition`, it's `show_graph <Composition.show_graph>` method can be used to display it graphically.
-For example, the figure below shows the following EMComposition that has 2 keys and 1 value::
+The EMComposition can be visualized graphically, like any `Composition`, using its `show_graph
+<Composition.show_graph>` method.  For example, the figure below shows the following EMComposition
+that has 2 keys and 1 value::
 
     >>> import psyneulink as pnl
-    >>> em = EMComposition(memory_template=(3,2))
+    >>> em = EMComposition(memory_template=(3,2), memory_capacity=4)
     >>> em.show_graph()
     <BLANKLINE>
 
-.. figure:: _static/EMComposition_Example_Fig.svg
+.. _EMComposition_Example_fig:
+
+.. figure:: _static/EMComposition_Example_fig.svg
    :alt: Exxample of an EMComposition
    :align: left
 
-   **Example of an EMComposition**
+       **Example of an EMComposition**
+
+       .. note::
+          The order in which the nodes at a given level (e.g., the `INPUT <NodeRole.INPUT>` or `OUTPUT
+          <NodeRole.OUTPUT>` `Nodes <Composition_Nodes>`) are shown in the diagram is arbitrary, and does not necessarily
+          reflect the order in which they are created or specied in the script.
 
 .. _EMComposition_Example_Memory_Template:
 
@@ -455,12 +475,10 @@ can be specified with by a tuple or a list or array.
 
 **Tuple specification**
 
-The following tuple::
-
-    >>> import psyneulink as pnl
-    >>> em = EMComposition(memory_template=(2,3), memory_capacity=4)
-
-  specifies that EMComposition's memory contains four entries, each of which has two fields of length 3 each:
+A tuple can be used to specify the number of fields and the length of each field in memory.  In the example above,
+a tuple is used to specify that EMComposition's memory should four entries, each of which has two fields of length
+3 each.  The contents of `memory <EMComposition.memory>` can be see using it `memory <EMComposition.memory>`
+attribute::
 
     >>> em.memory
     [[[array([0., 0., 0.]), array([0., 0., 0.])]],
@@ -468,17 +486,18 @@ The following tuple::
      [[array([0., 0., 0.]), array([0., 0., 0.])]],
      [[array([0., 0., 0.]), array([0., 0., 0.])]]]
 
-Note that there are four enries (rows) each with two fields (columns) that is each of length 3. The number of rows
-was determined by``memory_capacity``.  The default for ``memory_capacity`` is 1000, but 4 is used here for legibility.
-The specification of ``memory_template`` above is equivalent to the following use of a list or array::
+Note that there are four entries (rows) each with two fields (columns) that is each of length 3. The number of entries
+was determined by ``memory_capacity``.  The default for ``memory_capacity`` is 1000, but 4 is used here for legibility.
+The specification of ``memory_template`` above is equivalent to the following use of a list or array to specify
+``memory_template``::
 
     >>> em = EMComposition(memory_template=[[0,0,0],[0,0,0]], memory_capacity=4)
 
 **List or array specification**
 
-When a tuple is used, all fields have the same length (3 in the example above).  However, a list or array can
-be used to specify fields of different length (i.e., as a ragged array).  For example, the following specifies
-one field of length 3 and another of length 1::
+Note that in the example above the two fields have the same length (3). This is always the case when a tuple is used,
+as it generates a regular array.  However, a list or array can be used to specify fields of different length (i.e.,
+as a ragged array).  For example, the following specifies one field of length 3 and another of length 1::
 
     >>> em = EMComposition(memory_template=[[0,0,0],[0]], memory_capacity=4)
     >>> em.memory
@@ -547,78 +566,53 @@ Here again, ``memory_fill`` can be used to specify a different default value::
 
 By default, all of the fields specified are treated as keys except the last, which is treated as a "value" field --
 that is, one that is not included in the matching process, but for which a value is retrieved along with the key fields.
-However, the ``field_weights`` argument can be used to modify this, specifying which fields should be used as keys
-as well as the relative contribution that each makes to the matching process.  Non-zero values in the ``field_weights``
-argument designate keys.  For example, the following specifies that the first two fields should be used as keys while
+For example, in the `figure <EMComposition_Example_fig>` above, of the three fields specified, the first two are used as
+keys, and the last is used as a value. However, the ``field_weights`` argument can be used to modify this, specifying
+which fields should be used as keys, as well as the relative contribution that each makes to the matching process, and
+which should be used as value fields.  Non-zero elements in the ``field_weights`` argument designate keys, and zeros
+specify value fields.  For example, the following specifies that the first two fields should be used as keys while
 the last two should be used as values::
 
     >>> em = EMComposition(memory_template=[[0,0,0],[0],[0,0],[0,0,0,0]], memory_capacity=3, field_weights=[1,1,0,0])
     >>> em.show_graph()
     <BLANKLINE>
 
-FIGURE HERE
 
+.. _EMComposition_Example_Field_Weights_Equal_fig:
 
+.. figure:: _static/EMComposition_field_weights_equal_fig.svg
 
+    **Use of field_weights to specify keys and values.**
 
-, and the relative contribution of each is determined by the ratio of its
-value to the sum of all non-zero values.  For example, the following specifies that the first field should be used as
-a key, and that it should contribute 75% to the matching process, while the second field should contribute 25%::
+The ``field_weights`` argument can also be used to specify the relative contribution of each field to the matching
+process.  By default, all non-zero values are set to 1, but different values can be used to weight the
+relative contribution of each field.  The values are normalized so that the sum of all non-zero values is 1, and the
+relative contribution of each is determined by the ratio of its value to the sum of all non-zero values.  For example,
+the following specifies that the first two fields should be used as keys, with the first contributing 75% to the
+matching process and the second field should contribute 25%::
 
-    >>> em = EMComposition(memory_template=[[0,0,0],[0]], memory_capacity=4, field_weights=[3,1])
-    >>> em.memory
-    [[[array([0., 0., 0.]), array([0.])]],
-     [[array([0., 0., 0.]), array([0.])]],
-     [[array([0., 0., 0.]), array([0.])]],
-     [[array([0., 0., 0.]), array([0.])]]]
+    >>> em = EMComposition(memory_template=[[0,0,0],[0],[0,0]], memory_capacity=3, field_weights=[3,1,0])
+    >>> em.show_graph()
+    <BLANKLINE>
+
+.. _EMComposition_Example_Field_Weights_Different_fig:
+
+.. figure:: _static/EMComposition_field_weights_different.svg
+
+    **Use of field_weights to specify relative contribution of fields to matching process.**
+
+ Note that in this case, the `concatenate_keys_node <EMComposition_concatenate_keys_node>` has been replaced by a
+ pair of `retreival_weights_nodes <EMComposition_retrieval_weights_nodes>`, one for each key field.  This is because
+ the keys were assigned different weights;  when they are assigned equal weights, or if no weights are specified,
+ and `normalize_memories <EMComposition_normalize_memories>` is `True`, then the keys are concatenated and are
+ concatenated for efficiency of processing.  This can be suppressed by specifying `concatenate_keys` as `False`
+ (see `concatenate_keys <EMComposition_Concatenate_Keys>` for additional details).
+
 
 COMMENT:
 
-For example, the following
-
-
-specify the relative contribution of each field to the
-the last field specified in ``memory_template`` is used as the `memory <EMComposition.memory>` for
-The `field_weights <EMComposition.field_weights>` attribute can be used to specify
-the relative contribution of each
-
-
-
      - `Memory Configuration <EMComposition_Example_Softmax>`
-
-
-
-
-
-
-
-
-
-
-
 memory to be normalized to a unit vector.  This can be avoided by specifying a different value for
-
-This can be avoided by specifying a different value for ``memory_fill``::
-
-
-
-
-  <EMComposition.memory>` with small random values::
-
-      np.random.rand((2,3)) /100
-
-    memory_template=[[0,0,0],[0,0]
-    memory_fill=(RANDOM, 100)
-
-
-
-  * **tuple**: interpreted as an np.array shape specification, in which the 1st item specifies the number of fields in
-  * **2d list or array**:  interpreted as a template for memory entries.  This can be used to specify fields of
-    .. hint::
-       To specify a single entry, with all other entries filled with zeros
-       or the value specified in ``memory_fill``, use a 3d array as described below.
-  * **3d list or array**:  used to initialize `memory <EMComposition.memory>` directly. If the outer dimension of
-* **memory_fill**: specifies the value used to fill the `memory <EMComposition.memory>`, based on the shape specified
 
 
 .. _EMComposition_Field_Weights:
@@ -1035,7 +1029,8 @@ class EMComposition(AutodiffComposition):
 
         self._validate_memory_specs(memory_template, memory_fill, field_weights, field_names, name)
         self._parse_memory_template(memory_template, memory_fill, memory_capacity, field_weights)
-        self._parse_fields(field_weights, field_names, concatenate_keys, learn_weights, learning_rate, name)
+        self._parse_fields(field_weights, field_names, concatenate_keys, normalize_memories,
+                           learn_weights, learning_rate, name)
 
         if self.parameters.memory_decay.get() and self.parameters.memory_decay_rate.get() is None:
             self.parameters.memory_decay_rate.set(memory_decay_rate or 1 / self.memory_capacity)
@@ -1182,7 +1177,14 @@ class EMComposition(AutodiffComposition):
         self.memory_template = memory
         self.memory_capacity = memory_capacity
 
-    def _parse_fields(self, field_weights, field_names, concatenate_keys, learn_weights, learning_rate, name):
+    def _parse_fields(self,
+                      field_weights,
+                      field_names,
+                      concatenate_keys,
+                      normalize_memories,
+                      learn_weights,
+                      learning_rate,
+                      name):
 
         # Deal with default field_weights
         if field_weights is None:
@@ -1213,12 +1215,28 @@ class EMComposition(AutodiffComposition):
             self.key_names = [f'KEY {i}' for i in range(self.num_keys)] if self.num_keys > 1 else ['KEY']
             self.value_names = [f'VALUE {i}' for i in range(self.num_values)] if self.num_values > 1 else ['VALUE']
 
-        # self.concatenate_keys = concatenate_keys or np.all(keys_weights == keys_weights[0])
-        self.concatenate_keys = concatenate_keys and self.num_keys > 1 and np.all(keys_weights == keys_weights[0])
-        if concatenate_keys and not np.all(keys_weights == keys_weights[0]):
-            warnings.warn(f"The 'concatenate_keys' arg for '{name}' is True but field weights ({field_weights}) "
-                          f"are not all equal; concatenation will be ignored. To use concatenation, "
-                          f"remove `field_weights` specification or make them all the same.")
+        self.concatenate_keys = (concatenate_keys
+                                 and self.num_keys > 1
+                                 and np.all(keys_weights == keys_weights[0])
+                                 and normalize_memories)
+        # if concatenate_keys was forced off above:
+        if concatenate_keys and not self.concatenate_keys:
+            # Issue warning if concatenate_keys is True but either
+            #   field weights are not all equal and/or normalize_memories is False
+            if not all(np.all(keys_weights == keys_weights[0])):
+                fw_error_msg = f" field weights ({field_weights}) are not all equal"
+                fw_correction_msg = f"remove `field_weights` specification or make them all the same."
+            if not normalize_memories:
+                nm_error_msg = f" normalize_memories is False"
+                nm_correction_msg = f" or set normalize_memories to True"
+            if fw_error_msg and nm_error_msg:
+                error_msg = f"{fw_error_msg} and {nm_error_msg}"
+                correction_msg = f"{fw_correction_msg} and/or {nm_correction_msg}"
+            else:
+                error_msg = fw_error_msg or nm_error_msg
+                correction_msg = fw_correction_msg or nm_correction_msg
+            warnings.warn(f"The 'concatenate_keys' arg for '{name}' is True but {error_msg}; "
+                          f"concatenation will be ignored. To use concatenation, {correction_msg}.")
 
         self.learn_weights = learn_weights
         self.learning_rate = learning_rate
