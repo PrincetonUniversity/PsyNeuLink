@@ -8,28 +8,24 @@
 
 # ********************************************* EMComposition *************************************************
 
-# ISSUES:
-# - IMPLEMENTATION OF STORAGE IN PYTORCH AND/OR AS LEARNING PROCESS (HEBBIAN?)
-# - CONFIDENCE COMPUTATION
-
 # TODO:
+# - FIX: WRITE TESTS
 # - FIX: WARNING NOT OCCURING FOR ZEROS WITH MULTIPLE ENTRIES (HAPPENS IF *ANY* KEY IS EVER ALL ZEROS)
-# - FIX: MAKE CONCATENTATION=FALSE IF NORMALIZE_MEMORIES IS FALSE.
 # - FIX: ALLOW memory_template TO BE 3-ITEM TUPLE IN WHICH 1ST ITEM SPECIFIES MEMORY CAPACITY
 #        DEFAULTS TO memory_capacity; IF memory_capacity IS USER-SPECIFIED AND THEY CONFLICT -> ERROR MESSAGE
+# - FIX: - ADD add_memory() METHOD
 # - FIX: LEARNING:
 #        - ADD LEARNING MECHANISMS TO STORE MEMORY AND ADJUST WEIGHTS
 #        - DEAL WITH ERROR SIGNALS to retrieval_weighting_node OR AS PASS-THROUGH
-# - FIX: - ADD add_memory() METHOD
 # - FIX: CONFIDENCE COMPUTATION (USING SIGMOID ON DOT PRODUCTS) AND REPORT THAT (EVEN ON FIRST CALL)
-# - FIX: WRITE TESTS
 # - FIX: ALLOW SOFTMAX SPEC TO BE A DICT WITH PARAMETERS FOR _get_softmax_gain() FUNCTION
-# - FIX: CONCATENATE ANY FIELDS THAT ARE THE SAME WEIGHT (FOR EFFICIENCY)
+# - FIX: CONCATENATE *ANY* FIELDS THAT ARE THE SAME WEIGHT (FOR EFFICIENCY)
 # - FIX: COMPILE
 #      - LinearMatrix to add normalization
-#      _store() method to assign weights to memory
-# - FIX: AUGMENT LINEARMATRIX NORMALIZATION SO THAT ANYTIME A ROW'S NORM IS 0 REPLACE IT WITH 1
-#  1s)
+#      - _store() method to assign weights to memory
+# - FIX: AUGMENT LinearMatrix Function:
+#        - Normalize as option
+#        - Anytime a row's norm is 0, replace with 1s
 # - FIX: WHY IS Concatenate NOT WORKING AS FUNCTION OF AN INPUTPORT (WASN'T THAT USED IN CONTEXT OF BUFFER?)
 # - WRITE TESTS FOR INPUT_PORT and MATRIX SPECS CORRECT IN LATEST BRANCHEs
 # - ACCESSIBILITY OF DISTANCES (SEE BELOW): MAKE IT A LOGGABLE PARAMETER (I.E., WITH APPROPRIATE SETTER)
@@ -50,7 +46,6 @@
 # - ADAPTIVE TEMPERATURE: KAMESH FOR FORMULA
 # - ADD MEMORY_DECAY TO ContentAddressableMemory FUNCTION (and compiled version by Samyak)
 # - MAKE memory_template A CONSTRUCTOR ARGUMENT FOR default_variable
-
 
 """
 
@@ -1132,7 +1127,7 @@ class EMComposition(AutodiffComposition):
             # memory_template specifies a single entry
             if num_entries == 1:
                 # If any non-zeros, replicate the entry for full matrix
-                if any(np.array(memory_template, dtype=object).any()):
+                if any(np.nonzero(np.array(memory_template, dtype=object))):
                     memory_fill = None
                 # Otherwise, use memory_fill
                 else:
@@ -1203,7 +1198,8 @@ class EMComposition(AutodiffComposition):
         if concatenate_keys and not self.concatenate_keys:
             # Issue warning if concatenate_keys is True but either
             #   field weights are not all equal and/or normalize_memories is False
-            if not all(np.all(keys_weights == keys_weights[0])):
+            fw_error_msg = nm_error_msg = fw_correction_msg = nm_correction_msg = None
+            if not all(np.all(keys_weights[i] == keys_weights[0] for i in range(len(keys_weights)))):
                 fw_error_msg = f" field weights ({field_weights}) are not all equal"
                 fw_correction_msg = f"remove `field_weights` specification or make them all the same."
             if not normalize_memories:
@@ -1224,10 +1220,21 @@ class EMComposition(AutodiffComposition):
     def _parse_memory_shape(self, memory_template):
         """Parse shape of memory_template to determine number of entries and fields"""
         memory_template_dim = np.array(memory_template, dtype=object).ndim
-        if memory_template_dim == 1:
+        # # MODIFIED 7/16/23 OLD:
+        # if memory_template_dim == 1:
+        #     fields_equal_length = all(len(field) == len(memory_template[0]) for field in memory_template)
+        # else:
+        #     if isinstance(memory_template[0], (int, float)):
+        #         fields_equal_length = all(len(field) == len(memory_template[0]) for field in memory_template)
+        #     else:
+        #         fields_equal_length = all(len(field) == len(memory_template[0]) for field in memory_template[0])
+        # MODIFIED 7/16/23 NEW:
+        if memory_template_dim == 1 or all(isinstance(item, (int, float)) for item in memory_template[0]):
             fields_equal_length = all(len(field) == len(memory_template[0]) for field in memory_template)
         else:
             fields_equal_length = all(len(field) == len(memory_template[0]) for field in memory_template[0])
+        # MODIFIED 7/16/23 END
+
         single_entry = (((memory_template_dim == 1) and not fields_equal_length) or
                         ((memory_template_dim == 2)  and fields_equal_length))
         num_entries = 1 if single_entry else len(memory_template)
@@ -1351,8 +1358,6 @@ class EMComposition(AutodiffComposition):
                     input_ports= {
                         SIZE:self.memory_capacity,
                         PROJECTIONS: MappingProjection(sender=self.key_input_nodes[i].output_port,
-                                                       # matrix = np.array(
-                                                       #     self.memory_template[:,i].transpose()).astype(float),
                                                        matrix = np.array(self.memory_template[:,i].tolist()
                                                                          ).transpose().astype(float),
                                                        function=LinearMatrix(normalize=self.normalize_memories))},
