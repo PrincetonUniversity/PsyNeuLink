@@ -427,10 +427,29 @@ Examples
 
 The following are examples of how to configure and initialize the EMComposition's `memory <EMComposition.memory>`:
 
+*Visualizing the EMComposition*
+
+As with any `Composition`, it's `show_graph <Composition.show_graph>` method can be used to display it graphically.
+For example, the figure below shows the following EMComposition that has 2 keys and 1 value::
+
+    >>> import psyneulink as pnl
+    >>> em = EMComposition(memory_template=(3,2))
+    >>> em.show_graph()
+    <BLANKLINE>
+
+.. figure:: _static/EMComposition_Example_Fig.svg
+   :alt: Exxample of an EMComposition
+   :align: left
+
+   **Example of an EMComposition**
+
 .. _EMComposition_Example_Memory_Template:
 
 *Memory Template*
 ~~~~~~~~~~~~~~~~~
+
+The ``memory_template`` argument is used to configure the EMComposition's `memory <EMComposition.memory>`, which
+can be specified with by a tuple or a list or array.
 
 .. _EMComposition_Example_Tuple_Spec:
 
@@ -526,12 +545,12 @@ Here again, ``memory_fill`` can be used to specify a different default value::
 *Field Weights*
 ~~~~~~~~~~~~~~~
 
-By default, all of the fields specified are keys except the last, which is treated as a "value" field -- that is,
-one that is not included in the matching process, but for which a value is retrieved along with the key fields.
+By default, all of the fields specified are treated as keys except the last, which is treated as a "value" field --
+that is, one that is not included in the matching process, but for which a value is retrieved along with the key fields.
 However, the ``field_weights`` argument can be used to modify this, specifying which fields should be used as keys
-as well as the relative contribution that each makes to the matching process.  All non-zero values specified in the
-``field_weights`` argument are used as keys.  For example, the following specifies that the first two fields should
-be used as keys while the last two should be used as values::
+as well as the relative contribution that each makes to the matching process.  Non-zero values in the ``field_weights``
+argument designate keys.  For example, the following specifies that the first two fields should be used as keys while
+the last two should be used as values::
 
     >>> em = EMComposition(memory_template=[[0,0,0],[0],[0,0],[0,0,0,0]], memory_capacity=3, field_weights=[1,1,0,0])
     >>> em.show_graph()
