@@ -645,7 +645,7 @@ def _memory_getter(owning_component=None, context=None)->list: # FIX: MAKE THIS 
     memory = [retrieval_node.path_afferents[0].parameters.matrix.get(context)
               for retrieval_node in owning_component.retrieval_nodes]
     # Reorganize memory so that each row is an entry and each column is a field
-    return [[[memory[j][i] for j in range(owning_component.num_fields)]]
+    return [[memory[j][i] for j in range(owning_component.num_fields)]
               for i in range(owning_component.memory_capacity)]
 
 def get_softmax_gain(v, scale=1, base=1, entropy_weighting=.1)->float:
@@ -1127,7 +1127,10 @@ class EMComposition(AutodiffComposition):
             # memory_template specifies a single entry
             if num_entries == 1:
                 # If any non-zeros, replicate the entry for full matrix
-                if any(np.nonzero(np.array(memory_template, dtype=object))):
+                # if any(np.array(memory_template, dtype=object).any()):
+                # if any(np.nonzero(np.array(memory_template, dtype=object))):
+                # if np.array(np.nonzero(np.array(memory_template, dtype=object))).any():
+                if np.array([np.nonzero(field) for field in memory_template]).any():
                     memory_fill = None
                 # Otherwise, use memory_fill
                 else:
