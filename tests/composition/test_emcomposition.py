@@ -11,7 +11,7 @@ from psyneulink.core.components.functions.nonstateful.transferfunctions import L
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals import Context
-from psyneulink.core.globals.keywords import TRAINING_SET, Loss
+from psyneulink.core.globals.keywords import TRAINING_SET, Loss, CONTROL
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
@@ -99,37 +99,41 @@ class TestACConstructor:
         # memory_template, field_weights, concatenate_keys, normalize_memory, repeat (entries),
         # num_fields, num_keys, num_values, concatenate_node, retrieval_weighting_nodes,
         # ------------------ SPECS -----------------------------------------   ------------ EXPECTED -------------------
-        #  memory_template    memory_fill  field_wts cncat_ky nmlze sm_gain repeat   #fld  #key  #val   concat  sm_node
-        (0,  (2,3),                 None,    None,    None,    None,  None,  False,    2,     1,   1,    False,  False),
-        (1,  [[0,0],[0,0]],         None,    None,    None,    None,  None,  False,    2,     1,   1,    False,  False),
-        (2,  [[0,0],[0,0],[0,0]],   None,    None,    None,    None,  None,  False,    3,     2,   1,    True,   False),
-        (3,  [[0,0,0],[0,0]],       None,    None,    None,    None,  None,  False,    2,     1,   1,    False,  False),
-        (4,  [[0,0,0],[0],[0,0]],   None,    None,    None,    None,  None,  False,    3,     2,   1,    True,   False),
-        (5,  [[0,0],[0,0],[0,0]],   None,     1,      None,    None,  None,  False,    3,     3,   0,    True,   False),
-        (6,  [[0,0,0],[0],[0,0]],   None,  [1,1,1],   None,    None,  None,  False,    3,     3,   0,    True,   False),
-        (7,  [[0,0,0],[0],[0,0]],   None,  [1,1,1],   False,   None,  None,  False,    3,     3,   0,    False,  False),
-        (8,  [[0,0],[0,0],[0,0]],   None,  [1,2,0],   None,    None,  None,  False,    3,     2,   1,    False,  False),
-        (9,  [[0,1],[0,0,0],[0,0]], None,  [1,2,0],   None,    None,  None,  [0,1],    3,     2,   1,    False,  False),
-        (10, [[0,1],[0,0,0],[0,0]],   .1,  [1,2,0],   None,    None,  None,  [0,1],    3,     2,   1,    False,  False),
-        (11, [[0,0],[0,0,0],[0,0]],   .1,  [1,2,0],   None,    None,  None,  False,    3,     2,   1,    False,  False),
-        (12, [[[0,1],[0,0,0],[0,0]],  # two entries specified, fields have same weights
-              [[0,2],[0,0,0],[0,0]]], .1,  [1,1,0],   None,    None,  None,    2,      3,     2,   1,    True,   False),
-        (13, [[[0,1],[0,0,0],[0,0]],  # two entries specified, fields have same weights, but conccatenate_keys is False
-              [[0,2],[0,0,0],[0,0]]], .1,  [1,1,0],   False,   None,  None,    2,      3,     2,   1,    False,  False),
-        (14, [[[0,1],[0,0,0],[0,0]],  # two entries specified, all fields are keys
-              [[0,2],[0,0,0],[0,0]]], .1,  [1,1,1],   None,    None,  None,    2,      3,     3,   0,    True,   False),
-        (15, [[[0,1],[0,0,0],[0,0]],  # two entries specified; fields have different weights
-              [[0,2],[0,0,0],[0,0]]], .1,  [1,2,0],   None,    None,  None,    2,      3,     2,   1,    False,  False),
-        (16, [[[0,1],[0,0,0],[0,0]],  # three enrtries specified
-              [[0,2],[0,0,0],[0,0]],
-              [[0,3],[0,0,0],[0,0]]], .1,  [1,2,0],   None,    None,  None,    3,      3,     2,   1,    False,  False),
-        (17, [[[0,1],[0,0,0],[0,0]],  # all four enrtries allowed by memory_capacity specified
-              [[0,2],[0,0,0],[0,0]],
-              [[0,3],[0,0,0],[0,0]],
-              [[0,4],[0,0,0],[0,0]]], .1,  [1,2,0],   None,    None,  None,    4,      3,     2,   1,    False,  False),
+        #   memory_template     memory_fill field_wts cncat_ky nmlze sm_gain   repeat  #fields #keys #vals  concat
+        (0,   (2,3),                 None,    None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        (1,   [[0,0],[0,0]],         None,    None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        (2,   [[0,0],[0,0],[0,0]],   None,    None,    None,    None,  None,    False,    3,     2,   1,    True, ),
+        (2.1, [[0,0],[0,0],[0,0]],   None,    None,    None,    None,   1.5,    False,    3,     2,   1,    True, ),
+        (2.2, [[0,0],[0,0],[0,0]],   None,    None,    None,    None, CONTROL,  False,    3,     2,   1,    True, ),
+        (3,   [[0,0,0],[0,0]],       None,    None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        (4,   [[0,0,0],[0],[0,0]],   None,    None,    None,    None,  None,    False,    3,     2,   1,    True, ),
+        (5,   [[0,0],[0,0],[0,0]],   None,     1,      None,    None,  None,    False,    3,     3,   0,    True, ),
+        (5.1, [[0,0],[0,0],[0,0]],   None,     1,      None,    None,   0.1,    False,    3,     3,   0,    True, ),
+        (5.2, [[0,0],[0,0],[0,0]],   None,     1,      None,    None, CONTROL,  False,    3,     3,   0,    True, ),
+        (6,   [[0,0,0],[0],[0,0]],   None,  [1,1,1],   None,    None,  None,    False,    3,     3,   0,    True, ),
+        (7,   [[0,0,0],[0],[0,0]],   None,  [1,1,1],   False,   None,  None,    False,    3,     3,   0,    False,),
+        (8,   [[0,0],[0,0],[0,0]],   None,  [1,2,0],   None,    None,  None,    False,    3,     2,   1,    False,),
+        (9,   [[0,1],[0,0,0],[0,0]], None,  [1,2,0],   None,    None,  None,    [0,1],    3,     2,   1,    False,),
+        (10,  [[0,1],[0,0,0],[0,0]],   .1,  [1,2,0],   None,    None,  None,    [0,1],    3,     2,   1,    False,),
+        (11,  [[0,0],[0,0,0],[0,0]],   .1,  [1,2,0],   None,    None,  None,    False,    3,     2,   1,    False,),
+        (12,  [[[0,1],[0,0,0],[0,0]],  # two entries specified, fields have same weights
+               [[0,2],[0,0,0],[0,0]]], .1,  [1,1,0],   None,    None,  None,      2,      3,     2,   1,    True,),
+        (13,  [[[0,1],[0,0,0],[0,0]],  # two entries specified, fields have same weights, but conccatenate_keys is False
+               [[0,2],[0,0,0],[0,0]]], .1,  [1,1,0],   False,   None,  None,      2,      3,     2,   1,    False),
+        (14,  [[[0,1],[0,0,0],[0,0]],  # two entries specified, all fields are keys
+               [[0,2],[0,0,0],[0,0]]], .1,  [1,1,1],   None,    None,  None,      2,      3,     3,   0,    True),
+        (15,  [[[0,1],[0,0,0],[0,0]],  # two entries specified; fields have different weights
+               [[0,2],[0,0,0],[0,0]]], .1,  [1,2,0],   None,    None,  None,      2,      3,     2,   1,    False),
+        (16,  [[[0,1],[0,0,0],[0,0]],  # three enrtries specified
+               [[0,2],[0,0,0],[0,0]],
+               [[0,3],[0,0,0],[0,0]]], .1,  [1,2,0],   None,    None,  None,      3,      3,     2,   1,    False),
+        (17,  [[[0,1],[0,0,0],[0,0]],  # all four enrtries allowed by memory_capacity specified
+               [[0,2],[0,0,0],[0,0]],
+               [[0,3],[0,0,0],[0,0]],
+               [[0,4],[0,0,0],[0,0]]], .1,  [1,2,0],   None,    None,  None,      4,      3,     2,   1,    False),
     ]
     args_names = "test_num, memory_template, memory_fill, field_weights, concatenate_keys, normalize_memories, " \
-                 "softmax_gain, repeat, num_fields, num_keys, num_values, concatenate_node, sm_node"
+                 "softmax_gain, repeat, num_fields, num_keys, num_values, concatenate_node"
     @pytest.mark.parametrize(args_names,
                              test_data,
                              ids=[x[0] for x in test_data]
@@ -148,7 +152,6 @@ class TestACConstructor:
                        num_keys,
                        num_values,
                        concatenate_node,
-                       sm_node,
                        benchmark):
         """Note: weight matrices used for memory are validated by using em.memory, since its getter uses thos matrices
         """
@@ -203,14 +206,19 @@ class TestACConstructor:
         # Validate node structure
         assert len(em.key_input_nodes) == num_keys
         assert len(em.value_input_nodes) == num_values
-        assert len(em.retrieval_nodes) == num_keys + num_values
+        assert isinstance(em.concatenate_keys_node, Mechanism) == concatenate_node
         if em.concatenate_keys:
             assert em.retrieval_gating_nodes == []
+            assert bool(softmax_gain in {None, CONTROL}) == bool(len(em.softmax_control_nodes))
         else:
             assert len(em.retrieval_gating_nodes) == num_keys
+            if softmax_gain in {None, CONTROL}:
+                assert len(em.softmax_control_nodes) == num_keys
+            else:
+                assert em.softmax_control_nodes == []
         assert len(em.retrieval_nodes) == num_fields
-        assert isinstance(em.concatenate_keys_node, Mechanism) == concatenate_node
-        # assert em.retrieval_weighting_node == retrieval_weighting_nodes
+
+
 
         # Validate specified entries and memory_memory_fill
         # If memory_template is all zeros, ensure that all fields are empty

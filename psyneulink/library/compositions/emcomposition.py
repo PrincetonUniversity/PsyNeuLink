@@ -1388,16 +1388,14 @@ class EMComposition(AutodiffComposition):
     def _construct_softmax_control_nodes(self)->list:
         """Create nodes that set the softmax gain (inverse temperature) for each softmax_node."""
 
-        if self.softmax_gain != CONTROL:
-            return []
-        softmax_control_nodes = [
-            ControlMechanism(monitor_for_control=match_node,
-                             control_signals=[(GAIN, self.softmax_nodes[i])],
-                             function=get_softmax_gain,
-                             name='SOFTMAX GAIN CONTROL' if len(self.softmax_nodes) == 1
-                             else f'SOFTMAX GAIN CONTROL {i}')
-
-            for i, match_node in enumerate(self.match_nodes)]
+        softmax_control_nodes = []
+        if self.softmax_gain == CONTROL:
+            softmax_control_nodes = [ControlMechanism(monitor_for_control=match_node,
+                                                      control_signals=[(GAIN, self.softmax_nodes[i])],
+                                                      function=get_softmax_gain,
+                                                      name='SOFTMAX GAIN CONTROL' if len(self.softmax_nodes) == 1
+                                                      else f'SOFTMAX GAIN CONTROL {i}')
+                                     for i, match_node in enumerate(self.match_nodes)]
 
         return softmax_control_nodes
 
