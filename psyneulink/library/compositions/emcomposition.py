@@ -882,7 +882,7 @@ class EMComposition(AutodiffComposition):
                 learn_weights
                     see `learn_weights <EMComposition.learn_weights>`
 
-                    :default value: True
+                    :default value: False # False UNTIL IMPLEMENTED
                     :type: ``bool``
 
                 learning_rate
@@ -948,7 +948,7 @@ class EMComposition(AutodiffComposition):
         memory_decay_rate = Parameter(None, loggable=True, modulable=True, fallback_default=True,
                                dependencies='memory_decay')
         normalize_memories = Parameter(True, loggable=False, fallback_default=True)
-        learn_weights = Parameter(True, fallback_default=True)
+        learn_weights = Parameter(False, fallback_default=True) # FIX: False until learning is implemented
         learning_rate = Parameter(.001, fallback_default=True)
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         softmax_gain = Parameter(CONTROL, modulable=True, fallback_default=True)
@@ -991,7 +991,7 @@ class EMComposition(AutodiffComposition):
                  field_names:Optional[list]=None,
                  field_weights:tuple=None,
                  concatenate_keys:bool=True,
-                 learn_weights:bool=True,
+                 learn_weights:bool=False, # FIX: False FOR NOW, UNTIL IMPLEMENTED
                  learning_rate:float=None,
                  memory_capacity:int=1000,
                  memory_decay:bool=True,
@@ -1232,7 +1232,11 @@ class EMComposition(AutodiffComposition):
             warnings.warn(f"The 'concatenate_keys' arg for '{name}' is True but {error_msg}; "
                           f"concatenation will be ignored. To use concatenation, {correction_msg}.")
 
-        self.learn_weights = learn_weights
+        # FIX: UNTIL FULLY IMPLEMENTED
+        if learn_weights:
+            warnings.warn(f"The 'learn_weights' arg for '{name}' is True but not yet implemented; "
+                          f"automatically set to False for now;  stay tuned...")
+        # self.learn_weights = learn_weights
         self.learning_rate = learning_rate
 
     def _parse_memory_shape(self, memory_template):
