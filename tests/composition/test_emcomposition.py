@@ -217,8 +217,6 @@ class TestACConstructor:
                 assert em.softmax_control_nodes == []
         assert len(em.retrieval_nodes) == num_fields
 
-
-
         # Validate specified entries and memory_memory_fill
         # If memory_template is all zeros, ensure that all fields are empty
         if not repeat and memory_fill:
