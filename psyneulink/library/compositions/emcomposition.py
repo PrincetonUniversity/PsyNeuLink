@@ -14,6 +14,7 @@
 # - FIX: ALLOW memory_template TO BE 3-ITEM TUPLE IN WHICH 1ST ITEM SPECIFIES MEMORY CAPACITY
 #        DEFAULTS TO memory_capacity; IF memory_capacity IS USER-SPECIFIED AND THEY CONFLICT -> ERROR MESSAGE
 # - FIX: - ADD add_memory() METHOD
+# - FIX: - HANDLE Nones in args
 # - FIX: LEARNING:
 #        - ADD LEARNING MECHANISMS TO STORE MEMORY AND ADJUST WEIGHTS
 #        - DEAL WITH ERROR SIGNALS to retrieval_weighting_node OR AS PASS-THROUGH
@@ -1036,9 +1037,15 @@ class EMComposition(AutodiffComposition):
         self._set_learnability_of_projections()
 
         # Warn if divide by zero will occur due to memory initialization
-        if not np.any([np.any([self.memory[i][0][j]
+        # # MODIFIED 7/16/23 OLD:
+        # if not np.any([np.any([self.memory[i][0][j]
+        #                        for i in range(self.memory_capacity)])
+        #                for j in range(self.num_keys)]):
+        # MODIFIED 7/16/23 NEW:
+        if not np.any([np.any([self.memory[i][j]
                                for i in range(self.memory_capacity)])
                        for j in range(self.num_keys)]):
+        # MODIFIED 7/16/23 END
             warnings.warn(f"Memory initialized with at least one field that has all zeros; "
                           f"a divide by zero will occur if 'normalize_memories' is True. "
                           f"This can be avoided by using 'memory_fill' to initialize memories with non-zero values.")
@@ -1079,8 +1086,9 @@ class EMComposition(AutodiffComposition):
                                      f"must be a float, int or len tuple of ints and/or floats.")
 
         # If field_weights has more than one value it must match the first dimension (axis 0) of memory_template:
-        if field_weights is not None and len(field_weights) > 1 and len(field_weights) != num_fields:
-            raise EMCompositionError(f"The number of items ({len(field_weights)}) in the 'field_weights' arg "
+        field_weights_len = len(np.atleast_1d(field_weights))
+        if field_weights is not None and field_weights_len > 1 and field_weights_len != num_fields:
+            raise EMCompositionError(f"The number of items ({field_weights_len}) in the 'field_weights' arg "
                                      f"for {name} must match the number of items in an entry of memory "
                                      f"({num_fields}).")
 
@@ -1088,7 +1096,7 @@ class EMComposition(AutodiffComposition):
         if field_names and len(field_names) != num_fields:
             raise EMCompositionError(f"The number of items ({len(field_names)}) "
                                      f"in the 'field_names' arg for {name} must match "
-                                     f"the number of fields ({len(field_weights)}).")
+                                     f"the number of fields ({field_weights_len}).")
 
     def _parse_memory_template(self, memory_template, memory_fill, memory_capacity, field_weights):
         """Construct memory from memory_template and memory_fill
@@ -1130,7 +1138,7 @@ class EMComposition(AutodiffComposition):
                 # if any(np.array(memory_template, dtype=object).any()):
                 # if any(np.nonzero(np.array(memory_template, dtype=object))):
                 # if np.array(np.nonzero(np.array(memory_template, dtype=object))).any():
-                if np.array([np.nonzero(field) for field in memory_template]).any():
+                if np.array([np.nonzero(field) for field in memory_template],dtype=object).any():
                     memory_fill = None
                 # Otherwise, use memory_fill
                 else:
