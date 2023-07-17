@@ -57,8 +57,8 @@ class TestACConstructor:
 #    √ memory_template is list with zeros and different lengths - 3,4,6,7,11
 #    √ memory_template is list with non-zeros and same lengths - 9
 #    √ memory_template is np.ndarray with zeros and different lengths - 9.1, 10
-#    - memory_template is np.ndarray with zeros and same lengths -
-#    - memory_template is np.ndarray with zeros and different lengths
+#    - memory_template is np.ndarray with zeros and same lengths - FIX
+#    - memory_template is np.ndarray with zeros and different lengths FIX
 # 2) multiple entries
 #    - memory_template is partial entries with zeros and different lengths
 #    √ memory_template is partial entries with non-zeros and different lengths - 13,14,15,16
@@ -67,12 +67,12 @@ class TestACConstructor:
 
 # memory_fill
 # √ single value - 10-17
-# - tuple of values (random)
+# √ tuple of values (random) 0.2
 
 # field_weights
 # √ single value - 5.x
 # √ multiple values all same - 6,7,12-14
-# - multiple values different - 8-11, 15-17
+# √ multiple values different - 8-11, 15-17
 
 # TODO:
 # field names
@@ -97,39 +97,43 @@ class TestACConstructor:
         # memory_template, field_weights, concatenate_keys, normalize_memory, repeat (entries),
         # num_fields, num_keys, num_values, concatenate_node, retrieval_weighting_nodes,
         # ------------------ SPECS -----------------------------------------   ------------ EXPECTED -------------------
-        #   memory_template      memory_fill field_wts cncat_ky nmlze sm_gain   repeat  #fields #keys #vals  concat
-        (0,    (2,3),                 None,    None,    None,    None,  None,    False,    2,     1,   1,    False,),
-        (1,    [[0,0],[0,0]],         None,    None,    None,    None,  None,    False,    2,     1,   1,    False,),
-        (2,    [[0,0],[0,0],[0,0]],   None,    None,    None,    None,  None,    False,    3,     2,   1,    True, ),
-        (2.1,  [[0,0],[0,0],[0,0]],   None,    None,    None,    None,   1.5,    False,    3,     2,   1,    True, ),
-        (2.2,  [[0,0],[0,0],[0,0]],   None,    None,    None,    None, CONTROL,  False,    3,     2,   1,    True, ),
-        (3,    [[0,0,0],[0,0]],       None,    None,    None,    None,  None,    False,    2,     1,   1,    False,),
-        (4,    [[0,0,0],[0],[0,0]],   None,    None,    None,    None,  None,    False,    3,     2,   1,    True, ),
-        (5,    [[0,0],[0,0],[0,0]],   None,     1,      None,    None,  None,    False,    3,     3,   0,    True, ),
-        (5.1,  [[0,0],[0,0],[0,0]],   None,     1,      None,    None,   0.1,    False,    3,     3,   0,    True, ),
-        (5.2,  [[0,0],[0,0],[0,0]],   None,     1,      None,    None, CONTROL,  False,    3,     3,   0,    True, ),
-        (6,    [[0,0,0],[0],[0,0]],   None,  [1,1,1],   None,    None,  None,    False,    3,     3,   0,    True, ),
-        (7,    [[0,0,0],[0],[0,0]],   None,  [1,1,1],   False,   None,  None,    False,    3,     3,   0,    False,),
-        (8,    [[0,0],[0,0],[0,0]],   None,  [1,2,0],   None,    None,  None,    False,    3,     2,   1,    False,),
-        (9,    [[0,1],[0,0],[0,0]],   None,  [1,2,0],   None,    None,  None,    [0,1],    3,     2,   1,    False,),
-        (9.1,  [[0,1],[0,0,0],[0,0]], None,  [1,2,0],   None,    None,  None,    [0,1],    3,     2,   1,    False,),
-        (10,   [[0,1],[0,0,0],[0,0]],   .1,  [1,2,0],   None,    None,  None,    [0,1],    3,     2,   1,    False,),
-        (11,   [[0,0],[0,0,0],[0,0]],   .1,  [1,2,0],   None,    None,  None,    False,    3,     2,   1,    False,),
+        #   memory_template       memory_fill   field_wts cncat_ky nmlze sm_gain   repeat  #fields #keys #vals  concat
+        (0,    (2,3),                  None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        (0.1,  (2,3),                   .1,       None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        (0.2,  (2,3),                 (0,.1),     None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        (1,    [[0,0],[0,0]],          None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        (2,    [[0,0],[0,0],[0,0]],    None,      None,    None,    None,  None,    False,    3,     2,   1,    True,),
+        (2.1,  [[0,0],[0,0],[0,0]],    None,      None,    None,    None,   1.5,    False,    3,     2,   1,    True,),
+        (2.2,  [[0,0],[0,0],[0,0]],    None,      None,    None,    None, CONTROL,  False,    3,     2,   1,    True,),
+        (3,    [[0,0,0],[0,0]],        None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        (4,    [[0,0,0],[0],[0,0]],    None,      None,    None,    None,  None,    False,    3,     2,   1,    True,),
+        (5,    [[0,0],[0,0],[0,0]],    None,       1,      None,    None,  None,    False,    3,     3,   0,    True,),
+        (5.1,  [[0,0],[0,0],[0,0]],    None,       1,      None,    None,   0.1,    False,    3,     3,   0,    True,),
+        (5.2,  [[0,0],[0,0],[0,0]],    None,       1,      None,    None, CONTROL,  False,    3,     3,   0,    True,),
+        (6,    [[0,0,0],[0],[0,0]],    None,    [1,1,1],   None,    None,  None,    False,    3,     3,   0,    True,),
+        (7,    [[0,0,0],[0],[0,0]],    None,    [1,1,1],   False,   None,  None,    False,    3,     3,   0,    False,),
+        (8,    [[0,0],[0,0],[0,0]],    None,    [1,2,0],   None,    None,  None,    False,    3,     2,   1,    False,),
+        (9,    [[0,1],[0,0],[0,0]],    None,    [1,2,0],   None,    None,  None,    [0,1],    3,     2,   1,    False,),
+        (9.1,  [[0,1],[0,0,0],[0,0]],  None,    [1,2,0],   None,    None,  None,    [0,1],    3,     2,   1,    False,),
+        (10,   [[0,1],[0,0,0],[0,0]],    .1,    [1,2,0],   None,    None,  None,    [0,1],    3,     2,   1,    False,),
+        (11,   [[0,0],[0,0,0],[0,0]],    .1,    [1,2,0],   None,    None,  None,    False,    3,     2,   1,    False,),
         (12,   [[[0,1],[0,0,0],[0,0]], # two entries specified, fields have same weights
-                [[0,2],[0,0,0],[0,0]]], .1,  [1,1,0],   None,    None,  None,      2,      3,     2,   1,    True,),
+                [[0,2],[0,0,0],[0,0]]],  .1,     [1,1,0],   None,    None,  None,      2,      3,     2,   1,    True,),
         (13,   [[[0,1],[0,0,0],[0,0]], # two entries specified, fields have same weights, but conccatenate_keys is False
-                [[0,2],[0,0,0],[0,0]]], .1,  [1,1,0],   False,   None,  None,      2,      3,     2,   1,    False),
+                [[0,2],[0,0,0],[0,0]]],  .1,     [1,1,0],   False,   None,  None,      2,      3,     2,   1,    False),
         (14,   [[[0,1],[0,0,0],[0,0]], # two entries specified, all fields are keys
-                [[0,2],[0,0,0],[0,0]]], .1,  [1,1,1],   None,    None,  None,      2,      3,     3,   0,    True),
-        (15,   [[[0,1],[0,0,0],[0,0]], # two entries specified; fields have different weights
-                [[0,2],[0,0,0],[0,0]]], .1,  [1,2,0],   None,    None,  None,      2,      3,     2,   1,    False),
+                [[0,2],[0,0,0],[0,0]]],  .1,     [1,1,1],   None,    None,  None,      2,      3,     3,   0,    True),
+        (15,   [[[0,1],[0,0,0],[0,0]], # two entries specified; fields have different weights, constant memory_fill
+                [[0,2],[0,0,0],[0,0]]],  .1,     [1,2,0],   None,    None,  None,      2,      3,     2,   1,    False),
+        (15.1, [[[0,1],[0,0,0],[0,0]], # two entries specified; fields have different weights, random memory_fill
+                [[0,2],[0,0,0],[0,0]]], (0,.1), [1,2,0],   None,    None,  None,       2,      3,     2,   1,    False),
         (16,   [[[0,1],[0,0,0],[0,0]], # three enrtries specified
                 [[0,2],[0,0,0],[0,0]],
-                [[0,3],[0,0,0],[0,0]]], .1,  [1,2,0],   None,    None,  None,      3,      3,     2,   1,    False),
+                [[0,3],[0,0,0],[0,0]]],  .1,     [1,2,0],   None,    None,  None,      3,      3,     2,   1,    False),
         (17,   [[[0,1],[0,0,0],[0,0]], # all four enrtries allowed by memory_capacity specified
                 [[0,2],[0,0,0],[0,0]],
                 [[0,3],[0,0,0],[0,0]],
-                [[0,4],[0,0,0],[0,0]]], .1,  [1,2,0],   None,    None,  None,      4,      3,     2,   1,    False),
+                [[0,4],[0,0,0],[0,0]]],  .1,     [1,2,0],   None,    None,  None,      4,      3,     2,   1,    False),
     ]
     args_names = "test_num, memory_template, memory_fill, field_weights, concatenate_keys, normalize_memories, " \
                  "softmax_gain, repeat, num_fields, num_keys, num_values, concatenate_node"
@@ -217,47 +221,30 @@ class TestACConstructor:
                 assert em.softmax_control_nodes == []
         assert len(em.retrieval_nodes) == num_fields
 
-        # Validate specified entries and memory_memory_fill
-        # If memory_template is all zeros, ensure that all fields are empty
-        if not repeat and memory_fill:
-            # Random fill
-            if isinstance(memory_fill, tuple):
-                # elem = em.memory[-1][0][0]
-                # assert isinstance(elem, float) and (elem >= memory_fill[0] and elem <= memory_fill[1])
-                for k in range(memory_capacity):
-                    for j in range(num_fields):
-                        for i in range(len(em.memory[k][j])):
-                            elem = em.memory[k][j][i]
+        def test_memory_fill(start, memory_fill):
+            for k in range(start, memory_capacity):
+                for j in range(num_fields):
+                    for i in range(len(em.memory[k][j])):
+                        elem = em.memory[k][j][i]
+                        # Random fill
+                        if isinstance(memory_fill, tuple):
                             assert isinstance(elem, float) and (elem >= memory_fill[0] and elem <= memory_fill[1])
-            # Constant fill
-            else:
-                for k in range(memory_capacity):
-                    for j in range(num_fields):
-                        for i in range(len(em.memory[k][j])):
-                            assert em.memory[k][j][i] == memory_fill
+                        # Constant fill
+                        else:
+                            assert elem == memory_fill
+
+        # Validate specified entries and memory_memory_fill
+        # If memory_template is all zeros, ensure that all fields are filled with zeros or memory_fill
+        if not repeat:
+            test_memory_fill(start=0, memory_fill=memory_fill)
+
         if isinstance(repeat,list):  # Single entry specification and repeat = item repeated for all entries
             for j in range(num_fields):
                 for i in range(len(em.memory[0][j])):
                     np.testing.assert_allclose(em.memory[0][j][i], em.memory[-1][j][i])
             np.testing.assert_allclose(em.memory[-1][0], np.array(repeat,dtype=object).astype(float))
-        elif repeat:  # Multi-entry specification and repeat = number entries; remainder should be memory_fill
-            for k in range(repeat, memory_capacity):
-                for j in range(num_fields):
-                    for i in range(len(em.memory[0][j])):
-                        # All items after number specified should be identical and populated with memory_fill
-                        np.testing.assert_allclose(em.memory[k][j][i], em.memory[-1][j][i])
-            if repeat < memory_capacity:
-                memory_fill = memory_fill or 0
-                # Check that all non-specified entries are populated with memory_fill
-                for entry in em.memory[repeat:]:
-                    for field in entry:
-                        for item in field:
-                            assert item == memory_fill
-                for field in em.memory[-1]:
-                    for item in field:
-                        assert item == memory_fill
-        elif memory_fill:
-            assert em.memory[-1][0][0] == memory_fill
+        elif repeat and repeat < memory_capacity:  # Multi-entry specification and repeat = number entries; remainder
+            test_memory_fill(start=repeat, memory_fill=memory_fill)
 
 
 @pytest.mark.skip(reason="no pytorch representation of EMComposition yet")
