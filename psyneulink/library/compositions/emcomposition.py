@@ -1441,9 +1441,8 @@ class EMComposition(AutodiffComposition):
         """
 
         # FIX: CONSIDER USING THIS FOR INPUT GATING OF MATCH NODE(S)?
-        if self.concatenate_keys:
-            retrieval_gating_nodes = []
-        else:
+        retrieval_gating_nodes = []
+        if not self.concatenate_keys:
             retrieval_gating_nodes = [GatingMechanism(input_ports={PROJECTIONS: key_match_pair[0].output_ports['RESULT'],
                                                                    NAME: 'OUTCOME'},
                                                       gate=[key_match_pair[1].output_ports[1]],

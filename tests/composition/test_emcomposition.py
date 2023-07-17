@@ -114,14 +114,16 @@ class TestACConstructor:
         (11, [[0,0],[0,0,0],[0,0]],   .1,  [1,2,0],     None,      None,    False,     3,     2,   1,    False,  False),
         (12, [[[0,1],[0,0,0],[0,0]],  # two entries specified, fields have same weights
               [[0,2],[0,0,0],[0,0]]], .1,  [1,1,0],     None,      None,      2,       3,     2,   1,    True,   False),
-        (13, [[[0,1],[0,0,0],[0,0]],  # two entries specified, all fields are keys
+        (13, [[[0,1],[0,0,0],[0,0]],  # two entries specified, fields have same weights, but conccatenate_keys is False
+              [[0,2],[0,0,0],[0,0]]], .1,  [1,1,0],     False,      None,      2,       3,     2,   1,    False, False),
+        (14, [[[0,1],[0,0,0],[0,0]],  # two entries specified, all fields are keys
               [[0,2],[0,0,0],[0,0]]], .1,  [1,1,1],     None,      None,      2,       3,     3,   0,    True,   False),
-        (14, [[[0,1],[0,0,0],[0,0]],  # two entries specified; fields have different weights
+        (15, [[[0,1],[0,0,0],[0,0]],  # two entries specified; fields have different weights
               [[0,2],[0,0,0],[0,0]]], .1,  [1,2,0],     None,      None,      2,       3,     2,   1,    False,  False),
-        (15, [[[0,1],[0,0,0],[0,0]],  # three enrtries specified
+        (16, [[[0,1],[0,0,0],[0,0]],  # three enrtries specified
               [[0,2],[0,0,0],[0,0]],
               [[0,3],[0,0,0],[0,0]]], .1,  [1,2,0],     None,      None,      3,       3,     2,   1,    False,  False),
-        (16, [[[0,1],[0,0,0],[0,0]],  # all four enrtries allowed by memory_capacity specified
+        (17, [[[0,1],[0,0,0],[0,0]],  # all four enrtries allowed by memory_capacity specified
               [[0,2],[0,0,0],[0,0]],
               [[0,3],[0,0,0],[0,0]],
               [[0,4],[0,0,0],[0,0]]], .1,  [1,2,0],     None,      None,      4,       3,     2,   1,    False,  False),
@@ -198,7 +200,10 @@ class TestACConstructor:
         assert len(em.key_input_nodes) == num_keys
         assert len(em.value_input_nodes) == num_values
         assert len(em.retrieval_nodes) == num_keys + num_values
-        # assert len(em.retrieval_weighting_nodes) == retrieval_weighting_nodes
+        if concatenate_keys:
+            assert em.retrieval_gating_nodes == []
+        else:
+            assert len(em.retrieval_gating_nodes) == num_keys
         assert len(em.retrieval_nodes) == num_fields
         assert isinstance(em.concatenate_keys_node, Mechanism) == concatenate_node
         # assert em.retrieval_weighting_node == retrieval_weighting_nodes
