@@ -1154,11 +1154,14 @@ class EMComposition(AutodiffComposition):
                 # If there are any non-zero values, keep specified entries and create rest using memory_fill
                 else:
                     num_entries_needed = memory_capacity - len(memory_template)
+                    # Get remaining entries populated with memory_fill
                     remaining_entries = _construct_entries(memory_template[0], num_entries_needed, memory_fill)
                     assert bool(num_entries_needed == len(remaining_entries))
+                    # I any remaining entries, concatenate them with the entries that were specified
                     if num_entries_needed:
                         memory = np.concatenate((np.array(memory_template, dtype=object),
                                                  np.array(remaining_entries, dtype=object)))
+                    # All entries were specivied, so just retun memory_template
                     else:
                         memory = np.array(memory_template, dtype=object)
 
