@@ -121,20 +121,22 @@ class TestACConstructor:
                              ids=[x[0] for x in test_data]
                              )
     @pytest.mark.benchmark
-    def test_memory_template_configurations(self,
-                                            test_num,
-                                            memory_template,
-                                            memory_fill,
-                                            field_weights,
-                                            concatenate_keys,
-                                            normalize_memories,
-                                            repeat,
-                                            num_fields,
-                                            num_keys,
-                                            num_values,
-                                            concatenate_node,
-                                            retrieval_weighting_nodes,
-                                            benchmark):
+    def test_structure(self,
+                       test_num,
+                       memory_template,
+                       memory_fill,
+                       field_weights,
+                       concatenate_keys,
+                       normalize_memories,
+                       repeat,
+                       num_fields,
+                       num_keys,
+                       num_values,
+                       concatenate_node,
+                       retrieval_weighting_nodes,
+                       benchmark):
+        """Note: weight matrices used for memory are validated by using em.memory, since its getter uses thos matrices
+        """
         memory_capacity = 4
         params = {'memory_template': memory_template,
                   'memory_capacity': memory_capacity,
@@ -150,8 +152,13 @@ class TestACConstructor:
 
         em = EMComposition(**params)
 
+        # Validate basic structure
         assert len(em.memory) == memory_capacity
         assert len(em.memory[0]) == num_fields
+        assert len(em.field_weights) == num_fields
+        assert len(em.field_weights) == num_keys + num_fields
+
+        # Validate memory_template
         # If tuple spec, ensure that all fields have the same length
         if isinstance(memory_template, tuple):
             assert all(len(em.memory[j][i]) == memory_template[1]
@@ -168,18 +175,14 @@ class TestACConstructor:
                            for j in range(num_fields) for k in range(memory_capacity))
             # memory_template is multiple entries, so need outer dimension on em.memory for test
             else:
+                # ensure all specified entries have correct number of fields
                 assert all(len(em.memory[k][j]) == len(memory_template[k][j])
                        for j in range(num_fields) for k in range(repeat))
+                # ensure all repeated entries have correct number of fields
                 assert all(len(em.memory[k][j]) == len(memory_template[0][j])
                        for j in range(num_fields) for k in range(repeat,memory_capacity))
-        if not repeat and memory_fill:
-            if isinstance(memory_fill, tuple):  # Random fill
-                elem = em.memory[-1][0][0]
-                assert isinstance(elem, float) and (elem >= memory_fill[0] and elem <= memory_fill[1])
-            else:  # Constant fill
-                assert em.memory[-1][0][0] == memory_fill
-        len(em.field_weights) == num_fields
-        len(em.field_weights) == num_keys + num_fields
+
+        # Validate node structure
         assert len(em.key_input_nodes) == num_keys
         assert len(em.value_input_nodes) == num_values
         assert len(em.retrieval_nodes) == num_keys + num_values
@@ -187,7 +190,25 @@ class TestACConstructor:
         assert len(em.retrieval_nodes) == num_fields
         assert isinstance(em.concatenate_keys_node, Mechanism) == concatenate_node
         # assert em.retrieval_weighting_node == retrieval_weighting_nodes
-        # FIX: ADD assert FOR MATRIX SIZES AND VALUES
+
+        # Validate specified entries and memory_memory_fill
+        # If memory_template is all zeros, ensure that all fields are empty
+        if not repeat and memory_fill:
+            # Random fill
+            if isinstance(memory_fill, tuple):
+                # elem = em.memory[-1][0][0]
+                # assert isinstance(elem, float) and (elem >= memory_fill[0] and elem <= memory_fill[1])
+                for k in range(memory_capacity):
+                    for j in range(num_fields):
+                        for i in range(len(em.memory[k][j])):
+                            elem = em.memory[k][j][i]
+                            assert isinstance(elem, float) and (elem >= memory_fill[0] and elem <= memory_fill[1])
+            # Constant fill
+            else:
+                for k in range(memory_capacity):
+                    for j in range(num_fields):
+                        for i in range(len(em.memory[k][j])):
+                            assert em.memory[k][j][i] == memory_fill
         if isinstance(repeat,list):  # Single entry specification and repeat = item repeated for all entries
             for j in range(num_fields):
                 for i in range(len(em.memory[0][j])):
