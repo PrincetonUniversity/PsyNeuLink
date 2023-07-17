@@ -107,18 +107,21 @@ class TestACConstructor:
         (4,  [[0,0,0],[0],[0,0]],   None,    None,      None,      None,    False,     3,     2,   1,    True,   False),
         (5,  [[0,0],[0,0],[0,0]],   None,     1,        None,      None,    False,     3,     3,   0,    True,   False),
         (6,  [[0,0,0],[0],[0,0]],   None,  [1,1,1],     None,      None,    False,     3,     3,   0,    True,   False),
-        (7,  [[0,0],[0,0],[0,0]],   None,  [1,2,0],     None,      None,    False,     3,     2,   1,    False,  False),
-        (8,  [[0,1],[0,0,0],[0,0]], None,  [1,2,0],     None,      None,    [0,1],     3,     2,   1,    False,  False),
-        (9,  [[0,1],[0,0,0],[0,0]],   .1,  [1,2,0],     None,      None,    [0,1],     3,     2,   1,    False,  False),
-        (10, [[0,0],[0,0,0],[0,0]],   .1,  [1,2,0],     None,      None,    False,     3,     2,   1,    False,  False),
-        (11, [[[0,1],[0,0,0],[0,0]],  # two entries specified, fields have same lengths
+        (7,  [[0,0,0],[0],[0,0]],   None,  [1,1,1],     False,     None,    False,     3,     3,   0,    False,  False),
+        (8,  [[0,0],[0,0],[0,0]],   None,  [1,2,0],     None,      None,    False,     3,     2,   1,    False,  False),
+        (9,  [[0,1],[0,0,0],[0,0]], None,  [1,2,0],     None,      None,    [0,1],     3,     2,   1,    False,  False),
+        (10, [[0,1],[0,0,0],[0,0]],   .1,  [1,2,0],     None,      None,    [0,1],     3,     2,   1,    False,  False),
+        (11, [[0,0],[0,0,0],[0,0]],   .1,  [1,2,0],     None,      None,    False,     3,     2,   1,    False,  False),
+        (12, [[[0,1],[0,0,0],[0,0]],  # two entries specified, fields have same weights
               [[0,2],[0,0,0],[0,0]]], .1,  [1,1,0],     None,      None,      2,       3,     2,   1,    True,   False),
-        (12, [[[0,1],[0,0,0],[0,0]],  # two entries specified; fields have different lengths
+        (13, [[[0,1],[0,0,0],[0,0]],  # two entries specified, all fields are keys
+              [[0,2],[0,0,0],[0,0]]], .1,  [1,1,1],     None,      None,      2,       3,     3,   0,    True,   False),
+        (14, [[[0,1],[0,0,0],[0,0]],  # two entries specified; fields have different weights
               [[0,2],[0,0,0],[0,0]]], .1,  [1,2,0],     None,      None,      2,       3,     2,   1,    False,  False),
-        (13, [[[0,1],[0,0,0],[0,0]],  # three enrtries specified
+        (15, [[[0,1],[0,0,0],[0,0]],  # three enrtries specified
               [[0,2],[0,0,0],[0,0]],
               [[0,3],[0,0,0],[0,0]]], .1,  [1,2,0],     None,      None,      3,       3,     2,   1,    False,  False),
-        (14, [[[0,1],[0,0,0],[0,0]],  # all four enrtries allowed by memory_capacity specified
+        (16, [[[0,1],[0,0,0],[0,0]],  # all four enrtries allowed by memory_capacity specified
               [[0,2],[0,0,0],[0,0]],
               [[0,3],[0,0,0],[0,0]],
               [[0,4],[0,0,0],[0,0]]], .1,  [1,2,0],     None,      None,      4,       3,     2,   1,    False,  False),
