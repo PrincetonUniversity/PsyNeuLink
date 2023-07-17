@@ -50,34 +50,32 @@ class TestACConstructor:
         assert comp.input_CIM.reportOutputPref == ReportOutput.OFF
         assert comp.output_CIM.reportOutputPref == ReportOutput.OFF
 
-# TEST PARAMETERS:
 # memory_template - NUMBER OF ENTRIES AND FORMAT:
 # 1) single entry
-#    - memory_template is tuple
-#    - memory_template is list with zeros and same lengths
-#    - memory_template is list with zeros and different lengths
-#    - memory_template is list with non-zeros and same lengths
-#    - memory_template is np.ndarray with zeros and different lengths
-#    - memory_template is np.ndarray with zeros and same lengths
+#    √ memory_template is tuple - 0
+#    √ memory_template is list with zeros and same lengths - 1, 2.x
+#    √ memory_template is list with zeros and different lengths - 3,4,6,7,11
+#    √ memory_template is list with non-zeros and same lengths - 9
+#    √ memory_template is np.ndarray with zeros and different lengths - 9.1, 10
+#    - memory_template is np.ndarray with zeros and same lengths -
 #    - memory_template is np.ndarray with zeros and different lengths
 # 2) multiple entries
 #    - memory_template is partial entries with zeros and different lengths
-#    - memory_template is partial entries with non-zeros and differnt lengths
-#    - memory_template is full entries with zeros and differnt lengths
-#    - memory_template is full entries with non-zeros and different lengths
+#    √ memory_template is partial entries with non-zeros and different lengths - 13,14,15,16
+#    - memory_template is full entries with zeros and different lengths
+#    - memory_template is full entries with non-zeros and different lengths - 17
 
 # memory_fill
-# 1) single value
-# 2) tuple of values (random)
+# √ single value - 10-17
+# - tuple of values (random)
 
 # field_weights
-# 1) single value
-# 2) multiple values all same
-# 3) multiple values different
+# √ single value - 5.x
+# √ multiple values all same - 6,7,12-14
+# - multiple values different - 8-11, 15-17
 
+# TODO:
 # field names
-
-# concatenate_keys - True/False
 
 # normalize_memory - True/False
 
@@ -99,38 +97,39 @@ class TestACConstructor:
         # memory_template, field_weights, concatenate_keys, normalize_memory, repeat (entries),
         # num_fields, num_keys, num_values, concatenate_node, retrieval_weighting_nodes,
         # ------------------ SPECS -----------------------------------------   ------------ EXPECTED -------------------
-        #   memory_template     memory_fill field_wts cncat_ky nmlze sm_gain   repeat  #fields #keys #vals  concat
-        (0,   (2,3),                 None,    None,    None,    None,  None,    False,    2,     1,   1,    False,),
-        (1,   [[0,0],[0,0]],         None,    None,    None,    None,  None,    False,    2,     1,   1,    False,),
-        (2,   [[0,0],[0,0],[0,0]],   None,    None,    None,    None,  None,    False,    3,     2,   1,    True, ),
-        (2.1, [[0,0],[0,0],[0,0]],   None,    None,    None,    None,   1.5,    False,    3,     2,   1,    True, ),
-        (2.2, [[0,0],[0,0],[0,0]],   None,    None,    None,    None, CONTROL,  False,    3,     2,   1,    True, ),
-        (3,   [[0,0,0],[0,0]],       None,    None,    None,    None,  None,    False,    2,     1,   1,    False,),
-        (4,   [[0,0,0],[0],[0,0]],   None,    None,    None,    None,  None,    False,    3,     2,   1,    True, ),
-        (5,   [[0,0],[0,0],[0,0]],   None,     1,      None,    None,  None,    False,    3,     3,   0,    True, ),
-        (5.1, [[0,0],[0,0],[0,0]],   None,     1,      None,    None,   0.1,    False,    3,     3,   0,    True, ),
-        (5.2, [[0,0],[0,0],[0,0]],   None,     1,      None,    None, CONTROL,  False,    3,     3,   0,    True, ),
-        (6,   [[0,0,0],[0],[0,0]],   None,  [1,1,1],   None,    None,  None,    False,    3,     3,   0,    True, ),
-        (7,   [[0,0,0],[0],[0,0]],   None,  [1,1,1],   False,   None,  None,    False,    3,     3,   0,    False,),
-        (8,   [[0,0],[0,0],[0,0]],   None,  [1,2,0],   None,    None,  None,    False,    3,     2,   1,    False,),
-        (9,   [[0,1],[0,0,0],[0,0]], None,  [1,2,0],   None,    None,  None,    [0,1],    3,     2,   1,    False,),
-        (10,  [[0,1],[0,0,0],[0,0]],   .1,  [1,2,0],   None,    None,  None,    [0,1],    3,     2,   1,    False,),
-        (11,  [[0,0],[0,0,0],[0,0]],   .1,  [1,2,0],   None,    None,  None,    False,    3,     2,   1,    False,),
-        (12,  [[[0,1],[0,0,0],[0,0]],  # two entries specified, fields have same weights
-               [[0,2],[0,0,0],[0,0]]], .1,  [1,1,0],   None,    None,  None,      2,      3,     2,   1,    True,),
-        (13,  [[[0,1],[0,0,0],[0,0]],  # two entries specified, fields have same weights, but conccatenate_keys is False
-               [[0,2],[0,0,0],[0,0]]], .1,  [1,1,0],   False,   None,  None,      2,      3,     2,   1,    False),
-        (14,  [[[0,1],[0,0,0],[0,0]],  # two entries specified, all fields are keys
-               [[0,2],[0,0,0],[0,0]]], .1,  [1,1,1],   None,    None,  None,      2,      3,     3,   0,    True),
-        (15,  [[[0,1],[0,0,0],[0,0]],  # two entries specified; fields have different weights
-               [[0,2],[0,0,0],[0,0]]], .1,  [1,2,0],   None,    None,  None,      2,      3,     2,   1,    False),
-        (16,  [[[0,1],[0,0,0],[0,0]],  # three enrtries specified
-               [[0,2],[0,0,0],[0,0]],
-               [[0,3],[0,0,0],[0,0]]], .1,  [1,2,0],   None,    None,  None,      3,      3,     2,   1,    False),
-        (17,  [[[0,1],[0,0,0],[0,0]],  # all four enrtries allowed by memory_capacity specified
-               [[0,2],[0,0,0],[0,0]],
-               [[0,3],[0,0,0],[0,0]],
-               [[0,4],[0,0,0],[0,0]]], .1,  [1,2,0],   None,    None,  None,      4,      3,     2,   1,    False),
+        #   memory_template      memory_fill field_wts cncat_ky nmlze sm_gain   repeat  #fields #keys #vals  concat
+        (0,    (2,3),                 None,    None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        (1,    [[0,0],[0,0]],         None,    None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        (2,    [[0,0],[0,0],[0,0]],   None,    None,    None,    None,  None,    False,    3,     2,   1,    True, ),
+        (2.1,  [[0,0],[0,0],[0,0]],   None,    None,    None,    None,   1.5,    False,    3,     2,   1,    True, ),
+        (2.2,  [[0,0],[0,0],[0,0]],   None,    None,    None,    None, CONTROL,  False,    3,     2,   1,    True, ),
+        (3,    [[0,0,0],[0,0]],       None,    None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        (4,    [[0,0,0],[0],[0,0]],   None,    None,    None,    None,  None,    False,    3,     2,   1,    True, ),
+        (5,    [[0,0],[0,0],[0,0]],   None,     1,      None,    None,  None,    False,    3,     3,   0,    True, ),
+        (5.1,  [[0,0],[0,0],[0,0]],   None,     1,      None,    None,   0.1,    False,    3,     3,   0,    True, ),
+        (5.2,  [[0,0],[0,0],[0,0]],   None,     1,      None,    None, CONTROL,  False,    3,     3,   0,    True, ),
+        (6,    [[0,0,0],[0],[0,0]],   None,  [1,1,1],   None,    None,  None,    False,    3,     3,   0,    True, ),
+        (7,    [[0,0,0],[0],[0,0]],   None,  [1,1,1],   False,   None,  None,    False,    3,     3,   0,    False,),
+        (8,    [[0,0],[0,0],[0,0]],   None,  [1,2,0],   None,    None,  None,    False,    3,     2,   1,    False,),
+        (9,    [[0,1],[0,0],[0,0]],   None,  [1,2,0],   None,    None,  None,    [0,1],    3,     2,   1,    False,),
+        (9.1,  [[0,1],[0,0,0],[0,0]], None,  [1,2,0],   None,    None,  None,    [0,1],    3,     2,   1,    False,),
+        (10,   [[0,1],[0,0,0],[0,0]],   .1,  [1,2,0],   None,    None,  None,    [0,1],    3,     2,   1,    False,),
+        (11,   [[0,0],[0,0,0],[0,0]],   .1,  [1,2,0],   None,    None,  None,    False,    3,     2,   1,    False,),
+        (12,   [[[0,1],[0,0,0],[0,0]], # two entries specified, fields have same weights
+                [[0,2],[0,0,0],[0,0]]], .1,  [1,1,0],   None,    None,  None,      2,      3,     2,   1,    True,),
+        (13,   [[[0,1],[0,0,0],[0,0]], # two entries specified, fields have same weights, but conccatenate_keys is False
+                [[0,2],[0,0,0],[0,0]]], .1,  [1,1,0],   False,   None,  None,      2,      3,     2,   1,    False),
+        (14,   [[[0,1],[0,0,0],[0,0]], # two entries specified, all fields are keys
+                [[0,2],[0,0,0],[0,0]]], .1,  [1,1,1],   None,    None,  None,      2,      3,     3,   0,    True),
+        (15,   [[[0,1],[0,0,0],[0,0]], # two entries specified; fields have different weights
+                [[0,2],[0,0,0],[0,0]]], .1,  [1,2,0],   None,    None,  None,      2,      3,     2,   1,    False),
+        (16,   [[[0,1],[0,0,0],[0,0]], # three enrtries specified
+                [[0,2],[0,0,0],[0,0]],
+                [[0,3],[0,0,0],[0,0]]], .1,  [1,2,0],   None,    None,  None,      3,      3,     2,   1,    False),
+        (17,   [[[0,1],[0,0,0],[0,0]], # all four enrtries allowed by memory_capacity specified
+                [[0,2],[0,0,0],[0,0]],
+                [[0,3],[0,0,0],[0,0]],
+                [[0,4],[0,0,0],[0,0]]], .1,  [1,2,0],   None,    None,  None,      4,      3,     2,   1,    False),
     ]
     args_names = "test_num, memory_template, memory_fill, field_weights, concatenate_keys, normalize_memories, " \
                  "softmax_gain, repeat, num_fields, num_keys, num_values, concatenate_node"
