@@ -109,14 +109,16 @@ class TestACConstructor:
         (6,  [[0,0,0],[0],[0,0]],   None,  [1,1,1],     None,      None,    False,     3,     3,   0,    True,   False),
         (7,  [[0,0],[0,0],[0,0]],   None,  [1,2,0],     None,      None,    False,     3,     2,   1,    False,  False),
         (8,  [[0,1],[0,0,0],[0,0]], None,  [1,2,0],     None,      None,    [0,1],     3,     2,   1,    False,  False),
-        (9,  [[0,1],[0,0,0],[0,0]],  .1,   [1,2,0],     None,      None,    [0,1],     3,     2,   1,    False,  False),
-        (10, [[0,0],[0,0,0],[0,0]],  .1,   [1,2,0],     None,      None,    False,     3,     2,   1,    False,  False),
-        (11, [[[0,1],[0,0,0],[0,0]],
+        (9,  [[0,1],[0,0,0],[0,0]],   .1,  [1,2,0],     None,      None,    [0,1],     3,     2,   1,    False,  False),
+        (10, [[0,0],[0,0,0],[0,0]],   .1,  [1,2,0],     None,      None,    False,     3,     2,   1,    False,  False),
+        (11, [[[0,1],[0,0,0],[0,0]],  # two entries specified, fields have same lengths
+              [[0,2],[0,0,0],[0,0]]], .1,  [1,1,0],     None,      None,      2,       3,     2,   1,    True,   False),
+        (12, [[[0,1],[0,0,0],[0,0]],  # two entries specified; fields have different lengths
               [[0,2],[0,0,0],[0,0]]], .1,  [1,2,0],     None,      None,      2,       3,     2,   1,    False,  False),
-        (12, [[[0,1],[0,0,0],[0,0]],
+        (13, [[[0,1],[0,0,0],[0,0]],  # three enrtries specified
               [[0,2],[0,0,0],[0,0]],
               [[0,3],[0,0,0],[0,0]]], .1,  [1,2,0],     None,      None,      3,       3,     2,   1,    False,  False),
-        (13, [[[0,1],[0,0,0],[0,0]],
+        (14, [[[0,1],[0,0,0],[0,0]],  # all four enrtries allowed by memory_capacity specified
               [[0,2],[0,0,0],[0,0]],
               [[0,3],[0,0,0],[0,0]],
               [[0,4],[0,0,0],[0,0]]], .1,  [1,2,0],     None,      None,      4,       3,     2,   1,    False,  False),
