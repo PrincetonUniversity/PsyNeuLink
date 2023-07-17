@@ -100,18 +100,18 @@ class TestACConstructor:
         # num_fields, num_keys, num_values, concatenate_node, retrieval_weighting_nodes,
         # ------------------ SPECS -----------------------------------------   ------------ EXPECTED -------------------
         #  memory_template    memory_fill  field_wts concat_key  normalize  repeat  #field  #key  #val   concat  rtrv_wt
-        # (0,  (2,3),                 None,    None,      None,      None,    False,     2,     1,   1,    False,  False),
-        # (1,  [[0,0],[0,0]],         None,    None,      None,      None,    False,     2,     1,   1,    False,  False),
-        # (2,  [[0,0],[0,0],[0,0]],   None,    None,      None,      None,    False,     3,     2,   1,    True,   False),
-        # (3,  [[0,0,0],[0,0]],       None,    None,      None,      None,    False,     2,     1,   1,    False,  False),
-        # (4,  [[0,0,0],[0],[0,0]],   None,    None,      None,      None,    False,     3,     2,   1,    True,   False),
-        # (5,  [[0,0],[0,0],[0,0]],   None,     1,        None,      None,    False,     3,     3,   0,    True,   False),
-        # (6,  [[0,0,0],[0],[0,0]],   None,  [1,1,1],     None,      None,    False,     3,     3,   0,    True,   False),
-        # (7,  [[0,0],[0,0],[0,0]],   None,  [1,2,0],     None,      None,    False,     3,     2,   1,    False,  False),
+        (0,  (2,3),                 None,    None,      None,      None,    False,     2,     1,   1,    False,  False),
+        (1,  [[0,0],[0,0]],         None,    None,      None,      None,    False,     2,     1,   1,    False,  False),
+        (2,  [[0,0],[0,0],[0,0]],   None,    None,      None,      None,    False,     3,     2,   1,    True,   False),
+        (3,  [[0,0,0],[0,0]],       None,    None,      None,      None,    False,     2,     1,   1,    False,  False),
+        (4,  [[0,0,0],[0],[0,0]],   None,    None,      None,      None,    False,     3,     2,   1,    True,   False),
+        (5,  [[0,0],[0,0],[0,0]],   None,     1,        None,      None,    False,     3,     3,   0,    True,   False),
+        (6,  [[0,0,0],[0],[0,0]],   None,  [1,1,1],     None,      None,    False,     3,     3,   0,    True,   False),
+        (7,  [[0,0],[0,0],[0,0]],   None,  [1,2,0],     None,      None,    False,     3,     2,   1,    False,  False),
         (8,  [[0,1],[0,0,0],[0,0]], None,  [1,2,0],     None,      None,    [0,1],     3,     2,   1,    False,  False),
         (9,  [[0,1],[0,0,0],[0,0]],  .1,   [1,2,0],     None,      None,    [0,1],     3,     2,   1,    False,  False),
-        # (10, [[0,0],[0,0,0],[0,0]],  .1,   [1,2,0],     None,      None,    False,     3,     2,   1,    False,  False)
-        # (11, [[0,0],[0,0,0],[0,0]],  .1,   [1,2,0],     None,      None,      2,     3,     2,   1,    False,  False)
+        (10, [[0,0],[0,0,0],[0,0]],  .1,   [1,2,0],     None,      None,    False,     3,     2,   1,    False,  False),
+        (11, [[0,0],[0,0,0],[0,0]],  .1,   [1,2,0],     None,      None,      2,     3,     2,   1,    False,  False),
     ]
     args_names = "test_num, memory_template, memory_fill, field_weights, concatenate_keys, normalize_memories, repeat,"\
                  " num_fields, num_keys, num_values, concatenate_node, retrieval_weighting_nodes"
@@ -157,11 +157,12 @@ class TestACConstructor:
         else:
             assert all(len(em.memory[j][i]) == len(memory_template[i])
                        for i in range(num_fields) for j in range(memory_capacity))
-        if isinstance(memory_fill, tuple):
-            elem = em.memory[-1][0][0]
-            assert isinstance(elem, float) and (elem >= memory_fill[0] and elem <= memory_fill[1])
-        else:
-            assert em.memory[-1][0][0] == memory_fill
+        if not repeat and memory_fill:
+            if isinstance(memory_fill, tuple):  # Random fill
+                elem = em.memory[-1][0][0]
+                assert isinstance(elem, float) and (elem >= memory_fill[0] and elem <= memory_fill[1])
+            else:  # Constant fill
+                assert em.memory[-1][0][0] == memory_fill
         len(em.field_weights) == num_fields
         len(em.field_weights) == num_keys + num_fields
         assert len(em.key_input_nodes) == num_keys
