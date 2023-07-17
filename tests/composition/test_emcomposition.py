@@ -99,37 +99,37 @@ class TestACConstructor:
         # memory_template, field_weights, concatenate_keys, normalize_memory, repeat (entries),
         # num_fields, num_keys, num_values, concatenate_node, retrieval_weighting_nodes,
         # ------------------ SPECS -----------------------------------------   ------------ EXPECTED -------------------
-        #  memory_template    memory_fill  field_wts concat_key  normalize  repeat  #field  #key  #val   concat  rtrv_wt
-        (0,  (2,3),                 None,    None,      None,      None,    False,     2,     1,   1,    False,  False),
-        (1,  [[0,0],[0,0]],         None,    None,      None,      None,    False,     2,     1,   1,    False,  False),
-        (2,  [[0,0],[0,0],[0,0]],   None,    None,      None,      None,    False,     3,     2,   1,    True,   False),
-        (3,  [[0,0,0],[0,0]],       None,    None,      None,      None,    False,     2,     1,   1,    False,  False),
-        (4,  [[0,0,0],[0],[0,0]],   None,    None,      None,      None,    False,     3,     2,   1,    True,   False),
-        (5,  [[0,0],[0,0],[0,0]],   None,     1,        None,      None,    False,     3,     3,   0,    True,   False),
-        (6,  [[0,0,0],[0],[0,0]],   None,  [1,1,1],     None,      None,    False,     3,     3,   0,    True,   False),
-        (7,  [[0,0,0],[0],[0,0]],   None,  [1,1,1],     False,     None,    False,     3,     3,   0,    False,  False),
-        (8,  [[0,0],[0,0],[0,0]],   None,  [1,2,0],     None,      None,    False,     3,     2,   1,    False,  False),
-        (9,  [[0,1],[0,0,0],[0,0]], None,  [1,2,0],     None,      None,    [0,1],     3,     2,   1,    False,  False),
-        (10, [[0,1],[0,0,0],[0,0]],   .1,  [1,2,0],     None,      None,    [0,1],     3,     2,   1,    False,  False),
-        (11, [[0,0],[0,0,0],[0,0]],   .1,  [1,2,0],     None,      None,    False,     3,     2,   1,    False,  False),
+        #  memory_template    memory_fill  field_wts cncat_ky nmlze sm_gain repeat   #fld  #key  #val   concat  sm_node
+        (0,  (2,3),                 None,    None,    None,    None,  None,  False,    2,     1,   1,    False,  False),
+        (1,  [[0,0],[0,0]],         None,    None,    None,    None,  None,  False,    2,     1,   1,    False,  False),
+        (2,  [[0,0],[0,0],[0,0]],   None,    None,    None,    None,  None,  False,    3,     2,   1,    True,   False),
+        (3,  [[0,0,0],[0,0]],       None,    None,    None,    None,  None,  False,    2,     1,   1,    False,  False),
+        (4,  [[0,0,0],[0],[0,0]],   None,    None,    None,    None,  None,  False,    3,     2,   1,    True,   False),
+        (5,  [[0,0],[0,0],[0,0]],   None,     1,      None,    None,  None,  False,    3,     3,   0,    True,   False),
+        (6,  [[0,0,0],[0],[0,0]],   None,  [1,1,1],   None,    None,  None,  False,    3,     3,   0,    True,   False),
+        (7,  [[0,0,0],[0],[0,0]],   None,  [1,1,1],   False,   None,  None,  False,    3,     3,   0,    False,  False),
+        (8,  [[0,0],[0,0],[0,0]],   None,  [1,2,0],   None,    None,  None,  False,    3,     2,   1,    False,  False),
+        (9,  [[0,1],[0,0,0],[0,0]], None,  [1,2,0],   None,    None,  None,  [0,1],    3,     2,   1,    False,  False),
+        (10, [[0,1],[0,0,0],[0,0]],   .1,  [1,2,0],   None,    None,  None,  [0,1],    3,     2,   1,    False,  False),
+        (11, [[0,0],[0,0,0],[0,0]],   .1,  [1,2,0],   None,    None,  None,  False,    3,     2,   1,    False,  False),
         (12, [[[0,1],[0,0,0],[0,0]],  # two entries specified, fields have same weights
-              [[0,2],[0,0,0],[0,0]]], .1,  [1,1,0],     None,      None,      2,       3,     2,   1,    True,   False),
+              [[0,2],[0,0,0],[0,0]]], .1,  [1,1,0],   None,    None,  None,    2,      3,     2,   1,    True,   False),
         (13, [[[0,1],[0,0,0],[0,0]],  # two entries specified, fields have same weights, but conccatenate_keys is False
-              [[0,2],[0,0,0],[0,0]]], .1,  [1,1,0],     False,      None,      2,       3,     2,   1,    False, False),
+              [[0,2],[0,0,0],[0,0]]], .1,  [1,1,0],   False,   None,  None,    2,      3,     2,   1,    False,  False),
         (14, [[[0,1],[0,0,0],[0,0]],  # two entries specified, all fields are keys
-              [[0,2],[0,0,0],[0,0]]], .1,  [1,1,1],     None,      None,      2,       3,     3,   0,    True,   False),
+              [[0,2],[0,0,0],[0,0]]], .1,  [1,1,1],   None,    None,  None,    2,      3,     3,   0,    True,   False),
         (15, [[[0,1],[0,0,0],[0,0]],  # two entries specified; fields have different weights
-              [[0,2],[0,0,0],[0,0]]], .1,  [1,2,0],     None,      None,      2,       3,     2,   1,    False,  False),
+              [[0,2],[0,0,0],[0,0]]], .1,  [1,2,0],   None,    None,  None,    2,      3,     2,   1,    False,  False),
         (16, [[[0,1],[0,0,0],[0,0]],  # three enrtries specified
               [[0,2],[0,0,0],[0,0]],
-              [[0,3],[0,0,0],[0,0]]], .1,  [1,2,0],     None,      None,      3,       3,     2,   1,    False,  False),
+              [[0,3],[0,0,0],[0,0]]], .1,  [1,2,0],   None,    None,  None,    3,      3,     2,   1,    False,  False),
         (17, [[[0,1],[0,0,0],[0,0]],  # all four enrtries allowed by memory_capacity specified
               [[0,2],[0,0,0],[0,0]],
               [[0,3],[0,0,0],[0,0]],
-              [[0,4],[0,0,0],[0,0]]], .1,  [1,2,0],     None,      None,      4,       3,     2,   1,    False,  False),
+              [[0,4],[0,0,0],[0,0]]], .1,  [1,2,0],   None,    None,  None,    4,      3,     2,   1,    False,  False),
     ]
-    args_names = "test_num, memory_template, memory_fill, field_weights, concatenate_keys, normalize_memories, repeat,"\
-                 " num_fields, num_keys, num_values, concatenate_node, retrieval_weighting_nodes"
+    args_names = "test_num, memory_template, memory_fill, field_weights, concatenate_keys, normalize_memories, " \
+                 "softmax_gain, repeat, num_fields, num_keys, num_values, concatenate_node, sm_node"
     @pytest.mark.parametrize(args_names,
                              test_data,
                              ids=[x[0] for x in test_data]
@@ -142,12 +142,13 @@ class TestACConstructor:
                        field_weights,
                        concatenate_keys,
                        normalize_memories,
+                       softmax_gain,
                        repeat,
                        num_fields,
                        num_keys,
                        num_values,
                        concatenate_node,
-                       retrieval_weighting_nodes,
+                       sm_node,
                        benchmark):
         """Note: weight matrices used for memory are validated by using em.memory, since its getter uses thos matrices
         """
@@ -155,6 +156,7 @@ class TestACConstructor:
         params = {'memory_template': memory_template,
                   'memory_capacity': memory_capacity,
                   }
+        # Add explicit argument specifications (to avoid forcing to None in constructor)
         if memory_fill is not None:
             params.update({'memory_fill': memory_fill})
         if field_weights is not None:
@@ -163,6 +165,8 @@ class TestACConstructor:
             params.update({'concatenate_keys': concatenate_keys})
         if normalize_memories is not None:
             params.update({'normalize_memories': normalize_memories})
+        if softmax_gain is not None:
+            params.update({'softmax_gain': softmax_gain})
 
         em = EMComposition(**params)
 
@@ -200,7 +204,7 @@ class TestACConstructor:
         assert len(em.key_input_nodes) == num_keys
         assert len(em.value_input_nodes) == num_values
         assert len(em.retrieval_nodes) == num_keys + num_values
-        if concatenate_keys:
+        if em.concatenate_keys:
             assert em.retrieval_gating_nodes == []
         else:
             assert len(em.retrieval_gating_nodes) == num_keys
