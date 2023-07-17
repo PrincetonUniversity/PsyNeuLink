@@ -1202,8 +1202,10 @@ class ControlMechanism(ModulatoryMechanism_Base):
             def is_2tuple(o):
                 return isinstance(o, tuple) and len(o) == 2
 
-            if not isinstance(output_ports, list):
-                output_ports = [output_ports]
+            if output_ports is None:
+                return output_ports
+
+            output_ports = convert_to_list(output_ports)
 
             for i in range(len(output_ports)):
                 # handle 2-item tuple
@@ -1242,9 +1244,35 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
             return control_allocation
 
+        def _parse_monitor_for_control(self, monitor_for_control):
+            if monitor_for_control is not None:
+                monitor_for_control = convert_to_list(monitor_for_control)
+
+            return monitor_for_control
+
         def _validate_input_ports(self, input_ports):
             if input_ports is None:
                 return
+
+        def _validate_output_ports(self, control):
+            if control is None:
+                return
+
+            if not isinstance(control, list):
+                return 'should have been converted to a list'
+
+            port_types = self._owner.outputPortTypes
+            for ctl_spec in control:
+                ctl_spec = _parse_port_spec(
+                    port_type=port_types, owner=self._owner, port_spec=ctl_spec
+                )
+                if not (
+                    isinstance(ctl_spec, port_types)
+                    or (
+                        isinstance(ctl_spec, dict) and ctl_spec[PORT_TYPE] == port_types
+                    )
+                ):
+                    return 'invalid port specification'
 
             # FIX 5/28/20:
             # TODO: uncomment this method or remove this block entirely.
@@ -1276,8 +1304,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
                  **kwargs
                  ):
 
-        control = convert_to_list(control) or []
-        monitor_for_control = convert_to_list(monitor_for_control) or []
         self.allow_probes = allow_probes
         self._sim_counts = {}
 
@@ -1286,7 +1312,10 @@ class ControlMechanism(ModulatoryMechanism_Base):
             if MONITOR_FOR_MODULATION in kwargs:
                 args = kwargs.pop(MONITOR_FOR_MODULATION)
                 if args:
-                    monitor_for_control.extend(convert_to_list(args))
+                    try:
+                        monitor_for_control.extend(convert_to_list(args))
+                    except AttributeError:
+                        monitor_for_control = convert_to_list(args)
 
             # Only allow one of CONTROL, MODULATORY_SIGNALS OR CONTROL_SIGNALS to be specified
             # These are synonyms, but allowing several to be specified and trying to combine the specifications
@@ -1346,13 +1375,15 @@ class ControlMechanism(ModulatoryMechanism_Base):
                                                        target_set=target_set,
                                                        context=context)
 
-        if (MONITOR_FOR_CONTROL in target_set
-                and target_set[MONITOR_FOR_CONTROL] is not None
-                and any(item for item in target_set[MONITOR_FOR_CONTROL]
-                        if (isinstance(item, ObjectiveMechanism) or item is ObjectiveMechanism))):
-            raise ControlMechanismError(f"The '{MONITOR_FOR_CONTROL}' arg of '{self.name}' contains a specification for"
-                                        f" an {ObjectiveMechanism.componentType} ({target_set[MONITOR_FOR_CONTROL]}).  "
-                                        f"This should be specified in its '{OBJECTIVE_MECHANISM}' argument.")
+        monitor_for_control = self.defaults.monitor_for_control
+        if monitor_for_control is not None:
+            for item in monitor_for_control:
+                if item is ObjectiveMechanism or isinstance(item, ObjectiveMechanism):
+                    raise ControlMechanismError(
+                        f"The '{MONITOR_FOR_CONTROL}' arg of '{self.name}' contains a specification for"
+                        f" an {ObjectiveMechanism.componentType} ({monitor_for_control}).  "
+                        f"This should be specified in its '{OBJECTIVE_MECHANISM}' argument."
+                    )
 
         if (OBJECTIVE_MECHANISM in target_set and
                 target_set[OBJECTIVE_MECHANISM] is not None
@@ -1387,21 +1418,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
                                             f"({target_set[OBJECTIVE_MECHANISM].name}) must be an "
                                             f"{ObjectiveMechanism.componentType} or a list of Mechanisms and/or "
                                             f"OutputPorts to be monitored for control.")
-
-        if CONTROL in target_set and target_set[CONTROL]:
-            control = target_set[CONTROL]
-            self._validate_control_arg(control)
-
-    def _validate_control_arg(self, control):
-        """Treat control arg separately so it can be overridden by subclassses (e.g., GatingMechanism)"""
-        assert isinstance(control, list), \
-            f"PROGRAM ERROR: control arg {control} of {self.name} should have been converted to a list."
-        for ctl_spec in control:
-            ctl_spec = _parse_port_spec(port_type=ControlSignal, owner=self, port_spec=ctl_spec)
-            if not (isinstance(ctl_spec, ControlSignal)
-                    or (isinstance(ctl_spec, dict) and ctl_spec[PORT_TYPE] == ControlSignal)):
-                raise ControlMechanismError(f"Invalid specification for '{CONTROL}' argument of {self.name}:"
-                                            f"({ctl_spec})")
 
     # FIX: 2/11/23 SHOULDN'T THIS BE PUT ON COMPOSITION NOW?
     # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
