@@ -1155,8 +1155,12 @@ class EMComposition(AutodiffComposition):
                 else:
                     num_entries_needed = memory_capacity - len(memory_template)
                     remaining_entries = _construct_entries(memory_template[0], num_entries_needed, memory_fill)
-                    memory = np.concatenate((np.array(memory_template, dtype=object),
-                                             np.array(remaining_entries, dtype=object)))
+                    assert bool(num_entries_needed == len(remaining_entries))
+                    if num_entries_needed:
+                        memory = np.concatenate((np.array(memory_template, dtype=object),
+                                                 np.array(remaining_entries, dtype=object)))
+                    else:
+                        memory = np.array(memory_template, dtype=object)
 
         # Get shape of single entry
         self.entry_template = memory[0]

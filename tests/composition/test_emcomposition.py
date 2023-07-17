@@ -112,7 +112,14 @@ class TestACConstructor:
         (9,  [[0,1],[0,0,0],[0,0]],  .1,   [1,2,0],     None,      None,    [0,1],     3,     2,   1,    False,  False),
         (10, [[0,0],[0,0,0],[0,0]],  .1,   [1,2,0],     None,      None,    False,     3,     2,   1,    False,  False),
         (11, [[[0,1],[0,0,0],[0,0]],
-              [[0,2],[0,0,0],[0,0]]], .1,   [1,2,0],     None,      None,      2,       3,     2,   1,    False, False),
+              [[0,2],[0,0,0],[0,0]]], .1,  [1,2,0],     None,      None,      2,       3,     2,   1,    False,  False),
+        (12, [[[0,1],[0,0,0],[0,0]],
+              [[0,2],[0,0,0],[0,0]],
+              [[0,3],[0,0,0],[0,0]]], .1,  [1,2,0],     None,      None,      3,       3,     2,   1,    False,  False),
+        (13, [[[0,1],[0,0,0],[0,0]],
+              [[0,2],[0,0,0],[0,0]],
+              [[0,3],[0,0,0],[0,0]],
+              [[0,4],[0,0,0],[0,0]]], .1,  [1,2,0],     None,      None,      4,       3,     2,   1,    False,  False),
     ]
     args_names = "test_num, memory_template, memory_fill, field_weights, concatenate_keys, normalize_memories, repeat,"\
                  " num_fields, num_keys, num_values, concatenate_node, retrieval_weighting_nodes"
@@ -156,7 +163,7 @@ class TestACConstructor:
         assert len(em.memory) == memory_capacity
         assert len(em.memory[0]) == num_fields
         assert len(em.field_weights) == num_fields
-        assert len(em.field_weights) == num_keys + num_fields
+        assert len(em.field_weights) == num_keys + num_values
 
         # Validate memory_template
         # If tuple spec, ensure that all fields have the same length
