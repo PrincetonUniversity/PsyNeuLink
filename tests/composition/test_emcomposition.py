@@ -111,7 +111,8 @@ class TestACConstructor:
         (8,  [[0,1],[0,0,0],[0,0]], None,  [1,2,0],     None,      None,    [0,1],     3,     2,   1,    False,  False),
         (9,  [[0,1],[0,0,0],[0,0]],  .1,   [1,2,0],     None,      None,    [0,1],     3,     2,   1,    False,  False),
         (10, [[0,0],[0,0,0],[0,0]],  .1,   [1,2,0],     None,      None,    False,     3,     2,   1,    False,  False),
-        (11, [[0,0],[0,0,0],[0,0]],  .1,   [1,2,0],     None,      None,      2,     3,     2,   1,    False,  False),
+        (11, [[[0,1],[0,0,0],[0,0]],
+              [[0,2],[0,0,0],[0,0]]], .1,   [1,2,0],     None,      None,      2,       3,     2,   1,    False, False),
     ]
     args_names = "test_num, memory_template, memory_fill, field_weights, concatenate_keys, normalize_memories, repeat,"\
                  " num_fields, num_keys, num_values, concatenate_node, retrieval_weighting_nodes"
@@ -151,12 +152,26 @@ class TestACConstructor:
 
         assert len(em.memory) == memory_capacity
         assert len(em.memory[0]) == num_fields
+        # If tuple spec, ensure that all fields have the same length
         if isinstance(memory_template, tuple):
             assert all(len(em.memory[j][i]) == memory_template[1]
                        for i in range(num_fields) for j in range(memory_capacity))
+        # If list or array spec, ensure that all fields have the same length as those in the specified memory_template
         else:
-            assert all(len(em.memory[j][i]) == len(memory_template[i])
+            # memory_template has all zeros, so all fields should be empty
+            if not repeat:
+                assert all(len(em.memory[j][i]) == len(memory_template[i])
                        for i in range(num_fields) for j in range(memory_capacity))
+            # memory_template is a single specified entry:
+            elif repeat and isinstance(repeat, list):
+                assert all(len(em.memory[k][j]) == len(memory_template[j])
+                           for j in range(num_fields) for k in range(memory_capacity))
+            # memory_template is multiple entries, so need outer dimension on em.memory for test
+            else:
+                assert all(len(em.memory[k][j]) == len(memory_template[k][j])
+                       for j in range(num_fields) for k in range(repeat))
+                assert all(len(em.memory[k][j]) == len(memory_template[0][j])
+                       for j in range(num_fields) for k in range(repeat,memory_capacity))
         if not repeat and memory_fill:
             if isinstance(memory_fill, tuple):  # Random fill
                 elem = em.memory[-1][0][0]
@@ -173,13 +188,27 @@ class TestACConstructor:
         assert isinstance(em.concatenate_keys_node, Mechanism) == concatenate_node
         # assert em.retrieval_weighting_node == retrieval_weighting_nodes
         # FIX: ADD assert FOR MATRIX SIZES AND VALUES
-        # FIX: ADD assert FOR memory_fill
-        if isinstance(repeat,list):
-        # if repeat:
+        if isinstance(repeat,list):  # Single entry specification and repeat = item repeated for all entries
             for j in range(num_fields):
                 for i in range(len(em.memory[0][j])):
                     np.testing.assert_allclose(em.memory[0][j][i], em.memory[-1][j][i])
             np.testing.assert_allclose(em.memory[-1][0], np.array(repeat,dtype=object).astype(float))
+        elif repeat:  # Multi-entry specification and repeat = number entries; remainder should be memory_fill
+            for k in range(repeat, memory_capacity):
+                for j in range(num_fields):
+                    for i in range(len(em.memory[0][j])):
+                        # All items after number specified should be identical and populated with memory_fill
+                        np.testing.assert_allclose(em.memory[k][j][i], em.memory[-1][j][i])
+            if repeat < memory_capacity:
+                memory_fill = memory_fill or 0
+                # Check that all non-specified entries are populated with memory_fill
+                for entry in em.memory[repeat:]:
+                    for field in entry:
+                        for item in field:
+                            assert item == memory_fill
+                for field in em.memory[-1]:
+                    for item in field:
+                        assert item == memory_fill
         elif memory_fill:
             assert em.memory[-1][0][0] == memory_fill
 
