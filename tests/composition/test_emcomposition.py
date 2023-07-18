@@ -117,7 +117,11 @@ class TestACConstructor:
         (9.1,  [[0,1],[0,0,0],[0,0]],  None,    [1,2,0],   None,    None,  None,    [0,1],    3,     2,   1,    False,),
         (10,   [[0,1],[0,0,0],[0,0]],    .1,    [1,2,0],   None,    None,  None,    [0,1],    3,     2,   1,    False,),
         (11,   [[0,0],[0,0,0],[0,0]],    .1,    [1,2,0],   None,    None,  None,    False,    3,     2,   1,    False,),
-        (12,   [[[0,1],[0,0,0],[0,0]], # two entries specified, fields have same weights
+        (12,   [[[0,0],[0,0,0],[0,0]], # two entries specified, both have 0's
+                [[0,0],[0,0,0],[0,0]]],  .1,     [1,1,0],   None,    None,  None,      2,      3,     2,   1,    True,),
+        (12.1,  [[[0,0],[0,0,0],[0,0]], # two entries specified, first has 0's
+                [[0,2],[0,0,0],[0,0]]],  .1,     [1,1,0],   None,    None,  None,      2,      3,     2,   1,    True,),
+        (12.2, [[[0,1],[0,0,0],[0,0]], # two entries specified, fields have same weights
                 [[0,2],[0,0,0],[0,0]]],  .1,     [1,1,0],   None,    None,  None,      2,      3,     2,   1,    True,),
         (13,   [[[0,1],[0,0,0],[0,0]], # two entries specified, fields have same weights, but conccatenate_keys is False
                 [[0,2],[0,0,0],[0,0]]],  .1,     [1,1,0],   False,   None,  None,      2,      3,     2,   1,    False),
@@ -222,6 +226,7 @@ class TestACConstructor:
         assert len(em.retrieval_nodes) == num_fields
 
         def test_memory_fill(start, memory_fill):
+            memory_fill = memory_fill or 0
             for k in range(start, memory_capacity):
                 for j in range(num_fields):
                     for i in range(len(em.memory[k][j])):
@@ -245,7 +250,6 @@ class TestACConstructor:
             np.testing.assert_allclose(em.memory[-1][0], np.array(repeat,dtype=object).astype(float))
         elif repeat and repeat < memory_capacity:  # Multi-entry specification and repeat = number entries; remainder
             test_memory_fill(start=repeat, memory_fill=memory_fill)
-
 
 @pytest.mark.skip(reason="no pytorch representation of EMComposition yet")
 @pytest.mark.pytorch
