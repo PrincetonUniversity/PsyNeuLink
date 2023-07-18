@@ -279,10 +279,8 @@ class TestExecution:
                            )
 
         np.testing.assert_equal(np.array(em.memory_template), np.array(stimuli))
-        retrieved = em.run(inputs={em.key_input_nodes[0]:[[[1, 2, 3]]],
-                                   # em.key_input_nodes[1]:[[[4, 5, 10]]]
-                                   })
-        np.testing.assert_allclose(retrieved,[[4., 5., 6.16540637],[1., 2., 3.16585899]])
+        retrieved = em.run(inputs={em.key_input_nodes[0]:[[[1, 2, 3]]]})
+        np.testing.assert_allclose(retrieved,[[1., 2., 3.16585899],[4., 5., 6.16540637]])
 
         # # Test with 0 as field weight
         # em.field_weights=[1,0]

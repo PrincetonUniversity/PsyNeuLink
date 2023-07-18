@@ -1049,15 +1049,9 @@ class EMComposition(AutodiffComposition):
         self._set_learnability_of_projections()
 
         # Warn if divide by zero will occur due to memory initialization
-        # # MODIFIED 7/16/23 OLD:
-        # if not np.any([np.any([self.memory[i][0][j]
-        #                        for i in range(self.memory_capacity)])
-        #                for j in range(self.num_keys)]):
-        # MODIFIED 7/16/23 NEW:
         if not np.any([np.any([self.memory[i][j]
                                for i in range(self.memory_capacity)])
                        for j in range(self.num_keys)]):
-        # MODIFIED 7/16/23 END
             warnings.warn(f"Memory initialized with at least one field that has all zeros; "
                           f"a divide by zero will occur if 'normalize_memories' is True. "
                           f"This can be avoided by using 'memory_fill' to initialize memories with non-zero values.")
@@ -1255,20 +1249,10 @@ class EMComposition(AutodiffComposition):
     def _parse_memory_shape(self, memory_template):
         """Parse shape of memory_template to determine number of entries and fields"""
         memory_template_dim = np.array(memory_template, dtype=object).ndim
-        # # MODIFIED 7/16/23 OLD:
-        # if memory_template_dim == 1:
-        #     fields_equal_length = all(len(field) == len(memory_template[0]) for field in memory_template)
-        # else:
-        #     if isinstance(memory_template[0], (int, float)):
-        #         fields_equal_length = all(len(field) == len(memory_template[0]) for field in memory_template)
-        #     else:
-        #         fields_equal_length = all(len(field) == len(memory_template[0]) for field in memory_template[0])
-        # MODIFIED 7/16/23 NEW:
         if memory_template_dim == 1 or all(isinstance(item, (int, float)) for item in memory_template[0]):
             fields_equal_length = all(len(field) == len(memory_template[0]) for field in memory_template)
         else:
             fields_equal_length = all(len(field) == len(memory_template[0]) for field in memory_template[0])
-        # MODIFIED 7/16/23 END
 
         single_entry = (((memory_template_dim == 1) and not fields_equal_length) or
                         ((memory_template_dim == 2)  and fields_equal_length))
@@ -1297,6 +1281,7 @@ class EMComposition(AutodiffComposition):
         # self.storage_nodes = self._construct_storage_nodes()
 
         # Construct pathway as a set of nodes, since Projections are specified in the construction of each node
+        #  (and specifying INPUT or OUTPUT Nodes in a list would cause them to be interpreted as linear pathways)
         pathway = set(self.key_input_nodes + self.value_input_nodes
                       + self.match_nodes + self.softmax_control_nodes + self.softmax_nodes \
                       + [self.retrieval_weighting_node] + self.retrieval_gating_nodes + self.retrieval_nodes)
@@ -1593,8 +1578,15 @@ class EMComposition(AutodiffComposition):
             memories[idx_of_min] = np.array(memory)
             self.retrieval_nodes[i].path_afferents[0].parameters.matrix.set(memories, context)
             
-    # def run(self):
-    #     raise EMCompositionError(f"EMComposition can be constructed, but 'run' method not yet working")
-
     def learn(self):
         raise EMCompositionError(f"EMComposition can be constructed, but 'learn' method not yet working")
+
+    def get_output_values(self, context=None):
+        """Override to provide ordering of retrieval_nodes that matches order of inputs.
+        This is needed since nodes were constructed as sets
+        """
+        return [retrieval_node.output_port.parameters.value.get(context)
+                for retrieval_node in self.retrieval_nodes
+                if (not self.output_CIM._sender_is_probe(self.output_CIM.port_map[retrieval_node.output_port][1])
+                    or self.include_probes_in_output)]
+
