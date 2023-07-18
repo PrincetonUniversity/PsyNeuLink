@@ -1577,7 +1577,7 @@ class EMComposition(AutodiffComposition):
             self.retrieval_nodes[i].path_afferents[0].parameters.matrix.set(memories, context)
             
     def run(self):
-        raise EMCompositionError(f"'run' method of EMComposition not yet working")
+        raise EMCompositionError(f"EMComposition can be constructed, but 'run' method not yet working")
 
     def learn(self):
-        raise EMCompositionError(f"'learn' method of EMComposition not yet working")
+        raise EMCompositionError(f"EMComposition can be constructed, but 'learn' method not yet working")
