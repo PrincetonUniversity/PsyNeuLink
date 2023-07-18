@@ -18,6 +18,9 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.library.compositions.emcomposition import EMComposition, EMCompositionError
 from psyneulink.core.compositions.report import ReportOutput
 
+module_seed = 0
+np.random.seed(0)
+
 logger = logging.getLogger(__name__)
 
 
@@ -96,12 +99,13 @@ class TestACConstructor:
     test_data = [
         # memory_template, field_weights, concatenate_keys, normalize_memory, repeat (entries),
         # num_fields, num_keys, num_values, concatenate_node, retrieval_weighting_nodes,
-        # ------------------ SPECS -----------------------------------------   ------------ EXPECTED -------------------
+        # ------------------ SPECS ---------------------------------------------   ------- EXPECTED -------------------
         #   memory_template       memory_fill   field_wts cncat_ky nmlze sm_gain   repeat  #fields #keys #vals  concat
         (0,    (2,3),                  None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
         (0.1,  (2,3),                   .1,       None,    None,    None,  None,    False,    2,     1,   1,    False,),
         (0.2,  (2,3),                 (0,.1),     None,    None,    None,  None,    False,    2,     1,   1,    False,),
         (1,    [[0,0],[0,0]],          None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        (1.1,  [[0,0],[0,0]],          None,      [1,1],   None,    None,  None,    False,    2,     2,   0,    True,),
         (2,    [[0,0],[0,0],[0,0]],    None,      None,    None,    None,  None,    False,    3,     2,   1,    True,),
         (2.1,  [[0,0],[0,0],[0,0]],    None,      None,    None,    None,   1.5,    False,    3,     2,   1,    True,),
         (2.2,  [[0,0],[0,0],[0,0]],    None,      None,    None,    None, CONTROL,  False,    3,     2,   1,    True,),
@@ -112,16 +116,20 @@ class TestACConstructor:
         (5.2,  [[0,0],[0,0],[0,0]],    None,       1,      None,    None, CONTROL,  False,    3,     3,   0,    True,),
         (6,    [[0,0,0],[0],[0,0]],    None,    [1,1,1],   None,    None,  None,    False,    3,     3,   0,    True,),
         (7,    [[0,0,0],[0],[0,0]],    None,    [1,1,1],   False,   None,  None,    False,    3,     3,   0,    False,),
+        (7.1,  [[0,0,0],[0],[0,0]],    None,    [1,1,1],   True ,   False, None,    False,    3,     3,   0,    False,),
         (8,    [[0,0],[0,0],[0,0]],    None,    [1,2,0],   None,    None,  None,    False,    3,     2,   1,    False,),
+        (8.1,  [[0,0],[0,0],[0,0]],    None,    [1,2,0],   True,    None,  None,    False,    3,     2,   1,    False,),
         (9,    [[0,1],[0,0],[0,0]],    None,    [1,2,0],   None,    None,  None,    [0,1],    3,     2,   1,    False,),
         (9.1,  [[0,1],[0,0,0],[0,0]],  None,    [1,2,0],   None,    None,  None,    [0,1],    3,     2,   1,    False,),
         (10,   [[0,1],[0,0,0],[0,0]],    .1,    [1,2,0],   None,    None,  None,    [0,1],    3,     2,   1,    False,),
         (11,   [[0,0],[0,0,0],[0,0]],    .1,    [1,2,0],   None,    None,  None,    False,    3,     2,   1,    False,),
-        (12,   [[[0,0],[0,0,0],[0,0]], # two entries specified, both have 0's
+        (12,   [[[0,0],[0,0],[0,0]],   # two entries specified, fields all same length, both entries have all 0's
+                [[0,0],[0,0],[0,0]]],    .1,    [1,1,1],   None,    None,  None,      2,      3,     3,   0,    True,),
+        (12.1, [[[0,0],[0,0,0],[0,0]], # two entries specified, fields have different lenghts, entries all have 0's
                 [[0,0],[0,0,0],[0,0]]],  .1,    [1,1,0],   None,    None,  None,      2,      3,     2,   1,    True,),
-        (12.1,  [[[0,0],[0,0,0],[0,0]], # two entries specified, first has 0's
+        (12.2,  [[[0,0],[0,0,0],[0,0]], # two entries specified, first has 0's
                 [[0,2],[0,0,0],[0,0]]],  .1,    [1,1,0],   None,    None,  None,      2,      3,     2,   1,    True,),
-        (12.2, [[[0,1],[0,0,0],[0,0]], # two entries specified, fields have same weights
+        (12.3, [[[0,1],[0,0,0],[0,0]], # two entries specified, fields have same weights
                 [[0,2],[0,0,0],[0,0]]],  .1,    [1,1,0],   None,    None,  None,      2,      3,     2,   1,    True,),
         (13,   [[[0,1],[0,0,0],[0,0]], # two entries specified, fields have same weights, but conccatenate_keys is False
                 [[0,2],[0,0,0],[0,0]]],  .1,    [1,1,0],   False,   None,  None,      2,      3,     2,   1,    False),
@@ -250,6 +258,383 @@ class TestACConstructor:
             np.testing.assert_allclose(em.memory[-1][0], np.array(repeat,dtype=object).astype(float))
         elif repeat and repeat < memory_capacity:  # Multi-entry specification and repeat = number entries; remainder
             test_memory_fill(start=repeat, memory_fill=memory_fill)
+
+
+class TestExecution:
+
+    # FIX: PARAMETERIZE FIELD WEIGHTS AND RETRIEVED VALUE
+    def test_simple_retrieval_from_initialized_memories(self):
+
+        stimuli = [[[1,2,3],[4,5,6]],
+                   [[1,2,5],[4,5,8]],
+                   [[1,2,10],[4,5,10]]
+                   ]
+
+        c = EMComposition(
+            memory_template=stimuli,
+            field_weights=[1,0],
+            storage_prob=0,
+            memory_capacity=3
+            # seed=module_seed,
+        )
+
+        # Test distance (for retrieved item) and distances_by_field
+        # retrieved = c.run(inputs={c.key_input_nodes[0]:[[[1, 2, 4]]],
+        #                           c.key_input_nodes[1]:[[[4, 5, 9]]]
+        #                           })
+        # np.testing.assert_allclose(retrieved,[[4.,5.,7.97238032], [1.,2.,5.94103853]], atol=1e-08)
+
+        retrieved = c.run(inputs={c.key_input_nodes[0]:[[[1, 2, 3]]],
+                                  # c.key_input_nodes[1]:[[[4, 5, 10]]]
+                                  })
+        np.testing.assert_equal(retrieved, [[1, 2, 3], [4, 5, 6]])
+
+
+        # Test with 0 as field weight
+        c.field_weights=[1,0]
+        retrieved = c([[1, 2, 3], [4, 5, 10]])
+        np.testing.assert_equal(retrieved, [[1, 2, 3], [4, 5, 6]])
+        assert c.distances_by_field == [0.0, 0.0]
+
+        c.distance_field_weights=[0,1]
+        retrieved = c([[1, 2, 3], [4, 5, 10]])
+        np.testing.assert_equal(retrieved, [[1, 2, 10], [4, 5, 10]])
+        assert c.distances_by_field == [0.0, 0.0]
+
+        # Test with None as field weight
+        c.distance_field_weights=[None,1]
+        retrieved = c([[1, 2, 3], [4, 5, 10]])
+        np.testing.assert_equal(retrieved, [[1, 2, 10], [4, 5, 10]])
+        assert c.distances_by_field == [None, 0.0]
+
+        c.distance_field_weights=[1, None]
+        retrieved = c([[1, 2, 3], [4, 5, 10]])
+        np.testing.assert_equal(retrieved, [[1, 2, 3], [4, 5, 6]])
+        assert c.distances_by_field == [0.0, None]
+
+        # Test with [] as field weight
+        c.distance_field_weights=[[],1]
+        retrieved = c([[1, 2, 3], [4, 5, 10]])
+        np.testing.assert_equal(retrieved, [[1, 2, 10], [4, 5, 10]])
+        assert c.distances_by_field == [None, 0.0]
+
+        c.distance_field_weights=[1, []]
+        retrieved = c([[1, 2, 3], [4, 5, 10]])
+        np.testing.assert_equal(retrieved, [[1, 2, 3], [4, 5, 6]])
+        assert c.distances_by_field == [0.0, None]
+
+    # FIX: COULD CONDENSE THESE TESTS BY PARAMETERIZING FIELD-WEIGHTS AND ALSO INCLUDE DISTANCE METRIC AS A PARAM
+    def test_parametric_distances(self):
+
+        stimuli = np.array([[[1,2,3],[4,5,6]],
+                            [[7,8,9],[10,11,12]],
+                            [[13,14,15],[16,17,18]]])
+
+        c = EMComposition(
+            initializer=stimuli,
+            storage_prob=0,
+            distance_function=Distance(metric=COSINE),
+            seed=module_seed,
+        )
+
+        pairs = list(combinations(range(0,3),2))
+        # Distances between all stimuli
+        distances = [Distance(metric=COSINE)([stimuli[i],stimuli[j]]) for i, j in pairs]
+        c_distances = []
+        # for i,j in pairs:
+
+        # Test distances with evenly weighted fields
+        retrieved = c(stimuli[0])
+        np.testing.assert_equal(retrieved, stimuli[0])
+        np.testing.assert_allclose(c.distances_to_entries, [0, distances[0], distances[1]], rtol=1e-5, atol=1e-8)
+
+        retrieved = c(stimuli[1])
+        np.testing.assert_equal(retrieved, stimuli[1])
+        np.testing.assert_allclose(c.distances_to_entries, [distances[0], 0, distances[2]], rtol=1e-5, atol=1e-8)
+
+        retrieved = c(stimuli[2])
+        np.testing.assert_equal(retrieved, stimuli[2])
+        np.testing.assert_allclose(c.distances_to_entries, [distances[1], distances[2], 0], rtol=1e-5, atol=1e-8)
+
+        # Test distances using distance_field_weights
+        field_weights = [np.array([[1],[0]]), np.array([[0],[1]])]
+        for fw in field_weights:
+            c.distance_field_weights = fw
+            distances = []
+            for k in range(2):
+                if fw[k]:
+                    distances.append([Distance(metric=COSINE)([stimuli[i][k], stimuli[j][k]]) * fw[k]
+                                      for i, j in pairs])
+            distances = np.array(distances)
+            distances = np.squeeze(np.sum(distances, axis=0) / len([f for f in fw if f]))
+
+            retrieved = c(stimuli[0])
+            np.testing.assert_equal(retrieved, stimuli[0])
+            np.testing.assert_allclose(c.distances_to_entries, [0, distances[0], distances[1]], rtol=1e-5, atol=1e-8)
+
+            retrieved = c(stimuli[1])
+            np.testing.assert_equal(retrieved, stimuli[1])
+            np.testing.assert_allclose(c.distances_to_entries, [distances[0], 0, distances[2]], rtol=1e-5, atol=1e-8)
+
+            retrieved = c(stimuli[2])
+            np.testing.assert_equal(retrieved, stimuli[2])
+            np.testing.assert_allclose(c.distances_to_entries, [distances[1], distances[2], 0], rtol=1e-5, atol=1e-8)
+
+        # Test distances_by_fields
+        c.distance_field_weights=[1,1]
+        stim = [[8,9,10],[11,12,13]]
+        retrieved = c(stim)
+        np.testing.assert_equal(retrieved, [[7, 8, 9], [10, 11, 12]])
+        distances_by_field = [Distance(metric=COSINE)([retrieved[i], stim[i]]) for i in range(2)]
+        np.testing.assert_equal(c.distances_by_field, distances_by_field)
+
+    # Test of EMComposition without LLVM:
+    def test_with_initializer_and_equal_field_sizes(self):
+
+        stimuli = {'A': [[1,2,3],[4,5,6]],
+                   'B': [[8,9,10],[11,12,13]],
+                   'C': [[1,2,3],[11,12,13]],
+                   'D': [[1,2,3],[21,22,23]],
+                   'E': [[9,8,4],[11,12,13]],
+                   'F': [[10,10,30],[40,50,60]],
+                   }
+
+        c = EMComposition(
+            seed=2,
+            initializer=np.array([stimuli['F'], stimuli['F']], dtype=object),
+            distance_function=Distance(metric=COSINE),
+            duplicate_entries_allowed=True,
+            equidistant_entries_select=RANDOM
+        )
+
+        retrieved_labels=[]
+        sorted_labels = sorted(stimuli.keys())
+        for label in sorted_labels:
+            retrieved = [i for i in c(stimuli[label])]
+            # Get label of retrieved item
+            retrieved_label = retrieve_label_helper(retrieved, stimuli)
+            # Get distances of retrieved entry to all other entries and assert it has the minimum distance
+            distances = [Distance(metric=COSINE)([retrieved,stimuli[k]]) for k in sorted_labels]
+            min_idx = distances.index(min(distances))
+            assert retrieved_label == [sorted_labels[min_idx]]
+            retrieved_labels.append(retrieved_label)
+        assert retrieved_labels == [['F'], ['A'], ['F'], ['C'], ['B'], ['F']]
+
+        # Run again to test re-initialization and random retrieval
+        c.reset(np.array([stimuli['A'], stimuli['F']], dtype=object))
+        retrieved_labels=[]
+        for label in sorted(stimuli.keys()):
+            retrieved = [i for i in c(stimuli[label])]
+            retrieved_label = retrieve_label_helper(retrieved, stimuli)
+            # Get distances of retrieved entry to all other entries and assert it has the minimum distance
+            distances = [Distance(metric=COSINE)([retrieved,stimuli[k]]) for k in sorted_labels]
+            min_idx = distances.index(min(distances))
+            assert retrieved_label == [sorted_labels[min_idx]]
+            retrieved_labels.append(retrieved_label)
+            Distance(metric=COSINE)([retrieved,stimuli['A']])
+        assert retrieved_labels == [['A'], ['A'], ['F'], ['C'], ['B'], ['F']]
+
+        # Test  restricting retrieval to only 1st field (which has duplicate values) and selecting for OLDEST
+        c.distance_field_weights = [1,0]
+        stim = 'C' # Has same 1st field as A (older) and D (newer)
+
+        c.equidistant_entries_select = OLDEST  # Should return A
+        retrieved = c.get_memory(stimuli[stim])
+        retrieved_label = [k for k, v in stimuli.items()
+                           if np.all([vi == retrieved[i] for i, vi in enumerate(v)])] or [None]
+        assert retrieved_label == ['A']
+
+        c.equidistant_entries_select = NEWEST  # Should return D
+        retrieved = c.get_memory(stimuli[stim])
+        retrieved_label = retrieve_label_helper(retrieved, stimuli)
+        assert retrieved_label == ['D']
+
+        # Test that after allowing dups and now disallowing them, warning is issued and memory with zeros is returned
+        c.duplicate_entries_allowed = False
+        stim = 'A'
+        text = "More than one entry matched cue"
+        with pytest.warns(UserWarning, match=text):
+            retrieved = c(stimuli[stim])
+        retrieved_label = retrieve_label_helper(retrieved, stimuli)
+        assert retrieved_label == [None]
+        np.testing.assert_equal(retrieved, [[0, 0, 0], [0, 0, 0]])
+
+    def test_with_initializer_and_diff_field_sizes(self):
+
+        stimuli = {'A': np.array([[1.,2.,3.],[4.,5.,6.,7.]], dtype=object),
+                   'B': np.array([[8.,9.,10.],[11.,12.,13.,14.]], dtype=object),
+                   'C': np.array([[1.,2.,3.],[11.,12.,13.,14.]], dtype=object),
+                   'D': np.array([[1.,2.,3.],[21.,22.,23.,24.]], dtype=object),
+                   'E': np.array([[9.,8.,4.],[11.,12.,13.,14.]], dtype=object),
+                   'F': np.array([[10.,10.,30.],[40.,50.,60.,70.]], dtype=object),
+                   }
+
+        c = EMComposition(
+            initializer=np.array([stimuli['F'], stimuli['F']], dtype=object),
+            duplicate_entries_allowed=True,
+            equidistant_entries_select=RANDOM,
+            seed=module_seed,
+        )
+
+        # Run again to test re-initialization and random retrieval
+        c.reset(np.array([stimuli['A'], stimuli['F']], dtype=object))
+        retrieved_labels=[]
+        for key in sorted(stimuli.keys()):
+            retrieved = c(stimuli[key])
+            retrieved_label = retrieve_label_helper(retrieved, stimuli)
+            retrieved_labels.append(retrieved_label)
+        assert retrieved_labels == [['A'], ['A'], ['F'], ['C'], ['B'], ['F']]
+
+        c.distance_field_weights = [1,0]
+        stim = 'C'
+        c.equidistant_entries_select = OLDEST
+        retrieved = c.get_memory(stimuli[stim])
+        retrieved_label = retrieve_label_helper(retrieved, stimuli)
+        retrieved_labels.append(retrieved_label)
+        assert retrieved_label == ['A']
+
+        c.equidistant_entries_select = NEWEST
+        retrieved = c.get_memory(stimuli[stim])
+        retrieved_label = retrieve_label_helper(retrieved, stimuli)
+        assert retrieved_label == ['D']
+
+        # Test that after allowing dups, warning is issued and memory with zeros is returned
+        c.duplicate_entries_allowed = False
+        stim = 'A'
+
+        text = r'More than one entry matched cue'
+        with pytest.warns(UserWarning, match=text):
+            retrieved = c(stimuli[stim])
+
+        retrieved_label = retrieve_label_helper(retrieved, stimuli)
+        assert retrieved_label == [None]
+
+        expected = convert_all_elements_to_np_array([[0, 0, 0], [0, 0, 0, 0]])
+
+        # There's no np.testing function that handles the rugged arrays correctly
+        assert len(retrieved) == len(expected)
+        for m, e in zip(retrieved, expected):
+            assert len(m) == len(e)
+            for x, y in zip(m, e):
+                np.testing.assert_array_equal(x, y)
+
+    def test_without_initializer_and_equal_field_sizes(self):
+
+        stimuli = {'A': [[1,2,3],[4,5,6]],
+                   'B': [[8,9,10],[11,12,13]],
+                   'C': [[1,2,3],[11,12,13]],
+                   'D': [[1,2,3],[21,22,23]],
+                   'E': [[9,8,4],[11,12,13]],
+                   'F': [[10,10,30],[40,50,60]],
+                   }
+
+        c = EMComposition(
+            distance_function=Distance(metric=COSINE),
+            duplicate_entries_allowed=True,
+            equidistant_entries_select=RANDOM,
+            seed=module_seed,
+        )
+
+        retrieved_labels=[]
+        sorted_labels = sorted(stimuli.keys())
+        for label in sorted_labels:
+            retrieved = [i for i in c(stimuli[label])]
+            retrieved_label = retrieve_label_helper(retrieved, stimuli)
+            retrieved_labels.append(retrieved_label)
+        assert retrieved_labels == [[None], ['A'], ['A'], ['C'], ['B'], ['A']]
+
+        stim = 'C'
+        c.distance_field_weights = [1,0]
+        c.equidistant_entries_select = OLDEST
+        retrieved = [i for i in c.get_memory(stimuli[stim])]
+        retrieved_label = retrieve_label_helper(retrieved, stimuli)
+        assert retrieved_label == ['A']
+
+        c.equidistant_entries_select = NEWEST
+        retrieved = [i for i in c.get_memory(stimuli[stim])]
+        retrieved_label = retrieve_label_helper(retrieved, stimuli)
+        assert retrieved_label == ['D']
+
+        # Test that after allowing dups, warning is issued and memory with zeros is returned
+        c.duplicate_entries_allowed = False
+        stim = 'A'
+
+        text = "More than one entry matched cue"
+        with pytest.warns(UserWarning, match=text):
+            retrieved = c.execute(stimuli[stim])
+
+        retrieved_label = retrieve_label_helper(retrieved, stimuli)
+        assert retrieved_label == [None]
+        expected = np.array([np.array([0,0,0]),np.array([0,0,0])])
+        assert all(np.alltrue(x) for x in np.equal(expected,retrieved, dtype=object))
+
+    def test_without_initializer_and_diff_field_sizes(self):
+
+        stimuli = {'A': np.array([[1,2,3],[4,5,6,7]], dtype=object),
+                   'B': np.array([[8,9,10],[11,12,13,14]], dtype=object),
+                   'C': np.array([[1,2,3],[11,12,13,14]], dtype=object),
+                   'D': np.array([[1,2,3],[21,22,23,24]], dtype=object),
+                   'E': np.array([[9,8,4],[11,12,13,14]], dtype=object),
+                   'F': np.array([[10,10,30],[40,50,60,70]], dtype=object),
+                   }
+
+        c = EMComposition(
+            duplicate_entries_allowed=True,
+            equidistant_entries_select=RANDOM,
+            distance_field_weights=[1,0],
+            seed=module_seed,
+        )
+
+        retrieved_labels=[]
+        for key in sorted(stimuli.keys()):
+            retrieved = c(stimuli[key])
+            retrieved_label = retrieve_label_helper(retrieved, stimuli)
+            retrieved_labels.append(retrieved_label)
+        assert retrieved_labels == [[None], ['A'], ['A'], ['C'], ['B'], ['D']]
+
+        stim = 'C'
+        c.equidistant_entries_select = OLDEST
+        retrieved = c.get_memory(stimuli[stim])
+        retrieved_label = retrieve_label_helper(retrieved, stimuli)
+        assert retrieved_label == ['A']
+
+        c.equidistant_entries_select = NEWEST
+        retrieved = c.get_memory(stimuli[stim])
+        retrieved_label = retrieve_label_helper(retrieved, stimuli)
+        assert retrieved_label == ['D']
+
+        # Test that after allowing dups, warning is issued and memory with zeros is returned
+        c.duplicate_entries_allowed = False
+        stim = 'A'
+
+        text = "More than one entry matched cue"
+        with pytest.warns(UserWarning, match=text):
+            retrieved = c(stimuli[stim])
+
+        retrieved_label = retrieve_label_helper(retrieved, stimuli)
+        assert retrieved_label == [None]
+
+        expected = convert_all_elements_to_np_array([[0, 0, 0], [0, 0, 0, 0]])
+
+        # There's no np.testing function that handles the rugged arrays correctly
+        assert len(retrieved) == len(expected)
+        for m, e in zip(retrieved, expected):
+            assert len(m) == len(e)
+            for x, y in zip(m, e):
+                np.testing.assert_array_equal(x, y)
+
+
+
+
+
+
+
+
+
+
+# *****************************************************************************************************************
+# *************************************  FROM AutodiffComposition  ************************************************
+# *****************************************************************************************************************
 
 @pytest.mark.skip(reason="no pytorch representation of EMComposition yet")
 @pytest.mark.pytorch

@@ -9,7 +9,8 @@
 # ********************************************* EMComposition *************************************************
 
 # TODO:
-# - FIX: WRITE TESTS
+# - FIX: WRITE EXECUTION TESTS
+# - FIX: ADD NOISE (AND/OR SOFTMAX PROBABILISTIC RETRIEVAL MODE)
 # - FIX: WARNING NOT OCCURING FOR ZEROS WITH MULTIPLE ENTRIES (HAPPENS IF *ANY* KEY IS EVER ALL ZEROS)
 # - FIX: ALLOW memory_template TO BE 3-ITEM TUPLE IN WHICH 1ST ITEM SPECIFIES MEMORY CAPACITY
 #        DEFAULTS TO memory_capacity; IF memory_capacity IS USER-SPECIFIED AND THEY CONFLICT -> ERROR MESSAGE
@@ -1363,6 +1364,7 @@ class EMComposition(AutodiffComposition):
             #    and columns should number of items in memory
             matrix =np.array([np.concatenate((self.memory_template[:,:self.num_keys][i]))
                               for i in range(self.memory_capacity)]).transpose()
+            matrix = np.array(matrix.tolist())
             match_nodes = [
                 TransferMechanism(
                     input_ports={NAME: 'CONCATENATED_INPUTS',
