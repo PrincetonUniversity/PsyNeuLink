@@ -258,6 +258,15 @@ class TestACConstructor:
 
 class TestExecution:
 
+    # TEST:
+    # 0: 3 entries that fill memory; no decay, one key, high softmax gain, no storage, inputs has only key (no value)
+    # 1: 3 entries that fill memory; no decay, one key, high softmax gain, no storage, inputs has key & value
+    # 2:   same as 1 but different value (that should be ignored)
+    # 3:   same as 2 but has extra entry filled with random values (which changes retrieval)
+    # 4:   same as 3 but uses both fields as keys (no values)
+    # 5:   same as 4 but no concatentation of keys
+    # 6:   same as 5, but different field_weights
+    # 7:  EFFECTS OF VALUE ON STORAGE AND FUTURE RETRIEVAL
 
     test_data = [
         # ---------------------------------------- SPECS -----------------------------------  ----- EXPECTED ---------
@@ -271,11 +280,34 @@ class TestExecution:
         # (1, [[[1,2,3],[4,5,6]],
         #      [[1,2,5],[4,5,8]],
         #      [[1,2,10],[4,5,10]]],  None,   3,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]],
-        #                                                                            [[4, 5, 6]]], [[1., 2., 3.16585899],
+        #                                                                           [[4, 5, 6]]], [[1., 2., 3.16585899],
         #                                                                                          [4., 5., 6.16540637]]),
-        (2, [[[1,2,3],[4,5,6]],
+        # (2, [[[1,2,3],[4,5,6]],
+        #      [[1,2,5],[4,5,8]],
+        #      [[1,2,10],[4,5,10]]],  None,   3,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]],
+        #                                                                           [[4, 5, 8]]], [[1., 2., 3.16585899],
+        #                                                                                          [4., 5., 6.16540637]]),
+        # (3, [[[1,2,3],[4,5,6]],
+        #      [[1,2,5],[4,5,8]],
+        #      [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]],
+        #                                                                            [[4, 5, 8]]], [[0.99998628,
+        #                                                                                            1.99997247,
+        #                                                                                            3.1658154 ],
+        #                                                                                           [3.99994492,
+        #                                                                                            4.99993115,
+        #                                                                                            6.16532141]]),
+        (4, [[[1,2,3],[4,5,6]],
              [[1,2,5],[4,5,8]],
-             [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]],
+             [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [1,1],  None, None,  100,  0, [[[1, 2, 4]],
+                                                                                   [[4, 5, 8]]], [[0.99999932,
+                                                                                                   1.99999864,
+                                                                                                   4.34651032],
+                                                                                                  [3.99999727,
+                                                                                                   4.99999659,
+                                                                                                   7.33742455]]),
+        (5, [[[1,2,3],[4,5,6]],
+             [[1,2,5],[4,5,8]],
+             [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [1,1],  False, None,  100,  0, [[[1, 2, 3]],
                                                                                    [[4, 5, 6]]], [[0.99998628,
                                                                                                    1.99997247,
                                                                                                    3.1658154 ],
@@ -291,7 +323,6 @@ class TestExecution:
                              ids=[x[0] for x in test_data]
                              )
     @pytest.mark.benchmark
-    # FIX: PARAMETERIZE FIELD WEIGHTS AND RETRIEVED VALUE
     def test_simple_retrieval_without_storage_or_decay(self,
                                                        test_num,
                                                        memory_template,
@@ -351,7 +382,6 @@ class TestExecution:
         # retrieved = c([[1, 2, 3], [4, 5, 10]])
         # np.testing.assert_equal(retrieved, [[1, 2, 3], [4, 5, 6]])
 
-    # FIX: COULD CONDENSE THESE TESTS BY PARAMETERIZING FIELD-WEIGHTS AND ALSO INCLUDE DISTANCE METRIC AS A PARAM
     @pytest.mark.skip(reason="test not yet fully implemented")
     def test_parametric_distances(self):
 

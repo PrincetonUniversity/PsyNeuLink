@@ -15,6 +15,7 @@
 # - FIX: ADD NOISE (AND/OR SOFTMAX PROBABILISTIC RETRIEVAL MODE)
 # - FIX: WARNING NOT OCCURING FOR ZEROS WITH MULTIPLE ENTRIES (HAPPENS IF *ANY* KEY IS EVER ALL ZEROS)
 # - FIX: ALLOW memory_template TO BE 3-ITEM TUPLE IN WHICH 1ST ITEM SPECIFIES MEMORY CAPACITY
+# - FIX: MAKE memory_fill A Parameter with fallback_default = 0 (and get rid of hard assignment in __init__()
 # - FIX: USE fallback_default FOR concatenate_keys, softmax_gain and storage_prob, AND MODIFY TESTS ACCORDINGLY?
 # - FIX: TEST FOR fallback_default FOR normalize_memories
 #        DEFAULTS TO memory_capacity; IF memory_capacity IS USER-SPECIFIED AND THEY CONFLICT -> ERROR MESSAGE
@@ -1018,6 +1019,7 @@ class EMComposition(AutodiffComposition):
 
         # Construct memory --------------------------------------------------------------------------------
 
+        memory_fill = memory_fill or 0 # FIX: GET RID OF THIS ONCE IMPLEMENTED AS A Parameter
         self._validate_memory_specs(memory_template, memory_fill, field_weights, field_names, name)
         self._parse_memory_template(memory_template, memory_fill, memory_capacity, field_weights)
         self._parse_fields(field_weights, field_names, concatenate_keys, normalize_memories,
