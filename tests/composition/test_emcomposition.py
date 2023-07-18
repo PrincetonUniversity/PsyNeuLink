@@ -259,7 +259,7 @@ class TestACConstructor:
             test_memory_fill(start=repeat, memory_fill=memory_fill)
 
 
-@pytest.mark.skip(reason="not yet fully implemented")
+# @pytest.mark.skip(reason="not yet fully implemented")
 class TestExecution:
 
     # FIX: PARAMETERIZE FIELD WEIGHTS AND RETRIEVED VALUE
@@ -267,58 +267,49 @@ class TestExecution:
 
         stimuli = [[[1,2,3],[4,5,6]],
                    [[1,2,5],[4,5,8]],
-                   [[1,2,10],[4,5,10]]
-                   ]
+                   [[1,2,10],[4,5,10]]]
 
         em = EMComposition(memory_template=stimuli,
                            field_weights=[1,0],
                            memory_decay=0,
-                           storage_prob=1,
-                           # normalize_memories=False,
+                           storage_prob=0,
+                           softmax_gain=100,
                            memory_capacity=3
                            # seed=module_seed,
                            )
-
-        # Test distance (for retrieved item) and distances_by_field
-        # retrieved = em.run(inputs={em.key_input_nodes[0]:[[[1, 2, 4]]],
-        #                           em.key_input_nodes[1]:[[[4, 5, 9]]]
-        #                           })
-        # np.testing.assert_allclose(retrieved,[[4.,5.,7.97238032], [1.,2.,5.94103853]], atol=1e-08)
 
         np.testing.assert_equal(np.array(em.memory_template), np.array(stimuli))
         retrieved = em.run(inputs={em.key_input_nodes[0]:[[[1, 2, 3]]],
                                    # em.key_input_nodes[1]:[[[4, 5, 10]]]
                                    })
-        assert True
-        np.testing.assert_equal(retrieved, [[1, 2, 3], [4, 5, 6]])
+        np.testing.assert_allclose(retrieved,[[4., 5., 6.16540637],[1., 2., 3.16585899]])
 
-
-        # Test with 0 as field weight
-        em.field_weights=[1,0]
-        retrieved = c([[1, 2, 3], [4, 5, 10]])
-        np.testing.assert_equal(retrieved, [[1, 2, 3], [4, 5, 6]])
-
-        em.distance_field_weights=[0,1]
-        retrieved = c([[1, 2, 3], [4, 5, 10]])
-        np.testing.assert_equal(retrieved, [[1, 2, 10], [4, 5, 10]])
-
-        # Test with None as field weight
-        em.distance_field_weights=[None,1]
-        retrieved = c([[1, 2, 3], [4, 5, 10]])
-        np.testing.assert_equal(retrieved, [[1, 2, 10], [4, 5, 10]])
-
-        em.distance_field_weights=[1, None]
-        retrieved = c([[1, 2, 3], [4, 5, 10]])
-        np.testing.assert_equal(retrieved, [[1, 2, 3], [4, 5, 6]])
-
-        # Test with [] as field weight
-        em.distance_field_weights=[[],1]
-        retrieved = c([[1, 2, 3], [4, 5, 10]])
-        np.testing.assert_equal(retrieved, [[1, 2, 10], [4, 5, 10]])
-
-        em.distance_field_weights=[1, []]
-        retrieved = c([[1, 2, 3], [4, 5, 10]])
-        np.testing.assert_equal(retrieved, [[1, 2, 3], [4, 5, 6]])
+        # # Test with 0 as field weight
+        # em.field_weights=[1,0]
+        # retrieved = c([[1, 2, 3], [4, 5, 10]])
+        # np.testing.assert_equal(retrieved, [[1, 2, 3], [4, 5, 6]])
+        #
+        # em.distance_field_weights=[0,1]
+        # retrieved = c([[1, 2, 3], [4, 5, 10]])
+        # np.testing.assert_equal(retrieved, [[1, 2, 10], [4, 5, 10]])
+        #
+        # # Test with None as field weight
+        # em.distance_field_weights=[None,1]
+        # retrieved = c([[1, 2, 3], [4, 5, 10]])
+        # np.testing.assert_equal(retrieved, [[1, 2, 10], [4, 5, 10]])
+        #
+        # em.distance_field_weights=[1, None]
+        # retrieved = c([[1, 2, 3], [4, 5, 10]])
+        # np.testing.assert_equal(retrieved, [[1, 2, 3], [4, 5, 6]])
+        #
+        # # Test with [] as field weight
+        # em.distance_field_weights=[[],1]
+        # retrieved = c([[1, 2, 3], [4, 5, 10]])
+        # np.testing.assert_equal(retrieved, [[1, 2, 10], [4, 5, 10]])
+        #
+        # em.distance_field_weights=[1, []]
+        # retrieved = c([[1, 2, 3], [4, 5, 10]])
+        # np.testing.assert_equal(retrieved, [[1, 2, 3], [4, 5, 6]])
 
     # FIX: COULD CONDENSE THESE TESTS BY PARAMETERIZING FIELD-WEIGHTS AND ALSO INCLUDE DISTANCE METRIC AS A PARAM
     def test_parametric_distances(self):

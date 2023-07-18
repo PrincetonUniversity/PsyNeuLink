@@ -10,6 +10,7 @@
 
 # TODO:
 # - FIX: WRITE EXECUTION TESTS
+# - FIX: ORDER OF VALUES RETURNED BY RUN IS BACKWARDS (VALUE SHOULD BE LAST NOT FIRST)
 # - FIX: ADD NOISE (AND/OR SOFTMAX PROBABILISTIC RETRIEVAL MODE)
 # - FIX: WARNING NOT OCCURING FOR ZEROS WITH MULTIPLE ENTRIES (HAPPENS IF *ANY* KEY IS EVER ALL ZEROS)
 # - FIX: ALLOW memory_template TO BE 3-ITEM TUPLE IN WHICH 1ST ITEM SPECIFIES MEMORY CAPACITY
@@ -380,6 +381,8 @@ When the EMComposition is executed, the following sequence of operations occur
        `match_node <EMComposition.match_nodes>` by `memory_decay <EMComposition.memory_decay_rate>`,
         by 1 - `memory_decay <EMComposition.memory_decay_rate>`.
 
+.. _EMComposition_Storage:
+
 * **Store memories**. After the values have been retrieved, the inputs to for each field (i.e., values in the
   `key_input_nodes <EMComposition.key_input_nodes>` and `value_input_nodes <EMComposition.value_input_nodes>`)
   are added as a new entry in `memory <EMComposition.memory>`, replacing the weakest one if `memory_capacity
@@ -723,6 +726,11 @@ class EMComposition(AutodiffComposition):
         specifies the temperature used for softmax normalizing the dot products of keys and memories;
         see `Softmax normalize matches over fields <EMComposition_Processing>` for additional details.
 
+    storage_prob : float : default 1.0
+        specifies the probability that an item will be stored in `memory <EMComposition.memory>`
+        when the EMComposition is executed (see `Retrieval and Storage <EMComposition_Storage>` for
+        additional details).
+
     learn_weights : bool : default False
         specifies whether `field_weights <EMComposition.field_weights>` are learnable during training;
         see `Learning <EMComposition_Learning>` for additional details.
@@ -792,7 +800,9 @@ class EMComposition(AutodiffComposition):
         over fields <EMComposition_Processing>` for additional details.
 
     storage_prob : float
-        determines the probability that an item will be stored in `memory <EMComposition.memory>`.
+        determines the probability that an item will be stored in `memory <EMComposition.memory>`
+        when the EMComposition is executed (see `Retrieval and Storage <EMComposition_Storage>` for
+        additional details).
 
     memory_capacity : int
         determines the number of items that can be stored in `memory <EMComposition.memory>`; see `memory_capacity
@@ -999,7 +1009,7 @@ class EMComposition(AutodiffComposition):
                  memory_decay_rate:float=None,
                  normalize_memories:bool=True,
                  softmax_gain:Union[float, CONTROL]=CONTROL,
-                 storage_prob:float=None,
+                 storage_prob:float=1.0,
                  name="EM_Composition"):
 
         # Construct memory --------------------------------------------------------------------------------
@@ -1012,6 +1022,7 @@ class EMComposition(AutodiffComposition):
         if self.parameters.memory_decay.get() and self.parameters.memory_decay_rate.get() is None:
             self.parameters.memory_decay_rate.set(memory_decay_rate or 1 / self.memory_capacity)
         self.softmax_gain = softmax_gain
+        self.storage_prob = storage_prob
 
         # Instantiate Composition -------------------------------------------------------------------------
 
@@ -1290,6 +1301,11 @@ class EMComposition(AutodiffComposition):
                       + [self.retrieval_weighting_node] + self.retrieval_gating_nodes + self.retrieval_nodes)
         if self.concatenate_keys_node is not None:
             pathway.add(self.concatenate_keys_node)
+        # pathway = self.key_input_nodes + self.value_input_nodes + self.match_nodes + self.softmax_control_nodes + \
+        #           self.softmax_nodes + [self.retrieval_weighting_node] + self.retrieval_gating_nodes + \
+        #           self.retrieval_nodes
+        # if self.concatenate_keys_node is not None:
+        #     pathway.insert(len(self.key_input_nodes) + len(self.value_input_nodes), self.concatenate_keys_node)
 
         return pathway
 
@@ -1576,8 +1592,8 @@ class EMComposition(AutodiffComposition):
             memories[idx_of_min] = np.array(memory)
             self.retrieval_nodes[i].path_afferents[0].parameters.matrix.set(memories, context)
             
-    def run(self):
-        raise EMCompositionError(f"EMComposition can be constructed, but 'run' method not yet working")
+    # def run(self):
+    #     raise EMCompositionError(f"EMComposition can be constructed, but 'run' method not yet working")
 
     def learn(self):
         raise EMCompositionError(f"EMComposition can be constructed, but 'learn' method not yet working")
