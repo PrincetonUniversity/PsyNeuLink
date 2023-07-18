@@ -491,16 +491,6 @@ class GatingMechanism(ControlMechanism):
                           registry=self._portRegistry,
                           )
 
-    def _validate_control_arg(self, gate):
-        """Overrided to handle GatingMechanism-specific specifications"""
-        assert isinstance(gate, list), \
-            f"PROGRAM ERROR: 'gate' arg ({gate}) of {self.name} should have been converted to a list."
-        for spec in gate:
-            spec = _parse_port_spec(port_type=GatingSignal, owner=self, port_spec=spec)
-            if not (isinstance(spec, GatingSignal)
-                    or (isinstance(spec, dict) and spec[PORT_TYPE] == GatingSignal)):
-                raise GatingMechanismError(f"Invalid specification for '{GATE}' argument of {self.name}: ({spec})")
-
     def _instantiate_control_signal_type(self, gating_signal_spec, context):
         """Instantiate actual ControlSignal, or subclass if overridden"""
         from psyneulink.core.components.ports.port import _instantiate_port

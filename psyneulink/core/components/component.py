@@ -538,7 +538,7 @@ from psyneulink.core.globals.registry import register_category, _get_auto_name_p
 from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, convert_all_elements_to_np_array, convert_to_np_array, get_deepcopy_with_shared, \
-    is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, prune_unused_args, \
+    is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, \
     get_all_explicit_arguments, call_with_pruned_args, safe_equals, safe_len, parse_valid_identifier
 from psyneulink.core.scheduling.condition import Never
 from psyneulink.core.scheduling.time import Time, TimeScale
@@ -2983,8 +2983,13 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                     except (AttributeError, KeyError, TypeError):
                         pass
 
-            _, kwargs = prune_unused_args(function.__init__, args=[], kwargs=kwargs_to_instantiate)
-            function = function(default_variable=function_variable, owner=self, **kwargs)
+            try:
+                function = function(default_variable=function_variable, owner=self, **kwargs_to_instantiate)
+            except TypeError as e:
+                if 'unexpected keyword argument' in str(e):
+                    raise ComponentError(f'(function): {function} {e}', component=self) from e
+                else:
+                    raise
 
         else:
             raise ComponentError(f'Unsupported function type: {type(function)}, function={function}.')

@@ -275,7 +275,9 @@ class AutoAssociativeProjection(MappingProjection):
     def _instantiate_parameter_classes(self, context):
         if FUNCTION not in self.initial_shared_parameters:
             try:
-                self.initial_shared_parameters[FUNCTION] = self.initial_shared_parameters[OWNER_MECH]
+                self.initial_shared_parameters[FUNCTION] = {
+                    'matrix': self.initial_shared_parameters[OWNER_MECH]['matrix']
+                }
             except KeyError:
                 pass
 
