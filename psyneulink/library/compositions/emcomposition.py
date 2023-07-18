@@ -1575,3 +1575,9 @@ class EMComposition(AutodiffComposition):
             idx_of_min = np.argmin(memories.sum(axis=1))
             memories[idx_of_min] = np.array(memory)
             self.retrieval_nodes[i].path_afferents[0].parameters.matrix.set(memories, context)
+            
+    def run(self):
+        raise EMCompositionError(f"'run' method of EMComposition not yet working")
+
+    def learn(self):
+        raise EMCompositionError(f"'learn' method of EMComposition not yet working")

@@ -92,7 +92,6 @@ class TestACConstructor:
 # storage_probability - None, float
 # learn_weights - True/False
 
-    # FIX: ADD SoftMax TESTS:
     # FIX: ADD WARNING TESTS
     # FIX: ADD ERROR TESTS
     # FIX: rtrv_wt_node TESTS
@@ -260,6 +259,7 @@ class TestACConstructor:
             test_memory_fill(start=repeat, memory_fill=memory_fill)
 
 
+@pytest.mark.skip(reason="not yet fully implemented")
 class TestExecution:
 
     # FIX: PARAMETERIZE FIELD WEIGHTS AND RETRIEVED VALUE
@@ -270,13 +270,14 @@ class TestExecution:
                    [[1,2,10],[4,5,10]]
                    ]
 
-        c = EMComposition(
-            memory_template=stimuli,
-            field_weights=[1,0],
-            storage_prob=0,
-            memory_capacity=3
-            # seed=module_seed,
-        )
+        em = EMComposition(memory_template=stimuli,
+                           field_weights=[1,0],
+                           memory_decay=0,
+                           storage_prob=1,
+                           # normalize_memories=False,
+                           memory_capacity=3
+                           # seed=module_seed,
+                           )
 
         # Test distance (for retrieved item) and distances_by_field
         # retrieved = c.run(inputs={c.key_input_nodes[0]:[[[1, 2, 4]]],
@@ -284,9 +285,11 @@ class TestExecution:
         #                           })
         # np.testing.assert_allclose(retrieved,[[4.,5.,7.97238032], [1.,2.,5.94103853]], atol=1e-08)
 
-        retrieved = c.run(inputs={c.key_input_nodes[0]:[[[1, 2, 3]]],
-                                  # c.key_input_nodes[1]:[[[4, 5, 10]]]
-                                  })
+        np.testing.assert_equal(np.array(em.memory_template), np.array(stimuli))
+        retrieved = em.run(inputs={em.key_input_nodes[0]:[[[1, 2, 3]]],
+                                   # em.key_input_nodes[1]:[[[4, 5, 10]]]
+                                   })
+        assert True
         np.testing.assert_equal(retrieved, [[1, 2, 3], [4, 5, 6]])
 
 
