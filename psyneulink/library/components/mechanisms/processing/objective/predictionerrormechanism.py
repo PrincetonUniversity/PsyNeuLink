@@ -299,11 +299,9 @@ class PredictionErrorMechanism(ComparatorMechanism):
                  **kwargs
                  ):
 
-        input_ports = [sample, target]
         super().__init__(
             sample=sample,
             target=target,
-            input_ports=input_ports,
             function=function,
             output_ports=output_ports,
             learning_rate=learning_rate,
