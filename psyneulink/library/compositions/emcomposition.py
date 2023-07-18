@@ -244,7 +244,7 @@ An EMComposition is created by calling its constructor, that takes the following
          inputs can be provided for each key, and the value of each key can be retrieved separately.
 
 .. _EMComposition_Memory_Capacity:
-  
+
 *Memory Capacity*
 
 * **memory_capacity**: specifies the maximum number of items that can be stored in the EMComposition's memory; when
@@ -972,7 +972,7 @@ class EMComposition(AutodiffComposition):
 
         def _validate_field_weights(self, field_weights):
             if field_weights is not None:
-                if  not np.atleast_1d(field_weights).ndim == 1:
+                if not np.atleast_1d(field_weights).ndim == 1:
                     return f"must be a scalar, list of scalars, or 1d array."
                 if any([field_weight < 0 for field_weight in field_weights]):
                     return f"must be all be postive values."
@@ -1149,15 +1149,9 @@ class EMComposition(AutodiffComposition):
 
             # memory_template specifies a single entry
             if num_entries == 1:
-                # If any non-zeros, replicate the entry for full matrix
-                # if any(np.array(memory_template, dtype=object).any()):
-                # if any(np.nonzero(np.array(memory_template, dtype=object))):
-                # if np.array(np.nonzero(np.array(memory_template, dtype=object))).any():
                 if np.array([np.nonzero(field) for field in memory_template],dtype=object).any():
                     memory_fill = None
                 # Otherwise, use memory_fill
-                else:
-                    memory_fill = memory_fill
                 memory = _construct_entries(memory_template, memory_capacity, memory_fill)
 
             # If memory template is a full or partial 3d (matrix) specification
@@ -1263,7 +1257,7 @@ class EMComposition(AutodiffComposition):
             fields_equal_length = all(len(field) == len(memory_template[0]) for field in memory_template[0])
 
         single_entry = (((memory_template_dim == 1) and not fields_equal_length) or
-                        ((memory_template_dim == 2)  and fields_equal_length))
+                        ((memory_template_dim == 2) and fields_equal_length))
         num_entries = 1 if single_entry else len(memory_template)
         num_fields = len(memory_template) if single_entry else len(memory_template[0])
         return num_entries, num_fields
@@ -1291,7 +1285,7 @@ class EMComposition(AutodiffComposition):
         # Construct pathway as a set of nodes, since Projections are specified in the construction of each node
         #  (and specifying INPUT or OUTPUT Nodes in a list would cause them to be interpreted as linear pathways)
         pathway = set(self.key_input_nodes + self.value_input_nodes
-                      + self.match_nodes + self.softmax_control_nodes + self.softmax_nodes \
+                      + self.match_nodes + self.softmax_control_nodes + self.softmax_nodes
                       + [self.retrieval_weighting_node] + self.retrieval_gating_nodes + self.retrieval_nodes)
         if self.concatenate_keys_node is not None:
             pathway.add(self.concatenate_keys_node)
@@ -1308,7 +1302,7 @@ class EMComposition(AutodiffComposition):
         Used to assign new set of weights for Projection for key_input_node[i] -> match_node[i]
         where i is selected randomly without replacement from (0->memory_capacity)
         """
-        
+
         # Get indices of field_weights that specify keys:
         key_indices = np.nonzero(self.field_weights)[0]
 
@@ -1476,7 +1470,7 @@ class EMComposition(AutodiffComposition):
         assert len(retrieval_weighting_node.output_port.value) == self.memory_capacity,\
             f'PROGRAM ERROR: number of items in retrieval_weighting_node ({len(retrieval_weighting_node.output_port)})' \
             f'does not match memory_capacity ({self.memory_capacity})'
-                                                            
+
         return retrieval_weighting_node
 
     def _construct_retrieval_nodes(self)->list:
@@ -1499,7 +1493,7 @@ class EMComposition(AutodiffComposition):
                                                                              sender=self.retrieval_weighting_node,
                                                                              # matrix=ZEROS_MATRIX)
                                                                              matrix=self.memory_template[:,
-                                                                                    i+self.num_keys])
+                                                                                    i + self.num_keys])
                                                                      },
                                                         name= f'{self.value_names[i]} RETRIEVED')
                                       for i in range(self.num_values)]
@@ -1585,7 +1579,7 @@ class EMComposition(AutodiffComposition):
             idx_of_min = np.argmin(memories.sum(axis=1))
             memories[idx_of_min] = np.array(memory)
             self.retrieval_nodes[i].path_afferents[0].parameters.matrix.set(memories, context)
-            
+
     def learn(self):
         raise EMCompositionError(f"EMComposition can be constructed, but 'learn' method not yet working")
 
@@ -1597,4 +1591,3 @@ class EMComposition(AutodiffComposition):
                 for retrieval_node in self.retrieval_nodes
                 if (not self.output_CIM._sender_is_probe(self.output_CIM.port_map[retrieval_node.output_port][1])
                     or self.include_probes_in_output)]
-
