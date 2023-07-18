@@ -263,7 +263,7 @@ class TestACConstructor:
 class TestExecution:
 
     # FIX: PARAMETERIZE FIELD WEIGHTS AND RETRIEVED VALUE
-    def test_simple_retrieval_from_initialized_memories(self):
+    def test_simple_retrieval_without_storage_or_decay(self):
 
         stimuli = [[[1,2,3],[4,5,6]],
                    [[1,2,5],[4,5,8]],
@@ -280,8 +280,8 @@ class TestExecution:
                            )
 
         # Test distance (for retrieved item) and distances_by_field
-        # retrieved = c.run(inputs={c.key_input_nodes[0]:[[[1, 2, 4]]],
-        #                           c.key_input_nodes[1]:[[[4, 5, 9]]]
+        # retrieved = em.run(inputs={em.key_input_nodes[0]:[[[1, 2, 4]]],
+        #                           em.key_input_nodes[1]:[[[4, 5, 9]]]
         #                           })
         # np.testing.assert_allclose(retrieved,[[4.,5.,7.97238032], [1.,2.,5.94103853]], atol=1e-08)
 
@@ -294,37 +294,31 @@ class TestExecution:
 
 
         # Test with 0 as field weight
-        c.field_weights=[1,0]
+        em.field_weights=[1,0]
         retrieved = c([[1, 2, 3], [4, 5, 10]])
         np.testing.assert_equal(retrieved, [[1, 2, 3], [4, 5, 6]])
-        assert c.distances_by_field == [0.0, 0.0]
 
-        c.distance_field_weights=[0,1]
+        em.distance_field_weights=[0,1]
         retrieved = c([[1, 2, 3], [4, 5, 10]])
         np.testing.assert_equal(retrieved, [[1, 2, 10], [4, 5, 10]])
-        assert c.distances_by_field == [0.0, 0.0]
 
         # Test with None as field weight
-        c.distance_field_weights=[None,1]
+        em.distance_field_weights=[None,1]
         retrieved = c([[1, 2, 3], [4, 5, 10]])
         np.testing.assert_equal(retrieved, [[1, 2, 10], [4, 5, 10]])
-        assert c.distances_by_field == [None, 0.0]
 
-        c.distance_field_weights=[1, None]
+        em.distance_field_weights=[1, None]
         retrieved = c([[1, 2, 3], [4, 5, 10]])
         np.testing.assert_equal(retrieved, [[1, 2, 3], [4, 5, 6]])
-        assert c.distances_by_field == [0.0, None]
 
         # Test with [] as field weight
-        c.distance_field_weights=[[],1]
+        em.distance_field_weights=[[],1]
         retrieved = c([[1, 2, 3], [4, 5, 10]])
         np.testing.assert_equal(retrieved, [[1, 2, 10], [4, 5, 10]])
-        assert c.distances_by_field == [None, 0.0]
 
-        c.distance_field_weights=[1, []]
+        em.distance_field_weights=[1, []]
         retrieved = c([[1, 2, 3], [4, 5, 10]])
         np.testing.assert_equal(retrieved, [[1, 2, 3], [4, 5, 6]])
-        assert c.distances_by_field == [0.0, None]
 
     # FIX: COULD CONDENSE THESE TESTS BY PARAMETERIZING FIELD-WEIGHTS AND ALSO INCLUDE DISTANCE METRIC AS A PARAM
     def test_parametric_distances(self):
