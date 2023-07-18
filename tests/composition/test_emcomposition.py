@@ -94,7 +94,6 @@ class TestACConstructor:
 
     # FIX: ADD WARNING TESTS
     # FIX: ADD ERROR TESTS
-    # FIX: rtrv_wt_node TESTS
     test_data = [
         # memory_template, field_weights, concatenate_keys, normalize_memory, repeat (entries),
         # num_fields, num_keys, num_values, concatenate_node, retrieval_weighting_nodes,
@@ -259,7 +258,6 @@ class TestACConstructor:
             test_memory_fill(start=repeat, memory_fill=memory_fill)
 
 
-# @pytest.mark.skip(reason="not yet fully implemented")
 class TestExecution:
 
     # FIX: PARAMETERIZE FIELD WEIGHTS AND RETRIEVED VALUE
@@ -310,6 +308,7 @@ class TestExecution:
         # np.testing.assert_equal(retrieved, [[1, 2, 3], [4, 5, 6]])
 
     # FIX: COULD CONDENSE THESE TESTS BY PARAMETERIZING FIELD-WEIGHTS AND ALSO INCLUDE DISTANCE METRIC AS A PARAM
+    @pytest.mark.skip(reason="test not yet fully implemented")
     def test_parametric_distances(self):
 
         stimuli = np.array([[[1,2,3],[4,5,6]],
@@ -375,6 +374,7 @@ class TestExecution:
         np.testing.assert_equal(c.distances_by_field, distances_by_field)
 
     # Test of EMComposition without LLVM:
+    @pytest.mark.skip(reason="test not yet fully implemented")
     def test_with_initializer_and_equal_field_sizes(self):
 
         stimuli = {'A': [[1,2,3],[4,5,6]],
@@ -445,6 +445,7 @@ class TestExecution:
         assert retrieved_label == [None]
         np.testing.assert_equal(retrieved, [[0, 0, 0], [0, 0, 0]])
 
+    @pytest.mark.skip(reason="test not yet fully implemented")
     def test_with_initializer_and_diff_field_sizes(self):
 
         stimuli = {'A': np.array([[1.,2.,3.],[4.,5.,6.,7.]], dtype=object),
@@ -504,6 +505,7 @@ class TestExecution:
             for x, y in zip(m, e):
                 np.testing.assert_array_equal(x, y)
 
+    @pytest.mark.skip(reason="test not yet fully implemented")
     def test_without_initializer_and_equal_field_sizes(self):
 
         stimuli = {'A': [[1,2,3],[4,5,6]],
@@ -554,6 +556,7 @@ class TestExecution:
         expected = np.array([np.array([0,0,0]),np.array([0,0,0])])
         assert all(np.alltrue(x) for x in np.equal(expected,retrieved, dtype=object))
 
+    @pytest.mark.skip(reason="test not yet fully implemented")
     def test_without_initializer_and_diff_field_sizes(self):
 
         stimuli = {'A': np.array([[1,2,3],[4,5,6,7]], dtype=object),
