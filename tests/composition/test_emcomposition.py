@@ -264,7 +264,7 @@ class TestExecution:
     # 2:   same as 1 but different value (that should be ignored)
     # 3:   same as 2 but has extra entry filled with random values (which changes retrieval)
     # 4:   same as 3 but uses both fields as keys (no values)
-    # 5:   same as 4 but no concatentation of keys
+    # 5:   same as 4 but no concatentation of keys (confirms that results are same w/ and w/o concatenation)
     # 6:   same as 5, but different field_weights
     # 7:  EFFECTS OF VALUE ON STORAGE AND FUTURE RETRIEVAL
 
@@ -296,18 +296,27 @@ class TestExecution:
         #                                                                                           [3.99994492,
         #                                                                                            4.99993115,
         #                                                                                            6.16532141]]),
-        (4, [[[1,2,3],[4,5,6]],
+        # (4, [[[1,2,3],[4,5,6]],
+        #      [[1,2,5],[4,5,8]],
+        #      [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [1,1],  None, None,  100,  0, [[[1, 2, 4]],
+        #                                                                            [[4, 5, 8]]], [[0.99999932,
+        #                                                                                            1.99999864,
+        #                                                                                            4.34651032],
+        #                                                                                           [3.99999727,
+        #                                                                                            4.99999659,
+        #                                                                                            7.33742455]]),
+        # (5, [[[1,2,3],[4,5,6]],
+        #      [[1,2,5],[4,5,8]],
+        #      [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [1,1],  False, None,  100,  0, [[[1, 2, 3]],
+        #                                                                            [[4, 5, 6]]], [[0.99998628,
+        #                                                                                            1.99997247,
+        #                                                                                            3.1658154 ],
+        #                                                                                           [3.99994492,
+        #                                                                                            4.99993115,
+        #                                                                                            6.16532141]]),
+        (6, [[[1,2,3],[4,5,6]],
              [[1,2,5],[4,5,8]],
-             [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [1,1],  None, None,  100,  0, [[[1, 2, 4]],
-                                                                                   [[4, 5, 8]]], [[0.99999932,
-                                                                                                   1.99999864,
-                                                                                                   4.34651032],
-                                                                                                  [3.99999727,
-                                                                                                   4.99999659,
-                                                                                                   7.33742455]]),
-        (5, [[[1,2,3],[4,5,6]],
-             [[1,2,5],[4,5,8]],
-             [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [1,1],  False, None,  100,  0, [[[1, 2, 3]],
+             [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [3,1],  None, None,  100,  0, [[[1, 2, 3]],
                                                                                    [[4, 5, 6]]], [[0.99998628,
                                                                                                    1.99997247,
                                                                                                    3.1658154 ],
@@ -344,6 +353,7 @@ class TestExecution:
                            memory_decay=memory_decay,
                            softmax_gain=softmax_gain,
                            storage_prob=storage_prob,
+                           concatenate_keys=concatenate_keys
                            # seed=module_seed,
                            )
 
