@@ -95,8 +95,6 @@ class TestACConstructor:
     # FIX: ADD WARNING TESTS
     # FIX: ADD ERROR TESTS
     test_data = [
-        # memory_template, field_weights, concatenate_keys, normalize_memory, repeat (entries),
-        # num_fields, num_keys, num_values, concatenate_node, retrieval_weighting_nodes,
         # ------------------ SPECS ---------------------------------------------   ------- EXPECTED -------------------
         #   memory_template       memory_fill   field_wts cncat_ky nmlze sm_gain   repeat  #fields #keys #vals  concat
         (0,    (2,3),                  None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
@@ -260,25 +258,71 @@ class TestACConstructor:
 
 class TestExecution:
 
+
+    test_data = [
+        # ---------------------------------------- SPECS -----------------------------------  ----- EXPECTED ---------
+        #   memory_template         mem    mem  mem  fld   concat  nlz  sm   str    inputs        expected_retrieval
+        #                           fill   cap decay wts    keys       gain  prob
+        # ----------------------------------------------------------------------------------  ------------------------
+        # (0, [[[1,2,3],[4,5,6]],
+        #      [[1,2,5],[4,5,8]],
+        #      [[1,2,10],[4,5,10]]],  None,   3,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]]], [[1., 2., 3.16585899],
+        #                                                                                          [4., 5., 6.16540637]]),
+        # (1, [[[1,2,3],[4,5,6]],
+        #      [[1,2,5],[4,5,8]],
+        #      [[1,2,10],[4,5,10]]],  None,   3,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]],
+        #                                                                            [[4, 5, 6]]], [[1., 2., 3.16585899],
+        #                                                                                          [4., 5., 6.16540637]]),
+        (2, [[[1,2,3],[4,5,6]],
+             [[1,2,5],[4,5,8]],
+             [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]],
+                                                                                   [[4, 5, 6]]], [[0.99998628,
+                                                                                                   1.99997247,
+                                                                                                   3.1658154 ],
+                                                                                                  [3.99994492,
+                                                                                                   4.99993115,
+                                                                                                   6.16532141]]),
+    ]
+
+    args_names = "test_num, memory_template, memory_fill, memory_capacity, memory_decay, field_weights, " \
+                 "concatenate_keys, normalize_memories, softmax_gain, storage_prob, inputs, expected_retrieval"
+    @pytest.mark.parametrize(args_names,
+                             test_data,
+                             ids=[x[0] for x in test_data]
+                             )
+    @pytest.mark.benchmark
     # FIX: PARAMETERIZE FIELD WEIGHTS AND RETRIEVED VALUE
-    def test_simple_retrieval_without_storage_or_decay(self):
+    def test_simple_retrieval_without_storage_or_decay(self,
+                                                       test_num,
+                                                       memory_template,
+                                                       memory_fill,
+                                                       memory_capacity,
+                                                       memory_decay,
+                                                       field_weights,
+                                                       concatenate_keys,
+                                                       normalize_memories,
+                                                       softmax_gain,
+                                                       storage_prob,
+                                                       inputs,
+                                                       expected_retrieval):
 
-        stimuli = [[[1,2,3],[4,5,6]],
-                   [[1,2,5],[4,5,8]],
-                   [[1,2,10],[4,5,10]]]
-
-        em = EMComposition(memory_template=stimuli,
-                           field_weights=[1,0],
-                           memory_decay=0,
-                           storage_prob=0,
-                           softmax_gain=100,
-                           memory_capacity=3
+        em = EMComposition(memory_template=memory_template,
+                           memory_capacity=memory_capacity,
+                           memory_fill=memory_fill,
+                           field_weights=field_weights,
+                           memory_decay=memory_decay,
+                           softmax_gain=softmax_gain,
+                           storage_prob=storage_prob,
                            # seed=module_seed,
                            )
 
-        np.testing.assert_equal(np.array(em.memory_template), np.array(stimuli))
-        retrieved = em.run(inputs={em.key_input_nodes[0]:[[[1, 2, 3]]]})
-        np.testing.assert_allclose(retrieved,[[1., 2., 3.16585899],[4., 5., 6.16540637]])
+        input_nodes = em.key_input_nodes + em.value_input_nodes
+        inputs = {input_nodes[i]:inputs[i] for i in range(len(inputs))}
+
+        if len(np.array(em.memory_template)) == len(np.array(memory_template)):
+            np.testing.assert_equal(np.array(em.memory_template), np.array(memory_template))
+        retrieved = em.run(inputs=inputs)
+        np.testing.assert_allclose(retrieved, expected_retrieval)
 
         # # Test with 0 as field weight
         # em.field_weights=[1,0]

@@ -10,10 +10,13 @@
 
 # TODO:
 # - FIX: WRITE EXECUTION TESTS
+# - FIX: WHY IS RETRIEVAL_WEIGHTING NODE STILL PRESENT WITH ONLY ON KEY
 # - FIX: ORDER OF VALUES RETURNED BY RUN IS BACKWARDS (VALUE SHOULD BE LAST NOT FIRST)
 # - FIX: ADD NOISE (AND/OR SOFTMAX PROBABILISTIC RETRIEVAL MODE)
 # - FIX: WARNING NOT OCCURING FOR ZEROS WITH MULTIPLE ENTRIES (HAPPENS IF *ANY* KEY IS EVER ALL ZEROS)
 # - FIX: ALLOW memory_template TO BE 3-ITEM TUPLE IN WHICH 1ST ITEM SPECIFIES MEMORY CAPACITY
+# - FIX: USE fallback_default FOR concatenate_keys, softmax_gain and storage_prob, AND MODIFY TESTS ACCORDINGLY?
+# - FIX: TEST FOR fallback_default FOR normalize_memories
 #        DEFAULTS TO memory_capacity; IF memory_capacity IS USER-SPECIFIED AND THEY CONFLICT -> ERROR MESSAGE
 # - FIX: - ADD add_memory() METHOD
 # - FIX: - HANDLE Nones in args
@@ -666,12 +669,13 @@ def get_softmax_gain(v, scale=1, base=1, entropy_weighting=.1)->float:
 
 
 class EMCompositionError(CompositionError):
-
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+    pass
+#
+#     def __init__(self, error_value):
+#         self.error_value = error_value
+#
+#     def __str__(self):
+#         return repr(self.error_value)
 
 
 class EMComposition(AutodiffComposition):
@@ -1070,6 +1074,10 @@ class EMComposition(AutodiffComposition):
                 raise EMCompositionError(f"The 'memory_template' arg for {name} ({memory_template}) uses a tuple to "
                                          f"shape requires but does not have exactly two integers.")
             num_fields = memory_template[0]
+            if len(memory_template) == 3:
+                num_entries = memory_template[0]
+            else:
+                num_entries = self.memory_capacity
         elif isinstance(memory_template, (list, np.ndarray)):
             num_entries, num_fields = self._parse_memory_shape(memory_template)
         else:
