@@ -1112,7 +1112,8 @@ class EMComposition(AutodiffComposition):
 
     def _parse_memory_template(self, memory_template, memory_fill, memory_capacity, field_weights):
         """Construct memory from memory_template and memory_fill
-        Assign self.memory_template and self.entry_template attributes"""
+        Assign self.memory_template and self.entry_template attributes
+        """
 
         def _construct_entries(entry_template, num_entries, memory_fill=None):
             """Construct memory entries from memory_template and memory_fill"""
