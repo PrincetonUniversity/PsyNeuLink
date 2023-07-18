@@ -11128,10 +11128,6 @@ _
             self._set_up_animation(context)
 
         # SET UP EXECUTION -----------------------------------------------
-        results = self.parameters.results._get(context)
-        if results is None:
-            results = []
-
         self.rich_diverted_reports = None
         self.recorded_reports = None
 
@@ -11210,6 +11206,10 @@ _
             for node in reset_stateful_functions_when:
                 self._reset_stateful_functions_when_cache[node] = node.reset_stateful_function_when
                 node.reset_stateful_function_when = reset_stateful_functions_when[node]
+
+        results = self.parameters.results._get(context)
+        if results is None:
+            results = []
 
         is_simulation = (context is not None and
                          ContextFlags.SIMULATION_MODE in context.runmode)
