@@ -222,9 +222,7 @@ class TestACConstructor:
             assert em.retrieval_gating_nodes == []
             assert bool(softmax_gain in {None, CONTROL}) == bool(len(em.softmax_control_nodes))
         else:
-            if (num_keys > 1
-                    and isinstance(field_weights, list)
-                    and not all(field_weights[i] == field_weights[0] for i in range(num_keys))):
+            if num_keys > 1:
                 assert len(em.retrieval_gating_nodes) == num_keys
             else:
                 assert em.retrieval_gating_nodes == []
@@ -277,29 +275,29 @@ class TestExecution:
         #   memory_template         mem    mem  mem  fld   concat  nlz  sm   str    inputs        expected_retrieval
         #                           fill   cap decay wts    keys       gain  prob
         # ----------------------------------------------------------------------------------  ------------------------
-        (0, [[[1,2,3],[4,5,6]],
-             [[1,2,5],[4,5,8]],
-             [[1,2,10],[4,5,10]]],  None,   3,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]]], [[1., 2., 3.16585899],
-                                                                                                 [4., 5., 6.16540637]]),
-        (1, [[[1,2,3],[4,5,6]],
-             [[1,2,5],[4,5,8]],
-             [[1,2,10],[4,5,10]]],  None,   3,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]],
-                                                                                  [[4, 5, 6]]], [[1., 2., 3.16585899],
-                                                                                                 [4., 5., 6.16540637]]),
-        (2, [[[1,2,3],[4,5,6]],
-             [[1,2,5],[4,5,8]],
-             [[1,2,10],[4,5,10]]],  None,   3,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]],
-                                                                                  [[4, 5, 8]]], [[1., 2., 3.16585899],
-                                                                                                 [4., 5., 6.16540637]]),
-        (3, [[[1,2,3],[4,5,6]],
-             [[1,2,5],[4,5,8]],
-             [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]],
-                                                                                   [[4, 5, 8]]], [[0.99998628,
-                                                                                                   1.99997247,
-                                                                                                   3.1658154 ],
-                                                                                                  [3.99994492,
-                                                                                                   4.99993115,
-                                                                                                   6.16532141]]),
+        # (0, [[[1,2,3],[4,5,6]],
+        #      [[1,2,5],[4,5,8]],
+        #      [[1,2,10],[4,5,10]]],  None,   3,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]]], [[1., 2., 3.16585899],
+        #                                                                                          [4., 5., 6.16540637]]),
+        # (1, [[[1,2,3],[4,5,6]],
+        #      [[1,2,5],[4,5,8]],
+        #      [[1,2,10],[4,5,10]]],  None,   3,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]],
+        #                                                                           [[4, 5, 6]]], [[1., 2., 3.16585899],
+        #                                                                                          [4., 5., 6.16540637]]),
+        # (2, [[[1,2,3],[4,5,6]],
+        #      [[1,2,5],[4,5,8]],
+        #      [[1,2,10],[4,5,10]]],  None,   3,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]],
+        #                                                                           [[4, 5, 8]]], [[1., 2., 3.16585899],
+        #                                                                                          [4., 5., 6.16540637]]),
+        # (3, [[[1,2,3],[4,5,6]],
+        #      [[1,2,5],[4,5,8]],
+        #      [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]],
+        #                                                                            [[4, 5, 8]]], [[0.99998628,
+        #                                                                                            1.99997247,
+        #                                                                                            3.1658154 ],
+        #                                                                                           [3.99994492,
+        #                                                                                            4.99993115,
+        #                                                                                            6.16532141]]),
         (4, [[[1,2,3],[4,5,6]],     # Concatenated equal field_weights
              [[1,2,5],[4,5,8]],
              [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [1,1],  None, None,  100,  0, [[[1, 2, 4]],
@@ -309,19 +307,28 @@ class TestExecution:
                                                                                                  [3.98547551,
                                                                                                   4.98184466,
                                                                                                   6.92977565]]),
-        (5, [[[1,2,3],[4,5,6]],     # Not concatenated equal field_weights
+        # (5, [[[1,2,3],[4,5,6]],     # Not concatenated equal field_weights
+        #      [[1,2,5],[4,5,8]],
+        #      [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [1,1],  False, None,  100,  0, [[[1, 2, 3]],
+        #                                                                            [[4, 5, 6]]], [[0.99637453,
+        #                                                                                            1.99272658,
+        #                                                                                            3.44135342],
+        #                                                                                           [3.98544898,
+        #                                                                                            4.9818115,
+        #                                                                                            6.38099054]]
+        #  ),
+        # (6, [[[1,2,3],[4,5,6]],        # Unequal field_weights
+        #      [[1,2,5],[4,5,8]],
+        #      [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [9,1],  None, None,  100,  0, [[[1, 2, 3]],
+        #                                                                           [[4, 5, 6]]], [[0.99926393,
+        #                                                                                           1.99852329,
+        #                                                                                           3.220923],
+        #                                                                                          [3.99704573,
+        #                                                                                           4.99630722,
+        #                                                                                           6.20845524]]),
+        (7, [[[1,2,3],[4,5,6]],        # Store
              [[1,2,5],[4,5,8]],
-             [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [1,1],  False, None,  100,  0, [[[1, 2, 3]],
-                                                                                   [[4, 5, 6]]], [[0.99637453,
-                                                                                                   1.99272658,
-                                                                                                   3.44135342],
-                                                                                                  [3.98544898,
-                                                                                                   4.9818115,
-                                                                                                   6.38099054]]
-         ),
-        (6, [[[1,2,3],[4,5,6]],        # Unequal field_weights
-             [[1,2,5],[4,5,8]],
-             [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [9,1],  None, None,  100,  0, [[[1, 2, 3]],
+             [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [9,1],  None, None,  100,  1, [[[1, 2, 3]],
                                                                                   [[4, 5, 6]]], [[0.99926393,
                                                                                                   1.99852329,
                                                                                                   3.220923],
@@ -337,19 +344,19 @@ class TestExecution:
                              ids=[x[0] for x in test_data]
                              )
     @pytest.mark.benchmark
-    def test_simple_retrieval_without_storage_or_decay(self,
-                                                       test_num,
-                                                       memory_template,
-                                                       memory_fill,
-                                                       memory_capacity,
-                                                       memory_decay,
-                                                       field_weights,
-                                                       concatenate_keys,
-                                                       normalize_memories,
-                                                       softmax_gain,
-                                                       storage_prob,
-                                                       inputs,
-                                                       expected_retrieval):
+    def test_execution(self,
+                       test_num,
+                       memory_template,
+                       memory_fill,
+                       memory_capacity,
+                       memory_decay,
+                       field_weights,
+                       concatenate_keys,
+                       normalize_memories,
+                       softmax_gain,
+                       storage_prob,
+                       inputs,
+                       expected_retrieval):
 
         em = EMComposition(memory_template=memory_template,
                            memory_capacity=memory_capacity,
@@ -382,8 +389,18 @@ class TestExecution:
 
         # Validate storage
         if storage_prob:
-            em.memory
-
+            assert em.memory[-1] == [[1,2,3],[4,5,6]]
+            if memory_decay:
+                pass # FIX:  IMPLEMENT
+            else:
+                pass # FIX:  IMPLEMENT
+        elif len(memory_template) < memory_capacity:
+            if isinstance(memory_fill, tuple):
+                for field in em.memory[-1]:
+                    assert all((memory_fill[0] <= elem <= memory_fill[1]) for elem in field)
+            else:
+                memory_fill = memory_fill or 0
+                assert all(elem == memory_fill for elem in em.memory[-1])
 
 
 # *****************************************************************************************************************

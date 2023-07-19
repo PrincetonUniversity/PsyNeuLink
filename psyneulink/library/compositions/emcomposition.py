@@ -10,12 +10,10 @@
 
 # TODO:
 # - FIX: WRITE MORE EXECUTION TESTS
-# - FIX: EXAMPLES and FIGURES RE: default concatenate_keys -> False
-# - FIX: GET RID OF retrieval_gating_nodes IF all key weights are equal
+# - FIX: EXAMPLES and FIGURES RE: default concatenate_keys -> False and retrieval_gating_nodes IF all key weights are equal
 # - FIX: DOCUMENTATION: define "key weights" explicitly as field_weights for all non-zero values
-# - FIX: REFACTOR PARAMETER ASSIGNEMENTS TO PASS VALUES TO SUPER, AND ADD **kwargs to AutodiffComposition
 # - FIX: ADD NOISE (AND/OR SOFTMAX PROBABILISTIC RETRIEVAL MODE)
-# - FIX: WARNING NOT OCCUrRING FOR ZEROS WITH MULTIPLE ENTRIES (HAPPENS IF *ANY* KEY IS EVER ALL ZEROS)
+# - FIX: WARNING NOT OCCURRING FOR ZEROS WITH MULTIPLE ENTRIES (HAPPENS IF *ANY* KEY IS EVER ALL ZEROS)
 # - FIX: ALLOW memory_template TO BE 3-ITEM TUPLE IN WHICH 1ST ITEM SPECIFIES MEMORY CAPACITY
 # - FIX: ??MAKE memory_fill a Parameter with fallback_default = 0 (and get rid of hard assignment in __init__()
 # - FIX: USE fallback_default FOR concatenate_keys, softmax_gain and storage_prob, AND MODIFY TESTS ACCORDINGLY?
@@ -855,10 +853,9 @@ class EMComposition(AutodiffComposition):
 
     retrieval_gating_nodes : list[GatingMechanism]
         `GatingMechanisms <GatingMechanism>` that uses the `field weight <EMComposition.field_weights>` for each
-        field to modulate the output of the corresponding `retrieval_node <EMComposition.retrieval_nodes>` before
-        it is passed to the `retrieval_weighting_node <EMComposition.retrieval_weighting_node>`. These are
-        implemented only if more than one `key field <EMComposition_Fields>` is specified and differential weights
-        are specified for their `field_weights <EMComposition.field_weights>` (see `Fields <EMComposition_Fields>`
+        field to modulate the output of the corresponding `retrieval_node <EMComposition.retrieval_nodes>` before it
+        is passed to the `retrieval_weighting_node <EMComposition.retrieval_weighting_node>`. These are implemented
+        only if more than one `key field <EMComposition_Fields>` is specified (see `Fields <EMComposition_Fields>`
         for additional details).
 
     retrieval_weighting_node : TransferMechanism
@@ -1464,8 +1461,7 @@ class EMComposition(AutodiffComposition):
 
         # FIX: CONSIDER USING THIS FOR INPUT GATING OF MATCH NODE(S)?
         retrieval_gating_nodes = []
-        if (not concatenate_keys and self.num_keys > 1
-                and not all(field_weights[i] == field_weights[0] for i in range(self.num_keys))):
+        if not concatenate_keys and self.num_keys > 1:
             retrieval_gating_nodes = [GatingMechanism(input_ports={VARIABLE: field_weights[i],
                                                                    PARAMS:{DEFAULT_INPUT: DEFAULT_VARIABLE},
                                                                    NAME: 'OUTCOME'},
