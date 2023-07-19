@@ -10,6 +10,9 @@
 
 # TODO:
 # - FIX: WRITE MORE EXECUTION TESTS
+# - FIX: EXAMPLES and FIGURES RE: default concatenate_keys -> False
+# - FIX: GET RID OF retrieval_gating_nodes IF all key weights are equal
+# - FIX: DOCUMENTATION: define "key weights" explicitly as field_weights for all non-zero values
 # - FIX: REFACTOR PARAMETER ASSIGNEMENTS TO PASS VALUES TO SUPER, AND ADD **kwargs to AutodiffComposition
 # - FIX: ADD NOISE (AND/OR SOFTMAX PROBABILISTIC RETRIEVAL MODE)
 # - FIX: WARNING NOT OCCUrRING FOR ZEROS WITH MULTIPLE ENTRIES (HAPPENS IF *ANY* KEY IS EVER ALL ZEROS)
@@ -212,13 +215,12 @@ An EMComposition is created by calling its constructor, that takes the following
       while the last field is treated as a value field;
 
     * *single entry*: its value is ignored, and all fields are treated as keys (i.e., used for
-      retrieval) and are `concatenated <EMComposition_Concatenate_Keys>` and equally weighted for retrieval;
+      retrieval) and equally weighted for retrieval;
 
-    * *multiple non-zero entries*: If all entries are identical, the value is ignored and the corresponding keys are
-      `concatenated <EMComposition_Concatenate_Keys>` and weighted equally for retrieval; if the non-zero entries are
-      non-identical, they are used to weight the corresponding fields during retrieval (see `Weight fields
-      <EMComposition_Processing>`).  In either case, the remaining fields (with zero weights) are treated
-      as value fields.
+    * *multiple non-zero entries*: If all entries are identical, the value is ignored and the corresponding keys
+      are weighted equally for retrieval; if the non-zero entries are non-identical, they are used to weight the
+      corresponding fields during retrieval (see `Weight fields <EMComposition_Processing>`).  In either case,
+      the remaining fields (with zero weights) are treated as value fields.
 
 .. _EMComposition_Field_Names:
 
@@ -229,20 +231,20 @@ An EMComposition is created by calling its constructor, that takes the following
 .. _EMComposition_Concatenate_Keys:
 
 * **concatenate_keys**:  specifies whether keys are concatenated before a match is made to items in memory.
-  This is True by default, if the `field_weights <EMComposition.field_weights>` for all keys are equal (i.e.,
-  all non-zero weights are equal -- see `field_weights <EMComposition_Field_Weights>`) and `normalize_memories
-  <EMComposition.normalize_memories>` is True (the default).  However, if the key `field_weights
-  <EMComposition.field_weights>` are *not* all equal, or ``normalize_memories`` is set to False, then a warning
-  is issued and concatenation is disabled (i.e., all keys are treated separately). If ``concatenate_keys`` is set
-  to False, then keys are not concatenated irrepsective of `field_weights <EMComposition.field_weights>` or
-  `normalize_memories <EMComposition.normalize_memories>`.
+  This is False by default. It is also ignored if the `field_weights <EMComposition.field_weights>` for all keys are
+  not all equal (i.e., all non-zero weights are not equal -- see `field_weights <EMComposition_Field_Weights>`) and/or
+  `normalize_memories <EMComposition.normalize_memories>` is set to False. Setting concatenate_keys to True in either
+  of those cases issues a warning, and the setting is ignored. If the key `field_weights <EMComposition.field_weights>`
+  (i.e., all non-zero values) are all equal *and* ``normalize_memories`` is set to True, then setting
+  ``concatenate_keys`` then a concatenate_keys_node <EMComposition.concatenate_keys_node>` is created that
+  receives input from all of the `key_input_nodes <EMComposition.key_input_nodes>` and passes them as a single
+  vector to the `mactch_node <EMComposition.match_node>`.
 
-      .. technical_note::
-         If `normalize_memories <EMComposition.normalize_memories>` is True, then concatenating keys has no influence
-         on the outcome of the `matching process <EMComposition_Processing>`, however it can be more computationally
-         efficient. However, if `normalize_memories <EMComposition.normalize_memories>` is False, it can affect the
-         outcome of the matching process, since different fields may have different norms that will result in different
-         dot products in the `matching process <EMComposition_Processing>`.
+      .. note::
+         While this is computationally more efficient, it can affect the outcome of the `matching process
+         <EMComposition_Processing>`, since computing the normalized dot product of a single vector comprised of the
+         concatentated inputs is not identical to computing the normalized dot product of each field independently and
+         then combining the results.
 
       .. note::
          All `key_input_nodes <EMComposition.key_input_nodes>` and `retrieval_nodes <EMComposition.retrieval_nodes>`
@@ -958,7 +960,7 @@ class EMComposition(AutodiffComposition):
         memory_capacity = Parameter(1000, structural=True)
         field_weights = Parameter(None, structural=True)
         field_names = Parameter(None, structural=True)
-        concatenate_keys = Parameter(True, structural=True)
+        concatenate_keys = Parameter(False, structural=True)
         memory_decay = Parameter(True, loggable=True, modulable=True, fallback_default=True)
         memory_decay_rate = Parameter(None, loggable=True, modulable=True, fallback_default=True,
                                dependencies='memory_decay')
@@ -1005,7 +1007,7 @@ class EMComposition(AutodiffComposition):
                  memory_fill:Union[int, float, RANDOM]=0,
                  field_names:Optional[list]=None,
                  field_weights:tuple=None,
-                 concatenate_keys:bool=True,
+                 concatenate_keys:bool=False,
                  learn_weights:bool=False, # FIX: False FOR NOW, UNTIL IMPLEMENTED
                  learning_rate:float=None,
                  memory_capacity:int=1000,
@@ -1224,8 +1226,6 @@ class EMComposition(AutodiffComposition):
             parsed_field_weights = np.repeat(field_weights / np.sum(field_weights), len(self.entry_template))
         else:
             parsed_field_weights = np.array(field_weights) / np.sum(field_weights)
-        # # Rescale field_weights to be proportional to the number of fields <- FIX CORRECT?
-        # field_weights = field_weights * num_fields
 
         # Memory structure Parameters
         parsed_field_names = field_names.copy() if field_names is not None else None
@@ -1468,7 +1468,8 @@ class EMComposition(AutodiffComposition):
 
         # FIX: CONSIDER USING THIS FOR INPUT GATING OF MATCH NODE(S)?
         retrieval_gating_nodes = []
-        if not concatenate_keys and self.num_keys > 1:
+        if (not concatenate_keys and self.num_keys > 1
+                and not all(field_weights[i] == field_weights[0] for i in range(self.num_keys))):
             retrieval_gating_nodes = [GatingMechanism(input_ports={VARIABLE: field_weights[i],
                                                                    PARAMS:{DEFAULT_INPUT: DEFAULT_VARIABLE},
                                                                    NAME: 'OUTCOME'},
