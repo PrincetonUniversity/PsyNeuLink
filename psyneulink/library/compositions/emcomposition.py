@@ -1483,9 +1483,10 @@ class EMComposition(AutodiffComposition):
     def _construct_retrieval_weighting_node(self)->list:
         """Create nodes that compute the weighting of each item in memory.
         """
-        # FIX: THIS SHOULD WORK:
-        retrieval_weighting_node = TransferMechanism(input_ports=[m.output_port for m in self.softmax_nodes],
-                                                     name='RETRIEVAL')
+        retrieval_weighting_node = TransferMechanism(input_ports=[{SIZE:self.memory_capacity,
+                                                                   PROJECTIONS:[m.output_port for m in
+                                                                                self.softmax_nodes]}],
+                                                                  name='RETRIEVAL')
 
         assert len(retrieval_weighting_node.output_port.value) == self.memory_capacity, \
             f'PROGRAM ERROR: number of items in retrieval_weighting_node ' \
