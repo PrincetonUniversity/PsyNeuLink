@@ -305,24 +305,33 @@ class TestExecution:
         #                                                                                           [3.99999727,
         #                                                                                            4.99999659,
         #                                                                                            7.33742455]]),
-        (5, [[[1,2,3],[4,5,6]],
+        # (5, [[[1,2,3],[4,5,6]],  # OLD
+        #      [[1,2,5],[4,5,8]],
+        #      [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [1,1],  False, None,  100,  0, [[[1, 2, 3]],
+        #                                                                            [[4, 5, 6]]], [[0.99998628,
+        #                                                                                            1.99997247,
+        #                                                                                            3.1658154 ],
+        #                                                                                           [3.99994492,
+        #                                                                                            4.99993115,
+        #                                                                                            6.16532141]]),
+        (5, [[[1,2,3],[4,5,6]], # NEW NO MULTIPLIER BY N
              [[1,2,5],[4,5,8]],
              [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [1,1],  False, None,  100,  0, [[[1, 2, 3]],
-                                                                                   [[4, 5, 6]]], [[0.99998628,
-                                                                                                   1.99997247,
-                                                                                                   3.1658154 ],
-                                                                                                  [3.99994492,
-                                                                                                   4.99993115,
-                                                                                                   6.16532141]]),
-        (6, [[[1,2,3],[4,5,6]],
+                                                                                   [[4, 5, 6]]], [[0.49999314,
+                                                                                                   0.99998623,
+                                                                                                   1.5829077],
+                                                                                                  [1.99997246,
+                                                                                                   2.49996557,
+                                                                                                   3.08266071]]),
+        (6, [[[1,2,3],[4,5,6]], # NEW NO MULTIPLIER BY N
              [[1,2,5],[4,5,8]],
-             [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [3,1],  None, None,  100,  0, [[[1, 2, 3]],
-                                                                                   [[4, 5, 6]]], [[0.99998628,
-                                                                                                   1.99997247,
-                                                                                                   3.1658154 ],
-                                                                                                  [3.99994492,
-                                                                                                   4.99993115,
-                                                                                                   6.16532141]]),
+             [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [9,1],  None, None,  100,  0, [[[1, 2, 3]],
+                                                                                   [[4, 5, 6]]], [[0.89998765,
+                                                                                                   1.79997522,
+                                                                                                   2.84923386],
+                                                                                                  [3.59995042,
+                                                                                                   4.49993803,
+                                                                                                   5.54878927]]),
     ]
 
     args_names = "test_num, memory_template, memory_fill, memory_capacity, memory_decay, field_weights, " \
@@ -362,8 +371,18 @@ class TestExecution:
 
         if len(np.array(em.memory_template)) == len(np.array(memory_template)):
             np.testing.assert_equal(np.array(em.memory_template), np.array(memory_template))
+
         retrieved = em.run(inputs=inputs)
-        # np.testing.assert_allclose(retrieved, expected_retrieval)
+
+        np.testing.assert_allclose(retrieved, expected_retrieval)
+
+        # Validate that sum of weighted softmaxwes in retrieval_weighting_node itelf sums to 1
+        np.testing.assert_allclose(np.sum(em.retrieval_weighting_node.value), 1.0, atol=1e-15)
+
+        # Validate that sum of its output ports also sums to 1
+        np.testing.assert_allclose(np.sum([port.value for port in em.retrieval_weighting_node.output_ports]),
+                                   1.0, atol=1e-15)
+
 
         # # Test with 0 as field weight
         # em.field_weights=[1,0]
