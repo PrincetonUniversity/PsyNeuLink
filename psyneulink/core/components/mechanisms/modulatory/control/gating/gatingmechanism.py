@@ -465,6 +465,9 @@ class GatingMechanism(ControlMechanism):
                 args = kwargs.pop(MONITOR_FOR_CONTROL)
                 if args:
                     monitor_for_gating.extend(convert_to_list(args))
+            if 'default_gating_allocation' in kwargs:
+                raise GatingMechanismError(f"'default_allocation' should be used in place of "
+                                           f"'default_gating_allocation'.")
 
         super().__init__(default_variable=default_gating_allocation,
                          size=size,

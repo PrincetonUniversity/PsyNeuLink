@@ -367,7 +367,8 @@ class AutodiffComposition(Composition):
                  disable_cuda=True,
                  cuda_index=None,
                  force_no_retain_graph=False,
-                 name="autodiff_composition"):
+                 name="autodiff_composition",
+                 **kwargs):
 
         if not torch_available:
             raise AutodiffCompositionError('Pytorch python module (torch) is not installed. Please install it with '
@@ -378,7 +379,8 @@ class AutodiffComposition(Composition):
                                                   optimizer_type = optimizer_type,
                                                   weight_decay = weight_decay,
                                                   loss_spec = loss_spec,
-                                                  pathways=pathways)
+                                                  pathways=pathways,
+                                                  **kwargs)
 
         self.optimizer_type = optimizer_type
         self.loss_spec = loss_spec

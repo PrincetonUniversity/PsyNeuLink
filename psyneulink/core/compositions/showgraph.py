@@ -22,7 +22,7 @@ them as edges.
 
 .. technical_note::
     Every Composition is assigned a `ShowGraph` object, that is implemented in the free-standing showgraph.py module.
-    The `show_graph <Compositoin.show_graph>` method of a Composition directly calls the `show_graph
+    The `show_graph <Composition.show_graph>` method of a Composition directly calls the `show_graph
     <ShowGraph.show_graph>` method of its `ShowGraph` object, as do all links to documentation concerning
     `show_graph`.
 

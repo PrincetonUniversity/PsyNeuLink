@@ -712,8 +712,8 @@ class InputPort(Port_Base):
         any inputs) and the `Mechanisms <Mechanism>` to which they belong, as an error is returned if an InputPort
         is executed and its variable is assigned None. If *default_input* is assigned *DEFAULT_VARIABLE*, then the
         `default value <Parameter_Defaults>` for the InputPort's `variable <InputPort.variable>` is used as its value.
-        This  is useful for assignment to a Mechanism that needs a fixed value as the input to its `function
-        <Mechanism_Base.function>`.
+        This  is useful for assignment to a Mechanism that needs a constant (i.e., fixed value) as the input to its
+        `function <Mechanism_Base.function>`.
 
         .. note::
            If `default_input <InputPort.default_input>` is assigned *DEFAULT_VARIABLE*, then its `internal_only

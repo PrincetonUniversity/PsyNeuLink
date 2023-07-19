@@ -169,11 +169,11 @@ from psyneulink import *
 
 # Settings for running script:
 CONSTRUCT_MODEL = True # THIS MUST BE SET TO True to run the script
-DISPLAY_MODEL = False # True = show visual graphic of model
-TRAIN_FFN = True  # True => train the FFN (WM)
-TEST_FFN = True  # True => test the FFN on training stimuli (WM)
-RUN_MODEL = True  # True => test the model on sample stimulus sequences
-ANALYZE_RESULTS = True # True => output analysis of results of run
+DISPLAY_MODEL = True # True = show visual graphic of model
+TRAIN_FFN = False  # True => train the FFN (WM)
+TEST_FFN = False  # True => test the FFN on training stimuli (WM)
+RUN_MODEL = False  # True => test the model on sample stimulus sequences
+ANALYZE_RESULTS = False # True => output analysis of results of run
 REPORT_OUTPUT = ReportOutput.OFF       # Sets console output during run
 REPORT_PROGRESS = ReportProgress.OFF   # Sets console progress bar during run
 ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution

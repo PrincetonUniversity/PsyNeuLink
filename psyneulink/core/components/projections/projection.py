@@ -753,6 +753,7 @@ class Projection_Base(Projection):
             if self not in self.receiver.afferents_info:
                 self.receiver.afferents_info[self] = ConnectionInfo()
 
+
         self._creates_scheduling_dependency = True
 
        # Validate variable, function and params
@@ -1913,20 +1914,16 @@ def _parse_connection_specs(connectee_port_type,
                                              projection_socket,
                                              connectee_port_type)
             else:
-                raise ProjectionError("Invalid {} specification ({}) for connection "
-                                      "between {} \'{}\' and {} of \'{}\'.".
-                                 format(Projection.__name__,
-                                        projection_spec,
-                                        port_type.__name__,
-                                        port.name,
-                                        connectee_port_type.__name__,
-                                        owner.name))
+                raise ProjectionError(f"Invalid {Projection.__name__} specification ({projection_spec}) "
+                                      f"for connection between {port_type.__name__} '{port.name}' "
+                                      f"and {connectee_port_type.__name__} of '{owner.name}'.")
 
             connect_with_ports.extend([ProjectionTuple(port, weight, exponent, projection_spec)])
 
         else:
-            raise ProjectionError("Unrecognized, invalid or insufficient specification of connection for {}: \'{}\'".
-                                  format(owner.name, connection))
+            # raise ProjectionError(f"Unrecognized, invalid or insufficient specification "
+            #                       f"of connection for {owner.name}: '{connection}'.")
+            pass
 
     if not all(isinstance(projection_tuple, ProjectionTuple) for projection_tuple in connect_with_ports):
         raise ProjectionError("PROGRAM ERROR: Not all items are ProjectionTuples for {}".format(owner.name))
