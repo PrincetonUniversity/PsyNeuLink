@@ -9,16 +9,12 @@
 # ********************************************* EMComposition *************************************************
 
 # TODO:
-# - FIX: WRITE EXECUTION TESTS
-# - FIX: FOR ONE KEY, GET RID OF:
-#        - retrieval_gating_nodes
-#        - retieval_weighting_node
-#        - softmax goes straight to retrieval nodes
-# - FIX: ORDER OF VALUES RETURNED BY RUN IS BACKWARDS (VALUE SHOULD BE LAST NOT FIRST)
+# - FIX: WRITE MORE EXECUTION TESTS
+# - FIX: REFACTOR PARAMETER ASSIGNEMENTS TO PASS VALUES TO SUPER, AND ADD **kwargs to AutodiffComposition
 # - FIX: ADD NOISE (AND/OR SOFTMAX PROBABILISTIC RETRIEVAL MODE)
-# - FIX: WARNING NOT OCCURING FOR ZEROS WITH MULTIPLE ENTRIES (HAPPENS IF *ANY* KEY IS EVER ALL ZEROS)
+# - FIX: WARNING NOT OCCUrRING FOR ZEROS WITH MULTIPLE ENTRIES (HAPPENS IF *ANY* KEY IS EVER ALL ZEROS)
 # - FIX: ALLOW memory_template TO BE 3-ITEM TUPLE IN WHICH 1ST ITEM SPECIFIES MEMORY CAPACITY
-# - FIX: MAKE memory_fill A Parameter with fallback_default = 0 (and get rid of hard assignment in __init__()
+# - FIX: ??MAKE memory_fill a Parameter with fallback_default = 0 (and get rid of hard assignment in __init__()
 # - FIX: USE fallback_default FOR concatenate_keys, softmax_gain and storage_prob, AND MODIFY TESTS ACCORDINGLY?
 # - FIX: TEST FOR fallback_default FOR normalize_memories
 #        DEFAULTS TO memory_capacity; IF memory_capacity IS USER-SPECIFIED AND THEY CONFLICT -> ERROR MESSAGE
@@ -36,11 +32,13 @@
 #      - _store() method to assign weights to memory
 # - FIX: IMPLEMENT Composition.merge() METHOD that merges a Composition into the one on which it is called
 #        (MAKE COMPARABLE TO add_nodes() METHOD)
-# - FIX: AUGMENT LinearMatrix Function:
-#        - Normalize as option
-#        - Anytime a row's norm is 0, replace with 1s
-# - FIX: WHY IS Concatenate NOT WORKING AS FUNCTION OF AN INPUTPORT (WASN'T THAT USED IN CONTEXT OF BUFFER?)
-# - FIX: IF InputPort HAS default_input = DEFAULT_VARIABLE, THEN IT SHOULD BE IGNORED AS AN INPUT NODE IN A COMPOSITION
+# - FIX: PSYNEULINK:
+# -    FIX: AUGMENT LinearMatrix Function:
+#           - Normalize as option
+#           - Anytime a row's norm is 0, replace with 1s
+# -    FIX: WHY IS Concatenate NOT WORKING AS FUNCTION OF AN INPUTPORT (WASN'T THAT USED IN CONTEXT OF BUFFER?)
+# -    FIX: IF InputPort HAS default_input = DEFAULT_VARIABLE, THEN IT SHOULD BE IGNORED AS AN INPUT NODE IN A
+#  COMPOSITION
 # - WRITE TESTS FOR INPUT_PORT and MATRIX SPECS CORRECT IN LATEST BRANCHEs
 # - ACCESSIBILITY OF DISTANCES (SEE BELOW): MAKE IT A LOGGABLE PARAMETER (I.E., WITH APPROPRIATE SETTER)
 #   ADD COMPILED VERSION OF NORMED LINEAR_COMBINATION FUNCTION TO LinearCombination FUNCTION: dot / (norm a * norm b)
@@ -1016,6 +1014,8 @@ class EMComposition(AutodiffComposition):
                  normalize_memories:bool=True,
                  softmax_gain:Union[float, CONTROL]=CONTROL,
                  storage_prob:float=1.0,
+                 random_state=None,
+                 seed=None,
                  name="EM_Composition"):
 
         # Construct memory --------------------------------------------------------------------------------
@@ -1023,19 +1023,33 @@ class EMComposition(AutodiffComposition):
         memory_fill = memory_fill or 0 # FIX: GET RID OF THIS ONCE IMPLEMENTED AS A Parameter
         self._validate_memory_specs(memory_template, memory_fill, field_weights, field_names, name)
         self._parse_memory_template(memory_template, memory_fill, memory_capacity, field_weights)
-        self._parse_fields(field_weights, field_names, concatenate_keys, normalize_memories,
-                           learn_weights, learning_rate, name)
+        field_weights, field_names, concatenate_keys = self._parse_fields(field_weights, field_names, concatenate_keys,
+                                                                          normalize_memories,
+                                                                          learn_weights, learning_rate, name)
 
-        if self.parameters.memory_decay.get() and self.parameters.memory_decay_rate.get() is None:
-            self.parameters.memory_decay_rate.set(memory_decay_rate or 1 / self.memory_capacity)
-        self.softmax_gain = softmax_gain
-        self.storage_prob = storage_prob
+        if memory_decay and memory_decay_rate is None:
+            memory_decay_rate = 1 / self.memory_capacity
 
         # Instantiate Composition -------------------------------------------------------------------------
 
         pathway = self._construct_pathway()
         super().__init__(pathway,
-                         name=name)
+                         name=name,
+                         memory_template = memory_template,
+                         memory_capacity = memory_capacity,
+                         field_weights = field_weights,
+                         field_names = field_names,
+                         concatenate_keys = concatenate_keys,
+                         memory_decay = memory_decay,
+                         memory_decay_rate = memory_decay_rate,
+                         normalize_memories = normalize_memories,
+                         learn_weights = learn_weights,
+                         learning_rate = learning_rate,
+                         storage_prob = storage_prob,
+                         softmax_gain = softmax_gain,
+                         random_state = random_state,
+                         seed = seed
+                         )
 
         # Clean-up ----------------------------------------------------------------------------------------
 
@@ -1206,35 +1220,34 @@ class EMComposition(AutodiffComposition):
         field_weights = np.atleast_1d(field_weights)
         # Fill out and normalize all field_weights
         if len(field_weights) == 1:
-            field_weights = np.repeat(field_weights/np.sum(field_weights), len(self.entry_template))
+            parsed_field_weights = np.repeat(field_weights/np.sum(field_weights), len(self.entry_template))
         else:
-            field_weights = np.array(field_weights) / np.sum(field_weights)
+            parsed_field_weights = np.array(field_weights) / np.sum(field_weights)
         # # Rescale field_weights to be proportional to the number of fields <- FIX CORRECT?
         # field_weights = field_weights * num_fields
 
-        # Memory structure (field) attributes (not Parameters)
-        self.num_fields = len(self.entry_template)
-        self.field_weights = field_weights
-        self.field_names = field_names.copy() if field_names is not None else None
+        # Memory structure Parameters
+        parsed_field_names = field_names.copy() if field_names is not None else None
 
-        # Memory field attributes
-        keys_weights = [i for i in self.field_weights if i != 0]
+        # Set memory field attributes
+        self.num_fields = len(self.entry_template)
+        keys_weights = [i for i in parsed_field_weights if i != 0]
         self.num_keys = len(keys_weights)
         self.num_values = self.num_fields - self.num_keys
-        if self.field_names:
-            self.key_names = self.field_names[:self.num_keys]
-            self.value_names = self.field_names[self.num_keys:]
+        if parsed_field_weights:
+            self.key_names = parsed_field_weights[:self.num_keys]
+            self.value_names = parsed_field_weights[self.num_keys:]
         else:
             self.key_names = [f'KEY {i}' for i in range(self.num_keys)] if self.num_keys > 1 else ['KEY']
             self.value_names = [f'VALUE {i}' for i in range(self.num_values)] if self.num_values > 1 else ['VALUE']
 
-        concatenate_keys = concatenate_keys or False
-        self.concatenate_keys = (concatenate_keys
-                                 and self.num_keys > 1
-                                 and np.all(keys_weights == keys_weights[0])
-                                 and normalize_memories)
-        # if concatenate_keys was forced off above:
-        if concatenate_keys and not self.concatenate_keys:
+        user_specified_concatenate_keys = concatenate_keys or False
+        parsed_concatenate_keys = (user_specified_concatenate_keys
+                                    and self.num_keys > 1
+                                    and np.all(keys_weights == keys_weights[0])
+                                    and normalize_memories)
+        # if concatenate_keys was forced to be False when user specified it as True, issue warning
+        if user_specified_concatenate_keys and not parsed_concatenate_keys:
             # Issue warning if concatenate_keys is True but either
             #   field weights are not all equal and/or normalize_memories is False
             fw_error_msg = nm_error_msg = fw_correction_msg = nm_correction_msg = None
@@ -1259,6 +1272,7 @@ class EMComposition(AutodiffComposition):
                           f"automatically set to False for now;  stay tuned...")
         # self.learn_weights = learn_weights
         self.learning_rate = learning_rate
+        return parsed_field_weights, parsed_field_names, parsed_concatenate_keys
 
     def _parse_memory_shape(self, memory_template):
         """Parse shape of memory_template to determine number of entries and fields"""

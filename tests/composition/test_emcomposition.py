@@ -267,68 +267,76 @@ class TestExecution:
     # 2:   same as 1 but different value (that should be ignored)
     # 3:   same as 2 but has extra entry filled with random values (which changes retrieval)
     # 4:   same as 3 but uses both fields as keys (no values)
-    # 5:   same as 4 but no concatentation of keys (confirms that results are same w/ and w/o concatenation)
+    # 5:   same as 4 but no concatenation of keys (confirms that results are similar w/ and w/o concatenation)
     # 6:   same as 5, but different field_weights
-    # 7:  EFFECTS OF VALUE ON STORAGE AND FUTURE RETRIEVAL
 
     test_data = [
         # ---------------------------------------- SPECS -----------------------------------  ----- EXPECTED ---------
         #   memory_template         mem    mem  mem  fld   concat  nlz  sm   str    inputs        expected_retrieval
         #                           fill   cap decay wts    keys       gain  prob
         # ----------------------------------------------------------------------------------  ------------------------
-        (0, [[[1,2,3],[4,5,6]],
-             [[1,2,5],[4,5,8]],
-             [[1,2,10],[4,5,10]]],  None,   3,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]]], [[1., 2., 3.16585899],
-                                                                                                 [4., 5., 6.16540637]]),
-        (1, [[[1,2,3],[4,5,6]],
-             [[1,2,5],[4,5,8]],
-             [[1,2,10],[4,5,10]]],  None,   3,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]],
-                                                                                  [[4, 5, 6]]], [[1., 2., 3.16585899],
-                                                                                                 [4., 5., 6.16540637]]),
-        (2, [[[1,2,3],[4,5,6]],
-             [[1,2,5],[4,5,8]],
-             [[1,2,10],[4,5,10]]],  None,   3,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]],
-                                                                                  [[4, 5, 8]]], [[1., 2., 3.16585899],
-                                                                                                 [4., 5., 6.16540637]]),
-        (3, [[[1,2,3],[4,5,6]],
-             [[1,2,5],[4,5,8]],
-             [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]],
-                                                                                   [[4, 5, 8]]], [[0.99998628,
-                                                                                                   1.99997247,
-                                                                                                   3.1658154 ],
-                                                                                                  [3.99994492,
-                                                                                                   4.99993115,
-                                                                                                   6.16532141]]),
-        (4, [[[1,2,3],[4,5,6]], # Concatenated NORMALIZED
-             [[1,2,5],[4,5,8]],
-             [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [1,1],  None, None,  100,  0, [[[1, 2, 4]],
-                                                                                   [[4, 5, 6]]], [[0.49999975,
-                                                                                                   0.99999949,
-                                                                                                   2.15230061],
-                                                                                                  [1.99999899,
-                                                                                                   2.49999873,
-                                                                                                   3.63144582]]),
-        # (5, [[[1,2,3],[4,5,6]], No concatenation # OLD (NOT NORMALIZED)
+        # (0, [[[1,2,3],[4,5,6]],
         #      [[1,2,5],[4,5,8]],
-        #      [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [1,1],  False, None,  100,  0, [[[1, 2, 3]],
-        #                                                                            [[4, 5, 6]]], [[0.99998628,
+        #      [[1,2,10],[4,5,10]]],  None,   3,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]]], [[1., 2., 3.16585899],
+        #                                                                                          [4., 5., 6.16540637]]),
+        # (1, [[[1,2,3],[4,5,6]],
+        #      [[1,2,5],[4,5,8]],
+        #      [[1,2,10],[4,5,10]]],  None,   3,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]],
+        #                                                                           [[4, 5, 6]]], [[1., 2., 3.16585899],
+        #                                                                                          [4., 5., 6.16540637]]),
+        # (2, [[[1,2,3],[4,5,6]],
+        #      [[1,2,5],[4,5,8]],
+        #      [[1,2,10],[4,5,10]]],  None,   3,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]],
+        #                                                                           [[4, 5, 8]]], [[1., 2., 3.16585899],
+        #                                                                                          [4., 5., 6.16540637]]),
+        # (3, [[[1,2,3],[4,5,6]],
+        #      [[1,2,5],[4,5,8]],
+        #      [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]],
+        #                                                                            [[4, 5, 8]]], [[0.99998628,
         #                                                                                            1.99997247,
         #                                                                                            3.1658154 ],
         #                                                                                           [3.99994492,
         #                                                                                            4.99993115,
         #                                                                                            6.16532141]]),
-        (5, [[[1,2,3],[4,5,6]], # Concatenated NORMALIZED
+        # (4, [[[1,2,3],[4,5,6]], # Concatenated NORMALIZED
+        #      [[1,2,5],[4,5,8]],
+        #      [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [1,1],  None, None,  100,  0, [[[1, 2, 4]],
+        #                                                                            [[4, 5, 6]]], [[0.49999975,
+        #                                                                                            0.99999949,
+        #                                                                                            2.15230061],
+        #                                                                                           [1.99999899,
+        #                                                                                            2.49999873,
+        #                                                                                            3.63144582]]),
+        # # (5, [[[1,2,3],[4,5,6]], No concatenation # OLD (NOT NORMALIZED)
+        # #      [[1,2,5],[4,5,8]],
+        # #      [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [1,1],  False, None,  100,  0, [[[1, 2, 3]],
+        # #                                                                            [[4, 5, 6]]], [[0.99998628,
+        # #                                                                                            1.99997247,
+        # #                                                                                            3.1658154 ],
+        # #                                                                                           [3.99994492,
+        # #                                                                                            4.99993115,
+        # #                                                                                            6.16532141]]),
+        # (5, [[[1,2,3],[4,5,6]], # Concatenated NORMALIZED
+        #      [[1,2,5],[4,5,8]],
+        #      [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [1,1],  False, None,  100,  0, [[[1, 2, 3]],
+        #                                                                            [[4, 5, 6]]], [[0.49999314,
+        #                                                                                            0.99998623,
+        #                                                                                            1.5829077],
+        #                                                                                           [1.99997246,
+        #                                                                                            2.49996557,
+        #                                                                                            3.08266071]]),
+        # (6, [[[1,2,3],[4,5,6]], # NORMALIZED
+        #      [[1,2,5],[4,5,8]],
+        #      [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [9,1],  None, None,  100,  0, [[[1, 2, 3]],
+        #                                                                            [[4, 5, 6]]], [[0.89998765,
+        #                                                                                            1.79997522,
+        #                                                                                            2.84923386],
+        #                                                                                           [3.59995042,
+        #                                                                                            4.49993803,
+        #                                                                                            5.54878927]]),
+        (7, [[[1,2,3],[4,5,6]], # NORMALIZED
              [[1,2,5],[4,5,8]],
-             [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [1,1],  False, None,  100,  0, [[[1, 2, 3]],
-                                                                                   [[4, 5, 6]]], [[0.49999314,
-                                                                                                   0.99998623,
-                                                                                                   1.5829077],
-                                                                                                  [1.99997246,
-                                                                                                   2.49996557,
-                                                                                                   3.08266071]]),
-        (6, [[[1,2,3],[4,5,6]], # NORMALIZED
-             [[1,2,5],[4,5,8]],
-             [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [9,1],  None, None,  100,  0, [[[1, 2, 3]],
+             [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [9,1],  None, None,  100,  1, [[[1, 2, 3]],
                                                                                    [[4, 5, 6]]], [[0.89998765,
                                                                                                    1.79997522,
                                                                                                    2.84923386],
@@ -369,22 +377,29 @@ class TestExecution:
                            # seed=module_seed,
                            )
 
+        # Construct inputs
         input_nodes = em.key_input_nodes + em.value_input_nodes
         inputs = {input_nodes[i]:inputs[i] for i in range(len(inputs))}
 
-        if len(np.array(em.memory_template)) == len(np.array(memory_template)):
-            np.testing.assert_equal(np.array(em.memory_template), np.array(memory_template))
+        # Validate any specified initial memories
+        np.testing.assert_equal(np.array(em.memory_template[:len(memory_template)]), np.array(memory_template))
 
+        # Execute and validate results
         retrieved = em.run(inputs=inputs)
-
         np.testing.assert_allclose(retrieved, expected_retrieval)
 
-        # Validate that sum of weighted softmaxwes in retrieval_weighting_node itelf sums to 1
+        # Validate that sum of weighted softmax distributions in retrieval_weighting_node itself sums to 1
         np.testing.assert_allclose(np.sum(em.retrieval_weighting_node.value), 1.0, atol=1e-15)
 
         # Validate that sum of its output ports also sums to 1
         np.testing.assert_allclose(np.sum([port.value for port in em.retrieval_weighting_node.output_ports]),
                                    1.0, atol=1e-15)
+
+        # Validate storage
+        if storage_prob:
+            em.memory
+
+
 
 
 
