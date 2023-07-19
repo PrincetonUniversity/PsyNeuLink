@@ -1191,20 +1191,24 @@ class EMComposition(AutodiffComposition):
                       learning_rate,
                       name):
 
+        num_fields = len(self.entry_template)
+
         # Deal with default field_weights
         if field_weights is None:
             if len(self.entry_template) == 1:
                 field_weights = [1]
             else:
                 # Default is to all fields as keys except the last one, which is the value
-                num_fields = len(self.entry_template)
                 field_weights = [1] * num_fields
                 field_weights[-1] = 0
         field_weights = np.atleast_1d(field_weights)
+        # Fill out and normalize all field_weights
         if len(field_weights) == 1:
-            field_weights = np.repeat(field_weights, len(self.entry_template))
+            field_weights = np.repeat(field_weights/np.sum(field_weights), len(self.entry_template))
         else:
             field_weights = np.array(field_weights) / np.sum(field_weights)
+        # # Rescale field_weights to be proportional to the number of fields <- FIX CORRECT?
+        # field_weights = field_weights * num_fields
 
         # Memory structure (field) attributes (not Parameters)
         self.num_fields = len(self.entry_template)
