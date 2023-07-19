@@ -3295,14 +3295,11 @@ def _parse_port_spec(port_type=None,
                         params[PROJECTIONS] = port_specific_args[key]
                         del port_specific_args[key]
                 else:
-                    raise PortError("There is more than one entry of the {} "
-                                     "specification dictionary for {} ({}) "
-                                     "that is not a keyword; there should be "
-                                     "only one (used to name the Port, with a "
-                                     "list of Projection specifications".
-                                     format(port_type.__name__,
-                                            owner.name,
-                                            ", ".join([s for s in list(port_specific_args.keys())])))
+                    raise PortError(f"There is more than one entry of the {port_type.__name__} "
+                                    f"specification dictionary for {owner.name} "
+                                    f"({', '.join([s for s in list(port_specific_args.keys())])}) "
+                                    f"that is not a keyword; there should be only one (used to name the Port, "
+                                    f"with a list of Projection specifications.")
 
             for param in port_type.portAttributes:
                 # KDM 12/24/19: below is meant to skip overwriting an already
