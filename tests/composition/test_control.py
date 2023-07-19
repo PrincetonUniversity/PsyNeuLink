@@ -3914,7 +3914,7 @@ class TestControlTimeScales:
         #
         assert c.value == [4]
         assert c.execution_count == 4
-        assert comp.results == [[2], [4]]
+        np.testing.assert_array_equal(comp.results, [[[2]], [[4]]])
 
     def test_time_step_after(self):
         a = pnl.ProcessingMechanism()
@@ -3942,7 +3942,7 @@ class TestControlTimeScales:
         #
         assert c.value == [4]
         assert c.execution_count == 4
-        assert comp.results == [[1], [3]]
+        np.testing.assert_array_equal(comp.results, [[[1]], [[3]]])
 
     def test_pass_before(self):
         a = pnl.ProcessingMechanism()
@@ -3982,7 +3982,7 @@ class TestControlTimeScales:
         #       a   b
         assert c.value == [6]
         assert c.execution_count == 6
-        assert comp.results == [[3], [6]]
+        np.testing.assert_array_equal(comp.results, [[[3]], [[6]]])
 
     def test_pass_after(self):
         a = pnl.ProcessingMechanism()
@@ -4028,7 +4028,7 @@ class TestControlTimeScales:
         #       (C-6)
         assert c.value == [6]
         assert c.execution_count == 6
-        assert comp.results == [[2], [5]]
+        np.testing.assert_array_equal(comp.results, [[[2]], [[5]]])
 
     def test_trial_before(self):
         a = pnl.ProcessingMechanism()
@@ -4056,7 +4056,7 @@ class TestControlTimeScales:
         #
         assert c.value == [2]
         assert c.execution_count == 2
-        assert comp.results == [[1], [2]]
+        np.testing.assert_array_equal(comp.results, [[[1]], [[2]]])
 
     def test_trial_after(self):
         a = pnl.ProcessingMechanism()
@@ -4086,7 +4086,7 @@ class TestControlTimeScales:
         #
         assert c.value == [2]
         assert c.execution_count == 2
-        assert comp.results == [[1], [1]]
+        np.testing.assert_array_equal(comp.results, [[[1]], [[1]]])
 
     def test_run_before(self):
         a = pnl.ProcessingMechanism()
@@ -4121,7 +4121,7 @@ class TestControlTimeScales:
         #      a  b
         assert c.value == [2]
         assert c.execution_count == 2
-        assert comp.results == [[1], [1], [2], [2]]
+        np.testing.assert_array_equal(comp.results, [[[1]], [[1]], [[2]], [[2]]])
 
     def test_run_after(self):
         a = pnl.ProcessingMechanism()
@@ -4156,4 +4156,4 @@ class TestControlTimeScales:
         #      a  b
         assert c.value == [2]
         assert c.execution_count == 2
-        assert comp.results == [[1], [1], [1], [1]]
+        np.testing.assert_allclose(comp.results, [[[1]], [[1]], [[1]], [[1]]])
