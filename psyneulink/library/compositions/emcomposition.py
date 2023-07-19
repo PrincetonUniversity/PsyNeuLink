@@ -1221,7 +1221,7 @@ class EMComposition(AutodiffComposition):
         field_weights = np.atleast_1d(field_weights)
         # Fill out and normalize all field_weights
         if len(field_weights) == 1:
-            parsed_field_weights = np.repeat(field_weights/np.sum(field_weights), len(self.entry_template))
+            parsed_field_weights = np.repeat(field_weights / np.sum(field_weights), len(self.entry_template))
         else:
             parsed_field_weights = np.array(field_weights) / np.sum(field_weights)
         # # Rescale field_weights to be proportional to the number of fields <- FIX CORRECT?
