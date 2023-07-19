@@ -6212,10 +6212,10 @@ class TestInputSpecifications:
     @pytest.mark.control
     @pytest.mark.parametrize(
         "controllers, results",[
-            ('none', [[-2], [1]]),
-            ('inner',  [[-2], [10]]),
-            ('outer',  [[-2], [10]]),
-            ('inner_and_outer', [[-2], [100]]),
+            ('none', [[[-2]], [[1]]]),
+            ('inner',  [[[-2]], [[10]]]),
+            ('outer',  [[[-2]], [[10]]]),
+            ('inner_and_outer', [[[-2]], [[100]]]),
         ]
     )
     @pytest.mark.parametrize(
@@ -6323,7 +6323,7 @@ class TestInputSpecifications:
 
         # run Composition with all three input types and assert that results are as expected.
         ocomp.run(inputs=inputs_source)
-        assert ocomp.results == results
+        np.testing.assert_array_equal(ocomp.results, results)
 
     expected_format_strings = \
         [
