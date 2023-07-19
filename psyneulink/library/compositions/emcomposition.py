@@ -1317,11 +1317,6 @@ class EMComposition(AutodiffComposition):
                       + [self.retrieval_weighting_node] + self.retrieval_gating_nodes + self.retrieval_nodes)
         if self.concatenate_keys_node is not None:
             pathway.add(self.concatenate_keys_node)
-        # pathway = self.key_input_nodes + self.value_input_nodes + self.match_nodes + self.softmax_control_nodes + \
-        #           self.softmax_nodes + [self.retrieval_weighting_node] + self.retrieval_gating_nodes + \
-        #           self.retrieval_nodes
-        # if self.concatenate_keys_node is not None:
-        #     pathway.insert(len(self.key_input_nodes) + len(self.value_input_nodes), self.concatenate_keys_node)
 
         return pathway
 
