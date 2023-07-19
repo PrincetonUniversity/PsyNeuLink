@@ -857,8 +857,9 @@ class EMComposition(AutodiffComposition):
         `GatingMechanisms <GatingMechanism>` that uses the `field weight <EMComposition.field_weights>` for each
         field to modulate the output of the corresponding `retrieval_node <EMComposition.retrieval_nodes>` before
         it is passed to the `retrieval_weighting_node <EMComposition.retrieval_weighting_node>`. These are
-        implemented only if more than one `key field <EMComposition_Fields>` is specified, and differential weights
-        are specified for their `field_weights <EMComposition.field_weights>`.
+        implemented only if more than one `key field <EMComposition_Fields>` is specified and differential weights
+        are specified for their `field_weights <EMComposition.field_weights>` (see `Fields <EMComposition_Fields>`
+        for additional details).
 
     retrieval_weighting_node : TransferMechanism
         `TransferMechanism` that receives the softmax normalized dot products of the keys and memories
