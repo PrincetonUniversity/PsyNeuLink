@@ -10,7 +10,10 @@
 
 # TODO:
 # - FIX: WRITE EXECUTION TESTS
-# - FIX: WHY IS RETRIEVAL_WEIGHTING NODE STILL PRESENT WITH ONLY ONE KEY
+# - FIX: FOR ONE KEY, GET RID OF:
+#        - retrieval_gating_nodes
+#        - retieval_weighting_node
+#        - softmax goes straight to retrieval nodes
 # - FIX: ORDER OF VALUES RETURNED BY RUN IS BACKWARDS (VALUE SHOULD BE LAST NOT FIRST)
 # - FIX: ADD NOISE (AND/OR SOFTMAX PROBABILISTIC RETRIEVAL MODE)
 # - FIX: WARNING NOT OCCURING FOR ZEROS WITH MULTIPLE ENTRIES (HAPPENS IF *ANY* KEY IS EVER ALL ZEROS)
@@ -853,9 +856,9 @@ class EMComposition(AutodiffComposition):
     retrieval_gating_nodes : list[GatingMechanism]
         `GatingMechanisms <GatingMechanism>` that uses the `field weight <EMComposition.field_weights>` for each
         field to modulate the output of the corresponding `retrieval_node <EMComposition.retrieval_nodes>` before
-        it is passed to the `retrieval_weighting_node <EMComposition.retrieval_weighting_node>`.  These are
-        implemented only if differential weights are specified for the different fields in `field_weights
-        <EMComposition.field_weights>`.
+        it is passed to the `retrieval_weighting_node <EMComposition.retrieval_weighting_node>`. These are
+        implemented only if more than one `key field <EMComposition_Fields>` is specified, and differential weights
+        are specified for their `field_weights <EMComposition.field_weights>`.
 
     retrieval_weighting_node : TransferMechanism
         `TransferMechanism` that receives the softmax normalized dot products of the keys and memories
@@ -1225,6 +1228,7 @@ class EMComposition(AutodiffComposition):
             self.key_names = [f'KEY {i}' for i in range(self.num_keys)] if self.num_keys > 1 else ['KEY']
             self.value_names = [f'VALUE {i}' for i in range(self.num_values)] if self.num_values > 1 else ['VALUE']
 
+        concatenate_keys = concatenate_keys or False
         self.concatenate_keys = (concatenate_keys
                                  and self.num_keys > 1
                                  and np.all(keys_weights == keys_weights[0])
@@ -1451,7 +1455,7 @@ class EMComposition(AutodiffComposition):
 
         # FIX: CONSIDER USING THIS FOR INPUT GATING OF MATCH NODE(S)?
         retrieval_gating_nodes = []
-        if not self.concatenate_keys:
+        if not self.concatenate_keys and self.num_keys > 1:
             retrieval_gating_nodes = [GatingMechanism(input_ports={VARIABLE: self.field_weights[i],
                                                                    PARAMS:{DEFAULT_INPUT: DEFAULT_VARIABLE},
                                                                    NAME: 'OUTCOME'},
@@ -1467,7 +1471,7 @@ class EMComposition(AutodiffComposition):
         """
         # FIX: THIS SHOULD WORK:
         retrieval_weighting_node = TransferMechanism(input_ports=[m.output_port for m in self.softmax_nodes],
-                                                     name='WEIGHT RETRIEVALS')
+                                                     name='RETRIEVAL')
 
         assert len(retrieval_weighting_node.output_port.value) == self.memory_capacity, \
             f'PROGRAM ERROR: number of items in retrieval_weighting_node ' \

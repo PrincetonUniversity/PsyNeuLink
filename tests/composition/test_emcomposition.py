@@ -222,7 +222,10 @@ class TestACConstructor:
             assert em.retrieval_gating_nodes == []
             assert bool(softmax_gain in {None, CONTROL}) == bool(len(em.softmax_control_nodes))
         else:
-            assert len(em.retrieval_gating_nodes) == num_keys
+            if num_keys > 1:
+                assert len(em.retrieval_gating_nodes) == num_keys
+            else:
+                assert em.retrieval_gating_nodes == []
             if softmax_gain in {None, CONTROL}:
                 assert len(em.softmax_control_nodes) == num_keys
             else:
