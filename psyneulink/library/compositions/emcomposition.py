@@ -15,9 +15,6 @@
 #          - list with number of entries > memory_capacity if specified
 # - FIX: DOCUMENTATION:
 #        - define "key weights" explicitly as field_weights for all non-zero values
-#        - make sure examples and figures align with changes to:
-#          - default concatenate_keys -> False
-#          - memory_template (including 3d tuple)
 # - FIX: WRITE MORE TESTS FOR EXECUTION, WARNINGS, AND ERROR MESSAGES
 # - FIX: EXAMPLES and FIGURES RE: default concatenate_keys -> False
 # - FIX: ADD NOISE (AND/OR SOFTMAX PROBABILISTIC RETRIEVAL MODE)
@@ -207,12 +204,13 @@ An EMComposition is created by calling its constructor, that takes the following
 
 *Memory Capacity*
 
-* **memory_capacity**: specifies the maximum number of items that can be stored in the EMComposition's memory; when
+* **memory_capacity**: specifies the number of items that can be stored in the EMComposition's memory; when
   `memory_capacity <EMComposition.memory_capacity>` is reached, each new entry overwrites the weakest entry (i.e., the
   one with the smallest norm across all of its fields) in `memory <EMComposition.memory>`.  If `memory_template
   EMComposition_Memory_Template>` is specified as a 3-item tuple or 3d list or array (see above), then that is used
   to determine `memory_capacity <EMComposition.memory_capacity>` (if it is specified and conflicts with either of those
-  an error is generated).  Otherwise, it can be specified using a numerical value, with a default of 1000.
+  an error is generated).  Otherwise, it can be specified using a numerical value, with a default of 1000.  The
+  `memory_capacity <EMComposition.memory_capacity>` cannot be modified once the EMComposition has been constructed.
 
 .. _EMComposition_Memory_Fill:
 
@@ -475,11 +473,11 @@ The following are examples of how to configure and initialize the EMComposition'
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The EMComposition can be visualized graphically, like any `Composition`, using its `show_graph
-<Composition.show_graph>` method.  For example, the figure below shows the following EMComposition
-that has 2 keys and 1 value::
+<ShowGraph_show_graph_Method>` method.  For example, the figure below shows an EMComposition that
+implements a simple dictionary, with one key field and one value field, each of length 5::
 
     >>> import psyneulink as pnl
-    >>> em = EMComposition(memory_template=(3,2), memory_capacity=4)
+    >>> em = EMComposition(memory_template=(2,5))
     >>> em.show_graph()
     <BLANKLINE>
 
@@ -501,36 +499,55 @@ that has 2 keys and 1 value::
 *Memory Template*
 ~~~~~~~~~~~~~~~~~
 
-The ``memory_template`` argument is used to configure the EMComposition's `memory <EMComposition.memory>`, which
-can be specified with by a tuple or a list or array.
+The `memory_template <EMComposition_Memory_Template>` argument of a EMComposition's constructor is used to configure
+it `memory <EMComposition.memory>`, which can be specified using either a tuple or a list or array.
 
 .. _EMComposition_Example_Tuple_Spec:
 
 **Tuple specification**
 
-A tuple can be used to specify the number of fields and the length of each field in memory.  In the example above,
-a tuple is used to specify that EMComposition's memory should four entries, each of which has two fields of length
-3 each.  The contents of `memory <EMComposition.memory>` can be see using it `memory <EMComposition.memory>`
-attribute::
+The simplest form of specification is a tuple, that uses the `numpy shape
+<https://numpy.org/doc/stable/reference/generated/numpy.shape.html>`_ format.  If it has two elements (as in the
+example above), the first specifies the number of fields, and the second the length of each field.  In this case,
+a default number of entries (1000) is created:
+
+    >>> em.memory_capacity
+    1000
+
+The number of entries can be specified explicitly in the EMComposition's constructor, using either the
+`memory_capacity <EMComposition_Memory_Capacity>` argument, or by using a 3-item tuple to specify the
+`memory_template <EMComposition_Memory_Template>` argument, in which case the first element specifies
+the  number of entries, while the second and their specify the number of fields and the length of each field,
+respectively.  The following are equivalent::
+
+    >>> em = EMComposition(memory_template=(2,5), memory_capcity=4)
+
+and
+
+    >>> em = EMComposition(memory_template=(4,2,5))
+
+both of which create a memory with 4 entries, each with 2 fields of length 5. The contents of `memory
+<EMComposition_Memory>` can be inspected using the `memory <EMComposition.memory>` attribute::
 
     >>> em.memory
-    [[[array([0., 0., 0.]), array([0., 0., 0.])]],
-     [[array([0., 0., 0.]), array([0., 0., 0.])]],
-     [[array([0., 0., 0.]), array([0., 0., 0.])]],
-     [[array([0., 0., 0.]), array([0., 0., 0.])]]]
+    [[array([0., 0., 0., 0., 0.]), array([0., 0., 0., 0., 0.])],
+     [array([0., 0., 0., 0., 0.]), array([0., 0., 0., 0., 0.])],
+     [array([0., 0., 0., 0., 0.]), array([0., 0., 0., 0., 0.])],
+     [array([0., 0., 0., 0., 0.]), array([0., 0., 0., 0., 0.])]]
 
-Note that there are four entries (rows) each with two fields (columns) that is each of length 3. The number of entries
-was determined by ``memory_capacity``.  The default for ``memory_capacity`` is 1000, but 4 is used here for legibility.
-The specification of ``memory_template`` above is equivalent to the following use of a list or array to specify
-``memory_template``::
-
-    >>> em = EMComposition(memory_template=[[0,0,0],[0,0,0]], memory_capacity=4)
+The default for `memory_capacity <EMComposition.memory_capacity>` is 1000, which is used if it is not otherwise
+specified.
 
 **List or array specification**
 
-Note that in the example above the two fields have the same length (3). This is always the case when a tuple is used,
-as it generates a regular array.  However, a list or array can be used to specify fields of different length (i.e.,
-as a ragged array).  For example, the following specifies one field of length 3 and another of length 1::
+Note that in the example above the two fields have the same length (5). This is always the case when a tuple is used,
+as it generates a regular array.  A list or numpy array can also be used to specify the ``memory_template`` argument.
+For example, the following is equivalent to the examples above::
+
+    >>> em = EMComposition(memory_template=[[0,0,0],[0,0,0]], memory_capacity=4)
+
+However, a list or array can be used to specify fields of different length (i.e., as a ragged array).  For example,
+the following specifies one field of length 3 and another of length 1::
 
     >>> em = EMComposition(memory_template=[[0,0,0],[0]], memory_capacity=4)
     >>> em.memory
@@ -543,10 +560,11 @@ as a ragged array).  For example, the following specifies one field of length 3 
 
 **Memory fill**
 
-Note that the examples above generate a warning about the use zeros to initialize the memory.  This is because the
-default value for ``memory_fill`` is ``0``, and the default value for ``normalize_memories`` is ``True``, which
-will cause a divide by zero warning when memories are normalized  While numpy handles this gracefully, albeit with
-a warning, it can be avoided by specifying a non-zero value for ``memory_fill``, such as small number::
+Note that the examples above generate a warning about the use of zeros to initialize the memory. This is
+because the default value for ``memory_fill`` is ``0``, and the default value for `normalize_memories
+<EMComposition.normalize_memories>` is True, which will cause a divide by zero warning when memories are
+normalized. While this doesn't crash, it will result in nan's that are likely to cauase problems elsewhere.
+This can be avoided by specifying a non-zero  value for ``memory_fill``, such as small number::
 
     >>> em = EMComposition(memory_template=[[0,0,0],[0]], memory_capacity=4, memory_fill=.001)
     >>> em.memory
@@ -555,9 +573,9 @@ a warning, it can be avoided by specifying a non-zero value for ``memory_fill``,
      [[array([0.001, 0.001, 0.001]), array([0.001])]],
      [[array([0.001, 0.001, 0.001]), array([0.001])]]]
 
-Here, a single value was specified for ``memory_fill`` (which can be a float or int) that is used to fill all values.
-A tuple can also be specified, in which case it is used to generate a random number in the internval between the first
-and second values of the tuple.  For example, the following uses random values between 0 and 0.01 to fill all entries::
+Here, a single value was specified for ``memory_fill`` (which can be a float or int), that is used to fill all values.
+Random values can be assigned using a tuple to specify and internval between the first and second elements.  For
+example, the following uses random values between 0 and 0.01 to fill all entries::
 
     >>> em = EMComposition(memory_template=[[0,0,0],[0]], memory_capacity=4, memory_fill=(0,0.01))
     >>> em.memory
@@ -581,9 +599,9 @@ following initializes memory with two specific entries::
      [[array([0., 0., 0.]), array([0.])]],
      [[array([0., 0., 0.]), array([0.])]]]
 
-Note that the two entries must have exactly the same shapes. If they do not, and error will be generated.
+Note that the two entries must have exactly the same shapes. If they do not, an error is generated.
 Also note that the remaining entries are filled with zeros (the default value for ``memory_fill``).
-Here again, ``memory_fill`` can be used to specify a different default value::
+Here again, ``memory_fill`` can be used to specify a different value::
 
     >>> em = EMComposition(memory_template=[[[7],[24,5]],[[100],[3,106]]], memory_capacity=4, memory_fill=(0,.01))
     >>> em.memory
@@ -599,12 +617,12 @@ Here again, ``memory_fill`` can be used to specify a different default value::
 
 By default, all of the fields specified are treated as keys except the last, which is treated as a "value" field --
 that is, one that is not included in the matching process, but for which a value is retrieved along with the key fields.
-For example, in the `figure <EMComposition_Example_fig>` above, of the three fields specified, the first two are used as
-keys, and the last is used as a value. However, the ``field_weights`` argument can be used to modify this, specifying
-which fields should be used as keys, as well as the relative contribution that each makes to the matching process, and
-which should be used as value fields.  Non-zero elements in the ``field_weights`` argument designate keys, and zeros
-specify value fields.  For example, the following specifies that the first two fields should be used as keys while
-the last two should be used as values::
+For example, in the `figure <EMComposition_Example_fig>` above, the first field specified was used as a key field,
+and the last as a value field. However, the ``field_weights`` argument can be used to modify this, specifying which
+fields should be used as keys fields -- including the relative contribution that each makes to the matching process
+-- and which should be used as value fields.  Non-zero elements in the ``field_weights`` argument designate key fields,
+and zeros specify value fields. For example, the following specifies that the first two fields should be used as keys
+while the last two should be used as values::
 
     >>> em = EMComposition(memory_template=[[0,0,0],[0],[0,0],[0,0,0,0]], memory_capacity=3, field_weights=[1,1,0,0])
     >>> em.show_graph()
@@ -617,17 +635,19 @@ the last two should be used as values::
 
     **Use of field_weights to specify keys and values.**
 
-The ``field_weights`` argument can also be used to specify the relative contribution of each field to the matching
-process.  By default, all non-zero values are set to 1, but different values can be used to weight the
-relative contribution of each field.  The values are normalized so that the sum of all non-zero values is 1, and the
-relative contribution of each is determined by the ratio of its value to the sum of all non-zero values.  For example,
-the following specifies that the first two fields should be used as keys, with the first contributing 75% to the
-matching process and the second field should contribute 25%::
+Note that the figure now shows `retrieval weighting <EMComposition.retrieval_gating_nodes>` `nodes <Composition_Node>`,
+that are used to implement the relative contribution that each key field makes to the matching process specifed in
+`field_weights <EMComposition.field_weights>` argument.  By default, these are equal (all assigned a value of 1),
+but different values can be used to weight the relative contribution of each key field.  The values are normalized so
+that they sum 1, and the relative contribution of each is determined by the ratio of its value to the sum of all
+non-zero values.  For example, the following specifies that the first two fields should be used as keys,
+with the first contributing 75% to the matching process and the second field should contribute 25%::
 
     >>> em = EMComposition(memory_template=[[0,0,0],[0],[0,0]], memory_capacity=3, field_weights=[3,1,0])
     >>> em.show_graph()
     <BLANKLINE>
 
+COMMENT:
 .. _EMComposition_Example_Field_Weights_Different_fig:
 
 .. figure:: _static/EMComposition_field_weights_different.svg
@@ -640,6 +660,7 @@ the keys were assigned different weights;  when they are assigned equal weights,
 and `normalize_memories <EMComposition.normalize_memories>` is `True`, then the keys are concatenated and are
 concatenated for efficiency of processing.  This can be suppressed by specifying `concatenate_keys` as `False`
 (see `concatenate_keys <EMComposition_Concatenate_Keys>` for additional details).
+COMMENT
 
 .. _EMComposition_Class_Reference:
 
@@ -983,7 +1004,7 @@ class EMComposition(AutodiffComposition):
                     :type: ``float``
         """
         memory = Parameter(None, loggable=True, getter=_memory_getter, read_only=True)
-        memory_template = Parameter([[0],[0]], structural=True, valid_types=(tuple, list, np.ndarray))
+        memory_template = Parameter([[0],[0]], structural=True, valid_types=(tuple, list, np.ndarray), read_only=True)
         memory_capacity = Parameter(1000, structural=True)
         field_weights = Parameter(None, structural=True)
         field_names = Parameter(None, structural=True)
