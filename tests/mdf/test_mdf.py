@@ -174,11 +174,35 @@ def test_write_json_file_multiple_comps(
         assert orig_results[composition_name] == final_results, f'{composition_name}:'
 
 
-def _get_mdf_model_results(evaluable_graph):
-    return [
-        [eo.curr_value for _, eo in evaluable_graph.enodes[node.id].evaluable_outputs.items()]
-        for node in evaluable_graph.scheduler.consideration_queue[-1]
-    ]
+def _get_mdf_model_results(evaluable_graph, composition=None):
+    """
+    Returns psyneulink-style output for **evaluable_graph**, optionally
+    casting outputs to their equivalent node's shape in **composition**
+    """
+    if composition is not None:
+        node_output_shapes = {
+            # NOTE: would use defaults.value here, but it doesn't always
+            # match the shape of value (specifically here,
+            # FitzHughNagumoIntegrator EULER)
+            pnl.parse_valid_identifier(node.name): node.value.shape
+            for node in composition.get_nodes_by_role(pnl.NodeRole.OUTPUT)
+        }
+    else:
+        node_output_shapes = {}
+
+    res = []
+    for node in evaluable_graph.scheduler.consideration_queue[-1]:
+        next_res_elem = [
+            eo.curr_value for eo in evaluable_graph.enodes[node.id].evaluable_outputs.values()
+        ]
+        try:
+            next_res_elem = np.reshape(next_res_elem, node_output_shapes[node.id])
+        except KeyError:
+            pass
+
+        res.append(next_res_elem)
+
+    return pnl.convert_to_np_array(res)
 
 
 # These runtime_params are necessary because noise seeding is not
@@ -240,13 +264,14 @@ def test_mdf_equivalence(filename, composition_name, input_dict, simple_edge_for
 
     # Save json_summary of Composition to file and read back in.
     json_filename = filename.replace('.py', '.json')
-    pnl.write_json_file(eval(composition_name), json_filename, simple_edge_format=simple_edge_format)
+    composition = eval(composition_name)
+    pnl.write_json_file(composition, json_filename, simple_edge_format=simple_edge_format)
 
     m = load_mdf(json_filename)
     eg = ee.EvaluableGraph(m.graphs[0], verbose=True)
     eg.evaluate(initializer={f'{node}_InputPort_0': i for node, i in input_dict.items()})
 
-    assert pnl.safe_equals(orig_results, _get_mdf_model_results(eg))
+    np.testing.assert_array_equal(orig_results, _get_mdf_model_results(eg, composition))
 
 
 ddi_termination_conds = [
@@ -313,7 +338,7 @@ def test_mdf_equivalence_individual_functions(mech_type, function, runtime_param
     eg = ee.EvaluableGraph(model.graphs[0], verbose=True)
     eg.evaluate(initializer={'A_InputPort_0': 1.0})
 
-    assert pnl.safe_equals(comp.results, _get_mdf_model_results(eg))
+    np.testing.assert_array_equal(comp.results, _get_mdf_model_results(eg, comp))
 
 
 @pytest.mark.parametrize(
