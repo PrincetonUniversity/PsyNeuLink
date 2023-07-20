@@ -36,7 +36,7 @@ def _single_learn_results(composition, *args, **kwargs):
 
 @pytest.mark.pytorch
 @pytest.mark.acconstructor
-class TestACConstructor:
+class TestConstruction:
 
     def test_two_calls_no_args(self):
         comp = EMComposition()
@@ -98,9 +98,10 @@ class TestACConstructor:
         # NOTE: None => use default value (i.e., don't specify in constructor, rather than forcing None as value of arg)
         # ------------------ SPECS ---------------------------------------------   ------- EXPECTED -------------------
         #   memory_template       memory_fill   field_wts cncat_ky nmlze sm_gain   repeat  #fields #keys #vals  concat
-        (0,    (2,3),                  None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
-        (0.1,  (2,3),                   .1,       None,    None,    None,  None,    False,    2,     1,   1,    False,),
-        (0.2,  (2,3),                 (0,.1),     None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        # (0,    (2,3),                  None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        # (0.1,  (2,3),                   .1,       None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        # (0.2,  (2,3),                 (0,.1),     None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        (0.3,  (4,2,3),                 .1,       None,    None,    None,  None,    False,    2,     1,   1,    False,),
         (1,    [[0,0],[0,0]],          None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
         (1.1,  [[0,0],[0,0]],          None,      [1,1],   None,    None,  None,    False,    2,     2,   0,    False,),
         (2,    [[0,0],[0,0],[0,0]],    None,      None,    None,    None,  None,    False,    3,     2,   1,    False,),
@@ -167,11 +168,16 @@ class TestACConstructor:
                        benchmark):
         """Note: weight matrices used for memory are validated by using em.memory, since its getter uses thos matrices
         """
-        memory_capacity = 4
-        params = {'memory_template': memory_template,
-                  'memory_capacity': memory_capacity,
-                  }
+
+        params = {'memory_template': memory_template}
         # Add explicit argument specifications (to avoid forcing to None in constructor)
+        if isinstance(memory_template, tuple) and len(memory_template) == 3:
+            # Assign for tests below, but allow it to be inferred in constructor
+            memory_capacity = memory_template[0]
+        else:
+            memory_capacity = 4
+            # Specify it explicitly
+            params.update({'memory_capacity': memory_capacity})
         if memory_fill is not None:
             params.update({'memory_fill': memory_fill})
         if field_weights is not None:
@@ -194,7 +200,11 @@ class TestACConstructor:
         # Validate memory_template
         # If tuple spec, ensure that all fields have the same length
         if isinstance(memory_template, tuple):
-            assert all(len(em.memory[j][i]) == memory_template[1]
+            if len(memory_template) == 3:
+                # If 3-item tuple, ensure that memory_capacity == number of entries specified in first item
+                assert len(em.memory) == memory_template[0]
+            field_idx = 1 if len(memory_template) == 2 else 2
+            assert all(len(em.memory[j][i]) == memory_template[field_idx]
                        for i in range(num_fields) for j in range(memory_capacity))
         # If list or array spec, ensure that all fields have the same length as those in the specified memory_template
         else:
