@@ -10,31 +10,28 @@
 
 # TODO:
 # - FIX: WARNING NOT OCCURRING FOR ZEROS WITH MULTIPLE ENTRIES (HAPPENS IF *ANY* KEY IS EVER ALL ZEROS)
-#        - errors;
+# - FIX: DOCUMENTATION:
+#        - define "keys" and "values" explicitly
+#        - define "key weights" explicitly as field_weights for all non-zero values
+#        - make it clear that full size of memory is initialized (rather than "filling up" w/ use)
+#        - write examples for run()
+# - FIX: WRITE MORE TESTS FOR EXECUTION, WARNINGS, AND ERROR MESSAGES
 #          - 3d tuple with first entry != memory_capacity if speciied
 #          - list with number of entries > memory_capacity if specified
-# - FIX: DOCUMENTATION:
-#        - define "key weights" explicitly as field_weights for all non-zero values
-# - FIX: WRITE MORE TESTS FOR EXECUTION, WARNINGS, AND ERROR MESSAGES
-# - FIX: EXAMPLES and FIGURES RE: default concatenate_keys -> False
 # - FIX: ADD NOISE (AND/OR SOFTMAX PROBABILISTIC RETRIEVAL MODE)
-# - FIX: ??MAKE memory_fill a Parameter with fallback_default = 0 (and get rid of hard assignment in __init__()
-# - FIX: ??USE fallback_default FOR concatenate_keys, softmax_gain and storage_prob, AND MODIFY TESTS ACCORDINGLY?
-# - FIX: ??TEST FOR fallback_default FOR normalize_memories
-#        DEFAULTS TO memory_capacity; IF memory_capacity IS USER-SPECIFIED AND THEY CONFLICT -> ERROR MESSAGE
-# - FIX: - ADD add_memory() METHOD
+# - FIX: ?ADD add_memory() METHOD FOR STORING W/O RETRIEVAL, OR JUST ADD retrieval_prob AS modulable Parameter
 # - FIX: LEARNING:
 #        - ADD LEARNING MECHANISM TO ADJUST FIELD_WEIGHTS (THAT MULTIPLICATIVELY MODULATES MAPPING PROJECTION)
 #        - ADD LEARNING MECHANISMS TO STORE MEMORY AND ADJUST WEIGHTS
 #        - DEAL WITH ERROR SIGNALS to retrieval_weighting_node OR AS PASS-THROUGH
 # - FIX: CONFIDENCE COMPUTATION (USING SIGMOID ON DOT PRODUCTS) AND REPORT THAT (EVEN ON FIRST CALL)
 # - FIX: ALLOW SOFTMAX SPEC TO BE A DICT WITH PARAMETERS FOR _get_softmax_gain() FUNCTION
+# - FIX: PSYNEULINK:
 # - FIX: COMPILE
 #      - LinearMatrix to add normalization
 #      - _store() method to assign weights to memory
 # - FIX: IMPLEMENT Composition.merge() METHOD that merges a Composition into the one on which it is called
 #        (MAKE COMPARABLE TO add_nodes() METHOD)
-# - FIX: PSYNEULINK:
 # -    FIX: AUGMENT LinearMatrix Function:
 #           - Normalize as option
 #           - Anytime a row's norm is 0, replace with 1s
