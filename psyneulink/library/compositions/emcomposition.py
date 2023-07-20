@@ -9,14 +9,15 @@
 # ********************************************* EMComposition *************************************************
 
 # TODO:
-# - FIX: WRITE MORE EXECUTION TESTS
-# - FIX: REFACTOR PARAMETER ASSIGNEMENTS TO PASS VALUES TO SUPER, AND ADD **kwargs to AutodiffComposition
+# - FIX: WARNING NOT OCCURRING FOR ZEROS WITH MULTIPLE ENTRIES (HAPPENS IF *ANY* KEY IS EVER ALL ZEROS)
+# - FIX: WRITE MORE TESTS FOR EXECUTION, WARNINGS, AND ERROR MESSAGES
+# - FIX: EXAMPLES and FIGURES RE: default concatenate_keys -> False
+# - FIX: DOCUMENTATION: define "key weights" explicitly as field_weights for all non-zero values
 # - FIX: ADD NOISE (AND/OR SOFTMAX PROBABILISTIC RETRIEVAL MODE)
-# - FIX: WARNING NOT OCCUrRING FOR ZEROS WITH MULTIPLE ENTRIES (HAPPENS IF *ANY* KEY IS EVER ALL ZEROS)
-# - FIX: ALLOW memory_template TO BE 3-ITEM TUPLE IN WHICH 1ST ITEM SPECIFIES MEMORY CAPACITY
+# - FIX: ALLOW memory_template TO BE 3-ITEM TUPLE IN WHICH 1ST ITEM SPECIFIES memory_capacity
 # - FIX: ??MAKE memory_fill a Parameter with fallback_default = 0 (and get rid of hard assignment in __init__()
-# - FIX: USE fallback_default FOR concatenate_keys, softmax_gain and storage_prob, AND MODIFY TESTS ACCORDINGLY?
-# - FIX: TEST FOR fallback_default FOR normalize_memories
+# - FIX: ??USE fallback_default FOR concatenate_keys, softmax_gain and storage_prob, AND MODIFY TESTS ACCORDINGLY?
+# - FIX: ??TEST FOR fallback_default FOR normalize_memories
 #        DEFAULTS TO memory_capacity; IF memory_capacity IS USER-SPECIFIED AND THEY CONFLICT -> ERROR MESSAGE
 # - FIX: - ADD add_memory() METHOD
 # - FIX: - HANDLE Nones in args
@@ -26,7 +27,6 @@
 #        - DEAL WITH ERROR SIGNALS to retrieval_weighting_node OR AS PASS-THROUGH
 # - FIX: CONFIDENCE COMPUTATION (USING SIGMOID ON DOT PRODUCTS) AND REPORT THAT (EVEN ON FIRST CALL)
 # - FIX: ALLOW SOFTMAX SPEC TO BE A DICT WITH PARAMETERS FOR _get_softmax_gain() FUNCTION
-# - FIX: CONCATENATE *ANY* FIELDS THAT ARE THE SAME WEIGHT (FOR EFFICIENCY)
 # - FIX: COMPILE
 #      - LinearMatrix to add normalization
 #      - _store() method to assign weights to memory
@@ -212,13 +212,12 @@ An EMComposition is created by calling its constructor, that takes the following
       while the last field is treated as a value field;
 
     * *single entry*: its value is ignored, and all fields are treated as keys (i.e., used for
-      retrieval) and are `concatenated <EMComposition_Concatenate_Keys>` and equally weighted for retrieval;
+      retrieval) and equally weighted for retrieval;
 
-    * *multiple non-zero entries*: If all entries are identical, the value is ignored and the corresponding keys are
-      `concatenated <EMComposition_Concatenate_Keys>` and weighted equally for retrieval; if the non-zero entries are
-      non-identical, they are used to weight the corresponding fields during retrieval (see `Weight fields
-      <EMComposition_Processing>`).  In either case, the remaining fields (with zero weights) are treated
-      as value fields.
+    * *multiple non-zero entries*: If all entries are identical, the value is ignored and the corresponding keys
+      are weighted equally for retrieval; if the non-zero entries are non-identical, they are used to weight the
+      corresponding fields during retrieval (see `Weight fields <EMComposition_Processing>`).  In either case,
+      the remaining fields (with zero weights) are treated as value fields.
 
 .. _EMComposition_Field_Names:
 
@@ -229,20 +228,20 @@ An EMComposition is created by calling its constructor, that takes the following
 .. _EMComposition_Concatenate_Keys:
 
 * **concatenate_keys**:  specifies whether keys are concatenated before a match is made to items in memory.
-  This is True by default, if the `field_weights <EMComposition.field_weights>` for all keys are equal (i.e.,
-  all non-zero weights are equal -- see `field_weights <EMComposition_Field_Weights>`) and `normalize_memories
-  <EMComposition.normalize_memories>` is True (the default).  However, if the key `field_weights
-  <EMComposition.field_weights>` are *not* all equal, or ``normalize_memories`` is set to False, then a warning
-  is issued and concatenation is disabled (i.e., all keys are treated separately). If ``concatenate_keys`` is set
-  to False, then keys are not concatenated irrepsective of `field_weights <EMComposition.field_weights>` or
-  `normalize_memories <EMComposition.normalize_memories>`.
+  This is False by default. It is also ignored if the `field_weights <EMComposition.field_weights>` for all keys are
+  not all equal (i.e., all non-zero weights are not equal -- see `field_weights <EMComposition_Field_Weights>`) and/or
+  `normalize_memories <EMComposition.normalize_memories>` is set to False. Setting concatenate_keys to True in either
+  of those cases issues a warning, and the setting is ignored. If the key `field_weights <EMComposition.field_weights>`
+  (i.e., all non-zero values) are all equal *and* ``normalize_memories`` is set to True, then setting
+  ``concatenate_keys`` then a concatenate_keys_node <EMComposition.concatenate_keys_node>` is created that
+  receives input from all of the `key_input_nodes <EMComposition.key_input_nodes>` and passes them as a single
+  vector to the `mactch_node <EMComposition.match_node>`.
 
-      .. technical_note::
-         If `normalize_memories <EMComposition.normalize_memories>` is True, then concatenating keys has no influence
-         on the outcome of the `matching process <EMComposition_Processing>`, however it can be more computationally
-         efficient. However, if `normalize_memories <EMComposition.normalize_memories>` is False, it can affect the
-         outcome of the matching process, since different fields may have different norms that will result in different
-         dot products in the `matching process <EMComposition_Processing>`.
+      .. note::
+         While this is computationally more efficient, it can affect the outcome of the `matching process
+         <EMComposition_Processing>`, since computing the normalized dot product of a single vector comprised of the
+         concatentated inputs is not identical to computing the normalized dot product of each field independently and
+         then combining the results.
 
       .. note::
          All `key_input_nodes <EMComposition.key_input_nodes>` and `retrieval_nodes <EMComposition.retrieval_nodes>`
@@ -257,13 +256,15 @@ An EMComposition is created by calling its constructor, that takes the following
   `memory_capacity <EMComposition.memory_capacity>` is reached, each new entry overwrites the weakest entry (i.e., the
   one with the smallest norm across all of its fields) in `memory <EMComposition.memory>`.
 
-* **memory_decay**: specifies whether the EMComposition's memory decays over time.
+.. _EMComposition_Memory_Decay_Rate
 
-* **memory_decay_rate**: specifies the rate at which items in the EMComposition's memory decay;  the default rate is
-  1 / `memory_capacity <EMComposition.memory_capacity>`, such that the oldest memories are the most likely to be
-  replaced when `memory_capacity <EMComposition.memory_capacity>` is reached.
+* **memory_decay_rate**: specifies the rate at which items in the EMComposition's memory decay;  the default rate
+  is *AUTO*, which sets it to  1 / `memory_capacity <EMComposition.memory_capacity>`, such that the oldest memories
+  are the most likely to be replaced when `memory_capacity <EMComposition.memory_capacity>` is reached.  If
+  ``memory_decay_rate`` is set to 0 None or False, then memories do not decay and, when `memory_capacity
+  <EMComposition.memory_capacity>` is reached, the weakest memories are replaced, irrespective of order of entry.
 
-  .. _EMComposition_Retrieval_Storage:
+.. _EMComposition_Retrieval_Storage:
 
 *Retrieval and Storage*
 
@@ -640,7 +641,7 @@ from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.keywords import \
-    CONTROL, DEFAULT_INPUT, DEFAULT_VARIABLE, EM_COMPOSITION, FUNCTION, GAIN, IDENTITY_MATRIX, \
+    AUTO, CONTROL, DEFAULT_INPUT, DEFAULT_VARIABLE, EM_COMPOSITION, FUNCTION, GAIN, IDENTITY_MATRIX, \
     MULTIPLICATIVE_PARAM, NAME, PARAMS, PROJECTIONS, RANDOM, RESULT, SIZE, VARIABLE, VALUE, ZEROS_MATRIX
 from psyneulink.core.globals.utilities import all_within_range
 
@@ -688,8 +689,7 @@ class EMComposition(AutodiffComposition):
         learn_weights=True,         \
         learning_rate=True,         \
         memory_capacity=1000,       \
-        memory_decay=True,          \
-        memory_decay_rate=.001,     \
+        memory_decay_rate=AUTO,     \
         storage_prob=1.0,           \
         name="EM_Composition"       \
         )
@@ -750,9 +750,9 @@ class EMComposition(AutodiffComposition):
         specifies whether memories decay with each execution of the EMComposition;
         see `memory_decay <EMComposition_Memory_Capacity>` for details.
 
-    memory_decay_rate : float : default 1 / `memory_capacity <EMComposition.memory_capacity>`
+    memory_decay_rate : float : AUTO
         specifies the rate at which items in the EMComposition's memory decay;
-        see `memory_decay_rate <EMComposition_Memory_Capacity>` for details.
+        see `memory_decay_rate <EMComposition_Memory_Decay_Rate>` for details.
 
 
     Attributes
@@ -812,11 +812,9 @@ class EMComposition(AutodiffComposition):
         determines the number of items that can be stored in `memory <EMComposition.memory>`; see `memory_capacity
         <EMComposition_Memory_Capacity>` for additional details.
 
-    memory_decay : bool
-        determines whether memories decay with each execution of the EMComposition.
-
     memory_decay_rate : float
-        determines the rate at which items in the EMComposition's memory decay.
+        determines the rate at which items in the EMComposition's memory decay (see `memory_decay_rate
+        <EMComposition_Memory_Decay_Rate>` for details).
 
     .. _EMComposition_Nodes:
 
@@ -853,10 +851,10 @@ class EMComposition(AutodiffComposition):
 
     retrieval_gating_nodes : list[GatingMechanism]
         `GatingMechanisms <GatingMechanism>` that uses the `field weight <EMComposition.field_weights>` for each
-        field to modulate the output of the corresponding `retrieval_node <EMComposition.retrieval_nodes>` before
-        it is passed to the `retrieval_weighting_node <EMComposition.retrieval_weighting_node>`. These are
-        implemented only if more than one `key field <EMComposition_Fields>` is specified, and differential weights
-        are specified for their `field_weights <EMComposition.field_weights>`.
+        field to modulate the output of the corresponding `retrieval_node <EMComposition.retrieval_nodes>` before it
+        is passed to the `retrieval_weighting_node <EMComposition.retrieval_weighting_node>`. These are implemented
+        only if more than one `key field <EMComposition_Fields>` is specified (see `Fields <EMComposition_Fields>`
+        for additional details).
 
     retrieval_weighting_node : TransferMechanism
         `TransferMechanism` that receives the softmax normalized dot products of the keys and memories
@@ -958,10 +956,9 @@ class EMComposition(AutodiffComposition):
         memory_capacity = Parameter(1000, structural=True)
         field_weights = Parameter(None, structural=True)
         field_names = Parameter(None, structural=True)
-        concatenate_keys = Parameter(True, structural=True)
-        memory_decay = Parameter(True, loggable=True, modulable=True, fallback_default=True)
-        memory_decay_rate = Parameter(None, loggable=True, modulable=True, fallback_default=True,
-                               dependencies='memory_decay')
+        concatenate_keys = Parameter(False, structural=True)
+        memory_decay_rate = Parameter(AUTO, loggable=True, modulable=True, fallback_default=True,
+                                      dependencies={'memory_capacity'})
         normalize_memories = Parameter(True, loggable=False, fallback_default=True)
         learn_weights = Parameter(False, fallback_default=True) # FIX: False until learning is implemented
         learning_rate = Parameter(.001, fallback_default=True)
@@ -982,13 +979,10 @@ class EMComposition(AutodiffComposition):
                 return f"must be a list of strings."
 
         def _validate_memory_decay_rate(self, memory_decay_rate):
-            if memory_decay_rate is not None:
-                memory_decay_rate = float(memory_decay_rate)
-                if self.memory_decay.get() and memory_decay_rate == 0.0:
-                    return f"is 0.0 and 'memory_decay' arg is True; set it to a positive value " \
-                           f"or to None to use the default of 1/memory_capacity."
-                if not all_within_range(memory_decay_rate, 0, 1):
-                    return f"must be a float in the interval [0,1]."
+            if memory_decay_rate in {None, AUTO}:
+                return
+            if not (isinstance(memory_decay_rate, (float, int)) and all_within_range(memory_decay_rate, 0, 1)):
+                return f"must be a float in the interval [0,1]."
 
         def _validate_softmax_gain(self, softmax_gain):
             if softmax_gain != CONTROL and not isinstance(softmax_gain, (float, int)):
@@ -999,18 +993,23 @@ class EMComposition(AutodiffComposition):
             if not all_within_range(storage_prob, 0, 1):
                 return f"must be a float in the interval [0,1]."
 
+        # def _parse_memory_decay_rate(self, memory_decay_rate):
+        #     if not memory_decay_rate:
+        #         return 0.0
+        #     if memory_decay_rate is AUTO:
+        #         return 1 / self.memory_capacity.get()
+
     @check_user_specified
     def __init__(self,
                  memory_template:Union[tuple, list, np.ndarray]=[[0],[0]],
                  memory_fill:Union[int, float, RANDOM]=0,
                  field_names:Optional[list]=None,
                  field_weights:tuple=None,
-                 concatenate_keys:bool=True,
+                 concatenate_keys:bool=False,
                  learn_weights:bool=False, # FIX: False FOR NOW, UNTIL IMPLEMENTED
                  learning_rate:float=None,
                  memory_capacity:int=1000,
-                 memory_decay:bool=True,
-                 memory_decay_rate:float=None,
+                 memory_decay_rate:Union[float,AUTO]=AUTO,
                  normalize_memories:bool=True,
                  softmax_gain:Union[float, CONTROL]=CONTROL,
                  storage_prob:float=1.0,
@@ -1027,8 +1026,8 @@ class EMComposition(AutodiffComposition):
                                                                           normalize_memories,
                                                                           learn_weights, learning_rate, name)
 
-        if memory_decay and memory_decay_rate is None:
-            memory_decay_rate = 1 / self.memory_capacity
+        if memory_decay_rate is AUTO:
+            memory_decay_rate = 1 / memory_capacity
 
         # Instantiate Composition -------------------------------------------------------------------------
 
@@ -1041,7 +1040,6 @@ class EMComposition(AutodiffComposition):
                          field_weights = field_weights,
                          field_names = field_names,
                          concatenate_keys = concatenate_keys,
-                         memory_decay = memory_decay,
                          memory_decay_rate = memory_decay_rate,
                          normalize_memories = normalize_memories,
                          learn_weights = learn_weights,
@@ -1224,8 +1222,6 @@ class EMComposition(AutodiffComposition):
             parsed_field_weights = np.repeat(field_weights / np.sum(field_weights), len(self.entry_template))
         else:
             parsed_field_weights = np.array(field_weights) / np.sum(field_weights)
-        # # Rescale field_weights to be proportional to the number of fields <- FIX CORRECT?
-        # field_weights = field_weights * num_fields
 
         # Memory structure Parameters
         parsed_field_names = field_names.copy() if field_names is not None else None
@@ -1316,11 +1312,6 @@ class EMComposition(AutodiffComposition):
                       + [self.retrieval_weighting_node] + self.retrieval_gating_nodes + self.retrieval_nodes)
         if self.concatenate_keys_node is not None:
             pathway.add(self.concatenate_keys_node)
-        # pathway = self.key_input_nodes + self.value_input_nodes + self.match_nodes + self.softmax_control_nodes + \
-        #           self.softmax_nodes + [self.retrieval_weighting_node] + self.retrieval_gating_nodes + \
-        #           self.retrieval_nodes
-        # if self.concatenate_keys_node is not None:
-        #     pathway.insert(len(self.key_input_nodes) + len(self.value_input_nodes), self.concatenate_keys_node)
 
         return pathway
 
@@ -1338,7 +1329,7 @@ class EMComposition(AutodiffComposition):
             f"non-zero values in field_weights ({len(key_indices)})."
 
         key_input_nodes = [TransferMechanism(size=len(self.entry_template[key_indices[i]]),
-                                             name= f'{self.key_names[i]} INPUT')
+                                             name=f'{self.key_names[i]} INPUT')
                        for i in range(self.num_keys)]
 
         return key_input_nodes
@@ -1569,22 +1560,55 @@ class EMComposition(AutodiffComposition):
 
         if storage_prob == 0.0 or (storage_prob > 0.0 and storage_prob < random_state.uniform()):
             return
-        self._encode_memory(inputs, context)
+        # self._encode_memory(inputs, context)
+        self._encode_memory(context)
 
-    def _encode_memory(self, inputs, context=None):
-        for i, input in enumerate(inputs.items()):
-            input_node = input[0]
-            memory = input[1]
-            # Memory = key_input or value_input
-            # memories = weights of Projections for each field
+    # def _encode_memory(self, inputs, context=None):
+    #     for i, input in enumerate(inputs.items()):
+    #         input_node = input[0]
+    #         memory = input[1]
+    #         # Memory = key_input or value_input
+    #         # memories = weights of Projections for each field
+    #
+    #         # Store key_input vector in projections from input_key_nodes to match_nodes
+    #         if input_node in self.key_input_nodes:
+    #             # For key_input:
+    #             #   assign as weights for first empty row of Projection.matrix from key_input_node to match_node
+    #             memories = input_node.efferents[0].parameters.matrix.get(context)
+    #             if self.memory_decay:
+    #                 memories *= self.memory_decay_rate
+    #             # Get least used slot (i.e., weakest memory = row of matrix with lowest weights)
+    #             # idx_of_min = np.argmin(memories.sum(axis=0))
+    #             idx_of_min = np.argmin(np.linalg.norm(memories, axis=0))
+    #             memories[:,idx_of_min] = np.array(memory)
+    #             input_node.efferents[0].parameters.matrix.set(memories, context)
+    #
+    #         # For all inputs, assign input vector to afferent weights of corresponding retrieval_node
+    #         memories = self.retrieval_nodes[i].path_afferents[0].parameters.matrix.get(context)
+    #         if self.memory_decay:
+    #             memories *= self.memory_decay_rate
+    #         # Get least used slot (i.e., weakest memory = row of matrix with lowest weights)
+    #         idx_of_min = np.argmin(memories.sum(axis=1))
+    #         memories[idx_of_min] = np.array(memory)
+    #         self.retrieval_nodes[i].path_afferents[0].parameters.matrix.set(memories, context)
+
+    def _encode_memory(self, context=None):
+        """Encode inputs as memories
+        For each node in key_input_nodes and value_input_nodes,
+        assign its value to afferent weights of corresponding retrieval_node.
+        - memory = key_input or value_input
+        - memories = weights of Projections for each field
+        """
+        for i, input_node in enumerate(self.key_input_nodes + self.value_input_nodes):
+            memory = input_node.value[0]
 
             # Store key_input vector in projections from input_key_nodes to match_nodes
             if input_node in self.key_input_nodes:
                 # For key_input:
                 #   assign as weights for first empty row of Projection.matrix from key_input_node to match_node
                 memories = input_node.efferents[0].parameters.matrix.get(context)
-                if self.memory_decay:
-                    memories *= self.memory_decay_rate
+                if self.memory_decay_rate:
+                    memories *= self.parameters.memory_decay_rate._get(context)
                 # Get least used slot (i.e., weakest memory = row of matrix with lowest weights)
                 # idx_of_min = np.argmin(memories.sum(axis=0))
                 idx_of_min = np.argmin(np.linalg.norm(memories, axis=0))
@@ -1593,7 +1617,7 @@ class EMComposition(AutodiffComposition):
 
             # For all inputs, assign input vector to afferent weights of corresponding retrieval_node
             memories = self.retrieval_nodes[i].path_afferents[0].parameters.matrix.get(context)
-            if self.memory_decay:
+            if self.memory_decay_rate:
                 memories *= self.memory_decay_rate
             # Get least used slot (i.e., weakest memory = row of matrix with lowest weights)
             idx_of_min = np.argmin(memories.sum(axis=1))

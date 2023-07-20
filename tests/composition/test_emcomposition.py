@@ -11,7 +11,7 @@ from psyneulink.core.components.functions.nonstateful.transferfunctions import L
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals import Context
-from psyneulink.core.globals.keywords import TRAINING_SET, Loss, CONTROL
+from psyneulink.core.globals.keywords import AUTO, CONTROL
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
@@ -88,30 +88,31 @@ class TestACConstructor:
 # 2) normalization - True/False
 # 3) field_weights - same / different
 # softmax_gain - None/float/function
-# memory_decay - True/False
+# memory_decay_rate - None/AUTO/float
 # storage_probability - None, float
 # learn_weights - True/False
 
     # FIX: ADD WARNING TESTS
     # FIX: ADD ERROR TESTS
     test_data = [
+        # NOTE: None => use default value (i.e., don't specify in constructor, rather than forcing None as value of arg)
         # ------------------ SPECS ---------------------------------------------   ------- EXPECTED -------------------
         #   memory_template       memory_fill   field_wts cncat_ky nmlze sm_gain   repeat  #fields #keys #vals  concat
         (0,    (2,3),                  None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
         (0.1,  (2,3),                   .1,       None,    None,    None,  None,    False,    2,     1,   1,    False,),
         (0.2,  (2,3),                 (0,.1),     None,    None,    None,  None,    False,    2,     1,   1,    False,),
         (1,    [[0,0],[0,0]],          None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
-        (1.1,  [[0,0],[0,0]],          None,      [1,1],   None,    None,  None,    False,    2,     2,   0,    True,),
-        (2,    [[0,0],[0,0],[0,0]],    None,      None,    None,    None,  None,    False,    3,     2,   1,    True,),
-        (2.1,  [[0,0],[0,0],[0,0]],    None,      None,    None,    None,   1.5,    False,    3,     2,   1,    True,),
-        (2.2,  [[0,0],[0,0],[0,0]],    None,      None,    None,    None, CONTROL,  False,    3,     2,   1,    True,),
+        (1.1,  [[0,0],[0,0]],          None,      [1,1],   None,    None,  None,    False,    2,     2,   0,    False,),
+        (2,    [[0,0],[0,0],[0,0]],    None,      None,    None,    None,  None,    False,    3,     2,   1,    False,),
+        (2.1,  [[0,0],[0,0],[0,0]],    None,      None,    None,    None,   1.5,    False,    3,     2,   1,    False,),
+        (2.2,  [[0,0],[0,0],[0,0]],    None,      None,    None,    None, CONTROL,  False,    3,     2,   1,    False,),
         (3,    [[0,0,0],[0,0]],        None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
-        (4,    [[0,0,0],[0],[0,0]],    None,      None,    None,    None,  None,    False,    3,     2,   1,    True,),
-        (5,    [[0,0],[0,0],[0,0]],    None,       1,      None,    None,  None,    False,    3,     3,   0,    True,),
-        (5.1,  [[0,0],[0,0],[0,0]],    None,       1,      None,    None,   0.1,    False,    3,     3,   0,    True,),
-        (5.2,  [[0,0],[0,0],[0,0]],    None,       1,      None,    None, CONTROL,  False,    3,     3,   0,    True,),
-        (6,    [[0,0,0],[0],[0,0]],    None,    [1,1,1],   None,    None,  None,    False,    3,     3,   0,    True,),
-        (7,    [[0,0,0],[0],[0,0]],    None,    [1,1,1],   False,   None,  None,    False,    3,     3,   0,    False,),
+        (4,    [[0,0,0],[0],[0,0]],    None,      None,    None,    None,  None,    False,    3,     2,   1,    False,),
+        (5,    [[0,0],[0,0],[0,0]],    None,       1,      None,    None,  None,    False,    3,     3,   0,    False,),
+        (5.1,  [[0,0],[0,0],[0,0]],    None,       1,      None,    None,   0.1,    False,    3,     3,   0,    False,),
+        (5.2,  [[0,0],[0,0],[0,0]],    None,       1,      None,    None, CONTROL,  False,    3,     3,   0,    False,),
+        (6,    [[0,0,0],[0],[0,0]],    None,    [1,1,1],   False,   None,  None,    False,    3,     3,   0,    False,),
+        (7,    [[0,0,0],[0],[0,0]],    None,    [1,1,1],   True,    None,  None,    False,    3,     3,   0,    True,),
         (7.1,  [[0,0,0],[0],[0,0]],    None,    [1,1,1],   True ,   False, None,    False,    3,     3,   0,    False,),
         (8,    [[0,0],[0,0],[0,0]],    None,    [1,2,0],   None,    None,  None,    False,    3,     2,   1,    False,),
         (8.1,  [[0,0],[0,0],[0,0]],    None,    [1,2,0],   True,    None,  None,    False,    3,     2,   1,    False,),
@@ -120,17 +121,17 @@ class TestACConstructor:
         (10,   [[0,1],[0,0,0],[0,0]],    .1,    [1,2,0],   None,    None,  None,    [0,1],    3,     2,   1,    False,),
         (11,   [[0,0],[0,0,0],[0,0]],    .1,    [1,2,0],   None,    None,  None,    False,    3,     2,   1,    False,),
         (12,   [[[0,0],[0,0],[0,0]],   # two entries specified, fields all same length, both entries have all 0's
-                [[0,0],[0,0],[0,0]]],    .1,    [1,1,1],   None,    None,  None,      2,      3,     3,   0,    True,),
+                [[0,0],[0,0],[0,0]]],    .1,    [1,1,1],   None,    None,  None,      2,      3,     3,   0,    False,),
         (12.1, [[[0,0],[0,0,0],[0,0]], # two entries specified, fields have different lenghts, entries all have 0's
-                [[0,0],[0,0,0],[0,0]]],  .1,    [1,1,0],   None,    None,  None,      2,      3,     2,   1,    True,),
+                [[0,0],[0,0,0],[0,0]]],  .1,    [1,1,0],   None,    None,  None,      2,      3,     2,   1,    False,),
         (12.2,  [[[0,0],[0,0,0],[0,0]], # two entries specified, first has 0's
-                [[0,2],[0,0,0],[0,0]]],  .1,    [1,1,0],   None,    None,  None,      2,      3,     2,   1,    True,),
+                [[0,2],[0,0,0],[0,0]]],  .1,    [1,1,0],   None,    None,  None,      2,      3,     2,   1,    False,),
         (12.3, [[[0,1],[0,0,0],[0,0]], # two entries specified, fields have same weights
-                [[0,2],[0,0,0],[0,0]]],  .1,    [1,1,0],   None,    None,  None,      2,      3,     2,   1,    True,),
+                [[0,2],[0,0,0],[0,0]]],  .1,    [1,1,0],   None,    None,  None,      2,      3,     2,   1,    False),
         (13,   [[[0,1],[0,0,0],[0,0]], # two entries specified, fields have same weights, but conccatenate_keys is False
-                [[0,2],[0,0,0],[0,0]]],  .1,    [1,1,0],   False,   None,  None,      2,      3,     2,   1,    False),
+                [[0,2],[0,0,0],[0,0]]],  .1,    [1,1,0],   True,    None,  None,      2,      3,     2,   1,    True),
         (14,   [[[0,1],[0,0,0],[0,0]], # two entries specified, all fields are keys
-                [[0,2],[0,0,0],[0,0]]],  .1,    [1,1,1],   None,    None,  None,      2,      3,     3,   0,    True),
+                [[0,2],[0,0,0],[0,0]]],  .1,    [1,1,1],   None,    None,  None,      2,      3,     3,   0,    False),
         (15,   [[[0,1],[0,0,0],[0,0]], # two entries specified; fields have different weights, constant memory_fill
                 [[0,2],[0,0,0],[0,0]]],  .1,    [1,2,0],   None,    None,  None,      2,      3,     2,   1,    False),
         (15.1, [[[0,1],[0,0,0],[0,0]], # two entries specified; fields have different weights, random memory_fill
@@ -271,6 +272,7 @@ class TestExecution:
     # 6:   same as 5, but different field_weights
 
     test_data = [
+        # NOTE: None => use default value (i.e., don't specify in constructor, rather than forcing None as value of arg)
         # ---------------------------------------- SPECS -----------------------------------  ----- EXPECTED ---------
         #   memory_template         mem    mem  mem  fld   concat  nlz  sm   str    inputs        expected_retrieval
         #                           fill   cap decay wts    keys       gain  prob
@@ -326,39 +328,85 @@ class TestExecution:
                                                                                                  [3.99704573,
                                                                                                   4.99630722,
                                                                                                   6.20845524]]),
+        (7, [[[1,2,3],[4,5,6]],        # Store
+             [[1,2,5],[4,5,8]],
+             [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [9,1],  None, None,  100,  1, [[[1, 2, 3]],
+                                                                                  [[4, 5, 6]]], [[0.99926393,
+                                                                                                  1.99852329,
+                                                                                                  3.220923],
+                                                                                                 [3.99704573,
+                                                                                                  4.99630722,
+                                                                                                  6.20845524]]),
+        (8, [[[1,2,3],[4,5,6]],        # Store + default decay
+             [[1,2,5],[4,5,8]],
+             [[1,2,10],[4,5,10]]], (0,.01), 4, None, [9,1],  None, None,  100,  1, [[[1, 2, 3]],
+                                                                                    [[4, 5, 6]]], [[0.99926393,
+                                                                                                    1.99852329,
+                                                                                                    3.220923],
+                                                                                                   [3.99704573,
+                                                                                                    4.99630722,
+                                                                                                    6.20845524]]),
+        (9, [[[1,2,3],[4,5,6]],        # Store + default decay
+             [[1,2,5],[4,5,8]],
+             [[1,2,10],[4,5,10]]], (0,.01), 4, AUTO, [9,1],  None, None,  100,  1, [[[1, 2, 3]],
+                                                                                    [[4, 5, 6]]], [[0.99926393,
+                                                                                                    1.99852329,
+                                                                                                    3.220923],
+                                                                                                   [3.99704573,
+                                                                                                    4.99630722,
+                                                                                                    6.20845524]]),
+        (10, [[[1,2,3],[4,5,6]],        # Store + specified decay
+              [[1,2,5],[4,5,8]],
+              [[1,2,10],[4,5,10]]], (0,.01), 4, .1, [9,1],  None, None,  100,  1, [[[1, 2, 3]],
+                                                                                   [[4, 5, 6]]], [[0.99926393,
+                                                                                                   1.99852329,
+                                                                                                   3.220923],
+                                                                                                  [3.99704573,
+                                                                                                   4.99630722,
+                                                                                                   6.20845524]]),
     ]
 
-    args_names = "test_num, memory_template, memory_fill, memory_capacity, memory_decay, field_weights, " \
+    args_names = "test_num, memory_template, memory_fill, memory_capacity, memory_decay_rate, field_weights, " \
                  "concatenate_keys, normalize_memories, softmax_gain, storage_prob, inputs, expected_retrieval"
     @pytest.mark.parametrize(args_names,
                              test_data,
-                             ids=[x[0] for x in test_data]
-                             )
+                             ids=[x[0] for x in test_data])
     @pytest.mark.benchmark
-    def test_simple_retrieval_without_storage_or_decay(self,
-                                                       test_num,
-                                                       memory_template,
-                                                       memory_fill,
-                                                       memory_capacity,
-                                                       memory_decay,
-                                                       field_weights,
-                                                       concatenate_keys,
-                                                       normalize_memories,
-                                                       softmax_gain,
-                                                       storage_prob,
-                                                       inputs,
-                                                       expected_retrieval):
+    def test_execution(self,
+                       test_num,
+                       memory_template,
+                       memory_capacity,
+                       memory_fill,
+                       memory_decay_rate,
+                       field_weights,
+                       concatenate_keys,
+                       normalize_memories,
+                       softmax_gain,
+                       storage_prob,
+                       inputs,
+                       expected_retrieval):
 
-        em = EMComposition(memory_template=memory_template,
-                           memory_capacity=memory_capacity,
-                           memory_fill=memory_fill,
-                           field_weights=field_weights,
-                           memory_decay=memory_decay,
-                           softmax_gain=softmax_gain,
-                           storage_prob=storage_prob,
-                           concatenate_keys=concatenate_keys
-                           # seed=module_seed,
-                           )
+        params = {'memory_template': memory_template,
+                  'memory_capacity': memory_capacity,
+                  }
+        # Add explicit argument specifications only for args that are not None
+        # (to avoid forcing to None in constructor)
+        if memory_fill is not None:
+            params.update({'memory_fill': memory_fill})
+        if memory_decay_rate is not None:
+            params.update({'memory_decay_rate': memory_decay_rate})
+        if field_weights is not None:
+            params.update({'field_weights': field_weights})
+        if concatenate_keys is not None:
+            params.update({'concatenate_keys': concatenate_keys})
+        if normalize_memories is not None:
+            params.update({'normalize_memories': normalize_memories})
+        if softmax_gain is not None:
+            params.update({'softmax_gain': softmax_gain})
+        if storage_prob is not None:
+            params.update({'storage_prob': storage_prob})
+
+        em = EMComposition(**params)
 
         # Construct inputs
         input_nodes = em.key_input_nodes + em.value_input_nodes
@@ -380,8 +428,22 @@ class TestExecution:
 
         # Validate storage
         if storage_prob:
-            em.memory
+            np.testing.assert_array_equal(em.memory[-1],[[1,2,3],[4,5,6]])
 
+            if memory_decay_rate in {None, AUTO}:
+                np.testing.assert_array_equal(np.array(memory_template) * (1 / memory_capacity), em.memory[:3])
+            elif memory_decay_rate:
+                np.testing.assert_array_equal(np.array(memory_template) * memory_decay_rate, em.memory[:3])
+            else:
+                np.testing.assert_array_equal(memory_template, em.memory[:3])
+
+        elif len(memory_template) < memory_capacity:
+            if isinstance(memory_fill, tuple):
+                for field in em.memory[-1]:
+                    assert all((memory_fill[0] <= elem <= memory_fill[1]) for elem in field)
+            else:
+                memory_fill = memory_fill or 0
+                assert all(elem == memory_fill for elem in em.memory[-1])
 
 
 # *****************************************************************************************************************
