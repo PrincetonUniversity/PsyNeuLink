@@ -11,7 +11,7 @@ from psyneulink.core.components.functions.nonstateful.transferfunctions import L
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals import Context
-from psyneulink.core.globals.keywords import TRAINING_SET, Loss, CONTROL
+from psyneulink.core.globals.keywords import AUTO, CONTROL
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
@@ -88,7 +88,7 @@ class TestACConstructor:
 # 2) normalization - True/False
 # 3) field_weights - same / different
 # softmax_gain - None/float/function
-# memory_decay - True/False
+# memory_decay_rate - None/AUTO/float
 # storage_probability - None, float
 # learn_weights - True/False
 
@@ -346,30 +346,38 @@ class TestExecution:
                                                                                                    [3.99704573,
                                                                                                     4.99630722,
                                                                                                     6.20845524]]),
-        (9, [[[1,2,3],[4,5,6]],        # Store + specified decay
+        (9, [[[1,2,3],[4,5,6]],        # Store + default decay
              [[1,2,5],[4,5,8]],
-             [[1,2,10],[4,5,10]]], (0,.01), 4, .1, [9,1],  None, None,  100,  1, [[[1, 2, 3]],
-                                                                                  [[4, 5, 6]]], [[0.99926393,
-                                                                                                  1.99852329,
-                                                                                                  3.220923],
-                                                                                                 [3.99704573,
-                                                                                                  4.99630722,
-                                                                                                  6.20845524]]),
+             [[1,2,10],[4,5,10]]], (0,.01), 4, AUTO, [9,1],  None, None,  100,  1, [[[1, 2, 3]],
+                                                                                    [[4, 5, 6]]], [[0.99926393,
+                                                                                                    1.99852329,
+                                                                                                    3.220923],
+                                                                                                   [3.99704573,
+                                                                                                    4.99630722,
+                                                                                                    6.20845524]]),
+        (10, [[[1,2,3],[4,5,6]],        # Store + specified decay
+              [[1,2,5],[4,5,8]],
+              [[1,2,10],[4,5,10]]], (0,.01), 4, .1, [9,1],  None, None,  100,  1, [[[1, 2, 3]],
+                                                                                   [[4, 5, 6]]], [[0.99926393,
+                                                                                                   1.99852329,
+                                                                                                   3.220923],
+                                                                                                  [3.99704573,
+                                                                                                   4.99630722,
+                                                                                                   6.20845524]]),
     ]
 
-    args_names = "test_num, memory_template, memory_fill, memory_capacity, memory_decay, field_weights, " \
+    args_names = "test_num, memory_template, memory_fill, memory_capacity, memory_decay_rate, field_weights, " \
                  "concatenate_keys, normalize_memories, softmax_gain, storage_prob, inputs, expected_retrieval"
     @pytest.mark.parametrize(args_names,
                              test_data,
                              ids=[x[0] for x in test_data])
-
     @pytest.mark.benchmark
     def test_execution(self,
                        test_num,
                        memory_template,
                        memory_capacity,
                        memory_fill,
-                       memory_decay,
+                       memory_decay_rate,
                        field_weights,
                        concatenate_keys,
                        normalize_memories,
@@ -385,12 +393,8 @@ class TestExecution:
         # (to avoid forcing to None in constructor)
         if memory_fill is not None:
             params.update({'memory_fill': memory_fill})
-        if memory_decay or memory_decay is None:
-            params.update({'memory_decay': True})
-            if isinstance(memory_decay, (int, float)):
-                params.update({'memory_decay_rate': memory_decay})
-        elif not memory_decay:
-            params.update({'memory_decay': False})
+        if memory_decay_rate is not None:
+            params.update({'memory_decay_rate': memory_decay_rate})
         if field_weights is not None:
             params.update({'field_weights': field_weights})
         if concatenate_keys is not None:
@@ -426,12 +430,10 @@ class TestExecution:
         if storage_prob:
             np.testing.assert_array_equal(em.memory[-1],[[1,2,3],[4,5,6]])
 
-            if memory_decay is None or memory_decay: # Note: None here means use default for constructor, which is True
-                if memory_decay is None:
-                    assert em.memory_decay is True # Validate default memory_decay
-                    np.testing.assert_array_equal(np.array(memory_template) * (1 / memory_capacity), em.memory[:3])
-                else:
-                    np.testing.assert_array_equal(np.array(memory_template) * memory_decay, em.memory[:3])
+            if memory_decay_rate in {None, AUTO}:
+                np.testing.assert_array_equal(np.array(memory_template) * (1 / memory_capacity), em.memory[:3])
+            elif memory_decay_rate:
+                np.testing.assert_array_equal(np.array(memory_template) * memory_decay_rate, em.memory[:3])
             else:
                 np.testing.assert_array_equal(memory_template, em.memory[:3])
 
