@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferFunctions &mdash; PsyNeuLink 0.11.0.0+821.gb2d22ec85 documentation</title>
+  <title>TransferFunctions &mdash; PsyNeuLink 0.11.0.0+823.g78fb45ae6 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.11.0.0+821
+                  0.11.0.0+823
                 </div>
               
             
@@ -1318,11 +1318,14 @@ arguments of the constructor.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.LinearMatrix">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.transferfunctions.</span></span><span class="sig-name descname"><span class="pre">LinearMatrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.transferfunctions.</span></span><span class="sig-name descname"><span class="pre">LinearMatrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix" title="Permalink to this definition">¶</a></dt>
 <dd><p id="linearmatrix">Matrix transform of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p>
 <p><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix._function" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a> returns dot product of variable with matrix:</p>
 <div class="math notranslate nohighlight">
 \[variable \bullet matrix\]</div>
+<p>If <strong>normalize</strong> is True, the result is normalized by the product of the norms of the variable and matrix:</p>
+<div class="math notranslate nohighlight">
+\[\frac{variable \bullet matrix}{\|variable\| \cdot \|matrix\|}\]</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1347,6 +1350,8 @@ and <a class="reference internal" href="Projection.html#psyneulink.core.componen
 </ul>
 </div></blockquote>
 </p></li>
+<li><p><strong>normalize</strong> (<em>bool : default False</em>) – specifies whether to normalize the result of <code class="xref any docutils literal notranslate"><span class="pre">function</span></code> by dividing it by the
+norm of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> x the norm of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a>.</p></li>
 <li><p><strong>bounds</strong> (<em>None</em>) – </p></li>
 <li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -1390,41 +1395,28 @@ columns correspond to elements of the output array (inner index).</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.LinearMatrix.owner">
-<span class="sig-name descname"><span class="pre">owner</span></span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.owner" title="Permalink to this definition">¶</a></dt>
-<dd><p><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.LinearMatrix.normalize">
+<span class="sig-name descname"><span class="pre">normalize</span></span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.normalize" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines whether the result of <code class="xref any docutils literal notranslate"><span class="pre">function</span></code> is normalized, by dividing it by the
+norm of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> x the norm of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component">Component</a></p>
+<dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.LinearMatrix.name">
-<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.name" title="Permalink to this definition">¶</a></dt>
-<dd><p>the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a default is
+<dl class="simple">
+<dt>owner<span class="classifier">Component</span></dt><dd><p><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
+</dd>
+<dt>name<span class="classifier">str</span></dt><dd><p>the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a default is
 assigned by FunctionRegistry (see <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a> for conventions used for default and duplicate names).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str</p>
 </dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.LinearMatrix.prefs">
-<span class="sig-name descname"><span class="pre">prefs</span></span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p>the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
+<dt>prefs<span class="classifier">PreferenceSet or specification dict</span><span class="classifier">Function.classPreferences</span></dt><dd><p>the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
 constructor, a default is assigned using <code class="xref any docutils literal notranslate"><span class="pre">classPreferences</span></code> defined in __init__.py (see <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code>
 for details).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>PreferenceSet or specification dict : Function.classPreferences</p>
 </dd>
 </dl>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.LinearMatrix._validate_params">
 <span class="sig-name descname"><span class="pre">_validate_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix._validate_params" title="Permalink to this definition">¶</a></dt>
