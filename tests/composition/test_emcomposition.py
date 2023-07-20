@@ -95,6 +95,7 @@ class TestACConstructor:
     # FIX: ADD WARNING TESTS
     # FIX: ADD ERROR TESTS
     test_data = [
+        # NOTE: None => use default value (i.e., don't specify in constructor, rather than forcing None as value of arg)
         # ------------------ SPECS ---------------------------------------------   ------- EXPECTED -------------------
         #   memory_template       memory_fill   field_wts cncat_ky nmlze sm_gain   repeat  #fields #keys #vals  concat
         (0,    (2,3),                  None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
@@ -271,33 +272,34 @@ class TestExecution:
     # 6:   same as 5, but different field_weights
 
     test_data = [
+        # NOTE: None => use default value (i.e., don't specify in constructor, rather than forcing None as value of arg)
         # ---------------------------------------- SPECS -----------------------------------  ----- EXPECTED ---------
         #   memory_template         mem    mem  mem  fld   concat  nlz  sm   str    inputs        expected_retrieval
         #                           fill   cap decay wts    keys       gain  prob
         # ----------------------------------------------------------------------------------  ------------------------
-        # (0, [[[1,2,3],[4,5,6]],
-        #      [[1,2,5],[4,5,8]],
-        #      [[1,2,10],[4,5,10]]],  None,   3,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]]], [[1., 2., 3.16585899],
-        #                                                                                          [4., 5., 6.16540637]]),
-        # (1, [[[1,2,3],[4,5,6]],
-        #      [[1,2,5],[4,5,8]],
-        #      [[1,2,10],[4,5,10]]],  None,   3,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]],
-        #                                                                           [[4, 5, 6]]], [[1., 2., 3.16585899],
-        #                                                                                          [4., 5., 6.16540637]]),
-        # (2, [[[1,2,3],[4,5,6]],
-        #      [[1,2,5],[4,5,8]],
-        #      [[1,2,10],[4,5,10]]],  None,   3,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]],
-        #                                                                           [[4, 5, 8]]], [[1., 2., 3.16585899],
-        #                                                                                          [4., 5., 6.16540637]]),
-        # (3, [[[1,2,3],[4,5,6]],
-        #      [[1,2,5],[4,5,8]],
-        #      [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]],
-        #                                                                            [[4, 5, 8]]], [[0.99998628,
-        #                                                                                            1.99997247,
-        #                                                                                            3.1658154 ],
-        #                                                                                           [3.99994492,
-        #                                                                                            4.99993115,
-        #                                                                                            6.16532141]]),
+        (0, [[[1,2,3],[4,5,6]],
+             [[1,2,5],[4,5,8]],
+             [[1,2,10],[4,5,10]]],  None,   3,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]]], [[1., 2., 3.16585899],
+                                                                                                 [4., 5., 6.16540637]]),
+        (1, [[[1,2,3],[4,5,6]],
+             [[1,2,5],[4,5,8]],
+             [[1,2,10],[4,5,10]]],  None,   3,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]],
+                                                                                  [[4, 5, 6]]], [[1., 2., 3.16585899],
+                                                                                                 [4., 5., 6.16540637]]),
+        (2, [[[1,2,3],[4,5,6]],
+             [[1,2,5],[4,5,8]],
+             [[1,2,10],[4,5,10]]],  None,   3,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]],
+                                                                                  [[4, 5, 8]]], [[1., 2., 3.16585899],
+                                                                                                 [4., 5., 6.16540637]]),
+        (3, [[[1,2,3],[4,5,6]],
+             [[1,2,5],[4,5,8]],
+             [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]],
+                                                                                   [[4, 5, 8]]], [[0.99998628,
+                                                                                                   1.99997247,
+                                                                                                   3.1658154 ],
+                                                                                                  [3.99994492,
+                                                                                                   4.99993115,
+                                                                                                   6.16532141]]),
         (4, [[[1,2,3],[4,5,6]],     # Concatenated equal field_weights
              [[1,2,5],[4,5,8]],
              [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [1,1],  None, None,  100,  0, [[[1, 2, 4]],
@@ -307,28 +309,46 @@ class TestExecution:
                                                                                                  [3.98547551,
                                                                                                   4.98184466,
                                                                                                   6.92977565]]),
-        # (5, [[[1,2,3],[4,5,6]],     # Not concatenated equal field_weights
-        #      [[1,2,5],[4,5,8]],
-        #      [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [1,1],  False, None,  100,  0, [[[1, 2, 3]],
-        #                                                                            [[4, 5, 6]]], [[0.99637453,
-        #                                                                                            1.99272658,
-        #                                                                                            3.44135342],
-        #                                                                                           [3.98544898,
-        #                                                                                            4.9818115,
-        #                                                                                            6.38099054]]
-        #  ),
-        # (6, [[[1,2,3],[4,5,6]],        # Unequal field_weights
-        #      [[1,2,5],[4,5,8]],
-        #      [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [9,1],  None, None,  100,  0, [[[1, 2, 3]],
-        #                                                                           [[4, 5, 6]]], [[0.99926393,
-        #                                                                                           1.99852329,
-        #                                                                                           3.220923],
-        #                                                                                          [3.99704573,
-        #                                                                                           4.99630722,
-        #                                                                                           6.20845524]]),
+        (5, [[[1,2,3],[4,5,6]],     # Not concatenated equal field_weights
+             [[1,2,5],[4,5,8]],
+             [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [1,1],  False, None,  100,  0, [[[1, 2, 3]],
+                                                                                   [[4, 5, 6]]], [[0.99637453,
+                                                                                                   1.99272658,
+                                                                                                   3.44135342],
+                                                                                                  [3.98544898,
+                                                                                                   4.9818115,
+                                                                                                   6.38099054]]
+         ),
+        (6, [[[1,2,3],[4,5,6]],        # Unequal field_weights
+             [[1,2,5],[4,5,8]],
+             [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [9,1],  None, None,  100,  0, [[[1, 2, 3]],
+                                                                                  [[4, 5, 6]]], [[0.99926393,
+                                                                                                  1.99852329,
+                                                                                                  3.220923],
+                                                                                                 [3.99704573,
+                                                                                                  4.99630722,
+                                                                                                  6.20845524]]),
         (7, [[[1,2,3],[4,5,6]],        # Store
              [[1,2,5],[4,5,8]],
              [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [9,1],  None, None,  100,  1, [[[1, 2, 3]],
+                                                                                  [[4, 5, 6]]], [[0.99926393,
+                                                                                                  1.99852329,
+                                                                                                  3.220923],
+                                                                                                 [3.99704573,
+                                                                                                  4.99630722,
+                                                                                                  6.20845524]]),
+        (8, [[[1,2,3],[4,5,6]],        # Store + default decay
+             [[1,2,5],[4,5,8]],
+             [[1,2,10],[4,5,10]]], (0,.01), 4, None, [9,1],  None, None,  100,  1, [[[1, 2, 3]],
+                                                                                    [[4, 5, 6]]], [[0.99926393,
+                                                                                                    1.99852329,
+                                                                                                    3.220923],
+                                                                                                   [3.99704573,
+                                                                                                    4.99630722,
+                                                                                                    6.20845524]]),
+        (9, [[[1,2,3],[4,5,6]],        # Store + specified decay
+             [[1,2,5],[4,5,8]],
+             [[1,2,10],[4,5,10]]], (0,.01), 4, .1, [9,1],  None, None,  100,  1, [[[1, 2, 3]],
                                                                                   [[4, 5, 6]]], [[0.99926393,
                                                                                                   1.99852329,
                                                                                                   3.220923],
@@ -347,8 +367,8 @@ class TestExecution:
     def test_execution(self,
                        test_num,
                        memory_template,
-                       memory_fill,
                        memory_capacity,
+                       memory_fill,
                        memory_decay,
                        field_weights,
                        concatenate_keys,
@@ -358,16 +378,31 @@ class TestExecution:
                        inputs,
                        expected_retrieval):
 
-        em = EMComposition(memory_template=memory_template,
-                           memory_capacity=memory_capacity,
-                           memory_fill=memory_fill,
-                           field_weights=field_weights,
-                           memory_decay=memory_decay,
-                           softmax_gain=softmax_gain,
-                           storage_prob=storage_prob,
-                           concatenate_keys=concatenate_keys
-                           # seed=module_seed,
-                           )
+        params = {'memory_template': memory_template,
+                  'memory_capacity': memory_capacity,
+                  }
+        # Add explicit argument specifications only for args that are not None
+        # (to avoid forcing to None in constructor)
+        if memory_fill is not None:
+            params.update({'memory_fill': memory_fill})
+        if memory_decay or memory_decay is None:
+            params.update({'memory_decay': True})
+            if isinstance(memory_decay, (int, float)):
+                params.update({'memory_decay_rate': memory_decay})
+        elif not memory_decay:
+            params.update({'memory_decay': False})
+        if field_weights is not None:
+            params.update({'field_weights': field_weights})
+        if concatenate_keys is not None:
+            params.update({'concatenate_keys': concatenate_keys})
+        if normalize_memories is not None:
+            params.update({'normalize_memories': normalize_memories})
+        if softmax_gain is not None:
+            params.update({'softmax_gain': softmax_gain})
+        if storage_prob is not None:
+            params.update({'storage_prob': storage_prob})
+
+        em = EMComposition(**params)
 
         # Construct inputs
         input_nodes = em.key_input_nodes + em.value_input_nodes
@@ -389,11 +424,17 @@ class TestExecution:
 
         # Validate storage
         if storage_prob:
-            assert em.memory[-1] == [[1,2,3],[4,5,6]]
-            if memory_decay:
-                pass # FIX:  IMPLEMENT
+            np.testing.assert_array_equal(em.memory[-1],[[1,2,3],[4,5,6]])
+
+            if memory_decay is None or memory_decay: # Note: None here means use default for constructor, which is True
+                if memory_decay is None:
+                    assert em.memory_decay is True # Validate default memory_decay
+                    np.testing.assert_array_equal(np.array(memory_template) * (1 / memory_capacity), em.memory[:3])
+                else:
+                    np.testing.assert_array_equal(np.array(memory_template) * memory_decay, em.memory[:3])
             else:
-                pass # FIX:  IMPLEMENT
+                np.testing.assert_array_equal(memory_template, em.memory[:3])
+
         elif len(memory_template) < memory_capacity:
             if isinstance(memory_fill, tuple):
                 for field in em.memory[-1]:

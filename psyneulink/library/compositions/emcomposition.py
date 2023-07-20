@@ -10,7 +10,7 @@
 
 # TODO:
 # - FIX: WRITE MORE EXECUTION TESTS
-# - FIX: EXAMPLES and FIGURES RE: default concatenate_keys -> False and retrieval_gating_nodes IF all key weights are equal
+# - FIX: EXAMPLES and FIGURES RE: default concatenate_keys -> False
 # - FIX: DOCUMENTATION: define "key weights" explicitly as field_weights for all non-zero values
 # - FIX: ADD NOISE (AND/OR SOFTMAX PROBABILISTIC RETRIEVAL MODE)
 # - FIX: WARNING NOT OCCURRING FOR ZEROS WITH MULTIPLE ENTRIES (HAPPENS IF *ANY* KEY IS EVER ALL ZEROS)
@@ -961,7 +961,7 @@ class EMComposition(AutodiffComposition):
         concatenate_keys = Parameter(False, structural=True)
         memory_decay = Parameter(True, loggable=True, modulable=True, fallback_default=True)
         memory_decay_rate = Parameter(None, loggable=True, modulable=True, fallback_default=True,
-                               dependencies='memory_decay')
+                               dependencies={'memory_decay', 'memory_capacity'})
         normalize_memories = Parameter(True, loggable=False, fallback_default=True)
         learn_weights = Parameter(False, fallback_default=True) # FIX: False until learning is implemented
         learning_rate = Parameter(.001, fallback_default=True)
@@ -999,6 +999,10 @@ class EMComposition(AutodiffComposition):
             if not all_within_range(storage_prob, 0, 1):
                 return f"must be a float in the interval [0,1]."
 
+        # def _parse_memory_decay_rate(self, memory_decay_rate):
+        #     if self.memory_decay.get() and memory_decay_rate is None:
+        #         return 1 / self.memory_capacity.get()
+
     @check_user_specified
     def __init__(self,
                  memory_template:Union[tuple, list, np.ndarray]=[[0],[0]],
@@ -1028,7 +1032,7 @@ class EMComposition(AutodiffComposition):
                                                                           learn_weights, learning_rate, name)
 
         if memory_decay and memory_decay_rate is None:
-            memory_decay_rate = 1 / self.memory_capacity
+            memory_decay_rate = 1 / memory_capacity
 
         # Instantiate Composition -------------------------------------------------------------------------
 
@@ -1562,14 +1566,47 @@ class EMComposition(AutodiffComposition):
 
         if storage_prob == 0.0 or (storage_prob > 0.0 and storage_prob < random_state.uniform()):
             return
-        self._encode_memory(inputs, context)
+        # self._encode_memory(inputs, context)
+        self._encode_memory(context)
 
-    def _encode_memory(self, inputs, context=None):
-        for i, input in enumerate(inputs.items()):
-            input_node = input[0]
-            memory = input[1]
-            # Memory = key_input or value_input
-            # memories = weights of Projections for each field
+    # def _encode_memory(self, inputs, context=None):
+    #     for i, input in enumerate(inputs.items()):
+    #         input_node = input[0]
+    #         memory = input[1]
+    #         # Memory = key_input or value_input
+    #         # memories = weights of Projections for each field
+    #
+    #         # Store key_input vector in projections from input_key_nodes to match_nodes
+    #         if input_node in self.key_input_nodes:
+    #             # For key_input:
+    #             #   assign as weights for first empty row of Projection.matrix from key_input_node to match_node
+    #             memories = input_node.efferents[0].parameters.matrix.get(context)
+    #             if self.memory_decay:
+    #                 memories *= self.memory_decay_rate
+    #             # Get least used slot (i.e., weakest memory = row of matrix with lowest weights)
+    #             # idx_of_min = np.argmin(memories.sum(axis=0))
+    #             idx_of_min = np.argmin(np.linalg.norm(memories, axis=0))
+    #             memories[:,idx_of_min] = np.array(memory)
+    #             input_node.efferents[0].parameters.matrix.set(memories, context)
+    #
+    #         # For all inputs, assign input vector to afferent weights of corresponding retrieval_node
+    #         memories = self.retrieval_nodes[i].path_afferents[0].parameters.matrix.get(context)
+    #         if self.memory_decay:
+    #             memories *= self.memory_decay_rate
+    #         # Get least used slot (i.e., weakest memory = row of matrix with lowest weights)
+    #         idx_of_min = np.argmin(memories.sum(axis=1))
+    #         memories[idx_of_min] = np.array(memory)
+    #         self.retrieval_nodes[i].path_afferents[0].parameters.matrix.set(memories, context)
+
+    def _encode_memory(self, context=None):
+        """Encode inputs as memories
+        For each node in key_input_nodes and value_input_nodes,
+        assign its value to afferent weights of corresponding retrieval_node.
+        - memory = key_input or value_input
+        - memories = weights of Projections for each field
+        """
+        for i, input_node in enumerate(self.key_input_nodes + self.value_input_nodes):
+            memory = input_node.value[0]
 
             # Store key_input vector in projections from input_key_nodes to match_nodes
             if input_node in self.key_input_nodes:
@@ -1577,7 +1614,7 @@ class EMComposition(AutodiffComposition):
                 #   assign as weights for first empty row of Projection.matrix from key_input_node to match_node
                 memories = input_node.efferents[0].parameters.matrix.get(context)
                 if self.memory_decay:
-                    memories *= self.memory_decay_rate
+                    memories *= self.parameters.memory_decay_rate._get(context)
                 # Get least used slot (i.e., weakest memory = row of matrix with lowest weights)
                 # idx_of_min = np.argmin(memories.sum(axis=0))
                 idx_of_min = np.argmin(np.linalg.norm(memories, axis=0))
