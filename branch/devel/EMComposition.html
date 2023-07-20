@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>EMComposition &mdash; PsyNeuLink 0.11.0.0+823.g78fb45ae6 documentation</title>
+  <title>EMComposition &mdash; PsyNeuLink 0.11.0.0+824.g0a5bcbfbd documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.11.0.0+823
+                  0.11.0.0+824
                 </div>
               
             
@@ -305,45 +305,73 @@ with the smallest norm across all of its fields) in <a class="reference internal
 <div></div></blockquote>
 <p id="emcomposition-fields"><em>Field Specification</em></p>
 <ul id="emcomposition-memory-template">
-<li><p><strong>memory_template</strong>: This specifies the shape of the entries to be stored in the EMComposition’s <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory" title="psyneulink.library.compositions.emcomposition.EMComposition.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>.  The default is to initialize <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory" title="psyneulink.library.compositions.emcomposition.EMComposition.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> with all zeros, but
-it can be initialized with pre-specified entries using the list or array formats described below.  The
-<code class="docutils literal notranslate"><span class="pre">memory_template</span></code> can be specified in one of three ways (see <a class="reference internal" href="#emcomposition-examples"><span class="std std-ref">Examples</span></a> for
+<li><p><strong>memory_template</strong>: This specifies the shape of the entries to be stored in the EMComposition’s <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory" title="psyneulink.library.compositions.emcomposition.EMComposition.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>, and can be used to initialize <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory" title="psyneulink.library.compositions.emcomposition.EMComposition.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> with pre-specified entries.
+The <code class="docutils literal notranslate"><span class="pre">memory_template</span></code> argument can be specified in one of three ways (see <a class="reference internal" href="#emcomposition-examples"><span class="std std-ref">Examples</span></a> for
 representative use cases):</p>
+<ul>
+<li><p><strong>tuple</strong>: interpreted as an np.array shape specification, that must be of length 2 or 3.  If it is a 3-item tuple,
+then the first item specifies the number of entries in memory, the 2nd the number of fields in each entry, and the
+3rd the length of each field.  If it is a 2-item tuple, this specifies the shape of an entry, and the number of
+entries is specified by <a class="reference internal" href="#emcomposition-memory-capacity"><span class="std std-ref">memory_capacity</span></a>).  All entries are
+filled with zeros or the value specified by <a class="reference internal" href="#emcomposition-memory-fill"><span class="std std-ref">memory_fill</span></a>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>If the <code class="docutils literal notranslate"><span class="pre">memory_template</span></code> is specified with a 3-item tuple and <a class="reference internal" href="#emcomposition-memory-capacity"><span class="std std-ref">memory_capacity</span></a>
+is also specified with a value that does not match the first item of <code class="docutils literal notranslate"><span class="pre">memory_template</span></code>, and error is
+generated indicating the conflict in the number of entries specified.</p>
+</div>
 <div class="admonition hint">
 <p class="admonition-title">Hint</p>
-<p>Using the default initialization of memory with all zeros and <code class="docutils literal notranslate"><span class="pre">normalize_memories</span></code> set to <code class="docutils literal notranslate"><span class="pre">True</span></code>
-(see <a class="reference internal" href="#emcomposition-retrieval-storage"><span class="std std-ref">below</span></a>) results in a numpy.linalg warning about divide by zero.
-This can be ignored, as it does not affect the results of execution, but it can be averted by specifying
-<a class="reference internal" href="#emcomposition-memory-fill"><span class="std std-ref">memory_fill</span></a> to use small random values (e.g., <code class="docutils literal notranslate"><span class="pre">memory_fill=(0,.001)</span></code>).</p>
+<p>To specify a single field, a list or array must be used (see below), as a 2-item tuple is interpreted as
+specifying the shape of an entry, and so it can’t be used to specify the number of entries each of which
+has a single field.</p>
 </div>
-<ul>
-<li><p><strong>tuple</strong>: interpreted as an np.array shape specification, in which the 1st item specifies the number of fields in
-each memory entry and the 2nd item specifies the length of each field.  The matrix is filled either with zeros or
-with the value specified in <code class="docutils literal notranslate"><span class="pre">memory_fill</span></code> (see below).</p></li>
+</li>
 <li><p><strong>2d list or array</strong>:  interpreted as a template for memory entries.  This can be used to specify fields of
-different lengths (i.e., entries that are ragged arrays), with each item in the list (axis 0 of the array) used to
-specify the length of the corresponding field.  The template is broadcast over the third dimension to generate the
-full matrix used to initialize <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory" title="psyneulink.library.compositions.emcomposition.EMComposition.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>.  If the template uses any non-zero values, then the
-array is replicated for all entries in <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory" title="psyneulink.library.compositions.emcomposition.EMComposition.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>.  If the template has all zeros, then the
-the entire <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory" title="psyneulink.library.compositions.emcomposition.EMComposition.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> is filled with either zeros or the value specified in <code class="docutils literal notranslate"><span class="pre">memory_fill</span></code>.</p>
+different lengths (i.e., entries that are ragged arrays), with each item in the list (axis 0 of the array) used
+to specify the length of the corresponding field.  The template is then used to initialze all entries in <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory" title="psyneulink.library.compositions.emcomposition.EMComposition.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>.  If the template includes any non-zero elements, then the array is replicated for all
+entries in <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory" title="psyneulink.library.compositions.emcomposition.EMComposition.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>; otherwise, they are filled with either zeros or the value specified
+in <a class="reference internal" href="#emcomposition-memory-fill"><span class="std std-ref">memory_fill</span></a>.</p>
 <div class="admonition hint">
 <p class="admonition-title">Hint</p>
 <p>To specify a single entry, with all other entries filled with zeros
 or the value specified in <code class="docutils literal notranslate"><span class="pre">memory_fill</span></code>, use a 3d array as described below.</p>
 </div>
 </li>
-<li><p><strong>3d list or array</strong>:  used to initialize <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory" title="psyneulink.library.compositions.emcomposition.EMComposition.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> directly. If the outer dimension of
-the list or array (axis 0) has fewer than <code class="docutils literal notranslate"><span class="pre">memory_capacity</span></code> items, then it is filled with the remaining entries,
-using either zeros or the value specified in <code class="docutils literal notranslate"><span class="pre">memory_fill</span></code> (see below).  If all of thespecified entries are
-zeros and <code class="docutils literal notranslate"><span class="pre">memory_fill</span></code> is specified, then the matrix is filled with the value specified in <code class="docutils literal notranslate"><span class="pre">memory_fill</span></code>.</p></li>
+<li><p><strong>3d list or array</strong>:  used to initialize <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory" title="psyneulink.library.compositions.emcomposition.EMComposition.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> directly with the entries specified in
+the outer dimension (axis 0) of the list or array.  If <a class="reference internal" href="#emcomposition-memory-capacity"><span class="std std-ref">memory_capacity</span></a> is not
+specified, then it is set to the number of entries in the list or array. If <code class="docutils literal notranslate"><span class="pre">memory_capacity</span></code> <em>is</em> specified,
+then the number of entries specified in <code class="docutils literal notranslate"><span class="pre">memory_template</span></code> must be less than or equal to <code class="docutils literal notranslate"><span class="pre">memory_capacity</span></code>.  If
+is less than <code class="docutils literal notranslate"><span class="pre">memory_capacity</span></code>, then the remaining entries in <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory" title="psyneulink.library.compositions.emcomposition.EMComposition.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> are filled with
+zeros or the value specified in <code class="docutils literal notranslate"><span class="pre">memory_fill</span></code> (see below):  if all of the entries specified contain only
+zeros, and <code class="docutils literal notranslate"><span class="pre">memory_fill</span></code> is specified, then the matrix is filled with the value specified in <code class="docutils literal notranslate"><span class="pre">memory_fill</span></code>;
+otherwise, zeros are used to fill all entries.</p></li>
 </ul>
 </li>
 </ul>
-<ul class="simple" id="emcomposition-memory-fill">
+<p id="emcomposition-memory-capacity"><em>Memory Capacity</em></p>
+<ul class="simple">
+<li><p><strong>memory_capacity</strong>: specifies the number of items that can be stored in the EMComposition’s memory; when
+<a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory_capacity" title="psyneulink.library.compositions.emcomposition.EMComposition.memory_capacity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory_capacity</span></code></a> is reached, each new entry overwrites the weakest entry (i.e., the
+one with the smallest norm across all of its fields) in <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory" title="psyneulink.library.compositions.emcomposition.EMComposition.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>.  If <code class="xref any docutils literal notranslate"><span class="pre">memory_template</span>
+<span class="pre">EMComposition_Memory_Template&gt;</span></code> is specified as a 3-item tuple or 3d list or array (see above), then that is used
+to determine <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory_capacity" title="psyneulink.library.compositions.emcomposition.EMComposition.memory_capacity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory_capacity</span></code></a> (if it is specified and conflicts with either of those
+an error is generated).  Otherwise, it can be specified using a numerical value, with a default of 1000.  The
+<a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory_capacity" title="psyneulink.library.compositions.emcomposition.EMComposition.memory_capacity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory_capacity</span></code></a> cannot be modified once the EMComposition has been constructed.</p></li>
+</ul>
+<ul id="emcomposition-memory-fill">
 <li><p><strong>memory_fill</strong>: specifies the value used to fill the <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory" title="psyneulink.library.compositions.emcomposition.EMComposition.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>, based on the shape specified
 in the <code class="docutils literal notranslate"><span class="pre">memory_template</span></code> (see above).  The value can be a scalar, or a tuple to specify an interval over which
 to draw random values to fill <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory" title="psyneulink.library.compositions.emcomposition.EMComposition.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> — both should be scalars, with the first specifying
-the lower bound and the second the upper bound.</p></li>
+the lower bound and the second the upper bound.  If <code class="docutils literal notranslate"><span class="pre">memory_fill</span></code> is not specified, and no entries are specified
+in <code class="docutils literal notranslate"><span class="pre">memory_template</span></code>, then <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory" title="psyneulink.library.compositions.emcomposition.EMComposition.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> is filled with zeros.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>If memory is initialized with all zeros and <code class="docutils literal notranslate"><span class="pre">normalize_memories</span></code> set to <code class="docutils literal notranslate"><span class="pre">True</span></code> (see <a class="reference internal" href="#emcomposition-retrieval-storage"><span class="std std-ref">below</span></a>) then a numpy.linalg warning is issued about divide by zero.
+This can be ignored, as it does not affect the results of execution, but it can be averted by specifying
+<a class="reference internal" href="#emcomposition-memory-fill"><span class="std std-ref">memory_fill</span></a> to use small random values (e.g., <code class="docutils literal notranslate"><span class="pre">memory_fill=(0,.001)</span></code>).</p>
+</div>
+</li>
 </ul>
 <ul id="emcomposition-field-weights">
 <li><p><strong>field_weights</strong>: specifies which fields are used as keys, and how they are weighted during retrieval. The
@@ -399,12 +427,6 @@ inputs can be provided for each key, and the value of each key can be retrieved 
 </div>
 </div></blockquote>
 </li>
-</ul>
-<p id="emcomposition-memory-capacity"><em>Memory Capacity</em></p>
-<ul class="simple">
-<li><p><strong>memory_capacity</strong>: specifies the maximum number of items that can be stored in the EMComposition’s memory; when
-<a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory_capacity" title="psyneulink.library.compositions.emcomposition.EMComposition.memory_capacity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory_capacity</span></code></a> is reached, each new entry overwrites the weakest entry (i.e., the
-one with the smallest norm across all of its fields) in <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory" title="psyneulink.library.compositions.emcomposition.EMComposition.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>.</p></li>
 </ul>
 <ul class="simple">
 <li><p><strong>memory_decay_rate</strong>: specifies the rate at which items in the EMComposition’s memory decay;  the default rate
@@ -544,10 +566,10 @@ or <a class="reference internal" href="#psyneulink.library.compositions.emcompos
 </section>
 <section id="visualizing-the-emcomposition">
 <h3><em>Visualizing the EMComposition</em><a class="headerlink" href="#visualizing-the-emcomposition" title="Permalink to this headline">¶</a></h3>
-<p>The EMComposition can be visualized graphically, like any <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, using its <code class="xref any docutils literal notranslate"><span class="pre">show_graph</span></code> method.  For example, the figure below shows the following EMComposition
-that has 2 keys and 1 value:</p>
+<p>The EMComposition can be visualized graphically, like any <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, using its <a class="reference internal" href="Visualization.html#showgraph-show-graph-method"><span class="std std-ref">show_graph</span></a> method.  For example, the figure below shows an EMComposition that
+implements a simple dictionary, with one key field and one value field, each of length 5:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">em</span> <span class="o">=</span> <span class="n">EMComposition</span><span class="p">(</span><span class="n">memory_template</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span> <span class="n">memory_capacity</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">em</span> <span class="o">=</span> <span class="n">EMComposition</span><span class="p">(</span><span class="n">memory_template</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">5</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">em</span><span class="o">.</span><span class="n">show_graph</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -556,31 +578,47 @@ that has 2 keys and 1 value:</p>
 </section>
 <section id="memory-template">
 <span id="emcomposition-example-memory-template"></span><h3><em>Memory Template</em><a class="headerlink" href="#memory-template" title="Permalink to this headline">¶</a></h3>
-<p>The <code class="docutils literal notranslate"><span class="pre">memory_template</span></code> argument is used to configure the EMComposition’s <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory" title="psyneulink.library.compositions.emcomposition.EMComposition.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>, which
-can be specified with by a tuple or a list or array.</p>
+<p>The <a class="reference internal" href="#emcomposition-memory-template"><span class="std std-ref">memory_template</span></a> argument of a EMComposition’s constructor is used to configure
+it <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory" title="psyneulink.library.compositions.emcomposition.EMComposition.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>, which can be specified using either a tuple or a list or array.</p>
 <p id="emcomposition-example-tuple-spec"><strong>Tuple specification</strong></p>
-<p>A tuple can be used to specify the number of fields and the length of each field in memory.  In the example above,
-a tuple is used to specify that EMComposition’s memory should four entries, each of which has two fields of length
-3 each.  The contents of <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory" title="psyneulink.library.compositions.emcomposition.EMComposition.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> can be see using it <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory" title="psyneulink.library.compositions.emcomposition.EMComposition.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>
-attribute:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">em</span><span class="o">.</span><span class="n">memory</span>
-<span class="go">[[[array([0., 0., 0.]), array([0., 0., 0.])]],</span>
-<span class="go"> [[array([0., 0., 0.]), array([0., 0., 0.])]],</span>
-<span class="go"> [[array([0., 0., 0.]), array([0., 0., 0.])]],</span>
-<span class="go"> [[array([0., 0., 0.]), array([0., 0., 0.])]]]</span>
+<p>The simplest form of specification is a tuple, that uses the <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.shape.html">numpy shape</a> format.  If it has two elements (as in the
+example above), the first specifies the number of fields, and the second the length of each field.  In this case,
+a default number of entries (1000) is created:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">em</span><span class="o">.</span><span class="n">memory_capacity</span>
+<span class="go">1000</span>
 </pre></div>
 </div>
-<p>Note that there are four entries (rows) each with two fields (columns) that is each of length 3. The number of entries
-was determined by <code class="docutils literal notranslate"><span class="pre">memory_capacity</span></code>.  The default for <code class="docutils literal notranslate"><span class="pre">memory_capacity</span></code> is 1000, but 4 is used here for legibility.
-The specification of <code class="docutils literal notranslate"><span class="pre">memory_template</span></code> above is equivalent to the following use of a list or array to specify
-<code class="docutils literal notranslate"><span class="pre">memory_template</span></code>:</p>
+<p>The number of entries can be specified explicitly in the EMComposition’s constructor, using either the
+<a class="reference internal" href="#emcomposition-memory-capacity"><span class="std std-ref">memory_capacity</span></a> argument, or by using a 3-item tuple to specify the
+<a class="reference internal" href="#emcomposition-memory-template"><span class="std std-ref">memory_template</span></a> argument, in which case the first element specifies
+the  number of entries, while the second and their specify the number of fields and the length of each field,
+respectively.  The following are equivalent:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">em</span> <span class="o">=</span> <span class="n">EMComposition</span><span class="p">(</span><span class="n">memory_template</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">5</span><span class="p">),</span> <span class="n">memory_capcity</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>and</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">em</span> <span class="o">=</span> <span class="n">EMComposition</span><span class="p">(</span><span class="n">memory_template</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">5</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>both of which create a memory with 4 entries, each with 2 fields of length 5. The contents of <a class="reference internal" href="#emcomposition-memory"><span class="std std-ref">memory</span></a> can be inspected using the <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory" title="psyneulink.library.compositions.emcomposition.EMComposition.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> attribute:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">em</span><span class="o">.</span><span class="n">memory</span>
+<span class="go">[[array([0., 0., 0., 0., 0.]), array([0., 0., 0., 0., 0.])],</span>
+<span class="go"> [array([0., 0., 0., 0., 0.]), array([0., 0., 0., 0., 0.])],</span>
+<span class="go"> [array([0., 0., 0., 0., 0.]), array([0., 0., 0., 0., 0.])],</span>
+<span class="go"> [array([0., 0., 0., 0., 0.]), array([0., 0., 0., 0., 0.])]]</span>
+</pre></div>
+</div>
+<p>The default for <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory_capacity" title="psyneulink.library.compositions.emcomposition.EMComposition.memory_capacity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory_capacity</span></code></a> is 1000, which is used if it is not otherwise
+specified.</p>
+<p><strong>List or array specification</strong></p>
+<p>Note that in the example above the two fields have the same length (5). This is always the case when a tuple is used,
+as it generates a regular array.  A list or numpy array can also be used to specify the <code class="docutils literal notranslate"><span class="pre">memory_template</span></code> argument.
+For example, the following is equivalent to the examples above:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">em</span> <span class="o">=</span> <span class="n">EMComposition</span><span class="p">(</span><span class="n">memory_template</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]],</span> <span class="n">memory_capacity</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><strong>List or array specification</strong></p>
-<p>Note that in the example above the two fields have the same length (3). This is always the case when a tuple is used,
-as it generates a regular array.  However, a list or array can be used to specify fields of different length (i.e.,
-as a ragged array).  For example, the following specifies one field of length 3 and another of length 1:</p>
+<p>However, a list or array can be used to specify fields of different length (i.e., as a ragged array).  For example,
+the following specifies one field of length 3 and another of length 1:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">em</span> <span class="o">=</span> <span class="n">EMComposition</span><span class="p">(</span><span class="n">memory_template</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">memory_capacity</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">em</span><span class="o">.</span><span class="n">memory</span>
 <span class="go">[[[array([0., 0., 0.]), array([0.])]],</span>
@@ -590,10 +628,10 @@ as a ragged array).  For example, the following specifies one field of length 3 
 </pre></div>
 </div>
 <p id="emcomposition-example-memory-fill"><strong>Memory fill</strong></p>
-<p>Note that the examples above generate a warning about the use zeros to initialize the memory.  This is because the
-default value for <code class="docutils literal notranslate"><span class="pre">memory_fill</span></code> is <code class="docutils literal notranslate"><span class="pre">0</span></code>, and the default value for <code class="docutils literal notranslate"><span class="pre">normalize_memories</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code>, which
-will cause a divide by zero warning when memories are normalized  While numpy handles this gracefully, albeit with
-a warning, it can be avoided by specifying a non-zero value for <code class="docutils literal notranslate"><span class="pre">memory_fill</span></code>, such as small number:</p>
+<p>Note that the examples above generate a warning about the use of zeros to initialize the memory. This is
+because the default value for <code class="docutils literal notranslate"><span class="pre">memory_fill</span></code> is <code class="docutils literal notranslate"><span class="pre">0</span></code>, and the default value for <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.normalize_memories" title="psyneulink.library.compositions.emcomposition.EMComposition.normalize_memories"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">normalize_memories</span></code></a> is True, which will cause a divide by zero warning when memories are
+normalized. While this doesn’t crash, it will result in nan’s that are likely to cauase problems elsewhere.
+This can be avoided by specifying a non-zero  value for <code class="docutils literal notranslate"><span class="pre">memory_fill</span></code>, such as small number:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">em</span> <span class="o">=</span> <span class="n">EMComposition</span><span class="p">(</span><span class="n">memory_template</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">memory_capacity</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">memory_fill</span><span class="o">=</span><span class="mf">.001</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">em</span><span class="o">.</span><span class="n">memory</span>
 <span class="go">[[[array([0.001, 0.001, 0.001]), array([0.001])]],</span>
@@ -602,9 +640,9 @@ a warning, it can be avoided by specifying a non-zero value for <code class="doc
 <span class="go"> [[array([0.001, 0.001, 0.001]), array([0.001])]]]</span>
 </pre></div>
 </div>
-<p>Here, a single value was specified for <code class="docutils literal notranslate"><span class="pre">memory_fill</span></code> (which can be a float or int) that is used to fill all values.
-A tuple can also be specified, in which case it is used to generate a random number in the internval between the first
-and second values of the tuple.  For example, the following uses random values between 0 and 0.01 to fill all entries:</p>
+<p>Here, a single value was specified for <code class="docutils literal notranslate"><span class="pre">memory_fill</span></code> (which can be a float or int), that is used to fill all values.
+Random values can be assigned using a tuple to specify and internval between the first and second elements.  For
+example, the following uses random values between 0 and 0.01 to fill all entries:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">em</span> <span class="o">=</span> <span class="n">EMComposition</span><span class="p">(</span><span class="n">memory_template</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">memory_capacity</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">memory_fill</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.01</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">em</span><span class="o">.</span><span class="n">memory</span>
 <span class="go">[[[array([0.00298981, 0.00563404, 0.00444073]), array([0.00245373])]],</span>
@@ -625,9 +663,9 @@ following initializes memory with two specific entries:</p>
 <span class="go"> [[array([0., 0., 0.]), array([0.])]]]</span>
 </pre></div>
 </div>
-<p>Note that the two entries must have exactly the same shapes. If they do not, and error will be generated.
+<p>Note that the two entries must have exactly the same shapes. If they do not, an error is generated.
 Also note that the remaining entries are filled with zeros (the default value for <code class="docutils literal notranslate"><span class="pre">memory_fill</span></code>).
-Here again, <code class="docutils literal notranslate"><span class="pre">memory_fill</span></code> can be used to specify a different default value:</p>
+Here again, <code class="docutils literal notranslate"><span class="pre">memory_fill</span></code> can be used to specify a different value:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">em</span> <span class="o">=</span> <span class="n">EMComposition</span><span class="p">(</span><span class="n">memory_template</span><span class="o">=</span><span class="p">[[[</span><span class="mi">7</span><span class="p">],[</span><span class="mi">24</span><span class="p">,</span><span class="mi">5</span><span class="p">]],[[</span><span class="mi">100</span><span class="p">],[</span><span class="mi">3</span><span class="p">,</span><span class="mi">106</span><span class="p">]]],</span> <span class="n">memory_capacity</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">memory_fill</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mf">.01</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">em</span><span class="o">.</span><span class="n">memory</span>
 <span class="go">[[[array([7.]), array([24.,  5.])]],</span>
@@ -641,12 +679,12 @@ Here again, <code class="docutils literal notranslate"><span class="pre">memory_
 <span id="emcomposition-example-field-weights"></span><h3><em>Field Weights</em><a class="headerlink" href="#field-weights" title="Permalink to this headline">¶</a></h3>
 <p>By default, all of the fields specified are treated as keys except the last, which is treated as a “value” field –
 that is, one that is not included in the matching process, but for which a value is retrieved along with the key fields.
-For example, in the <a class="reference internal" href="#emcomposition-example-fig"><span class="std std-ref">figure</span></a> above, of the three fields specified, the first two are used as
-keys, and the last is used as a value. However, the <code class="docutils literal notranslate"><span class="pre">field_weights</span></code> argument can be used to modify this, specifying
-which fields should be used as keys, as well as the relative contribution that each makes to the matching process, and
-which should be used as value fields.  Non-zero elements in the <code class="docutils literal notranslate"><span class="pre">field_weights</span></code> argument designate keys, and zeros
-specify value fields.  For example, the following specifies that the first two fields should be used as keys while
-the last two should be used as values:</p>
+For example, in the <a class="reference internal" href="#emcomposition-example-fig"><span class="std std-ref">figure</span></a> above, the first field specified was used as a key field,
+and the last as a value field. However, the <code class="docutils literal notranslate"><span class="pre">field_weights</span></code> argument can be used to modify this, specifying which
+fields should be used as keys fields – including the relative contribution that each makes to the matching process
+– and which should be used as value fields.  Non-zero elements in the <code class="docutils literal notranslate"><span class="pre">field_weights</span></code> argument designate key fields,
+and zeros specify value fields. For example, the following specifies that the first two fields should be used as keys
+while the last two should be used as values:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">em</span> <span class="o">=</span> <span class="n">EMComposition</span><span class="p">(</span><span class="n">memory_template</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]],</span> <span class="n">memory_capacity</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">field_weights</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">em</span><span class="o">.</span><span class="n">show_graph</span><span class="p">()</span>
 </pre></div>
@@ -656,34 +694,23 @@ the last two should be used as values:</p>
 <p><span class="caption-text"><strong>Use of field_weights to specify keys and values.</strong></span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
-<p>The <code class="docutils literal notranslate"><span class="pre">field_weights</span></code> argument can also be used to specify the relative contribution of each field to the matching
-process.  By default, all non-zero values are set to 1, but different values can be used to weight the
-relative contribution of each field.  The values are normalized so that the sum of all non-zero values is 1, and the
-relative contribution of each is determined by the ratio of its value to the sum of all non-zero values.  For example,
-the following specifies that the first two fields should be used as keys, with the first contributing 75% to the
-matching process and the second field should contribute 25%:</p>
+<p>Note that the figure now shows <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.retrieval_gating_nodes" title="psyneulink.library.compositions.emcomposition.EMComposition.retrieval_gating_nodes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RETRIEVAL</span> <span class="pre">WEIGHTING</span></code></a> <code class="xref any docutils literal notranslate"><span class="pre">nodes</span></code>,
+that are used to implement the relative contribution that each key field makes to the matching process specifed in
+<a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.field_weights" title="psyneulink.library.compositions.emcomposition.EMComposition.field_weights"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">field_weights</span></code></a> argument.  By default, these are equal (all assigned a value of 1),
+but different values can be used to weight the relative contribution of each key field.  The values are normalized so
+that they sum 1, and the relative contribution of each is determined by the ratio of its value to the sum of all
+non-zero values.  For example, the following specifies that the first two fields should be used as keys,
+with the first contributing 75% to the matching process and the second field contributing 25%:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">em</span> <span class="o">=</span> <span class="n">EMComposition</span><span class="p">(</span><span class="n">memory_template</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]],</span> <span class="n">memory_capacity</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">field_weights</span><span class="o">=</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">em</span><span class="o">.</span><span class="n">show_graph</span><span class="p">()</span>
 </pre></div>
 </div>
-<figure class="align-default" id="id4">
-<span id="emcomposition-example-field-weights-different-fig"></span><img alt="_images/EMComposition_field_weights_different.svg" src="_images/EMComposition_field_weights_different.svg" /><figcaption>
-<p><span class="caption-text"><strong>Use of field_weights to specify relative contribution of fields to matching process.</strong></span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></p>
-</figcaption>
-</figure>
-<p>Note that in this case, the <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.concatenate_keys_node" title="psyneulink.library.compositions.emcomposition.EMComposition.concatenate_keys_node"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">concatenate_keys_node</span></code></a> has been replaced by a
-pair of <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.retrieval_gating_nodes" title="psyneulink.library.compositions.emcomposition.EMComposition.retrieval_gating_nodes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">retreival_weighting_nodes</span></code></a>, one for each key field.  This is because
-the keys were assigned different weights;  when they are assigned equal weights, or if no weights are specified,
-and <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.normalize_memories" title="psyneulink.library.compositions.emcomposition.EMComposition.normalize_memories"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">normalize_memories</span></code></a> is <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>, then the keys are concatenated and are
-concatenated for efficiency of processing.  This can be suppressed by specifying <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.concatenate_keys" title="psyneulink.library.compositions.emcomposition.EMComposition.concatenate_keys"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">concatenate_keys</span></code></a> as <code class="xref any docutils literal notranslate"><span class="pre">False</span></code>
-(see <a class="reference internal" href="#emcomposition-concatenate-keys"><span class="std std-ref">concatenate_keys</span></a> for additional details).</p>
 </section>
 </section>
 <section id="class-reference">
 <span id="emcomposition-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.EMComposition">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.library.compositions.emcomposition.</span></span><span class="sig-name descname"><span class="pre">EMComposition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">memory_template</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[[0],</span> <span class="pre">[0]]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_fill</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">concatenate_keys</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learn_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_capacity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_decay_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize_memories</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">softmax_gain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'control'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storage_prob</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'EM_Composition'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.library.compositions.emcomposition.</span></span><span class="sig-name descname"><span class="pre">EMComposition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">memory_template</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[[0],</span> <span class="pre">[0]]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_capacity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_fill</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">concatenate_keys</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learn_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_decay_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize_memories</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">softmax_gain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'control'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storage_prob</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'EM_Composition'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference internal" href="AutodiffComposition.html"><span class="doc">AutodiffComposition</span></a> that implements the functions of an <a class="reference internal" href="EpisodicMemoryMechanism.html"><span class="doc">EpisodicMemoryMechanism</span></a> in a
 differentiable form and in which it <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.field_weights" title="psyneulink.library.compositions.emcomposition.EMComposition.field_weights"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">field_weights</span></code></a> parameter can be learned.</p>
 <p>Takes only the following arguments, all of which are optional</p>
@@ -710,7 +737,7 @@ additional details).</p></li>
 <li><p><strong>learn_weights</strong> (<em>bool : default False</em>) – specifies whether <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.field_weights" title="psyneulink.library.compositions.emcomposition.EMComposition.field_weights"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">field_weights</span></code></a> are learnable during training;
 see <a class="reference internal" href="#emcomposition-learning"><span class="std std-ref">Learning</span></a> for additional details.</p></li>
 <li><p><strong>learning_rate</strong> (<em>float : default .01</em>) – specifies rate at which <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.field_weights" title="psyneulink.library.compositions.emcomposition.EMComposition.field_weights"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">field_weights</span></code></a> are learned if <code class="docutils literal notranslate"><span class="pre">learn_weights</span></code> is True.</p></li>
-<li><p><strong>memory_capacity</strong> (<em>int : default 1000</em>) – specifies the number of items that can be stored in the EMComposition’s memory;
+<li><p><strong>memory_capacity</strong> (<em>int : default None</em>) – specifies the number of items that can be stored in the EMComposition’s memory;
 see <a class="reference internal" href="#emcomposition-memory-capacity"><span class="std std-ref">memory_capacity</span></a> for details.</p></li>
 <li><p><strong>memory_decay</strong> (<em>bool : default True</em>) – specifies whether memories decay with each execution of the EMComposition;
 see <a class="reference internal" href="#emcomposition-memory-capacity"><span class="std std-ref">memory_decay</span></a> for details.</p></li>
@@ -981,15 +1008,20 @@ single weighting for each memory.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.EMComposition._validate_memory_specs">
-<span class="sig-name descname"><span class="pre">_validate_memory_specs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">memory_template</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_fill</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition._validate_memory_specs" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_validate_memory_specs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">memory_template</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_capacity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_fill</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition._validate_memory_specs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Validate the memory_template, field_weights, and field_names arguments</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.EMComposition._parse_memory_template">
-<span class="sig-name descname"><span class="pre">_parse_memory_template</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">memory_template</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_fill</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_capacity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_weights</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition._parse_memory_template" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_parse_memory_template</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">memory_template</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_capacity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_fill</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_weights</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition._parse_memory_template" title="Permalink to this definition">¶</a></dt>
 <dd><p>Construct memory from memory_template and memory_fill
 Assign self.memory_template and self.entry_template attributes</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(&lt;class ‘numpy.ndarray’&gt;, &lt;class ‘int’&gt;)</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -1000,7 +1032,7 @@ Assign self.memory_template and self.entry_template attributes</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.EMComposition._construct_pathway">
-<span class="sig-name descname"><span class="pre">_construct_pathway</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field_weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">concatenate_keys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize_memories</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">softmax_gain</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition._construct_pathway" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_construct_pathway</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">memory_template</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_capacity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">concatenate_keys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize_memories</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">softmax_gain</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition._construct_pathway" title="Permalink to this definition">¶</a></dt>
 <dd><p>Construct pathway for EMComposition</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
@@ -1049,7 +1081,7 @@ Used to create a matrix for Projectoin from match / memory weights from concaten
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.EMComposition._construct_match_nodes">
-<span class="sig-name descname"><span class="pre">_construct_match_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">concatenate_keys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize_memories</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition._construct_match_nodes" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_construct_match_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">memory_template</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_capacity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">concatenate_keys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize_memories</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition._construct_match_nodes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create nodes that, for each key field, compute the similarity between the input and each item in memory.
 - If self.concatenate_keys is True, then all inputs for keys from concatenated_keys_node are assigned a single</p>
 <blockquote>
@@ -1073,7 +1105,7 @@ that match_node.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.EMComposition._construct_softmax_nodes">
-<span class="sig-name descname"><span class="pre">_construct_softmax_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field_weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">softmax_gain</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition._construct_softmax_nodes" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_construct_softmax_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">memory_capacity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">softmax_gain</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition._construct_softmax_nodes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create nodes that, for each key field, compute the softmax over the similarities between the input and the
 memories in the corresponding match_node.</p>
 <dl class="field-list simple">
@@ -1107,7 +1139,7 @@ memories in the corresponding match_node.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.EMComposition._construct_retrieval_weighting_node">
-<span class="sig-name descname"><span class="pre">_construct_retrieval_weighting_node</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition._construct_retrieval_weighting_node" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_construct_retrieval_weighting_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">memory_capacity</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition._construct_retrieval_weighting_node" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create nodes that compute the weighting of each item in memory.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
@@ -1118,7 +1150,7 @@ memories in the corresponding match_node.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.EMComposition._construct_retrieval_nodes">
-<span class="sig-name descname"><span class="pre">_construct_retrieval_nodes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition._construct_retrieval_nodes" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_construct_retrieval_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">memory_template</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition._construct_retrieval_nodes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create nodes that report the value field(s) for the item(s) matched in memory.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
