@@ -916,6 +916,12 @@ class EMComposition(AutodiffComposition):
                     :default value: 1000
                     :type: ``int``
 
+                memory_template
+                    see `memory_template <EMComposition.memory_template>`
+
+                    :default value: np.array([[0],[0]])
+                    :type: ``np.ndarray``
+
                 field_names
                     see `field_names <EMComposition.field_names>`
 
@@ -952,7 +958,7 @@ class EMComposition(AutodiffComposition):
                     :type: ``float``
         """
         memory = Parameter(None, loggable=True, getter=_memory_getter, read_only=True)
-        # memory_template = Parameter([[0],[0]], structural=True, valid_types=(tuple, list, np.ndarray))
+        memory_template = Parameter([[0],[0]], structural=True, valid_types=(tuple, list, np.ndarray))
         memory_capacity = Parameter(1000, structural=True)
         field_weights = Parameter(None, structural=True)
         field_names = Parameter(None, structural=True)
@@ -1021,11 +1027,17 @@ class EMComposition(AutodiffComposition):
 
         memory_fill = memory_fill or 0 # FIX: GET RID OF THIS ONCE IMPLEMENTED AS A Parameter
         self._validate_memory_specs(memory_template, memory_fill, field_weights, field_names, name)
-        self._parse_memory_template(memory_template, memory_fill, memory_capacity, field_weights)
-        field_weights, field_names, concatenate_keys = self._parse_fields(field_weights, field_names, concatenate_keys,
+        memory_template, memory_capacity = self._parse_memory_template(memory_template,
+                                                                       memory_fill,
+                                                                       memory_capacity,
+                                                                       field_weights)
+        field_weights, field_names, concatenate_keys = self._parse_fields(field_weights,
+                                                                          field_names,
+                                                                          concatenate_keys,
                                                                           normalize_memories,
-                                                                          learn_weights, learning_rate, name)
-
+                                                                          learn_weights,
+                                                                          learning_rate,
+                                                                          name)
         if memory_decay_rate is AUTO:
             memory_decay_rate = 1 / memory_capacity
 
@@ -1130,12 +1142,12 @@ class EMComposition(AutodiffComposition):
                                      f"in the 'field_names' arg for {name} must match "
                                      f"the number of fields ({field_weights_len}).")
 
-    def _parse_memory_template(self, memory_template, memory_fill, memory_capacity, field_weights):
+    def _parse_memory_template(self, memory_template, memory_fill, memory_capacity, field_weights)->(np.ndarray,int):
         """Construct memory from memory_template and memory_fill
         Assign self.memory_template and self.entry_template attributes
         """
 
-        def _construct_entries(entry_template, num_entries, memory_fill=None):
+        def _construct_entries(entry_template, num_entries, memory_fill=None)->np.ndarray:
             """Construct memory entries from memory_template and memory_fill"""
 
             # Random fill specification
@@ -1194,8 +1206,8 @@ class EMComposition(AutodiffComposition):
 
         # Get shape of single entry
         self.entry_template = memory[0]
-        self.memory_template = memory
-        self.memory_capacity = memory_capacity
+
+        return memory, memory_capacity
 
     def _parse_fields(self,
                       field_weights,
