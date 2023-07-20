@@ -637,12 +637,11 @@ from psyneulink.core.components.mechanisms.processing.transfermechanism import T
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import GatingMechanism
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import LearningMechanism
-from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.keywords import \
-    AUTO, CONTROL, DEFAULT_INPUT, DEFAULT_VARIABLE, EM_COMPOSITION, FUNCTION, GAIN, IDENTITY_MATRIX, \
-    MULTIPLICATIVE_PARAM, NAME, PARAMS, PROJECTIONS, RANDOM, RESULT, SIZE, VARIABLE, VALUE, ZEROS_MATRIX
+    AUTO, CONTROL, DEFAULT_INPUT, DEFAULT_VARIABLE, EM_COMPOSITION, GAIN, IDENTITY_MATRIX, \
+    MULTIPLICATIVE_PARAM, NAME, PARAMS, PROJECTIONS, RANDOM, SIZE, VARIABLE
 from psyneulink.core.globals.utilities import all_within_range
 
 __all__ = [
@@ -651,7 +650,7 @@ __all__ = [
 
 STORAGE_PROB = 'storage_prob'
 
-def _memory_getter(owning_component=None, context=None)->list: # FIX: MAKE THIS A PARAMETER
+def _memory_getter(owning_component=None, context=None)->list:
     """Return list of memories in which rows (outer dimension) are memories for each field.
     These are derived from `matrix <MappingProjection.matrix>` parameter of the `afferent
     <Mechanism_Base.afferents>` MappingProjections to each of the `retrieval_nodes <EMComposition.retrieval_nodes>`.
@@ -660,8 +659,9 @@ def _memory_getter(owning_component=None, context=None)->list: # FIX: MAKE THIS 
     memory = [retrieval_node.path_afferents[0].parameters.matrix.get(context)
               for retrieval_node in owning_component.retrieval_nodes]
     # Reorganize memory so that each row is an entry and each column is a field
+    memory_capacity = owning_component.memory_capacity or owning_component.defaults.memory_capacity
     return [[memory[j][i] for j in range(owning_component.num_fields)]
-              for i in range(owning_component.memory_capacity)]
+              for i in range(memory_capacity)]
 
 def get_softmax_gain(v, scale=1, base=1, entropy_weighting=.1)->float:
     """Compute the softmax gain (inverse temperature) based on the entropy of the distribution of values.
@@ -1043,7 +1043,12 @@ class EMComposition(AutodiffComposition):
 
         # Instantiate Composition -------------------------------------------------------------------------
 
-        pathway = self._construct_pathway(field_weights, concatenate_keys, normalize_memories, softmax_gain)
+        pathway = self._construct_pathway(memory_template,
+                                          memory_capacity,
+                                          field_weights,
+                                          concatenate_keys,
+                                          normalize_memories,
+                                          softmax_gain)
 
         super().__init__(pathway,
                          name=name,
@@ -1301,19 +1306,26 @@ class EMComposition(AutodiffComposition):
     # ******************************  Nodes and Pathway Construction Methods  *****************************************
     # *****************************************************************************************************************
 
-    def _construct_pathway(self, field_weights, concatenate_keys, normalize_memories, softmax_gain)->set:
+    def _construct_pathway(self,
+                           memory_template,
+                           memory_capacity,
+                           field_weights,
+                           concatenate_keys,
+                           normalize_memories,
+                           softmax_gain)->set:
         """Construct pathway for EMComposition"""
 
         # Construct nodes of Composition
         self.key_input_nodes = self._construct_key_input_nodes(field_weights)
         self.value_input_nodes = self._construct_value_input_nodes(field_weights)
         self.concatenate_keys_node = self._construct_concatenate_keys_node(concatenate_keys)
-        self.match_nodes = self._construct_match_nodes(concatenate_keys, normalize_memories)
-        self.softmax_nodes = self._construct_softmax_nodes(field_weights, softmax_gain)
+        self.match_nodes = self._construct_match_nodes(memory_template, memory_capacity,
+                                                       concatenate_keys,normalize_memories)
+        self.softmax_nodes = self._construct_softmax_nodes(memory_capacity, field_weights, softmax_gain)
         self.softmax_control_nodes = self._construct_softmax_control_nodes(softmax_gain)
         self.retrieval_gating_nodes = self._construct_retrieval_gating_nodes(field_weights, concatenate_keys)
-        self.retrieval_weighting_node = self._construct_retrieval_weighting_node()
-        self.retrieval_nodes = self._construct_retrieval_nodes()
+        self.retrieval_weighting_node = self._construct_retrieval_weighting_node(memory_capacity)
+        self.retrieval_nodes = self._construct_retrieval_nodes(memory_template)
         self.input_nodes = self.key_input_nodes + self.value_input_nodes
         # self.storage_nodes = self._construct_storage_nodes()
 
@@ -1382,7 +1394,7 @@ class EMComposition(AutodiffComposition):
                                                     for i in range(self.num_keys)],
                                        name='CONCATENATE KEYS')
 
-    def _construct_match_nodes(self, concatenate_keys, normalize_memories)->list:
+    def _construct_match_nodes(self, memory_template, memory_capacity, concatenate_keys, normalize_memories)->list:
         """Create nodes that, for each key field, compute the similarity between the input and each item in memory.
         - If self.concatenate_keys is True, then all inputs for keys from concatenated_keys_node are assigned a single
             match_node, and weights from memory_template are assigned to a Projection from concatenated_keys_node to
@@ -1396,13 +1408,13 @@ class EMComposition(AutodiffComposition):
             # Get fields of memory structure corresponding to the keys
             # Number of rows should total number of elements over all keys,
             #    and columns should number of items in memory
-            matrix =np.array([np.concatenate((self.memory_template[:,:self.num_keys][i]))
-                              for i in range(self.memory_capacity)]).transpose()
+            matrix =np.array([np.concatenate((memory_template[:,:self.num_keys][i]))
+                              for i in range(memory_capacity)]).transpose()
             matrix = np.array(matrix.tolist())
             match_nodes = [
                 TransferMechanism(
                     input_ports={NAME: 'CONCATENATED_INPUTS',
-                                 SIZE: self.memory_capacity,
+                                 SIZE: memory_capacity,
                                  PROJECTIONS: MappingProjection(sender=self.concatenate_keys_node,
                                                                 matrix=matrix,
                                                                 function=LinearMatrix(
@@ -1414,9 +1426,9 @@ class EMComposition(AutodiffComposition):
             match_nodes = [
                 TransferMechanism(
                     input_ports= {
-                        SIZE:self.memory_capacity,
+                        SIZE:memory_capacity,
                         PROJECTIONS: MappingProjection(sender=self.key_input_nodes[i].output_port,
-                                                       matrix = np.array(self.memory_template[:,i].tolist()
+                                                       matrix = np.array(memory_template[:,i].tolist()
                                                                          ).transpose().astype(float),
                                                        function=LinearMatrix(normalize=normalize_memories))},
                     name=f'MATCH {self.key_names[i]}')
@@ -1425,7 +1437,7 @@ class EMComposition(AutodiffComposition):
 
         return match_nodes
 
-    def _construct_softmax_nodes(self, field_weights, softmax_gain)->list:
+    def _construct_softmax_nodes(self, memory_capacity, field_weights, softmax_gain)->list:
         """Create nodes that, for each key field, compute the softmax over the similarities between the input and the
         memories in the corresponding match_node.
         """
@@ -1443,7 +1455,7 @@ class EMComposition(AutodiffComposition):
         if softmax_gain == CONTROL:
             softmax_gain = None
 
-        softmax_nodes = [TransferMechanism(input_ports={SIZE:self.memory_capacity,
+        softmax_nodes = [TransferMechanism(input_ports={SIZE:memory_capacity,
                                                         PROJECTIONS: match_node.output_port},
                                            function=SoftMax(gain=softmax_gain),
                                            name='SOFTMAX' if len(self.match_nodes) == 1 else f'SOFTMAX {i}')
@@ -1482,21 +1494,21 @@ class EMComposition(AutodiffComposition):
 
         return retrieval_gating_nodes
 
-    def _construct_retrieval_weighting_node(self)->ProcessingMechanism:
+    def _construct_retrieval_weighting_node(self, memory_capacity)->ProcessingMechanism:
         """Create nodes that compute the weighting of each item in memory.
         """
-        retrieval_weighting_node = ProcessingMechanism(input_ports=[{SIZE:self.memory_capacity,
+        retrieval_weighting_node = ProcessingMechanism(input_ports=[{SIZE:memory_capacity,
                                                                      PROJECTIONS:[m.output_port for m in
                                                                                   self.softmax_nodes]}],
                                                        name='RETRIEVAL')
 
-        assert len(retrieval_weighting_node.output_port.value) == self.memory_capacity, \
+        assert len(retrieval_weighting_node.output_port.value) == memory_capacity, \
             'PROGRAM ERROR: number of items in retrieval_weighting_node ' \
             '({len(retrieval_weighting_node.output_port)}) does not match memory_capacity ({self.memory_capacity})'
 
         return retrieval_weighting_node
 
-    def _construct_retrieval_nodes(self)->list:
+    def _construct_retrieval_nodes(self, memory_template)->list:
         """Create nodes that report the value field(s) for the item(s) matched in memory.
         """
 
@@ -1505,7 +1517,7 @@ class EMComposition(AutodiffComposition):
                                                                        MappingProjection(
                                                                            sender=self.retrieval_weighting_node,
                                                                            # matrix=ZEROS_MATRIX)
-                                                                           matrix=self.memory_template[:,i])
+                                                                           matrix=memory_template[:,i])
                                                                    },
                                                       name= f'{self.key_names[i]} RETRIEVED')
                                     for i in range(self.num_keys)]
@@ -1515,7 +1527,7 @@ class EMComposition(AutodiffComposition):
                                                                          MappingProjection(
                                                                              sender=self.retrieval_weighting_node,
                                                                              # matrix=ZEROS_MATRIX)
-                                                                             matrix=self.memory_template[:,
+                                                                             matrix=memory_template[:,
                                                                                     i + self.num_keys])
                                                                      },
                                                         name= f'{self.value_names[i]} RETRIEVED')
