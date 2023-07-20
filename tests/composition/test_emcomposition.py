@@ -361,8 +361,8 @@ class TestExecution:
                  "concatenate_keys, normalize_memories, softmax_gain, storage_prob, inputs, expected_retrieval"
     @pytest.mark.parametrize(args_names,
                              test_data,
-                             ids=[x[0] for x in test_data]
-                             )
+                             ids=[x[0] for x in test_data])
+
     @pytest.mark.benchmark
     def test_execution(self,
                        test_num,
