@@ -634,16 +634,15 @@ while the last two should be used as values::
 
     **Use of field_weights to specify keys and values.**
 
-Note that the figure now shows `retrieval weighting <EMComposition.retrieval_gating_nodes>` `nodes <Composition_Node>`,
+Note that the figure now shows `RETRIEVAL WEIGHTING <EMComposition.retrieval_gating_nodes>` `nodes <Composition_Node>`,
 that are used to implement the relative contribution that each key field makes to the matching process specifed in
 `field_weights <EMComposition.field_weights>` argument.  By default, these are equal (all assigned a value of 1),
 but different values can be used to weight the relative contribution of each key field.  The values are normalized so
 that they sum 1, and the relative contribution of each is determined by the ratio of its value to the sum of all
 non-zero values.  For example, the following specifies that the first two fields should be used as keys,
-with the first contributing 75% to the matching process and the second field should contribute 25%::
+with the first contributing 75% to the matching process and the second field contributing 25%::
 
     >>> em = EMComposition(memory_template=[[0,0,0],[0],[0,0]], memory_capacity=3, field_weights=[3,1,0])
-    >>> em.show_graph()
     <BLANKLINE>
 
 COMMENT:
@@ -1026,7 +1025,7 @@ class EMComposition(AutodiffComposition):
                     return f"must have only integers as entries."
             if isinstance(memory_template, (list, np.ndarray)):
                 memory_template = np.array(memory_template)
-                if not memory_template.ndim in {1,2,3}:
+                if memory_template.ndim not in {1,2,3}:
                     return f"must be either 2 or 3d."
                 if not all(isinstance(item, (list, np.ndarray)) for item in memory_template):
                     return f"must be a list or array of lists or arrays."
@@ -1408,7 +1407,6 @@ class EMComposition(AutodiffComposition):
         self.retrieval_weighting_node = self._construct_retrieval_weighting_node(memory_capacity)
         self.retrieval_nodes = self._construct_retrieval_nodes(memory_template)
         self.input_nodes = self.key_input_nodes + self.value_input_nodes
-        # self.storage_nodes = self._construct_storage_nodes()
 
         # Construct pathway as a set of nodes, since Projections are specified in the construction of each node
         #  (and specifying INPUT or OUTPUT Nodes in a list would cause them to be interpreted as linear pathways)
