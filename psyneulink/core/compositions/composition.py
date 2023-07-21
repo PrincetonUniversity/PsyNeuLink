@@ -4331,10 +4331,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # VALIDATE args ====================================================================================
 
         if not get_input_from:
-            raise(CompositionError(f"The 'get_input_from' arg must be specified "
+            raise (CompositionError(f"The 'get_input_from' arg must be specified "
                                    f"for import_composition method of {self.name}"))
         if not send_output_to:
-            raise(CompositionError(f"The 'send_output_to' arg must be specified "
+            raise (CompositionError(f"The 'send_output_to' arg must be specified "
                                    f"for import_composition method of {self.name}"))
         if not isinstance(composition, Composition):
             raise CompositionError(f"Can't import from {composition.name} ({composition.__class__.__name__}) "
@@ -4346,7 +4346,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    f"as they are either not legal nodes or not in {composition.name}.")
 
         illegal_from_nodes = [node for node in from_nodes if (not isinstance(node, (Mechanism, Composition))
-                                                               or not node in self.nodes)]
+                                                               or node not in self.nodes)]
         if illegal_from_nodes:
             raise CompositionError(f"The following items specified in the 'get_input_from' arg of"
                                    f"'import_composition' for {self.name} either are not legal nodes "
@@ -4360,13 +4360,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    f"or not in {composition.name}: "
                                    f"{','.join([node.name for node in illegal_input_nodes])}")
         illegal_to_nodes = [node for node in output_nodes if (not isinstance(node, (Mechanism, Composition))
-                                                              or not node in nodes)]
+                                                              or node not in nodes)]
         if illegal_to_nodes:
             raise CompositionError(f"The following items specified in the 'send_output_to' arg of "
                                    f"'import_composition' for {self.name} either are not legal nodes "
                                    f"or not in {composition.name}: "
                                    f"{','.join([node.name for node in illegal_to_nodes])}")
-        illegal_output_nodes = [node for node in to_nodes if (not isinstance(node, (Mechanism, Composition))                                                                  or not node in self.nodes)]
+        illegal_output_nodes = [node for node in to_nodes if (not isinstance(node, (Mechanism, Composition))
+                                                              or node not in self.nodes)]
         if illegal_output_nodes:
             raise CompositionError(f"The following items specified in the 'send_output_to' arg of "
                                    f"'import_composition' for {self.name} either are not legal nodes "
