@@ -4295,6 +4295,82 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._analyze_graph()
 
+    def import_composition(self,
+                           composition,
+                           nodes:Union[list, Literal[ALL]]=ALL,
+                           get_input_from:dict=None,
+                           send_output_to:dict=None,
+                           context=None):
+
+        # Nodes and Projections
+        # Validate
+        if not isinstance(composition, Composition):
+            raise CompositionError(f"Can't import from {composition.name} ({composition.__class__.__name__}) "
+                                   f"since it is not a Composition.")
+        illegal_nodes = [node for node in composition.nodes
+                         if (not isinstance(node, (Mechanism, Composition)) or node not in nodes)]
+        if len(illegal_nodes):
+            raise CompositionError(f"Can't import {','.join([node.name for node in illegal_nodes])} "
+                                   f"as they are either not legal nodes or not in {composition.name}.")
+        # Import
+        if nodes == ALL:
+            nodes = composition.nodes
+        self.add_nodes(nodes)
+        projections = [projection for projection in composition.projections
+                       if (projection.sender.owner in nodes and projection.receiver.owner in nodes)]
+        self.add_projections(projections)
+
+        # Inputs
+        if get_input_from:
+            from_nodes, input_nodes = get_input_from.items()
+            # Validate
+            illegal_from_nodes = [node for node in from_nodes if (not isinstance(node, (Mechanism, Composition))
+                                                                   or not node in self.nodes)]
+            if illegal_from_nodes:
+                raise CompositionError(f"The following items specified in the 'get_input_from' arg of"
+                                       f"'import_composition' for {self.name} either are not legal nodes "
+                                       f"or not in that Composition.")
+            illegal_input_nodes = [node for node in input_nodes if (not isinstance(node, (Mechanism, Composition))
+                                                                   or not node in composition.nodes)]
+            if illegal_input_nodes:
+                raise CompositionError(f"The following items specified in the 'get_input_from' arg of"
+                                       f"'import_composition' for {self.name} either are not legal nodes "
+                                       f"or not in {composition.name}.")
+            # if len(from_nodes) != len(composition.get_nodes_by_role(NodeRole.INPUT)):
+            #     raise CompositionError(f"The number of items ({len(from_nodes)}) specified in the 'get_input_from' "
+            #                            f"arg of 'import_composition' for {self.name} must be the same as the number "
+            #                            f"of INPUT nodes ({len(composition.get_nodes_by_role(NodeRole.INPUT))}) in "
+            #                            f"{composition.name}.")
+
+            # Connect from_nodes to input_nodes
+            for i in range(len(get_input_from)):
+                self.add_projection(MappingProjection(sender=from_nodes[i], receiver=input_nodes[i]))
+
+        # Outputs
+        if send_output_to:
+            output_nodes, to_nodes = send_output_to.items()
+            illegal_to_nodes = [node for node in output_nodes if (not isinstance(node, (Mechanism, Composition))
+                                                                  or not node in composition.nodes)]
+            if illegal_to_nodes:
+                raise CompositionError(f"The following items specified in the 'send_output_to' arg of "
+                                       f"'import_composition' for {self.name} either are not legal nodes "
+                                       f"or not in {composition.name}.")
+            illegal_output_nodes = [node for node in to_nodes if (not isinstance(node, (Mechanism, Composition))                                                                  or not node in self.nodes)]
+            if illegal_output_nodes:
+                raise CompositionError(f"The following items specified in the 'send_output_to' arg of "
+                                       f"'import_composition' for {self.name} either are not legal nodes "
+                                       f"or not in that Composition.")
+            # if len(output_nodes) != len(composition.get_nodes_by_role(NodeRole.OUTPUT)):
+            #     raise CompositionError(f"The number of items ({len(senders)}) specified in the 'send_output_to' "
+            #                            f"arg of 'import_composition' for {self.name} must be the same as the number "
+            #                            f"of OUTPUT nodes ({len(composition.get_nodes_by_role(NodeRole.INPUT))}) "
+            #                            f"in {composition.name}.")
+
+            # Connect output_nodes to to_nodes
+            input_nodes = composition.get_nodes_by_role(NodeRole.INPUT)
+            for i in range(len(send_output_to)):
+                self.add_projection(MappingProjection(sender=output_nodes[i], receiver=to_nodes[i]))
+
     @handle_external_context()
     def _add_required_node_role(self, node, role, context=None):
         """
