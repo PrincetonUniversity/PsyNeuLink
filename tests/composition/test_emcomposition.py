@@ -270,6 +270,7 @@ class TestConstruction:
             test_memory_fill(start=repeat, memory_fill=memory_fill)
 
 
+@pytest.mark.pytorch
 class TestExecution:
 
     # TEST:
