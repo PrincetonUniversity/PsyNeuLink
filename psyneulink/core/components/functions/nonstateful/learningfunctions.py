@@ -91,7 +91,7 @@ class LearningFunction(Function_Base):
         * the output of the parameter being modified (variable[LEARNING_ACTIVATION_OUTPUT]);
         * the error associated with the output (variable[LEARNING_ERROR_OUTPUT]).
 
-        However, the exact specification depends on the funtion's type.
+        However, the exact specification depends on the function's type.
 
     default_learning_rate : numeric
         the value used for the function's `learning_rate <LearningFunction.learning_rate>` parameter if none of the
@@ -954,7 +954,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
     ---------
 
     variable : List[number] or 1d array : default class_defaults.variable
-       specifies the activation values, the pair-wise products of which are used to generate the a weight change matrix.
+       specifies the activation values, the pair-wise products of which are used to generate the weight change matrix.
 
     COMMENT:
     activation_function : Function or function : SoftMax
@@ -2244,7 +2244,7 @@ class EMStorage(LearningFunction):
     variable : List or 2d array [length 3 in axis 0] : default class_defaults.variable
        specifies a template for the three items provided as the variable in the call to the
        `function <BackPropagation.function>` (in order):
-       - `activation_input <BackPropagation.activation_input>` (1d array),
+       - `entry <BackPropagation.activation_input>` (1d array),
        - `activation_output <BackPropagation.activation_output>` (1d array),
        - `error_signal <BackPropagation.error_signal>` (1d array).
 
