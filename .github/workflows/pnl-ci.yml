@@ -44,7 +44,7 @@ jobs:
   # the main build job
   build:
     needs: select-runner
-    runs-on: ${{ (contains(needs.select-runner.outputs.*, matrix.os) && fromJSON(format('[ "self-hosted","{0}", "X64" ]', matrix.os))) || format('{0}-latest', matrix.os) }}
+    runs-on: 'self-hosted'
     strategy:
       fail-fast: false
       matrix:
