@@ -1,4 +1,5 @@
-from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear, Logistic, ReLU, SoftMax, Dropout
+from psyneulink.core.components.functions.nonstateful.transferfunctions import \
+    Linear, Logistic, ReLU, SoftMax, Dropout, Identity
 from psyneulink.library.compositions.pytorchllvmhelper import *
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core import llvm as pnlvm
@@ -46,6 +47,9 @@ def pytorch_function_creator(function, device, context=None):
     elif isinstance(function, Dropout):
         prob = get_fct_param_value('p')
         return lambda x: (torch.dropout(input=x, p=prob, train=False))
+
+    elif isinstance(function, Identity):
+        return lambda x: x
 
     else:
         raise Exception(f"Function {function} is not currently supported in AutodiffCompositions!")
