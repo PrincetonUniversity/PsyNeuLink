@@ -43,7 +43,7 @@ from psyneulink.core.globals.keywords import \
     MATRIX, Loss
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
-from psyneulink.core.globals.utilities import is_numeric, scalar_distance, convert_to_np_array
+from psyneulink.core.globals.utilities import is_numeric, scalar_distance, convert_to_np_array, all_within_range
 
 __all__ = ['LearningFunction', 'Kohonen', 'Hebbian', 'ContrastiveHebbian',
            'Reinforcement', 'BayesGLM', 'BackPropagation', 'TDLearning', 'EMStorage',
@@ -67,6 +67,7 @@ ACTIVATION_INPUT = 'activation_input'
 ACTIVATION_OUTPUT = 'activation_output'
 ERROR_SIGNAL = 'error_signal'
 ERROR_MATRIX = 'error_matrix'
+MEMORY_MATRIX = 'memory_matrix'
 
 
 ReturnVal = namedtuple('ReturnVal', 'learning_signal, error_signal')
@@ -131,25 +132,16 @@ class LearningFunction(Function_Base):
                     :type: ``numpy.ndarray``
                     :read only: True
 
-                axis
-                    see `axis <EMStorage.axis>`
+                learning_rate
+                    see `learning_rate <LearningFunction.learning_rate>`
 
-                    :default value: 0
-                    :type: int
-                    :read only: True
-
-                storage_prob
-                    see `EM_storage_prob <EMSorage.storage_prob>`
-
-                    :default value: 1.0
+                    :default value: 0.05
                     :type: ``float``
         """
         variable = Parameter(np.array([0, 0, 0]),
                              read_only=True,
                              pnl_internal=True,
                              constructor_argument='default_variable')
-        axis = Parameter(0, read_only=True, structural=True)
-        storage_prob = Parameter(1.0, modulable=True)
         learning_rate = Parameter(0.05,
                                   modulable=True)
 
@@ -188,7 +180,8 @@ class EMStorage(LearningFunction):
     """
     EMStorage(                 \
         default_variable=None, \
-        storage_prob=None,     \
+        axis=0,                \
+        storage_prob=1.0,      \
         params=None,           \
         name=None,             \
         prefs=None)
@@ -209,12 +202,10 @@ class EMStorage(LearningFunction):
     ---------
 
     variable : List or 1d array : default class_defaults.variable
-        specifies a template for the variable in the call to the `function <EMStorage.function>` :
-       - `entry <EMStorage.entry>` (1d array),
+        specifies shape of `entry <EMStorage.entry>` passed in the call to the `function <EMStorage.function>`.
 
     axis : int : default 0
-        specifies the axis of `memory_matrix <EMStorage.memory_matrix>` to which `entry <EMStorage.entry>`
-        is assigned.
+        specifies the axis of `memory_matrix <EMStorage.memory_matrix>` to which `entry <EMStorage.entry>` is assigned.
 
     storage_prob : float : default default_learning_rate
         specifies the probability with which `entry <EMStorage.entry>` is assigned to `memory_matrix
@@ -223,7 +214,7 @@ class EMStorage(LearningFunction):
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those
-        parameters in arguments of the constructor.
+        parameters in arguments of the constructor.d
 
     owner : Component
         `component <Component>` to which to assign the Function.
@@ -238,8 +229,7 @@ class EMStorage(LearningFunction):
     ----------
 
     variable: 2d array
-        contains the value used as input to the `function <EMStorage.function>` as its only item:
-       `entry <EMStorage.entry>`,
+        contains the value (`entry <EMStorage.entry>`) used as input to the `function <EMStorage.function>`.
 
     entry : 1d array
         value to be stored in `memory_matrix <EMStorage.memory_matrix>`.
@@ -248,12 +238,14 @@ class EMStorage(LearningFunction):
         matrix to which the entry is assigned along `axis <EMstorage.axis>`.
 
     axis : int
-        determines axis of `memory_matrix <EMStorage.memory_matrix>` to which `entry <EMStorage.entry>`
-        is assigned.
+        determines axis of `memory_matrix <EMStorage.memory_matrix>` to which `entry <EMStorage.entry>` is assigned.
 
     storage_prob : float
         determines the probability with which `entry <EMStorage.entry>` is stored in `memory_matrix
         <EMStorage.memory_matrix>`.
+
+    random_state : numpy.RandomState
+        private pseudorandom number generator
 
     owner : Component
         `Mechanism <Mechanism>` to which the Function belongs.
@@ -276,6 +268,13 @@ class EMStorage(LearningFunction):
                     :type: ``numpy.ndarray``
                     :read only: True
 
+                axis
+                    see `axis <EMStorage.axis>`
+
+                    :default value: 0
+                    :type: int
+                    :read only: True
+
                 entry
                     see `entry <EMStorage.error_signal>`
 
@@ -290,21 +289,37 @@ class EMStorage(LearningFunction):
                     :type: ``np.ndarray``
                     :read only: True
 
+                random_state
+                    see `random_state <UniformDist.random_state>`
+
+                    :default value: None
+                    :type: ``numpy.random.RandomState``
+
                 storage_prob
                     see `storage_prob <EMStorage.storage_prob>`
 
                     :default value: 1.0
                     :type: ``float``
+
         """
         variable = Parameter(np.array([[0]]),
                              read_only=True,
                              pnl_internal=True,
                              constructor_argument='default_variable')
+        axis = Parameter(0, read_only=True, structural=True)
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
+        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
         storage_prob = Parameter(1.0, modulable=True)
         entry = Parameter([0], read_only=True)
         memory_matrix = Parameter([[0],[0]], read_only=True)
 
     default_learning_rate = 1.0
+
+    def _validate_storage_prob(self, storage_prob):
+        storage_prob = float(storage_prob)
+        if not all_within_range(storage_prob, 0, 1):
+            return f"must be a float in the interval [0,1]."
+
 
     @check_user_specified
     @beartype
@@ -312,6 +327,7 @@ class EMStorage(LearningFunction):
                  default_variable=None,
                  axis=0,
                  storage_prob=1.0,
+                 seed=None,
                  params=None,
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None):
@@ -320,6 +336,7 @@ class EMStorage(LearningFunction):
             default_variable=default_variable,
             axis=axis,
             storage_prob=storage_prob,
+            seed=seed,
             params=params,
             owner=owner,
             prefs=prefs,
@@ -348,7 +365,7 @@ class EMStorage(LearningFunction):
                  variable=None,
                  context=None,
                  params=None,
-                 **kwargs):
+                 **kwargs)->np.ndarray:
         """
         .. note::
            Both variable and error_matrix must be specified for the function to execute.
@@ -363,6 +380,11 @@ class EMStorage(LearningFunction):
         memory_matrix : List, 2d array, np.matrix, ParameterPort, or MappingProjection
             matrix to which `variable <EMStorage.variable>` is stored.
 
+            .. technical_note::
+               ``memory_matrix`` is listed here as an argument since it must be passed to the EMStorage Function;
+               however it does not show in the signature for the function since it is passed through the `params
+               <EMStorage.params>` argument, placed there by Component._execute.
+
         params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -371,73 +393,47 @@ class EMStorage(LearningFunction):
         Returns
         -------
 
-        new weight matrix : 2d array
-            the new matrix containing `entry <EMStorage.entry>` stored in `memory_matrix <EMStorage.memory_matrix>`.
+        new memory_matrix : 2d array
+            the new matrix contains `entry <EMStorage.entry>` stored in `memory_matrix <EMStorage.memory_matrix>`
+            in slot with lowest norm along axis specified by `axis <EMStorage.axis>`.
         """
-        ZZZ
+
         self._check_args(variable=variable, context=context, params=params)
 
-        # IMPLEMENTATION NOTE: if error_matrix is an arg, it must in params (put there by super.function()
-        if params:
-            error_matrix = params.pop(ERROR_MATRIX, None)
+        entry = variable[0]
+        axis = self.parameters.axis._get(context)
+        storage_prob = self.parameters.storage_prob._get(context)
+        random_state = self.parameters.random_state._get(context)
 
-        # Manage error_matrix param
+        # IMPLEMENTATION NOTE: if memory_matrix is an arg, it must in params (put there by Component.function()
+        # Manage memory_matrix param
+        memory_matrix = None
+        if params:
+            memory_matrix = params.pop(MEMORY_MATRIX, None)
         # During init, function is called directly from Component (i.e., not from LearningMechanism execute() method),
         #     so need "placemarker" error_matrix for validation
-        if error_matrix is None:
+        if memory_matrix is None:
             if self.is_initializing:
-                error_matrix = np.zeros(
-                    (len(variable[LEARNING_ACTIVATION_OUTPUT]), len(variable[LEARNING_ERROR_OUTPUT]))
-                )
-            # Raise exception if error_matrix is not specified
+                # Can use variable, since it is 2d with length of an entry
+                #   (so essentially a memory_matrix with one entry)
+                memory_matrix = np.zeros(variable.shape)
+            # Raise exception if memory_matrix is not specified
             else:
                 owner_string = ""
                 if self.owner:
                     owner_string = " of " + self.owner.name
                 raise FunctionError(f"Call to {self.__class__.__name__} function {owner_string} "
-                                    f"must include '{ERROR_MATRIX}' in params arg.")
+                                    f"must include '{MEMORY_MATRIX}' in params arg.")
 
-        self.parameters.error_matrix._set(error_matrix, context)
-        # self._check_args(variable=variable, context=context, params=params, context=context)
+        if random_state.uniform(0, 1) < storage_prob:
+            # Store entry in slot with weakest memory (one with lowest norm) along specified axis
+            idx_of_min = np.argmin(np.linalg.norm(memory_matrix, axis=axis))
+            memory_matrix[:,idx_of_min] = np.array(entry)
 
-        # Manage learning_rate
-        # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
-        #                      1) if no learning_rate is specified for the Mechanism, need to assign None
-        #                          so that the process or system can see it is free to be assigned
-        #                      2) if neither the system nor the process assigns a value to the learning_rate,
-        #                          then need to assign it to the default value
-        # If learning_rate was not specified for instance or composition, use default value
-        learning_rate = self._get_current_parameter_value(LEARNING_RATE, context)
-        if learning_rate is None:
-            learning_rate = self.defaults.learning_rate
+        self.parameters.entry._set(entry, context)
+        self.parameters.memory_matrix._set(memory_matrix, context)
 
-        # make activation_input a 1D row array
-        activation_input = self._get_current_parameter_value(ACTIVATION_INPUT, context)
-        activation_input = np.array(activation_input).reshape(len(activation_input), 1)
-
-        # Derivative of error with respect to output activity (contribution of each output unit to the error above)
-        loss_spec = self.parameters.loss_spec.get(context)
-        if loss_spec == Loss.MSE:
-            num_output_units = self._get_current_parameter_value(ERROR_SIGNAL, context).shape[0]
-            dE_dA = np.dot(error_matrix, self._get_current_parameter_value(ERROR_SIGNAL, context)) / num_output_units * 2
-        elif loss_spec == Loss.SSE:
-            dE_dA = np.dot(error_matrix, self._get_current_parameter_value(ERROR_SIGNAL, context)) * 2
-        else:
-            # Use L0 (this applies to hidden layers)
-            dE_dA = np.dot(error_matrix, self._get_current_parameter_value(ERROR_SIGNAL, context))
-
-        # Derivative of the output activity
-        activation_output = self._get_current_parameter_value(ACTIVATION_OUTPUT, context)
-        dA_dW = self.activation_derivative_fct(input=None, output=activation_output, context=context)
-
-        # Chain rule to get the derivative of the error with respect to the weights
-        dE_dW = dE_dA * dA_dW
-        # dE_dW = np.matmul(dE_dA,dA_dW)
-
-        # Weight changes = delta rule (learning rate * activity * error)
-        weight_change_matrix = learning_rate * activation_input * dE_dW
-
-        return [weight_change_matrix, dE_dW]
+        return self.convert_output_type(memory_matrix)
 
 
 class BayesGLM(LearningFunction):
@@ -2394,12 +2390,12 @@ class BackPropagation(LearningFunction):
     def _function(self,
                  variable=None,
                  context=None,
-                 # error_matrix=None,
                  params=None,
                  **kwargs):
         """
         .. note::
-           Both variable and error_matrix must be specified for the function to execute.
+           Both variable and error_matrix must be specified for the function to execute, with
+           error_matrix passed in the `params` argument.
 
         Arguments
         ---------
@@ -2419,7 +2415,7 @@ class BackPropagation(LearningFunction):
             .. technical_note::
                ``error_matrix`` is listed here as an argument since it must be passed to the BackPropagation Function;
                however it does not show in the signature for the function since it is passed through the `params
-               <BackPropagation.params>` in Component._execute.
+               <BackPropagation.params>` argument, placed there by Component._execute.
 
         params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -2499,5 +2495,3 @@ class BackPropagation(LearningFunction):
         weight_change_matrix = learning_rate * activation_input * dE_dW
 
         return [weight_change_matrix, dE_dW]
-
-

@@ -170,16 +170,6 @@ class TestThreshold:
         # it should have taken 5 executions (and time_step_size = 1.0)
         assert D.parameters.value.get(C)[1] == 5.0
 
-
-    # def test_is_finished_stops_mechanism(self):
-    #     D = DDM(name='DDM',
-    #             function=DriftDiffusionIntegrator(threshold=10.0))
-    #     T = TransferMechanism(function=Linear(slope=2.0))
-    #     P = Process(pathway=[D, T])
-    #     S = System(processes=[P])
-    #
-    #     sched = Scheduler(system=S)
-
 @pytest.mark.composition
 class TestInputPorts:
 

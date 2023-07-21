@@ -10,6 +10,8 @@
 
 # TODO:
 # - FIX: WARNING NOT OCCURRING FOR ZEROS WITH MULTIPLE ENTRIES (HAPPENS IF *ANY* KEY IS EVER ALL ZEROS)
+# - FIX: IMPLEMENT _integrate_into_composition METHOD THAT CALLS _import_composition ON ANOTHER COMPOSITION
+# - FIX:        AND TRANSFERS RELEVANT ATTRIBUTES (SUCH AS MEMORY, KEY_INPUT_NODES, ETC., POSSIBLY APPENDING NAMES)
 # - FIX: Thresholded version of SoftMax gain (per Kamesh)
 # - FIX: DOCUMENTATION:
 #        - define "keys" and "values" explicitly
@@ -676,6 +678,7 @@ from psyneulink.core.components.functions.function import \
     DEFAULT_SEED, _random_state_getter, _seed_setter
 from psyneulink.core.compositions.composition import CompositionError, NodeRole
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
+from psyneulink.library.components.mechanisms.modulatory.learning.EMstoragemechanism import EMStorageMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
@@ -1400,6 +1403,7 @@ class EMComposition(AutodiffComposition):
         # Construct nodes of Composition
         self.key_input_nodes = self._construct_key_input_nodes(field_weights)
         self.value_input_nodes = self._construct_value_input_nodes(field_weights)
+        self.input_nodes = self.key_input_nodes + self.value_input_nodes
         self.concatenate_keys_node = self._construct_concatenate_keys_node(concatenate_keys)
         self.match_nodes = self._construct_match_nodes(memory_template, memory_capacity,
                                                        concatenate_keys,normalize_memories)
@@ -1408,8 +1412,7 @@ class EMComposition(AutodiffComposition):
         self.retrieval_gating_nodes = self._construct_retrieval_gating_nodes(field_weights, concatenate_keys)
         self.retrieval_weighting_node = self._construct_retrieval_weighting_node(memory_capacity)
         self.retrieval_nodes = self._construct_retrieval_nodes(memory_template)
-        self.storage_nodes = self._construct_storage_nodes(storage_prob)
-        self.input_nodes = self.key_input_nodes + self.value_input_nodes
+        self.storage_nodes = self._construct_storage_node(storage_prob)
 
         # Construct pathway as a set of nodes, since Projections are specified in the construction of each node
         #  (and specifying INPUT or OUTPUT Nodes in a list would cause them to be interpreted as linear pathways)
@@ -1619,40 +1622,45 @@ class EMComposition(AutodiffComposition):
 
         return self.retrieved_key_nodes + self.retrieved_value_nodes
 
-    def _construct_storage_nodes(self, storage_prob)->list:
-        """Create LearningMechanisms that store the key and value inputs in memory.
-        Memories are stored by adding the current input to each field to the corresponding row of the matrix
-        for the Projection from the key_input_node to the matching_node and retrieval_node for keys, and from the
-        value_input_node to the retrieval_node for values.
+    def _construct_storage_node(self, storage_prob)->list:
+        """Create EMStorageMechanism that stores the key and value inputs in memory.
+        Memories are stored by adding the current input to each field to the corresponding row of the matrix for
+        the Projection from the key_input_node to the matching_node and retrieval_node for keys, and from the
+        value_input_node to the retrieval_node for values. The `function <EMStorageMechanism.function>` of the
+        `EMSorageMechanism` that takes the following arguments:
 
-        FIX:
-        function should take input_vector, find the row (or col?) of the matrix it is modulating that has the
-        smallest norm, and create an "error signal" that is simply the input vector for that row (or col?)
-        and zeros for all other rows (or cols?);  that will be added to the Projection storing memories
-        by the learning Projection when learning is executed for the Composition (which should be after retrieval)
+         - **variable* -- template for an `entry <EMComposition_Memory>` in `memory<EMComposition.memory>`;
+
+         - **fields* -- the `input_nodes <EMComposition.input_nodes>` for the corresponding `fields
+           <EMComposition_Fields>` of an `entry <EMCmposition_Memory>` in `memory <EMComposition.memory>`;
+
+         - **field_indices* -- contains two lists, that specify the positions of the `key fields and value fields
+           <EMComposition_Fields>` in `memory <EMComposition.memory>`, respectively;
+
+         - **memory_matrix* -- `memory_template <EMComposition.memory_template>`),
+
+         - **learning_signals* -- list of ` `MappingProjection`\\s (or their ParameterPort`\\s) that store each
+           `field <EMComposition_Fields>` of `memory <EMComposition.memory>`;
+
+         - **decay_rate** -- rate at which entries in the `memory_matrix <EMComposition.memory_matrix>` decay;
+
+         - **storage_prob** -- probability for storing an entry in `memory <EMComposition.memory>`.
 
         TESTS:
         - test that storage nodes are created for each key and value
         - test that input is added to the correct row of the matrix for each key and value
         - test that storage occurs after retrieval
         """
+        field_indices = [i for i in range(self.num_fields)]
 
-        # FIX: ASSIGN RELEVANT PROJECTIONS TO LEARNING MECHANISM ATTRIBUTES, AND ASSIGN FUNCTION THAT USES THOSE
-        self.matching_storage_nodes = [LearningMechanism(size=len(self.key_input_nodes[i].value[0]),
-                                                         function=EMStorage(),
-                                                    input_ports=self.key_input_nodes[i].output_port,
-                                                    name= f'{self.key_names[i]} STORAGE')
-                                  for i in range(self.num_keys)]
-
-        self.value_retrieval_storage_nodes = [LearningMechanism(size=len(self.value_input_nodes[i].value[0]),
-                                                      name= f'{self.value_names[i]} STORAGE')
-                                    for i in range(self.num_values)]
-
-        self.value_retrieval_storage_nodes = [LearningMechanism(size=len(self.value_input_nodes[i].value[0]),
-                                                      name= f'{self.value_names[i]} STORAGE')
-                                    for i in range(self.num_values)]
-
-        return self.matching_storage_nodes + self.key_retrieval_storage_nodes + self.value_retrieval_storage_nodes
+        return EMStorageMechanism(variable=[self.input_nodes[i].value for i in range(self.num_fields)],
+                                  fields=[self.input_nodes[i].name for i in range(self.num_fields)],
+                                  field_indices=field_indices,
+                                  memory_matrix=self.memory_template,
+                                  learning_signals=[PROJECTIONS],
+                                  decay_rate = self.memory_decay_rate,
+                                  storage_prob=storage_prob,
+                                  name='STORAGE MECHANISM')
 
     def _set_learnability_of_projections(self):
         """Turn off learning for all Projections except afferents to retrieval_gating_nodes.
@@ -1685,35 +1693,6 @@ class EMComposition(AutodiffComposition):
             return
         # self._encode_memory(inputs, context)
         self._encode_memory(context)
-
-    # def _encode_memory(self, inputs, context=None):
-    #     for i, input in enumerate(inputs.items()):
-    #         input_node = input[0]
-    #         memory = input[1]
-    #         # Memory = key_input or value_input
-    #         # memories = weights of Projections for each field
-    #
-    #         # Store key_input vector in projections from input_key_nodes to match_nodes
-    #         if input_node in self.key_input_nodes:
-    #             # For key_input:
-    #             #   assign as weights for first empty row of Projection.matrix from key_input_node to match_node
-    #             memories = input_node.efferents[0].parameters.matrix.get(context)
-    #             if self.memory_decay:
-    #                 memories *= self.memory_decay_rate
-    #             # Get least used slot (i.e., weakest memory = row of matrix with lowest weights)
-    #             # idx_of_min = np.argmin(memories.sum(axis=0))
-    #             idx_of_min = np.argmin(np.linalg.norm(memories, axis=0))
-    #             memories[:,idx_of_min] = np.array(memory)
-    #             input_node.efferents[0].parameters.matrix.set(memories, context)
-    #
-    #         # For all inputs, assign input vector to afferent weights of corresponding retrieval_node
-    #         memories = self.retrieval_nodes[i].path_afferents[0].parameters.matrix.get(context)
-    #         if self.memory_decay:
-    #             memories *= self.memory_decay_rate
-    #         # Get least used slot (i.e., weakest memory = row of matrix with lowest weights)
-    #         idx_of_min = np.argmin(memories.sum(axis=1))
-    #         memories[idx_of_min] = np.array(memory)
-    #         self.retrieval_nodes[i].path_afferents[0].parameters.matrix.set(memories, context)
 
     def _encode_memory(self, context=None):
         """Encode inputs as memories

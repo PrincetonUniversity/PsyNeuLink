@@ -56,16 +56,16 @@ displayed using the Composition's `show_graph`show_graph <ShowGraph.show_graph>`
 
 The implementation of learning in PsyNeuLink was designed for exposition rather than efficiency. Unlike its
 implementation in most other environments -- where the learning algorithm is tightly integrated with the
-elements of processing that it modifies --  PsyNeuLink separates it into three constituent components:  An
-`ObjectiveMechanism` used to evaluate the most proximal source of error, a `LearningMechanism` that uses that error
-(or one derived from it by another LearningMechanism) to calculate a learning signal;  and `LearningProjection(s)
-<LearningProjection>` that use that learning signal to modify the weight `matrix <MappingProjection.matrix>` of the
-`MappingProjection(s) <MappingProjection>` being learned.  This has the advantage of isolating and exposing the
-constituent computations, making it clearer to students what these are and how they operate, and also making each
-individually accessible for reconfiguration. However, it comes at the cost of efficiency.  For efficient execution of
-supervised forms of learning (e.g., reinforcement learning and backpropagation), the `AutodiffComposition` can be used,
-which allows the model to be specified using PsyNeuLink, but actually executes learning using `PyTorch
-<https://pytorch.org>`.
+elements of processing that it modifies --  PsyNeuLink separates it into three constituent components, often including:
+an `ObjectiveMechanism` used to evaluate the most proximal source of error; a `LearningMechanism` that uses that error
+(or one derived from it by another LearningMechanism) to calculate a learning signal;  and one or more
+`LearningProjections <LearningProjection>` that use that learning signal to modify the weight `matrix
+<MappingProjection.matrix>` of the `MappingProjection(s) <MappingProjection>` being learned.  This has the advantage
+of isolating and exposing the constituent computations, making it clearer what these are and how they operate, and
+also making each individually accessible for reconfiguration. However, it comes at the cost of efficiency.  For
+efficient execution of supervised forms of learning (e.g., reinforcement learning and backpropagation),
+an `AutodiffComposition` can be used, which allows the model to be specified using PsyNeuLink, but actually executes
+learning either in a compiled form or using `PyTorch <https://pytorch.org>` (see `Compilation` for additional details).
 
 .. _LearningMechanism_Creation:
 
@@ -612,12 +612,12 @@ class LearningTiming(Enum):
 
     EXECUTION_PHASE
         LearningMechanism (and associated `LearningProjections(s) <LearningProjection>`) executed during the
-        `execution phase <System_Execution>` of the System to which they belong, usually immediately after execution of
-        the `Mechanism <Mechanism>` that receives the `primary_learned_projection`
+        `execution phase <Composition_Execution>` of the Composition to which they belong, usually immediately after
+        execution of of the `Mechanism <Mechanism>` that receives the `primary_learned_projection`
 
     LEARNING_PHASE
         LearningMechanism (and associated `LearningProjections(s) <LearningProjection>`) executed during the
-        `learning phase <System_Execution>` of the System to which they belong.
+        `learning phase <Composition_Execution>` of the Composition to which they belong.
 
     """
     EXECUTION_PHASE = 0
@@ -1163,7 +1163,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
                 learning_signal = _parse_port_spec(port_type=LearningSignal, owner=self, port_spec=spec)
 
                 # Validate that the receiver of the LearningProjection (if specified)
-                #     is a MappingProjection and in the same System as self (if specified)
+                #     is a MappingProjection and in the same Composition as self (if specified)
                 if learning_signal[PARAMS] and PROJECTIONS in learning_signal[PARAMS]:
                     for learning_projection in learning_signal[PARAMS][PROJECTIONS]:
                         _validate_receiver(sender_mech=self,
