@@ -98,9 +98,9 @@ class TestConstruction:
         # NOTE: None => use default value (i.e., don't specify in constructor, rather than forcing None as value of arg)
         # ------------------ SPECS ---------------------------------------------   ------- EXPECTED -------------------
         #   memory_template       memory_fill   field_wts cncat_ky nmlze sm_gain   repeat  #fields #keys #vals  concat
-        # (0,    (2,3),                  None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
-        # (0.1,  (2,3),                   .1,       None,    None,    None,  None,    False,    2,     1,   1,    False,),
-        # (0.2,  (2,3),                 (0,.1),     None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        (0,    (2,3),                  None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        (0.1,  (2,3),                   .1,       None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        (0.2,  (2,3),                 (0,.1),     None,    None,    None,  None,    False,    2,     1,   1,    False,),
         (0.3,  (4,2,3),                 .1,       None,    None,    None,  None,    False,    2,     1,   1,    False,),
         (1,    [[0,0],[0,0]],          None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
         (1.1,  [[0,0],[0,0]],          None,      [1,1],   None,    None,  None,    False,    2,     2,   0,    False,),
@@ -270,6 +270,7 @@ class TestConstruction:
             test_memory_fill(start=repeat, memory_fill=memory_fill)
 
 
+@pytest.mark.pytorch
 class TestExecution:
 
     # TEST:
@@ -280,6 +281,10 @@ class TestExecution:
     # 4:   same as 3 but uses both fields as keys (no values)
     # 5:   same as 4 but no concatenation of keys (confirms that results are similar w/ and w/o concatenation)
     # 6:   same as 5, but different field_weights
+    # 7:   store + no decay
+    # 8:   store + default decay (should be AUTO
+    # 9:   store + explicit AUTO decay
+    # 10:  store + numerical decay
 
     test_data = [
         # NOTE: None => use default value (i.e., don't specify in constructor, rather than forcing None as value of arg)
@@ -338,7 +343,7 @@ class TestExecution:
                                                                                                  [3.99704573,
                                                                                                   4.99630722,
                                                                                                   6.20845524]]),
-        (7, [[[1,2,3],[4,5,6]],        # Store
+        (7, [[[1,2,3],[4,5,6]],        # Store + no decay
              [[1,2,5],[4,5,8]],
              [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [9,1],  None, None,  100,  1, [[[1, 2, 3]],
                                                                                   [[4, 5, 6]]], [[0.99926393,
@@ -347,7 +352,7 @@ class TestExecution:
                                                                                                  [3.99704573,
                                                                                                   4.99630722,
                                                                                                   6.20845524]]),
-        (8, [[[1,2,3],[4,5,6]],        # Store + default decay
+        (8, [[[1,2,3],[4,5,6]],        # Store + default decay (should be AUTO)
              [[1,2,5],[4,5,8]],
              [[1,2,10],[4,5,10]]], (0,.01), 4, None, [9,1],  None, None,  100,  1, [[[1, 2, 3]],
                                                                                     [[4, 5, 6]]], [[0.99926393,
@@ -356,7 +361,7 @@ class TestExecution:
                                                                                                    [3.99704573,
                                                                                                     4.99630722,
                                                                                                     6.20845524]]),
-        (9, [[[1,2,3],[4,5,6]],        # Store + default decay
+        (9, [[[1,2,3],[4,5,6]],        # Store + explicit AUTO decay
              [[1,2,5],[4,5,8]],
              [[1,2,10],[4,5,10]]], (0,.01), 4, AUTO, [9,1],  None, None,  100,  1, [[[1, 2, 3]],
                                                                                     [[4, 5, 6]]], [[0.99926393,
@@ -365,7 +370,7 @@ class TestExecution:
                                                                                                    [3.99704573,
                                                                                                     4.99630722,
                                                                                                     6.20845524]]),
-        (10, [[[1,2,3],[4,5,6]],        # Store + specified decay
+        (10, [[[1,2,3],[4,5,6]],        # Store + numerical decay
               [[1,2,5],[4,5,8]],
               [[1,2,10],[4,5,10]]], (0,.01), 4, .1, [9,1],  None, None,  100,  1, [[[1, 2, 3]],
                                                                                    [[4, 5, 6]]], [[0.99926393,
