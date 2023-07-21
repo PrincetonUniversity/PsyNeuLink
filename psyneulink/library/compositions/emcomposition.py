@@ -1639,6 +1639,7 @@ class EMComposition(AutodiffComposition):
 
         # FIX: ASSIGN RELEVANT PROJECTIONS TO LEARNING MECHANISM ATTRIBUTES, AND ASSIGN FUNCTION THAT USES THOSE
         self.matching_storage_nodes = [LearningMechanism(size=len(self.key_input_nodes[i].value[0]),
+                                                         function=EMStorage(),
                                                     input_ports=self.key_input_nodes[i].output_port,
                                                     name= f'{self.key_names[i]} STORAGE')
                                   for i in range(self.num_keys)]
