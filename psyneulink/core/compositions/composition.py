@@ -3925,19 +3925,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.controller = None
 
-        # FIX 4/8/20 [JDC]: WHY NOT CALL add_nodes()?
         # Nodes, Projections, and Pathways
         if nodes is not None:
-            nodes = convert_to_list(nodes)
-            for node in nodes:
-                required_roles = None
-                if isinstance(node, tuple):
-                    node, required_roles = node
-                self.add_node(node, required_roles)
+            self.add_nodes(nodes)
 
-        # FIX 4/8/20 [JDC]: TEST THIS
         if projections is not None:
-            projections = convert_to_list(projections)
             self.add_projections(projections)
 
         # CONSTRUCTOR flag is needed for warning check tests, but this
@@ -4294,6 +4286,134 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._remove_node(node, analyze_graph=False)
 
         self._analyze_graph()
+
+    def import_composition(self,
+                           composition,
+                           nodes:Union[list, Literal[ALL]]=ALL,
+                           get_input_from:dict=None,
+                           send_output_to:dict=None,
+                           transfer_required_roles:bool=True,
+                           transfer_excluded_roles:bool=True,
+                           context=None):
+        """Import a `Composition` into the current Composition.
+
+        Arguments
+        ---------
+
+        composition : Composition
+            the Composition to be imported into the current Composition.
+
+        nodes : list : default ALL
+            the nodes to be imported from ``composition``.  Each item of the list must be a `Mechanism <Mechanism>`.
+            If ALL (the default), all nodes in ``composition`` will be imported.
+
+        get_input_from : dict : default None
+            mapping from `Nodes <Composition_Nodes>` (keys) in the current Composition to Nodes (values) in the
+            Composition to be imported that will receive their input; this argument must be specified.
+
+        send_output_to : dict : default None
+            mapping from `Nodes <Composition_Nodes>` (keys) in the Composition to be imported to Nodes (values)
+            in the current Composition that will receive their output; this argument must be specified.
+
+        transfer_required_roles : bool : default True
+            if True, the `required_roles <Composition.required_roles>` of the nodes in the imported Composition
+            will be transferred to the corresponding nodes in the current Composition.
+
+        transfer_excluded_roles : bool : default True
+            if True, the `excluded_roles <Composition.excluded_roles>` of the nodes in the imported Composition
+            will be transferred to the corresponding nodes in the current Composition.
+        """
+
+        nodes = composition.nodes if nodes is ALL else nodes
+        from_nodes, input_nodes = zip(*get_input_from.items())
+        output_nodes, to_nodes = zip(*send_output_to.items())
+
+        # VALIDATE args ====================================================================================
+
+        if not get_input_from:
+            raise (CompositionError(f"The 'get_input_from' arg must be specified "
+                                   f"for import_composition method of {self.name}"))
+        if not send_output_to:
+            raise (CompositionError(f"The 'send_output_to' arg must be specified "
+                                   f"for import_composition method of {self.name}"))
+        if not isinstance(composition, Composition):
+            raise CompositionError(f"Can't import from {composition.name} ({composition.__class__.__name__}) "
+                                   f"since it is not a Composition.")
+        illegal_nodes = [node for node in nodes
+                         if (not isinstance(node, (Mechanism, Composition)) or node not in nodes)]
+        if len(illegal_nodes):
+            raise CompositionError(f"Can't import {','.join([node.name for node in illegal_nodes])} "
+                                   f"as they are either not legal nodes or not in {composition.name}.")
+
+        illegal_from_nodes = [node for node in from_nodes if (not isinstance(node, (Mechanism, Composition))
+                                                               or node not in self.nodes)]
+        if illegal_from_nodes:
+            raise CompositionError(f"The following items specified in the 'get_input_from' arg of"
+                                   f"'import_composition' for {self.name} either are not legal nodes "
+                                   f"or not in that Composition: "
+                                   f"{','.join([node.name for node in illegal_from_nodes])}")
+        illegal_input_nodes = [node for node in input_nodes if (not isinstance(node, (Mechanism, Composition))
+                                                               or node not in nodes)]
+        if illegal_input_nodes:
+            raise CompositionError(f"The following items specified in the 'get_input_from' arg of "
+                                   f"'import_composition' for {self.name} either are not legal nodes "
+                                   f"or not in {composition.name}: "
+                                   f"{','.join([node.name for node in illegal_input_nodes])}")
+        illegal_to_nodes = [node for node in output_nodes if (not isinstance(node, (Mechanism, Composition))
+                                                              or node not in nodes)]
+        if illegal_to_nodes:
+            raise CompositionError(f"The following items specified in the 'send_output_to' arg of "
+                                   f"'import_composition' for {self.name} either are not legal nodes "
+                                   f"or not in {composition.name}: "
+                                   f"{','.join([node.name for node in illegal_to_nodes])}")
+        illegal_output_nodes = [node for node in to_nodes if (not isinstance(node, (Mechanism, Composition))
+                                                              or node not in self.nodes)]
+        if illegal_output_nodes:
+            raise CompositionError(f"The following items specified in the 'send_output_to' arg of "
+                                   f"'import_composition' for {self.name} either are not legal nodes "
+                                   f"or not in that Composition: "
+                                   f"{','.join([node.name for node in illegal_output_nodes])}")
+
+        # IMPORT Nodes and Projections from Composition =======================================================
+
+        self.add_nodes(nodes)
+
+        projections = [projection for projection in composition.projections
+                       if (projection.sender.owner in nodes
+                           # and not isinstance(projection.sender.owner, CompositionInterfaceMechanism)
+                           and projection.receiver.owner in nodes
+                           # and not isinstance(projection.receiver.owner, CompositionInterfaceMechanism)
+                           )]
+        self.add_projections(projections)
+
+        # CONNECT Inputs and Outputs ==========================================================================
+
+        # Inputs ------------------------------------------------------------------------------------
+        if get_input_from:
+            # Connect from_nodes to input_nodes
+            for i in range(len(get_input_from)):
+                self.add_projection(MappingProjection(sender=from_nodes[i], receiver=input_nodes[i]))
+
+        # Outputs -----------------------------------------------------------------------------------
+        if send_output_to:
+            # Connect output_nodes to to_nodes
+            input_nodes = composition.get_nodes_by_role(NodeRole.INPUT)
+            for i in range(len(send_output_to)):
+                self.add_projection(MappingProjection(sender=output_nodes[i], receiver=to_nodes[i]))
+
+        # TRANSFER required and excluded NodeRoles for imported Nodes to self =================================
+
+        if transfer_required_roles:
+            for entry in composition.required_node_roles:
+                if entry[0] in nodes:
+                    self.require_node_roles(entry)
+
+        if transfer_excluded_roles:
+            for entry in composition.excluded_node_roles:
+                if entry[0] in nodes:
+                    self.exclude_node_roles(entry[0], entry[1])
+
+        self._need_check_for_unused_projections = False
 
     @handle_external_context()
     def _add_required_node_role(self, node, role, context=None):
@@ -5696,22 +5816,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 list of Projections to be added to the Composition
         """
 
-        if isinstance(projections, list):
-            for projection in projections:
-                if isinstance(projection, list):
-                    self.add_projections(projection)
-                elif isinstance(projection, Projection) and \
-                        hasattr(projection, "sender") and \
-                        hasattr(projection, "receiver"):
-                    self.add_projection(projection)
-                else:
-                    raise CompositionError("Invalid projections specification for {}. The add_projections method of "
-                                           "Composition requires a list of Projections, each of which must have a "
-                                           "sender and a receiver.".format(self.name))
-        else:
-            raise CompositionError("Invalid projections specification for {}. The add_projections method of "
-                                   "Composition requires a list of Projections, each of which must have a "
-                                   "sender and a receiver.".format(self.name))
+        projections = convert_to_list(projections)
+
+        for projection in projections:
+            if isinstance(projection, list):
+                self.add_projections(projection)
+            elif isinstance(projection, Projection) and \
+                    hasattr(projection, "sender") and \
+                    hasattr(projection, "receiver"):
+                self.add_projection(projection)
+            else:
+                raise CompositionError(f"Invalid projections specification for {self.name}. The add_projections "
+                                       f"method of Composition requires a list of Projections, each of which must "
+                                       f"have a sender and a receiver.")
 
     @handle_external_context(source=ContextFlags.COMMAND_LINE)
     def add_projection(self,
