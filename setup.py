@@ -1,3 +1,5 @@
+# Just a change to test CI
+
 import versioneer
 
 # Always prefer setuptools over distutils
