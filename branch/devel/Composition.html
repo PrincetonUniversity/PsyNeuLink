@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.11.0.0+825.g9ce2367d9 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.11.0.0+826.g2814b65c5 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.11.0.0+825
+                  0.11.0.0+826
                 </div>
               
             
@@ -3455,6 +3455,29 @@ are applied in addition to those specified in the <strong>required_roles</strong
 <li><p><strong>required_roles</strong> (<a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">NodeRole</span></code></a> or list of NodeRoles) – NodeRoles to assign to the nodes in addition to those determined by analyze graph;
 these apply to any items in the list of nodes that are not in a tuple;  these apply to any specified
 in any role-specification tuples in the <strong>nodes</strong> argument.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition.import_composition">
+<span class="sig-name descname"><span class="pre">import_composition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">composition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">get_input_from</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">send_output_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transfer_required_roles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transfer_excluded_roles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.import_composition" title="Permalink to this definition">¶</a></dt>
+<dd><p>Import a <a class="reference internal" href="#"><span class="doc">Composition</span></a> into the current Composition.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>composition</strong> (<a class="reference internal" href="#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a>) – the Composition to be imported into the current Composition.</p></li>
+<li><p><strong>nodes</strong> (<em>list : default ALL</em>) – the nodes to be imported from <code class="docutils literal notranslate"><span class="pre">composition</span></code>.  Each item of the list must be a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>.
+If ALL (the default), all nodes in <code class="docutils literal notranslate"><span class="pre">composition</span></code> will be imported.</p></li>
+<li><p><strong>get_input_from</strong> (<em>dict : default None</em>) – mapping from <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Nodes</span></a> (keys) in the current Composition to Nodes (values) in the
+Composition to be imported that will receive their input; this argument must be specified.</p></li>
+<li><p><strong>send_output_to</strong> (<em>dict : default None</em>) – mapping from <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Nodes</span></a> (keys) in the Composition to be imported to Nodes (values)
+in the current Composition that will receive their output; this argument must be specified.</p></li>
+<li><p><strong>transfer_required_roles</strong> (<em>bool : default True</em>) – if True, the <code class="xref any docutils literal notranslate"><span class="pre">required_roles</span></code> of the nodes in the imported Composition
+will be transferred to the corresponding nodes in the current Composition.</p></li>
+<li><p><strong>transfer_excluded_roles</strong> (<em>bool : default True</em>) – if True, the <code class="xref any docutils literal notranslate"><span class="pre">excluded_roles</span></code> of the nodes in the imported Composition
+will be transferred to the corresponding nodes in the current Composition.</p></li>
 </ul>
 </dd>
 </dl>
