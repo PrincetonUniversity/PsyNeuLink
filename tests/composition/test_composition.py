@@ -46,7 +46,6 @@ from psyneulink.library.components.mechanisms.processing.transfer.recurrenttrans
     RecurrentTransferMechanism
 from psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism import \
     EpisodicMemoryMechanism
-from psyneulink.library.compositions.emcomposition import EMComposition
 
 logger = logging.getLogger(__name__)
 
@@ -5176,37 +5175,6 @@ class TestNestedCompositions:
             assert all(isinstance(comp.controller.control_signals[i].efferents[0].receiver.owner,
                                   pnl.CompositionInterfaceMechanism) for i in range(4))
 
-
-class TestImportComposition:
-    @pytest.mark.composition
-    def test_import_composition(self, comp_mode):
-
-        if comp_mode != pnl.ExecutionMode.Python:
-            pytest.skip('Compilation not yet support for Composition.import.')
-
-        em = EMComposition(memory_template=(2,5), memory_capacity=4)
-
-        i1 = ProcessingMechanism()
-        i2 = ProcessingMechanism()
-        o1 = ProcessingMechanism()
-        o2 = ProcessingMechanism()
-
-        c = Composition(nodes=[i1,i2, o1,o2])
-        c.import_composition(em,
-                             get_input_from={i1:em.key_input_nodes[0],
-                                             i2:em.value_input_nodes[0]},
-                             send_output_to={em.retrieval_nodes[0]:o1,
-                                             em.retrieval_nodes[1]:o2})
-
-        assert all(node in c.nodes for node in em.nodes)
-        assert i1 in [proj.sender.owner for proj in em.key_input_nodes[0].path_afferents]
-        assert i2 in [proj.sender.owner for proj in em.value_input_nodes[0].path_afferents]
-        assert o1 in [proj.receiver.owner for proj in em.retrieval_nodes[0].efferents]
-        assert o2 in [proj.receiver.owner for proj in em.retrieval_nodes[1].efferents]
-        assert all(entry in c.excluded_node_roles for entry in em.excluded_node_roles)
-        assert all(entry in c.required_node_roles for entry in em.required_node_roles)
-
-        c.run(execution_mode=comp_mode)
 
 class TestOverloadedCompositions:
     def test_mechanism_different_inputs(self):

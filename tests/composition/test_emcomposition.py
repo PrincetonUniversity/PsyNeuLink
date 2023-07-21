@@ -386,10 +386,8 @@ class TestExecution:
     @pytest.mark.parametrize(args_names,
                              test_data,
                              ids=[x[0] for x in test_data])
-    @pytest.mark.composition
     @pytest.mark.benchmark
     def test_execution(self,
-                       comp_mode,
                        test_num,
                        memory_template,
                        memory_capacity,
@@ -402,9 +400,6 @@ class TestExecution:
                        storage_prob,
                        inputs,
                        expected_retrieval):
-
-        if comp_mode != pnl.ExecutionMode.Python:
-            pytest.skip('Compilation not yet support for Composition.import.')
 
         params = {'memory_template': memory_template,
                   'memory_capacity': memory_capacity,
@@ -436,7 +431,7 @@ class TestExecution:
         np.testing.assert_equal(np.array(em.memory_template[:len(memory_template)]), np.array(memory_template))
 
         # Execute and validate results
-        retrieved = em.run(inputs=inputs, execution_mode=comp_mode)
+        retrieved = em.run(inputs=inputs)
         np.testing.assert_allclose(retrieved, expected_retrieval)
 
         # Validate that sum of weighted softmax distributions in retrieval_weighting_node itself sums to 1
