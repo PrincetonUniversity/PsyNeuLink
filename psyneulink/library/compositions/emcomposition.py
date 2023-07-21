@@ -28,6 +28,8 @@
 # - FIX: ALLOW SOFTMAX SPEC TO BE A DICT WITH PARAMETERS FOR _get_softmax_gain() FUNCTION
 # - FIX: PSYNEULINK:
 # - FIX: COMPILE
+#      - Remove CIM projections on import to another composition
+#      - Autodiff support for IdentityFunction
 #      - LinearMatrix to add normalization
 #      - _store() method to assign weights to memory
 # - FIX: IMPLEMENT Composition.merge() METHOD that merges a Composition into the one on which it is called
