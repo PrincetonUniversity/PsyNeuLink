@@ -10,6 +10,7 @@
 
 # TODO:
 # - FIX: WARNING NOT OCCURRING FOR ZEROS WITH MULTIPLE ENTRIES (HAPPENS IF *ANY* KEY IS EVER ALL ZEROS)
+# - FIX: Thresholded version of SoftMax gain (per Kamesh)
 # - FIX: DOCUMENTATION:
 #        - define "keys" and "values" explicitly
 #        - define "key weights" explicitly as field_weights for all non-zero values
@@ -1108,7 +1109,8 @@ class EMComposition(AutodiffComposition):
                                           field_weights,
                                           concatenate_keys,
                                           normalize_memories,
-                                          softmax_gain)
+                                          softmax_gain,
+                                          storage_prob)
 
         super().__init__(pathway,
                          name=name,
@@ -1391,7 +1393,8 @@ class EMComposition(AutodiffComposition):
                            field_weights,
                            concatenate_keys,
                            normalize_memories,
-                           softmax_gain)->set:
+                           softmax_gain,
+                           storage_prob)->set:
         """Construct pathway for EMComposition"""
 
         # Construct nodes of Composition
@@ -1405,13 +1408,16 @@ class EMComposition(AutodiffComposition):
         self.retrieval_gating_nodes = self._construct_retrieval_gating_nodes(field_weights, concatenate_keys)
         self.retrieval_weighting_node = self._construct_retrieval_weighting_node(memory_capacity)
         self.retrieval_nodes = self._construct_retrieval_nodes(memory_template)
+        self.storage_nodes = self._construct_storage_nodes(storage_prob)
         self.input_nodes = self.key_input_nodes + self.value_input_nodes
 
         # Construct pathway as a set of nodes, since Projections are specified in the construction of each node
         #  (and specifying INPUT or OUTPUT Nodes in a list would cause them to be interpreted as linear pathways)
         pathway = set(self.key_input_nodes + self.value_input_nodes
                       + self.match_nodes + self.softmax_control_nodes + self.softmax_nodes
-                      + [self.retrieval_weighting_node] + self.retrieval_gating_nodes + self.retrieval_nodes)
+                      + [self.retrieval_weighting_node] + self.retrieval_gating_nodes + self.retrieval_nodes
+                      + self.storage_nodes
+                      )
         if self.concatenate_keys_node is not None:
             pathway.add(self.concatenate_keys_node)
 
@@ -1613,25 +1619,39 @@ class EMComposition(AutodiffComposition):
 
         return self.retrieved_key_nodes + self.retrieved_value_nodes
 
-    def _construct_storage_nodes(self)->list:
-        """Create LearningMechanisms that store the input values in memory.
+    def _construct_storage_nodes(self, storage_prob)->list:
+        """Create LearningMechanisms that store the key and value inputs in memory.
         Memories are stored by adding the current input to each field to the corresponding row of the matrix
-        for the Projection from the key_input_node to the matching_node for keys, and from the value_input_node to
-        the retrieval node for values.
+        for the Projection from the key_input_node to the matching_node and retrieval_node for keys, and from the
+        value_input_node to the retrieval_node for values.
+
+        FIX:
+        function should take input_vector, find the row (or col?) of the matrix it is modulating that has the
+        smallest norm, and create an "error signal" that is simply the input vector for that row (or col?)
+        and zeros for all other rows (or cols?);  that will be added to the Projection storing memories
+        by the learning Projection when learning is executed for the Composition (which should be after retrieval)
+
+        TESTS:
+        - test that storage nodes are created for each key and value
+        - test that input is added to the correct row of the matrix for each key and value
+        - test that storage occurs after retrieval
         """
 
         # FIX: ASSIGN RELEVANT PROJECTIONS TO LEARNING MECHANISM ATTRIBUTES, AND ASSIGN FUNCTION THAT USES THOSE
-        self.key_storage_nodes = [LearningMechanism(size=len(self.key_input_nodes[i].value[0]),
+        self.matching_storage_nodes = [LearningMechanism(size=len(self.key_input_nodes[i].value[0]),
                                                     input_ports=self.key_input_nodes[i].output_port,
                                                     name= f'{self.key_names[i]} STORAGE')
                                   for i in range(self.num_keys)]
 
-        self.value_storage_nodes = [LearningMechanism(size=len(self.value_input_nodes[i].value[0]),
+        self.value_retrieval_storage_nodes = [LearningMechanism(size=len(self.value_input_nodes[i].value[0]),
                                                       name= f'{self.value_names[i]} STORAGE')
                                     for i in range(self.num_values)]
 
-        return self.key_storage_nodes + self.value_storage_nodes
+        self.value_retrieval_storage_nodes = [LearningMechanism(size=len(self.value_input_nodes[i].value[0]),
+                                                      name= f'{self.value_names[i]} STORAGE')
+                                    for i in range(self.num_values)]
 
+        return self.matching_storage_nodes + self.key_retrieval_storage_nodes + self.value_retrieval_storage_nodes
 
     def _set_learnability_of_projections(self):
         """Turn off learning for all Projections except afferents to retrieval_gating_nodes.

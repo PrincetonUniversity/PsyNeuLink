@@ -35,7 +35,10 @@ class PytorchModelCreator(torch.nn.Module):
 
         # Instantiate pytorch mechanisms
         for node in set(composition.nodes) - set(composition.get_nodes_by_role(NodeRole.LEARNING)):
-            pytorch_node = PytorchMechanismWrapper(node, self._composition._get_node_index(node), device, context=context)
+            pytorch_node = PytorchMechanismWrapper(node,
+                                                   self._composition._get_node_index(node),
+                                                   device,
+                                                   context=context)
             self.component_map[node] = pytorch_node
             self.nodes.append(pytorch_node)
 
@@ -46,7 +49,12 @@ class PytorchModelCreator(torch.nn.Module):
                 proj_recv = self.component_map[projection.receiver.owner]
 
                 port_idx = projection.sender.owner.output_ports.index(projection.sender)
-                new_proj = PytorchProjectionWrapper(projection, list(self._composition._inner_projections).index(projection), port_idx, device, sender=proj_send, receiver=proj_recv, context=context)
+                new_proj = PytorchProjectionWrapper(projection,
+                                                    list(self._composition._inner_projections).index(projection),
+                                                    port_idx, device,
+                                                    sender=proj_send,
+                                                    receiver=proj_recv,
+                                                    context=context)
                 proj_send.add_efferent(new_proj)
                 proj_recv.add_afferent(new_proj)
                 self.projection_map[projection] = new_proj
