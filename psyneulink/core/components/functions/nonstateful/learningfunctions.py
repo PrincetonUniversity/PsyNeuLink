@@ -2248,10 +2248,6 @@ class EMStorage(LearningFunction):
        - `activation_output <BackPropagation.activation_output>` (1d array),
        - `error_signal <BackPropagation.error_signal>` (1d array).
 
-    activation_derivative_fct : Function or function
-        specifies the derivative for the function of the Mechanism that generates
-        `activation_output <BackPropagation.activation_output>`.
-
     storage_prob : float : default default_learning_rate
         supersedes any specification for the `Process` and/or `System` to which the function's
         `owner <Function.owner>` belongs (see `learning_rate <BackPropagation.learning_rate>` for details).
@@ -2274,42 +2270,40 @@ class EMStorage(LearningFunction):
     ----------
 
     variable: 2d array
-        contains the three values used as input to the `function <BackPropagation.function>`:
-       `activation_input <BackPropagation.activation_input>`,
-       `activation_output <BackPropagation.activation_output>`, and
-       `error_signal <BackPropagation.error_signal>`.
+        contains the three values used as input to the `function <EMStorage.function>`:
+       `entry <EMStorage.entry>`,
 
     activation_input : 1d array
-        the input to the matrix being modified; same as 1st item of `variable <BackPropagation.variable>`.
+        the input to the matrix being modified; same as 1st item of `variable <EMStorage.variable>`.
 
     activation_output : 1d array
         the output of the function for which the matrix being modified provides the input;
-        same as 2nd item of `variable <BackPropagation.variable>`.
+        same as 2nd item of `variable <EMStorage.variable>`.
 
     activation_derivative_fct : Function or function
         the derivative for the function of the Mechanism that generates
-        `activation_output <BackPropagation.activation_output>`.
+        `activation_output <EMStorage.activation_output>`.
 
     error_signal : 1d array
         the error signal for the next matrix (layer above) in the learning pathway, or the error computed from the
         target (training signal) and the output of the last Mechanism in the sequence;
-        same as 3rd item of `variable <BackPropagation.variable>`.
+        same as 3rd item of `variable <EMStorage.variable>`.
 
     error_matrix : 2d array or ParameterPort
-        matrix, the input of which is `activation_output <BackPropagation.activation_output>` and the output of which
-        is used to calculate the `error_signal <BackPropagation.error_signal>`; if it is a `ParameterPort`,
+        matrix, the input of which is `activation_output <EMStorage.activation_output>` and the output of which
+        is used to calculate the `error_signal <EMStorage.error_signal>`; if it is a `ParameterPort`,
         it refers to the MATRIX parameterPort of the `MappingProjection` being learned.
 
     storage_prob : float
         the learning rate used by the function.  If specified, it supersedes any learning_rate specified for the
         `process <Process.learning_Rate>` and/or `system <System.learning_rate>` to which the function's  `owner
-        <BackPropagation.owner>` belongs.  If it is `None`, then the learning_rate specified for the process to
-        which the `owner <BackPropagation.owner>` belongs is used;  and, if that is `None`, then the learning_rate for
+        <EMStorage.owner>` belongs.  If it is `None`, then the learning_rate specified for the process to
+        which the `owner <EMStorage.owner>` belongs is used;  and, if that is `None`, then the learning_rate for
         the system to which it belongs is used. If all are `None`, then the
-        `default_learning_rate <BackPropagation.default_learning_rate>` is used.
+        `default_learning_rate <EMStorage.default_learning_rate>` is used.
 
     default_learning_rate : float
-        the value used for the `learning_rate <BackPropagation.learning_rate>` if it is not otherwise specified.
+        the value used for the `learning_rate <EMStorage.learning_rate>` if it is not otherwise specified.
 
     owner : Component
         `Mechanism <Mechanism>` to which the Function belongs.
@@ -2326,70 +2320,39 @@ class EMStorage(LearningFunction):
             ----------
 
                 variable
-                    see `variable <BackPropagation.variable>`
+                    see `variable <EMStorage.variable>`
 
                     :default value: numpy.array([[0], [0], [0]])
                     :type: ``numpy.ndarray``
                     :read only: True
 
-                activation_derivative_fct
-                    see `activation_derivative_fct <BackPropagation.activation_derivative_fct>`
-
-                    :default value: `Logistic`.derivative
-                    :type: ``types.FunctionType``
-
                 activation_input
-                    see `activation_input <BackPropagation.activation_input>`
+                    see `activation_input <EMStorage.activation_input>`
 
                     :default value: [0]
                     :type: ``list``
                     :read only: True
 
-                activation_output
-                    see `activation_output <BackPropagation.activation_output>`
+                entry
+                    see `entry <EMStorage.error_signal>`
 
                     :default value: [0]
                     :type: ``list``
                     :read only: True
 
-                error_matrix
-                    see `error_matrix <BackPropagation.error_matrix>`
-
-                    :default value: None
-                    :type:
-                    :read only: True
-
-                error_signal
-                    see `error_signal <BackPropagation.error_signal>`
-
-                    :default value: [0]
-                    :type: ``list``
-                    :read only: True
-
-                learning_rate
-                    see `learning_rate <BackPropagation.learning_rate>`
+                storage_prob
+                    see `learning_rate <EMStorage.learning_rate>`
 
                     :default value: 1.0
                     :type: ``float``
-
-                loss_spec
-                    see `loss_spec <BackPropagation.loss_spec>`
-
-                    :default value: None
-                    :type:
-                    :read only: True
         """
         variable = Parameter(np.array([[0], [0], [0]]),
                              read_only=True,
                              pnl_internal=True,
                              constructor_argument='default_variable')
-        learning_rate = Parameter(1.0, modulable=True)
-        loss_spec = Parameter(None, read_only=True)
+        storage_prob = Parameter(1.0, modulable=True)
         activation_input = Parameter([0], read_only=True, getter=_activation_input_getter)
-        activation_output = Parameter([0], read_only=True, getter=_activation_output_getter)
-        error_signal = Parameter([0], read_only=True, getter=_error_signal_getter)
-        error_matrix = Parameter(None, read_only=True)
-        activation_derivative_fct = Parameter(Logistic.derivative, stateful=False, loggable=False)
+        entry = Parameter([0], read_only=True, getter=_error_signal_getter)
 
     default_learning_rate = 1.0
 
@@ -2525,7 +2488,6 @@ class EMStorage(LearningFunction):
     def _function(self,
                  variable=None,
                  context=None,
-                 error_matrix=None,
                  params=None,
                  **kwargs):
         """
@@ -2537,15 +2499,15 @@ class EMStorage(LearningFunction):
 
         variable : List or 2d array [length 3 in axis 0]
            must have three items that are the values for (in order):
-           `activation_input <BackPropagation.activation_input>` (1d array),
-           `activation_output <BackPropagation.activation_output>` (1d array),
-           `error_signal <BackPropagation.error_signal>` (1d array).
+           `activation_input <EMStorage.activation_input>` (1d array),
+           `activation_output <EMStorage.activation_output>` (1d array),
+           `error_signal <EMStorage.error_signal>` (1d array).
 
         error_matrix : List, 2d array, np.matrix, ParameterPort, or MappingProjection
-            matrix of weights that were used to generate the `error_signal <BackPropagation.error_signal>` (3rd item
-            of `variable <BackPropagation.variable>` from `activation_output <BackPropagation.activation_output>`;
-            its dimensions must be the length of `activation_output <BackPropagation.activation_output>` (rows) x
-            length of `error_signal <BackPropagation.error_signal>` (cols).
+            matrix of weights that were used to generate the `error_signal <EMStorage.error_signal>` (3rd item
+            of `variable <EMStorage.variable>` from `activation_output <EMStorage.activation_output>`;
+            its dimensions must be the length of `activation_output <EMStorage.activation_output>` (rows) x
+            length of `error_signal <EMStorage.error_signal>` (cols).
 
         params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -2556,9 +2518,9 @@ class EMStorage(LearningFunction):
         -------
 
         weight change matrix, weighted error signal : List[2d array, 1d array]
-            the modifications to make to the matrix, `error_signal <BackPropagation.error_signal>` weighted by the
-            contribution made by each element of `activation_output <BackPropagation.activation_output>` as a
-            function of `error_matrix <BackPropagation.error_matrix>`.
+            the modifications to make to the matrix, `error_signal <EMStorage.error_signal>` weighted by the
+            contribution made by each element of `activation_output <EMStorage.activation_output>` as a
+            function of `error_matrix <EMStorage.error_matrix>`.
         """
 
         self._check_args(variable=variable, context=context, params=params)
