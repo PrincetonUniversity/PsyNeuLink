@@ -1634,8 +1634,8 @@ class EMComposition(AutodiffComposition):
          - **fields* -- the `input_nodes <EMComposition.input_nodes>` for the corresponding `fields
            <EMComposition_Fields>` of an `entry <EMCmposition_Memory>` in `memory <EMComposition.memory>`;
 
-         - **field_indices* -- contains two lists, that specify the positions of the `key fields and value fields
-           <EMComposition_Fields>` in `memory <EMComposition.memory>`, respectively;
+         - **field_types* -- a list of the same length as ``fields``, containing 1's for key fields and 0's for
+           value fields;
 
          - **memory_matrix* -- `memory_template <EMComposition.memory_template>`),
 
@@ -1651,11 +1651,11 @@ class EMComposition(AutodiffComposition):
         - test that input is added to the correct row of the matrix for each key and value
         - test that storage occurs after retrieval
         """
-        field_indices = [i for i in range(self.num_fields)]
+        field_types = [i for i in range(self.num_fields)]
 
         return EMStorageMechanism(variable=[self.input_nodes[i].value for i in range(self.num_fields)],
                                   fields=[self.input_nodes[i].name for i in range(self.num_fields)],
-                                  field_indices=field_indices,
+                                  field_types=field_types,
                                   memory_matrix=self.memory_template,
                                   learning_signals=[PROJECTIONS],
                                   decay_rate = self.memory_decay_rate,

@@ -78,9 +78,8 @@ used to store entries in its `memory <EMComposition.memory>` of the EMCompositio
 specified (as a template for the shape of the entries to be stored, and of the `matrix <MappingProjection.matrix>`
 parameters to which they are assigned. It must also have at least one, and usually several `fields
 <EMStorageMechanism.fields>` specifications that identify the `OutputPort`\\s of the `ProcessingMechanism`\\s from
-which it receives its `fields <EMStorageMechanism_Fields>`, and a `field_indices <EMStorageMechanism.field_indices>`
-specification that identifies which parts of the `memory_matrix <EMStorageMechanism.memory_matrix>` to which each
-field corresponds.
+which it receives its `fields <EMStorageMechanism_Fields>`, and a `field_types <EMStorageMechanism.field_types>`
+specification that inidicates whether each `field is a key or a value field <EMStorageMechanism_Fields>`.
 
 .. _EMStorageMechanism_Structure:
 
@@ -91,7 +90,7 @@ An EMStorageMechanism is identical to a `LearningMechanism` in all respects exce
 
   * it has no `input_source <LearningMechanism.input_source>`, `output_source <LearningMechanism.output_source>`,
     or `error_source <LearningMechanism.error_source>` attributes;  instead, it has the `fields
-    <EMStorageMechanism.fields>` and `field_indices <EMStorageMechanism.field_indices>` attributes described below.
+    <EMStorageMechanism.fields>` and `field_types <EMStorageMechanism.field_types>` attributes described below.
 
   * its `fields <EMStorageMechanism.fields>` attribute has as many *FIELDS* `field <EMStorage_mechanism.fields>`
     as there are `fields <EMStorageMechanism_Fields>` of an entry in its `memory_matrix
@@ -101,8 +100,8 @@ An EMStorageMechanism is identical to a `LearningMechanism` in all respects exce
     <EMStorageMechanism_Fields>` of the `entry <EMStorageMechanism_Entry>` to be stored in its `memory_matrix
     <EMStorageMechanism.memory_matrix>` attribute.
 
-  * it has a `field_indices <EMStorageMechanism.field_indices>` attribute that specifies the indices of the `memory
-    matrix <EMStorageMechanism.memory_matrix>` to which each `field <EMStorageMechanism_Fields>` is assigned.
+  * it has a `field_types <EMStorageMechanism.field_types>` attribute that specifies whether each `field
+    <EMStorageMechanism_Fields>` is a `key or a value field <EMStorageMechanism_Fields>`.
 
   * it has a `memory_matrix <EMStorageMechanism.memory_matrix>` attribute that represents the full memory that the
     EMStorageMechanism is used to update.
@@ -192,7 +191,7 @@ class EMStorageMechanism(LearningMechanism):
     EMStorageMechanism(                       \
         variable,                             \
         fields,                               \
-        field_indices,                        \
+        field_types,                          \
         memory_matrix,                        \
         function=EMStorage,                   \
         decay_rate=0.0,                       \
@@ -218,14 +217,14 @@ class EMStorageMechanism(LearningMechanism):
     fields : List[OutputPort, Mechanism, Projection, tuple[str, Mechanism, Projection] or dict] : default None
         specifies the `OutputPort`\\(s), the `value <OutputPort.value>`\\s of which are used as the
         corresponding `fields <EMStorageMechanism_Fields>` of the `memory_matrix <EMStorageMechanism.memory_matrix>`;
-        used to construct the Mechanism's `InputPorts <InputPort>`.
+        used to construct the Mechanism's `InputPorts <InputPort>`; must be the same lenghtt as `variable
+        <EMStorageMechanism.variable>`.
 
-    field_indices : List[int or slice] : default None
-        specifies the indices of the `memory_matrix <EMStorageMechanism.memory_matrix>` to which the `value
-        <InputPort.value>` of the corresponding item of its `fields <EMStorageMechanism.fields>` attribute should be
-        assigned (see `field_indices <EMStorageMechanism.field_indices>` for additional details).  If ints are used,
-        then each must designate the starting index of each field in `memory_matrix <EMStorageMechanism.memory_matrix>`,
-        taking account of the width of and indicating the index just after the last item of the preceding field.
+    field_types : List[int] : default None
+        specifies whether each item of `variable <EMStorageMechanism.variable>` corresponds to a `key or value field
+        <EMStorageMechanism_Fields>` (see `field_types <EMStorageMechanism.field_types>` for additional details);
+        must contain only 1's (for keys) and 0's (for values), with the same number of these as there are items in
+        the `variable <EMStorageMechanism.variable>` and `fields <EMStorageMechanism.fields>` arguments.
 
     memory_matrix : List or 2d np.array : default None
         specifies the shape of the `memory <EMStorageMechanism_Memory>` used to store an `entry
@@ -270,10 +269,10 @@ class EMStorageMechanism(LearningMechanism):
         the `OutputPort`\\(s) used to get the value for each `field <EMStorageMechanism_Fields>` of
         an `entry <EMStorageMechanism_Entry>` of the `memory_matrix <EMStorageMechanism.memory_matrix>` attribute.
 
-    field_indices : List[int or tuple[slice]]
-        contains the indices of the `memory_matrix <EMStorageMechanism.memory_matrix>` to which the `value
-        <InputPort.value>` of the corresponding item of its `fields <EMStorageMechanism.fields>` attribute is
-        assigned (see `Fields <EMStorageMechanism_Fields>` for additional details).
+    field_types : List[int or tuple[slice]]
+        contains a list of indicators of whether each item of `variable <EMStorageMechanism.variable>`
+        and the corresponding `fields <EMStorageMechanism.fields>` are key (1) or value (0) fields.
+        (see `fields <EMStorageMechanism_Fields>` for additional details).
 
     learned_projections : List[MappingProjection]
         list of the `MappingProjections <MappingProjection>`, the `matrix <MappingProjection.matrix>` Parameters of
@@ -342,8 +341,8 @@ class EMStorageMechanism(LearningMechanism):
                     :default value: None
                     :type: ``list``
 
-                field_indices
-                    see `field_indices <EMStorageMechanism.field_indices>`
+                field_types
+                    see `field_types <EMStorageMechanism.field_types>`
 
                     :default value: None
                     :type: ``list``
@@ -387,9 +386,9 @@ class EMStorageMechanism(LearningMechanism):
                                 read_only=True,
                                 structural=True,
                                 parse_spec=True,
-                                constructor_argument='fields'
+                                constructor_argument='fields',
                                 )
-        field_indices = Parameter([],
+        field_types = Parameter([],
                                     stateful=False,
                                     loggable=False,
                                     read_only=True,
@@ -412,10 +411,13 @@ class EMStorageMechanism(LearningMechanism):
         learning_timing = LearningTiming.LEARNING_PHASE
 
     # FIX: WRITE VALIDATION AND PARSE METHODS FOR THESE
-    def _validate_field_indices(self, field_indices):
-        if not len(field_indices) or len(field_indices) != len(self.fields):
+    def _validate_field_types(self, field_types):
+        if not len(field_types) or len(field_types) != len(self.fields):
             return f"must be specified with a number of items equal to " \
                    f"the number of fields specified {len(self.fields)}"
+        if not all(item in {1,0} for item in field_types):
+            return f"must be a list of 1s (for keys) and 0s (for values)."
+
 
     def _validate_storage_prob(self, storage_prob):
         storage_prob = float(storage_prob)
@@ -435,7 +437,7 @@ class EMStorageMechanism(LearningMechanism):
     def __init__(self,
                  default_variable: Union[list, np.ndarray],
                  fields: Optional[list, tuple, dict, OutputPort, Mechanism, Projection] = None,
-                 field_indices: Optional[Union[int,slice]] = None,
+                 field_types: Optional[Union[int,slice]] = None,
                  memory_matrix: Optional[Union[list, np.ndarray]] = None,
                  function: Optional[Callable] = EMStorage,
                  learning_signals: Optional[list, dict, ParameterPort, Projection, tuple] = None,
@@ -462,7 +464,7 @@ class EMStorageMechanism(LearningMechanism):
 
         super().__init__(default_variable=default_variable,
                          fields=fields,
-                         fields_indices=field_indices,
+                         field_types=field_types,
                          memory_matrix=memory_matrix,
                          function=function,
                          modulation=modulation,
