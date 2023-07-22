@@ -220,10 +220,12 @@ class EMStorageMechanism(LearningMechanism):
         corresponding `fields <EMStorageMechanism_Fields>` of the `memory_matrix <EMStorageMechanism.memory_matrix>`;
         used to construct the Mechanism's `InputPorts <InputPort>`.
 
-    field_indices : List[int or slice] : default None
+    field_indices : List[List[int or slice]] : default None
         specifies the indices of the `memory_matrix <EMStorageMechanism.memory_matrix>` to which the `value
         <InputPort.value>` of the corresponding item of its `fields <EMStorageMechanism.fields>` attribute should be
-        assigned (see `field_indices <EMStorageMechanism.field_indices>` for additional details).  If ints are used,
+        assigned (see `field_indices <EMStorageMechanism.field_indices>` for additional details); it must have two sets
+        of indicies, one for keys and one for values.  Each set must be a list of ints or slices, for the indices of
+        key fields and the other for value fields (see `EMComposition_Memory` for additional details). If ints are used,
         then each must designate the starting index of each field in `memory_matrix <EMStorageMechanism.memory_matrix>`,
         taking account of the width of and indicating the index just after the last item of the preceding field.
 
@@ -270,10 +272,12 @@ class EMStorageMechanism(LearningMechanism):
         the `OutputPort`\\(s) used to get the value for each `field <EMStorageMechanism_Fields>` of
         an `entry <EMStorageMechanism_Entry>` of the `memory_matrix <EMStorageMechanism.memory_matrix>` attribute.
 
-    field_indices : List[int or tuple[slice]]
+    field_indices : List[List[int or tuple[slice]]]
         contains the indices of the `memory_matrix <EMStorageMechanism.memory_matrix>` to which the `value
         <InputPort.value>` of the corresponding item of its `fields <EMStorageMechanism.fields>` attribute is
-        assigned (see `Fields <EMStorageMechanism_Fields>` for additional details).
+        assigned.  Contains to lists, one for key fields and the other for value fields (see `EMComposition_Memory`
+        for additional details);  these are used to construct the EMStorageMechanism's `learning_signals
+        <EMStorageMechanism.learning_signals>`.
 
     learned_projections : List[MappingProjection]
         list of the `MappingProjections <MappingProjection>`, the `matrix <MappingProjection.matrix>` Parameters of
@@ -389,7 +393,7 @@ class EMStorageMechanism(LearningMechanism):
                                 parse_spec=True,
                                 constructor_argument='fields'
                                 )
-        field_indices = Parameter([],
+        field_indices = Parameter([[]],
                                     stateful=False,
                                     loggable=False,
                                     read_only=True,
@@ -411,11 +415,15 @@ class EMStorageMechanism(LearningMechanism):
         learning_type = LearningType.UNSUPERVISED
         learning_timing = LearningTiming.LEARNING_PHASE
 
-    # FIX: WRITE VALIDATION AND PARSE METHODS FOR THESE
     def _validate_field_indices(self, field_indices):
-        if not len(field_indices) or len(field_indices) != len(self.fields):
-            return f"must be specified with a number of items equal to " \
-                   f"the number of fields specified {len(self.fields)}"
+        if (not len(field_indices) or len(field_indices) != 2
+                or not all(isinstance(sublist, list) for sublist in field_indices)
+                or not all(isinstance(item, (int, slice)) for sublist in field_indices for item in sublist)):
+            return f"must be specified with two list of either ints or slices"
+        for sublist in field_indices:
+            if len(np.array(field_indices).flatten != len(self.fields)):
+                return  f"the total number of items in the two sublists must be equal to " \
+                        f"the number of fields specified {len(self.fields)}"
 
     def _validate_storage_prob(self, storage_prob):
         storage_prob = float(storage_prob)
