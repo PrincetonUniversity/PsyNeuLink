@@ -10,6 +10,9 @@
 
 # TODO:
 # - FIX: WARNING NOT OCCURRING FOR ZEROS WITH MULTIPLE ENTRIES (HAPPENS IF *ANY* KEY IS EVER ALL ZEROS)
+# - FIX: _import_composition:  MOVE LearningProjections
+# - FIX: ??NEED TO IMPLEMENT LEARNING PATHWAYS
+# - FIX: TEST LEARNING FOR NON-CONTIGIOUS KEYS IN field_weights; E.G. [1,0,1]
 # - FIX: IMPLEMENT _integrate_into_composition METHOD THAT CALLS _import_composition ON ANOTHER COMPOSITION
 # - FIX:        AND TRANSFERS RELEVANT ATTRIBUTES (SUCH AS MEMORY, KEY_INPUT_NODES, ETC., POSSIBLY APPENDING NAMES)
 # - FIX: Thresholded version of SoftMax gain (per Kamesh)
@@ -1109,6 +1112,7 @@ class EMComposition(AutodiffComposition):
 
         pathway = self._construct_pathway(memory_template,
                                           memory_capacity,
+                                          memory_decay_rate,
                                           field_weights,
                                           concatenate_keys,
                                           normalize_memories,
@@ -1393,6 +1397,7 @@ class EMComposition(AutodiffComposition):
     def _construct_pathway(self,
                            memory_template,
                            memory_capacity,
+                           memory_decay_rate,
                            field_weights,
                            concatenate_keys,
                            normalize_memories,
@@ -1412,14 +1417,15 @@ class EMComposition(AutodiffComposition):
         self.retrieval_gating_nodes = self._construct_retrieval_gating_nodes(field_weights, concatenate_keys)
         self.retrieval_weighting_node = self._construct_retrieval_weighting_node(memory_capacity)
         self.retrieval_nodes = self._construct_retrieval_nodes(memory_template)
-        self.storage_nodes = self._construct_storage_node(storage_prob)
+        self.storage_node = self._construct_storage_node(memory_template, field_weights,
+                                                         memory_decay_rate, storage_prob)
 
         # Construct pathway as a set of nodes, since Projections are specified in the construction of each node
         #  (and specifying INPUT or OUTPUT Nodes in a list would cause them to be interpreted as linear pathways)
         pathway = set(self.key_input_nodes + self.value_input_nodes
                       + self.match_nodes + self.softmax_control_nodes + self.softmax_nodes
                       + [self.retrieval_weighting_node] + self.retrieval_gating_nodes + self.retrieval_nodes
-                      + self.storage_nodes
+                      + [self.storage_node]
                       )
         if self.concatenate_keys_node is not None:
             pathway.add(self.concatenate_keys_node)
@@ -1622,7 +1628,7 @@ class EMComposition(AutodiffComposition):
 
         return self.retrieved_key_nodes + self.retrieved_value_nodes
 
-    def _construct_storage_node(self, storage_prob)->list:
+    def _construct_storage_node(self, memory_template, field_weights, memory_decay_rate, storage_prob)->list:
         """Create EMStorageMechanism that stores the key and value inputs in memory.
         Memories are stored by adding the current input to each field to the corresponding row of the matrix for
         the Projection from the key_input_node to the matching_node and retrieval_node for keys, and from the
@@ -1651,16 +1657,20 @@ class EMComposition(AutodiffComposition):
         - test that input is added to the correct row of the matrix for each key and value
         - test that storage occurs after retrieval
         """
-        field_types = [i for i in range(self.num_fields)]
+        field_types = [0 if weight == 0 else 1 for weight in field_weights]
+        projections = [self.match_nodes[i].input_port.path_afferents[0] for i in range(self.num_keys)] + \
+                      [self.retrieval_nodes[i].input_port.path_afferents[0] for i in range(len(self.input_nodes))]
 
-        return EMStorageMechanism(variable=[self.input_nodes[i].value for i in range(self.num_fields)],
-                                  fields=[self.input_nodes[i].name for i in range(self.num_fields)],
-                                  field_types=field_types,
-                                  memory_matrix=self.memory_template,
-                                  learning_signals=[PROJECTIONS],
-                                  decay_rate = self.memory_decay_rate,
-                                  storage_prob=storage_prob,
-                                  name='STORAGE MECHANISM')
+        storage_node = EMStorageMechanism(default_variable=[self.input_nodes[i].value[0]
+                                                            for i in range(self.num_fields)],
+                                          fields=[self.input_nodes[i] for i in range(self.num_fields)],
+                                          field_types=field_types,
+                                          memory_matrix=memory_template,
+                                          learning_signals=projections,
+                                          decay_rate = memory_decay_rate,
+                                          storage_prob=storage_prob,
+                                          name='STORAGE MECHANISM')
+        return storage_node
 
     def _set_learnability_of_projections(self):
         """Turn off learning for all Projections except afferents to retrieval_gating_nodes.

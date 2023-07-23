@@ -1838,9 +1838,15 @@ def _parse_connection_specs(connectee_port_type,
                                               mech=mech,
                                               mech_port_attribute=mech_port_attribute,
                                               projection_socket=projection_socket)
-                assert isinstance(port, Port) or all([p in port_types for p in convert_to_list(port)]), \
-                    f'PROGRAM ERROR:  ' \
-                    f'projection._get_port_for_socket() returned {port} which is not a Port or allowed Port Type.'
+                if not isinstance(port, Port) and not any([p in port_types for p in convert_to_list(port)]):
+                    if isinstance(port, list):
+                        type_list = ' ,'.join([p.__name__ for p in port])
+                    from_or_to_1 = f"from" if projection_socket == RECEIVER else "to"
+                    from_or_to_2 = f"to" if projection_socket == RECEIVER else "from"
+                    raise ProjectionError(f"Specification of the Projection {from_or_to_1} "
+                                          f"'{connectee_port_type.__name__}' of '{owner.name}' {from_or_to_2} "
+                                          f"'{projection_spec.name}' resolves to a type of Port ({type_list}) that is "
+                                          f"not of a required type ({' ,'.join([pt.__name__ for pt in port_types])}).")
             except PortError as e:
                 raise ProjectionError(f"Problem with specification for {Port.__name__} in {Projection.__name__} "
                                       f"specification{(' for ' + owner.name) if owner else ' '}: " + e.error_value)

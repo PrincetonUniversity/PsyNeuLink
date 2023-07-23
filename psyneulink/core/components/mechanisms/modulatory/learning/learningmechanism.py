@@ -528,6 +528,7 @@ Class Reference
 
 import warnings
 from enum import Enum
+from collections import defaultdict
 
 import numpy as np
 from beartype import beartype
@@ -546,8 +547,8 @@ from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ADDITIVE, ASSERT, ENABLED, INPUT_PORTS, \
-    LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \
-    MATRIX, NAME, OUTPUT_PORT, OWNER_VALUE, PARAMS, PROJECTIONS, SAMPLE, PORT_TYPE, VARIABLE
+    LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, MATRIX, \
+    MODULATION, NAME, OUTPUT_PORT, OWNER_VALUE, PARAMS, PROJECTIONS, REFERENCE_VALUE, SAMPLE, PORT_TYPE, VARIABLE
 from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -1226,14 +1227,22 @@ class LearningMechanism(ModulatoryMechanism_Base):
 
         # Instantiate LearningSignals and assign to self.output_ports
         for learning_signal in self.learning_signals:
-            # Instantiate LearningSignal
-            # Parses learning_signal specifications (in call to Port._parse_port_spec)
+            # If it is already a dict, use that (e.g., in case varialbe or modulation is specified by user)
+            variable = (OWNER_VALUE, 0)
+            modulation = self.defaults.modulation
+            reference_value = self.parameters.learning_signal._get(context)
+            if isinstance(learning_signal, dict):
+                variable = defaultdict(dict,learning_signal)[VARIABLE] or variable
+                modulation = defaultdict(dict,learning_signal)[MODULATION] or modulation
+                reference_value = defaultdict(dict,learning_signal)[REFERENCE_VALUE] \
+                    if REFERENCE_VALUE in learning_signal else reference_value
+            # Parse learning_signal specifications (in call to Port._parse_port_spec)
             #    and any embedded Projection specifications (in call to <Port>._instantiate_projections)
             learning_signal = _instantiate_port(port_type=LearningSignal,
                                                  owner=self,
-                                                 variable=(OWNER_VALUE,0),
-                                                 reference_value=self.parameters.learning_signal._get(context),
-                                                 modulation=self.defaults.modulation,
+                                                 variable=variable,
+                                                 reference_value=reference_value,
+                                                 modulation=modulation,
                                                  # port_spec=self.learning_signal)
                                                  port_spec=learning_signal,
                                                  context=context)

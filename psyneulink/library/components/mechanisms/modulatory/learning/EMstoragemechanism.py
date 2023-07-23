@@ -161,15 +161,15 @@ from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    ADDITIVE, EM_STORAGE_MECHANISM, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MULTIPLICATIVE, OVERWRITE
+    ADDITIVE, EM_STORAGE_MECHANISM, LEARNING, LEARNING_PROJECTION, MULTIPLICATIVE, MODULATION, \
+    NAME, OVERRIDE, OWNER_VALUE, PROJECTIONS, REFERENCE_VALUE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_numeric, ValidParamSpecType, all_within_range
 
 __all__ = [
-    'EMStorageMechanism', 'EMStorageMechanismError', 'DefaultTrainingMechanism',
-    'input_port_names', 'output_port_names',
+    'EMStorageMechanism', 'EMStorageMechanismError',
 ]
 
 # Parameters:
@@ -177,10 +177,10 @@ __all__ = [
 parameter_keywords.update({LEARNING_PROJECTION, LEARNING})
 projection_keywords.update({LEARNING_PROJECTION, LEARNING})
 
-input_port_names = [ACTIVATION_INPUT]
-output_port_names = [LEARNING_SIGNAL]
-
-DefaultTrainingMechanism = ObjectiveMechanism
+MEMORY_MATRIX = 'memory_matrix'
+FIELDS = 'fields'
+FIELD_TYPES = 'field_types'
+LEARNING_SIGNALS = 'learning_signals'
 
 class EMStorageMechanismError(LearningMechanismError):
     pass
@@ -197,7 +197,7 @@ class EMStorageMechanism(LearningMechanism):
         decay_rate=0.0,                       \
         storage_prob=1.0,                     \
         learning_signals,                     \
-        modulation=OVERWRITE,                 \
+        modulation=OVERRIDE,                  \
         params=None,                          \
         name=None,                            \
         prefs=None)
@@ -380,13 +380,20 @@ class EMStorageMechanism(LearningMechanism):
                     :type: ``float``
 
         """
-        input_ports = Parameter([],
+        # input_ports = Parameter([],
+        #                         stateful=False,
+        #                         loggable=False,
+        #                         read_only=True,
+        #                         structural=True,
+        #                         parse_spec=True,
+        #                         # constructor_argument='fields',
+        #                         )
+        fields = Parameter([],
                                 stateful=False,
                                 loggable=False,
                                 read_only=True,
                                 structural=True,
                                 parse_spec=True,
-                                constructor_argument='fields',
                                 )
         field_types = Parameter([],
                                     stateful=False,
@@ -399,14 +406,19 @@ class EMStorageMechanism(LearningMechanism):
         storage_prob = Parameter(1.0, modulable=True)
         storage_prob = Parameter(1.0, modulable=True)
         decay_rate = Parameter(0.0, modulable=True)
-        modulation = OVERWRITE
+        modulation = OVERRIDE
         output_ports = Parameter([],
                                  stateful=False,
                                  loggable=False,
                                  read_only=True,
                                  structural=True,
-                                 constructor_argument='learning_signals'
+                                 # constructor_argument='learning_signals'
                                  )
+        learning_signals = Parameter([],
+                                     stateful=False,
+                                     loggable=False,
+                                     read_only=True,
+                                     structural=True)
         learning_type = LearningType.UNSUPERVISED
         learning_timing = LearningTiming.LEARNING_PHASE
 
@@ -436,14 +448,14 @@ class EMStorageMechanism(LearningMechanism):
     @beartype
     def __init__(self,
                  default_variable: Union[list, np.ndarray],
-                 fields: Optional[list, tuple, dict, OutputPort, Mechanism, Projection] = None,
-                 field_types: Optional[Union[int,slice]] = None,
-                 memory_matrix: Optional[Union[list, np.ndarray]] = None,
+                 fields: Union[list, tuple, dict, OutputPort, Mechanism, Projection] = None,
+                 field_types: list = None,
+                 memory_matrix: Union[list, np.ndarray] = None,
                  function: Optional[Callable] = EMStorage,
-                 learning_signals: Optional[list, dict, ParameterPort, Projection, tuple] = None,
-                 modulation: Optional[Literal[OVERWRITE, ADDITIVE, MULTIPLICATIVE]] = None,
-                 decay_rate: Optional[float] = None,
-                 storage_prob: Optional[float] = None,
+                 learning_signals: Union[list, dict, ParameterPort, Projection, tuple] = None,
+                 modulation: Optional[Literal[OVERRIDE, ADDITIVE, MULTIPLICATIVE]] = OVERRIDE,
+                 decay_rate: Optional[float] = 0.0,
+                 storage_prob: Optional[float] = 1.0,
                  params=None,
                  name=None,
                  prefs: Optional[ValidPrefSet] = None,
@@ -461,6 +473,7 @@ class EMStorageMechanism(LearningMechanism):
         # self.initialization_status = ContextFlags.DEFERRED_INIT
 
         # self._storage_prob = storage_prob
+        # self.num_key_fields = len([i for i in field_types if i==0])
 
         super().__init__(default_variable=default_variable,
                          fields=fields,
@@ -477,11 +490,6 @@ class EMStorageMechanism(LearningMechanism):
                          **kwargs
                          )
 
-
-    # FIX: NEEDED??
-    def _parse_function_variable(self, variable, context=None):
-        return variable
-
     def _validate_variable(self, variable, context=None):
         """Validate that variable has only one item: activation_input.
         """
@@ -490,66 +498,116 @@ class EMStorageMechanism(LearningMechanism):
         variable = super(LearningMechanism, self)._validate_variable(variable, context)
 
         # Items in variable should be 1d and have numeric values
-        if not (all(np.array(variable)[i].ndim == 1 for i in len(variable)) and is_numeric(variable)):
+        if not (all(np.array(variable)[i].ndim == 1 for i in range(len(variable))) and is_numeric(variable)):
             raise EMStorageMechanismError(f"Variable for {self.name} ({variable}) must be "
                                           f"a list or 2d np.array containing 1d arrays with only numbers.")
-
-        # Items in variable should have the same shape as memory_matrix
-        memory_matrix = self.parameters.memory_matrix.get()
-        if memory_matrix.shape != np.array(variable).vstack.shape:
-            raise EMStorageMechanismError(f"The 'variable' arg for {self.name} ({variable}) must be "
-                                          f"a list or 2d np.array containing entries that, when vertically stacked,"
-                                          f"are the same shape ({memory_matrix.shape}) as its 'memory_matrix' arg.")
         return variable
 
+    def _validate_params(self, request_set, target_set=None, context=None):
+
+        # Ensure that the shape of variable is equivalent to an entry in memory_matrix
+        if MEMORY_MATRIX in request_set:
+            memory_matrix = request_set[MEMORY_MATRIX]
+            # Items in variable should have the same shape as memory_matrix
+            if memory_matrix[0].shape != np.array(self.variable).shape:
+                raise EMStorageMechanismError(f"The 'variable' arg for {self.name} ({variable}) must be "
+                                              f"a list or 2d np.array containing entries that have the same shape "
+                                              f"({memory_matrix.shape}) as an entry (row) in 'memory_matrix' arg.")
+
+        # Ensure the number of fields is equal to the number of items in variable
+        if FIELDS in request_set:
+            fields = request_set[FIELDS]
+            if len(fields) != len(self.variable):
+                raise EMStorageMechanismError(f"The 'fields' arg for {self.name} ({fields}) must have the same "
+                                              f"number of items as its variable arg ({len(self.variable)}).")
+
+        # Ensure the number of field_types is equal to the number of fields
+        if FIELD_TYPES in request_set:
+            field_types = request_set[FIELD_TYPES]
+            num_keys = len([i for i in field_types if i==0])
+            if len(field_types) != len(fields):
+                raise EMStorageMechanismError(f"The 'field_types' arg for {self.name} ({field_types}) must have "
+                                              f"the same number of items as its 'fields' arg ({len(fields)}).")
+
+        # Ensure the number of learning_signals is equal to the number of fields + number of keys
+        if LEARNING_SIGNALS in request_set:
+            learning_signals = request_set[LEARNING_SIGNALS]
+            if len(learning_signals) != len(fields) + num_keys:
+                raise EMStorageMechanismError(f"The 'learning_signals' arg for {self.name} ({learning_signals}) "
+                                              f"must have the same number of items as its variable arg "
+                                              f"({len(self.variable)}).")
+
+        # Ensure shape of memory_matrix is equal to the shape of the aggregated matrices for learning_signals
+        learning_signals = np.array([learning_signal.parameters.matrix._get(context)
+                                           for learning_signal in learning_signals[num_keys:]])
+        if (learning_signals.shape[0] != memory_matrix.shape[1]
+                or learning_signals.shape[1] != memory_matrix.shape[0]
+                or learning_signals.shape[2] != memory_matrix.shape[2]):
+            raise EMStorageMechanismError(f"The shape ({learning_signals.shape}) of the matrices for the Projections "
+                                          f"in the 'learning_signals' arg of {self.name} do not match the shape of the "
+                                          f"'memory_matrix' arg {memory_matrix.shape}).")
+
     def _instantiate_input_ports(self, input_ports=None, reference_value=None, context=None):
-        # FIX: SHOUD HAVE SPECS FROM fields ARG HERE
-        pass
+        """Override LearningMechanism to instantiate an InputPort for each field"""
+        input_ports = [{NAME: f"KEY_INPUT_{i}" if self.field_types[i] == 1 else f"VALUE_INPUT_{i}",
+                        VARIABLE: self.variable[i],
+                        PROJECTIONS: field}
+                       for i, field in enumerate(self.fields)]
+        return super()._instantiate_input_ports(input_ports=input_ports, context=context)
 
     def _instantiate_output_ports(self, output_ports=None, reference_value=None, context=None):
-        # FIX: SHOUD HAVE SPECS FROM learning_signals ARG HERE
-        pass
+        # FIX: SHOULD HAVE SPECS FROM learning_signals ARG HERE
+        learning_signal_dicts = []
+        for i, learning_signal in enumerate(self.learning_signals):
+            learning_signal_dicts.append({NAME: f"LEARNING_SIGNAL_{i}",
+                                         VARIABLE: (OWNER_VALUE, i),
+                                         REFERENCE_VALUE: self.value[i],
+                                         MODULATION: self.modulation,
+                                         PROJECTIONS: learning_signal.parameter_ports['matrix']})
+        self.parameters.learning_signals._set(learning_signal_dicts, context)
 
-    def _execute(
-        self,
-        variable=None,
-        context=None,
-        runtime_params=None,
+        return super()._instantiate_output_ports(context=context)
 
-    ):
-        """Execute EMStorageMechanism. function and return learning_signal
+    def _parse_function_variable(self, variable, context=None):
+        # Function expects a single field (one item of Mechanism's variable) at a time
+        if self.initialization_status == ContextFlags.INITIALIZING:
+            # During initialization, Mechanism's variable is its default_variable,
+            # which has all field's worth of input, so need get a single one here
+            return variable[0]
+        # During execution, _execute passes only a entry (item of variable) at a time,
+        #    so can just pass that along here
+        return variable
 
-        :return: (2D np.array) self.learning_signal
+    def _execute(self,
+                 variable=None,
+                 context=None,
+                 runtime_params=None):
+        """Execute EMStorageMechanism. function and return learning_signals
+
+        :return: List[2d np.array] self.learning_signal
         """
 
-        # COMPUTE LEARNING SIGNAL (note that function is assumed to return only one value)
-        # IMPLEMENTATION NOTE:  skip LearningMechanism's implementation of _execute
-        #                       as it assumes projections from other LearningMechanisms
-        #                       which are not relevant to an autoassociative projection
-        learning_signal = super(LearningMechanism, self)._execute(
-            variable=variable,
-            context=context,
-            runtime_params=runtime_params,
+        num_key_fields = len([i for i in self.field_types if i==0])
+        # Note: learing_signals have afferents to match_nodes then retrieval_nodes
+        match_node_afferents = self.learning_signals[:num_key_fields]
+        retrieval_node_afferents = self.learning_signals[num_key_fields:]
 
-        )
-
-        from psyneulink.core.compositions.report import ReportOutput
-        if self.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref is not ReportOutput.OFF:
-            print("\n{} weight change matrix: \n{}\n".format(self.name, self.parameters.learning_signal._get(context)))
-
-        # --------------------------------------------------------------
-            # FIX: PUT THIS IN EMStorageMechanism
-            memories = input_node.efferents[0].parameters.matrix.get(context)
-            if self.memory_decay_rate:
-                memories *= self.parameters.memory_decay_rate._get(context)
-            # Get least used slot (i.e., weakest memory = row of matrix with lowest weights)
-            # idx_of_min = np.argmin(memories.sum(axis=0))
-        # --------------------------------------------------------------
-
-
-
-
-        value = np.array([learning_signal])
+        value = []
+        for i, learning_signal in enumerate(match_node_afferents):
+            matrix = learning_signal.parameters.matrix._get(context)
+            entry = learning_signal.sender.value
+            value.append(super(LearningMechanism, self)._execute(variable=entry,
+                                                                 memory_matrix=matrix,
+                                                                 context=context,
+                                                                 runtime_params=runtime_params))
+        for i, learning_signal in enumerate(retrieval_node_afferents):
+            matrix = learning_signal.parameters.matrix._get(context)
+            entry = variable[i]
+            # FIX: MAY NEED TO PASS AXIS HERE
+            value.append(super(LearningMechanism, self)._execute(variable=entry,
+                                                                 memory_matrix=matrix,
+                                                                 context=context,
+                                                                 runtime_params=runtime_params))
 
         self.parameters.value._set(value, context)
 

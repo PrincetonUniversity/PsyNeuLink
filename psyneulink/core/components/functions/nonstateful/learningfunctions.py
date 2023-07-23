@@ -302,7 +302,7 @@ class EMStorage(LearningFunction):
                     :type: ``float``
 
         """
-        variable = Parameter(np.array([[0]]),
+        variable = Parameter(np.array([0]),
                              read_only=True,
                              pnl_internal=True,
                              constructor_argument='default_variable')
@@ -355,10 +355,9 @@ class EMStorage(LearningFunction):
     def _validate_variable(self, variable, context=None):
         variable = super()._validate_variable(variable, context)
 
-        if len(variable) != 3:
-            raise ComponentError(f"Variable for '{self.name}' ({variable}) must have three items: "
-                                 f"{ACTIVATION_INPUT}, {ACTIVATION_OUTPUT}, and {ERROR_SIGNAL}).")
-
+        if np.array(variable).ndim != 1:
+            raise ComponentError(f"The number of items in the outer dimension of variable for '{self.name}' "
+                                 f"(({len(variable)}) should be just one")
         return variable
 
     def _function(self,
@@ -373,9 +372,9 @@ class EMStorage(LearningFunction):
         Arguments
         ---------
 
-        variable : List or 2d array
-           array containing one item in its outer dimensions (axis 0) that is a 1d array containing `entry
-           <EMStorage.entry>` to be added to `memory_matrix <EMStorage.memory_matrix>` along `axis <EMStorage.axis>`.
+        variable : List or 1d array
+           array containing `entry <EMStorage.entry>` to be added to `memory_matrix <EMStorage.memory_matrix>`
+           along `axis <EMStorage.axis>`.
 
         memory_matrix : List, 2d array, np.matrix, ParameterPort, or MappingProjection
             matrix to which `variable <EMStorage.variable>` is stored.
@@ -400,7 +399,7 @@ class EMStorage(LearningFunction):
 
         self._check_args(variable=variable, context=context, params=params)
 
-        entry = variable[0]
+        entry = variable
         axis = self.parameters.axis._get(context)
         storage_prob = self.parameters.storage_prob._get(context)
         random_state = self.parameters.random_state._get(context)
@@ -416,7 +415,7 @@ class EMStorage(LearningFunction):
             if self.is_initializing:
                 # Can use variable, since it is 2d with length of an entry
                 #   (so essentially a memory_matrix with one entry)
-                memory_matrix = np.zeros(variable.shape)
+                memory_matrix = np.zeros((1,1,len(variable)))
             # Raise exception if memory_matrix is not specified
             else:
                 owner_string = ""
