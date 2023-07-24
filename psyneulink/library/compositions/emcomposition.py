@@ -11,6 +11,11 @@
 # TODO:
 # - FIX: WARNING NOT OCCURRING FOR ZEROS WITH MULTIPLE ENTRIES (HAPPENS IF *ANY* KEY IS EVER ALL ZEROS)
 # - FIX: GENERATE ANIMATION w/ STORAGE
+# - FIX: WRITE TEST FOR EXECTUTION WITH concatenation=True
+#         TESTS:
+#         - test that storage nodes are created for each key and value
+#         - test that input is added to the correct row of the matrix for each key and value
+#         - test that storage occurs after retrieval
 # - FIX: _import_composition:
 #        - MOVE LearningProjections
 #        - MOVE CONDITION? (OR PUT ON MECHANISM?)
@@ -1430,7 +1435,7 @@ class EMComposition(AutodiffComposition):
         self.retrieval_gating_nodes = self._construct_retrieval_gating_nodes(field_weights, concatenate_keys)
         self.retrieval_weighting_node = self._construct_retrieval_weighting_node(memory_capacity)
         self.retrieval_nodes = self._construct_retrieval_nodes(memory_template)
-        self.storage_node = self._construct_storage_node(memory_template, field_weights,
+        self.storage_node = self._construct_storage_node(memory_template, field_weights, concatenate_keys,
                                                          memory_decay_rate, storage_prob)
 
         # Construct pathway as a set of nodes, since Projections are specified in the construction of each node
@@ -1623,7 +1628,7 @@ class EMComposition(AutodiffComposition):
                                                                        MappingProjection(
                                                                            sender=self.retrieval_weighting_node,
                                                                            # matrix=ZEROS_MATRIX)
-                                                                           matrix=memory_template[:,i,:])
+                                                                           matrix=memory_template[:,i])
                                                                    },
                                                       name= f'{self.key_names[i]} RETRIEVED')
                                     for i in range(self.num_keys)]
@@ -1634,14 +1639,19 @@ class EMComposition(AutodiffComposition):
                                                                              sender=self.retrieval_weighting_node,
                                                                              # matrix=ZEROS_MATRIX)
                                                                              matrix=memory_template[:,
-                                                                                    i + self.num_keys,:])
+                                                                                    i + self.num_keys])
                                                                      },
                                                         name= f'{self.value_names[i]} RETRIEVED')
                                       for i in range(self.num_values)]
 
         return self.retrieved_key_nodes + self.retrieved_value_nodes
 
-    def _construct_storage_node(self, memory_template, field_weights, memory_decay_rate, storage_prob)->list:
+    def _construct_storage_node(self,
+                                memory_template,
+                                field_weights,
+                                concatenate_keys,
+                                memory_decay_rate,
+                                storage_prob)->list:
         """Create EMStorageMechanism that stores the key and value inputs in memory.
         Memories are stored by adding the current input to each field to the corresponding row of the matrix for
         the Projection from the key_input_node to the matching_node and retrieval_node for keys, and from the
@@ -1664,15 +1674,16 @@ class EMComposition(AutodiffComposition):
          - **decay_rate** -- rate at which entries in the `memory_matrix <EMComposition.memory_matrix>` decay;
 
          - **storage_prob** -- probability for storing an entry in `memory <EMComposition.memory>`.
-
-        TESTS:
-        - test that storage nodes are created for each key and value
-        - test that input is added to the correct row of the matrix for each key and value
-        - test that storage occurs after retrieval
         """
+
         field_types = [0 if weight == 0 else 1 for weight in field_weights]
-        projections = [self.match_nodes[i].input_port.path_afferents[0] for i in range(self.num_keys)] + \
-                      [self.retrieval_nodes[i].input_port.path_afferents[0] for i in range(len(self.input_nodes))]
+
+        if concatenate_keys:
+            projections = [self.concatenate_keys_node.input_ports[i].path_afferents[0] for i in range(self.num_keys)] + \
+                          [self.retrieval_nodes[i].input_port.path_afferents[0] for i in range(len(self.input_nodes))]
+        else:
+            projections = [self.match_nodes[i].input_port.path_afferents[0] for i in range(self.num_keys)] + \
+                          [self.retrieval_nodes[i].input_port.path_afferents[0] for i in range(len(self.input_nodes))]
 
         storage_node = EMStorageMechanism(default_variable=[self.input_nodes[i].value[0]
                                                             for i in range(self.num_fields)],

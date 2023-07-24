@@ -539,15 +539,14 @@ class EMStorageMechanism(LearningMechanism):
                                               f"for  {self.name} must be the same as the number of items "
                                               f"in its variable ({len(self.variable)}).")
 
-        # Ensure shape of memory_matrix is equal to the shape of the aggregated matrices for learning_signals
-        learning_signals = np.array([learning_signal.parameters.matrix._get(context)
-                                           for learning_signal in learning_signals[num_keys:]])
-        if (learning_signals.shape[0] != memory_matrix.shape[1]
-                or learning_signals.shape[1] != memory_matrix.shape[0]
-                or learning_signals.shape[2] != memory_matrix.shape[2]):
-            raise EMStorageMechanismError(f"The shape ({learning_signals.shape}) of the matrices for the Projections "
-                                          f"in the 'learning_signals' arg of {self.name} do not match the shape of the "
-                                          f"'memory_matrix' arg {memory_matrix.shape}).")
+        # Ensure shape of memory_matrix for each field is same as learning_signal for corresponding retrieval_node
+        for i, learning_signal in enumerate(learning_signals[num_keys:]):
+            learning_signal_shape = learning_signal.parameters.matrix._get(context).shape
+            memory_matrix_field_shape = np.array(memory_matrix[:,i].tolist()).shape
+            assert learning_signal_shape == memory_matrix_field_shape, \
+                f"The shape ({learning_signal.shape}) of the matrix for the Projection {learning_signal.name} " \
+                f"used to specify learning signal {i} of {self.name} does not match the shape " \
+                f"of the corresponding field {i} of its 'memory_matrix' {memory_matrix.shape})."
 
     def _instantiate_input_ports(self, input_ports=None, reference_value=None, context=None):
         """Override LearningMechanism to instantiate an InputPort for each field"""
