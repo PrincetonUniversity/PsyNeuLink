@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LearningMechanism &mdash; PsyNeuLink 0.11.0.0+826.g2814b65c5 documentation</title>
+  <title>LearningMechanism &mdash; PsyNeuLink 0.11.0.0+827.g98c70ed15 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.11.0.0+826
+                  0.11.0.0+827
                 </div>
               
             
@@ -244,14 +244,15 @@ displayed using the Composition’s <a class="reference internal" href="Visualiz
 <h3><em>A Note about the Implementation of Learning</em><a class="headerlink" href="#a-note-about-the-implementation-of-learning" title="Permalink to this headline">¶</a></h3>
 <p>The implementation of learning in PsyNeuLink was designed for exposition rather than efficiency. Unlike its
 implementation in most other environments – where the learning algorithm is tightly integrated with the
-elements of processing that it modifies –  PsyNeuLink separates it into three constituent components:  An
-<a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> used to evaluate the most proximal source of error, a <a class="reference internal" href="#"><span class="doc">LearningMechanism</span></a> that uses that error
-(or one derived from it by another LearningMechanism) to calculate a learning signal;  and <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection(s)</span></a> that use that learning signal to modify the weight <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> of the
-<a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection(s)</span></a> being learned.  This has the advantage of isolating and exposing the
-constituent computations, making it clearer to students what these are and how they operate, and also making each
-individually accessible for reconfiguration. However, it comes at the cost of efficiency.  For efficient execution of
-supervised forms of learning (e.g., reinforcement learning and backpropagation), the <a class="reference internal" href="AutodiffComposition.html"><span class="doc">AutodiffComposition</span></a> can be used,
-which allows the model to be specified using PsyNeuLink, but actually executes learning using <code class="xref any docutils literal notranslate"><span class="pre">PyTorch</span></code>.</p>
+elements of processing that it modifies –  PsyNeuLink separates it into three constituent components, often including:
+an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> used to evaluate the most proximal source of error; a <a class="reference internal" href="#"><span class="doc">LearningMechanism</span></a> that uses that error
+(or one derived from it by another LearningMechanism) to calculate a learning signal;  and one or more
+<a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a> that use that learning signal to modify the weight <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> of the <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection(s)</span></a> being learned.  This has the advantage
+of isolating and exposing the constituent computations, making it clearer what these are and how they operate, and
+also making each individually accessible for reconfiguration. However, it comes at the cost of efficiency.  For
+efficient execution of supervised forms of learning (e.g., reinforcement learning and backpropagation),
+an <a class="reference internal" href="AutodiffComposition.html"><span class="doc">AutodiffComposition</span></a> can be used, which allows the model to be specified using PsyNeuLink, but actually executes
+learning either in a compiled form or using <code class="xref any docutils literal notranslate"><span class="pre">PyTorch</span></code> (see <a class="reference internal" href="Compilation.html"><span class="doc">Compilation</span></a> for additional details).</p>
 </section>
 </section>
 <section id="creating-a-learningmechanism">
