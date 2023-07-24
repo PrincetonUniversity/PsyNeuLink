@@ -404,7 +404,6 @@ class EMStorageMechanism(LearningMechanism):
                                     dependiencies='fields')
         function = Parameter(EMStorage, stateful=False, loggable=False)
         storage_prob = Parameter(1.0, modulable=True)
-        storage_prob = Parameter(1.0, modulable=True)
         decay_rate = Parameter(0.0, modulable=True)
         modulation = OVERRIDE
         output_ports = Parameter([],
@@ -591,6 +590,8 @@ class EMStorageMechanism(LearningMechanism):
         """
 
         decay_rate = self.parameters.decay_rate._get(context)
+        storage_prob = self.parameters.storage_prob._get(context)
+
         num_key_fields = len([i for i in self.field_types if i==1])
         num_fields = len(self.fields)
         # learning_signals are afferents to match_nodes (key fields) then retrieval_nodes (all fields)
@@ -612,6 +613,7 @@ class EMStorageMechanism(LearningMechanism):
             value.append(super(LearningMechanism, self)._execute(variable=entry,
                                                                  memory_matrix=matrix,
                                                                  axis=axis,
+                                                                 storage_prob=storage_prob,
                                                                  context=context,
                                                                  runtime_params=runtime_params))
 

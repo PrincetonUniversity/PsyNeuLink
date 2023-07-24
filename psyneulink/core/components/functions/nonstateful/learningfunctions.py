@@ -410,6 +410,7 @@ class EMStorage(LearningFunction):
         if params:
             memory_matrix = params.pop(MEMORY_MATRIX, None)
             axis = params.pop('axis', axis)
+            storage_prob = params.pop('storage_prob', storage_prob)
         # During init, function is called directly from Component (i.e., not from LearningMechanism execute() method),
         #     so need "placemarker" error_matrix for validation
         if memory_matrix is None:

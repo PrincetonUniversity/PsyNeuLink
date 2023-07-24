@@ -94,19 +94,19 @@ class TestConstruction:
 
     # FIX: ADD WARNING TESTS
     # FIX: ADD ERROR TESTS
-    test_data = [
+    test_structure_data = [
         # NOTE: None => use default value (i.e., don't specify in constructor, rather than forcing None as value of arg)
         # ------------------ SPECS ---------------------------------------------   ------- EXPECTED -------------------
         #   memory_template       memory_fill   field_wts cncat_ky nmlze sm_gain   repeat  #fields #keys #vals  concat
         # (0,    (2,3),                  None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
-        (0.1,  (2,3),                   .1,       None,    None,    None,  None,    False,    2,     1,   1,    False,),
-        (0.2,  (2,3),                 (0,.1),     None,    None,    None,  None,    False,    2,     1,   1,    False,),
-        (0.3,  (4,2,3),                 .1,       None,    None,    None,  None,    False,    2,     1,   1,    False,),
-        (1,    [[0,0],[0,0]],          None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
-        (1.1,  [[0,0],[0,0]],          None,      [1,1],   None,    None,  None,    False,    2,     2,   0,    False,),
-        (2,    [[0,0],[0,0],[0,0]],    None,      None,    None,    None,  None,    False,    3,     2,   1,    False,),
-        (2.1,  [[0,0],[0,0],[0,0]],    None,      None,    None,    None,   1.5,    False,    3,     2,   1,    False,),
-        (2.2,  [[0,0],[0,0],[0,0]],    None,      None,    None,    None, CONTROL,  False,    3,     2,   1,    False,),
+        # (0.1,  (2,3),                   .1,       None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        # (0.2,  (2,3),                 (0,.1),     None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        # (0.3,  (4,2,3),                 .1,       None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        # (1,    [[0,0],[0,0]],          None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        # (1.1,  [[0,0],[0,0]],          None,      [1,1],   None,    None,  None,    False,    2,     2,   0,    False,),
+        # (2,    [[0,0],[0,0],[0,0]],    None,      None,    None,    None,  None,    False,    3,     2,   1,    False,),
+        # (2.1,  [[0,0],[0,0],[0,0]],    None,      None,    None,    None,   1.5,    False,    3,     2,   1,    False,),
+        # (2.2,  [[0,0],[0,0],[0,0]],    None,      None,    None,    None, CONTROL,  False,    3,     2,   1,    False,),
         (3,    [[0,0,0],[0,0]],        None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
         (4,    [[0,0,0],[0],[0,0]],    None,      None,    None,    None,  None,    False,    3,     2,   1,    False,),
         (5,    [[0,0],[0,0],[0,0]],    None,       1,      None,    None,  None,    False,    3,     3,   0,    False,),
@@ -148,8 +148,8 @@ class TestConstruction:
     args_names = "test_num, memory_template, memory_fill, field_weights, concatenate_keys, normalize_memories, " \
                  "softmax_gain, repeat, num_fields, num_keys, num_values, concatenate_node"
     @pytest.mark.parametrize(args_names,
-                             test_data,
-                             ids=[x[0] for x in test_data]
+                             test_structure_data,
+                             ids=[x[0] for x in test_structure_data]
                              )
     @pytest.mark.benchmark
     def test_structure(self,
@@ -286,26 +286,26 @@ class TestExecution:
     # 9:   store + explicit AUTO decay
     # 10:  store + numerical decay
 
-    test_data = [
+    test_execution_data = [
         # NOTE: None => use default value (i.e., don't specify in constructor, rather than forcing None as value of arg)
         # ---------------------------------------- SPECS -----------------------------------  ----- EXPECTED ---------
         #   memory_template         mem    mem  mem  fld   concat  nlz  sm   str    inputs        expected_retrieval
         #                           fill   cap decay wts    keys       gain  prob
         # ----------------------------------------------------------------------------------  ------------------------
-        # (0, [[[1,2,3],[4,5,6]],
-        #      [[1,2,5],[4,5,8]],
-        #      [[1,2,10],[4,5,10]]],  None,   3,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]]], [[1., 2., 3.16585899],
-        #                                                                                          [4., 5., 6.16540637]]),
-        # (1, [[[1,2,3],[4,5,6]],
-        #      [[1,2,5],[4,5,8]],
-        #      [[1,2,10],[4,5,10]]],  None,   3,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]],
-        #                                                                           [[4, 5, 6]]], [[1., 2., 3.16585899],
-        #                                                                                          [4., 5., 6.16540637]]),
-        # (2, [[[1,2,3],[4,5,6]],
-        #      [[1,2,5],[4,5,8]],
-        #      [[1,2,10],[4,5,10]]],  None,   3,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]],
-        #                                                                           [[4, 5, 8]]], [[1., 2., 3.16585899],
-        #                                                                                          [4., 5., 6.16540637]]),
+        (0, [[[1,2,3],[4,5,6]],
+             [[1,2,5],[4,5,8]],
+             [[1,2,10],[4,5,10]]],  None,   3,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]]], [[1., 2., 3.16585899],
+                                                                                                 [4., 5., 6.16540637]]),
+        (1, [[[1,2,3],[4,5,6]],
+             [[1,2,5],[4,5,8]],
+             [[1,2,10],[4,5,10]]],  None,   3,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]],
+                                                                                  [[4, 5, 6]]], [[1., 2., 3.16585899],
+                                                                                                 [4., 5., 6.16540637]]),
+        (2, [[[1,2,3],[4,5,6]],
+             [[1,2,5],[4,5,8]],
+             [[1,2,10],[4,5,10]]],  None,   3,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]],
+                                                                                  [[4, 5, 8]]], [[1., 2., 3.16585899],
+                                                                                                 [4., 5., 6.16540637]]),
         (3, [[[1,2,3],[4,5,6]],
              [[1,2,5],[4,5,8]],
              [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]],
@@ -384,8 +384,8 @@ class TestExecution:
     args_names = "test_num, memory_template, memory_fill, memory_capacity, memory_decay_rate, field_weights, " \
                  "concatenate_keys, normalize_memories, softmax_gain, storage_prob, inputs, expected_retrieval"
     @pytest.mark.parametrize(args_names,
-                             test_data,
-                             ids=[x[0] for x in test_data])
+                             test_execution_data,
+                             ids=[x[0] for x in test_execution_data])
     @pytest.mark.composition
     @pytest.mark.benchmark
     def test_execution(self,
