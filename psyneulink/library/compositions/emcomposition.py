@@ -13,7 +13,6 @@
 # - FIX: _import_composition:
 #        - MOVE LearningProjections
 #        - MOVE CONDITION? (OR PUT ON MECHANISM?)
-# _ FIX: TESTS FOR memory_decay:  TEST FOR DECAYED WEIGHTS NOT JUST NEW ONE
 # - FIX: NAMING OF LEARNING_SIGNALS IN EMStorageMechanism
 # - FIX: IMPLEMENT LearningMechanism FOR RETRIEVAL WEIGHTS (WHAT IS THE ERROR SIGNAL AND DERIVATIVE IT SHOULD USE?)
 # - FIX: ??NEED TO IMPLEMENT LEARNING PATHWAYS
@@ -1209,7 +1208,7 @@ class EMComposition(AutodiffComposition):
                     raise EMCompositionError(f"The 'memory_template' arg for {self.name} must specify a list "
                                              f"or 2d array that has the same shape for all entries.")
 
-        # Validate memqory_fill specification (int, float, or tuple with two scalars)
+        # Validate memory_fill specification (int, float, or tuple with two scalars)
         if not (isinstance(memory_fill, (int, float)) or
                 (isinstance(memory_fill, tuple) and len(memory_fill)==2) and
                 all(isinstance(item, (int, float)) for item in memory_fill)):
