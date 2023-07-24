@@ -9,31 +9,28 @@
 # ********************************************* EMComposition *************************************************
 
 # TODO:
-# - FIX: WARNING NOT OCCURRING FOR ZEROS WITH MULTIPLE ENTRIES (HAPPENS IF *ANY* KEY IS EVER ALL ZEROS)
-# - FIX: GENERATE ANIMATION w/ STORAGE
-# - FIX: WRITE TEST FOR EXECTUTION WITH concatenation=True
-#         TESTS:
-#         - test that storage nodes are created for each key and value
-#         - test that input is added to the correct row of the matrix for each key and value
-#         - test that storage occurs after retrieval
+# - FIX: IMPLEMENT LearningMechanism FOR RETRIEVAL WEIGHTS (WHAT IS THE ERROR SIGNAL AND DERIVATIVE IT SHOULD USE?)
+# - FIX: GENERATE ANIMATION w/ STORAGE (uses Learning but not in usual way)
+# - FIX: WRITE MORE TESTS FOR EXECUTION, WARNINGS, AND ERROR MESSAGES
+#         - 3d tuple with first entry != memory_capacity if specified
+#         - list with number of entries > memory_capacity if specified
+#         - test that input is added to the correct row of the matrix for each key and value for
+#                for non-contiguous keys (e.g, field_weights = [1,0,1]))
+#         - test explicitly that storage occurs after retrieval
 # - FIX: _import_composition:
 #        - MOVE LearningProjections
-#        - MOVE CONDITION? (OR PUT ON MECHANISM?)
+#        - MOVE Condition? (e.g., AllHaveRun) (OR PUT ON MECHANISM?)
 # - FIX: NAMING OF LEARNING_SIGNALS IN EMStorageMechanism
-# - FIX: IMPLEMENT LearningMechanism FOR RETRIEVAL WEIGHTS (WHAT IS THE ERROR SIGNAL AND DERIVATIVE IT SHOULD USE?)
-# - FIX: ??NEED TO IMPLEMENT LEARNING PATHWAYS
-# - FIX: TEST LEARNING FOR NON-CONTIGIOUS KEYS IN field_weights; E.G. [1,0,1]
+# - FIX: ??IMPLEMENT LEARNING PATHWAYS
 # - FIX: IMPLEMENT _integrate_into_composition METHOD THAT CALLS _import_composition ON ANOTHER COMPOSITION
 # - FIX:        AND TRANSFERS RELEVANT ATTRIBUTES (SUCH AS MEMORY, KEY_INPUT_NODES, ETC., POSSIBLY APPENDING NAMES)
 # - FIX: Thresholded version of SoftMax gain (per Kamesh)
+# - FIX: WARNING NOT OCCURRING FOR Normalize ON ZEROS WITH MULTIPLE ENTRIES (HAPPENS IF *ANY* KEY IS EVER ALL ZEROS)
 # - FIX: DOCUMENTATION:
 #        - define "keys" and "values" explicitly
 #        - define "key weights" explicitly as field_weights for all non-zero values
 #        - make it clear that full size of memory is initialized (rather than "filling up" w/ use)
 #        - write examples for run()
-# - FIX: WRITE MORE TESTS FOR EXECUTION, WARNINGS, AND ERROR MESSAGES
-#          - 3d tuple with first entry != memory_capacity if speciied
-#          - list with number of entries > memory_capacity if specified
 # - FIX: ADD NOISE (AND/OR SOFTMAX PROBABILISTIC RETRIEVAL MODE)
 # - FIX: ?ADD add_memory() METHOD FOR STORING W/O RETRIEVAL, OR JUST ADD retrieval_prob AS modulable Parameter
 # - FIX: LEARNING:
