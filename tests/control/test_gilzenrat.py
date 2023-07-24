@@ -32,7 +32,7 @@ class TestGilzenratMechanisms:
         # X = 0.02 <--- previous value 0.02
         # f(X) = 1.0*0.02  <--- return 0.02, recurrent projection 0.02
 
-        # Outside of a system, previous value works (integrator) but recurrent projection does NOT
+        # Outside of a Composition, previous value works (integrator) but recurrent projection does NOT
         np.testing.assert_allclose(G.execute(1.0), np.array([[0.0396]]))
         # X = 0.02 + (-0.02 + 1.0)*0.02 + 0.0
         # X = 0.0396 --- previous value 0.0396

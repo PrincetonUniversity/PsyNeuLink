@@ -94,7 +94,7 @@ class TestConstruction:
 
     # FIX: ADD WARNING TESTS
     # FIX: ADD ERROR TESTS
-    test_data = [
+    test_structure_data = [
         # NOTE: None => use default value (i.e., don't specify in constructor, rather than forcing None as value of arg)
         # ------------------ SPECS ---------------------------------------------   ------- EXPECTED -------------------
         #   memory_template       memory_fill   field_wts cncat_ky nmlze sm_gain   repeat  #fields #keys #vals  concat
@@ -148,8 +148,8 @@ class TestConstruction:
     args_names = "test_num, memory_template, memory_fill, field_weights, concatenate_keys, normalize_memories, " \
                  "softmax_gain, repeat, num_fields, num_keys, num_values, concatenate_node"
     @pytest.mark.parametrize(args_names,
-                             test_data,
-                             ids=[x[0] for x in test_data]
+                             test_structure_data,
+                             ids=[x[0] for x in test_structure_data]
                              )
     @pytest.mark.benchmark
     def test_structure(self,
@@ -286,7 +286,7 @@ class TestExecution:
     # 9:   store + explicit AUTO decay
     # 10:  store + numerical decay
 
-    test_data = [
+    test_execution_data = [
         # NOTE: None => use default value (i.e., don't specify in constructor, rather than forcing None as value of arg)
         # ---------------------------------------- SPECS -----------------------------------  ----- EXPECTED ---------
         #   memory_template         mem    mem  mem  fld   concat  nlz  sm   str    inputs        expected_retrieval
@@ -384,10 +384,12 @@ class TestExecution:
     args_names = "test_num, memory_template, memory_fill, memory_capacity, memory_decay_rate, field_weights, " \
                  "concatenate_keys, normalize_memories, softmax_gain, storage_prob, inputs, expected_retrieval"
     @pytest.mark.parametrize(args_names,
-                             test_data,
-                             ids=[x[0] for x in test_data])
+                             test_execution_data,
+                             ids=[x[0] for x in test_execution_data])
+    @pytest.mark.composition
     @pytest.mark.benchmark
     def test_execution(self,
+                       comp_mode,
                        test_num,
                        memory_template,
                        memory_capacity,
@@ -400,6 +402,9 @@ class TestExecution:
                        storage_prob,
                        inputs,
                        expected_retrieval):
+
+        if comp_mode != pnl.ExecutionMode.Python:
+            pytest.skip('Compilation not yet support for Composition.import.')
 
         params = {'memory_template': memory_template,
                   'memory_capacity': memory_capacity,
@@ -431,7 +436,7 @@ class TestExecution:
         np.testing.assert_equal(np.array(em.memory_template[:len(memory_template)]), np.array(memory_template))
 
         # Execute and validate results
-        retrieved = em.run(inputs=inputs)
+        retrieved = em.run(inputs=inputs, execution_mode=comp_mode)
         np.testing.assert_allclose(retrieved, expected_retrieval)
 
         # Validate that sum of weighted softmax distributions in retrieval_weighting_node itself sums to 1

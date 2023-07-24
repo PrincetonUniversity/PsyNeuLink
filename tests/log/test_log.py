@@ -999,7 +999,7 @@ class TestClearLog:
 
     def test_clear_log(self):
 
-        # Create System
+        # Create Composition
         T_1 = pnl.TransferMechanism(name='log_test_T_1', size=2)
         T_2 = pnl.TransferMechanism(name='log_test_T_2', size=2)
         COMP = pnl.Composition(name="log_test_COMP", pathways=[T_1, T_2])
@@ -1012,7 +1012,7 @@ class TestClearLog:
         T_2.set_log_conditions(pnl.RESULT)
         PJ.set_log_conditions('mod_matrix')
 
-        # Run system
+        # Run Composition
         COMP.run(inputs={T_1: [1.0, 1.0]})
 
         # Create log dict for each component
@@ -1059,7 +1059,7 @@ class TestClearLog:
         # Confirm that PJ log values were not affected by changes to T_1 and T_2's logs
         np.testing.assert_allclose(log_dict_PJ[COMP.default_execution_id]['mod_matrix'], np.array([[[1.0, 0.0], [0.0, 1.0]]]))
 
-        # Run system again
+        # Run Composition again
         COMP.run(inputs={T_1: [2.0, 2.0]})
 
         # Create new log dict for each component

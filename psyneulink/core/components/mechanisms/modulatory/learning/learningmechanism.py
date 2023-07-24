@@ -56,16 +56,16 @@ displayed using the Composition's `show_graph`show_graph <ShowGraph.show_graph>`
 
 The implementation of learning in PsyNeuLink was designed for exposition rather than efficiency. Unlike its
 implementation in most other environments -- where the learning algorithm is tightly integrated with the
-elements of processing that it modifies --  PsyNeuLink separates it into three constituent components:  An
-`ObjectiveMechanism` used to evaluate the most proximal source of error, a `LearningMechanism` that uses that error
-(or one derived from it by another LearningMechanism) to calculate a learning signal;  and `LearningProjection(s)
-<LearningProjection>` that use that learning signal to modify the weight `matrix <MappingProjection.matrix>` of the
-`MappingProjection(s) <MappingProjection>` being learned.  This has the advantage of isolating and exposing the
-constituent computations, making it clearer to students what these are and how they operate, and also making each
-individually accessible for reconfiguration. However, it comes at the cost of efficiency.  For efficient execution of
-supervised forms of learning (e.g., reinforcement learning and backpropagation), the `AutodiffComposition` can be used,
-which allows the model to be specified using PsyNeuLink, but actually executes learning using `PyTorch
-<https://pytorch.org>`.
+elements of processing that it modifies --  PsyNeuLink separates it into three constituent components, often including:
+an `ObjectiveMechanism` used to evaluate the most proximal source of error; a `LearningMechanism` that uses that error
+(or one derived from it by another LearningMechanism) to calculate a learning signal;  and one or more
+`LearningProjections <LearningProjection>` that use that learning signal to modify the weight `matrix
+<MappingProjection.matrix>` of the `MappingProjection(s) <MappingProjection>` being learned.  This has the advantage
+of isolating and exposing the constituent computations, making it clearer what these are and how they operate, and
+also making each individually accessible for reconfiguration. However, it comes at the cost of efficiency.  For
+efficient execution of supervised forms of learning (e.g., reinforcement learning and backpropagation),
+an `AutodiffComposition` can be used, which allows the model to be specified using PsyNeuLink, but actually executes
+learning either in a compiled form or using `PyTorch <https://pytorch.org>` (see `Compilation` for additional details).
 
 .. _LearningMechanism_Creation:
 
@@ -528,6 +528,7 @@ Class Reference
 
 import warnings
 from enum import Enum
+from collections import defaultdict
 
 import numpy as np
 from beartype import beartype
@@ -546,8 +547,8 @@ from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ADDITIVE, ASSERT, ENABLED, INPUT_PORTS, \
-    LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \
-    MATRIX, NAME, OUTPUT_PORT, OWNER_VALUE, PARAMS, PROJECTIONS, SAMPLE, PORT_TYPE, VARIABLE
+    LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, MATRIX, \
+    MODULATION, NAME, OUTPUT_PORT, OWNER_VALUE, PARAMS, PROJECTIONS, REFERENCE_VALUE, SAMPLE, PORT_TYPE, VARIABLE
 from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -612,12 +613,12 @@ class LearningTiming(Enum):
 
     EXECUTION_PHASE
         LearningMechanism (and associated `LearningProjections(s) <LearningProjection>`) executed during the
-        `execution phase <System_Execution>` of the System to which they belong, usually immediately after execution of
-        the `Mechanism <Mechanism>` that receives the `primary_learned_projection`
+        `execution phase <Composition_Execution>` of the Composition to which they belong, usually immediately after
+        execution of of the `Mechanism <Mechanism>` that receives the `primary_learned_projection`
 
     LEARNING_PHASE
         LearningMechanism (and associated `LearningProjections(s) <LearningProjection>`) executed during the
-        `learning phase <System_Execution>` of the System to which they belong.
+        `learning phase <Composition_Execution>` of the Composition to which they belong.
 
     """
     EXECUTION_PHASE = 0
@@ -1163,7 +1164,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
                 learning_signal = _parse_port_spec(port_type=LearningSignal, owner=self, port_spec=spec)
 
                 # Validate that the receiver of the LearningProjection (if specified)
-                #     is a MappingProjection and in the same System as self (if specified)
+                #     is a MappingProjection and in the same Composition as self (if specified)
                 if learning_signal[PARAMS] and PROJECTIONS in learning_signal[PARAMS]:
                     for learning_projection in learning_signal[PARAMS][PROJECTIONS]:
                         _validate_receiver(sender_mech=self,
@@ -1226,14 +1227,22 @@ class LearningMechanism(ModulatoryMechanism_Base):
 
         # Instantiate LearningSignals and assign to self.output_ports
         for learning_signal in self.learning_signals:
-            # Instantiate LearningSignal
-            # Parses learning_signal specifications (in call to Port._parse_port_spec)
+            # If it is already a dict, use that (e.g., in case varialbe or modulation is specified by user)
+            variable = (OWNER_VALUE, 0)
+            modulation = self.defaults.modulation
+            reference_value = self.parameters.learning_signal._get(context)
+            if isinstance(learning_signal, dict):
+                variable = defaultdict(dict,learning_signal)[VARIABLE] or variable
+                modulation = defaultdict(dict,learning_signal)[MODULATION] or modulation
+                reference_value = defaultdict(dict,learning_signal)[REFERENCE_VALUE] \
+                    if REFERENCE_VALUE in learning_signal else reference_value
+            # Parse learning_signal specifications (in call to Port._parse_port_spec)
             #    and any embedded Projection specifications (in call to <Port>._instantiate_projections)
             learning_signal = _instantiate_port(port_type=LearningSignal,
                                                  owner=self,
-                                                 variable=(OWNER_VALUE,0),
-                                                 reference_value=self.parameters.learning_signal._get(context),
-                                                 modulation=self.defaults.modulation,
+                                                 variable=variable,
+                                                 reference_value=reference_value,
+                                                 modulation=modulation,
                                                  # port_spec=self.learning_signal)
                                                  port_spec=learning_signal,
                                                  context=context)

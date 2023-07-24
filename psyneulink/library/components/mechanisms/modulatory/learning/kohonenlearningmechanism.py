@@ -82,9 +82,9 @@ An KohonenLearningMechanism executes in the same manner as standard `LearningMec
 * 1) its execution can be enabled or disabled by setting the `learning_enabled
   <KohonenMechanism.learning_enabled>` attribute of the `KohonenMechanism` with which it is
   associated (identified in its `activity_source <KohonenLearningMechanism.activity_source>` attribute).
-* 2) it is executed during the `execution phase <System_Execution>` of the System's execution.  Note that this is
+* 2) it is executed during the `execution phase <Composition_Execution>` of the Composition's execution.  Note that this is
   different from the behavior of supervised learning algorithms (such as `Reinforcement` and `BackPropagation`),
-  that are executed during the `learning phase <System_Execution>` of a System's execution
+  that are executed during the `learning phase <Composition_Execution>` of a Composition's execution
 
 
 .. _KohonenLearningMechanism_Class_Reference:
@@ -220,13 +220,11 @@ class KohonenLearningMechanism(LearningMechanism):
         to the `function <KohonenLearningMechanism.function>` (i.e., the `value <InputPort.value>` of the
         KohonenLearningMechanism's *ACTIVATION_INPUT* `InputPort <KohonenLearningMechanism_Structure>`,
         allowing the contribution of individual *units* to be scaled). If specified, the value supersedes the
-        learning_rate assigned to any `Process` or `System` to which the KohonenLearningMechanism belongs.
-        If it is `None`, then the `learning_rate <Process.learning_rate>` specified for the Process to which the
-        KohonenLearningMechanism belongs belongs is used;  and, if that is `None`, then the `learning_rate
-        <System.learning_rate>` for the System to which it belongs is used. If all are `None`, then the
-        `default_learning_rate <LearningFunction.default_learning_rate>` for the `function
-        <KohonenLearningMechanism.function>` is used (see `learning_rate <LearningMechanism_Learning_Rate>`
-        for additional details).
+        learning_rate assigned to any `Composition` to which the KohonenLearningMechanism belongs.
+        If it is `None`, then the `learning_rate <Composition.learning_rate>` specified for Composition to which it
+        belongs is used. If that is `None`, then the `default_learning_rate <LearningFunction.default_learning_rate>`
+        for the `function <KohonenLearningMechanism.function>` is used (see `learning_rate
+        <LearningMechanism_Learning_Rate>` for additional details).
 
     learning_signal : 2d ndarray or matrix of numeric values
         the value returned by `function <KohonenLearningMechanism.function>`, that specifies
