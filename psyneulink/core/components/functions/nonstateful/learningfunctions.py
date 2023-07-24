@@ -409,6 +409,7 @@ class EMStorage(LearningFunction):
         memory_matrix = None
         if params:
             memory_matrix = params.pop(MEMORY_MATRIX, None)
+            axis = params.pop('axis', axis)
         # During init, function is called directly from Component (i.e., not from LearningMechanism execute() method),
         #     so need "placemarker" error_matrix for validation
         if memory_matrix is None:
@@ -424,10 +425,18 @@ class EMStorage(LearningFunction):
                 raise FunctionError(f"Call to {self.__class__.__name__} function {owner_string} "
                                     f"must include '{MEMORY_MATRIX}' in params arg.")
 
-        if random_state.uniform(0, 1) < storage_prob:
+        if self.is_initializing:
+            # Don't store entry during initialization to avoid contaminating memory_matrix
+            pass
+        elif random_state.uniform(0, 1) < storage_prob:
             # Store entry in slot with weakest memory (one with lowest norm) along specified axis
             idx_of_min = np.argmin(np.linalg.norm(memory_matrix, axis=axis))
-            memory_matrix[:,idx_of_min] = np.array(entry)
+            if axis == 0:
+                memory_matrix[:,idx_of_min] = np.array(entry)
+            elif axis == 1:
+                memory_matrix[idx_of_min,:] = np.array(entry)
+            else:
+                raise FunctionError(f"PROGRAM ERROR: axis ({axis}) is not 0 or 1")
 
         self.parameters.entry._set(entry, context)
         self.parameters.memory_matrix._set(memory_matrix, context)

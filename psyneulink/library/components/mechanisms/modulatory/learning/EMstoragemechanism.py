@@ -112,14 +112,14 @@ An EMStorageMechanism is identical to a `LearningMechanism` in all respects exce
 
   * its `function <EMStorageMechanism.function>` is an `EMStorage` `LearningFunction`, that takes as its `variable
     <Function_Base.variable>` a list or 1d np.array with a length of the corresponding  *ACTIVATION_INPUT* InputPort;
-    and it returns a `learning_signal <LearningMechanism.learning_signal>` (a weight matrix assigned to one of the 
+    and it returns a `learning_signal <LearningMechanism.learning_signal>` (a weight matrix assigned to one of the
     Mechanism's *LEARNING_SIGNAL* OutputPorts), but no `error_signal <LearningMechanism.error_signal>`.
 
   * its `decay_rate <EMStorageMechanism.decay_rate>`, a float in the interval [0,1] that is used to decay
     `memory_matrix <EMStorageMechanism.memory_matrix>` before an `entry <EMStorageMechanism_Entry>` is stored.
 
   * its `storage_prob <EMStorageMechanism.storage_prob>`, a float in the interval [0,1] is used in place of a
-    LearningMechanism's `storage_prob <LearningMechanism.storage_prob>` to determine the probability that the 
+    LearningMechanism's `storage_prob <LearningMechanism.storage_prob>` to determine the probability that the
     Mechanism will store its `variable <EMStorageMechanism.variable>` in its `memory_matrix
     <EMStorageMechanism.memory_matrix>` attribute each time it executes.
 
@@ -203,14 +203,14 @@ class EMStorageMechanism(LearningMechanism):
         prefs=None)
 
     Implements a `LearningMechanism` that modifies the `matrix <MappingProjection.matrix>` parameters of
-    `MappingProjections <MappingProjection>` that implement its `memory_matrix <EMStorageMechanism.memory_matrix>`. 
+    `MappingProjections <MappingProjection>` that implement its `memory_matrix <EMStorageMechanism.memory_matrix>`.
 
     Arguments
     ---------
 
     variable : List or 2d np.array : default None
         each item of the 2d array specifies the shape of the corresponding `field <EMStorageMechanism_Fields>` of
-        an `entry <EMStorageMechanism_Entry>`, that must be compatible (in number and type) with the `value 
+        an `entry <EMStorageMechanism_Entry>`, that must be compatible (in number and type) with the `value
         <InputPort.value>` of the corresponding item of its `fields <EMStorageMechanism.fields>`
         attribute (see `variable <EMStorageMechanism.variable>` for additional details).
 
@@ -420,7 +420,9 @@ class EMStorageMechanism(LearningMechanism):
                                      read_only=True,
                                      structural=True)
         learning_type = LearningType.UNSUPERVISED
-        learning_timing = LearningTiming.LEARNING_PHASE
+        # learning_type = LearningType.SUPERVISED
+        # learning_timing = LearningTiming.LEARNING_PHASE
+        learning_timing = LearningTiming.EXECUTION_PHASE
 
     # FIX: WRITE VALIDATION AND PARSE METHODS FOR THESE
     def _validate_field_types(self, field_types):
@@ -454,8 +456,8 @@ class EMStorageMechanism(LearningMechanism):
                  function: Optional[Callable] = EMStorage,
                  learning_signals: Union[list, dict, ParameterPort, Projection, tuple] = None,
                  modulation: Optional[Literal[OVERRIDE, ADDITIVE, MULTIPLICATIVE]] = OVERRIDE,
-                 decay_rate: Optional[float] = 0.0,
-                 storage_prob: Optional[float] = 1.0,
+                 decay_rate: Optional[Union[int,float]] = 0.0,
+                 storage_prob: Optional[Union[int, float]] = 1.0,
                  params=None,
                  name=None,
                  prefs: Optional[ValidPrefSet] = None,
@@ -504,6 +506,7 @@ class EMStorageMechanism(LearningMechanism):
         return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
+        """Validate relationship of matrix, fields and field_types arguments"""
 
         # Ensure that the shape of variable is equivalent to an entry in memory_matrix
         if MEMORY_MATRIX in request_set:
@@ -524,18 +527,18 @@ class EMStorageMechanism(LearningMechanism):
         # Ensure the number of field_types is equal to the number of fields
         if FIELD_TYPES in request_set:
             field_types = request_set[FIELD_TYPES]
-            num_keys = len([i for i in field_types if i==0])
             if len(field_types) != len(fields):
                 raise EMStorageMechanismError(f"The 'field_types' arg for {self.name} ({field_types}) must have "
                                               f"the same number of items as its 'fields' arg ({len(fields)}).")
 
+        num_keys = len([i for i in field_types if i==1])
         # Ensure the number of learning_signals is equal to the number of fields + number of keys
         if LEARNING_SIGNALS in request_set:
             learning_signals = request_set[LEARNING_SIGNALS]
             if len(learning_signals) != len(fields) + num_keys:
-                raise EMStorageMechanismError(f"The 'learning_signals' arg for {self.name} ({learning_signals}) "
-                                              f"must have the same number of items as its variable arg "
-                                              f"({len(self.variable)}).")
+                raise EMStorageMechanismError(f"The number ({len(learning_signals)}) of 'learning_signals' specified "
+                                              f"for  {self.name} must be the same as the number of items "
+                                              f"in its variable ({len(self.variable)}).")
 
         # Ensure shape of memory_matrix is equal to the shape of the aggregated matrices for learning_signals
         learning_signals = np.array([learning_signal.parameters.matrix._get(context)
@@ -587,47 +590,32 @@ class EMStorageMechanism(LearningMechanism):
         :return: List[2d np.array] self.learning_signal
         """
 
-        num_key_fields = len([i for i in self.field_types if i==0])
-        # Note: learing_signals have afferents to match_nodes then retrieval_nodes
-        match_node_afferents = self.learning_signals[:num_key_fields]
-        retrieval_node_afferents = self.learning_signals[num_key_fields:]
-
+        decay_rate = self.parameters.decay_rate._get(context)
+        num_key_fields = len([i for i in self.field_types if i==1])
+        num_fields = len(self.fields)
+        # learning_signals are afferents to match_nodes (key fields) then retrieval_nodes (all fields)
+        entries = [i for i in range(num_key_fields)] + [i for i in range(num_fields)]
         value = []
-        for i, learning_signal in enumerate(match_node_afferents):
-            matrix = learning_signal.parameters.matrix._get(context)
-            entry = learning_signal.sender.value
-            value.append(super(LearningMechanism, self)._execute(variable=entry,
-                                                                 memory_matrix=matrix,
-                                                                 context=context,
-                                                                 runtime_params=runtime_params))
-        for i, learning_signal in enumerate(retrieval_node_afferents):
-            matrix = learning_signal.parameters.matrix._get(context)
+        for j, item in enumerate(zip(entries, self.learning_signals)):
+            i = item[0]
+            learning_signal = item[1]
+            # During initialization, learning_signal is still a reciever Projection specification so get its matrix
+            if self.is_initializing:
+                matrix = learning_signal.parameters.matrix._get(context)
+            # During execution, learning_signal is the sending OutputPort, so get the matrix of the receiver
+            else:
+                matrix = learning_signal.efferents[0].receiver.owner.parameters.matrix._get(context)
+                if decay_rate:
+                    matrix *= decay_rate
+            axis = 0 if j < num_key_fields else 1
             entry = variable[i]
-            # FIX: MAY NEED TO PASS AXIS HERE
             value.append(super(LearningMechanism, self)._execute(variable=entry,
                                                                  memory_matrix=matrix,
+                                                                 axis=axis,
                                                                  context=context,
                                                                  runtime_params=runtime_params))
+
 
         self.parameters.value._set(value, context)
 
         return value
-
-    def _update_output_ports(self, runtime_params=None, context=None):
-        """Update the weights for the AutoAssociativeProjection for which this is the EMStorageMechanism
-
-        Must do this here, so it occurs after LearningMechanism's OutputPort has been updated.
-        This insures that weights are updated within the same trial in which they have been learned
-        """
-
-        super()._update_output_ports(runtime_params, context)
-        if self.parameters.learning_enabled._get(context):
-            learned_projection = self.activity_source.recurrent_projection
-            old_exec_phase = context.execution_phase
-            context.execution_phase = ContextFlags.LEARNING
-            learned_projection.execute(context=context)
-            context.execution_phase = old_exec_phase
-
-    @property
-    def activity_source(self):
-        return self.input_port.path_afferents[0].sender.owner
