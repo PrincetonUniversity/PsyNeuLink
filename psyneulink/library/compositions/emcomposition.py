@@ -10,7 +10,12 @@
 
 # TODO:
 # - FIX: WARNING NOT OCCURRING FOR ZEROS WITH MULTIPLE ENTRIES (HAPPENS IF *ANY* KEY IS EVER ALL ZEROS)
-# - FIX: _import_composition:  MOVE LearningProjections
+# - FIX: _import_composition:
+#        - MOVE LearningProjections
+#        - MOVE CONDITION? (OR PUT ON MECHANISM?)
+# _ FIX: TESTS FOR memory_decay:  TEST FOR DECAYED WEIGHTS NOT JUST NEW ONE
+# - FIX: NAMING OF LEARNING_SIGNALS IN EMStorageMechanism
+# - FIX: IMPLEMENT LearningMechanism FOR RETRIEVAL WEIGHTS (WHAT IS THE ERROR SIGNAL AND DERIVATIVE IT SHOULD USE?)
 # - FIX: ??NEED TO IMPLEMENT LEARNING PATHWAYS
 # - FIX: TEST LEARNING FOR NON-CONTIGIOUS KEYS IN field_weights; E.G. [1,0,1]
 # - FIX: IMPLEMENT _integrate_into_composition METHOD THAT CALLS _import_composition ON ANOTHER COMPOSITION
@@ -692,6 +697,7 @@ from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.keywords import \
     AUTO, CONTROL, DEFAULT_INPUT, DEFAULT_VARIABLE, EM_COMPOSITION, GAIN, IDENTITY_MATRIX, \
     MULTIPLICATIVE_PARAM, NAME, PARAMS, PROJECTIONS, RANDOM, SIZE, VARIABLE
+from psyneulink.core.scheduling.condition import WhenFinished, AfterTrial, AllHaveRun
 from psyneulink.core.globals.utilities import all_within_range
 
 __all__ = [
@@ -1138,6 +1144,17 @@ class EMComposition(AutodiffComposition):
 
         # Clean-up ----------------------------------------------------------------------------------------
 
+        # Turn off learning for all Projections except inputs to retrieval_gating_nodes
+        self._set_learnability_of_projections()
+
+        # Set condition on storage_node
+        # for node in self.retrieval_nodes:
+        #     self.scheduler.add_condition(self.storage_node, WhenFinished(node))
+        # self.scheduler.add_condition(self.storage_node, WhenFinished(self.retrieval_nodes[1]))
+        # self.scheduler.add_condition(self.storage_node, AfterTrial(1))
+        self.scheduler.add_condition(self.storage_node, AllHaveRun(*self.retrieval_nodes))
+
+
         # Suppress warnings for no efferent Projections
         for node in self.value_input_nodes:
             node.output_ports['RESULT'].parameters.require_projection_in_composition.set(False, override=True)
@@ -1152,9 +1169,6 @@ class EMComposition(AutodiffComposition):
         # Suppress value_input_nodes as OUTPUT nodes of the Composition
         for node in self.value_input_nodes:
             self.exclude_node_roles(node, NodeRole.OUTPUT)
-
-        # Turn off learning for all Projections except inputs to retrieval_gating_nodes
-        self._set_learnability_of_projections()
 
         # Warn if divide by zero will occur due to memory initialization
         if not np.any([np.any([self.memory[i][j]
@@ -1610,7 +1624,7 @@ class EMComposition(AutodiffComposition):
                                                                        MappingProjection(
                                                                            sender=self.retrieval_weighting_node,
                                                                            # matrix=ZEROS_MATRIX)
-                                                                           matrix=memory_template[:,i])
+                                                                           matrix=memory_template[:,i,:])
                                                                    },
                                                       name= f'{self.key_names[i]} RETRIEVED')
                                     for i in range(self.num_keys)]
@@ -1621,7 +1635,7 @@ class EMComposition(AutodiffComposition):
                                                                              sender=self.retrieval_weighting_node,
                                                                              # matrix=ZEROS_MATRIX)
                                                                              matrix=memory_template[:,
-                                                                                    i + self.num_keys])
+                                                                                    i + self.num_keys,:])
                                                                      },
                                                         name= f'{self.value_names[i]} RETRIEVED')
                                       for i in range(self.num_values)]
@@ -1690,7 +1704,7 @@ class EMComposition(AutodiffComposition):
     def execute(self, inputs, context, **kwargs):
         """Set input to weights of Projection to match_node."""
         results = super().execute(inputs, **kwargs)
-        self._store_memory(inputs, context)
+        # self._store_memory(inputs, context)
         return results
 
     def _store_memory(self, inputs, context):
