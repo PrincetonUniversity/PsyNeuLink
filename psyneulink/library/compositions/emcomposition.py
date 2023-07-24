@@ -697,7 +697,7 @@ from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.keywords import \
     AUTO, CONTROL, DEFAULT_INPUT, DEFAULT_VARIABLE, EM_COMPOSITION, GAIN, IDENTITY_MATRIX, \
     MULTIPLICATIVE_PARAM, NAME, PARAMS, PROJECTIONS, RANDOM, SIZE, VARIABLE
-from psyneulink.core.scheduling.condition import WhenFinished, AfterTrial, AllHaveRun
+from psyneulink.core.scheduling.condition import AllHaveRun
 from psyneulink.core.globals.utilities import all_within_range
 
 __all__ = [
@@ -1142,7 +1142,7 @@ class EMComposition(AutodiffComposition):
                          seed = seed
                          )
 
-        # Clean-up ----------------------------------------------------------------------------------------
+        # Final Configuration and Clean-up ---------------------------------------------------------------------------
 
         # Turn off learning for all Projections except inputs to retrieval_gating_nodes
         self._set_learnability_of_projections()
@@ -1153,7 +1153,6 @@ class EMComposition(AutodiffComposition):
         # self.scheduler.add_condition(self.storage_node, WhenFinished(self.retrieval_nodes[1]))
         # self.scheduler.add_condition(self.storage_node, AfterTrial(1))
         self.scheduler.add_condition(self.storage_node, AllHaveRun(*self.retrieval_nodes))
-
 
         # Suppress warnings for no efferent Projections
         for node in self.value_input_nodes:
