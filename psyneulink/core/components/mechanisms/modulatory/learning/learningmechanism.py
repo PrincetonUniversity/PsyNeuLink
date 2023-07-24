@@ -1249,9 +1249,9 @@ class LearningMechanism(ModulatoryMechanism_Base):
             # Add LearningSignal to output_ports list
             self.output_ports.append(learning_signal)
 
-        # Assign LEARNING_SIGNAL as the name of the 1st LearningSignal; the names of any others can be user-defined
-        first_learning_signal = next(port for port in self.output_ports if isinstance(port, LearningSignal))
-        first_learning_signal.name = LEARNING_SIGNAL
+        # # Assign LEARNING_SIGNAL as the name of the 1st LearningSignal; the names of any others can be user-defined
+        # first_learning_signal = next(port for port in self.output_ports if isinstance(port, LearningSignal))
+        # first_learning_signal.name = LEARNING_SIGNAL
 
         super()._instantiate_output_ports(context=context)
 

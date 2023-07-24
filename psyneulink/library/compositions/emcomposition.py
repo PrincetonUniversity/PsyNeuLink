@@ -20,7 +20,6 @@
 # - FIX: _import_composition:
 #        - MOVE LearningProjections
 #        - MOVE Condition? (e.g., AllHaveRun) (OR PUT ON MECHANISM?)
-# - FIX: NAMING OF LEARNING_SIGNALS IN EMStorageMechanism
 # - FIX: ??IMPLEMENT LEARNING PATHWAYS
 # - FIX: IMPLEMENT _integrate_into_composition METHOD THAT CALLS _import_composition ON ANOTHER COMPOSITION
 # - FIX:        AND TRANSFERS RELEVANT ATTRIBUTES (SUCH AS MEMORY, KEY_INPUT_NODES, ETC., POSSIBLY APPENDING NAMES)
@@ -35,7 +34,6 @@
 # - FIX: ?ADD add_memory() METHOD FOR STORING W/O RETRIEVAL, OR JUST ADD retrieval_prob AS modulable Parameter
 # - FIX: LEARNING:
 #        - ADD LEARNING MECHANISM TO ADJUST FIELD_WEIGHTS (THAT MULTIPLICATIVELY MODULATES MAPPING PROJECTION)
-#        - ADD LEARNING MECHANISMS TO STORE MEMORY AND ADJUST WEIGHTS
 #        - DEAL WITH ERROR SIGNALS to retrieval_weighting_node OR AS PASS-THROUGH
 # - FIX: CONFIDENCE COMPUTATION (USING SIGMOID ON DOT PRODUCTS) AND REPORT THAT (EVEN ON FIRST CALL)
 # - FIX: ALLOW SOFTMAX SPEC TO BE A DICT WITH PARAMETERS FOR _get_softmax_gain() FUNCTION
@@ -743,7 +741,7 @@ class EMComposition(AutodiffComposition):
         memory_template=[[0],[0]],  \
         field_weights=None,         \
         field_names=None,           \
-        concatenate_keys=True,      \
+        concatenate_keys=False,     \
         learn_weights=True,         \
         learning_rate=True,         \
         memory_capacity=None,       \
@@ -776,7 +774,7 @@ class EMComposition(AutodiffComposition):
         specifies the optional names assigned to each field in the memory_template;
         see `field names <EMComposition_Field_Names>` for details.
 
-    concatenate_keys : bool : default True
+    concatenate_keys : bool : default False
         specifies whether to concatenate the keys into a single field before matching them to items in
         the corresponding fields in memory; see `concatenate keys <EMComposition_Concatenate_Keys>` for details.
 
@@ -935,7 +933,7 @@ class EMComposition(AutodiffComposition):
                 concatenate_keys
                     see `concatenate_keys <EMComposition.concatenate_keys>`
 
-                    :default value: True
+                    :default value: False
                     :type: ``bool``
 
                 memory_decay
@@ -1153,7 +1151,6 @@ class EMComposition(AutodiffComposition):
         # for node in self.retrieval_nodes:
         #     self.scheduler.add_condition(self.storage_node, WhenFinished(node))
         # self.scheduler.add_condition(self.storage_node, WhenFinished(self.retrieval_nodes[1]))
-        # self.scheduler.add_condition(self.storage_node, AfterTrial(1))
         self.scheduler.add_condition(self.storage_node, AllHaveRun(*self.retrieval_nodes))
 
         # Suppress warnings for no efferent Projections
