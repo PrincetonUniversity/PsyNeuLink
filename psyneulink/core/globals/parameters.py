@@ -1246,7 +1246,7 @@ class Parameter(ParameterBase):
                 attr not in exclusions
                 and getattr(self, attr) is getattr(self._parent, attr)
             ):
-                setattr(self, attr, self._inherited_attrs_cache[attr])
+                super().__setattr__(attr, self._inherited_attrs_cache[attr])
 
     @property
     def _parent(self):
