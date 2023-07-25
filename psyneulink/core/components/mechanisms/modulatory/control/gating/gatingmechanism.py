@@ -474,7 +474,7 @@ class GatingMechanism(ControlMechanism):
                          monitor_for_control=monitor_for_gating,
                          function=function,
                          default_allocation=default_allocation,
-                         control=gate,
+                         gate=gate,
                          modulation=modulation,
                          params=params,
                          name=name,
