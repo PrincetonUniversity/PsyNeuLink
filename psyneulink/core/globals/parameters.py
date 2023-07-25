@@ -1725,9 +1725,10 @@ class Parameter(ParameterBase):
     # KDM 7/30/18: the below is weird like this in order to use this like a property, but also include it
     # in the interface for user simplicity: that is, inheritable (by this Parameter's children or from its parent),
     # visible in a Parameter's repr, and easily settable by the user
-    def _set_default_value(self, value):
-        value = self._parse(value)
-        self._validate(value)
+    def _set_default_value(self, value, directly=False):
+        if not directly:
+            value = self._parse(value)
+            self._validate(value)
 
         super().__setattr__('default_value', value)
 
@@ -2173,8 +2174,11 @@ class ParametersBase(ParametersTemplate):
             super().__setattr__(attr, value)
         else:
             if isinstance(value, Parameter):
+                is_new_parameter = False
+
                 if value._owner is None:
                     value._owner = self
+                    is_new_parameter = True
                 elif value._owner is not self and self._initializing:
                     # case where no Parameters class defined on subclass
                     # but default value overridden in __init__
@@ -2185,7 +2189,8 @@ class ParametersBase(ParametersTemplate):
                     value.name = attr
 
                 if self._initializing and not value._inherited:
-                    value.default_value = self._reconcile_value_with_init_default(attr, value.default_value)
+                    reconciled_value = self._reconcile_value_with_init_default(attr, value.default_value)
+                    value._set_default_value(reconciled_value, directly=not is_new_parameter)
 
                 super().__setattr__(attr, value)
 
