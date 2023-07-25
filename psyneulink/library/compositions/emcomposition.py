@@ -347,14 +347,16 @@ and the number of entries is determined by the `memory_capacity <EMComposition_M
   .. technical_note::
      The memories are actually stored in the `matrix <MappingProjection.matrix>` parameters of the `MappingProjections`
      from the `retrieval_weighting_node <EMComposition.retrieval_weighting_node>` to each of the `retrieval_nodes
-     <EMComposition.retrieval_nodes>`.  Memories associated with each key are also stored in the `matrix
+     <EMComposition.retrieval_nodes>`. Memories associated with each key are also stored in the `matrix
      <MappingProjection.matrix>` parameters of the `MappingProjections` from the `key_input_nodes
      <EMComposition.key_input_nodes>` to each of the corresponding `match_nodes <EMComposition.match_nodes>`.
      This is done so that the match of each key to the memories for the corresponding field can be computed simply
-     by passing the input for each key through the Projection to the corresponding match_node and, similarly,
-     retrieivals can be computed by passiing the softmax disintributions and weighting for each field computed
+     by passing the input for each key through the Projection (which computes the dot product of the input with
+     the Projection's `matrix <MappingProjection.matrix>` parameter) to the corresponding match_node; and, similarly,
+     retrieivals can be computed by passing the softmax disintributions and weighting for each field computed
      in the `retrieval_weighting_node <EMComposition.retrieval_weighting_node>` through its Projection to each
-     `retrieval_node <EMComposition.retrieval_nodes>` to get the retreieved value for each field.
+     `retrieval_node <EMComposition.retrieval_nodes>` (which computes the dot product of the weighted softmax over
+     entries with the corresponding field of each entry) to get the retreieved value for each field.
 
 .. _EMComposition_Output:
 
@@ -427,17 +429,17 @@ When the EMComposition is executed, the following sequence of operations occur
 
 * **Store memories**. After the values have been retrieved, the inputs to for each field (i.e., values in the
   `key_input_nodes <EMComposition.key_input_nodes>` and `value_input_nodes <EMComposition.value_input_nodes>`)
-  are added as a new entry in `memory <EMComposition.memory>`, replacing the weakest one if `memory_capacity
-  <EMComposition_Memory_Capacity>` has been reached.
+  are added by the `storage_node <EMComposition.storage_node>` as a new entry in `memory <EMComposition.memory>`,
+  replacing the weakest one if `memory_capacity <EMComposition_Memory_Capacity>` has been reached.
 
     .. technical_note::
        This is done by adding the input vectors to the the corresponding rows of the `matrix <MappingProjection.matrix>`
        of the `MappingProjection` from the `retreival_weighting_node <EMComposition.retrieval_weighting_node>` to each
        of the `retrieval_nodes <EMComposition.retrieval_nodes>`, as well as the `matrix <MappingProjection.matrix>`
        parameter of the `MappingProjection` from each `key_input_node <EMComposition.key_input_nodes>` to the
-       corresponding `match_node <EMComposition.match_nodes>`.  If `memory_capacity <EMComposition_Memory_Capacity>`
-       has been reached, then the weakest memory (i.e., the one with the lowest norm across all fields) is replaced by
-       the new memory.
+       corresponding `match_node <EMComposition.match_nodes>` (see note `above <EMComposition_Memory_Storage>` for
+       additional details). If `memory_capacity <EMComposition_Memory_Capacity>` has been reached, then the weakest
+       memory (i.e., the one with the lowest norm across all fields) is replaced by the new memory.
 
 COMMENT:
 FROM CodePilot: (OF HISTORICAL INTEREST?)
@@ -886,7 +888,7 @@ class EMComposition(AutodiffComposition):
     concatenate_keys_node : TransferMechanism
         `TransferMechanism` that concatenates the inputs to `key_input_nodes <EMComposition.key_input_nodes>` into a
         single vector used for the matching processing if `concatenate keys <EMComposition.concatenate_keys>` is True.
-        This is not created if the ``contatenate_keys`` argument to the EMComposition's constructor is False or is
+        This is not created if the ``concatenate_keys`` argument to the EMComposition's constructor is False or is
         overridden (see `concatenate_keys <EMComposition_Concatenate_Keys>`), or there is only one key_input_node.
 
     match_nodes : list[TransferMechanism]
@@ -922,6 +924,11 @@ class EMComposition(AutodiffComposition):
         `TransferMechanisms <TransferMechanism>` that receive the vector retrieved for each field in `memory
         <EMComposition.memory>` (see `Retrieve values by field <EMComposition_Processing>` for additional details).
 
+    storage_nodes : EMStorageMechanism
+        `EMStorageMechanism` that receives inputs from the `key_input_nodes <EMComposition.key_input_nodes>` and
+        `value_input_nodes <EMComposition.value_input_nodes>`, and stores these in the corresponding field of
+        `memory <EMComposition.memory>` with probability `storage_prob <EMComposition.storage_prob>` after a retrieval
+        has been made (see `Retrieval and Storage <EMComposition_Storage>` for additional details).
     """
 
     componentCategory = EM_COMPOSITION
@@ -1144,8 +1151,8 @@ class EMComposition(AutodiffComposition):
 
         # Final Configuration and Clean-up ---------------------------------------------------------------------------
 
-        # Turn off learning for all Projections except inputs to retrieval_gating_nodes
-        self._set_learnability_of_projections()
+        # Assign learning-related attributes
+        self._set_learning_attributes()
 
         # Set condition on storage_node
         # for node in self.retrieval_nodes:
@@ -1690,9 +1697,12 @@ class EMComposition(AutodiffComposition):
                                           name='STORAGE MECHANISM')
         return storage_node
 
-    def _set_learnability_of_projections(self):
-        """Turn off learning for all Projections except afferents to retrieval_gating_nodes.
+    def _set_learning_attributes(self):
+        """Set learning-related attributes for Node and Projections
         """
+        # self.require_node_roles(self.storage_node, NodeRole.LEARNING)
+
+        # Turn off learning for all Projections except afferents to retrieval_gating_nodes.
         for node in self.nodes:
             for input_port in node.input_ports:
                 for proj in input_port.path_afferents:

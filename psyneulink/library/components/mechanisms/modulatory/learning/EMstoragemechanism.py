@@ -587,6 +587,8 @@ class EMStorageMechanism(LearningMechanism):
         :return: List[2d np.array] self.learning_signal
         """
 
+        # FIX: SET LEARNING MODE HERE FOR SHOW_GRAPH
+
         decay_rate = self.parameters.decay_rate._get(context)
         storage_prob = self.parameters.storage_prob._get(context)
 
