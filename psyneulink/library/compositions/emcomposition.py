@@ -11,6 +11,7 @@
 # TODO:
 # - FIX: IMPLEMENT LearningMechanism FOR RETRIEVAL WEIGHTS (WHAT IS THE ERROR SIGNAL AND DERIVATIVE IT SHOULD USE?)
 # - FIX: GENERATE ANIMATION w/ STORAGE (uses Learning but not in usual way)
+# - FIX: DEAL WITH INDEXING IN NAMES FOR NON-CONTIGOUS KEYS AND VALUES (reorder to keep all keys together?)
 # - FIX: WRITE MORE TESTS FOR EXECUTION, WARNINGS, AND ERROR MESSAGES
 #         - 3d tuple with first entry != memory_capacity if specified
 #         - list with number of entries > memory_capacity if specified
@@ -880,10 +881,15 @@ class EMComposition(AutodiffComposition):
         `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` that receive keys used to determine the item
         to be retrieved from `memory <EMComposition.memory>`, and then themselves stored in `memory
         <EMComposition.memory>` (see `Match memories by field <EMComposition_Processing>` for additional details).
+        By default these are assigned the name *KEY_n_INPUT* where n is the field number (starting from 0);
+        however, if `field_names <EMComposition.field_names>` is specified, then the name of each key_input_node
+        is assigned the corresponding field name.
 
     value_input_nodes : list[TransferMechanism]
         `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` that receive values to be stored in `memory
-        <EMComposition.memory>`; these are not used in the matching process used for retrieval
+        <EMComposition.memory>`; these are not used in the matching process used for retrieval.  By default these
+        are assigned the name *VALUE_n_INPUT* where n is the field number (starting from 0);  however, if
+        `field_names <EMComposition.field_names>` is specified, then the name of each value_input_node is assigned
 
     concatenate_keys_node : TransferMechanism
         `TransferMechanism` that concatenates the inputs to `key_input_nodes <EMComposition.key_input_nodes>` into a
@@ -894,7 +900,8 @@ class EMComposition(AutodiffComposition):
     match_nodes : list[TransferMechanism]
         `TransferMechanisms <TransferMechanism>` that receive the dot product of each key and those stored in
         the corresponding field of `memory <EMComposition.memory>` (see `Match memories by field
-        <EMComposition_Processing>` for additional details).
+        <EMComposition_Processing>` for additional details).  These are assigned names that prepend *MATCH_n* to the
+        name of the corresponding `key_input_nodes <EMComposition.key_input_nodes>`.
 
     softmax_control_nodes : list[ControlMechanism]
         `ControlMechanisms <ControlMechanism>` that adaptively control the `softmax_gain <EMComposition.softmax_gain>`
@@ -922,13 +929,21 @@ class EMComposition(AutodiffComposition):
 
     retrieval_nodes : list[TransferMechanism]
         `TransferMechanisms <TransferMechanism>` that receive the vector retrieved for each field in `memory
-        <EMComposition.memory>` (see `Retrieve values by field <EMComposition_Processing>` for additional details).
+        <EMComposition.memory>` (see `Retrieve values by field <EMComposition_Processing>` for additional details);
+        these are assigned the same names as the `key_input_nodes <EMComposition.key_input_nodes>` and
+        `value_input_nodes <EMComposition.value_input_nodes>` to which they correspond appended with the suffix
+        *_RETRIEVAL*.
 
-    storage_nodes : EMStorageMechanism
+    storage_node : EMStorageMechanism
         `EMStorageMechanism` that receives inputs from the `key_input_nodes <EMComposition.key_input_nodes>` and
         `value_input_nodes <EMComposition.value_input_nodes>`, and stores these in the corresponding field of
         `memory <EMComposition.memory>` with probability `storage_prob <EMComposition.storage_prob>` after a retrieval
         has been made (see `Retrieval and Storage <EMComposition_Storage>` for additional details).
+
+        .. technical_note::
+           The `storage_node <EMComposition.storage_node>` is assigned a Condition to execute after the `retrieval_nodes
+           <EMComposition.retrieval_nodes>` have executed, to ensure that storage occurs after retrieval, but before
+           any subequent processing is done (i.e., in a composition in which the EMComposition may be embededded.
     """
 
     componentCategory = EM_COMPOSITION
