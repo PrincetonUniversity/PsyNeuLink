@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>UserDefinedFunction &mdash; PsyNeuLink 0.11.0.0+828.gd8be6be98 documentation</title>
+  <title>UserDefinedFunction &mdash; PsyNeuLink 0.11.0.0+836.g4eeee5cf3 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.11.0.0+828
+                  0.11.0.0+836
                 </div>
               
             
@@ -472,6 +472,23 @@ for details).</p>
 </dd>
 </dl>
 </div></blockquote>
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.userdefinedfunction.UserDefinedFunction._get_allowed_arguments">
+<span class="sig-name descname"><span class="pre">_get_allowed_arguments</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.userdefinedfunction.UserDefinedFunction._get_allowed_arguments" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a set of argument names that can be passed into
+__init__, directly or through params dictionaries</p>
+<dl class="simple">
+<dt>Includes:</dt><dd><ul class="simple">
+<li><p>all Parameter constructor_argument names</p></li>
+<li><p>all Parameter names except for those that have a
+constructor_argument</p></li>
+<li><p>all ParameterAlias names</p></li>
+<li><p>all other explicitly specified named arguments in __init__</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.userdefinedfunction.UserDefinedFunction._validate_params">
 <span class="sig-name descname"><span class="pre">_validate_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.userdefinedfunction.UserDefinedFunction._validate_params" title="Permalink to this definition">¶</a></dt>
