@@ -978,7 +978,7 @@ class Parameter(ParameterBase):
         reference=False,
         dependencies=None,
         initializer=None,
-        port=None,
+        port=None,  # if modulated, set to the ParameterPort
         mdf_name=None,
         specify_none=False,
         _owner=None,
@@ -988,7 +988,6 @@ class Parameter(ParameterBase):
         # attributes will be taken from
         _inherited_source=None,
         _user_specified=False,
-        # if modulated, set to the ParameterPort
         **kwargs
     ):
         if isinstance(aliases, str):
