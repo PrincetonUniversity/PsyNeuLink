@@ -5178,6 +5178,7 @@ class TestNestedCompositions:
 
 
 class TestImportComposition:
+    @pytest.mark.pytorch
     @pytest.mark.composition
     def test_import_composition(self, comp_mode):
 
