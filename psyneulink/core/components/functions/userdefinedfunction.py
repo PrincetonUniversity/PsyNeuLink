@@ -600,10 +600,8 @@ class UserDefinedFunction(Function_Base):
             **self.cust_fct_params
         )
 
-    def _handle_illegal_kwargs(self, **kwargs):
-        super()._handle_illegal_kwargs(
-            **{k: kwargs[k] for k in kwargs if k not in self.cust_fct_params}
-        )
+    def _get_allowed_arguments(self):
+        return super()._get_allowed_arguments().union(self.cust_fct_params)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         pass
