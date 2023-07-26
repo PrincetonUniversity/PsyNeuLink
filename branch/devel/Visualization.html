@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Visualization &mdash; PsyNeuLink 0.11.0.0+836.g4eeee5cf3 documentation</title>
+  <title>Visualization &mdash; PsyNeuLink 0.11.0.0+837.g6daa89b8d documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.11.0.0+836
+                  0.11.0.0+837
                 </div>
               
             
@@ -508,14 +508,14 @@ Composition(s).</p></li>
 <li><p><strong>show_controller</strong> (<em>bool</em><em> or </em><em>AGENT_REP : default True</em>) – specifies whether or not to show the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">controller</span></code></a> and associated
 <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">objective_mechanism</span></code></a> if it has one.  If the controller is an
 OptimizationControlMechanism and it has an <a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">agent_rep</span></a>, then specifying
-<em>AGENT_REP</em> will also show that.  All control-related items are displayed in the color specified for
+<em>AGENT_REP</em> also shows that.  All control-related items are displayed in the color specified for
 <strong>controller_color</strong>.</p></li>
 <li><p><strong>show_learning</strong> (<em>bool</em><em> or </em><em>ALL : default False</em>) – specifies whether or not to show the <a class="reference internal" href="Composition.html#composition-learning-components"><span class="std std-ref">learning components</span></a> of the
-<a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>; they will all be displayed in the color specified for <strong>learning_color</strong>.
-Projections that receive a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> will be shown as a diamond-shaped node.
-If set to <em>ALL</em>, all Projections associated with learning will be shown:  the LearningProjections
+<a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>; they are all displayed in the color specified for <strong>learning_color</strong>.
+Projections that receive a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> are shown as a diamond-shaped node.
+If set to <em>ALL</em>, all Projections associated with learning are shown:  the LearningProjections
 as well as from <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> to <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanisms</span></a>
-that convey error and activation information;  if set to <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>, only the LearningPojections are shown.</p></li>
+that convey error and activation information;  if set to <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>, only the LearningProjections are shown.</p></li>
 <li><p><strong>show_projection_labels</strong> (<em>bool : default False</em>) – specifies whether or not to show names of projections.</p></li>
 <li><p><strong>show_projections_not_in_composition</strong> (<em>bool : default False</em>) – specifies whether or not to show <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> that are not active in the current
 <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> (and, accordingly, are <em>not</em> listed in its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.projections" title="psyneulink.core.compositions.composition.Composition.projections"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">projections</span></code></a>
