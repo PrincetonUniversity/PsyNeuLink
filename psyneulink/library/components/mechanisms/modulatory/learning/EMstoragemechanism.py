@@ -143,6 +143,7 @@ Class Reference
 """
 
 import numpy as np
+import re
 from beartype import beartype
 
 from psyneulink._typing import Optional, Union, Callable, Literal
@@ -160,7 +161,7 @@ from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    ADDITIVE, EM_STORAGE_MECHANISM, LEARNING, LEARNING_PROJECTION, MULTIPLICATIVE, MODULATION, \
+    ADDITIVE, EM_STORAGE_MECHANISM, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNALS, MULTIPLICATIVE, MODULATION, \
     NAME, OVERRIDE, OWNER_VALUE, PROJECTIONS, REFERENCE_VALUE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
@@ -179,7 +180,6 @@ projection_keywords.update({LEARNING_PROJECTION, LEARNING})
 MEMORY_MATRIX = 'memory_matrix'
 FIELDS = 'fields'
 FIELD_TYPES = 'field_types'
-LEARNING_SIGNALS = 'learning_signals'
 
 class EMStorageMechanismError(LearningMechanismError):
     pass
@@ -556,17 +556,17 @@ class EMStorageMechanism(LearningMechanism):
         return super()._instantiate_input_ports(input_ports=input_ports, context=context)
 
     def _instantiate_output_ports(self, output_ports=None, reference_value=None, context=None):
-        # FIX: SHOULD HAVE SPECS FROM learning_signals ARG HERE
         learning_signal_dicts = []
         for i, learning_signal in enumerate(self.learning_signals):
-            learning_signal_dicts.append({NAME: f"LEARNING_SIGNAL_{i}",
-                                         VARIABLE: (OWNER_VALUE, i),
-                                         REFERENCE_VALUE: self.value[i],
-                                         MODULATION: self.modulation,
-                                         PROJECTIONS: learning_signal.parameter_ports['matrix']})
+            learning_signal_dicts.append({NAME: f"STORE TO {learning_signal.receiver.owner.name} MATRIX",
+                                          VARIABLE: (OWNER_VALUE, i),
+                                          REFERENCE_VALUE: self.value[i],
+                                          MODULATION: self.modulation,
+                                          PROJECTIONS: learning_signal.parameter_ports['matrix']})
         self.parameters.learning_signals._set(learning_signal_dicts, context)
 
-        return super()._instantiate_output_ports(context=context)
+        learning_signals = super()._instantiate_output_ports(context=context)
+
 
     def _parse_function_variable(self, variable, context=None):
         # Function expects a single field (one item of Mechanism's variable) at a time
@@ -586,6 +586,8 @@ class EMStorageMechanism(LearningMechanism):
 
         :return: List[2d np.array] self.learning_signal
         """
+
+        # FIX: SET LEARNING MODE HERE FOR SHOW_GRAPH
 
         decay_rate = self.parameters.decay_rate._get(context)
         storage_prob = self.parameters.storage_prob._get(context)

@@ -10895,29 +10895,6 @@ _
                 # These are meant to be assigned in run method;  needed here for direct call to execute method
                 self._animate = False
 
-            # [JDC 12/4/22]: FIX ALL OF THIS REPLACED BY REFERENCES TO self.is_nested
-            # IMPLEMENTATION NOTE:
-            # KAM 4/29/19
-            # The nested var is set to True if the Composition is nested in another Composition, otherwise False
-            # Later on, this is used to determine:
-            #   (1) whether to initialize from context
-            #   (2) whether to assign values to CIM from input dict (if not nested) or simply execute CIM (if nested)
-            # nested = False
-            # # MODIFIED 12/1/22 OLD:
-            # if len(self.input_CIM.path_afferents) > 0:
-            # if self.is_nested:
-            #     nested = True
-            # MODIFIED 12/1/22 NEW:  FIX: EFFORT TO ADDRESS ABOVE ISSUE;  NEEDS TESTING  CALL OF NESTED COMPOSITION
-            # if len(self.input_CIM.path_afferents) > 0 and context.composition != self:
-            #     nested = True
-            # # MODIFIED 12/1/22 NEWER:
-            # if self.is_nested and not self._executed_from_command_line:
-            #     nested = True
-            # # MODIFIED 12/1/22 NEWEST:
-            # nested = self.is_nested and not self._executed_from_command_line
-            # # MODIFIED 12/1/22 FINAL?
-            # nested = self.is_nested
-            # MODIFIED 12/1/22 END
 
             runtime_params = self._parse_runtime_params_conditions(runtime_params)
 
