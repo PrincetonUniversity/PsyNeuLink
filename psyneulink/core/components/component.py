@@ -2167,6 +2167,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         alias_names = {p.name for p in self.class_parameters if isinstance(p, ParameterAlias)}
 
         self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
+        self.defaults = Defaults(owner=self, parent=self.class_defaults)
 
         # assign defaults based on pass in params and class defaults
         defaults = {}
@@ -2210,12 +2211,13 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         for k in defaults:
             if defaults[k] is None:
                 continue
-            defaults[k] = copy_parameter_value(
-                defaults[k],
-                shared_types=shared_types
+            setattr(
+                self.defaults, k,
+                copy_parameter_value(
+                    defaults[k],
+                    shared_types=shared_types
+                )
             )
-
-        self.defaults = Defaults(owner=self, **defaults)
 
         for p in filter(lambda x: not isinstance(x, (ParameterAlias, SharedParameter)), self.parameters._in_dependency_order):
             # copy spec so it is not overwritten later
