@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 25.3.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 876 498" style="enable-background:new 0 0 876 498;" xml:space="preserve">
+<style type="text/css">
+	.st0{font-family:'Times-Roman';}
+	.st1{font-size:14px;}
+	.st2{fill:none;stroke:#00FF00;stroke-width:3;stroke-miterlimit:10;}
+	.st3{font-family:'ArialMT';}
+	.st4{font-size:12px;}
+	.st5{fill:none;stroke:#000000;stroke-miterlimit:10;}
+	.st6{fill:none;stroke:#0000FF;stroke-width:3;stroke-miterlimit:10;}
+	.st7{fill:none;stroke:#0000FF;stroke-miterlimit:10;}
+	.st8{fill:#0000FF;}
+	.st9{fill:none;stroke:#FF0000;stroke-width:3;stroke-miterlimit:10;}
+</style>
+<text transform="matrix(1 0 0 1 387.8169 451.2002)" class="st0 st1">EM_Composition</text>
+<ellipse class="st2" cx="98.9" cy="418" rx="58.9" ry="18"/>
+<text transform="matrix(1 0 0 1 60.0317 420.7002)"><tspan x="0" y="0" class="st3 st4">V</tspan><tspan x="7.1" y="0" class="st3 st4">ALUE INPUT</tspan></text>
+<ellipse class="st2" cx="231.9" cy="418" rx="56" ry="18"/>
+<text transform="matrix(1 0 0 1 195.3608 420.7002)"><tspan x="0" y="0" class="st3 st4">KE</tspan><tspan x="16" y="0" class="st3 st4">Y</tspan><tspan x="23.8" y="0" class="st3 st4"> 0 INPUT</tspan></text>
+<ellipse class="st5" cx="140.9" cy="346" rx="59.8" ry="18"/>
+<text transform="matrix(1 0 0 1 101.4751 348.7002)"><tspan x="0" y="0" class="st3 st4">M</tspan><tspan x="10" y="0" class="st3 st4">A</tspan><tspan x="17.1" y="0" class="st3 st4">TCH KE</tspan><tspan x="61.1" y="0" class="st3 st4">Y</tspan><tspan x="68.9" y="0" class="st3 st4"> 0</tspan></text>
+<path class="st5" d="M210.8,401.3c-12.1-9.6-27.4-21.7-40.7-32.2"/>
+<polygon points="167.9,371.8 162.2,362.9 172.2,366.3 "/>
+<polygon class="st5" points="167.9,371.8 162.2,362.9 172.2,366.3 "/>
+<ellipse class="st6" cx="321.9" cy="346" rx="103.1" ry="18"/>
+<text transform="matrix(1 0 0 1 247.9194 348.7002)"><tspan x="0" y="0" class="st3 st4">RETRIE</tspan><tspan x="44" y="0" class="st3 st4">V</tspan><tspan x="51.1" y="0" class="st3 st4">A</tspan><tspan x="59.1" y="0" class="st3 st4">L</tspan><tspan x="65.4" y="0" class="st3 st4"> WEIGHTING 0</tspan></text>
+<path class="st5" d="M253.3,400.9c11.5-9.2,25.9-20.7,38.6-30.8"/>
+<polygon points="289.8,367.2 299.8,363.7 294.2,372.7 "/>
+<polygon class="st5" points="289.8,367.2 299.8,363.7 294.2,372.7 "/>
+<ellipse class="st2" cx="655.9" cy="418" rx="56" ry="18"/>
+<text transform="matrix(1 0 0 1 619.3604 420.7002)"><tspan x="0" y="0" class="st3 st4">KE</tspan><tspan x="16" y="0" class="st3 st4">Y</tspan><tspan x="23.8" y="0" class="st3 st4"> 1 INPUT</tspan></text>
+<ellipse class="st5" cx="601.9" cy="346" rx="59.8" ry="18"/>
+<text transform="matrix(1 0 0 1 562.4746 348.7002)"><tspan x="0" y="0" class="st3 st4">M</tspan><tspan x="10" y="0" class="st3 st4">A</tspan><tspan x="17.1" y="0" class="st3 st4">TCH KE</tspan><tspan x="61.1" y="0" class="st3 st4">Y</tspan><tspan x="68.9" y="0" class="st3 st4"> 1</tspan></text>
+<path class="st5" d="M642.6,400.2c-6.4-8.5-14.2-18.9-21.3-28.3"/>
+<polygon points="618.3,373.7 615.1,363.6 623.9,369.5 "/>
+<polygon class="st5" points="618.3,373.7 615.1,363.6 623.9,369.5 "/>
+<ellipse class="st6" cx="732.9" cy="274" rx="103.1" ry="18"/>
+<text transform="matrix(1 0 0 1 658.9189 276.7002)"><tspan x="0" y="0" class="st3 st4">RETRIE</tspan><tspan x="44" y="0" class="st3 st4">V</tspan><tspan x="51.1" y="0" class="st3 st4">A</tspan><tspan x="59.1" y="0" class="st3 st4">L</tspan><tspan x="65.4" y="0" class="st3 st4"> WEIGHTING 1</tspan></text>
+<path class="st5" d="M665.5,400.1c13.3-24.8,37.3-69.7,52.8-98.7"/>
+<polygon points="715.4,299.3 723.2,292.2 721.6,302.6 "/>
+<polygon class="st5" points="715.4,299.3 723.2,292.2 721.6,302.6 "/>
+<ellipse class="st6" cx="461.9" cy="274" rx="112" ry="18"/>
+<text transform="matrix(1 0 0 1 380.8091 276.7002)"><tspan x="0" y="0" class="st3 st4">SOFTMAX GAIN CONTRO</tspan><tspan x="146" y="0" class="st3 st4">L</tspan><tspan x="152.2" y="0" class="st3 st4"> 1</tspan></text>
+<path class="st5" d="M571.6,330.4c-19.6-10.1-45.5-23.4-67.1-34.5"/>
+<polygon points="502.7,298.9 495.4,291.2 505.9,292.7 "/>
+<polygon class="st5" points="502.7,298.9 495.4,291.2 505.9,292.7 "/>
+<ellipse class="st5" cx="531.9" cy="202" rx="52.6" ry="18"/>
+<text transform="matrix(1 0 0 1 497.9238 204.7007)" class="st3 st4">SOFTMAX 1</text>
+<path class="st5" d="M601,327.8c-1.6-18.9-6-48.9-18.1-71.8c-5.8-11-14.5-21.4-23-30.1"/>
+<polygon points="557.2,228.2 552.5,218.7 562.1,223.1 "/>
+<polygon class="st5" points="557.2,228.2 552.5,218.7 562.1,223.1 "/>
+<path class="st7" d="M479.2,256.2c8.8-9,19.6-20.1,29.1-29.9"/>
+<rect x="508.5" y="218" transform="matrix(0.6971 -0.717 0.717 0.6971 -3.8955 434.7099)" class="st8" width="8" height="8"/>
+<rect x="508.5" y="218" transform="matrix(0.6971 -0.717 0.717 0.6971 -3.8955 434.7099)" class="st7" width="8" height="8"/>
+<line class="st7" x1="509.7" y1="224.8" x2="508.3" y2="226.3"/>
+<ellipse class="st5" cx="251.9" cy="202" rx="52.6" ry="18"/>
+<text transform="matrix(1 0 0 1 217.9243 204.7007)" class="st3 st4">SOFTMAX 0</text>
+<ellipse class="st5" cx="356.9" cy="130" rx="88.6" ry="18"/>
+<text transform="matrix(1 0 0 1 294.4741 132.7007)"><tspan x="0" y="0" class="st3 st4">WEIGH</tspan><tspan x="40.7" y="0" class="st3 st4">T</tspan><tspan x="47.8" y="0" class="st3 st4"> RETRIE</tspan><tspan x="95.1" y="0" class="st3 st4">V</tspan><tspan x="102.2" y="0" class="st3 st4">ALS</tspan></text>
+<path class="st5" d="M275.5,185.8c14.1-9.7,32.2-22.1,47.8-32.8"/>
+<polygon points="321.4,150.1 331.6,147.4 325.3,155.9 "/>
+<polygon class="st5" points="321.4,150.1 331.6,147.4 325.3,155.9 "/>
+<path class="st5" d="M105.2,331.5c-16.6-8.8-34.8-21.7-44.2-39.5c-7.5-14.1-9.7-23.2,0-36c16-21.2,82.2-36.5,132.2-45.3"/>
+<polygon points="192.7,207.3 203.2,209 193.9,214.2 "/>
+<polygon class="st5" points="192.7,207.3 203.2,209 193.9,214.2 "/>
+<ellipse class="st6" cx="181.9" cy="274" rx="112" ry="18"/>
+<text transform="matrix(1 0 0 1 100.8091 276.7002)"><tspan x="0" y="0" class="st3 st4">SOFTMAX GAIN CONTRO</tspan><tspan x="146" y="0" class="st3 st4">L</tspan><tspan x="152.2" y="0" class="st3 st4"> 0</tspan></text>
+<path class="st5" d="M151.1,328.2c4.7-8.2,10.4-18.2,15.6-27.4"/>
+<polygon points="163.6,299.1 171.6,292.1 169.7,302.5 "/>
+<polygon class="st5" points="163.6,299.1 171.6,292.1 169.7,302.5 "/>
+<path class="st7" d="M321,327.8c-1.6-18.9-6-48.9-18.1-71.8c-5.8-11-14.5-21.4-23-30.1"/>
+<rect x="271.3" y="217.5" transform="matrix(0.6933 -0.7207 0.7207 0.6933 -75.1809 266.3662)" class="st8" width="8" height="8"/>
+<rect x="271.3" y="217.5" transform="matrix(0.6933 -0.7207 0.7207 0.6933 -75.1809 266.3662)" class="st7" width="8" height="8"/>
+<line class="st7" x1="278.2" y1="224.3" x2="279.7" y2="225.7"/>
+<path class="st7" d="M199.2,256.2c8.8-9,19.6-20.1,29.1-29.9"/>
+<rect x="228.5" y="218" transform="matrix(0.6971 -0.717 0.717 0.6971 -88.7131 233.9518)" class="st8" width="8" height="8"/>
+<rect x="228.5" y="218" transform="matrix(0.6971 -0.717 0.717 0.6971 -88.7131 233.9518)" class="st7" width="8" height="8"/>
+<line class="st7" x1="229.7" y1="224.8" x2="228.3" y2="226.3"/>
+<ellipse class="st9" cx="182.9" cy="58" rx="76.6" ry="18"/>
+<text transform="matrix(1 0 0 1 130.022 60.7007)"><tspan x="0" y="0" class="st3 st4">KE</tspan><tspan x="16" y="0" class="st3 st4">Y</tspan><tspan x="23.8" y="0" class="st3 st4"> 0 RETRIEVED</tspan></text>
+<path class="st5" d="M317.9,113.8C292,103.1,257.8,89,230.4,77.6"/>
+<polygon points="228.9,80.8 221,73.7 231.5,74.3 "/>
+<polygon class="st5" points="228.9,80.8 221,73.7 231.5,74.3 "/>
+<ellipse class="st9" cx="356.9" cy="58" rx="79.4" ry="18"/>
+<text transform="matrix(1 0 0 1 301.6929 60.7007)"><tspan x="0" y="0" class="st3 st4">V</tspan><tspan x="7.1" y="0" class="st3 st4">ALUE RETRIEVED</tspan></text>
+<path class="st5" d="M356.9,111.8c0-7.7,0-16.9,0-25.4"/>
+<polygon points="353.4,86.4 356.9,76.4 360.4,86.4 "/>
+<polygon class="st5" points="353.4,86.4 356.9,76.4 360.4,86.4 "/>
+<ellipse class="st9" cx="530.9" cy="58" rx="76.6" ry="18"/>
+<text transform="matrix(1 0 0 1 478.0215 60.7007)"><tspan x="0" y="0" class="st3 st4">KE</tspan><tspan x="16" y="0" class="st3 st4">Y</tspan><tspan x="23.8" y="0" class="st3 st4"> 1 RETRIEVED</tspan></text>
+<path class="st5" d="M396,113.8c25.9-10.7,60.1-24.8,87.5-36.2"/>
+<polygon points="482.3,74.3 492.9,73.7 485,80.8 "/>
+<polygon class="st5" points="482.3,74.3 492.9,73.7 485,80.8 "/>
+<path class="st5" d="M498.2,188.1c-26.3-10.8-63.1-25.9-92.5-38.1"/>
+<polygon points="404.3,153.3 396.4,146.2 407,146.8 "/>
+<polygon class="st5" points="404.3,153.3 396.4,146.2 407,146.8 "/>
+<path class="st7" d="M687.6,257.8c-32.6-11.7-76.5-27.4-109.3-39.2"/>
+<rect x="568.2" y="212.4" transform="matrix(0.3372 -0.9414 0.9414 0.3372 175.4751 682.0858)" class="st8" width="8" height="8"/>
+<rect x="568.2" y="212.4" transform="matrix(0.3372 -0.9414 0.9414 0.3372 175.4751 682.0858)" class="st7" width="8" height="8"/>
+<line class="st7" x1="575.9" y1="217.8" x2="577.8" y2="218.4"/>
+</svg>

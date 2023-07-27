@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Migrating Learning Compositions from before PsyNeuLink 0.7.4 &mdash; PsyNeuLink 0.12.1.0+8.g06f3006ab documentation</title>
+  <title>Migrating Learning Compositions from before PsyNeuLink 0.7.4 &mdash; PsyNeuLink 0.13.0.0+6.gb8cd10e18 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.12.1.0+8
+                  0.13.0.0+6
                 </div>
               
             
@@ -279,12 +279,12 @@ Pre 0.7.5 PsyNeuLink code to the new API.</p>
 <span class="gp">... </span>                   <span class="n">animate</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;show_learning&#39;</span><span class="p">:</span><span class="kc">True</span><span class="p">})</span>
 </pre></div>
 </div>
-<p>Notice that we no longer have to extract the target node from the <code class="xref any docutils literal notranslate"><span class="pre">add_backpropagation_learning_pathway</span> <span class="pre">method</span></code>, and can instead pass the targets as output nodes mapped to values, in a new parameter called <code class="xref any docutils literal notranslate"><span class="pre">targets</span></code> in the <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method.</p>
+<p>Notice that we no longer have to extract the target node from the <code class="xref any docutils literal notranslate"><span class="pre">add_backpropagation_learning_pathway</span> <span class="pre">method</span></code>, and can instead pass the targets as output nodes mapped to values, in a new parameter called <code class="xref any docutils literal notranslate"><span class="pre">targets</span></code> in the <a class="reference internal" href="EMComposition.html#psyneulink.library.compositions.emcomposition.EMComposition.learn" title="psyneulink.library.compositions.emcomposition.EMComposition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method.</p>
 </section>
 <section id="learning-using-autodiffcompositions">
 <h2>Learning using AutodiffCompositions<a class="headerlink" href="#learning-using-autodiffcompositions" title="Permalink to this headline">¶</a></h2>
 <p>AutodiffCompositions are also update in this change. In addition to the API changes mentioned for learning in compositions, several parameters of AutodiffCompositions have been moved from
-its constructor to be runtime parameters of its <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method.</p>
+its constructor to be runtime parameters of its <a class="reference internal" href="EMComposition.html#psyneulink.library.compositions.emcomposition.EMComposition.learn" title="psyneulink.library.compositions.emcomposition.EMComposition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method.</p>
 <p>This is demonstrated in the following codeblocks:</p>
 <p>This is the OLD code:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span>    <span class="n">my_mech_1</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span>
