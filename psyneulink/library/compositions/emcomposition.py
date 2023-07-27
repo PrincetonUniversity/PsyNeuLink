@@ -741,17 +741,21 @@ class EMCompositionError(CompositionError):
 
 class EMComposition(AutodiffComposition):
     """
-    EMComposition(                  \
-        memory_template=[[0],[0]],  \
-        field_weights=None,         \
-        field_names=None,           \
-        concatenate_keys=False,     \
-        learn_weights=True,         \
-        learning_rate=True,         \
-        memory_capacity=None,       \
-        memory_decay_rate=AUTO,     \
-        storage_prob=1.0,           \
-        name="EM_Composition"       \
+    EMComposition(                      \
+        memory_template=[[0],[0]],      \
+        memory_fill=0,                  \
+        memory_capacity=None,           \
+        field_weights=None,             \
+        field_names=None,               \
+        concatenate_keys=False,         \
+        normalize_memories=True,        \
+        softmax_gain=CONTROL,           \
+        memory_decay_rate=AUTO,         \
+        storage_prob=1.0,               \
+        learn_weights=True,             \
+        learning_rate=True,             \
+        use_gating_for_weighting=False, \
+        name="EM_Composition"           \
         )
 
     Subclass of `AutodiffComposition` that implements the functions of an `EpisodicMemoryMechanism` in a
@@ -769,6 +773,10 @@ class EMComposition(AutodiffComposition):
     memory_fill : scalar or tuple : default 0
         specifies the value used to fill the memory when it is initialized;
         see `memory_fill <EMComposition_Memory_Fill>` for details.
+
+    memory_capacity : int : default None
+        specifies the number of items that can be stored in the EMComposition's memory;
+        see `memory_capacity <EMComposition_Memory_Capacity>` for details.
 
     field_weights : tuple : default (1,0)
         specifies the relative weight assigned to each key when matching an item in memory'
@@ -790,6 +798,10 @@ class EMComposition(AutodiffComposition):
         specifies the temperature used for softmax normalizing the dot products of keys and memories;
         see `Softmax normalize matches over fields <EMComposition_Processing>` for additional details.
 
+    memory_decay_rate : float : AUTO
+        specifies the rate at which items in the EMComposition's memory decay;
+        see `memory_decay_rate <EMComposition_Memory_Decay_Rate>` for details.
+
     storage_prob : float : default 1.0
         specifies the probability that an item will be stored in `memory <EMComposition.memory>`
         when the EMComposition is executed (see `Retrieval and Storage <EMComposition_Storage>` for
@@ -802,18 +814,10 @@ class EMComposition(AutodiffComposition):
     learning_rate : float : default .01
         specifies rate at which `field_weights <EMComposition.field_weights>` are learned if ``learn_weights`` is True.
 
-    memory_capacity : int : default None
-        specifies the number of items that can be stored in the EMComposition's memory;
-        see `memory_capacity <EMComposition_Memory_Capacity>` for details.
-
-    memory_decay : bool : default True
-        specifies whether memories decay with each execution of the EMComposition;
-        see `memory_decay <EMComposition_Memory_Capacity>` for details.
-
-    memory_decay_rate : float : AUTO
-        specifies the rate at which items in the EMComposition's memory decay;
-        see `memory_decay_rate <EMComposition_Memory_Decay_Rate>` for details.
-
+    use_gating_for_weighting : bool : default False
+        specifies whether to use a `GatingMechanism` to modulate the `softmax_weighting_node
+        <EMComposition.softmax_weighting_node>` instead of a standard ProcessingMechanism;
+        see `use_gating_for_weighting <EMComposition.use_gating_for_weighting>` for additional details.
 
     Attributes
     ----------
@@ -831,6 +835,10 @@ class EMComposition(AutodiffComposition):
 
     .. _EMComposition_Parameters:
 
+    memory_capacity : int
+        determines the number of items that can be stored in `memory <EMComposition.memory>`; see `memory_capacity
+        <EMComposition_Memory_Capacity>` for additional details.
+
     field_weights : list[float]
         determines which fields of the input are treated as "keys" (non-zero values), used to match entries in `memory
         <EMComposition.memory>` for retrieval, and which are used as "values" (zero values), that are stored and
@@ -841,14 +849,6 @@ class EMComposition(AutodiffComposition):
     field_names : list[str]
         determines which names that can be used to label fields in `memory <EMComposition.memory>`;  see
         `field_names <EMComposition_Field_Names>` for additional details.
-
-    learn_weights : bool
-        determines whether `field_weights <EMComposition.field_weights>` are learnable during training; see
-        `Learning <EMComposition_Learning>` for additional details.
-
-    learning_rate : float
-        determines whether the rate at which `field_weights <EMComposition.field_weights>` are learned if
-        `learn_weights` is True;  see `EMComposition_Learning>` for additional details.
 
     concatenate_keys : bool
         determines whether keys are concatenated into a single field before matching them to items in `memory
@@ -863,18 +863,27 @@ class EMComposition(AutodiffComposition):
         by the `softmax` function of the `softmax_nodes <EMComposition.softmax_nodes>`; see `Softmax normalize matches
         over fields <EMComposition_Processing>` for additional details.
 
+    memory_decay_rate : float
+        determines the rate at which items in the EMComposition's memory decay (see `memory_decay_rate
+        <EMComposition_Memory_Decay_Rate>` for details).
+
     storage_prob : float
         determines the probability that an item will be stored in `memory <EMComposition.memory>`
         when the EMComposition is executed (see `Retrieval and Storage <EMComposition_Storage>` for
         additional details).
 
-    memory_capacity : int
-        determines the number of items that can be stored in `memory <EMComposition.memory>`; see `memory_capacity
-        <EMComposition_Memory_Capacity>` for additional details.
+    learn_weights : bool
+        determines whether `field_weights <EMComposition.field_weights>` are learnable during training; see
+        `Learning <EMComposition_Learning>` for additional details.
 
-    memory_decay_rate : float
-        determines the rate at which items in the EMComposition's memory decay (see `memory_decay_rate
-        <EMComposition_Memory_Decay_Rate>` for details).
+    learning_rate : float
+        determines whether the rate at which `field_weights <EMComposition.field_weights>` are learned if
+        `learn_weights` is True;  see `EMComposition_Learning>` for additional details.
+
+    use_gating_for_weighting : bool
+        specifies whether to use a `GatingMechanism` to modulate the `softmax_weighting_node
+        <EMComposition.softmax_weighting_node>` instead of a standard ProcessingMechanism;
+        see `use_gating_for_weighting <EMComposition.use_gating_for_weighting>` for additional details.
 
     .. _EMComposition_Nodes:
 
@@ -1050,13 +1059,12 @@ class EMComposition(AutodiffComposition):
         field_weights = Parameter(None, structural=True)
         field_names = Parameter(None, structural=True)
         concatenate_keys = Parameter(False, structural=True)
-        memory_decay_rate = Parameter(AUTO, loggable=True, modulable=True, fallback_default=True,
-                                      dependencies={'memory_capacity'})
         normalize_memories = Parameter(True, loggable=False, fallback_default=True)
+        softmax_gain = Parameter(CONTROL, modulable=True, fallback_default=True)
+        e
+        storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         learn_weights = Parameter(False, fallback_default=True) # FIX: False until learning is implemented
         learning_rate = Parameter(.001, fallback_default=True)
-        storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        softmax_gain = Parameter(CONTROL, modulable=True, fallback_default=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
 
@@ -1117,12 +1125,12 @@ class EMComposition(AutodiffComposition):
                  field_names:Optional[list]=None,
                  field_weights:tuple=None,
                  concatenate_keys:bool=False,
-                 learn_weights:bool=False, # FIX: False FOR NOW, UNTIL IMPLEMENTED
-                 learning_rate:float=None,
-                 memory_decay_rate:Union[float,AUTO]=AUTO,
                  normalize_memories:bool=True,
                  softmax_gain:Union[float, CONTROL]=CONTROL,
+                 memory_decay_rate:Union[float,AUTO]=AUTO,
                  storage_prob:float=1.0,
+                 learn_weights:bool=False, # FIX: False FOR NOW, UNTIL IMPLEMENTED
+                 learning_rate:float=None,
                  use_gating_for_weighting:bool=False,
                  random_state=None,
                  seed=None,
@@ -1165,12 +1173,12 @@ class EMComposition(AutodiffComposition):
                          field_weights = field_weights,
                          field_names = field_names,
                          concatenate_keys = concatenate_keys,
+                         softmax_gain = softmax_gain,
                          memory_decay_rate = memory_decay_rate,
+                         storage_prob = storage_prob,
                          normalize_memories = normalize_memories,
                          learn_weights = learn_weights,
                          learning_rate = learning_rate,
-                         storage_prob = storage_prob,
-                         softmax_gain = softmax_gain,
                          random_state = random_state,
                          seed = seed
                          )

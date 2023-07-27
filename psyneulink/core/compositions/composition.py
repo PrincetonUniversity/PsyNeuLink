@@ -8920,9 +8920,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for proj in self._get_invalid_aux_components(node):
                 receiver = proj.receiver.owner
                 warnings.warn(
-                    f"{node.name} has been specified to project to {receiver.name}, "
-                    f"but {receiver.name} is not in {self.name} or any of its nested Compositions. "
-                    f"This projection will be deactivated until {receiver.name} is added to {self.name} "
+                    f"'{node.name}' has been specified to project to '{receiver.name}', "
+                    f"but the latter is not in '{self.name}' or any of its nested Compositions. "
+                    f"This projection will be deactivated until '{receiver.name}' is added to '{self.name}' "
                     f"or a composition nested within it."
                 )
 
