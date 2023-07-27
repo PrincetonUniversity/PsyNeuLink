@@ -739,7 +739,7 @@ class InputPort(Port_Base):
         applied and it will generate a value that is the same length as the Projection's `value
         <Projection_Base.value>`. However, if the InputPort receives more than one Projection and
         uses a function other than a CombinationFunction, a warning is generated and only the `value
-        <Projection_Base.value>` of the first Projection list in `path_afferents <Port_Base.path_afferents>`
+        <Projection_Base.value>` of the first Projection listed in `path_afferents <Port_Base.path_afferents>`
         is used by the function, which may generate unexpected results when executing the Mechanism or Composition
         to which it belongs.
 

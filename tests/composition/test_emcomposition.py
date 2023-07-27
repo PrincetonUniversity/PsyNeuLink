@@ -449,10 +449,10 @@ class TestExecution:
         np.testing.assert_allclose(retrieved, expected_retrieval)
 
         # Validate that sum of weighted softmax distributions in retrieval_weighting_node itself sums to 1
-        np.testing.assert_allclose(np.sum(em.retrieval_weighting_node.value), 1.0, atol=1e-15)
+        np.testing.assert_allclose(np.sum(em.softmax_weighting_node.value), 1.0, atol=1e-15)
 
         # Validate that sum of its output ports also sums to 1
-        np.testing.assert_allclose(np.sum([port.value for port in em.retrieval_weighting_node.output_ports]),
+        np.testing.assert_allclose(np.sum([port.value for port in em.softmax_weighting_node.output_ports]),
                                    1.0, atol=1e-15)
 
         # Validate storage
