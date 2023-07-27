@@ -1644,8 +1644,8 @@ class EMComposition(AutodiffComposition):
             retrieval_weighting_nodes = [ProcessingMechanism(input_ports={VARIABLE: field_weights[i],
                                                                           PARAMS:{DEFAULT_INPUT: DEFAULT_VARIABLE},
                                                                           NAME: 'FIELD_WEIGHT'},
-                                                             name= 'RETRIEVAL WEIGHTING' if self.num_keys == 1
-                                                             else f'RETRIEVAL WEIGHTING FOR {self.key_names[i]}')
+                                                             name= 'WEIGHT' if self.num_keys == 1
+                                                             else f'WEIGHT FOR {self.key_names[i]}')
                                          for i in range(self.num_keys)]
 
         return retrieval_weighting_nodes
