@@ -77,8 +77,8 @@ Primer
 
 The examples below are intended to provide quick illustrations of some of PsyNeuLink's basic and more advanced
 capabilities.  They assume some experience with computational modeling and/or relevant background knowledge.  The
-`tutorial <>` provides additional introductory material for those who are newer to computational modeling, as well as a
-more detailed and comprehensive introduction to the use of PsyNeuLink.
+`tutorial <Tutorial>` provides additional introductory material for those who are newer to computational modeling,
+as well as a more detailed and comprehensive introduction to the use of PsyNeuLink.
 
 .. _BasicsAndPrimer_Simple_Configurations:
 
