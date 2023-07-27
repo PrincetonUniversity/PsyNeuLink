@@ -230,13 +230,13 @@ class TestConstruction:
         assert len(em.value_input_nodes) == num_values
         assert isinstance(em.concatenate_keys_node, Mechanism) == concatenate_node
         if em.concatenate_keys:
-            assert em.retrieval_gating_nodes == []
+            assert em.retrieval_weighting_nodes == []
             assert bool(softmax_gain in {None, CONTROL}) == bool(len(em.softmax_control_nodes))
         else:
             if num_keys > 1:
-                assert len(em.retrieval_gating_nodes) == num_keys
+                assert len(em.retrieval_weighting_nodes) == num_keys
             else:
-                assert em.retrieval_gating_nodes == []
+                assert em.retrieval_weighting_nodes == []
             if softmax_gain in {None, CONTROL}:
                 assert len(em.softmax_control_nodes) == num_keys
             else:

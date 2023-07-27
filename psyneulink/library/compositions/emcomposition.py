@@ -1546,7 +1546,8 @@ class EMComposition(AutodiffComposition):
                                  PROJECTIONS: MappingProjection(sender=self.concatenate_keys_node,
                                                                 matrix=matrix,
                                                                 function=LinearMatrix(
-                                                                    normalize=normalize_memories))},
+                                                                    normalize=normalize_memories),
+                                                                name=f'MEMORY')},
                     name='MATCH')]
 
         # One node for each key
@@ -1558,7 +1559,8 @@ class EMComposition(AutodiffComposition):
                         PROJECTIONS: MappingProjection(sender=self.key_input_nodes[i].output_port,
                                                        matrix = np.array(memory_template[:,i].tolist()
                                                                          ).transpose().astype(float),
-                                                       function=LinearMatrix(normalize=normalize_memories))},
+                                                       function=LinearMatrix(normalize=normalize_memories),
+                                                       name=f'MEMORY for {self.key_names[i]}')},
                     name=f'MATCH {self.key_names[i]}')
                 for i in range(self.num_keys)
             ]
@@ -1586,7 +1588,8 @@ class EMComposition(AutodiffComposition):
         softmax_nodes = [TransferMechanism(input_ports={SIZE:memory_capacity,
                                                         PROJECTIONS: match_node.output_port},
                                            function=SoftMax(gain=softmax_gain),
-                                           name='SOFTMAX' if len(self.match_nodes) == 1 else f'SOFTMAX {i}')
+                                           name='SOFTMAX' if len(self.match_nodes) == 1
+                                           else f'SOFTMAX for {self.key_names[i]}')
                          for i, match_node in enumerate(self.match_nodes)]
 
         # softmax_nodes = [TransferMechanism(input_ports={SIZE:memory_capacity,
@@ -1642,7 +1645,7 @@ class EMComposition(AutodiffComposition):
                                                                           PARAMS:{DEFAULT_INPUT: DEFAULT_VARIABLE},
                                                                           NAME: 'FIELD_WEIGHT'},
                                                              name= 'RETRIEVAL WEIGHTING' if self.num_keys == 1
-                                                             else f'RETRIEVAL WEIGHTING {i}')
+                                                             else f'RETRIEVAL WEIGHTING FOR {self.key_names[i]}')
                                          for i in range(self.num_keys)]
 
         return retrieval_weighting_nodes
@@ -1664,15 +1667,23 @@ class EMComposition(AutodiffComposition):
     def _construct_softmax_weighting_node(self, memory_capacity)->ProcessingMechanism:
         """Create nodes that compute the weighting of each item in memory.
         """
-        softmax_weighting_node = \
-            ProcessingMechanism(input_ports=[{SIZE: memory_capacity,
-                                              FUNCTION: LinearCombination(operation=PRODUCT),
-                                              PROJECTIONS: [sm_node.output_port, rw_node.output_port],
-                                              NAME: "WEIGHTING FOR {sm_node.name}"}
-                                             for sm_node, rw_node in zip(self.softmax_nodes,
-                                                                         self.retrieval_weighting_nodes)],
-                                function=LinearCombination,
-                                name='RETRIEVAL')
+
+        if self.retrieval_weighting_nodes:
+            input_ports = [{SIZE: memory_capacity,
+                            FUNCTION: LinearCombination(operation=PRODUCT),
+                            PROJECTIONS: [sm_node.output_port, rw_node.output_port],
+                            NAME: "WEIGHTING FOR {sm_node.name}"}
+                           for sm_node, rw_node in zip(self.softmax_nodes,
+                                                       self.retrieval_weighting_nodes)]
+        else:
+            input_ports = [{SIZE: memory_capacity,
+                            PROJECTIONS: [sm_node.output_port],
+                            NAME: "SOFTMAX FROM {sm_node.name}"}
+                           for sm_node in self.softmax_nodes]
+
+        softmax_weighting_node = ProcessingMechanism(input_ports=input_ports,
+                                                     function=LinearCombination,
+                                                     name='RETRIEVAL')
 
         assert len(softmax_weighting_node.output_port.value) == memory_capacity, \
             'PROGRAM ERROR: number of items in retrieval_weighting_node ' \
@@ -1684,26 +1695,27 @@ class EMComposition(AutodiffComposition):
         """Create nodes that report the value field(s) for the item(s) matched in memory.
         """
 
-        self.retrieved_key_nodes = [TransferMechanism(input_ports={SIZE: len(self.key_input_nodes[i].variable[0]),
-                                                                   PROJECTIONS:
-                                                                       MappingProjection(
-                                                                           sender=self.softmax_weighting_node,
-                                                                           # matrix=ZEROS_MATRIX)
-                                                                           matrix=memory_template[:,i])
-                                                                   },
-                                                      name= f'{self.key_names[i]} RETRIEVED')
-                                    for i in range(self.num_keys)]
+        self.retrieved_key_nodes = \
+            [TransferMechanism(input_ports={SIZE: len(self.key_input_nodes[i].variable[0]),
+                                            PROJECTIONS:
+                                                MappingProjection(
+                                                    sender=self.softmax_weighting_node,
+                                                    matrix=memory_template[:,i],
+                                                    name=f'MEMORY FOR {self.key_names[i]}')
+                                            },
+                               name= f'{self.key_names[i]} RETRIEVED')
+             for i in range(self.num_keys)]
 
-        self.retrieved_value_nodes = [TransferMechanism(input_ports={SIZE: len(self.value_input_nodes[i].variable[0]),
-                                                                     PROJECTIONS:
-                                                                         MappingProjection(
-                                                                             sender=self.softmax_weighting_node,
-                                                                             # matrix=ZEROS_MATRIX)
-                                                                             matrix=memory_template[:,
-                                                                                    i + self.num_keys])
-                                                                     },
-                                                        name= f'{self.value_names[i]} RETRIEVED')
-                                      for i in range(self.num_values)]
+        self.retrieved_value_nodes = \
+            [TransferMechanism(input_ports={SIZE: len(self.value_input_nodes[i].variable[0]),
+                                            PROJECTIONS:
+                                                MappingProjection(
+                                                    sender=self.softmax_weighting_node,
+                                                    matrix=memory_template[:,
+                                                           i + self.num_keys],
+                                                    name=f'MEMORY FOR {self.value_names[i]}')},
+                               name= f'{self.value_names[i]} RETRIEVED')
+             for i in range(self.num_values)]
 
         return self.retrieved_key_nodes + self.retrieved_value_nodes
 
