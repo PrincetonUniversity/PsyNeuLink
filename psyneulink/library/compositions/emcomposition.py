@@ -1454,8 +1454,9 @@ class EMComposition(AutodiffComposition):
                            concatenate_keys,
                            normalize_memories,
                            softmax_gain,
+                           storage_prob,
                            use_gating_for_weighting,
-                           storage_prob)->set:
+                           )->set:
         """Construct pathway for EMComposition"""
 
         # Construct nodes of Composition
