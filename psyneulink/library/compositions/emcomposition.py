@@ -1061,7 +1061,6 @@ class EMComposition(AutodiffComposition):
         concatenate_keys = Parameter(False, structural=True)
         normalize_memories = Parameter(True, loggable=False, fallback_default=True)
         softmax_gain = Parameter(CONTROL, modulable=True, fallback_default=True)
-        e
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         learn_weights = Parameter(False, fallback_default=True) # FIX: False until learning is implemented
         learning_rate = Parameter(.001, fallback_default=True)
@@ -1694,10 +1693,6 @@ class EMComposition(AutodiffComposition):
                                                                          PROJECTIONS:[m.output_port for m in
                                                                                       self.softmax_nodes]}],
                                                            name='RETRIEVAL')
-            assert len(softmax_weighting_node.output_port.value) == memory_capacity, \
-                'PROGRAM ERROR: number of items in softmax_weighting_node ' \
-                '({len(softmax_weighting_node.output_port)}) does not match memory_capacity ({self.memory_capacity})'
-
         else:
             if self.retrieval_weighting_nodes:
                 input_ports = [{SIZE: memory_capacity,
