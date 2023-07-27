@@ -74,23 +74,23 @@ class TestParameterPorts:
         A = TransferMechanism()
         with pytest.raises(pnl.PortError) as error:
             A.parameter_ports['slope'].path_afferents
-        assert '"ParameterPorts do not have \'path_afferents\'; (access attempted for TransferMechanism-0[slope])."' \
+        assert 'ParameterPorts do not have \'path_afferents\'; (access attempted for TransferMechanism-0[slope]).' \
                in str(error.value)
         with pytest.raises(pnl.PortError) as error:
             A.parameter_ports['slope'].path_afferents = ['test']
-        assert '"ParameterPorts are not allowed to have \'path_afferents\' ' \
-               '(assignment attempted for TransferMechanism-0[slope])."' in str(error.value)
+        assert 'ParameterPorts are not allowed to have \'path_afferents\' ' \
+               '(assignment attempted for TransferMechanism-0[slope]).' in str(error.value)
 
     def test_no_efferents(self):
         A = TransferMechanism()
         with pytest.raises(pnl.PortError) as error:
             A.parameter_ports['slope'].efferents
-        assert '"ParameterPorts do not have \'efferents\'; (access attempted for TransferMechanism-0[slope])."' \
+        assert 'ParameterPorts do not have \'efferents\'; (access attempted for TransferMechanism-0[slope]).' \
                in str(error.value)
         with pytest.raises(pnl.PortError) as error:
             A.parameter_ports['slope'].efferents = ['test']
-        assert '"ParameterPorts are not allowed to have \'efferents\' ' \
-               '(assignment attempted for TransferMechanism-0[slope])."' in str(error.value)
+        assert 'ParameterPorts are not allowed to have \'efferents\' ' \
+               '(assignment attempted for TransferMechanism-0[slope]).' in str(error.value)
 
 class TestConfigurableParameters:
     def test_configurable_params(self):
@@ -103,61 +103,61 @@ class TestConfigurableParameters:
 
         # SLOPE - - - - - - - -
 
-        assert np.allclose(T.function.slope.base, old_value)
-        assert np.allclose(T.function.slope.modulated, old_value)
+        np.testing.assert_allclose(T.function.slope.base, old_value)
+        np.testing.assert_allclose(T.function.slope.modulated, old_value)
 
         T.function.slope.base = new_value
 
-        assert np.allclose(T.function.slope.base, new_value)
-        assert np.allclose(T.function.slope.modulated, old_value)
+        np.testing.assert_allclose(T.function.slope.base, new_value)
+        np.testing.assert_allclose(T.function.slope.modulated, old_value)
 
         # INTERCEPT - - - - - - - -
 
-        assert np.allclose(T.function.intercept.base, old_value)
-        assert np.allclose(T.function.intercept.modulated, old_value)
+        np.testing.assert_allclose(T.function.intercept.base, old_value)
+        np.testing.assert_allclose(T.function.intercept.modulated, old_value)
 
         T.function.intercept.base = new_value
 
-        assert np.allclose(T.function.intercept.base, new_value)
-        assert np.allclose(T.function.intercept.modulated, old_value)
+        np.testing.assert_allclose(T.function.intercept.base, new_value)
+        np.testing.assert_allclose(T.function.intercept.modulated, old_value)
 
         # SMOOTHING FACTOR - - - - - - - -
 
-        assert np.allclose(T.integration_rate.base, old_value)
-        assert np.allclose(T.integration_rate.modulated, old_value)
+        np.testing.assert_allclose(T.integration_rate.base, old_value)
+        np.testing.assert_allclose(T.integration_rate.modulated, old_value)
 
         T.integration_rate.base = new_value
 
         # KAM changed 3/2/18 --
         # function_params looks at ParameterPort value, so this will not update until next execution
-        assert np.allclose(T.integration_rate.base, new_value)
-        assert np.allclose(T.integration_rate.modulated, old_value)
+        np.testing.assert_allclose(T.integration_rate.base, new_value)
+        np.testing.assert_allclose(T.integration_rate.modulated, old_value)
 
         # NOISE - - - - - - - -
 
-        assert np.allclose(T.noise.base, old_value)
-        assert np.allclose(T.noise.modulated, old_value)
+        np.testing.assert_allclose(T.noise.base, old_value)
+        np.testing.assert_allclose(T.noise.modulated, old_value)
 
         T.noise.base = new_value
 
         # KAM changed 3/2/18 --
         # function_params looks at ParameterPort value, so this will not update until next execution
-        assert np.allclose(T.noise.base, new_value)
-        assert np.allclose(T.noise.modulated, old_value)
+        np.testing.assert_allclose(T.noise.base, new_value)
+        np.testing.assert_allclose(T.noise.modulated, old_value)
 
         T.execute(1.0)
 
-        assert np.allclose(T.function.slope.base, new_value)
-        assert np.allclose(T.function.slope.modulated, new_value)
+        np.testing.assert_allclose(T.function.slope.base, new_value)
+        np.testing.assert_allclose(T.function.slope.modulated, new_value)
 
-        assert np.allclose(T.function.intercept.base, new_value)
-        assert np.allclose(T.function.intercept.modulated, new_value)
+        np.testing.assert_allclose(T.function.intercept.base, new_value)
+        np.testing.assert_allclose(T.function.intercept.modulated, new_value)
 
-        assert np.allclose(T.integration_rate.base, new_value)
-        assert np.allclose(T.integration_rate.modulated, new_value)
+        np.testing.assert_allclose(T.integration_rate.base, new_value)
+        np.testing.assert_allclose(T.integration_rate.modulated, new_value)
 
-        assert np.allclose(T.noise.base, new_value)
-        assert np.allclose(T.noise.modulated, new_value)
+        np.testing.assert_allclose(T.noise.base, new_value)
+        np.testing.assert_allclose(T.noise.modulated, new_value)
 
 
 class TestModParams:

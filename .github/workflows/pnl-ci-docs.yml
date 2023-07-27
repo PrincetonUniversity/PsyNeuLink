@@ -24,7 +24,7 @@ jobs:
       # The entire matrix is set up and 'base' builds are pruned based
       # on event name and final configuration (ubuntu, python3.7).
       matrix:
-        python-version: [3.7, 3.8, 3.9]
+        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11']
         python-architecture: ['x64']
         os: [ubuntu-latest, macos-latest, windows-latest]
         event:
@@ -37,9 +37,13 @@ jobs:
             pnl-version: 'base'
           - os: windows-latest
             pnl-version: 'base'
-          - python-version: 3.8
+          - python-version: '3.8'
             pnl-version: 'base'
-          - python-version: 3.9
+          - python-version: '3.9'
+            pnl-version: 'base'
+          - python-version: '3.10'
+            pnl-version: 'base'
+          - python-version: '3.11'
             pnl-version: 'base'
 
     outputs:
@@ -74,7 +78,9 @@ jobs:
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
-        python-version: ${{ matrix.python-version }}
+        # Block python3.7.17 on macos. see:
+        # https://github.com/actions/setup-python/issues/682
+        python-version: ${{ (matrix.os == 'macos-latest' && matrix.python-version == '3.7') && '3.7.16' || matrix.python-version }}
         architecture: ${{ matrix.python-architecture }}
 
     - name: Get pip cache location

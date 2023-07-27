@@ -1,29 +1,29 @@
-#%%
+# %%
 import numpy as np
 import psyneulink as pnl
 
 import matplotlib.pyplot as plt
-plt.rcParams["figure.figsize"] = (20,10)
 
-import matplotlib.pyplot as plt
+plt.rcParams["figure.figsize"] = (20, 10)
+
 import seaborn as sns
 import pandas as pd
 
 import wfpt
 
-from psyneulink.core.components.functions.fitfunctions import simulation_likelihood
+from psyneulink.core.components.functions.nonstateful.fitfunctions import simulation_likelihood
 
 
-def ddm_pdf_analytical(drift_rate, threshold, noise, starting_point, non_decision_time, time_step_size=0.01):
+def ddm_pdf_analytical(rate, threshold, noise, starting_value, non_decision_time, time_step_size=0.01):
     from ddm import Model
     from ddm.models import DriftConstant, NoiseConstant, BoundConstant, OverlayNonDecision, ICPoint
     from ddm.functions import display_model
 
     model = Model(name='Simple model',
-                  drift=DriftConstant(drift=drift_rate),
+                  drift=DriftConstant(drift=rate),
                   noise=NoiseConstant(noise=noise),
                   bound=BoundConstant(B=threshold),
-                  IC=ICPoint(x0=starting_point),
+                  IC=ICPoint(x0=starting_value),
                   overlay=OverlayNonDecision(nondectime=non_decision_time),
                   dx=.001, dt=time_step_size, T_dur=3)
     display_model(model)
@@ -34,7 +34,6 @@ def ddm_pdf_analytical(drift_rate, threshold, noise, starting_point, non_decisio
 
 def ddm_pdf_simulate(drift_rate=0.75, threshold=1.0, noise=0.1, starting_point=0.0, non_decision_time=0.0,
                      time_step_size=0.01, num_samples=1000000, use_pnl=True, rt_space=None):
-
     if use_pnl:
         decision = pnl.DDM(function=pnl.DriftDiffusionIntegrator(starting_value=0.1234),
                            output_ports=[pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME],
@@ -68,7 +67,7 @@ def ddm_pdf_simulate(drift_rate=0.75, threshold=1.0, noise=0.1, starting_point=0
                                  drift_rate * np.ones(num_samples),
                                  threshold * np.ones(num_samples),
                                  dt=time_step_size)
-        rts = np.expand_dims(np.column_stack((np.sign(rts)*threshold, np.abs(rts))), axis=0)
+        rts = np.expand_dims(np.column_stack((np.sign(rts) * threshold, np.abs(rts))), axis=0)
 
     # Make a histogram
     # hist = bh.Histogram(bh.axis.Boolean(), bh.axis.Regular(int(3 / time_step_size), 0.0, 3.0))
@@ -80,18 +79,18 @@ def ddm_pdf_simulate(drift_rate=0.75, threshold=1.0, noise=0.1, starting_point=0
     df = pd.DataFrame(index=rt_space)
 
     df[f'Correct KDE (dt={time_step_size})'] = simulation_likelihood(rts,
-                                                                    categorical_dims=np.array([True, False]),
-                                                                    combine_trials=True,
-                                                                    exp_data=np.c_[
-                                                                        threshold * np.ones(len(rt_space)), rt_space])
+                                                                     categorical_dims=np.array([True, False]),
+                                                                     combine_trials=True,
+                                                                     exp_data=np.c_[
+                                                                         threshold * np.ones(len(rt_space)), rt_space])
     df[f'Error KDE (dt={time_step_size})'] = simulation_likelihood(rts,
-                                                                  categorical_dims=np.array([True, False]),
-                                                                  combine_trials=True,
-                                                                  exp_data=np.c_[
-                                                                      -threshold * np.ones(len(rt_space)), rt_space])
+                                                                   categorical_dims=np.array([True, False]),
+                                                                   combine_trials=True,
+                                                                   exp_data=np.c_[
+                                                                       -threshold * np.ones(len(rt_space)), rt_space])
 
-    #df[f'Correct Histogram (dt={time_step_size})'] = (hist[True, :] / hist.sum(flow=True) / time_step_size).view()
-    #df[f'Error Histogram (dt={time_step_size})'] = (hist[False, :] / hist.sum(flow=True) / time_step_size).view()
+    # df[f'Correct Histogram (dt={time_step_size})'] = (hist[True, :] / hist.sum(flow=True) / time_step_size).view()
+    # df[f'Error Histogram (dt={time_step_size})'] = (hist[False, :] / hist.sum(flow=True) / time_step_size).view()
 
     return df
 
@@ -139,13 +138,63 @@ def ddm_plot_check():
 
     fig, axes = plt.subplots(1, 2, sharex=True, sharey=True)
 
-    #df = df.loc[:, ~df.columns.str.contains('Histogram')]
+    # df = df.loc[:, ~df.columns.str.contains('Histogram')]
     sns.lineplot(data=df.filter(regex='Correct'), ax=axes[0])
     sns.lineplot(data=df.filter(regex='Error'), ax=axes[1])
     plt.show()
 
-    plt.savefig(f"{'_'.join([f'{p}={v}' for p,v in ddm_params.items()])}.png")
+    plt.savefig(f"{'_'.join([f'{p}={v}' for p, v in ddm_params.items()])}.png")
 
 
 ddm_plot_check()
 
+
+def plot_sim_results(rate, threshold, noise, starting_value, non_decision_time, time_step_size=0.001,
+                     sim_data=None, rt_space=None):
+    # Get the analytical DDM results
+    from pyddm import Model
+    from pyddm.models import DriftConstant, NoiseConstant, BoundConstant, OverlayNonDecision, ICPoint
+
+    model = Model(name='Simple model',
+                  drift=DriftConstant(drift=rate),
+                  noise=NoiseConstant(noise=noise),
+                  bound=BoundConstant(B=threshold),
+                  IC=ICPoint(x0=starting_value),
+                  overlay=OverlayNonDecision(nondectime=non_decision_time),
+                  dx=.001, dt=time_step_size, T_dur=3)
+    s = model.solve()
+
+    t_domain, pdf_corr, pdf_err = model.t_domain(), s.pdf_corr(), s.pdf_err()
+
+    # Interpolate to common rt space
+    if rt_space is None:
+        rt_space = np.linspace(0.0, 3.0, 3000)
+
+    from scipy.interpolate import interpn
+    df = pd.DataFrame(index=rt_space)
+    df[f"Correct Analytical"] = interpn((t_domain,), pdf_corr, rt_space,
+                                        method='linear', bounds_error=False, fill_value=1e-10)
+    df[f"Error Analytical"] = interpn((t_domain,), pdf_err, rt_space,
+                                      method='linear', bounds_error=False, fill_value=1e-10)
+
+    if sim_data is not None:
+        sim_df = pd.DataFrame(index=rt_space)
+        sim_df[f'Correct KDE'] = simulation_likelihood(sim_data,
+                                                       categorical_dims=np.array([True, False]),
+                                                       combine_trials=True,
+                                                       exp_data=np.c_[
+                                                           threshold * np.ones(len(rt_space)), rt_space])
+        sim_df[f'Error KDE'] = simulation_likelihood(sim_data,
+                                                     categorical_dims=np.array([True, False]),
+                                                     combine_trials=True,
+                                                     exp_data=np.c_[
+                                                         -threshold * np.ones(len(rt_space)), rt_space])
+
+        df = pd.concat([df, sim_df])
+
+    fig, axes = plt.subplots(1, 2, sharex=True, sharey=True)
+
+    # df = df.loc[:, ~df.columns.str.contains('Histogram')]
+    sns.lineplot(data=df.filter(regex='Correct'), ax=axes[0])
+    sns.lineplot(data=df.filter(regex='Error'), ax=axes[1])
+    plt.show()

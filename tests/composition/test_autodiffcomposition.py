@@ -26,6 +26,10 @@ logger = logging.getLogger(__name__)
 # Unit tests for functions of AutodiffComposition class that are new (not in Composition)
 # or override functions in Composition
 
+def _single_learn_results(composition, *args, **kwargs):
+    composition.learn(*args, **kwargs)
+    return composition.learning_results
+
 @pytest.mark.pytorch
 @pytest.mark.acconstructor
 class TestACConstructor:
@@ -64,6 +68,7 @@ class TestACConstructor:
 
 
 @pytest.mark.pytorch
+@pytest.mark.composition
 def test_autodiff_forward(autodiff_mode):
     # create xor model mechanisms and projections
     xor_in = TransferMechanism(name='xor_in',
@@ -91,11 +96,12 @@ def test_autodiff_forward(autodiff_mode):
     xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
     outputs = xor.run(inputs=[0,0], execution_mode=autodiff_mode)
-    assert np.allclose(outputs, [[0.9479085241082691]])
+    np.testing.assert_allclose(outputs, [[0.9479085241082691]])
 
 
 @pytest.mark.pytorch
 @pytest.mark.accorrectness
+@pytest.mark.composition
 class TestTrainingCorrectness:
 
     # test whether xor model created as autodiff composition learns properly
@@ -121,8 +127,7 @@ class TestTrainingCorrectness:
         hid_map = MappingProjection(matrix=np.random.rand(2, 10))
         out_map = MappingProjection(matrix=np.random.rand(10, 1))
 
-        xor = AutodiffComposition(optimizer_type=opt,
-                                  learning_rate=0.1)
+        xor = AutodiffComposition(optimizer_type=opt, learning_rate=0.1)
 
         xor.add_node(xor_in)
         xor.add_node(xor_hid)
@@ -131,28 +136,24 @@ class TestTrainingCorrectness:
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
-        xor_inputs = np.array(  # the inputs we will provide to the model
-            [[0, 0], [0, 1], [1, 0], [1, 1]])
-
-        xor_targets = np.array(  # the outputs we wish to see from the model
-            [[0], [1], [1], [0]])
+        input_dict = {"inputs": {xor_in: np.array([[0, 0], [0, 1], [1, 0], [1, 1]])},
+                      "targets": {xor_out: np.array([[0], [1], [1], [0]])}}
 
         if calls == 'single':
-            results = benchmark(xor.learn, inputs={"inputs": {xor_in:xor_inputs},
-                                        "targets": {xor_out:xor_targets},
-                                        "epochs": eps}, execution_mode=autodiff_mode)
-
+            input_dict["epochs"] = eps
+            results = benchmark(_single_learn_results, xor, inputs=input_dict, execution_mode=autodiff_mode)
         else:
-            input_dict = {"inputs": {xor_in: xor_inputs},
-                          "targets": {xor_out: xor_targets},
-                          "epochs": 1}
+            input_dict["epochs"] = 1
             for i in range(eps - 1):
                 xor.learn(inputs=input_dict, execution_mode=autodiff_mode)
-            results = benchmark(xor.learn, inputs=input_dict, execution_mode=autodiff_mode)
+            results = benchmark(_single_learn_results, xor, inputs=input_dict, execution_mode=autodiff_mode)
 
-        assert len(results) == len(expected)
-        for r, t in zip(results, expected):
-            assert np.allclose(r[0], t)
+        if pytest.helpers.llvm_current_fp_precision() == 'fp32' and autodiff_mode != pnl.ExecutionMode.PyTorch:
+            accuracy_args = {"atol": 1e-8, "rtol": 1e-6}
+        else:
+            accuracy_args = {}
+
+        np.testing.assert_allclose(results, expected, **accuracy_args)
 
 
     # tests whether semantic network created as autodiff composition learns properly
@@ -323,9 +324,12 @@ class TestTrainingCorrectness:
                 targets_dict[out_sig_can].append(truth_can[i])
 
         # TRAIN THE MODEL
-        results = benchmark(sem_net.learn, inputs={'inputs': inputs_dict,
-                                                   'targets': targets_dict,
-                                                   'epochs': eps}, execution_mode=autodiff_mode)
+        results = benchmark(_single_learn_results,
+                            sem_net,
+                            inputs={'inputs': inputs_dict,
+                                    'targets': targets_dict,
+                                    'epochs': eps},
+                            execution_mode=autodiff_mode)
 
         # CHECK CORRECTNESS
         expected = [[[0.13455769, 0.12924714, 0.13288172, 0.1404659 , 0.14305814,
@@ -450,9 +454,17 @@ class TestTrainingCorrectness:
                     0.23886036, 0.24575353, 0.25715595, 0.24334699], [0.99925183, 0.51889063, 0.25712839, 0.25460613, 0.49597306,
                     0.26739429, 0.25464059, 0.25453138, 0.49761396]]]
 
+
+        if pytest.helpers.llvm_current_fp_precision() == 'fp32' and autodiff_mode != pnl.ExecutionMode.Python:
+            accuracy_args = {"atol": 1e-8, "rtol": 1e-6}
+        else:
+            accuracy_args = {}
+
+        # The results are in a ragged array, we need to check components explictly
         for res, exp in zip(results, expected):
             for r, e in zip(res, exp):
-                assert np.allclose(r, e)
+                np.testing.assert_allclose(r, e, **accuracy_args)
+
 
     def test_pytorch_equivalence_with_autodiff_composition(self, autodiff_mode):
         iSs = np.array(
@@ -664,7 +676,7 @@ class TestTrainingCorrectness:
                              0.05186586, 0.05829845, 0.05179337, 0.03504668, 0.05379566,
                              0.07103772, 0.03544133, 0.03019486, 0.12605846, 0.03976812])
 
-        assert np.allclose(output,comparator)
+        np.testing.assert_allclose(output,comparator, atol=1e-6)
 
     def test_pytorch_equivalence_with_autodiff_training_disabled_on_proj(self):
         iSs = np.array(
@@ -880,7 +892,7 @@ class TestTrainingCorrectness:
                                0.08293781, 0.08313539, 0.08310112, 0.08409653, 0.08289441,
                                0.08348761, 0.08323367, 0.35237628, 0.22024095, 0.08336799])
 
-        assert np.allclose(output, comparator)
+        np.testing.assert_allclose(output, comparator, rtol=1e-5, atol=1e-8)
 
 
 @pytest.mark.pytorch
@@ -1192,19 +1204,19 @@ class TestTrainingIdenticalness():
 
         # CHECK THAT PARAMETERS FOR AUTODIFFCOMPOSITION, COMPOSITION ARE SAME
 
-        assert np.allclose(map_nouns_h1.parameters.matrix.get(sem_net_autodiff),
+        np.testing.assert_allclose(map_nouns_h1.parameters.matrix.get(sem_net_autodiff),
                            map_nouns_h1_comp.get_mod_matrix(sem_net_comp))
-        assert np.allclose(map_rels_h2.parameters.matrix.get(sem_net_autodiff),
+        np.testing.assert_allclose(map_rels_h2.parameters.matrix.get(sem_net_autodiff),
                            map_rels_h2_comp.get_mod_matrix(sem_net_comp))
-        assert np.allclose(map_h1_h2.parameters.matrix.get(sem_net_autodiff),
+        np.testing.assert_allclose(map_h1_h2.parameters.matrix.get(sem_net_autodiff),
                            map_h1_h2_comp.get_mod_matrix(sem_net_comp))
-        assert np.allclose(map_h2_I.parameters.matrix.get(sem_net_autodiff),
+        np.testing.assert_allclose(map_h2_I.parameters.matrix.get(sem_net_autodiff),
                            map_h2_I_comp.get_mod_matrix(sem_net_comp))
-        assert np.allclose(map_h2_is.parameters.matrix.get(sem_net_autodiff),
+        np.testing.assert_allclose(map_h2_is.parameters.matrix.get(sem_net_autodiff),
                            map_h2_is_comp.get_mod_matrix(sem_net_comp))
-        assert np.allclose(map_h2_has.parameters.matrix.get(sem_net_autodiff),
+        np.testing.assert_allclose(map_h2_has.parameters.matrix.get(sem_net_autodiff),
                            map_h2_has_comp.get_mod_matrix(sem_net_comp))
-        assert np.allclose(map_h2_can.parameters.matrix.get(sem_net_autodiff),
+        np.testing.assert_allclose(map_h2_can.parameters.matrix.get(sem_net_autodiff),
                            map_h2_can_comp.get_mod_matrix(sem_net_comp))
 
     def test_identicalness_of_input_types(self):
@@ -1457,6 +1469,7 @@ class TestTrainingIdenticalness():
 
 @pytest.mark.pytorch
 @pytest.mark.acmisc
+@pytest.mark.composition
 class TestMiscTrainingFunctionality:
 
     # test whether pytorch parameters are initialized to be identical to the Autodiff Composition's
@@ -1491,9 +1504,9 @@ class TestMiscTrainingFunctionality:
         xor._analyze_graph()
         xor._build_pytorch_representation(context=xor.default_execution_id)
         # check whether pytorch parameters are identical to projections
-        assert np.allclose(hid_map.parameters.matrix.get(None),
+        np.testing.assert_allclose(hid_map.parameters.matrix.get(None),
                            xor.parameters.pytorch_representation.get(xor).params[0].detach().numpy())
-        assert np.allclose(out_map.parameters.matrix.get(None),
+        np.testing.assert_allclose(out_map.parameters.matrix.get(None),
                            xor.parameters.pytorch_representation.get(xor).params[1].detach().numpy())
 
     # test whether processing doesn't interfere with pytorch parameters after training
@@ -1556,14 +1569,17 @@ class TestMiscTrainingFunctionality:
         # pt_weights_out_ap = xor.parameters.pytorch_representation.get(xor).params[1].detach().numpy().copy()
         #
         # # check that weight parameters before and after processing are the same
-        # assert np.allclose(pt_weights_hid_bp, pt_weights_hid_ap)
-        # assert np.allclose(pt_weights_out_bp, pt_weights_out_ap)
+        # np.testing.assert_allclose(pt_weights_hid_bp, pt_weights_hid_ap)
+        # np.testing.assert_allclose(pt_weights_out_bp, pt_weights_out_ap)
 
     @pytest.mark.parametrize(
-        'loss', [Loss.L1, Loss.POISSON_NLL]
+        'loss, expected', [(Loss.MSE, [[[0.99330509]], [[0.99933169]], [[0.99933169]], [[0.9998504]]]),
+                           (Loss.L1, []),
+                           (Loss.POISSON_NLL, []),
+                           (Loss.CROSS_ENTROPY, [[[0.99330715]], [[0.99933202]], [[0.99933202]], [[0.99985049]]])]
     )
-    def test_various_loss_specs(self, loss, autodiff_mode):
-        if autodiff_mode is not pnl.ExecutionMode.Python:
+    def test_loss_specs(self, loss, expected, autodiff_mode):
+        if autodiff_mode is not pnl.ExecutionMode.Python and loss in [Loss.POISSON_NLL, Loss.L1]:
             pytest.skip("Loss spec not yet implemented!")
 
         xor_in = TransferMechanism(name='xor_in',
@@ -1589,23 +1605,19 @@ class TestMiscTrainingFunctionality:
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
-        xor_inputs = np.array(  # the inputs we will provide to the model
-            [[0, 0],
-             [0, 1],
-             [1, 0],
-             [1, 1]])
+        xor_inputs = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
 
-        xor_targets = np.array(  # the outputs we wish to see from the model
-            [[0],
-             [1],
-             [1],
-             [0]])
+        xor_targets = np.array([[0], [1], [1], [0]])
 
         xor.learn(inputs = {"inputs": {xor_in:xor_inputs},
                             "targets": {xor_out:xor_targets},
                             "epochs": 10}, execution_mode=autodiff_mode)
 
+        tol = {'atol': 2e-6, 'rtol': 2e-6} if autodiff_mode != pnl.ExecutionMode.Python and loss == Loss.CROSS_ENTROPY else {}
+        np.testing.assert_allclose(xor.learning_results, expected, **tol)
+
     def test_pytorch_loss_spec(self, autodiff_mode):
+
         if autodiff_mode is not pnl.ExecutionMode.Python:
             pytest.skip("Loss spec not yet implemented!")
 
@@ -1682,29 +1694,23 @@ class TestMiscTrainingFunctionality:
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
-        xor_inputs = np.array(  # the inputs we will provide to the model
-            [[0, 0], [0, 1], [1, 0], [1, 1]])
-
-        xor_targets = np.array(  # the outputs we wish to see from the model
-            [[0], [1], [1], [0]])
-
         # train model for a few epochs
-        # results_before_proc = xor.run(inputs={xor_in:xor_inputs},
-        #                               targets={xor_out:xor_targets},
-        #                               epochs=10)
-        results_before_proc = benchmark(xor.learn, inputs={"inputs": {xor_in:xor_inputs},
-                                                           "targets": {xor_out:xor_targets},
-                                                           "epochs": 10}, execution_mode=autodiff_mode)
+        results = benchmark(_single_learn_results,
+                            xor,
+                            inputs={"inputs": {xor_in: [[0, 0], [0, 1], [1, 0], [1, 1]]},
+                                    "targets": {xor_out: [[0], [1], [1], [0]]},
+                                    "epochs": 10},
+                            execution_mode=autodiff_mode)
 
         # fp32 results are different due to rounding
         if pytest.helpers.llvm_current_fp_precision() == 'fp32' and \
-           autodiff_mode != pnl.ExecutionMode.Python and \
+           autodiff_mode != pnl.ExecutionMode.PyTorch and \
            optimizer_type == 'sgd' and \
            learning_rate == 10:
             expected = [[[0.9918830394744873]], [[0.9982172846794128]], [[0.9978305697441101]], [[0.9994590878486633]]]
         # FIXME: LLVM version is broken with learning rate == 1.5
-        if learning_rate != 1.5 or autodiff_mode == pnl.ExecutionMode.Python:
-            assert np.allclose(results_before_proc, expected)
+        if learning_rate != 1.5 or autodiff_mode == pnl.ExecutionMode.PyTorch:
+            np.testing.assert_allclose(results, expected)
 
 
     # test whether pytorch parameters and projections are kept separate (at diff. places in memory)
@@ -1762,8 +1768,8 @@ class TestMiscTrainingFunctionality:
         pt_weights_out = xor.parameters.pytorch_representation.get(xor).params[1].detach().numpy().copy()
 
         # assert that projections are still what they were initialized as
-        assert np.allclose(hid_map.parameters.matrix.get(None), hid_m)
-        assert np.allclose(out_map.parameters.matrix.get(None), out_m)
+        np.testing.assert_allclose(hid_map.parameters.matrix.get(None), hid_m)
+        np.testing.assert_allclose(out_map.parameters.matrix.get(None), out_m)
 
         # assert that projections didn't change during training with the pytorch
         # parameters (they should now be different)
@@ -2306,7 +2312,7 @@ def test_autodiff_saveload(tmp_path):
     assert not np.allclose(xor2_outputs_pre, xor2_outputs_post, atol=1e-9)
 
     # make sure loaded model is identical, and used during run
-    assert np.allclose(xor1_outputs, xor2_outputs_post, atol=1e-9)
+    np.testing.assert_allclose(xor1_outputs, xor2_outputs_post, atol=1e-9)
 
 
 @pytest.mark.pytorch
@@ -2378,19 +2384,17 @@ class TestACLogging:
 
         expected_length = len(xor_inputs) * num_epochs
 
-        assert np.all(in_np_dict_vals[0:4] == xor_inputs)
-        assert np.all(np.array(in_np_vals) == in_np_dict_vals)
+        np.testing.assert_equal(in_np_dict_vals[0:4], xor_inputs)
+        np.testing.assert_equal(in_np_vals, in_np_dict_vals)
         assert in_np_dict_vals.shape == (expected_length, xor_in.size)
 
         assert hid_map_np_dict_mats.shape == (expected_length, xor_in.size, xor_hid.size)
-        assert hid_map_np_mats.shape == hid_map_np_dict_mats.shape
-        assert np.all(hid_map_np_mats[3] == hid_map_np_dict_mats[3])  # CW: 3 is arbitrary. you can use any index
+        np.testing.assert_equal(hid_map_np_mats, hid_map_np_dict_mats)
 
         assert hid_np_dict_vals.shape == (expected_length, xor_hid.size)
 
         assert out_map_np_dict_mats.shape == (expected_length, xor_hid.size, xor_out.size)
-        assert out_map_np_mats.shape == out_map_np_dict_mats.shape
-        assert np.all(out_map_np_mats[3] == out_map_np_dict_mats[3])
+        np.testing.assert_equal(out_map_np_mats, out_map_np_dict_mats)
 
         assert out_np_dict_vals.shape == (expected_length, xor_out.size)
 
@@ -2452,6 +2456,7 @@ class TestACLogging:
 
 @pytest.mark.pytorch
 @pytest.mark.acnested
+@pytest.mark.composition
 class TestNested:
 
     @pytest.mark.parametrize(
@@ -2515,12 +2520,12 @@ class TestNested:
         no_training_input = {xor_autodiff: no_training_input_dict}
 
         learning_context = Context()
-        result1 = xor_autodiff.learn(inputs=input_dict, execution_mode=autodiff_mode, epochs=num_epochs, context=learning_context, patience=patience, min_delta=min_delta)
-        result1 = np.array(result1).flatten()
-        assert np.allclose(result1, np.array(xor_targets).flatten(), atol=0.1)
+        xor_autodiff.learn(inputs=input_dict, execution_mode=autodiff_mode, epochs=num_epochs, context=learning_context, patience=patience, min_delta=min_delta)
+        result1 = np.array(xor_autodiff.learning_results).flatten()
+        np.testing.assert_allclose(result1, np.array(xor_targets).flatten(), atol=0.1)
         result2 = parentComposition.run(inputs=no_training_input, execution_mode=autodiff_mode, context=learning_context)
 
-        assert np.allclose(result2, [[0]], atol=0.1)
+        np.testing.assert_allclose(result2, [[0]], atol=0.1)
 
     @pytest.mark.parametrize(
         'num_epochs, learning_rate, patience, min_delta', [
@@ -2587,7 +2592,7 @@ class TestNested:
         xor_autodiff.learn(inputs=input_dict, execution_mode=autodiff_mode, context=learning_context, patience=patience, min_delta=min_delta)
         result2 = parentComposition.run(inputs=no_training_input, execution_mode=autodiff_mode, context=learning_context)
 
-        assert np.allclose(result2, [[0]], atol=0.1)
+        np.testing.assert_allclose(result2, [[0]], atol=0.1)
 
     # CW 12/21/18: Test is failing due to bugs, will fix later
     # @pytest.mark.parametrize(
@@ -2667,7 +2672,7 @@ class TestNested:
     #
     #     result = parentComposition.run(inputs=no_training_input)
     #
-    #     assert np.allclose(result, [[0]], atol=0.1)
+    #     np.testing.assert_allclose(result, [[0]], atol=0.1)
 
     @pytest.mark.parametrize(
         'eps, opt', [
@@ -3172,8 +3177,8 @@ class TestBatching:
         c1_results = xor.parameters.results._get(c1)
         c2_results = xor.parameters.results._get(c2)
 
-        assert np.allclose(c1_results[0][:2], c2_results[0][:2])
-        assert np.allclose(c1_results[0][2:], c2_results[0][2:])
+        np.testing.assert_allclose(c1_results[0][:2], c2_results[0][:2])
+        np.testing.assert_allclose(c1_results[0][2:], c2_results[0][2:])
 
     def test_cross_entropy_loss(self):
         import torch
@@ -3186,8 +3191,34 @@ class TestBatching:
         adc.add_linear_processing_pathway([m1, p, m2])
         adc._build_pytorch_representation()
 
-        classes = torch.Tensor([2, 1])
-        target = torch.Tensor([1])
+        # The following is based on earlier version of PyTorch that only allows
+        # class (index) based target specification (rather than one-hot) for cross-entropy loss:
+        # classes = torch.Tensor([2, 1])
+        # target = torch.Tensor([1])
+        # # Equation for loss taken from https://pytorch.org/docs/stable/nn.html#torch.nn.CrossEntropyLoss
+        # assert np.allclose(adc.loss(classes, target).detach().numpy(), -1 + np.log(np.exp(2) + np.exp(1)))
+        # assert np.allclose(adc.loss(output, target).detach().numpy(), -1 + np.log(np.exp(2) + np.exp(1)))
 
-        # Equation for loss taken from https://pytorch.org/docs/stable/nn.html#torch.nn.CrossEntropyLoss
-        assert np.allclose(adc.loss(classes, target).detach().numpy(), -1 + np.log(np.exp(2) + np.exp(1)))
+        # Current implementation uses one-hot target specification:
+        output = [2,1]
+        target = [0,1]
+
+        o = np.array(output)
+        t = np.array(target)
+        sm = pnl.SoftMax()
+        logit = pnl.Logistic()
+
+        # Compute cross-entropy loss as documented for `PyTorchCrossEntropyLoss using target class probabilies vector
+        # (see https://pytorch.org/docs/stable/generated/torch.nn.CrossEntropyLoss.html);
+        # avoids "inf" value for entries = 0 in target vector
+        ce_numpy = -np.sum(np.log( np.exp(o) / np.sum(np.exp(o))) * t)
+
+        # Compute cross-entropy loss using standard mathematical formulation
+        #  which can return an "inf" value for entries = 0 in target vector
+        ce_pnl = np.sum(pnl.LinearCombination(operation=pnl.CROSS_ENTROPY)([sm(logit(o)),t]))
+
+        output = torch.Tensor(output)
+        target = torch.Tensor(target)
+        ce_torch = adc.loss(output, target).detach().numpy()
+
+        np.testing.assert_allclose(ce_numpy, ce_torch)

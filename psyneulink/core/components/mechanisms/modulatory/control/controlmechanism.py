@@ -39,7 +39,7 @@ used to modulate the `ParameterPort(s) <ParameterPort>` of one or more Mechanism
 the parameter(s) of the `function(s) <Mechanism_Base.function>` of those Mechanism(s). However, a ControlMechanism
 can also be used to modulate the function of `InputPorts <InputPort>` and/or `OutputPort <OutputPorts>`,
 much like a `GatingMechanism`.  A ControlMechanism's `function <ControlMechanism.function>` calculates a
-`control_allocation <ControlMechanism.control_allocation>`: a list of values provided to each of its `control_signals
+`control_allocation <ControlMechanism.control_allocation>`: one or more values used as inputs for its `control_signals
 <ControlMechanism.control_signals>`.  Its control_signals are `ControlSignal` OutputPorts that are used to modulate
 the parameters of other Mechanisms' `function <Mechanism_Base.function>` (see `ControlSignal_Modulation` for a more
 detailed description of how modulation operates).  A ControlMechanism can be configured to monitor the outputs of
@@ -376,20 +376,20 @@ determine its `control_allocation <ControlMechanism.control_allocation>`.
 ~~~~~~~~~~
 
 A ControlMechanism's `function <ControlMechanism.function>` uses its `outcome <ControlMechanism.outcome>`
-attribute (the `value <InputPort.value>` of its *OUTCOME* `InputPort`) to generate a `control_allocation
-<ControlMechanism.control_allocation>`.  By default, its `function <ControlMechanism.function>` is assigned
-the `Identity`, which takes a single value as its input, and copies it to the output, this assigns the value of
-each item of `control_allocation <ControlMechanism.control_allocation>`.  This item is assigned as
-the allocation for the all `ControlSignal` in `control_signals <ControlMechanism.control_signals>`. This
-distributes the ControlMechanism's input as the allocation to each of its `control_signals
-<ControlMechanism.control_signals>`.
-This same behavior also applies to any custom function assigned to a
-ControlMechanism that returns a 2d array with a single item in its outer dimension (axis 0).  If a function is
-assigned that returns a 2d array with more than one item, and it has the same number of `control_signals
-<ControlMechanism.control_signals>`, then each ControlSignal is assigned to the corresponding item of the function's
-value.  However, these default behaviors can be modified by specifying that individual ControlSignals reference
-different items in `control_allocation` as their `variable <Projection_Base.variable>`
-(see `OutputPort_Custom_Variable`).
+attribute (the `value <InputPort.value>` of its *OUTCOME* `InputPort`) to generate one or more values used
+for ControlMechanism's `control_allocation <ControlMechanism.control_allocation>`.  By default, its `function
+<ControlMechanism.function>` is assigned the `Identity` Function, which takes a single value as its input and returns
+it as its output.  That is then used as the ControlSignal's `control_allocation <ControlMechanism.control_allocation>`,
+which in turn is assigned as the allocation for all of the ControlMechanism's `control_signals
+<ControlMechanism.control_signals>`. That is, by default, the ControlMechanism's input is distributed as the
+allocation to each of its `control_signals <ControlMechanism.control_signals>`. This same behavior also occurs for
+any custom function assigned to a ControlMechanism that returns a 2d array with a single item in its outer dimension
+(axis 0).  If a function is assigned that returns a 2d array with more than one item, and the number of those items
+(i.e., the length of the 2d array) is the same as the number of `control_signals <ControlMechanism.control_signals>`,
+then each item is assigned to a corresponding `ControlSignal` (in the order in which they are specified in the
+**control_signals** argument of the ControlMechanism's constructor).  However, these default behaviors can be modified
+by specifying that individual ControlSignals reference different items in the ControlMechanism's `value
+<Mechanism_Base.value>` (see `OutputPort_Custom_Variable`).
 
 .. _ControlMechanism_Output:
 
@@ -402,16 +402,40 @@ The OutputPorts of a ControlMechanism are `ControlSignals <ControlSignal>` (list
 corresponding parameter.  The ControlSignals are listed in the `control_signals <ControlMechanism.control_signals>`
 attribute;  since they are a type of `OutputPort`, they are also listed in the ControlMechanism's `output_ports
 <Mechanism_Base.output_ports>` attribute. The parameters modulated by a ControlMechanism's ControlSignals can be
-displayed using its `show <ControlMechanism.show>` method. By default, each `ControlSignal` is assigned as its
-`allocation <ControlSignal.allocation>` the value of the  corresponding item of the ControlMechanism's
-`control_allocation <ControlMechanism.control_allocation>`;  however, subtypes of ControlMechanism may assign
-allocations differently. The `default_allocation  <ControlMechanism.default_allocation>` attribute can be used to
-specify a  default allocation for ControlSignals that have not been assigned their own `default_allocation
-<ControlSignal.default_allocation>`. The `allocation <ControlSignal.allocation>` is used by each ControlSignal to
-determine its `intensity <ControlSignal.intensity>`, which is then assigned to the `value <ControlProjection.value>`
-of the ControlSignal's `ControlProjection`.   The `value <ControlProjection.value>` of the ControlProjection is used
-by the `ParameterPort` to which it projects to modify the value of the parameter it controls (see
-`ControlSignal_Modulation` for description of how a ControlSignal modulates the value of a parameter).
+displayed using its `show <ControlMechanism.show>` method.
+
+By default, each `ControlSignal` is assigned as its `allocation <ControlSignal.allocation>` the value of the
+corresponding item of the ControlMechanism's `control_allocation <ControlMechanism.control_allocation>`;  however,
+subtypes of ControlMechanism may assign allocations differently. The **default_allocation** argument of the
+ControlMechanism's constructor can be used to specify a default allocation for ControlSignals that
+have not been assigned their own `default_allocation <ControlSignal.default_allocation>`.
+
+.. warning::
+    the **default_variable** argument of the ControlMechanism's constructor is **not** used to specify a default
+    allocation;  the **default_allocation** argument must be used for that purpose.  The **default_variable** argument
+    should only be used to specify the format of the `value <ControlMechanism.value>` of the ControlMechanism's
+    `input_port (see `Mechanism_InputPorts` for additional details), and its default input when it does not receive
+    any Projections (see `default_variable <Component_Variable>` for additional details).
+
+.. note::
+   While specifying **default_allocation** will take effect the first time the ControlMechanism is executed,
+   a value specified for **default_variable** will not take effect (i.e., in determining `control_allocation
+   <ControlMechanism.control_allocation>` or `value <ControlSignal.value>`\\s of the ControlSignals) until after
+   the ControlMechahnism is executed, and thus will not influence the parameters it controls until the next round of
+   execution (see `Composition_Timing` for a detailed description of the sequence of events during a Composition's
+   execution).
+
+COMMENT:
+    The `value <ControlSignal.value>` of a ControlSignal is not necessarily the same as its `allocation.
+    <ControlSignal.allocation>`  The former is the result of the ControlSignal's `function <ControlSignal.function>`,
+    which is executed when the ControlSignal is updated;  the latter is the value assigned to the ControlSignal's
+COMMENT
+
+The `allocation <ControlSignal.allocation>` is used by each ControlSignal to determine its `intensity
+<ControlSignal.intensity>`, which is then assigned to the `value <ControlProjection.value>`
+of the ControlSignal's `ControlProjection`.   The `value <ControlProjection.value>` of the ControlProjection
+is used by the `ParameterPort` to which it projects to modify the value of the parameter it controls (see
+`ControlSignal_Modulation` for a description of how a ControlSignal modulates the value of a parameter).
 
 .. _ControlMechanism_Costs_NetOutcome:
 
@@ -586,13 +610,14 @@ import uuid
 import warnings
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
 
-from psyneulink.core.components.functions.function import Function_Base, is_function_type
+from psyneulink._typing import Optional, Union, Callable, Literal, Iterable
+
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import Concatenate
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
-from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base
+from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base, MechanismError
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
@@ -607,9 +632,9 @@ from psyneulink.core.globals.keywords import \
     OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PARAMS, PORT_TYPE, PRODUCT, PROJECTION_TYPE, PROJECTIONS, \
     SEPARATE, SIZE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import ContentAddressableList, convert_to_list, convert_to_np_array, is_iterable
+from psyneulink.core.globals.utilities import ContentAddressableList, convert_all_elements_to_np_array, convert_to_list, convert_to_np_array
 
 __all__ = [
     'CONTROL_ALLOCATION', 'GATING_ALLOCATION', 'ControlMechanism', 'ControlMechanismError',
@@ -640,10 +665,10 @@ def _is_control_spec(spec):
         return False
 
 
-class ControlMechanismError(Exception):
-    def __init__(self, error_value, data=None):
-        self.error_value = error_value
+class ControlMechanismError(MechanismError):
+    def __init__(self, message, data=None):
         self.data = data
+        return super().__init__(message)
 
 
 def validate_monitored_port_spec(owner, spec_list):
@@ -724,6 +749,12 @@ def _net_outcome_getter(owning_component=None, context=None):
     except TypeError:
         return [0]
 
+def _control_allocation_getter(owning_component=None, context=None):
+    try:
+        return [v.parameters.variable._get(context) for v in owning_component.control_signals]
+    except (TypeError, AttributeError):
+        return owning_component.defaults.control_allocation
+
 
 class ControlMechanism(ModulatoryMechanism_Base):
     """
@@ -803,11 +834,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
     function : TransferFunction : default Linear(slope=1, intercept=0)
         specifies function used to combine values of monitored OutputPorts.
-
-    default_allocation : number, list or 1d array : None
-        specifies the default_allocation of any `control_signals <ControlMechanism.control_signals>` for
-        which the **default_allocation** was not specified in its constructor (see `default_allocation
-        <ControlMechanism.default_allocation>` for additional details).
 
     control : ControlSignal specification or list[ControlSignal specification, ...]
         specifies the parameters to be controlled by the ControlMechanism; a `ControlSignal` is created for each
@@ -911,14 +937,15 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
     control_allocation : 2d array
         each item is the value assigned as the `allocation <ControlSignal.allocation>` for the corresponding
-        ControlSignal listed in the `control_signals` attribute;  the control_allocation is the same as the
-        ControlMechanism's `value <Mechanism_Base.value>` attribute).
+        ControlSignal listed in the `control_signals <ControlMechanism.control_signals>` attribute (that is,
+        it is a list of the values of the `variable <OutputPort.variable>` attributes of the ControlMechanism's
+        `ControlSignals <ControlSignal>`).
 
     control_signals : ContentAddressableList[ControlSignal]
         list of the `ControlSignals <ControlSignal>` for the ControlMechanism, including any inherited from a
         `Composition` for which it is a `controller <Composition.controller>` (same as ControlMechanism's
         `output_ports <Mechanism_Base.output_ports>` attribute); each sends a `ControlProjection`
-        to the `ParameterPort` for the parameter it controls
+        to the `ParameterPort` for the parameter it controls.
 
     compute_reconfiguration_cost : Function, function or method
         function used to compute the ControlMechanism's `reconfiguration_cost  <ControlMechanism.reconfiguration_cost>`;
@@ -1025,6 +1052,13 @@ class ControlMechanism(ModulatoryMechanism_Base):
                     :default value: None
                     :type:
 
+                control_allocation
+                    see `control_allocation <ControlMechanism.control_signal_costs>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
                 control_signal_costs
                     see `control_signal_costs <ControlMechanism.control_signal_costs>`
 
@@ -1038,12 +1072,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
                     :default value: None
                     :type:
                     :read only: True
-
-                default_allocation
-                    see `default_allocation <ControlMechanism.default_allocation>`
-
-                    :default value: None
-                    :type:
 
                 input_ports
                     see `input_ports <Mechanism_Base.input_ports>`
@@ -1114,9 +1142,13 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         """
         # This must be a list, as there may be more than one (e.g., one per control_signal)
-        variable = Parameter(np.array([[defaultControlAllocation]]), pnl_internal=True, constructor_argument='default_variable')
-        value = Parameter(np.array([defaultControlAllocation]), aliases='control_allocation', pnl_internal=True)
-        default_allocation = None
+        variable = Parameter(np.array([[defaultControlAllocation]]), pnl_internal=True,
+                             constructor_argument='default_variable')
+        value = Parameter(np.array([defaultControlAllocation]), pnl_internal=True)
+        control_allocation = Parameter(np.array([defaultControlAllocation]),
+                                       read_only=True,
+                                       getter=_control_allocation_getter,
+                                       constructor_argument='default_allocation')
         combine_costs = Parameter(np.sum, stateful=False, loggable=False)
         costs = Parameter(None, read_only=True, getter=_control_mechanism_costs_getter)
         control_signal_costs = Parameter(None, read_only=True, pnl_internal=True)
@@ -1170,8 +1202,10 @@ class ControlMechanism(ModulatoryMechanism_Base):
             def is_2tuple(o):
                 return isinstance(o, tuple) and len(o) == 2
 
-            if not isinstance(output_ports, list):
-                output_ports = [output_ports]
+            if output_ports is None:
+                return output_ports
+
+            output_ports = convert_to_list(output_ports)
 
             for i in range(len(output_ports)):
                 # handle 2-item tuple
@@ -1198,9 +1232,47 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
             return output_ports
 
+        def _parse_control_allocation(self, control_allocation):
+            if (
+                isinstance(control_allocation, (float, int))
+                or (
+                    isinstance(control_allocation, np.ndarray)
+                    and control_allocation.dtype.kind in 'iufc'  # numeric type
+                )
+            ):
+                control_allocation = np.atleast_1d(control_allocation)
+
+            return control_allocation
+
+        def _parse_monitor_for_control(self, monitor_for_control):
+            if monitor_for_control is not None:
+                monitor_for_control = convert_to_list(monitor_for_control)
+
+            return monitor_for_control
+
         def _validate_input_ports(self, input_ports):
             if input_ports is None:
                 return
+
+        def _validate_output_ports(self, control):
+            if control is None:
+                return
+
+            if not isinstance(control, list):
+                return 'should have been converted to a list'
+
+            port_types = self._owner.outputPortTypes
+            for ctl_spec in control:
+                ctl_spec = _parse_port_spec(
+                    port_type=port_types, owner=self._owner, port_spec=ctl_spec
+                )
+                if not (
+                    isinstance(ctl_spec, port_types)
+                    or (
+                        isinstance(ctl_spec, dict) and ctl_spec[PORT_TYPE] == port_types
+                    )
+                ):
+                    return 'invalid port specification'
 
             # FIX 5/28/20:
             # TODO: uncomment this method or remove this block entirely.
@@ -1211,33 +1283,27 @@ class ControlMechanism(ModulatoryMechanism_Base):
             # validate_monitored_port_spec(self._owner, input_ports)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputPort))=None,
+                 monitor_for_control: Optional[Union[Iterable, Mechanism, OutputPort]] = None,
                  objective_mechanism=None,
-                 allow_probes:bool = False,
-                 outcome_input_ports_option:tc.optional(tc.enum(CONCATENATE, COMBINE, SEPARATE))=None,
+                 allow_probes: bool = False,
+                 outcome_input_ports_option: Optional[Literal['concatenate', 'combine', 'separate']] = None,
                  function=None,
-                 default_allocation:tc.optional(tc.any(int, float, list, np.ndarray))=None,
-                 control:tc.optional(tc.any(is_iterable,
-                                            ParameterPort,
-                                            InputPort,
-                                            OutputPort,
-                                            ControlSignal))=None,
-                 modulation:tc.optional(str)=None,
-                 combine_costs:tc.optional(is_function_type)=None,
-                 compute_reconfiguration_cost:tc.optional(is_function_type)=None,
+                 default_allocation: Optional[Union[int, float, list, np.ndarray]] = None,
+                 control: Optional[Union[Iterable, ParameterPort, InputPort, OutputPort, ControlSignal]] = None,
+                 modulation: Optional[str] = None,
+                 combine_costs: Optional[Callable] = None,
+                 compute_reconfiguration_cost: Optional[Callable] = None,
                  compute_net_outcome=None,
                  params=None,
                  name=None,
-                 prefs:tc.optional(is_pref_set)=None,
+                 prefs: Optional[ValidPrefSet] = None,
                  **kwargs
                  ):
 
-        control = convert_to_list(control) or []
-        monitor_for_control = convert_to_list(monitor_for_control) or []
         self.allow_probes = allow_probes
         self._sim_counts = {}
 
@@ -1246,7 +1312,10 @@ class ControlMechanism(ModulatoryMechanism_Base):
             if MONITOR_FOR_MODULATION in kwargs:
                 args = kwargs.pop(MONITOR_FOR_MODULATION)
                 if args:
-                    monitor_for_control.extend(convert_to_list(args))
+                    try:
+                        monitor_for_control.extend(convert_to_list(args))
+                    except AttributeError:
+                        monitor_for_control = convert_to_list(args)
 
             # Only allow one of CONTROL, MODULATORY_SIGNALS OR CONTROL_SIGNALS to be specified
             # These are synonyms, but allowing several to be specified and trying to combine the specifications
@@ -1276,6 +1345,9 @@ class ControlMechanism(ModulatoryMechanism_Base):
                                                     f"These are synonyms, but only one should be used to avoid "
                                                     f"creating unnecessary and/or duplicated Components.")
                     control = convert_to_list(args)
+            if 'default_control_allocation' in kwargs:
+                raise ControlMechanismError(f"'default_allocation' should be used in place of "
+                                            f"'default_control_allocation'.")
 
         super(ControlMechanism, self).__init__(
             default_variable=default_variable,
@@ -1287,7 +1359,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
             monitor_for_control=monitor_for_control,
             outcome_input_ports_option=outcome_input_ports_option,
             control=control,
-            output_ports=control,
             objective_mechanism=objective_mechanism,
             default_allocation=default_allocation,
             combine_costs=combine_costs,
@@ -1307,13 +1378,15 @@ class ControlMechanism(ModulatoryMechanism_Base):
                                                        target_set=target_set,
                                                        context=context)
 
-        if (MONITOR_FOR_CONTROL in target_set
-                and target_set[MONITOR_FOR_CONTROL] is not None
-                and any(item for item in target_set[MONITOR_FOR_CONTROL]
-                        if (isinstance(item, ObjectiveMechanism) or item is ObjectiveMechanism))):
-            raise ControlMechanismError(f"The '{MONITOR_FOR_CONTROL}' arg of '{self.name}' contains a specification for"
-                                        f" an {ObjectiveMechanism.componentType} ({target_set[MONITOR_FOR_CONTROL]}).  "
-                                        f"This should be specified in its '{OBJECTIVE_MECHANISM}' argument.")
+        monitor_for_control = self.defaults.monitor_for_control
+        if monitor_for_control is not None:
+            for item in monitor_for_control:
+                if item is ObjectiveMechanism or isinstance(item, ObjectiveMechanism):
+                    raise ControlMechanismError(
+                        f"The '{MONITOR_FOR_CONTROL}' arg of '{self.name}' contains a specification for"
+                        f" an {ObjectiveMechanism.componentType} ({monitor_for_control}).  "
+                        f"This should be specified in its '{OBJECTIVE_MECHANISM}' argument."
+                    )
 
         if (OBJECTIVE_MECHANISM in target_set and
                 target_set[OBJECTIVE_MECHANISM] is not None
@@ -1349,21 +1422,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                                             f"{ObjectiveMechanism.componentType} or a list of Mechanisms and/or "
                                             f"OutputPorts to be monitored for control.")
 
-        if CONTROL in target_set and target_set[CONTROL]:
-            control = target_set[CONTROL]
-            self._validate_control_arg(control)
-
-    def _validate_control_arg(self, control):
-        """Treat control arg separately so it can be overridden by subclassses (e.g., GatingMechanism)"""
-        assert isinstance(control, list), \
-            f"PROGRAM ERROR: control arg {control} of {self.name} should have been converted to a list."
-        for ctl_spec in control:
-            ctl_spec = _parse_port_spec(port_type=ControlSignal, owner=self, port_spec=ctl_spec)
-            if not (isinstance(ctl_spec, ControlSignal)
-                    or (isinstance(ctl_spec, dict) and ctl_spec[PORT_TYPE] == ControlSignal)):
-                raise ControlMechanismError(f"Invalid specification for '{CONTROL}' argument of {self.name}:"
-                                            f"({ctl_spec})")
-
+    # FIX: 2/11/23 SHOULDN'T THIS BE PUT ON COMPOSITION NOW?
     # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
     def _instantiate_objective_mechanism(self, input_ports=None, context=None):
         """
@@ -1683,17 +1742,14 @@ class ControlMechanism(ModulatoryMechanism_Base):
         #     assign each control_signal to the corresponding item of the function's value
         # - a different number of items than number of control_signals,
         #     leave things alone, and allow any errant indices for control_signals to be caught later.
-        self.defaults.value = np.array(self.function.value)
-        self.parameters.value._set(copy.deepcopy(self.defaults.value), context)
-
-        len_fct_value = len(self.function.value)
+        control_allocation_len = len(self._set_mechanism_value(context))
 
         # Assign each ControlSignal's variable_spec to index of ControlMechanism's value
         for i, control_signal in enumerate(self.control):
 
             # If number of control_signals is same as number of items in function's value,
             #    assign each ControlSignal to the corresponding item of the function's value
-            if len_fct_value == len(self.control):
+            if len(self.control) == control_allocation_len:
                 control_signal._variable_spec = (OWNER_VALUE, i)
 
             if not isinstance(control_signal.owner_value_index, int):
@@ -1742,8 +1798,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         from psyneulink.core.components.projections.projection import ProjectionError
 
         try:
-            # set the default by implicit shape defined by one of the
-            # allocation_samples if possible
+            # set the default by implicit shape defined by one of the allocation_samples if possible
             try:
                 allocation_parameter_default = control_signal_spec._init_args['allocation_samples'][0]
             except AttributeError:
@@ -1759,6 +1814,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
             # if control allocation is a single value specified from
             # default_variable for example, it should be used here
             # instead of the "global default" defaultControlAllocation
+            # FIX: JDC 6/9/23 CHANGE THIS TO self.defaults.control_allocation or self.control_allocation??
+            #       ALSO, CONSOLIDATE default_allocation and defaults.control_allocation?? (SEE ABOVE)
             if len(self.defaults.control_allocation) == 1:
                 allocation_parameter_default = copy.deepcopy(self.defaults.control_allocation)
             else:
@@ -1766,8 +1823,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         control_signal = _instantiate_port(port_type=ControlSignal,
                                            owner=self,
-                                           variable=self.defaults.default_allocation  # User specified value
-                                                    or allocation_parameter_default,  # Parameter default
+                                           variable=allocation_parameter_default,
                                            reference_value=allocation_parameter_default,
                                            modulation=self.defaults.modulation,
                                            port_spec=control_signal_spec,
@@ -1775,6 +1831,16 @@ class ControlMechanism(ModulatoryMechanism_Base):
         if not type(control_signal) in convert_to_list(self.outputPortTypes):
             raise ProjectionError(f'{type(control_signal)} inappropriate for {self.name}')
         return control_signal
+
+    def _set_mechanism_value(self, context):
+        """Set Mechanism's value.
+        By default, use value returned by ControlMechanism's function.
+        Can be overridden by a subclass if it determines its value in some other way (see OCM for example).
+        Note: this is used to determine the number of ControlSignals
+        """
+        self.defaults.value = convert_all_elements_to_np_array(self.function.parameters.value._get(context))
+        self.parameters.value._set(copy.deepcopy(self.defaults.value), context)
+        return self.defaults.value
 
     def _check_for_duplicates(self, control_signal, control_signals, context):
         """
@@ -1814,6 +1880,22 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 warnings.warn(f"Specification of {control_signal.name} for {self.name} "
                               f"has one or more {projection_type.__name__}s redundant with ones already on "
                               f"an existing {ControlSignal.__name__} ({existing_ctl_sig.name}).")
+
+    def _remove_default_control_signal(self, type: Literal['ControlSignal', 'GatingSignal']):
+        if type == CONTROL_SIGNAL:
+            ctl_sig_attribute = self.control_signals
+        elif type == GATING_SIGNAL:
+            ctl_sig_attribute = self.gating_signals
+        else:
+            assert False, \
+                f"PROGRAM ERROR:  bad 'type' arg ({type})passed to " \
+                f"{ControlMechanism.__name__}._remove_default_control_signal" \
+                f"(should have been caught by typecheck"
+
+        if (len(ctl_sig_attribute) == 1
+                and ctl_sig_attribute[0].name == type + '-0'
+                and not ctl_sig_attribute[0].efferents):
+            self.remove_ports(ctl_sig_attribute[0])
 
     def show(self):
         """Display the OutputPorts monitored by ControlMechanism's `objective_mechanism
@@ -1877,30 +1959,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
         """
         output_ports = self.objective_mechanism.add_to_monitor(monitor_specs=monitor_specs, context=context)
 
-    def _add_process(self, process, role:str):
-        assert False
-        super()._add_process(process, role)
-        if self.objective_mechanism:
-            self.objective_mechanism._add_process(process, role)
-
-    def _remove_default_control_signal(self, type:tc.enum(CONTROL_SIGNAL, GATING_SIGNAL)):
-        if type == CONTROL_SIGNAL:
-            ctl_sig_attribute = self.control_signals
-        elif type == GATING_SIGNAL:
-            ctl_sig_attribute = self.gating_signals
-        else:
-            assert False, \
-                f"PROGRAM ERROR:  bad 'type' arg ({type})passed to " \
-                    f"{ControlMechanism.__name__}._remove_default_control_signal" \
-                    f"(should have been caught by typecheck"
-
-        if (len(ctl_sig_attribute)==1
-                and ctl_sig_attribute[0].name==type + '-0'
-                and not ctl_sig_attribute[0].efferents):
-            self.remove_ports(ctl_sig_attribute[0])
-
     # FIX: 11/15/21 SHOULDN'T THIS BE PUT ON COMPOSITION??
-    def _activate_projections_for_compositions(self, composition=None):
+    def _activate_projections_for_compositions(self, composition=None, context=None):
         """Activate eligible Projections to or from Nodes in Composition.
         If Projection is to or from a node NOT (yet) in the Composition,
         assign it the node's aux_components attribute but do not activate it.
@@ -1948,7 +2008,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
             proj._activate_for_compositions(composition)
 
         for proj in deeply_nested_aux_components.values():
-            composition.add_projection(proj, sender=proj.sender, receiver=proj.receiver)
+            composition.add_projection(proj, sender=proj.sender, receiver=proj.receiver, context=context)
 
         # Add any remaining afferent Projections that have been assigned and are from nodes in composition
         remaining_projections = set(self.projections) - dependent_projections - set(self.composition.projections)
@@ -1966,15 +2026,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
                               f"efferent of '{self.name}' -- May be as yet unaccounted for condition."
             if node in composition._get_all_nodes():
                 proj._activate_for_compositions(composition)
-
-    def _apply_control_allocation(self, control_allocation, runtime_params, context):
-        """Update values to `control_signals <ControlMechanism.control_signals>`
-        based on specified `control_allocation <ControlMechanism.control_allocation>`
-        (used by controller of a Composition in simulations)
-        """
-        value = [a for a in control_allocation]
-        self.parameters.value._set(value, context)
-        self._update_output_ports(runtime_params, context)
 
     @property
     def monitored_output_ports(self):

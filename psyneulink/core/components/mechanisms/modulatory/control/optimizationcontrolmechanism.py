@@ -820,8 +820,12 @@ is automatically assigned the OptimizationControlMechanism's `evaluate_agent_rep
 <OptimizationControlMechanism.evaluate_agent_rep>` method, that is used to evaluate each `control_allocation
 <ControlMechanism.control_allocation>` sampled from the `search_space <OptimizationFunction.search_space>` by the
 `search_function <OptimizationFunction.search_function>` until the `search_termination_function
-<OptimizationFunction.search_termination_function>` returns `True` (see `OptimizationControlMechanism_Execution`
-for additional details).
+<OptimizationFunction.search_termination_function>` returns `True`.  The `net_outcome <ControlMechanism.net_outcome>`
+returned by the call to `evaluate_agent_rep <OptimizationControlMechanism.evaluate_agent_rep>` is assigned to the
+OptimizationControlMechanism's `optimal_net_outcome <OptimizationControlMechanism.optimal_net_outcome>` attribute,
+and the `control_allocation  <ControlMechanism.control_allocation>` that yielded it is assigned to the
+OptimizationControlMechanism's `optimal_control_allocation <OptimizationControlMechanism.optimal_control_allocation>`
+attribute (see `OptimizationControlMechanism_Execution` for additional details).
 
 .. _OptimizationControlMechanism_Custom_Function:
 
@@ -1002,7 +1006,11 @@ When an OptimizationControlMechanism is executed, it carries out the following s
     `net_outcome <ControlMechanism.net_outcome>` to the OptimizationControlMechanism's `control_signals,
     that compute their `values <ControlSignal.value>` which, in turn, are assigned to their `ControlProjections
     <ControlProjection>` to `modulate the Parameters <ModulatorySignal_Modulation>` they control when the
-    Composition is next executed.
+    Composition is next executed. That `control_allocation <ControlMechanism.control_allocation>` is also
+    assigned as the OptimizationControlMechanism's `optimal_control_allocation
+    <OptimizationControlMechanism.optimal_control_allocation>` attribute, and the 'net_outcome
+    <ControlMechanism.net_outcome>` that yield it is assigned to the OptimizationControlMechanism's
+    `optimal_net_outcome <OptimizationControlMechanism.optimal_net_outcome>` attribute.
 
 .. _OptimizationControlMechanism_Estimation_Randomization:
 
@@ -1073,14 +1081,14 @@ import ast
 import copy
 import warnings
 from collections.abc import Iterable
-from typing import Union
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union, Callable
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility, Component
-from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.nonstateful.optimizationfunctions import \
     GridSearch, OBJECTIVE_FUNCTION, SEARCH_SPACE, RANDOMIZATION_DIMENSION
 from psyneulink.core.components.functions.nonstateful.transferfunctions import CostFunctions
@@ -1097,8 +1105,8 @@ from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
     ALL, COMPOSITION, COMPOSITION_FUNCTION_APPROXIMATOR, CONCATENATE, DEFAULT_INPUT, DEFAULT_VARIABLE, EID_FROZEN, \
-    FUNCTION, INPUT_PORT, INTERNAL_ONLY, NAME, OPTIMIZATION_CONTROL_MECHANISM, NODE, OWNER_VALUE, PARAMS, PORT, \
-    PROJECTIONS, SHADOW_INPUTS, VALUE
+    FUNCTION, INPUT_PORT, INTERNAL_ONLY, NAME, OPTIMIZATION_CONTROL_MECHANISM, NODE, OWNER_VALUE, PARAMS, PORT, PROJECTIONS, \
+    PROJECTIONS, SHADOW_INPUTS, VALUE, OVERRIDE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import rename_instance_in_registry
@@ -1213,12 +1221,8 @@ def _state_feature_values_getter(owning_component=None, context=None):
     return state_feature_values
 
 
-class OptimizationControlMechanismError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class OptimizationControlMechanismError(ControlMechanismError):
+    pass
 
 
 def _control_allocation_search_space_getter(owning_component=None, context=None):
@@ -1554,6 +1558,14 @@ class OptimizationControlMechanism(ControlMechanism):
         <ControlMechanism.control_allocation>` (see `note <OptimizationControlMechanism_Randomization_Control_Signal>`
         above).
 
+    optimal_control_allocation : 1d array
+        the `control_allocation <ControlMechanism.control_allocation>` that yielded the optimal
+        `net_outcome <ControlMechanism.net_outcome>` in call to `evaluate_agent_rep <OptimizationControlMechanism>`.
+
+    optimal_net_outcome : float
+        the `net_outcome <ControlMechanism.net_outcome>` for the `optimal_control_allocation
+        <OptimizationControlMechanism>` returned by call to `evaluate_agent_rep <OptimizationControlMechanism>`.
+
     saved_samples : list
         contains all values of `control_allocation <ControlMechanism.control_allocation>` sampled by `function
         <OptimizationControlMechanism.function>` if its `save_samples <OptimizationFunction.save_samples>` parameter
@@ -1572,6 +1584,27 @@ class OptimizationControlMechanism(ControlMechanism):
         `execution contexts <Composition_Execution_Context>`.  If *search_statefulness* is False, calls for each
         `control_allocation <ControlMechanism.control_allocation>` will not be executed as independent simulations;
         rather, all will be run in the same (original) execution context.
+
+    value : 2d np.array
+        the `optimal_control_allocation <OptimizationControlMechanism.optimal_control_allocation>` returned by the
+        `OptimizationFunction <OptimizationControlMechanism.function>` assigned as the OptimizationControlMechanism's
+        `function <OptimizationControlMechanism.function>`, which is the `net_outcome
+        <ControlMechanism.net_outcome>` of the `agent_rep <OptimizationControlMechanism.agent_rep>`.
+
+        .. technical_note::
+           This uses only the first value returned by the `OptimizationFunction <OptimizationControlMechanism.function>`
+           which also may return the value associated with the `optimal_control_allocation
+           <OptimizationControlMechanism.optimal_control_allocation>` as well as the full set of `control_allocations
+           <ControlMechanism.control_allocation>` and corresponding values (if the *save_samples* and/or *save_values*
+           arguments of the OptimizationControlMechanism's constructor are `True`);  these are stored in the
+           OptimizationControlMechanism's `saved_samples <OptimizationControlMechanism.saved_samples>` and
+           `saved_values <OptimizationControlMechanism.saved_values>` attributes, respectively.
+
+    return_results: bool : False
+        if True, the complete simulation results are returned when invoking
+        `evaluate_agent_rep <OptimizationControlMechanism.evaluate_agent_rep>` calls. This is nescessary when using a
+        ParameterEstimationCompostion for parameter estimation via data fitting.
+
     """
 
     componentType = OPTIMIZATION_CONTROL_MECHANISM
@@ -1677,6 +1710,14 @@ class OptimizationControlMechanism(ControlMechanism):
                     :default value: SHADOW_INPUTS
                     :type: ``dict``
 
+                state_feature_values
+                    Returns values of `state_input_ports <OptimizationControlMechanism.state_input_ports>`
+                    used as inputs to simulation (see `state_feature_values
+                    <OptimizationControlMechanism.state_features>`)
+
+                    :default value: SHADOW_INPUTS
+                    :type: ``dict``
+
                 state_feature_default_spec
                     This is a shell parameter to validate its assignment and explicity user specification of None
                     to override Parameter default;  its .spec attribute is assigned to the user-facing
@@ -1704,8 +1745,8 @@ class OptimizationControlMechanism(ControlMechanism):
         state_feature_default_spec = Parameter(SHADOW_INPUTS, stateful=False, loggable=False, read_only=True,
                                                structural=True)
         state_feature_function = Parameter(None, reference=True, stateful=False, loggable=False)
-        state_feature_values = Parameter(None,getter=_state_feature_values_getter,
-                                         user=False,  pnl_internal=True, read_only=True)
+        state_feature_values = Parameter(None, getter=_state_feature_values_getter,
+                                         user=False, pnl_internal=True, read_only=True)
         outcome_input_ports_option = Parameter(CONCATENATE, stateful=False, loggable=False, structural=True)
         function = Parameter(GridSearch, stateful=False, loggable=False)
         search_function = Parameter(None, stateful=False, loggable=False)
@@ -1742,27 +1783,29 @@ class OptimizationControlMechanism(ControlMechanism):
 
     @handle_external_context()
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  agent_rep=None,
-                 state_features: tc.optional((tc.any(str, Iterable, InputPort,
-                                                     OutputPort, Mechanism)))=SHADOW_INPUTS,
+                 state_features: Optional[Union[str, Iterable, InputPort, OutputPort, Mechanism]] = SHADOW_INPUTS,
                  # state_feature_default=None,
-                 state_feature_default: tc.optional((tc.any(str, Iterable,
-                                                            InputPort, OutputPort,Mechanism)))=SHADOW_INPUTS,
-                 state_feature_function: tc.optional(tc.optional(tc.any(dict, is_function_type)))=None,
+                 state_feature_default: Optional[Union[str, Iterable, InputPort, OutputPort, Mechanism]] = SHADOW_INPUTS,
+                 state_feature_function: Optional[Union[dict, Callable]]=None,
                  function=None,
                  num_estimates=None,
                  random_variables=None,
                  initial_seed=None,
                  same_seed_for_all_allocations=None,
                  num_trials_per_estimate=None,
-                 search_function: tc.optional(tc.optional(tc.any(is_function_type)))=None,
-                 search_termination_function: tc.optional(tc.optional(tc.any(is_function_type)))=None,
+                 search_function: Optional[Callable]=None,
+                 search_termination_function: Optional[Callable]=None,
                  search_statefulness=None,
+                 return_results: bool = False,
+                 data=None,
                  context=None,
                  **kwargs):
         """Implement OptimizationControlMechanism"""
+
+        self.return_results = return_results
 
         # Legacy warnings and conversions
         for k in kwargs.copy():
@@ -2840,7 +2883,7 @@ class OptimizationControlMechanism(ControlMechanism):
             raise OptimizationControlMechanismError(
                 self_has_state_features_str + f"({[d.name for d in invalid_state_features]}) " + not_in_comps_str)
 
-        # # FOLLOWING IS FOR DEBUGGING: (TO SEE CODING ERRORS DIRECTLY) -----------------------
+        # # FOLLOWING IS FOR DEBUGGING: (TO SEE CODING ERRORS DIRECTLY AND BREAK WHERE THEY OCCUR) -----------------------
         # print("****** DEBUGGING CODE STILL IN OCM -- REMOVE FOR PROPER TESTING ************")
         # inputs_dict, num_inputs = self.agent_rep._parse_input_dict(self.parameters.state_feature_values._get(context))
         # #  END DEBUGGING ---------------------------------------------------------------------
@@ -2856,7 +2899,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 f"specifications are not compatible with the inputs required by its 'agent_rep': '{error.error_value}' "
                 f"Use the get_inputs_format() method of '{self.agent_rep.name}' to see the required format, or "
                 f"remove the specification of '{STATE_FEATURES}' from the constructor for {self.name} "
-                f"to have them automatically assigned.")
+                f"to have them automatically assigned.") from error
         except KeyError as error:   # This occurs if a Node is illegal for a reason other than above,
             pass                    # and will issue the corresponding error message.
         except:  # Legal Node specifications, but incorrect for input to agent_rep
@@ -2891,27 +2934,22 @@ class OptimizationControlMechanism(ControlMechanism):
                 control_signal._instantiate_cost_attributes(context)
 
     def _instantiate_control_signals(self, context):
-        """Size control_allocation and assign modulatory_signals
-
-        Set size of control_allocation equal to number of modulatory_signals.
-        Assign each modulatory_signal sequentially to corresponding item of control_allocation.
-        Assign RANDOMIZATION_CONTROL_SIGNAL for random_variables
-        """
-
-        control_signals = []
-        for i, spec in list(enumerate(self.output_ports)):
-            control_signal = self._instantiate_control_signal(spec, context=context)
-            control_signal._variable_spec = (OWNER_VALUE, i)
-            # MODIFIED 11/20/21 NEW:
-            #  FIX - SHOULD MOVE THIS TO WHERE IT IS CALLED IN ControlSignal._instantiate_control_signal
-            if self._check_for_duplicates(control_signal, control_signals, context):
-                continue
-            # MODIFIED 11/20/21 END
-            self.output_ports[i] = control_signal
-
+        super()._instantiate_control_signals(context)
         self._create_randomization_control_signal(context)
-        self.defaults.value = np.tile(control_signal.parameters.variable.default_value, (len(self.output_ports), 1))
-        self.parameters.control_allocation._set(copy.deepcopy(self.defaults.value), context)
+
+    def _set_mechanism_value(self, context):
+        """Set Mechanism's value from control_allocation.
+        OCM uses optimal_control_allocation (returned by its _execute() method), which is isomorphic to
+        self.control_allocation, as its value.
+        This is needed because the OCM's:
+            - function (an OptimizationFunction) can return additional information (e.g., GridSearch)
+            - _execute() method processes the value returned by the OptimizationFunction (to incorporate costs)
+        """
+        control_allocation = self.parameters.control_allocation._get(context)
+        self.defaults.value = np.array(control_allocation)
+        self.parameters.value._set(copy.deepcopy(self.defaults.value), context)
+        return control_allocation
+
 
     def _create_randomization_control_signal(self, context):
         if self.num_estimates:
@@ -2938,11 +2976,14 @@ class OptimizationControlMechanism(ControlMechanism):
             randomization_control_signal = ControlSignal(name=RANDOMIZATION_CONTROL_SIGNAL,
                                                          modulates=[param.parameters.seed.port
                                                                     for param in self.random_variables],
-                                                         allocation_samples=randomization_seed_mod_values)
+                                                         allocation_samples=randomization_seed_mod_values,
+                                                         modulation=OVERRIDE,
+                                                         cost_options=CostFunctions.NONE,
+                                                         # FIXME: Hack that Jan found to prevent some LLVM runtime errors
+                                                         default_allocation=[self.num_estimates])
+            randomization_control_signal = self._instantiate_control_signal(randomization_control_signal, context)
             randomization_control_signal_index = len(self.output_ports)
             randomization_control_signal._variable_spec = (OWNER_VALUE, randomization_control_signal_index)
-
-            randomization_control_signal = self._instantiate_control_signal(randomization_control_signal, context)
 
             self.output_ports.append(randomization_control_signal)
 
@@ -2961,6 +3002,9 @@ class OptimizationControlMechanism(ControlMechanism):
 
                 # search_space must be a SampleIterator
                 function_search_space.append(SampleIterator(randomization_seed_mod_values))
+
+            self.defaults.value = np.insert(self.defaults.value, len(self.defaults.value), self.defaults.value[0], 0)
+            self.parameters.value._set(copy.deepcopy(self.defaults.value), context)
 
     def _instantiate_function(self, function, function_params=None, context=None):
         # this indicates a significant peculiarity of OCM, in that its function
@@ -3009,7 +3053,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # after search_space to avoid IndexError when getting
         # num_estimates of function
         self.function.reset(**{
-            DEFAULT_VARIABLE: self.parameters.control_allocation._get(context),
+            DEFAULT_VARIABLE: self.parameters.value._get(context),
             OBJECTIVE_FUNCTION: self.evaluate_agent_rep,
             # SEARCH_FUNCTION: self.search_function,
             # SEARCH_TERMINATION_FUNCTION: self.search_termination_function,
@@ -3023,8 +3067,8 @@ class OptimizationControlMechanism(ControlMechanism):
         if self.agent_rep_type == COMPOSITION_FUNCTION_APPROXIMATOR:
             self._initialize_composition_function_approximator(context)
 
-    def _execute(self, variable=None, context=None, runtime_params=None):
-        """Find control_allocation that optimizes net_outcome of agent_rep.evaluate().
+    def _execute(self, variable=None, context=None, runtime_params=None)->np.ndarray:
+        """Return control_allocation that optimizes net_outcome of agent_rep.evaluate().
         """
 
         if self.is_initializing:
@@ -3034,7 +3078,6 @@ class OptimizationControlMechanism(ControlMechanism):
         control_allocation = self.parameters.control_allocation._get(context)
         if control_allocation is None:
             control_allocation = [c.defaults.variable for c in self.control_signals]
-            self.parameters.control_allocation._set(control_allocation, context=None)
 
         # Give the agent_rep a chance to adapt based on last trial's state_feature_values and control_allocation
         if hasattr(self.agent_rep, "adapt"):
@@ -3075,13 +3118,16 @@ class OptimizationControlMechanism(ControlMechanism):
         # clean up frozen values after execution
         self.agent_rep._clean_up_as_agent_rep(frozen_context, alt_controller=alt_controller)
 
-        optimal_control_allocation = np.array(optimal_control_allocation).reshape((len(self.defaults.value), 1))
         if self.function.save_samples:
             self.saved_samples = saved_samples
         if self.function.save_values:
             self.saved_values = saved_values
 
-        # Return optimal control_allocation
+        self.optimal_control_allocation = optimal_control_allocation
+        self.optimal_net_outcome = optimal_net_outcome
+        optimal_control_allocation = np.array(optimal_control_allocation).reshape((len(self.defaults.value), 1))
+
+        # Return optimal control_allocation formatted as 2d array
         return optimal_control_allocation
 
     def _get_frozen_context(self, context=None):
@@ -3113,7 +3159,7 @@ class OptimizationControlMechanism(ControlMechanism):
         if not self.agent_rep.parameters.retain_old_simulation_data._get():
             self.agent_rep._clean_up_as_agent_rep(sim_context, alt_controller=alt_controller)
 
-    def evaluate_agent_rep(self, control_allocation, context=None, return_results=False):
+    def evaluate_agent_rep(self, control_allocation, context=None):
         """Call `evaluate <Composition.evaluate>` method of `agent_rep <OptimizationControlMechanism.agent_rep>`
 
         Assigned as the `objective_function <OptimizationFunction.objective_function>` for the
@@ -3165,13 +3211,15 @@ class OptimizationControlMechanism(ControlMechanism):
             # We shouldn't get this far if execution mode is not Python
             assert self.parameters.comp_execution_mode._get(context) == "Python"
             exec_mode = pnlvm.ExecutionMode.Python
-            ret_val = self.agent_rep.evaluate(self.parameters.state_feature_values._get(context),
+
+            predicted_input = self.parameters.state_feature_values._get(context)
+            ret_val = self.agent_rep.evaluate(predicted_input,
                                               control_allocation,
                                               self.parameters.num_trials_per_estimate._get(context),
                                               base_context=context,
                                               context=new_context,
                                               execution_mode=exec_mode,
-                                              return_results=return_results)
+                                              return_results=self.return_results)
             context.composition = old_composition
             if self.defaults.search_statefulness:
                 self._tear_down_simulation(new_context, alt_controller)
@@ -3180,7 +3228,7 @@ class OptimizationControlMechanism(ControlMechanism):
             # If results of the simulation should be returned then, do so. agent_rep's evaluate method will
             # return a tuple in this case in which the first element is the outcome as usual and the second
             # is the results of the composition run.
-            if return_results:
+            if self.return_results:
                 return ret_val[0], ret_val[1]
             else:
                 return ret_val
@@ -3196,7 +3244,22 @@ class OptimizationControlMechanism(ControlMechanism):
                                            context=context
                                            )
 
-    def _get_evaluate_output_struct_type(self, ctx, *, tags):
+    def _apply_control_allocation(self, control_allocation, runtime_params, context):
+        """Update values to `control_signals <ControlMechanism.control_signals>`
+        based on specified `control_allocation <ControlMechanism.control_allocation>`
+        """
+        # IMPLEMENTATION NOTE:
+        #  Need to set value of ControlMechanism (rather than variables of ControlSignals)
+        #  since OutputPort uses _output_port_variable_getter() to parse its variable_spec
+        #  rather than assigning a value directly to its variable.
+        #  Need to assign OCM's value to control_allocation, since the value of its function includes other info
+        #  (see `function <OptimizationControlMechanism.optimization_>`)
+        self.parameters.value._set(control_allocation, context)
+        self._update_output_ports(runtime_params, context)
+
+    def _get_evaluate_output_struct_type(self, ctx, tags):
+        if "evaluate_type_all_results" in tags:
+            return ctx.get_output_struct_type(self.agent_rep)
         assert "evaluate_type_objective" in tags, "Unknown evaluate type: {}".format(tags)
         # Returns a scalar that is the predicted net_outcome
         return ctx.float_ty
@@ -3251,9 +3314,9 @@ class OptimizationControlMechanism(ControlMechanism):
                 data_out = builder.gep(op_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
             if data_in.type != data_out.type:
-                warnings.warn(f"Shape mismatch: Allocation sample '{i}' "
-                              f"({self.parameters.control_allocation_search_space.get()}) "
-                              f"doesn't match input port input ({op.defaults.variable}).")
+                warnings.warn("Shape mismatch: Allocation sample '{}' ({}) doesn't match input port input ({}).".format(
+                               i, self.parameters.control_allocation_search_space.get(), op.defaults.variable),
+                               pnlvm.PNLCompilerWarning)
                 assert len(data_out.type.pointee) == 1
                 data_out = builder.gep(data_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
@@ -3291,7 +3354,7 @@ class OptimizationControlMechanism(ControlMechanism):
         builder = ctx.create_llvm_function(args, self, str(self) + "_evaluate_range")
         llvm_func = builder.function
 
-        params, state, start, stop, arg_out, arg_in, data = llvm_func.args
+        params, state, start, stop, arg_out, arg_in, data, num_inputs = llvm_func.args
         for p in llvm_func.args:
             if isinstance(p.type, (pnlvm.ir.PointerType)):
                 p.attributes.add('nonnull')
@@ -3301,6 +3364,8 @@ class OptimizationControlMechanism(ControlMechanism):
         my_idx = self.composition._get_node_index(self)
         my_params = builder.gep(nodes_params, [ctx.int32_ty(0),
                                                ctx.int32_ty(my_idx)])
+        num_trials_per_estimate_ptr = pnlvm.helpers.get_param_ptr(builder, self,
+                                                                  my_params, "num_trials_per_estimate")
         func_params = pnlvm.helpers.get_param_ptr(builder, self,
                                                   my_params, "function")
         search_space = pnlvm.helpers.get_param_ptr(builder, self.function,
@@ -3311,13 +3376,15 @@ class OptimizationControlMechanism(ControlMechanism):
 
             if "evaluate_type_objective" in tags:
                 out_idx = idx
+            elif "evaluate_type_all_results" in tags:
+                out_idx = builder.mul(idx, builder.load(num_trials_per_estimate_ptr))
             else:
                 assert False, "Evaluation type not detected in tags, or unknown: {}".format(tags)
 
             func_out = b.gep(arg_out, [out_idx])
             pnlvm.helpers.create_sample(b, allocation, search_space, idx)
 
-            b.call(evaluate_f, [params, state, allocation, func_out, arg_in, data])
+            b.call(evaluate_f, [params, state, allocation, func_out, arg_in, data, num_inputs])
 
         builder.ret_void()
         return llvm_func
@@ -3329,14 +3396,15 @@ class OptimizationControlMechanism(ControlMechanism):
                 self._get_evaluate_alloc_struct_type(ctx).as_pointer(),
                 self._get_evaluate_output_struct_type(ctx, tags=tags).as_pointer(),
                 ctx.get_input_struct_type(self.agent_rep).as_pointer(),
-                ctx.get_data_struct_type(self.agent_rep).as_pointer()]
+                ctx.get_data_struct_type(self.agent_rep).as_pointer(),
+                ctx.int32_ty.as_pointer()]
 
         builder = ctx.create_llvm_function(args, self, str(self) + "_evaluate")
         llvm_func = builder.function
         for p in llvm_func.args:
             p.attributes.add('nonnull')
 
-        comp_params, base_comp_state, allocation_sample, arg_out, comp_input, base_comp_data = llvm_func.args
+        comp_params, base_comp_state, allocation_sample, arg_out, comp_input, base_comp_data, num_inputs = llvm_func.args
 
         if "const_params" in debug_env:
             comp_params = builder.alloca(comp_params.type.pointee, name="const_params_loc")
@@ -3373,10 +3441,6 @@ class OptimizationControlMechanism(ControlMechanism):
         controller_params = builder.gep(nodes_params, [ctx.int32_ty(0),
                                                        ctx.int32_ty(controller_idx)])
 
-        # Get simulation function
-        sim_f = ctx.import_llvm_function(self.agent_rep,
-                                         tags=frozenset({"run", "simulation"}))
-
         # Apply allocation sample to simulation data
         assert len(self.output_ports) == len(allocation_sample.type.pointee)
         idx = self.agent_rep._get_node_index(self)
@@ -3391,6 +3455,12 @@ class OptimizationControlMechanism(ControlMechanism):
                 sample_dst = builder.gep(sample_dst, [ctx.int32_ty(0),
                                                       ctx.int32_ty(0)])
             builder.store(builder.load(sample_ptr), sample_dst)
+
+        # Get simulation function
+        agent_tags = {"run", "simulation"}
+        if "evaluate_type_all_results" in tags:
+            agent_tags.add("simulation_results")
+        sim_f = ctx.import_llvm_function(self.agent_rep, tags=frozenset(agent_tags))
 
         if "const_input" in debug_env:
             comp_input = builder.alloca(sim_f.args[3].type.pointee, name="sim_input")
@@ -3420,13 +3490,11 @@ class OptimizationControlMechanism(ControlMechanism):
         num_trials = builder.alloca(ctx.int32_ty, name="num_sim_trials")
         builder.store(num_sims, num_trials)
 
-        # We only provide one input
-        num_inputs = builder.alloca(ctx.int32_ty, name="num_sim_inputs")
-        builder.store(num_inputs.type.pointee(1), num_inputs)
-
-        # Simulations don't store output
-        if "evaluate_type_objective" in tags:
+        # Simulations don't store output unless we run parameter fitting
+        if 'evaluate_type_objective' in tags:
             comp_output = sim_f.args[4].type(None)
+        elif 'evaluate_type_all_results' in tags:
+            comp_output = arg_out
         else:
             assert False, "Evaluation type not detected in tags, or unknown: {}".format(tags)
 
@@ -3435,6 +3503,10 @@ class OptimizationControlMechanism(ControlMechanism):
 
         if "evaluate_type_objective" in tags:
             # Extract objective mechanism value
+
+            assert self.objective_mechanism, f"objective_mechanism on OptimizationControlMechanism cannot be None " \
+                                             f"in compiled mode"
+
             idx = self.agent_rep._get_node_index(self.objective_mechanism)
             # Mechanisms' results are stored in the first substructure
             objective_op_ptr = builder.gep(comp_data, [ctx.int32_ty(0),
@@ -3449,6 +3521,8 @@ class OptimizationControlMechanism(ControlMechanism):
             builder.call(net_outcome_f, [controller_params, controller_state,
                                          allocation_sample, objective_val_ptr,
                                          arg_out])
+        elif "evaluate_type_all_results" in tags:
+            pass
         else:
             assert False, "Evaluation type not detected in tags, or unknown: {}".format(tags)
 

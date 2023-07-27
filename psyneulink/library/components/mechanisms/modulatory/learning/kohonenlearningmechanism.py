@@ -82,9 +82,9 @@ An KohonenLearningMechanism executes in the same manner as standard `LearningMec
 * 1) its execution can be enabled or disabled by setting the `learning_enabled
   <KohonenMechanism.learning_enabled>` attribute of the `KohonenMechanism` with which it is
   associated (identified in its `activity_source <KohonenLearningMechanism.activity_source>` attribute).
-* 2) it is executed during the `execution phase <System_Execution>` of the System's execution.  Note that this is
+* 2) it is executed during the `execution phase <Composition_Execution>` of the Composition's execution.  Note that this is
   different from the behavior of supervised learning algorithms (such as `Reinforcement` and `BackPropagation`),
-  that are executed during the `learning phase <System_Execution>` of a System's execution
+  that are executed during the `learning phase <Composition_Execution>` of a Composition's execution
 
 
 .. _KohonenLearningMechanism_Class_Reference:
@@ -95,13 +95,14 @@ Class Reference
 """
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union, Callable
 
 from psyneulink.core.components.component import parameter_keywords
-from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.nonstateful.learningfunctions import Hebbian
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
-    ACTIVATION_INPUT, ACTIVATION_OUTPUT, LearningMechanism, LearningTiming, LearningType
+    ACTIVATION_INPUT, ACTIVATION_OUTPUT, LearningMechanism, LearningMechanismError, LearningTiming, LearningType
 from psyneulink.core.components.projections.projection import projection_keywords
 from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.globals.context import ContextFlags
@@ -109,9 +110,9 @@ from psyneulink.core.globals.keywords import \
     ADDITIVE, KOHONEN_LEARNING_MECHANISM, \
     LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import is_numeric, parameter_spec
+from psyneulink.core.globals.utilities import is_numeric, ValidParamSpecType
 
 __all__ = [
     'KohonenLearningMechanism', 'KohonenLearningMechanismError', 'input_port_names', 'output_port_names',
@@ -128,12 +129,8 @@ output_port_names = [LEARNING_SIGNAL]
 # DefaultTrainingMechanism = ObjectiveMechanism
 
 
-class KohonenLearningMechanismError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class KohonenLearningMechanismError(LearningMechanismError):
+    pass
 
 
 class KohonenLearningMechanism(LearningMechanism):
@@ -223,13 +220,11 @@ class KohonenLearningMechanism(LearningMechanism):
         to the `function <KohonenLearningMechanism.function>` (i.e., the `value <InputPort.value>` of the
         KohonenLearningMechanism's *ACTIVATION_INPUT* `InputPort <KohonenLearningMechanism_Structure>`,
         allowing the contribution of individual *units* to be scaled). If specified, the value supersedes the
-        learning_rate assigned to any `Process` or `System` to which the KohonenLearningMechanism belongs.
-        If it is `None`, then the `learning_rate <Process.learning_rate>` specified for the Process to which the
-        KohonenLearningMechanism belongs belongs is used;  and, if that is `None`, then the `learning_rate
-        <System.learning_rate>` for the System to which it belongs is used. If all are `None`, then the
-        `default_learning_rate <LearningFunction.default_learning_rate>` for the `function
-        <KohonenLearningMechanism.function>` is used (see `learning_rate <LearningMechanism_Learning_Rate>`
-        for additional details).
+        learning_rate assigned to any `Composition` to which the KohonenLearningMechanism belongs.
+        If it is `None`, then the `learning_rate <Composition.learning_rate>` specified for Composition to which it
+        belongs is used. If that is `None`, then the `default_learning_rate <LearningFunction.default_learning_rate>`
+        for the `function <KohonenLearningMechanism.function>` is used (see `learning_rate
+        <LearningMechanism_Learning_Rate>` for additional details).
 
     learning_signal : 2d ndarray or matrix of numeric values
         the value returned by `function <KohonenLearningMechanism.function>`, that specifies
@@ -321,18 +316,18 @@ class KohonenLearningMechanism(LearningMechanism):
         modulation = ADDITIVE
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
-                 default_variable:tc.any(list, np.ndarray),
+                 default_variable: Union[list, np.ndarray],
                  size=None,
-                 matrix:tc.optional(ParameterPort)=None,
-                 function: tc.optional(is_function_type) = None,
-                 learning_signals:tc.optional(tc.optional(list)) = None,
-                 modulation:tc.optional(str)=None,
-                 learning_rate:tc.optional(parameter_spec)=None,
+                 matrix: Optional[ParameterPort] = None,
+                 function: Optional[Callable] = None,
+                 learning_signals: Optional[list] = None,
+                 modulation: Optional[str] = None,
+                 learning_rate: Optional[ValidParamSpecType] = None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None):
+                 prefs: Optional[ValidPrefSet] = None):
 
         # # USE FOR IMPLEMENTATION OF deferred_init()
         # # Store args for deferred initialization

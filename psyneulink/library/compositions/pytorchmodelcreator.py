@@ -1,4 +1,6 @@
 import graph_scheduler
+import torch
+import torch.nn as nn
 
 from psyneulink.core.components.component import Component, ComponentsMeta
 from psyneulink.core.compositions.composition import NodeRole
@@ -11,22 +13,11 @@ from psyneulink.core.globals.keywords import TARGET_MECHANISM, Loss
 from psyneulink.core.globals.utilities import get_deepcopy_with_shared
 from .pytorchcomponents import *
 
-try:
-    import torch
-    from torch import nn
-    torch_available = True
-except ImportError:
-    torch_available = False
-
 __all__ = ['PytorchModelCreator']
 
 class PytorchModelCreator(torch.nn.Module):
     # sets up parameters of model & the information required for forward computation
     def __init__(self, composition, device, context=None):
-
-        if not torch_available:
-            raise Exception('Pytorch python module (torch) is not installed. Please install it with '
-                            '`pip install torch` or `pip3 install torch`')
 
         super(PytorchModelCreator, self).__init__()
 
@@ -44,7 +35,10 @@ class PytorchModelCreator(torch.nn.Module):
 
         # Instantiate pytorch mechanisms
         for node in set(composition.nodes) - set(composition.get_nodes_by_role(NodeRole.LEARNING)):
-            pytorch_node = PytorchMechanismWrapper(node, self._composition._get_node_index(node), device, context=context)
+            pytorch_node = PytorchMechanismWrapper(node,
+                                                   self._composition._get_node_index(node),
+                                                   device,
+                                                   context=context)
             self.component_map[node] = pytorch_node
             self.nodes.append(pytorch_node)
 
@@ -55,7 +49,12 @@ class PytorchModelCreator(torch.nn.Module):
                 proj_recv = self.component_map[projection.receiver.owner]
 
                 port_idx = projection.sender.owner.output_ports.index(projection.sender)
-                new_proj = PytorchProjectionWrapper(projection, list(self._composition._inner_projections).index(projection), port_idx, device, sender=proj_send, receiver=proj_recv, context=context)
+                new_proj = PytorchProjectionWrapper(projection,
+                                                    list(self._composition._inner_projections).index(projection),
+                                                    port_idx, device,
+                                                    sender=proj_send,
+                                                    receiver=proj_recv,
+                                                    context=context)
                 proj_send.add_efferent(new_proj)
                 proj_recv.add_afferent(new_proj)
                 self.projection_map[projection] = new_proj
@@ -84,7 +83,10 @@ class PytorchModelCreator(torch.nn.Module):
 
     def _regenerate_paramlist(self):
         self.params = nn.ParameterList()
-        for proj in self.projections:
+        # for proj in self.projections:
+        #    if proj._projection._exclude_from_autodiff:
+        #        continue
+        for proj in [p for p in self.projections if not p._projection._exclude_from_autodiff]:
             self.params.append(proj.matrix)
 
     # generates llvm function for self.forward

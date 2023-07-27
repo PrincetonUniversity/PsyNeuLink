@@ -21,7 +21,9 @@ from inspect import isclass
 from numbers import Number
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union, Callable
 
 __all__ = ['SampleSpec', 'SampleIterator']
 
@@ -51,7 +53,7 @@ class SampleIteratorError(Exception):
         self.error_value = error_value
 
 
-class SampleSpec():
+class SampleSpec:
     """
     SampleSpec(      \
     start=None,      \
@@ -148,15 +150,15 @@ class SampleSpec():
 
     """
 
-    @tc.typecheck
+    @beartype
     def __init__(self,
-                 start:tc.optional(tc.any(int, float))=None,
-                 stop:tc.optional(tc.any(int, float))=None,
-                 step:tc.optional(tc.any(int, float))=None,
-                 num:tc.optional(int)=None,
-                 function:tc.optional(callable)=None,
-                 precision:tc.optional(int)=None,
-                 custom_spec = None
+                 start: Optional[Union[int, float]] = None,
+                 stop: Optional[Union[int, float]] = None,
+                 step: Optional[Union[int, float]] = None,
+                 num: Optional[int] = None,
+                 function: Optional[Callable] = None,
+                 precision: Optional[int] = None,
+                 custom_spec=None
                  ):
 
         self.custom_spec = custom_spec
@@ -187,17 +189,17 @@ class SampleSpec():
                                                 .format(repr('step'), repr('num'), repr('function')))
             else:
                 if not np.isclose(num, 1.0 + (stop - start) / step):
-                    raise SampleIteratorError("The {} ({}) and {} ({}} values specified are not comaptible."
+                    raise SampleIteratorError("The {} ({}) and {} ({}) values specified are not comaptible."
                                                     .format(repr('step'), step, repr('num'), num))
 
         elif callable(function):
             _validate_function(self, function)
 
             if start is not None:
-                raise SampleIteratorError("Only one of {} ({}) and {} ({}} may be specified."
+                raise SampleIteratorError("Only one of {} ({}) and {} ({}) may be specified."
                                                 .format(repr('start'), start, repr('function'), function))
             if step is not None:
-                raise SampleIteratorError("Only one of {} ({}) and {} ({}} may be specified."
+                raise SampleIteratorError("Only one of {} ({}) and {} ({}) may be specified."
                                                 .format(repr('step'), step, repr('function'), function))
         else:
             raise SampleIteratorError("{} is not a valid function for {}."
@@ -214,6 +216,14 @@ class SampleSpec():
 
         # Restore global precision
         getcontext().prec = _global_precision
+
+    def __str__(self):
+        return self.__repr__()
+
+    def __repr__(self):
+        params_list = ['start', 'stop', 'step', 'num', 'function', 'custom_spec']
+        params_str = ", ".join([f"{k}={repr(getattr(self, k))}" for k in params_list if getattr(self, k) is not None])
+        return f"SampleSpec({params_str})"
 
 
 allowable_specs = (tuple, list, np.array, range, np.arange, callable, SampleSpec)
@@ -432,3 +442,6 @@ class SampleIterator(Iterator):
 
         self.current_step = 0
         self.head = head or self.start
+
+    def __repr__(self):
+        return '{}({})'.format(self.__class__.__name__, self.specification)

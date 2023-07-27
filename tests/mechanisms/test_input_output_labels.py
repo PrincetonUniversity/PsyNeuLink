@@ -22,10 +22,10 @@ from psyneulink.core.globals.keywords import ENABLED, INPUT_LABELS_DICT, OUTPUT_
 #
 #         C.run(inputs={M:['red', 'green', 'green', 'red']},
 #               call_after_trial=call_after_trial)
-#         assert np.allclose(C.results, [[[1.]], [[0.]], [[0.]], [[1.]]])
+#         np.testing.assert_allclose(C.results, [[[1.]], [[0.]], [[0.]], [[1.]]])
 #         assert store_input_labels == [['red'], ['green'], ['green'], ['red']]
 #         C.run(inputs={M:[1, 'green', 0, 'red']})
-#         assert np.allclose(C.results, [[[1.]], [[0.]], [[0.]], [[1.]], [[1.]], [[0.]], [[0.]], [[1.]]])
+#         np.testing.assert_allclose(C.results, [[[1.]], [[0.]], [[0.]], [[1.]], [[1.]], [[0.]], [[0.]], [[1.]]])
 #
 #     def test_dict_of_arrays(self):
 #         input_labels_dict = {"red": [1, 0, 0],
@@ -42,14 +42,14 @@ from psyneulink.core.globals.keywords import ENABLED, INPUT_LABELS_DICT, OUTPUT_
 #
 #         C.run(inputs={M:['red', 'green', 'blue', 'red']},
 #               call_after_trial=call_after_trial)
-#         assert np.allclose(C.results, [[[1, 0, 0]], [[0, 1, 0]], [[0, 0, 1]], [[1, 0, 0]]])
+#         np.testing.assert_allclose(C.results, [[[1, 0, 0]], [[0, 1, 0]], [[0, 0, 1]], [[1, 0, 0]]])
 #         assert store_input_labels == [['red'], ['green'], ['blue'], ['red']]
 #
 #         C.run(inputs={M:'red'})
-#         assert np.allclose(C.results, [[[1, 0, 0]], [[0, 1, 0]], [[0, 0, 1]], [[1, 0, 0]], [[1, 0, 0]]])
+#         np.testing.assert_allclose(C.results, [[[1, 0, 0]], [[0, 1, 0]], [[0, 0, 1]], [[1, 0, 0]], [[1, 0, 0]]])
 #
 #         C.run(inputs={M:['red']})
-#         assert np.allclose(C.results, [[[1, 0, 0]], [[0, 1, 0]], [[0, 0, 1]], [[1, 0, 0]], [[1, 0, 0]], [[1, 0, 0]]])
+#         np.testing.assert_allclose(C.results, [[[1, 0, 0]], [[0, 1, 0]], [[0, 0, 1]], [[1, 0, 0]], [[1, 0, 0]], [[1, 0, 0]]])
 #
 #     # def test_dict_of_arrays_2_input_ports(self):
 #     #     input_labels_dict = {"red": [0],
@@ -70,13 +70,13 @@ from psyneulink.core.globals.keywords import ENABLED, INPUT_LABELS_DICT, OUTPUT_
 #     #     S.run(inputs=[['red', 'green'], ['green', 'red']],
 #     #           call_after_trial=call_after_trial)
 #     #
-#     #     assert np.allclose(M_output, [[[0], [1]], [[1], [0]]])
+#     #     np.testing.assert_allclose(M_output, [[[0], [1]], [[1], [0]]])
 #     #     assert store_input_labels == [['red', 'green'], ['green', 'red']]
 #     #
 #     #     S.run(inputs=[[[0], 'green'], [[1], 'red']],
 #     #           call_after_trial=call_after_trial)
 #     #
-#     #     assert np.allclose(M_output, [[[0], [1]], [[1], [0]], [[0], [1]], [[1], [0]]])
+#     #     np.testing.assert_allclose(M_output, [[[0], [1]], [[1], [0]], [[0], [1]], [[1], [0]]])
 #
 #     # no longer valid:
 #     # def test_dict_of_2d_arrays(self):
@@ -95,11 +95,11 @@ from psyneulink.core.globals.keywords import ENABLED, INPUT_LABELS_DICT, OUTPUT_
 #     #
 #     #     S.run(inputs=['red', 'green', 'blue'],
 #     #           call_after_trial=call_after_trial)
-#     #     assert np.allclose(S.results, [[[1, 0], [1, 0]], [[0, 1], [0, 1]], [[0, 1], [1, 0]]])
+#     #     np.testing.assert_allclose(S.results, [[[1, 0], [1, 0]], [[0, 1], [0, 1]], [[0, 1], [1, 0]]])
 #     #     assert store_input_labels == ['red', 'green', 'blue']
 #     #
 #     #     S.run(inputs='red')
-#     #     assert np.allclose(S.results, [[[1, 0], [1, 0]], [[0, 1], [0, 1]], [[0, 1], [1, 0]], [[1, 0], [1, 0]]])
+#     #     np.testing.assert_allclose(S.results, [[[1, 0], [1, 0]], [[0, 1], [0, 1]], [[0, 1], [1, 0]], [[1, 0], [1, 0]]])
 #
 #     def test_dict_of_dicts_1_input_port(self):
 #         input_labels_dict = {0: {"red": [1, 0],
@@ -116,14 +116,14 @@ from psyneulink.core.globals.keywords import ENABLED, INPUT_LABELS_DICT, OUTPUT_
 #
 #         C.run(inputs={M:[['red'], ['green'], ['green']]},
 #               call_after_trial=call_after_trial)
-#         assert np.allclose(C.results, [[[1, 0]], [[0, 1]], [[0, 1]]])
+#         np.testing.assert_allclose(C.results, [[[1, 0]], [[0, 1]], [[0, 1]]])
 #         assert [['red'], ['green'], ['green']] == store_input_labels
 #
 #         C.run(inputs={M:'red'})
-#         assert np.allclose(C.results, [[[1, 0]], [[0, 1]], [[0, 1]], [[1, 0]]])
+#         np.testing.assert_allclose(C.results, [[[1, 0]], [[0, 1]], [[0, 1]], [[1, 0]]])
 #
 #         C.run(inputs={M:['red']})
-#         assert np.allclose(C.results, [[[1, 0]], [[0, 1]], [[0, 1]], [[1, 0]], [[1, 0]]])
+#         np.testing.assert_allclose(C.results, [[[1, 0]], [[0, 1]], [[0, 1]], [[1, 0]], [[1, 0]]])
 #
 #     def test_dict_of_dicts(self):
 #         input_labels_dict = {0: {"red": [1, 0],
@@ -137,10 +137,10 @@ from psyneulink.core.globals.keywords import ENABLED, INPUT_LABELS_DICT, OUTPUT_
 #         C = Composition(pathways=[M])
 #
 #         C.run(inputs={M:[['red', 'green'], ['green', 'red'], ['green', 'green']]})
-#         assert np.allclose(C.results, [[[1, 0], [1, 0]], [[0, 1], [0, 1]], [[0, 1], [1, 0]]])
+#         np.testing.assert_allclose(C.results, [[[1, 0], [1, 0]], [[0, 1], [0, 1]], [[0, 1], [1, 0]]])
 #
 #         C.run(inputs={M:[['red', [1, 0]], ['green', 'red'], [[0,1], 'green']]})
-#         assert np.allclose(C.results, [[[1, 0], [1, 0]], [[0, 1], [0, 1]], [[0, 1], [1, 0]], [[1, 0], [1, 0]], [[0, 1], [0, 1]], [[0, 1], [1, 0]]])
+#         np.testing.assert_allclose(C.results, [[[1, 0], [1, 0]], [[0, 1], [0, 1]], [[0, 1], [1, 0]], [[1, 0], [1, 0]], [[0, 1], [0, 1]], [[0, 1], [1, 0]]])
 #
 #     def test_3_input_ports_2_label_dicts(self):
 #         input_labels_dict = {0: {"red": [1, 0],
@@ -154,10 +154,10 @@ from psyneulink.core.globals.keywords import ENABLED, INPUT_LABELS_DICT, OUTPUT_
 #         C = Composition(pathways=[M])
 #
 #         C.run(inputs={M:[['red', [0, 0], 'green'], ['green', [1, 1], 'red'], ['green', [2, 2], 'green']]})
-#         assert np.allclose(C.results, [[[1, 0], [0, 0], [1, 0]], [[0, 1], [1, 1], [0, 1]], [[0, 1], [2, 2], [1, 0]]])
+#         np.testing.assert_allclose(C.results, [[[1, 0], [0, 0], [1, 0]], [[0, 1], [1, 1], [0, 1]], [[0, 1], [2, 2], [1, 0]]])
 #
 #         C.run(inputs={M:[['red', [0, 0], [1, 0]], ['green', [1, 1], 'red'], [[0,1], [2, 2], 'green']]})
-#         assert np.allclose(C.results, [[[1, 0], [0, 0], [1, 0]], [[0, 1], [1, 1], [0, 1]], [[0, 1], [2, 2], [1, 0]], [[1, 0], [0, 0], [1, 0]], [[0, 1], [1, 1], [0, 1]], [[0, 1], [2, 2], [1, 0]]])
+#         np.testing.assert_allclose(C.results, [[[1, 0], [0, 0], [1, 0]], [[0, 1], [1, 1], [0, 1]], [[0, 1], [2, 2], [1, 0]], [[1, 0], [0, 0], [1, 0]], [[0, 1], [1, 1], [0, 1]], [[0, 1], [2, 2], [1, 0]]])
 #
 # class TestMechanismTargetLabels:
 #     def test_dict_of_floats(self):
@@ -179,8 +179,8 @@ from psyneulink.core.globals.keywords import ENABLED, INPUT_LABELS_DICT, OUTPUT_
 #                         target:['red', 'green', 'green', 'red']},
 #                 call_after_trial=record_matrix_after_trial)
 #
-#         assert np.allclose(C.results, [[[1.]], [[0.]], [[0.]], [[0.75]]])
-#         assert np.allclose(learned_matrix, [[[0.75]], [[0.75]], [[0.75]], [[0.5625]]])
+#         np.testing.assert_allclose(C.results, [[[1.]], [[0.]], [[0.]], [[0.75]]])
+#         np.testing.assert_allclose(learned_matrix, [[[0.75]], [[0.75]], [[0.75]], [[0.5625]]])
 #
 #     def test_dict_of_arrays(self):
 #         input_labels_dict_M1 = {"red": [1, 1],
@@ -204,8 +204,8 @@ from psyneulink.core.globals.keywords import ENABLED, INPUT_LABELS_DICT, OUTPUT_
 #         C.learn(inputs={M1: ['red', 'green', 'green', 'red'],
 #                         target: ['red', 'green', 'green', 'red']},
 #                 call_after_trial=record_matrix_after_trial)
-#         assert np.allclose(C.results, [[[1, 1]], [[0., 0.]], [[0., 0.]], [[0.5, 0.5]]])
-#         assert np.allclose(learned_matrix, [np.array([[0.75, -0.25], [-0.25,  0.75]]),
+#         np.testing.assert_allclose(C.results, [[[1, 1]], [[0., 0.]], [[0., 0.]], [[0.5, 0.5]]])
+#         np.testing.assert_allclose(learned_matrix, [np.array([[0.75, -0.25], [-0.25,  0.75]]),
 #                                             np.array([[0.75, -0.25], [-0.25,  0.75]]),
 #                                             np.array([[0.75, -0.25], [-0.25,  0.75]]),
 #                                             np.array([[0.625, -0.375], [-0.375,  0.625]])])
@@ -234,8 +234,8 @@ from psyneulink.core.globals.keywords import ENABLED, INPUT_LABELS_DICT, OUTPUT_
 #         C.learn(inputs={M1: ['red', 'green', 'green', 'red'],
 #                         target: ['red', 'green', 'green', 'red']},
 #                 call_after_trial=record_matrix_after_trial)
-#         assert np.allclose(C.results, [[[1, 1]], [[0., 0.]], [[0., 0.]], [[0.5, 0.5]]])
-#         assert np.allclose(learned_matrix, [np.array([[0.75, -0.25], [-0.25,  0.75]]),
+#         np.testing.assert_allclose(C.results, [[[1, 1]], [[0., 0.]], [[0., 0.]], [[0.5, 0.5]]])
+#         np.testing.assert_allclose(learned_matrix, [np.array([[0.75, -0.25], [-0.25,  0.75]]),
 #                                             np.array([[0.75, -0.25], [-0.25,  0.75]]),
 #                                             np.array([[0.75, -0.25], [-0.25,  0.75]]),
 #                                             np.array([[0.625, -0.375], [-0.375,  0.625]])])
@@ -259,13 +259,13 @@ from psyneulink.core.globals.keywords import ENABLED, INPUT_LABELS_DICT, OUTPUT_
 #
 #         C.run(inputs={M: ['red', 'green', 'green', 'red']},
 #               call_after_trial=call_after_trial)
-#         assert np.allclose(C.results, [[[1.]], [[0.]], [[0.]], [[1.]]])
+#         np.testing.assert_allclose(C.results, [[[1.]], [[0.]], [[0.]], [[1.]]])
 #         assert store_output_labels == [['red'], ['green'], ['green'], ['red']]
 #
 #         store_output_labels = []
 #         C.run(inputs={M: [1, 'green', 0, 'red']},
 #               call_after_trial=call_after_trial)
-#         assert np.allclose(C.results, [[[1.]], [[0.]], [[0.]], [[1.]], [[1.]], [[0.]], [[0.]], [[1.]]])
+#         np.testing.assert_allclose(C.results, [[[1.]], [[0.]], [[0.]], [[1.]], [[1.]], [[0.]], [[0.]], [[1.]]])
 #         assert store_output_labels == [['red'], ['green'], ['green'], ['red']]
 #
 #     def test_dict_of_arrays(self):
@@ -285,13 +285,13 @@ from psyneulink.core.globals.keywords import ENABLED, INPUT_LABELS_DICT, OUTPUT_
 #
 #         C.run(inputs={M:['red', 'green', 'green', 'red']},
 #               call_after_trial=call_after_trial)
-#         assert np.allclose(C.results, [[[1.0, 0.0]], [[0.0, 1.0]], [[0.0, 1.0]], [[1.0, 0.0]]])
+#         np.testing.assert_allclose(C.results, [[[1.0, 0.0]], [[0.0, 1.0]], [[0.0, 1.0]], [[1.0, 0.0]]])
 #         assert store_output_labels == [['red'], ['green'], ['green'], ['red']]
 #
 #         store_output_labels = []
 #         C.run(inputs={M: [[1.0, 0.0], 'green', [0.0, 1.0], 'red']},
 #               call_after_trial=call_after_trial)
-#         assert np.allclose(C.results, [[[1.0, 0.0]], [[0.0, 1.0]], [[0.0, 1.0]], [[1.0, 0.0]], [[1.0, 0.0]], [[0.0, 1.0]], [[0.0, 1.0]], [[1.0, 0.0]]])
+#         np.testing.assert_allclose(C.results, [[[1.0, 0.0]], [[0.0, 1.0]], [[0.0, 1.0]], [[1.0, 0.0]], [[1.0, 0.0]], [[0.0, 1.0]], [[0.0, 1.0]], [[1.0, 0.0]]])
 #         assert store_output_labels == [['red'], ['green'], ['green'], ['red']]
 #         # S.show_graph(show_mechanism_structure="labels")
 #
@@ -313,9 +313,9 @@ from psyneulink.core.globals.keywords import ENABLED, INPUT_LABELS_DICT, OUTPUT_
 #
 #         C.run(inputs={M: ['red', 'blue', 'green', 'blue']},
 #               call_after_trial=call_after_trial)
-#         assert np.allclose(C.results, [[[1.0, 0.0]], [[2.0, 2.0]], [[0.0, 1.0]], [[2.0, 2.0]]])
+#         np.testing.assert_allclose(C.results, [[[1.0, 0.0]], [[2.0, 2.0]], [[0.0, 1.0]], [[2.0, 2.0]]])
 #
 #         assert store_output_labels[0] == ['red']
-#         assert np.allclose(store_output_labels[1], [[2.0, 2.0]])
+#         np.testing.assert_allclose(store_output_labels[1], [[2.0, 2.0]])
 #         assert store_output_labels[2] == ['green']
-#         assert np.allclose(store_output_labels[3], [[2.0, 2.0]])
+#         np.testing.assert_allclose(store_output_labels[3], [[2.0, 2.0]])

@@ -350,7 +350,8 @@ dimension (axis 0) for each of the Mechanism's `input_ports <Mechanism_Base.inpu
 Mechanism's `value <Mechanism_Base.value>` attribute which is  also at least a 2d array.  The Mechanism's `value
 <Mechanism_Base.value>` is referenced by its `OutputPorts <Mechanism_OutputPorts>` to generate their own `value
 <OutputPort.value>` attributes, each of which is assigned as the value of an item of the list in the Mechanism's
-`output_values <Mechanism_Base.output_values>` attribute (see `Mechanism_OutputPorts` below).
+`output_values <Mechanism_Base.output_values>` attribute (see `Mechanism_OutputPorts` below), which is the value
+returned by a call to the Mechanism's `execute <Mechanism_Base.execute>` method.
 
 .. note::
    The input to a Mechanism is not necessarily the same as the input to its `function <Mechanism_Base.function>`. The
@@ -1084,10 +1085,12 @@ from inspect import isclass
 from numbers import Number
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union, Literal, Type
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.component import Component
+from psyneulink.core.components.component import Component, ComponentError
 from psyneulink.core.components.functions.function import FunctionOutputType
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
 from psyneulink.core.components.ports.inputport import DEFER_VARIABLE_SPEC_TO_MECH_MSG, InputPort
@@ -1125,12 +1128,8 @@ logger = logging.getLogger(__name__)
 MechanismRegistry = {}
 
 
-class MechanismError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class MechanismError(ComponentError):
+    pass
 
 
 class MechParamsDict(UserDict):
@@ -1345,7 +1344,8 @@ class Mechanism_Base(Mechanism):
         name of a parameter of the function, and its value is the parameter's value.
 
     value : 2d np.array [array(float64)]
-        result of the Mechanism's `function <Mechanism_Base.function>`.  It is always at least a 2d np.array, with the
+        result of the Mechanism's `execute` method, which is usually (but not always) the `value <Function.value>`
+        of it `function <Mechanism_Base.function>`.  It is always at least a 2d np.array, with the
         items of axis 0 corresponding to the values referenced by the corresponding `index <OutputPort.index>`
         attribute of the Mechanism's `OutputPorts <OutputPort>`.  The first item is generally referenced by the
         Mechanism's `primary OutputPort <OutputPort_Primary>` (i.e., the one in the its `output_port
@@ -1677,9 +1677,9 @@ class Mechanism_Base(Mechanism):
     # def __new__(cls, *args, **kwargs):
     # def __new__(cls, name=NotImplemented, params=NotImplemented, context=None):
 
-    @tc.typecheck
-    @abc.abstractmethod
     @check_user_specified
+    @beartype
+    @abc.abstractmethod
     def __init__(self,
                  default_variable=None,
                  size=None,
@@ -3124,7 +3124,9 @@ class Mechanism_Base(Mechanism):
             assert value is mech_val_ptr
         else:
             # FIXME: Does this need some sort of parsing?
-            warnings.warn("Shape mismatch: function result does not match mechanism value param: {} vs. {}".format(value.type.pointee, mech_val_ptr.type.pointee))
+            warnings.warn("Shape mismatch: function result does not match mechanism value param: {} vs. {}".format(
+                          value.type.pointee, mech_val_ptr.type.pointee),
+                          pnlvm.PNLCompilerWarning)
 
         # Update  num_executions parameter
         num_executions_ptr = pnlvm.helpers.get_state_ptr(builder, self, m_state, "num_executions")
@@ -3146,13 +3148,18 @@ class Mechanism_Base(Mechanism):
                                                         arg_out])
         return builder, is_finished_cond
 
-    def _gen_llvm_function_reset(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+    def _gen_llvm_function_reset(self, ctx, builder, m_base_params, m_state, m_arg_in, m_arg_out, *, tags:frozenset):
         assert "reset" in tags
+
         reinit_func = ctx.import_llvm_function(self.function, tags=tags)
-        reinit_params = pnlvm.helpers.get_param_ptr(builder, self, params, "function")
-        reinit_state = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
         reinit_in = builder.alloca(reinit_func.args[2].type.pointee, name="reinit_in")
         reinit_out = builder.alloca(reinit_func.args[3].type.pointee, name="reinit_out")
+
+        reinit_base_params = pnlvm.helpers.get_param_ptr(builder, self, m_base_params, "function")
+        reinit_params, builder = self._gen_llvm_param_ports_for_obj(
+                self.function, reinit_base_params, ctx, builder, m_base_params, m_state, m_arg_in)
+        reinit_state = pnlvm.helpers.get_state_ptr(builder, self, m_state, "function")
+
         builder.call(reinit_func, [reinit_params, reinit_state, reinit_in,
                                    reinit_out])
 
@@ -3274,21 +3281,21 @@ class Mechanism_Base(Mechanism):
 
         return builder
 
-    @tc.typecheck
+    @beartype
     def _show_structure(self,
-                        show_functions:bool=False,
-                        show_mech_function_params:bool=False,
-                        show_port_function_params:bool=False,
-                        show_values:bool=False,
-                        use_labels:bool=False,
-                        show_headers:bool=False,
-                        show_roles:bool=False,
-                        show_conditions:bool=False,
+                        show_functions: bool = False,
+                        show_mech_function_params: bool = False,
+                        show_port_function_params: bool = False,
+                        show_values: bool = False,
+                        use_labels: bool = False,
+                        show_headers: bool = False,
+                        show_roles: bool = False,
+                        show_conditions: bool = False,
                         composition=None,
-                        compact_cim:bool=False,
-                        condition:tc.optional(Condition)=None,
-                        node_border:str="1",
-                        output_fmt:tc.enum('pdf','struct')='pdf',
+                        compact_cim: bool = False,
+                        condition: Optional[Condition] = None,
+                        node_border: str = "1",
+                        output_fmt: Literal['pdf', 'struct'] = 'pdf',
                         context=None
                         ):
         """Generate a detailed display of a the structure of a Mechanism.
@@ -3462,9 +3469,9 @@ class Mechanism_Base(Mechanism):
             return f'<td port="{self.name}" colspan="{cols}">' + \
                    mech_name + mech_roles + mech_condition + mech_function + mech_value + '</td>'
 
-        @tc.typecheck
-        def port_table(port_list:ContentAddressableList,
-                        port_type:tc.enum(InputPort, ParameterPort, OutputPort)):
+        @beartype
+        def port_table(port_list: ContentAddressableList,
+                       port_type: Union[Type[InputPort], Type[ParameterPort], Type[OutputPort]]):
             """Return html with table for each port in port_list, including functions and/or values as specified
 
             Each table has a header cell and and inner table with cells for each port in the list
@@ -3620,8 +3627,7 @@ class Mechanism_Base(Mechanism):
 
     # def remove_projection(self, projection):
     #     pass
-
-    @tc.typecheck
+    @beartype
     def _get_port_name(self, port:Port):
         if isinstance(port, InputPort):
             port_type = InputPort.__name__
@@ -3634,7 +3640,7 @@ class Mechanism_Base(Mechanism):
                 f'{InputPort.__name__}, {ParameterPort.__name__} or {OutputPort.__name__}'
         return port_type + '-' + port.name
 
-    @tc.typecheck
+    @beartype
     @handle_external_context()
     def add_ports(self, ports, update_variable=True, context=None):
         """
@@ -3728,7 +3734,7 @@ class Mechanism_Base(Mechanism):
         return {INPUT_PORTS: instantiated_input_ports,
                 OUTPUT_PORTS: instantiated_output_ports}
 
-    @tc.typecheck
+    @beartype
     def remove_ports(self, ports, context=REMOVE_PORTS):
         """
         remove_ports(ports)
@@ -3899,9 +3905,8 @@ class Mechanism_Base(Mechanism):
             return self.input_ports.index(port)
         raise MechanismError("{} is not an InputPort of {}.".format(port.name, self.name))
 
-    # @tc.typecheck
-    # def _get_port_value_labels(self, port_type:tc.any(InputPort, OutputPort)):
-    def _get_port_value_labels(self, port_type, context=None):
+    @beartype
+    def _get_port_value_labels(self, port_type: Union[Type[InputPort], Type[OutputPort]], context=None):
         """Return list of labels for the value of each Port of specified port_type.
         If the labels_dict has subdicts (one for each Port), get label for the value of each Port from its subdict.
         If the labels dict does not have subdicts, then use the same dict for the only (or all) Port(s)
@@ -4295,7 +4300,7 @@ class MechanismList(UserList):
         return self.mechs[item]
 
     def __setitem__(self, key, value):
-        raise ("MechanismList is read only ")
+        raise KeyError("MechanismList is read only ")
 
     def __len__(self):
         return (len(self.mechs))

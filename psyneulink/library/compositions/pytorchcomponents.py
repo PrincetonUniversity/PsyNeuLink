@@ -1,4 +1,5 @@
-from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear, Logistic, ReLU, SoftMax
+from psyneulink.core.components.functions.nonstateful.transferfunctions import \
+    Linear, Logistic, ReLU, SoftMax, Dropout, Identity
 from psyneulink.library.compositions.pytorchllvmhelper import *
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core import llvm as pnlvm
@@ -21,7 +22,10 @@ def pytorch_function_creator(function, device, context=None):
 
         return float(val)
 
-    if isinstance(function, Linear):
+    if isinstance(function, Identity):
+        return lambda x: x
+
+    elif isinstance(function, Linear):
         slope = get_fct_param_value('slope')
         intercept = get_fct_param_value('intercept')
         return lambda x: x * slope + intercept
@@ -41,7 +45,11 @@ def pytorch_function_creator(function, device, context=None):
 
     elif isinstance(function, SoftMax):
         gain = get_fct_param_value('gain')
-        return lambda x: (torch.softmax(x, len(x), other=torch.tensor([0], device=device).double()))
+        return lambda x: (torch.softmax(x, len(x)))
+
+    elif isinstance(function, Dropout):
+        prob = get_fct_param_value('p')
+        return lambda x: (torch.dropout(input=x, p=prob, train=False))
 
     else:
         raise Exception(f"Function {function} is not currently supported in AutodiffCompositions!")

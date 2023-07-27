@@ -102,18 +102,20 @@ Class Reference
 import numbers
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional
 
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.nonstateful.transferfunctions import LinearMatrix
 from psyneulink.core.components.functions.function import get_matrix
-from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.core.components.projections.pathway.mappingprojection import MappingError, MappingProjection
 from psyneulink.core.components.projections.projection import projection_keywords
 from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.keywords import AUTO_ASSOCIATIVE_PROJECTION, DEFAULT_MATRIX, HOLLOW_MATRIX, FUNCTION, OWNER_MECH
 from psyneulink.core.globals.parameters import SharedParameter, Parameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
 __all__ = [
@@ -124,9 +126,8 @@ parameter_keywords.update({AUTO_ASSOCIATIVE_PROJECTION})
 projection_keywords.update({AUTO_ASSOCIATIVE_PROJECTION})
 
 
-class AutoAssociativeError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
+class AutoAssociativeError(MappingError):
+    pass
 
 
 class AutoAssociativeProjection(MappingProjection):
@@ -237,7 +238,7 @@ class AutoAssociativeProjection(MappingProjection):
     classPreferenceLevel = PreferenceLevel.TYPE
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  owner=None,
                  sender=None,
@@ -246,7 +247,7 @@ class AutoAssociativeProjection(MappingProjection):
                  function=None,
                  params=None,
                  name=None,
-                 prefs: tc.optional(is_pref_set) = None,
+                 prefs:  Optional[ValidPrefSet] = None,
                  **kwargs
                  ):
 
@@ -274,7 +275,9 @@ class AutoAssociativeProjection(MappingProjection):
     def _instantiate_parameter_classes(self, context):
         if FUNCTION not in self.initial_shared_parameters:
             try:
-                self.initial_shared_parameters[FUNCTION] = self.initial_shared_parameters[OWNER_MECH]
+                self.initial_shared_parameters[FUNCTION] = {
+                    'matrix': self.initial_shared_parameters[OWNER_MECH]['matrix']
+                }
             except KeyError:
                 pass
 

@@ -22,7 +22,7 @@ them as edges.
 
 .. technical_note::
     Every Composition is assigned a `ShowGraph` object, that is implemented in the free-standing showgraph.py module.
-    The `show_graph <Compositoin.show_graph>` method of a Composition directly calls the `show_graph
+    The `show_graph <ShowGraph.show_graph>` method of a Composition directly calls the `show_graph
     <ShowGraph.show_graph>` method of its `ShowGraph` object, as do all links to documentation concerning
     `show_graph`.
 
@@ -217,10 +217,12 @@ Class Reference
 
 import inspect
 import warnings
-from typing import Union
+from psyneulink._typing import Union
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union, Literal
 from PIL import Image
 
 from psyneulink.core.components.component import Component
@@ -412,7 +414,7 @@ class ShowGraph():
 
     def __init__(self,
                  composition,
-                 direction:tc.enum('BT', 'TB', 'LR', 'RL')='BT',
+                 direction: Literal['BT', 'TB', 'LR', 'RL'] = 'BT',
                  # Node shapes:
                  mechanism_shape = 'oval',
                  feedback_shape = 'octagon',
@@ -488,24 +490,24 @@ class ShowGraph():
         self.learning_rank = learning_rank
         self.output_rank = output_rank
 
-    @tc.typecheck
+    @beartype
     @handle_external_context(source=ContextFlags.COMPOSITION)
     def show_graph(self,
-                   show_all:bool=False,
-                   show_node_structure:tc.any(bool, tc.enum(VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS,
-                                                            PORT_FUNCTION_PARAMS, ROLES, ALL))=False,
-                   show_nested:tc.optional(tc.any(bool,int,dict,tc.enum(NESTED, INSET)))=NESTED,
-                   show_nested_args:tc.optional(tc.any(bool,dict,tc.enum(ALL)))=ALL,
-                   show_cim:bool=False,
-                   show_controller:tc.any(bool, tc.enum(AGENT_REP))=True,
-                   show_learning:bool=False,
-                   show_headers:bool=True,
-                   show_types:bool=False,
-                   show_dimensions:bool=False,
-                   show_projection_labels:bool=False,
-                   show_projections_not_in_composition=False,
+                   show_all: bool = False,
+                   show_node_structure: Union[bool, Literal['values', 'labels', 'functions', 'MECHANISM_FUNCTION_PARAMS',
+                                                             'PORT_FUNCTION_PARAMS', 'roles', 'all']] = False,
+                   show_nested: Optional[Union[bool, int, dict, Literal['nested', 'inset']]] = 'nested',
+                   show_nested_args: Optional[Union[bool, dict, Literal['all']]] = 'all',
+                   show_cim: bool = False,
+                   show_controller: Union[bool, Literal['agent_rep']] = True,
+                   show_learning: bool = False,
+                   show_headers: bool = True,
+                   show_types: bool = False,
+                   show_dimensions: bool = False,
+                   show_projection_labels: bool = False,
+                   show_projections_not_in_composition: bool = False,
                    active_items=None,
-                   output_fmt:tc.optional(tc.enum('pdf','gv','jupyter','gif'))='pdf',
+                   output_fmt: Optional[Literal['pdf', 'gv', 'jupyter', 'gif', 'source']] = 'pdf',
                    context=None,
                    *args,
                    **kwargs):
@@ -598,16 +600,16 @@ class ShowGraph():
             specifies whether or not to show the Composition's `controller <Composition.controller>` and associated
             `objective_mechanism <ControlMechanism.objective_mechanism>` if it has one.  If the controller is an
             OptimizationControlMechanism and it has an `agent_rep <OptimizationControlMechanism>`, then specifying
-            *AGENT_REP* will also show that.  All control-related items are displayed in the color specified for
+            *AGENT_REP* also shows that.  All control-related items are displayed in the color specified for
             **controller_color**.
 
         show_learning : bool or ALL : default False
             specifies whether or not to show the `learning components <Composition_Learning_Components>` of the
-            `Composition`; they will all be displayed in the color specified for **learning_color**.
-            Projections that receive a `LearningProjection` will be shown as a diamond-shaped node.
-            If set to *ALL*, all Projections associated with learning will be shown:  the LearningProjections
+            `Composition`; they are all displayed in the color specified for **learning_color**.
+            Projections that receive a `LearningProjection` are shown as a diamond-shaped node.
+            If set to *ALL*, all Projections associated with learning are shown:  the LearningProjections
             as well as from `ProcessingMechanisms <ProcessingMechanism>` to `LearningMechanisms <LearningMechanism>`
-            that convey error and activation information;  if set to `True`, only the LearningPojections are shown.
+            that convey error and activation information;  if set to `True`, only the LearningProjections are shown.
 
         show_projection_labels : bool : default False
             specifies whether or not to show names of projections.
@@ -650,6 +652,7 @@ class ShowGraph():
             'jupyter': return the object (for working in jupyter/ipython notebooks);
             'gv': return graphviz object
             'gif': return gif used for animation
+            'source': return the source code for the graphviz object
             None : return None
 
         Returns
@@ -820,8 +823,7 @@ class ShowGraph():
                    if isinstance(nested_comp, Composition) for n in nested_comp.nodes):
                 continue
 
-            # If show_controller is true, objective mechanism will be
-            # handled in _assign_controller_components
+            # If show_controller is true, objective mechanism is handled in _assign_controller_components
             if (show_controller
                 and composition.controller
                 and composition.controller.objective_mechanism
@@ -2197,7 +2199,7 @@ class ShowGraph():
                        color=learning_proj_color, penwidth=learning_proj_width)
         return True
 
-    @tc.typecheck
+    @beartype
     def _assign_incoming_edges(self,
                                g,
                                rcvr,
@@ -2462,7 +2464,7 @@ class ShowGraph():
                             # - cims as sources (handled in _assign_cim_components)
                             # - controller (handled in _assign_controller_components)
                             # NOTE 7/20/20: if receiver is a controller, then we need to skip this block or shadow inputs
-                            # will not be rendered -DS
+                            # is not rendered -DS
                             if (rcvr is not composition.controller
                                     and isinstance(sndr, CompositionInterfaceMechanism)
                                     or (isinstance(sndr, ControlMechanism) and sndr.composition)):
@@ -2486,7 +2488,7 @@ class ShowGraph():
         composition = self.composition
 
         # Sort nodes for display
-        def get_index_of_node_in_G_body(node, node_type:tc.enum(MECHANISM, PROJECTION, COMPOSITION)):
+        def get_index_of_node_in_G_body(node, node_type: Literal['MECHANISM', 'Projection', 'Composition']):
             """Get index of node in G.body"""
             for i, item in enumerate(G.body):
                 quoted_items = item.split('"')[1::2]

@@ -186,21 +186,26 @@ Class Reference
 
 import logging
 import warnings
+import sys
+
 from collections.abc import Iterable
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union
 
 from psyneulink.core.components.functions.nonstateful.objectivefunctions import Distance, MAX_ABS_DIFF
 from psyneulink.core.components.functions.nonstateful.selectionfunctions import max_vs_avg, max_vs_next, MAX_VS_NEXT, MAX_VS_AVG
 from psyneulink.core.components.functions.stateful.integratorfunctions import LeakyCompetingIntegrator
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Logistic
+from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import _integrator_mode_setter
 from psyneulink.core.globals.keywords import \
     CONVERGENCE, FUNCTION, GREATER_THAN_OR_EQUAL, LCA_MECHANISM, LESS_THAN_OR_EQUAL, MATRIX, NAME, \
     RESULT, TERMINATION_THRESHOLD, TERMINATION_MEASURE, TERMINATION_COMPARISION_OP, VALUE, INVERSE_HOLLOW_MATRIX, AUTO
 from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
     RecurrentTransferMechanism, _recurrent_transfer_mechanism_matrix_getter, _recurrent_transfer_mechanism_matrix_setter
 
@@ -210,12 +215,8 @@ __all__ = ['LCAMechanism', 'LCAError', 'CONVERGENCE']
 logger = logging.getLogger(__name__)
 
 
-class LCAError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class LCAError(MechanismError):
+    pass
 
 
 
@@ -421,7 +422,7 @@ class LCAMechanism(RecurrentTransferMechanism):
         def _validate_competition(self, competition):
             if competition < 0:
                 warnings.warn(
-                    f"The 'competition' arg specified for {self.name} is a negative value ({competition}); "
+                    f"The 'competition' arg specified for {self._owner.name} is a negative value ({competition}); "
                     f"note that this will result in a matrix that has positive off-diagonal elements "
                     f"since 'competition' is assumed to specify the magnitude of inhibition."
                 )
@@ -438,11 +439,11 @@ class LCAMechanism(RecurrentTransferMechanism):
                                     FUNCTION:max_vs_avg}])
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 size:tc.optional(tc.any(int, list, np.array))=None,
-                 input_ports:tc.optional(tc.any(list, dict))=None,
+                 size: Optional[Union[int, list, np.ndarray]] = None,
+                 input_ports: Optional[Union[list, dict]] = None,
                  function=None,
                  initial_value=None,
                  leak=None,
@@ -453,11 +454,11 @@ class LCAMechanism(RecurrentTransferMechanism):
                  integrator_mode=None,
                  time_step_size=None,
                  clip=None,
-                 output_ports:tc.optional(tc.any(str, Iterable))=None,
+                 output_ports: Optional[Union[str, Iterable]] = None,
                  integrator_function=None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
+                 prefs: Optional[ValidPrefSet] = None,
                  **kwargs):
         """Instantiate LCAMechanism
         """
@@ -507,6 +508,9 @@ class LCAMechanism(RecurrentTransferMechanism):
         # Implemented for backward compatibility or, if kept, ease of use
         termination_threshold, termination_measure, termination_comparison_op = self._parse_threshold_args(kwargs)
         # MODIFIED 10/26/19 END
+
+        # Set maximum executions absurdly large to avoid early termination
+        self.max_executions_before_finished = sys.maxsize
 
         super().__init__(
             default_variable=default_variable,

@@ -677,23 +677,29 @@ Composition, it can be executed calling the Composition's `learn <Composition.le
 *Configuring Learning in a Composition*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-There are three ways of configuring learning in a Composition:
+There are three ways of configuring learning in a Composition, using:
 
-i) using `standard PsyNeuLink Components <Composition_Learning_Standard>`
+i) `standard PsyNeuLink Components <Composition_Learning_Standard>`, for presentational and/or instructional purposes;
 
-ii) using the `AutodiffComposition <Composition_Learning_AutodiffComposition>` -- a specialized subclass of Composition
-    that executes learning using `PyTorch <https://pytorch.org>`_
+ii) an `AutodiffComposition <Composition_Learning_AutodiffComposition>`, a subclass of Composition
+    that executes learning efficiently;
 
-iii) using `UserDefinedFunctions <UserDefinedFunction>`.
+iii) `UserDefinedFunctions <Composition_Learning_UDF>`, that provide full flexiblity.
 
-The advantage of using standard PsyNeuLink compoments is that it assigns each operation involved in learning to a
-dedicated Component. This helps make clear exactly what those operations are, the sequence in which they are carried
-out, and how they interact with one another.  However, this can also make execution inefficient, due to the overhead
-incurred by distributing the calculations over different Components.  If more efficient computation is critical,
-then the `AutodiffComposition` can be used to execute a compatible PsyNeuLink Composition in PyTorch, or one or more
-`UserDefinedFunctions <UserDefinedFunction>` can be assigned to either PyTorch functions or those in any other Python
-environment that implements learning and accepts and returns tensors. Each of these approaches is described in more
-detail below.
+Implementing learning using PsyNeuLink compoments is meant as a complement to more standard implementations of
+learning in neural networks, such as `PyTorch <https://pytorch.org/>`_ or `TensorFlow <https://www.tensorflow.org>`_,
+that assigns each operation involved in learning to a dedicated Component. This helps make clear exactly what those
+operations are, the sequence in which they are carried out, and how they interact with one another, which can be
+useful in instructional settings, where each computation associtated with learning can be individually examined.
+However, the cost is that execution is extremely inefficient (due to the lack of parallelization). To execute learning
+on a scale typical of standard deep learning applicatons, an `AutodiffComposition` should be used.  This can executed
+using either `direct compilation <AutodiffComposition_LLVM>` or by translating the model to, and execiting it using
+`PyTorch <AutodiffComposition_PyTorch>`.  Both of these provide as much as three orders of magnitude acceleration
+(comparable to standard machine learning environments).  Finally, for full flexiblity, learning can be impelmented
+using one or more `UserDefinedFunctions <UserDefinedFunction>`, that can be assigned to PyTorch functions, or ones in
+any other Python environment that implements learning and accepts and returns tensors. Each of these approaches is
+described in more detail in the three sections that follow, and summarized in a `table <Composition_Compilation_Table>`
+that compares their advantages and disadvantages.
 
 .. _Composition_Learning_Standard:
 
@@ -930,8 +936,8 @@ When the `learn <Composition.learn>` method is used, all Components *unrelated* 
 way as with the `run <Composition.run>` method.  If the Composition has any `nested Composition <Composition_Nested>`
 that have `learning Pathways <Composition_Learning_Pathway>`, then learning also occurs on all of those for which
 the `disable_learning <Composition.disable_learning>` attribute is False.  This is true even if the `disable_learning
-<Composition.disable_learning>` attribute is True for which the Composition on which the  `learn <Composition.learn>`
-method was called.
+<Composition.disable_learning>` attribute is True for the Composition on which the  `learn <Composition.learn>` method
+was called.
 
 When a Composition is run that contains one or more `learning Pathways <Composition_Learning_Pathway>`, all of the
 ProcessingMechanisms for a pathway are executed first, and then its `learning components
@@ -955,6 +961,11 @@ ProcessingMechanisms for a pathway are executed first, and then its `learning co
         changes will not be observed in the values of their `matrix <MappingProjection.matrix>` parameters until after
         they are next executed (see `Lazy Evaluation <Component_Lazy_Updating>` for an explanation of "lazy" updating).
 
+The Compositon's `learn <Composition.learn>` method takes all of the same arguments as its `run <Composition.run>`
+method, as well as additonal ones that are specific to learning.  Also like `run <Composition.run>`, it returns the
+`output_values <Composition.output_values>` of the Composition after the last trial of execution.  The results for the
+last epoch of learning are stored in its `learning_results <Composition.learning_results>` attribute.
+
 .. _Composition_Learning_AutodiffComposition:
 
 *Learning Using AutodiffCompositon*
@@ -971,12 +982,12 @@ is no need to specify any `learning components <Composition_Learning_Components>
 <Autodiff_Learning_Components_Warning>`) -- an AutodiffComposition automatically creates backpropagation
 `learning pathways <Composition_Learning_Pathway>` from all input to all output `Nodes <Composition_Nodes>`.
 While learning in an AutodiffComposition is restricted to the `BackPropagation` learning algorithm, its `loss
-function can be specified (using the **loss_spec** parameter of its constructor), which implements different kinds of
-`supervised learning <Composition_Learning_Supervised>` (for example, `Loss.MSE` can be used for regression,
+function <Loss>` can be specified (using the **loss_spec** parameter of its constructor), which implements different
+kinds of `supervised learning <Composition_Learning_Supervised>` (for example, `Loss.MSE` can be used for regression,
 or `Loss.CROSS_ENTROPY` for classification).
 
-The advantage of using an AutodiffComposition is that it allows a model to be implemented in PsyNeuLink, and then
-exploit the acceleration of optimized implementations of learning. This can be achieved by executing the `learn
+The advantage of using an AutodiffComposition is that it allows a model to be implemented in PsyNeuLink, while
+exploiting the acceleration of optimized implementations of learning. This can be achieved by executing the `learn
 <Composition.learn>` method in one of two modes (specified using its **execution_mode** argument):  using direct
 compilation (**execution_mode** = `ExecutionMode.LLVMRun`); or by automatically translating the model to `PyTorch
 <https://pytorch.org>`_ for training (**execution_mode** = `ExecutionMode.PyTorch`). The advantage of these modes is
@@ -984,30 +995,47 @@ that they can provide up to three orders of magnitude speed-up in training a mod
 on the kinds of Compositions that be implemented in this way.  The features of the different ways to implement and
 execute learning are outlined in the following table, and described in more detail in `AutodiffComposition`.
 
+  .. warning::
+    * `ExecutionMode.LLVM` and `ExecutionMode.PyTorch` can only be used in the `learn <AutodiffComposition.learn>`
+      method of an `AutodiffComposition`;  specifying them in the `learn <Composition.learn>`()` method of a standard
+      `Composition` causes an error.
+
+|
 .. _Composition_Compilation_Table:
 
+**Comparison of Learning Modes**
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 .. table::
-    :align: left
+   :widths: 5 34 33 33
 
-    +-----------------+------------------------+------------------------------------------------+
-    |                 |  **Composition**       |          **AutodiffComposition**               |
-    +-----------------+------------------------+-----------------------+------------------------+
-    |                 |      *Python*          | *Direct Compilation*  |         *PyTorch*      |
-    +=================+========================+=======================+========================+
-    | execution_mode =| `ExecutionMode.Python` |`ExecutionMode.LLVMRun`|`ExecutionMode.PyTorch` |
-    +-----------------+------------------------+-----------------------+------------------------+
-    |  *learn()*      |  Python interpreted    |   LLVM compiled       |     PyTorch compiled   |
-    |                 |                        |                       |                        |
-    |  *run()*        |  Python interpreted    |   LLVM compiled       |     Python interpreted |
-    +-----------------+------------------------+-----------------------+------------------------+
-    |  *Speed:*       |       slow             |      fastest          |           fast         |
-    +-----------------+------------------------+-----------------------+------------------------+
-    |                 |* Backpropagation       | * Backpropagation     |* Backpropagation       |
-    |                 |* Reinforcement learning|                       |* RNN, inclduing LSTM   |
-    |  *Supports:*    |* Unspervised learning  |                       |* Unsupervised learning |
-    |                 |* modulation, inspection|                       |                        |
-    +-----------------+------------------------+-----------------------+------------------------+
-
+   +--------------------+------------------------------------+-----------------------------------------------+
+   |                    |**Composition**                     |**AutodiffComposition**                        |
+   +--------------------+------------------------------------+-----------------------+-----------------------+
+   |                    |*Python*                            |*Direct Compilation*   |*PyTorch*              |
+   +====================+====================================+=======================+=======================+
+   |execution_mode=     |`ExecutionMode.Python`              |`ExecutionMode.LLVMRun`|`ExecutionMode.LLVMRun`|
+   +--------------------+------------------------------------+-----------------------+-----------------------+
+   |`learn()            |                                    |                       |                       |
+   |<Composition.learn>`|Python interpreted                  |LLVM compiled          |PyTorch compiled       |
+   |                    |                                    |                       |                       |
+   |`run()              |                                    |                       |                       |
+   |<Composition.run>`  |Python interpreted                  |LLVM compiled          |Python interpreted     |
+   +--------------------+------------------------------------+-----------------------+-----------------------+
+   |*Speed:*            |slow                                |fastest                |fast                   |
+   +--------------------+------------------------------------+-----------------------+-----------------------+
+   |                    |`BackPropagation`                   |Backpropagation        |Backpropagation        |
+   |                    |                                    |                       |                       |
+   |                    |`Reinforcement` learning            |                       |RNN, inclduing LSTM    |
+   |                    |                                    |                       |                       |
+   |*Supports:*         |`Unspervised learning               |                       |Unsupervised learning  |
+   |                    |<Composition_Learning_Unsupervised>`|                       |                       |
+   |                    |                                    |                       |                       |
+   |                    |`Modulation                         |                       |                       |
+   |                    |<ModulatorySignal_Modulation>`      |                       |                       |
+   |                    |                                    |                       |                       |
+   |                    |Inspection                          |                       |                       |
+   +--------------------+------------------------------------+-----------------------+-----------------------+
 
 .. _Composition_Learning_UDF:
 
@@ -1019,8 +1047,8 @@ environment that supports learning can be assigned as the `function <Mechanism_B
 <Mechanism>`, in which case it is automatically  wrapped as `UserDefinedFunction`.  For example, the `forward and
 backward methods <https://pytorch.org/docs/master/notes/extending.html>`_ of a PyTorch object can be assigned in this
 way.  The advanatage of this approach is that it can be applied to any Python function that adheres to the requirements
-of a `UserDefinedFunction`. It must be carefully coordinated with the execution of other learning-related Components in
-the Composition, to insure that each function is called at the appropriate times during execution.  Furthermore, as
+of a `UserDefinedFunction`. It must be carefully coordinated with the execution of other learning-related Components
+in the Composition, to insure that each function is called at the appropriate times during execution.  Furthermore, as
 with an `AutodiffComposition`, the internal constituents of the object (e.g., intermediates layers of a neural network
 model) are not accessible to other Components in the Composition (e.g., as a source of information or for modulation).
 
@@ -2760,21 +2788,22 @@ import typing
 import warnings
 from copy import deepcopy, copy
 from inspect import isgenerator, isgeneratorfunction
-from typing import Union
 
 import graph_scheduler
 import networkx
 import numpy as np
 import pint
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union, Literal, Type, Callable
+
 from PIL import Image
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.component import Component, ComponentsMeta
-from psyneulink.core.components.functions.fitfunctions import make_likelihood_function
-from psyneulink.core.components.functions.function import is_function_type, RandomMatrix
+from psyneulink.core.components.component import Component, ComponentError, ComponentsMeta
+from psyneulink.core.components.functions.function import is_function_type, Function, RandomMatrix
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import \
-    LinearCombination, PredictionErrorDeltaFunction
+        LinearCombination, PredictionErrorDeltaFunction
 from psyneulink.core.components.functions.nonstateful.learningfunctions import \
     LearningFunction, Reinforcement, BackPropagation, TDLearning
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity, Logistic, SoftMax
@@ -2812,7 +2841,7 @@ from psyneulink.core.globals.keywords import \
     DEFAULT, DICT, FEEDBACK, FULL, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX, \
     INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
     LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, Loss, \
-    MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MODEL_SPEC_ID_METADATA, \
+    MATRIX, MAYBE, MODEL_SPEC_ID_METADATA, \
     MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, NODE, OBJECTIVE_MECHANISM, ONLINE, OUTCOME, \
     OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
     PARAMETER, PARAMETER_CIM_NAME, PORT, \
@@ -2825,14 +2854,13 @@ from psyneulink.core.globals.preferences.basepreferenceset import BasePreference
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, _assign_prefs
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import ContentAddressableList, call_with_pruned_args, convert_to_list, \
-    nesting_depth, convert_to_np_array, is_numeric, is_matrix, parse_valid_identifier
+    nesting_depth, convert_to_np_array, is_numeric, is_matrix, is_matrix_keyword, parse_valid_identifier
 from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Any, Condition, Never
 from psyneulink.core.scheduling.scheduler import Scheduler, SchedulingMode
 from psyneulink.core.scheduling.time import Time, TimeScale
 from psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism import \
     AutoAssociativeLearningMechanism
-from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import \
-    ComparatorMechanism, OUTCOME, MSE, SSE, L0, L1, CROSS_ENTROPY
+from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 from psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism import \
     PredictionErrorMechanism
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
@@ -2848,14 +2876,8 @@ logger = logging.getLogger(__name__)
 CompositionRegistry = {}
 
 
-class CompositionError(Exception):
-
-    def __init__(self, error_value, **kwargs):
-        self.error_value = error_value
-        self.return_items = kwargs
-
-    def __str__(self):
-        return repr(self.error_value)
+class CompositionError(ComponentError):
+    pass
 
 
 class RunError(Exception):
@@ -3689,10 +3711,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         components used for learning; those are contained in `learning_components
         <Composition.learning_components>` attribute.
 
+    is_nested : bool
+        True of Composition is `nested <Composition_Nested>` in another (outer) Compositon.
+
     results : list[list[list]]
         a list of the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` `Nodes <Composition_Nodes>`
         in the Composition for every `TRIAL <TimeScale.TRIAL>` executed in a call to `run <Composition.run>`.
-        Each item in the outermos list is a list of values for a given trial; each item within a trial corresponds
+        Each item in the outermost list is a list of values for a given trial; each item within a trial corresponds
         to the `output_values <Mechanism_Base.output_values>` of an `OUTPUT` Mechanism for that trial.
 
     output_values : list[list]
@@ -3701,6 +3726,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         `execution methods <Composition_Execution_Methods>`, and the value returned by that method; this is the
         same as `results <Composition.results>`\\[0], and provides consistency of access to the values of a
         Composition's Nodes when one or more is a `nested Composition <Composition_Nested>`.
+
+    learning_results : list[list[list]]
+        a list of the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` `Nodes <Composition_Nodes>`
+        in the Composition for every `TRIAL <TimeScale.TRIAL>` of the last epoch of learning executed in a call to
+        `learn <Composition.learn>`. Each item in the outermost list is a list of values for a given trial; each item
+        within a trial corresponds to the `output_values <Mechanism_Base.output_values>` of an `OUTPUT` Mechanism
+        for that trial.
 
     simulation_results : list[list[list]]
         a list of the `results <Composition.results>` for `simulations <OptimizationControlMechanism_Execution>`
@@ -3755,6 +3787,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     :default value: None
                     :type:
 
+                learning_results
+                    see `learning_results <Composition.learning_results>`
+
+                    :default value: []
+                    :type: ``list``
+
                 results
                     see `results <Composition.results>`
 
@@ -3774,6 +3812,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     :type: ``list``
         """
         results = Parameter([], loggable=False, pnl_internal=True)
+        learning_results = Parameter([], loggable=False, pnl_internal=True)
         simulation_results = Parameter([], loggable=False, pnl_internal=True)
         retain_old_simulation_data = Parameter(False, stateful=False, loggable=False, pnl_internal=True)
         input_specification = Parameter(None, stateful=False, loggable=False, pnl_internal=True)
@@ -3788,14 +3827,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pathways=None,
             nodes=None,
             projections=None,
-            allow_probes:Union[bool, CONTROL]=True,
-            include_probes_in_output:bool=False,
-            disable_learning:bool=False,
-            controller:ControlMechanism=None,
+            allow_probes: Union[bool, CONTROL] = True,
+            include_probes_in_output: bool = False,
+            disable_learning: bool = False,
+            controller: ControlMechanism = None,
             enable_controller=None,
-            controller_mode:tc.enum(BEFORE,AFTER)=AFTER,
+            controller_mode: Literal['before', 'after'] = 'after',
             controller_time_scale=TimeScale.TRIAL,
-            controller_condition:Condition=Always(),
+            controller_condition: Condition = Always(),
             retain_old_simulation_data=None,
             show_graph_attributes=None,
             name=None,
@@ -3845,6 +3884,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.default_execution_id = self.name
         self.execution_ids = {self.default_execution_id}
+        self._executed_from_command_line = False
 
         self.projections = ContentAddressableList(component_type=Component)
 
@@ -3885,22 +3925,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.controller = None
 
-        # FIX 4/8/20 [JDC]: WHY NOT CALL add_nodes()?
         # Nodes, Projections, and Pathways
         if nodes is not None:
-            nodes = convert_to_list(nodes)
-            for node in nodes:
-                required_roles = None
-                if isinstance(node, tuple):
-                    node, required_roles = node
-                self.add_node(node, required_roles)
+            self.add_nodes(nodes)
 
-        # FIX 4/8/20 [JDC]: TEST THIS
         if projections is not None:
-            projections = convert_to_list(projections)
             self.add_projections(projections)
 
-        self.add_pathways(pathways, context=context)
+        # CONSTRUCTOR flag is needed for warning check tests, but this
+        # must be changed immediately to COMMAND_LINE because any
+        # pathways added in composition constructor should be created
+        # the same as if they were created on a command-line call. Do
+        # not use the above context object because the source change
+        # will persist after this call
+        self.add_pathways(pathways, context=Context(source=ContextFlags.CONSTRUCTOR))
 
         # Controller
         self.controller = None
@@ -4043,11 +4081,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         self._graph_processing = self.graph.copy()
 
-        def remove_vertex(vertex):
-            for parent in vertex.parents:
-                for child in vertex.children:
-                    child.source_types[parent] = vertex.feedback
-                    self._graph_processing.connect_vertices(parent, child)
+        def remove_vertex(vertex, connect_endpoints):
+            if connect_endpoints:
+                for parent in vertex.parents:
+                    for child in vertex.children:
+                        child.source_types[parent] = vertex.feedback
+                        self._graph_processing.connect_vertices(parent, child)
 
             self._graph_processing.remove_vertex(vertex)
 
@@ -4055,7 +4094,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         vert_list = self._graph_processing.vertices.copy()
         for cur_vertex in vert_list:
             if not cur_vertex.component.is_processing:
-                remove_vertex(cur_vertex)
+                remove_vertex(cur_vertex, cur_vertex.component._creates_scheduling_dependency)
 
         # this determines CYCLE nodes and final FEEDBACK nodes
         self._graph_processing.prune_feedback_edges()
@@ -4067,7 +4106,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # region ---------------------------------------NODES  -------------------------------------------------------------
     # ******************************************************************************************************************
 
-    @handle_external_context(source = ContextFlags.COMPOSITION)
+    @handle_external_context()
     def add_node(self, node, required_roles=None, context=None):
         """
             Add a Node (`Mechanism <Mechanism>` or `Composition`) to Composition, if it is not already added
@@ -4085,10 +4124,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # FIX 5/25/20 [JDC]: ADD ERROR STRING (as in pathway_arg_str in add_linear_processing_pathway)
         # Raise error if Composition is added to itself
         if node is self:
-            pathway_arg_str = ""
-            if context.source in {ContextFlags.INITIALIZING, ContextFlags.METHOD}:
-                pathway_arg_str = " in " + context.string
-            raise CompositionError(f"Attempt to add Composition as a Node to itself{pathway_arg_str}.")
+            pathway_arg_str = context.string
+            raise CompositionError(f"Attempt to add Composition as a Node to itself {pathway_arg_str}.")
 
         required_roles = convert_to_list(required_roles)
 
@@ -4121,7 +4158,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.needs_update_scheduler = True
             self.needs_update_controller = True
 
-        invalid_aux_components = self._add_node_aux_components(node)
+        invalid_aux_components = self._add_node_aux_components(node, context=context)
 
         # Implement required_roles
         if required_roles:
@@ -4249,6 +4286,134 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._remove_node(node, analyze_graph=False)
 
         self._analyze_graph()
+
+    def import_composition(self,
+                           composition,
+                           nodes:Union[list, Literal[ALL]]=ALL,
+                           get_input_from:dict=None,
+                           send_output_to:dict=None,
+                           transfer_required_roles:bool=True,
+                           transfer_excluded_roles:bool=True,
+                           context=None):
+        """Import a `Composition` into the current Composition.
+
+        Arguments
+        ---------
+
+        composition : Composition
+            the Composition to be imported into the current Composition.
+
+        nodes : list : default ALL
+            the nodes to be imported from ``composition``.  Each item of the list must be a `Mechanism <Mechanism>`.
+            If ALL (the default), all nodes in ``composition`` will be imported.
+
+        get_input_from : dict : default None
+            mapping from `Nodes <Composition_Nodes>` (keys) in the current Composition to Nodes (values) in the
+            Composition to be imported that will receive their input; this argument must be specified.
+
+        send_output_to : dict : default None
+            mapping from `Nodes <Composition_Nodes>` (keys) in the Composition to be imported to Nodes (values)
+            in the current Composition that will receive their output; this argument must be specified.
+
+        transfer_required_roles : bool : default True
+            if True, the `required_roles <Composition.required_roles>` of the nodes in the imported Composition
+            will be transferred to the corresponding nodes in the current Composition.
+
+        transfer_excluded_roles : bool : default True
+            if True, the `excluded_roles <Composition.excluded_roles>` of the nodes in the imported Composition
+            will be transferred to the corresponding nodes in the current Composition.
+        """
+
+        nodes = composition.nodes if nodes is ALL else nodes
+        from_nodes, input_nodes = zip(*get_input_from.items())
+        output_nodes, to_nodes = zip(*send_output_to.items())
+
+        # VALIDATE args ====================================================================================
+
+        if not get_input_from:
+            raise (CompositionError(f"The 'get_input_from' arg must be specified "
+                                   f"for import_composition method of {self.name}"))
+        if not send_output_to:
+            raise (CompositionError(f"The 'send_output_to' arg must be specified "
+                                   f"for import_composition method of {self.name}"))
+        if not isinstance(composition, Composition):
+            raise CompositionError(f"Can't import from {composition.name} ({composition.__class__.__name__}) "
+                                   f"since it is not a Composition.")
+        illegal_nodes = [node for node in nodes
+                         if (not isinstance(node, (Mechanism, Composition)) or node not in nodes)]
+        if len(illegal_nodes):
+            raise CompositionError(f"Can't import {','.join([node.name for node in illegal_nodes])} "
+                                   f"as they are either not legal nodes or not in {composition.name}.")
+
+        illegal_from_nodes = [node for node in from_nodes if (not isinstance(node, (Mechanism, Composition))
+                                                               or node not in self.nodes)]
+        if illegal_from_nodes:
+            raise CompositionError(f"The following items specified in the 'get_input_from' arg of"
+                                   f"'import_composition' for {self.name} either are not legal nodes "
+                                   f"or not in that Composition: "
+                                   f"{','.join([node.name for node in illegal_from_nodes])}")
+        illegal_input_nodes = [node for node in input_nodes if (not isinstance(node, (Mechanism, Composition))
+                                                               or node not in nodes)]
+        if illegal_input_nodes:
+            raise CompositionError(f"The following items specified in the 'get_input_from' arg of "
+                                   f"'import_composition' for {self.name} either are not legal nodes "
+                                   f"or not in {composition.name}: "
+                                   f"{','.join([node.name for node in illegal_input_nodes])}")
+        illegal_to_nodes = [node for node in output_nodes if (not isinstance(node, (Mechanism, Composition))
+                                                              or node not in nodes)]
+        if illegal_to_nodes:
+            raise CompositionError(f"The following items specified in the 'send_output_to' arg of "
+                                   f"'import_composition' for {self.name} either are not legal nodes "
+                                   f"or not in {composition.name}: "
+                                   f"{','.join([node.name for node in illegal_to_nodes])}")
+        illegal_output_nodes = [node for node in to_nodes if (not isinstance(node, (Mechanism, Composition))
+                                                              or node not in self.nodes)]
+        if illegal_output_nodes:
+            raise CompositionError(f"The following items specified in the 'send_output_to' arg of "
+                                   f"'import_composition' for {self.name} either are not legal nodes "
+                                   f"or not in that Composition: "
+                                   f"{','.join([node.name for node in illegal_output_nodes])}")
+
+        # IMPORT Nodes and Projections from Composition =======================================================
+
+        self.add_nodes(nodes)
+
+        projections = [projection for projection in composition.projections
+                       if (projection.sender.owner in nodes
+                           # and not isinstance(projection.sender.owner, CompositionInterfaceMechanism)
+                           and projection.receiver.owner in nodes
+                           # and not isinstance(projection.receiver.owner, CompositionInterfaceMechanism)
+                           )]
+        self.add_projections(projections)
+
+        # CONNECT Inputs and Outputs ==========================================================================
+
+        # Inputs ------------------------------------------------------------------------------------
+        if get_input_from:
+            # Connect from_nodes to input_nodes
+            for i in range(len(get_input_from)):
+                self.add_projection(MappingProjection(sender=from_nodes[i], receiver=input_nodes[i]))
+
+        # Outputs -----------------------------------------------------------------------------------
+        if send_output_to:
+            # Connect output_nodes to to_nodes
+            input_nodes = composition.get_nodes_by_role(NodeRole.INPUT)
+            for i in range(len(send_output_to)):
+                self.add_projection(MappingProjection(sender=output_nodes[i], receiver=to_nodes[i]))
+
+        # TRANSFER required and excluded NodeRoles for imported Nodes to self =================================
+
+        if transfer_required_roles:
+            for entry in composition.required_node_roles:
+                if entry[0] in nodes:
+                    self.require_node_roles(entry)
+
+        if transfer_excluded_roles:
+            for entry in composition.excluded_node_roles:
+                if entry[0] in nodes:
+                    self.exclude_node_roles(entry[0], entry[1])
+
+        self._need_check_for_unused_projections = False
 
     @handle_external_context()
     def _add_required_node_role(self, node, role, context=None):
@@ -4712,11 +4877,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if sender_node in self._all_nodes and \
                         receiver_node in self._all_nodes:
                     self.add_projection(projection=proj_spec[0],
-                                        feedback=proj_spec[1])
+                                        feedback=proj_spec[1],
+                                        context=context,
+                    )
                 else:
                     self.add_projection(sender=proj_spec[0].sender,
                                         receiver=proj_spec[0].receiver,
-                                        feedback=proj_spec[1])
+                                        feedback=proj_spec[1],
+                                        context=context,
+                    )
                 del node.aux_components[node.aux_components.index(proj_spec)]
 
             # MODIFIED 12/29/21 NEW:
@@ -4932,11 +5101,36 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._determine_origin_and_terminal_nodes_from_consideration_queue()
 
         # INPUT
-        for node in self.get_nodes_by_role(NodeRole.ORIGIN):
+        origin_nodes = self.get_nodes_by_role(NodeRole.ORIGIN)
+        for node in origin_nodes:
             # Don't allow INTERNAL Nodes to be INPUTS
             if NodeRole.INTERNAL in self.get_roles_by_node(node):
                 continue
             self._add_node_role(node, NodeRole.INPUT)
+
+            # special case, ControlMechanisms create MappingProjections
+            # to inner composition parameter CIMs, which may or may not
+            # create scheduler dependencies (determined by user action).
+            # If an inner composition is not ORIGIN because of this
+            # condition, add it as INPUT anyway.
+            if isinstance(node, ControlMechanism):
+                for child in self.graph_processing.comp_to_vertex[node].children:
+                    for parent in child.parents:
+                        # MappingProjections from non-ControlMechanisms
+                        # always obey standard scheduling behavior
+                        if (
+                            not isinstance(parent.component, ControlMechanism)
+                            or parent.component not in origin_nodes
+                        ):
+                            continue
+
+                        for proj in child.component.get_afferents(parent.component):
+                            if (
+                                isinstance(proj, PathwayProjection_Base)
+                                and proj._creates_scheduling_dependency
+                            ):
+                                self._add_node_role(child.component, NodeRole.INPUT)
+                                break
 
         # CYCLE
         for node in self.graph_processing.cycle_vertices:
@@ -5125,7 +5319,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             break
         return external_modulators
 
-    tc.typecheck
+    @beartype
     def _create_CIM_ports(self, context=None):
         """
             - remove the default InputPort and OutputPort from the CIMs if this is the first time that real
@@ -5158,6 +5352,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             - delete all of the above for any node Ports which were previously, but are no longer, classified as
               INPUT/OUTPUT
         """
+        # temporarily change context source for scope of this method so
+        # port calls are not believed to come directly from
+        # script/command-line
+        prev_source = context.source
+        context.source = ContextFlags.METHOD
 
         # Composition's CIMs need to be set up from scratch, so we remove their default input and output ports
         if not self.input_CIM.connected_to_composition:
@@ -5483,10 +5682,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 assert c == 0, f"PROGRAM ERROR:  Number of external control projections {c} is greater than 0. " \
                                f"This means there was a failure to route these projections through the PCIM."
 
+        context.source = prev_source
+
     def _get_nested_node_CIM_port(self,
                                   node: Mechanism,
-                                  node_port: tc.any(InputPort, OutputPort),
-                                  role: tc.enum(NodeRole.INPUT, NodeRole.PROBE, NodeRole.OUTPUT)
+                                  node_port: Union[InputPort, OutputPort],
+                                  role: Literal[NodeRole.INPUT, NodeRole.PROBE, NodeRole.OUTPUT]
                                   ):
         """Check for node in nested Composition
         Assign NodeRole.PROBE to relevant nodes if allow_probes is specified (see handle_probes below)
@@ -5615,24 +5816,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 list of Projections to be added to the Composition
         """
 
-        if isinstance(projections, list):
-            for projection in projections:
-                if isinstance(projection, list):
-                    self.add_projections(projection)
-                elif isinstance(projection, Projection) and \
-                        hasattr(projection, "sender") and \
-                        hasattr(projection, "receiver"):
-                    self.add_projection(projection)
-                else:
-                    raise CompositionError("Invalid projections specification for {}. The add_projections method of "
-                                           "Composition requires a list of Projections, each of which must have a "
-                                           "sender and a receiver.".format(self.name))
-        else:
-            raise CompositionError("Invalid projections specification for {}. The add_projections method of "
-                                   "Composition requires a list of Projections, each of which must have a "
-                                   "sender and a receiver.".format(self.name))
+        projections = convert_to_list(projections)
 
-    @handle_external_context(source=ContextFlags.METHOD)
+        for projection in projections:
+            if isinstance(projection, list):
+                self.add_projections(projection)
+            elif isinstance(projection, Projection) and \
+                    hasattr(projection, "sender") and \
+                    hasattr(projection, "receiver"):
+                self.add_projection(projection)
+            else:
+                raise CompositionError(f"Invalid projections specification for {self.name}. The add_projections "
+                                       f"method of Composition requires a list of Projections, each of which must "
+                                       f"have a sender and a receiver.")
+
+    @handle_external_context(source=ContextFlags.COMMAND_LINE)
     def add_projection(self,
                        projection=None,
                        sender=None,
@@ -5816,6 +6014,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                                        sender_mechanism, receiver,
                                                                                        graph_receiver, context)
                 receiver = projection.receiver
+                if context.source is not ContextFlags.COMMAND_LINE:
+                    projection._creates_scheduling_dependency = False
 
         if sender_mechanism is self.parameter_CIM:
             idx = self.parameter_CIM.output_ports.index(sender)
@@ -5979,7 +6179,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         elif isinstance(projection, (np.ndarray, np.matrix, list, RandomMatrix)):
             return MappingProjection(matrix=projection, sender=sender, receiver=receiver, name=name)
         elif isinstance(projection, str):
-            if projection in MATRIX_KEYWORD_VALUES:
+            if is_matrix_keyword(projection):
                 return MappingProjection(matrix=projection, sender=sender, receiver=receiver, name=name)
             else:
                 raise CompositionError("Invalid projection ({}) specified for {}.".format(projection, self.name))
@@ -6203,7 +6403,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         # TBI - Shadow projection type? Matrix value?
                         new_projection = MappingProjection(sender=correct_sender,
                                                            receiver=input_port)
-                        self.add_projection(new_projection, sender=correct_sender, receiver=input_port)
+                        self.add_projection(new_projection, sender=correct_sender, receiver=input_port, context=context)
                 else:
                     raise CompositionError(f"Unable to find port specified to be shadowed by '{input_port.owner.name}' "
                                            f"({shadowed_projection.receiver.owner.name}"
@@ -6463,11 +6663,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 pathway = list(pathway)
             # If tuple is (pathway, LearningFunction), get pathway and ignore LearningFunction
             elif isinstance(pathway[1],type) and issubclass(pathway[1], LearningFunction):
-                warnings.warn(f"{LearningFunction.__name__} found in specification of {pathway_arg_str}: {pathway[1]}; "
+                warnings.warn(f"{LearningFunction.__name__} found {pathway_arg_str}: {pathway[1]}; "
                               f"it will be ignored")
                 pathway = pathway[0]
             else:
-                raise CompositionError(f"Unrecognized tuple specification in {pathway_arg_str}: {pathway}")
+                raise CompositionError(f"Unrecognized tuple specification {pathway_arg_str}: {pathway}")
         elif not isinstance(pathway, collections.abc.Iterable) or all(_is_pathway_entry_spec(n, ANY) for n in pathway):
             pathway = convert_to_list(pathway)
         else:
@@ -6475,7 +6675,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                   f"a Node (Mechanism or Composition) or a Projection nor a set of either: "
             bad_entries = [repr(entry) for entry in pathway if not _is_pathway_entry_spec(entry, ANY)]
             raise CompositionError(f"{bad_entry_error_msg}{','.join(bad_entries)}")
-            # raise CompositionError(f"Unrecognized specification in {pathway_arg_str}: {pathway}")
+            # raise CompositionError(f"Unrecognized specification {pathway_arg_str}: {pathway}")
 
         lists = [entry for entry in pathway
                  if isinstance(entry, list) and all(_is_pathway_entry_spec(node, NODE) for node in entry)]
@@ -6561,6 +6761,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pathways_arg_str = f"'pathways' arg for the add_pathways method of {self.name}"
         elif context.source == ContextFlags.CONSTRUCTOR:
             pathways_arg_str = f"'pathways' arg of the constructor for {self.name}"
+            context.source = ContextFlags.COMMAND_LINE
         else:
             assert False, f"PROGRAM ERROR:  unrecognized context passed to add_pathways of {self.name}."
         context.string = pathways_arg_str
@@ -6709,7 +6910,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 raise CompositionError(f"{bad_entry_error_msg}{repr(pathway)}")
 
-            context.source = ContextFlags.METHOD
             if pway_type == PROCESSING_PATHWAY:
                 new_pathway = self.add_linear_processing_pathway(pathway=pway,
                                                                  default_projection_matrix=matrix,
@@ -6786,9 +6986,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pathway_arg_str = context.string
         # Otherwise, refer to call from this method
         else:
-            pathway_arg_str = f"'pathway' arg for add_linear_procesing_pathway method of '{self.name}'"
+            pathway_arg_str = f"in 'pathway' arg for add_linear_procesing_pathway method of '{self.name}'"
 
-        context.source = ContextFlags.METHOD
         context.string = pathway_arg_str
 
         pathway, pathway_name = self._parse_pathway(pathway, name, pathway_arg_str)
@@ -6806,7 +7005,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             node_entries.append(pathway[0])
         else:
             # 'MappingProjection has no attribute _name' error is thrown when pathway[0] is passed to the error msg
-            raise CompositionError(f"First item in {pathway_arg_str} must be "
+            raise CompositionError(f"First item {pathway_arg_str} must be "
                                    f"a Node (Mechanism or Composition): {pathway}.")
 
         # Add all of the remaining nodes in the pathway
@@ -6840,12 +7039,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     items_to_delete.append(pathway[i - 1])
         for item in items_to_delete:
             if isinstance(item, ControlMechanism):
-                arg_name = f'in the {repr(MONITOR_FOR_CONTROL)} of its constructor'
+                if item.objective_mechanism:
+                    msg = f' since it has an ObjectiveMechanism that was specified in its constructor'
+                else:
+                    msg = f' since there were ones already specified in ' \
+                          f'the {repr(MONITOR_FOR_CONTROL)} of its constructor'
             else:
-                arg_name = f'either in the {repr(MONITOR)} arg of its constructor, ' \
+                msg = f' since there were ones already specified either in ' \
+                           f'the {repr(MONITOR)} arg of its constructor, ' \
                            f'or in the {repr(MONITOR_FOR_CONTROL)} arg of its associated {ControlMechanism.__name__}'
-            warnings.warn(f'No new {Projection.__name__}s were added to {item.name} that was included in '
-                          f'the {pathway_arg_str}, since there were ones already specified {arg_name}.')
+            warnings.warn(f"No new {Projection.__name__}s were added to '{item.name}' "
+                          f"that was included in the {pathway_arg_str},{msg}.")
             del pathway[pathway.index(item)]
 
         # Then, loop through pathway and validate that the Mechanism-Projection relationships make sense
@@ -6864,6 +7068,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # Replace any nested Compositions with their INPUT Nodes
                     node = (self._get_nested_nodes_with_same_roles_at_all_levels(node, include_roles, exclude_roles)
                                 if isinstance(node, Composition) else [node])
+                    if not node:
+                        raise CompositionError(f"A nested Composition ('{list(entry)[0].name}') "
+                                               f"included in {pathway_arg_str} is empty; "
+                                               f"(i.e., does not have any nodes assigned to it yet).")
                     nodes.extend(node)
                 return nodes
 
@@ -6882,7 +7090,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                  default_matrix=default_projection_matrix,
                                                  allow_duplicates=False)
                             for r in receivers for s in senders}
-                    # MODIFIED 11/2/22 END
+                    # Warn about assignment of MappingProjections from ControlMechanisms
+                    for cm in [s for s in senders if isinstance(s, ControlMechanism)]:
+                        warnings.warn(f"A {MappingProjection.__name__} has been created from a "
+                                      f"{ControlSignal.__name__} of '{cm.name}' -- specified {pathway_arg_str} -- "
+                                      f"to another {Mechanism.__name__} in that pathway.  If this is not the "
+                                      f"intended behavior, add '{cm.name}' separately to '{self.name}'.")
                     if all(projs):
                         projs = projs.pop() if len(projs) == 1 else projs
                         projections.append(projs)
@@ -6899,7 +7112,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # Validate that Projection specification is not last entry
                 if c == len(pathway) - 1:
-                    raise CompositionError(f"The last item in the {pathway_arg_str} cannot be a Projection: "
+                    raise CompositionError(f"The last item {pathway_arg_str} cannot be a Projection: "
                                            f"{pathway[c]}.")
 
                 # Validate that entry is between two Nodes (or sets of Nodes)
@@ -6912,7 +7125,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     receivers = [_get_spec_if_tuple(receiver) for receiver in convert_to_list(next_entry)]
                     node_pairs = list(itertools.product(senders,receivers))
                 else:
-                    raise CompositionError(f"A Projection specified in {pathway_arg_str} "
+                    raise CompositionError(f"A Projection specified {pathway_arg_str} "
                                            f"is not between two Nodes: {pathway[c]}")
 
                 # Convert specs in entry to list (embedding in one if matrix) for consistency of handling below
@@ -6956,8 +7169,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 proj_set = []
 
                 def handle_misc_errors(proj, error):
-                    raise CompositionError(f"Bad Projection specification in {pathway_arg_str} ({proj}): "
-                                           f"{str(error.error_value)}")
+                    raise CompositionError(f"Bad Projection specification {pathway_arg_str} ({proj}): "
+                                           f"{error}")
 
                 def handle_duplicates(sender, receiver):
                     duplicate = [p for p in receiver.afferents if p in sender.efferents]
@@ -6967,7 +7180,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         f"in call to {repr('add_linear_processing_pathway')} for {self.name}."
                     duplicate = duplicate[0]
                     warning_msg = f"Projection specified between {sender.name} and {receiver.name} " \
-                                  f"in {pathway_arg_str} is a duplicate of one"
+                                  f"{pathway_arg_str} is a duplicate of one"
                     # IMPLEMENTATION NOTE: Version that allows different Projections between same
                     #                      sender and receiver in different Compositions
                     # if duplicate in self.projections:
@@ -7006,7 +7219,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 # Default is a matrix_spec
                                 assert is_matrix(default_proj_spec), \
                                     f"PROGRAM ERROR: Expected {default_proj_spec} to be " \
-                                    f"a matrix specification in {pathway_arg_str}."
+                                    f"a matrix specification {pathway_arg_str}."
                                 projection = self.add_projection(projection=MappingProjection(sender=sender,
                                                                                               matrix=default_proj_spec,
                                                                                               receiver=receiver),
@@ -7076,7 +7289,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     #   (since all Projections to or from it have been implemented)
                                     node_pairs = [pair for pair in node_pairs if (proj.owner not in pair)]
                                 except (InputPortError, ProjectionError) as error:
-                                    raise ProjectionError(str(error.error_value))
+                                    raise ProjectionError(error) from error
 
                         except (InputPortError, ProjectionError, MappingError) as error:
                             handle_misc_errors(proj, error)
@@ -7110,7 +7323,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # BAD PATHWAY ENTRY: contains neither Node nor Projection specification(s)
             else:
-                assert False, f"PROGRAM ERROR : An entry in {pathway_arg_str} is not a Node (Mechanism " \
+                assert False, f"PROGRAM ERROR : An entry {pathway_arg_str} is not a Node (Mechanism " \
                               f"or Composition) or a Projection nor a set of either: {repr(pathway[c])}."
 
         # Finally, clean up any tuple specs
@@ -7127,7 +7340,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # If pathway is an existing one, return that
         existing_pathway = next((p for p in self.pathways if explicit_pathway==p.pathway), None)
         if existing_pathway:
-            warnings.warn(f"Pathway specified in {pathway_arg_str} already exists in {self.name}: {pathway}; "
+            warnings.warn(f"Pathway specified {pathway_arg_str} already exists in {self.name}: {pathway}; "
                           f"it will be ignored.")
             return existing_pathway
         # If the explicit pathway is shorter than the one specified, then need to do more checking
@@ -7138,19 +7351,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                          if not isinstance(item, Projection)]), None)
             # Shorter because Projections generated for unspecified ones duplicated existing ones & were suppressed
             if existing_pathway:
-                warnings.warn(f"Pathway specified in {pathway_arg_str} has same Nodes in same order as "
+                warnings.warn(f"Pathway specified {pathway_arg_str} has same Nodes in same order as "
                               f"one already in {self.name}: {pathway}; it will be ignored.")
                 return existing_pathway
             #
-            # Shorter because it contained one or more ControlMechanisms with monitor_for_control specified.
-            elif explicit_pathway == [m for m in pathway
-                                      if not (isinstance(m, ControlMechanism)
-                                              or (isinstance(m, tuple) and isinstance(m[0], ControlMechanism)))]:
+            # Shorter because it contained one or more ControlMechanisms with monitor_for_control specified
+            #    or an ObjectiveMechanism that projects to a ControlMechanism.
+            elif explicit_pathway == [m for m in pathway if not (
+                    (isinstance(m, ControlMechanism)
+                      or (isinstance(m, tuple) and isinstance(m[0], ControlMechanism))
+                     or (isinstance(m, ObjectiveMechanism) and m.control_mechanism)))]:
                 pass
             else:
                 # Otherwise, something has gone wrong
                 assert False, \
-                    f"PROGRAM ERROR: Bad pathway specification for {self.name} in {pathway_arg_str}: {pathway}."
+                    f"PROGRAM ERROR: Bad pathway specification for {self.name} {pathway_arg_str}: {pathway}."
 
         pathway = Pathway(pathway=explicit_pathway,
                           composition=self,
@@ -7167,16 +7382,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     # region ------------------------------------ LEARNING -------------------------------------------------------------
 
+    @beartype
     @handle_external_context()
     def add_linear_learning_pathway(self,
                                     pathway,
-                                    learning_function:LearningFunction,
-                                    loss_function=None,
-                                    learning_rate:tc.any(int,float)=0.05,
+                                    learning_function: Union[Type[LearningFunction], LearningFunction, Callable] = None,
+                                    loss_spec: Optional[Loss] = Loss.MSE,
+                                    learning_rate: Union[int, float] = 0.05,
                                     error_function=LinearCombination,
-                                    learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=AFTER,
+                                    learning_update: Union[bool, Literal['online', 'after']] = 'after',
                                     default_projection_matrix=None,
-                                    name:str=None,
+                                    name: Optional[str] = None,
                                     context=None):
         """Implement learning pathway (including necessary `learning components <Composition_Learning_Components>`.
 
@@ -7222,7 +7438,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies the type of `LearningFunction` to use for the `LearningMechanism` constructued for each
             `MappingProjection` in the **pathway**.
 
-        loss_function : Loss : default Loss.MSE
+        loss_spec : Loss : default Loss.MSE
             specifies the loss function used if `BackPropagation` is specified as the **learning_function**
             (see `add_backpropagation_learning_pathway <Composition.add_backpropagation_learning_pathway>`).
 
@@ -7269,7 +7485,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pathway_arg_str = context.string
         # Otherwise, refer to call from this method
         else:
-            pathway_arg_str = f"'pathway' arg for add_linear_procesing_pathway method of {self.name}"
+            pathway_arg_str = f"in 'pathway' arg for add_linear_procesing_pathway method of {self.name}"
         context.source = ContextFlags.METHOD
         context.string = pathway_arg_str
 
@@ -7282,7 +7498,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Make sure pathways is not a (<pathway spec>, LearningFunction) tuple that conflicts with learning_function
         if isinstance(pathway,tuple) and pathway[1] is not learning_function:
-            raise CompositionError(f"Specification in {pathway_arg_str} contains a tuple that specifies a different "
+            raise CompositionError(f"Specification {pathway_arg_str} contains a tuple that specifies a different "
                                    f"{LearningFunction.__name__} ({pathway[1].__name__}) than the one specified in "
                                    f"its 'learning_function' arg ({learning_function.__name__}).")
 
@@ -7297,7 +7513,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return self._create_backpropagation_learning_pathway(pathway,
                                                                  learning_rate,
                                                                  error_function,
-                                                                 loss_function,
+                                                                 loss_spec,
                                                                  learning_update,
                                                                  name=pathway_name,
                                                                  default_projection_matrix=default_projection_matrix,
@@ -7311,7 +7527,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             input_source, output_source, learned_projection = \
                 self._unpack_processing_components_of_learning_pathway(pathway, default_projection_matrix)
         except CompositionError as e:
-            raise CompositionError(e.error_value.replace('this method',
+            raise CompositionError(e.args[0].replace('this method',
                                                          f'{learning_function.__name__} {LearningFunction.__name__}'))
 
         # Add required role before calling add_linear_process_pathway so NodeRole.OUTPUTS are properly assigned
@@ -7368,14 +7584,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._analyze_graph()
         return learning_pathway
 
-
+    @beartype
     def add_reinforcement_learning_pathway(self,
-                                           pathway,
-                                           learning_rate=0.05,
-                                           error_function=None,
-                                           learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE,
+                                           pathway: Union[list, 'psyneulink.core.compositions.pathway.Pathway'],
+                                           learning_rate: Union[float, int] = 0.05,
+                                           error_function: Optional[Function] = None,
+                                           learning_update: Union[bool, Literal['online', 'after']] = 'online',
                                            default_projection_matrix=None,
-                                           name:str=None):
+                                           name: Optional[str] = None):
         """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`Reinforcement`
 
         Arguments
@@ -7424,13 +7640,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                 default_projection_matrix=default_projection_matrix,
                                                 name=name)
 
+    @beartype
     def add_td_learning_pathway(self,
-                                pathway,
-                                learning_rate=0.05,
-                                error_function=None,
-                                learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE,
+                                pathway: Union[list, 'psyneulink.core.compositions.pathway.Pathway'],
+                                learning_rate: Union[int, float] = 0.05,
+                                error_function: Optional[Function] = None,
+                                learning_update: Union[bool, Literal['online', 'after']] = 'online',
                                 default_projection_matrix=None,
-                                name:str=None):
+                                name: Optional[str] = None):
         """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`TDLearning`
 
         Arguments
@@ -7478,14 +7695,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                 default_projection_matrix=default_projection_matrix,
                                                 name=name)
 
+    @beartype
     def add_backpropagation_learning_pathway(self,
-                                             pathway,
-                                             learning_rate=0.05,
-                                             error_function=None,
-                                             loss_function:tc.enum(Loss)=Loss.MSE,
-                                             learning_update:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=AFTER,
+                                             pathway: Union[list, 'psyneulink.core.compositions.pathway.Pathway'],
+                                             learning_rate: Union[int, float] = 0.05,
+                                             error_function: Optional[Function] = None,
+                                             loss_spec: Optional[Loss] = Loss.MSE,
+                                             learning_update: Optional[Union[bool, Literal['online', 'after']]] = 'after',
                                              default_projection_matrix=None,
-                                             name:str=None):
+                                             name: str = None):
         """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`Backpropagation`
 
         Arguments
@@ -7503,7 +7721,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies the function assigned to `ComparatorMechanism` used to compute the error from the target and the
             output (`value <Mechanism_Base.value>`) of the `TARGET` (last) Mechanism in the **pathway**).
 
-        loss_function : Loss : default Loss.MSE
+        loss_spec : Loss : default Loss.MSE
             specifies the loss function used in computing the error term;  see `Loss` for values.
 
         learning_update : Optional[bool|ONLINE|AFTER] : default AFTER
@@ -7531,7 +7749,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return self.add_linear_learning_pathway(pathway,
                                                 learning_rate=learning_rate,
                                                 learning_function=BackPropagation,
-                                                loss_function=loss_function,
+                                                loss_spec=loss_spec,
                                                 error_function=error_function,
                                                 learning_update=learning_update,
                                                 default_projection_matrix=default_projection_matrix,
@@ -7631,7 +7849,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                       target={NAME: TARGET,
                                                               VARIABLE: [0.]},
                                                       function=error_function,
-                                                      output_ports=[OUTCOME, MSE],
+                                                      output_ports=[OUTCOME, Loss.MSE.name],
                                                       )
             learning_mechanism = LearningMechanism(
                                     function=learning_function(
@@ -7708,7 +7926,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                   target={NAME: TARGET,
                                                           VARIABLE: [0.]},
                                                   function=error_function,
-                                                  output_ports=[OUTCOME, MSE],
+                                                  output_ports=[OUTCOME, Loss.MSE.name],
                                                   )
 
         learning_mechanism = \
@@ -7761,7 +7979,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                  pathway,
                                                  learning_rate=0.05,
                                                  error_function=None,
-                                                 loss_function=Loss.MSE,
+                                                 loss_spec=Loss.MSE,
                                                  learning_update=AFTER,
                                                  default_projection_matrix=None,
                                                  name=None,
@@ -7770,13 +7988,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # FIX: LEARNING CONSOLIDATION - Can get rid of this:
         if not error_function:
             error_function = LinearCombination()
-        if not loss_function:
-            loss_function = Loss.MSE
+        if not loss_spec:
+            loss_spec = Loss.MSE
 
         # Add pathway to graph and get its full specification (includes all ProcessingMechanisms and MappingProjections)
         # Pass ContextFlags.INITIALIZING so that it can be passed on to _analyze_graph() and then
         #    _check_for_projection_assignments() in order to ignore checks for require_projection_in_composition
-        context.string = f"'pathway' arg for add_backpropagation_learning_pathway method of {self.name}"
+        context.string = f"in 'pathway' arg for add_backpropagation_learning_pathway method of {self.name}"
         learning_pathway = self.add_linear_processing_pathway(pathway=pathway,
                                                               name=name,
                                                               default_projection_matrix=default_projection_matrix,
@@ -7821,7 +8039,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self._create_terminal_backprop_learning_components(input_source,
                                                                        output_source,
                                                                        error_function,
-                                                                       loss_function,
+                                                                       loss_spec,
                                                                        learned_projection,
                                                                        learning_rate,
                                                                        learning_update,
@@ -7879,7 +8097,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._create_terminal_backprop_learning_components(input_source,
                                                                    output_source,
                                                                    error_function,
-                                                                   loss_function,
+                                                                   loss_spec,
                                                                    learned_projection,
                                                                    learning_rate,
                                                                    learning_update,
@@ -7977,13 +8195,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     NodeRole.TARGET not in self.get_roles_by_node(n) for p in bfs(n)]
         for pathway in pathways:
             self.add_backpropagation_learning_pathway(pathway=pathway,
-                                                      loss_function=self.loss_spec)
+                                                      loss_spec=self.loss_spec)
 
     def _create_terminal_backprop_learning_components(self,
                                                       input_source,
                                                       output_source,
                                                       error_function,
-                                                      loss_function,
+                                                      loss_spec,
                                                       learned_projection,
                                                       learning_rate,
                                                       learning_update,
@@ -8001,19 +8219,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Otherwise, create new ones
         except KeyError:
-            # # MODIFIED 11/12/22 OLD:
-            # target_mechanism = ProcessingMechanism(name='Target',
-            #                                        default_variable=output_source.output_ports[0].value)
-            # objective_mechanism = ComparatorMechanism(name='Comparator',
-            #                                           target={NAME: TARGET,
-            #                                                   VARIABLE: target_mechanism.output_ports[0].value},
-            #                                           sample={NAME: SAMPLE,
-            #                                                   VARIABLE: output_source.output_ports[0].value,
-            #                                                   WEIGHT: -1},
-            #                                           function=error_function,
-            #                                           output_ports=[OUTCOME, Loss.MSE],
-            #                                           )
-            # # MODIFIED 11/12/22 NEW:
             target_mechanism = ProcessingMechanism(name='Target',
                                                    default_variable=output_source.output_ports[0].value)
             # Base for object_mechanism output_ports:
@@ -8021,34 +8226,34 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     VARIABLE: output_source.output_ports[0].value}
             target={NAME: TARGET,
                     VARIABLE: target_mechanism.output_ports[0].value}
-            if loss_function == Loss.CROSS_ENTROPY:
+            if loss_spec == Loss.CROSS_ENTROPY:
                 # error function:  use LinearCombination to implement cross_entropy: (SoftMax(sample), SoftMax(target))
                 sample.update({FUNCTION: SoftMax(output=ALL)})
+                # [JDC 12/4/22]: FIX: IS THIS COORRECT, OR SHOULD IT BE ASSUMED TO BE A ONE-HOT AND COMPLAIN IF NOT?
                 target.update({FUNCTION: SoftMax(output=ALL)})
                 error_function = LinearCombination(operation=CROSS_ENTROPY)
-                output_ports = [OUTCOME, SUM]
+                output_ports = [OUTCOME, SUM.upper()]
             else:
                 # error_function: use default for Comparator (LinearCombination) =>  target - sample
                 sample.update({WEIGHT: -1})
-                if loss_function == Loss.L0:
-                    output_ports = [OUTCOME, SUM]
-                elif loss_function == Loss.SSE:
-                    output_ports = [OUTCOME, SSE]
+                if loss_spec == Loss.L0:
+                    output_ports = [OUTCOME, SUM.upper()]
+                elif loss_spec == Loss.SSE:
+                    output_ports = [OUTCOME, Loss.SSE.name]
                 else:
-                    output_ports = [OUTCOME, MSE]
+                    output_ports = [OUTCOME, Loss.MSE.name]
             objective_mechanism = ComparatorMechanism(name='Comparator',
                                                       sample=sample,
                                                       target=target,
                                                       function=error_function,
                                                       output_ports=output_ports)
-            # MODIFIED 11/12/22 END
 
         learning_function = BackPropagation(default_variable=[input_source.output_ports[0].value,
                                                               output_source.output_ports[0].value,
                                                               objective_mechanism.output_ports[0].value],
                                             activation_derivative_fct=output_source.function.derivative,
                                             learning_rate=learning_rate,
-                                            loss_function=loss_function)
+                                            loss_spec=loss_spec)
 
         learning_mechanism = LearningMechanism(function=learning_function,
                                                default_variable=[input_source.output_ports[0].value,
@@ -8114,7 +8319,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             learning_function = BackPropagation(default_variable=[input_source.output_ports[0].value,
                                                                   output_source.output_ports[0].value,
                                                                   error_signal_template[0]],
-                                                loss_function=None,
+                                                loss_spec=None,
                                                 activation_derivative_fct=output_source.function.derivative,
                                                 learning_rate=learning_rate)
 
@@ -8312,8 +8517,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # region ------------------------------------- CONTROL -------------------------------------------------------------
     # ******************************************************************************************************************
 
+    @beartype
     @handle_external_context()
-    def add_controller(self, controller:ControlMechanism, context=None):
+    def add_controller(self, controller: ControlMechanism, context=None):
         """
         Add a `ControlMechanism` as the `controller <Composition.controller>` of the Composition.
 
@@ -8440,7 +8646,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.node_ordering.append(controller)
         self.enable_controller = True
         # FIX: 11/15/21 - SHOULD THIS METHOD BE MOVED HERE (TO COMPOSITION) FROM ControlMechanism
-        controller._activate_projections_for_compositions(self)
+        controller._activate_projections_for_compositions(self, context=context)
         self._analyze_graph(context=context)
         if not invalid_aux_components:
             self._controller_initialization_status = ContextFlags.INITIALIZED
@@ -8473,11 +8679,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if not self.controller:
             return hanging_control_specs
         else:
+            # must not instantiate control signal with COMMAND_LINE
+            # source here because later port methods assume it is a
+            # direct command-line call, not down-line
+            prev_source = context.source
+            context.source = ContextFlags.COMPOSITION
             for spec in hanging_control_specs:
                 control_signal = self.controller._instantiate_control_signal(control_signal=spec,
                                                                              context=context)
                 self.controller.control.append(control_signal)
                 self.controller._activate_projections_for_compositions(self)
+            context.source = prev_source
         return []
 
     def _get_monitor_for_control_nodes(self):
@@ -8582,6 +8794,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         projection specification from the original sender to the relevant input port of the pcim of the Composition
         located in the same level of nesting.
         """
+        # COMMAND_LINE context in port methods/constructors act as if
+        # method is *directly* executed from script/command-line, not
+        # just as a down-line consequence
+        prev_source = context.source
+        context.source = ContextFlags.METHOD
+
         for proj in receiver.mod_afferents:
             if proj.sender.owner == sender_mechanism:
                 receiver._remove_projection_to_port(proj)
@@ -8607,10 +8825,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if receiver.owner not in graph_receiver.nodes.data + graph_receiver.cims:
             receiver = interface_input_port
         graph_receiver.parameter_CIM.add_ports([control_signal], context=context)
+
+        # restore context source here because add_projection must know the original source
+        context.source = prev_source
+
         # add sender and receiver to self.parameter_CIM_ports dict
         for p in control_signal.projections:
             # self.add_projection(p)
-            graph_receiver.add_projection(p, receiver=p.receiver, sender=control_signal)
+            graph_receiver.add_projection(p, receiver=p.receiver, sender=control_signal, context=context)
         try:
             sender._remove_projection_to_port(projection)
         except (ValueError, PortError):
@@ -8864,10 +9086,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Update input ports in order to get correct value for "outcome" (from objective mech)
         controller._update_input_ports(runtime_params, context)
 
-        # FIX: REFACTOR TO CREATE ARRAY OF INPUT_PORT VALUES FOR OUTCOME_INPUT_PORTS
-        outcome_is_array = controller.num_outcome_input_ports > 1
-        if not outcome_is_array:
+        # If outcome comes from a single input_port on controller, then get its value
+        #    (note: it is allowed to be a 1d array with len > 1)
+        if controller.num_outcome_input_ports <= 1:
+            # FIX: 12/15/22
+            #  THIS IS None IF self.controller_mode = AFTER (WHICH IS THE CASE IF agent_rep = model FOR PEC)
+            #  BELOW, THAT FORCES OUTCOME TO BE 0.0 EVEN IF IT IS A 1D ARRAY (I.E., NOT JUST A SCALAR)
+            #  (2D ARRAY RULED OUT ABOVE)
             outcome = controller.input_port.parameters.value._get(context)
+        # If outcome comes from more than one input_port on controller, then wrap them in an outer list
         else:
             outcome = []
             for i in range(controller.num_outcome_input_ports):
@@ -8879,8 +9106,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Compute net outcome based on the cost of the simulated control allocation (usually, net = outcome - cost)
             net_outcome = controller.compute_net_outcome(outcome, total_cost)
 
+        # If we are doing data fitting, we need to return the full simulation results (result for each trial)
         if return_results:
-            return net_outcome, result
+            return net_outcome, self.results
         else:
             return net_outcome
 
@@ -9292,7 +9520,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            f"{bad_entry_names}.")
 
     def _instantiate_input_dict(self, inputs):
-        """Implement dict with all INPUT Node of Composition as keys and their assigned inputs or defaults as values
+        """Implement dict with all INPUT Nodes of Composition as keys and their assigned inputs or defaults as values
         **inputs** can contain specifications for inputs to InputPorts, Mechanisms and/or nested Compositions,
             that can be at any level of nesting within self.
         Consolidate any entries of **inputs** with InputPorts as keys to Mechanism or Composition entries
@@ -9311,6 +9539,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Construct input_dict from input_nodes of self
         for INPUT_Node in input_nodes:
+
+            # MODIFIED 12/11/22 NEW:
+            if not inputs:
+                input_dict[INPUT_Node] = INPUT_Node.external_input_shape
+                continue
+            # MODIFIED 12/11/22 END
 
             # If entry is for an INPUT_Node of self, assign the entry directly to input_dict and proceed to next
             if INPUT_Node in inputs:
@@ -9379,7 +9613,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             node_input = np.empty(tuple([max_num_trials] +
                                         list(np.array(mech.external_input_shape).shape)),
                                   dtype='object').tolist()
-            # - move ports to outer access for processing below
+            # - move ports to outer axis for processing below
             node_input = np.swapaxes(np.atleast_3d(np.array(node_input, dtype=object)),0,1).tolist()
 
             # Assign specs to ports of INPUT_Node, using ones in input_port_entries or defaults
@@ -9670,9 +9904,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             skip_analyze_graph=False,
             report_output:ReportOutput=ReportOutput.OFF,
             report_params:ReportParams=ReportParams.OFF,
-            report_progress=ReportProgress.OFF,
-            report_simulations=ReportSimulations.OFF,
-            report_to_devices=None,
+            report_progress:ReportProgress=ReportProgress.OFF,
+            report_simulations:ReportSimulations=ReportSimulations.OFF,
+            report_to_devices:ReportDevices=None,
             animate=False,
             log=False,
             scheduler=None,
@@ -9904,9 +10138,9 @@ _
             trials.
 
         """
-        # MODIFIED 3/28/22 OLD:
+        if context.source == ContextFlags.COMMAND_LINE:
+            self._executed_from_command_line = True
         context.source = ContextFlags.COMPOSITION
-        # MODIFIED 3/28/22 END
         execution_phase = context.execution_phase
         context.execution_phase = ContextFlags.PREPARING
 
@@ -9979,7 +10213,8 @@ _
         self.rich_diverted_reports = None
         self.recorded_reports = None
 
-        self._assign_execution_ids(context)
+        if context.execution_id is None:
+            self._assign_execution_ids(context)
 
         scheduler._init_counts(execution_id=context.execution_id)
 
@@ -9987,9 +10222,7 @@ _
 
         inputs, num_inputs_sets = self._parse_run_inputs(inputs, context)
 
-        if num_trials is not None:
-            num_trials = num_trials
-        else:
+        if num_trials is None:
             num_trials = num_inputs_sets
 
         scheduler._reset_counts_total(TimeScale.RUN, context.execution_id)
@@ -10096,7 +10329,9 @@ _
 
                     if self._is_learning(context):
                         # copies back matrix to pnl from param struct (after learning)
-                        _comp_ex._copy_params_to_pnl(context=context)
+                        _comp_ex.writeback_params_to_pnl(params=_comp_ex._param_struct,
+                                                         ids="llvm_param_ids",
+                                                         condition=lambda p: p.name == "matrix")
 
                     self._propagate_most_recent_context(context)
 
@@ -10198,20 +10433,19 @@ _
                 else:
                     result_copy = trial_output
 
-                if ContextFlags.SIMULATION_MODE not in context.runmode:
-                    results.append(result_copy)
-                    self.parameters.results._set(results, context)
+                results.append(result_copy)
+                self.parameters.results._set(results, context)
 
-                    if not self.parameters.retain_old_simulation_data._get():
-                        if self.controller is not None:
-                            # if any other special parameters store simulation info that needs to be cleaned up
-                            # consider dedicating a function to it here
-                            # this will not be caught above because it resides in the base context (context)
-                            if not self.parameters.simulation_results.retain_old_simulation_data:
-                                self.parameters.simulation_results._get(context).clear()
+                if not self.parameters.retain_old_simulation_data._get():
+                    if self.controller is not None:
+                        # if any other special parameters store simulation info that needs to be cleaned up
+                        # consider dedicating a function to it here
+                        # this will not be caught above because it resides in the base context (context)
+                        if not self.parameters.simulation_results.retain_old_simulation_data:
+                            self.parameters.simulation_results._get(context).clear()
 
-                            if not self.controller.parameters.simulation_ids.retain_old_simulation_data:
-                                self.controller.parameters.simulation_ids._get(context).clear()
+                        if not self.controller.parameters.simulation_ids.retain_old_simulation_data:
+                            self.controller.parameters.simulation_ids._get(context).clear()
 
                 if call_after_trial:
                     call_with_pruned_args(call_after_trial, context=context)
@@ -10278,21 +10512,21 @@ _
     def learn(
             self,
             inputs: dict,
-            targets: tc.optional(dict) = None,
-            num_trials: tc.optional(int) = None,
+            targets: Optional[dict] = None,
+            num_trials: Optional[int] = None,
             epochs: int = 1,
             learning_rate = None,
             minibatch_size: int = 1,
-            patience: tc.optional(int) = None,
+            patience: Optional[int] = None,
             min_delta: int = 0,
-            context: tc.optional(Context) = None,
-            execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
+            context: Optional[Context] = None,
+            execution_mode: pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
             randomize_minibatches=False,
-            call_before_minibatch = None,
-            call_after_minibatch = None,
+            call_before_minibatch=None,
+            call_after_minibatch=None,
             *args,
             **kwargs
-            ):
+    ):
         """
             Runs the composition in learning mode - that is, any components with disable_learning False will be
             executed in learning mode. See `Composition_Learning` for details.
@@ -10389,7 +10623,12 @@ _
             Returns
             ---------
 
-            the results of the final epoch of training : list
+            the results of the last trial of training : list
+
+            .. note::
+               the results of the final epoch of training are stored in the Composition's `learning_results
+               <Composition.learning_results>` attribute.
+
         """
         from psyneulink.library.compositions import CompositionRunner
         from psyneulink.library.compositions import AutodiffComposition
@@ -10426,7 +10665,7 @@ _
                         f'as the target attribute of the relevant pathway in {comp.name}.pathways. '
                     )
 
-        learning_results = runner.run_learning(
+        result = runner.run_learning(
             inputs=inputs,
             targets=targets,
             num_trials=num_trials,
@@ -10443,7 +10682,7 @@ _
             *args, **kwargs)
 
         context.remove_flag(ContextFlags.LEARNING_MODE)
-        return learning_results
+        return result
 
     def _execute_controller(self,
                             relative_order=AFTER,
@@ -10469,13 +10708,14 @@ _
 
                 # Report controller engagement before executing simulations
                 #    so it appears before them for ReportOutput.TERSE
-                report(self,
-                       EXECUTE_REPORT,
-                       report_num=report_num,
-                       scheduler=execution_scheduler,
-                       content='controller_start',
-                       context=context,
-                       node=self.controller)
+                if report is not None:
+                    report(self,
+                           EXECUTE_REPORT,
+                           report_num=report_num,
+                           scheduler=execution_scheduler,
+                           content='controller_start',
+                           context=context,
+                           node=self.controller)
 
                 if self.controller and not execution_mode & pnlvm.ExecutionMode.COMPILED:
                     context.execution_phase = ContextFlags.PROCESSING
@@ -10497,13 +10737,14 @@ _
 
                 # Report controller execution after executing simulations
                 #    so it includes the results for ReportOutput.FULL
-                report(self,
-                       CONTROLLER_REPORT,
-                       report_num=report_num,
-                       scheduler=execution_scheduler,
-                       content='controller_end',
-                       context=context,
-                       node=self.controller)
+                if report is not None:
+                    report(self,
+                           CONTROLLER_REPORT,
+                           report_num=report_num,
+                           scheduler=execution_scheduler,
+                           content='controller_end',
+                           context=context,
+                           node=self.controller)
 
     @handle_external_context(execution_phase=ContextFlags.PROCESSING)
     def execute(
@@ -10654,18 +10895,6 @@ _
                 # These are meant to be assigned in run method;  needed here for direct call to execute method
                 self._animate = False
 
-            # IMPLEMENTATION NOTE:
-            # KAM 4/29/19
-            # The nested var is set to True if the Composition is nested in another Composition, otherwise False
-            # Later on, this is used to determine:
-            #   (1) whether to initialize from context
-            #   (2) whether to assign values to CIM from input dict (if not nested) or simply execute CIM (if nested)
-            # JDC 3/28/22:
-            #    This currently prevents a Composition that is nested within another to be tested on its own
-            #    Would be good to figure out a way to accomodate that
-            nested = False
-            if len(self.input_CIM.path_afferents) > 0:
-                nested = True
 
             runtime_params = self._parse_runtime_params_conditions(runtime_params)
 
@@ -10678,7 +10907,7 @@ _
 
             # if execute was called from command line and no inputs were specified,
             # assign default inputs to highest level composition (i.e. not on any nested Compositions)
-            if not inputs and not nested and ContextFlags.COMMAND_LINE in context.source:
+            if not inputs and not self.is_nested and ContextFlags.COMMAND_LINE in context.source:
                 inputs = self._instantiate_input_dict({})
             # Skip initialization if possible (for efficiency):
             # - and(context has not changed
@@ -10698,7 +10927,7 @@ _
                 # initialize from base context but don't overwrite any values already set for this context
                 if (
                     not skip_initialization
-                    and not nested
+                    and not self.is_nested
                     or context is None
                     and context.execution_phase is not ContextFlags.SIMULATION_MODE
                 ):
@@ -10818,6 +11047,8 @@ _
             # -DS
 
             context.execution_phase = ContextFlags.PROCESSING
+            build_CIM_input = NotImplemented
+
             if inputs is not None:
                 inputs = self._validate_execution_inputs(inputs)
                 build_CIM_input = self._build_variable_for_input_CIM(inputs)
@@ -10827,18 +11058,22 @@ _
                 # FIXME: parameter_CIM should be executed here as well,
                 #        but node execution of nested compositions with
                 #        outside control is not supported yet.
-                assert not nested or len(self.parameter_CIM.afferents) == 0
+                assert not self.is_nested or len(self.parameter_CIM.afferents) == 0
 
-            elif nested:
+            elif self.is_nested:
 
+                # [JDC 12/2/22]: FIX NONE OF THIS SEEMS TO BE NEEDED ANY LONGER (AT LEAST TO PASS TESTS)
                 # MODIFIED 3/28/22 CURRENT:
-                # IMPLEMENTATION NOTE: context.string set in Mechanism.execute
-                direct_call = (f"{context.source.name} EXECUTING" not in context.string)
-                # MODIFIED 3/28/22 NEW:
-                # direct_call = (context.source == ContextFlags.COMMAND_LINE)
+                # # IMPLEMENTATION NOTE: context.string set in Mechanism.execute
+                # executed_from_command_line = (f"{context.source.name} EXECUTING" not in context.string)
+                # # MODIFIED 3/28/22 NEW:  CALL OF NESTED COMPOSITION
+                # executed_from_command_line = (context.source == ContextFlags.COMMAND_LINE)
+                # # MODIFIED 12/3/22 NEWER:
+                # executed_from_command_line = self._executed_from_command_line
                 # MODIFIED 3/28/22 END
                 simulation = ContextFlags.SIMULATION_MODE in context.runmode
-                if simulation or direct_call:
+                # if simulation or executed_from_command_line:
+                if simulation or self._executed_from_command_line:
                     # For simulations, or direct call to nested Composition (e.g., from COMMAND_LINE to test it)
                     #  assign inputs if they not provided (e.g., # autodiff)
                     if inputs is not None:
@@ -10855,6 +11090,7 @@ _
                 self.parameter_CIM.execute(context=context)
 
             else:
+                assert build_CIM_input != NotImplemented, f"{self} not in nested mode and no inputs available"
                 self.input_CIM.execute(build_CIM_input, context=context)
 
                 # Update nested compositions
@@ -11115,7 +11351,7 @@ _
                             if node is not self.controller:
                                 mech_context = copy(context)
                                 mech_context.source = ContextFlags.COMPOSITION
-                                if nested and node in self.get_nodes_by_role(NodeRole.INPUT):
+                                if self.is_nested and node in self.get_nodes_by_role(NodeRole.INPUT):
                                     for port in node.input_ports:
                                         port._update(context=context)
                                 node.execute(context=mech_context,
@@ -11127,6 +11363,9 @@ _
                         if self._is_learning(context):
                             context.replace_flag(ContextFlags.LEARNING, ContextFlags.PROCESSING)
                         context.remove_flag(ContextFlags.PROCESSING)
+
+                        # IMPLEMENTATION NOTE: PAUSE / BREAK POINT FOR EXECUTION OF INDIVIDUAL NODES
+                        assert True
 
                     # EXECUTE A NESTED COMPOSITION ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -12302,6 +12541,15 @@ _
                                             if p.feedback is EdgeType.FEEDBACK])
 
     @property
+    def is_nested(self):
+        """Determine whether Composition is nested in another
+        Used in run() to decide whether to:
+            (1) initialize from context
+            (2) assign values to CIM from input dict (if not nested) or simply execute CIM (if nested)
+        """
+        return len(self.input_CIM.path_afferents) > 0
+
+    @property
     def _all_nodes(self):
         for n in self.nodes:
             yield n
@@ -12310,6 +12558,18 @@ _
         yield self.parameter_CIM
         if self.controller:
             yield self.controller
+
+    @property
+    def _sender_ports(self):
+        ports = super()._sender_ports
+        ports.extend(self.parameter_CIM.output_ports)
+        return ports
+
+    @property
+    def _receiver_ports(self):
+        ports = super()._receiver_ports
+        ports.extend(self.parameter_CIM.input_ports)
+        return ports
 
     # endregion PROPERTIES
 
@@ -12357,13 +12617,6 @@ _
         self._show_graph._animate_execution(active_items, context)
 
     # endregion SHOW_GRAPH
-
-    def make_likelihood_function(self, *args, **kwargs):
-        """
-        This method invokes :func:`~psyneulink.core.components.functions.fitfunctions.make_likelihood_function`
-        on the composition.
-        """
-        return make_likelihood_function(composition=self, *args, **kwargs)
 
 
 def get_compositions():

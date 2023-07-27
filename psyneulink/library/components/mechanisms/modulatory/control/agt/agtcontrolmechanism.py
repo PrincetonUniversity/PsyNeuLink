@@ -160,17 +160,19 @@ Class Reference
 ---------------
 
 """
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional
 
 from psyneulink.core.components.functions.stateful.integratorfunctions import DualAdaptiveIntegrator
-from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism, ControlMechanismError
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import MONITORED_OUTPUT_PORTS, ObjectiveMechanism
 from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.keywords import \
     INIT_EXECUTE_METHOD_ONLY, MECHANISM, OBJECTIVE_MECHANISM
 from psyneulink.core.globals.parameters import check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
 __all__ = [
@@ -179,9 +181,8 @@ __all__ = [
 
 MONITORED_OUTPUT_PORT_NAME_SUFFIX = '_Monitor'
 
-class AGTControlMechanismError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
+class AGTControlMechanismError(ControlMechanismError):
+    pass
 
 
 class AGTControlMechanism(ControlMechanism):
@@ -244,16 +245,16 @@ class AGTControlMechanism(ControlMechanism):
     #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  monitored_output_ports=None,
                  function=None,
-                 # control_signals:tc.optional(tc.optional(list)) = None,
-                 control_signals= None,
-                 modulation:tc.optional(str)=None,
+                 # control_signals: Optional[list] = None,
+                 control_signals=None,
+                 modulation: Optional[str] = None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None):
+                 prefs: Optional[ValidPrefSet] = None):
 
         super().__init__(
             objective_mechanism=ObjectiveMechanism(

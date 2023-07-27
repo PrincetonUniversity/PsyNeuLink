@@ -67,7 +67,7 @@ def test_vector_op(benchmark, op, v, builtin, result, func_mode):
             return lres
 
     res = benchmark(ex)
-    assert np.allclose(res, result)
+    np.testing.assert_allclose(res, result)
 
 
 @pytest.mark.benchmark(group="Sum")
@@ -98,4 +98,4 @@ def test_vector_sum(benchmark, func_mode):
             return res[0]
 
     res = benchmark(ex)
-    assert np.allclose(res, sum(u))
+    np.testing.assert_allclose(res, sum(u))

@@ -386,7 +386,7 @@ word_input_weights.parameters.matrix.set(
 )
 
 neutral_input = trial_dict(1.0, 0.0, 0.0, 0.0, pc, 0.0, bias)  # create neutral stimuli input
-# run Compositoin to settle for 200 trials with neutral stimuli input
+# run Composition to settle for 200 trials with neutral stimuli input
 PCTC.run(inputs=initialize_input, num_trials=settle)
 
 color_input_weights.parameters.matrix.set(

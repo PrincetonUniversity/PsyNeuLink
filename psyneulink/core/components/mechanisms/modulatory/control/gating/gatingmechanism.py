@@ -181,9 +181,12 @@ Class Reference
 """
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
 
-from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
+from psyneulink._typing import Optional, Union
+
+from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import \
+    ControlMechanism, ControlMechanismError, _control_allocation_getter
 from psyneulink.core.components.ports.modulatorysignals.gatingsignal import GatingSignal
 from psyneulink.core.components.ports.port import _parse_port_spec
 from psyneulink.core.globals.defaults import defaultGatingAllocation
@@ -191,7 +194,7 @@ from psyneulink.core.globals.keywords import \
     CONTROL, CONTROL_SIGNALS, GATE, GATING_PROJECTION, GATING_SIGNAL, GATING_SIGNALS, \
     INIT_EXECUTE_METHOD_ONLY, MONITOR_FOR_CONTROL, PORT_TYPE, PROJECTIONS, PROJECTION_TYPE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import ContentAddressableList, convert_to_list
 
@@ -222,9 +225,8 @@ def _is_gating_spec(spec):
         return False
 
 
-class GatingMechanismError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
+class GatingMechanismError(ControlMechanismError):
+    pass
 
 
 class GatingMechanism(ControlMechanism):
@@ -416,10 +418,15 @@ class GatingMechanism(ControlMechanism):
         # This must be a list, as there may be more than one (e.g., one per control_signal)
         value = Parameter(
             np.array([defaultGatingAllocation]),
-            aliases=['control_allocation', 'gating_allocation'],
             pnl_internal=True
         )
 
+        control_allocation = Parameter(np.array([defaultGatingAllocation]),
+                                       read_only=True,
+                                       aliases='gating_allocation',
+                                       constructor_argument='default_allocation',
+                                       getter=_control_allocation_getter,
+                                       )
         output_ports = Parameter(
             None,
             stateful=False,
@@ -432,18 +439,18 @@ class GatingMechanism(ControlMechanism):
         )
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_gating_allocation=None,
                  size=None,
                  monitor_for_gating=None,
                  function=None,
-                 default_allocation:tc.optional(tc.any(int, float, list, np.ndarray))=None,
-                 gate:tc.optional(tc.optional(list)) = None,
-                 modulation:tc.optional(str)=None,
+                 default_allocation: Optional[Union[int, float, list, np.ndarray]] = None,
+                 gate: Optional[list] = None,
+                 modulation: Optional[str] = None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
+                 prefs: Optional[ValidPrefSet] = None,
                  **kwargs):
 
         gate = convert_to_list(gate) or []
@@ -458,13 +465,16 @@ class GatingMechanism(ControlMechanism):
                 args = kwargs.pop(MONITOR_FOR_CONTROL)
                 if args:
                     monitor_for_gating.extend(convert_to_list(args))
+            if 'default_gating_allocation' in kwargs:
+                raise GatingMechanismError(f"'default_allocation' should be used in place of "
+                                           f"'default_gating_allocation'.")
 
         super().__init__(default_variable=default_gating_allocation,
                          size=size,
                          monitor_for_control=monitor_for_gating,
                          function=function,
                          default_allocation=default_allocation,
-                         control=gate,
+                         gate=gate,
                          modulation=modulation,
                          params=params,
                          name=name,
@@ -481,16 +491,6 @@ class GatingMechanism(ControlMechanism):
                           registry=self._portRegistry,
                           )
 
-    def _validate_control_arg(self, gate):
-        """Overrided to handle GatingMechanism-specific specifications"""
-        assert isinstance(gate, list), \
-            f"PROGRAM ERROR: 'gate' arg ({gate}) of {self.name} should have been converted to a list."
-        for spec in gate:
-            spec = _parse_port_spec(port_type=GatingSignal, owner=self, port_spec=spec)
-            if not (isinstance(spec, GatingSignal)
-                    or (isinstance(spec, dict) and spec[PORT_TYPE] == GatingSignal)):
-                raise GatingMechanismError(f"Invalid specification for '{GATE}' argument of {self.name}: ({spec})")
-
     def _instantiate_control_signal_type(self, gating_signal_spec, context):
         """Instantiate actual ControlSignal, or subclass if overridden"""
         from psyneulink.core.components.ports.port import _instantiate_port
@@ -504,8 +504,7 @@ class GatingMechanism(ControlMechanism):
 
         gating_signal = _instantiate_port(port_type=GatingSignal,
                                                owner=self,
-                                               variable=self.default_allocation           # User specified value
-                                                        or allocation_parameter_default,  # Parameter default
+                                               variable=allocation_parameter_default,
                                                reference_value=allocation_parameter_default,
                                                modulation=self.defaults.modulation,
                                                port_spec=gating_signal_spec,

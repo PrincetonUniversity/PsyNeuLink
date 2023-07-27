@@ -114,6 +114,100 @@ class Execution:
         return struct
 
 
+    def writeback_params_to_pnl(self, params=None, ids:str=None, condition:callable=lambda p: True):
+
+        assert (params is None) == (ids is None), "Either both 'params' and 'ids' have to be set or neither"
+
+        if params is None:
+            # Default to stateful params
+            params = self._state_struct
+            ids = "llvm_state_ids"
+
+        self._copy_params_to_pnl(self._execution_contexts[0], self._obj, params, ids, condition)
+
+
+    def _copy_params_to_pnl(self, context, component, params, ids:str, condition:callable):
+
+        for idx, attribute in enumerate(getattr(component, ids)):
+            compiled_attribute_param = getattr(params, params._fields_[idx][0])
+
+            # Handle custom compiled-only structures by name
+            if attribute == 'nodes':
+                for node_id, node in enumerate(component._all_nodes):
+                    node_params = getattr(compiled_attribute_param,
+                                          compiled_attribute_param._fields_[node_id][0])
+                    self._copy_params_to_pnl(context=context,
+                                             component=node,
+                                             params=node_params,
+                                             ids=ids,
+                                             condition=condition)
+            elif attribute == 'projections':
+                for proj_id, projection in enumerate(component._inner_projections):
+                    projection_params = getattr(compiled_attribute_param,
+                                                compiled_attribute_param._fields_[proj_id][0])
+                    self._copy_params_to_pnl(context=context,
+                                             component=projection,
+                                             params=projection_params,
+                                             ids=ids,
+                                             condition=condition)
+
+            elif attribute == '_parameter_ports':
+                for pp_id, param_port in enumerate(component._parameter_ports):
+                    port_params = getattr(compiled_attribute_param,
+                                          compiled_attribute_param._fields_[pp_id][0])
+                    self._copy_params_to_pnl(context=context,
+                                             component=param_port,
+                                             params=port_params,
+                                             ids=ids,
+                                             condition=condition)
+            else:
+                # Handle PNL parameters
+                pnl_param = getattr(component.parameters, attribute)
+                pnl_value = pnl_param.get(context=context)
+
+                # Recurse if the value is a PNL object with its own parameters
+                if hasattr(pnl_value, 'parameters'):
+                    self._copy_params_to_pnl(context=context,
+                                             component=pnl_value,
+                                             params=compiled_attribute_param,
+                                             ids=ids,
+                                             condition=condition)
+
+                elif attribute == "input_ports" or attribute == "output_ports":
+                    for port_id, port in enumerate(pnl_value):
+                        port_params = getattr(compiled_attribute_param,
+                                              compiled_attribute_param._fields_[port_id][0])
+                        self._copy_params_to_pnl(context=context,
+                                                 component=port,
+                                                 params=port_params,
+                                                 ids=ids,
+                                                 condition=condition)
+
+                # Writeback parameter value if the condition matches
+                elif condition(pnl_param):
+
+                    # TODO: Reconstruct Python RandomState
+                    if attribute == "random_state":
+                        continue
+
+                    # Replace empty structures with None
+                    if ctypes.sizeof(compiled_attribute_param) == 0:
+                        value = None
+                    else:
+                        value = np.ctypeslib.as_array(compiled_attribute_param)
+
+                        # Stateful parameters include history, get the most recent value
+                        if "state" in ids:
+                            value = value[-1]
+
+                        # Try to match the shape of the old value
+                        old_value = pnl_param.get(context)
+                        if hasattr(old_value, 'shape'):
+                            value = value.reshape(old_value.shape)
+
+                    pnl_param.set(value, context=context)
+
+
 class CUDAExecution(Execution):
     def __init__(self, buffers=['param_struct', 'state_struct', 'out']):
         super().__init__()
@@ -150,6 +244,10 @@ class CUDAExecution(Execution):
             # provide a small device buffer instead
             return jit_engine.pycuda.driver.mem_alloc(4)
         return jit_engine.pycuda.driver.to_device(bytes(data))
+
+    def download_to(self, dst, source, name='other'):
+        bounce = self.download_ctype(source, type(dst), name)
+        ctypes.memmove(ctypes.addressof(dst), ctypes.addressof(bounce), ctypes.sizeof(dst))
 
     def download_ctype(self, source, ty, name='other'):
         self._downloaded_bytes[name] += ctypes.sizeof(ty)
@@ -202,8 +300,9 @@ class CUDAExecution(Execution):
                                  threads=len(self._execution_contexts))
 
         # Copy the result from the device
-        ct_res = self.download_ctype(self._cuda_out, type(self._ct_vo), 'result')
-        return _convert_ctype_to_python(ct_res)
+        self.download_to(self._ct_vo, self._cuda_out, 'result')
+        self.download_to(self._state_struct, self._cuda_state_struct, 'state')
+        return _convert_ctype_to_python(self._ct_vo)
 
 
 class FuncExecution(CUDAExecution):
@@ -381,45 +480,6 @@ class CompExecution(CUDAExecution):
     def _data_struct(self, data_struct):
         self._data = data_struct
 
-    def _copy_params_to_pnl(self, context=None, component=None, params=None):
-
-        if component is None:
-            component = self._composition
-
-        if params is None:
-            assert component == self._composition
-            params = self._param_struct
-
-        for idx, attribute in enumerate(component.llvm_param_ids):
-            if attribute == 'nodes':
-                params_node_list = getattr(params, params._fields_[idx][0])
-                for node_id, node in enumerate(component._all_nodes):
-                    node_params = getattr(params_node_list,
-                                          params_node_list._fields_[node_id][0])
-                    self._copy_params_to_pnl(context=context, component=node,
-                                             params=node_params)
-            elif attribute == 'projections':
-                params_projection_list = getattr(params, params._fields_[idx][0])
-                for proj_id, projection in enumerate(component._inner_projections):
-                    projection_params = getattr(params_projection_list,
-                                                params_projection_list._fields_[proj_id][0])
-                    self._copy_params_to_pnl(context=context,
-                                             component=projection,
-                                             params=projection_params)
-            elif attribute == 'function':
-                function_params = getattr(params, params._fields_[idx][0])
-                self._copy_params_to_pnl(context=context,
-                                         component=component.function,
-                                         params=function_params)
-            elif attribute == 'matrix':
-                pnl_param = component.parameters.matrix
-                parameter_ctype = getattr(params, params._fields_[idx][0])
-                value = _convert_ctype_to_python(parameter_ctype)
-                # Unflatten the matrix
-                # FIXME: this seems to break something when generalized for all attributes
-                value = np.array(value).reshape(pnl_param._get(context).shape)
-                pnl_param._set(value, context=context)
-
     def _extract_node_struct(self, node, data):
         # context structure consists of a list of node contexts,
         #   followed by a list of projection contexts; get the first one
@@ -513,7 +573,7 @@ class CompExecution(CUDAExecution):
                        inputs, self.__frozen_vals, self._data_struct)
 
         if "comp_node_debug" in self._debug_env:
-            print("RAN: {}. CTX: {}".format(node, self.extract_node_state(node)))
+            print("RAN: {}. State: {}".format(node, self.extract_node_state(node)))
             print("RAN: {}. Params: {}".format(node, self.extract_node_params(node)))
             print("RAN: {}. Results: {}".format(node, self.extract_node_output(node)))
 
@@ -575,7 +635,13 @@ class CompExecution(CUDAExecution):
         assert len(inputs) == len(self._execution_contexts)
         # Extract input for each trial and execution id
         run_inputs = ((([x] for x in self._composition._build_variable_for_input_CIM({k:v[i] for k,v in inp.items()})) for i in range(num_input_sets)) for inp in inputs)
-        return c_input(*_tupleize(run_inputs))
+        c_inputs = c_input(*_tupleize(run_inputs))
+        if "stat" in self._debug_env:
+            print("Instantiated struct: input ( size:" ,
+                  _pretty_size(ctypes.sizeof(c_inputs)), ")",
+                  "for", self._obj.name)
+
+        return c_inputs
 
     def _get_generator_run_input_struct(self, inputs, runs):
         assert len(self._execution_contexts) == 1
@@ -679,18 +745,19 @@ class CompExecution(CUDAExecution):
             assert runs_np[0] <= runs, "Composition ran more times than allowed!"
             return _convert_ctype_to_python(ct_out)[0:runs_np[0]]
 
-    def _prepare_evaluate(self, inputs, num_input_sets, num_evaluations):
+    def _prepare_evaluate(self, inputs, num_input_sets, num_evaluations, all_results:bool):
         ocm = self._composition.controller
         assert len(self._execution_contexts) == 1
 
-        tags = {"evaluate", "alloc_range", "evaluate_type_objective"}
+        eval_type = "evaluate_type_all_results" if all_results else "evaluate_type_objective"
+        tags = {"evaluate", "alloc_range", eval_type}
         bin_func = pnlvm.LLVMBinaryFunction.from_obj(ocm, tags=frozenset(tags))
         self.__bin_func = bin_func
 
-        # There are 7 arguments to evaluate_alloc_range:
-        # comp_param, comp_state, from, to, results, input, comp_data
+        # There are 8 arguments to evaluate_alloc_range:
+        # comp_param, comp_state, from, to, results, input, comp_data, num_inputs
         # all but #4 are shared
-        assert len(bin_func.byref_arg_types) == 7
+        assert len(bin_func.byref_arg_types) == 8
 
         # Directly initialized structures
         assert ocm.agent_rep is self._composition
@@ -702,14 +769,27 @@ class CompExecution(CUDAExecution):
         ct_inputs = self._get_run_input_struct(inputs, num_input_sets, 5)
 
         # Output ctype
-        out_ty = bin_func.byref_arg_types[4] * num_evaluations
+        out_el_ty = bin_func.byref_arg_types[4]
+        if all_results:
+            num_trials = ocm.parameters.num_trials_per_estimate.get(self._execution_contexts[0])
+            if num_trials is None:
+                num_trials = num_input_sets
+            out_el_ty *= num_trials
+        out_ty = out_el_ty * num_evaluations
+
+        ct_num_inputs = bin_func.byref_arg_types[7](num_input_sets)
+        if "stat" in self._debug_env:
+            print("Evaluate result struct type size:",
+                  _pretty_size(ctypes.sizeof(out_ty)),
+                  "( evaluations:", num_evaluations, "element size:", ctypes.sizeof(out_el_ty), ")",
+                  "for", self._obj.name)
 
         # return variable as numpy array. pycuda can use it directly
-        return ct_comp_param, ct_comp_state, ct_comp_data, ct_inputs, out_ty
+        return ct_comp_param, ct_comp_state, ct_comp_data, ct_inputs, out_ty, ct_num_inputs
 
-    def cuda_evaluate(self, inputs, num_input_sets, num_evaluations):
-        ct_comp_param, ct_comp_state, ct_comp_data, ct_inputs, out_ty = \
-            self._prepare_evaluate(inputs, num_input_sets, num_evaluations)
+    def cuda_evaluate(self, inputs, num_input_sets, num_evaluations, all_results:bool=False):
+        ct_comp_param, ct_comp_state, ct_comp_data, ct_inputs, out_ty, ct_num_inputs = \
+            self._prepare_evaluate(inputs, num_input_sets, num_evaluations, all_results)
 
         # Output is allocated on device, but we need the ctype (out_ty).
         cuda_args = (self.upload_ctype(ct_comp_param, 'params'),
@@ -717,6 +797,7 @@ class CompExecution(CUDAExecution):
                      jit_engine.pycuda.driver.mem_alloc(ctypes.sizeof(out_ty)),
                      self.upload_ctype(ct_inputs, 'input'),
                      self.upload_ctype(ct_comp_data, 'data'),
+                     self.upload_ctype(ct_num_inputs, 'input'),
                     )
 
         self.__bin_func.cuda_call(*cuda_args, threads=int(num_evaluations))
@@ -724,9 +805,9 @@ class CompExecution(CUDAExecution):
 
         return ct_results
 
-    def thread_evaluate(self, inputs, num_input_sets, num_evaluations):
-        ct_param, ct_state, ct_data, ct_inputs, out_ty = \
-            self._prepare_evaluate(inputs, num_input_sets, num_evaluations)
+    def thread_evaluate(self, inputs, num_input_sets, num_evaluations, all_results:bool=False):
+        ct_param, ct_state, ct_data, ct_inputs, out_ty, ct_num_inputs = \
+            self._prepare_evaluate(inputs, num_input_sets, num_evaluations, all_results)
 
         ct_results = out_ty()
         jobs = min(os.cpu_count(), num_evaluations)
@@ -739,9 +820,10 @@ class CompExecution(CUDAExecution):
             results = [ex.submit(self.__bin_func, ct_param, ct_state,
                                  int(i * evals_per_job),
                                  min((i + 1) * evals_per_job, num_evaluations),
-                                 ct_results,
+                                 ctypes.cast(ct_results, self.__bin_func.c_func.argtypes[4]),
                                  ctypes.cast(ctypes.byref(ct_inputs), self.__bin_func.c_func.argtypes[5]),
-                                 ct_data)
+                                 ct_data,
+                                 ct_num_inputs)
                        for i in range(jobs)]
 
         parallel_stop = time.time()

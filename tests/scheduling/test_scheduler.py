@@ -193,7 +193,7 @@ class TestScheduler:
                             [np.array([2.]), np.array([1.])],
                             [np.array([10.]), np.array([10.])],
                             [np.array([2.]), np.array([1.])]]
-        assert np.allclose(expected_results, np.asfarray(C.results))
+        np.testing.assert_allclose(expected_results, np.asfarray(C.results))
 
     def test_default_condition_1(self):
         A = pnl.TransferMechanism(name='A')
@@ -1558,7 +1558,7 @@ class TestFeedback:
             assert attention.execution_count == 3
             assert counter.execution_count == 1 if in_one_pass else 3
             assert response.execution_count == 1
-        assert np.allclose(result, expected)
+        np.testing.assert_allclose(result, expected)
 
     @pytest.mark.composition
     @pytest.mark.parametrize("condition,scale,expected_result",
@@ -1637,10 +1637,7 @@ class TestFeedback:
             comp.scheduler.add_condition(response, condition(0))
 
         result = comp.run([0.05], execution_mode=comp_mode)
-        #HACK: The result is an object dtype in Python mode for some reason?
-        if comp_mode is pnl.ExecutionMode.Python:
-            result = np.asfarray(result[0])
-        assert np.allclose(result, expected_result)
+        np.testing.assert_allclose(result, expected_result)
 
 
     @pytest.mark.composition
@@ -1662,8 +1659,8 @@ class TestFeedback:
             pnl.TimeScale.RUN: condition(2)
         }
         r = comp.run(inputs=[1], num_trials=5, execution_mode=mode)
-        assert np.allclose(r, expected_result[-1])
-        assert np.allclose(comp.results, expected_result)
+        np.testing.assert_allclose(r, expected_result[-1])
+        np.testing.assert_allclose(comp.results, expected_result)
 
 
 class TestAbsoluteTime:

@@ -401,10 +401,13 @@ import warnings
 from collections import namedtuple, defaultdict
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union, Type, Literal, Any, Dict, Tuple
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.functions.function import get_matrix
+from psyneulink.core.components.component import ComponentError
+from psyneulink.core.components.functions.function import get_matrix, ValidMatrixSpecType
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.functions.nonstateful.transferfunctions import LinearMatrix
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import _is_modulatory_spec
@@ -415,9 +418,11 @@ from psyneulink.core.globals.mdf import _get_variable_parameter_name
 from psyneulink.core.globals.keywords import \
     CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, EXPONENT, FUNCTION_PARAMS, GATE, GATING_PROJECTION, GATING_SIGNAL, \
     INPUT_PORT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, \
-    MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, MECHANISM, \
-    MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_RECEIVER_PORT, MODEL_SPEC_ID_SENDER_MECH, MODEL_SPEC_ID_SENDER_PORT, MODEL_SPEC_ID_METADATA, \
-    NAME, OUTPUT_PORT, OUTPUT_PORTS, PARAMS, PATHWAY, PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, \
+    MAPPING_PROJECTION, MATRIX, MECHANISM, \
+    MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_RECEIVER_PORT, \
+    MODEL_SPEC_ID_SENDER_MECH, MODEL_SPEC_ID_SENDER_PORT, MODEL_SPEC_ID_METADATA, \
+    NAME, OUTPUT_PORT, OUTPUT_PORTS, PARAMS, PATHWAY, PROJECTION, PROJECTION_PARAMS, \
+    PROJECTION_RECEIVER, PROJECTION_SENDER, PROJECTION_TYPE, \
     RECEIVER, SENDER, STANDARD_ARGS, PORT, PORTS, WEIGHT, ADD_INPUT_PORT, ADD_OUTPUT_PORT, \
     PROJECTION_COMPONENT_CATEGORY
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
@@ -425,7 +430,7 @@ from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
 from psyneulink.core.globals.socket import ConnectionInfo
 from psyneulink.core.globals.utilities import \
-    ContentAddressableList, is_matrix, is_numeric, parse_valid_identifier
+    ContentAddressableList, is_matrix, is_matrix_keyword, is_numeric, parse_valid_identifier, convert_to_list
 
 __all__ = [
     'Projection_Base', 'projection_keywords', 'PROJECTION_SPEC_KEYWORDS',
@@ -467,9 +472,8 @@ def projection_param_keywords():
 ProjectionTuple = namedtuple("ProjectionTuple", "port, weight, exponent, projection")
 
 
-class ProjectionError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
+class ProjectionError(ComponentError):
+    pass
 
 class DuplicateProjectionError(Exception):
     def __init__(self, error_value):
@@ -642,6 +646,7 @@ class Projection_Base(Projection):
                  weight=None,
                  exponent=None,
                  function=None,
+                 exclude_in_autodiff=False,
                  params=None,
                  name=None,
                  prefs=None,
@@ -704,6 +709,7 @@ class Projection_Base(Projection):
             return
 
         self.receiver = receiver
+        self._exclude_from_autodiff = exclude_in_autodiff
 
          # Register with ProjectionRegistry or create one
         register_category(entry=self,
@@ -736,7 +742,6 @@ class Projection_Base(Projection):
         # Assume that if receiver was specified as a Mechanism, it should be assigned to its (primary) InputPort
         # MODIFIED 11/1/17 CW: Added " hasattr(self, "prefs") and" in order to avoid errors. Otherwise, this was being
         # called and yielding an error: " AttributeError: 'MappingProjection' object has no attribute '_prefs' "
-
         if isinstance(self.receiver, Mechanism):
             if (len(self.receiver.input_ports) > 1 and hasattr(self, 'prefs') and
                     (self.prefs.verbosePref or self.receiver.prefs.verbosePref)):
@@ -747,6 +752,9 @@ class Projection_Base(Projection):
         if hasattr(self.receiver, "afferents_info"):
             if self not in self.receiver.afferents_info:
                 self.receiver.afferents_info[self] = ConnectionInfo()
+
+
+        self._creates_scheduling_dependency = True
 
        # Validate variable, function and params
         # Note: pass name of Projection (to override assignment of componentName in super.__init__)
@@ -788,6 +796,7 @@ class Projection_Base(Projection):
         # FIX: 10/3/17 SHOULD ADD CHECK THAT RECEIVER/SENDER SOCKET SPECIFICATIONS ARE CONSISTENT WITH
         # FIX:         PROJECTION_TYPE SPECIFIED BY THE CORRESPONDING PORT TYPES
 
+        # Validate sender
         if (PROJECTION_SENDER in target_set and
                 not (target_set[PROJECTION_SENDER] in {None, self.projection_sender})):
             # If PROJECTION_SENDER is specified it will be the sender
@@ -799,13 +808,58 @@ class Projection_Base(Projection):
             sender_string = "\'{}\' argument".format(SENDER)
         if not ((isinstance(sender, (Mechanism, Port)) or
                  (inspect.isclass(sender) and issubclass(sender, (Mechanism, Port))))):
-            raise ProjectionError("Specification of {} for {} ({}) is invalid; "
-                                  "it must be a {}, {} or a class of one of these.".
-                                  format(sender_string, self.name, sender,
-                                         Mechanism.__name__, Port.__name__))
+            raise ProjectionError(f"Specification of {sender_string} for {self.name} ({sender}) is invalid; "
+                                  "it must be a {Mechanism.__name__}, {Port.__name__} or a class of one of these.")
+
+        # Validate receiver
+        if (PROJECTION_RECEIVER in target_set and target_set[PROJECTION_RECEIVER] is not None):
+            # If PROJECTION_RECEIVER is specified it will be the receiver
+            receiver = target_set[PROJECTION_RECEIVER]
+            receiver_string = PROJECTION_RECEIVER
+        else:
+            # PROJECTION_RECEIVER is not specified or None, so receiver argument of constructor will be the receiver
+            receiver = self.receiver
+            receiver_string = "\'{}\' argument".format(RECEIVER)
+        if not ((isinstance(receiver, (Mechanism, Port)) or
+                 (inspect.isclass(receiver) and issubclass(receiver, (Mechanism, Port))))):
+            raise ProjectionError(f"Specification of {receiver_string} for {self.name} ({sender}) is invalid; "
+                                  "it must be a {Mechanism.__name__}, {Port.__name__} or a class of one of these.")
+
+        # MODIFIED JDC 7/11/23 NEW:
+        # # Validate matrix spec
+        # if MATRIX in target_set and target_set[MATRIX] is not None:
+        #     matrix = target_set[MATRIX]
+        #     # If matrix_spec is keyword and sender and receiver have been instantiated, implement matrix
+        #     #   so that it can be passed to function (e.g., LinearMatrix) if needed.
+        #     if not is_matrix(matrix):
+        #         raise ProjectionError(f"Matrix ('{matrix}') specified for '{self.name}' is not a legal matrix spec.")
+        #     if self.sender_instantiated and self.receiver_instantiated:
+        #         if isinstance(matrix, (list, np.ndarray)):
+        #             # use default value for sender if necessary
+        #             sender_len = \
+        #                 len(self.sender.value) if self.sender.value is not None \
+        #                 else  len(self.sender.defaults.value)
+        #             # reduce receiver to 1d array if necessary
+        #             receiver_len = len(np.atleast_1d(np.squeeze(self.receiver.variable)))
+        #             if matrix.shape != (sender_len, receiver_len):
+        #                 raise ProjectionError(f"Shape of matrix ('{matrix.shape}') specified for '{self.name}' "
+        #                                       f"does not shapes of its sender and/or receiver "
+        #                                       f"({(len(self.sender.value), len(self.receiver.variable))}).")
+        # MODIFIED JDC 7/11/23 END
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
+
         self._instantiate_parameter_ports(function=function, context=context)
+
+        # If Projection has a matrix parameter, it is specified as a keyword arg in the constructor,
+        #    and sender and receiver have been instantiated, then implement it:
+        if hasattr(self.parameters, MATRIX) and self.parameters.matrix._user_specified:
+            matrix = self.parameters.matrix.get(context)
+            if is_matrix_keyword(matrix):
+                if self.sender_instantiated and self.receiver_instantiated:
+                    self.parameters.matrix.set(get_matrix(self.matrix, len(self.sender.value),
+                                                          len(self.receiver.variable)),
+                                               context)
 
     def _instantiate_parameter_ports(self, function=None, context=None):
 
@@ -1027,12 +1081,32 @@ class Projection_Base(Projection):
                               format(self.__class__.__name__))
 
     @property
+    def sender_instantiated(self):
+        sender_instantiated = isinstance(self.sender, Port)
+        if sender_instantiated:
+            sender_instantiated = self.sender.initialization_status == ContextFlags.INITIALIZED
+        return sender_instantiated
+
+    @property
+    def receiver_instantiated(self):
+        receiver_instantiated = isinstance(self.receiver, Port)
+        if receiver_instantiated:
+            receiver_instantiated = self.receiver.initialization_status == ContextFlags.INITIALIZED
+        return receiver_instantiated
+
+    @property
     def parameter_ports(self):
         """Read-only access to _parameter_ports"""
         return self._parameter_ports
 
     # Provide invocation wrapper
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+
+        if "passthrough" in tags:
+            assert arg_in.type == arg_out.type, "Requestd passthrough projection but types are not compatible IN: {} OUT: {}".format(arg_in.type, arg_out.type)
+            builder.store(builder.load(arg_in), arg_out)
+            return builder
+
         mf_state = pnlvm.helpers.get_state_ptr(builder, self, state, self.parameters.function.name)
         mf_params = pnlvm.helpers.get_param_ptr(builder, self, params, self.parameters.function.name)
         main_function = ctx.import_llvm_function(self.function)
@@ -1164,8 +1238,20 @@ class Projection_Base(Projection):
             )
 
 
-@tc.typecheck
-def _is_projection_spec(spec, proj_type:tc.optional(type)=None, include_matrix_spec=True):
+ProjSpecType = Union[
+    Projection, Port,
+    Type[Projection], Type[Port],
+    Literal['pathway', 'LEARNING', 'LearningSignal', 'LearningProjection', 'control',
+            'ControlSignal', 'ControlProjection', 'gate', 'GatingSignal', 'GatingProjection'],
+    ValidMatrixSpecType,
+    Dict[Literal['PROJECTION_TYPE', 'sender', 'receiver', 'matrix'], Any],
+]
+
+ProjSpecTypeWithTuple = Union[ProjSpecType, Tuple[ProjSpecType, Union[Literal['MappingProjection']]]]
+
+
+@beartype
+def _is_projection_spec(spec, proj_type: Optional[Type] = None, include_matrix_spec=True):
     """Evaluate whether spec is a valid Projection specification
 
     Return `True` if spec is any of the following:
@@ -1215,7 +1301,7 @@ def _is_projection_spec(spec, proj_type:tc.optional(type)=None, include_matrix_s
         # FIX: CHECK PORT AGAIN ALLOWABLE PORTS IF type IS SPECIFIED
         return True
     if include_matrix_spec:
-        if isinstance(spec, str) and spec in MATRIX_KEYWORD_SET:
+        if is_matrix_keyword(spec):
             return True
         if get_matrix(spec) is not None:
             return True
@@ -1237,6 +1323,7 @@ def _is_projection_spec(spec, proj_type:tc.optional(type)=None, include_matrix_s
         #             return True
 
     return False
+
 
 def _is_projection_subclass(spec, keyword):
     """Evaluate whether spec is a valid specification of type
@@ -1751,6 +1838,15 @@ def _parse_connection_specs(connectee_port_type,
                                               mech=mech,
                                               mech_port_attribute=mech_port_attribute,
                                               projection_socket=projection_socket)
+                if not isinstance(port, Port) and not any([p in port_types for p in convert_to_list(port)]):
+                    if isinstance(port, list):
+                        type_list = ' ,'.join([p.__name__ for p in port])
+                    from_or_to_1 = f"from" if projection_socket == RECEIVER else "to"
+                    from_or_to_2 = f"to" if projection_socket == RECEIVER else "from"
+                    raise ProjectionError(f"Specification of the Projection {from_or_to_1} "
+                                          f"'{connectee_port_type.__name__}' of '{owner.name}' {from_or_to_2} "
+                                          f"'{projection_spec.name}' resolves to a type of Port ({type_list}) that is "
+                                          f"not of a required type ({' ,'.join([pt.__name__ for pt in port_types])}).")
             except PortError as e:
                 raise ProjectionError(f"Problem with specification for {Port.__name__} in {Projection.__name__} "
                                       f"specification{(' for ' + owner.name) if owner else ' '}: " + e.error_value)
@@ -1824,33 +1920,30 @@ def _parse_connection_specs(connectee_port_type,
                                              projection_socket,
                                              connectee_port_type)
             else:
-                raise ProjectionError("Invalid {} specification ({}) for connection "
-                                      "between {} \'{}\' and {} of \'{}\'.".
-                                 format(Projection.__name__,
-                                        projection_spec,
-                                        port_type.__name__,
-                                        port.name,
-                                        connectee_port_type.__name__,
-                                        owner.name))
+                raise ProjectionError(f"Invalid {Projection.__name__} specification ({projection_spec}) "
+                                      f"for connection between {port_type.__name__} '{port.name}' "
+                                      f"and {connectee_port_type.__name__} of '{owner.name}'.")
 
             connect_with_ports.extend([ProjectionTuple(port, weight, exponent, projection_spec)])
 
         else:
-            raise ProjectionError("Unrecognized, invalid or insufficient specification of connection for {}: \'{}\'".
-                                  format(owner.name, connection))
+            # raise ProjectionError(f"Unrecognized, invalid or insufficient specification "
+            #                       f"of connection for {owner.name}: '{connection}'.")
+            pass
 
     if not all(isinstance(projection_tuple, ProjectionTuple) for projection_tuple in connect_with_ports):
         raise ProjectionError("PROGRAM ERROR: Not all items are ProjectionTuples for {}".format(owner.name))
 
     return connect_with_ports
 
-@tc.typecheck
+
+@beartype
 def _validate_connection_request(
-        owner,                                   # Owner of Port seeking connection
-        connect_with_ports:list,                # Port to which connection is being sought
-        projection_spec:_is_projection_spec,     # projection specification
-        projection_socket:str,                   # socket of Projection to be connected to target port
-        connectee_port:tc.optional(type)=None): # Port for which connection is being sought
+        owner,  # Owner of Port seeking connection
+        connect_with_ports: list,  # Port to which connection is being sought
+        projection_spec, #: _is_projection_spec,  # projection specification
+        projection_socket: str,  # socket of Projection to be connected to target port
+        connectee_port: Optional[Type] = None):  # Port for which connection is being sought
     """Validate that a Projection specification is compatible with the Port to which a connection is specified
 
     Carries out undirected validation (i.e., without knowing whether the connectee is the sender or receiver).
@@ -2005,7 +2098,8 @@ def _get_projection_value_shape(sender, matrix):
     return np.zeros(matrix.shape[np.atleast_1d(sender.value).ndim :])
 
 # IMPLEMENTATION NOTE: MOVE THIS TO ModulatorySignals WHEN THAT IS IMPLEMENTED
-@tc.typecheck
+@check_user_specified
+@beartype
 def _validate_receiver(sender_mech:Mechanism,
                        projection:Projection,
                        expected_owner_type:type,

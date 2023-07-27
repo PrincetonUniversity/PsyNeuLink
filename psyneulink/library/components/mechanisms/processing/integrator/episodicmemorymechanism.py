@@ -404,19 +404,21 @@ Class Reference
 
 
 """
+import copy
 import warnings
-from typing import Optional, Union
+from psyneulink._typing import Optional, Union
 
 import numpy as np
 
 from psyneulink.core.components.functions.function import Function
 from psyneulink.core.components.functions.stateful.memoryfunctions import \
     DictionaryMemory, ContentAddressableMemory
+from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.globals.keywords import EPISODIC_MEMORY_MECHANISM, INITIALIZER, NAME, OWNER_VALUE, VARIABLE
-from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.utilities import deprecation_warning, convert_to_np_array, convert_all_elements_to_np_array
 
 __all__ = ['EpisodicMemoryMechanism', 'KEY_INPUT', 'VALUE_INPUT', 'KEY_OUTPUT', 'VALUE_OUTPUT']
@@ -430,12 +432,8 @@ DEFAULT_INPUT_PORT_NAME_SUFFIX = '_INPUT'
 DEFAULT_OUTPUT_PORT_PREFIX = 'RETRIEVED_'
 
 
-class EpisodicMemoryMechanismError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class EpisodicMemoryMechanismError(MechanismError):
+    pass
 
 
 class EpisodicMemoryMechanism(ProcessingMechanism_Base):
@@ -511,6 +509,13 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
         """
         variable = Parameter([[0,0]], pnl_internal=True, constructor_argument='default_variable')
         function = Parameter(ContentAddressableMemory, stateful=False, loggable=False)
+        memory = FunctionParameter(None, function_parameter_name='initializer')
+
+        def _parse_memory(self, memory):
+            if memory is None:
+                return memory
+
+            return ContentAddressableMemory._enforce_memory_shape(memory)
 
     @check_user_specified
     def __init__(self,
@@ -520,7 +525,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                  function:Optional[Function]=None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
+                 prefs:   Optional[ValidPrefSet] = None,
                  **kwargs):
 
         # LEGACY SUPPORT FOR DictionaryMemory
@@ -541,8 +546,6 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                     size += kwargs['assoc_size']
                 kwargs.pop('assoc_size')
 
-        self._memory_init = memory
-
         super().__init__(
             default_variable=default_variable,
             size=size,
@@ -550,6 +553,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
             params=params,
             name=name,
             prefs=prefs,
+            memory=memory,
             **kwargs
         )
 
@@ -567,18 +571,15 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
         variable_shape = convert_all_elements_to_np_array(default_variable).shape \
                              if default_variable is not None else None
         function_instance = self.function if isinstance(self.function, Function) else None
-        function_type = self.function if isinstance(self.function, type) else self.function.__class__
 
         # **memory** arg is specified in constructor, so use that to initialize or validate default_variable
-        if self._memory_init:
-            try:
-                self._memory_init = function_type._enforce_memory_shape(self._memory_init)
-            except:
-                pass
+        if self.parameters.memory._user_specified:
+            memory = self.defaults.memory
+
             if default_variable is None:
-                default_variable = self._memory_init[0]
+                default_variable = copy.deepcopy(memory[0])
             else:
-                entry_shape = convert_all_elements_to_np_array(self._memory_init[0]).shape
+                entry_shape = convert_all_elements_to_np_array(memory[0]).shape
                 if entry_shape != variable_shape:
                     raise EpisodicMemoryMechanismError(f"Shape of 'variable' for {self.name} ({variable_shape}) "
                                                        f"does not match the shape of entries ({entry_shape}) in "
@@ -613,14 +614,9 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
 
     def _instantiate_function(self, function, function_params, context):
         """Assign memory to function if specified in Mechanism's constructor"""
-        if self._memory_init is not None:
-            if isinstance(function, type):
-                function_params.update({INITIALIZER:self._memory_init})
-            else:
-                if len(function.memory):
-                    warnings.warn(f"The 'memory' argument specified for {self.name} will override the specification "
-                                  f"for the {repr(INITIALIZER)} argument of its function ({self.function.name}).")
-                function.reset(self._memory_init)
+        memory = self.parameters.memory._get(context)
+        if memory is not None:
+            function.reset(memory)
         super()._instantiate_function(function, function_params, context)
 
     def _instantiate_output_ports(self, context=None):

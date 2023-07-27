@@ -83,8 +83,8 @@ class MSELoss(Loss):
 
 class CROSS_ENTROPYLoss(Loss):
     """Implements compiled CROSS_ENTROPY Loss"""
-    def __init__(self, reduction='cross_entropy'):
-        if reduction not in ['cross_entropy']:
+    def __init__(self, reduction='sum'):
+        if reduction not in ['sum']:
             raise Exception("Unsupported compiled reduction type " + reduction)
 
         super().__init__()

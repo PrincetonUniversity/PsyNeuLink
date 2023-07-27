@@ -161,16 +161,16 @@ assigned to the `last_intensity` attribute.
 <ModulatorySignal.variable>`, and is used by its `function <ControlSignal.function>` to generate an `intensity`.
 The default `function <ControlSignal.function>` for a ControlSignal is `TransferWithCosts`.  This is a
 `Function` that supplements its core `TransferFunction` (specified by its `transfer_fct
-<TransferWithCosts.transfer_fct>` with a set of cost functions that can be used to compute the ControlSignal's `cost
-attributes <ControlSignal_Costs>`.  The default `transfer_fct <TransferWithCosts.transfer_fct>`> for TransferWithCosts
+<TransferWithCosts.transfer_fct>`) with a set of cost functions that can be used to compute the ControlSignal's `cost
+attributes <ControlSignal_Costs>`.  The default `transfer_fct <TransferWithCosts.transfer_fct>` for `TransferWithCosts`
 is an identity function (`Linear` with `slope <Linear.slope>` \\=1 and `intercept <Linear.intercept>`\\=0), that simply
 assigns the ControlSignal's `allocation <ControlSignal.allocation>` as its `intensity <ControlSignal.intensity>`.
-However, the TransferWithCosts function can be specified as **function** argument in the ControlSignal's constructor,
-with a different function specified for the **transfer_fct** argument of the TransferWithCosts's constructor (e.g.,
-`Exponential`, or any other function that takes and returns a scalar value or 1d array).  The TransferWithCosts' `cost
-functions <TransferWithCosts_Cost_Functions>` can also be assigned using its own constructor.  A function other than
-TransferWithCosts can also be assigned as the ControlSignal's `function <ControlSignal.function>`, however in that
-case, the ControlSignal's costs can't be computed and will all be assigned None.
+However, the `TransferWithCosts` function can be specified using its constructor in the **function** argument of the
+ControlSignal's constructor, with a different `TransferFunction` specified for the **transfer_fct** argument of the
+`TransferWithCosts`\\'s constructor (e.g.,`Exponential`, or any other function that takes and returns a scalar value
+or 1d array).  The `TransferWithCosts`\\'s `cost functions <TransferWithCosts_Cost_Functions>` can also be assigned
+using its constructor. A function other than `TransferWithCosts` can also be assigned to the ControlSignal's
+**function** argument, however in that case the ControlSignal's costs can't be computed and will all be assigned None.
 
 *Intensity (value)*. The result of the function is assigned as the value of the ControlSignal's `intensity`
 attribute, which serves as the ControlSignal's `value <ControlSignal.value>` (also referred to as `control_signal`).
@@ -382,7 +382,6 @@ the `intensity <ControlSignal.intensity>` of which is also ``3``, the value of t
 as shown below::
 
     >>> comp.run(inputs={mech:[3]}, num_trials=2)
-    <BLANKLINE>
     [array([3.])]
     >>> ctl_mech_A.control_signals[0].intensity_cost
     array([8103.08392758])
@@ -401,7 +400,9 @@ Class Reference
 import warnings
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union, Callable
 
 # FIX: EVCControlMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCControlMechanism
 #            SHOULD THEY BE LIMITED TO EVC??
@@ -411,7 +412,7 @@ from psyneulink.core.components.functions.nonstateful.combinationfunctions impor
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Exponential, Linear, CostFunctions, \
     TransferWithCosts
 from psyneulink.core.components.functions.stateful.integratorfunctions import SimpleIntegrator
-from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal
+from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal, ModulatorySignalError
 from psyneulink.core.components.ports.outputport import _output_port_variable_getter
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
@@ -423,7 +424,7 @@ from psyneulink.core.globals.keywords import \
     RECEIVER, FUNCTION
 from psyneulink.core.globals.parameters import FunctionParameter, Parameter, get_validator_by_function, \
     check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.sampleiterator import SampleSpec, SampleIterator
 from psyneulink.core.globals.sampleiterator import is_sample_spec
@@ -440,13 +441,8 @@ from psyneulink.core.components.functions.nonstateful.transferfunctions import \
 COST_OPTIONS = 'cost_options'
 
 
-class ControlSignalError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-
-    def __str__(self):
-        return repr(self.error_value)
+class ControlSignalError(ModulatorySignalError):
+    pass
 
 
 class ControlSignal(ModulatorySignal):
@@ -794,24 +790,24 @@ class ControlSignal(ModulatorySignal):
     #endregion
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  owner=None,
                  reference_value=None,
                  default_allocation=None,
                  size=None,
                  transfer_function=None,
-                 cost_options:tc.optional(tc.any(CostFunctions, list))=None,
-                 intensity_cost_function:tc.optional(is_function_type)=None,
-                 adjustment_cost_function:tc.optional(is_function_type)=None,
-                 duration_cost_function:tc.optional(is_function_type)=None,
-                 combine_costs_function:tc.optional(is_function_type)=None,
+                 cost_options: Optional[Union[CostFunctions, list]] = None,
+                 intensity_cost_function:Optional[Callable] = None,
+                 adjustment_cost_function:Optional[Callable] = None,
+                 duration_cost_function:Optional[Callable] = None,
+                 combine_costs_function:Optional[Callable] = None,
                  allocation_samples=None,
-                 modulation:tc.optional(str)=None,
+                 modulation:Optional[str]=None,
                  control=None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
+                 prefs:   Optional[ValidPrefSet] = None,
                  **kwargs):
 
         try:
@@ -1081,15 +1077,6 @@ class ControlSignal(ModulatorySignal):
 
         return port_spec, params_dict
 
-    def _update(self, params=None, context=None):
-        """Update value (intensity) and costs
-        """
-        super()._update(params=params, context=context)
-
-        if self.parameters.cost_options._get(context):
-            intensity = self.parameters.value._get(context)
-            self.parameters.cost._set(self.compute_costs(intensity, context), context)
-
     def compute_costs(self, intensity, context=None):
         """Compute costs based on self.value (`intensity <ControlSignal.intensity>`)."""
         # FIX 8/30/19: NEED TO DEAL WITH DURATION_COST AS STATEFUL:  DON'T WANT TO MESS UP MAIN VALUE
@@ -1154,7 +1141,7 @@ class ControlSignal(ModulatorySignal):
                                                  "function")
 
         # FIXME: This allows INTENSITY and NONE
-        assert self.cost_options & ~CostFunctions.INTENSITY == 0
+        assert self.cost_options & ~CostFunctions.INTENSITY == CostFunctions.NONE
 
         cfunc = ctx.import_llvm_function(self.function.combine_costs_fct)
         cfunc_in = builder.alloca(cfunc.args[2].type.pointee,
@@ -1180,10 +1167,13 @@ class ControlSignal(ModulatorySignal):
             else:
                 ifunc_in = arg_in
             # point output to the proper slot in comb func input
-            assert cost_funcs == 0, "Intensity should eb the first cost function!"
+            assert cost_funcs == 0, "Intensity should be the first cost function!"
             ifunc_out = builder.gep(cfunc_in, [ctx.int32_ty(0), ctx.int32_ty(cost_funcs)])
             if ifunc_out.type != ifunc.args[3].type:
-                warnings.warn("Shape mismatch: {} element of combination func input ({}) doesn't match INTENSITY cost output ({})".format(cost_funcs, self.function.combine_costs_fct.defaults.variable, self.function.intensity_cost_fct.defaults.value))
+                warnings.warn("Shape mismatch: {} element of combination func input ({}) doesn't match INTENSITY cost output ({})".format(
+                              cost_funcs, self.function.combine_costs_fct.defaults.variable,
+                              self.function.intensity_cost_fct.defaults.value),
+                              pnlvm.PNLCompilerWarning)
                 assert self.cost_options == CostFunctions.INTENSITY
                 ifunc_out = cfunc_in
 

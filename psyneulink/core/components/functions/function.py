@@ -148,7 +148,9 @@ import warnings
 from enum import Enum, IntEnum
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union, Callable
 
 from psyneulink.core.components.component import Component, ComponentError, DefaultsFlexibility
 from psyneulink.core.components.shellclasses import Function, Mechanism
@@ -157,16 +159,17 @@ from psyneulink.core.globals.keywords import (
     ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, EXAMPLE_FUNCTION_TYPE, FULL_CONNECTIVITY_MATRIX,
     FUNCTION_COMPONENT_CATEGORY, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, HOLLOW_MATRIX,
     IDENTITY_MATRIX, INVERSE_HOLLOW_MATRIX, NAME, PREFERENCE_SET_NAME, RANDOM_CONNECTIVITY_MATRIX, VALUE, VARIABLE,
-    MODEL_SPEC_ID_MDF_VARIABLE
+    MODEL_SPEC_ID_MDF_VARIABLE, MatrixKeywordLiteral, ZEROS_MATRIX
 )
 from psyneulink.core.globals.mdf import _get_variable_parameter_name
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import REPORT_OUTPUT_PREF, is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import REPORT_OUTPUT_PREF, ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import (
     convert_to_np_array, get_global_seed, is_instance_or_subclass, object_has_single_value, parameter_spec, parse_valid_identifier, safe_len,
-    SeededRandomState, contains_type, is_numeric, random_matrix
+    SeededRandomState, contains_type, is_numeric, NumericCollections,
+    random_matrix
 )
 
 __all__ = [
@@ -210,7 +213,9 @@ def is_Function(x):
 
 
 def is_function_type(x):
-    if not x:
+    if callable(x):
+        return True
+    elif not x:
         return False
     elif isinstance(x, (Function, types.FunctionType, types.MethodType, types.BuiltinFunctionType, types.BuiltinMethodType)):
         return True
@@ -694,6 +699,7 @@ class Function_Base(Function):
                                     params=params,
                                     target_set=target_set,
                                     )
+        # Execute function
         try:
             value = self._function(variable=variable,
                                    context=context,
@@ -795,7 +801,7 @@ class Function_Base(Function):
                     raise FunctionError(f"Can't convert value ({value}: 2D np.ndarray object "
                                         f"with more than one array) to 1D array.")
             elif value.ndim == 1:
-                value = value
+                pass
             elif value.ndim == 0:
                 value = np.atleast_1d(value)
             else:
@@ -879,20 +885,20 @@ class Function_Base(Function):
         model.functions.append(self_model)
 
         # assign stateful parameters
-        for param, index in self._mdf_stateful_parameter_indices.items():
-            initializer_name = getattr(self.parameters, param).initializer
-
+        for name, index in self._mdf_stateful_parameter_indices.items():
             # in this case, parameter gets updated to its function's final value
+            param = getattr(self.parameters, name)
+
             try:
-                initializer_value = self_model.args[initializer_name]
+                initializer_value = self_model.args[param.initializer]
             except KeyError:
-                initializer_value = self_model.metadata[initializer_name]
+                initializer_value = self_model.metadata[param.initializer]
 
             index_str = f'[{index}]' if index is not None else ''
 
             model.parameters.append(
                 mdf.Parameter(
-                    id=param,
+                    id=param.mdf_name if param.mdf_name is not None else param.name,
                     default_initial_value=initializer_value,
                     value=f'{self_model.id}{index_str}'
                 )
@@ -1048,7 +1054,7 @@ class ArgumentTherapy(Function_Base):
                  pertincacity=Manner.CONTRARIAN,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1193,13 +1199,13 @@ class EVCAuxiliaryFunction(Function_Base):
        }
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  function,
                  variable=None,
                  params=None,
                  owner=None,
-                 prefs:is_pref_set=None,
+                 prefs:   Optional[ValidPrefSet] = None,
                  context=None):
         self.aux_function = function
 
@@ -1267,6 +1273,7 @@ def get_matrix(specification, rows=1, cols=1, context=None):
             + HOLLOW_MATRIX: 0's on diagonal, 1's elsewhere (must be square matrix), otherwise generates error
             + INVERSE_HOLLOW_MATRIX: 0's on diagonal, -1's elsewhere (must be square matrix), otherwise generates error
             + FULL_CONNECTIVITY_MATRIX: all 1's
+            + ZERO_MATRIX: all 0's
             + RANDOM_CONNECTIVITY_MATRIX (random floats uniformly distributed between 0 and 1)
             + RandomMatrix (random floats uniformly distributed around a specified center value with a specified range)
         + 2D list or np.ndarray of numbers
@@ -1300,6 +1307,9 @@ def get_matrix(specification, rows=1, cols=1, context=None):
 
     if specification == FULL_CONNECTIVITY_MATRIX:
         return np.full((rows, cols), 1.0)
+
+    if specification == ZEROS_MATRIX:
+        return np.zeros((rows, cols))
 
     if specification == IDENTITY_MATRIX:
         if rows != cols:
@@ -1338,3 +1348,8 @@ def get_matrix(specification, rows=1, cols=1, context=None):
 
     # Specification not recognized
     return None
+
+
+# Valid types for a matrix specification, note this is does not ensure that ND arrays are 1D or 2D like the
+# above code does.
+ValidMatrixSpecType = Union[MatrixKeywordLiteral, Callable, str, NumericCollections, np.matrix]

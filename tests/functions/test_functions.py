@@ -60,7 +60,7 @@ def test_output_type_conversion_failure(output_type, variable):
 )
 def test_seed_setting_results(obj):
     obj = obj()
-    new_seed = 1
+    new_seed = pnl.core.components.functions.function.get_global_seed()
 
     obj.parameters.seed.set(new_seed, context='c1')
 
@@ -94,7 +94,7 @@ def test_seed_setting_results(obj):
 def test_seed_setting_params(obj):
     if not isinstance(obj, pnl.Component):
         obj = obj()
-    new_seed = 1
+    new_seed = pnl.core.components.functions.function.get_global_seed()
 
     obj._initialize_from_context(pnl.Context(execution_id='c1'))
     obj._initialize_from_context(pnl.Context(execution_id='c2'), pnl.Context(execution_id='c1'))

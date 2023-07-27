@@ -44,9 +44,9 @@ def check_drift_diffusion_analytical(B, data, degenerate_cases=False):
         # now. If we are doing degenerate cases, then don't check conditional moments, these can vary wildly because
         # implementation differences of coth and csch between Python and MATLAB
         if degenerate_cases:
-            assert np.allclose(results_b[1:6], ground_truth[0:5], atol=1e-10, equal_nan=True)
+            np.testing.assert_allclose(results_b[1:6], ground_truth[0:5], rtol=1e-5, atol=1e-10, equal_nan=True)
         else:
-            assert np.allclose(results_b[1:], ground_truth, atol=1e-10, equal_nan=True)
+            np.testing.assert_allclose(results_b[1:], ground_truth, rtol=1e-5, atol=1e-10, equal_nan=True)
 
 def test_drift_difussion_analytical_shenhav_compat_mode():
 

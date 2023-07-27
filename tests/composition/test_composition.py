@@ -46,6 +46,7 @@ from psyneulink.library.components.mechanisms.processing.transfer.recurrenttrans
     RecurrentTransferMechanism
 from psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism import \
     EpisodicMemoryMechanism
+from psyneulink.library.compositions.emcomposition import EMComposition
 
 logger = logging.getLogger(__name__)
 
@@ -100,8 +101,8 @@ class TestConstructor:
         c = Composition(pathways=[[A],[B],[C]])
         assert c() is None
         result = c(inputs={A:[[1],[100]],B:[[2],[200]],C:[[3],[1]]})
-        assert np.allclose(result, [[100],[400],[0.73105858]])
-        assert np.allclose(c(), [[100],[400],[0.73105858]])
+        np.testing.assert_allclose(result, [[100],[400],[0.73105858]])
+        np.testing.assert_allclose(c(), [[100],[400],[0.73105858]])
         with pytest.raises(CompositionError) as err:
             c(23, 'bad_arg', bad_kwarg=1)
         assert f" called with illegal argument(s): 23, bad_arg, bad_kwarg" in str(err.value)
@@ -116,13 +117,13 @@ class TestConstructor:
         # Run without learning
         result = c(inputs={A:[[1],[100]],B:[[2],[1]]})
         print(result)
-        assert np.allclose(result, [[100.],[0.62245933]])
-        assert np.allclose(c(), [[100.],[0.62245933]])
+        np.testing.assert_allclose(result, [[100.], [0.62245933]], rtol=1e-5, atol=1e-8)
+        np.testing.assert_allclose(c(), [[100.], [0.62245933]], rtol=1e-5, atol=1e-8)
 
         # Run with learning
         target = c.pathways['LEARNING_PATHWAY'].target
         result = c(inputs={A:[[1],[100]],B:[[2],[1]],target:[[3],[300]]})
-        np.allclose(result, [[[1.], [0.73105858]], [[100.], [0.62507661]]])
+        np.testing.assert_allclose(c.results[-2:], [[[1.], [0.73105858]], [[100.], [0.62768661]]])
 
 
 class TestAddMechanism:
@@ -158,9 +159,9 @@ class TestAddMechanism:
 
         comp.run(inputs={a: 1.0})
 
-        assert np.allclose(a.value, [[1.0]])
-        assert np.allclose(b.value, [[2.0]])
-        assert np.allclose(c.value, [[24.0]])
+        np.testing.assert_allclose(a.value, [[1.0]])
+        np.testing.assert_allclose(b.value, [[2.0]])
+        np.testing.assert_allclose(c.value, [[24.0]])
         assert ab in comp.projections
         assert bc in comp.projections
 
@@ -227,7 +228,7 @@ class TestAddMechanism:
                                   c: [3.0]})
         assert set(comp.get_nodes_by_role(NodeRole.INPUT)) == set(nodes)
         assert set(comp.get_nodes_by_role(NodeRole.OUTPUT)) == set(nodes)
-        assert np.allclose(output, [[1.0], [2.0], [3.0]])
+        np.testing.assert_allclose(output, [[1.0], [2.0], [3.0]])
     @pytest.mark.stress
     @pytest.mark.parametrize(
         'count', [
@@ -299,7 +300,7 @@ class TestAddProjection:
         comp.add_node(B)
         comp.add_projection(sender=A, receiver=B)
         result = comp.run(inputs={A: [1.0]})
-        assert np.allclose(result, [[np.array([2.])]])
+        np.testing.assert_allclose(result, [np.array([2.])])
 
     def test_add_proj_missing_sender(self):
         comp = Composition()
@@ -364,10 +365,10 @@ class TestAddProjection:
         comp.add_node(B)
         proj = comp.add_projection(weights, A, B)
         comp.run(inputs={A: [[1.1, 1.2, 1.3]]})
-        assert np.allclose(A.parameters.value.get(comp), [[1.1, 1.2, 1.3]])
-        assert np.allclose(B.get_input_values(comp), [[11.2,  14.8]])
-        assert np.allclose(B.parameters.value.get(comp), [[22.4,  29.6]])
-        assert np.allclose(proj.matrix.base, weights)
+        np.testing.assert_allclose(A.parameters.value.get(comp), [[1.1, 1.2, 1.3]])
+        np.testing.assert_allclose(B.get_input_values(comp), [[11.2,  14.8]])
+        np.testing.assert_allclose(B.parameters.value.get(comp), [[22.4,  29.6]])
+        np.testing.assert_allclose(proj.matrix.base, weights)
 
     test_args = [(None, ([1],[1],[1],[1]), 3.0),
         ('list', ([[0.60276338]],[[0.64589411]],[[0.96366276]]), 2.02947612),
@@ -411,7 +412,7 @@ class TestAddProjection:
             opway = [[X, oprojs, mcomp, Y, C]]
         ocomp = Composition(pathways=opway, name='OUTER COMPOSITION')
 
-        assert np.allclose(ocomp.run(inputs=[[1.5]]), expected_result)
+        np.testing.assert_allclose(ocomp.run(inputs=[[1.5]]), expected_result)
 
         if not projs:
             assert (comp1.output_CIM.output_ports[0].efferents[0].matrix.base ==
@@ -421,12 +422,12 @@ class TestAddProjection:
             assert (X.output_ports[0].efferents[1].matrix.base ==
                     mcomp.input_CIM.input_ports[1].path_afferents[0].matrix.base == expected_matrices[2])
         else:
-            assert np.allclose(comp1.output_CIM.output_ports[0].efferents[0].matrix.base, expected_matrices[0])
-            assert np.allclose(comp2.input_CIM.input_ports[0].path_afferents[0].matrix.base, expected_matrices[0])
-            assert np.allclose(X.output_ports[0].efferents[0].matrix.base, expected_matrices[1])
-            assert np.allclose(mcomp.input_CIM.input_ports[0].path_afferents[0].matrix.base, expected_matrices[1])
-            assert np.allclose(X.output_ports[0].efferents[1].matrix.base, expected_matrices[2])
-            assert np.allclose(mcomp.input_CIM.input_ports[1].path_afferents[0].matrix.base, expected_matrices[2])
+            np.testing.assert_allclose(comp1.output_CIM.output_ports[0].efferents[0].matrix.base, expected_matrices[0])
+            np.testing.assert_allclose(comp2.input_CIM.input_ports[0].path_afferents[0].matrix.base, expected_matrices[0])
+            np.testing.assert_allclose(X.output_ports[0].efferents[0].matrix.base, expected_matrices[1])
+            np.testing.assert_allclose(mcomp.input_CIM.input_ports[0].path_afferents[0].matrix.base, expected_matrices[1])
+            np.testing.assert_allclose(X.output_ports[0].efferents[1].matrix.base, expected_matrices[2])
+            np.testing.assert_allclose(mcomp.input_CIM.input_ports[1].path_afferents[0].matrix.base, expected_matrices[2])
 
     def test_add_linear_processing_pathway_with_noderole_specified_in_tuple(self):
         comp = Composition()
@@ -497,9 +498,9 @@ class TestAddProjection:
         weights = [[1., 2.], [3., 4.], [5., 6.]]
         comp.add_linear_processing_pathway([A, weights, B])
         comp.run(inputs={A: [[1.1, 1.2, 1.3]]})
-        assert np.allclose(A.parameters.value.get(comp), [[1.1, 1.2, 1.3]])
-        assert np.allclose(B.get_input_values(comp), [[11.2,  14.8]])
-        assert np.allclose(B.parameters.value.get(comp), [[22.4,  29.6]])
+        np.testing.assert_allclose(A.parameters.value.get(comp), [[1.1, 1.2, 1.3]])
+        np.testing.assert_allclose(B.get_input_values(comp), [[11.2,  14.8]])
+        np.testing.assert_allclose(B.parameters.value.get(comp), [[22.4,  29.6]])
 
     def test_add_conflicting_projection_object(self):
         comp = Composition()
@@ -512,9 +513,9 @@ class TestAddProjection:
         proj = MappingProjection(sender=A, receiver=B)
         with pytest.raises(CompositionError) as error:
             comp.add_projection(projection=proj, receiver=C)
-            assert '"Receiver (\'composition-pytests-C\') assigned to ' \
+            assert 'Receiver (\'composition-pytests-C\') assigned to ' \
                    '\'MappingProjection from composition-pytests-A[RESULT] to composition-pytests-B[InputPort-0] ' \
-                   'is incompatible with the positions of these Components in \'Composition-0\'."' == str(error.value)
+                   'is incompatible with the positions of these Components in \'Composition-0\'.' == str(error.value)
 
     @pytest.mark.stress
     @pytest.mark.parametrize(
@@ -597,11 +598,9 @@ class TestPathway:
         assert p.learning_components is None
 
     def test_pathway_assign_composition_arg_error(self):
-        c = Composition()
-        with pytest.raises(pnl.CompositionError) as error_text:
+        error_text = "'composition' arg of constructor for Pathway must be a Composition"
+        with pytest.raises(pnl.CompositionError, match=error_text):
             p = Pathway(pathway=[], composition='c')
-        assert "\'composition\' can not be specified as an arg in the constructor for a Pathway" in str(
-                error_text.value)
 
     def test_pathway_assign_roles_error(self):
         A = ProcessingMechanism()
@@ -792,7 +791,7 @@ class TestCompositionPathwayArgsAndAdditionMethods:
         p = Pathway(pathway=([A,B], Reinforcement), name='P')
         c = Composition()
 
-        regexp = "LearningFunction found in specification of 'pathway' arg for "\
+        regexp = "LearningFunction found in 'pathway' arg for "\
                  "add_linear_procesing_pathway method .*"\
                 r"Reinforcement'>; it will be ignored"
         with pytest.warns(UserWarning, match=regexp):
@@ -2113,7 +2112,7 @@ class TestGraphCycles:
 
 
         output = comp.run(inputs={R1: [1.0]}, num_trials=3)
-        assert np.allclose(output, [[np.array([22.])]])
+        np.testing.assert_allclose(output, [np.array([22.])])
 
 @pytest.mark.pathways
 class TestExecutionOrder:
@@ -2336,7 +2335,7 @@ class TestExecutionOrder:
                            E: 3.0}
 
         for node in expected_values:
-            assert np.allclose(expected_values[node], node.parameters.value.get(comp))
+            np.testing.assert_allclose(expected_values[node], node.parameters.value.get(comp))
 
         comp.run(inputs={A: [1.0]})
         expected_values_2 = {A: 1.0,
@@ -2347,7 +2346,7 @@ class TestExecutionOrder:
 
         print(D.log.nparray_dictionary(["OutputPort-0"]))
         for node in expected_values:
-            assert np.allclose(expected_values_2[node], node.parameters.value.get(comp))
+            np.testing.assert_allclose(expected_values_2[node], node.parameters.value.get(comp))
 
     def test_loop_with_extra_node(self):
         A = ProcessingMechanism(name="A")
@@ -2379,7 +2378,7 @@ class TestExecutionOrder:
                            E: 5.0}
 
         for node in expected_values:
-            assert np.allclose(expected_values[node], node.parameters.value.get(comp))
+            np.testing.assert_allclose(expected_values[node], node.parameters.value.get(comp))
 
         comp.run(inputs={A: [1.0]})
         expected_values_2 = {A: 1.0,
@@ -2390,7 +2389,7 @@ class TestExecutionOrder:
                              E: 10.0}
 
         for node in expected_values:
-            assert np.allclose(expected_values_2[node], node.parameters.value.get(comp))
+            np.testing.assert_allclose(expected_values_2[node], node.parameters.value.get(comp))
 
     def test_two_overlapping_loops(self):
         A = ProcessingMechanism(name="A")
@@ -2606,7 +2605,7 @@ class TestExecutionOrder:
         inputs_dict = {A: [4.0]}
         sched = Scheduler(composition=comp)
         output = benchmark(comp.run, inputs=inputs_dict, scheduler=sched, execution_mode=comp_mode)
-        assert np.allclose(output, 320)
+        np.testing.assert_allclose(output, 320)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2643,7 +2642,7 @@ class TestExecutionOrder:
 
         inputs_dict = {B: [4.0]}
         output = benchmark(comp.run, inputs=inputs_dict, execution_mode=comp_mode)
-        assert np.allclose(output, 354.19328716)
+        np.testing.assert_allclose(output, 354.19328716)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2680,7 +2679,7 @@ class TestExecutionOrder:
         inputs_dict = {B: [4.0]}
         sched = Scheduler(composition=comp)
         output = benchmark(comp.run, inputs=inputs_dict, scheduler=sched, execution_mode=comp_mode)
-        assert np.allclose(output, 650.83865743)
+        np.testing.assert_allclose(output, 650.83865743)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2717,7 +2716,7 @@ class TestExecutionOrder:
 
         inputs_dict = {B: [4.0]}
         output = benchmark(comp.run, inputs=inputs_dict, execution_mode=comp_mode)
-        assert np.allclose(output, 150.83865743)
+        np.testing.assert_allclose(output, 150.83865743)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2755,7 +2754,7 @@ class TestExecutionOrder:
         inputs_dict = {B: [4.0]}
         sched = Scheduler(composition=comp)
         output = benchmark(comp.run, inputs=inputs_dict, scheduler=sched, execution_mode=comp_mode)
-        assert np.allclose(output, 600)
+        np.testing.assert_allclose(output, 600)
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Transfer")
@@ -2774,7 +2773,7 @@ class TestExecutionOrder:
         # pass same 3 trials of input to comp1 and comp2
         benchmark(comp2.run, inputs={C: [1.0, 2.0, 3.0]}, execution_mode=comp_mode)
 
-        assert np.allclose(comp2.results[:3], [[[0.52497918747894]], [[0.5719961329315186]], [[0.6366838893983633]]])
+        np.testing.assert_allclose(comp2.results[:3], [[[0.52497918747894]], [[0.5719961329315186]], [[0.6366838893983633]]])
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Transfer")
@@ -2792,7 +2791,7 @@ class TestExecutionOrder:
 
         benchmark(comp1.run, inputs={A: [1.0, 2.0, 3.0]}, execution_mode=comp_mode)
 
-        assert np.allclose(comp1.results[:3], [[[0.52497918747894]], [[0.5719961329315186]], [[0.6366838893983633]]])
+        np.testing.assert_allclose(comp1.results[:3], [[[0.52497918747894]], [[0.5719961329315186]], [[0.6366838893983633]]])
 
     @pytest.mark.composition
     def test_exact_time(self):
@@ -2864,16 +2863,16 @@ class TestInputPortSpecifications:
         sched = Scheduler(composition=comp)
         comp.run(inputs=inputs_dict, scheduler=sched)
 
-        assert np.allclose(A.input_ports[0].parameters.value.get(comp), [2.0])
-        assert np.allclose(A.input_ports[1].parameters.value.get(comp), [4.0])
-        assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
+        np.testing.assert_allclose(A.input_ports[0].parameters.value.get(comp), [2.0])
+        np.testing.assert_allclose(A.input_ports[1].parameters.value.get(comp), [4.0])
+        np.testing.assert_allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
 
     def test_recurrent_transfer_origin(self):
         R = RecurrentTransferMechanism(has_recurrent_input_port=True)
         C = Composition(pathways=[R])
 
         result = C.run(inputs={R: [[1.0], [2.0], [3.0]]})
-        assert np.allclose(result, [[3.0]])
+        np.testing.assert_allclose(result, [[3.0]])
 
     def test_two_input_ports_created_first_with_deferred_init(self):
         comp = Composition()
@@ -2903,9 +2902,9 @@ class TestInputPortSpecifications:
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched)
 
-        assert np.allclose(A.input_ports[0].parameters.value.get(comp), [2.0])
-        assert np.allclose(A.input_ports[1].parameters.value.get(comp), [4.0])
-        assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
+        np.testing.assert_allclose(A.input_ports[0].parameters.value.get(comp), [2.0])
+        np.testing.assert_allclose(A.input_ports[1].parameters.value.get(comp), [4.0])
+        np.testing.assert_allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
 
     def test_two_input_ports_created_with_keyword(self):
         comp = Composition()
@@ -2928,11 +2927,11 @@ class TestInputPortSpecifications:
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched)
 
-        assert np.allclose(A.input_ports[0].parameters.value.get(comp), [2.0])
-        assert np.allclose(A.input_ports[1].parameters.value.get(comp), [4.0])
-        assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
+        np.testing.assert_allclose(A.input_ports[0].parameters.value.get(comp), [2.0])
+        np.testing.assert_allclose(A.input_ports[1].parameters.value.get(comp), [4.0])
+        np.testing.assert_allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
 
-        assert np.allclose([[2], [4]], output)
+        np.testing.assert_allclose([[2], [4]], output)
 
     def test_two_input_ports_created_with_strings(self):
         comp = Composition()
@@ -2956,9 +2955,9 @@ class TestInputPortSpecifications:
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched)
 
-        assert np.allclose(A.input_ports[0].parameters.value.get(comp), [2.0])
-        assert np.allclose(A.input_ports[1].parameters.value.get(comp), [4.0])
-        assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
+        np.testing.assert_allclose(A.input_ports[0].parameters.value.get(comp), [2.0])
+        np.testing.assert_allclose(A.input_ports[1].parameters.value.get(comp), [4.0])
+        np.testing.assert_allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
 
     def test_two_input_ports_created_with_values(self):
         comp = Composition()
@@ -2981,9 +2980,9 @@ class TestInputPortSpecifications:
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched)
 
-        assert np.allclose(A.input_ports[0].parameters.value.get(comp), [2.0])
-        assert np.allclose(A.input_ports[1].parameters.value.get(comp), [4.0])
-        assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
+        np.testing.assert_allclose(A.input_ports[0].parameters.value.get(comp), [2.0])
+        np.testing.assert_allclose(A.input_ports[1].parameters.value.get(comp), [4.0])
+        np.testing.assert_allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
 
 
 class TestRunInputSpecifications:
@@ -3009,8 +3008,8 @@ class TestRunInputSpecifications:
                                default_variable=[[0.0, 0.0]])
         C = Composition(pathways=[T, T2])
         run_result = C.run(inputs={})
-        assert np.allclose(T.parameters.value.get(C), [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])
-        assert np.allclose(run_result, [[np.array([2.0, 4.0])]])
+        np.testing.assert_allclose(T.parameters.value.get(C), [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])
+        np.testing.assert_allclose(run_result, [np.array([2.0, 4.0])])
 
     input_args = [
         ('non_input_node',
@@ -3110,12 +3109,12 @@ class TestRunInputSpecifications:
         sched = Scheduler(composition=comp)
         comp.run(inputs=inputs, scheduler=sched)[0]
 
-        assert np.allclose(A.get_output_values(comp), [[2.0, 4.0], [6.0, 8.0]])
-        assert np.allclose(B.get_output_values(comp), [[3., 6., 9.]])
-        assert np.allclose(C.get_output_values(comp), [[0.]])
-        assert np.allclose(D.get_output_values(comp), [[4.]])
+        np.testing.assert_allclose(A.get_output_values(comp), [[2.0, 4.0], [6.0, 8.0]])
+        np.testing.assert_allclose(B.get_output_values(comp), [[3., 6., 9.]])
+        np.testing.assert_allclose(C.get_output_values(comp), [[0.]])
+        np.testing.assert_allclose(D.get_output_values(comp), [[4.]])
         for i,j in zip(comp.results[0], [[2., 4.], [6., 8.], [3., 6., 9.],[0.], [4.]]):
-            assert np.allclose(i,j)
+            np.testing.assert_allclose(i,j)
 
     def test_some_inputs_not_specified_origin_node_is_composition(self):
 
@@ -3147,28 +3146,29 @@ class TestRunInputSpecifications:
         sched = Scheduler(composition=comp)
         comp.run(inputs=inputs, scheduler=sched)[0]
 
-        assert np.allclose(A.get_output_values(comp), [[2.0, 4.0], [6.0, 8.0]])
-        assert np.allclose(compA.get_output_values(comp), [[2.0, 4.0], [6.0, 8.0]])
-        assert np.allclose(B.get_output_values(comp), [[3., 6., 9.]])
-        assert np.allclose(C.get_output_values(comp), [[0.]])
-        assert np.allclose(D.get_output_values(comp), [[4.]])
+        np.testing.assert_allclose(A.get_output_values(comp), [[2.0, 4.0], [6.0, 8.0]])
+        np.testing.assert_allclose(compA.get_output_values(comp), [[2.0, 4.0], [6.0, 8.0]])
+        np.testing.assert_allclose(B.get_output_values(comp), [[3., 6., 9.]])
+        np.testing.assert_allclose(C.get_output_values(comp), [[0.]])
+        np.testing.assert_allclose(D.get_output_values(comp), [[4.]])
 
     def test_heterogeneous_variables_drop_outer_list(self):
         # from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
         A = TransferMechanism(name='a', default_variable=[[0.0], [0.0,0.0]])
         C = Composition(pathways=[A])
         output = C.run(inputs={A: [[1.0], [2.0, 2.0]]})
-        for i,j in zip(output,[[1.0],[2.0,2.0]]):
-            np.allclose(i,j)
+
+        for res, exp in zip(output, [[1.0], [2.0, 2.0]]):
+            np.testing.assert_allclose(res, exp)
 
     def test_heterogeneous_variables_two_trials(self):
         # from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
         A = TransferMechanism(name='a', default_variable=[[0.0], [0.0,0.0]])
         C = Composition(pathways=[A])
         C.run(inputs={A: [[[1.1], [2.1, 2.1]], [[1.2], [2.2, 2.2]]]})
-        for i,j in zip(C.results,[[[1.1], [2.1, 2.1]], [[1.2], [2.2, 2.2]]]):
-            for k,l in zip(i,j):
-                np.allclose(k,l)
+        for res, exp in zip(C.results, [[[1.1], [2.1, 2.1]], [[1.2], [2.2, 2.2]]]):
+            for r, e in zip(res, exp):
+                np.testing.assert_allclose(r, e)
 
     def test_3_origins(self):
         comp = Composition()
@@ -3213,7 +3213,7 @@ class TestRunInputSpecifications:
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs, scheduler=sched)
 
-        assert np.allclose(np.array([[12.]]), output)
+        np.testing.assert_allclose(np.array([[12.]]), output)
 
     def test_2_mechanisms_input_5(self):
         comp = Composition()
@@ -3225,7 +3225,7 @@ class TestRunInputSpecifications:
         inputs_dict = {A: [[5]]}
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched)
-        assert np.allclose([125], output)
+        np.testing.assert_allclose([[125]], output)
 
     def test_run_2_mechanisms_reuse_input(self):
         comp = Composition()
@@ -3237,7 +3237,7 @@ class TestRunInputSpecifications:
         inputs_dict = {A: [[5]]}
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched, num_trials=5)
-        assert np.allclose([125], output)
+        np.testing.assert_allclose([[125]], output)
 
     def test_function_as_input(self):
         c = pnl.Composition()
@@ -3263,6 +3263,7 @@ class TestRunInputSpecifications:
                                       pytest.param(pnl.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
                                       pytest.param(pnl.ExecutionMode.PTXRun, marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                      ])
+    @pytest.mark.composition
     def test_generator_as_input(self, mode):
         c = pnl.Composition()
 
@@ -3288,6 +3289,7 @@ class TestRunInputSpecifications:
                                       pytest.param(pnl.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
                                       pytest.param(pnl.ExecutionMode.PTXRun, marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                      ])
+    @pytest.mark.composition
     def test_generator_as_input_with_num_trials(self, mode):
         c = pnl.Composition()
 
@@ -3356,7 +3358,7 @@ class TestRun:
         inputs_dict = {A: [5, 4]}
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched, execution_mode=comp_mode)
-        assert np.allclose(output, [[225, 225, 225]])
+        np.testing.assert_allclose(output, [[225, 225, 225]])
 
     @pytest.mark.projection
     @pytest.mark.composition
@@ -3372,7 +3374,7 @@ class TestRun:
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched, execution_mode=comp_mode
         )
-        assert np.allclose(output, [[300, 300]])
+        np.testing.assert_allclose(output, [[300, 300]])
 
     @pytest.mark.composition
     def test_run_2_mechanisms_input_5(self, comp_mode):
@@ -3385,7 +3387,7 @@ class TestRun:
         inputs_dict = {A: [5]}
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched, execution_mode=comp_mode)
-        assert np.allclose(125, output[0][0])
+        np.testing.assert_allclose(125, output[0][0])
 
     def test_projection_assignment_mistake_swap(self):
 
@@ -3401,9 +3403,9 @@ class TestRun:
         comp.add_projection(MappingProjection(sender=A, receiver=C), A, C)
         with pytest.raises(CompositionError) as error_text:
             comp.add_projection(MappingProjection(sender=B, receiver=D), B, C)
-        assert '"Receiver (\'composition-pytests-C\') assigned to ' \
+        assert 'Receiver (\'composition-pytests-C\') assigned to ' \
                '\'MappingProjection from composition-pytests-B[RESULT] to composition-pytests-D[InputPort-0] ' \
-               'is incompatible with the positions of these Components in \'Composition-0\'."' == str(error_text.value)
+               'is incompatible with the positions of these Components in \'Composition-0\'.' == str(error_text.value)
 
     def test_projection_assignment_mistake_swap2(self):
         # A ----> C --
@@ -3423,9 +3425,9 @@ class TestRun:
         comp.add_projection(MappingProjection(sender=A, receiver=C), A, C)
         with pytest.raises(CompositionError) as error_text:
             comp.add_projection(MappingProjection(sender=B, receiver=C), B, D)
-        assert '"Receiver (\'composition-pytests-D\') assigned to ' \
+        assert 'Receiver (\'composition-pytests-D\') assigned to ' \
                '\'MappingProjection from composition-pytests-B[RESULT] to composition-pytests-C[InputPort-0] ' \
-               'is incompatible with the positions of these Components in \'Composition-0\'."' == str(error_text.value)
+               'is incompatible with the positions of these Components in \'Composition-0\'.' == str(error_text.value)
 
     @pytest.mark.composition
     def test_run_5_mechanisms_2_origins_1_terminal(self, comp_mode):
@@ -3457,7 +3459,7 @@ class TestRun:
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched, execution_mode=comp_mode)
 
-        assert np.allclose([250], output)
+        np.testing.assert_allclose([[250]], output)
 
     @pytest.mark.composition
     @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Python]) # LLVM doesn't support EveryNCalls fr N > 1
@@ -3477,7 +3479,7 @@ class TestRun:
         sched.add_condition(B, EveryNCalls(A, 2))
         output = comp.run(inputs=inputs_dict, scheduler=sched, execution_mode=mode)
 
-        assert np.allclose(50.0, output[0][0])
+        np.testing.assert_allclose(50.0, output[0][0])
 
     @pytest.mark.composition
     def test_run_2_mechanisms_with_scheduling_AAB_transfer(self, comp_mode):
@@ -3496,7 +3498,7 @@ class TestRun:
         sched = Scheduler(composition=comp)
         sched.add_condition(B, EveryNCalls(A, 2))
         output = comp.run(inputs=inputs_dict, scheduler=sched, execution_mode=comp_mode)
-        assert np.allclose(50.0, output[0][0])
+        np.testing.assert_allclose(50.0, output[0][0])
 
     @pytest.mark.composition
     def test_run_2_mechanisms_with_multiple_trials_of_input_values(self, comp_mode):
@@ -3511,7 +3513,7 @@ class TestRun:
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched, execution_mode=comp_mode)
 
-        assert np.allclose([[[40.0]]], output)
+        np.testing.assert_allclose([[40.0]], output)
 
     @pytest.mark.composition
     def test_sender_receiver_not_specified(self, comp_mode):
@@ -3526,7 +3528,7 @@ class TestRun:
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched, execution_mode=comp_mode)
 
-        assert np.allclose([[40.0]], output)
+        np.testing.assert_allclose([[40.0]], output)
 
     @pytest.mark.composition
     def test_run_2_mechanisms_reuse_input(self, comp_mode):
@@ -3539,7 +3541,7 @@ class TestRun:
         inputs_dict = {A: [5]}
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched, num_trials=5, execution_mode=comp_mode)
-        assert np.allclose([125], output)
+        np.testing.assert_allclose([[125]], output)
 
     @pytest.mark.composition
     def test_run_2_mechanisms_double_trial_specs(self, comp_mode):
@@ -3553,7 +3555,7 @@ class TestRun:
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched, num_trials=3, execution_mode=comp_mode)
 
-        assert np.allclose(np.array([[75.]]), output)
+        np.testing.assert_allclose(np.array([[75.]]), output)
 
     @pytest.mark.composition
     @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Python,
@@ -3572,7 +3574,7 @@ class TestRun:
         inputs_dict = {A: 3}
         sched = Scheduler(composition=comp)
         output = comp.execute(inputs=inputs_dict, scheduler=sched, execution_mode=mode)
-        assert np.allclose([75], output)
+        np.testing.assert_allclose([[75]], output)
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="LPP")
@@ -3589,7 +3591,7 @@ class TestRun:
         inputs_dict = {A: [[1]]}
         sched = Scheduler(composition=comp)
         output = benchmark(comp.run, inputs=inputs_dict, scheduler=sched, execution_mode=comp_mode)
-        assert np.allclose(89., output)
+        np.testing.assert_allclose(89., output)
 
     @pytest.mark.composition
     def test_LPP_with_projections(self, comp_mode):
@@ -3606,7 +3608,7 @@ class TestRun:
         inputs_dict = {A: [[1]]}
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched, execution_mode=comp_mode)
-        assert np.allclose(32., output)
+        np.testing.assert_allclose(32., output)
 
     def test_LPP_end_with_projection(self):
         comp = Composition()
@@ -3620,7 +3622,7 @@ class TestRun:
         with pytest.raises(CompositionError) as error_text:
             comp.add_linear_processing_pathway([A, A_to_B, B, C, D, E, C_to_E])
 
-        assert ("The last item in the \'pathway\' arg for add_linear_procesing_pathway method" in str(error_text.value)
+        assert ("The last item in \'pathway\' arg for add_linear_procesing_pathway method" in str(error_text.value)
                 and "cannot be a Projection:" in str(error_text.value))
 
     def test_LPP_two_projections_in_a_row(self):
@@ -3671,7 +3673,7 @@ class TestRun:
         m_outer = ProcessingMechanism(size=2)
         outer_comp = Composition(pathways=[m_outer, inner_comp])
         result = outer_comp.run(execution_mode=mode)
-        assert np.allclose(result, [[0.0],[0.0]])
+        np.testing.assert_allclose(result, [[0.0, 0.0]])
 
     @pytest.mark.composition
     def test_run_no_inputs(self, comp_mode):
@@ -3680,7 +3682,7 @@ class TestRun:
         m_outer = ProcessingMechanism(size=2)
         outer_comp = Composition(pathways=[m_outer, inner_comp])
         result = outer_comp.run(execution_mode=comp_mode)
-        assert np.allclose(result, [[0.0],[0.0]])
+        np.testing.assert_allclose(result, [[0.0, 0.0]])
 
     def test_lpp_invalid_matrix_keyword(self):
         comp = Composition()
@@ -3715,7 +3717,7 @@ class TestRun:
                        B: [5]}
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched, execution_mode=comp_mode)
-        assert np.allclose([250], output)
+        np.testing.assert_allclose([[250]], output)
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="LinearComposition")
@@ -3728,7 +3730,7 @@ class TestRun:
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
         sched = Scheduler(composition=comp)
         output = benchmark(comp.run, inputs={A: [[1.0]]}, scheduler=sched, execution_mode=comp_mode)
-        assert np.allclose(25, output)
+        np.testing.assert_allclose(25, output)
 
 
     @pytest.mark.skip
@@ -3758,7 +3760,7 @@ class TestRun:
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
         sched = Scheduler(composition=comp)
         output = benchmark(comp.run, inputs={A: [var]}, scheduler=sched, execution_mode=comp_mode)
-        assert np.allclose([25.0 for x in range(vector_length)], output[0])
+        np.testing.assert_allclose([25.0 for x in range(vector_length)], output[0])
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Merge composition scalar")
@@ -3784,7 +3786,7 @@ class TestRun:
                        D: [5.0]}
         sched = Scheduler(composition=comp)
         output = benchmark(comp.run, inputs=inputs_dict, scheduler=sched, execution_mode=comp_mode)
-        assert np.allclose(250, output)
+        np.testing.assert_allclose(250, output)
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Merge composition scalar")
@@ -3809,7 +3811,7 @@ class TestRun:
         inputs_dict = {C: [5.0]}
         sched = Scheduler(composition=comp)
         output = benchmark(comp.run, inputs=inputs_dict, scheduler=sched, execution_mode=comp_mode)
-        assert np.allclose([[100], [150]], output)
+        np.testing.assert_allclose([[100], [150]], output)
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Merge composition scalar MIMO")
@@ -3835,7 +3837,7 @@ class TestRun:
                        D: [8.0]}
         sched = Scheduler(composition=comp)
         output = benchmark(comp.run, inputs=inputs_dict, scheduler=sched, execution_mode=comp_mode)
-        assert np.allclose([[150], [200]], output)
+        np.testing.assert_allclose([[150], [200]], output)
 
 
     @pytest.mark.composition
@@ -3864,7 +3866,7 @@ class TestRun:
                        D: [[7.0], [8.0]]}
         sched = Scheduler(composition=comp)
         output = benchmark(comp.run, inputs=inputs_dict, scheduler=sched, execution_mode=comp_mode)
-        assert np.allclose([[300], [350]], output)
+        np.testing.assert_allclose([[300], [350]], output)
 
 
     @pytest.mark.composition
@@ -3893,7 +3895,7 @@ class TestRun:
                        D: [[7.0], [8.0]]}
         sched = Scheduler(composition=comp)
         output = benchmark(comp.run, inputs=inputs_dict, scheduler=sched, execution_mode=comp_mode)
-        assert np.allclose([[650]], output)
+        np.testing.assert_allclose([[650]], output)
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Recurrent")
@@ -3903,12 +3905,12 @@ class TestRun:
         comp.add_node(A)
         sched = Scheduler(composition=comp)
         output1 = comp.run(inputs={A: [[1.0, 2.0, 3.0]]}, scheduler=sched, execution_mode=comp_mode)
-        assert np.allclose([5.0, 10.0, 15.0], output1)
+        np.testing.assert_allclose([[5.0, 10.0, 15.0]], output1)
         output2 = benchmark(comp.run, inputs={A: [[1.0, 2.0, 3.0]]}, scheduler=sched, execution_mode=comp_mode)
         # Using the hollow matrix: (10 + 15 + 1) * 5 = 130,
         #                          ( 5 + 15 + 2) * 5 = 110,
         #                          ( 5 + 10 + 3) * 5 = 90
-        assert np.allclose([130.0, 110.0, 90.0], output2)
+        np.testing.assert_allclose([[130.0, 110.0, 90.0]], output2)
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Recurrent")
@@ -3920,15 +3922,14 @@ class TestRun:
                                        output_ports = [RESULT])
         comp.add_node(R)
         comp._analyze_graph()
-        sched = Scheduler(composition=comp)
         val = comp.run(inputs={R: [[3.0]]}, num_trials=1, execution_mode=comp_mode)
-        assert np.allclose(val, [[0.95257413]])
+        np.testing.assert_allclose(val, [[0.95257413]])
         val = comp.run(inputs={R: [[4.0]]}, num_trials=1, execution_mode=comp_mode)
-        assert np.allclose(val, [[0.98201379]])
+        np.testing.assert_allclose(val, [[0.98201379]])
 
         # execute 10 trials
         val = benchmark(comp.run, inputs={R: [[5.0]]}, num_trials=10, execution_mode=comp_mode)
-        assert np.allclose(val, [[0.99330715]])
+        np.testing.assert_allclose(val, [[0.99330715]])
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Recurrent")
@@ -3942,15 +3943,14 @@ class TestRun:
                                        output_ports = [RESULT])
         comp.add_node(R)
         comp._analyze_graph()
-        sched = Scheduler(composition=comp)
         val = comp.run(inputs={R: [[3.0]]}, num_trials=1, execution_mode=comp_mode)
-        assert np.allclose(val, [[0.50749944]])
+        np.testing.assert_allclose(val, [[0.50749944]])
         val = comp.run(inputs={R: [[4.0]]}, num_trials=1, execution_mode=comp_mode)
-        assert np.allclose(val, [[0.51741795]])
+        np.testing.assert_allclose(val, [[0.51741795]])
 
         # execute 10 trials
         val = benchmark(comp.run, inputs={R: [[5.0]]}, num_trials=10, execution_mode=comp_mode)
-        assert np.allclose(val, [[0.6320741]])
+        np.testing.assert_allclose(val, [[0.6320741]])
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Recurrent")
@@ -3959,16 +3959,15 @@ class TestRun:
         R = RecurrentTransferMechanism(size=2, function=Logistic())
         comp.add_node(R)
         comp._analyze_graph()
-        sched = Scheduler(composition=comp)
         val = comp.run(inputs={R: [[1.0, 2.0]]}, num_trials=1, execution_mode=comp_mode)
-        assert np.allclose(val, [[0.81757448, 0.92414182]])
+        np.testing.assert_allclose(val, [[0.81757448, 0.92414182]])
         val = comp.run(inputs={R: [[1.0, 2.0]]}, num_trials=1, execution_mode=comp_mode)
-        assert np.allclose(val, [[0.87259959,  0.94361816]])
+        np.testing.assert_allclose(val, [[0.87259959,  0.94361816]])
 
         # execute 10 trials
         val = benchmark(comp.run, inputs={R: [[1.0, 2.0]]}, num_trials=10, execution_mode=comp_mode)
 
-        assert np.allclose(val, [[0.87507549,  0.94660049]])
+        np.testing.assert_allclose(val, [[0.87507549,  0.94660049]])
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Recurrent")
@@ -3980,15 +3979,14 @@ class TestRun:
                                        output_ports = [RESULT])
         comp.add_node(R)
         comp._analyze_graph()
-        sched = Scheduler(composition=comp)
         val = comp.run(inputs={R: [[1.0, 2.0]]}, num_trials=1, execution_mode=comp_mode)
-        assert np.allclose(val, [[0.5, 0.73105858]])
+        np.testing.assert_allclose(val, [[0.5, 0.73105858]])
         val = comp.run(inputs={R: [[1.0, 2.0]]}, num_trials=1, execution_mode=comp_mode)
-        assert np.allclose(val, [[0.3864837, 0.73105858]])
+        np.testing.assert_allclose(val, [[0.3864837, 0.73105858]])
 
         # execute 10 trials
         val = benchmark(comp.run, inputs={R: [[1.0, 2.0]]}, num_trials=10, execution_mode=comp_mode)
-        assert np.allclose(val, [[0.36286875, 0.78146724]])
+        np.testing.assert_allclose(val, [[0.36286875, 0.78146724]])
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Recurrent")
@@ -4002,16 +4000,15 @@ class TestRun:
                                        output_ports = [RESULT])
         comp.add_node(R)
         comp._analyze_graph()
-        sched = Scheduler(composition=comp)
         val = comp.run(inputs={R: [[1.0, 2.0]]}, num_trials=1, execution_mode=comp_mode)
-        assert np.allclose(val, [[0.5, 0.50249998]])
+        np.testing.assert_allclose(val, [[0.5, 0.50249998]])
         val = comp.run(inputs={R: [[1.0, 2.0]]}, num_trials=1, execution_mode=comp_mode)
-        assert np.allclose(val, [[0.4999875, 0.50497484]])
+        np.testing.assert_allclose(val, [[0.4999875, 0.50497484]])
 
         # execute 10 trials
         val = benchmark(comp.run, inputs={R: [[1.0, 2.0]]}, num_trials=10, execution_mode=comp_mode)
 
-        assert np.allclose(val, [[0.49922843, 0.52838607]])
+        np.testing.assert_allclose(val, [[0.49922843, 0.52838607]])
 
     def test_run_termination_condition_custom_context(self):
         D = pnl.DDM(function=pnl.DriftDiffusionIntegrator, execute_until_finished=False)
@@ -4615,8 +4612,8 @@ class TestNestedCompositions:
         comp1.run(inputs={A: [1.0, 2.0, 3.0]}, execution_mode=comp_mode)
         comp2.run(inputs={C: [1.0, 2.0, 3.0]}, execution_mode=comp_mode)
 
-        assert np.allclose(comp1.results, comp2.results)
-        assert np.allclose(comp2.results, [[[0.52497918747894]], [[0.5719961329315186]], [[0.6366838893983633]]])
+        np.testing.assert_allclose(comp1.results, comp2.results)
+        np.testing.assert_allclose(comp2.results, [[[0.52497918747894]], [[0.5719961329315186]], [[0.6366838893983633]]])
 
     @pytest.mark.nested
     @pytest.mark.composition
@@ -4630,15 +4627,13 @@ class TestNestedCompositions:
 
         inner_comp = Composition(name="inner_comp")
         inner_comp.add_linear_processing_pathway([A, B])
-        sched = Scheduler(composition=inner_comp)
 
         outer_comp = Composition(name="outer_comp")
         outer_comp.add_node(inner_comp)
 
-        sched = Scheduler(composition=outer_comp)
         ret = outer_comp.run(inputs=[1.0], execution_mode=comp_mode)
 
-        assert np.allclose(ret, [[[0.52497918747894]]])
+        np.testing.assert_allclose(ret, [[0.52497918747894]])
 
 
     @pytest.mark.nested
@@ -4653,7 +4648,6 @@ class TestNestedCompositions:
 
         inner_comp1 = Composition(name="inner_comp1")
         inner_comp1.add_linear_processing_pathway([A, B])
-        sched = Scheduler(composition=inner_comp1)
 
         C = TransferMechanism(name="C",
                               function=Logistic,
@@ -4662,15 +4656,13 @@ class TestNestedCompositions:
 
         inner_comp2 = Composition(name="inner_comp2")
         inner_comp2.add_node(C)
-        sched = Scheduler(composition=inner_comp2)
 
         outer_comp = Composition(name="outer_comp")
         outer_comp.add_node(inner_comp1)
         outer_comp.add_node(inner_comp2)
 
-        sched = Scheduler(composition=outer_comp)
-        ret = outer_comp.run(inputs={inner_comp1: [[1.0]], inner_comp2: [[1.0]]}, execution_mode=comp_mode)
-        assert np.allclose(ret, [[[0.52497918747894]],[[0.52497918747894]]])
+        outer_comp.run(inputs={inner_comp1: [[1.0]], inner_comp2: [[1.0]]}, execution_mode=comp_mode)
+        np.testing.assert_allclose(outer_comp.results, [[[0.52497918747894], [0.52497918747894]]])
 
     @pytest.mark.nested
     @pytest.mark.composition
@@ -4780,7 +4772,7 @@ class TestNestedCompositions:
     #     comp1.run(inputs={A: [1.0, 2.0, 3.0]})
     #     comp2.run(inputs={C: [1.0, 2.0, 3.0]})
     #
-    #     assert np.allclose(comp1.results, comp2.results)
+    #     np.testing.assert_allclose(comp1.results, comp2.results)
 
     def test_combine_two_disjunct_trees(self):
         # Goal:
@@ -5046,7 +5038,7 @@ class TestNestedCompositions:
         comp_lvl1 = Composition(name="comp_lvl2", pathways=[comp_lvl2])
         comp_lvl0 = Composition(name="outer_comp", pathways=[comp_lvl1])
         ret = comp_lvl0.run(inputs={comp_lvl1: {comp_lvl2: {comp_lvl3a: [[1.0]], comp_lvl3b: [[1.0]]}}})
-        assert np.allclose(ret, [[[0.52497918747894]], [[0.52497918747894]]])
+        np.testing.assert_allclose(ret, [[0.52497918747894], [0.52497918747894]])
 
     @pytest.mark.state_features
     @pytest.mark.control
@@ -5185,6 +5177,38 @@ class TestNestedCompositions:
                                   pnl.CompositionInterfaceMechanism) for i in range(4))
 
 
+class TestImportComposition:
+    @pytest.mark.pytorch
+    @pytest.mark.composition
+    def test_import_composition(self, comp_mode):
+
+        if comp_mode != pnl.ExecutionMode.Python:
+            pytest.skip('Compilation not yet support for Composition.import.')
+
+        em = EMComposition(memory_template=(2,5), memory_capacity=4)
+
+        i1 = ProcessingMechanism()
+        i2 = ProcessingMechanism()
+        o1 = ProcessingMechanism()
+        o2 = ProcessingMechanism()
+
+        c = Composition(nodes=[i1,i2, o1,o2])
+        c.import_composition(em,
+                             get_input_from={i1:em.key_input_nodes[0],
+                                             i2:em.value_input_nodes[0]},
+                             send_output_to={em.retrieval_nodes[0]:o1,
+                                             em.retrieval_nodes[1]:o2})
+
+        assert all(node in c.nodes for node in em.nodes)
+        assert i1 in [proj.sender.owner for proj in em.key_input_nodes[0].path_afferents]
+        assert i2 in [proj.sender.owner for proj in em.value_input_nodes[0].path_afferents]
+        assert o1 in [proj.receiver.owner for proj in em.retrieval_nodes[0].efferents]
+        assert o2 in [proj.receiver.owner for proj in em.retrieval_nodes[1].efferents]
+        assert all(entry in c.excluded_node_roles for entry in em.excluded_node_roles)
+        assert all(entry in c.required_node_roles for entry in em.required_node_roles)
+
+        c.run(execution_mode=comp_mode)
+
 class TestOverloadedCompositions:
     def test_mechanism_different_inputs(self):
         a = TransferMechanism(name='a', function=Linear(slope=2))
@@ -5258,7 +5282,7 @@ class TestCompositionInterface:
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched)
 
-        assert np.allclose(250, output)
+        np.testing.assert_allclose(250, output)
 
     def test_updating_input_values_for_second_execution(self):
         # 5 -#1-> A --^ --> C --
@@ -5294,7 +5318,7 @@ class TestCompositionInterface:
         sched = Scheduler(composition=comp)
 
         output = comp.run(inputs=inputs_dict, scheduler=sched)
-        assert np.allclose(250, output)
+        np.testing.assert_allclose(250, output)
 
         inputs_dict2 = {
             A: [[2.]],
@@ -5314,7 +5338,7 @@ class TestCompositionInterface:
 
         output = comp.run(inputs=inputs_dict, scheduler=sched)
 
-        assert np.allclose([np.array([[250.]]), np.array([[250.]])], output)
+        np.testing.assert_allclose([np.array([250.])], output)
 
         # add a new branch to the composition
         F = TransferMechanism(name="composition-pytests-F", function=Linear(slope=2.0))
@@ -5334,7 +5358,7 @@ class TestCompositionInterface:
         sched = Scheduler(composition=comp)
         output2 = comp.run(inputs=inputs_dict2, scheduler=sched)
 
-        assert np.allclose(np.array([[135.]]), output2)
+        np.testing.assert_allclose(np.array([[135.]]), output2)
 
     def test_changing_origin_for_second_execution(self):
 
@@ -5355,7 +5379,7 @@ class TestCompositionInterface:
 
         output = comp.run(inputs=inputs_dict, scheduler=sched)
 
-        assert np.allclose(25, output)
+        np.testing.assert_allclose(25, output)
 
         # add a new origin to the composition
         F = TransferMechanism(name="composition-pytests-F", function=Linear(slope=2.0))
@@ -5376,7 +5400,7 @@ class TestCompositionInterface:
                 connections_to_A.append((p_a.sender, p_a.receiver))
 
         assert connections_to_A == expected_connections_to_A
-        assert np.allclose(np.array([[30.]]), output2)
+        np.testing.assert_allclose(np.array([[30.]]), output2)
 
     def test_two_input_ports_new_inputs_second_trial(self):
 
@@ -5403,10 +5427,10 @@ class TestCompositionInterface:
 
         output = comp.run(inputs=inputs_dict2, scheduler=sched)
 
-        assert np.allclose(A.input_ports[0].parameters.value.get(comp), [2.])
-        assert np.allclose(A.input_ports[1].parameters.value.get(comp), [4.])
-        assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[2.], [4.]])
-        assert np.allclose(output, np.array([[2.], [4.]]))
+        np.testing.assert_allclose(A.input_ports[0].parameters.value.get(comp), [2.])
+        np.testing.assert_allclose(A.input_ports[1].parameters.value.get(comp), [4.])
+        np.testing.assert_allclose(A.parameters.variable.get(comp.default_execution_id), [[2.], [4.]])
+        np.testing.assert_allclose(output, np.array([[2.], [4.]]))
 
     def test_two_input_ports_new_origin_second_trial(self):
 
@@ -5439,10 +5463,10 @@ class TestCompositionInterface:
 
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched)
-        assert np.allclose(A.input_ports[0].parameters.value.get(comp), [5.])
-        assert np.allclose(A.input_ports[1].parameters.value.get(comp), [5.])
-        assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[5.], [5.]])
-        assert np.allclose(output, [[50.]])
+        np.testing.assert_allclose(A.input_ports[0].parameters.value.get(comp), [5.])
+        np.testing.assert_allclose(A.input_ports[1].parameters.value.get(comp), [5.])
+        np.testing.assert_allclose(A.parameters.variable.get(comp.default_execution_id), [[5.], [5.]])
+        np.testing.assert_allclose(output, [[50.]])
 
         # A --> B --> C
         #     ^
@@ -5466,15 +5490,15 @@ class TestCompositionInterface:
         inputs_dict2 = {A: [[2.], [4.]],
                         D: [[2.], [4.]]}
         output2 = comp.run(inputs=inputs_dict2, scheduler=sched)
-        assert np.allclose(A.input_ports[0].parameters.value.get(comp), [2.])
-        assert np.allclose(A.input_ports[1].parameters.value.get(comp), [4.])
-        assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[2.], [4.]])
+        np.testing.assert_allclose(A.input_ports[0].parameters.value.get(comp), [2.])
+        np.testing.assert_allclose(A.input_ports[1].parameters.value.get(comp), [4.])
+        np.testing.assert_allclose(A.parameters.variable.get(comp.default_execution_id), [[2.], [4.]])
 
-        assert np.allclose(D.input_ports[0].parameters.value.get(comp), [2.])
-        assert np.allclose(D.input_ports[1].parameters.value.get(comp), [4.])
-        assert np.allclose(D.parameters.variable.get(comp.default_execution_id), [[2.], [4.]])
+        np.testing.assert_allclose(D.input_ports[0].parameters.value.get(comp), [2.])
+        np.testing.assert_allclose(D.input_ports[1].parameters.value.get(comp), [4.])
+        np.testing.assert_allclose(D.parameters.variable.get(comp.default_execution_id), [[2.], [4.]])
 
-        assert np.allclose(np.array([[40.]]), output2)
+        np.testing.assert_allclose(np.array([[40.]]), output2)
 
     def test_output_cim_one_terminal_mechanism_multiple_output_ports(self):
 
@@ -5557,8 +5581,8 @@ class TestCompositionInterface:
 
         out = comp.output_CIM
 
-        assert np.allclose(np.shape(out.defaults.variable), (2,1))
-        assert np.allclose(out.parameters.variable.get(comp), [[1.0], [2.0]])
+        np.testing.assert_allclose(np.shape(out.defaults.variable), (2,1))
+        np.testing.assert_allclose(out.parameters.variable.get(comp), [[1.0], [2.0]])
 
         C = ProcessingMechanism(name='C')
         comp.add_node(C)
@@ -5569,8 +5593,8 @@ class TestCompositionInterface:
 
         out = comp.output_CIM
 
-        assert np.allclose(np.shape(out.defaults.variable), (3, 1))
-        assert np.allclose(out.parameters.variable.get(comp), [[1.0], [2.0], [3.0]])
+        np.testing.assert_allclose(np.shape(out.defaults.variable), (3, 1))
+        np.testing.assert_allclose(out.parameters.variable.get(comp), [[1.0], [2.0], [3.0]])
 
         T = ProcessingMechanism(name='T')
         comp.add_linear_processing_pathway([A, T])
@@ -5585,8 +5609,8 @@ class TestCompositionInterface:
         print(out.input_values)
         print(out.variable)
         print(out.defaults.variable)
-        assert np.allclose(np.shape(out.defaults.variable), (1, 1))
-        assert np.allclose(out.parameters.variable.get(comp), [[6.0]])
+        np.testing.assert_allclose(np.shape(out.defaults.variable), (1, 1))
+        np.testing.assert_allclose(out.parameters.variable.get(comp), [[6.0]])
 
     def test_inner_composition_change_before_run(self):
         outer_comp = Composition(name="Outer Comp")
@@ -5634,9 +5658,9 @@ class TestInputPortSpecifications:
         sched = Scheduler(composition=comp)
         comp.run(inputs=inputs_dict, scheduler=sched)
 
-        assert np.allclose(A.input_ports[0].parameters.value.get(comp), [2.0])
-        assert np.allclose(A.input_ports[1].parameters.value.get(comp), [4.0])
-        assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
+        np.testing.assert_allclose(A.input_ports[0].parameters.value.get(comp), [2.0])
+        np.testing.assert_allclose(A.input_ports[1].parameters.value.get(comp), [4.0])
+        np.testing.assert_allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
 
     def test_two_input_ports_created_first_with_deferred_init(self):
         comp = Composition()
@@ -5666,9 +5690,9 @@ class TestInputPortSpecifications:
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched)
 
-        assert np.allclose(A.input_ports[0].parameters.value.get(comp), [2.0])
-        assert np.allclose(A.input_ports[1].parameters.value.get(comp), [4.0])
-        assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
+        np.testing.assert_allclose(A.input_ports[0].parameters.value.get(comp), [2.0])
+        np.testing.assert_allclose(A.input_ports[1].parameters.value.get(comp), [4.0])
+        np.testing.assert_allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
 
     def test_two_input_ports_created_with_keyword(self):
         comp = Composition()
@@ -5691,11 +5715,11 @@ class TestInputPortSpecifications:
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched)
 
-        assert np.allclose(A.input_ports[0].parameters.value.get(comp), [2.0])
-        assert np.allclose(A.input_ports[1].parameters.value.get(comp), [4.0])
-        assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
+        np.testing.assert_allclose(A.input_ports[0].parameters.value.get(comp), [2.0])
+        np.testing.assert_allclose(A.input_ports[1].parameters.value.get(comp), [4.0])
+        np.testing.assert_allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
 
-        assert np.allclose([[2], [4]], output)
+        np.testing.assert_allclose([[2], [4]], output)
 
     def test_two_input_ports_created_with_strings(self):
         comp = Composition()
@@ -5719,9 +5743,9 @@ class TestInputPortSpecifications:
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched)
 
-        assert np.allclose(A.input_ports[0].parameters.value.get(comp), [2.0])
-        assert np.allclose(A.input_ports[1].parameters.value.get(comp), [4.0])
-        assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
+        np.testing.assert_allclose(A.input_ports[0].parameters.value.get(comp), [2.0])
+        np.testing.assert_allclose(A.input_ports[1].parameters.value.get(comp), [4.0])
+        np.testing.assert_allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
 
     def test_two_input_ports_created_with_values(self):
         comp = Composition()
@@ -5744,9 +5768,9 @@ class TestInputPortSpecifications:
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched)
 
-        assert np.allclose(A.input_ports[0].parameters.value.get(comp), [2.0])
-        assert np.allclose(A.input_ports[1].parameters.value.get(comp), [4.0])
-        assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
+        np.testing.assert_allclose(A.input_ports[0].parameters.value.get(comp), [2.0])
+        np.testing.assert_allclose(A.input_ports[1].parameters.value.get(comp), [4.0])
+        np.testing.assert_allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
 
 
 class TestInputSpecifications:
@@ -5807,7 +5831,7 @@ class TestInputSpecifications:
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs, scheduler=sched)
 
-        assert np.allclose(np.array([[12.]]), output)
+        np.testing.assert_allclose(np.array([[12.]]), output)
 
     def test_2_mechanisms_input_5(self):
         comp = Composition()
@@ -5819,7 +5843,7 @@ class TestInputSpecifications:
         inputs_dict = {A: [[5]]}
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched)
-        assert np.allclose([125], output)
+        np.testing.assert_allclose([[125]], output)
 
     def test_run_2_mechanisms_reuse_input(self):
         comp = Composition()
@@ -5831,7 +5855,7 @@ class TestInputSpecifications:
         inputs_dict = {A: [[5]]}
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched, num_trials=5)
-        assert np.allclose([125], output)
+        np.testing.assert_allclose([[125]], output)
 
     def test_some_inputs_not_specified(self):
         comp = Composition()
@@ -5860,10 +5884,10 @@ class TestInputSpecifications:
         sched = Scheduler(composition=comp)
         comp.run(inputs=inputs, scheduler=sched)[0]
 
-        assert np.allclose(A.get_output_values(comp), [[2.0, 4.0], [6.0, 8.0]])
-        assert np.allclose(B.get_output_values(comp), [[3., 6., 9.]])
-        assert np.allclose(C.get_output_values(comp), [[0.]])
-        assert np.allclose(D.get_output_values(comp), [[4.]])
+        np.testing.assert_allclose(A.get_output_values(comp), [[2.0, 4.0], [6.0, 8.0]])
+        np.testing.assert_allclose(B.get_output_values(comp), [[3., 6., 9.]])
+        np.testing.assert_allclose(C.get_output_values(comp), [[0.]])
+        np.testing.assert_allclose(D.get_output_values(comp), [[4.]])
 
     def test_some_inputs_not_specified_origin_node_is_composition(self):
 
@@ -5895,11 +5919,11 @@ class TestInputSpecifications:
         sched = Scheduler(composition=comp)
         comp.run(inputs=inputs, scheduler=sched)[0]
 
-        assert np.allclose(A.get_output_values(comp), [[2.0, 4.0], [6.0, 8.0]])
-        assert np.allclose(compA.get_output_values(comp), [[2.0, 4.0], [6.0, 8.0]])
-        assert np.allclose(B.get_output_values(comp), [[3., 6., 9.]])
-        assert np.allclose(C.get_output_values(comp), [[0.]])
-        assert np.allclose(D.get_output_values(comp), [[4.]])
+        np.testing.assert_allclose(A.get_output_values(comp), [[2.0, 4.0], [6.0, 8.0]])
+        np.testing.assert_allclose(compA.get_output_values(comp), [[2.0, 4.0], [6.0, 8.0]])
+        np.testing.assert_allclose(B.get_output_values(comp), [[3., 6., 9.]])
+        np.testing.assert_allclose(C.get_output_values(comp), [[0.]])
+        np.testing.assert_allclose(D.get_output_values(comp), [[4.]])
 
     def test_function_as_input(self):
         c = pnl.Composition()
@@ -6198,7 +6222,7 @@ class TestProperties:
         comp.add_node(A)
 
         res = comp.run(inputs=inputs, execution_mode=mode)
-        assert np.allclose(res, [[20.0, 40.0], [60.0, 80.0]])
+        np.testing.assert_allclose(res, [[20.0, 40.0], [60.0, 80.0]])
 
     def test_get_output_values_prop(self):
         A = pnl.ProcessingMechanism()
@@ -6220,7 +6244,7 @@ class TestAuxComponents:
 
         comp.run(inputs={A: [[1.0]]})
 
-        assert np.allclose(B.parameters.value.get(comp), [[1.0]])
+        np.testing.assert_allclose(B.parameters.value.get(comp), [[1.0]])
         # First Run:
         # Input to A = 1.0 | Output = 1.0
         # Input to B = 1.0 | Output = 1.0
@@ -6230,7 +6254,7 @@ class TestAuxComponents:
         # Input to A = 2.0 | Output = 2.0
         # Input to B = 2.0 | Output = 2.0
 
-        assert np.allclose(B.parameters.value.get(comp), [[2.0]])
+        np.testing.assert_allclose(B.parameters.value.get(comp), [[2.0]])
 
     def test_two_transfer_mechanisms_with_feedback_proj(self):
         A = TransferMechanism(name='A')
@@ -6244,7 +6268,7 @@ class TestAuxComponents:
         comp.run(inputs={A: [[1.0]],
                          B: [[2.0]]})
 
-        assert np.allclose(B.parameters.value.get(comp), [[2.0]])
+        np.testing.assert_allclose(B.parameters.value.get(comp), [[2.0]])
         # First Run:
         # Input to A = 1.0 | Output = 1.0
         # Input to B = 2.0 | Output = 2.0
@@ -6255,7 +6279,7 @@ class TestAuxComponents:
         # Input to A = 1.0 | Output = 1.0
         # Input to B = 2.0 + 1.0 | Output = 3.0
 
-        assert np.allclose(B.parameters.value.get(comp), [[3.0]])
+        np.testing.assert_allclose(B.parameters.value.get(comp), [[3.0]])
 
     def test_aux_component_with_required_role(self):
         A = TransferMechanism(name='A')
@@ -6263,7 +6287,7 @@ class TestAuxComponents:
         C = TransferMechanism(name='C',
                               function=Linear(slope=2.0))
 
-        A.aux_components = [(B, NodeRole.TERMINAL), MappingProjection(sender=A, receiver=B)]
+        A.aux_components = [(B, NodeRole.OUTPUT), MappingProjection(sender=A, receiver=B)]
 
         comp = Composition(name='composition')
         comp.add_node(A)
@@ -6271,7 +6295,7 @@ class TestAuxComponents:
 
         comp.run(inputs={A: [[1.0]]})
 
-        assert np.allclose(B.parameters.value.get(comp), [[1.0]])
+        np.testing.assert_allclose(B.parameters.value.get(comp), [[1.0]])
         # First Run:
         # Input to A = 1.0 | Output = 1.0
         # Input to B = 1.0 | Output = 1.0
@@ -6281,11 +6305,11 @@ class TestAuxComponents:
         # Input to A = 2.0 | Output = 2.0
         # Input to B = 2.0 | Output = 2.0
 
-        assert np.allclose(B.parameters.value.get(comp), [[2.0]])
+        np.testing.assert_allclose(B.parameters.value.get(comp), [[2.0]])
 
-        assert B in comp.get_nodes_by_role(NodeRole.TERMINAL)
-        assert np.allclose(C.parameters.value.get(comp), [[4.0]])
-        assert np.allclose(comp.get_output_values(comp), [[2.0], [4.0]])
+        assert B in comp.get_nodes_by_role(NodeRole.OUTPUT)
+        np.testing.assert_allclose(C.parameters.value.get(comp), [[4.0]])
+        np.testing.assert_allclose(comp.get_output_values(comp), [[2.0], [4.0]])
 
     def test_stateful_nodes(self):
         A = TransferMechanism(name='A')
@@ -6364,7 +6388,7 @@ class TestShadowInputs:
         comp.run(inputs={A: [[1.0]]})
 
         assert A.value == [[2.0]]
-        assert np.allclose(B.value, [[1.0], [2.0]])
+        np.testing.assert_allclose(B.value, [[1.0], [2.0]])
 
         assert len(B.input_ports)==2
         assert len(B.input_ports[0].path_afferents)==1
@@ -6378,7 +6402,7 @@ class TestShadowInputs:
         comp.run(inputs={C: 1.5})
         assert A.value == [[3.0]]
         assert C.value == [[1.5]]
-        assert np.allclose(B.value, [[1.5], [3.0]])
+        np.testing.assert_allclose(B.value, [[1.5], [3.0]])
 
         # Since B is shadowing A, its old projection from the CIM should be deleted,
         # and a new projection from C should be added
@@ -6461,7 +6485,7 @@ class TestShadowInputs:
                 ocomp = Composition(nodes=[mcomp,O], name='OUTER COMP')
             assert 'Attempt to shadow the input to a node (B) in a nested Composition of OUTER COMP ' \
                    'that is not an INPUT Node of that Composition is not currently supported.' \
-                   in err.value.error_value
+                   in str(err)
 
     def test_failure_to_find_node_to_shadow(self):
         A = ProcessingMechanism(name='A')
@@ -6645,7 +6669,7 @@ class TestResetValues:
         )
 
         # Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.5, Trial 3: 0.75. Trial 4: 0.875
-        assert np.allclose(
+        np.testing.assert_allclose(
             C.log.nparray_dictionary('value')[comp.default_execution_id]['value'],
             [
                 [np.array([0.5])],
@@ -6680,7 +6704,7 @@ class TestResetValues:
         )
 
         # Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.5, Trial 3: 0.75. Trial 4: 0.875
-        assert np.allclose(
+        np.testing.assert_allclose(
             C.log.nparray_dictionary('value')[comp.default_execution_id]['value'],
             [
                 [np.array([0.5])],
@@ -6729,7 +6753,7 @@ class TestResetValues:
 
         # Mechanism A - resets on Trial 1
         # Trial 0: 0.5, Trial 1: 0.5, Trial 2: 0.75, Trial 3: 0.875, Trial 4: 0.9375
-        assert np.allclose(
+        np.testing.assert_allclose(
             A.log.nparray_dictionary('value')[comp.default_execution_id]['value'],
             [
                 [np.array([0.5])],
@@ -6742,7 +6766,7 @@ class TestResetValues:
 
         # Mechanism B - resets on Trial 2
         # Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.5, Trial 3: 0.75. Trial 4: 0.875
-        assert np.allclose(
+        np.testing.assert_allclose(
             B.log.nparray_dictionary('value')[comp.default_execution_id]['value'],
             [
                 [np.array([0.5])],
@@ -6755,7 +6779,7 @@ class TestResetValues:
 
         # Mechanism C - sum of A and B
         # Trial 0: 1.0, Trial 1: 1.25, Trial 2: 1.25, Trial 3: 1.625, Trial 4: 1.8125
-        assert np.allclose(
+        np.testing.assert_allclose(
             C.log.nparray_dictionary('value')[comp.default_execution_id]['value'],
             [
                 [np.array([1.0])],
@@ -6782,10 +6806,12 @@ class TestResetValues:
 
         comp.run(inputs={A: [[1.0], [1.0]]})
 
+        # All mechanism values are 2D but B has two elements,
+        # extract element 0 out of each.
         run_1_values = [
-            A.parameters.value.get(comp),
+            A.parameters.value.get(comp)[0],
             B.parameters.value.get(comp)[0],
-            C.parameters.value.get(comp)
+            C.parameters.value.get(comp)[0]
         ]
 
         # "Save state" code from EVCaux
@@ -6811,25 +6837,26 @@ class TestResetValues:
         # Allow values to continue accumulating so that we can set them back to the saved state
         comp.run(inputs={A: [[1.0], [1.0]]})
 
-        run_2_values = [A.parameters.value.get(comp),
+        # All mechanism values are 2D but B has two elements,
+        # extract element 0 out of each.
+        run_2_values = [A.parameters.value.get(comp)[0],
                         B.parameters.value.get(comp)[0],
-                        C.parameters.value.get(comp)]
+                        C.parameters.value.get(comp)[0]]
 
         comp.run(
             inputs={A: [[1.0], [1.0]]},
             reset_stateful_functions_to=reinitialization_values
         )
 
-        run_3_values = [A.parameters.value.get(comp),
+        # All mechanism values are 2D but B has two elements,
+        # extract element 0 out of each.
+        run_3_values = [A.parameters.value.get(comp)[0],
                         B.parameters.value.get(comp)[0],
-                        C.parameters.value.get(comp)]
+                        C.parameters.value.get(comp)[0]]
 
-        assert np.allclose(np.asfarray(run_2_values),
-                           np.asfarray(run_3_values))
-        assert np.allclose(np.asfarray(run_1_values),
-                           [np.array([0.36]), np.array([0.056]), np.array([0.056])])
-        assert np.allclose(np.asfarray(run_2_values),
-                           [np.array([0.5904]), np.array([0.16384]), np.array([0.16384])])
+        np.testing.assert_allclose(run_2_values, run_3_values)
+        np.testing.assert_allclose(np.asfarray(run_1_values), [[0.36], [0.056], [0.056]])
+        np.testing.assert_allclose(np.asfarray(run_2_values), [[0.5904], [0.16384], [0.16384]])
 
 
 class TestNodeRoles:
@@ -6907,20 +6934,20 @@ class TestNodeRoles:
         results_by_node = ocomp.get_results_by_nodes(nodes=Z, use_labels=True)
         assert repr(results_by_node) == '{(ProcessingMechanism Z): [\'red\']}'
 
-        label_not_in_dict_error_msg = '"Inappropriate use of \'purple\' as a stimulus for A in MIDDLE COMP: ' \
-                                      'it is not a label in its input_labels_dict."'
+        label_not_in_dict_error_msg = 'Inappropriate use of \'purple\' as a stimulus for A in MIDDLE COMP: ' \
+                                      'it is not a label in its input_labels_dict.'
         with pytest.raises(CompositionError) as error_text:
             ocomp.run(inputs={mcomp:[[0],['purple']],Q:['red']})
         assert label_not_in_dict_error_msg in str(error_text.value)
 
-        no_label_dict_error_msg = '"Inappropriate use of str (\'red\') as a stimulus for X in MIDDLE COMP: ' \
-                                  'it does not have an input_labels_dict."'
+        no_label_dict_error_msg = 'Inappropriate use of str (\'red\') as a stimulus for X in MIDDLE COMP: ' \
+                                  'it does not have an input_labels_dict.'
         with pytest.raises(CompositionError) as error_text:
             ocomp.run(inputs={mcomp:[['red'],['red']],Q:['red']})
         assert no_label_dict_error_msg in str(error_text.value)
 
-        no_such_node_error_msg = '"Nodes specified in get_results_by_nodes() method not found in OUTER COMP ' \
-                                 'nor any Compositions nested within it: [\'N\']"'
+        no_such_node_error_msg = 'Nodes specified in get_results_by_nodes() method not found in OUTER COMP ' \
+                                 'nor any Compositions nested within it: [\'N\']'
         with pytest.raises(CompositionError) as error_text:
             ocomp.get_results_by_nodes(nodes=['N'])
         assert no_such_node_error_msg in str(error_text.value)
@@ -6994,7 +7021,7 @@ class TestNodeRoles:
                                 allow_probes=allow_probes,
                                 include_probes_in_output=include_probes_in_output)
                 ocomp._analyze_graph()
-            assert err.value.error_value == err_msg
+            assert str(err.value) == err_msg
 
     def test_two_node_cycle(self):
         A = TransferMechanism()
@@ -7247,7 +7274,7 @@ class TestNodeRoles:
         result = comp.run(inputs={A: [[1.0]]})
         output_mechanisms = comp.get_nodes_by_role(NodeRole.OUTPUT)
         assert set(output_mechanisms) == {A,B}
-        assert np.allclose(result, [[1.0],[2.0]])
+        np.testing.assert_allclose(result, [[1.0],[2.0]])
 
     def test_OUTPUT_required_node_roles_both(self):
         A = TransferMechanism(name='A')
@@ -7258,7 +7285,7 @@ class TestNodeRoles:
         result = comp.run(inputs={A: [[1.0]]})
         terminal_mechanisms = comp.get_nodes_by_role(NodeRole.OUTPUT)
         assert A in terminal_mechanisms and B in terminal_mechanisms
-        assert np.allclose(result, [[1.0],[2.0]])
+        np.testing.assert_allclose(result, [[1.0],[2.0]])
 
     def test_exclude_control_mechanisms_as_OUTPUT(self):
         mech = ProcessingMechanism(name='my_mech')
@@ -7301,7 +7328,10 @@ class TestNodeRoles:
         assert {mech, ctl_mech_A, ctl_mech_B} == set(comp.get_nodes_by_role(NodeRole.OUTPUT))
         # Current instantiation always assigns ctl_mech_B as TERMINAL in this case;
         # this is here to flag any violation of this in the future, in case that is not intended
+        assert {mech} == set(comp.get_nodes_by_role(NodeRole.ORIGIN))
+        # assert {ctl_mech_A, ctl_mech_B} == set(comp.get_nodes_by_role(NodeRole.TERMINAL))
         assert {ctl_mech_B} == set(comp.get_nodes_by_role(NodeRole.TERMINAL))
+        assert {mech, ctl_mech_A, ctl_mech_B} == set(comp.get_nodes_by_role(NodeRole.OUTPUT))
 
     def test_LEARNING_hebbian(self):
         A = RecurrentTransferMechanism(name='A', size=2, enable_learning=True)
@@ -7414,6 +7444,7 @@ class TestNodeRoles:
 
 class TestMisc:
 
+    @pytest.mark.skip(reason="This test is hanging on MacOS for some reason.")
     def test_disable_all_history(self):
         comp = Composition(name='comp')
         A = ProcessingMechanism(name='A')
@@ -7870,7 +7901,7 @@ class TestInputSpecsDocumentationExamples:
         comp.run(inputs=input_dictionary, call_after_trial=store_inputs)
 
         for mech in input_dictionary:
-            assert np.allclose(
+            np.testing.assert_allclose(
                 check_inputs_dictionary[mech], input_dictionary[mech]
             )
 
@@ -7896,4 +7927,4 @@ class TestInputSpecsDocumentationExamples:
             call_after_trial=store_inputs
         )
 
-        assert np.allclose(check_inputs, [[[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]])
+        np.testing.assert_allclose(check_inputs, [[[1.0, 2.0, 3.0]], [[1.0, 2.0, 3.0]]])

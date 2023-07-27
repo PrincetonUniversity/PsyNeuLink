@@ -29,7 +29,8 @@ __all__ = [
     'ADDITIVE', 'ADDITIVE_PARAM', 'AFTER', 'ALL', 'ALLOCATION_SAMPLES', 'ALLOW_PROBES', 'ANGLE', 'ANGLE_FUNCTION',
     'ANY', 'ARGUMENT_THERAPY_FUNCTION', 'ARRANGEMENT', 'ASSERT', 'ASSIGN', 'ASSIGN_VALUE', 'AUTO','AUTO_ASSIGN_MATRIX',
     'AUTO_ASSOCIATIVE_PROJECTION', 'HAS_INITIALIZERS', 'AUTOASSOCIATIVE_LEARNING_MECHANISM', 'AUTODIFF_COMPOSITION',
-    'BACKPROPAGATION_FUNCTION', 'BEFORE', 'BETA', 'BIAS', 'BOLD', 'BOTH', 'BOUNDS', 'BUFFER_FUNCTION',
+    'BACKPROPAGATION_FUNCTION', 'BINOMIAL_DISTORT_FUNCTION',
+    'BEFORE', 'BETA', 'BIAS', 'BOLD', 'BOTH', 'BOUNDS', 'BUFFER_FUNCTION',
     'CHANGED', 'CLAMP_INPUT', 'COMBINATION_FUNCTION_TYPE', 'COMBINE', 'COMBINE_MEANS_FUNCTION',
     'COMBINE_OUTCOME_AND_COST_FUNCTION', 'COMMAND_LINE', 'comparison_operators', 'COMPARATOR_MECHANISM', 'COMPONENT',
     'COMPONENT_INIT', 'COMPONENT_PREFERENCE_SET', 'COMPOSITION', 'COMPOSITION_FUNCTION_APPROXIMATOR',
@@ -43,11 +44,12 @@ __all__ = [
     'DEFAULT_PREFERENCE_SET_OWNER', 'DEFAULT_PROCESSING_MECHANISM', 'DEFAULT_VARIABLE',
     'DEFERRED_ASSIGNMENT', 'DEFERRED_DEFAULT_NAME', 'DEFERRED_INITIALIZATION', 'DICT', 'DictionaryMemory_FUNCTION',
     'DIFFERENCE', 'DIFFERENCE', 'DIFFUSION', 'DIRECT', 'DISABLE', 'DISABLE_PARAM', 'DIST_FUNCTION_TYPE', 'DIST_MEAN',
-    'DIST_SHAPE', 'DISTANCE_FUNCTION', 'DISTANCE_METRICS', 'DISTRIBUTION_FUNCTION_TYPE', 'DIVISION',
-    'DRIFT_DIFFUSION_INTEGRATOR_FUNCTION', 'DRIFT_ON_A_SPHERE_INTEGRATOR_FUNCTION', 'DUAL_ADAPTIVE_INTEGRATOR_FUNCTION',
+    'DIST_SHAPE', 'DISTANCE_FUNCTION', 'DISTANCE_METRICS', 'DISTRIBUTION_FUNCTION_TYPE', 'DIVISION', 'DOT_PRODUCT',
+    'DRIFT_DIFFUSION_INTEGRATOR_FUNCTION', 'DRIFT_ON_A_SPHERE_INTEGRATOR_FUNCTION', 'DROPOUT_FUNCTION',
+    'DUAL_ADAPTIVE_INTEGRATOR_FUNCTION',
     'EFFERENTS', 'EID_SIMULATION', 'EID_FROZEN', 'EITHER', 'ENABLE_CONTROLLER', 'ENABLED', 'ENERGY', 'ENTROPY',
-    'EPISODIC_MEMORY_MECHANISM', 'EPOCHS', 'EQUAL', 'ERROR_DERIVATIVE_FUNCTION', 'EUCLIDEAN',
-    'EVC_MECHANISM', 'EVC_SIMULATION',  'EXAMPLE_FUNCTION_TYPE',
+    'EM_COMPOSITION', 'EM_STORAGE_FUNCTION', 'EM_STORAGE_MECHANISM', 'EPISODIC_MEMORY_MECHANISM', 'EPOCHS', 'EQUAL',
+    'ERROR_DERIVATIVE_FUNCTION', 'EUCLIDEAN', 'EVC_MECHANISM', 'EVC_SIMULATION',  'EXAMPLE_FUNCTION_TYPE',
     'EXECUTE_UNTIL_FINISHED', 'EXECUTING', 'EXECUTION', 'EXECUTION_COUNT', 'EXECUTION_ID', 'EXECUTION_PHASE',
     'EXPONENTIAL', 'EXPONENT', 'EXPONENTIAL_DIST_FUNCTION', 'EXPONENTIAL_FUNCTION', 'EXPONENTS',
     'FEEDBACK', 'FITZHUGHNAGUMO_INTEGRATOR_FUNCTION', 'FINAL', 'FLAGS', 'FULL', 'FULL_CONNECTIVITY_MATRIX',
@@ -66,7 +68,7 @@ __all__ = [
     'LAST_INTEGRATED_VALUE', 'INTERCEPT', 'INTERNAL', 'INTERNAL_ONLY',
     'K_VALUE', 'KOHONEN_FUNCTION', 'KOHONEN_MECHANISM', 'KOHONEN_LEARNING_MECHANISM', 'KWTA_MECHANISM',
     'LABELS', 'LCA_MECHANISM', 'LEAKY_COMPETING_INTEGRATOR_FUNCTION', 'LEAK',
-    'LEARNED_PARAM', 'LEARNED_PROJECTIONS', 'LEARNING', 'LEARNING_FUNCTION', 'LEARNING_FUNCTION_TYPE',
+    'LEARNED_PROJECTIONS', 'LEARNING', 'LEARNING_FUNCTION', 'LEARNING_FUNCTION_TYPE',
     'LEARNING_OBJECTIVE', 'LEARNING_MECHANISM', 'LEARNING_MECHANISMS', 'LEARNING_PATHWAY', 'LEARNING_PROJECTION',
     'LEARNING_PROJECTION_PARAMS', 'LEARNING_RATE', 'LEARNING_SIGNAL', 'LEARNING_SIGNAL_SPECS', 'LEARNING_SIGNALS',
     'LESS_THAN', 'LESS_THAN_OR_EQUAL', 'LINEAR', 'LINEAR_COMBINATION_FUNCTION', 'LINEAR_FUNCTION',
@@ -86,8 +88,8 @@ __all__ = [
     'MODEL_SPEC_ID_PARAMETER_INITIAL_VALUE', 'MODEL_SPEC_ID_PARAMETER_SOURCE',
     'MODEL_SPEC_ID_PARAMETER_VALUE', 'MODEL_SPEC_ID_TYPE',
     'MULTIPLICATIVE', 'MULTIPLICATIVE_PARAM', 'MUTUAL_ENTROPY',
-    'NAME', 'NESTED', 'NEWEST',  'NODE', 'NOISE', 'NORMAL_DIST_FUNCTION', 'NORMED_L0_SIMILARITY', 'NOT_EQUAL',
-    'NUM_EXECUTIONS_BEFORE_FINISHED',
+    'NAME', 'NESTED', 'NEWEST',  'NODE', 'NOISE', 'NORMAL_DIST_FUNCTION', 'NORMALIZE', 'NORMED_L0_SIMILARITY',
+    'NOT_EQUAL', 'NUM_EXECUTIONS_BEFORE_FINISHED',
     'OBJECTIVE_FUNCTION_TYPE', 'OBJECTIVE_MECHANISM', 'OBJECTIVE_MECHANISM_OBJECT', 'OFF', 'OFFSET', 'OLDEST', 'ON',
     'ONLINE', 'OPERATION', 'OPTIMIZATION_FUNCTION_TYPE', 'ORIGIN','ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION', 'OUTCOME',
     'OUTCOME_FUNCTION', 'OUTPUT', 'OUTPUT_CIM_NAME', 'OUTPUT_LABELS_DICT', 'OUTPUT_MECHANISM',
@@ -104,10 +106,10 @@ __all__ = [
     'PROCESS', 'PROCESS_COMPONENT_CATEGORY', 'PROCESS_DEFAULT_MECHANISM', 'PROCESS_DEFAULT_PROJECTION_FUNCTION',
     'PROCESS_EXECUTE', 'PROCESS_INIT', 'PROCESSES', 'PROCESSES_DIM', 'PROCESSING', 'PROCESSING_MECHANISM',
     'PROCESSING_PATHWAY', 'PRODUCT', 'PROGRESS_BAR_CHAR', 'PROJECTION', 'PROJECTION_DIRECTION', 'PROJECTION_PARAMS',
-    'PROJECTION_SENDER', 'PROJECTION_TYPE', 'PROJECTIONS', 'PROJECTION_COMPONENT_CATEGORY', 'QUOTIENT',
-    'RANDOM', 'RANDOM_CONNECTIVITY_MATRIX', 'RATE', 'RATIO', 'REARRANGE_FUNCTION', 'RECEIVER', 'RECEIVER_ARG',
-    'RECURRENT_TRANSFER_MECHANISM', 'REDUCE_FUNCTION', 'REFERENCE_VALUE', 'RESET', 'RESET_STATEFUL_FUNCTION_WHEN',
-    'RELU_FUNCTION', 'REST', 'RESULT', 'RESULT', 'ROLES', 'RL_FUNCTION', 'RUN',
+    'PROJECTION_RECEIVER', 'PROJECTION_SENDER', 'PROJECTION_TYPE', 'PROJECTIONS', 'PROJECTION_COMPONENT_CATEGORY',
+    'QUOTIENT', 'RANDOM', 'RANDOM_CONNECTIVITY_MATRIX', 'RATE', 'RATIO', 'REARRANGE_FUNCTION', 'RECEIVER',
+    'RECEIVER_ARG', 'RECURRENT_TRANSFER_MECHANISM', 'REDUCE_FUNCTION', 'REFERENCE_VALUE', 'RESET',
+    'RESET_STATEFUL_FUNCTION_WHEN', 'RELU_FUNCTION', 'REST', 'RESULT', 'RESULT', 'ROLES', 'RL_FUNCTION', 'RUN',
     'SAMPLE', 'SAVE_ALL_VALUES_AND_POLICIES', 'SCALAR', 'SCALE', 'SCHEDULER', 'SELF', 'SENDER', 'SEPARATE',
     'SEPARATOR_BAR', 'SHADOW_INPUT_NAME', 'SHADOW_INPUTS', 'SIMPLE', 'SIMPLE_INTEGRATOR_FUNCTION', 'SIMULATIONS',
     'SINGLETON', 'SIZE', 'SLOPE', 'SOFT_CLAMP', 'SOFTMAX_FUNCTION', 'SOURCE', 'STABILITY_FUNCTION',
@@ -119,7 +121,7 @@ __all__ = [
     'TRIAL', 'TRIALS_DIM',
     'UNCHANGED', 'UNIFORM_DIST_FUNCTION', 'USER_DEFINED_FUNCTION', 'USER_DEFINED_FUNCTION_TYPE',
     'VALUES', 'VALIDATE', 'VALIDATION', 'VALUE', 'VALUE_ASSIGNMENT', 'VALUE_FUNCTION', 'VARIABLE', 'VARIANCE',
-    'VECTOR', 'WALD_DIST_FUNCTION', 'WEIGHT', 'WEIGHTS', 'X_0',
+    'VECTOR', 'WALD_DIST_FUNCTION', 'WEIGHT', 'WEIGHTS', 'X_0', 'ZEROS_MATRIX'
 ]
 
 # **********************************************************************************************************************
@@ -127,6 +129,9 @@ __all__ = [
 # **********************************************************************************************************************
 import operator
 from enum import Enum, auto
+
+from psyneulink._typing import Literal
+
 
 class MatrixKeywords:
     """
@@ -144,6 +149,10 @@ class MatrixKeywords:
     FULL_CONNECTIVITY_MATRIX
         a matrix that has a number of rows equal to the length of the sender's value, and a number of columns equal
         to the length of the receiver's value, all the elements of which are 1's.
+
+    ZEROS_MATRIX
+        a matrix that has a number of rows equal to the length of the sender's value, and a number of columns equal
+        to the length of the receiver's value, all the elements of which are 0's.
 
     RANDOM_CONNECTIVITY_MATRIX
         a matrix that has a number of rows equal to the length of the sender's value, and a number of columns equal
@@ -164,6 +173,7 @@ class MatrixKeywords:
         self.HOLLOW_MATRIX = HOLLOW_MATRIX
         self.INVERSE_HOLLOW_MATRIX = INVERSE_HOLLOW_MATRIX
         self.FULL_CONNECTIVITY_MATRIX = FULL_CONNECTIVITY_MATRIX
+        self.ZEROS_MATRIX = ZEROS_MATRIX
         self.RANDOM_CONNECTIVITY_MATRIX = RANDOM_CONNECTIVITY_MATRIX
         self.AUTO_ASSIGN_MATRIX = AUTO_ASSIGN_MATRIX
         self.DEFAULT_MATRIX = DEFAULT_MATRIX
@@ -183,10 +193,14 @@ IDENTITY_MATRIX = "IdentityMatrix"
 HOLLOW_MATRIX = "HollowMatrix"
 INVERSE_HOLLOW_MATRIX = "InverseHollowMatrix"
 FULL_CONNECTIVITY_MATRIX = "FullConnectivityMatrix"
+ZEROS_MATRIX = "ZerosMatrix"
 RANDOM_CONNECTIVITY_MATRIX = "RandomConnectivityMatrix"
 AUTO_ASSIGN_MATRIX = 'AutoAssignMatrix'
 DEFAULT_MATRIX = AUTO_ASSIGN_MATRIX
 # DEFAULT_MATRIX = IDENTITY_MATRIX
+
+MatrixKeywordLiteral = Literal["IdentityMatrix", "HollowMatrix", "InverseHollowMatrix", "FullConnectivityMatrix",
+                               "RandomConnectivityMatrix", "AutoAssignMatrix"]
 
 MATRIX_KEYWORDS = MatrixKeywords()
 MATRIX_KEYWORD_SET = MATRIX_KEYWORDS._set()
@@ -212,6 +226,9 @@ class DistanceMetrics:
         (can also be referenced as *L0*)\n
         :math:`d = \\sum\\limits^{len}(|a_1-a_2|)`
 
+    DOT_PRODUCT
+        :math:`d = \\sum\\limits^{len}\\(a_1 * a_2)}`
+
     EUCLIDEAN
         (can also be referenced as *L1*)\n
         :math:`d = \\sum\\limits^{len}\\sqrt{(a_1-a_2)^2}`
@@ -236,6 +253,7 @@ class DistanceMetrics:
         self.DIFFERENCE = DIFFERENCE
         self.L0 = L0
         self.NORMED_L0_SIMILARITY = NORMED_L0_SIMILARITY
+        self.DOT_PRODUCT = DOT_PRODUCT
         self.EUCLIDEAN = EUCLIDEAN
         self.L1 = L1
         self.ANGLE = ANGLE
@@ -268,6 +286,7 @@ DIFFERENCE = 'difference'
 L0 = DIFFERENCE
 NORMED_L0_SIMILARITY = 'normed_L0_similarity'
 MAX_ABS_DIFF = 'max_abs_diff'
+DOT_PRODUCT = 'dot_product'
 EUCLIDEAN = 'euclidean'
 L1 = EUCLIDEAN
 ANGLE = 'angle'
@@ -275,7 +294,7 @@ CORRELATION = 'correlation'
 COSINE = 'cosine'
 COSINE_SIMILARITY = 'cosine'
 PEARSON = 'Pearson'
-ENTROPY = 'cross-entropy'
+ENTROPY = 'entropy'
 CROSS_ENTROPY = 'cross-entropy'
 ENERGY = 'energy'
 
@@ -284,17 +303,18 @@ DISTANCE_METRICS_SET = DISTANCE_METRICS._set()
 DISTANCE_METRICS_VALUES = DISTANCE_METRICS._values()
 DISTANCE_METRICS_NAMES = DISTANCE_METRICS._names()
 
-ENERGY = 'energy'
-ENTROPY = 'entropy'
+# ENTROPY = 'entropy'
 CONVERGENCE = 'CONVERGENCE'
 
 
 class Loss(Enum):
     """Loss function used for `learning <Composition_Learning>`.
 
-    Each keyword specifies a loss function used for learning in a `Composition` or `AutodiffComposition`,
-    and the comparable loss functions used by `PyTorch` when an AutodiffComposition is executed in
-    `ExecutionMode.PyTorch` mode.
+    Used to specify the **loss_spec** argument of the constructor for an `AutodiffComposition`,
+    or in the `learning methods <Composition_Learning_Methods>` used to construct `learning pathways
+    <Composition_Learning_Pathway>` in a `Composition`. Each keyword specifies a loss function used
+    for learning, and the comparable `loss functions <https://pytorch.org/docs/stable/nn.html#loss-functions>`_
+    used by `PyTorch` when an AutodiffComposition is executed in `ExecutionMode.PyTorch` mode.
     COMMENT:
     Get latex for remaining equations from https://blmoistawinde.github.io/ml_equations_latex/#cross-entropy
     COMMENT
@@ -339,6 +359,7 @@ class Loss(Enum):
     KL_DIV = auto()
     NLL = auto()
     POISSON_NLL = auto()
+    SUM = L0
 
 
 # **********************************************************************************************************************
@@ -455,6 +476,7 @@ FINAL = 'FINAL'
 COMPOSITION = 'Composition'
 AUTODIFF_COMPOSITION = 'AutodiffComposition'
 COMPOSITION_FUNCTION_APPROXIMATOR = 'CompositionFunctionApproximator'
+EM_COMPOSITION = 'EMComposition'
 
 INPUT_CIM_NAME = 'INPUT_CIM'
 OUTPUT_CIM_NAME = 'OUTPUT_CIM'
@@ -538,6 +560,7 @@ LEARNING_MECHANISM = "LearningMechanism"
 CONTROL_MECHANISM = "ControlMechanism"
 GATING_MECHANISM = 'GatingMechanism'
 AUTOASSOCIATIVE_LEARNING_MECHANISM = 'AutoAssociativeLearningMechanism'
+EM_STORAGE_MECHANISM = 'EMStorageMechanism'
 KOHONEN_LEARNING_MECHANISM = 'KohonenLearningMechanism'
 
 # Ports:
@@ -634,6 +657,8 @@ RELU_FUNCTION = "ReLU Function"
 ANGLE_FUNCTION = 'Angle Function'
 GAUSSIAN_FUNCTION = "Gaussian Function"
 GAUSSIAN_DISTORT_FUNCTION = "GaussianDistort Function"
+BINOMIAL_DISTORT_FUNCTION = 'BinomialDistort Function'
+DROPOUT_FUNCTION = 'Dropout Function'
 SOFTMAX_FUNCTION = 'SoftMax Function'
 LINEAR_MATRIX_FUNCTION = "LinearMatrix Function"
 TRANSFER_WITH_COSTS_FUNCTION = "TransferWithCosts Function"
@@ -666,6 +691,7 @@ GRADIENT_OPTIMIZATION_FUNCTION = "GradientOptimization Function"
 GRID_SEARCH_FUNCTION = 'GridSearch Function'
 
 # LearningFunctions:
+EM_STORAGE_FUNCTION = "EMStorage Function"
 GAUSSIAN_PROCESS_FUNCTION = 'GaussianProcess Function'
 HEBBIAN_FUNCTION = 'Hebbian Learning Function'
 CONTRASTIVE_HEBBIAN_FUNCTION = 'ContrastiveHebbian Learning Function'
@@ -811,7 +837,6 @@ OWNER_MECH = 'owner_mech'
 LEARNING_SIGNALS = 'learning_signals'
 LEARNING_SIGNAL_SPECS = 'LEARNING_SIGNAL_SPECS'
 LEARNING_FUNCTION = 'learning_function'
-LEARNED_PARAM = 'learned_param'
 LEARNED_PROJECTIONS = 'LEARNED_PROJECTIONS'
 LEARNING_MECHANISMS = "LEARNING_MECHANISMS"
 OUTPUT_MECHANISM = "OUTPUT_MECHANISM"
@@ -921,9 +946,10 @@ CONTROL_PROJECTION_PARAMS = "CONTROL_PROJECTION_PARAMS"
 GATING_PROJECTION_PARAMS = 'GATING_PROJECTION_PARAMS'
 
 
-PROJECTION_SENDER = 'projection_sender'
 SENDER = 'sender'
 RECEIVER = "receiver"
+PROJECTION_SENDER = 'projection_sender'
+PROJECTION_RECEIVER = 'projection_receiver'
 PROJECTION_DIRECTION = {SENDER: 'to',
                         RECEIVER: 'from'}
 RECEIVER_ARG = 'receiver'
@@ -978,7 +1004,6 @@ COMBINE = 'combine'
 CONCATENATE = 'concatenate'
 SEPARATE = 'separate'
 SUM = 'sum'
-DIFFERENCE = DIFFERENCE # Defined above for DISTANCE_METRICS
 PRODUCT = 'product'
 QUOTIENT = 'quotient'
 SUBTRACTION = 'subtraction'
@@ -1005,6 +1030,7 @@ STANDARD_DEVIATION = 'standard_deviation'
 VARIANCE = 'variance'
 
 # Note:  These are used only as names of StandardOutputPorts (hence upper case)
+
 MAX_VAL = 'MAX_VAL'
 MAX_ABS_VAL = 'MAX_ABS_VAL'
 MAX_ONE_HOT = 'MAX_ONE_HOT'
@@ -1017,7 +1043,7 @@ MIN_INDICATOR = 'MIN_INDICATOR'
 MIN_ABS_INDICATOR = 'MIN_ABS_INDICATOR'
 PROB = 'PROB'
 PROB_INDICATOR = 'PROB_INDICATOR'
-MUTUAL_ENTROPY = 'mutual entropy'
+MUTUAL_ENTROPY = 'MUTUAL_ENTROPY'
 PER_ITEM = 'per_item'
 
 INITIALIZER = 'initializer'
@@ -1027,6 +1053,7 @@ WEIGHTS = "weights"
 EXPONENTS = "exponents"
 OPERATION = "operation"
 OFFSET = "offset"
+NORMALIZE = "normalize"
 
 REWARD = 'reward'
 NETWORK = 'network'

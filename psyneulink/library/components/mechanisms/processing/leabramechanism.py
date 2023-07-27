@@ -103,6 +103,7 @@ import numbers
 
 import numpy as np
 
+from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.function import Function_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.globals.keywords import LEABRA_FUNCTION, LEABRA_FUNCTION_TYPE, LEABRA_MECHANISM, NETWORK, PREFERENCE_SET_NAME
@@ -124,13 +125,8 @@ input_port_names = [MAIN_INPUT, LEARNING_TARGET]
 output_port_name = [MAIN_OUTPUT]
 
 
-class LeabraError(Exception):
-
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class LeabraError(ComponentError):
+    pass
 
 
 class LeabraFunction(Function_Base):

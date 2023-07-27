@@ -82,17 +82,19 @@ Class Reference
 """
 from collections.abc import Iterable
 
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union
 import numpy as np
 
 from psyneulink.core.components.functions.function import Function
 from psyneulink.core.components.functions.stateful.integratorfunctions import AdaptiveIntegrator
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
-from psyneulink.core.components.mechanisms.mechanism import Mechanism
+from psyneulink.core.components.mechanisms.mechanism import Mechanism, MechanismError
 from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, INTEGRATOR_MECHANISM, VARIABLE, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
 __all__ = [
@@ -102,12 +104,8 @@ __all__ = [
 # IntegratorMechanism parameter keywords:
 DEFAULT_RATE = 0.5
 
-class IntegratorMechanismError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class IntegratorMechanismError(MechanismError):
+    pass
 
 
 class IntegratorMechanism(ProcessingMechanism_Base):
@@ -151,16 +149,16 @@ class IntegratorMechanism(ProcessingMechanism_Base):
 
         #
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 input_ports:tc.optional(tc.any(list, dict))=None,
+                 input_ports:Optional[Union[list, dict]]=None,
                  function=None,
-                 output_ports:tc.optional(tc.any(str, Iterable))=None,
+                 output_ports:Optional[Union[str, Iterable]]=None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
+                 prefs:   Optional[ValidPrefSet] = None,
                  **kwargs):
         """Assign type-level preferences, default input value (SigmoidLayer_DEFAULT_BIAS) and call super.__init__
         """

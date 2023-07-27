@@ -37,7 +37,7 @@ class TestControlSpecification:
         comp.add_controller(ctl_mech)
         assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
         assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_ports['drift_rate']
-        assert np.allclose(comp.controller.control[0].allocation_samples(),
+        np.testing.assert_allclose(comp.controller.control[0].allocation_samples(),
                            [0.1, 0.4, 0.7000000000000001, 1.0000000000000002])
 
     def test_add_controller_in_comp_constructor_then_add_node_with_control_specified(self):
@@ -59,7 +59,7 @@ class TestControlSpecification:
         comp._analyze_graph()
         assert comp.controller.control[0].efferents[0].receiver == ddm.parameter_ports['drift_rate']
         assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
-        assert np.allclose(comp.controller.control[0].allocation_samples(),
+        np.testing.assert_allclose(comp.controller.control[0].allocation_samples(),
                            [0.1, 0.4, 0.7000000000000001, 1.0000000000000002])
 
     def test_redundant_control_spec_add_node_with_control_specified_then_controller_in_comp_constructor(self):
@@ -116,7 +116,7 @@ class TestControlSpecification:
         comp.add_node(ddm)
         assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_ports['drift_rate']
         assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
-        assert np.allclose(comp.controller.control[0].allocation_samples(), [0.2, 0.5, 0.8])
+        np.testing.assert_allclose(comp.controller.control[0].allocation_samples(), [0.2, 0.5, 0.8])
 
     # def test_missing_mech_referenced_by_controller_warning(self):
     #     mech = pnl.ProcessingMechanism()
@@ -132,8 +132,7 @@ class TestControlSpecification:
                          'and/or OutputPorts to be monitored for control.'
         with pytest.raises(pnl.ControlMechanismError) as error:
             pnl.Composition(controller=pnl.ControlMechanism(objective_mechanism=mech))
-        error_msg = error.value.error_value
-        assert expected_error in error_msg
+        assert expected_error in str(error.value)
 
     def test_objective_mechanism_spec_as_monitor_for_control_error(self):
         expected_error = 'The \'monitor_for_control\' arg of \'ControlMechanism-0\' contains a specification ' \
@@ -141,8 +140,7 @@ class TestControlSpecification:
                          'This should be specified in its \'objective_mechanism\' argument.'
         with pytest.raises(pnl.ControlMechanismError) as error:
             pnl.Composition(controller=pnl.ControlMechanism(monitor_for_control=pnl.ObjectiveMechanism()))
-        error_msg = error.value.error_value
-        assert expected_error in error_msg
+        assert expected_error in str(error.value)
 
     @pytest.mark.state_features
     @pytest.mark.parametrize("control_spec", [CONTROL, PROJECTIONS])
@@ -316,7 +314,7 @@ class TestControlSpecification:
             assert comp.controller.state_input_ports.names == [deferred_numeric_input_port_0,
                                                                deferred_numeric_input_port_1]
             assert comp.controller.state_features == {deferred_node_0: [1.1], deferred_node_1: [2.2]}
-            assert np.allclose(list(comp.controller.state_feature_values.values()), [[0.9625],[1.925]])
+            np.testing.assert_allclose(list(comp.controller.state_feature_values.values()), [[0.9625],[1.925]])
             assert list(comp.controller.state_feature_values.keys()) == [deferred_node_0, deferred_node_1]
         elif state_features_arg == 'dict':
             assert comp.controller.state_input_ports.names == [deferred_shadowed_0, deferred_shadowed_1]
@@ -360,7 +358,7 @@ class TestControlSpecification:
             assert comp.controller.state_input_ports.names == [numeric_reward_node, numeric_Input_node]
             assert comp.controller.state_features == {'reward[InputPort-0]': [1.1],
                                                       'Input[InputPort-0]': [2.2]}
-            assert np.allclose(list(comp.controller.state_feature_values.values()), [[1.065625],[2.13125]])
+            np.testing.assert_allclose(list(comp.controller.state_feature_values.values()), [[1.065625],[2.13125]])
             assert list(comp.controller.state_feature_values.keys()) == [reward.input_port, Input.input_port]
         elif state_features_arg in {'list_reversed', 'dict_reversed'}:
             assert all(p.path_afferents for p in comp.controller.state_input_ports)
@@ -523,7 +521,7 @@ class TestControlSpecification:
                 [[15.], [15.0], [0.0], [3.84279648], [0.81637827]]]
 
         for simulation in range(len(expected_sim_results_array)):
-            assert np.allclose(expected_sim_results_array[simulation],
+            np.testing.assert_allclose(expected_sim_results_array[simulation],
                                # Note: Skip decision variable OutputPort
                                comp.simulation_results[simulation][0:3] + comp.simulation_results[simulation][4:6])
 
@@ -621,7 +619,7 @@ class TestControlSpecification:
 
         with pytest.raises(pnl.OptimizationControlMechanismError) as error_text:
             ocomp.run({initial_node_a: [1]})
-        assert expected_text in error_text.value.error_value
+        assert expected_text in str(error_text.value)
 
         ocomp.add_linear_processing_pathway([deferred_node, initial_node_b])
         assert ocomp.controller.state_features == {'ia[InputPort-0]': 'ia[InputPort-0]',
@@ -670,8 +668,8 @@ class TestControlSpecification:
                 ])
         )
 
-        text = '"Controller has \'outcome_ouput_ports\' that receive Projections from the following Components ' \
-               'that do not belong to its agent_rep (ocomp): [\'deferred\']."'
+        text = 'Controller has \'outcome_ouput_ports\' that receive Projections from the following Components ' \
+               + 'that do not belong to its agent_rep (ocomp): [\'deferred\'].'
         with pytest.raises(pnl.OptimizationControlMechanismError) as error:
             ocomp.run({initial_node: [1]})
         assert text == str(error.value)
@@ -784,7 +782,7 @@ class TestControlSpecification:
 
         controller = pnl.ControlMechanism(
             name='controller',
-            default_variable=5
+            default_allocation=5
         )
 
         outer_comp = pnl.Composition(
@@ -800,7 +798,7 @@ class TestControlSpecification:
     def test_hanging_control_spec_nearest_controller(self):
         inner_controller = pnl.ControlMechanism(
             name='inner_controller',
-            default_variable=5
+            default_allocation=5
         )
 
         inner_comp = pnl.Composition(
@@ -810,7 +808,7 @@ class TestControlSpecification:
 
         outer_controller = pnl.ControlMechanism(
             name='outer_controller',
-            default_variable=10
+            default_allocation=10
         )
 
         outer_comp = pnl.Composition(
@@ -1073,7 +1071,7 @@ class TestControlMechanisms:
                 ocomp.add_controller(ocm)
                 ocomp._analyze_graph()
                 ocomp.run()
-            assert err.value.error_value == err_msg
+            assert str(err.value) == err_msg
 
     messages = [
         # 0
@@ -1083,16 +1081,16 @@ class TestControlMechanisms:
         f"behavior, use its get_inputs_format() method to see the format for its inputs.",
 
         # 1
-        f'\'Attempt to shadow the input to a node (IB) in a nested Composition of OUTER COMP '
-        f'that is not an INPUT Node of that Composition is not currently supported.\'',
+        'Attempt to shadow the input to a node (IB) in a nested Composition of OUTER COMP '
+        + 'that is not an INPUT Node of that Composition is not currently supported.',
 
         # 2
-        f'"\'OptimizationControlMechanism-0\' has \'state_features\' specified ([\'SHADOWED INPUT OF EXT[InputPort-0] '
-        f'FOR IA[InputPort-0]\']) that are missing from \'OUTER COMP\' and any Compositions nested within it."',
+        '\'OptimizationControlMechanism-0\' has \'state_features\' specified ([\'SHADOWED INPUT OF EXT[InputPort-0] '
+        + 'FOR IA[InputPort-0]\']) that are missing from \'OUTER COMP\' and any Compositions nested within it.',
 
         # 3
-        '"\'OptimizationControlMechanism-0\' has \'state_features\' specified ([\'INPUT FROM EXT[OutputPort-0] '
-        'FOR IA[InputPort-0]\']) that are missing from \'OUTER COMP\' and any Compositions nested within it."',
+        '\'OptimizationControlMechanism-0\' has \'state_features\' specified ([\'INPUT FROM EXT[OutputPort-0] '
+        + 'FOR IA[InputPort-0]\']) that are missing from \'OUTER COMP\' and any Compositions nested within it.',
 
         # 4
         f"The '{pnl.STATE_FEATURES}' argument has been specified for 'OptimizationControlMechanism-0' that is using "
@@ -1116,8 +1114,8 @@ class TestControlMechanisms:
         f"will generate an error.",
 
         # 7
-        f'"The number of \'state_features\' specified for OptimizationControlMechanism-0 (4) is more than the number '
-        f'of INPUT Nodes (3) of the Composition assigned as its agent_rep (\'OUTER COMP\')."',
+        'The number of \'state_features\' specified for OptimizationControlMechanism-0 (4) is more than the number '
+        + 'of INPUT Nodes (3) of the Composition assigned as its agent_rep (\'OUTER COMP\').',
 
         # 8
         f'The \'state_features\' specified for \'OptimizationControlMechanism-0\' contains an item (OC) '
@@ -1327,9 +1325,10 @@ class TestControlMechanisms:
                 assert ocm.state_features == {'IA[InputPort-0]': 'IA[InputPort-0]',
                                               'OA[InputPort-0]': None,
                                               'OB[InputPort-0]': [3, 1, 2]}
-                assert all(np.allclose(expected, actual)
-                           for expected, actual in zip(list(ocm.state_feature_values.values()),
-                                                       [[0.], [3, 1, 2]]))
+                for expected, actual in zip(
+                    list(ocm.state_feature_values.values()), [[0.], [3, 1, 2]]
+                ):
+                    np.testing.assert_allclose(expected, actual)
 
             elif test_condition in {'input_dict_spec', 'input_dict_spec_short'}:
                 assert len(ocm.state_input_ports) == 3
@@ -1337,9 +1336,10 @@ class TestControlMechanisms:
                 assert ocm.state_features == {'IA[InputPort-0]': 'IA[InputPort-0]',
                                               'OA[InputPort-0]': 'OC[InputPort-0]',
                                               'OB[InputPort-0]': 'OB[OutputPort-0]'}
-                assert all(np.allclose(expected, actual)
-                           for expected, actual in zip(list(ocm.state_feature_values.values()),
-                                                       [[0.], [0.], [0, 0, 0]]))
+                for expected, actual in zip(
+                    list(ocm.state_feature_values.values()), [[0.], [0.], [0, 0, 0]]
+                ):
+                    np.testing.assert_allclose(expected, actual)
 
             elif test_condition == 'set_spec_short':
                 assert len(ocm.state_input_ports) == 1
@@ -1348,9 +1348,10 @@ class TestControlMechanisms:
                 assert ocm.state_features == {'IA[InputPort-0]': None,
                                               'OA[InputPort-0]': 'OA[InputPort-0]',
                                               'OB[InputPort-0]': None}
-                assert all(np.allclose(expected, actual)
-                           for expected, actual in zip(list(ocm.state_feature_values.values()),
-                                                       [[0.], [0.], [0, 0, 0]]))
+                for expected, actual in zip(
+                    list(ocm.state_feature_values.values()), [[0.], [0.], [0, 0, 0]]
+                ):
+                    np.testing.assert_allclose(expected, actual)
 
         elif test_condition == 'shadow_inputs_dict_spec_w_none':
             assert len(ocm.state_input_ports) == 2
@@ -1358,9 +1359,10 @@ class TestControlMechanisms:
             assert ocm.state_features == {'IA[InputPort-0]': 'IA[InputPort-0]',
                                           'OA[InputPort-0]': None,
                                           'OB[InputPort-0]': 'OB[InputPort-0]'}
-            assert all(np.allclose(expected, actual)
-                       for expected, actual in zip(list(ocm.state_feature_values.values()),
-                                                   [[0.], [0.], [0, 0, 0]]))
+            for expected, actual in zip(
+                list(ocm.state_feature_values.values()), [[0.], [0.], [0, 0, 0]]
+            ):
+                np.testing.assert_allclose(expected, actual)
 
         elif exception_type is UserWarning:
             # These also produce errors, tested below
@@ -1381,9 +1383,10 @@ class TestControlMechanisms:
                         assert ocm.state_features == {'IA[InputPort-0]': 'OA[OutputPort-0]',
                                                       'OA[InputPort-0]': 'OA[InputPort-0]',
                                                       'OB[InputPort-0]': 'OB[InputPort-0]'}
-                        assert all(np.allclose(expected, actual)
-                                   for expected, actual in zip(list(ocm.state_feature_values.values()),
-                                                               [[0.], [0.], [0, 0, 0]]))
+                        for expected, actual in zip(
+                            list(ocm.state_feature_values.values()), [[0.], [0.], [0, 0, 0]]
+                        ):
+                            np.testing.assert_allclose(expected, actual)
 
                 assert error_or_warning_message in [warning[i].message.args[0] for i in range(len(warning))]
 
@@ -1661,9 +1664,10 @@ class TestControlMechanisms:
             inputs = {A:[1,2], B:[1,2], C:[1,2]}
             result = comp.run(inputs=inputs, context='test')
             assert result == [[24.]]
-            assert all(np.allclose(actual, expected)
-                       for actual, expected in zip(list(ocm.parameters.state_feature_values.get('test').values()),
-                                                   [[2],[[1],[2]],[3]]))
+            for actual, expected in zip(
+                list(ocm.parameters.state_feature_values.get('test').values()), [[2],[[1],[2]],[3]]
+            ):
+                np.testing.assert_allclose(actual, expected)
         else:
             assert isinstance(ocm.state_input_ports[0].function, pnl.LinearCombination)
             assert isinstance(ocm.state_input_ports[1].function, pnl.LinearCombination)
@@ -1671,9 +1675,10 @@ class TestControlMechanisms:
             inputs = {A:[1,2], B:[1,2], C:[1,2]}
             result = comp.run(inputs=inputs, context='test')
             assert result == [[24.]]
-            assert all(np.allclose(expected, actual)
-                       for actual, expected in zip(list(ocm.parameters.state_feature_values.get('test').values()),
-                                                   [[2],[2],[2]]))
+            for actual, expected in zip(
+                list(ocm.parameters.state_feature_values.get('test').values()), [[2],[2],[2]]
+            ):
+                np.testing.assert_allclose(expected, actual)
 
     @pytest.mark.state_features
     @pytest.mark.control
@@ -1702,7 +1707,8 @@ class TestControlMechanisms:
                              ]
         )
         ocomp.add_controller(ocm)
-        assert all(np.allclose(x,y) for x,y in zip(ocm.state, [[0.0], [0.0], [3.0, 1.0, 2.0], [1.0], [1.0]]))
+        for x, y in zip(ocm.state, [[0.0], [0.0], [3.0, 1.0, 2.0], [1.0], [1.0]]):
+            np.testing.assert_allclose(x, y)
         assert len(ocm.state_distal_sources_and_destinations_dict) == 6
         keys = list(ocm.state_distal_sources_and_destinations_dict.keys())
         values = list(ocm.state_distal_sources_and_destinations_dict.values())
@@ -1715,9 +1721,10 @@ class TestControlMechanisms:
         assert keys[4] == (oc.parameter_ports[pnl.INTERCEPT], oc, ocomp, 4)
         assert keys[5] == (oc.parameter_ports[pnl.SLOPE], oc, ocomp, 4)
         ocomp.run()
-        assert all(np.allclose(expected, actual)
-                   for expected, actual in zip(list(ocm.state_feature_values.values()),
-                                               [[0.], [0.], [3, 1, 2]]))
+        for expected, actual in zip(
+            list(ocm.state_feature_values.values()), [[0.], [0.], [3, 1, 2]]
+        ):
+            np.testing.assert_allclose(expected, actual)
 
     def test_modulation_of_control_signal_intensity_cost_function_MULTIPLICATIVE(self):
         # tests multiplicative modulation of default intensity_cost_function (Exponential) of
@@ -1738,7 +1745,7 @@ class TestControlMechanisms:
                                                     ])
 
         comp.run(inputs={mech:[3]}, num_trials=2)
-        assert np.allclose(ctl_mech_A.control_signals[0].intensity_cost, 8103.083927575384008)
+        np.testing.assert_allclose(ctl_mech_A.control_signals[0].intensity_cost, 8103.083927575384008)
 
     def test_feedback_assignment_for_multiple_control_projections_to_same_mechanism(self):
         """Test that multiple ControlProjections from a ControlMechanism to the same Mechanism are treated
@@ -1751,7 +1758,7 @@ class TestControlMechanisms:
         comp = pnl.Composition()
         comp.add_nodes([mech, control_mech])
         result = comp.run(inputs={control_mech:[2]}, num_trials=3)
-        # assert np.allclose(result, [[2],[2],[2]])
+        # np.testing.assert_allclose(result, [[2],[2],[2]])
         assert pnl.NodeRole.INPUT not in comp.get_roles_by_node(mech)
         assert pnl.NodeRole.INPUT in comp.get_roles_by_node(control_mech)
 
@@ -1783,7 +1790,7 @@ class TestControlMechanisms:
                                                     ])
 
         comp.run(inputs={mech:[3]}, num_trials=2)
-        assert np.allclose(ctl_mech_A.control_signals[0].intensity_cost, 403.428793492735123)
+        np.testing.assert_allclose(ctl_mech_A.control_signals[0].intensity_cost, 403.428793492735123)
 
     def test_lvoc(self):
         m1 = pnl.TransferMechanism(input_ports=["InputPort A", "InputPort B"])
@@ -1915,7 +1922,7 @@ class TestControlMechanisms:
                                                    allocation_samples=pnl.SampleSpec(start=1.0, stop=5.0, num=5))])
         )
         result = benchmark(ocomp.run, [5], execution_mode=mode)
-        assert np.allclose(result, [[50]])
+        np.testing.assert_allclose(result, [[50], [50]])
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -1979,7 +1986,7 @@ class TestControlMechanisms:
                                                                                      num=5))])
         )
         result = benchmark(ocomp.run, [5], execution_mode=mode)
-        assert np.allclose(result, [[70]])
+        np.testing.assert_allclose(result, [[70],[70]])
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2043,7 +2050,7 @@ class TestControlMechanisms:
                                                                                      num=5))])
         )
         result = benchmark(ocomp.run, [5], execution_mode=mode)
-        assert np.allclose(result, [[5]])
+        np.testing.assert_allclose(result, [[5],[5]])
 
     def test_two_tier_ocm(self):
         integrationConstant = 0.8  # Time Constant
@@ -2210,10 +2217,10 @@ class TestControlMechanisms:
         stimulusTrain = [[1, -1], [1, -1], [1, -1]]
         zipTrain = list(zip(taskTrain, stimulusTrain))
         outerComposition.run(zipTrain)
-        assert np.allclose(outerComposition.results,
+        np.testing.assert_allclose(outerComposition.results,
                            [[[0.05], [0.42357798], [0.76941918], [0.23058082]],
                             [[0.1], [0.64721378], [0.98737278], [0.01262722]],
-                            [[0.1], [0.60232676], [0.9925894], [0.0074106]]])
+                            [[0.1], [0.60232676], [0.9925894], [0.0074106]]], atol=1e-8)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2267,7 +2274,7 @@ class TestControlMechanisms:
         assert iComp.controller == iController
         assert oComp.controller == oController
         res = benchmark(oComp.run, inputs=[5], execution_mode=comp_mode)
-        assert np.allclose(res, [40])
+        np.testing.assert_allclose(res, [[40]])
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2303,8 +2310,8 @@ class TestControlMechanisms:
                 },
             execution_mode=comp_mode
         )
-        assert np.allclose(val[0], [5])
-        assert np.allclose(val[1], [0.7978996, 0.40776362])
+        np.testing.assert_allclose(val[0], [5])
+        np.testing.assert_allclose(val[1], [0.7978996, 0.40776362])
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2325,7 +2332,7 @@ class TestControlMechanisms:
         comp.add_nodes([(mech, pnl.NodeRole.INPUT), (control_mech, pnl.NodeRole.INPUT)])
         inputs = {mech:[[0.5]], control_mech:[0.2]}
         results = comp.run(inputs=inputs, num_trials=1, execution_mode=comp_mode)
-        assert np.allclose(results, expected)
+        np.testing.assert_allclose(results, expected)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2344,7 +2351,7 @@ class TestControlMechanisms:
         comp.add_nodes([(mech, pnl.NodeRole.INPUT), (control_mech, pnl.NodeRole.INPUT)])
         inputs = {mech:[[0.5]], control_mech:[0.2]}
         results = comp.run(inputs=inputs, num_trials=1, execution_mode=comp_mode)
-        assert np.allclose(results, expected)
+        np.testing.assert_allclose(results, expected)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2354,17 +2361,20 @@ class TestControlMechanisms:
                               (pnl.MULTIPLICATIVE, 0.1),
                               (pnl.ADDITIVE, 0.7),
                              ])
-    @pytest.mark.parametrize("specification", [ pnl.OWNER_VALUE, (pnl.OWNER_VALUE, 0)])
+    @pytest.mark.parametrize("specification", [pnl.OWNER_VALUE,
+                                               (pnl.OWNER_VALUE, 0)
+                                               ])
     def test_control_of_mech_output_port(self, comp_mode, modulation, expected, specification):
         mech = pnl.TransferMechanism(output_ports=[pnl.OutputPort(variable=specification)])
-        control_mech = pnl.ControlMechanism(
-                control_signals=pnl.ControlSignal(modulation=modulation,
-                                                  modulates=mech.output_port))
+        control_mech = pnl.ControlMechanism(control_signals=pnl.ControlSignal(modulation=modulation,
+                                                                              modulates=mech.output_port),
+                                            default_allocation=mech.value if specification is pnl.OWNER_VALUE else mech.value[0]
+                                            )
         comp = pnl.Composition()
         comp.add_nodes([(mech, pnl.NodeRole.INPUT), (control_mech, pnl.NodeRole.INPUT)])
-        inputs = {mech:[[0.5]], control_mech:[0.2]}
+        inputs = {mech:[[0.5]], control_mech:[[0.2]]}
         results = comp.run(inputs=inputs, num_trials=1, execution_mode=comp_mode)
-        assert np.allclose(results, expected)
+        np.testing.assert_allclose(results, expected)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2392,7 +2402,7 @@ class TestControlMechanisms:
         (pnl.CostFunctions.INTENSITY, 3, [0.2817181715409549, -3.3890560989306495, -15.085536923187664, -48.59815003314423, -141.41315910257657]),
         (pnl.CostFunctions.ADJUSTMENT, 3, [3, 3, 3, 3, 3] ),
         (pnl.CostFunctions.INTENSITY | pnl.CostFunctions.ADJUSTMENT, 3, [0.2817181715409549, -4.389056098930649, -17.085536923187664, -51.59815003314423, -145.41315910257657]),
-        (pnl.CostFunctions.DURATION, 3, [-17, -20, -23, -26, -29]),
+        (pnl.CostFunctions.DURATION, 3, [-7, -8, -9, -10, -11]),
         # FIXME: combinations with DURATION are broken
         # (pnl.CostFunctions.DURATION | pnl.CostFunctions.ADJUSTMENT, ,),
         # (pnl.CostFunctions.ALL, ,),
@@ -2427,9 +2437,9 @@ class TestControlMechanisms:
         )
 
         ret = comp.run(inputs={mech: [2]}, num_trials=1, execution_mode=comp_mode)
-        assert np.allclose(ret, expected)
+        np.testing.assert_allclose(ret, expected)
         if comp_mode == pnl.ExecutionMode.Python:
-            assert np.allclose(comp.controller.function.saved_values.flatten(), exp_values)
+            np.testing.assert_allclose(comp.controller.function.saved_values.flatten(), exp_values)
 
     @pytest.mark.benchmark
     @pytest.mark.control
@@ -2459,9 +2469,9 @@ class TestControlMechanisms:
             def get_val(s, dty):
                 return prngs[s].random(dtype=dty)
 
-        dty = np.float32 if pytest.helpers.llvm_current_fp_precision() == 'fp32' else np.float64
+        dty = np.float32 if pytest.helpers.llvm_current_fp_precision() == 'fp32' and comp_mode != pnl.ExecutionMode.Python else np.float64
         expected = [get_val(s, dty) for s in seeds] * 2
-        assert np.allclose(np.squeeze(comp.results[:len(seeds) * 2]), expected)
+        np.testing.assert_allclose(np.squeeze(comp.results[:len(seeds) * 2]), expected, rtol=1e-5, atol=1e-8)
 
     @pytest.mark.benchmark
     @pytest.mark.control
@@ -2489,15 +2499,94 @@ class TestControlMechanisms:
         # cycle over the seeds twice setting and resetting the random state
         benchmark(comp.run, inputs={ctl_mech:seeds, mech:5.0}, num_trials=len(seeds) * 2, execution_mode=comp_mode)
 
-        precision = pytest.helpers.llvm_current_fp_precision()
+        # Python uses fp64 irrespective of the pytest precision setting
+        precision = 'fp64' if comp_mode == pnl.ExecutionMode.Python else pytest.helpers.llvm_current_fp_precision()
         if prng == 'Default':
-            assert np.allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[100, 21], [100, 23], [100, 20]] * 2)
+            np.testing.assert_allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[100, 21], [100, 23], [100, 20]] * 2)
         elif prng == 'Philox' and precision == 'fp64':
-            assert np.allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[100, 19], [100, 21], [100, 21]] * 2)
+            np.testing.assert_allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[100, 19], [100, 21], [100, 21]] * 2)
         elif prng == 'Philox' and precision == 'fp32':
-            assert np.allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[100, 17], [100, 22], [100, 20]] * 2)
+            np.testing.assert_allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[100, 17], [100, 22], [100, 20]] * 2)
         else:
             assert False, "Unknown PRNG!"
+
+    @pytest.mark.control
+    @pytest.mark.composition
+    # test only OCM modes. we check "saved_values" which are not available in e2e compilation
+    # FIXME: skip Python since direct ocm modulation of initializers is not implemented yet
+    @pytest.mark.parametrize('ocm_mode', [pytest.param('Python', marks=pytest.mark.skip),
+                                          pytest.param('LLVM', marks=pytest.mark.llvm),
+                                          pytest.helpers.cuda_param('PTX')])
+    def test_modulation_of_initializer(self, ocm_mode):
+        ddm = pnl.DDM(function=pnl.DriftDiffusionIntegrator(threshold=10,
+                                                            time_step_size=1,
+                                                            non_decision_time=0.6))
+
+        obj = pnl.ObjectiveMechanism(monitor=ddm.output_ports[pnl.RESPONSE_TIME])
+        comp = pnl.Composition(retain_old_simulation_data=True,
+                               controller_mode=pnl.BEFORE)
+        comp.add_node(ddm, required_roles=pnl.NodeRole.INPUT)
+        comp.add_node(obj)
+
+        comp.add_controller(
+            pnl.OptimizationControlMechanism(
+                agent_rep=comp,
+                objective_mechanism=obj,
+                control_signals=pnl.ControlSignal(
+                    modulates=(pnl.NON_DECISION_TIME, ddm),
+                    modulation=pnl.OVERRIDE,
+                    allocation_samples=[0.1, 0.2, 0.3, 0.4, 0.5],
+                )
+            )
+        )
+        comp.controller.function.save_values = True
+        comp.controller.comp_execution_mode = ocm_mode
+
+        comp.run(inputs={ddm: [2]},
+                 num_trials=1)
+
+        np.testing.assert_allclose(comp.controller.function.saved_values, [5.1, 5.2, 5.3, 5.4, 5.5])
+
+    @pytest.mark.control
+    @pytest.mark.composition
+    # test only OCM modes. we check "saved_values" which are not available in e2e compilation
+    # FIXME: skip Python since direct ocm modulation of initializers is not implemented yet
+    @pytest.mark.parametrize('ocm_mode', [pytest.param('Python', marks=pytest.mark.skip),
+                                          pytest.param('LLVM', marks=pytest.mark.llvm),
+                                          pytest.helpers.cuda_param('PTX')])
+    def test_modulation_of_initializer_nested(self, ocm_mode):
+        ddm = pnl.DDM(function=pnl.DriftDiffusionIntegrator(threshold=10,
+                                                            time_step_size=1,
+                                                            non_decision_time=0.6))
+
+        obj = pnl.ObjectiveMechanism(monitor=ddm.output_ports[pnl.RESPONSE_TIME])
+
+        inner_comp = pnl.Composition(name="Inner comp")
+        inner_comp.add_node(ddm, required_roles=pnl.NodeRole.INPUT)
+
+
+        outer_comp = pnl.Composition(retain_old_simulation_data=True,
+                                     controller_mode=pnl.BEFORE)
+
+        outer_comp.add_node(inner_comp, required_roles=pnl.NodeRole.INPUT)
+        outer_comp.add_controller(
+            pnl.OptimizationControlMechanism(
+                agent_rep=outer_comp,
+                objective_mechanism=obj,
+                control_signals=pnl.ControlSignal(
+                    modulates=(pnl.NON_DECISION_TIME, ddm),
+                    modulation=pnl.OVERRIDE,
+                    allocation_samples=[0.1, 0.2, 0.3, 0.4, 0.5],
+                )
+            )
+        )
+        outer_comp.controller.function.save_values = True
+        outer_comp.controller.comp_execution_mode = ocm_mode
+
+        outer_comp.run(inputs={inner_comp: [2]},
+                       num_trials=1)
+
+        np.testing.assert_allclose(outer_comp.controller.function.saved_values, [5.1, 5.2, 5.3, 5.4, 5.5])
 
     @pytest.mark.benchmark
     @pytest.mark.control
@@ -2523,13 +2612,14 @@ class TestControlMechanisms:
         # cycle over the seeds twice setting and resetting the random state
         benchmark(comp.run, inputs={ctl_mech:seeds, mech:0.1}, num_trials=len(seeds) * 2, execution_mode=comp_mode)
 
-        precision = pytest.helpers.llvm_current_fp_precision()
+        # Python uses fp64 irrespective of the pytest precision setting
+        precision = 'fp64' if comp_mode == pnl.ExecutionMode.Python else pytest.helpers.llvm_current_fp_precision()
         if prng == 'Default':
-            assert np.allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[-1, 3.99948962], [1, 3.99948962], [-1, 3.99948962]] * 2)
+            np.testing.assert_allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[-1, 3.99948962], [1, 3.99948962], [-1, 3.99948962]] * 2)
         elif prng == 'Philox' and precision == 'fp64':
-            assert np.allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[-1, 3.99948962], [-1, 3.99948962], [1, 3.99948962]] * 2)
+            np.testing.assert_allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[-1, 3.99948962], [-1, 3.99948962], [1, 3.99948962]] * 2)
         elif prng == 'Philox' and precision == 'fp32':
-            assert np.allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[1, 3.99948978], [-1, 3.99948978], [1, 3.99948978]] * 2)
+            np.testing.assert_allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[1, 3.99948978], [-1, 3.99948978], [1, 3.99948978]] * 2)
         else:
             assert False, "Unknown PRNG!"
 
@@ -2584,8 +2674,8 @@ class TestControlMechanisms:
                                 first_generator_samples[index_best + 1:]
         best_second = max(second_considerations)
         # Check that we select the maximum of generated values
-        assert np.allclose(best_first, comp.results[0])
-        assert np.allclose(best_second, comp.results[1])
+        np.testing.assert_allclose(best_first, comp.results[0])
+        np.testing.assert_allclose(best_second, comp.results[1])
 
 
 @pytest.mark.composition
@@ -2614,16 +2704,8 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
 
     @pytest.mark.parametrize("nested", [True, False])
     @pytest.mark.parametrize("format", ["list", "tuple", "SampleIterator", "SampleIteratorArray", "SampleSpec", "ndArray"])
-    @pytest.mark.parametrize("mode", pytest.helpers.get_comp_execution_modes() +
-                                     [pytest.helpers.cuda_param('Python-PTX'),
-                                      pytest.param('Python-LLVM', marks=pytest.mark.llvm)])
-    def test_ocm_searchspace_format_equivalence(self, format, nested, mode):
-        if str(mode).startswith('Python-'):
-            ocm_mode = mode.split('-')[1]
-            mode = pnl.ExecutionMode.Python
-        else:
-            # OCM default mode is Python
-            ocm_mode = 'Python'
+    @pytest.mark.parametrize("mode, ocm_mode", pytest.helpers.get_comp_and_ocm_execution_modes())
+    def test_ocm_searchspace_format_equivalence(self, format, nested, mode, ocm_mode):
 
         if format == "list":
             search_space = [1, 10]
@@ -2751,7 +2833,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         ]
 
         for simulation in range(len(expected_sim_results_array)):
-            assert np.allclose(expected_sim_results_array[simulation],
+            np.testing.assert_allclose(expected_sim_results_array[simulation],
                                # Note: Skip decision variable OutputPort
                                comp.simulation_results[simulation][0:3] + comp.simulation_results[simulation][4:6])
 
@@ -2931,11 +3013,11 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         ]
 
         for trial in range(len(evc_gratton.results)):
-            assert np.allclose(expected_results_array[trial],
+            np.testing.assert_allclose(expected_results_array[trial],
                                # Note: Skip decision variable OutputPort
                                evc_gratton.results[trial][1:])
         for simulation in range(len(evc_gratton.simulation_results)):
-            assert np.allclose(expected_sim_results_array[simulation],
+            np.testing.assert_allclose(expected_sim_results_array[simulation],
                                # Note: Skip decision variable OutputPort
                                evc_gratton.simulation_results[simulation][1:])
 
@@ -3040,7 +3122,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         ]
 
         for simulation in range(len(expected_sim_results_array)):
-            assert np.allclose(
+            np.testing.assert_allclose(
                 expected_sim_results_array[simulation],
                 # Note: Skip decision variable OutputPort
                 comp.simulation_results[simulation][0:3] + comp.simulation_results[simulation][4:6]
@@ -3177,7 +3259,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         ]
 
         for simulation in range(len(expected_sim_results_array)):
-            assert np.allclose(
+            np.testing.assert_allclose(
                 expected_sim_results_array[simulation],
                 # Note: Skip decision variable OutputPort
                 comp.simulation_results[simulation][0:3] + comp.simulation_results[simulation][4:6]
@@ -3197,16 +3279,8 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
             )
 
     @pytest.mark.benchmark(group="Model Based OCM")
-    @pytest.mark.parametrize("mode", pytest.helpers.get_comp_execution_modes() +
-                                     [pytest.helpers.cuda_param('Python-PTX'),
-                                      pytest.param('Python-LLVM', marks=pytest.mark.llvm)])
-    def test_model_based_ocm_after(self, benchmark, mode):
-        if str(mode).startswith('Python-'):
-            ocm_mode = mode.split('-')[1]
-            mode = pnl.ExecutionMode.Python
-        else:
-            # OCM default mode is Python
-            ocm_mode = 'Python'
+    @pytest.mark.parametrize("mode, ocm_mode", pytest.helpers.get_comp_and_ocm_execution_modes())
+    def test_model_based_ocm_after(self, benchmark, mode, ocm_mode):
 
         A = pnl.ProcessingMechanism(name='A')
         B = pnl.ProcessingMechanism(name='B')
@@ -3238,24 +3312,16 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         comp.run(inputs=inputs, execution_mode=mode)
 
         # objective_mech.log.print_entries(pnl.OUTCOME)
-        assert np.allclose(comp.results, [[np.array([1.])], [np.array([1.5])], [np.array([2.25])]])
+        np.testing.assert_allclose(comp.results, [[np.array([1.])], [np.array([1.5])], [np.array([2.25])]])
         if mode == pnl.ExecutionMode.Python:
-            assert np.allclose(np.asfarray(ocm.function.saved_values).flatten(), [0.75, 1.5, 2.25])
+            np.testing.assert_allclose(np.asfarray(ocm.function.saved_values).flatten(), [0.75, 1.5, 2.25])
 
         if benchmark.enabled:
             benchmark(comp.run, inputs, execution_mode=mode)
 
     @pytest.mark.benchmark(group="Model Based OCM")
-    @pytest.mark.parametrize("mode", pytest.helpers.get_comp_execution_modes() +
-                                     [pytest.helpers.cuda_param('Python-PTX'),
-                                      pytest.param('Python-LLVM', marks=pytest.mark.llvm)])
-    def test_model_based_ocm_before(self, benchmark, mode):
-        if str(mode).startswith('Python-'):
-            ocm_mode = mode.split('-')[1]
-            mode = pnl.ExecutionMode.Python
-        else:
-            # OCM default mode is Python
-            ocm_mode = 'Python'
+    @pytest.mark.parametrize("mode, ocm_mode", pytest.helpers.get_comp_and_ocm_execution_modes())
+    def test_model_based_ocm_before(self, benchmark, mode, ocm_mode):
 
         A = pnl.ProcessingMechanism(name='A')
         B = pnl.ProcessingMechanism(name='B')
@@ -3287,9 +3353,9 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         comp.run(inputs=inputs, execution_mode=mode)
 
         # objective_mech.log.print_entries(pnl.OUTCOME)
-        assert np.allclose(comp.results, [[np.array([0.75])], [np.array([1.5])], [np.array([2.25])]])
+        np.testing.assert_allclose(comp.results, [[np.array([0.75])], [np.array([1.5])], [np.array([2.25])]])
         if mode == pnl.ExecutionMode.Python:
-            assert np.allclose(np.asfarray(ocm.function.saved_values).flatten(), [0.75, 1.5, 2.25])
+            np.testing.assert_allclose(np.asfarray(ocm.function.saved_values).flatten(), [0.75, 1.5, 2.25])
 
         if benchmark.enabled:
             benchmark(comp.run, inputs, execution_mode=mode)
@@ -3331,7 +3397,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         log = objective_mech.log.nparray_dictionary()
 
         # "outer" composition
-        assert np.allclose(log["comp"][pnl.OUTCOME], [[0.75], [1.5], [2.25]])
+        np.testing.assert_allclose(log["comp"][pnl.OUTCOME], [[0.75], [1.5], [2.25]])
 
         # preprocess to ignore control allocations
         log_parsed = {}
@@ -3532,7 +3598,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
 
         inputs = {taskLayer: taskTrain, stimulusInfo: stimulusTrain}
         stabilityFlexibility.run(inputs)
-        assert np.allclose(stabilityFlexibility.results,
+        np.testing.assert_allclose(stabilityFlexibility.results,
                            [[[0.0475], [0.33695222], [1.], [1.13867062e-09]],
                             [[0.0475], [1.13635091], [0.93038951], [0.06961049]],
                             [[0.0475], [0.35801411], [0.99999998], [1.77215519e-08]],
@@ -3550,7 +3616,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
             B = pnl.ProcessingMechanism(name='B',
                                         function=pnl.SimpleIntegrator(rate=1))
 
-        comp = pnl.Composition(name='comp')
+        comp = pnl.Composition(name='comp', retain_old_simulation_data=True)
         comp.add_linear_processing_pathway([A, B])
 
         search_range = pnl.SampleSpec(start=0.25, stop=0.75, step=0.25)
@@ -3589,15 +3655,36 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
             # noise
 
         if rand_var: # results for DDM (which has random variables)
-            assert np.allclose(comp.simulation_results,
-                               [[np.array([2.25])], [np.array([3.5])], [np.array([4.75])], [np.array([3.])], [np.array([4.25])], [np.array([5.5])]])
-            assert np.allclose(comp.results,
-                               [[np.array([1.]), np.array([1.1993293])], [np.array([1.]), np.array([3.24637662])]])
+            if num_estimates in {None,1}:
+                np.testing.assert_allclose(comp.simulation_results,[[np.array([1.]),np.array([3.24637662])],
+                                                                    [np.array([1.]),np.array([2.12805516])],
+                                                                    [np.array([1.]),np.array([1.52673967])],
+                                                                    [np.array([1.]),np.array([3.24637662])],
+                                                                    [np.array([1.]),np.array([2.12805516])],
+                                                                    [np.array([1.]),np.array([1.52673967])]])
+            else:
+                np.testing.assert_allclose(comp.simulation_results,[[np.array([1.]), np.array([3.24637662])],
+                                                                    [np.array([1.]), np.array([3.24637662])],
+                                                                    [np.array([1.]), np.array([2.12805516])],
+                                                                    [np.array([1.]), np.array([2.12805516])],
+                                                                    [np.array([1.]), np.array([1.52673967])],
+                                                                    [np.array([1.]), np.array([1.52673967])],
+                                                                    [np.array([1.]), np.array([3.24637662])],
+                                                                    [np.array([1.]), np.array([3.24637662])],
+                                                                    [np.array([1.]), np.array([2.12805516])],
+                                                                    [np.array([1.]), np.array([2.12805516])],
+                                                                    [np.array([1.]), np.array([1.52673967])],
+                                                                    [np.array([1.]), np.array([1.52673967])]])
+            np.testing.assert_allclose(comp.results,
+                                       [[np.array([1.]), np.array([1.1993293])],
+                                        [np.array([1.]), np.array([3.24637662])]])
+
         else:  # results for ProcessingMechanism (which does not have any random variables)
-            assert np.allclose(comp.simulation_results,
-                               [[np.array([2.25])], [np.array([3.5])], [np.array([4.75])], [np.array([3.])], [np.array([4.25])], [np.array([5.5])]])
-            assert np.allclose(comp.results,
-                               [[np.array([1.])], [np.array([1.75])]])
+            np.testing.assert_allclose(comp.simulation_results,
+                                       [[np.array([1.25])], [np.array([1.5])], [np.array([1.75])],
+                                        [np.array([2.])], [np.array([2.25])], [np.array([2.5])]])
+            np.testing.assert_allclose(comp.results,
+                                       [[np.array([1.])], [np.array([1.75])]])
 
     def test_model_based_ocm_no_simulations(self):
         A = pnl.ProcessingMechanism(name='A')
@@ -3663,13 +3750,13 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         inputs = {A: [[[1.0]]]}
 
         comp.run(inputs=inputs, num_trials=10, context='outer_comp', execution_mode=comp_mode)
-        assert np.allclose(comp.results, [[[0.7310585786300049]], [[0.999999694097773]], [[0.999999694097773]], [[0.9999999979388463]], [[0.9999999979388463]], [[0.999999694097773]], [[0.9999999979388463]], [[0.999999999986112]], [[0.999999694097773]], [[0.9999999999999993]]])
+        np.testing.assert_allclose(comp.results, [[[0.7310585786300049]], [[0.999999694097773]], [[0.999999694097773]], [[0.9999999979388463]], [[0.9999999979388463]], [[0.999999694097773]], [[0.9999999979388463]], [[0.999999999986112]], [[0.999999694097773]], [[0.9999999999999993]]])
 
         # control signal value (mod slope) is chosen randomly from all of the control signal values
         # that correspond to a net outcome of 1
         if comp_mode is pnl.ExecutionMode.Python:
             log_arr = A.log.nparray_dictionary()
-            assert np.allclose([[1.], [15.], [15.], [20.], [20.], [15.], [20.], [25.], [15.], [35.]],
+            np.testing.assert_allclose([[1.], [15.], [15.], [20.], [20.], [15.], [20.], [25.], [15.], [35.]],
                                log_arr['outer_comp']['mod_slope'])
 
         if benchmark.enabled:
@@ -3724,7 +3811,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         #
         # Thus, in the correct case, the output of the model is 7 ((5*1)+(-2*-1)) and in the errant case the output of the model is
         # -7 ((5*-1)+(-2*1))
-        assert np.allclose(results, [[7]])
+        np.testing.assert_allclose(results, [[7]])
 
 
 @pytest.mark.control
@@ -3739,14 +3826,14 @@ class TestSampleIterator:
         expected = [0, 2, 4, 6, 8, 10]
 
         for i in range(6):
-            assert np.allclose(next(sample_iterator), expected[i])
+            np.testing.assert_allclose(next(sample_iterator), expected[i])
 
         assert next(sample_iterator, None) is None
 
         sample_iterator.reset()
 
         for i in range(6):
-            assert np.allclose(next(sample_iterator), expected[i])
+            np.testing.assert_allclose(next(sample_iterator), expected[i])
 
         assert next(sample_iterator, None) is None
 
@@ -3759,14 +3846,14 @@ class TestSampleIterator:
         expected = [0, 2, 4, 6, 8, 10]
 
         for i in range(6):
-            assert np.allclose(next(sample_iterator), expected[i])
+            np.testing.assert_allclose(next(sample_iterator), expected[i])
 
         assert next(sample_iterator, None) is None
 
         sample_iterator.reset()
 
         for i in range(6):
-            assert np.allclose(next(sample_iterator), expected[i])
+            np.testing.assert_allclose(next(sample_iterator), expected[i])
 
         assert next(sample_iterator, None) is None
 
@@ -3786,14 +3873,14 @@ class TestSampleIterator:
         expected = [0.65, 3.44, 6.23, 9.02]
 
         for i in range(4):
-            assert np.allclose(next(sample_iterator), expected[i])
+            np.testing.assert_allclose(next(sample_iterator), expected[i])
 
         assert next(sample_iterator, None) is None
 
         sample_iterator.reset()
 
         for i in range(4):
-            assert np.allclose(next(sample_iterator), expected[i])
+            np.testing.assert_allclose(next(sample_iterator), expected[i])
 
         assert next(sample_iterator, None) is None
 
@@ -3805,7 +3892,7 @@ class TestSampleIterator:
         expected = [3.4359565850611617, 4.4847029144020505, 2.4464727305984764, 5.302845918582278, 4.306822898004032]
 
         for i in range(5):
-            assert np.allclose(next(sample_iterator), expected[i])
+            np.testing.assert_allclose(next(sample_iterator), expected[i])
 
     def test_function_with_num(self):
         fun = pnl.NormalDist(mean=5.0)
@@ -3816,7 +3903,7 @@ class TestSampleIterator:
         expected = [3.4359565850611617, 4.4847029144020505, 2.4464727305984764, 5.302845918582278]
 
         for i in range(4):
-            assert np.allclose(next(sample_iterator), expected[i])
+            np.testing.assert_allclose(next(sample_iterator), expected[i])
 
         assert next(sample_iterator, None) is None
 
@@ -3825,14 +3912,14 @@ class TestSampleIterator:
         sample_iterator = SampleIterator(specification=sample_list)
 
         for i in range(len(sample_list)):
-            assert np.allclose(next(sample_iterator), sample_list[i])
+            np.testing.assert_allclose(next(sample_iterator), sample_list[i])
 
         assert next(sample_iterator, None) is None
 
         sample_iterator.reset()
 
         for i in range(len(sample_list)):
-            assert np.allclose(next(sample_iterator), sample_list[i])
+            np.testing.assert_allclose(next(sample_iterator), sample_list[i])
 
         assert next(sample_iterator, None) is None
 
@@ -3849,7 +3936,7 @@ class TestControlTimeScales:
         a = pnl.ProcessingMechanism()
         b = pnl.ProcessingMechanism()
         c = pnl.ControlMechanism(
-            default_variable=1,
+            default_allocation=1,
             function=pnl.SimpleIntegrator,
             control=pnl.ControlSignal(modulates=(pnl.SLOPE, b))
         )
@@ -3877,7 +3964,7 @@ class TestControlTimeScales:
         a = pnl.ProcessingMechanism()
         b = pnl.ProcessingMechanism()
         c = pnl.ControlMechanism(
-            default_variable=1,
+            default_allocation=1,
             function=pnl.SimpleIntegrator,
             control=pnl.ControlSignal(modulates=(pnl.SLOPE, b))
         )
@@ -3905,7 +3992,7 @@ class TestControlTimeScales:
         a = pnl.ProcessingMechanism()
         b = pnl.ProcessingMechanism()
         c = pnl.ControlMechanism(
-            default_variable=1,
+            default_allocation=1,
             function=pnl.SimpleIntegrator,
             control=pnl.ControlSignal(modulates=(pnl.SLOPE, b))
         )
@@ -3945,7 +4032,7 @@ class TestControlTimeScales:
         a = pnl.ProcessingMechanism()
         b = pnl.ProcessingMechanism()
         c = pnl.ControlMechanism(
-            default_variable=1,
+            default_allocation=1,
             function=pnl.SimpleIntegrator,
             control=pnl.ControlSignal(modulates=(pnl.SLOPE, b))
         )
@@ -3991,7 +4078,7 @@ class TestControlTimeScales:
         a = pnl.ProcessingMechanism()
         b = pnl.ProcessingMechanism()
         c = pnl.ControlMechanism(
-            default_variable=1,
+            default_allocation=1,
             function=pnl.SimpleIntegrator,
             control=pnl.ControlSignal(modulates=(pnl.SLOPE, b))
         )
@@ -4019,7 +4106,7 @@ class TestControlTimeScales:
         a = pnl.ProcessingMechanism()
         b = pnl.ProcessingMechanism()
         c = pnl.ControlMechanism(
-            default_variable=1,
+            default_allocation=1,
             function=pnl.SimpleIntegrator,
             control=pnl.ControlSignal(modulates=(pnl.SLOPE, b))
         )
@@ -4049,7 +4136,7 @@ class TestControlTimeScales:
         a = pnl.ProcessingMechanism()
         b = pnl.ProcessingMechanism()
         c = pnl.ControlMechanism(
-            default_variable=1,
+            default_allocation=1,
             function=pnl.SimpleIntegrator,
             control=pnl.ControlSignal(modulates=(pnl.SLOPE, b))
         )
@@ -4084,7 +4171,7 @@ class TestControlTimeScales:
         a = pnl.ProcessingMechanism()
         b = pnl.ProcessingMechanism()
         c = pnl.ControlMechanism(
-            default_variable=1,
+            default_allocation=1,
             function=pnl.SimpleIntegrator,
             control=pnl.ControlSignal(modulates=(pnl.SLOPE, b))
         )

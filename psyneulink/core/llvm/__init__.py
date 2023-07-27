@@ -14,7 +14,7 @@ import functools
 import numpy as np
 import time
 from math import ceil, log2
-from typing import Set
+from psyneulink._typing import Set
 
 from llvmlite import ir
 
@@ -25,6 +25,8 @@ from .debug import debug_env
 from .execution import *
 from .execution import _tupleize
 from .jit_engine import *
+from .warnings import *
+
 
 __all__ = ['LLVMBuilderContext', 'ExecutionMode']
 

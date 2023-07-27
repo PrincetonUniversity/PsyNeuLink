@@ -575,7 +575,9 @@ import numbers
 import warnings
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Literal
 
 from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import Function
@@ -587,10 +589,10 @@ from psyneulink.core.globals.keywords import \
     COMBINE, CONTROL_SIGNAL, DEFAULT_VARIABLE, EXPONENT, FUNCTION, GATING_SIGNAL, \
     INPUT_PORT, INPUT_PORTS, INPUT_PORT_PARAMS, \
     LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, NAME, OPERATION, OUTPUT_PORT, OUTPUT_PORTS, OWNER, \
-    PARAMS, PRODUCT, PROJECTIONS, REFERENCE_VALUE, \
+    PARAMS, PROJECTIONS, REFERENCE_VALUE, \
     SENDER, SHADOW_INPUTS, SHADOW_INPUT_NAME, SIZE, PORT_TYPE, SUM, VALUE, VARIABLE, WEIGHT
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
     append_type_to_name, convert_to_np_array, is_numeric, iscompatible, kwCompatibilityLength, convert_to_list, parse_valid_identifier
@@ -613,12 +615,8 @@ EXPONENT_INDEX = 2
 
 DEFER_VARIABLE_SPEC_TO_MECH_MSG = "InputPort variable not yet defined, defer to Mechanism"
 
-class InputPortError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class InputPortError(PortError):
+    pass
 
 
 class InputPort(Port_Base):
@@ -714,8 +712,8 @@ class InputPort(Port_Base):
         any inputs) and the `Mechanisms <Mechanism>` to which they belong, as an error is returned if an InputPort
         is executed and its variable is assigned None. If *default_input* is assigned *DEFAULT_VARIABLE*, then the
         `default value <Parameter_Defaults>` for the InputPort's `variable <InputPort.variable>` is used as its value.
-        This  is useful for assignment to a Mechanism that needs a fixed value as the input to its `function
-        <Mechanism_Base.function>`.
+        This  is useful for assignment to a Mechanism that needs a constant (i.e., fixed value) as the input to its
+        `function <Mechanism_Base.function>`.
 
         .. note::
            If `default_input <InputPort.default_input>` is assigned *DEFAULT_VARIABLE*, then its `internal_only
@@ -875,7 +873,7 @@ class InputPort(Port_Base):
 
     @handle_external_context()
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  owner=None,
                  reference_value=None,
@@ -884,13 +882,13 @@ class InputPort(Port_Base):
                  default_input=None,
                  function=None,
                  projections=None,
-                 combine:tc.optional(tc.enum(SUM,PRODUCT))=None,
+                 combine: Optional[Literal['sum', 'product']] = None,
                  weight=None,
                  exponent=None,
-                 internal_only: tc.optional(bool) = None,
+                 internal_only: Optional[bool] = None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
+                 prefs:   Optional[ValidPrefSet] = None,
                  context=None,
                  **kwargs):
 
@@ -1114,7 +1112,7 @@ class InputPort(Port_Base):
     def _get_all_projections(self):
         return self._get_all_afferents()
 
-    @tc.typecheck
+    @beartype
     def _parse_port_specific_specs(self, owner, port_dict, port_specific_spec):
         """Get weights, exponents and/or any connections specified in an InputPort specification tuple
 

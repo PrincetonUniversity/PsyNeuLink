@@ -48,22 +48,51 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.7, 3.8, 3.9]
+        python-version: ['3.7', '3.11']
         python-architecture: ['x64']
         extra-args: ['']
         os: [ubuntu, macos, windows]
         include:
-          # add 32-bit build on windows
-          - python-version: 3.8
-            python-architecture: 'x86'
-            os: windows
           # code-coverage build on macos python 3.9
-          - python-version: 3.9
+          - python-version: '3.9'
             os: macos
             extra-args: '--cov=psyneulink'
+
+          # --forked run of python only tests
+          # Python tests are enough to test potential naming issues
+          - python-version: '3.9'
+            os: ubuntu
+            extra-args: '--forked -m "not llvm"'
+
+          # add 32-bit build on windows
+          - python-version: '3.8'
+            python-architecture: 'x86'
+            os: windows
+
+          # fp32 run on linux python 3.10
+          - python-version: '3.10'
+            os: ubuntu
+            extra-args: '--fp-precision=fp32'
+
+          # --benchmark-enable run on macos python 3.10
+          - python-version: '3.10'
+            os: macos
+            # pytest needs both '--benchmark-only' and '-m benchmark'
+            # The former fails the test if benchamrks cannot be enabled
+            # The latter works around a crash in pytest when collecting tests:
+            # https://github.com/ionelmc/pytest-benchmark/issues/243
+            extra-args: '-m benchmark --benchmark-enable --benchmark-only --benchmark-min-rounds=2 --benchmark-max-time=0.001 --benchmark-warmup=off -n0 --dist=no'
+
+          # add python 3.8 build on macos since 3.7 is broken
+          # https://github.com/actions/virtual-environments/issues/4230
+          - python-version: '3.8'
+            python-architecture: 'x64'
+            os: macos
+
         exclude:
-          # 3.7 is broken on macos-11, https://github.com/actions/virtual-environments/issues/4230
-          - python-version: 3.7
+          # 3.7 is broken on macos-11,
+          # https://github.com/actions/virtual-environments/issues/4230
+          - python-version: '3.7'
             os: macos
 
     steps:
@@ -115,6 +144,14 @@ jobs:
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
+    - name: Print test machine/env info
+      shell: bash
+      run: |
+        python -c "import numpy; numpy.show_config()"
+        case "$RUNNER_OS" in
+          Linux*) lscpu;;
+        esac
+
     - name: Test with pytest
       timeout-minutes: 180
       run: pytest --junit-xml=tests_out.xml --verbosity=0 -n auto ${{ matrix.extra-args }}
@@ -122,10 +159,10 @@ jobs:
     - name: Upload test results
       uses: actions/upload-artifact@v3
       with:
-        name: test-results-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}-${{ matrix.extra-args }}
+        name: test-results-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}
         path: tests_out.xml
         retention-days: 5
-      if: success() || failure()
+      if: (success() || failure()) && ! contains(matrix.extra-args, 'forked')
 
     - name: Upload coveralls code coverage
       if: contains(matrix.extra-args, '--cov=psyneulink')

@@ -28,7 +28,7 @@ def test_random_int(benchmark, mode):
         init_fun(state, SEED)
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_int32')
-        out = ctypes.c_longlong()
+        out = ctypes.c_ulonglong()
         def f():
             gen_fun(state, out)
             return out.value
@@ -39,7 +39,7 @@ def test_random_int(benchmark, mode):
         init_fun.cuda_call(gpu_state, np.int32(SEED))
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_int32')
-        out = np.asarray([0], dtype=np.int64)
+        out = np.asarray([0], dtype=np.uint64)
         gpu_out = pnlvm.jit_engine.pycuda.driver.Out(out)
         def f():
             gen_fun.cuda_call(gpu_state, gpu_out)
@@ -48,7 +48,7 @@ def test_random_int(benchmark, mode):
         assert False, "Unknown mode: {}".format(mode)
 
     res = [f(), f()]
-    assert np.allclose(res, [3626764237, 1654615998])
+    np.testing.assert_allclose(res, [3626764237, 1654615998])
     benchmark(f)
 
 
@@ -94,7 +94,7 @@ def test_random_float(benchmark, mode):
         assert False, "Unknown mode: {}".format(mode)
 
     res = [f(), f()]
-    assert np.allclose(res, [0.8444218515250481, 0.7579544029403025])
+    np.testing.assert_allclose(res, [0.8444218515250481, 0.7579544029403025])
     benchmark(f)
 
 
@@ -135,7 +135,7 @@ def test_random_normal(benchmark, mode):
         assert False, "Unknown mode: {}".format(mode)
 
     res = [f(), f()]
-    assert np.allclose(res, [0.4644982638709743, 0.6202001216069017])
+    np.testing.assert_allclose(res, [0.4644982638709743, 0.6202001216069017], rtol=1e-5, atol=1e-8)
     benchmark(f)
 
 @pytest.mark.benchmark(group="Marsenne Twister Binomial distribution")

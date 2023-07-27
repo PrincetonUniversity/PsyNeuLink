@@ -63,17 +63,18 @@ class TestOutputPorts:
         C.add_node(node=mech)
         C.termination_processing[pnl.TimeScale.TRIAL] = pnl.AtPass(2)
         outs = C.run(inputs={mech: var}, num_trials=2, execution_mode=comp_mode)
-        assert np.allclose(outs, expected1)
+        # outs is entire mechanism value, expected is output port value
+        np.testing.assert_allclose(outs[0], expected1)
         outs = C.run(inputs={mech: var}, num_trials=2, execution_mode=comp_mode)
-        assert np.allclose(outs, expected2)
+        np.testing.assert_allclose(outs[0], expected2)
 
     def test_no_path_afferents(self):
         A = pnl.OutputPort()
         with pytest.raises(pnl.PortError) as error:
             A.path_afferents
-        assert '"OutputPorts do not have \'path_afferents\'; (access attempted for Deferred Init OutputPort)."' \
+        assert 'OutputPorts do not have \'path_afferents\'; (access attempted for Deferred Init OutputPort).' \
                in str(error.value)
         with pytest.raises(pnl.PortError) as error:
             A.path_afferents = ['test']
-        assert '"OutputPorts are not allowed to have \'path_afferents\' ' \
-               '(assignment attempted for Deferred Init OutputPort)."' in str(error.value)
+        assert 'OutputPorts are not allowed to have \'path_afferents\' ' \
+               '(assignment attempted for Deferred Init OutputPort).' in str(error.value)

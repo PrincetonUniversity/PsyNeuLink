@@ -45,25 +45,25 @@ class TestProjectionSpecificationFormats:
                                                  M3_M4_matrix_B,
                                                  M4])
 
-        assert np.allclose(M2_M3_proj.matrix.base, M2_M3_matrix)
+        np.testing.assert_allclose(M2_M3_proj.matrix.base, M2_M3_matrix)
         assert M2.efferents[0] is M2_M3_proj
-        assert np.allclose(M3.efferents[0].matrix.base, M3_M4_matrix_A)
+        np.testing.assert_allclose(M3.efferents[0].matrix.base, M3_M4_matrix_A)
         # This is if different Projections are allowed between the same sender and receiver in different Compositions:
-        # assert np.allclose(M3.efferents[1].matrix, M3_M4_matrix_B)
+        # np.testing.assert_allclose(M3.efferents[1].matrix, M3_M4_matrix_B)
         c.run(inputs={M1:[2, -30]})
-        # assert np.allclose(c.results, [[-130.19166667, -152.53333333, -174.875]])
-        assert np.allclose(c.results, [[ -78.115,  -91.52 , -104.925]])
+        # np.testing.assert_allclose(c.results, [[-130.19166667, -152.53333333, -174.875]])
+        np.testing.assert_allclose(c.results, [[[-78.115,  -91.52, -104.925]]])
 
     @pytest.mark.parametrize('args', [
         (pnl.CONTROL, None),
         (pnl.MODULATES, None),
         (pnl.PROJECTIONS, None),
-        ('mod and ctl', '"Both \'control\' and \'modulates\' arguments are specified in '
-                        'the constructor for \'ControlSignal; Should use just \'control\'."'),
+        ('mod and ctl', 'Both \'control\' and \'modulates\' arguments are specified in '
+                        'the constructor for \'ControlSignal; Should use just \'control\'.'),
         ('proj and ctl', 'Both \'control\' and \'projections\' arguments are specified in the constructor for '
                          '\'ControlSignal; Must use just one or the other.'),
-        ('proj and mod','"Both \'modulates\' and \'projections\' arguments are specified in the constructor for '
-                        '\'ControlSignal; Should use just \'projections\' (or \'control\') "')
+        ('proj and mod','Both \'modulates\' and \'projections\' arguments are specified in the constructor for '
+                        '\'ControlSignal; Should use just \'projections\' (or \'control\') ')
     ])
     @pytest.mark.control
     def test_control_signal_projections_arg(self, args):
@@ -92,12 +92,12 @@ class TestProjectionSpecificationFormats:
         (pnl.GATE, None),
         (pnl.MODULATES, None),
         (pnl.PROJECTIONS, None),
-        ('mod and gate', '"Both \'gate\' and \'modulates\' arguments are specified in the constructor for '
-                         '\'GatingSignal; Should use just \'gate\'."'),
+        ('mod and gate', 'Both \'gate\' and \'modulates\' arguments are specified in the constructor for '
+                         '\'GatingSignal; Should use just \'gate\'.'),
         ('proj and gate', 'Both \'gate\' and \'projections\' arguments are specified in the constructor for '
                           '\'GatingSignal; Must use just one or the other.'),
-        ('proj and mod','"Both \'modulates\' and \'projections\' arguments are specified in the constructor for '
-                        '\'GatingSignal; Should use just \'projections\' (or \'gate\') "')
+        ('proj and mod','Both \'modulates\' and \'projections\' arguments are specified in the constructor for '
+                        '\'GatingSignal; Should use just \'projections\' (or \'gate\') ')
     ])
     @pytest.mark.control
     def test_gating_signal_projections_arg(self, args):
@@ -140,13 +140,13 @@ class TestProjectionSpecificationFormats:
         if extra_spec:
             ctl_sig_spec.update({extra_spec:[M.parameter_ports[pnl.STARTING_VALUE]]})
             gating_sig_spec.update({extra_spec:[M.output_ports[pnl.RESPONSE_TIME]]})
-            ctl_err_msg = '"Both \'PROJECTIONS\' and \'CONTROL\' entries found in specification dict for ' \
-                          '\'ControlSignal\' of \'ControlMechanism-0\'. Must use only one or the other."'
+            ctl_err_msg = 'Both \'PROJECTIONS\' and \'CONTROL\' entries found in specification dict for ' \
+                          '\'ControlSignal\' of \'ControlMechanism-0\'. Must use only one or the other.'
             with pytest.raises(pnl.ControlSignalError) as err:
                 pnl.ControlMechanism(control_signals=[ctl_sig_spec])
             assert ctl_err_msg == str(err.value)
-            gating_err_msg = '"Both \'PROJECTIONS\' and \'GATE\' entries found in specification dict for ' \
-                             '\'GatingSignal\' of \'GatingMechanism-0\'. Must use only one or the other."'
+            gating_err_msg = 'Both \'PROJECTIONS\' and \'GATE\' entries found in specification dict for ' \
+                             '\'GatingSignal\' of \'GatingMechanism-0\'. Must use only one or the other.'
             with pytest.raises(pnl.GatingSignalError) as err:
                 pnl.GatingMechanism(gating_signals=[gating_sig_spec])
             assert gating_err_msg == str(err.value)
@@ -495,7 +495,7 @@ class TestProjectionSpecificationFormats:
                                     )
         c = pnl.Composition(pathways=[[t1, proj, t2]])
         val = c.execute(inputs={t1:[1,2]})
-        assert np.allclose(val, [[8, 12]])
+        np.testing.assert_allclose(val, [[8, 12]])
 
         t1 = pnl.TransferMechanism(size=2)
         t2 = pnl.TransferMechanism(size=2)
@@ -507,7 +507,7 @@ class TestProjectionSpecificationFormats:
                                     )
         c = pnl.Composition(pathways=[[t1, proj, t2]])
         val = c.execute(inputs={t1:[1,2]})
-        assert np.allclose(val, [[1, 8]])
+        np.testing.assert_allclose(val, [[1, 8]])
 
         t1 = pnl.TransferMechanism(size=2)
         t2 = pnl.TransferMechanism(size=2)
@@ -518,7 +518,7 @@ class TestProjectionSpecificationFormats:
                                     )
         c = pnl.Composition(pathways=[[t1, proj, t2]])
         val = c.execute(inputs={t1:[1,2]})
-        assert np.allclose(val, [[1, 8]])
+        np.testing.assert_allclose(val, [[1, 8]])
 
     def test_masked_mapping_projection_mask_conficts_with_matrix(self):
 

@@ -79,9 +79,9 @@ An AutoAssociativeLearningMechanism executes in the same manner as standard `Lea
 * 1) its execution can be enabled or disabled by setting the `learning_enabled
   <RecurrentTransferMechanism.learning_enabled>` attribute of the `RecurrentTransferMechanism` with which it is
   associated (identified in its `activity_source <AutoAssociativeLearningMechanism.activity_source>` attribute).
-* 2) it is executed during the `execution phase <System_Execution>` of the System's execution.  Note that this is
+* 2) it is executed during the `execution phase <Composition_Execution>` of the Composition's execution.  Note that this is
   different from the behavior of supervised learning algorithms (such as `Reinforcement` and `BackPropagation`),
-  that are executed during the `learning phase <System_Execution>` of a System's execution
+  that are executed during the `learning phase <Composition_Execution>` of a Composition's execution
 
 
 .. _AutoAssociativeLearningMechanism_Class_Reference:
@@ -92,22 +92,23 @@ Class Reference
 """
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union, Callable
 
 from psyneulink.core.components.component import parameter_keywords
-from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.nonstateful.learningfunctions import Hebbian
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
-    ACTIVATION_INPUT, LearningMechanism, LearningTiming, LearningType
+    ACTIVATION_INPUT, LearningMechanism, LearningMechanismError, LearningTiming, LearningType
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.projection import projection_keywords
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     ADDITIVE, AUTOASSOCIATIVE_LEARNING_MECHANISM, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, NAME, OWNER_VALUE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import is_numeric, parameter_spec
+from psyneulink.core.globals.utilities import is_numeric, ValidParamSpecType
 
 __all__ = [
     'AutoAssociativeLearningMechanism', 'AutoAssociativeLearningMechanismError', 'DefaultTrainingMechanism',
@@ -124,12 +125,8 @@ output_port_names = [LEARNING_SIGNAL]
 
 DefaultTrainingMechanism = ObjectiveMechanism
 
-class AutoAssociativeLearningMechanismError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class AutoAssociativeLearningMechanismError(LearningMechanismError):
+    pass
 
 
 class AutoAssociativeLearningMechanism(LearningMechanism):
@@ -213,16 +210,16 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
     learning_rate : float, 1d or 2d np.array, or np.matrix of numeric values : default None
         determines the learning rate used by the AutoAssociativeLearningMechanism's `function
-        <AutoAssociativeLearningMechanism.function>` to scale the weight change matrix it returns. If it is a scalar, it is used to multiply the weight change matrix;  if it is a 2d array or matrix,
+        <AutoAssociativeLearningMechanism.function>` to scale the weight change matrix it returns. If it is a scalar,
+        it is used to multiply the weight change matrix;  if it is a 2d array or matrix,
         it is used to Hadamard (elementwise) multiply the weight matrix (allowing the contribution of individual
         *connections* to be scaled);  if it is a 1d np.array, it is used to Hadamard (elementwise) multiply the input
         to the `function <AutoAssociativeLearningMechanism.function>` (i.e., the `value <InputPort.value>` of the
         AutoAssociativeLearningMechanism's *ACTIVATION_INPUT* `InputPort <AutoAssociativeLearningMechanism_Structure>`,
         allowing the contribution of individual *units* to be scaled). If specified, the value supersedes the
-        learning_rate assigned to any `Process` or `System` to which the AutoAssociativeLearningMechanism belongs.
-        If it is `None`, then the `learning_rate <Process.learning_rate>` specified for the Process to which the
-        AutoAssociativeLearningMechanism belongs belongs is used;  and, if that is `None`, then the `learning_rate
-        <System.learning_rate>` for the System to which it belongs is used. If all are `None`, then the
+        learning_rate assigned to any `Composition` to which the AutoAssociativeLearningMechanism belongs.
+        If it is `None`, then the `learning_rate <Composition.learning_rate>` specified for the System to which the
+        AutoAssociativeLearningMechanism belongs belongs is used;  and, if that is `None`, then the
         `default_learning_rate <LearningFunction.default_learning_rate>` for the `function
         <AutoAssociativeLearningMechanism.function>` is used (see `learning_rate <LearningMechanism_Learning_Rate>`
         for additional details).
@@ -320,17 +317,17 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
     classPreferenceLevel = PreferenceLevel.TYPE
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
-                 default_variable:tc.any(list, np.ndarray),
+                 default_variable: Union[list, np.ndarray],
                  size=None,
-                 function: tc.optional(is_function_type) = None,
-                 learning_signals:tc.optional(tc.optional(list)) = None,
-                 modulation:tc.optional(str)=None,
-                 learning_rate:tc.optional(parameter_spec)=None,
+                 function: Optional[Callable] = None,
+                 learning_signals: Optional[list] = None,
+                 modulation: Optional[str] = None,
+                 learning_rate: Optional[ValidParamSpecType] = None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
+                 prefs: Optional[ValidPrefSet] = None,
                  **kwargs
                  ):
 

@@ -775,7 +775,9 @@ from collections import defaultdict
 from collections.abc import Iterable
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union, Type
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import ComponentError, DefaultsFlexibility, component_keywords
@@ -847,13 +849,8 @@ def _is_port_class(spec):
 #        Individual portRegistries (used for naming) are created for each Mechanism
 PortRegistry = {}
 
-class PortError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-
-    def __str__(self):
-        return repr(self.error_value)
+class PortError(ComponentError):
+    pass
 
 
 # DOCUMENT:  INSTANTIATION CREATES AN ATTIRBUTE ON THE OWNER MECHANISM WITH THE PORT'S NAME + VALUE_SUFFIX
@@ -1006,10 +1003,10 @@ class Port_Base(Port):
     classPreferenceLevel = PreferenceLevel.CATEGORY
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     @abc.abstractmethod
     def __init__(self,
-                 owner:tc.any(Mechanism, Projection),
+                 owner: Union[Mechanism, Projection],
                  variable=None,
                  size=None,
                  projections=None,
@@ -1284,9 +1281,7 @@ class Port_Base(Port):
               ModulatorySignal: _instantiate_projections_from_port (.efferents)
         """
 
-        raise PortError("{} must implement _instantiate_projections (called for {})".
-                         format(self.__class__.__name__,
-                                self.name))
+        raise PortError("f{self.__class__.__name__} must implement _instantiate_projections (called for {self.name}).")
 
     # FIX: MOVE TO InputPort AND ParameterPort OR...
     # IMPLEMENTATION NOTE:  MOVE TO COMPOSITION ONCE THAT IS IMPLEMENTED
@@ -1375,22 +1370,26 @@ class Port_Base(Port):
 
                 # validate receiver
                 if proj_receiver is not None and proj_receiver != self:
-                    raise PortError("Projection ({}) assigned to {} of {} already has a receiver ({})".
-                                     format(projection_type.__name__, self.name, self.owner.name, proj_receiver.name))
+                    raise PortError(f"Projection ({projection_type.__name__}) "
+                                    f"assigned to '{self.name}' of '{self.owner.name}' "
+                                    f"already has a receiver ('{proj_receiver.owner.name}[{proj_receiver.name}]').")
                 projection._init_args[RECEIVER] = self
-
 
                 # parse/validate sender
                 if proj_sender:
                     # If the Projection already has Port as its sender,
                     #    it must be the same as the one specified in the connection spec
-                    if isinstance(proj_sender, Port) and proj_sender != port:
-                        raise PortError("Projection assigned to {} of {} from {} already has a sender ({})".
-                                         format(self.name, self.owner.name, port.name, proj_sender.name))
+                    if isinstance(proj_sender, Port):
+                        if proj_sender == port:
+                            sender = port
+                        else:
+                            raise PortError(
+                                f"Projection assigned to '{self.name}' of '{self.owner.name}' from {port.name} "
+                                f"already has a sender ('{proj_sender.owner.name}[{proj_sender.name}]').")
                     # If the Projection has a Mechanism specified as its sender:
                     elif isinstance(port, Port):
-                        #    Connection spec (port) is specified as a Port,
-                        #    so validate that Port belongs to Mechanism and is of the correct type
+                        #    Connection spec (port) is specified as a Port, so validate that
+                        #       Port belongs to proj_sender Mechanism and is of the correct type
                         sender = _get_port_for_socket(owner=self.owner,
                                                        mech=proj_sender,
                                                        port_spec=port,
@@ -1423,8 +1422,8 @@ class Port_Base(Port):
                 elif inspect.isclass(sender) and issubclass(sender, Port):
                     sender_name = sender.__name__
                 else:
-                    raise PortError("SENDER of {} to {} of {} is neither a Port or Port class".
-                                     format(projection_type.__name__, self.name, self.owner.name))
+                    raise PortError(f"SENDER of {projection_type.__name__} to {self.name} of {self.owner.name} "
+                                    f"is neither a Port or Port class.")
                 projection._assign_default_projection_name(port=self,
                                                            sender_name=sender_name,
                                                            receiver_name=self.name)
@@ -2300,6 +2299,16 @@ class Port_Base(Port):
         raise PortError(f"{self.__class__.__name__}s are not allowed to have 'efferents' "
                              f"(assignment attempted for {self.full_name}).")
 
+    def get_afferents(self, from_component=None):
+        return self._get_matching_projections(
+            from_component, self.all_afferents, filter_component_is_sender=True
+        )
+
+    def get_efferents(self, to_component=None):
+        return self._get_matching_projections(
+            to_component, self.efferents, filter_component_is_sender=False
+        )
+
     @property
     def full_name(self):
         """Return name relative to owner as:  <owner.name>[<self.name>]"""
@@ -2380,12 +2389,15 @@ class Port_Base(Port):
             elif afferent.sender.modulation == DISABLE:
                 name = None
             elif afferent.sender.modulation == OVERRIDE:
+                assert f_mod_ptr.type == arg_out.type, \
+                    "Shape mismatch: Value of '{}' for '{}' ({}) " \
+                    "should match value of '{}'s '{}' ({})".format(afferent.sender.name,
+                                                                   afferent.sender.owner.name,
+                                                                   self.defaults.value,
+                                                                   self.owner.name,
+                                                                   self.name,
+                                                                   afferent.defaults.value)
                 # Directly store the value in the output array
-                if f_mod_ptr.type != arg_out.type:
-                    assert len(f_mod_ptr.type.pointee) == 1
-                    warnings.warn("Shape mismatch: Overriding modulation should match parameter port output: {} vs. {}".format(
-                                  afferent.defaults.value, self.defaults.value))
-                    f_mod_ptr = builder.gep(f_mod_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
                 builder.store(builder.load(f_mod_ptr), arg_out)
                 return builder
             else:
@@ -2399,7 +2411,8 @@ class Port_Base(Port):
                 if f_mod_param_ptr.type != f_mod_ptr.type:
                     warnings.warn("Shape mismatch: Modulation vs. modulated parameter: {} vs. {}".format(
                                   afferent.defaults.value,
-                                  getattr(self.function.parameters, name).get(None)))
+                                  getattr(self.function.parameters, name).get(None)),
+                                  pnlvm.PNLCompilerWarning)
                     param_val = pnlvm.helpers.load_extract_scalar_array_one(builder, f_mod_ptr)
                 else:
                     param_val = builder.load(f_mod_ptr)
@@ -2583,16 +2596,16 @@ def _instantiate_port_list(owner,
 
     return ports
 
-@tc.typecheck
-def _instantiate_port(port_type:_is_port_class,           # Port's type
-                       owner:tc.any(Mechanism, Projection),  # Port's owner
-                       reference_value,                      # constraint for Port's value and default for variable
-                       name:tc.optional(str)=None,           # port's name if specified
-                       variable=None,                        # used as default value for port if specified
-                       params=None,                          # port-specific params
-                       prefs=None,
-                       context=None,
-                       **port_spec):                        # captures *port_spec* arg and any other non-standard ones
+@beartype
+def _instantiate_port(port_type: Type[Port],  # Port's type
+                      owner: Union[Mechanism, Projection],  # Port's owner
+                      reference_value,  # constraint for Port's value and default for variable
+                      name: Optional[str] = None,  # port's name if specified
+                      variable=None,  # used as default value for port if specified
+                      params=None,  # port-specific params
+                      prefs=None,
+                      context=None,
+                      **port_spec):                        # captures *port_spec* arg and any other non-standard ones
     """Instantiate a Port of specified type, with a value that is compatible with reference_value
 
     This is the interface between the various ways in which a port can be specified and the Port's constructor
@@ -2812,7 +2825,7 @@ PORT_SPEC_INDEX = 0
 #          THESE CAN BE USED BY THE InputPort's LinearCombination Function
 #          (AKIN TO HOW THE MECHANISM'S FUNCTION COMBINES InputPort VALUES)
 #          THIS WOULD ALLOW FULLY GENEREAL (HIEARCHICALLY NESTED) ALGEBRAIC COMBINATION OF INPUT VALUES TO A MECHANISM
-@tc.typecheck
+@beartype
 def _parse_port_spec(port_type=None,
                       owner=None,
                       reference_value=None,
@@ -2871,14 +2884,49 @@ def _parse_port_spec(port_type=None,
 
         # If it is a Port specification dictionary
         if isinstance(port_spec[PORT_SPEC_ARG], dict):
-
-            # If the Port specification is a Projection that has a sender already assigned,
-            #    then return that Port with the Projection assigned to it
-            #    (this occurs, for example, if an instantiated ControlSignal is used to specify a parameter
+            # If the Port specification has a Projection specification (instantiated or in deferred_init)
+            # (used to define its connection) then return port specified in the Projection.
+            # This can either the sender or the receiver of the specified Projection, depending on the caller:
+            # - if the sender is specified in the Projection, return port = receiver
+            #   (e.g., projection is a ControlProjections with its receiver (ParameterPort) specified,
+            #          so return port = sender -- i.e., ControlSignal to which ControlProjection should be connected)
+            # - if the receiver is specified in the Projection, return port = sender
+            #   (e.g., projection is from an OutputPort with its sender specified,
+            #          so return the port = receiver -- i.e., InputPort to which Projection should be connected)
+            # FIX: WHAT IF PORT SPECIFICATION DICT HAS OTHER SPECS, SUCH AS SIZE?
+            # FIX: POSSIBLY THIS SHOULD BE CALLED ONLY IF DICT CONTAINS *ONLY* A PROJECTION SPEC?
             try:
-                assert len(port_spec[PORT_SPEC_ARG][PROJECTIONS])==1
-                projection = port_spec[PORT_SPEC_ARG][PROJECTIONS][0]
-                port = projection.sender
+                projection = port_spec[PORT_SPEC_ARG][PROJECTIONS]
+                if isinstance(projection, list):
+                    assert len(port_spec[PORT_SPEC_ARG][PROJECTIONS])==1
+                    projection = port_spec[PORT_SPEC_ARG][PROJECTIONS][0]
+                if projection.initialization_status == ContextFlags.INITIALIZED:
+                    sender = projection.sender
+                    receiver = projection.receiver
+                elif projection.initialization_status == ContextFlags.DEFERRED_INIT:
+                    sender = projection._init_args[SENDER]
+                    receiver = projection._init_args[RECEIVER]
+                else:
+                    assert False, f"PROGRAM ERROR: Projection ('{projection.name}') specified for" \
+                                  f" {port_type.__name__} of '{owner.name}' has unrcognized initialization_status: " \
+                                  f"{projection.initialization_status.name}"
+                # Check whether sender and/or receiver is an instantiated Port
+                sender_instantiated = isinstance(sender, Port)
+                if sender_instantiated:
+                    sender_instantiated = sender.initialization_status == ContextFlags.INITIALIZED
+                receiver_instantiated = isinstance(receiver, Port)
+                if receiver_instantiated:
+                    receiver_instantiated = receiver.initialization_status == ContextFlags.INITIALIZED
+                # Ensure that *either* sender or receiver is an instantiated Port, but *not both*
+                assert sender_instantiated ^ receiver_instantiated, \
+                    f"PROGRAM ERROR: Projection ('{projection.name}') specified for" \
+                    f" {port_type.__name__} of '{owner.name}' has both sender and receiver instantiated: " \
+                    f"sender: '{sender.name}'; receiver: '{receiver.name}'"
+                if sender_instantiated:
+                    port = projection.receiver
+                else:
+                    port = projection.sender
+
                 if port.initialization_status == ContextFlags.DEFERRED_INIT:
                     port._init_args[PROJECTIONS] = projection
                 else:
@@ -3138,9 +3186,9 @@ def _parse_port_spec(port_type=None,
 
         if isinstance(port_specification, (list, set)):
             port_specific_specs = ProjectionTuple(port=port_specification,
-                                              weight=None,
-                                              exponent=None,
-                                              projection=port_type)
+                                                  weight=None,
+                                                  exponent=None,
+                                                  projection=port_type)
 
         # Port specification is a tuple
         elif isinstance(port_specification, tuple):
@@ -3210,13 +3258,8 @@ def _parse_port_spec(port_type=None,
                                 port = port_attr[port]
                             except:
                                 name = owner.name if 'unnamed' not in owner.name else 'a ' + owner.__class__.__name__
-                                raise PortError("Unrecognized name ({}) for {} "
-                                                 "of {} in specification of {} "
-                                                 "for {}".format(port,
-                                                                 PORTS,
-                                                                 mech.name,
-                                                                 port_type.__name__,
-                                                                 name))
+                                raise PortError("Unrecognized name ({port}) for {PORTS} of {mech.name} "
+                                                "in specification of {port_type.__name__} for {name}.")
                             # If port_spec was a tuple, put port back in as its first item and use as projection spec
                             if isinstance(port_spec, tuple):
                                 port = (port,) + port_spec[1:]
@@ -3252,14 +3295,11 @@ def _parse_port_spec(port_type=None,
                         params[PROJECTIONS] = port_specific_args[key]
                         del port_specific_args[key]
                 else:
-                    raise PortError("There is more than one entry of the {} "
-                                     "specification dictionary for {} ({}) "
-                                     "that is not a keyword; there should be "
-                                     "only one (used to name the Port, with a "
-                                     "list of Projection specifications".
-                                     format(port_type.__name__,
-                                            owner.name,
-                                            ", ".join([s for s in list(port_specific_args.keys())])))
+                    raise PortError(f"There is more than one entry of the {port_type.__name__} "
+                                    f"specification dictionary for {owner.name} "
+                                    f"({', '.join([s for s in list(port_specific_args.keys())])}) "
+                                    f"that is not a keyword; there should be only one (used to name the Port, "
+                                    f"with a list of Projection specifications.")
 
             for param in port_type.portAttributes:
                 # KDM 12/24/19: below is meant to skip overwriting an already
@@ -3352,7 +3392,7 @@ def _parse_port_spec(port_type=None,
     #                                 port_dict[OWNER].name, spec_function_value, spec_function))
 
     if port_dict[REFERENCE_VALUE] is not None and not iscompatible(port_dict[VALUE], port_dict[REFERENCE_VALUE]):
-        port_name = f"the {port_dict[NAME]}" if (NAME in port_dict and port_dict[NAME]) else f"an"
+        port_name = f"the {port_dict[NAME]}" if (NAME in port_dict and port_dict[NAME]) else f"a"
         raise PortError(f"The value ({port_dict[VALUE]}) for {port_name} {port_type.__name__} of "
                         f"{owner.name} does not match the reference_value ({port_dict[REFERENCE_VALUE]}) "
                         f"used for it at construction.")
@@ -3362,14 +3402,14 @@ def _parse_port_spec(port_type=None,
 
 # FIX: REPLACE mech_port_attribute WITH DETERMINATION FROM port_type
 # FIX:          ONCE PORT CONNECTION CHARACTERISTICS HAVE BEEN IMPLEMENTED IN REGISTRY
-@tc.typecheck
+@beartype
 def _get_port_for_socket(owner,
-                          connectee_port_type:tc.optional(_is_port_class)=None,
-                          port_spec=None,
-                          port_types:tc.optional(tc.any(list, _is_port_class))=None,
-                          mech:tc.optional(Mechanism)=None,
-                          mech_port_attribute:tc.optional(tc.any(str, list))=None,
-                          projection_socket:tc.optional(tc.any(str, set))=None):
+                         connectee_port_type: Optional[Type[Port]] = None,
+                         port_spec=None,
+                         port_types: Optional[Union[list, Type[Port]]] = None,
+                         mech: Optional[Mechanism] = None,
+                         mech_port_attribute: Optional[Union[str, list]] = None,
+                         projection_socket: Optional[Union[str, set]] = None):
     """Take some combination of Mechanism, port name (string), Projection, and projection_socket, and return
     specified Port(s)
 
@@ -3431,16 +3471,26 @@ def _get_port_for_socket(owner,
             else:
                 proj_type = proj_spec[PROJECTION_TYPE]
 
-        # Get Port type if it is appropriate for the specified socket of the
-        #  Projection's type
+        # Get Port type if it is appropriate for the specified socket of the Projection's type
         s = next((s for s in port_types if
                   s.__name__ in getattr(proj_type.sockets, projection_socket)),
                  None)
+        # If there is a port_type for the projection_socket, try to get the actual Port and return it;
+        #   otherwise return first in the list of allowable Port types for that socket
         if s:
             try:
                 # Return Port associated with projection_socket if proj_spec is an actual Projection
-                port = getattr(proj_spec, projection_socket)
-                return port
+                if proj_spec.initialization_status == ContextFlags.DEFERRED_INIT:
+                    port = proj_spec._init_args[projection_socket]
+                    if port is None:
+                        raise AttributeError
+                    elif isinstance(port, Mechanism):
+                        # Mechanism specifiea as sender or receiver of Projection, so get corresponding primary Port
+                        port = port.output_port
+                    return port
+                else:
+                    port = getattr(proj_spec, projection_socket)
+                    return port
             except AttributeError:
                 # Otherwise, return first port_type (s)
                 return s
@@ -3518,10 +3568,6 @@ def _get_port_for_socket(owner,
                 if port is None:
                     raise PortError("PROGRAM ERROR: {} attribute(s) not found on {}'s type ({})".
                                      format(mech_port_attribute, mech.name, mech.__class__.__name__))
-
-    # # Get
-    # elif isinstance(port_spec, type) and issubclass(port_spec, Mechanism):
-
 
     # Get port from Projection specification (exclude matrix spec in test as it can't be used to determine the port)
     elif _is_projection_spec(port_spec, include_matrix_spec=False):

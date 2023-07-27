@@ -201,7 +201,7 @@ def test_botvinick_model(benchmark, comp_mode, reps):
         res2d = [x[response_results_index] for r in res for x in r]
         # NOTE: The formatting below provides visual split between
         #       initialization and runs. Please do not change it.
-        assert np.allclose(res2d, [[0.497679878752004, 0.497679878752004],
+        np.testing.assert_allclose(res2d, [[0.497679878752004, 0.497679878752004],
                                    [0.4954000154631831, 0.4954000154631831],
                                    [0.4931599760310996, 0.4931599760310996],
                                    [0.4909593232354856, 0.4909593232354856],
@@ -245,10 +245,10 @@ def test_botvinick_model(benchmark, comp_mode, reps):
 [0.4747361162403673, 0.4747187300733827],
 [0.4728759862850626, 0.4728524925799762],
 [0.4710517686957791, 0.4710211600879554],
-[0.469263048105203, 0.469224283048266]])
+[0.469263048105203, 0.469224283048266]], rtol=1e-5, atol=1e-8)
 
         res1d = [x[response_decision_energy_index] for r in res for x in r]
-        assert np.allclose(res1d, [[0.9907410468584376], [0.9816847012836883], [0.9728270478359791], [0.964164228287384], [0.9556924424992138],
+        np.testing.assert_allclose(res1d, [[0.9907410468584376], [0.9816847012836883], [0.9728270478359791], [0.964164228287384], [0.9556924424992138],
 [0.9474079491380278], [0.9393111265997224], [0.9313984494721904], [0.9236664515817239], [0.9161117261021626],
 [0.9087309255565738], [0.9015207617204032], [0.8944780054345429], [0.8875994863362322], [0.880882092515256],
                                    [0.9907410468584376], [0.9816847012836883], [0.9728270478359791], [0.964164228287384], [0.9556924424992138],
@@ -256,30 +256,30 @@ def test_botvinick_model(benchmark, comp_mode, reps):
 [0.9087309264959722], [0.9015207635977346], [0.8944780088366047], [0.887599492067544], [0.8808821016396065],
                                    [0.9907410468584376], [0.9816847012836883], [0.9728270478359791], [0.964164228287384], [0.9556924424992138],
 [0.9474079491380278], [0.939308563971253], [0.9313906911792855], [0.9236507947874026], [0.9160853988421866],
-[0.9086910874785843], [0.901464504886388], [0.894402355184426], [0.8875014022102764], [0.8807584692328312]])
+[0.9086910874785843], [0.901464504886388], [0.894402355184426], [0.8875014022102764], [0.8807584692328312]], rtol=1e-5, atol=1e-8)
     if reps == 10:
-        assert np.allclose(res[0][ntrials0 - 1][response_results_index], [0.42481045, 0.42481045])
-        assert np.allclose(res[0][-1][response_results_index], [0.43512335, 0.39995991])
-        assert np.allclose(res[1][ntrials0 - 1][response_results_index], [0.42481045, 0.42481045])
-        assert np.allclose(res[1][-1][response_results_index], [0.41360321, 0.42121262])
-        assert np.allclose(res[2][ntrials0 - 1][response_results_index], [0.42481045, 0.42481045])
-        assert np.allclose(res[2][-1][response_results_index], [0.41621778, 0.40255998])
-        assert np.allclose(res[0][ntrials0 - 1][response_decision_energy_index], [0.72185566])
-        assert np.allclose(res[0][-1][response_decision_energy_index], [0.69612758])
-        assert np.allclose(res[1][ntrials0 - 1][response_decision_energy_index], [0.72185566])
-        assert np.allclose(res[1][-1][response_decision_energy_index], [0.69685957])
-        assert np.allclose(res[2][ntrials0 - 1][response_decision_energy_index], [0.72185566])
-        assert np.allclose(res[2][-1][response_decision_energy_index], [0.67021047])
+        np.testing.assert_allclose(res[0][ntrials0 - 1][response_results_index], [0.42481045, 0.42481045])
+        np.testing.assert_allclose(res[0][-1][response_results_index], [0.43512335, 0.39995991])
+        np.testing.assert_allclose(res[1][ntrials0 - 1][response_results_index], [0.42481045, 0.42481045])
+        np.testing.assert_allclose(res[1][-1][response_results_index], [0.41360321, 0.42121262])
+        np.testing.assert_allclose(res[2][ntrials0 - 1][response_results_index], [0.42481045, 0.42481045])
+        np.testing.assert_allclose(res[2][-1][response_results_index], [0.41621778, 0.40255998])
+        np.testing.assert_allclose(res[0][ntrials0 - 1][response_decision_energy_index], [0.72185566])
+        np.testing.assert_allclose(res[0][-1][response_decision_energy_index], [0.69612758])
+        np.testing.assert_allclose(res[1][ntrials0 - 1][response_decision_energy_index], [0.72185566])
+        np.testing.assert_allclose(res[1][-1][response_decision_energy_index], [0.69685957])
+        np.testing.assert_allclose(res[2][ntrials0 - 1][response_decision_energy_index], [0.72185566])
+        np.testing.assert_allclose(res[2][-1][response_decision_energy_index], [0.67021047])
     if reps == 100:
-        assert np.allclose(res[0][ntrials0 - 1][response_results_index], [0.48590224, 0.48590224])
-        assert np.allclose(res[0][-1][response_results_index], [0.95967791, 0.21434208])
-        assert np.allclose(res[1][ntrials0 - 1][response_results_index], [0.48590224, 0.48590224])
-        assert np.allclose(res[1][-1][response_results_index], [0.55847666, 0.83814112])
-        assert np.allclose(res[2][ntrials0 - 1][response_results_index], [0.48590224, 0.48590224])
-        assert np.allclose(res[2][-1][response_results_index], [0.89673726, 0.25100269])
-        assert np.allclose(res[0][ntrials0 - 1][response_decision_energy_index], [0.94440397])
-        assert np.allclose(res[0][-1][response_decision_energy_index], [0.82279743])
-        assert np.allclose(res[1][ntrials0 - 1][response_decision_energy_index], [0.94440397])
-        assert np.allclose(res[1][-1][response_decision_energy_index], [1.87232903])
-        assert np.allclose(res[2][ntrials0 - 1][response_decision_energy_index], [0.94440397])
-        assert np.allclose(res[2][-1][response_decision_energy_index], [0.90033387])
+        np.testing.assert_allclose(res[0][ntrials0 - 1][response_results_index], [0.48590224, 0.48590224])
+        np.testing.assert_allclose(res[0][-1][response_results_index], [0.95967791, 0.21434208])
+        np.testing.assert_allclose(res[1][ntrials0 - 1][response_results_index], [0.48590224, 0.48590224])
+        np.testing.assert_allclose(res[1][-1][response_results_index], [0.55847666, 0.83814112])
+        np.testing.assert_allclose(res[2][ntrials0 - 1][response_results_index], [0.48590224, 0.48590224])
+        np.testing.assert_allclose(res[2][-1][response_results_index], [0.89673726, 0.25100269])
+        np.testing.assert_allclose(res[0][ntrials0 - 1][response_decision_energy_index], [0.94440397])
+        np.testing.assert_allclose(res[0][-1][response_decision_energy_index], [0.82279743])
+        np.testing.assert_allclose(res[1][ntrials0 - 1][response_decision_energy_index], [0.94440397])
+        np.testing.assert_allclose(res[1][-1][response_decision_energy_index], [1.87232903])
+        np.testing.assert_allclose(res[2][ntrials0 - 1][response_decision_energy_index], [0.94440397])
+        np.testing.assert_allclose(res[2][-1][response_decision_energy_index], [0.90033387])

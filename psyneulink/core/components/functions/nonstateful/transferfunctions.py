@@ -19,6 +19,8 @@
 * `Angle`
 * `Gaussian`
 * `GaussianDistort`
+* `BinomialDistort`
+* `Dropout`
 * `SoftMax`
 * `LinearMatrix`
 * `TransferWithCosts`
@@ -64,11 +66,13 @@ TranferFunction Class References
 import numbers
 import types
 import warnings
-from enum import IntFlag
+from enum import Flag, auto
 from math import e, pi, sqrt
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union, Callable
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import parameter_keywords
@@ -82,21 +86,21 @@ from psyneulink.core.components.functions.stateful.integratorfunctions import Si
 from psyneulink.core.components.shellclasses import Projection
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    ADDITIVE_PARAM, ALL, ANGLE_FUNCTION, BIAS, EXPONENTIAL_FUNCTION, \
+    ADDITIVE_PARAM, ALL, ANGLE_FUNCTION, BIAS, BINOMIAL_DISTORT_FUNCTION, DROPOUT_FUNCTION, EXPONENTIAL_FUNCTION, \
     GAIN, GAUSSIAN_DISTORT_FUNCTION, GAUSSIAN_FUNCTION, HAS_INITIALIZERS, HOLLOW_MATRIX, \
     IDENTITY_FUNCTION, IDENTITY_MATRIX, INTERCEPT, LEAK, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, \
-    TANH_FUNCTION, MATRIX_KEYWORD_NAMES, MATRIX, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, MULTIPLICATIVE_PARAM, \
+    TANH_FUNCTION, MATRIX_KEYWORD_NAMES, MATRIX, MAX_INDICATOR, MAX_VAL, MULTIPLICATIVE_PARAM, NORMALIZE, \
     OFF, OFFSET, ON, PER_ITEM, PROB, PRODUCT, OUTPUT_TYPE, PROB_INDICATOR, \
     RATE, RECEIVER, RELU_FUNCTION, SCALE, SLOPE, SOFTMAX_FUNCTION, STANDARD_DEVIATION, SUM, \
     TRANSFER_FUNCTION_TYPE, TRANSFER_WITH_COSTS_FUNCTION, VARIANCE, VARIABLE, X_0, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import \
     FunctionParameter, Parameter, get_validator_by_function, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import \
-    REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, is_pref_set
-from psyneulink.core.globals.utilities import parameter_spec, safe_len
+    REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, ValidPrefSet
+from psyneulink.core.globals.utilities import ValidParamSpecType, safe_len, is_matrix_keyword
 
-__all__ = ['Angle', 'Exponential', 'Gaussian', 'GaussianDistort', 'Identity', 'Linear', 'LinearMatrix',
-           'Logistic', 'ReLU', 'SoftMax', 'Tanh', 'TransferFunction', 'TransferWithCosts'
+__all__ = ['Angle', 'BinomialDistort', 'Dropout', 'Exponential', 'Gaussian', 'GaussianDistort', 'Identity',
+           'Linear', 'LinearMatrix', 'Logistic', 'ReLU', 'SoftMax', 'Tanh', 'TransferFunction', 'TransferWithCosts'
            ]
 
 class TransferFunction(Function_Base):
@@ -218,12 +222,12 @@ class Identity(TransferFunction):  # -------------------------------------------
     }
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
         super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
@@ -386,14 +390,14 @@ class Linear(TransferFunction):  # ---------------------------------------------
         intercept = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 slope: tc.optional(tc.optional(parameter_spec)) = None,
-                 intercept: tc.optional(tc.optional(parameter_spec)) = None,
+                 slope: Optional[ValidParamSpecType] = None,
+                 intercept: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -648,16 +652,16 @@ class Exponential(TransferFunction):  # ----------------------------------------
         bounds = (0, None)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 rate: tc.optional(parameter_spec) = None,
-                 scale: tc.optional(parameter_spec) = None,
-                 bias: tc.optional(parameter_spec) = None,
-                 offset: tc.optional(parameter_spec) = None,
+                 rate: Optional[ValidParamSpecType] = None,
+                 scale: Optional[ValidParamSpecType] = None,
+                 bias: Optional[ValidParamSpecType] = None,
+                 offset: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
         super().__init__(
             default_variable=default_variable,
             rate=rate,
@@ -939,17 +943,17 @@ class Logistic(TransferFunction):  # -------------------------------------------
         bounds = (0, 1)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 gain: tc.optional(parameter_spec) = None,
+                 gain: Optional[ValidParamSpecType] = None,
                  x_0=None,
                  bias=None,
-                 offset: tc.optional(parameter_spec) = None,
-                 scale: tc.optional(parameter_spec) = None,
+                 offset: Optional[ValidParamSpecType] = None,
+                 scale: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
         super().__init__(
             default_variable=default_variable,
             gain=gain,
@@ -1259,17 +1263,17 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         bounds = (0, 1)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 gain: tc.optional(parameter_spec) = None,
+                 gain: Optional[ValidParamSpecType] = None,
                  x_0=None,
                  bias=None,
-                 offset: tc.optional(parameter_spec) = None,
-                 scale: tc.optional(parameter_spec) = None,
+                 offset: Optional[ValidParamSpecType] = None,
+                 scale: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
         super().__init__(
             default_variable=default_variable,
             gain=gain,
@@ -1524,15 +1528,15 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         bounds = (None, None)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 gain: tc.optional(parameter_spec) = None,
-                 bias: tc.optional(parameter_spec) = None,
-                 leak: tc.optional(parameter_spec) = None,
+                 gain: Optional[ValidParamSpecType] = None,
+                 bias: Optional[ValidParamSpecType] = None,
+                 leak: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
         super().__init__(
             default_variable=default_variable,
             gain=gain,
@@ -1641,6 +1645,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         value = np.where(variable > 0, gain, gain * leak)
         return value
 
+
 # **********************************************************************************************************************
 #                                                    Angle
 # **********************************************************************************************************************
@@ -1742,12 +1747,12 @@ class Angle(TransferFunction):  # ----------------------------------------------
                 return f"must be list or 1d array of length 2 or greater."
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -2033,16 +2038,16 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         bounds = (None, None)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 standard_deviation: tc.optional(parameter_spec) = None,
-                 bias: tc.optional(parameter_spec) = None,
-                 scale: tc.optional(parameter_spec) = None,
-                 offset: tc.optional(parameter_spec) = None,
+                 standard_deviation: Optional[ValidParamSpecType] = None,
+                 bias: Optional[ValidParamSpecType] = None,
+                 scale: Optional[ValidParamSpecType] = None,
+                 offset: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
         super().__init__(
             default_variable=default_variable,
             standard_deviation=standard_deviation,
@@ -2101,7 +2106,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         ---------
 
         variable : number or array : default class_defaults.variable
-           a single value or array to be transformed.
+           a single value or array to be distorted by Guassian distribution.
 
         params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -2307,17 +2312,17 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         bounds = (None, None)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 variance: tc.optional(parameter_spec) = None,
-                 bias: tc.optional(parameter_spec) = None,
-                 scale: tc.optional(parameter_spec) = None,
-                 offset: tc.optional(parameter_spec) = None,
+                 variance: Optional[ValidParamSpecType] = None,
+                 bias: Optional[ValidParamSpecType] = None,
+                 scale: Optional[ValidParamSpecType] = None,
+                 offset: Optional[ValidParamSpecType] = None,
                  seed=None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -2423,6 +2428,428 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
     #     df = -input(variance**3 * np.sqrt(2 * np.pi))
     #
     #     return self.convert_output_type(df*f)
+
+
+# **********************************************************************************************************************
+#                                               BinomialDistort
+# **********************************************************************************************************************
+
+class BinomialDistort(TransferFunction):  #-----------------------------------------------------------------------------
+    """
+    BinomialDistort(          \
+         default_variable,    \
+         p=0.05,              \
+         seed=None,           \
+         params=None,         \
+         owner=None,          \
+         name=None,           \
+         prefs=None           \
+         )
+
+    .. _BinomialDistort:
+
+    `function <BinomialDistort._function>` returns `variable <BinomialDistort.variable>` with elements randomly
+    zeroed with probability **p**:
+
+    .. math::
+
+       if \\ \\ rand[0,1] > p: output_i=0 \\\\
+       else: \\ output_i = variable_i
+
+    `derivative <Binomial.derivative>` returns `variable`
+
+    Arguments
+    ---------
+
+    default_variable : number or array : default class_defaults.variable
+        specifies a template for the value(s) used as the mean of the Guassian distribution from which each sample is
+        drawn.
+
+    p : float : default 0.5
+        specifies the probability with which each element of `variable` is replaced with zero.
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    variable : number or array
+        each element determines mean of the Gaussian distribution from which each sample is drawn.
+
+    p : float
+        the probability with which each element of `variable` is replaced with zero.
+
+    random_state : numpy.RandomState
+        private pseudorandom number generator
+
+    owner : Component
+        `component <Component>` to which the Function has been assigned.
+
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
+    """
+
+    componentName = BINOMIAL_DISTORT_FUNCTION
+
+    classPreferences = {
+        PREFERENCE_SET_NAME: 'BinomialClassPreferences',
+        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+    }
+
+    class Parameters(TransferFunction.Parameters):
+        """
+            Attributes
+            ----------
+                p
+                    see `p <BinomialDistort.p>`
+
+                    :default value: 0.5
+                    :type: ``float``
+
+                random_state
+                    see `random_state <BinomialDistort.random_state>`
+
+                    :default value: None
+                    :type: ``numpy.random.RandomState``
+
+        """
+        p = Parameter(0.5, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
+        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
+        bounds = (None, None)
+
+    @check_user_specified
+    @beartype
+    def __init__(self,
+                 default_variable=None,
+                 p: Optional[ValidParamSpecType] = None,
+                 seed=None,
+                 params=None,
+                 owner=None,
+                 prefs: Optional[ValidPrefSet] = None):
+
+        super().__init__(
+            default_variable=default_variable,
+            p=p,
+            seed=seed,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
+
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
+        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+
+        p_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, 'p')
+        p = builder.load(p_ptr)
+        mod_p = builder.fsub(p.type(1), p)
+        p_mod_ptr = builder.alloca(mod_p.type)
+        builder.store(mod_p, p_mod_ptr)
+
+        n_ptr = builder.alloca(ctx.int32_ty)
+        builder.store(n_ptr.type.pointee(1), n_ptr)
+
+        rand_state_ptr = ctx.get_random_state_ptr(builder, self, state, params)
+        binomial_f = ctx.get_binomial_dist_function_by_state(rand_state_ptr)
+
+        rvalp = builder.alloca(binomial_f.args[-1].type.pointee, name="random_out")
+        builder.call(binomial_f, [rand_state_ptr, n_ptr, p_mod_ptr, rvalp])
+
+        val = builder.load(ptri)
+        rval = builder.load(rvalp)
+        rval = builder.uitofp(rval, val.type)
+        val = builder.fmul(val, rval)
+
+        builder.store(val, ptro)
+
+    def _function(self,
+                 variable=None,
+                 context=None,
+                 params=None,
+                 ):
+        """
+
+        Arguments
+        ---------
+
+        variable : number or array : default class_defaults.variable
+           a single value or array to be randomly zeroed.
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+
+        Returns
+        -------
+
+        variable with elements zeroed with probability p : number or array
+
+        """
+        p = self._get_current_parameter_value('p', context)
+        random_state = self._get_current_parameter_value('random_state', context)
+        result = variable * random_state.binomial(size=len(variable), n=1, p=(1 - p))
+        return self.convert_output_type(result)
+
+    def _is_identity(self, context=None, defaults=False):
+        if defaults:
+            p = self.defaults.p
+        else:
+            p = self.parameters.p._get(context)
+        return p == 0.0
+
+    def derivative(self, output, input=None, context=None):
+        raise FunctionError(f"Derivative of BinomialDistort not yet supported.")
+    #     """
+    #     derivative(input, output):
+    #
+    #     Derivative of `function <BinomialDistort.function>`:
+    #
+    #         -input/:math:`{variance^3}*\\sqrt{2\\pi}`
+    #
+    #
+    #     Returns
+    #     -------
+    #
+    #     Derivative of Binomial of variable :  number or array
+    #
+    #     """
+    #     bias = self._get_current_parameter_value(BIAS, context)
+    #     scale = self._get_current_parameter_value(SCALE, context)
+    #     offset = self._get_current_parameter_value(OFFSET, context)
+    #
+    #     # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
+    #     f = scale * np.random.normal(input+bias, variance) + offset
+    #
+    # # FIX: ?WHICH IF EITHER IS CORRECT?:
+    # return self._get_current_parameter_value(VARIABLE, context)
+    # # return 1.0
+
+
+# **********************************************************************************************************************
+#                                                    Dropout
+# **********************************************************************************************************************
+
+class Dropout(TransferFunction):  #
+    # -------------------------------------------------------------------------------------
+    """
+    Dropout(               \
+         default_variable, \
+         p=0.5,            \
+         params=None,      \
+         owner=None,       \
+         name=None,        \
+         prefs=None        \
+         )
+
+    .. _Dropout:
+
+    `function <Dropout._function>` returns `variable <Dropout.variable>` with elements randomly zeroed with
+    probability **p** during learning; otherwise functions as `Identity` Function.  During learning, the output
+    of the function is scaled by :math:`\\frac{1}{(1-p)}`, which implements the inverse scaling form of `dropout
+    <https://pytorch.org/docs/stable/generated/torch.nn.Dropout.html?highlight=dropout>`_ used by by PyTorch.
+
+    .. math::
+
+       if \\ (context.runmode == ContextFlags.LEARNING\\_MODE) \\ and \\ (rand[0,1] > p):  output_i = 0 \\\\
+       else: \\ output_i = \\frac{1}{(1-p)}variable_i
+
+    .. _technical_note::
+       **learning_only** uses ``context.runmode`` == `ContextFlags.LEARNING_MODE`
+       to determine when learning is in effect
+
+    `derivative <Dropout.derivative>` returns `variable`
+
+    Arguments
+    ---------
+
+    default_variable : number or array : default class_defaults.variable
+        specifies a template for the value to be transformed.
+
+    p : float : default 0.5
+        specifies the probability with which each element of `variable` is replaced with zero.
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    variable : number or array
+        contains value to be transformed.
+
+    p : float
+        the probability with which each element of `variable` is replaced with zero.
+
+    random_state : numpy.RandomState
+        private pseudorandom number generator
+
+    owner : Component
+        `component <Component>` to which the Function has been assigned.
+
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
+    """
+
+    componentName = DROPOUT_FUNCTION
+
+    classPreferences = {
+        PREFERENCE_SET_NAME: 'DropoutClassPreferences',
+        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+    }
+
+    class Parameters(TransferFunction.Parameters):
+        """
+            Attributes
+            ----------
+
+                p
+                    see `p <Dropout.p>`
+
+                    :default value: 0.5
+                    :type: ``float``
+
+                random_state
+                    see `random_state <GaussianDistort.random_state>`
+
+                    :default value: None
+                    :type: ``numpy.random.RandomState``
+        """
+        p = Parameter(0.5, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
+        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
+
+    @check_user_specified
+    @beartype
+    def __init__(self,
+                 default_variable=None,
+                 p: Optional[ValidParamSpecType] = None,
+                 params=None,
+                 owner=None,
+                 prefs: Optional[ValidPrefSet]  = None):
+        self.binomial_distort = BinomialDistort(default_variable=default_variable, p=p)
+
+        super().__init__(
+            default_variable=default_variable,
+            p=p,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
+
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
+        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+
+        val = builder.load(ptri)
+        builder.store(val, ptro)
+
+    def _function(self,
+                 variable=None,
+                 context=None,
+                 params=None,
+                 ):
+        """
+
+        Arguments
+        ---------
+
+        variable : number or array : default class_defaults.variable
+           a single value or array to be randomly zeroed.
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        Returns
+        -------
+
+        During learning, variable with elements zeroed with probability p, else scaled by :math:`frac{1}{(1-p)}`;
+        otherwise returns variable : number or array
+
+        """
+        p = self._get_current_parameter_value('p', context)
+
+        if context.runmode != ContextFlags.LEARNING_MODE:
+            result = variable
+
+        else:
+            # ??Not sure whether the following works with autograd (https://github.com/HIPS/autograd/issues/416)
+            p = p or self.defaults.p
+            self.binomial_distort.parameters.p.set(p, context)
+            result = self.binomial_distort(variable) * (1 / (1 - p))
+
+        return self.convert_output_type(result)
+
+    def _is_identity(self, context=None, defaults=False):
+        if defaults:
+            p = self.defaults.p
+        else:
+            p = self.parameters.p._get(context)
+
+        return (context.run_mode != ContextFlags.LEARNING_MODE) or (p == 0.0)
+
+    @handle_external_context()
+    def derivative(self, input=None, output=None, context=None):
+        # raise FunctionError(f"Derivative of Dropout not yet supported.")
+        """
+        derivative(input)
+
+        Derivative of `function <Dropout._function>` at **input**.
+
+        Arguments
+        ---------
+
+        input : number or array
+            value of the input to the Dropouput function at which derivative is to be taken.
+
+        Returns
+        -------
+
+        variable :  number or array
+
+        """
+        # FIX: ?WHICH IS CORRECT:
+        # return self._get_current_parameter_value(VARIABLE, context)
+        return 1.0
 
 
 # **********************************************************************************************************************
@@ -2588,15 +3015,15 @@ class SoftMax(TransferFunction):
                 return 'not one of {0}'.format(options)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 gain: tc.optional(parameter_spec) = None,
+                 gain: Optional[ValidParamSpecType] = None,
                  output=None,
                  per_item=None,
-                 params: tc.optional(tc.optional(dict)) = None,
+                 params: Optional[dict] = None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         try:
             # needed because one_hot_function is initialized here based
@@ -2715,7 +3142,7 @@ class SoftMax(TransferFunction):
 
             builder.call(one_hot_f, [one_hot_p, one_hot_s, one_hot_in, one_hot_out])
         else:
-            assert False, "Unsupported output in {}: {}".format(self, out_type)
+            assert False, "Unsupported output in {}: {}".format(self, output_type)
 
         return builder
 
@@ -2732,14 +3159,21 @@ class SoftMax(TransferFunction):
             all_out = builder.alloca(arg_out.type.pointee)
             builder = self._gen_llvm_function_body(ctx, builder, params, state, arg_in, all_out, output_type=ALL, tags=forward_tags)
 
-        # The rest of the algorithm is for MAX_VAL and MAX_INDICATOR only
+        if self.parameters.per_item.get():
+            assert isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType)
+            assert isinstance(arg_out.type.pointee.element, pnlvm.ir.ArrayType)
+            for i in range(arg_in.type.pointee.count):
+                inner_all_out = builder.gep(all_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
+                inner_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
+                builder = self.__gen_llvm_apply_derivative(ctx, builder, params, state, inner_all_out, inner_out, tags=tags)
+            return builder
+        else:
+            return self.__gen_llvm_apply_derivative(ctx, builder, params, state, all_out, arg_out, tags=tags)
+
+    def __gen_llvm_apply_derivative(self, ctx, builder, params, state, all_out, arg_out, *, tags:frozenset):
+
         assert self.output in {MAX_VAL, MAX_INDICATOR}, \
             "Derivative of SoftMax is only implemented for MAX_VAL and MAX_INDICATOR! ({})".format(self.output)
-
-        if not pnlvm.helpers.is_scalar(arg_out.type.pointee.element):
-            assert len(arg_out.type.pointee) == 1
-            arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            all_out = builder.gep(all_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
         max_pos_ptr = builder.alloca(ctx.int32_ty)
         builder.store(max_pos_ptr.type.pointee(-1), max_pos_ptr)
@@ -2865,44 +3299,51 @@ class SoftMax(TransferFunction):
         else:
             assert not np.any(np.equal(0, output))
 
-        sm = np.squeeze(output)
-        size = len(sm)
-        assert (len(output) == 1 and len(output[0]) == size) or len(output) == size
+        per_item = self._get_current_parameter_value(PER_ITEM, context)
+        if not per_item:
+            output = [output]
 
-        output_type = self._get_current_parameter_value(OUTPUT_TYPE, context)
-        if output_type == ALL:
-            # Return full Jacobian matrix of derivatives using Kronecker's delta method:
-            derivative = np.empty([size, size])
-            for i, j in np.ndindex(size, size):
-                if i == j:
-                    d = 1
-                else:
-                    d = 0
-                derivative[j, i] = sm[i] * (d - sm[j])
-        elif output_type in {MAX_VAL, MAX_INDICATOR}:
-            # Return 1d array of derivatives for max element (i.e., the one chosen by SoftMax)
-            derivative = np.empty(size)
-            # Get the element of output returned as non-zero (max val) when output_type is not ALL
-            # IMPLEMENTATION NOTES:
-            #    if there is a tie for max, this chooses the item in sm with the lowest index in sm:
-            index_of_max = int(np.where(sm == np.max(sm))[-1][0])
-            #    the following would randomly choose a value in case of a tie,
-            #    but may cause problems with compilation:
-            # index_of_max = np.where(sm == np.max(sm))[0]
-            # if len(index_of_max)>1:
-            #     index_of_max = int(np.random.choice(index_of_max))
-            max_val = sm[index_of_max]
-            for i in range(size):
-                if i == index_of_max:
-                    d = 1
-                else:
-                    d = 0
-                derivative[i] = sm[i] * (d - max_val)
-        else:
-            raise FunctionError("Can't assign derivative for SoftMax function{} since OUTPUT_TYPE is PROB "
-                                "(and therefore the relevant element is ambiguous)".format(self.owner_name))
+        result = []
+        for sm in output:
+            size = len(sm)
 
-        return derivative
+            output_type = self._get_current_parameter_value(OUTPUT_TYPE, context)
+            if output_type == ALL:
+                # Return full Jacobian matrix of derivatives using Kronecker's delta method:
+                derivative = np.empty([size, size])
+                for i, j in np.ndindex(size, size):
+                    if i == j:
+                        d = 1
+                    else:
+                        d = 0
+                    derivative[j, i] = sm[i] * (d - sm[j])
+            elif output_type in {MAX_VAL, MAX_INDICATOR}:
+                # Return 1d array of derivatives for max element (i.e., the one chosen by SoftMax)
+                derivative = np.empty(size)
+                # Get the element of output returned as non-zero (max val) when output_type is not ALL
+                # IMPLEMENTATION NOTES:
+                #    if there is a tie for max, this chooses the item in sm with the lowest index in sm:
+                index_of_max = int(np.where(sm == np.max(sm))[-1][0])
+                #    the following would randomly choose a value in case of a tie,
+                #    but may cause problems with compilation:
+                # index_of_max = np.where(sm == np.max(sm))[0]
+                # if len(index_of_max)>1:
+                #     index_of_max = int(np.random.choice(index_of_max))
+                max_val = sm[index_of_max]
+                for i in range(size):
+                    if i == index_of_max:
+                        d = 1
+                    else:
+                        d = 0
+                    derivative[i] = sm[i] * (d - max_val)
+            else:
+                raise FunctionError("Can't assign derivative for SoftMax function{} since OUTPUT_TYPE is PROB "
+                                    "(and therefore the relevant element is ambiguous)".format(self.owner_name))
+
+            result.append(derivative)
+
+        assert per_item or len(result) == 1
+        return result[0] if not per_item else result
 
 
 # **********************************************************************************************************************
@@ -2914,6 +3355,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     LinearMatrix(          \
          default_variable, \
          matrix=None,      \
+         normalize=False,  \
          params=None,      \
          owner=None,       \
          name=None,        \
@@ -2928,6 +3370,11 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     .. math::
         variable \\bullet matrix
+
+    If **normalize** is True, the result is normalized by the product of the norms of the variable and matrix:
+
+    .. math::
+        \\frac{variable \\bullet matrix}{\\|variable\\| \\cdot \\|matrix\\|}
 
     COMMENT:  [CONVERT TO FIGURE]
         ----------------------------------------------------------------------------------------------------------
@@ -2981,6 +3428,10 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
             - matrix keywords are not valid matrix specifications
 
+    normalize : bool : default False
+        specifies whether to normalize the result of `function <LinearCombination.function>` by dividing it by the
+        norm of `variable <LinearMatrix.variable>` x the norm of `matrix <LinearMatrix.matrix>`.
+
     bounds : None
 
     params : Dict[param keyword: param value] : default None
@@ -3012,6 +3463,11 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         Rows correspond to elements of the input array (outer index), and
         columns correspond to elements of the output array (inner index).
 
+    normalize : bool
+        determines whether the result of `function <LinearCombination.function>` is normalized, by dividing it by the
+        norm of `variable <LinearMatrix.variable>` x the norm of `matrix <LinearMatrix.matrix>`.
+
+
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
@@ -3041,9 +3497,16 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
                     :default value: None
                     :type:
+
+                normalize
+                    see `normalize <LinearMatrix.normalize>`
+
+                    :default value: False
+                    :type: bool
         """
         variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable', mdf_name='A')
         matrix = Parameter(None, modulable=True, mdf_name='B')
+        normalize = Parameter(False)
         bounds = None
 
     # def is_matrix_spec(m):
@@ -3056,13 +3519,14 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     #     return False
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  matrix=None,
+                 normalize=None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         # Note: this calls _validate_variable and _validate_params which are overridden below;
         #       the latter implements the matrix if required
@@ -3070,6 +3534,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         super().__init__(
             default_variable=default_variable,
             matrix=matrix,
+            normalize=normalize,
             params=params,
             owner=owner,
             prefs=prefs,
@@ -3209,7 +3674,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                     # Auto, full or random connectivity matrix requested (using keyword):
                     # Note:  assume that these will be properly processed by caller
                     #        (e.g., MappingProjection._instantiate_receiver)
-                    elif param_value in MATRIX_KEYWORD_VALUES:
+                    elif is_matrix_keyword(param_value):
                         continue
 
                     # Identity matrix requested (using keyword), so check send_len == receiver_len
@@ -3294,7 +3759,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                                             format(self.name, variable_shape, param_shape))
 
                 # keyword matrix specified - not valid outside of a projection
-                elif param_value in MATRIX_KEYWORD_VALUES:
+                elif is_matrix_keyword(param_value):
                     raise FunctionError("{} is not a valid specification for the matrix parameter of {}. Keywords "
                                         "may only be used to specify the matrix parameter of a Projection's "
                                         "LinearMatrix function. When the LinearMatrix function is implemented in a "
@@ -3369,13 +3834,18 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out, *, tags:frozenset):
         # Restrict to 1d arrays
         if self.defaults.variable.ndim != 1:
-            warnings.warn("Shape mismatch: {} (in {}) got 2D input: {}".format(self, self.owner, self.defaults.variable))
+            warnings.warn("Shape mismatch: {} (in {}) got 2D input: {}".format(
+                          self, self.owner, self.defaults.variable),
+                          pnlvm.PNLCompilerWarning)
             arg_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
         if self.defaults.value.ndim != 1:
-            warnings.warn("Shape mismatch: {} (in {}) has 2D output: {}".format(self, self.owner, self.defaults.value))
+            warnings.warn("Shape mismatch: {} (in {}) has 2D output: {}".format(
+                          self, self.owner, self.defaults.value),
+                          pnlvm.PNLCompilerWarning)
             arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
         matrix = pnlvm.helpers.get_param_ptr(builder, self, params, MATRIX)
+        normalize = pnlvm.helpers.get_param_ptr(builder, self, params, NORMALIZE)
 
         # Convert array pointer to pointer to the fist element
         matrix = builder.gep(matrix, [ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -3384,6 +3854,15 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
         input_length = ctx.int32_ty(arg_in.type.pointee.count)
         output_length = ctx.int32_ty(arg_out.type.pointee.count)
+
+        # if normalize:
+        #     if vec_in is not zeros:
+        #     # FIX: NORMALIZE vec_in and matrix here
+        #         vec_in_sum = fsum(builder, vec_in)
+        #         vec_in = fdiv(builder, vec_in, vec_in_sum)
+        #     if matrix is not zeros:
+        #     # FIX: NORMALIZE matrix here
+
         builtin = ctx.import_llvm_function("__pnl_builtin_vxm")
         builder.call(builtin, [vec_in, matrix, input_length, output_length, vec_out])
         return builder
@@ -3412,8 +3891,20 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             length of the array returned equals the number of columns of `matrix <LinearMatrix.matrix>`.
 
         """
+        vector = np.array(variable)
         matrix = self._get_current_parameter_value(MATRIX, context)
-        result = np.dot(variable, matrix)
+        normalize = self._get_current_parameter_value(NORMALIZE, context)
+        if normalize:
+            if np.any(vector):
+                vector = vector / np.linalg.norm(vector)
+            if np.any(matrix):
+                # FIX: the axis along which norming is carried out should probably be a parameter
+                #      Also need to deal with column- (or row-) wise zeros which cause div by zero
+                #      Replace columns (if norming axis 0) or rows (if norming axis 1) of zeros with 1's
+                # matrix = matrix / np.linalg.norm(matrix,axis=-1,keepdims=True)
+                matrix = matrix / np.linalg.norm(matrix,axis=0,keepdims=True)
+
+        result = np.dot(vector, matrix)
         return self.convert_output_type(result)
 
     @staticmethod
@@ -3534,7 +4025,7 @@ costFunctionNames = [INTENSITY_COST_FUNCTION,
                      COMBINE_COSTS_FUNCTION]
 
 
-class CostFunctions(IntFlag):
+class CostFunctions(Flag):
     """Options for selecting constituent cost functions to be used by a `TransferWithCosts` Function.
 
     These can be used alone or in combination with one another, by enabling or disabling each using the
@@ -3568,9 +4059,9 @@ class CostFunctions(IntFlag):
 
     """
     NONE          = 0
-    INTENSITY     = 1 << 1
-    ADJUSTMENT    = 1 << 2
-    DURATION      = 1 << 3
+    INTENSITY     = auto()
+    ADJUSTMENT    = auto()
+    DURATION      = auto()
     ALL           = INTENSITY | ADJUSTMENT | DURATION
     DEFAULTS      = NONE
 
@@ -4058,19 +4549,19 @@ class TransferWithCosts(TransferFunction):
         )
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 transfer_fct:tc.optional(is_function_type)=None,
-                 enabled_cost_functions:tc.optional(tc.any(CostFunctions, list))=None,
-                 intensity_cost_fct:tc.optional(is_function_type)=None,
-                 adjustment_cost_fct:tc.optional(is_function_type)=None,
-                 duration_cost_fct:tc.optional(is_function_type)=None,
-                 combine_costs_fct:tc.optional(is_function_type)=None,
+                 transfer_fct: Optional[Callable] = None,
+                 enabled_cost_functions: Optional[Union[CostFunctions, list]] = None,
+                 intensity_cost_fct: Optional[Callable] = None,
+                 adjustment_cost_fct: Optional[Callable] = None,
+                 duration_cost_fct: Optional[Callable] = None,
+                 combine_costs_fct: Optional[Callable] = None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs: Optional[ValidPrefSet] = None):
 
         # if size:
         #     if default_variable is None:
@@ -4271,8 +4762,8 @@ class TransferWithCosts(TransferFunction):
             and enabled_cost_functions == CostFunctions.NONE
         )
 
-    @tc.typecheck
-    def assign_costs(self, cost_functions: tc.any(CostFunctions, list), execution_context=None):
+    @beartype
+    def assign_costs(self, cost_functions: Union[CostFunctions, list], execution_context=None):
         """Assigns specified functions; all others are disabled.
 
         Arguments
@@ -4290,8 +4781,8 @@ class TransferWithCosts(TransferFunction):
         self.parameters.enabled_cost_functions.set(CostFunctions.NONE, execution_context)
         return self.enable_costs(cost_functions, execution_context)
 
-    @tc.typecheck
-    def enable_costs(self, cost_functions: tc.any(CostFunctions, list), execution_context=None):
+    @beartype
+    def enable_costs(self, cost_functions: Union[CostFunctions, list], execution_context=None):
         """Enable specified `cost functions <TransferWithCosts_Cost_Functions>`;
         settings for all other cost functions are left intact.
 
@@ -4314,8 +4805,8 @@ class TransferWithCosts(TransferFunction):
         self.parameters.enabled_cost_functions.set(enabled_cost_functions, execution_context)
         return enabled_cost_functions
 
-    @tc.typecheck
-    def disable_costs(self, cost_functions: tc.any(CostFunctions, list), execution_context=None):
+    @beartype
+    def disable_costs(self, cost_functions: Union[CostFunctions, list], execution_context=None):
         """Disable specified `cost functions <TransferWithCosts_Cost_Functions>`;
         settings for all other cost functions are left intact.
 
@@ -4337,9 +4828,9 @@ class TransferWithCosts(TransferFunction):
         self.parameters.enabled_cost_functions.set(enabled_cost_functions, execution_context)
         return enabled_cost_functions
 
-    def toggle_cost(self, cost_function_name:tc.any(str, CostFunctions),
-                             assignment:bool=ON,
-                             execution_context=None):
+    def toggle_cost(self, cost_function_name: Union[str, CostFunctions],
+                    assignment: bool = ON,
+                    execution_context=None):
         """Enable/disable a `cost functions <TransferWithCosts_Cost_Functions>`.
 
         Arguments
@@ -4389,14 +4880,41 @@ class TransferWithCosts(TransferFunction):
         trans_p = pnlvm.helpers.get_param_ptr(builder, self, params, transfer_f.name)
         trans_s = pnlvm.helpers.get_state_ptr(builder, self, state, transfer_f.name)
         trans_in = arg_in
-        if trans_in.type != trans_f.args[2].type:
-            warnings.warn("Shape mismatch: {} input does not match the transfer function ({}): {} vs. {}".format(self, transfer_f.get(), self.defaults.variable, transfer_f.get().defaults.variable))
-            trans_in = builder.gep(trans_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
         trans_out = arg_out
-        if trans_out.type != trans_f.args[3].type:
-            warnings.warn("Shape mismatch: {} output does not match the transfer function ({}): {} vs. {}".format(self, transfer_f.get(), self.defaults.value, transfer_f.get().defaults.value))
-            trans_out = builder.gep(trans_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
         builder.call(trans_f, [trans_p, trans_s, trans_in, trans_out])
+        intensity_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, self.parameters.intensity.name)
 
-        # TODO: Implement cost calculations
+        costs = [(self.parameters.intensity_cost_fct, CostFunctions.INTENSITY, self.parameters.intensity_cost),
+                 (self.parameters.adjustment_cost_fct, CostFunctions.ADJUSTMENT, self.parameters.adjustment_cost),
+                 (self.parameters.duration_cost_fct, CostFunctions.DURATION, self.parameters.duration_cost)]
+
+        for (func, flag, out) in costs:
+
+            # The check for enablement is structural and has to be done in Python.
+            # If a cost function is not enabled the cost parameter is None
+            if flag in self.parameters.enabled_cost_functions.get():
+                cost_f = ctx.import_llvm_function(func.get())
+                cost_p = pnlvm.helpers.get_param_ptr(builder, self, params, func.name)
+                cost_s = pnlvm.helpers.get_state_ptr(builder, self, state, func.name)
+                cost_out = pnlvm.helpers.get_state_ptr(builder, self, state, out.name)
+                cost_in = trans_out
+
+                if flag == CostFunctions.ADJUSTMENT:
+                    old_intensity = pnlvm.helpers.load_extract_scalar_array_one(builder, intensity_ptr)
+                    new_intensity = pnlvm.helpers.load_extract_scalar_array_one(builder, trans_out)
+                    adjustment = builder.fsub(new_intensity, old_intensity)
+
+                    fabs_f = ctx.get_builtin("fabs", [adjustment.type])
+                    adjustment = builder.call(fabs_f, [adjustment])
+
+                    cost_in = builder.alloca(cost_in.type.pointee)
+                    builder.store(adjustment, builder.gep(cost_in, [ctx.int32_ty(0), ctx.int32_ty(0)]))
+
+                builder.call(cost_f, [cost_p, cost_s, cost_in, cost_out])
+
+        # TODO: combine above costs via a call to combine_costs_fct
+        # depends on: https://github.com/PrincetonUniversity/PsyNeuLink/issues/2712
+
+        builder.store(builder.load(trans_out), intensity_ptr)
+
         return builder

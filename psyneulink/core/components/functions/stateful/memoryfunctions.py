@@ -23,19 +23,22 @@ Functions that store and can return a record of their input.
 
 """
 
+import copy
 import numbers
 import warnings
 from collections import deque
 from itertools import combinations, product
-# from typing import Optional, Union, Literal, Callable
-from typing import Optional, Union
+
+from psyneulink._typing import Optional, Union, Callable
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union, Literal
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import (
-    DEFAULT_SEED, FunctionError, _random_state_getter, _seed_setter, is_function_type, EPSILON, _noise_setter
+    DEFAULT_SEED, FunctionError, _random_state_getter, _seed_setter, EPSILON, _noise_setter
 )
 from psyneulink.core.components.functions.nonstateful.objectivefunctions import Distance
 from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot
@@ -46,7 +49,7 @@ from psyneulink.core.globals.keywords import \
     ContentAddressableMemory_FUNCTION, DictionaryMemory_FUNCTION, \
     MIN_INDICATOR, MULTIPLICATIVE_PARAM, NEWEST, NOISE, OLDEST, OVERWRITE, RATE, RANDOM, VARIABLE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.utilities import \
     all_within_range, convert_to_np_array, convert_to_list, convert_all_elements_to_np_array
 
@@ -226,7 +229,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
 
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  # FIX: 12/11/18 JDC - NOT SAFE TO SPECIFY A MUTABLE TYPE AS DEFAULT
                  default_variable=None,
@@ -244,13 +247,13 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
                  # noise: Optional[Union[int, float, callable]] = None, # Changed to 0.0 - None fails validation
                  # rate: Optional[Union[int, float, list, np.ndarray]] = 1.0,
                  # noise: Optional[Union[int, float, list, np.ndarray, callable]] = 0.0,
-                 history:tc.optional(int)=None,
+                 history:Optional[int]=None,
                  # history: Optional[int] = None,
                  initializer=None,
-                 params: tc.optional(dict) = None,
+                 params: Optional[dict] = None,
                  # params: Optional[dict] = None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None
+                 prefs:  Optional[ValidPrefSet] = None
                  ):
 
         super().__init__(
@@ -430,15 +433,19 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
     .. _ContentAddressableMemory_Retrieval:
 
-    **Retrieval**. Entries are retrieved from `memory <ContentAddressableMemory.memory>` based on their distance from
-    `variable <ContentAddressableMemory.variable>`, used as the cue for retrieval. The distance is computed using the
-    `distance_function <ContentAddressableMemory.distance_function>`, which compares `variable
-    <ContentAddressableMemory.variable>` with each entry in `memory <ContentAddressableMemory.storage_prob>` as full
-    vectors (i.e., with all fields of each concatenated into a single array), or by computing the distance of each
-    field in `variable <ContentAddressableMemory.variable>` with the corresponding ones of each entry in `memory
-    <ContentAddressableMemory.memory>`, and then averaging those distances, possibly weighted by coefficients specified
-    in `distance_field_weights <ContentAddressableMemory.distance_field_weights>`. The distances computed between
-    `variable `<ContentAddressableMemory.variable>` and each entry in `memory <ContentAddressableMemory.memory>` are
+    **Retrieval**. Entries are retrieved from `memory <ContentAddressableMemory.memory>` based on their distance
+    from `variable <ContentAddressableMemory.variable>`, used as the cue for retrieval. The distance is computed
+    using the `distance_function <ContentAddressableMemory.distance_function>`, which compares `variable
+    <ContentAddressableMemory.variable>` with each entry in `memory <ContentAddressableMemory.memory>`.
+    If memories have more than one field, then the distances are computed in one of two ways: i) as full
+    vectors (i.e., with all fields of each concatenated into a single array) if `distance_field_weights
+    <ContentAddressableMemory.distance_field_weights>` is a single scalar value or a list of identical values);
+    or field-by-field, if `distance_field_weights <ContentAddressableMemory.distance_field_weights>` is a list of
+    non-identical values, by computing the distance of each field in `variable <ContentAddressableMemory.variable>`
+    with the corresponding ones of each entry in `memory <ContentAddressableMemory.memory>`, and then averaging
+    those distances weighted by the coefficients specified in `distance_field_weights
+    <ContentAddressableMemory.distance_field_weights>`. The distances computed between `variable
+    `<ContentAddressableMemory.variable>` and each entry in `memory <ContentAddressableMemory.memory>` are then
     used by `selection_function <ContentAddressableMemory.selection_function>` to determine which entry is retrieved.
     The distance used for the last retrieval (i.e., between `variable <ContentAddressableMemory.variable>` and the
     entry retrieved), the distances of each of their corresponding fields (weighted by `distance_field_weights
@@ -516,8 +523,8 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             entry in `memory <ContentAddressableMemory.memory>`, and then using `distance_function
             <ContentAddressableMemory.distance_function>` to compute the distance betwen them.
 
-          * if `distance_field_weights <ContentAddressableMemory.distance_field_weights>` is an array of scalars with
-            different values, then `variable <ContentAddressableMemory.variable>` is compared with each entry in `memory
+          * if `distance_field_weights <ContentAddressableMemory.distance_field_weights>` is an array of non-identical
+            scalars , then `variable <ContentAddressableMemory.variable>` is compared with each entry in `memory
             <ContentAddressableMemory.memory>` by using `distance_function <ContentAddressableMemory.distance_function>`
             to compute the distance of each item in `variable <ContentAddressableMemory.variable>` with the
             corresponding field of the entry in memory, and then averaging those distances weighted by the
@@ -1108,7 +1115,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
         distance_function = Parameter(Distance(metric=COSINE), stateful=False, loggable=False)
-        selection_function = Parameter(OneHot(mode=MIN_INDICATOR), stateful=False, loggable=False)
+        selection_function = Parameter(OneHot(mode=MIN_INDICATOR), stateful=False, loggable=False, dependencies='distance_function')
         distance = Parameter(0, stateful=True, read_only=True)
         distances_by_field = Parameter([0], stateful=True, read_only=True)
         distances_to_entries = Parameter([0], stateful=True, read_only=True)
@@ -1154,7 +1161,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             return initializer
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  # FIX: REINSTATE WHEN 3.6 IS RETIRED:
                  # default_variable=None,
@@ -1173,7 +1180,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                  # seed:Optional[int]=None,
                  # params:Optional[Union[list, np.ndarray]]=None,
                  # owner=None,
-                 # prefs:tc.optional(is_pref_set)=None):
+                 # prefs:  Optional[ValidPrefSet] = None):
                  default_variable=None,
                  retrieval_prob=None,
                  storage_prob=None,
@@ -1190,7 +1197,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                  seed=None,
                  params=None,
                  owner=None,
-                 prefs:tc.optional(is_pref_set)=None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         self._memory = []
 
@@ -1203,6 +1210,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             duplicate_threshold=duplicate_threshold,
             equidistant_entries_select=equidistant_entries_select,
             distance_function=distance_function,
+            selection_function=selection_function,
             distance_field_weights=distance_field_weights,
             rate=rate,
             noise=noise,
@@ -1217,11 +1225,11 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             self.parameters.memory_num_fields.set(self.previous_value.shape[1], override=True)
             self.parameters.memory_field_shapes.set([item.shape for item in self.previous_value[0]], override=True)
 
-    def _parse_selection_function_variable(self, variable, context=None):
-        # this should be replaced in the future with the variable
-        # argument when function ordering (and so ordering of parsers)
-        # is made explicit
-        distance_result = self.distance_function.parameters.value._get(context)
+    def _parse_distance_function_variable(self, variable, context=None):
+        return convert_all_elements_to_np_array([variable, variable])
+
+    def _parse_selection_function_variable(self, variable, context=None, distance_result=None):
+        distance_result = self.distance_function(self._parse_distance_function_variable(variable), context=context)
         # TEST PRINT:
         # print(distance_result, self.distance_function.defaults.value)
         return np.asfarray([
@@ -1237,13 +1245,6 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             test_var = self.get_previous_value(context)[0]
         else:
             test_var = self.defaults.variable
-        if isinstance(distance_function, type):
-            distance_function = distance_function(default_variable=test_var)
-            fct_msg = 'Function type'
-        else:
-            distance_function.defaults.variable = [test_var,test_var]
-            distance_function._instantiate_value(context)
-            fct_msg = 'Function'
 
         if (isinstance(distance_function, Distance)
                 and distance_function.metric == COSINE
@@ -1259,7 +1260,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             try:
                 distance_result = self._get_distance(test_var, test_var, field_weights, granularity, context=context)
             except:
-                raise FunctionError(f"{fct_msg} specified for {repr(DISTANCE_FUNCTION)} arg of "
+                raise FunctionError(f"Function specified for {repr(DISTANCE_FUNCTION)} arg of "
                                     f"{self.__class__.__name__} ({distance_function}) must accept an array "
                                     f"with two lists or 1d arrays, or a 2d array, as its argument.")
             if granularity == 'full_entry' and not np.isscalar(distance_result):
@@ -1275,28 +1276,26 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                                     f"if {repr(DISTANCE_FIELD_WEIGHTS)} is a non-homogenous list or array"
                                     f"(i.e., not all elements are the same.")
 
-        # FIX: 4/5/21 SHOULD VALIDATE NOISE AND RATE HERE AS WELL?
+            # Default to full memory
+            selection_function = self.selection_function
+            test_var = np.asfarray([
+                distance_result if i == 0 else np.zeros_like(distance_result)
+                for i in range(self._get_current_parameter_value('max_entries', context))
+            ])
+            try:
+                result = np.asarray(selection_function(test_var, context=context))
+            except Exception as e:
+                raise FunctionError(
+                    f'Function specified for {repr(SELECTION_FUNCTION)} arg of {self.__class__} '
+                    f'({selection_function}) must accept a 1d array as its argument'
+                ) from e
+            if result.shape != test_var.shape:
+                raise FunctionError(
+                    f'Value returned by {repr(SELECTION_FUNCTION)} specified for {self.__class__} '
+                    f'({result}) must return an array of the same length it receives'
+                )
 
-        # Default to full memory
-        selection_function = self.selection_function
-        test_var = np.asfarray([distance_result if i==0
-                                else np.zeros_like(distance_result)
-                                for i in range(self._get_current_parameter_value('max_entries', context))])
-        if isinstance(selection_function, type):
-            selection_function = selection_function(default_variable=test_var, context=context)
-            fct_string = 'Function type'
-        else:
-            selection_function.defaults.variable = test_var
-            selection_function._instantiate_value(context)
-            fct_string = 'Function'
-        try:
-            result = np.asarray(selection_function(test_var, context=context))
-        except e:
-            raise FunctionError(f'{fct_string} specified for {repr(SELECTION_FUNCTION)} arg of {self.__class__} '
-                                f'({selection_function}) must accept a 1d array as its argument')
-        if result.shape != test_var.shape:
-            raise FunctionError(f'Value returned by {repr(SELECTION_FUNCTION)} specified for {self.__class__} '
-                                f'({result}) must return an array of the same length it receives')
+        # FIX: 4/5/21 SHOULD VALIDATE NOISE AND RATE HERE AS WELL?
 
     @handle_external_context()
     def _update_default_variable(self, new_default_variable, context=None):
@@ -1337,12 +1336,6 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
         self._initialize_previous_value(self.parameters.initializer._get(context), context)
-
-        if isinstance(self.distance_function, type):
-            self.distance_function = self.distance_function(context=context)
-
-        if isinstance(self.selection_function, type):
-            self.selection_function = self.selection_function(context=context)
 
     @handle_external_context(fallback_most_recent=True)
     def reset(self, new_value=None, context=None):
@@ -1606,7 +1599,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                 # Note: if greater ndim>2, item in each field is >1d
                 shape = (1, num_fields, entry.shape[1])
             else:
-                raise ContentAddressableMemory(f"Unrecognized format for entry to be stored in {self.name}: {entry}.")
+                raise ValueError(f"Unrecognized format for entry to be stored in {self.name}: {entry}.")
             return np.atleast_3d(entry).reshape(shape)
 
         if existing_entries is not None:
@@ -1684,22 +1677,23 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         if field_weights is None:
             # Could be from get_memory called from COMMAND LINE without field_weights
             field_weights = self._get_current_parameter_value('distance_field_weights', context)
-        field_weights = np.atleast_1d(field_weights)
-
+        # Set any items in field_weights to None if they are None or an empty list:
+        field_weights = np.atleast_1d([None if
+                                       fw is None or fw == [] or isinstance(fw, np.ndarray) and fw.tolist()==[]
+                                       else fw
+                                       for fw in field_weights])
         if granularity == 'per_field':
             # Note: this is just used for reporting, and not determining storage or retrieval
-
-            # Replace None's with 0 to allow multiplication
-            distances_by_field = np.array([distance_fct([cue[i], candidate[i]])
-                                           for i in range(num_fields)]
-                                          ) * np.array([f if f is not None else 0 for f in field_weights])
+            # Report None if any element of cue, candidate or field_weights is None or empty list:
+            distances_by_field = np.array([None] * num_fields)
             # If field_weights is scalar, splay out as array of length num_fields so can iterate through all of them
             if len(field_weights)==1:
                 field_weights = np.full(num_fields, field_weights[0])
-            # Replace 0's with None's for fields with None in field_weights
-            distances_by_field = np.array([distances_by_field[i]
-                                           if f is not None else None for i,f in enumerate(field_weights)])
-            return distances_by_field
+            for i in range(num_fields):
+                if not any([item is None or item == [] or isinstance(item, np.ndarray) and item.tolist() == []
+                            for item in [cue[i], candidate[i], field_weights[i]]]):
+                    distances_by_field[i] = distance_fct([cue[i], candidate[i]]) * field_weights[i]
+            return list(distances_by_field)
 
         elif granularity == 'full_entry':
             # Use first element as scalar if it is a homogenous array (i.e., all elements are the same)
@@ -1720,9 +1714,6 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             assert False, f"PROGRAM ERROR: call to 'ContentAddressableMemory.get_distance()' method " \
                           f"with invalid 'granularity' argument ({granularity});  " \
                           f"should be 'full_entry' or 'per_field."
-
-    def _parse_distance_function_variable(self, variable):
-        return convert_to_np_array([variable[0], variable[0]])
 
     @classmethod
     def _enforce_memory_shape(cls, memory):
@@ -2188,23 +2179,23 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
 
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 retrieval_prob: tc.optional(tc.any(int, float))=None,
-                 storage_prob: tc.optional(tc.any(int, float))=None,
-                 noise: tc.optional(tc.any(int, float, list, np.ndarray, callable))=None,
-                 rate: tc.optional(tc.any(int, float, list, np.ndarray))=None,
+                 retrieval_prob: Optional[Union[int, float]] = None,
+                 storage_prob: Optional[Union[int, float]] = None,
+                 noise: Optional[Union[int, float, list, np.ndarray, Callable]] = None,
+                 rate: Optional[Union[int, float, list, np.ndarray]] = None,
                  initializer=None,
-                 distance_function:tc.optional(tc.any(Distance, is_function_type))=None,
-                 selection_function:tc.optional(tc.any(OneHot, is_function_type))=None,
-                 duplicate_keys:tc.optional(tc.any(bool, tc.enum(OVERWRITE)))=None,
-                 equidistant_keys_select:tc.optional(tc.enum(RANDOM, OLDEST, NEWEST))=None,
+                 distance_function: Optional[Union[Distance, Callable]] = None,
+                 selection_function: Optional[Union[OneHot, Callable]] = None,
+                 duplicate_keys: Optional[Union[bool, Literal['overwrite']]] = None,
+                 equidistant_keys_select: Optional[Literal['random', 'oldest', 'newest']] = None,
                  max_entries=None,
                  seed=None,
-                 params: tc.optional(tc.optional(tc.any(list, np.ndarray))) = None,
+                 params: Optional[Union[list, np.ndarray]] = None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs: Optional[ValidPrefSet] = None):
 
         if initializer is None:
             initializer = []
@@ -2541,8 +2532,8 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
             previous_value = self._get_current_parameter_value("initializer", context)
 
         if previous_value == []:
-            self.parameters.previous_value._get(context).clear()
             value = np.ndarray(shape=(2, 0, len(self.defaults.variable[0])))
+            self.parameters.previous_value._set(copy.deepcopy(value), context)
 
         else:
             value = self._initialize_previous_value(previous_value, context=context)
@@ -2630,8 +2621,8 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         ret_val[1] = list(memory[1])
         return ret_val
 
-    @tc.typecheck
-    def _validate_memory(self, memory:tc.any(list, np.ndarray), context):
+    @beartype
+    def _validate_memory(self, memory: Union[list, np.ndarray], context):
 
         # memory must be list or 2d array with 2 items
         if len(memory) != 2 and not all(np.array(i).ndim == 1 for i in memory):
@@ -2640,16 +2631,16 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
 
         self._validate_key(memory[KEYS], context)
 
-    @tc.typecheck
-    def _validate_key(self, key:tc.any(list, np.ndarray), context):
+    @beartype
+    def _validate_key(self, key: Union[list, np.ndarray], context):
         # Length of key must be same as that of existing entries (so it can be matched on retrieval)
         if len(key) != self.parameters.key_size._get(context):
             raise FunctionError(f"Length of 'key' ({key}) to store in {self.__class__.__name__} ({len(key)}) "
                                 f"must be same as others in the dict ({self.parameters.key_size._get(context)})")
 
-    @tc.typecheck
+    @beartype
     @handle_external_context()
-    def get_memory(self, query_key:tc.any(list, np.ndarray), context=None):
+    def get_memory(self, query_key:Union[list, np.ndarray], context=None):
         """get_memory(query_key, context=None)
 
         Retrieve memory from `memory <DictionaryMemory.memory>` based on `distance_function
@@ -2718,8 +2709,8 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         # Return as list of lists
         return [list(best_match_key), list(best_match_val)]
 
-    @tc.typecheck
-    def _store_memory(self, memory:tc.any(list, np.ndarray), context):
+    @beartype
+    def _store_memory(self, memory:Union[list, np.ndarray], context):
         """Save an key-value pair to `memory <DictionaryMemory.memory>`
 
         Arguments
@@ -2777,9 +2768,9 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
 
         return storage_succeeded
 
-    @tc.typecheck
+    @beartype
     @handle_external_context()
-    def add_to_memory(self, memories:tc.any(list, np.ndarray), context=None):
+    def add_to_memory(self, memories:Union[list, np.ndarray], context=None):
         """Add one or more key-value pairs into `memory <ContentAddressableMemory.memory>`
 
         Arguments
@@ -2796,9 +2787,9 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         for memory in memories:
             self._store_memory(memory, context)
 
-    @tc.typecheck
+    @beartype
     @handle_external_context()
-    def delete_from_memory(self, memories:tc.any(list, np.ndarray), key_only:bool= True, context=None):
+    def delete_from_memory(self, memories:Union[list, np.ndarray], key_only:bool= True, context=None):
         """Delete one or more key-value pairs from `memory <ContentAddressableMememory.memory>`
 
         Arguments

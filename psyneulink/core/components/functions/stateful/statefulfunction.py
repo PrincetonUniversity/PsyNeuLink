@@ -22,7 +22,9 @@ import numbers
 import warnings
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility, _has_initializers_setter, ComponentsMeta
@@ -31,7 +33,7 @@ from psyneulink.core.components.functions.function import Function_Base, Functio
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import STATEFUL_FUNCTION_TYPE, STATEFUL_FUNCTION, NOISE, RATE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.utilities import iscompatible, convert_to_np_array, contains_type
 
 __all__ = ['StatefulFunction']
@@ -219,15 +221,15 @@ class StatefulFunction(Function_Base): #  --------------------------------------
 
     @handle_external_context()
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  rate=None,
                  noise=None,
                  initializer=None,
-                 params: tc.optional(tc.optional(dict)) = None,
+                 params: Optional[dict] = None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None,
+                 prefs:  Optional[ValidPrefSet] = None,
                  context=None,
                  **kwargs
                  ):
@@ -489,7 +491,30 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                 kwargs[attr] = np.atleast_1d(kwargs[attr])
             else:
                 try:
-                    kwargs[attr] = self._get_current_parameter_value(getattr(self.parameters, attr).initializer, context=context)
+                    initializer_ref = getattr(self.parameters, attr).initializer
+                    if initializer_ref:
+                        initializer = getattr(self.parameters, initializer_ref)
+                    # FIX: ?NEED TO HANDLE initializer IF IT IS A NUMBER?
+                    if initializer is not None and initializer.port and initializer.port.mod_afferents:
+                        # If the initializer is subject to control, get its control_allocation
+                        initializer_mod_proj = initializer.port.mod_afferents[0]
+                        mod_parameter_source = initializer_mod_proj.sender.owner
+                        from psyneulink.core.compositions.composition import CompositionInterfaceMechanism
+                        from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism \
+                            import ControlMechanism
+                        if isinstance(mod_parameter_source, CompositionInterfaceMechanism):
+                            ctl_sig,_,_  = mod_parameter_source._get_source_of_modulation_for_parameter_CIM(
+                                initializer_mod_proj.sender)
+                        elif isinstance(mod_parameter_source, ControlMechanism):
+                            ctl_sig = mod_parameter_source.control_signals[0]
+                        else:
+                            assert False, f"Cannot reset {self.name} because " \
+                                          f"the source of modulation is not of correct type."
+                        kwargs[attr] = ctl_sig.parameters.value.get(context)
+                    else:
+                        # Otherwise, just use the default (or user-assigned) initializer
+                        kwargs[attr] = self._get_current_parameter_value(initializer, context=context)
+
                 except AttributeError:
                     invalid_args.append(attr)
 
@@ -516,13 +541,6 @@ class StatefulFunction(Function_Base): #  --------------------------------------
             initializer = getattr(self.parameters, a).initializer
             source_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, initializer)
             dest_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, a)
-            if source_ptr.type != dest_ptr.type:
-                warnings.warn("Shape mismatch: stateful param does not match the initializer: "
-                              "{initializer}({source_ptr.type}) vs. {a}({dest_ptr.type}).")
-                # Take a guess that dest just has an extra dimension
-                assert len(dest_ptr.type.pointee) == 1
-                dest_ptr = builder.gep(dest_ptr, [ctx.int32_ty(0),
-                                                  ctx.int32_ty(0)])
             builder.store(builder.load(source_ptr), dest_ptr)
 
         return builder

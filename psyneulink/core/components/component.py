@@ -167,17 +167,22 @@ with the one exception of `prefs <Component_Prefs>`.
 
 .. _Component_Value:
 
-* **value** - the `value <Component.value>` attribute contains the result (return value) of the Component's
-  `function <Component.function>` after the function is called.
+* **value** - the `value <Component.value>` attribute generally contains the result (return value) of the Component's
+  `function <Component.function>` after the function is called, though some Components may override this to return
+  other values.
+
+      .. technical_note::
+         In general, Components that have an execute() method may use this to assign the `value` of the Component
+         (e.g., `Mechanism_Base`; see `OptimizationControlMechanism` and `LCControlMechanism` for examples).
 ..
 
 .. _Component_Log:
 
-* **log** - the `log <Component.log>` attribute contains the Component's `Log`, that can be used to record its
-  `value <Component.value>`, as well as that of Components that belong to it, during initialization, validation,
-  execution and learning.  It also has four convenience methods -- `loggable_items <Log.loggable_items>`, `set_log_conditions
-  <Log.set_log_conditions>`, `log_values <Log.log_values>` and `logged_items <Log.logged_items>` -- that provide access to the
-  corresponding methods of its Log, used to identify, configure and track items for logging.
+* **log** - the `log <Component.log>` attribute contains the Component's `Log`, that can be used to record its `value
+  <Component.value>`, as well as that of Components that belong to it, during initialization, validation, execution
+  and learning.  It also has four convenience methods -- `loggable_items <Log.loggable_items>`, `set_log_conditions
+  <Log.set_log_conditions>`, `log_values <Log.log_values>` and `logged_items <Log.logged_items>` -- that provide
+  access to the corresponding methods of its Log, used to identify, configure and track items for logging.
 ..
 
 .. _Component_Name:
@@ -522,18 +527,18 @@ from psyneulink.core.globals.keywords import \
     MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS, \
     MODEL_SPEC_ID_MDF_VARIABLE, \
     MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_PORTS, OWNER, PARAMS, PREFS_ARG, \
-    RESET_STATEFUL_FUNCTION_WHEN, VALUE, VARIABLE
+    RESET_STATEFUL_FUNCTION_WHEN, SIZE, VALUE, VARIABLE
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.globals.parameters import \
     Defaults, SharedParameter, Parameter, ParameterAlias, ParameterError, ParametersBase, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet, VERBOSE_PREF
 from psyneulink.core.globals.preferences.preferenceset import \
     PreferenceLevel, PreferenceSet, _assign_prefs
-from psyneulink.core.globals.registry import register_category
+from psyneulink.core.globals.registry import register_category, _get_auto_name_prefix
 from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, convert_all_elements_to_np_array, convert_to_np_array, get_deepcopy_with_shared, \
-    is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, prune_unused_args, \
+    is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, \
     get_all_explicit_arguments, call_with_pruned_args, safe_equals, safe_len, parse_valid_identifier
 from psyneulink.core.scheduling.condition import Never
 from psyneulink.core.scheduling.time import Time, TimeScale
@@ -907,7 +912,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     componentCategory = None
     componentType = None
 
-    standard_constructor_args = [RESET_STATEFUL_FUNCTION_WHEN, EXECUTE_UNTIL_FINISHED, MAX_EXECUTIONS_BEFORE_FINISHED]
+    standard_constructor_args = {EXECUTE_UNTIL_FINISHED, FUNCTION_PARAMS, MAX_EXECUTIONS_BEFORE_FINISHED, RESET_STATEFUL_FUNCTION_WHEN, SIZE}
 
     # helper attributes for MDF model spec
     _model_spec_id_parameters = 'parameters'
@@ -1095,6 +1100,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                  name=None,
                  reset_stateful_function_when=None,
                  prefs=None,
+                 function_params=None,
                  **kwargs):
         """Assign default preferences; enforce required params; validate and instantiate params and execute method
 
@@ -1116,32 +1122,9 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         else:
             self.reset_stateful_function_when = Never()
 
-        try:
-            function_params = copy.copy(param_defaults[FUNCTION_PARAMS])
-        except (KeyError, TypeError):
-            function_params = {}
-
-        # if function is string, assume any unknown kwargs are for the
-        # corresponding UDF expression
-        if isinstance(function, (types.FunctionType, str)):
-            function_params = {
-                **kwargs,
-                **function_params
-            }
-        else:
-            self._handle_illegal_kwargs(**kwargs)
-
-        # allow override of standard arguments with arguments specified in
-        # params (here, param_defaults) argument
-        # (if there are duplicates, later lines override previous)
-        parameter_values = {
-            **{
-                'function': function,
-                'variable': default_variable
-            },
-            **kwargs,
-            **(param_defaults if param_defaults is not None else {}),
-        }
+        parameter_values, function_params = self._parse_arguments(
+            default_variable, param_defaults, size, function, function_params, kwargs
+        )
 
         self._initialize_parameters(
             context=context,
@@ -1150,8 +1133,6 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
         var = call_with_pruned_args(
             self._handle_default_variable,
-            default_variable=default_variable,
-            size=size,
             **parameter_values
         )
         if var is None:
@@ -1318,7 +1299,9 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         # FIXME: MAGIC LIST, Use stateful tag for this
         whitelist = {"previous_time", "previous_value", "previous_v",
                      "previous_w", "random_state",
-                     "input_ports", "output_ports"}
+                     "input_ports", "output_ports",
+                     "adjustment_cost", "intensity_cost", "duration_cost",
+                     "intensity"}
         # Prune subcomponents (which are enabled by type rather than a list)
         # that should be omitted
         blacklist = { "objective_mechanism", "agent_rep", "projections"}
@@ -1338,7 +1321,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             blacklist.update(['combination_function'])
 
         def _is_compilation_state(p):
-            #FIXME: This should use defaults instead of 'p.get'
+            # FIXME: This should use defaults instead of 'p.get'
             return p.name not in blacklist and \
                    not isinstance(p, (ParameterAlias, SharedParameter)) and \
                    (p.name in whitelist or isinstance(p.get(), Component))
@@ -1358,6 +1341,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
     def _get_state_initializer(self, context):
         def _convert(p):
+            # FIXME: This should use defaults instead of 'p.get'
             x = p.get(context)
             if isinstance(x, np.random.RandomState):
                 # Skip first element of random state (id string)
@@ -1388,7 +1372,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "num_executions_before_finished", "num_executions",
                      "variable", "value", "saved_values", "saved_samples",
                      "integrator_function_value", "termination_measure_value",
-                     "execution_count",
+                     "execution_count", "intensity", "combined_costs",
+                     "adjustment_cost", "intensity_cost", "duration_cost",
                      # Invalid types
                      "input_port_variables", "results", "simulation_results",
                      "monitor_for_control", "state_feature_values", "simulation_ids",
@@ -1404,19 +1389,22 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      # duplicate
                      "allocation_samples", "control_allocation_search_space",
                      # not used in computation
-                     "auto", "hetero", "cost", "costs", "combined_costs",
-                     "control_signal", "intensity", "competition",
+                     "auto", "hetero", "cost", "costs",
+                     "control_signal", "competition",
                      "has_recurrent_input_port", "enable_learning",
                      "enable_output_type_conversion", "changes_shape",
                      "output_type", "bounds", "internal_only",
                      "require_projection_in_composition", "default_input",
                      "shadow_inputs", "compute_reconfiguration_cost",
                      "reconfiguration_cost", "net_outcome", "outcome",
-                     "adjustment_cost", "intensity_cost", "duration_cost",
                      "enabled_cost_functions", "control_signal_costs",
                      "default_allocation", "same_seed_for_all_allocations",
                      "search_statefulness", "initial_seed", "combine",
-                     "smoothing_factor",
+                     "random_variables", "smoothing_factor",
+                     # not used in compiled learning
+                     "learning_results", "learning_signal", "learning_signals",
+                     "error_matrix", "error_signal", "activation_input",
+                     "activation_output"
                      }
         # Mechanism's need few extra entires:
         # * matrix -- is never used directly, and is flatened below
@@ -1435,7 +1423,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
         def _is_compilation_param(p):
             if p.name not in blacklist and not isinstance(p, (ParameterAlias, SharedParameter)):
-                #FIXME: this should use defaults
+                # FIXME: this should use defaults
                 val = p.get()
                 # Check if the value type is valid for compilation
                 return not isinstance(val, (str, ComponentsMeta,
@@ -1691,26 +1679,46 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
         return variable
 
-    def _handle_illegal_kwargs(self, **kwargs):
-        illegal_args = [
-            arg
-            for arg in kwargs.keys()
-            if arg not in (
-                self.standard_constructor_args
-                + self.parameters.names(show_all=True)
-                # arguments to constructor
-                + list(get_all_explicit_arguments(self.__class__, '__init__'))
-            )
-        ]
+    def _get_allowed_arguments(self) -> set:
+        """
+        Returns a set of argument names that can be passed into
+        __init__, directly or through params dictionaries
 
-        if illegal_args:
-            plural = ''
-            if len(illegal_args) > 1:
-                plural = 's'
-            raise ComponentError(
-                f"Unrecognized argument{plural} in constructor for {self.name} "
-                f"(type: {self.__class__.__name__}): {repr(', '.join(illegal_args))}"
-            )
+        Includes:
+            - all Parameter constructor_argument names
+            - all Parameter names except for those that have a
+              constructor_argument
+            - all ParameterAlias names
+            - all other explicitly specified named arguments in __init__
+        """
+        allowed_kwargs = self.standard_constructor_args.union(
+            get_all_explicit_arguments(self.__class__, '__init__')
+        )
+        for p in self.parameters:
+            # restrict to constructor argument, if both are desired, use alias
+            if p.constructor_argument is not None and p.constructor_argument != p.name:
+                allowed_kwargs.add(p.constructor_argument)
+                try:
+                    allowed_kwargs.remove(p.name)
+                except KeyError:
+                    pass
+            else:
+                allowed_kwargs.add(p.name)
+
+            if p.aliases is not None:
+                if isinstance(p.aliases, str):
+                    allowed_kwargs.add(p.aliases)
+                else:
+                    allowed_kwargs = allowed_kwargs.union(p.aliases)
+
+        return allowed_kwargs
+
+    def _get_illegal_arguments(self, **kwargs) -> set:
+        allowed_kwargs = self._get_allowed_arguments()
+        return {
+            k for k in kwargs
+            if k not in allowed_kwargs and k in self._user_specified_args
+        }
 
     # breaking self convention here because when storing the args,
     # "self" is often among them. To avoid needing to preprocess to
@@ -1769,8 +1777,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
     def _assign_deferred_init_name(self, name):
 
-        name = "{} [{}]".format(name,DEFERRED_INITIALIZATION) if name \
-          else "{} {}".format(DEFERRED_INITIALIZATION,self.__class__.__name__)
+        name = "{} [{}]".format(name, DEFERRED_INITIALIZATION) if name \
+          else "{}{} {}".format(_get_auto_name_prefix(), DEFERRED_INITIALIZATION, self.__class__.__name__)
 
         # Register with ProjectionRegistry or create one
         register_category(entry=self,
@@ -1995,6 +2003,148 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                                       target_set=target_set,
                                       context=context)
 
+    def _validate_arguments(self, parameter_values):
+        """
+        Raises errors for illegal specifications of arguments to
+        __init__:
+            - original Parameter name when Parameter has a
+              constructor_argument
+            - arguments that don't correspond to Parameters or other
+              arguments to __init__
+            - non-equal values of a Parameter and a corresponding
+              ParameterAlias
+        """
+        def create_illegal_argument_error(illegal_arg_strs):
+            plural = 's' if len(illegal_arg_strs) > 1 else ''
+            base_err = f"Illegal argument{plural} in constructor (type: {type(self).__name__}):"
+            return ComponentError('\n\t'.join([base_err] + illegal_arg_strs), component=self)
+
+        def alias_conflicts(alias, passed_name):
+            # some aliases share name with constructor_argument
+            if alias.name == passed_name:
+                return False
+
+            try:
+                a_val = parameter_values[alias.name]
+                s_val = parameter_values[passed_name]
+            except KeyError:
+                return False
+
+            if safe_equals(a_val, s_val):
+                return False
+
+            # both specified, not equal -> conflict
+            alias_specified = (
+                alias.name in self._user_specified_args
+                and (a_val is not None or alias.specify_none)
+            )
+            source_specified = (
+                passed_name in self._user_specified_args
+                and (s_val is not None or alias.source.specify_none)
+            )
+            return alias_specified and source_specified
+
+        illegal_passed_args = self._get_illegal_arguments(**parameter_values)
+
+        conflicting_aliases = []
+        unused_constructor_args = {}
+        for p in self.parameters:
+            if p.name in illegal_passed_args:
+                assert p.constructor_argument is not None
+                unused_constructor_args[p.name] = p.constructor_argument
+
+            if isinstance(p, ParameterAlias):
+                if p.source.constructor_argument is None:
+                    passed_name = p.source.name
+                else:
+                    passed_name = p.source.constructor_argument
+
+                if alias_conflicts(p, passed_name):
+                    conflicting_aliases.append((p.source.name, passed_name, p.name))
+
+        # raise constructor arg errors
+        if len(unused_constructor_args) > 0:
+            raise create_illegal_argument_error([
+                f"'{arg}': must use '{constr_arg}' instead"
+                for arg, constr_arg in unused_constructor_args.items()
+            ])
+
+        # raise generic illegal argument error
+        unknown_args = illegal_passed_args.difference(unused_constructor_args)
+        if len(unknown_args) > 0:
+            raise create_illegal_argument_error([f"'{a}'" for a in unknown_args])
+
+        # raise alias conflict error
+        # can standardize these with above error, but leaving for now for consistency
+        if len(conflicting_aliases) > 0:
+            source, passed, alias = conflicting_aliases[0]
+            constr_arg_str = f' ({source})' if source != passed else ''
+            raise ComponentError(
+                f"Multiple values ({alias}: {parameter_values[alias]}"
+                f"\t{passed}: {parameter_values[passed]}) "
+                f"assigned to identical Parameters. {alias} is an alias "
+                f"of {passed}{constr_arg_str}",
+                component=self,
+            )
+
+    def _parse_arguments(
+        self, default_variable, param_defaults, size, function, function_params, kwargs
+    ):
+        if function_params is None:
+            function_params = {}
+
+        # allow override of standard arguments with arguments specified
+        # in params (here, param_defaults) argument
+        # (if there are duplicates, later lines override previous)
+        # add named arguments here so that values from param_defaults
+        # can override them.
+        parameter_values = {
+            **{
+                'function': function,
+                'size': size,
+                'default_variable': default_variable,
+                'function_params': function_params
+            },
+            **kwargs,
+            **(param_defaults if param_defaults is not None else {}),
+        }
+        function_params = parameter_values['function_params']
+
+        # if function is a standard python function or string, assume
+        # any unknown kwargs are for the corresponding UDF.
+        # Validation will happen there.
+        if isinstance(function, (types.FunctionType, str)):
+            function_params = {
+                **kwargs,
+                **function_params
+            }
+        else:
+            self._validate_arguments(parameter_values)
+
+        # self.parameters here still references <class>.parameters, but
+        # only unchanging attributes are needed here
+        for p in self.parameters:
+            if p.constructor_argument is not None and p.constructor_argument != p.name:
+                try:
+                    parameter_values[p.name] = parameter_values[p.constructor_argument]
+                except KeyError:
+                    pass
+                else:
+                    # the value itself isn't used elsewhere
+                    self._user_specified_args[p.name] = f'FROM_{p.constructor_argument}'
+
+            if isinstance(p, ParameterAlias):
+                if p.source.name not in self._user_specified_args:
+                    # if alias conflicts with source, error thrown in _validate_arguments
+                    try:
+                        parameter_values[p.source.name] = parameter_values[p.name]
+                    except KeyError:
+                        pass
+                    else:
+                        self._user_specified_args[p.source.name] = f'FROM_{p.name}'
+
+        return parameter_values, function_params
+
     def _initialize_parameters(self, context=None, **param_defaults):
         from psyneulink.core.components.shellclasses import (
             Composition_Base, Function, Mechanism, Port, Process_Base,
@@ -2026,6 +2176,9 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
         if param_defaults is not None:
             for name, value in copy.copy(param_defaults).items():
+                if name in alias_names:
+                    continue
+
                 try:
                     parameter_obj = getattr(self.parameters, name)
                 except AttributeError:
@@ -2037,14 +2190,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                     and parameter_obj.constructor_argument not in self._user_specified_args
                 ):
                     continue
-
-                if (
-                    (
-                        name in self._user_specified_args
-                        or parameter_obj.constructor_argument in self._user_specified_args
-                    )
-                    and (value is not None or parameter_obj.specify_none)
-                ):
+                elif value is not None or parameter_obj.specify_none:
                     parameter_obj._user_specified = True
 
                 if parameter_obj.structural:
@@ -2052,11 +2198,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
                 if parameter_obj.modulable:
                     # later, validate this
-                    try:
-                        modulable_param_parser = self.parameters._get_prefixed_method(
-                            parse=True,
-                            modulable=True
-                        )
+                    modulable_param_parser = self.parameters._get_parse_method('modulable')
+                    if modulable_param_parser is not None:
                         parsed = modulable_param_parser(name, value)
 
                         if parsed is not value:
@@ -2064,39 +2207,19 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                             parameter_obj.spec = value
                             value = parsed
                             param_defaults[name] = parsed
-                    except AttributeError:
-                        pass
 
                 if value is not None or parameter_obj.specify_none:
                     defaults[name] = value
 
         for k in defaults:
+            if defaults[k] is None:
+                continue
             defaults[k] = copy_parameter_value(
                 defaults[k],
                 shared_types=shared_types
             )
 
         self.defaults = Defaults(owner=self, **defaults)
-
-        def _is_user_specified(parameter):
-            return (
-                parameter.name in param_defaults
-                and param_defaults[parameter.name] is not None
-            )
-
-        for p in filter(lambda x: isinstance(x, ParameterAlias), self.parameters):
-            if _is_user_specified(p):
-                if _is_user_specified(p.source):
-                    if param_defaults[p.name] is not param_defaults[p.source.name]:
-                        raise ComponentError(
-                            f"Multiple values ({p.name}: {param_defaults[p.name]}"
-                            f"\t{p.source.name}: {param_defaults[p.source.name]}) "
-                            f"assigned to identical Parameters. {p.name} is an alias "
-                            f"of {p.source.name}",
-                            component=self,
-                        )
-                else:
-                    param_defaults[p.source.name] = param_defaults[p.name]
 
         for p in filter(lambda x: not isinstance(x, (ParameterAlias, SharedParameter)), self.parameters._in_dependency_order):
             # copy spec so it is not overwritten later
@@ -2685,14 +2808,11 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                             try:
                                 target_set[param_name] = param_value.copy()
                             except AttributeError:
-                                try:
-                                    modulable_param_parser = self.parameters._get_prefixed_method(
-                                        parse=True,
-                                        modulable=True
-                                    )
+                                modulable_param_parser = self.parameters._get_parse_method('modulable')
+                                if modulable_param_parser is not None:
                                     param_value = modulable_param_parser(param_name, param_value)
                                     target_set[param_name] = param_value
-                                except AttributeError:
+                                else:
                                     target_set[param_name] = param_value.copy()
 
                         else:
@@ -2972,8 +3092,13 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                     except (AttributeError, KeyError, TypeError):
                         pass
 
-            _, kwargs = prune_unused_args(function.__init__, args=[], kwargs=kwargs_to_instantiate)
-            function = function(default_variable=function_variable, owner=self, **kwargs)
+            try:
+                function = function(default_variable=function_variable, owner=self, **kwargs_to_instantiate)
+            except TypeError as e:
+                if 'unexpected keyword argument' in str(e):
+                    raise ComponentError(f'(function): {function} {e}', component=self) from e
+                else:
+                    raise
 
         else:
             raise ComponentError(f'Unsupported function type: {type(function)}, function={function}.')
@@ -3013,7 +3138,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             value = self.execute(variable=default_variable, context=context)
         except TypeError as e:
             # don't hide other TypeErrors
-            if "execute() got an unexpected keyword argument 'variable'" != str(e):
+            if "execute() got an unexpected keyword argument 'variable'" not in str(e):
                 raise
 
             try:
@@ -3360,6 +3485,92 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
     def _change_function(self, to_function):
         pass
+
+    @property
+    def _sender_ports(self):
+        """
+        Returns:
+            ContentAddressableList: list containing Ports on this object
+            that can send Projections
+        """
+        from psyneulink.core.components.shellclasses import Port
+
+        ports = []
+        try:
+            ports.extend(self.output_ports)
+        except AttributeError:
+            pass
+
+        return ContentAddressableList(Port, list=ports)
+
+    @property
+    def _receiver_ports(self):
+        """
+        Returns:
+            ContentAddressableList: list containing Ports on this object
+            that can receive Projections
+        """
+        from psyneulink.core.components.shellclasses import Port
+
+        ports = []
+        try:
+            ports.extend(self.input_ports)
+        except AttributeError:
+            pass
+
+        try:
+            ports.extend(self.parameter_ports)
+        except AttributeError:
+            pass
+
+        return ContentAddressableList(Port, list=ports)
+
+    def _get_matching_projections(self, component, projections, filter_component_is_sender):
+        from psyneulink.core.components.shellclasses import Projection
+
+        if filter_component_is_sender:
+            def proj_matches_component(proj):
+                return proj.sender.owner == component or proj.sender == component
+        else:
+            def proj_matches_component(proj):
+                return proj.receiver.owner == component or proj.receiver == component
+
+        if component:
+            projections = filter(proj_matches_component, projections)
+
+        return ContentAddressableList(Projection, list=list(projections))
+
+    def get_afferents(self, from_component=None):
+        """
+        Args:
+            from_component (Component, optional): if specified, filters
+            returned list to contain only afferents originating from
+            *from_component* or one of its Ports. Defaults to None.
+
+        Returns:
+            ContentAddressableList: list of afferent Projections to this
+            Component
+        """
+        projections = itertools.chain(*[p.all_afferents for p in self._receiver_ports])
+        return self._get_matching_projections(
+            from_component, projections, filter_component_is_sender=True
+        )
+
+    def get_efferents(self, to_component=None):
+        """
+        Args:
+            to_component (Component, optional): if specified, filters
+            returned list to contain only efferents ending at
+            *to_component* or one of its Ports. Defaults to None.
+
+        Returns:
+            ContentAddressableList: list of efferent Projections from
+            this Component
+        """
+        projections = itertools.chain(*[p.efferents for p in self._sender_ports])
+        return self._get_matching_projections(
+            to_component, projections, filter_component_is_sender=False
+        )
 
     @property
     def name(self):
@@ -3862,6 +4073,17 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         }
 
         return params
+
+    @property
+    def _mdf_model_nonstateful_parameters(self):
+        parameters = self._mdf_model_parameters
+
+        return {
+            self._model_spec_id_parameters: {
+                k: v for k, v in parameters[self._model_spec_id_parameters].items()
+                if (k not in self.parameters or getattr(self.parameters, k).initializer is None)
+            }
+        }
 
     @property
     def _mdf_metadata(self):

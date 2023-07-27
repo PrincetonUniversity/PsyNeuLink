@@ -212,11 +212,11 @@ def test_helper_all_close(mode, var1, var2, atol, rtol):
         ct_ty = ctypes.POINTER(bin_f.byref_arg_types[0])
         ct_vec1 = vec1.ctypes.data_as(ct_ty)
         ct_vec2 = vec2.ctypes.data_as(ct_ty)
-        res = ctypes.c_int32()
+        res = ctypes.c_uint32()
 
         bin_f(ct_vec1, ct_vec2, ctypes.byref(res))
     else:
-        res = np.array([5], dtype=np.int32)
+        res = np.array([5], dtype=np.uint32)
         bin_f.cuda_wrap_call(vec1, vec2, res)
         res = res[0]
 
@@ -229,7 +229,9 @@ def test_helper_all_close(mode, var1, var2, atol, rtol):
     (pnlvm.ir.DoubleType(), "%lf", [x *.5 for x in range(0, 5)]),
     ], ids=["i32", "i64", "double"])
 def test_helper_printf(capfd, ir_argtype, format_spec, values_to_check):
-    format_str = f"Hello {(format_spec+' ')*len(values_to_check)} \n"
+
+    format_str = f"Hello {(format_spec + ' ') * len(values_to_check)}\n"
+
     with pnlvm.LLVMBuilderContext.get_current() as ctx:
         func_ty = ir.FunctionType(ir.VoidType(), [])
         ir_values_to_check = [ir_argtype(i) for i in values_to_check]
@@ -242,9 +244,8 @@ def test_helper_printf(capfd, ir_argtype, format_spec, values_to_check):
         builder.ret_void()
 
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
-
-
     bin_f()
+
     # Printf is buffered in libc.
     libc = ctypes.util.find_library("msvcrt" if sys.platform == "win32" else "c")
     libc = ctypes.CDLL(libc)
@@ -252,8 +253,11 @@ def test_helper_printf(capfd, ir_argtype, format_spec, values_to_check):
 
     # Convert format specifier to Python compatible
     python_format_spec = {"%lld":"%ld"}.get(format_spec, format_spec)
-    python_format_str = f"Hello {(python_format_spec+' ')*len(values_to_check)} \n"
-    assert capfd.readouterr().out == python_format_str % tuple(values_to_check)
+
+    # The string below omits the newline character used above and the check below
+    # uses 'startswith' to avoid issues with different newline encoding across OSes.
+    python_format_str = f"Hello {(python_format_spec + ' ') * len(values_to_check)}"
+    assert capfd.readouterr().out.startswith(python_format_str % tuple(values_to_check))
 
 class TestHelperTypegetters:
     FLOAT_TYPE = pnlvm.ir.FloatType()
@@ -458,7 +462,7 @@ def test_helper_numerical(mode, op, var, expected, fp_type):
         res = np.ctypeslib.as_array(bin_f.byref_arg_types[0](var))
         bin_f.cuda_wrap_call(res)
 
-    assert np.allclose(res, expected)
+    np.testing.assert_allclose(res, expected)
 
 @pytest.mark.llvm
 @pytest.mark.parametrize('mode', ['CPU',
@@ -595,4 +599,4 @@ def test_helper_convert_fp_type(t1, t2, mode, val):
     else:
         bin_f.cuda_wrap_call(x, y)
 
-    assert np.allclose(y, ref, equal_nan=True)
+    np.testing.assert_allclose(y, ref, equal_nan=True)

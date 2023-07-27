@@ -29,7 +29,9 @@ Functions that integrate current value of input with previous value.
 import warnings
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union, Callable
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
@@ -49,9 +51,9 @@ from psyneulink.core.globals.keywords import \
     MULTIPLICATIVE_PARAM, NOISE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_PORTS, PRODUCT, \
     RATE, REST, SIMPLE_INTEGRATOR_FUNCTION, SUM, TIME_STEP_SIZE, THRESHOLD, VARIABLE, MODEL_SPEC_ID_MDF_VARIABLE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
-from psyneulink.core.globals.utilities import parameter_spec, all_within_range, \
-    convert_all_elements_to_np_array, parse_valid_identifier
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
+from psyneulink.core.globals.utilities import ValidParamSpecType, all_within_range, \
+    convert_all_elements_to_np_array, parse_valid_identifier, safe_len
 
 __all__ = ['SimpleIntegrator', 'AdaptiveIntegrator', 'DriftDiffusionIntegrator', 'DriftOnASphereIntegrator',
            'OrnsteinUhlenbeckIntegrator', 'FitzHughNagumoIntegrator', 'AccumulatorIntegrator',
@@ -221,15 +223,15 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         initializer = Parameter(np.array([0]), pnl_internal=True)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  rate=None,
                  noise=None,
                  initializer=None,
-                 params: tc.optional(tc.optional(dict)) = None,
+                 params: Optional[dict] = None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None,
+                 prefs:  Optional[ValidPrefSet] = None,
                  context=None,
                  **kwargs):
 
@@ -274,7 +276,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
             # If param is in Parameter class for function and it is a function_arg:
             if (param in self.parameters.names() and getattr(self.parameters, param).function_arg
                     and getattr(self.parameters, param)._user_specified):
-                if value is not None and isinstance(value, (list, np.ndarray)) and len(value)>1:
+                if value is not None and isinstance(value, (list, np.ndarray)) and safe_len(value)>1:
                     # Store ones with length > 1 in dict for evaluation below
                     params_to_check.update({param:value})
 
@@ -303,7 +305,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
             values_with_a_len = [param.default_value for param in self.parameters if
                                  param.function_arg and
                                  isinstance(param.default_value, (list, np.ndarray)) and
-                                 len(param.default_value)>1]
+                                 safe_len(param.default_value)>1]
             # One or more parameters are specified with length > 1 in the inner dimension
             if values_with_a_len:
                 # If shape already matches,
@@ -552,16 +554,16 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         increment = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  rate=None,
                  increment=None,
                  noise=None,
                  initializer=None,
-                 params: tc.optional(tc.optional(dict)) = None,
+                 params: Optional[dict] = None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -829,16 +831,16 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 rate: tc.optional(parameter_spec) = None,
+                 rate: Optional[ValidParamSpecType] = None,
                  noise=None,
                  offset=None,
                  initializer=None,
-                 params: tc.optional(tc.optional(dict)) = None,
+                 params: Optional[dict] = None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
         super().__init__(
             default_variable=default_variable,
             rate=rate,
@@ -1065,16 +1067,16 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  rate=None,
                  noise=None,
                  offset=None,
                  initializer=None,
-                 params: tc.optional(tc.optional(dict)) = None,
+                 params: Optional[dict] = None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1578,7 +1580,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
 
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  # rate: parameter_spec = 0.5,
@@ -1594,9 +1596,9 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
                  long_term_rate=None,
                  operation=None,
                  offset=None,
-                 params: tc.optional(tc.optional(dict)) = None,
+                 params: Optional[dict] = None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -2020,19 +2022,19 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
         min_val = Parameter(-1.0, function_arg=True)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 rate: tc.optional(parameter_spec) = None,
-                 decay: tc.optional(parameter_spec) = None,
-                 rest: tc.optional(parameter_spec) = None,
-                 max_val: tc.optional(parameter_spec) = None,
-                 min_val: tc.optional(parameter_spec) = None,
+                 rate: Optional[ValidParamSpecType] = None,
+                 decay: Optional[ValidParamSpecType] = None,
+                 rest: Optional[ValidParamSpecType] = None,
+                 max_val: Optional[ValidParamSpecType] = None,
+                 min_val: Optional[ValidParamSpecType] = None,
                  noise=None,
                  initializer=None,
-                 params: tc.optional(tc.optional(dict)) = None,
+                 params: Optional[dict] = None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None,
+                 prefs:  Optional[ValidPrefSet] = None,
                  # **kwargs
                  ):
 
@@ -2425,29 +2427,49 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         random_draw = Parameter()
 
         def _parse_initializer(self, initializer):
+            initializer = np.array(initializer)
             if initializer.ndim > 1:
                 return np.atleast_1d(initializer.squeeze())
             else:
                 return initializer
 
+        def _validate_rate(self, rate):
+            # Make sure rate is a 1D array or scalar
+            if rate is not None:
+                if isinstance(rate, np.ndarray):
+                    if rate.ndim > 1:
+                        return f"incompatible value ({rate}) for rate parameter, must be 1D array or scalar"
+                else:
+                    if not np.isscalar(rate) and type(rate) != list:
+                        return f"incompatible value ({rate}) for rate parameter, must be 1D array or scalar"
+
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(
         self,
         default_variable=None,
-        rate: tc.optional(parameter_spec) = None,
+        rate: Optional[Union[ValidParamSpecType, Callable]] = None,
         noise=None,
-        offset: tc.optional(parameter_spec) = None,
+        offset: Optional[ValidParamSpecType] = None,
         starting_value=None,
         non_decision_time=None,
         threshold=None,
         time_step_size=None,
         seed=None,
-        params: tc.optional(tc.optional(dict)) = None,
+        params: Optional[dict] = None,
         owner=None,
-        prefs: tc.optional(is_pref_set) = None,
+        prefs:  Optional[ValidPrefSet] = None,
         **kwargs
     ):
+
+        # Make sure rate is a 1D array or scalar
+        if rate is not None:
+            if isinstance(rate, np.ndarray):
+                if rate.ndim > 1:
+                    raise ValueError(f"incompatible value ({rate}) for rate parameter, must be 1D array or scalar")
+            else:
+                if not np.isscalar(rate) and type(rate) != list:
+                    raise ValueError(f"incompatible value ({rate}) for rate parameter, must be 1D array or scalar")
 
         # Assign here as default, for use in initialization of function
         super().__init__(
@@ -2976,6 +2998,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
 
         def _parse_initializer(self, initializer):
             """Assign initial value as array of random values of length dimension-1"""
+            initializer = np.array(initializer)
             initializer_dim = self.dimension.default_value - 1
             if initializer.ndim != 1 or len(initializer) != initializer_dim:
                 initializer = np.random.random(initializer_dim)
@@ -2989,12 +3012,12 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
             return noise
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 rate: tc.optional(parameter_spec) = None,
+                 rate: Optional[ValidParamSpecType] = None,
                  noise=None,
-                 offset: tc.optional(parameter_spec) = None,
+                 offset: Optional[ValidParamSpecType] = None,
                  starting_point=None,
                  # threshold=None,
                  time_step_size=None,
@@ -3002,9 +3025,9 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
                  initializer=None,
                  angle_function=None,
                  seed=None,
-                 params: tc.optional(tc.optional(dict)) = None,
+                 params: Optional[dict] = None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None,
+                 prefs:  Optional[ValidPrefSet] = None,
                  **kwargs):
 
         # Assign here as default, for use in initialization of function
@@ -3270,9 +3293,11 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
 
     .. math::
        previous\\_value + (decay \\cdot  previous\\_value) - (rate \\cdot variable) + \\mathcal{N}(\\sigma^2)
+
     where
-    ..  math::
-        \\sigma^2 =\\sqrt{time\\_step\\_size \\cdot noise}
+
+    .. math::
+       \\sigma^2 =\\sqrt{time\\_step\\_size \\cdot noise}
 
     *Modulatory Parameters:*
 
@@ -3495,22 +3520,30 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
             read_only=True
         )
 
+        def _parse_initializer(self, initializer):
+            initializer = np.array(initializer)
+            if initializer.ndim > 1:
+                return np.atleast_1d(initializer.squeeze())
+            else:
+                return initializer
+
+
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(
         self,
         default_variable=None,
-        rate: tc.optional(parameter_spec) = None,
+        rate: Optional[ValidParamSpecType] = None,
         decay=None,
         noise=None,
-        offset: tc.optional(parameter_spec) = None,
+        offset: Optional[ValidParamSpecType] = None,
         non_decision_time=None,
         time_step_size=None,
         starting_value=None,
-        params: tc.optional(tc.optional(dict)) = None,
+        params: Optional[dict] = None,
         seed=None,
         owner=None,
-        prefs: tc.optional(is_pref_set) = None,
+        prefs:  Optional[ValidPrefSet] = None,
         **kwargs
     ):
 
@@ -3537,6 +3570,9 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
             raise FunctionError(
                 "Invalid noise parameter for {}. OrnsteinUhlenbeckIntegrator requires noise parameter to be a float. "
                 "Noise parameter is used to construct the standard DDM noise distribution".format(self.name))
+
+    def _initialize_previous_value(self, initializer, context=None):
+        return super()._initialize_previous_value(self.parameters._parse_initializer(initializer), context)
 
     def _function(self,
                  variable=None,
@@ -3791,17 +3827,17 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         time_step_size = Parameter(0.1, modulable=True, function_arg=True)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 leak: tc.optional(parameter_spec) = None,
+                 leak: Optional[ValidParamSpecType] = None,
                  noise=None,
                  offset=None,
                  time_step_size=None,
                  initializer=None,
-                 params: tc.optional(tc.optional(dict)) = None,
+                 params: Optional[dict] = None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None,
+                 prefs:  Optional[ValidPrefSet] = None,
                  **kwargs):
 
         # IMPLEMENTATION NOTE:  For backward compatibility of LeakyFun in tests/functions/test_integrator.py
@@ -4281,6 +4317,12 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
     """
 
     componentName = FITZHUGHNAGUMO_INTEGRATOR_FUNCTION
+    _mdf_stateful_parameter_indices = {
+        'previous_v': 0,
+        'previous_w': 1,
+        'previous_time': 2,
+    }
+    _mdf_result_function_id = 'integration_result'
 
     class Parameters(IntegratorFunction.Parameters):
         """
@@ -4456,8 +4498,8 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         initial_w = 0.0
         initial_v = 0.0
         t_0 = 0.0
-        previous_w = Parameter(np.array([1.0]), initializer='initial_w', pnl_internal=True)
-        previous_v = Parameter(np.array([1.0]), initializer='initial_v', pnl_internal=True)
+        previous_w = Parameter(np.array([1.0]), initializer='initial_w', pnl_internal=True, mdf_name='w')
+        previous_v = Parameter(np.array([1.0]), initializer='initial_v', pnl_internal=True, mdf_name='v')
         previous_time = Parameter(0.0, initializer='t_0', pnl_internal=True)
 
         # this should be removed because it's unused, but this will
@@ -4473,7 +4515,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         )
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  # scale=1.0,
@@ -4497,9 +4539,9 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
                  mode=None,
                  uncorrelated_activity=None,
                  integration_method=None,
-                 params: tc.optional(tc.optional(dict)) = None,
+                 params: Optional[dict] = None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None,
+                 prefs:  Optional[ValidPrefSet] = None,
                  **kwargs):
 
         # These may be passed (as standard IntegratorFunction args) but are not used by FitzHughNagumo
@@ -4770,7 +4812,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
                  variable=None,
                  context=None,
                  params=None,
-                 ):
+                 ) -> (np.ndarray, np.ndarray, np.ndarray):
         """
 
         Arguments
@@ -4784,7 +4826,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         Returns
         -------
 
-        current value of v , current value of w : float, list, or array
+        current value of v , current value of w, current time_step of integration : ndarray
 
         """
 
@@ -5121,3 +5163,123 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         res = super().stateful_attributes
         res.remove('previous_value')
         return res
+
+    def _assign_to_mdf_model(self, model, input_id):
+        import modeci_mdf.mdf as mdf
+
+        args = self._mdf_model_nonstateful_parameters[self._model_spec_id_parameters]
+
+        slope_v_expression = (
+            '(a_v * (v ** 3) + (1 + threshold) * b_v * (v ** 2)'
+            + ' + (-threshold) * c_v * v + d_v + e_v * w'
+            + f' + f_v * {input_id}) / time_constant_v'
+        )
+        slope_w_expression = (
+            '(mode * a_w * v + b_w * w + c_w + (1 - mode) * uncorrelated_activity) / time_constant_w'
+        )
+
+        if self.integration_method == 'RK4':
+            runge_kutta_4_v_approx_1 = mdf.Function(
+                id='runge_kutta_4_v_approx_1',
+                value=slope_v_expression,
+                args=args,
+            )
+            runge_kutta_4_v_approx_2 = mdf.Function(
+                id='runge_kutta_4_v_approx_2',
+                value=slope_v_expression,
+                args={
+                    **args,
+                    'v': 'v + (0.5 * time_step_size * runge_kutta_4_v_approx_1)',
+                },
+            )
+            runge_kutta_4_v_approx_3 = mdf.Function(
+                id='runge_kutta_4_v_approx_3',
+                value=slope_v_expression,
+                args={
+                    **args,
+                    'v': 'v + (0.5 * time_step_size * runge_kutta_4_v_approx_2)',
+                },
+            )
+            runge_kutta_4_v_approx_4 = mdf.Function(
+                id='runge_kutta_4_v_approx_4',
+                value=slope_v_expression,
+                args={
+                    **args,
+                    'v': 'v + (time_step_size * runge_kutta_4_v_approx_3)',
+                },
+            )
+            runge_kutta_4_w_approx_1 = mdf.Function(
+                id='runge_kutta_4_w_approx_1',
+                value=slope_w_expression,
+                args=args,
+            )
+            runge_kutta_4_w_approx_2 = mdf.Function(
+                id='runge_kutta_4_w_approx_2',
+                value=slope_w_expression,
+                args={
+                    **args,
+                    'w': 'w + (0.5 * time_step_size * runge_kutta_4_w_approx_1)',
+                },
+            )
+            runge_kutta_4_w_approx_3 = mdf.Function(
+                id='runge_kutta_4_w_approx_3',
+                value=slope_w_expression,
+                args={
+                    **args,
+                    'w': 'w + (0.5 * time_step_size * runge_kutta_4_w_approx_2)',
+                },
+            )
+            runge_kutta_4_w_approx_4 = mdf.Function(
+                id='runge_kutta_4_w_approx_4',
+                value=slope_w_expression,
+                args={
+                    **args,
+                    'w': 'w + (time_step_size * runge_kutta_4_w_approx_3)',
+                },
+            )
+            runge_kutta_result = mdf.Function(
+                id=self._mdf_result_function_id,
+                value='[' + ', '.join([
+                    'v + (time_step_size / 6)'
+                    + ' * (runge_kutta_4_v_approx_1 + 2 * (runge_kutta_4_v_approx_2 + runge_kutta_4_v_approx_3)'
+                    + ' + runge_kutta_4_v_approx_4)',
+                    'w + (time_step_size / 6)'
+                    + ' * (runge_kutta_4_w_approx_1 + 2 * (runge_kutta_4_w_approx_2 + runge_kutta_4_w_approx_3)'
+                    + ' + runge_kutta_4_w_approx_4)',
+                ]) + ']',
+                args=args,
+            )
+
+            model.functions.extend([
+                runge_kutta_4_v_approx_1, runge_kutta_4_v_approx_2,
+                runge_kutta_4_v_approx_3, runge_kutta_4_v_approx_4,
+                runge_kutta_4_w_approx_1, runge_kutta_4_w_approx_2,
+                runge_kutta_4_w_approx_3, runge_kutta_4_w_approx_4,
+                runge_kutta_result,
+            ])
+        elif self.integration_method == 'EULER':
+            euler_v_approx = mdf.Function(
+                id='euler_v_approx',
+                value=slope_v_expression,
+                args=args,
+            )
+            euler_w_approx = mdf.Function(
+                id='euler_w_approx',
+                value=slope_w_expression,
+                args=args,
+            )
+            euler_result = mdf.Function(
+                id=self._mdf_result_function_id,
+                value='[v + time_step_size * euler_v_approx, w + time_step_size * euler_w_approx]',
+                args=args,
+            )
+            model.functions.extend([
+                euler_v_approx, euler_w_approx, euler_result
+            ])
+        else:
+            assert False, 'Integration method should already be validated to either RK4 or EULER'
+
+        return super()._assign_to_mdf_model(model, self._mdf_result_function_id)
+
+    def as_expression(self):
+        return f'{self._mdf_result_function_id}[0], {self._mdf_result_function_id}[1], previous_time + time_step_size'

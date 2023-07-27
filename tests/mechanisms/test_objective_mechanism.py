@@ -21,4 +21,4 @@ class TestObjectiveMechanism:
         EX = pytest.helpers.get_mech_execution(O, mech_mode)
 
         val = benchmark(EX, [10.0 for i in range(VECTOR_SIZE)])
-        assert np.allclose(val, [[10.0 for i in range(VECTOR_SIZE)]])
+        np.testing.assert_allclose(val, [[10.0 for i in range(VECTOR_SIZE)]])

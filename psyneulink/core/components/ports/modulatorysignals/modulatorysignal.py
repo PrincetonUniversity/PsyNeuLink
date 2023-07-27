@@ -407,6 +407,7 @@ Class Reference
 
 from psyneulink.core.components.component import component_keywords
 from psyneulink.core.components.ports.outputport import OutputPort
+from psyneulink.core.components.ports.port import PortError
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultModulatoryAllocation
 from psyneulink.core.globals.keywords import \
@@ -439,12 +440,8 @@ modulatory_signal_keywords.update(component_keywords)
 modulation_type_keywords = [MULTIPLICATIVE_PARAM, ADDITIVE_PARAM, OVERRIDE, DISABLE]
 
 
-class ModulatorySignalError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class ModulatorySignalError(PortError):
+    pass
 
 
 class ModulatorySignal(OutputPort):

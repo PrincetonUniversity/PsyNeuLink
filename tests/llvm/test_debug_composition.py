@@ -1,7 +1,6 @@
 import numpy as np
 import os
 import pytest
-from itertools import combinations
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
@@ -9,8 +8,9 @@ from psyneulink.core.components.mechanisms.processing.integratormechanism import
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.compositions.composition import Composition
 
-debug_options=["const_input=[[[7]]]", "const_input", "const_data", "const_params", "const_data", "const_state", "stat", "time_stat", "unaligned_copy"]
-options_combinations = (";".join(("", *c)) for i in range(len(debug_options) + 1) for c in combinations(debug_options, i))
+debug_options = ["const_input=[[[7]]]", "const_input", "const_params", "const_data", "const_state",
+                 "stat", "time_stat", "unaligned_copy"]
+options_combinations = (";".join(c) for c in pytest.helpers.power_set(debug_options))
 
 @pytest.mark.composition
 @pytest.mark.parametrize("mode", [pytest.param(pnlvm.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
@@ -55,5 +55,5 @@ def test_debug_comp(mode, debug_env):
         expected2 = expected1
 
 
-    assert np.allclose(expected1, output1[0][0])
-    assert np.allclose(expected2, output2[0][0])
+    np.testing.assert_allclose(expected1, output1[0][0])
+    np.testing.assert_allclose(expected2, output2[0][0])

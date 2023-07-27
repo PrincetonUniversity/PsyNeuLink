@@ -60,7 +60,7 @@ There are two primary types of ModulatoryMechanism:
     that appear after its LearningSignals in its `output_ports <LearningMechanism.output_ports>` attribute.
 
 A single `ModulatoryMechanism` can be assigned more than one ModulatorySignal of the appropriate type, each of which
-can be assigned different `control_allocations <ControlSignal.control_allocation>` (for ControlSignals) or
+can be assigned different `control_allocations <ControlSignal.allocation>` (for ControlSignals) or
 `learning_signals <LearningMechanism.learning_signal>` (for LearningSignals).  A single ModulatorySignal can also be
 assigned multiple ModulatoryProjections; however, as described  in `ModulatorySignal_Projections`, they will all
 be assigned the same `variable <ModulatoryProjection_Base.variable>`.
@@ -138,7 +138,7 @@ Class Reference
 
 """
 
-from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
+from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError
 from psyneulink.core.globals.keywords import ADAPTIVE_MECHANISM
 from psyneulink.core.globals.parameters import check_user_specified
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -148,9 +148,8 @@ __all__ = [
 ]
 
 
-class ModulatoryMechanismError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
+class ModulatoryMechanismError(MechanismError):
+    pass
 
 
 class ModulatoryMechanism_Base(Mechanism_Base):

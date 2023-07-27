@@ -59,6 +59,11 @@ class RegistryError(Exception):
         return repr(self.error_value)
 
 
+_register_auto_name_prefix = ""
+
+def _get_auto_name_prefix():
+    return _register_auto_name_prefix
+
 def register_category(entry,
                       base_class,
                       name=None,
@@ -185,9 +190,9 @@ def register_category(entry,
             # If name was not provided, assign component_type_name-1 as default;
             if name is None:
                 try:
-                    entry.name = component_type_name + "-0"
+                    entry.name = _register_auto_name_prefix + component_type_name + "-0"
                 except TypeError:
-                    entry.name = entry.__class__.__name__
+                    entry.name = _register_auto_name_prefix + entry.__class__.__name__
 
             else:
                 entry.name = name
@@ -216,8 +221,6 @@ def register_category(entry,
     else:
         raise RegistryError("Requested entry {0} not of type {1}".format(entry, base_class))
 
-
-_register_auto_name_prefix = ""
 
 def register_instance(entry, name, base_class, registry, sub_dict):
 

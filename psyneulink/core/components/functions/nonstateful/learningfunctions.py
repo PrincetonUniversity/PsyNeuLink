@@ -10,6 +10,7 @@
 # *******************************************   LEARNING FUNCTIONS *****************************************************
 """
 
+* `EMstorage`
 * `BayesGLM`
 * `Kohonen`
 * `Hebbian`
@@ -18,7 +19,7 @@
 * `BackPropagation`
 * `TDLearning`
 
-Functions that parameterize a function.
+Functions that parameterize a function, usually of the matrix used by a `Projection's <Projection>` `Function`.
 
 """
 
@@ -26,25 +27,26 @@ import types
 from collections import namedtuple
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union, Literal, Callable
 
 from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.function import (
     DEFAULT_SEED, Function_Base, FunctionError, _random_state_getter, _seed_setter,
-    is_function_type,
 )
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Logistic, SoftMax
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import \
-    CONTRASTIVE_HEBBIAN_FUNCTION, TDLEARNING_FUNCTION, LEARNING_FUNCTION_TYPE, LEARNING_RATE, \
+    CONTRASTIVE_HEBBIAN_FUNCTION, EM_STORAGE_FUNCTION, TDLEARNING_FUNCTION, LEARNING_FUNCTION_TYPE, LEARNING_RATE, \
     KOHONEN_FUNCTION, GAUSSIAN, LINEAR, EXPONENTIAL, HEBBIAN_FUNCTION, RL_FUNCTION, BACKPROPAGATION_FUNCTION, \
     MATRIX, Loss
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
-from psyneulink.core.globals.utilities import is_numeric, scalar_distance, convert_to_np_array
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
+from psyneulink.core.globals.utilities import is_numeric, scalar_distance, convert_to_np_array, all_within_range
 
 __all__ = ['LearningFunction', 'Kohonen', 'Hebbian', 'ContrastiveHebbian',
-           'Reinforcement', 'BayesGLM', 'BackPropagation', 'TDLearning',
+           'Reinforcement', 'BayesGLM', 'BackPropagation', 'TDLearning', 'EMStorage',
            'LEARNING_ACTIVATION_FUNCTION','LEARNING_ACTIVATION_INPUT','LEARNING_ACTIVATION_OUTPUT',
            'LEARNING_ERROR_OUTPUT','AUTOASSOCIATIVE']
 
@@ -65,6 +67,7 @@ ACTIVATION_INPUT = 'activation_input'
 ACTIVATION_OUTPUT = 'activation_output'
 ERROR_SIGNAL = 'error_signal'
 ERROR_MATRIX = 'error_matrix'
+MEMORY_MATRIX = 'memory_matrix'
 
 
 ReturnVal = namedtuple('ReturnVal', 'learning_signal, error_signal')
@@ -90,7 +93,7 @@ class LearningFunction(Function_Base):
         * the output of the parameter being modified (variable[LEARNING_ACTIVATION_OUTPUT]);
         * the error associated with the output (variable[LEARNING_ERROR_OUTPUT]).
 
-        However, the exact specification depends on the funtion's type.
+        However, the exact specification depends on the function's type.
 
     default_learning_rate : numeric
         the value used for the function's `learning_rate <LearningFunction.learning_rate>` parameter if none of the
@@ -171,6 +174,275 @@ class LearningFunction(Function_Base):
             if learning_rate_dim:
                 raise FunctionError("{} arg for {} ({}) must be a single value".
                                     format(LEARNING_RATE, self.name, learning_rate))
+
+
+class EMStorage(LearningFunction):
+    """
+    EMStorage(                 \
+        default_variable=None, \
+        axis=0,                \
+        storage_prob=1.0,      \
+        params=None,           \
+        name=None,             \
+        prefs=None)
+
+    Assign an entry to a matrix with a specified probability specified by `storage_prob <EMStorage.storage_prob>.
+    Used by `EMStorageMechanism` in an `EMComposition` to
+    COMMENT:
+    FROM CoPilot:
+    implement the `Ebbinghaus illusion <https://en.wikipedia.org/wiki/Ebbinghaus_illusion>`_.
+    COMMENT
+    store an entry in `memory_matrix <EMStorage.memory_matrix>`.
+
+    Its function takes the `entry <EMStorage.entry>` to be stored and `memory_matrix <EMStorage.memory_matrix>` in
+    which to store it, and assigns the the entry to the corresponding location in the matrix with a probability
+    specified by `storage_prob <EMStorage.storage_prob>`.
+
+    Arguments
+    ---------
+
+    variable : List or 1d array : default class_defaults.variable
+        specifies shape of `entry <EMStorage.entry>` passed in the call to the `function <EMStorage.function>`.
+
+    axis : int : default 0
+        specifies the axis of `memory_matrix <EMStorage.memory_matrix>` to which `entry <EMStorage.entry>` is assigned.
+
+    storage_prob : float : default default_learning_rate
+        specifies the probability with which `entry <EMStorage.entry>` is assigned to `memory_matrix
+        <EMStorage.memory_matrix>`.
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those
+        parameters in arguments of the constructor.d
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    variable: 2d array
+        contains the value (`entry <EMStorage.entry>`) used as input to the `function <EMStorage.function>`.
+
+    entry : 1d array
+        value to be stored in `memory_matrix <EMStorage.memory_matrix>`.
+
+    memory_matrix : 2d array or ParameterPort
+        matrix to which the entry is assigned along `axis <EMstorage.axis>`.
+
+    axis : int
+        determines axis of `memory_matrix <EMStorage.memory_matrix>` to which `entry <EMStorage.entry>` is assigned.
+
+    storage_prob : float
+        determines the probability with which `entry <EMStorage.entry>` is stored in `memory_matrix
+        <EMStorage.memory_matrix>`.
+
+    random_state : numpy.RandomState
+        private pseudorandom number generator
+
+    owner : Component
+        `Mechanism <Mechanism>` to which the Function belongs.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    """
+
+    componentName = EM_STORAGE_FUNCTION
+
+    class Parameters(LearningFunction.Parameters):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <EMStorage.variable>`
+
+                    :default value: numpy.array([[0], [0], [0]])
+                    :type: ``numpy.ndarray``
+                    :read only: True
+
+                axis
+                    see `axis <EMStorage.axis>`
+
+                    :default value: 0
+                    :type: int
+                    :read only: True
+
+                entry
+                    see `entry <EMStorage.error_signal>`
+
+                    :default value: [0]
+                    :type: ``list``
+                    :read only: True
+
+                memory_matrix
+                    see `memory_matrix <EMStorage.memory_matrix>`
+
+                    :default value: [[0][0]]
+                    :type: ``np.ndarray``
+                    :read only: True
+
+                random_state
+                    see `random_state <UniformDist.random_state>`
+
+                    :default value: None
+                    :type: ``numpy.random.RandomState``
+
+                storage_prob
+                    see `storage_prob <EMStorage.storage_prob>`
+
+                    :default value: 1.0
+                    :type: ``float``
+
+        """
+        variable = Parameter(np.array([0]),
+                             read_only=True,
+                             pnl_internal=True,
+                             constructor_argument='default_variable')
+        axis = Parameter(0, read_only=True, structural=True)
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
+        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
+        storage_prob = Parameter(1.0, modulable=True)
+        entry = Parameter([0], read_only=True)
+        memory_matrix = Parameter([[0],[0]], read_only=True)
+
+    default_learning_rate = 1.0
+
+    def _validate_storage_prob(self, storage_prob):
+        storage_prob = float(storage_prob)
+        if not all_within_range(storage_prob, 0, 1):
+            return f"must be a float in the interval [0,1]."
+
+
+    @check_user_specified
+    @beartype
+    def __init__(self,
+                 default_variable=None,
+                 axis=0,
+                 storage_prob=1.0,
+                 seed=None,
+                 params=None,
+                 owner=None,
+                 prefs:  Optional[ValidPrefSet] = None):
+
+        super().__init__(
+            default_variable=default_variable,
+            axis=axis,
+            storage_prob=storage_prob,
+            seed=seed,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
+
+    @property
+    def output_type(self):
+        return self._output_type
+
+    @output_type.setter
+    def output_type(self, value):
+        # disabled because it happens during normal execution, may be confusing
+        # warnings.warn('output_type conversion disabled for {0}'.format(self.__class__.__name__))
+        self._output_type = None
+
+    def _validate_variable(self, variable, context=None):
+        variable = super()._validate_variable(variable, context)
+
+        if np.array(variable).ndim != 1:
+            raise ComponentError(f"The number of items in the outer dimension of variable for '{self.name}' "
+                                 f"(({len(variable)}) should be just one")
+        return variable
+
+    def _function(self,
+                 variable=None,
+                 context=None,
+                 params=None,
+                 **kwargs)->np.ndarray:
+        """
+        .. note::
+           Both variable and error_matrix must be specified for the function to execute.
+
+        Arguments
+        ---------
+
+        variable : List or 1d array
+           array containing `entry <EMStorage.entry>` to be added to `memory_matrix <EMStorage.memory_matrix>`
+           along `axis <EMStorage.axis>`.
+
+        memory_matrix : List, 2d array, np.matrix, ParameterPort, or MappingProjection
+            matrix to which `variable <EMStorage.variable>` is stored.
+
+            .. technical_note::
+               ``memory_matrix`` is listed here as an argument since it must be passed to the EMStorage Function;
+               however it does not show in the signature for the function since it is passed through the `params
+               <EMStorage.params>` argument, placed there by Component._execute.
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        Returns
+        -------
+
+        new memory_matrix : 2d array
+            the new matrix contains `entry <EMStorage.entry>` stored in `memory_matrix <EMStorage.memory_matrix>`
+            in slot with lowest norm along axis specified by `axis <EMStorage.axis>`.
+        """
+
+        self._check_args(variable=variable, context=context, params=params)
+
+        entry = variable
+        axis = self.parameters.axis._get(context)
+        storage_prob = self.parameters.storage_prob._get(context)
+        random_state = self.parameters.random_state._get(context)
+
+        # IMPLEMENTATION NOTE: if memory_matrix is an arg, it must in params (put there by Component.function()
+        # Manage memory_matrix param
+        memory_matrix = None
+        if params:
+            memory_matrix = params.pop(MEMORY_MATRIX, None)
+            axis = params.pop('axis', axis)
+            storage_prob = params.pop('storage_prob', storage_prob)
+        # During init, function is called directly from Component (i.e., not from LearningMechanism execute() method),
+        #     so need "placemarker" error_matrix for validation
+        if memory_matrix is None:
+            if self.is_initializing:
+                # Can use variable, since it is 2d with length of an entry
+                #   (so essentially a memory_matrix with one entry)
+                memory_matrix = np.zeros((1,1,len(variable)))
+            # Raise exception if memory_matrix is not specified
+            else:
+                owner_string = ""
+                if self.owner:
+                    owner_string = " of " + self.owner.name
+                raise FunctionError(f"Call to {self.__class__.__name__} function {owner_string} "
+                                    f"must include '{MEMORY_MATRIX}' in params arg.")
+
+        if self.is_initializing:
+            # Don't store entry during initialization to avoid contaminating memory_matrix
+            pass
+        elif random_state.uniform(0, 1) < storage_prob:
+            # Store entry in slot with weakest memory (one with lowest norm) along specified axis
+            idx_of_min = np.argmin(np.linalg.norm(memory_matrix, axis=axis))
+            if axis == 0:
+                memory_matrix[:,idx_of_min] = np.array(entry)
+            elif axis == 1:
+                memory_matrix[idx_of_min,:] = np.array(entry)
+            else:
+                raise FunctionError(f"PROGRAM ERROR: axis ({axis}) is not 0 or 1")
+
+        self.parameters.entry._set(entry, context)
+        self.parameters.memory_matrix._set(memory_matrix, context)
+
+        return self.convert_output_type(memory_matrix)
 
 
 class BayesGLM(LearningFunction):
@@ -458,7 +730,7 @@ class BayesGLM(LearningFunction):
                  params=None,
                  owner=None,
                  seed=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         self.user_specified_default_variable = default_variable
 
@@ -778,12 +1050,12 @@ class Kohonen(LearningFunction):  # --------------------------------------------
     @check_user_specified
     def __init__(self,
                  default_variable=None,
-                 # learning_rate: tc.optional(tc.optional(parameter_spec)) = None,
+                 # learning_rate: Optional[ValidParamSpecType] = None,
                  learning_rate=None,
-                 distance_function:tc.any(tc.enum(GAUSSIAN, LINEAR, EXPONENTIAL), is_function_type)=None,
+                 distance_function: Union[Literal['gaussian', 'linear', 'exponential'], Callable] = None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -953,7 +1225,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
     ---------
 
     variable : List[number] or 1d array : default class_defaults.variable
-       specifies the activation values, the pair-wise products of which are used to generate the a weight change matrix.
+       specifies the activation values, the pair-wise products of which are used to generate the weight change matrix.
 
     COMMENT:
     activation_function : Function or function : SoftMax
@@ -1053,7 +1325,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
                  learning_rate=None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1283,11 +1555,11 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
     @check_user_specified
     def __init__(self,
                  default_variable=None,
-                 # learning_rate: tc.optional(tc.optional(parameter_spec)) = None,
+                 # learning_rate: Optional[ValidParamSpecType] = None,
                  learning_rate=None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1591,11 +1863,11 @@ class Reinforcement(LearningFunction):  # --------------------------------------
     @check_user_specified
     def __init__(self,
                  default_variable=None,
-                 # learning_rate: tc.optional(tc.optional(parameter_spec)) = None,
+                 # learning_rate: Optional[ValidParamSpecType] = None,
                  learning_rate=None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1689,13 +1961,60 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         return [error_array, error_array]
 
 
+class TDLearning(Reinforcement):
+    """Implement temporal difference learning using the `Reinforcement` Function
+    (see `Reinforcement` for class details).
+    """
+    componentName = TDLEARNING_FUNCTION
+
+    @check_user_specified
+    def __init__(self,
+                 default_variable=None,
+                 learning_rate=None,
+                 params=None,
+                 owner=None,
+                 prefs=None):
+        """
+        Dummy function used to implement TD Learning via Reinforcement Learning
+
+        Parameters
+        ----------
+        default_variable
+        learning_rate: float: default 0.05
+        params
+        owner
+        prefs
+        context
+        """
+
+        super().__init__(
+            default_variable=default_variable,
+            learning_rate=learning_rate,
+            params=params,
+            owner=owner,
+            prefs=prefs
+        )
+
+    def _validate_variable(self, variable, context=None):
+        variable = super(Reinforcement, self)._validate_variable(variable, context)
+
+        if len(variable) != 3:
+            raise ComponentError("Variable for {} ({}) must have three items (input, output, and error arrays)".
+                                 format(self.name, variable))
+
+        # if len(variable[LEARNING_ERROR_OUTPUT]) != len(variable[LEARNING_ACTIVATION_OUTPUT]):
+        #     raise ComponentError("Error term does not match the length of the sample sequence")
+
+        return variable
+
+
 class BackPropagation(LearningFunction):
     """
     BackPropagation(                                     \
         default_variable=None,                           \
         activation_derivative_fct=Logistic().derivative, \
         learning_rate=None,                              \
-        loss_function=None,                              \
+        loss_spec=None,                              \
         params=None,                                     \
         name=None,                                       \
         prefs=None)
@@ -1803,7 +2122,7 @@ class BackPropagation(LearningFunction):
         supersedes any specification for the `Process` and/or `System` to which the function's
         `owner <Function.owner>` belongs (see `learning_rate <BackPropagation.learning_rate>` for details).
 
-    loss_function : Loss : default None
+    loss_spec : Loss : default None
         specifies the operation to apply to the error signal (i.e., method of calculating the derivative of the errror
         with respect to activation) before computing weight changes.
 
@@ -1862,7 +2181,7 @@ class BackPropagation(LearningFunction):
     default_learning_rate : float
         the value used for the `learning_rate <BackPropagation.learning_rate>` if it is not otherwise specified.
 
-    loss_function : Loss or None
+    loss_spec : Loss or None
         the operation to apply to the error signal (i.e., method of calculating the derivative of the errror
         with respect to activation) before computing weight changes.
 
@@ -1927,8 +2246,8 @@ class BackPropagation(LearningFunction):
                     :default value: 1.0
                     :type: ``float``
 
-                loss_function
-                    see `loss_function <BackPropagation.loss_function>`
+                loss_spec
+                    see `loss_spec <BackPropagation.loss_spec>`
 
                     :default value: None
                     :type:
@@ -1939,7 +2258,7 @@ class BackPropagation(LearningFunction):
                              pnl_internal=True,
                              constructor_argument='default_variable')
         learning_rate = Parameter(1.0, modulable=True)
-        loss_function = Parameter(None, read_only=True)
+        loss_spec = Parameter(None, read_only=True)
         activation_input = Parameter([0], read_only=True, getter=_activation_input_getter)
         activation_output = Parameter([0], read_only=True, getter=_activation_output_getter)
         error_signal = Parameter([0], read_only=True, getter=_error_signal_getter)
@@ -1949,16 +2268,16 @@ class BackPropagation(LearningFunction):
     default_learning_rate = 1.0
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 activation_derivative_fct: tc.optional(tc.optional(tc.any(types.FunctionType, types.MethodType)))=None,
-                 # learning_rate: tc.optional(tc.optional(parameter_spec)) = None,
+                 activation_derivative_fct: Optional[Union[types.FunctionType, types.MethodType]]=None,
+                 # learning_rate: Optional[ValidParamSpecType] = None,
                  learning_rate=None,
-                 loss_function=None,
+                 loss_spec=None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         error_matrix = np.zeros((len(default_variable[LEARNING_ACTIVATION_OUTPUT]),
                                  len(default_variable[LEARNING_ERROR_OUTPUT])))
@@ -1970,7 +2289,7 @@ class BackPropagation(LearningFunction):
             activation_derivative_fct=activation_derivative_fct,
             error_matrix=error_matrix,
             learning_rate=learning_rate,
-            loss_function=loss_function,
+            loss_spec=loss_spec,
             params=params,
             owner=owner,
             prefs=prefs,
@@ -2080,12 +2399,12 @@ class BackPropagation(LearningFunction):
     def _function(self,
                  variable=None,
                  context=None,
-                 error_matrix=None,
                  params=None,
                  **kwargs):
         """
         .. note::
-           Both variable and error_matrix must be specified for the function to execute.
+           Both variable and error_matrix must be specified for the function to execute, with
+           error_matrix passed in the `params` argument.
 
         Arguments
         ---------
@@ -2101,6 +2420,11 @@ class BackPropagation(LearningFunction):
             of `variable <BackPropagation.variable>` from `activation_output <BackPropagation.activation_output>`;
             its dimensions must be the length of `activation_output <BackPropagation.activation_output>` (rows) x
             length of `error_signal <BackPropagation.error_signal>` (cols).
+
+            .. technical_note::
+               ``error_matrix`` is listed here as an argument since it must be passed to the BackPropagation Function;
+               however it does not show in the signature for the function since it is passed through the `params
+               <BackPropagation.params>` argument, placed there by Component._execute.
 
         params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -2118,7 +2442,8 @@ class BackPropagation(LearningFunction):
 
         self._check_args(variable=variable, context=context, params=params)
 
-        # IMPLEMENTATION NOTE: if error_matrix is an arg, it must in params (put there by super.function()
+        # IMPLEMENTATION NOTE: if error_matrix is an arg, it must in params (put there by Component._execute)
+        error_matrix = None
         if params:
             error_matrix = params.pop(ERROR_MATRIX, None)
 
@@ -2157,11 +2482,11 @@ class BackPropagation(LearningFunction):
         activation_input = np.array(activation_input).reshape(len(activation_input), 1)
 
         # Derivative of error with respect to output activity (contribution of each output unit to the error above)
-        loss_function = self.parameters.loss_function.get(context)
-        if loss_function == Loss.MSE:
+        loss_spec = self.parameters.loss_spec.get(context)
+        if loss_spec == Loss.MSE:
             num_output_units = self._get_current_parameter_value(ERROR_SIGNAL, context).shape[0]
             dE_dA = np.dot(error_matrix, self._get_current_parameter_value(ERROR_SIGNAL, context)) / num_output_units * 2
-        elif loss_function == Loss.SSE:
+        elif loss_spec == Loss.SSE:
             dE_dA = np.dot(error_matrix, self._get_current_parameter_value(ERROR_SIGNAL, context)) * 2
         else:
             # Use L0 (this applies to hidden layers)
@@ -2179,50 +2504,3 @@ class BackPropagation(LearningFunction):
         weight_change_matrix = learning_rate * activation_input * dE_dW
 
         return [weight_change_matrix, dE_dW]
-
-
-class TDLearning(Reinforcement):
-    """Implement temporal difference learning using the `Reinforcement` Function
-    (see `Reinforcement` for class details).
-    """
-    componentName = TDLEARNING_FUNCTION
-
-    @check_user_specified
-    def __init__(self,
-                 default_variable=None,
-                 learning_rate=None,
-                 params=None,
-                 owner=None,
-                 prefs=None):
-        """
-        Dummy function used to implement TD Learning via Reinforcement Learning
-
-        Parameters
-        ----------
-        default_variable
-        learning_rate: float: default 0.05
-        params
-        owner
-        prefs
-        context
-        """
-
-        super().__init__(
-            default_variable=default_variable,
-            learning_rate=learning_rate,
-            params=params,
-            owner=owner,
-            prefs=prefs
-        )
-
-    def _validate_variable(self, variable, context=None):
-        variable = super(Reinforcement, self)._validate_variable(variable, context)
-
-        if len(variable) != 3:
-            raise ComponentError("Variable for {} ({}) must have three items (input, output, and error arrays)".
-                                 format(self.name, variable))
-
-        # if len(variable[LEARNING_ERROR_OUTPUT]) != len(variable[LEARNING_ACTIVATION_OUTPUT]):
-        #     raise ComponentError("Error term does not match the length of the sample sequence")
-
-        return variable

@@ -367,9 +367,12 @@ import warnings
 from collections import namedtuple
 from collections.abc import Iterable
 
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union
 
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
+from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.ports.inputport import InputPort, INPUT_PORT
 from psyneulink.core.components.ports.outputport import OutputPort
@@ -379,7 +382,7 @@ from psyneulink.core.globals.keywords import \
     CONTROL, EXPONENT, EXPONENTS, LEARNING, MATRIX, NAME, OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, \
     PARAMS, PREFERENCE_SET_NAME, PROJECTION, PROJECTIONS, PORT_TYPE, VARIABLE, WEIGHT, WEIGHTS
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.utilities import ContentAddressableList
 
@@ -400,12 +403,8 @@ DEFAULT_MONITORED_PORT_EXPONENT = None
 DEFAULT_MONITORED_PORT_MATRIX = None
 
 
-class ObjectiveMechanismError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class ObjectiveMechanismError(MechanismError):
+    pass
 
 
 class ObjectiveMechanism(ProcessingMechanism_Base):
@@ -563,16 +562,16 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
     # FIX:  TYPECHECK MONITOR TO LIST OR ZIP OBJECT
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  monitor=None,
                  default_variable=None,
                  size=None,
                  function=None,
-                 output_ports:tc.optional(tc.any(str, Iterable))=None,
+                 output_ports: Optional[Union[str, Iterable]] = None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
+                 prefs: Optional[ValidPrefSet] = None,
                  **kwargs):
 
         # For backward compatibility
@@ -585,14 +584,13 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                           f'use {repr(MONITOR)} instead')
             monitor = kwargs.pop(MONITORED_OUTPUT_PORTS)
         monitor = monitor or None # deal with possibility of empty list
-        input_ports = monitor
         if output_ports is None or output_ports == OUTCOME:
             output_ports = [OUTCOME]
 
         super().__init__(
             default_variable=default_variable,
             size=size,
-                         input_ports=input_ports,
+                         monitor=monitor,
                          output_ports=output_ports,
                          function=function,
                          params=params,
@@ -866,12 +864,12 @@ def _parse_monitor_specs(monitor_specs):
 # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
 #                      ??MAYBE INTEGRATE INTO Port MODULE (IN _instantate_port)
 # KAM commented out _instantiate_monitoring_projections 9/28/18 to avoid confusion because it never gets called
-# @tc.typecheck
+# @beartype
 # def _instantiate_monitoring_projections(
 #     owner,
-#     sender_list: tc.any(list, ContentAddressableList),
-#     receiver_list: tc.any(list, ContentAddressableList),
-#     receiver_projection_specs: tc.optional(list)=None,
+#     sender_list: Union[list, ContentAddressableList],
+#     receiver_list: Union[list, ContentAddressableList],
+#     receiver_projection_specs: Optional[list]=None,
 #     system=None,
 #     context=None
 # ):

@@ -190,7 +190,7 @@ The Drift Diffusion Model `Functions <Function>` that calculate analytic solutio
 `DDM_Execution` for details). In addition to `DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and
 `RESPONSE_TIME <DDM_RESPONSE_TIME>`, the Function returns an accuracy value (represented in the
 `PROBABILITY_UPPER_THRESHOLD <DDM_PROBABILITY_UPPER_THRESHOLD>` OutputPort), and an error rate value (in the
-`PROBABaILITY_LOWER_THRESHOLD <DDM_PROBABILITY_LOWER_THRESHOLD>` OutputPort, and moments (mean, variance, and skew)
+`PROBABIILITY_LOWER_THRESHOLD <DDM_PROBABILITY_LOWER_THRESHOLD>` OutputPort, and moments (mean, variance, and skew)
 for conditional (correct\\positive or incorrect\\negative) response time distributions. These are; the mean RT for
 correct responses  (`RT_CORRECT_MEAN <DDM_RT_CORRECT_MEAN>`, the RT variance for correct responses
 (`RT_CORRECT_VARIANCE <DDM_RT_CORRECT_VARIANCE>`, the RT skew for correct responses
@@ -364,7 +364,9 @@ import types
 from collections.abc import Iterable
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional, Union, Literal
 
 from psyneulink.core.components.functions.function import DEFAULT_SEED, _random_state_getter, _seed_setter
 from psyneulink.core.components.functions.stateful.integratorfunctions import \
@@ -373,6 +375,7 @@ from psyneulink.core.components.functions.nonstateful.distributionfunctions impo
     DriftDiffusionAnalytical
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import Reduce
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import _is_control_spec
+from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.ports.outputport import SEQUENTIAL, StandardOutputPorts
@@ -381,10 +384,11 @@ from psyneulink.core.globals.keywords import \
     ALLOCATION_SAMPLES, FUNCTION, FUNCTION_PARAMS, INPUT_PORT_VARIABLES, NAME, OWNER_VALUE, \
     THRESHOLD, VARIABLE, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, is_numeric, is_same_function_spec, object_has_single_value, get_global_seed
 from psyneulink.core.scheduling.condition import AtTrialStart
+from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 
 from psyneulink.core import llvm as pnlvm
 
@@ -395,7 +399,7 @@ __all__ = [
     'PROBABILITY_LOWER_THRESHOLD', 'PROBABILITY_UPPER_THRESHOLD', 'RESPONSE_TIME',
     'RT_CORRECT_MEAN', 'RT_CORRECT_SKEW', 'RT_CORRECT_VARIANCE',
     'RT_INCORRECT_MEAN', 'RT_INCORRECT_SKEW', 'RT_INCORRECT_VARIANCE',
-    'SCALAR', 'SELECTED_INPUT_ARRAY', 'VECTOR'
+    'SCALAR', 'SELECTED_INPUT_ARRAY', 'VECTOR', 'DECISION_OUTCOME'
 ]
 
 logger = logging.getLogger(__name__)
@@ -404,6 +408,7 @@ DEFAULT_VARIABLE = 0.0
 
 DECISION_VARIABLE = 'DECISION_VARIABLE'
 DECISION_VARIABLE_ARRAY = 'DECISION_VARIABLE_ARRAY'
+DECISION_OUTCOME = 'DECISION_OUTCOME'
 SELECTED_INPUT_ARRAY = 'SELECTED_INPUT_ARRAY'
 RESPONSE_TIME = 'RESPONSE_TIME'
 PROBABILITY_UPPER_THRESHOLD = 'PROBABILITY_UPPER_THRESHOLD'
@@ -431,12 +436,8 @@ def decision_variable_to_array(x):
         return [0,x]
 
 
-class DDMError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class DDMError(MechanismError):
+    pass
 
 
 class DDM(ProcessingMechanism):
@@ -577,6 +578,15 @@ class DDM(ProcessingMechanism):
             to execute in the current `TRIAL <TimeScale.TRIAL>` or, if it has reached the positive or negative value of
             the DDM `function <DDM.function>`'s threshold attribute, the `TIME_STEP` at which that occurred. \n
           Corresponds to the 2nd item of the DDM's `value <DDM.value>`.
+
+        .. _DDM_DECISION_OUTCOME:
+
+        *DECISION_OUTCOME* : float
+          • `analytic mode <DDM_Analytic_Mode>`: 1.0 if the value of the threshold crossed by the decision variable on the
+            current TRIAL (which is either the value of the DDM `function <DDM.function>`'s threshold attribute or its
+            negative) is positive, 0 otherwise. \n
+          • `integration mode <DDM_Integration_Mode>`: 1if the value of the decision variable at the current
+            TIME_STEP of execution is positive, 0 otherwise. \n
 
         .. _DDM_PROBABILITY_UPPER_THRESHOLD:
 
@@ -749,23 +759,23 @@ class DDM(ProcessingMechanism):
                             {NAME: RT_CORRECT_SKEW},              # (DriftDiffusionAnalytical only)
                             {NAME: RT_INCORRECT_MEAN},            # (DriftDiffusionAnalytical only)
                             {NAME: RT_INCORRECT_VARIANCE},        # (DriftDiffusionAnalytical only)
-                            {NAME: RT_INCORRECT_SKEW}             # (DriftDiffusionAnalytical only)
+                            {NAME: RT_INCORRECT_SKEW},            # (DriftDiffusionAnalytical only)
                             ]
     standard_output_port_names = [i['name'] for i in standard_output_ports]
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 input_format:tc.optional(tc.enum(SCALAR, ARRAY, VECTOR))=None,
+                 input_format: Optional[Literal['SCALAR', 'ARRAY', 'VECTOR']] = None,
                  function=None,
                  input_ports=None,
-                 output_ports: tc.optional(tc.any(str, Iterable)) = None,
+                 output_ports: Optional[Union[str, Iterable]] = None,
                  seed=None,
                  params=None,
                  name=None,
-                 prefs: tc.optional(is_pref_set) = None,
+                 prefs:  Optional[ValidPrefSet] = None,
                  **kwargs):
 
         # Override instantiation of StandardOutputPorts usually done in _instantiate_output_ports
@@ -818,6 +828,14 @@ class DDM(ProcessingMechanism):
                  }
             ])
 
+        self.standard_output_ports.add_port_dicts([
+            {
+                NAME: DECISION_OUTCOME,
+                VARIABLE: (OWNER_VALUE, self.DECISION_VARIABLE_INDEX),
+                FUNCTION: UserDefinedFunction(custom_function=lambda x: (x > 0.0).astype(float))
+            }
+        ])
+
         # Add StandardOutputPorts for Mechanism (after ones for DDM, so that their indices are not messed up)
         # FIX 11/9/19:  ADD BACK ONCE Mechanism_Base.standard_output_ports ONLY HAS RESULTS IN ITS
         # self.standard_output_ports.add_port_dicts(Mechanism_Base.standard_output_ports)
@@ -852,7 +870,7 @@ class DDM(ProcessingMechanism):
         if 'reset_stateful_function_when' not in kwargs:
             kwargs['reset_stateful_function_when'] = AtTrialStart()
 
-        # FIXME: Set maximum executions absurdly large to avoid early termination
+        # Set maximum executions absurdly large to avoid early termination
         self.max_executions_before_finished = sys.maxsize
 
         super(DDM, self).__init__(default_variable=default_variable,
@@ -1071,7 +1089,6 @@ class DDM(ProcessingMechanism):
                 variable=variable,
                 context=context,
                 runtime_params=runtime_params,
-
             )
 
             if isinstance(self.function, DriftDiffusionAnalytical):

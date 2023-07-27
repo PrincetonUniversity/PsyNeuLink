@@ -25,7 +25,9 @@ Functions that return one or more samples from a distribution.
 """
 
 import numpy as np
-import typecheck as tc
+from beartype import beartype
+
+from psyneulink._typing import Optional
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import (
@@ -36,8 +38,8 @@ from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, DIST_FUNCTION_TYPE, BETA, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_ANALYTICAL_FUNCTION, \
     EXPONENTIAL_DIST_FUNCTION, GAMMA_DIST_FUNCTION, HIGH, LOW, MULTIPLICATIVE_PARAM, NOISE, NORMAL_DIST_FUNCTION, \
     SCALE, STANDARD_DEVIATION, THRESHOLD, UNIFORM_DIST_FUNCTION, WALD_DIST_FUNCTION
-from psyneulink.core.globals.utilities import convert_to_np_array, parameter_spec
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.utilities import convert_to_np_array, ValidParamSpecType
+from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 
@@ -160,7 +162,7 @@ class NormalDist(DistributionFunction):
         seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  mean=None,
@@ -168,7 +170,7 @@ class NormalDist(DistributionFunction):
                  params=None,
                  owner=None,
                  seed=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -343,7 +345,7 @@ class UniformToNormalDist(DistributionFunction):
         standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  mean=None,
@@ -351,7 +353,7 @@ class UniformToNormalDist(DistributionFunction):
                  params=None,
                  owner=None,
                  seed=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -470,14 +472,14 @@ class ExponentialDist(DistributionFunction):
         seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  beta=None,
                  seed=None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -597,7 +599,7 @@ class UniformDist(DistributionFunction):
         seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  low=None,
@@ -605,7 +607,7 @@ class UniformDist(DistributionFunction):
                  seed=None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -755,7 +757,7 @@ class GammaDist(DistributionFunction):
         dist_shape = Parameter(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  scale=None,
@@ -763,7 +765,7 @@ class GammaDist(DistributionFunction):
                  seed=None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -890,7 +892,7 @@ class WaldDist(DistributionFunction):
         mean = Parameter(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
                  scale=None,
@@ -898,7 +900,7 @@ class WaldDist(DistributionFunction):
                  seed=None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs:  Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1127,17 +1129,17 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         )
 
     @check_user_specified
-    @tc.typecheck
+    @beartype
     def __init__(self,
                  default_variable=None,
-                 drift_rate: tc.optional(parameter_spec) = None,
-                 starting_value: tc.optional(parameter_spec) = None,
-                 threshold: tc.optional(parameter_spec) = None,
-                 noise: tc.optional(parameter_spec) = None,
-                 non_decision_time: tc.optional(parameter_spec) = None,
+                 drift_rate: Optional[ValidParamSpecType] = None,
+                 starting_value: Optional[ValidParamSpecType] = None,
+                 threshold: Optional[ValidParamSpecType] = None,
+                 noise: Optional[ValidParamSpecType] = None,
+                 non_decision_time: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None,
+                 prefs:  Optional[ValidPrefSet] = None,
                  shenhav_et_al_compat_mode=False):
 
         self._shenhav_et_al_compat_mode = shenhav_et_al_compat_mode

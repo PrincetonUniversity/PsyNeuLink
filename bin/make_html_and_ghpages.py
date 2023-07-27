@@ -175,7 +175,7 @@ def main(argv):
     for dir in [args.docs, args.source, args.build, args.html]:
         if not os.path.isdir(dir):
             print(' directory ' + dir + ' not found!')
-            fatal()
+            fatal(3)
 
     # run sphinx and build the html from the docs rst etc files, and push the update
     task = 'Building and pushing docs'
