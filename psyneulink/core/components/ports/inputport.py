@@ -519,14 +519,14 @@ following attributes, that includes ones specific to, and that can be used to cu
 
 .. _InputPort_Function:
 
-* `function <InputPort.function>` -- combines the `value <Projection_Base.value>` of all of the
-  `Projections <Projection>` received by the InputPort, and assigns the result to the InputPort's `value
-  <InputPort.value>` attribute.  The default function is `LinearCombination` that performs an elementwise (Hadamard)
-  sums the values. However, the parameters of the `function <InputPort.function>` -- and thus the `value
-  <InputPort.value>` of the InputPort -- can be modified by any `GatingProjections <GatingProjection>` received by
-  the InputPort (listed in its `mod_afferents <Port_Base.mod_afferents>` attribute.  A custom function can also be
-  specified, so long as it generates a result that is compatible with the item of the Mechanism's `variable
-  <Mechanism_Base.variable>` to which the `InputPort is assigned <Mechanism_InputPorts>`.
+* `function <InputPort.function>` -- combines the `value <Projection_Base.value>` of all of the `path_afferent
+  <InputPort.path_afferents>` `Projections <Projection>` received by the InputPort, and assigns the result to the
+  InputPort's `value <InputPort.value>` attribute.  The default function is `LinearCombination` that performs an
+  elementwise (Hadamard) sum of the afferent values. However, the parameters of the `function <InputPort.function>`
+  -- and thus the `value <InputPort.value>` of the InputPort -- can be modified by any `GatingProjections
+  <GatingProjection>` received by the InputPort (listed in its `mod_afferents <Port_Base.mod_afferents>` attribute.
+  A custom function can also be specified, so long as it generates a result that is compatible with the item of the
+  Mechanism's `variable <Mechanism_Base.variable>` to which the `InputPort is assigned <Mechanism_InputPorts>`.
 
 .. _InputPort_Value:
 
@@ -551,7 +551,7 @@ Execution
 
 An InputPort cannot be executed directly.  It is executed when the Mechanism to which it belongs is executed.
 When this occurs, the InputPort executes any `Projections <Projection>` it receives, calls its `function
-<InputPort.function>` to combines the values received from any `MappingProjections <MappingProjection>` it receives
+<InputPort.function>` to combine the values received from any `MappingProjections <MappingProjection>` it receives
 (listed in its its `path_afferents  <Port_Base.path_afferents>` attribute) and modulate them in response to any
 `GatingProjections <GatingProjection>` (listed in its `mod_afferents <Port_Base.mod_afferents>` attribute),
 and then assigns the result to the InputPort's `value <InputPort.value>` attribute. This, in turn, is assigned to
@@ -739,7 +739,7 @@ class InputPort(Port_Base):
         applied and it will generate a value that is the same length as the Projection's `value
         <Projection_Base.value>`. However, if the InputPort receives more than one Projection and
         uses a function other than a CombinationFunction, a warning is generated and only the `value
-        <Projection_Base.value>` of the first Projection list in `path_afferents <Port_Base.path_afferents>`
+        <Projection_Base.value>` of the first Projection listed in `path_afferents <Port_Base.path_afferents>`
         is used by the function, which may generate unexpected results when executing the Mechanism or Composition
         to which it belongs.
 

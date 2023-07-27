@@ -94,7 +94,7 @@ class TestConstruction:
 
     # FIX: ADD WARNING TESTS
     # FIX: ADD ERROR TESTS
-    test_data = [
+    test_structure_data = [
         # NOTE: None => use default value (i.e., don't specify in constructor, rather than forcing None as value of arg)
         # ------------------ SPECS ---------------------------------------------   ------- EXPECTED -------------------
         #   memory_template       memory_fill   field_wts cncat_ky nmlze sm_gain   repeat  #fields #keys #vals  concat
@@ -148,8 +148,8 @@ class TestConstruction:
     args_names = "test_num, memory_template, memory_fill, field_weights, concatenate_keys, normalize_memories, " \
                  "softmax_gain, repeat, num_fields, num_keys, num_values, concatenate_node"
     @pytest.mark.parametrize(args_names,
-                             test_data,
-                             ids=[x[0] for x in test_data]
+                             test_structure_data,
+                             ids=[x[0] for x in test_structure_data]
                              )
     @pytest.mark.benchmark
     def test_structure(self,
@@ -230,13 +230,13 @@ class TestConstruction:
         assert len(em.value_input_nodes) == num_values
         assert isinstance(em.concatenate_keys_node, Mechanism) == concatenate_node
         if em.concatenate_keys:
-            assert em.retrieval_gating_nodes == []
+            assert em.retrieval_weighting_nodes == []
             assert bool(softmax_gain in {None, CONTROL}) == bool(len(em.softmax_control_nodes))
         else:
             if num_keys > 1:
-                assert len(em.retrieval_gating_nodes) == num_keys
+                assert len(em.retrieval_weighting_nodes) == num_keys
             else:
-                assert em.retrieval_gating_nodes == []
+                assert em.retrieval_weighting_nodes == []
             if softmax_gain in {None, CONTROL}:
                 assert len(em.softmax_control_nodes) == num_keys
             else:
@@ -286,7 +286,7 @@ class TestExecution:
     # 9:   store + explicit AUTO decay
     # 10:  store + numerical decay
 
-    test_data = [
+    test_execution_data = [
         # NOTE: None => use default value (i.e., don't specify in constructor, rather than forcing None as value of arg)
         # ---------------------------------------- SPECS -----------------------------------  ----- EXPECTED ---------
         #   memory_template         mem    mem  mem  fld   concat  nlz  sm   str    inputs        expected_retrieval
@@ -315,18 +315,9 @@ class TestExecution:
                                                                                                   [3.99994492,
                                                                                                    4.99993115,
                                                                                                    6.16532141]]),
-        (4, [[[1,2,3],[4,5,6]],     # Concatenated equal field_weights
+        (4, [[[1,2,3],[4,5,6]],     # Equal field_weights (but not concatenated)
              [[1,2,5],[4,5,8]],
-             [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [1,1],  None, None,  100,  0, [[[1, 2, 4]],
-                                                                                  [[4, 5, 6]]], [[0.99638114,
-                                                                                                  1.99273984,
-                                                                                                  4.01074633],
-                                                                                                 [3.98547551,
-                                                                                                  4.98184466,
-                                                                                                  6.92977565]]),
-        (5, [[[1,2,3],[4,5,6]],     # Not concatenated equal field_weights
-             [[1,2,5],[4,5,8]],
-             [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [1,1],  False, None,  100,  0, [[[1, 2, 3]],
+             [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [1,1],  None, None,  100,  0, [[[1, 2, 3]],
                                                                                    [[4, 5, 6]]], [[0.99637453,
                                                                                                    1.99272658,
                                                                                                    3.44135342],
@@ -334,6 +325,15 @@ class TestExecution:
                                                                                                    4.9818115,
                                                                                                    6.38099054]]
          ),
+        (5, [[[1,2,3],[4,5,6]],     # Equal field_weights with concatenation
+             [[1,2,5],[4,5,8]],
+             [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [1,1],  True, None,  100,  0, [[[1, 2, 4]],
+                                                                                  [[4, 5, 6]]], [[0.99992176,
+                                                                                                  1.99984303,
+                                                                                                  3.80435538],
+                                                                                                 [3.99968598,
+                                                                                                  4.99960748,
+                                                                                                  6.79677593]]),
         (6, [[[1,2,3],[4,5,6]],        # Unequal field_weights
              [[1,2,5],[4,5,8]],
              [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [9,1],  None, None,  100,  0, [[[1, 2, 3]],
@@ -379,13 +379,22 @@ class TestExecution:
                                                                                                   [3.99704573,
                                                                                                    4.99630722,
                                                                                                    6.20845524]]),
-    ]
+        (11, [[[1,2,3],[4,5,6]],    # Same as 10, but with equal weights and concatenate keys
+              [[1,2,5],[4,5,8]],
+              [[1,2,10],[4,5,10]]], (0,.01), 4, .1, [1,1],  True, None,  100,  1, [[[1, 2, 3]],
+                                                                                   [[4, 5, 6]]], [[0.9999599,
+                                                                                                   1.99991955,
+                                                                                                   3.32054524],
+                                                                                                  [3.99983906,
+                                                                                                   4.99979883,
+                                                                                                   6.3201438]]),
+]
 
     args_names = "test_num, memory_template, memory_fill, memory_capacity, memory_decay_rate, field_weights, " \
                  "concatenate_keys, normalize_memories, softmax_gain, storage_prob, inputs, expected_retrieval"
     @pytest.mark.parametrize(args_names,
-                             test_data,
-                             ids=[x[0] for x in test_data])
+                             test_execution_data,
+                             ids=[x[0] for x in test_execution_data])
     @pytest.mark.composition
     @pytest.mark.benchmark
     def test_execution(self,
@@ -440,10 +449,10 @@ class TestExecution:
         np.testing.assert_allclose(retrieved, expected_retrieval)
 
         # Validate that sum of weighted softmax distributions in retrieval_weighting_node itself sums to 1
-        np.testing.assert_allclose(np.sum(em.retrieval_weighting_node.value), 1.0, atol=1e-15)
+        np.testing.assert_allclose(np.sum(em.softmax_weighting_node.value), 1.0, atol=1e-15)
 
         # Validate that sum of its output ports also sums to 1
-        np.testing.assert_allclose(np.sum([port.value for port in em.retrieval_weighting_node.output_ports]),
+        np.testing.assert_allclose(np.sum([port.value for port in em.softmax_weighting_node.output_ports]),
                                    1.0, atol=1e-15)
 
         # Validate storage

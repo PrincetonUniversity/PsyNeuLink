@@ -4350,10 +4350,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if illegal_from_nodes:
             raise CompositionError(f"The following items specified in the 'get_input_from' arg of"
                                    f"'import_composition' for {self.name} either are not legal nodes "
-                                   f"or not in that Composition: " 
+                                   f"or not in that Composition: "
                                    f"{','.join([node.name for node in illegal_from_nodes])}")
         illegal_input_nodes = [node for node in input_nodes if (not isinstance(node, (Mechanism, Composition))
-                                                               or not node in nodes)]
+                                                               or node not in nodes)]
         if illegal_input_nodes:
             raise CompositionError(f"The following items specified in the 'get_input_from' arg of "
                                    f"'import_composition' for {self.name} either are not legal nodes "
@@ -8920,9 +8920,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for proj in self._get_invalid_aux_components(node):
                 receiver = proj.receiver.owner
                 warnings.warn(
-                    f"{node.name} has been specified to project to {receiver.name}, "
-                    f"but {receiver.name} is not in {self.name} or any of its nested Compositions. "
-                    f"This projection will be deactivated until {receiver.name} is added to {self.name} "
+                    f"'{node.name}' has been specified to project to '{receiver.name}', "
+                    f"but the latter is not in '{self.name}' or any of its nested Compositions. "
+                    f"This projection will be deactivated until '{receiver.name}' is added to '{self.name}' "
                     f"or a composition nested within it."
                 )
 
@@ -10895,29 +10895,6 @@ _
                 # These are meant to be assigned in run method;  needed here for direct call to execute method
                 self._animate = False
 
-            # [JDC 12/4/22]: FIX ALL OF THIS REPLACED BY REFERENCES TO self.is_nested
-            # IMPLEMENTATION NOTE:
-            # KAM 4/29/19
-            # The nested var is set to True if the Composition is nested in another Composition, otherwise False
-            # Later on, this is used to determine:
-            #   (1) whether to initialize from context
-            #   (2) whether to assign values to CIM from input dict (if not nested) or simply execute CIM (if nested)
-            # nested = False
-            # # MODIFIED 12/1/22 OLD:
-            # if len(self.input_CIM.path_afferents) > 0:
-            # if self.is_nested:
-            #     nested = True
-            # MODIFIED 12/1/22 NEW:  FIX: EFFORT TO ADDRESS ABOVE ISSUE;  NEEDS TESTING  CALL OF NESTED COMPOSITION
-            # if len(self.input_CIM.path_afferents) > 0 and context.composition != self:
-            #     nested = True
-            # # MODIFIED 12/1/22 NEWER:
-            # if self.is_nested and not self._executed_from_command_line:
-            #     nested = True
-            # # MODIFIED 12/1/22 NEWEST:
-            # nested = self.is_nested and not self._executed_from_command_line
-            # # MODIFIED 12/1/22 FINAL?
-            # nested = self.is_nested
-            # MODIFIED 12/1/22 END
 
             runtime_params = self._parse_runtime_params_conditions(runtime_params)
 

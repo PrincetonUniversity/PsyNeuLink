@@ -79,9 +79,9 @@ An AutoAssociativeLearningMechanism executes in the same manner as standard `Lea
 * 1) its execution can be enabled or disabled by setting the `learning_enabled
   <RecurrentTransferMechanism.learning_enabled>` attribute of the `RecurrentTransferMechanism` with which it is
   associated (identified in its `activity_source <AutoAssociativeLearningMechanism.activity_source>` attribute).
-* 2) it is executed during the `execution phase <System_Execution>` of the System's execution.  Note that this is
+* 2) it is executed during the `execution phase <Composition_Execution>` of the Composition's execution.  Note that this is
   different from the behavior of supervised learning algorithms (such as `Reinforcement` and `BackPropagation`),
-  that are executed during the `learning phase <System_Execution>` of a System's execution
+  that are executed during the `learning phase <Composition_Execution>` of a Composition's execution
 
 
 .. _AutoAssociativeLearningMechanism_Class_Reference:
@@ -210,16 +210,16 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
     learning_rate : float, 1d or 2d np.array, or np.matrix of numeric values : default None
         determines the learning rate used by the AutoAssociativeLearningMechanism's `function
-        <AutoAssociativeLearningMechanism.function>` to scale the weight change matrix it returns. If it is a scalar, it is used to multiply the weight change matrix;  if it is a 2d array or matrix,
+        <AutoAssociativeLearningMechanism.function>` to scale the weight change matrix it returns. If it is a scalar,
+        it is used to multiply the weight change matrix;  if it is a 2d array or matrix,
         it is used to Hadamard (elementwise) multiply the weight matrix (allowing the contribution of individual
         *connections* to be scaled);  if it is a 1d np.array, it is used to Hadamard (elementwise) multiply the input
         to the `function <AutoAssociativeLearningMechanism.function>` (i.e., the `value <InputPort.value>` of the
         AutoAssociativeLearningMechanism's *ACTIVATION_INPUT* `InputPort <AutoAssociativeLearningMechanism_Structure>`,
         allowing the contribution of individual *units* to be scaled). If specified, the value supersedes the
-        learning_rate assigned to any `Process` or `System` to which the AutoAssociativeLearningMechanism belongs.
-        If it is `None`, then the `learning_rate <Process.learning_rate>` specified for the Process to which the
-        AutoAssociativeLearningMechanism belongs belongs is used;  and, if that is `None`, then the `learning_rate
-        <System.learning_rate>` for the System to which it belongs is used. If all are `None`, then the
+        learning_rate assigned to any `Composition` to which the AutoAssociativeLearningMechanism belongs.
+        If it is `None`, then the `learning_rate <Composition.learning_rate>` specified for the System to which the
+        AutoAssociativeLearningMechanism belongs belongs is used;  and, if that is `None`, then the
         `default_learning_rate <LearningFunction.default_learning_rate>` for the `function
         <AutoAssociativeLearningMechanism.function>` is used (see `learning_rate <LearningMechanism_Learning_Rate>`
         for additional details).

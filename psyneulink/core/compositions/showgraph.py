@@ -600,16 +600,16 @@ class ShowGraph():
             specifies whether or not to show the Composition's `controller <Composition.controller>` and associated
             `objective_mechanism <ControlMechanism.objective_mechanism>` if it has one.  If the controller is an
             OptimizationControlMechanism and it has an `agent_rep <OptimizationControlMechanism>`, then specifying
-            *AGENT_REP* will also show that.  All control-related items are displayed in the color specified for
+            *AGENT_REP* also shows that.  All control-related items are displayed in the color specified for
             **controller_color**.
 
         show_learning : bool or ALL : default False
             specifies whether or not to show the `learning components <Composition_Learning_Components>` of the
-            `Composition`; they will all be displayed in the color specified for **learning_color**.
-            Projections that receive a `LearningProjection` will be shown as a diamond-shaped node.
-            If set to *ALL*, all Projections associated with learning will be shown:  the LearningProjections
+            `Composition`; they are all displayed in the color specified for **learning_color**.
+            Projections that receive a `LearningProjection` are shown as a diamond-shaped node.
+            If set to *ALL*, all Projections associated with learning are shown:  the LearningProjections
             as well as from `ProcessingMechanisms <ProcessingMechanism>` to `LearningMechanisms <LearningMechanism>`
-            that convey error and activation information;  if set to `True`, only the LearningPojections are shown.
+            that convey error and activation information;  if set to `True`, only the LearningProjections are shown.
 
         show_projection_labels : bool : default False
             specifies whether or not to show names of projections.
@@ -823,8 +823,7 @@ class ShowGraph():
                    if isinstance(nested_comp, Composition) for n in nested_comp.nodes):
                 continue
 
-            # If show_controller is true, objective mechanism will be
-            # handled in _assign_controller_components
+            # If show_controller is true, objective mechanism is handled in _assign_controller_components
             if (show_controller
                 and composition.controller
                 and composition.controller.objective_mechanism
@@ -2465,7 +2464,7 @@ class ShowGraph():
                             # - cims as sources (handled in _assign_cim_components)
                             # - controller (handled in _assign_controller_components)
                             # NOTE 7/20/20: if receiver is a controller, then we need to skip this block or shadow inputs
-                            # will not be rendered -DS
+                            # is not rendered -DS
                             if (rcvr is not composition.controller
                                     and isinstance(sndr, CompositionInterfaceMechanism)
                                     or (isinstance(sndr, ControlMechanism) and sndr.composition)):

@@ -584,14 +584,13 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                           f'use {repr(MONITOR)} instead')
             monitor = kwargs.pop(MONITORED_OUTPUT_PORTS)
         monitor = monitor or None # deal with possibility of empty list
-        input_ports = monitor
         if output_ports is None or output_ports == OUTCOME:
             output_ports = [OUTCOME]
 
         super().__init__(
             default_variable=default_variable,
             size=size,
-                         input_ports=input_ports,
+                         monitor=monitor,
                          output_ports=output_ports,
                          function=function,
                          params=params,
