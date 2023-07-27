@@ -1092,6 +1092,17 @@ class Parameter(ParameterBase):
             _inherited=self._inherited,
             _user_specified=self._user_specified,
         )
+        # TODO: this is a quick fix to make sure default values are
+        # always copied. should be integrated with future changes to
+        # deepcopy
+        # None indicates was not already deepcopied above
+        if shared_types is None and not self._inherited:
+            # use of memo here relies on the fact that
+            # copy_parameter_value does not currently add
+            # self.default_value. Otherwise it would reuse the shared
+            # value from above
+            result._set_default_value(copy.deepcopy(self.default_value, memo), directly=True)
+
         memo[id(self)] = result
 
         return result
