@@ -1559,7 +1559,6 @@ class EMComposition(AutodiffComposition):
         """Create GatingMechanisms that weight each key's contribution to the retrieved values.
         """
 
-        # FIX: CONSIDER USING THIS FOR INPUT GATING OF MATCH NODE(S)?
         retrieval_gating_nodes = []
         if not concatenate_keys and self.num_keys > 1:
             retrieval_gating_nodes = [GatingMechanism(input_ports={VARIABLE: field_weights[i],
