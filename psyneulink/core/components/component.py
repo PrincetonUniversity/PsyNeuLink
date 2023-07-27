@@ -2282,15 +2282,15 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 if value is not None or parameter_obj.specify_none:
                     defaults[name] = value
 
-        for k in defaults:
-            if defaults[k] is None:
-                continue
-            defaults[k] = copy_parameter_value(
-                defaults[k],
-                shared_types=shared_types
-            )
-
-        self.defaults = Defaults(owner=self, **defaults)
+        self.defaults = Defaults(owner=self)
+        for k in sorted(defaults, key=self.parameters._dependency_order_key(names=True)):
+            if defaults[k] is not None:
+                defaults[k] = copy_parameter_value(
+                    defaults[k],
+                    shared_types=shared_types
+                )
+            parameter_obj = getattr(self.parameters, k)
+            parameter_obj._set_default_value(defaults[k])
 
         for p in filter(lambda x: not isinstance(x, (ParameterAlias, SharedParameter)), self.parameters._in_dependency_order):
             # copy spec so it is not overwritten later
