@@ -2026,7 +2026,9 @@ class Port_Base(Port):
             # Handle LearningProjection
             #  - update LearningSignals only if context == LEARNING;  otherwise, assign zero for projection_value
             # IMPLEMENTATION NOTE: done here rather than in its own method in order to exploit parsing of params above
-            elif (isinstance(projection, LearningProjection) and ContextFlags.LEARNING not in context.execution_phase):
+            elif (isinstance(projection, LearningProjection)
+                   and (ContextFlags.LEARNING not in context.execution_phase
+                        or not projection.receiver.owner.learnable)):
                 projection_value = projection.defaults.value * 0.0
             elif (
                 # learning projections add extra behavior in _execute that invalidates identity function
