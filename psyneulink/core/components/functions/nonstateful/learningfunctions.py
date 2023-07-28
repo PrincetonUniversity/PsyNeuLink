@@ -212,6 +212,10 @@ class EMStorage(LearningFunction):
     decay_rate : float : default 0.0
         specifies the rate at which pre-existing entries in `memory_matrix <EMStorage.memory_matrix>` are decayed.
 
+    storage_location : None : default 0.0
+        specifies the location (row or col determined by `axis <EMStorage.axis>`) of `memory_matrix
+        <EMStorage.memory_matrix>` at which the new entry is stored.
+
     storage_prob : float : default default_learning_rate
         specifies the probability with which `entry <EMStorage.entry>` is assigned to `memory_matrix
         <EMStorage.memory_matrix>`.
