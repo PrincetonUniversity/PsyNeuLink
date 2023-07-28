@@ -551,8 +551,6 @@ class EMStorageMechanism(LearningMechanism):
                  **kwargs
                  ):
 
-        self._init_memory_matrix = memory_matrix # FIX: NEED THIS FOR INITIALIZATION IN _execute
-
         super().__init__(default_variable=default_variable,
                          fields=fields,
                          field_types=field_types,
@@ -711,8 +709,7 @@ class EMStorageMechanism(LearningMechanism):
         memory = self.parameters.memory_matrix._get(context)
         if memory is None:
             if self.is_initializing:
-                # FIX: CREATE FAKE MEMORY MATRIX HERE (USING memory_matrix ARG PASSED IN ONCE AVAILABLE FROM Parameters)
-                # Return existing matrices for field_memories
+                # Return existing matrices for field_memories  # FIX: THE FOLLOWING DOESN'T TEST FUNCTION:
                 return [learning_signal.receiver.path_afferents[0].parameters.matrix.get()
                         for learning_signal in self.learning_signals]
             # Raise exception if not initializing and memory is not specified
@@ -759,5 +756,4 @@ class EMStorageMechanism(LearningMechanism):
                                                                  context=context,
                                                                  runtime_params=runtime_params))
         self.parameters.value._set(value, context)
-
         return value
