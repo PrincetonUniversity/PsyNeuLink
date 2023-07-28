@@ -182,6 +182,7 @@ class EMStorage(LearningFunction):
         default_variable=None, \
         axis=0,                \
         decay_rate=0.0,        \
+        storage_location=None  \
         storage_prob=1.0,      \
         params=None,           \
         name=None,             \

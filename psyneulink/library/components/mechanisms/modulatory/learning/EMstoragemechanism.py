@@ -690,7 +690,7 @@ class EMStorageMechanism(LearningMechanism):
                 axis = 0
                 entry_to_store = field_projection.variable
                 if concatenation_node is None:
-                    assert entry_to_store == variable[i],\
+                    assert np.all(entry_to_store == variable[i]),\
                         f"PROGRAM ERROR: misalignment between inputs and fields for storing them"
             else:
                 # For retrieval matrices,
@@ -699,7 +699,7 @@ class EMStorageMechanism(LearningMechanism):
                 entry_to_store = variable[i-num_match_fields]
             # Get matrix containing memories for the field from the Projection
             field_memory_matrix = field_projection.parameters.matrix.get(context)
-            # FIX: CALL FUNCTION HERE, WITH entry_to_store AS variable, AND MATRIX, DECAY RATE AND RELEVANT AXIS AS PARAMS
+
             # # Decay existing memories before storage if memory_decay_rate is specified
             # if decay_rate:
             #     field_memory_matrix *= decay_rate
@@ -710,6 +710,7 @@ class EMStorageMechanism(LearningMechanism):
 
             value.append(super(LearningMechanism, self)._execute(variable=entry_to_store,
                                                                  memory_matrix=field_memory_matrix,
+                                                                 storage_location=field_memory_matrix,
                                                                  axis=axis,
                                                                  decay_rate=decay_rate,
                                                                  storage_prob=storage_prob,
