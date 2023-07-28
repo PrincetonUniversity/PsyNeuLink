@@ -180,8 +180,8 @@ class EMStorage(LearningFunction):
     """
     EMStorage(                 \
         default_variable=None, \
-        axis=0,                \
         decay_rate=0.0,        \
+        axis=0,                \
         storage_location=None  \
         storage_prob=1.0,      \
         params=None,           \
@@ -206,15 +206,17 @@ class EMStorage(LearningFunction):
     variable : List or 1d array : default class_defaults.variable
         specifies shape of `entry <EMStorage.entry>` passed in the call to the `function <EMStorage.function>`.
 
-    axis : int : default 0
-        specifies the axis of `memory_matrix <EMStorage.memory_matrix>` to which `entry <EMStorage.entry>` is assigned.
-
     decay_rate : float : default 0.0
         specifies the rate at which pre-existing entries in `memory_matrix <EMStorage.memory_matrix>` are decayed.
 
-    storage_location : None : default 0.0
+    axis : int : default 0
+        specifies the axis of `memory_matrix <EMStorage.memory_matrix>` to which `entry <EMStorage.entry>` is assigned.
+
+    storage_location : int : default None
         specifies the location (row or col determined by `axis <EMStorage.axis>`) of `memory_matrix
-        <EMStorage.memory_matrix>` at which the new entry is stored.
+        <EMStorage.memory_matrix>` at which the new entry is stored (replacing the existing one);
+        if None, the weeakest entry (one with the lowest norm) along `axis <EMStorage.axis>` of
+        `memory_matrix <EMStorage.memory_matrix>` is used.
 
     storage_prob : float : default default_learning_rate
         specifies the probability with which `entry <EMStorage.entry>` is assigned to `memory_matrix
@@ -246,11 +248,15 @@ class EMStorage(LearningFunction):
     memory_matrix : 2d array or ParameterPort
         matrix to which the entry is assigned along `axis <EMstorage.axis>`.
 
+    decay_rate : float
+        determines the rate at which pre-existing entries in `memory_matrix <EMStorage.memory_matrix>` are decayed.
+
     axis : int
         determines axis of `memory_matrix <EMStorage.memory_matrix>` to which `entry <EMStorage.entry>` is assigned.
 
-    decay_rate : float
-        determines the rate at which pre-existing entries in `memory_matrix <EMStorage.memory_matrix>` are decayed.
+    storage_location : int
+        specifies the location (row or col determined by `axis <EMStorage.axis>`) of `memory_matrix
+        <EMStorage.memory_matrix>` at which the new entry is stored.
 
     storage_prob : float
         determines the probability with which `entry <EMStorage.entry>` is stored in `memory_matrix
@@ -313,6 +319,12 @@ class EMStorage(LearningFunction):
                     :default value: None
                     :type: ``numpy.random.RandomState``
 
+                storage_location
+                    see `storage_location <EMStorage.storage_location>`
+
+                    :default value: None
+                    :type: int
+
                 storage_prob
                     see `storage_prob <EMStorage.storage_prob>`
 
@@ -324,12 +336,13 @@ class EMStorage(LearningFunction):
                              read_only=True,
                              pnl_internal=True,
                              constructor_argument='default_variable')
-        axis = Parameter(0, read_only=True, structural=True)
         decay_rate = Parameter(0.0, modulable=True)
-        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
+        axis = Parameter(0, read_only=True, structural=True)
+        storage_location = Parameter(None, read_only=True)
         storage_prob = Parameter(1.0, modulable=True)
         entry = Parameter([0], read_only=True)
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
+        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
         memory_matrix = Parameter([[0],[0]], read_only=True)
 
     default_learning_rate = 1.0
@@ -345,6 +358,7 @@ class EMStorage(LearningFunction):
     def __init__(self,
                  default_variable=None,
                  axis=0,
+                 storage_location=None,
                  decay_rate=0.0,
                  storage_prob=1.0,
                  seed=None,
@@ -354,8 +368,9 @@ class EMStorage(LearningFunction):
 
         super().__init__(
             default_variable=default_variable,
-            axis=axis,
             decay_rate=decay_rate,
+            axis=axis,
+            storage_location=storage_location,
             storage_prob=storage_prob,
             seed=seed,
             params=params,
@@ -423,6 +438,7 @@ class EMStorage(LearningFunction):
         entry = variable
         decay_rate = self.parameters.decay_rate._get(context)
         axis = self.parameters.axis._get(context)
+        storage_location = self.parameters.storage_location._get(context)
         storage_prob = self.parameters.storage_prob._get(context)
         random_state = self.parameters.random_state._get(context)
 
@@ -435,6 +451,7 @@ class EMStorage(LearningFunction):
             memory_matrix = params.pop(MEMORY_MATRIX, None)
             decay_rate = params.pop('decay_rate', decay_rate)
             axis = params.pop('axis', axis)
+            storage_location = params.pop('storage_location', storage_location)
             storage_prob = params.pop('storage_prob', storage_prob)
         # During init, function is called directly from Component (i.e., not from LearningMechanism execute() method),
         #     so need "placemarker" error_matrix for validation
@@ -457,8 +474,11 @@ class EMStorage(LearningFunction):
         elif random_state.uniform(0, 1) < storage_prob:
             if decay_rate:
                 memory_matrix *= decay_rate
-            # Store entry in slot with weakest memory (one with lowest norm) along specified axis
-            idx_of_min = np.argmin(np.linalg.norm(memory_matrix, axis=axis))
+            if storage_location is not None:
+                idx_of_min = storage_location
+            else:
+                # Find weakest entry (i.e., with lowest norm) along specified axis of matrix
+                idx_of_min = np.argmin(np.linalg.norm(memory_matrix, axis=axis))
             if axis == 0:
                 memory_matrix[:,idx_of_min] = np.array(entry)
             elif axis == 1:

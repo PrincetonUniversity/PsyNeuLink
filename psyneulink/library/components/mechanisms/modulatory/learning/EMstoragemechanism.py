@@ -710,7 +710,7 @@ class EMStorageMechanism(LearningMechanism):
 
             value.append(super(LearningMechanism, self)._execute(variable=entry_to_store,
                                                                  memory_matrix=field_memory_matrix,
-                                                                 storage_location=field_memory_matrix,
+                                                                 storage_location=idx_of_weakest_memory,
                                                                  axis=axis,
                                                                  decay_rate=decay_rate,
                                                                  storage_prob=storage_prob,
