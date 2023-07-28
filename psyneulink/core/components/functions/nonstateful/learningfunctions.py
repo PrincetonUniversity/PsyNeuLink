@@ -405,6 +405,8 @@ class EMStorage(LearningFunction):
         storage_prob = self.parameters.storage_prob._get(context)
         random_state = self.parameters.random_state._get(context)
 
+        # FIX: IMPLEMENT decay_rate PARAM AND CALCUALTION
+
         # IMPLEMENTATION NOTE: if memory_matrix is an arg, it must in params (put there by Component.function()
         # Manage memory_matrix param
         memory_matrix = None
