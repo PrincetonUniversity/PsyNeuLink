@@ -1806,7 +1806,7 @@ class EMComposition(AutodiffComposition):
         for projection in self.projections:
             if projection.sender.owner in self.retrieval_weighting_nodes:
                 # projection.learnable = self.learn_weights
-                projection.learnable = True # FIX: FOR NOW, UNTIL LEARNING IS IMPLEMENTED
+                projection.learnable = True # FIX: FOR NOW, UNTIL LEARNING OF RETRIEVAL WEIGHTING IS IMPLEMENTED
             else:
                 projection.learnable = False
 
