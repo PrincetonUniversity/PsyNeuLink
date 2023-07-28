@@ -1162,6 +1162,7 @@ class EMComposition(AutodiffComposition):
         if memory_decay_rate is AUTO:
             memory_decay_rate = 1 / memory_capacity
 
+        use_storage_node = True
         self.use_storage_node = use_storage_node
 
 

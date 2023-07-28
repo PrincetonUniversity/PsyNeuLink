@@ -552,7 +552,11 @@ class EMStorageMechanism(LearningMechanism):
         # Ensure the number of learning_signals is equal to the number of fields + number of keys
         if LEARNING_SIGNALS in request_set:
             learning_signals = request_set[LEARNING_SIGNALS]
-            if len(learning_signals) != len(fields) + num_keys:
+            if 'concatenation_node' in request_set and request_set['concatenation_node'] is not None:
+                num_match_fields =  1 + num_keys
+            else:
+                num_match_fields =  len(fields) + num_keys
+            if len(learning_signals) != num_match_fields:
                 raise EMStorageMechanismError(f"The number ({len(learning_signals)}) of 'learning_signals' specified "
                                               f"for  {self.name} must be the same as the number of items "
                                               f"in its variable ({len(self.variable)}).")
