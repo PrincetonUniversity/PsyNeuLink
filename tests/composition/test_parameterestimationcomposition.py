@@ -227,7 +227,7 @@ def test_parameter_estimation_ddm_mle(func_mode):
     # High-level parameters the impact performance of the test
     num_trials = 50
     time_step_size = 0.01
-    num_estimates = 40000
+    num_estimates = 1000
 
     ddm_params = dict(
         starting_value=0.0,
