@@ -12,7 +12,7 @@
 # - FIX: TRY
 #        - refactoring node_constructors to go after super().__init__() of EMComposition
 
-
+# - FIX: SHOULD MEMORY DECAY OCCUR IF STORAGE DOES NOT? CURRENTLY IT DOES NOT (SEE EMStorage Function)
 # - FIX: COMBINE argument FOR InputPort
 # - FIX: REPLACE ALL TRANSFER MECHANISMS WITH ProcessingMechanisms
 # - FIX: IMPLEMENT LearningMechanism FOR RETRIEVAL WEIGHTS (WHAT IS THE ERROR SIGNAL AND DERIVATIVE IT SHOULD USE?)

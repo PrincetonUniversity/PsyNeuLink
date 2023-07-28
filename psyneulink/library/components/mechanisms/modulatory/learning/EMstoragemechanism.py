@@ -530,7 +530,7 @@ class EMStorageMechanism(LearningMechanism):
             memory_matrix = request_set[MEMORY_MATRIX]
             # Items in variable should have the same shape as memory_matrix
             if memory_matrix[0].shape != np.array(self.variable).shape:
-                raise EMStorageMechanismError(f"The 'variable' arg for {self.name} ({variable}) must be "
+                raise EMStorageMechanismError(f"The 'variable' arg for {self.name} ({self.variable}) must be "
                                               f"a list or 2d np.array containing entries that have the same shape "
                                               f"({memory_matrix.shape}) as an entry (row) in 'memory_matrix' arg.")
 
@@ -711,7 +711,7 @@ class EMStorageMechanism(LearningMechanism):
             value.append(super(LearningMechanism, self)._execute(variable=entry_to_store,
                                                                  memory_matrix=field_memory_matrix,
                                                                  axis=axis,
-                                                                 decay_rate,
+                                                                 decay_rate=decay_rate,
                                                                  storage_prob=storage_prob,
                                                                  context=context,
                                                                  runtime_params=runtime_params))

@@ -181,6 +181,7 @@ class EMStorage(LearningFunction):
     EMStorage(                 \
         default_variable=None, \
         axis=0,                \
+        decay_rate=0.0,        \
         storage_prob=1.0,      \
         params=None,           \
         name=None,             \
@@ -206,6 +207,9 @@ class EMStorage(LearningFunction):
 
     axis : int : default 0
         specifies the axis of `memory_matrix <EMStorage.memory_matrix>` to which `entry <EMStorage.entry>` is assigned.
+
+    decay_rate : float : default 0.0
+        specifies the rate at which pre-existing entries in `memory_matrix <EMStorage.memory_matrix>` are decayed.
 
     storage_prob : float : default default_learning_rate
         specifies the probability with which `entry <EMStorage.entry>` is assigned to `memory_matrix
@@ -239,6 +243,9 @@ class EMStorage(LearningFunction):
 
     axis : int
         determines axis of `memory_matrix <EMStorage.memory_matrix>` to which `entry <EMStorage.entry>` is assigned.
+
+    decay_rate : float
+        determines the rate at which pre-existing entries in `memory_matrix <EMStorage.memory_matrix>` are decayed.
 
     storage_prob : float
         determines the probability with which `entry <EMStorage.entry>` is stored in `memory_matrix
@@ -275,6 +282,12 @@ class EMStorage(LearningFunction):
                     :type: int
                     :read only: True
 
+                decay_rate
+                    see `decay_rate <EMStorage.axis>`
+
+                    :default value: 0.0
+                    :type: float
+
                 entry
                     see `entry <EMStorage.error_signal>`
 
@@ -307,6 +320,7 @@ class EMStorage(LearningFunction):
                              pnl_internal=True,
                              constructor_argument='default_variable')
         axis = Parameter(0, read_only=True, structural=True)
+        decay_rate = Parameter(0.0, modulable=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
         storage_prob = Parameter(1.0, modulable=True)
@@ -326,6 +340,7 @@ class EMStorage(LearningFunction):
     def __init__(self,
                  default_variable=None,
                  axis=0,
+                 decay_rate=0.0,
                  storage_prob=1.0,
                  seed=None,
                  params=None,
@@ -335,6 +350,7 @@ class EMStorage(LearningFunction):
         super().__init__(
             default_variable=default_variable,
             axis=axis,
+            decay_rate=decay_rate,
             storage_prob=storage_prob,
             seed=seed,
             params=params,
@@ -405,7 +421,7 @@ class EMStorage(LearningFunction):
         storage_prob = self.parameters.storage_prob._get(context)
         random_state = self.parameters.random_state._get(context)
 
-        # FIX: IMPLEMENT decay_rate PARAM AND CALCUALTION
+        # FIX: IMPLEMENT decay_rate CALCUALTION
 
         # IMPLEMENTATION NOTE: if memory_matrix is an arg, it must in params (put there by Component.function()
         # Manage memory_matrix param
@@ -434,6 +450,8 @@ class EMStorage(LearningFunction):
             # Don't store entry during initialization to avoid contaminating memory_matrix
             pass
         elif random_state.uniform(0, 1) < storage_prob:
+            if decay_rate:
+                memory_matrix *= decay_rate
             # Store entry in slot with weakest memory (one with lowest norm) along specified axis
             idx_of_min = np.argmin(np.linalg.norm(memory_matrix, axis=axis))
             if axis == 0:
