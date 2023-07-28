@@ -11334,7 +11334,7 @@ _
 
                         # Set to LEARNING if Mechanism receives any PathwayProjections that are being learned
                         #   for which learning_enabled == True or ONLINE (i.e., not False or AFTER)
-                        #   Implementation Note: RecurrentTransferMechanisms are special cased as the
+                        #   Implementation Note: RecurrentTransferMechanisms are special cases as the
                         #   AutoAssociativeMechanism should be handling learning - not the RTM itself.
                         if self._is_learning(context) and not isinstance(node, RecurrentTransferMechanism):
                             projections = set(self.projections).intersection(set(node.path_afferents))
