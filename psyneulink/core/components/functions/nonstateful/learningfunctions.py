@@ -400,6 +400,7 @@ class EMStorage(LearningFunction):
         self._check_args(variable=variable, context=context, params=params)
 
         entry = variable
+        decay_rate = self.parameters.decay_rate._get(context)
         axis = self.parameters.axis._get(context)
         storage_prob = self.parameters.storage_prob._get(context)
         random_state = self.parameters.random_state._get(context)
@@ -409,6 +410,7 @@ class EMStorage(LearningFunction):
         memory_matrix = None
         if params:
             memory_matrix = params.pop(MEMORY_MATRIX, None)
+            decay_rate = params.pop('decay_rate', decay_rate)
             axis = params.pop('axis', axis)
             storage_prob = params.pop('storage_prob', storage_prob)
         # During init, function is called directly from Component (i.e., not from LearningMechanism execute() method),
