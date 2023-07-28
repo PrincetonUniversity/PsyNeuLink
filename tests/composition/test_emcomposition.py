@@ -481,8 +481,7 @@ class TestExecution:
                            softmax_gain=100,
                            memory_fill=(0,.001),
                            concatenate_keys=concatenate,
-                           use_storage_node=use_storage_node
-                           )
+                           use_storage_node=use_storage_node)
 
         inputs = [[[[1,2,3]],[[4,5,6]],[[10,20,30]],[[40,50,60]],[[100,200,300]],[[400,500,600]]],
                   [[[1,2,5]],[[4,5,8]],[[11,21,31]],[[41,51,61]],[[111,222,333]],[[444,555,666]]],
