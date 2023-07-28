@@ -687,6 +687,7 @@ Class Reference
 ---------------
 """
 import numpy as np
+import graph_scheduler as gs
 import warnings
 
 from psyneulink._typing import Optional, Union
@@ -707,7 +708,6 @@ from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.keywords import \
     AUTO, COMBINE, CONTROL, DEFAULT_INPUT, DEFAULT_VARIABLE, EM_COMPOSITION, FUNCTION, GAIN, IDENTITY_MATRIX, \
     MULTIPLICATIVE_PARAM, NAME, PARAMS, PRODUCT, PROJECTIONS, RANDOM, SIZE, VARIABLE
-from psyneulink.core.scheduling.condition import AllHaveRun
 from psyneulink.core.globals.utilities import all_within_range
 
 __all__ = [
@@ -1206,7 +1206,7 @@ class EMComposition(AutodiffComposition):
         #     self.scheduler.add_condition(self.storage_node, WhenFinished(node))
         # self.scheduler.add_condition(self.storage_node, WhenFinished(self.retrieved_nodes[1]))
         if self.use_storage_node:
-            self.scheduler.add_condition(self.storage_node, AllHaveRun(*self.retrieved_nodes))
+            self.scheduler.add_condition(self.storage_node, gs.AllHaveRun(*self.retrieved_nodes))
 
         # Suppress warnings for no efferent Projections
         for node in self.value_input_nodes:

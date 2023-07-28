@@ -628,7 +628,7 @@ class EMStorageMechanism(LearningMechanism):
         - entry_to_store = key_input or value_input to store
         - field_memories = weights of Projections for each field
 
-        DIVISION OF LABOR:
+        DIVISION OF LABOR BETWEEN MECHANISM AND FUNCTION:
         EMStorageMechanism._execute:
          - compute norms to find weakest entry in memory
          - compute storage_prob to determine whether to store current entry in memory
@@ -699,20 +699,6 @@ class EMStorageMechanism(LearningMechanism):
                                                                  storage_prob=storage_prob,
                                                                  context=context,
                                                                  runtime_params=runtime_params))
-
-
-
-
-
-
-
-
-
-
-
-        # MODIFIED 7/28/23 END
-
-
         self.parameters.value._set(value, context)
 
         return value

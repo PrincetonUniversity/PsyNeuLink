@@ -273,19 +273,6 @@ class TestConstruction:
 @pytest.mark.pytorch
 class TestExecution:
 
-    # TEST:
-    # 0: 3 entries that fill memory; no decay, one key, high softmax gain, no storage, inputs has only key (no value)
-    # 1: 3 entries that fill memory; no decay, one key, high softmax gain, no storage, inputs has key & value
-    # 2:   same as 1 but different value (that should be ignored)
-    # 3:   same as 2 but has extra entry filled with random values (which changes retrieval)
-    # 4:   same as 3 but uses both fields as keys (no values)
-    # 5:   same as 4 but no concatenation of keys (confirms that results are similar w/ and w/o concatenation)
-    # 6:   same as 5, but different field_weights
-    # 7:   store + no decay
-    # 8:   store + default decay (should be AUTO
-    # 9:   store + explicit AUTO decay
-    # 10:  store + numerical decay
-
     test_execution_data = [
         # NOTE: None => use default value (i.e., don't specify in constructor, rather than forcing None as value of arg)
         # ---------------------------------------- SPECS -----------------------------------  ----- EXPECTED ---------
@@ -397,20 +384,20 @@ class TestExecution:
                              ids=[x[0] for x in test_execution_data])
     @pytest.mark.composition
     @pytest.mark.benchmark
-    def test_execution(self,
-                       comp_mode,
-                       test_num,
-                       memory_template,
-                       memory_capacity,
-                       memory_fill,
-                       memory_decay_rate,
-                       field_weights,
-                       concatenate_keys,
-                       normalize_memories,
-                       softmax_gain,
-                       storage_prob,
-                       inputs,
-                       expected_retrieval):
+    def test_simple_execution(self,
+                              comp_mode,
+                              test_num,
+                              memory_template,
+                              memory_capacity,
+                              memory_fill,
+                              memory_decay_rate,
+                              field_weights,
+                              concatenate_keys,
+                              normalize_memories,
+                              softmax_gain,
+                              storage_prob,
+                              inputs,
+                              expected_retrieval):
 
         if comp_mode != pnl.ExecutionMode.Python:
             pytest.skip('Compilation not yet support for Composition.import.')
@@ -473,6 +460,46 @@ class TestExecution:
             else:
                 memory_fill = memory_fill or 0
                 assert all(elem == memory_fill for elem in em.memory[-1])
+
+
+    @pytest.mark.composition
+    @pytest.mark.benchmark
+    @pytest.mark.parametrize('concatenate', [True, False])
+    @pytest.mark.parametrize('use_storage_node', [True, False])
+    def test_multiple_trials_concatenation_and_storage_node(self,comp_mode, concatenate, use_storage_node):
+
+        if comp_mode != pnl.ExecutionMode.Python:
+            pytest.skip('Compilation not yet support for Composition.import.')
+
+        def temp(context):
+            memory = context.composition.parameters.memory.get(context)
+            assert True
+
+        em = EMComposition(memory_template=(2,3),
+                           field_weights=[1,1],
+                           memory_capacity=4,
+                           softmax_gain=100,
+                           memory_fill=(0,.001),
+                           concatenate_keys=concatenate,
+                           use_storage_node=use_storage_node
+                           )
+
+        inputs = [[[[1,2,3]],[[4,5,6]],[[10,20,30]],[[40,50,60]],[[100,200,300]],[[400,500,600]]],
+                  [[[1,2,5]],[[4,5,8]],[[11,21,31]],[[41,51,61]],[[111,222,333]],[[444,555,666]]],
+                  [[[1,2,10]],[[4,5,10]]],[[[51,52,53]],[[81,82,83]],[[777,888,999]],[[1111,2222,3333]]]]
+
+        expected_memory = [[[0.15625, 0.3125,  0.46875], [0.171875, 0.328125, 0.484375]],
+                           [[400., 500., 600.], [444., 555., 666.]],
+                           [[2.5, 3.125, 3.75 ], [2.5625, 3.1875, 3.8125]],
+                           [[25., 50., 75.], [27.75, 55.5,  83.25]]]
+
+        input_nodes = em.key_input_nodes + em.value_input_nodes
+        inputs = {input_nodes[i]:inputs[i] for
+                  i in range(len(input_nodes))}
+        em.run(inputs=inputs,
+               # call_after_trial=temp
+               )
+        np.testing.assert_equal(em.memory, expected_memory)
 
 
 # *****************************************************************************************************************
