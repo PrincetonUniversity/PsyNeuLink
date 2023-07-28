@@ -549,20 +549,34 @@ class EMStorageMechanism(LearningMechanism):
                                               f"the same number of items as its 'fields' arg ({len(fields)}).")
 
         num_keys = len([i for i in field_types if i==1])
+        concatenate_keys = 'concatenation_node' in request_set and request_set['concatenation_node'] is not None
+
         # Ensure the number of learning_signals is equal to the number of fields + number of keys
         if LEARNING_SIGNALS in request_set:
             learning_signals = request_set[LEARNING_SIGNALS]
-            if 'concatenation_node' in request_set and request_set['concatenation_node'] is not None:
-                num_match_fields =  1 + num_keys
+            if concatenate_keys:
+                num_match_fields =  1
             else:
-                num_match_fields =  len(fields) + num_keys
-            if len(learning_signals) != num_match_fields:
-                raise EMStorageMechanismError(f"The number ({len(learning_signals)}) of 'learning_signals' specified "
+                num_match_fields =  num_keys
+            if len(learning_signals) != num_match_fields + len(fields):
+                raise EMStorageMechanismError(f"The number of 'learning_signals' ({len(learning_signals)}) specified "
                                               f"for  {self.name} must be the same as the number of items "
                                               f"in its variable ({len(self.variable)}).")
 
-        # Ensure shape of memory_matrix for each field is same as learning_signal for corresponding retrieval_node
-        for i, learning_signal in enumerate(learning_signals[num_keys:]):
+        # Ensure shape of learning_signals matches shapes of matrices for match nodes (i.e., either keys or concatenate)
+        for i, learning_signal in enumerate(learning_signals[:num_match_fields]):
+            learning_signal_shape = learning_signal.parameters.matrix._get(context).shape
+            if concatenate_keys:
+                memory_matrix_field_shape = np.array([np.concatenate(row, dtype=object).flatten()
+                                                      for row in memory_matrix[:,0:num_keys]]).T.shape
+            else:
+                memory_matrix_field_shape = np.array(memory_matrix[:,i].tolist()).T.shape
+            assert learning_signal_shape == memory_matrix_field_shape, \
+                f"The shape ({learning_signal_shape}) of the matrix for the Projection {learning_signal.name} " \
+                f"used to specify learning signal {i} of {self.name} does not match the shape " \
+                f"of the corresponding field {i} of its 'memory_matrix' {memory_matrix_field_shape})."
+        # Ensure shape of learning_signals matches shapes of matrices for retrieval nodes (i.e., all input fields)
+        for i, learning_signal in enumerate(learning_signals[num_match_fields:]):
             learning_signal_shape = learning_signal.parameters.matrix._get(context).shape
             memory_matrix_field_shape = np.array(memory_matrix[:,i].tolist()).shape
             assert learning_signal_shape == memory_matrix_field_shape, \
@@ -638,7 +652,7 @@ class EMStorageMechanism(LearningMechanism):
         memory = self.parameters.memory_matrix._get(context)
         if memory is None:
             if self.is_initializing:
-                # FIX: CREATE FAKE MEMORY MATRIX HERE (USING memory_matrix ARG PASSED IN)
+                # FIX: CREATE FAKE MEMORY MATRIX HERE (USING memory_matrix ARG PASSED IN ONCE AVAILABLE FROM Parameters)
                 # Return existing matrices for field_memories
                 return [learning_signal.receiver.path_afferents[0].parameters.matrix.get()
                         for learning_signal in self.learning_signals]
@@ -650,9 +664,6 @@ class EMStorageMechanism(LearningMechanism):
                 raise EMStorageMechanismError(f"Call to {self.__class__.__name__} function {owner_string} "
                                               f"must include '{MEMORY_MATRIX}' in params arg.")
 
-        # num_key_fields = len([i for i in self.field_types if i==1])
-
-
         # Get least used slot (i.e., weakest memory = row of matrix with lowest weights) computed across all fields
         field_norms = np.array([np.linalg.norm(field, axis=1) for field in [row for row in memory]])
         if norm_by_field_weights:
@@ -660,30 +671,6 @@ class EMStorageMechanism(LearningMechanism):
         row_norms = np.sum(field_norms, axis=1)
         idx_of_weakest_memory = np.argmin(row_norms)
 
-        # # MODIFIED 7/28/23 OLD:
-        # # learning_signals are afferents to match_nodes (key fields) then retrieval_nodes (all fields)
-        # entries = [i for i in range(num_key_fields)] + [i for i in range(num_fields)]
-        # value = []
-        # for j, item in enumerate(zip(entries, self.learning_signals)):
-        #     i = item[0]
-        #     learning_signal = item[1]
-        #     # During initialization, learning_signal is still a reciever Projection specification so get its matrix
-        #     if self.is_initializing:
-        #         matrix = learning_signal.parameters.matrix._get(context)
-        #     # During execution, learning_signal is the sending OutputPort, so get the matrix of the receiver
-        #     else:
-        #         matrix = learning_signal.efferents[0].receiver.owner.parameters.matrix._get(context)
-        #         if decay_rate:
-        #             matrix *= decay_rate
-        #     axis = 0 if j < num_key_fields else 1
-        #     entry = variable[i]
-        #     value.append(super(LearningMechanism, self)._execute(variable=entry,
-        #                                                          memory_matrix=matrix,
-        #                                                          axis=axis,
-        #                                                          storage_prob=storage_prob,
-        #                                                          context=context,
-        #                                                          runtime_params=runtime_params))
-        # MODIFIED 7/28/23 NEW:
         value = []
         for i, field_projection in enumerate([learning_signal.efferents[0].receiver.owner
                                             for learning_signal in self.learning_signals]):
@@ -703,14 +690,6 @@ class EMStorageMechanism(LearningMechanism):
                 entry_to_store = variable[i-num_match_fields]
             # Get matrix containing memories for the field from the Projection
             field_memory_matrix = field_projection.parameters.matrix.get(context)
-
-            # # Decay existing memories before storage if memory_decay_rate is specified
-            # if decay_rate:
-            #     field_memory_matrix *= decay_rate
-            # # Assign entry to (row or col) of existing one that has lowest norm (i.e., weakest memory)
-            # field_memory_matrix[:,idx_of_weakest_memory] = np.array(entry_to_store)
-            # # Assign updated matrix to Projection
-            # field_projection.parameters.matrix.set(field_memory_matrix, context)
 
             value.append(super(LearningMechanism, self)._execute(variable=entry_to_store,
                                                                  memory_matrix=field_memory_matrix,
