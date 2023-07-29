@@ -758,7 +758,7 @@ class EMComposition(AutodiffComposition):
         memory_decay_rate=AUTO,         \
         learn_weights=True,             \
         learning_rate=True,             \
-        use_storage_node=False,         \
+        use_storage_node=True,          \
         use_gating_for_weighting=False, \
         name="EM_Composition"           \
         )
@@ -819,7 +819,7 @@ class EMComposition(AutodiffComposition):
     learning_rate : float : default .01
         specifies rate at which `field_weights <EMComposition.field_weights>` are learned if ``learn_weights`` is True.
 
-    use_storage_node : bool : default False
+    use_storage_node : bool : default True
         specifies whether to use a `LearningMechanism` to store entries in `memory <EMComposition.memory>`.
         If False, a method on EMComposition is used, which precludes use of `import_composition
         <Composition.import_composition>` to integrate the EMComposition into another Composition;  to do so,
@@ -1130,7 +1130,7 @@ class EMComposition(AutodiffComposition):
                  memory_decay_rate:Union[float,AUTO]=AUTO,
                  learn_weights:bool=False, # FIX: False FOR NOW, UNTIL IMPLEMENTED
                  learning_rate:float=None,
-                 use_storage_node:bool=False,
+                 use_storage_node:bool=True,
                  use_gating_for_weighting:bool=False,
                  random_state=None,
                  seed=None,
@@ -1154,7 +1154,6 @@ class EMComposition(AutodiffComposition):
         if memory_decay_rate is AUTO:
             memory_decay_rate = 1 / memory_capacity
 
-        use_storage_node = True
         self.use_storage_node = use_storage_node
 
 
