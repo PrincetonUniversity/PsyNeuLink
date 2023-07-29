@@ -64,6 +64,28 @@ class TestInputPorts:
         assert "Specification of 'combine' argument (PRODUCT) conflicts with Function specified " \
                "in 'function' argument (Linear) for InputPort" in str(error_text.value)
 
+    def test_combine_dict_spec(self):
+        t = pnl.TransferMechanism(input_ports={pnl.COMBINE: pnl.PRODUCT})
+        assert t.input_port.function.operation == pnl.PRODUCT
+
+    def test_combine_dict_spec_redundant_with_function(self):
+        with pytest.warns(UserWarning) as warnings:  # Warn, since default_input is NOT set
+            t = pnl.TransferMechanism(input_ports={pnl.COMBINE:pnl.PRODUCT,
+                                                   pnl.FUNCTION:pnl.LinearCombination(operation=pnl.PRODUCT)})
+        assert any(w.message.args[0] == "Both COMBINE ('product') and FUNCTION (LinearCombination Function) "
+                                              "specifications found in InputPort specification dictionary for "
+                                              "'InputPort' of 'TransferMechanism-0'; no need to specify both."
+                   for w in warnings)
+        assert t.input_port.function.operation == pnl.PRODUCT
+
+    def test_combine_dict_spec_conflicts_with_function(self):
+        with pytest.raises(pnl.InputPortError) as error_text:
+            t = pnl.TransferMechanism(input_ports={pnl.COMBINE:pnl.PRODUCT,
+                                                   pnl.FUNCTION:pnl.LinearCombination})
+        assert "COMBINE entry (='product') of InputPort specification dictionary for 'InputPort' of " \
+               "'TransferMechanism-0' conflicts with FUNCTION entry (LinearCombination Function); " \
+               "remove one or the other." in str(error_text.value)
+
     def test_single_projection_variable(self):
         a = pnl.TransferMechanism()
         b = pnl.TransferMechanism()

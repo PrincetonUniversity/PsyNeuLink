@@ -1113,18 +1113,24 @@ class InputPort(Port_Base):
         return self._get_all_afferents()
 
     @beartype
-    def _parse_port_specific_specs(self, owner, port_dict, port_specific_spec):
-        """Get weights, exponents and/or any connections specified in an InputPort specification tuple
-
+    def _parse_port_specific_specs(self, owner, port_dict, port_specific_spec, context=None):
+        """Parse any InputPort-specific specifications, including SIZE, COMBINE, WEIGHTS and EXPONENTS
+        Get SIZE and/or COMBINE specification in if port_specific_spec is a dict
+        Get weights, exponents and/or any connections specified if port_specific_spec is a tuple
         Tuple specification can be:
             (port_spec, connections)
             (port_spec, weights, exponents, connections)
 
-        See Port._parse_port_specific_spec for additional info.
+        See Port._parse_port_specific_specs for additional info.
 
         Returns:
-             - port_spec:  1st item of tuple if it is a numeric value;  otherwise None
-             - params dict with WEIGHT, EXPONENT and/or PROJECTIONS entries if any of these was specified.
+             - port_spec:
+                 - updated with SIZE and/or COMBINE specifications for dict;
+                 - 1st item for tuple if it is a numeric value;
+                 - otherwise None
+             - params dict:
+                 - with WEIGHT, EXPONENT and/or PROJECTIONS entries if any of these was specified.
+                 - purged of SIZE and/or COMBINE entries if they were specified in port_specific_spec
 
         """
         # FIX: ADD FACILITY TO SPECIFY WEIGHTS AND/OR EXPONENTS FOR INDIVIDUAL OutputPort SPECS
@@ -1145,38 +1151,49 @@ class InputPort(Port_Base):
             # FIX:           USE ObjectiveMechanism EXAMPLES
             # if MECHANISM in port_specific_spec:
             #     if OUTPUT_PORTS in port_specific_spec
-            if SIZE in port_specific_spec:
-                if (VARIABLE in port_specific_spec or
-                        any(key in port_dict and port_dict[key] is not None for key in {VARIABLE, SIZE})):
-                    raise InputPortError(f"PROGRAM ERROR: SIZE specification found in port_specific_spec dict "
-                                         f"for {self.__name__} specification of {owner.name} when SIZE or VARIABLE "
-                                         f"is already present in its port_specific_spec dict or port_dict.")
-                port_dict.update({VARIABLE:np.zeros(port_specific_spec[SIZE])})
-                del port_specific_spec[SIZE]
-            if COMBINE in port_specific_spec:
-                fct_err = None
-                if (FUNCTION in port_specific_spec and port_specific_spec[FUNCTION] is not None):
-                    fct_str = port_specific_spec[FUNCTION].componentName
-                    fct_err = port_specific_spec[FUNCTION].operation != port_specific_spec[COMBINE]
-                    del port_specific_spec[FUNCTION]
-                elif (FUNCTION in port_dict and port_dict[FUNCTION] is not None):
-                    fct_str = port_dict[FUNCTION].componentName
-                    fct_err = port_dict[FUNCTION].operation != port_specific_spec[COMBINE]
-                    del port_dict[FUNCTION]
-                if fct_err is True:
-                    raise InputPortError(f"COMBINE specification ('{port_specific_spec[COMBINE]}') found in InputPort "
-                                         f"specification dictionary for '{self.__name__}' of '{owner.name}' conflicts "
-                                         f"with FUNCTION specification ({fct_str}); remove one or the other.")
-                if fct_err is False:
-                    warnings.warn(f"Both COMBINE ('{port_specific_spec[COMBINE]}') and FUNCTION ({fct_str}) "
-                                  f"specifications found in InputPort specification dictionary for '{self.__name__}' "
-                                  f"of '{owner.name}'; no need to specify both.")
-                # port_dict.update({FUNCTION:LinearCombination(operation = port_specific_spec[COMBINE])})
-                port_specific_spec[FUNCTION] = LinearCombination(operation=port_specific_spec[COMBINE])
-                del port_specific_spec[COMBINE]
 
-            return port_dict, port_specific_spec
-            return None, port_specific_spec
+            if any(spec in port_specific_spec for spec in {SIZE, COMBINE}):
+
+                if SIZE in port_specific_spec:
+                    if (VARIABLE in port_specific_spec or
+                            any(key in port_dict and port_dict[key] is not None for key in {VARIABLE, SIZE})):
+                        raise InputPortError(f"PROGRAM ERROR: SIZE specification found in port_specific_spec dict "
+                                             f"for {self.__name__} specification of {owner.name} when SIZE or VARIABLE "
+                                             f"is already present in its port_specific_spec dict or port_dict.")
+                    port_dict.update({VARIABLE:np.zeros(port_specific_spec[SIZE])})
+                    del port_specific_spec[SIZE]
+
+                if COMBINE in port_specific_spec:
+                    fct_err = None
+                    if (FUNCTION in port_specific_spec and port_specific_spec[FUNCTION] is not None):
+                        fct_str = port_specific_spec[FUNCTION].componentName
+                        fct_err = port_specific_spec[FUNCTION].operation != port_specific_spec[COMBINE]
+                        del port_specific_spec[FUNCTION]
+                    elif (FUNCTION in port_dict and port_dict[FUNCTION] is not None):
+                        fct_str = port_dict[FUNCTION].componentName
+                        fct_err = port_dict[FUNCTION].operation != port_specific_spec[COMBINE]
+                        del port_dict[FUNCTION]
+                    if fct_err is True:
+                        raise InputPortError(f"COMBINE entry (='{port_specific_spec[COMBINE]}') of InputPort "
+                                             f"specification dictionary for '{self.__name__}' of '{owner.name}' "
+                                             f"conflicts with FUNCTION entry ({fct_str}); remove one or the other.")
+                    if fct_err is False and any(source in context.string
+                                                for source in {'validate_params',
+                                                               '_instantiate_input_ports',
+                                                               '_instantiate_output_ports'}): # Suppress warning in earlier calls
+                        warnings.warn(f"Both COMBINE ('{port_specific_spec[COMBINE]}') and FUNCTION ({fct_str}) "
+                                      f"specifications found in InputPort specification dictionary for '{self.__name__}' "
+                                      f"of '{owner.name}'; no need to specify both.")
+                    # FIX: THE NEXT LINE, WHICH SHOULD JUST PASS THE COMBINE SPECIFICATION ON TO THE CONSTRUCTOR
+                    #      (AND HANDLE FUNCTION ASSIGNMENT THERE) CAUSES A CRASH (APPEARS TO BE A RECURSION ERROR);
+                    #      THEREFORE, NEED TO SET FUNCTION HERE
+                    # port_dict.update({COMBINE: port_specific_spec[COMBINE]})
+                    port_specific_spec[FUNCTION] = LinearCombination(operation=port_specific_spec[COMBINE])
+                    del port_specific_spec[COMBINE]
+
+                return port_dict, port_specific_spec
+            else:
+                return None, port_specific_spec
 
         elif isinstance(port_specific_spec, tuple):
 
@@ -1542,6 +1559,7 @@ def _instantiate_input_ports(owner, input_ports=None, reference_value=None, cont
     if input_ports is not None:
         input_ports = _parse_shadow_inputs(owner, input_ports)
 
+    context.string = context.string or '_instantiate_input_ports'
     port_list = _instantiate_port_list(owner=owner,
                                          port_list=input_ports,
                                          port_types=InputPort,
