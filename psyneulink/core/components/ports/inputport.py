@@ -1153,7 +1153,29 @@ class InputPort(Port_Base):
                                          f"is already present in its port_specific_spec dict or port_dict.")
                 port_dict.update({VARIABLE:np.zeros(port_specific_spec[SIZE])})
                 del port_specific_spec[SIZE]
-                return port_dict, port_specific_spec
+            if COMBINE in port_specific_spec:
+                fct_err = None
+                if (FUNCTION in port_specific_spec and port_specific_spec[FUNCTION] is not None):
+                    fct_str = port_specific_spec[FUNCTION].componentName
+                    fct_err = port_specific_spec[FUNCTION].operation != port_specific_spec[COMBINE]
+                    del port_specific_spec[FUNCTION]
+                elif (FUNCTION in port_dict and port_dict[FUNCTION] is not None):
+                    fct_str = port_dict[FUNCTION].componentName
+                    fct_err = port_dict[FUNCTION].operation != port_specific_spec[COMBINE]
+                    del port_dict[FUNCTION]
+                if fct_err is True:
+                    raise InputPortError(f"COMBINE specification ('{port_specific_spec[COMBINE]}') found in InputPort "
+                                         f"specification dictionary for '{self.__name__}' of '{owner.name}' conflicts "
+                                         f"with FUNCTION specification ({fct_str}); remove one or the other.")
+                if fct_err is False:
+                    warnings.warn(f"Both COMBINE ('{port_specific_spec[COMBINE]}') and FUNCTION ({fct_str}) "
+                                  f"specifications found in InputPort specification dictionary for '{self.__name__}' "
+                                  f"of '{owner.name}'; no need to specify both.")
+                # port_dict.update({FUNCTION:LinearCombination(operation = port_specific_spec[COMBINE])})
+                port_specific_spec[FUNCTION] = LinearCombination(operation=port_specific_spec[COMBINE])
+                del port_specific_spec[COMBINE]
+
+            return port_dict, port_specific_spec
             return None, port_specific_spec
 
         elif isinstance(port_specific_spec, tuple):

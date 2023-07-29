@@ -2654,14 +2654,14 @@ def _instantiate_port(port_type: Type[Port],  # Port's type
         reference_value = reference_value_dict[VARIABLE]
 
     parsed_port_spec = _parse_port_spec(port_type=port_type,
-                                          owner=owner,
-                                          reference_value=reference_value,
-                                          name=name,
-                                          variable=variable,
-                                          params=params,
-                                          prefs=prefs,
-                                          context=context,
-                                          **port_spec)
+                                        owner=owner,
+                                        reference_value=reference_value,
+                                        name=name,
+                                        variable=variable,
+                                        params=params,
+                                        prefs=prefs,
+                                        context=context,
+                                        **port_spec)
 
     # PORT SPECIFICATION IS A Port OBJECT ***************************************
     # Validate and return
