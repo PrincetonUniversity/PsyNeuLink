@@ -634,6 +634,7 @@ from psyneulink.core.globals.keywords import \
     VALUE, VARIABLE, \
     output_port_spec_to_parameter_name, INPUT_PORT_VARIABLES
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
+from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
@@ -1063,14 +1064,14 @@ class OutputPort(Port_Base):
         return _parse_output_port_variable(variable, self.owner)
 
     @beartype
-    def _parse_port_specific_specs(self, owner, port_dict, port_specific_spec):
+    def _parse_port_specific_specs(self, owner, port_dict, port_specific_spec, context=None):
         """Get variable spec and/or connections specified in an OutputPort specification tuple
 
         Tuple specification can be:
             (port_spec, connections)
             (port_spec, variable spec, connections)
 
-        See Port._parse_port_specific_spec for additional info.
+        See Port._parse_port_specific_specs for additional info.
 
         Returns:
              - port_spec:  1st item of tuple
@@ -1404,7 +1405,8 @@ def _instantiate_output_ports(owner, output_ports=None, context=None):
             else:
                 # parse output_port
                 from psyneulink.core.components.ports.port import _parse_port_spec
-                output_port = _parse_port_spec(port_type=OutputPort, owner=owner, port_spec=output_port)
+                output_port = _parse_port_spec(port_type=OutputPort, owner=owner, port_spec=output_port,
+                                               context=Context(string='OutputPort._instantiate_output_ports'))
 
                 _maintain_backward_compatibility(output_port, output_port[NAME], owner)
 
@@ -1456,6 +1458,7 @@ def _instantiate_output_ports(owner, output_ports=None, context=None):
         # Use OutputPort as default
         port_types = OutputPort
 
+    context.string = context.string or '_instantiate_output_ports'
     port_list = _instantiate_port_list(owner=owner,
                                          port_list=output_ports,
                                          port_types=port_types,

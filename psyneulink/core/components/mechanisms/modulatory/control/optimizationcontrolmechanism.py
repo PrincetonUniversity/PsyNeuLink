@@ -2581,7 +2581,8 @@ class OptimizationControlMechanism(ControlMechanism):
                 self.state_feature_specs[i] = spec
 
             # Get InputPort specification dictionary for state_input_port and update its entries
-            parsed_spec = _parse_port_spec(owner=self, port_type=InputPort, port_spec=spec)
+            parsed_spec = _parse_port_spec(owner=self, port_type=InputPort, port_spec=spec,
+                                           context=Context(string='OptimizationControlMechanism._parse_specs'))
             parsed_spec[NAME] = state_input_port_names[i]
             if parsed_spec[PARAMS] and SHADOW_INPUTS in parsed_spec[PARAMS]:
                 # Composition._update_shadow_projections will take care of PROJECTIONS specification

@@ -802,7 +802,7 @@ class ParameterPort(Port_Base):
         return self.mod_afferents
 
     @beartype
-    def _parse_port_specific_specs(self, owner, port_dict, port_specific_spec):
+    def _parse_port_specific_specs(self, owner, port_dict, port_specific_spec, context=None):
         """Get connections specified in a ParameterPort specification tuple
 
         Tuple specification can be:

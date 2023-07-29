@@ -632,6 +632,7 @@ from psyneulink.core.globals.keywords import \
     OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PARAMS, PORT_TYPE, PRODUCT, PROJECTION_TYPE, PROJECTIONS, \
     SEPARATE, SIZE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
+from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import ContentAddressableList, convert_all_elements_to_np_array, convert_to_list, convert_to_np_array
@@ -672,24 +673,17 @@ class ControlMechanismError(MechanismError):
 
 
 def validate_monitored_port_spec(owner, spec_list):
+    context = Context(string='ControlMechanism.validate_monitored_port_spec')
     for spec in spec_list:
         if isinstance(spec, MonitoredOutputPortTuple):
             spec = spec.output_port
         elif isinstance(spec, tuple):
-            spec = _parse_port_spec(
-                owner=owner,
-                port_type=InputPort,
-                port_spec=spec,
-            )
+            spec = _parse_port_spec(owner=owner, port_type=InputPort, port_spec=spec, context=context)
             spec = spec['params'][PROJECTIONS][0][0]
         elif isinstance(spec, dict):
             # If it is a dict, parse to validate that it is an InputPort specification dict
             #    (for InputPort of ObjectiveMechanism to be assigned to the monitored_output_port)
-            spec = _parse_port_spec(
-                owner=owner,
-                port_type=InputPort,
-                port_spec=spec,
-            )
+            spec = _parse_port_spec(owner=owner, port_type=InputPort, port_spec=spec, context=context)
             # Get the OutputPort, to validate that it is in the ControlMechanism's Composition (below);
             #    presumes that the monitored_output_port is the first in the list of projection_specs
             #    in the InputPort port specification dictionary returned from the parse,
@@ -1263,15 +1257,10 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
             port_types = self._owner.outputPortTypes
             for ctl_spec in control:
-                ctl_spec = _parse_port_spec(
-                    port_type=port_types, owner=self._owner, port_spec=ctl_spec
-                )
-                if not (
-                    isinstance(ctl_spec, port_types)
-                    or (
-                        isinstance(ctl_spec, dict) and ctl_spec[PORT_TYPE] == port_types
-                    )
-                ):
+                ctl_spec = _parse_port_spec(port_type=port_types, owner=self._owner, port_spec=ctl_spec,
+                                            context=Context(string='ControlMechanism._validate_input_ports'))
+                if not (isinstance(ctl_spec, port_types)
+                        or (isinstance(ctl_spec, dict) and ctl_spec[PORT_TYPE] == port_types)):
                     return 'invalid port specification'
 
             # FIX 5/28/20:
