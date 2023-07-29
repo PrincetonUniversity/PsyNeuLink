@@ -2812,7 +2812,7 @@ from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism i
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP, \
     OptimizationControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
-    LearningMechanism, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
+    LearningMechanism, LearningTiming, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -4950,7 +4950,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         receiver_node = component.receiver.owner.composition
                     else:
                         receiver_node = component.receiver.owner
-                # Defer instantiation of all shadow Projections until call to _update_shadow_projections()
                 if (not all([sender_node in valid_nodes, receiver_node in valid_nodes])
                         or (hasattr(component.receiver, SHADOW_INPUTS) and component.receiver.shadow_inputs)):
                     invalid_components.append(component)
@@ -6470,6 +6469,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 node._check_for_unused_projections(context)
             if isinstance(node, Mechanism):
                 for proj in [p for p in node.projections if p not in self.projections]:
+                    # LearningProjections not listed in self.projections but executed during EXECUTION_PHASE are OK
+                    #     (e.g., EMComposition.storage_node)
+                    if (isinstance(proj, LearningProjection)
+                            and proj.sender.owner.learning_timing is LearningTiming.EXECUTION_PHASE
+                            and proj.receiver.owner in self.projections):
+                        continue
                     proj_deferred = proj._initialization_status & ContextFlags.DEFERRED_INIT
                     proj_name = proj._name if proj_deferred else proj.name
                     if proj in node.afferents:
@@ -8919,12 +8924,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node in self._partially_added_nodes:
             for proj in self._get_invalid_aux_components(node):
                 receiver = proj.receiver.owner
-                warnings.warn(
-                    f"'{node.name}' has been specified to project to '{receiver.name}', "
-                    f"but the latter is not in '{self.name}' or any of its nested Compositions. "
-                    f"This projection will be deactivated until '{receiver.name}' is added to '{self.name}' "
-                    f"or a composition nested within it."
-                )
+                # LearningProjections not listed in self.projections but executed during EXECUTION_PHASE are OK
+                #     (e.g., EMComposition.storage_node)
+                if not (isinstance(proj, LearningProjection)
+                        and proj.sender.owner.learning_timing is LearningTiming.EXECUTION_PHASE
+                        and receiver in self.projections):
+                    warnings.warn(
+                        f"'{node.name}' has been specified to project to '{receiver.name}', "
+                        f"but the latter is not in '{self.name}' or any of its nested Compositions. "
+                        f"This projection will be deactivated until '{receiver.name}' is added to '{self.name}' "
+                        f"or a composition nested within it.")
 
     def _get_total_cost_of_control_allocation(self, control_allocation, context, runtime_params):
         total_cost = 0.
