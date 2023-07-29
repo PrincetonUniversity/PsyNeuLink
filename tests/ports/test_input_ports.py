@@ -68,6 +68,10 @@ class TestInputPorts:
         t = pnl.TransferMechanism(input_ports={pnl.COMBINE: pnl.PRODUCT})
         assert t.input_port.function.operation == pnl.PRODUCT
 
+    def test_equivalent_function_dict_spec(self):
+        t = pnl.TransferMechanism(input_ports={pnl.FUNCTION:pnl.LinearCombination(operation=pnl.PRODUCT)})
+        assert t.input_port.function.operation == pnl.PRODUCT
+
     def test_combine_dict_spec_redundant_with_function(self):
         with pytest.warns(UserWarning) as warnings:  # Warn, since default_input is NOT set
             t = pnl.TransferMechanism(input_ports={pnl.COMBINE:pnl.PRODUCT,
