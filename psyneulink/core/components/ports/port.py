@@ -1842,7 +1842,7 @@ class Port_Base(Port):
     def _get_all_afferents(self):
         assert False, f"Subclass of Port ({self.__class__.__name__}) must implement '_get_all_afferents()' method."
 
-    def _parse_port_specific_specs(self, owner, port_dict, port_specific_spec):
+    def _parse_port_specific_specs(self, owner, port_dict, port_specific_spec, context=None):
         """Parse parameters in Port specification tuple specific to each subclass
 
         Called by _parse_port_spec()
@@ -3061,8 +3061,9 @@ def _parse_port_spec(port_type=None,
                                                                                      port_specification,
                                                                                      context)
                     port_specification = _parse_port_spec(port_type=port_type,
-                                                            owner=owner,
-                                                            port_spec=new_port_specification)
+                                                          owner=owner,
+                                                          port_spec=new_port_specification,
+                                                          context=context)
                     assert True
                 except AttributeError:
                     raise PortError("Attempt to assign a {} ({}) to {} that belongs to another {} ({})".
@@ -3210,9 +3211,10 @@ def _parse_port_spec(port_type=None,
 
         if port_specific_specs:
             port_spec, params = port_type._parse_port_specific_specs(port_type,
-                                                                         owner=owner,
-                                                                         port_dict=port_dict,
-                                                                         port_specific_spec = port_specific_specs)
+                                                                     owner=owner,
+                                                                     port_dict=port_dict,
+                                                                     port_specific_spec = port_specific_specs,
+                                                                     context=context)
             # Port subclass returned a port_spec, so call _parse_port_spec to parse it
             if port_spec is not None:
                 port_dict = _parse_port_spec(context=context, port_spec=port_spec, **standard_args)
