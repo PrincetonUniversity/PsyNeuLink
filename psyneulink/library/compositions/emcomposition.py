@@ -11,21 +11,19 @@
 # TODO:
 # - FIX: TRY
 #        - refactoring node_constructors to go after super().__init__() of EMComposition
-
 # - FIX: SHOULD MEMORY DECAY OCCUR IF STORAGE DOES NOT? CURRENTLY IT DOES NOT (SEE EMStorage Function)
-# - FIX: DOCUMENT USE OF STORAGE_LOCATION (NONE => LOCAL, SPECIFED => GLOBAL)
+# - FIX: DOCUMENT USE OF STORAGE_LOCATION (NONE => LOCAL, SPECIFIED => GLOBAL)
 # - FIX: COMBINE argument FOR InputPort
 # - FIX: REPLACE ALL TRANSFER MECHANISMS WITH ProcessingMechanisms
 # - FIX: IMPLEMENT LearningMechanism FOR RETRIEVAL WEIGHTS (WHAT IS THE ERROR SIGNAL AND DERIVATIVE IT SHOULD USE?)
 # - FIX: GENERATE ANIMATION w/ STORAGE (uses Learning but not in usual way)
-# - FIX: DEAL WITH INDEXING IN NAMES FOR NON-CONTIGOUS KEYS AND VALUES (reorder to keep all keys together?)
+# - FIX: DEAL WITH INDEXING IN NAMES FOR NON-CONTIGUOUS KEYS AND VALUES (reorder to keep all keys together?)
 # - FIX: WRITE MORE TESTS FOR EXECUTION, WARNINGS, AND ERROR MESSAGES
-#         - two trials of execution
 #         - 3d tuple with first entry != memory_capacity if specified
 #         - list with number of entries > memory_capacity if specified
-#         - test that input is added to the correct row of the matrix for each key and value for
+#         - input is added to the correct row of the matrix for each key and value for
 #                for non-contiguous keys (e.g, field_weights = [1,0,1]))
-#         - test explicitly that storage occurs after retrieval
+#         - explicitly that storage occurs after retrieval
 # - FIX: _import_composition:
 #        - MOVE LearningProjections
 #        - MOVE Condition? (e.g., AllHaveRun) (OR PUT ON MECHANISM?)
@@ -756,8 +754,8 @@ class EMComposition(AutodiffComposition):
         concatenate_keys=False,         \
         normalize_memories=True,        \
         softmax_gain=CONTROL,           \
-        memory_decay_rate=AUTO,         \
         storage_prob=1.0,               \
+        memory_decay_rate=AUTO,         \
         learn_weights=True,             \
         learning_rate=True,             \
         use_storage_node=False,         \
@@ -805,14 +803,14 @@ class EMComposition(AutodiffComposition):
         specifies the temperature used for softmax normalizing the dot products of keys and memories;
         see `Softmax normalize matches over fields <EMComposition_Processing>` for additional details.
 
-    memory_decay_rate : float : AUTO
-        specifies the rate at which items in the EMComposition's memory decay;
-        see `memory_decay_rate <EMComposition_Memory_Decay_Rate>` for details.
-
     storage_prob : float : default 1.0
         specifies the probability that an item will be stored in `memory <EMComposition.memory>`
         when the EMComposition is executed (see `Retrieval and Storage <EMComposition_Storage>` for
         additional details).
+
+    memory_decay_rate : float : AUTO
+        specifies the rate at which items in the EMComposition's memory decay;
+        see `memory_decay_rate <EMComposition_Memory_Decay_Rate>` for details.
 
     learn_weights : bool : default False
         specifies whether `field_weights <EMComposition.field_weights>` are learnable during training;
@@ -881,14 +879,14 @@ class EMComposition(AutodiffComposition):
         by the `softmax` function of the `softmax_nodes <EMComposition.softmax_nodes>`; see `Softmax normalize matches
         over fields <EMComposition_Processing>` for additional details.
 
-    memory_decay_rate : float
-        determines the rate at which items in the EMComposition's memory decay (see `memory_decay_rate
-        <EMComposition_Memory_Decay_Rate>` for details).
-
     storage_prob : float
         determines the probability that an item will be stored in `memory <EMComposition.memory>`
         when the EMComposition is executed (see `Retrieval and Storage <EMComposition_Storage>` for
         additional details).
+
+    memory_decay_rate : float
+        determines the rate at which items in the EMComposition's memory decay (see `memory_decay_rate
+        <EMComposition_Memory_Decay_Rate>` for details).
 
     learn_weights : bool
         determines whether `field_weights <EMComposition.field_weights>` are learnable during training; see
@@ -989,29 +987,29 @@ class EMComposition(AutodiffComposition):
                     :default value: False
                     :type: ``bool``
 
-                memory_decay
-                    see `memory_decay <EMComposition.memory_decay>`
+                field_names
+                    see `field_names <EMComposition.field_names>`
 
-                    :default value: False
-                    :type: ``bool``
+                    :default value: None
+                    :type: ``list``
 
-                memory_decay_rate
-                    see `memory_decay_rate <EMComposition.memory_decay_rate>`
+                field_weights
+                    see `field_weights <EMComposition.field_weights>`
 
-                    :default value: 0.001
-                    :type: ``float``
-
-                learn_weights
-                    see `learn_weights <EMComposition.learn_weights>`
-
-                    :default value: False # False UNTIL IMPLEMENTED
-                    :type: ``bool``
+                    :default value: None
+                    :type: ``numpy.ndarray``
 
                 learning_rate
                     see `learning_results <EMComposition.learning_rate>`
 
                     :default value: []
                     :type: ``list``
+
+                learn_weights
+                    see `learn_weights <EMComposition.learn_weights>`
+
+                    :default value: False # False UNTIL IMPLEMENTED
+                    :type: ``bool``
 
                 memory
                     see `memory <EMComposition.memory>`
@@ -1025,23 +1023,17 @@ class EMComposition(AutodiffComposition):
                     :default value: 1000
                     :type: ``int``
 
+                memory_decay_rate
+                    see `memory_decay_rate <EMComposition.memory_decay_rate>`
+
+                    :default value: 0.001
+                    :type: ``float``
+
                 memory_template
                     see `memory_template <EMComposition.memory_template>`
 
                     :default value: np.array([[0],[0]])
                     :type: ``np.ndarray``
-
-                field_names
-                    see `field_names <EMComposition.field_names>`
-
-                    :default value: None
-                    :type: ``list``
-
-                field_weights
-                    see `field_weights <EMComposition.field_weights>`
-
-                    :default value: None
-                    :type: ``numpy.ndarray``
 
                 normalize_memories
                     see `normalize_memories <EMComposition.normalize_memories>`
@@ -1134,8 +1126,8 @@ class EMComposition(AutodiffComposition):
                  concatenate_keys:bool=False,
                  normalize_memories:bool=True,
                  softmax_gain:Union[float, CONTROL]=CONTROL,
-                 memory_decay_rate:Union[float,AUTO]=AUTO,
                  storage_prob:float=1.0,
+                 memory_decay_rate:Union[float,AUTO]=AUTO,
                  learn_weights:bool=False, # FIX: False FOR NOW, UNTIL IMPLEMENTED
                  learning_rate:float=None,
                  use_storage_node:bool=False,
@@ -1170,13 +1162,13 @@ class EMComposition(AutodiffComposition):
 
         nodes = self._construct_pathway(memory_template,
                                         memory_capacity,
-                                        memory_decay_rate,
                                         field_weights,
                                         concatenate_keys,
                                         normalize_memories,
                                         softmax_gain,
-                                        storage_prob,
                                         use_storage_node,
+                                        storage_prob,
+                                        memory_decay_rate,
                                         use_gating_for_weighting)
 
         super().__init__(nodes,
@@ -1187,8 +1179,8 @@ class EMComposition(AutodiffComposition):
                          field_names = field_names,
                          concatenate_keys = concatenate_keys,
                          softmax_gain = softmax_gain,
-                         memory_decay_rate = memory_decay_rate,
                          storage_prob = storage_prob,
+                         memory_decay_rate = memory_decay_rate,
                          normalize_memories = normalize_memories,
                          learn_weights = learn_weights,
                          learning_rate = learning_rate,
@@ -1464,12 +1456,12 @@ class EMComposition(AutodiffComposition):
     def _construct_pathway(self,
                            memory_template,
                            memory_capacity,
-                           memory_decay_rate,
                            field_weights,
                            concatenate_keys,
                            normalize_memories,
                            softmax_gain,
                            storage_prob,
+                           memory_decay_rate,
                            use_storage_node,
                            use_gating_for_weighting,
                            )->set:
@@ -1740,7 +1732,6 @@ class EMComposition(AutodiffComposition):
     def _construct_storage_node(self,
                                 memory_template,
                                 field_weights,
-                                concatenate_keys,
                                 memory_decay_rate,
                                 storage_prob)->list:
         """Create EMStorageMechanism that stores the key and value inputs in memory.
@@ -1793,8 +1784,8 @@ class EMComposition(AutodiffComposition):
                                           concatenation_node=self.concatenate_keys_node,
                                           memory_matrix=memory_template,
                                           learning_signals=learning_signals,
-                                          decay_rate = memory_decay_rate,
                                           storage_prob=storage_prob,
+                                          decay_rate = memory_decay_rate,
                                           name='STORAGE MECHANISM')
         return storage_node
 

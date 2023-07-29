@@ -103,8 +103,16 @@ An EMStorageMechanism is identical to a `LearningMechanism` in all respects exce
   * it has a `field_types <EMStorageMechanism.field_types>` attribute that specifies whether each `field
     <EMStorageMechanism_Fields>` is a `key or a value field <EMStorageMechanism_Fields>`.
 
+  * it has a `field_weights <EMStorageMechanism.field_weights>` attribute that specifies whether each `field
+    <EMStorageMechanism_Fields>` each norms for each field are weighted before deteterming the weakest `entry
+    <EMStorageMechanism_Entry>` in `memory_matrix <EMStorageMechanism.memory_matrix>`.
+
   * it has a `memory_matrix <EMStorageMechanism.memory_matrix>` attribute that represents the full memory that the
     EMStorageMechanism is used to update.
+
+  * it has a `concatenation_node <EMStorageMechanism.concatenation_node>` attribute used to access the concatenated
+    inputs to the `key <EMStorageMechanism.key>` fields of the `entry <EMStorageMechanism_Entry>` to be stored in its
+    `memory_matrix <EMStorageMechanism.memory_matrix>` attribute.
 
   * it has a several *LEARNING_SIGNAL* `OutputPorts <OutputPort>` that each send a `LearningProjection` to the `matrix
     <MappingProjection.matrix>` parameter of a 'MappingProjection` that constitutes a `field <EMStorageMechanism_Fields>`
@@ -114,6 +122,11 @@ An EMStorageMechanism is identical to a `LearningMechanism` in all respects exce
     <Function_Base.variable>` a list or 1d np.array with a length of the corresponding  *ACTIVATION_INPUT* InputPort;
     and it returns a `learning_signal <LearningMechanism.learning_signal>` (a weight matrix assigned to one of the
     Mechanism's *LEARNING_SIGNAL* OutputPorts), but no `error_signal <LearningMechanism.error_signal>`.
+
+  * the default form of `modulation <ModulatorySignal_Modulation>` for its `learning_signals
+    <LearningMechanism.learning_signals>` is *OVERRIDE*, so that the `matrix <MappingProjection.matrix>` parameter of
+    the `MappingProjection` to which the `LearningProjection` projects is replaced by the `value
+    <LearningProjection.value>` of the `learning_signal <LearningMechanism.learning_signal>`.
 
   * its `decay_rate <EMStorageMechanism.decay_rate>`, a float in the interval [0,1] that is used to decay
     `memory_matrix <EMStorageMechanism.memory_matrix>` before an `entry <EMStorageMechanism_Entry>` is stored.
@@ -199,8 +212,8 @@ class EMStorageMechanism(LearningMechanism):
         field_types,                          \
         memory_matrix,                        \
         function=EMStorage,                   \
-        decay_rate=0.0,                       \
         storage_prob=1.0,                     \
+        decay_rate=0.0,                       \
         learning_signals,                     \
         modulation=OVERRIDE,                  \
         params=None,                          \
@@ -251,9 +264,13 @@ class EMStorageMechanism(LearningMechanism):
         specifies the function used to assign each item of the `variable <EMStorageMechanism.variable>` to the
         corresponding `field <EMStorageMechanism_Fields>` of the `memory_matrix <EMStorageMechanism.memory_matrix>`.
         It must take as its `variable <EMSorage.variable> argument a list or 1d array of numeric values
-        (the "activity vector") and return a list, 2d np.array or np.matrix for the corresponding `field
-        <EMStorageMechanism_Fields>` of the `memory_matrix <EMStorageMechanism.memory_matrix>` (see `function
-        <EMStorageMechanism.function>` for additional details).
+        (the "activity vector"), as well as a ``memory_matrix`` argument that is a 2d array or matrix to which
+        the `variable <EMStorageMechanism.variable>` is assigned, ``axis`` and ``storage_location`` arguments that
+        determine where in ``memory_matrix`` the `variable <EMStorageMechanism.variable>` is entered, and optional
+        ``storage_prob`` and ``decay_rate`` arguments that determine the probability with which storage occurs and
+        the rate at which the `memory_matrix <EMStorageMechanism.memory_matrix>` decays, respectively.  The function
+        must return a list, 2d np.array or np.matrix for the corresponding `field <EMStorageMechanism_Fields>` of the
+        `memory_matrix <EMStorageMechanism.memory_matrix>` that is updated.
 
     learning_signals : List[ParameterPort, Projection, tuple[str, Projection] or dict] : default None
         specifies the `ParameterPort`\\(s) for the `matrix <MappingProjection.matrix>` parameter of the
@@ -268,14 +285,14 @@ class EMStorageMechanism(LearningMechanism):
         `entries <EMStorageMechanism_Entry>` is stored (see `modulation <EMStorageMechanism_Modulation>` for additional
         details).
 
+    storage_prob : float : default None
+        specifies the probability with which the current entry is stored in the EMSorageMechanism's `memory_matrix
+        <EMStorageMechanism.memory_matrix>` (see `storage_prob <EMStorageMechanism.storage_prob>` for details).
+
     decay_rate : float : default 0.0
         specifies the rate at which `entries <EMStorageMechanism_Entry>` in the `memory_matrix
         <EMStorageMechanism.memory_matrix>` decays (see `decay_rate <EMStorageMechanism.decay_rate>` for additional
         details).
-
-    storage_prob : float : default None
-        specifies the probability with which the current entry is stored in the EMSorageMechanism's `memory_matrix
-        <EMStorageMechanism.memory_matrix>` (see `storage_prob <EMStorageMechanism.storage_prob>` for details).
 
     Attributes
     ----------
@@ -318,14 +335,14 @@ class EMStorageMechanism(LearningMechanism):
         np.matrix assigned to the corresponding `field <EMStorageMechanism_Fields>` of the `memory_matrix
         <EMStorageMechanism.memory_matrix>`.
 
+    storage_prob : float
+        specifies the probability with which the current entry is stored in the EMSorageMechanism's `memory_matrix
+        <EMStorageMechanism.memory_matrix>`.
+
     decay_rate : float : default 0.0
         determines the rate at which `entries <EMStorageMechanism_Entry>` in the `memory_matrix
         <EMStorageMechanism.memory_matrix>` decay;  the decay rate is applied to `memory_matrix
         <EMStorageMechanism.memory_matrix>` before it is updated with the new `entry <EMStorageMechanism_Entry>`.
-
-    storage_prob : float
-        specifies the probability with which the current entry is stored in the EMSorageMechanism's `memory_matrix
-        <EMStorageMechanism.memory_matrix>`.
 
     learning_signals : List[LearningSignal]
         list of all of the `LearningSignals <LearningSignal>` for the EMStorageMechanism, each of which
@@ -749,10 +766,10 @@ class EMStorageMechanism(LearningMechanism):
 
             value.append(super(LearningMechanism, self)._execute(variable=entry_to_store,
                                                                  memory_matrix=field_memory_matrix,
-                                                                 storage_location=idx_of_weakest_memory,
                                                                  axis=axis,
-                                                                 decay_rate=decay_rate,
+                                                                 storage_location=idx_of_weakest_memory,
                                                                  storage_prob=storage_prob,
+                                                                 decay_rate=decay_rate,
                                                                  context=context,
                                                                  runtime_params=runtime_params))
         self.parameters.value._set(value, context)

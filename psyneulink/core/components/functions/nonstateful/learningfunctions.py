@@ -180,10 +180,10 @@ class EMStorage(LearningFunction):
     """
     EMStorage(                 \
         default_variable=None, \
-        decay_rate=0.0,        \
         axis=0,                \
         storage_location=None  \
         storage_prob=1.0,      \
+        decay_rate=0.0,        \
         params=None,           \
         name=None,             \
         prefs=None)
@@ -206,9 +206,6 @@ class EMStorage(LearningFunction):
     variable : List or 1d array : default class_defaults.variable
         specifies shape of `entry <EMStorage.entry>` passed in the call to the `function <EMStorage.function>`.
 
-    decay_rate : float : default 0.0
-        specifies the rate at which pre-existing entries in `memory_matrix <EMStorage.memory_matrix>` are decayed.
-
     axis : int : default 0
         specifies the axis of `memory_matrix <EMStorage.memory_matrix>` to which `entry <EMStorage.entry>` is assigned.
 
@@ -221,6 +218,9 @@ class EMStorage(LearningFunction):
     storage_prob : float : default default_learning_rate
         specifies the probability with which `entry <EMStorage.entry>` is assigned to `memory_matrix
         <EMStorage.memory_matrix>`.
+
+    decay_rate : float : default 0.0
+        specifies the rate at which pre-existing entries in `memory_matrix <EMStorage.memory_matrix>` are decayed.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -248,9 +248,6 @@ class EMStorage(LearningFunction):
     memory_matrix : 2d array or ParameterPort
         matrix to which the entry is assigned along `axis <EMstorage.axis>`.
 
-    decay_rate : float
-        determines the rate at which pre-existing entries in `memory_matrix <EMStorage.memory_matrix>` are decayed.
-
     axis : int
         determines axis of `memory_matrix <EMStorage.memory_matrix>` to which `entry <EMStorage.entry>` is assigned.
 
@@ -261,6 +258,9 @@ class EMStorage(LearningFunction):
     storage_prob : float
         determines the probability with which `entry <EMStorage.entry>` is stored in `memory_matrix
         <EMStorage.memory_matrix>`.
+
+    decay_rate : float
+        determines the rate at which pre-existing entries in `memory_matrix <EMStorage.memory_matrix>` are decayed.
 
     random_state : numpy.RandomState
         private pseudorandom number generator
@@ -336,14 +336,14 @@ class EMStorage(LearningFunction):
                              read_only=True,
                              pnl_internal=True,
                              constructor_argument='default_variable')
-        decay_rate = Parameter(0.0, modulable=True)
+        entry = Parameter([0], read_only=True)
+        memory_matrix = Parameter([[0],[0]], read_only=True)
         axis = Parameter(0, read_only=True, structural=True)
         storage_location = Parameter(None, read_only=True)
         storage_prob = Parameter(1.0, modulable=True)
-        entry = Parameter([0], read_only=True)
+        decay_rate = Parameter(0.0, modulable=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
-        memory_matrix = Parameter([[0],[0]], read_only=True)
 
     default_learning_rate = 1.0
 
@@ -359,8 +359,8 @@ class EMStorage(LearningFunction):
                  default_variable=None,
                  axis=0,
                  storage_location=None,
-                 decay_rate=0.0,
                  storage_prob=1.0,
+                 decay_rate=0.0,
                  seed=None,
                  params=None,
                  owner=None,
@@ -368,10 +368,10 @@ class EMStorage(LearningFunction):
 
         super().__init__(
             default_variable=default_variable,
-            decay_rate=decay_rate,
             axis=axis,
             storage_location=storage_location,
             storage_prob=storage_prob,
+            decay_rate=decay_rate,
             seed=seed,
             params=params,
             owner=owner,
@@ -436,10 +436,10 @@ class EMStorage(LearningFunction):
         self._check_args(variable=variable, context=context, params=params)
 
         entry = variable
-        decay_rate = self.parameters.decay_rate._get(context)
         axis = self.parameters.axis._get(context)
         storage_location = self.parameters.storage_location._get(context)
         storage_prob = self.parameters.storage_prob._get(context)
+        decay_rate = self.parameters.decay_rate._get(context)
         random_state = self.parameters.random_state._get(context)
 
         # FIX: IMPLEMENT decay_rate CALCUALTION
@@ -449,10 +449,10 @@ class EMStorage(LearningFunction):
         memory_matrix = None
         if params:
             memory_matrix = params.pop(MEMORY_MATRIX, None)
-            decay_rate = params.pop('decay_rate', decay_rate)
             axis = params.pop('axis', axis)
             storage_location = params.pop('storage_location', storage_location)
             storage_prob = params.pop('storage_prob', storage_prob)
+            decay_rate = params.pop('decay_rate', decay_rate)
         # During init, function is called directly from Component (i.e., not from LearningMechanism execute() method),
         #     so need "placemarker" error_matrix for validation
         if memory_matrix is None:
