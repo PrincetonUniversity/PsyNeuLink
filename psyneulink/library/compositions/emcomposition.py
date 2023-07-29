@@ -55,7 +55,6 @@
 #           - Anytime a row's norm is 0, replace with 1s
 # -    FIX: WHY IS Concatenate NOT WORKING AS FUNCTION OF AN INPUTPORT (WASN'T THAT USED IN CONTEXT OF BUFFER?)
 # -    FIX: IF InputPort HAS default_input = DEFAULT_VARIABLE, THEN IT SHOULD BE IGNORED AS AN INPUT NODE IN A
-# -    FIX: COMBINE argument FOR InputPort
 #  COMPOSITION
 # - WRITE TESTS FOR INPUT_PORT and MATRIX SPECS CORRECT IN LATEST BRANCHEs
 # - ACCESSIBILITY OF DISTANCES (SEE BELOW): MAKE IT A LOGGABLE PARAMETER (I.E., WITH APPROPRIATE SETTER)
@@ -1164,9 +1163,9 @@ class EMComposition(AutodiffComposition):
                                         concatenate_keys,
                                         normalize_memories,
                                         softmax_gain,
-                                        use_storage_node,
                                         storage_prob,
                                         memory_decay_rate,
+                                        use_storage_node,
                                         use_gating_for_weighting)
 
         super().__init__(nodes,
@@ -1485,7 +1484,7 @@ class EMComposition(AutodiffComposition):
         self.softmax_weighting_node = self._construct_softmax_weighting_node(memory_capacity, use_gating_for_weighting)
         self.retrieved_nodes = self._construct_retrieved_nodes(memory_template)
         if use_storage_node:
-            self.storage_node = self._construct_storage_node(memory_template, field_weights, concatenate_keys,
+            self.storage_node = self._construct_storage_node(memory_template, field_weights, self.concatenate_keys_node,
                                                              memory_decay_rate, storage_prob)
 
         # Construct pathway as a set of nodes, since Projections are specified in the construction of each node
@@ -1730,6 +1729,7 @@ class EMComposition(AutodiffComposition):
     def _construct_storage_node(self,
                                 memory_template,
                                 field_weights,
+                                concatenate_keys_node,
                                 memory_decay_rate,
                                 storage_prob)->list:
         """Create EMStorageMechanism that stores the key and value inputs in memory.
