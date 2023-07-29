@@ -630,9 +630,9 @@ class EMStorageMechanism(LearningMechanism):
         if LEARNING_SIGNALS in request_set:
             learning_signals = request_set[LEARNING_SIGNALS]
             if concatenate_keys:
-                num_match_fields =  1
+                num_match_fields = 1
             else:
-                num_match_fields =  num_keys
+                num_match_fields = num_keys
             if len(learning_signals) != num_match_fields + len(fields):
                 raise EMStorageMechanismError(f"The number of 'learning_signals' ({len(learning_signals)}) specified "
                                               f"for  {self.name} must be the same as the number of items "
@@ -760,7 +760,7 @@ class EMStorageMechanism(LearningMechanism):
                 # For retrieval matrices,
                 #    get entry to store from variable (which has inputs to all fields)
                 axis = 1
-                entry_to_store = variable[i-num_match_fields]
+                entry_to_store = variable[i - num_match_fields]
             # Get matrix containing memories for the field from the Projection
             field_memory_matrix = field_projection.parameters.matrix.get(context)
 
