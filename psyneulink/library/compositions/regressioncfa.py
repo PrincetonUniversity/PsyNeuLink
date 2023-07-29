@@ -88,6 +88,7 @@ from psyneulink.core.components.ports.port import _parse_port_spec
 from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator, CompositionFunctionApproximatorError
 from psyneulink.core.globals.keywords import ALL, CONTROL_SIGNALS, DEFAULT_VARIABLE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
+from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.utilities import get_deepcopy_with_shared, powerset, tensor_power
 
 __all__ = ['PREDICTION_TERMS', 'PV', 'RegressionCFA']
@@ -458,7 +459,8 @@ class RegressionCFA(CompositionFunctionApproximator):
                         assert False, "PROGRAM ERROR: unrecognized specification for {} arg of {}: {}".\
                                                       format(repr(CONTROL_SIGNALS), self.name, c)
                 else:
-                    port_spec_dict = _parse_port_spec(port_type=ControlSignal, owner=self, port_spec=c)
+                    port_spec_dict = _parse_port_spec(port_type=ControlSignal, owner=self, port_spec=c,
+                                                      context=Context(string='RegressionCFA.__init__'))
                     v = port_spec_dict[VARIABLE]
                     v = v or ControlSignal.defaults.variable
                 control_allocation.append(v)

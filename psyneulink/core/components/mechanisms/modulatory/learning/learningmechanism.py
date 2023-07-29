@@ -544,7 +544,7 @@ from psyneulink.core.components.mechanisms.processing.objectivemechanism import 
 from psyneulink.core.components.ports.modulatorysignals.learningsignal import LearningSignal
 from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.components.shellclasses import Mechanism
-from psyneulink.core.globals.context import ContextFlags, handle_external_context
+from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ADDITIVE, ASSERT, ENABLED, INPUT_PORTS, \
     LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, MATRIX, \
@@ -1161,7 +1161,8 @@ class LearningMechanism(ModulatoryMechanism_Base):
                                            format(LEARNING_SIGNAL, self.name))
 
             for spec in target_set[LEARNING_SIGNALS]:
-                learning_signal = _parse_port_spec(port_type=LearningSignal, owner=self, port_spec=spec)
+                learning_signal = _parse_port_spec(port_type=LearningSignal, owner=self, port_spec=spec,
+                                                   context=Context(string='LearningMechanism.validate_params'))
 
                 # Validate that the receiver of the LearningProjection (if specified)
                 #     is a MappingProjection and in the same Composition as self (if specified)
