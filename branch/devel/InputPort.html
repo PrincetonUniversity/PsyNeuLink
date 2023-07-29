@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>InputPort &mdash; PsyNeuLink 0+untagged.6.g4c22a0a documentation</title>
+  <title>InputPort &mdash; PsyNeuLink 0+untagged.7.g2890038 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.6.g4c22a0a
+                  0+untagged.7.g2890038
                 </div>
               
             
@@ -636,11 +636,12 @@ None or its <a class="reference internal" href="Parameters.html#parameter-defaul
 setting.</p></li>
 </ul>
 <ul class="simple" id="inputport-function">
-<li><p><a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.function" title="psyneulink.core.components.ports.inputport.InputPort.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> – combines the <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of all of the
-<a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> received by the InputPort, and assigns the result to the InputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> attribute.  The default function is <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearCombination</span></code></a> that performs an elementwise (Hadamard)
-sums the values. However, the parameters of the <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.function" title="psyneulink.core.components.ports.inputport.InputPort.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> – and thus the <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the InputPort – can be modified by any <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> received by
-the InputPort (listed in its <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.mod_afferents" title="psyneulink.core.components.ports.port.Port_Base.mod_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mod_afferents</span></code></a> attribute.  A custom function can also be
-specified, so long as it generates a result that is compatible with the item of the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> to which the <a class="reference internal" href="Mechanism.html#mechanism-inputports"><span class="std std-ref">InputPort is assigned</span></a>.</p></li>
+<li><p><a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.function" title="psyneulink.core.components.ports.inputport.InputPort.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> – combines the <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of all of the <code class="xref any docutils literal notranslate"><span class="pre">path_afferent</span></code> <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> received by the InputPort, and assigns the result to the
+InputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> attribute.  The default function is <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearCombination</span></code></a> that performs an
+elementwise (Hadamard) sum of the afferent values. However, the parameters of the <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.function" title="psyneulink.core.components.ports.inputport.InputPort.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>
+– and thus the <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the InputPort – can be modified by any <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> received by the InputPort (listed in its <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.mod_afferents" title="psyneulink.core.components.ports.port.Port_Base.mod_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mod_afferents</span></code></a> attribute.
+A custom function can also be specified, so long as it generates a result that is compatible with the item of the
+Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> to which the <a class="reference internal" href="Mechanism.html#mechanism-inputports"><span class="std std-ref">InputPort is assigned</span></a>.</p></li>
 </ul>
 <ul class="simple" id="inputport-value">
 <li><p><a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> – the result returned by its <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.function" title="psyneulink.core.components.ports.inputport.InputPort.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>,
@@ -658,7 +659,7 @@ its <a class="reference internal" href="ObjectiveMechanism.html"><span class="do
 <section id="execution">
 <span id="inputport-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>An InputPort cannot be executed directly.  It is executed when the Mechanism to which it belongs is executed.
-When this occurs, the InputPort executes any <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> it receives, calls its <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.function" title="psyneulink.core.components.ports.inputport.InputPort.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> to combines the values received from any <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> it receives
+When this occurs, the InputPort executes any <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> it receives, calls its <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.function" title="psyneulink.core.components.ports.inputport.InputPort.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> to combine the values received from any <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> it receives
 (listed in its its <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.path_afferents" title="psyneulink.core.components.ports.port.Port_Base.path_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">path_afferents</span></code></a> attribute) and modulate them in response to any
 <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> (listed in its <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.mod_afferents" title="psyneulink.core.components.ports.port.Port_Base.mod_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mod_afferents</span></code></a> attribute),
 and then assigns the result to the InputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> attribute. This, in turn, is assigned to
@@ -769,7 +770,7 @@ influence of <a class="reference internal" href="GatingProjection.html"><span cl
 attribute. For example, the the default (<a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearCombination</span></code></a> with <em>SUM</em> as it <strong>operation</strong>) performs an
 element-wise (Hadamard) sum of its Projection <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">values</span></code></a>, and assigns to <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> an array that is of the same length as each of the Projection <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">values</span></code></a>.  If the InputPort receives only one Projection, then any other function can be
 applied and it will generate a value that is the same length as the Projection’s <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>. However, if the InputPort receives more than one Projection and
-uses a function other than a CombinationFunction, a warning is generated and only the <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the first Projection list in <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.path_afferents" title="psyneulink.core.components.ports.port.Port_Base.path_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">path_afferents</span></code></a>
+uses a function other than a CombinationFunction, a warning is generated and only the <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the first Projection listed in <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.path_afferents" title="psyneulink.core.components.ports.port.Port_Base.path_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">path_afferents</span></code></a>
 is used by the function, which may generate unexpected results when executing the Mechanism or Composition
 to which it belongs.</p>
 <dl class="field-list simple">
@@ -938,18 +939,37 @@ return None so that it is ignored in execute method (i.e., not combined with bas
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.ports.inputport.InputPort._parse_port_specific_specs">
-<span class="sig-name descname"><span class="pre">_parse_port_specific_specs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">owner</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port_specific_spec</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.inputport.InputPort._parse_port_specific_specs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get weights, exponents and/or any connections specified in an InputPort specification tuple</p>
-<dl class="simple">
-<dt>Tuple specification can be:</dt><dd><p>(port_spec, connections)
+<span class="sig-name descname"><span class="pre">_parse_port_specific_specs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">owner</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port_specific_spec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.inputport.InputPort._parse_port_specific_specs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse any InputPort-specific specifications, including SIZE, COMBINE, WEIGHTS and EXPONENTS
+Get SIZE and/or COMBINE specification in if port_specific_spec is a dict
+Get weights, exponents and/or any connections specified if port_specific_spec is a tuple
+Tuple specification can be:</p>
+<blockquote>
+<div><p>(port_spec, connections)
 (port_spec, weights, exponents, connections)</p>
-</dd>
-</dl>
-<p>See Port._parse_port_specific_spec for additional info.</p>
+</div></blockquote>
+<p>See Port._parse_port_specific_specs for additional info.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>1st item of tuple if it is a numeric value;  otherwise None
-- params dict with WEIGHT, EXPONENT and/or PROJECTIONS entries if any of these was specified.</p>
+<dd class="field-odd"><p><ul class="simple">
+<li><dl class="simple">
+<dt>updated with SIZE and/or COMBINE specifications for dict;</dt><dd><ul>
+<li><p>1st item for tuple if it is a numeric value;</p></li>
+<li><p>otherwise None</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>params dict:</dt><dd><ul>
+<li><p>with WEIGHT, EXPONENT and/or PROJECTIONS entries if any of these was specified.</p></li>
+<li><p>purged of SIZE and/or COMBINE entries if they were specified in port_specific_spec</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p><ul class="simple">
