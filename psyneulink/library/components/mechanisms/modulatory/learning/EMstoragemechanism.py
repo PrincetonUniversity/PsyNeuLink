@@ -205,25 +205,30 @@ def _memory_matrix_getter(owning_component=None, context=None)->list:
     These are derived from `matrix <MappingProjection.matrix>` parameter of the `afferent
     <Mechanism_Base.afferents>` MappingProjections to each of the `retrieved_nodes <EMComposition.retrieved_nodes>`.
     """
-    if owning_component.learning_signals is None:
-        return None
+    if owning_component.is_initializing:
+        if owning_component.learning_signals is None or owning_component.fields is None:
+            return None
 
     num_fields = len(owning_component.fields)
 
     # Get learning_signals that project to retrieved_nodes
     num_learning_signals = len(owning_component.learning_signals)
-    retrieved_learning_signals = owning_component.learning_signals[num_learning_signals-num_fields:]
+    learning_signals_for_retrieved = owning_component.learning_signals[num_learning_signals-num_fields:]
 
     # Get memory from learning_signals that project to retrieved_nodes
     if owning_component.is_initializing:
-        memory = [retrieved_learning_signal.parameters.matrix.get(context) for retrieved_learning_signal in retrieved_learning_signals]
+        # If initializing, learning_signals are still MappingProjections used to specify them, so get from them
+        memory = [retrieved_learning_signal.parameters.matrix.get(context)
+                  for retrieved_learning_signal in learning_signals_for_retrieved]
     else:
-        memory = [retrieved_learning_signal.efferents[0].receiver.owner.parameters.matrix.get(context) for retrieved_learning_signal in retrieved_learning_signals]
-    # memory_capacity = np.array(memory).shape[1]
+        # Otherwise, get directly from the learning_signals
+        memory = [retrieved_learning_signal.efferents[0].receiver.owner.parameters.matrix.get(context)
+                  for retrieved_learning_signal in learning_signals_for_retrieved]
+
+    # Get memory capacity from first length of first matrix (can use full set since might be ragged array)
     memory_capacity = len(memory[0])
 
     # Reorganize memory so that each row is an entry and each column is a field
-    # memory_capacity = owning_component.memory_capacity or owning_component.defaults.memory_capacity
     return [[memory[j][i] for j in range(num_fields)]
               for i in range(memory_capacity)]
 

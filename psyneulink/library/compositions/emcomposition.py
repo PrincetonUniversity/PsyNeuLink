@@ -717,7 +717,12 @@ def _memory_getter(owning_component=None, context=None)->list:
     These are derived from `matrix <MappingProjection.matrix>` parameter of the `afferent
     <Mechanism_Base.afferents>` MappingProjections to each of the `retrieved_nodes <EMComposition.retrieved_nodes>`.
     """
-    # Get memory from Projection(s) to each retrieved_node
+
+    # If storage_node is implemented, get memory from that
+    if owning_component.use_storage_node:
+        return owning_component.storage_node.parameters.memory_matrix.get(context)
+
+    # Otherwise, get memory from Projection(s) to each retrieved_node
     memory = [retrieved_node.path_afferents[0].parameters.matrix.get(context)
               for retrieved_node in owning_component.retrieved_nodes]
     # Reorganize memory so that each row is an entry and each column is a field
