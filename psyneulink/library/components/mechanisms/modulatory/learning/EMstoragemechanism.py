@@ -79,7 +79,7 @@ specified (as a template for the shape of the entries to be stored, and of the `
 parameters to which they are assigned. It must also have at least one, and usually several `fields
 <EMStorageMechanism.fields>` specifications that identify the `OutputPort`\\s of the `ProcessingMechanism`\\s from
 which it receives its `fields <EMStorageMechanism_Fields>`, and a `field_types <EMStorageMechanism.field_types>`
-specification that inidicates whether each `field is a key or a value field <EMStorageMechanism_Fields>`.
+specification that indicates whether each `field is a key or a value field <EMStorageMechanism_Fields>`.
 
 .. _EMStorageMechanism_Structure:
 
@@ -103,8 +103,16 @@ An EMStorageMechanism is identical to a `LearningMechanism` in all respects exce
   * it has a `field_types <EMStorageMechanism.field_types>` attribute that specifies whether each `field
     <EMStorageMechanism_Fields>` is a `key or a value field <EMStorageMechanism_Fields>`.
 
+  * it has a `field_weights <EMStorageMechanism.field_weights>` attribute that specifies whether each `field
+    <EMStorageMechanism_Fields>` each norms for each field are weighted before deteterming the weakest `entry
+    <EMStorageMechanism_Entry>` in `memory_matrix <EMStorageMechanism.memory_matrix>`.
+
   * it has a `memory_matrix <EMStorageMechanism.memory_matrix>` attribute that represents the full memory that the
     EMStorageMechanism is used to update.
+
+  * it has a `concatenation_node <EMStorageMechanism.concatenation_node>` attribute used to access the concatenated
+    inputs to the `key <EMStorageMechanism.key>` fields of the `entry <EMStorageMechanism_Entry>` to be stored in its
+    `memory_matrix <EMStorageMechanism.memory_matrix>` attribute.
 
   * it has a several *LEARNING_SIGNAL* `OutputPorts <OutputPort>` that each send a `LearningProjection` to the `matrix
     <MappingProjection.matrix>` parameter of a 'MappingProjection` that constitutes a `field <EMStorageMechanism_Fields>`
@@ -114,6 +122,11 @@ An EMStorageMechanism is identical to a `LearningMechanism` in all respects exce
     <Function_Base.variable>` a list or 1d np.array with a length of the corresponding  *ACTIVATION_INPUT* InputPort;
     and it returns a `learning_signal <LearningMechanism.learning_signal>` (a weight matrix assigned to one of the
     Mechanism's *LEARNING_SIGNAL* OutputPorts), but no `error_signal <LearningMechanism.error_signal>`.
+
+  * the default form of `modulation <ModulatorySignal_Modulation>` for its `learning_signals
+    <LearningMechanism.learning_signals>` is *OVERRIDE*, so that the `matrix <MappingProjection.matrix>` parameter of
+    the `MappingProjection` to which the `LearningProjection` projects is replaced by the `value
+    <LearningProjection.value>` of the `learning_signal <LearningMechanism.learning_signal>`.
 
   * its `decay_rate <EMStorageMechanism.decay_rate>`, a float in the interval [0,1] that is used to decay
     `memory_matrix <EMStorageMechanism.memory_matrix>` before an `entry <EMStorageMechanism_Entry>` is stored.
@@ -181,6 +194,45 @@ MEMORY_MATRIX = 'memory_matrix'
 FIELDS = 'fields'
 FIELD_TYPES = 'field_types'
 
+# def _memory_matrix_getter(owning_component=None, context=None):
+#     if context.composition:
+#         return context.composition.parameters.memory._get(context)
+#     else:
+#         return None
+
+def _memory_matrix_getter(owning_component=None, context=None)->list:
+    """Return list of memories in which rows (outer dimension) are memories for each field.
+    These are derived from `matrix <MappingProjection.matrix>` parameter of the `afferent
+    <Mechanism_Base.afferents>` MappingProjections to each of the `retrieved_nodes <EMComposition.retrieved_nodes>`.
+    """
+    if owning_component.is_initializing:
+        if owning_component.learning_signals is None or owning_component.fields is None:
+            return None
+
+    num_fields = len(owning_component.fields)
+
+    # Get learning_signals that project to retrieved_nodes
+    num_learning_signals = len(owning_component.learning_signals)
+    learning_signals_for_retrieved = owning_component.learning_signals[num_learning_signals - num_fields:]
+
+    # Get memory from learning_signals that project to retrieved_nodes
+    if owning_component.is_initializing:
+        # If initializing, learning_signals are still MappingProjections used to specify them, so get from them
+        memory = [retrieved_learning_signal.parameters.matrix.get(context)
+                  for retrieved_learning_signal in learning_signals_for_retrieved]
+    else:
+        # Otherwise, get directly from the learning_signals
+        memory = [retrieved_learning_signal.efferents[0].receiver.owner.parameters.matrix.get(context)
+                  for retrieved_learning_signal in learning_signals_for_retrieved]
+
+    # Get memory capacity from first length of first matrix (can use full set since might be ragged array)
+    memory_capacity = len(memory[0])
+
+    # Reorganize memory so that each row is an entry and each column is a field
+    return [[memory[j][i] for j in range(num_fields)]
+              for i in range(memory_capacity)]
+
+
 class EMStorageMechanismError(LearningMechanismError):
     pass
 
@@ -193,8 +245,8 @@ class EMStorageMechanism(LearningMechanism):
         field_types,                          \
         memory_matrix,                        \
         function=EMStorage,                   \
-        decay_rate=0.0,                       \
         storage_prob=1.0,                     \
+        decay_rate=0.0,                       \
         learning_signals,                     \
         modulation=OVERRIDE,                  \
         params=None,                          \
@@ -216,7 +268,7 @@ class EMStorageMechanism(LearningMechanism):
     fields : List[OutputPort, Mechanism, Projection, tuple[str, Mechanism, Projection] or dict] : default None
         specifies the `OutputPort`\\(s), the `value <OutputPort.value>`\\s of which are used as the
         corresponding `fields <EMStorageMechanism_Fields>` of the `memory_matrix <EMStorageMechanism.memory_matrix>`;
-        used to construct the Mechanism's `InputPorts <InputPort>`; must be the same lenghtt as `variable
+        used to construct the Mechanism's `InputPorts <InputPort>`; must be the same length as `variable
         <EMStorageMechanism.variable>`.
 
     field_types : List[int] : default None
@@ -224,6 +276,18 @@ class EMStorageMechanism(LearningMechanism):
         <EMStorageMechanism_Fields>` (see `field_types <EMStorageMechanism.field_types>` for additional details);
         must contain only 1's (for keys) and 0's (for values), with the same number of these as there are items in
         the `variable <EMStorageMechanism.variable>` and `fields <EMStorageMechanism.fields>` arguments.
+
+    field_weights : List[float] : default None
+        specifies whether norms for each field are weighted before determining the weakest `entry
+        <EMStorageMechanism_Entry>` in `memory_matrix <EMStorageMechanism.memory_matrix>`. If None (the default),
+        the norm of each `entry <EMStorageMechanism_Entry>` is calculated across all fields at once; if specified,
+        it must contain only floats from 0 to 1, and be the same length as the `fields <EMStorageMechanism.fields>`
+        argument (see `field_weights <EMStorageMechanism.field_types>` for additional details).
+
+    concatenation_node : OutputPort or Mechanism : default None
+        specifies the `OutputPort` or `Mechanism` in which the `value <OutputPort.value>` of the `key fields
+        <EMStorageMechanism_Fields>` are concatenated (see `concatenate keys <EMComposition_Concatenate_Keys>`
+        for additional details).
 
     memory_matrix : List or 2d np.array : default None
         specifies the shape of the `memory <EMStorageMechanism_Memory>` used to store an `entry
@@ -233,23 +297,35 @@ class EMStorageMechanism(LearningMechanism):
         specifies the function used to assign each item of the `variable <EMStorageMechanism.variable>` to the
         corresponding `field <EMStorageMechanism_Fields>` of the `memory_matrix <EMStorageMechanism.memory_matrix>`.
         It must take as its `variable <EMSorage.variable> argument a list or 1d array of numeric values
-        (the "activity vector") and return a list, 2d np.array or np.matrix for the corresponding `field
-        <EMStorageMechanism_Fields>` of the `memory_matrix <EMStorageMechanism.memory_matrix>` (see `function
-        <EMStorageMechanism.function>` for additional details).
+        (the "activity vector"), as well as a ``memory_matrix`` argument that is a 2d array or matrix to which
+        the `variable <EMStorageMechanism.variable>` is assigned, ``axis`` and ``storage_location`` arguments that
+        determine where in ``memory_matrix`` the `variable <EMStorageMechanism.variable>` is entered, and optional
+        ``storage_prob`` and ``decay_rate`` arguments that determine the probability with which storage occurs and
+        the rate at which the `memory_matrix <EMStorageMechanism.memory_matrix>` decays, respectively.  The function
+        must return a list, 2d np.array or np.matrix for the corresponding `field <EMStorageMechanism_Fields>` of the
+        `memory_matrix <EMStorageMechanism.memory_matrix>` that is updated.
 
     learning_signals : List[ParameterPort, Projection, tuple[str, Projection] or dict] : default None
-        specifies the `ParameterPort`\\(s) of the `MappingProjections <MappingProjection>` that implement the `memory
-        <EMStorageMechanism_Memory>` in which the `entry <EMStorageMechanism_Entry>` is stored; there must the same
-        number of these as `fields <EMStorageMechanism.fields>`, and they must be specified in the sqme order.
+        specifies the `ParameterPort`\\(s) for the `matrix <MappingProjection.matrix>` parameter of the
+        `MappingProjection>`\\s that implement the `memory <EMStorageMechanism_Memory>` in which the `entry
+        <EMStorageMechanism_Entry>` is stored; there must the same number of these as `fields
+        <EMStorageMechanism.fields>`, and they must be specified in the sqme order.
 
-    decay_rate : float : default 0.0
-        specifies the rate at which `entries <EMStorageMechanism_Entry>` in the `memory_matrix
-        <EMStorageMechanism.memory_matrix>` decays (see `decay_rate <EMStorageMechanism.decay_rate>` for additional
+    modulation : str : default OVERRIDE
+        specifies form of `modulation <ModulatorySignal_Modulation>` that `learning_signals
+        <EMStorageMechanism.learning_signals>` use to modify the `matrix <MappingProjection.matrix>` parameter of the
+        `MappingProjections <MappingProjection>` that implement the `memory <EMStorageMechanism_Memory>` in which
+        `entries <EMStorageMechanism_Entry>` is stored (see `modulation <EMStorageMechanism_Modulation>` for additional
         details).
 
     storage_prob : float : default None
         specifies the probability with which the current entry is stored in the EMSorageMechanism's `memory_matrix
         <EMStorageMechanism.memory_matrix>` (see `storage_prob <EMStorageMechanism.storage_prob>` for details).
+
+    decay_rate : float : default 0.0
+        specifies the rate at which `entries <EMStorageMechanism_Entry>` in the `memory_matrix
+        <EMStorageMechanism.memory_matrix>` decays (see `decay_rate <EMStorageMechanism.decay_rate>` for additional
+        details).
 
     Attributes
     ----------
@@ -257,6 +333,7 @@ class EMStorageMechanism(LearningMechanism):
     # FIX: FINISH EDITING:
 
     variable : 2d np.array
+
         each item of the 2d array is used as a template for the shape of each the `fields
         <EMStorageMechanism_Fields>` that  comprise and `entry <EMStorageMechanism_Entry>` in the `memory_matrix
         <EMStorageMechanism.memory_matrix>`, and that must be compatible (in number and type) with the `value
@@ -273,6 +350,13 @@ class EMStorageMechanism(LearningMechanism):
         and the corresponding `fields <EMStorageMechanism.fields>` are key (1) or value (0) fields.
         (see `fields <EMStorageMechanism_Fields>` for additional details).
 
+    field_weights : List[float] or None
+        determines whether norms for each field are weighted before identifying the weakest `entry
+        <EMStorageMechanism_Entry>` in `memory_matrix <EMStorageMechanism.memory_matrix>`. If is None (the default),
+        the norm of each `entry <EMStorageMechanism_Entry>` is calculated across all fields at once; if specified,
+        it must contain only floats from 0 to 1, and be the same length as the `fields <EMStorageMechanism.fields>`
+        argument (see `field_weights <EMStorageMechanism.field_types>` for additional details).
+
     learned_projections : List[MappingProjection]
         list of the `MappingProjections <MappingProjection>`, the `matrix <MappingProjection.matrix>` Parameters of
         which are modified by the EMStorageMechanism.
@@ -284,14 +368,14 @@ class EMStorageMechanism(LearningMechanism):
         np.matrix assigned to the corresponding `field <EMStorageMechanism_Fields>` of the `memory_matrix
         <EMStorageMechanism.memory_matrix>`.
 
+    storage_prob : float
+        specifies the probability with which the current entry is stored in the EMSorageMechanism's `memory_matrix
+        <EMStorageMechanism.memory_matrix>`.
+
     decay_rate : float : default 0.0
         determines the rate at which `entries <EMStorageMechanism_Entry>` in the `memory_matrix
         <EMStorageMechanism.memory_matrix>` decay;  the decay rate is applied to `memory_matrix
         <EMStorageMechanism.memory_matrix>` before it is updated with the new `entry <EMStorageMechanism_Entry>`.
-
-    storage_prob : float
-        specifies the probability with which the current entry is stored in the EMSorageMechanism's `memory_matrix
-        <EMStorageMechanism.memory_matrix>`.
 
     learning_signals : List[LearningSignal]
         list of all of the `LearningSignals <LearningSignal>` for the EMStorageMechanism, each of which
@@ -305,6 +389,15 @@ class EMStorageMechanism(LearningMechanism):
         list of all of the LearningProjections <LearningProjection>` from the EMStorageMechanism, listed
         in the order of the `LearningSignals <LearningSignal>` to which they belong (that is, in the order they are
         listed in the `learning_signals <EMStorageMechanism.learning_signals>` attribute).
+
+    modulation : str
+        determines form of `modulation <ModulatorySignal_Modulation>` that `learning_signals
+        <EMStorageMechanism.learning_signals>` use to modify the `matrix <MappingProjection.matrix>` parameter of the
+        `MappingProjections <MappingProjection>` that implement the `memory <EMStorageMechanism_Memory>` in which
+        `entries <EMStorageMechanism_Entry>` is stored.  *OVERRIDE* (the default) insure that entries are stored
+        exactly as specified by the `value <OutputPort.value>` of the `fields <EMStorageMechanism.fields>` of the
+        `entry <EMStorageMechanism_Entry>`;  other values can have unpredictable consequences
+        (see `ModulatorySignal_Types for additional details)
 
     output_ports : ContentAddressableList[OutputPort]
         list of the EMStorageMechanism's `OutputPorts <OutputPort>`, beginning with its
@@ -327,30 +420,45 @@ class EMStorageMechanism(LearningMechanism):
             Attributes
             ----------
 
+                concatenation_node
+                    see `concatenation_node <EMStorageMechanism.concatenation_node>`
+
+                    :default value: None
+                    :type: ``Mechanism or OutputPort``
+                    :read only: True
+
                 decay_rate
                     see `decay_rate <EMStorageMechanism.decay_rate>`
 
                     :default value: 0.0
                     :type: ``float``
 
-
                 fields
                     see `fields <EMStorageMechanism.fields>`
 
                     :default value: None
                     :type: ``list``
+                    :read only: True
 
                 field_types
                     see `field_types <EMStorageMechanism.field_types>`
 
                     :default value: None
                     :type: ``list``
+                    :read only: True
+
+                field_weights
+                    see `field_weights <EMStorageMechanism.field_weights>`
+
+                    :default value: None
+                    :type: ``list or np.ndarray``
 
                 memory_matrix
                     see `memory_matrix <EMStorageMechanism.memory_matrix>`
 
                     :default value: None
                     :type: ``np.ndarray``
+                    :read only: True
 
                 function
                     see `function <EMStorageMechanism.function>`
@@ -363,6 +471,20 @@ class EMStorageMechanism(LearningMechanism):
 
                     :default value: None
                     :type: ``list``
+                    :read only: True
+
+                learning_signals
+                    see `learning_signals <EMStorageMechanism.learning_signals>`
+
+                    :default value: []
+                    :type: ``List[MappingProjection or ParameterPort]``
+                    :read only: True
+
+                modulation
+                    see `modulation <EMStorageMechanism.modulation>`
+
+                    :default value: OVERRIDE
+                    :type: ModulationParam
                     :read only: True
 
                 output_ports
@@ -379,7 +501,7 @@ class EMStorageMechanism(LearningMechanism):
                     :type: ``float``
 
         """
-        # input_ports = Parameter([],
+        # input_ports = Parameter([], # FIX: SHOULD BE ABLE TO UE THIS WITH 'fields' AS CONSTRUCTOR ARGUMENT
         #                         stateful=False,
         #                         loggable=False,
         #                         read_only=True,
@@ -388,22 +510,32 @@ class EMStorageMechanism(LearningMechanism):
         #                         # constructor_argument='fields',
         #                         )
         fields = Parameter([],
-                                stateful=False,
+                           stateful=False,
+                           loggable=False,
+                           read_only=True,
+                           structural=True,
+                           parse_spec=True,
+                           )
+        field_types = Parameter([],stateful=False,
                                 loggable=False,
                                 read_only=True,
                                 structural=True,
                                 parse_spec=True,
-                                )
-        field_types = Parameter([],
-                                    stateful=False,
-                                    loggable=False,
-                                    read_only=True,
-                                    structural=True,
-                                    parse_spec=True,
-                                    dependiencies='fields')
+                                dependiencies='fields')
+        field_weights = Parameter(None,
+                                  modulable=True,
+                                  stateful=True,
+                                  loggable=True,
+                                  dependiencies='fields')
+        concatenation_node = Parameter(None,
+                                       stateful=False,
+                                       loggable=False,
+                                       read_only=True,
+                                       structural=True)
         function = Parameter(EMStorage, stateful=False, loggable=False)
-        storage_prob = Parameter(1.0, modulable=True)
-        decay_rate = Parameter(0.0, modulable=True)
+        storage_prob = Parameter(1.0, modulable=True, stateful=True)
+        decay_rate = Parameter(0.0, modulable=True, stateful=True)
+        memory_matrix = Parameter(None, getter=_memory_matrix_getter, read_only=True, structural=True)
         modulation = OVERRIDE
         output_ports = Parameter([],
                                  stateful=False,
@@ -422,7 +554,6 @@ class EMStorageMechanism(LearningMechanism):
         # learning_timing = LearningTiming.LEARNING_PHASE
         learning_timing = LearningTiming.EXECUTION_PHASE
 
-    # FIX: WRITE VALIDATION AND PARSE METHODS FOR THESE
     def _validate_field_types(self, field_types):
         if not len(field_types) or len(field_types) != len(self.fields):
             return f"must be specified with a number of items equal to " \
@@ -430,6 +561,12 @@ class EMStorageMechanism(LearningMechanism):
         if not all(item in {1,0} for item in field_types):
             return f"must be a list of 1s (for keys) and 0s (for values)."
 
+    def _validate_field_weights(self, field_weights):
+        if not field_weights or len(field_weights) != len(self.fields):
+            return f"must be specified with a number of items equal to " \
+                   f"the number of fields specified {len(self.fields)}"
+        if not all(isinstance(item, (int, float)) and (0 <= item  <= 1) for item in field_weights):
+            return f"must be a list floats from 0 to 1."
 
     def _validate_storage_prob(self, storage_prob):
         storage_prob = float(storage_prob)
@@ -450,6 +587,8 @@ class EMStorageMechanism(LearningMechanism):
                  default_variable: Union[list, np.ndarray],
                  fields: Union[list, tuple, dict, OutputPort, Mechanism, Projection] = None,
                  field_types: list = None,
+                 field_weights: Optional[Union[list, np.ndarray]] = None,
+                 concatenation_node: Optional[Union[OutputPort, Mechanism]] = None,
                  memory_matrix: Union[list, np.ndarray] = None,
                  function: Optional[Callable] = EMStorage,
                  learning_signals: Union[list, dict, ParameterPort, Projection, tuple] = None,
@@ -462,33 +601,21 @@ class EMStorageMechanism(LearningMechanism):
                  **kwargs
                  ):
 
-        # # USE FOR IMPLEMENTATION OF deferred_init()
-        # # Store args for deferred initialization
-        # self._init_args = locals().copy()
-        # self._init_args['context'] = self
-        # self._init_args['name'] = name
-
-        # # Flag for deferred initialization
-        # self.initialization_status = ContextFlags.DEFERRED_INIT
-        # self.initialization_status = ContextFlags.DEFERRED_INIT
-
-        # self._storage_prob = storage_prob
-        # self.num_key_fields = len([i for i in field_types if i==0])
-
         super().__init__(default_variable=default_variable,
                          fields=fields,
                          field_types=field_types,
+                         concatenation_node=concatenation_node,
                          memory_matrix=memory_matrix,
                          function=function,
+                         learning_signals=learning_signals,
                          modulation=modulation,
                          decay_rate=decay_rate,
                          storage_prob=storage_prob,
-                         learning_signals=learning_signals,
+                         field_weights=field_weights,
                          params=params,
                          name=name,
                          prefs=prefs,
-                         **kwargs
-                         )
+                         **kwargs)
 
     def _validate_variable(self, variable, context=None):
         """Validate that variable has only one item: activation_input.
@@ -511,7 +638,7 @@ class EMStorageMechanism(LearningMechanism):
             memory_matrix = request_set[MEMORY_MATRIX]
             # Items in variable should have the same shape as memory_matrix
             if memory_matrix[0].shape != np.array(self.variable).shape:
-                raise EMStorageMechanismError(f"The 'variable' arg for {self.name} ({variable}) must be "
+                raise EMStorageMechanismError(f"The 'variable' arg for {self.name} ({self.variable}) must be "
                                               f"a list or 2d np.array containing entries that have the same shape "
                                               f"({memory_matrix.shape}) as an entry (row) in 'memory_matrix' arg.")
 
@@ -530,16 +657,34 @@ class EMStorageMechanism(LearningMechanism):
                                               f"the same number of items as its 'fields' arg ({len(fields)}).")
 
         num_keys = len([i for i in field_types if i==1])
+        concatenate_keys = 'concatenation_node' in request_set and request_set['concatenation_node'] is not None
+
         # Ensure the number of learning_signals is equal to the number of fields + number of keys
         if LEARNING_SIGNALS in request_set:
             learning_signals = request_set[LEARNING_SIGNALS]
-            if len(learning_signals) != len(fields) + num_keys:
-                raise EMStorageMechanismError(f"The number ({len(learning_signals)}) of 'learning_signals' specified "
+            if concatenate_keys:
+                num_match_fields = 1
+            else:
+                num_match_fields = num_keys
+            if len(learning_signals) != num_match_fields + len(fields):
+                raise EMStorageMechanismError(f"The number of 'learning_signals' ({len(learning_signals)}) specified "
                                               f"for  {self.name} must be the same as the number of items "
                                               f"in its variable ({len(self.variable)}).")
 
-        # Ensure shape of memory_matrix for each field is same as learning_signal for corresponding retrieval_node
-        for i, learning_signal in enumerate(learning_signals[num_keys:]):
+        # Ensure shape of learning_signals matches shapes of matrices for match nodes (i.e., either keys or concatenate)
+        for i, learning_signal in enumerate(learning_signals[:num_match_fields]):
+            learning_signal_shape = learning_signal.parameters.matrix._get(context).shape
+            if concatenate_keys:
+                memory_matrix_field_shape = np.array([np.concatenate(row, dtype=object).flatten()
+                                                      for row in memory_matrix[:,0:num_keys]]).T.shape
+            else:
+                memory_matrix_field_shape = np.array(memory_matrix[:,i].tolist()).T.shape
+            assert learning_signal_shape == memory_matrix_field_shape, \
+                f"The shape ({learning_signal_shape}) of the matrix for the Projection {learning_signal.name} " \
+                f"used to specify learning signal {i} of {self.name} does not match the shape " \
+                f"of the corresponding field {i} of its 'memory_matrix' {memory_matrix_field_shape})."
+        # Ensure shape of learning_signals matches shapes of matrices for retrieval nodes (i.e., all input fields)
+        for i, learning_signal in enumerate(learning_signals[num_match_fields:]):
             learning_signal_shape = learning_signal.parameters.matrix._get(context).shape
             memory_matrix_field_shape = np.array(memory_matrix[:,i].tolist()).shape
             assert learning_signal_shape == memory_matrix_field_shape, \
@@ -584,40 +729,81 @@ class EMStorageMechanism(LearningMechanism):
                  runtime_params=None):
         """Execute EMStorageMechanism. function and return learning_signals
 
+        For each node in key_input_nodes and value_input_nodes,
+        assign its value to afferent weights of corresponding retrieved_node.
+        - memory = matrix of entries made up vectors for each field in each entry (row)
+        - memory_full_vectors = matrix of entries made up vectors concatentated across all fields (used for norm)
+        - entry_to_store = key_input or value_input to store
+        - field_memories = weights of Projections for each field
+
+        DIVISION OF LABOR BETWEEN MECHANISM AND FUNCTION:
+        EMStorageMechanism._execute:
+         - compute norms to find weakest entry in memory
+         - compute storage_prob to determine whether to store current entry in memory
+         - call function for each LearningSignal to decay existing memory and assign input to weakest entry
+        EMStore function:
+         - decay existing memories
+         - assign input to weakest entry (given index for passed from EMStorageMechanism)
+
         :return: List[2d np.array] self.learning_signal
         """
 
         # FIX: SET LEARNING MODE HERE FOR SHOW_GRAPH
 
-        decay_rate = self.parameters.decay_rate._get(context)
-        storage_prob = self.parameters.storage_prob._get(context)
+        decay_rate = self.parameters.decay_rate._get(context)      # modulable, so use getter
+        storage_prob = self.parameters.storage_prob._get(context)  # modulable, so use getter
+        field_weights = self.parameters.field_weights.get(context) # modulable, so use getter
+        concatenation_node = self.concatenation_node
+        num_match_fields = 1 if concatenation_node else len([i for i in self.field_types if i==1])
 
-        num_key_fields = len([i for i in self.field_types if i==1])
-        num_fields = len(self.fields)
-        # learning_signals are afferents to match_nodes (key fields) then retrieval_nodes (all fields)
-        entries = [i for i in range(num_key_fields)] + [i for i in range(num_fields)]
-        value = []
-        for j, item in enumerate(zip(entries, self.learning_signals)):
-            i = item[0]
-            learning_signal = item[1]
-            # During initialization, learning_signal is still a reciever Projection specification so get its matrix
+        memory = self.parameters.memory_matrix._get(context)
+        if memory is None or self.is_initializing:
             if self.is_initializing:
-                matrix = learning_signal.parameters.matrix._get(context)
-            # During execution, learning_signal is the sending OutputPort, so get the matrix of the receiver
+                # Return existing matrices for field_memories  # FIX: THE FOLLOWING DOESN'T TEST FUNCTION:
+                return [learning_signal.receiver.path_afferents[0].parameters.matrix.get()
+                        for learning_signal in self.learning_signals]
+            # Raise exception if not initializing and memory is not specified
             else:
-                matrix = learning_signal.efferents[0].receiver.owner.parameters.matrix._get(context)
-                if decay_rate:
-                    matrix *= decay_rate
-            axis = 0 if j < num_key_fields else 1
-            entry = variable[i]
-            value.append(super(LearningMechanism, self)._execute(variable=entry,
-                                                                 memory_matrix=matrix,
+                owner_string = ""
+                if self.owner:
+                    owner_string = " of " + self.owner.name
+                raise EMStorageMechanismError(f"Call to {self.__class__.__name__} function {owner_string} "
+                                              f"must include '{MEMORY_MATRIX}' in params arg.")
+
+        # Get least used slot (i.e., weakest memory = row of matrix with lowest weights) computed across all fields
+        field_norms = np.array([np.linalg.norm(field, axis=1) for field in [row for row in memory]])
+        if field_weights is not None:
+            field_norms *= field_weights
+        row_norms = np.sum(field_norms, axis=1)
+        idx_of_weakest_memory = np.argmin(row_norms)
+
+        value = []
+        for i, field_projection in enumerate([learning_signal.efferents[0].receiver.owner
+                                            for learning_signal in self.learning_signals]):
+            if i < num_match_fields:
+                # For match matrices,
+                #   get entry to store from variable of Projection matrix (memory_field)
+                #   to match_node in which memory will be store (this is to accomodate concatenation_node)
+                axis = 0
+                entry_to_store = field_projection.variable
+                if concatenation_node is None:
+                    assert np.all(entry_to_store == variable[i]),\
+                        f"PROGRAM ERROR: misalignment between inputs and fields for storing them"
+            else:
+                # For retrieval matrices,
+                #    get entry to store from variable (which has inputs to all fields)
+                axis = 1
+                entry_to_store = variable[i - num_match_fields]
+            # Get matrix containing memories for the field from the Projection
+            field_memory_matrix = field_projection.parameters.matrix.get(context)
+
+            value.append(super(LearningMechanism, self)._execute(variable=entry_to_store,
+                                                                 memory_matrix=field_memory_matrix,
                                                                  axis=axis,
+                                                                 storage_location=idx_of_weakest_memory,
                                                                  storage_prob=storage_prob,
+                                                                 decay_rate=decay_rate,
                                                                  context=context,
                                                                  runtime_params=runtime_params))
-
-
         self.parameters.value._set(value, context)
-
         return value
