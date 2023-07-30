@@ -194,11 +194,39 @@ MEMORY_MATRIX = 'memory_matrix'
 FIELDS = 'fields'
 FIELD_TYPES = 'field_types'
 
-def _memory_matrix_getter(owning_component=None, context=None):
-    if context.composition:
-        return context.composition.parameters.memory._get(context)
-    else:
+# def _memory_matrix_getter(owning_component=None, context=None):
+#     if context.composition:
+#         return context.composition.parameters.memory._get(context)
+#     else:
+#         return None
+
+def _memory_matrix_getter(owning_component=None, context=None)->list:
+    """Return list of memories in which rows (outer dimension) are memories for each field.
+    These are derived from `matrix <MappingProjection.matrix>` parameter of the `afferent
+    <Mechanism_Base.afferents>` MappingProjections to each of the `retrieved_nodes <EMComposition.retrieved_nodes>`.
+    """
+    if owning_component.learning_signals is None:
         return None
+
+    num_fields = len(owning_component.fields)
+
+    # Get learning_signals that project to retrieved_nodes
+    num_learning_signals = len(owning_component.learning_signals)
+    retrieved_learning_signals = owning_component.learning_signals[num_learning_signals-num_fields:]
+
+    # Get memory from learning_signals that project to retrieved_nodes
+    if owning_component.is_initializing:
+        memory = [retrieved_learning_signal.parameters.matrix.get(context) for retrieved_learning_signal in retrieved_learning_signals]
+    else:
+        memory = [retrieved_learning_signal.efferents[0].receiver.owner.parameters.matrix.get(context) for retrieved_learning_signal in retrieved_learning_signals]
+    # memory_capacity = np.array(memory).shape[1]
+    memory_capacity = len(memory[0])
+
+    # Reorganize memory so that each row is an entry and each column is a field
+    # memory_capacity = owning_component.memory_capacity or owning_component.defaults.memory_capacity
+    return [[memory[j][i] for j in range(num_fields)]
+              for i in range(memory_capacity)]
+
 
 class EMStorageMechanismError(LearningMechanismError):
     pass
@@ -724,7 +752,7 @@ class EMStorageMechanism(LearningMechanism):
         num_match_fields = 1 if concatenation_node else len([i for i in self.field_types if i==1])
 
         memory = self.parameters.memory_matrix._get(context)
-        if memory is None:
+        if memory is None or self.is_initializing:
             if self.is_initializing:
                 # Return existing matrices for field_memories  # FIX: THE FOLLOWING DOESN'T TEST FUNCTION:
                 return [learning_signal.receiver.path_afferents[0].parameters.matrix.get()
