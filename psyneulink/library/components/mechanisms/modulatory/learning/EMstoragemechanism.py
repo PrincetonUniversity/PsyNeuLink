@@ -213,7 +213,7 @@ def _memory_matrix_getter(owning_component=None, context=None)->list:
 
     # Get learning_signals that project to retrieved_nodes
     num_learning_signals = len(owning_component.learning_signals)
-    learning_signals_for_retrieved = owning_component.learning_signals[num_learning_signals-num_fields:]
+    learning_signals_for_retrieved = owning_component.learning_signals[num_learning_signals - num_fields:]
 
     # Get memory from learning_signals that project to retrieved_nodes
     if owning_component.is_initializing:
