@@ -783,7 +783,7 @@ class EMStorageMechanism(LearningMechanism):
             if i < num_match_fields:
                 # For match matrices,
                 #   get entry to store from variable of Projection matrix (memory_field)
-                #   to match_node in which memory will be store (this is to accomodate concatenation_node)
+                #   to field_match_node in which memory will be store (this is to accomodate concatenation_node)
                 axis = 0
                 entry_to_store = field_projection.variable
                 if concatenation_node is None:

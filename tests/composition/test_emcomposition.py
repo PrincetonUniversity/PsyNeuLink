@@ -230,13 +230,13 @@ class TestConstruction:
         assert len(em.value_input_nodes) == num_values
         assert isinstance(em.concatenate_keys_node, Mechanism) == concatenate_node
         if em.concatenate_keys:
-            assert em.retrieval_weighting_nodes == []
+            assert em.field_weight_nodes == []
             assert bool(softmax_gain in {None, CONTROL}) == bool(len(em.softmax_control_nodes))
         else:
             if num_keys > 1:
-                assert len(em.retrieval_weighting_nodes) == num_keys
+                assert len(em.field_weight_nodes) == num_keys
             else:
-                assert em.retrieval_weighting_nodes == []
+                assert em.field_weight_nodes == []
             if softmax_gain in {None, CONTROL}:
                 assert len(em.softmax_control_nodes) == num_keys
             else:
@@ -435,11 +435,11 @@ class TestExecution:
         retrieved = em.run(inputs=inputs, execution_mode=comp_mode)
         np.testing.assert_allclose(retrieved, expected_retrieval)
 
-        # Validate that sum of weighted softmax distributions in retrieval_weighting_node itself sums to 1
-        np.testing.assert_allclose(np.sum(em.softmax_weighting_node.value), 1.0, atol=1e-15)
+        # Validate that sum of weighted softmax distributions in field_weight_node itself sums to 1
+        np.testing.assert_allclose(np.sum(em.combined_softmax_node.value), 1.0, atol=1e-15)
 
         # Validate that sum of its output ports also sums to 1
-        np.testing.assert_allclose(np.sum([port.value for port in em.softmax_weighting_node.output_ports]),
+        np.testing.assert_allclose(np.sum([port.value for port in em.combined_softmax_node.output_ports]),
                                    1.0, atol=1e-15)
 
         # Validate storage
