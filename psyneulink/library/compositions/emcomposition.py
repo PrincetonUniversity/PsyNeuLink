@@ -9,26 +9,35 @@
 # ********************************************* EMComposition *************************************************
 
 # TODO:
-# - FIX: TRY
-#        - refactoring node_constructors to go after super().__init__() of EMComposition
-# - FIX: SHOULD MEMORY DECAY OCCUR IF STORAGE DOES NOT? CURRENTLY IT DOES NOT (SEE EMStorage Function)
+# - QUESTION:
+#   - DOES SoftmaxGainControl Node need to be in differential pathway for learning?
+#   - SHOULD the gradients be separate for each key, or distributed over all (via the softamx weighting node)?
+#   - SHOULD there be any error for values retrieved?  If so, where does it go? to the keys?
+
+# - FIX: IMPLEMENT LearningMechanism FOR RETRIEVAL WEIGHTS:
+#        - refactor node_constructors to go after super().__init__() of EMComposition
+#        - implement learning pathways
+#        - implement derivative for concatenate
+#        - ADD LEARNING MECHANISM TO ADJUST FIELD_WEIGHTS (THAT MULTIPLICATIVELY MODULATES MAPPING PROJECTION)
+#        - take account of use of PRODUCT in InputPorts for derivative of function
+#        - derivative of LinearCombination
+# - FIX: Thresholded version of SoftMax gain (per Kamesh)
 # - FIX: DOCUMENT USE OF STORAGE_LOCATION (NONE => LOCAL, SPECIFIED => GLOBAL)
-# - FIX: IMPLEMENT LearningMechanism FOR RETRIEVAL WEIGHTS (WHAT IS THE ERROR SIGNAL AND DERIVATIVE IT SHOULD USE?)
-# - FIX: GENERATE ANIMATION w/ STORAGE (uses Learning but not in usual way)
 # - FIX: DEAL WITH INDEXING IN NAMES FOR NON-CONTIGUOUS KEYS AND VALUES (reorder to keep all keys together?)
+# - FIX: _import_composition:
+#        - MOVE LearningProjections
+#        - MOVE Condition? (e.g., AllHaveRun) (OR PUT ON MECHANISM?)
+# - FIX: IMPLEMENT _integrate_into_composition METHOD THAT CALLS _import_composition ON ANOTHER COMPOSITION
+# - FIX:        AND TRANSFERS RELEVANT ATTRIBUTES (SUCH AS MEMORY, KEY_INPUT_NODES, ETC., POSSIBLY APPENDING NAMES)
+
+# - FIX: SHOULD MEMORY DECAY OCCUR IF STORAGE DOES NOT? CURRENTLY IT DOES NOT (SEE EMStorage Function)
+# - FIX: GENERATE ANIMATION w/ STORAGE (uses Learning but not in usual way)
 # - FIX: WRITE MORE TESTS FOR EXECUTION, WARNINGS, AND ERROR MESSAGES
 #         - 3d tuple with first entry != memory_capacity if specified
 #         - list with number of entries > memory_capacity if specified
 #         - input is added to the correct row of the matrix for each key and value for
 #                for non-contiguous keys (e.g, field_weights = [1,0,1]))
 #         - explicitly that storage occurs after retrieval
-# - FIX: _import_composition:
-#        - MOVE LearningProjections
-#        - MOVE Condition? (e.g., AllHaveRun) (OR PUT ON MECHANISM?)
-# - FIX: ??IMPLEMENT LEARNING PATHWAYS
-# - FIX: IMPLEMENT _integrate_into_composition METHOD THAT CALLS _import_composition ON ANOTHER COMPOSITION
-# - FIX:        AND TRANSFERS RELEVANT ATTRIBUTES (SUCH AS MEMORY, KEY_INPUT_NODES, ETC., POSSIBLY APPENDING NAMES)
-# - FIX: Thresholded version of SoftMax gain (per Kamesh)
 # - FIX: WARNING NOT OCCURRING FOR Normalize ON ZEROS WITH MULTIPLE ENTRIES (HAPPENS IF *ANY* KEY IS EVER ALL ZEROS)
 # - FIX: DOCUMENTATION:
 #        - define "keys" and "values" explicitly
@@ -37,25 +46,30 @@
 #        - write examples for run()
 # - FIX: ADD NOISE (AND/OR SOFTMAX PROBABILISTIC RETRIEVAL MODE)
 # - FIX: ?ADD add_memory() METHOD FOR STORING W/O RETRIEVAL, OR JUST ADD retrieval_prob AS modulable Parameter
-# - FIX: LEARNING:
-#        - ADD LEARNING MECHANISM TO ADJUST FIELD_WEIGHTS (THAT MULTIPLICATIVELY MODULATES MAPPING PROJECTION)
-#        - DEAL WITH ERROR SIGNALS to softmax_weighting_node OR AS PASS-THROUGH
 # - FIX: CONFIDENCE COMPUTATION (USING SIGMOID ON DOT PRODUCTS) AND REPORT THAT (EVEN ON FIRST CALL)
 # - FIX: ALLOW SOFTMAX SPEC TO BE A DICT WITH PARAMETERS FOR _get_softmax_gain() FUNCTION
+
 # - FIX: PSYNEULINK:
-# - FIX: COMPILE
-#      - Remove CIM projections on import to another composition
-#      - Autodiff support for IdentityFunction
-#      - LinearMatrix to add normalization
-#      - _store() method to assign weights to memory
-# - FIX: IMPLEMENT Composition.merge() METHOD that merges a Composition into the one on which it is called
-#        (MAKE COMPARABLE TO add_nodes() METHOD)
-# -    FIX: AUGMENT LinearMatrix Function:
-#           - Normalize as option
+#        - Composition.add_nodes() should check, on each call to add_node, to see if one that has a releavant
+#          projection and, if so, add it.
+# -      - IF InputPort HAS default_input = DEFAULT_VARIABLE,
+#           THEN IT SHOULD BE IGNORED AS AN INPUT NODE IN A COMPOSITION
+#        COMPILATION:
+#        - Remove CIM projections on import to another composition
+#        - Autodiff support for IdentityFunction
+#        - LinearMatrix to add normalization
+#        - _store() method to assign weights to memory
+# -    FIX: LinearMatrix Function:
+#           - add Normalize as option
 #           - Anytime a row's norm is 0, replace with 1s
-# -    FIX: WHY IS Concatenate NOT WORKING AS FUNCTION OF AN INPUTPORT (WASN'T THAT USED IN CONTEXT OF BUFFER?)
-# -    FIX: IF InputPort HAS default_input = DEFAULT_VARIABLE, THEN IT SHOULD BE IGNORED AS AN INPUT NODE IN A
-#  COMPOSITION
+# -    FIX: LinearMatrix Function
+#           - add derivative
+# -    FIX: LinearCombination Function:
+#           - add derivative
+#           - remove properties (use getter and setter for Parameters)
+#           - should derivative be a scalar or an array of scalars?
+# -    FIX: WHY IS Concatenate NOT WORKING AS FUNCTION OF AN INPUTPORT (WASN'T THAT USED IN CONTEXT OF BUFFER?
+#           SEE NOTES TO KATHERINE
 # - WRITE TESTS FOR INPUT_PORT and MATRIX SPECS CORRECT IN LATEST BRANCHEs
 # - ACCESSIBILITY OF DISTANCES (SEE BELOW): MAKE IT A LOGGABLE PARAMETER (I.E., WITH APPROPRIATE SETTER)
 #   ADD COMPILED VERSION OF NORMED LINEAR_COMBINATION FUNCTION TO LinearCombination FUNCTION: dot / (norm a * norm b)
@@ -250,7 +264,7 @@ An EMComposition is created by calling its constructor, that takes the following
   are retrieved and assigned as the `value <Mechanism_Base.value>` of the corresponding `retrieved_node
   <EMComposition.retrieved_nodes>`. This distinction between keys and value implements a standard "dictionary; however,
   if all entries are non-zero, then all fields are treated as keys, implemented a full form of content-addressable
-  memory.  If ``learn_weights`` is True, the field_weights can be modified during training; otherwise they remain
+  memory.  If ``learn_field_weight`` is True, the field_weights can be modified during training; otherwise they remain
   fixed. The following options can be used to specify ``field_weights``:
 
     * *None* (the default): all fields except the last are treated as keys, and are weighted equally for retrieval,
@@ -318,10 +332,10 @@ An EMComposition is created by calling its constructor, that takes the following
   the gain based on the entropy of the dot products, preserving the distribution over non-(or near) zero entries
   irrespective of how many (near) zero entries there are.
 
-* **learn_weights** : specifies whether `field_weights <EMComposition.field_weights>` are modifiable during training.
+* **learn_field_weight** : specifies whether `field_weights <EMComposition.field_weights>` are modifiable during training.
 
 * **learning_rate** : specifies the rate at which  `field_weights <EMComposition.field_weights>` are learned if
-  ``learn_weights`` is True.
+  ``learn_field_weight`` is True.
 
 
 .. _EMComposition_Structure:
@@ -462,19 +476,19 @@ COMMENT
 *Learning*
 ~~~~~~~~~~
 
-If `learn <Composition.learn>` is called and the `learn_weights <EMComposition.learn_weights>` attribute is True,
-then the `field_weights <EMComposition.field_weights>` are modified to minimize the error passed to the EMComposition
-retrieved nodes, using the learning_rate specified in the `learning_rate <EMComposition.learning_rate>` attribute. If
-`learn_weights <EMComposition.learn_weights>` is False (or `run <Composition.run>` is called, then the
-`field_weights <EMComposition.field_weights>` are not modified and the EMComposition is simply executed without any
-modification, and the error signal is passed to the nodes that project to its `INPUT <NodeRole.INPUT>` `Nodes
-<Composition_Nodes>`.
+If `learn <Composition.learn>` is called and the `learn_field_weights <EMComposition.learn_field_weights>` attribute
+is True, then the `field_weights <EMComposition.field_weights>` are modified to minimize the error passed to the
+EMComposition retrieved nodes, using the learning_rate specified in the `learning_rate <EMComposition.learning_rate>`
+attribute. If `learn_field_weights <EMComposition.learn_field_weights>` is False (or `run <Composition.run>` is called,
+then the `field_weights <EMComposition.field_weights>` are not modified and the EMComposition is simply executed
+without any modification, and the error signal is passed to the nodes that project to its `INPUT <NodeRole.INPUT>`
+`Nodes <Composition_Nodes>`.
 
   .. note::
      Although memory storage is implemented as  a form of learning (though modification of MappingProjection
      `matrix <MappingProjection.matrix>` parameters; see `memory storage <EMComposition_Memory_Storage>`),
      this occurs irrespective of how EMComposition is run (i.e., whether `learn <Composition.learn>` or `run
-     <Composition.run>` is called), and is not affected by the `learn_weights <EMComposition.learn_weights>`
+     <Composition.run>` is called), and is not affected by the `learn_field_weights <EMComposition.learn_field_weights>`
      or `learning_rate <EMComposition.learning_rate>` attributes, which pertain only to whether the `field_weights
      <EMComposition.field_weights>` are modified during learning.
 
@@ -719,6 +733,8 @@ def _memory_getter(owning_component=None, context=None)->list:
     """
 
     # If storage_node is implemented, get memory from that
+    if owning_component.is_initializing:
+        return None
     if owning_component.use_storage_node:
         return owning_component.storage_node.parameters.memory_matrix.get(context)
 
@@ -759,7 +775,7 @@ class EMComposition(AutodiffComposition):
         softmax_gain=CONTROL,           \
         storage_prob=1.0,               \
         memory_decay_rate=AUTO,         \
-        learn_weights=True,             \
+        learn_field_weights=True,       \
         learning_rate=True,             \
         use_storage_node=True,          \
         use_gating_for_weighting=False, \
@@ -815,12 +831,13 @@ class EMComposition(AutodiffComposition):
         specifies the rate at which items in the EMComposition's memory decay;
         see `memory_decay_rate <EMComposition_Memory_Decay_Rate>` for details.
 
-    learn_weights : bool : default False
+    learn_field_weights : bool : default False
         specifies whether `field_weights <EMComposition.field_weights>` are learnable during training;
         see `Learning <EMComposition_Learning>` for additional details.
 
     learning_rate : float : default .01
-        specifies rate at which `field_weights <EMComposition.field_weights>` are learned if ``learn_weights`` is True.
+        specifies rate at which `field_weights <EMComposition.field_weights>` are learned
+        if ``learn_field_weights`` is True.
 
     use_storage_node : bool : default True
         specifies whether to use a `LearningMechanism` to store entries in `memory <EMComposition.memory>`.
@@ -891,13 +908,13 @@ class EMComposition(AutodiffComposition):
         determines the rate at which items in the EMComposition's memory decay (see `memory_decay_rate
         <EMComposition_Memory_Decay_Rate>` for details).
 
-    learn_weights : bool
+    learn_field_weights : bool
         determines whether `field_weights <EMComposition.field_weights>` are learnable during training; see
         `Learning <EMComposition_Learning>` for additional details.
 
     learning_rate : float
-        determines whether the rate at which `field_weights <EMComposition.field_weights>` are learned if
-        `learn_weights` is True;  see `EMComposition_Learning>` for additional details.
+        determines whether the rate at which `field_weights <EMComposition.field_weights>` are learned
+        if `learn_field_weights` is True;  see `EMComposition_Learning>` for additional details.
 
     .. _EMComposition_Nodes:
 
@@ -927,7 +944,7 @@ class EMComposition(AutodiffComposition):
         <EMComposition_Processing>` for additional details).  These are assigned names that prepend *MATCH_n* to the
         name of the corresponding `key_input_nodes <EMComposition.key_input_nodes>`.
 
-    softmax_control_nodes : list[ControlMechanism]
+    softmax_gain_control_nodes : list[ControlMechanism]
         `ControlMechanisms <ControlMechanism>` that adaptively control the `softmax_gain <EMComposition.softmax_gain>`
         for the corresponding `softmax_nodes <EMComposition.softmax_nodes>`. These are implemented only if
         `softmax_gain <EMComposition.softmax_gain>` is specified as *CONTROL* (see `softmax_gain
@@ -1008,8 +1025,8 @@ class EMComposition(AutodiffComposition):
                     :default value: []
                     :type: ``list``
 
-                learn_weights
-                    see `learn_weights <EMComposition.learn_weights>`
+                learn_field_weights
+                    see `learn_field_weights <EMComposition.learn_field_weights>`
 
                     :default value: False # False UNTIL IMPLEMENTED
                     :type: ``bool``
@@ -1064,17 +1081,17 @@ class EMComposition(AutodiffComposition):
         memory = Parameter(None, loggable=True, getter=_memory_getter, read_only=True)
         memory_template = Parameter([[0],[0]], structural=True, valid_types=(tuple, list, np.ndarray), read_only=True)
         memory_capacity = Parameter(1000, structural=True)
-        field_weights = Parameter(None, structural=True)
+        field_weights = Parameter(None)
         field_names = Parameter(None, structural=True)
         concatenate_keys = Parameter(False, structural=True)
-        normalize_memories = Parameter(True, loggable=False, fallback_default=True)
-        softmax_gain = Parameter(CONTROL, modulable=True, fallback_default=True)
+        normalize_memories = Parameter(True)
+        softmax_gain = Parameter(CONTROL, modulable=True)
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         memory_decay_rate = Parameter(AUTO, modulable=True)
-        learn_weights = Parameter(False, fallback_default=True) # FIX: False until learning is implemented
-        learning_rate = Parameter(.001, fallback_default=True)
+        learn_field_weights = Parameter(False, structural=True)
+        learning_rate = Parameter(.001, modulable=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
 
         def _validate_memory_template(self, memory_template):
             if isinstance(memory_template, tuple):
@@ -1131,7 +1148,7 @@ class EMComposition(AutodiffComposition):
                  softmax_gain:Union[float, CONTROL]=CONTROL,
                  storage_prob:float=1.0,
                  memory_decay_rate:Union[float,AUTO]=AUTO,
-                 learn_weights:bool=False, # FIX: False FOR NOW, UNTIL IMPLEMENTED
+                 learn_field_weights:bool=False, # FIX: False FOR NOW, UNTIL IMPLEMENTED
                  learning_rate:float=None,
                  use_storage_node:bool=True,
                  use_gating_for_weighting:bool=False,
@@ -1151,7 +1168,7 @@ class EMComposition(AutodiffComposition):
                                                                           field_names,
                                                                           concatenate_keys,
                                                                           normalize_memories,
-                                                                          learn_weights,
+                                                                          learn_field_weights,
                                                                           learning_rate,
                                                                           name)
         if memory_decay_rate is AUTO:
@@ -1162,19 +1179,7 @@ class EMComposition(AutodiffComposition):
 
         # Instantiate Composition -------------------------------------------------------------------------
 
-        nodes = self._construct_pathway(memory_template,
-                                        memory_capacity,
-                                        field_weights,
-                                        concatenate_keys,
-                                        normalize_memories,
-                                        softmax_gain,
-                                        storage_prob,
-                                        memory_decay_rate,
-                                        use_storage_node,
-                                        use_gating_for_weighting)
-
-        super().__init__(nodes,
-                         name=name,
+        super().__init__(name=name,
                          memory_template = memory_template,
                          memory_capacity = memory_capacity,
                          field_weights = field_weights,
@@ -1184,11 +1189,22 @@ class EMComposition(AutodiffComposition):
                          storage_prob = storage_prob,
                          memory_decay_rate = memory_decay_rate,
                          normalize_memories = normalize_memories,
-                         learn_weights = learn_weights,
+                         learn_field_weights = learn_field_weights,
                          learning_rate = learning_rate,
                          random_state = random_state,
                          seed = seed
                          )
+
+        self._construct_pathways(self.memory_template,
+                                 self.memory_capacity,
+                                 self.field_weights,
+                                 self.concatenate_keys,
+                                 self.normalize_memories,
+                                 self.softmax_gain,
+                                 self.storage_prob,
+                                 self.memory_decay_rate,
+                                 self.use_storage_node,
+                                 use_gating_for_weighting)
 
         # Final Configuration and Clean-up ---------------------------------------------------------------------------
 
@@ -1368,7 +1384,7 @@ class EMComposition(AutodiffComposition):
                       field_names,
                       concatenate_keys,
                       normalize_memories,
-                      learn_weights,
+                      learn_field_weights,
                       learning_rate,
                       name):
 
@@ -1430,10 +1446,10 @@ class EMComposition(AutodiffComposition):
                           f"concatenation will be ignored. To use concatenation, {correction_msg}.")
 
         # FIX: UNTIL FULLY IMPLEMENTED
-        if learn_weights:
-            warnings.warn(f"The 'learn_weights' arg for '{name}' is True but not yet implemented; "
-                          f"automatically set to False for now;  stay tuned...")
-        # self.learn_weights = learn_weights
+        # if learn_field_weights:
+        #     warnings.warn(f"The 'learn_field_weights' arg for '{name}' is True but not yet implemented; "
+        #                   f"automatically set to False for now;  stay tuned...")
+        self.learn_field_weights = learn_field_weights
         self.learning_rate = learning_rate
         return parsed_field_weights, parsed_field_names, parsed_concatenate_keys
 
@@ -1455,21 +1471,21 @@ class EMComposition(AutodiffComposition):
     # ******************************  Nodes and Pathway Construction Methods  *****************************************
     # *****************************************************************************************************************
 
-    def _construct_pathway(self,
-                           memory_template,
-                           memory_capacity,
-                           field_weights,
-                           concatenate_keys,
-                           normalize_memories,
-                           softmax_gain,
-                           storage_prob,
-                           memory_decay_rate,
-                           use_storage_node,
-                           use_gating_for_weighting,
-                           )->set:
-        """Construct pathway for EMComposition"""
+    def _construct_pathways(self,
+                            memory_template,
+                            memory_capacity,
+                            field_weights,
+                            concatenate_keys,
+                            normalize_memories,
+                            softmax_gain,
+                            storage_prob,
+                            memory_decay_rate,
+                            use_storage_node,
+                            use_gating_for_weighting,
+                            ):
+        """Construct Nodes and Pathways for EMComposition"""
 
-        # Construct nodes of Composition
+        # First, construct Nodes of Composition with their Projections
         self.key_input_nodes = self._construct_key_input_nodes(field_weights)
         self.value_input_nodes = self._construct_value_input_nodes(field_weights)
         self.input_nodes = self.key_input_nodes + self.value_input_nodes
@@ -1485,24 +1501,54 @@ class EMComposition(AutodiffComposition):
             self.retrieval_weighting_nodes = self._construct_retrieval_weighting_nodes(field_weights,
                                                                                        concatenate_keys,
                                                                                        use_gating_for_weighting)
-        self.softmax_control_nodes = self._construct_softmax_control_nodes(softmax_gain)
+        self.softmax_gain_control_nodes = self._construct_softmax_gain_control_nodes(softmax_gain)
         self.softmax_weighting_node = self._construct_softmax_weighting_node(memory_capacity, use_gating_for_weighting)
         self.retrieved_nodes = self._construct_retrieved_nodes(memory_template)
         if use_storage_node:
             self.storage_node = self._construct_storage_node(memory_template, field_weights, self.concatenate_keys_node,
                                                              memory_decay_rate, storage_prob)
 
-        # Construct pathway as a set of nodes, since Projections are specified in the construction of each node
-        #  (and specifying INPUT or OUTPUT Nodes in a list would cause them to be interpreted as linear pathways)
-        pathway = set(self.key_input_nodes + self.value_input_nodes
-                      + self.match_nodes + self.retrieval_weighting_nodes + self.softmax_control_nodes
-                      + self.softmax_nodes + [self.softmax_weighting_node] + self.retrieved_nodes)
-        if use_storage_node:
-            pathway.add(self.storage_node)
-        if self.concatenate_keys_node is not None:
-            pathway.add(self.concatenate_keys_node)
+        # Then Construct the Pathways
+        if not self.learn_field_weights:
+            self.add_nodes(self.key_input_nodes)
+            self.add_nodes(self.value_input_nodes)
+            if self.concatenate_keys_node is not None:
+                self.add_node(self.concatenate_keys_node)
+            self.add_nodes(self.match_nodes)
+            self.add_nodes(self.retrieval_weighting_nodes)
+            self.add_nodes(self.softmax_nodes)
+            self.add_nodes(self.softmax_gain_control_nodes)
+            self.add_node(self.softmax_weighting_node)
+            self.add_nodes(self.retrieved_nodes)
+            if use_storage_node:
+                self.add_node(self.storage_node)
 
-        return pathway
+        # Set up backpropagation pathways for learning field weights
+
+        # self.add_linear_processing_pathway([self.key_input_nodes[0],
+        #                                     self.match_nodes[0],
+        #                                     self.softmax_nodes[0],
+        #                                     self.softmax_weighting_node,
+        #                                     self.retrieved_nodes[0]])
+        # self.add_node(self.value_input_nodes[0])
+        # assert True
+        else:
+            for key_node, match_node, softmax_node, retrieved_node in zip(self.key_input_nodes,
+                                                                          self.match_nodes,
+                                                                          self.softmax_nodes,
+                                                                          self.retrieved_nodes[:self.num_keys]):
+                self.add_backpropagation_learning_pathway([key_node, match_node,
+                                                           softmax_node, self.softmax_weighting_node,
+                                                           retrieved_node])
+
+            for retrieved_node in self.retrieved_nodes[self.num_keys:]:
+                self.add_backpropagation_learning_pathway([self.softmax_weighting_node, retrieved_node])
+
+            for retrieval_weighting_node in self.retrieval_weighting_nodes:
+                self.add_backpropagation_learning_pathway([retrieval_weighting_node,
+                                                           self.softmax_weighting_node,
+                                                           self.retrieved_nodes[:self.num_keys]])
+            self.add_nodes(self.value_input_nodes)
 
     def _construct_key_input_nodes(self, field_weights)->list:
         """Create one node for each key to be used as cue for retrieval (and then stored) in memory.
@@ -1618,7 +1664,7 @@ class EMComposition(AutodiffComposition):
             f"non-zero values in field_weights ({len(key_indices)})."
 
         # If softmax_gain is specified as CONTROL, then set to None for now
-        #    (will be set in _construct_softmax_control_nodes)
+        #    (will be set in _construct_softmax_gain_control_nodes)
         if softmax_gain == CONTROL:
             softmax_gain = None
 
@@ -1631,19 +1677,19 @@ class EMComposition(AutodiffComposition):
 
         return softmax_nodes
 
-    def _construct_softmax_control_nodes(self, softmax_gain)->list:
+    def _construct_softmax_gain_control_nodes(self, softmax_gain)->list:
         """Create nodes that set the softmax gain (inverse temperature) for each softmax_node."""
 
-        softmax_control_nodes = []
+        softmax_gain_control_nodes = []
         if softmax_gain == CONTROL:
-            softmax_control_nodes = [ControlMechanism(monitor_for_control=match_node,
+            softmax_gain_control_nodes = [ControlMechanism(monitor_for_control=match_node,
                                                       control_signals=[(GAIN, self.softmax_nodes[i])],
                                                       function=get_softmax_gain,
                                                       name='SOFTMAX GAIN CONTROL' if len(self.softmax_nodes) == 1
                                                       else f'SOFTMAX GAIN CONTROL {i}')
                                      for i, match_node in enumerate(self.match_nodes)]
 
-        return softmax_control_nodes
+        return softmax_gain_control_nodes
 
     def _construct_retrieval_weighting_nodes(self, field_weights, concatenate_keys, use_gating_for_weighting)->list:
         """Create ProcessingMechanisms that weight each key's softmax contribution to the retrieved values.
@@ -1799,7 +1845,7 @@ class EMComposition(AutodiffComposition):
 
         for projection in self.projections:
             if projection.sender.owner in self.retrieval_weighting_nodes:
-                # projection.learnable = self.learn_weights
+                # projection.learnable = self.learn_field_weights
                 projection.learnable = True # FIX: FOR NOW, UNTIL LEARNING OF RETRIEVAL WEIGHTING IS IMPLEMENTED
             else:
                 projection.learnable = False

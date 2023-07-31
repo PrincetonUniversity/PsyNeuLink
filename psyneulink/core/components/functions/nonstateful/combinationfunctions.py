@@ -1425,6 +1425,28 @@ class LinearCombination(
 
         return self.convert_output_type(result)
 
+    # @handle_external_context()
+    # def derivative(self, input=None, context=None):
+    #     """
+    #     derivative(input)
+    #
+    #     Derivative of `function <LinearCombination._function>` at **input**.
+    #
+    #     Arguments
+    #     ---------
+    #
+    #     input : number
+    #         value of the input to the Linear transform at which derivative is to be taken.
+    #
+    #     Returns
+    #     -------
+    #
+    #     Slope of function :  number or array
+    #
+    #     """
+    #
+    #     return self._get_current_parameter_value(SCALE, context)
+
     def _get_input_struct_type(self, ctx):
         # FIXME: Workaround a special case of simple array.
         #        It should just pass through to modifiers, which matches what

@@ -7062,10 +7062,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         projections = []
         for c in range(1, len(pathway)):
 
-            # NODE ENTRY ----------------------------------------------------------------------------------------
             def _get_node_specs_for_entry(entry, include_roles=None, exclude_roles=None):
-                """Extract Nodes from any tuple specs and replace Compositions with their INPUT Nodes
-                """
+                """Extract Nodes from any tuple specs and replace Compositions with their INPUT Nodes"""
                 nodes = []
                 for node in entry:
                     # Extract Nodes from any tuple specs
@@ -7080,6 +7078,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     nodes.extend(node)
                 return nodes
 
+            # NODE ENTRY ----------------------------------------------------------------------------------------
             # The current entry is a Node or a set of them:
             #  - if it is a set, list or array, leave as is, else place in set for consistency of processing below
             current_entry = pathway[c] if isinstance(pathway[c], (set, list, np.ndarray)) else {pathway[c]}
@@ -7091,16 +7090,34 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    else {pathway[c - 1]})
                 if all(_is_node_spec(sender) for sender in preceding_entry):
                     senders = _get_node_specs_for_entry(preceding_entry, NodeRole.OUTPUT)
-                    projs = {self.add_projection(sender=s, receiver=r,
-                                                 default_matrix=default_projection_matrix,
-                                                 allow_duplicates=False)
-                            for r in receivers for s in senders}
+                    # # MODIFIED 7/30/23 OLD:
+                    # projs = {self.add_projection(sender=s, receiver=r,
+                    #                              default_matrix=default_projection_matrix,
+                    #                              allow_duplicates=False)
+                    #         for r in receivers for s in senders}
+                    # MODIFIED 7/30/23 NEW:
+                    # Check for any existing Projections and, if they are present, add them to the list
+                    projs = {proj for proj in self.projections
+                             if proj.sender.owner in senders and proj.receiver.owner in receivers}
+                    # Add Projections for any pairs that don't already have them
+                    # projs.add(*{self.add_projection(sender=s, receiver=r,
+                    #                                 default_matrix=default_projection_matrix,
+                    #                                 allow_duplicates=False)
+                    #             for r in receivers for s in senders})
+                    new_projs = {self.add_projection(sender=s, receiver=r,
+                                                                default_matrix=default_projection_matrix,
+                                                                allow_duplicates=False)
+                                            for r in receivers for s in senders}
+                    if any(new_projs):
+                        projs.add(*new_projs)
+
+                    # MODIFIED 7/30/23 END
                     # Warn about assignment of MappingProjections from ControlMechanisms
-                    for cm in [s for s in senders if isinstance(s, ControlMechanism)]:
+                    for ctl_mech in [s for s in senders if isinstance(s, ControlMechanism)]:
                         warnings.warn(f"A {MappingProjection.__name__} has been created from a "
-                                      f"{ControlSignal.__name__} of '{cm.name}' -- specified {pathway_arg_str} -- "
-                                      f"to another {Mechanism.__name__} in that pathway.  If this is not the "
-                                      f"intended behavior, add '{cm.name}' separately to '{self.name}'.")
+                                      f"{ControlSignal.__name__} of '{ctl_mech.name}' -- specified {pathway_arg_str} "
+                                      f"-- to another {Mechanism.__name__} in that pathway.  If this is not the "
+                                      f"intended behavior, add '{ctl_mech.name}' separately to '{self.name}'.")
                     if all(projs):
                         projs = projs.pop() if len(projs) == 1 else projs
                         projections.append(projs)
