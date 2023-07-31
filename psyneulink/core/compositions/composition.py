@@ -8316,10 +8316,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                           context):
 
         # Get existing LearningMechanism if one exists (i.e., if this is a crossing point with another pathway)
-        learning_mechanism = \
-            next((lp.sender.owner for lp in learned_projection.parameter_ports[MATRIX].mod_afferents
-                  if isinstance(lp, LearningProjection)),
-                 None)
+        learning_mechanism = next((lp.sender.owner
+                                   for lp in learned_projection.parameter_ports[MATRIX].mod_afferents
+                                   if (isinstance(lp, LearningProjection)
+                                       # MODIFIED 7/31/23 NEW:
+                                       # Only consider LearningMechanisms that use backprop
+                                       and isinstance(lp.sender.owner.function, BackPropagation))),
+                                       # MODIFIED 7/31/23 END:
+                                  None)
 
         # If learning_mechanism exists:
         #    error_sources will be empty (as they have been dealt with in self._get_back_prop_error_sources

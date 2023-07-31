@@ -46,7 +46,7 @@ from psyneulink.core.globals.keywords import \
     PREDICTION_ERROR_DELTA_FUNCTION, PRODUCT, REARRANGE_FUNCTION, REDUCE_FUNCTION, SCALE, SUM, WEIGHTS, \
     PREFERENCE_SET_NAME
 from psyneulink.core.globals.utilities import convert_to_np_array, is_numeric, np_array_less_than_2d, ValidParamSpecType
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, ValidPrefSet, PreferenceEntry, PreferenceLevel
@@ -1375,7 +1375,7 @@ class LinearCombination(
             #    make sure there are no zeros for an element that is assigned a negative exponent
             # Allow during initialization because 0s are common in default_variable argument
             if self.is_initializing:
-                with np.errstate(divide='raise'):
+                with np.edrrstate(divide='raise'):
                     try:
                         variable = variable ** exponents
                     except FloatingPointError:
@@ -1425,27 +1425,29 @@ class LinearCombination(
 
         return self.convert_output_type(result)
 
-    # @handle_external_context()
-    # def derivative(self, input=None, context=None):
-    #     """
-    #     derivative(input)
-    #
-    #     Derivative of `function <LinearCombination._function>` at **input**.
-    #
-    #     Arguments
-    #     ---------
-    #
-    #     input : number
-    #         value of the input to the Linear transform at which derivative is to be taken.
-    #
-    #     Returns
-    #     -------
-    #
-    #     Slope of function :  number or array
-    #
-    #     """
-    #
-    #     return self._get_current_parameter_value(SCALE, context)
+    @handle_external_context()
+    def derivative(self, input=None, output=None, context=None):
+        """
+        derivative(input)
+
+        Derivative of `function <LinearCombination._function>` at **input**.
+
+        Arguments
+        ---------
+
+        input : 1d or 2d np.array : default class_defaults.variable
+            value of the input to the Linear transform at which derivative is to be taken.
+           a single numeric array or multiple arrays being combined, and at which derivative is to be taken.
+
+
+        Returns
+        -------
+
+        Scale :  number (if input is 1d) or array (if input is 2d)
+
+        """
+
+        return self._get_current_parameter_value(SCALE, context)
 
     def _get_input_struct_type(self, ctx):
         # FIXME: Workaround a special case of simple array.

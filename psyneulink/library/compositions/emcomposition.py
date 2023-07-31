@@ -21,6 +21,9 @@
 #        - ADD LEARNING MECHANISM TO ADJUST FIELD_WEIGHTS (THAT MULTIPLICATIVELY MODULATES MAPPING PROJECTION)
 #        - take account of use of PRODUCT in InputPorts for derivative of function
 #        - derivative of LinearCombination
+# - FIX: implement add_storage_pathway to handle addition of storage_node as learning mechanism
+#        - in "_create_storage_learing_components()" assign "learning_update" arg
+#          as BEORE OR DURING instead of AFTER (assigned to learning_enabled arg of LearningMechanism)
 # - FIX: Thresholded version of SoftMax gain (per Kamesh)
 # - FIX: DOCUMENT USE OF STORAGE_LOCATION (NONE => LOCAL, SPECIFIED => GLOBAL)
 # - FIX: DEAL WITH INDEXING IN NAMES FOR NON-CONTIGUOUS KEYS AND VALUES (reorder to keep all keys together?)
@@ -60,12 +63,11 @@
 #        - LinearMatrix to add normalization
 #        - _store() method to assign weights to memory
 # -    FIX: LinearMatrix Function:
+#           - add derivative
 #           - add Normalize as option
 #           - Anytime a row's norm is 0, replace with 1s
-# -    FIX: LinearMatrix Function
-#           - add derivative
 # -    FIX: LinearCombination Function:
-#           - add derivative
+#           - finish adding derivative (for if exponents are specified)
 #           - remove properties (use getter and setter for Parameters)
 #           - should derivative be a scalar or an array of scalars?
 # -    FIX: WHY IS Concatenate NOT WORKING AS FUNCTION OF AN INPUTPORT (WASN'T THAT USED IN CONTEXT OF BUFFER?
