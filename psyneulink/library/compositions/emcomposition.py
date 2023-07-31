@@ -63,6 +63,11 @@
 #        - Autodiff support for IdentityFunction
 #        - LinearMatrix to add normalization
 #        - _store() method to assign weights to memory
+# -    FIX: Adding GatingMechanism after Mechanisms they gate fails to implement gating projections
+# -         (example:  reverse order of the following in _construct_pathways
+#                      self.add_nodes(self.softmax_nodes)
+# -                    self.add_nodes(self.field_weight_nodes)
+
 # -    FIX: LinearMatrix Function:
 #           - add derivative
 #           - add Normalize as option
@@ -405,34 +410,54 @@ an `AutodiffComposition`.  The details of how the EMComposition executes are des
 When the EMComposition is executed, the following sequence of operations occur
 (also see `figure <EMComposition_Example_Fig>`):
 
-* **Concatenation**. By default, if the `field_weights <EMComposition.field_weights>` are the same for all `keys
-  <EMComposition_Field_Weights>` and `normalize_memories <EMComposition.normalize_memories>` is True then, for
-  efficiency of computation, the inputs provided to the `key_input_nodes <EMComposition.key_input_nodes>` are
-  concatenated into a single vector in the `concatenate_keys_node <EMComposition.concatenate_keys_node>`, that
-  is provided to a single `field_match_node <EMComposition.field_match_nodes>`.  However, if either of these conditions is
-  not met or `concatenate_keys <EMComposition.concatenate_keys>`is False, then the input to each `key_input_node
-  <EMComposition.key_input_nodes>` is provided to its own `field_match_node <EMComposition.field_match_nodes>`
-  (see `concatenate keys <EMComposition_Concatenate_Keys>` for additional information).
+* **Input**.  The inputs to the EMComposition are provided to the `key_input_nodes <EMComposition.key_input_nodes>`
+  and `value_input_nodes <EMComposition.value_input_nodes>`.  The former are used for matching to the corresponding
+  `fields <EMComposition_Fields>` of the `memory <EMComposition.memory>`, while the latter are retrieved but not used
+  for matching.
+
+* **Concatenation**. By default, the input to every `key_input_node <EMComposition.key_input_nodes>` is passed to a
+  to its own `field_match_node <EMComposition.field_match_nodes>` through a `MappingProjection` that computes its
+  dot product with the corresponding field of each entry in `memory <EMComposition.memory>`.  In this way, each
+  match is normalized so that, absent `field_weighting <EMComposition_Field_Weights>`, all keys contribute equally to
+  retrieval irrespective of relative differences in the norms of inputs or their entries in memory.  However, if the
+  `field_weights <EMComposition.field_weights>` are the same for all `keys
+  <EMComposition_Field_Weights>` and `normalize_memories <EMComposition.normalize_memories>` is True, then the inputs
+  provided to the `key_input_nodes <EMComposition.key_input_nodes>` are concatenated into a single vector (in the
+  `concatenate_keys_node <EMComposition.concatenate_keys_node>`), which is passed to a single `field_match_node
+  <EMComposition.field_match_nodes>`.  This may be more computationally efficient than passing each key through its own
+  `field_match_node <EMComposition.field_match_nodes>`,
+  COMMENT:
+  FROM CodePilot: (OF HISTORICAL INTEREST?)
+  and may also be more effective if the keys are highly correlated (e.g., if they are different representations of
+  the same stimulus).
+  COMMENT
+  however it will not necessarily produce the same results as passing each key through its own `field_match_node
+  <EMComposition.field_match_nodes>` (see `concatenate keys <`concatenate_keys_node
+  >` for additional
+  information).
 
 * **Match memories by field**. The values of each `key_input_node <EMComposition.key_input_nodes>` (or the
   `concatenate_keys_node <EMComposition.concatenate_keys_node>` if `concatenate_keys <EMComposition_Concatenate_Keys>`
-  attribute is True) are passed through the corresponding `field_match_node <EMComposition.field_match_nodes>`, which computes
-  the dot product of the input with each memory for the corresponding field, resulting in a vector of dot products
-  for each memory in the corresponding field.
+  attribute is True) are passed through a `MappingProjection` that computes the dot product of the input with each
+  memory for the corresponding field, the result of which is passed to the corresponding `field_match_node
+  <EMComposition.field_match_nodes>`.
 
-* **Softmax normalize matches over fields**. The dot products of memories for each field are passed to the
-  corresponding `softmax_node <EMComposition.softmax_nodes>`, which applies a softmax function to normalize the
-  dot products of memories for each field.  If `softmax_gain <EMComposition.softmax_gain>` is specified, it is
-  used as the gain (inverse temperature) for the softmax function; if it is specified as *CONTROL* or None, then
-  the `softmax_gain <EMComposition.softmax_gain>` function is used to adaptively set the gain (see `softmax_gain
-  <EMComposition_Softmax_Gain>` for details).
+* **Softmax normalize matches over fields**. The dot product for each key field is passed from the `field_match_node
+  <EMComposition.field_match_nodes>` to the corresponding `softmax_node <EMComposition.softmax_nodes>`, which applies
+  a softmax function to normalize the dot products for each key field.  If a numerical value is specified for
+  `softmax_gain <EMComposition.softmax_gain>`, that is used as the gain (inverse temperature) for the softmax function;
+  otherwise, if it is specified as *CONTROL* or None, then the `softmax_gain <EMComposition.softmax_gain>` function is
+  used to adaptively set the gain (see `softmax_gain <EMComposition_Softmax_Gain>` for details).
 
-* **Weight fields**. The softmax normalized dot products of keys and memories for each field are passed to the
-  `combined_softmax_node <EMComposition.combined_softmax_node>`, which applies the corresponding `field_weight
-  <EMComposition.field_weights>` to the softmaxed dot products of memories for each field, and then haddamard sums
-  those weighted dot products to produce a single weighting for each memory.
+* **Weight fields**. If `field weights <EMComposition_Field_Weights>` are specified, then the softmax normalized dot
+  product for each key field is passed to the corresponding `field_weight_node <EMComposition.field_weight_nodes>`
+  where it is multiplied by the corresponding `field_weight <EMComposition.field_weights>` (if
+  `use_gating_for_weighting <EMComposition.use_gating_for_weighting>` is True, this is done by using the `field_weight
+  <EMComposition.field_weights>` to output gate the `softmax_node <EMComposition.softmax_nodes>`). The weighted softamx
+  vectors for all key fields are then passed to the `combined_softmax_node <EMComposition.combined_softmax_node>`,
+  where they are haddamard summed to produce a single weighting for each memory.
 
-* **Retrieve values by field**. The vector of weights for each memory generated by the `combined_softmax_node
+* **Retrieve values by field**. The vector of softmax weights for each memory generated by the `combined_softmax_node
   <EMComposition.combined_softmax_node>` is passed through the Projections to the each of the `retrieved_nodes
   <EMComposition.retrieved_nodes>` to compute the retrieved value for each field.
 
@@ -958,26 +983,39 @@ class EMComposition(AutodiffComposition):
         from the corresponding `field_match_nodes <EMComposition.field_match_nodes>` (see `Softmax normalize matches over fields
         <EMComposition_Processing>` for additional details).
 
-    retrieval_gating_nodes : list[GatingMechanism]
-        `GatingMechanisms <GatingMechanism>` that uses the `field weight <EMComposition.field_weights>` for each
-        field to modulate the output of the corresponding `retrieved_node <EMComposition.retrieved_nodes>` before it
-        is passed to the `combined_softmax_node <EMComposition.combined_softmax_node>`. These are implemented
-        only if `use_gating_for_weighting <EMComposition.use_gating_for_weighting>` is True and more than one
-        `key field <EMComposition_Fields>` is specified (see `Fields <EMComposition_Fields>` for additional details).
-
     field_weight_nodes : list[ProcessingMechanism]
-        `ProcessingMechanisms <ProcessingMechanism>` that use the `field weight <EMComposition.field_weights>` for
-        each field as their (fixed) input to multiply the input to the corresponding `input_port <InputPort>` of the
-        `combined_softmax_node <EMComposition.combined_softmax_node>`. These are implemented only if more than one
+        `ProcessingMechanisms <ProcessingMechanism>`, each of which use the `field weight <EMComposition.field_weights>`
+        for a given `field <EMComposition_Fields>` as its (fixed) input and provides this to the corresponding
+        `weighted_softmax_node <EMComposition.weighted_softmax_nodes>`. These are implemented only if more than one
         `key field <EMComposition_Fields>` is specified (see `Fields <EMComposition_Fields>` for additional details),
         and are replaced with `retrieval_gating_nodes <EMComposition.retrieval_gating_nodes>` if
         `use_gating_for_weighting <EMComposition.use_gating_for_weighting>` is True.
 
+    weighted_softmax_nodes : list[ProcessingMechanism]
+        `ProcessingMechanisms <ProcessingMechanism>`, each of which receives the output of the corresponding
+        `softmax_node <EMComposition.softmax_nodes>` and `field_weight_node <EMComposition.field_weight_nodes>`
+        for a given `field <EMComposition_Fields>`, and multiplies them to produce the weighted softmax for that field;
+        these are implemented only if more than one `key field <EMComposition_Fields>` is specified (see `Fields
+        <EMComposition_Fields>` for additional details) and `use_gating_for_weighting
+        <EMComposition.use_gating_for_weighting>` is False (in which case, `field_weights <EMComposition.field_weights>`
+        are applied through output gating of the `softmax_nodes <EMComposition.softmax_nodes>` by the
+        `retrieval_gating_nodes <EMComposition.retrieval_gating_nodes>`).
+
+    retrieval_gating_nodes : list[GatingMechanism]
+        `GatingMechanisms <GatingMechanism>` that uses the `field weight <EMComposition.field_weights>` for each
+        field to modulate the output of the corresponding `softmax_node <EMComposition.softmax_nodes>` before it
+        is passed to the `combined_softmax_node <EMComposition.combined_softmax_node>`. These are implemented
+        only if `use_gating_for_weighting <EMComposition.use_gating_for_weighting>` is True and more than one
+        `key field <EMComposition_Fields>` is specified (see `Fields <EMComposition_Fields>` for additional details).
+
     combined_softmax_node : TransferMechanism
         `TransferMechanism` that receives the softmax normalized dot products of the keys and memories
-        from the `softmax_nodes <EMComposition.softmax_nodes>`, weights these using `field_weights
-        <EMComposition.field_weights>`, and haddamard sums those weighted dot products to produce a
-        single weighting for each memory.
+        from the `softmax_nodes <EMComposition.softmax_nodes>`, weighted by the `field_weights_nodes
+        <EMComposition.field_weights_nodes>` if more than one `key field <EMComposition_Fields>` is specified
+        (or `retrieval_gating_nodes <EMComposition.retrieval_gating_nodes>` if `use_gating_for_weighting
+        <EMComposition.use_gating_for_weighting>` is True), and combines them into a single vector that is used to
+        retrieve the corresponding memory for each field from `memory <EMComposition.memory>` (see `Retrieve values by
+        field <EMComposition_Processing>` for additional details).
 
     retrieved_nodes : list[TransferMechanism]
         `TransferMechanisms <TransferMechanism>` that receive the vector retrieved for each field in `memory
@@ -1488,7 +1526,7 @@ class EMComposition(AutodiffComposition):
                             ):
         """Construct Nodes and Pathways for EMComposition"""
 
-        field_weighting = len([weight for weight in field_weights if weight]) > 1
+        field_weighting = len([weight for weight in field_weights if weight]) > 1 and not concatenate_keys
 
         # First, construct Nodes of Composition with their Projections
         self.key_input_nodes = self._construct_key_input_nodes(field_weights)
@@ -1519,8 +1557,8 @@ class EMComposition(AutodiffComposition):
             if self.concatenate_keys_node is not None:
                 self.add_node(self.concatenate_keys_node)
             self.add_nodes(self.field_match_nodes)
-            self.add_nodes(self.field_weight_nodes)
             self.add_nodes(self.softmax_nodes)
+            self.add_nodes(self.field_weight_nodes)
             self.add_nodes(self.weighted_softmax_nodes)
             self.add_nodes(self.softmax_gain_control_nodes)
             self.add_node(self.combined_softmax_node)
@@ -1689,21 +1727,20 @@ class EMComposition(AutodiffComposition):
         return softmax_gain_control_nodes
 
     def _construct_field_weight_nodes(self, field_weights, concatenate_keys, use_gating_for_weighting)->list:
-        """Create ProcessingMechanisms that weight each key's softmax contribution to the retrieved values.
-        """
+        """Create ProcessingMechanisms that weight each key's softmax contribution to the retrieved values."""
 
         field_weight_nodes = []
 
         if not concatenate_keys and self.num_keys > 1:
             if use_gating_for_weighting:
                 field_weight_nodes = [GatingMechanism(input_ports={VARIABLE: field_weights[i],
-                                                                          PARAMS:{DEFAULT_INPUT: DEFAULT_VARIABLE},
-                                                                          NAME: 'OUTCOME'},
-                                                             gate=[key_match_pair[1].output_ports[0]],
-                                                             name= 'RETRIEVAL WEIGHTING' if self.num_keys == 1
-                                                             else f'RETRIEVAL WEIGHTING {i}')
-                                             for i, key_match_pair in enumerate(zip(self.key_input_nodes,
-                                                                                    self.softmax_nodes))]
+                                                                   PARAMS:{DEFAULT_INPUT: DEFAULT_VARIABLE},
+                                                                   NAME: 'OUTCOME'},
+                                                      gate=[key_match_pair[1].output_ports[0]],
+                                                      name= 'RETRIEVAL WEIGHTING' if self.num_keys == 1
+                                                      else f'RETRIEVAL WEIGHTING {i}')
+                                      for i, key_match_pair in enumerate(zip(self.key_input_nodes,
+                                                                             self.softmax_nodes))]
             else:
                 field_weight_nodes = [ProcessingMechanism(input_ports={VARIABLE: field_weights[i],
                                                                               PARAMS:{DEFAULT_INPUT: DEFAULT_VARIABLE},

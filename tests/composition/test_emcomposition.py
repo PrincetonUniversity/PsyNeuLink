@@ -231,16 +231,16 @@ class TestConstruction:
         assert isinstance(em.concatenate_keys_node, Mechanism) == concatenate_node
         if em.concatenate_keys:
             assert em.field_weight_nodes == []
-            assert bool(softmax_gain in {None, CONTROL}) == bool(len(em.softmax_control_nodes))
+            assert bool(softmax_gain in {None, CONTROL}) == bool(len(em.softmax_gain_control_nodes))
         else:
             if num_keys > 1:
                 assert len(em.field_weight_nodes) == num_keys
             else:
                 assert em.field_weight_nodes == []
             if softmax_gain in {None, CONTROL}:
-                assert len(em.softmax_control_nodes) == num_keys
+                assert len(em.softmax_gain_control_nodes) == num_keys
             else:
-                assert em.softmax_control_nodes == []
+                assert em.softmax_gain_control_nodes == []
         assert len(em.retrieved_nodes) == num_fields
 
         def test_memory_fill(start, memory_fill):
