@@ -7107,7 +7107,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                      allow_duplicates=False)
                                  for r in receivers for s in senders if not (s,r) in already_connected}
                     if any(new_projs):
-                        projs.add(*new_projs)
+                        projs |= new_projs
                     # MODIFIED 7/30/23 END
 
                     # Warn about assignment of MappingProjections from ControlMechanisms

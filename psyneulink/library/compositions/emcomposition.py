@@ -15,12 +15,10 @@
 #   - SHOULD there be any error for values retrieved?  If so, where does it go? to the keys?
 
 # - FIX: IMPLEMENT LearningMechanism FOR RETRIEVAL WEIGHTS:
-#        - refactor node_constructors to go after super().__init__() of EMComposition
-#        - implement learning pathways
-#        - implement derivative for concatenate
-#        - ADD LEARNING MECHANISM TO ADJUST FIELD_WEIGHTS (THAT MULTIPLICATIVELY MODULATES MAPPING PROJECTION)
-#        - take account of use of PRODUCT in InputPorts for derivative of function
-#        - derivative of LinearCombination
+#        - implement derivative for LinearCombination, especially PRODUCT
+#        - verify use of diagonal in derivative for softmax (see test_backprop in ScrathPad)
+#        X implement derivative for concatenate
+#        - what is learning_update: AFTER doing?  Use for scheduling execution of storage_node?
 # - FIX: implement add_storage_pathway to handle addition of storage_node as learning mechanism
 #        - in "_create_storage_learing_components()" assign "learning_update" arg
 #          as BEORE OR DURING instead of AFTER (assigned to learning_enabled arg of LearningMechanism)
@@ -53,6 +51,7 @@
 # - FIX: ALLOW SOFTMAX SPEC TO BE A DICT WITH PARAMETERS FOR _get_softmax_gain() FUNCTION
 
 # - FIX: PSYNEULINK:
+#        - show_graph(): filter out learning components if learning_disabled
 #        - Composition.add_nodes():
 #           - should check, on each call to add_node, to see if one that has a releavantprojection and, if so, add it.
 #           - Allow [None] as argument and treat as []
