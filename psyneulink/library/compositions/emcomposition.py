@@ -10,30 +10,26 @@
 
 # TODO:
 # - QUESTION:
-#   - DOES SoftmaxGainControl Node need to be in differential pathway for learning?
-#   - SHOULD the gradients be separate for each key, or distributed over all (via the softamx weighting node)?
-#   - SHOULD there be any error for values retrieved?  If so, where does it go? to the keys?
+#   - SHOULD differential of SoftmaxGainControl Node be included in learning?
+#   - SHOULD MEMORY DECAY OCCUR IF STORAGE DOES NOT? CURRENTLY IT DOES NOT (SEE EMStorage Function)
 
 # - FIX: IMPLEMENT LearningMechanism FOR RETRIEVAL WEIGHTS:
-#        - refactor node_constructors to go after super().__init__() of EMComposition
-#        - implement learning pathways
-#        - implement derivative for concatenate
-#        - ADD LEARNING MECHANISM TO ADJUST FIELD_WEIGHTS (THAT MULTIPLICATIVELY MODULATES MAPPING PROJECTION)
-#        - take account of use of PRODUCT in InputPorts for derivative of function
-#        - derivative of LinearCombination
+#        - implement derivative for LinearCombination for PRODUCT (need "fat" Jacobian, one for each InputPort)
+#        - verify use of diagonal in derivative for softmax (see test_backprop in ScrathPad)
+#        - what is learning_update: AFTER doing?  Use for scheduling execution of storage_node?
+#        X implement derivative for concatenate
 # - FIX: implement add_storage_pathway to handle addition of storage_node as learning mechanism
 #        - in "_create_storage_learing_components()" assign "learning_update" arg
 #          as BEORE OR DURING instead of AFTER (assigned to learning_enabled arg of LearningMechanism)
 # - FIX: Thresholded version of SoftMax gain (per Kamesh)
-# - FIX: DOCUMENT USE OF STORAGE_LOCATION (NONE => LOCAL, SPECIFIED => GLOBAL)
 # - FIX: DEAL WITH INDEXING IN NAMES FOR NON-CONTIGUOUS KEYS AND VALUES (reorder to keep all keys together?)
 # - FIX: _import_composition:
 #        - MOVE LearningProjections
 #        - MOVE Condition? (e.g., AllHaveRun) (OR PUT ON MECHANISM?)
 # - FIX: IMPLEMENT _integrate_into_composition METHOD THAT CALLS _import_composition ON ANOTHER COMPOSITION
-# - FIX:        AND TRANSFERS RELEVANT ATTRIBUTES (SUCH AS MEMORY, KEY_INPUT_NODES, ETC., POSSIBLY APPENDING NAMES)
+# -      AND TRANSFERS RELEVANT ATTRIBUTES (SUCH AS MEMORY, KEY_INPUT_NODES, ETC., POSSIBLY APPENDING NAMES)
+# - FIX: ADD Option to suppress field_weights when computing norm for weakest entry in EMStorageMechanism
 
-# - FIX: SHOULD MEMORY DECAY OCCUR IF STORAGE DOES NOT? CURRENTLY IT DOES NOT (SEE EMStorage Function)
 # - FIX: GENERATE ANIMATION w/ STORAGE (uses Learning but not in usual way)
 # - FIX: WRITE MORE TESTS FOR EXECUTION, WARNINGS, AND ERROR MESSAGES
 #         - 3d tuple with first entry != memory_capacity if specified
@@ -43,6 +39,7 @@
 #         - explicitly that storage occurs after retrieval
 # - FIX: WARNING NOT OCCURRING FOR Normalize ON ZEROS WITH MULTIPLE ENTRIES (HAPPENS IF *ANY* KEY IS EVER ALL ZEROS)
 # - FIX: DOCUMENTATION:
+#        - USE OF EMStore.storage_location (NONE => LOCAL, SPECIFIED => GLOBAL)
 #        - define "keys" and "values" explicitly
 #        - define "key weights" explicitly as field_weights for all non-zero values
 #        - make it clear that full size of memory is initialized (rather than "filling up" w/ use)
@@ -53,6 +50,7 @@
 # - FIX: ALLOW SOFTMAX SPEC TO BE A DICT WITH PARAMETERS FOR _get_softmax_gain() FUNCTION
 
 # - FIX: PSYNEULINK:
+#        - show_graph(): filter out learning components if learning_disabled
 #        - Composition.add_nodes():
 #           - should check, on each call to add_node, to see if one that has a releavantprojection and, if so, add it.
 #           - Allow [None] as argument and treat as []
@@ -869,9 +867,9 @@ class EMComposition(AutodiffComposition):
     .. technical_note::    
         use_storage_node : bool : default True
             specifies whether to use a `LearningMechanism` to store entries in `memory <EMComposition.memory>`.
-            If False, a method on EMComposition is used, which precludes use of `import_composition
-            <Composition.import_composition>` to integrate the EMComposition into another Composition;  to do so,
-            use_storage_node must be set to True.
+            If False, a method on EMComposition is used rather than a LearningMechanism.  This is meant for
+            debugging, and precludes use of `import_composition <Composition.import_composition>` to integrate
+            the EMComposition into another Composition;  to do so, use_storage_node must be True (default).
 
     use_gating_for_weighting : bool : default False
         specifies whether to use a `GatingMechanism` to modulate the `combined_softmax_node
