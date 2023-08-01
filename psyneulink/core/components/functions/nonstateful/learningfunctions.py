@@ -2544,8 +2544,13 @@ class BackPropagation(LearningFunction):
         dA_dW = self.activation_derivative_fct(input=None, output=activation_output, context=context)
 
         # Chain rule to get the derivative of the error with respect to the weights
-        dE_dW = dE_dA * dA_dW
-        # dE_dW = np.matmul(dE_dA,dA_dW)
+        if dA_dW.ndim == 1:
+            dE_dW = dE_dA * dA_dW
+        elif dA_dW.ndim == 2:
+            dE_dW = np.matmul(dE_dA, dA_dW)
+        else:
+            owner_str = f" of {self.owner.name}" if self.owner else ""
+            raise FunctionError(f"Dimensionality of dA_dW ({dA_dW.ndim}) for {self.name}{owner_str} is not 1 or 2.")
 
         # Weight changes = delta rule (learning rate * activity * error)
         weight_change_matrix = learning_rate * activation_input * dE_dW
