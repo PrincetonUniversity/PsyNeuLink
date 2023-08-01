@@ -3348,14 +3348,14 @@ class SoftMax(TransferFunction):
         assert per_item or len(result) == 1
         # # MODIFIED 8/1/23 OLD:
         # return result[0] if not per_item else result
-        # # MODIFIED 8/1/23 NEW:
-        # return result[0] if not per_item or np.array(result).ndim == 3 else result
-        # MODIFIED 8/1/23 NEWEST:
-        derivative = result[0] if not per_item or np.array(result).ndim == 3 else result
-        if derivative.ndim == 2:
-            return derivative.diagonal()
-        else:
-            return derivative
+        # MODIFIED 8/1/23 NEW:
+        return result[0] if not per_item or np.array(result).ndim == 3 else result
+        # # MODIFIED 8/1/23 NEWEST:  (ERRONEOUS ATTEMPT TO DEAL WITH FULL JACOBIAN
+        # derivative = result[0] if not per_item or np.array(result).ndim == 3 else result
+        # if derivative.ndim == 2:
+        #     return derivative.diagonal()
+        # else:
+        #     return derivative
         # MODIFIED 8/1/23 END
 
 
