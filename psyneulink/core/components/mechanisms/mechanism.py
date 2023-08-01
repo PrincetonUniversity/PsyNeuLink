@@ -1865,9 +1865,9 @@ class Mechanism_Base(Mechanism):
 
             try:
                 parsed_input_port_spec = _parse_port_spec(owner=self,
-                                                            port_type=InputPort,
-                                                            port_spec=s,
-                                                            )
+                                                          port_type=InputPort,
+                                                          port_spec=s,
+                                                          context=Context(string='handle_arg_input_ports'))
             except AttributeError as e:
                 if DEFER_VARIABLE_SPEC_TO_MECH_MSG in e.args[0]:
                     default_variable_from_input_ports.append(InputPort.defaults.variable)
@@ -1980,9 +1980,11 @@ class Mechanism_Base(Mechanism):
             try:
                 try:
                     for port_spec in params[INPUT_PORTS]:
-                        _parse_port_spec(owner=self, port_type=InputPort, port_spec=port_spec)
+                        _parse_port_spec(owner=self, port_type=InputPort, port_spec=port_spec,
+                                         context=Context(string='mechanism.validate_params'))
                 except TypeError:
-                    _parse_port_spec(owner=self, port_type=InputPort, port_spec=params[INPUT_PORTS])
+                    _parse_port_spec(owner=self, port_type=InputPort, port_spec=params[INPUT_PORTS],
+                                     context=Context(string='mechanism.validate_params'))
             except AttributeError as e:
                 if DEFER_VARIABLE_SPEC_TO_MECH_MSG in e.args[0]:
                     pass

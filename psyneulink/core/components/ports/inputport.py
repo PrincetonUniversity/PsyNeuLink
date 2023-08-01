@@ -519,14 +519,14 @@ following attributes, that includes ones specific to, and that can be used to cu
 
 .. _InputPort_Function:
 
-* `function <InputPort.function>` -- combines the `value <Projection_Base.value>` of all of the
-  `Projections <Projection>` received by the InputPort, and assigns the result to the InputPort's `value
-  <InputPort.value>` attribute.  The default function is `LinearCombination` that performs an elementwise (Hadamard)
-  sums the values. However, the parameters of the `function <InputPort.function>` -- and thus the `value
-  <InputPort.value>` of the InputPort -- can be modified by any `GatingProjections <GatingProjection>` received by
-  the InputPort (listed in its `mod_afferents <Port_Base.mod_afferents>` attribute.  A custom function can also be
-  specified, so long as it generates a result that is compatible with the item of the Mechanism's `variable
-  <Mechanism_Base.variable>` to which the `InputPort is assigned <Mechanism_InputPorts>`.
+* `function <InputPort.function>` -- combines the `value <Projection_Base.value>` of all of the `path_afferent
+  <InputPort.path_afferents>` `Projections <Projection>` received by the InputPort, and assigns the result to the
+  InputPort's `value <InputPort.value>` attribute.  The default function is `LinearCombination` that performs an
+  elementwise (Hadamard) sum of the afferent values. However, the parameters of the `function <InputPort.function>`
+  -- and thus the `value <InputPort.value>` of the InputPort -- can be modified by any `GatingProjections
+  <GatingProjection>` received by the InputPort (listed in its `mod_afferents <Port_Base.mod_afferents>` attribute.
+  A custom function can also be specified, so long as it generates a result that is compatible with the item of the
+  Mechanism's `variable <Mechanism_Base.variable>` to which the `InputPort is assigned <Mechanism_InputPorts>`.
 
 .. _InputPort_Value:
 
@@ -551,7 +551,7 @@ Execution
 
 An InputPort cannot be executed directly.  It is executed when the Mechanism to which it belongs is executed.
 When this occurs, the InputPort executes any `Projections <Projection>` it receives, calls its `function
-<InputPort.function>` to combines the values received from any `MappingProjections <MappingProjection>` it receives
+<InputPort.function>` to combine the values received from any `MappingProjections <MappingProjection>` it receives
 (listed in its its `path_afferents  <Port_Base.path_afferents>` attribute) and modulate them in response to any
 `GatingProjections <GatingProjection>` (listed in its `mod_afferents <Port_Base.mod_afferents>` attribute),
 and then assigns the result to the InputPort's `value <InputPort.value>` attribute. This, in turn, is assigned to
@@ -739,7 +739,7 @@ class InputPort(Port_Base):
         applied and it will generate a value that is the same length as the Projection's `value
         <Projection_Base.value>`. However, if the InputPort receives more than one Projection and
         uses a function other than a CombinationFunction, a warning is generated and only the `value
-        <Projection_Base.value>` of the first Projection list in `path_afferents <Port_Base.path_afferents>`
+        <Projection_Base.value>` of the first Projection listed in `path_afferents <Port_Base.path_afferents>`
         is used by the function, which may generate unexpected results when executing the Mechanism or Composition
         to which it belongs.
 
@@ -1113,18 +1113,24 @@ class InputPort(Port_Base):
         return self._get_all_afferents()
 
     @beartype
-    def _parse_port_specific_specs(self, owner, port_dict, port_specific_spec):
-        """Get weights, exponents and/or any connections specified in an InputPort specification tuple
-
+    def _parse_port_specific_specs(self, owner, port_dict, port_specific_spec, context=None):
+        """Parse any InputPort-specific specifications, including SIZE, COMBINE, WEIGHTS and EXPONENTS
+        Get SIZE and/or COMBINE specification in if port_specific_spec is a dict
+        Get weights, exponents and/or any connections specified if port_specific_spec is a tuple
         Tuple specification can be:
             (port_spec, connections)
             (port_spec, weights, exponents, connections)
 
-        See Port._parse_port_specific_spec for additional info.
+        See Port._parse_port_specific_specs for additional info.
 
         Returns:
-             - port_spec:  1st item of tuple if it is a numeric value;  otherwise None
-             - params dict with WEIGHT, EXPONENT and/or PROJECTIONS entries if any of these was specified.
+             - port_spec:
+                 - updated with SIZE and/or COMBINE specifications for dict;
+                 - 1st item for tuple if it is a numeric value;
+                 - otherwise None
+             - params dict:
+                 - with WEIGHT, EXPONENT and/or PROJECTIONS entries if any of these was specified.
+                 - purged of SIZE and/or COMBINE entries if they were specified in port_specific_spec
 
         """
         # FIX: ADD FACILITY TO SPECIFY WEIGHTS AND/OR EXPONENTS FOR INDIVIDUAL OutputPort SPECS
@@ -1145,16 +1151,49 @@ class InputPort(Port_Base):
             # FIX:           USE ObjectiveMechanism EXAMPLES
             # if MECHANISM in port_specific_spec:
             #     if OUTPUT_PORTS in port_specific_spec
-            if SIZE in port_specific_spec:
-                if (VARIABLE in port_specific_spec or
-                        any(key in port_dict and port_dict[key] is not None for key in {VARIABLE, SIZE})):
-                    raise InputPortError(f"PROGRAM ERROR: SIZE specification found in port_specific_spec dict "
-                                         f"for {self.__name__} specification of {owner.name} when SIZE or VARIABLE "
-                                         f"is already present in its port_specific_spec dict or port_dict.")
-                port_dict.update({VARIABLE:np.zeros(port_specific_spec[SIZE])})
-                del port_specific_spec[SIZE]
+
+            if any(spec in port_specific_spec for spec in {SIZE, COMBINE}):
+
+                if SIZE in port_specific_spec:
+                    if (VARIABLE in port_specific_spec or
+                            any(key in port_dict and port_dict[key] is not None for key in {VARIABLE, SIZE})):
+                        raise InputPortError(f"PROGRAM ERROR: SIZE specification found in port_specific_spec dict "
+                                             f"for {self.__name__} specification of {owner.name} when SIZE or VARIABLE "
+                                             f"is already present in its port_specific_spec dict or port_dict.")
+                    port_dict.update({VARIABLE:np.zeros(port_specific_spec[SIZE])})
+                    del port_specific_spec[SIZE]
+
+                if COMBINE in port_specific_spec:
+                    fct_err = None
+                    if (FUNCTION in port_specific_spec and port_specific_spec[FUNCTION] is not None):
+                        fct_str = port_specific_spec[FUNCTION].componentName
+                        fct_err = port_specific_spec[FUNCTION].operation != port_specific_spec[COMBINE]
+                        del port_specific_spec[FUNCTION]
+                    elif (FUNCTION in port_dict and port_dict[FUNCTION] is not None):
+                        fct_str = port_dict[FUNCTION].componentName
+                        fct_err = port_dict[FUNCTION].operation != port_specific_spec[COMBINE]
+                        del port_dict[FUNCTION]
+                    if fct_err is True:
+                        raise InputPortError(f"COMBINE entry (='{port_specific_spec[COMBINE]}') of InputPort "
+                                             f"specification dictionary for '{self.__name__}' of '{owner.name}' "
+                                             f"conflicts with FUNCTION entry ({fct_str}); remove one or the other.")
+                    if fct_err is False and any(source in context.string
+                                                for source in {'validate_params',
+                                                               '_instantiate_input_ports',
+                                                               '_instantiate_output_ports'}): # Suppress warning in earlier calls
+                        warnings.warn(f"Both COMBINE ('{port_specific_spec[COMBINE]}') and FUNCTION ({fct_str}) "
+                                      f"specifications found in InputPort specification dictionary for '{self.__name__}' "
+                                      f"of '{owner.name}'; no need to specify both.")
+                    # FIX: THE NEXT LINE, WHICH SHOULD JUST PASS THE COMBINE SPECIFICATION ON TO THE CONSTRUCTOR
+                    #      (AND HANDLE FUNCTION ASSIGNMENT THERE) CAUSES A CRASH (APPEARS TO BE A RECURSION ERROR);
+                    #      THEREFORE, NEED TO SET FUNCTION HERE
+                    # port_dict.update({COMBINE: port_specific_spec[COMBINE]})
+                    port_specific_spec[FUNCTION] = LinearCombination(operation=port_specific_spec[COMBINE])
+                    del port_specific_spec[COMBINE]
+
                 return port_dict, port_specific_spec
-            return None, port_specific_spec
+            else:
+                return None, port_specific_spec
 
         elif isinstance(port_specific_spec, tuple):
 
@@ -1520,6 +1559,7 @@ def _instantiate_input_ports(owner, input_ports=None, reference_value=None, cont
     if input_ports is not None:
         input_ports = _parse_shadow_inputs(owner, input_ports)
 
+    context.string = context.string or '_instantiate_input_ports'
     port_list = _instantiate_port_list(owner=owner,
                                          port_list=input_ports,
                                          port_types=InputPort,

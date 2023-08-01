@@ -377,7 +377,7 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.components.ports.inputport import InputPort, INPUT_PORT
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.port import _parse_port_spec
-from psyneulink.core.globals.context import ContextFlags, handle_external_context
+from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     CONTROL, EXPONENT, EXPONENTS, LEARNING, MATRIX, NAME, OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, \
     PARAMS, PREFERENCE_SET_NAME, PROJECTION, PROJECTIONS, PORT_TYPE, VARIABLE, WEIGHT, WEIGHTS
@@ -714,7 +714,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                 monitor_specs[i] = spec
 
             # Parse spec to get value of OutputPort and (possibly) the Projection from it
-            input_port = _parse_port_spec(owner=self, port_type = InputPort, port_spec=spec)
+            input_port = _parse_port_spec(owner=self, port_type = InputPort, port_spec=spec,
+                                          context=Context(string='objective_mechanism.add_to_monitor'))
 
             # There should be only one ProjectionTuple specified,
             #    that designates the OutputPort and (possibly) a Projection from it

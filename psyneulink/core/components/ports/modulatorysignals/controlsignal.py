@@ -1025,7 +1025,7 @@ class ControlSignal(ModulatorySignal):
             self.duration_cost = 0
             self.cost = self.defaults.cost = self.intensity_cost
 
-    def _parse_port_specific_specs(self, owner, port_dict, port_specific_spec):
+    def _parse_port_specific_specs(self, owner, port_dict, port_specific_spec, context=None):
         """Get ControlSignal specified for a parameter or in a 'control_signals' argument
 
         Tuple specification can be:

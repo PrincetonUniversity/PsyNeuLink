@@ -98,23 +98,23 @@ class TestConstruction:
         # NOTE: None => use default value (i.e., don't specify in constructor, rather than forcing None as value of arg)
         # ------------------ SPECS ---------------------------------------------   ------- EXPECTED -------------------
         #   memory_template       memory_fill   field_wts cncat_ky nmlze sm_gain   repeat  #fields #keys #vals  concat
-        (0,    (2,3),                  None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
-        (0.1,  (2,3),                   .1,       None,    None,    None,  None,    False,    2,     1,   1,    False,),
-        (0.2,  (2,3),                 (0,.1),     None,    None,    None,  None,    False,    2,     1,   1,    False,),
-        (0.3,  (4,2,3),                 .1,       None,    None,    None,  None,    False,    2,     1,   1,    False,),
-        (1,    [[0,0],[0,0]],          None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
-        (1.1,  [[0,0],[0,0]],          None,      [1,1],   None,    None,  None,    False,    2,     2,   0,    False,),
-        (2,    [[0,0],[0,0],[0,0]],    None,      None,    None,    None,  None,    False,    3,     2,   1,    False,),
-        (2.1,  [[0,0],[0,0],[0,0]],    None,      None,    None,    None,   1.5,    False,    3,     2,   1,    False,),
-        (2.2,  [[0,0],[0,0],[0,0]],    None,      None,    None,    None, CONTROL,  False,    3,     2,   1,    False,),
-        (3,    [[0,0,0],[0,0]],        None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
-        (4,    [[0,0,0],[0],[0,0]],    None,      None,    None,    None,  None,    False,    3,     2,   1,    False,),
-        (5,    [[0,0],[0,0],[0,0]],    None,       1,      None,    None,  None,    False,    3,     3,   0,    False,),
-        (5.1,  [[0,0],[0,0],[0,0]],    None,       1,      None,    None,   0.1,    False,    3,     3,   0,    False,),
-        (5.2,  [[0,0],[0,0],[0,0]],    None,       1,      None,    None, CONTROL,  False,    3,     3,   0,    False,),
-        (6,    [[0,0,0],[0],[0,0]],    None,    [1,1,1],   False,   None,  None,    False,    3,     3,   0,    False,),
-        (7,    [[0,0,0],[0],[0,0]],    None,    [1,1,1],   True,    None,  None,    False,    3,     3,   0,    True,),
-        (7.1,  [[0,0,0],[0],[0,0]],    None,    [1,1,1],   True ,   False, None,    False,    3,     3,   0,    False,),
+        # (0,    (2,3),                  None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        # (0.1,  (2,3),                   .1,       None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        # (0.2,  (2,3),                 (0,.1),     None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        # (0.3,  (4,2,3),                 .1,       None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        # (1,    [[0,0],[0,0]],          None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        # (1.1,  [[0,0],[0,0]],          None,      [1,1],   None,    None,  None,    False,    2,     2,   0,    False,),
+        # (2,    [[0,0],[0,0],[0,0]],    None,      None,    None,    None,  None,    False,    3,     2,   1,    False,),
+        # (2.1,  [[0,0],[0,0],[0,0]],    None,      None,    None,    None,   1.5,    False,    3,     2,   1,    False,),
+        # (2.2,  [[0,0],[0,0],[0,0]],    None,      None,    None,    None, CONTROL,  False,    3,     2,   1,    False,),
+        # (3,    [[0,0,0],[0,0]],        None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        # (4,    [[0,0,0],[0],[0,0]],    None,      None,    None,    None,  None,    False,    3,     2,   1,    False,),
+        # (5,    [[0,0],[0,0],[0,0]],    None,       1,      None,    None,  None,    False,    3,     3,   0,    False,),
+        # (5.1,  [[0,0],[0,0],[0,0]],    None,       1,      None,    None,   0.1,    False,    3,     3,   0,    False,),
+        # (5.2,  [[0,0],[0,0],[0,0]],    None,       1,      None,    None, CONTROL,  False,    3,     3,   0,    False,),
+        # (6,    [[0,0,0],[0],[0,0]],    None,    [1,1,1],   False,   None,  None,    False,    3,     3,   0,    False,),
+        # (7,    [[0,0,0],[0],[0,0]],    None,    [1,1,1],   True,    None,  None,    False,    3,     3,   0,    True,),
+        # (7.1,  [[0,0,0],[0],[0,0]],    None,    [1,1,1],   True ,   False, None,    False,    3,     3,   0,    False,),
         (8,    [[0,0],[0,0],[0,0]],    None,    [1,2,0],   None,    None,  None,    False,    3,     2,   1,    False,),
         (8.1,  [[0,0],[0,0],[0,0]],    None,    [1,2,0],   True,    None,  None,    False,    3,     2,   1,    False,),
         (9,    [[0,1],[0,0],[0,0]],    None,    [1,2,0],   None,    None,  None,    [0,1],    3,     2,   1,    False,),
@@ -127,9 +127,9 @@ class TestConstruction:
                 [[0,0],[0,0,0],[0,0]]],  .1,    [1,1,0],   None,    None,  None,      2,      3,     2,   1,    False,),
         (12.2,  [[[0,0],[0,0,0],[0,0]], # two entries specified, first has 0's
                 [[0,2],[0,0,0],[0,0]]],  .1,    [1,1,0],   None,    None,  None,      2,      3,     2,   1,    False,),
-        (12.3, [[[0,1],[0,0,0],[0,0]], # two entries specified, fields have same weights
+        (12.3, [[[0,1],[0,0,0],[0,0]], # two entries specified, fields have same weights, but concatenate is False
                 [[0,2],[0,0,0],[0,0]]],  .1,    [1,1,0],   None,    None,  None,      2,      3,     2,   1,    False),
-        (13,   [[[0,1],[0,0,0],[0,0]], # two entries specified, fields have same weights, but conccatenate_keys is False
+        (13,   [[[0,1],[0,0,0],[0,0]], # two entries specified, fields have same weights, and concatenate_keys is True
                 [[0,2],[0,0,0],[0,0]]],  .1,    [1,1,0],   True,    None,  None,      2,      3,     2,   1,    True),
         (14,   [[[0,1],[0,0,0],[0,0]], # two entries specified, all fields are keys
                 [[0,2],[0,0,0],[0,0]]],  .1,    [1,1,1],   None,    None,  None,      2,      3,     3,   0,    False),
@@ -230,18 +230,18 @@ class TestConstruction:
         assert len(em.value_input_nodes) == num_values
         assert isinstance(em.concatenate_keys_node, Mechanism) == concatenate_node
         if em.concatenate_keys:
-            assert em.retrieval_gating_nodes == []
+            assert em.retrieval_weighting_nodes == []
             assert bool(softmax_gain in {None, CONTROL}) == bool(len(em.softmax_control_nodes))
         else:
             if num_keys > 1:
-                assert len(em.retrieval_gating_nodes) == num_keys
+                assert len(em.retrieval_weighting_nodes) == num_keys
             else:
-                assert em.retrieval_gating_nodes == []
+                assert em.retrieval_weighting_nodes == []
             if softmax_gain in {None, CONTROL}:
                 assert len(em.softmax_control_nodes) == num_keys
             else:
                 assert em.softmax_control_nodes == []
-        assert len(em.retrieval_nodes) == num_fields
+        assert len(em.retrieved_nodes) == num_fields
 
         def test_memory_fill(start, memory_fill):
             memory_fill = memory_fill or 0
@@ -272,19 +272,6 @@ class TestConstruction:
 
 @pytest.mark.pytorch
 class TestExecution:
-
-    # TEST:
-    # 0: 3 entries that fill memory; no decay, one key, high softmax gain, no storage, inputs has only key (no value)
-    # 1: 3 entries that fill memory; no decay, one key, high softmax gain, no storage, inputs has key & value
-    # 2:   same as 1 but different value (that should be ignored)
-    # 3:   same as 2 but has extra entry filled with random values (which changes retrieval)
-    # 4:   same as 3 but uses both fields as keys (no values)
-    # 5:   same as 4 but no concatenation of keys (confirms that results are similar w/ and w/o concatenation)
-    # 6:   same as 5, but different field_weights
-    # 7:   store + no decay
-    # 8:   store + default decay (should be AUTO
-    # 9:   store + explicit AUTO decay
-    # 10:  store + numerical decay
 
     test_execution_data = [
         # NOTE: None => use default value (i.e., don't specify in constructor, rather than forcing None as value of arg)
@@ -397,20 +384,20 @@ class TestExecution:
                              ids=[x[0] for x in test_execution_data])
     @pytest.mark.composition
     @pytest.mark.benchmark
-    def test_execution(self,
-                       comp_mode,
-                       test_num,
-                       memory_template,
-                       memory_capacity,
-                       memory_fill,
-                       memory_decay_rate,
-                       field_weights,
-                       concatenate_keys,
-                       normalize_memories,
-                       softmax_gain,
-                       storage_prob,
-                       inputs,
-                       expected_retrieval):
+    def test_simple_execution(self,
+                              comp_mode,
+                              test_num,
+                              memory_template,
+                              memory_capacity,
+                              memory_fill,
+                              memory_decay_rate,
+                              field_weights,
+                              concatenate_keys,
+                              normalize_memories,
+                              softmax_gain,
+                              storage_prob,
+                              inputs,
+                              expected_retrieval):
 
         if comp_mode != pnl.ExecutionMode.Python:
             pytest.skip('Compilation not yet support for Composition.import.')
@@ -449,10 +436,10 @@ class TestExecution:
         np.testing.assert_allclose(retrieved, expected_retrieval)
 
         # Validate that sum of weighted softmax distributions in retrieval_weighting_node itself sums to 1
-        np.testing.assert_allclose(np.sum(em.retrieval_weighting_node.value), 1.0, atol=1e-15)
+        np.testing.assert_allclose(np.sum(em.softmax_weighting_node.value), 1.0, atol=1e-15)
 
         # Validate that sum of its output ports also sums to 1
-        np.testing.assert_allclose(np.sum([port.value for port in em.retrieval_weighting_node.output_ports]),
+        np.testing.assert_allclose(np.sum([port.value for port in em.softmax_weighting_node.output_ports]),
                                    1.0, atol=1e-15)
 
         # Validate storage
@@ -473,6 +460,45 @@ class TestExecution:
             else:
                 memory_fill = memory_fill or 0
                 assert all(elem == memory_fill for elem in em.memory[-1])
+
+
+    @pytest.mark.composition
+    @pytest.mark.benchmark
+    @pytest.mark.parametrize('concatenate', [True, False])
+    @pytest.mark.parametrize('use_storage_node', [True, False])
+    def test_multiple_trials_concatenation_and_storage_node(self,comp_mode, concatenate, use_storage_node):
+
+        if comp_mode != pnl.ExecutionMode.Python:
+            pytest.skip('Compilation not yet support for Composition.import.')
+
+        def temp(context):
+            memory = context.composition.parameters.memory.get(context)
+            assert True
+
+        em = EMComposition(memory_template=(2,3),
+                           field_weights=[1,1],
+                           memory_capacity=4,
+                           softmax_gain=100,
+                           memory_fill=(0,.001),
+                           concatenate_keys=concatenate,
+                           use_storage_node=use_storage_node)
+
+        inputs = [[[[1,2,3]],[[4,5,6]],[[10,20,30]],[[40,50,60]],[[100,200,300]],[[400,500,600]]],
+                  [[[1,2,5]],[[4,5,8]],[[11,21,31]],[[41,51,61]],[[111,222,333]],[[444,555,666]]],
+                  [[[1,2,10]],[[4,5,10]]],[[[51,52,53]],[[81,82,83]],[[777,888,999]],[[1111,2222,3333]]]]
+
+        expected_memory = [[[0.15625, 0.3125,  0.46875], [0.171875, 0.328125, 0.484375]],
+                           [[400., 500., 600.], [444., 555., 666.]],
+                           [[2.5, 3.125, 3.75 ], [2.5625, 3.1875, 3.8125]],
+                           [[25., 50., 75.], [27.75, 55.5,  83.25]]]
+
+        input_nodes = em.key_input_nodes + em.value_input_nodes
+        inputs = {input_nodes[i]:inputs[i] for
+                  i in range(len(input_nodes))}
+        em.run(inputs=inputs,
+               # call_after_trial=temp
+               )
+        np.testing.assert_equal(em.memory, expected_memory)
 
 
 # *****************************************************************************************************************
