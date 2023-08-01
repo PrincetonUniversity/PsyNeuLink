@@ -3303,21 +3303,20 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                                                function=pnl.GridSearch(save_values=True),
                                                control_signals=[control_signal],
                                                comp_execution_mode=ocm_mode)
-        # objective_mech.log.set_log_conditions(pnl.OUTCOME)
 
         comp.add_controller(ocm)
 
         inputs = {A: [[[1.0]], [[2.0]], [[3.0]]]}
 
-        comp.run(inputs=inputs, execution_mode=mode)
+        def comp_run(inputs, execution_mode):
+            comp.run(inputs=inputs, execution_mode=execution_mode)
+            return comp.results.copy(), np.asfarray(ocm.function.saved_values)
 
-        # objective_mech.log.print_entries(pnl.OUTCOME)
-        np.testing.assert_allclose(comp.results, [[np.array([1.])], [np.array([1.5])], [np.array([2.25])]])
+        results, saved_values = benchmark(comp_run, inputs, mode)
+
+        np.testing.assert_allclose(results, [[np.array([1.])], [np.array([1.5])], [np.array([2.25])]])
         if mode == pnl.ExecutionMode.Python:
-            np.testing.assert_allclose(np.asfarray(ocm.function.saved_values).flatten(), [0.75, 1.5, 2.25])
-
-        if benchmark.enabled:
-            benchmark(comp.run, inputs, execution_mode=mode)
+            np.testing.assert_allclose(saved_values, [0.75, 1.5, 2.25])
 
     @pytest.mark.benchmark(group="Model Based OCM")
     @pytest.mark.parametrize("mode, ocm_mode", pytest.helpers.get_comp_and_ocm_execution_modes())
@@ -3344,21 +3343,20 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                                                function=pnl.GridSearch(save_values=True),
                                                control_signals=[control_signal],
                                                comp_execution_mode=ocm_mode)
-        # objective_mech.log.set_log_conditions(pnl.OUTCOME)
 
         comp.add_controller(ocm)
 
         inputs = {A: [[[1.0]], [[2.0]], [[3.0]]]}
 
-        comp.run(inputs=inputs, execution_mode=mode)
+        def comp_run(inputs, execution_mode):
+            comp.run(inputs=inputs, execution_mode=execution_mode)
+            return comp.results.copy(), np.asfarray(ocm.function.saved_values)
 
-        # objective_mech.log.print_entries(pnl.OUTCOME)
-        np.testing.assert_allclose(comp.results, [[np.array([0.75])], [np.array([1.5])], [np.array([2.25])]])
+        results, saved_values = benchmark(comp_run, inputs, mode)
+
+        np.testing.assert_allclose(results, [[np.array([0.75])], [np.array([1.5])], [np.array([2.25])]])
         if mode == pnl.ExecutionMode.Python:
-            np.testing.assert_allclose(np.asfarray(ocm.function.saved_values).flatten(), [0.75, 1.5, 2.25])
-
-        if benchmark.enabled:
-            benchmark(comp.run, inputs, execution_mode=mode)
+            np.testing.assert_allclose(saved_values, [0.75, 1.5, 2.25])
 
     def test_model_based_ocm_with_buffer(self):
 
