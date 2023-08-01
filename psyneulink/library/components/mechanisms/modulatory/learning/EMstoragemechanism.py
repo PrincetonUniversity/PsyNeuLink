@@ -86,7 +86,7 @@ specification that indicates whether each `field is a key or a value field <EMSt
 Structure
 ---------
 
-An EMStorageMechanism is identical to a `LearningMechanism` in all respects except the following:
+An EMStorageMechanism differs from a standard `LearningMechanism` in the following ways:
 
   * it has no `input_source <LearningMechanism.input_source>`, `output_source <LearningMechanism.output_source>`,
     or `error_source <LearningMechanism.error_source>` attributes;  instead, it has the `fields
@@ -141,11 +141,14 @@ An EMStorageMechanism is identical to a `LearningMechanism` in all respects exce
 Execution
 ---------
 
-An EMStorageMechanism executes in the same manner as standard `LearningMechanism`, however instead of modulating
+An EMStorageMechanism executes after all of the other Mechanisms in the `EMComposition` to which it belongs have
+executed.  It executes in the same manner as standard `LearningMechanism`, however instead of modulating
 the `matrix <MappingProjection.matrix>` Parameter of a `MappingProjection`, it replaces a row or column in each of
 the `matrix <MappingProjection.matrix>` Parameters of the `MappingProjections <MappingProjection>` to which its
 `LearningProjections <LearningProjection>` project with an item of its `variable <EMStorageMechanism.variable>` that
-represents the corresponding `field <EMStorageMechanism.fields>`.
+represents the corresponding `field <EMStorageMechanism.fields>`. The entry replaced is the one that has the lowest
+norm computed across all `fields <EMSorageMechanism_Fields>` of the `entry <EMStorageMechanism_Entry>` weighted by the
+corresponding items of `field_weights <EMStorageMechanism.field_weights>` if that is specified.
 
 
 .. _EMStorageMechanism_Class_Reference:
@@ -296,14 +299,14 @@ class EMStorageMechanism(LearningMechanism):
     function : LearningFunction or function : default EMStorage
         specifies the function used to assign each item of the `variable <EMStorageMechanism.variable>` to the
         corresponding `field <EMStorageMechanism_Fields>` of the `memory_matrix <EMStorageMechanism.memory_matrix>`.
-        It must take as its `variable <EMSorage.variable> argument a list or 1d array of numeric values
-        (the "activity vector"), as well as a ``memory_matrix`` argument that is a 2d array or matrix to which
-        the `variable <EMStorageMechanism.variable>` is assigned, ``axis`` and ``storage_location`` arguments that
-        determine where in ``memory_matrix`` the `variable <EMStorageMechanism.variable>` is entered, and optional
+        It must take as its `variable <EMStorage.variable>` argument a list or 1d array of numeric values
+        (the "activity vector"); a ``memory_matrix`` argument that is a 2d array or matrix to which
+        the `variable <EMStorageMechanism.variable>` is assigned; ``axis`` and ``storage_location`` arguments that
+        determine where in ``memory_matrix`` the `variable <EMStorageMechanism.variable>` is stored; and optional
         ``storage_prob`` and ``decay_rate`` arguments that determine the probability with which storage occurs and
         the rate at which the `memory_matrix <EMStorageMechanism.memory_matrix>` decays, respectively.  The function
         must return a list, 2d np.array or np.matrix for the corresponding `field <EMStorageMechanism_Fields>` of the
-        `memory_matrix <EMStorageMechanism.memory_matrix>` that is updated.
+        `memory_matrix <EMStorageMechanism.memory_matrix>` that is updated (see `EMStorage` for additional details).
 
     learning_signals : List[ParameterPort, Projection, tuple[str, Projection] or dict] : default None
         specifies the `ParameterPort`\\(s) for the `matrix <MappingProjection.matrix>` parameter of the
@@ -741,7 +744,7 @@ class EMStorageMechanism(LearningMechanism):
          - compute norms to find weakest entry in memory
          - compute storage_prob to determine whether to store current entry in memory
          - call function for each LearningSignal to decay existing memory and assign input to weakest entry
-        EMStore function:
+        EMStorage function:
          - decay existing memories
          - assign input to weakest entry (given index for passed from EMStorageMechanism)
 

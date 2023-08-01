@@ -207,13 +207,15 @@ class EMStorage(LearningFunction):
         specifies shape of `entry <EMStorage.entry>` passed in the call to the `function <EMStorage.function>`.
 
     axis : int : default 0
-        specifies the axis of `memory_matrix <EMStorage.memory_matrix>` to which `entry <EMStorage.entry>` is assigned.
+        specifies the axis of `memory_matrix <EMStorage.memory_matrix>` referenced by `storage_location
+        <EMStorage.storage_location>` to which `entry <EMStorage.entry>` is assigned.
 
     storage_location : int : default None
         specifies the location (row or col determined by `axis <EMStorage.axis>`) of `memory_matrix
         <EMStorage.memory_matrix>` at which the new entry is stored (replacing the existing one);
-        if None, the weeakest entry (one with the lowest norm) along `axis <EMStorage.axis>` of
-        `memory_matrix <EMStorage.memory_matrix>` is used.
+        if None, the weakest entry (one with the lowest norm) along `axis <EMStorage.axis>` of
+        `memory_matrix <EMStorage.memory_matrix>` is used; if an int is specified, that row (if ``axis``=0) or
+        column (if ``axis``=1) is used.
 
     storage_prob : float : default default_learning_rate
         specifies the probability with which `entry <EMStorage.entry>` is assigned to `memory_matrix
@@ -249,11 +251,12 @@ class EMStorage(LearningFunction):
         matrix to which the entry is assigned along `axis <EMstorage.axis>`.
 
     axis : int
-        determines axis of `memory_matrix <EMStorage.memory_matrix>` to which `entry <EMStorage.entry>` is assigned.
+        determines axis of `memory_matrix <EMStorage.memory_matrix>` referenced by `storage_location
+        <EMStorage.storage_location>` that determines where `entry <EMStorage.entry>` is stored.
 
     storage_location : int
-        specifies the location (row or col determined by `axis <EMStorage.axis>`) of `memory_matrix
-        <EMStorage.memory_matrix>` at which the new entry is stored.
+        specifies the location (row if `axis <EMStorage.axis>` is 0, or col if `axis <EMStorage.axis>` is 1) of
+        `memory_matrix <EMStorage.memory_matrix>` at which the new entry is stored.
 
     storage_prob : float
         determines the probability with which `entry <EMStorage.entry>` is stored in `memory_matrix
@@ -2540,17 +2543,21 @@ class BackPropagation(LearningFunction):
             dE_dA = np.dot(error_matrix, self._get_current_parameter_value(ERROR_SIGNAL, context))
 
         # Derivative of the output activity
+        # FIX: THIS SHOULD BE dA(output)/dA(input to function) [using function's derivative]
+        #                   * dA(input to function)/dW
         activation_output = self._get_current_parameter_value(ACTIVATION_OUTPUT, context)
         dA_dW = self.activation_derivative_fct(input=None, output=activation_output, context=context)
 
         # Chain rule to get the derivative of the error with respect to the weights
+        # MODIFIED 8/1/23 NEW:
         if dA_dW.ndim == 1:
-            dE_dW = dE_dA * dA_dW
+            dE_dW = dE_dA * dA_dW  # FIX: <- THIS WAS THE ORIGINAL CODE
         elif dA_dW.ndim == 2:
-            dE_dW = np.matmul(dE_dA, dA_dW)
+            dE_dW = np.matmul(dE_dA, dA_dW)   # FIX: <- THIS HAD BEEN COMMENTED OUT
         else:
             owner_str = f" of {self.owner.name}" if self.owner else ""
             raise FunctionError(f"Dimensionality of dA_dW ({dA_dW.ndim}) for {self.name}{owner_str} is not 1 or 2.")
+        # MODIFIED 8/1/23 END
 
         # Weight changes = delta rule (learning rate * activity * error)
         weight_change_matrix = learning_rate * activation_input * dE_dW

@@ -1375,7 +1375,7 @@ class LinearCombination(
             #    make sure there are no zeros for an element that is assigned a negative exponent
             # Allow during initialization because 0s are common in default_variable argument
             if self.is_initializing:
-                with np.edrrstate(divide='raise'):
+                with np.errstate(divide='raise'):
                     try:
                         variable = variable ** exponents
                     except FloatingPointError:
@@ -1447,6 +1447,7 @@ class LinearCombination(
 
         """
 
+        # FIX: NEED TO DEAL WITH PRODUCT HERE WRT TO WHICH INPUT PORT IS BEING "DERIVED"
         # return np.eye(len(output)) * self._get_current_parameter_value(SCALE, context)
         return np.diag(np.eye(len(output)) * self._get_current_parameter_value(SCALE, context))
         # return self._get_current_parameter_value(SCALE, context)
