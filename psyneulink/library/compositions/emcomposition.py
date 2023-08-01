@@ -1568,23 +1568,57 @@ class EMComposition(AutodiffComposition):
 
         # Set up backpropagation pathways for learning field weights
         else:
-            for key_node, field_match_node, softmax_node, retrieved_node in zip(self.key_input_nodes,
-                                                                          self.field_match_nodes,
-                                                                          self.softmax_nodes,
-                                                                          self.retrieved_nodes[:self.num_keys]):
-                self.add_backpropagation_learning_pathway([key_node, field_match_node,
-                                                           softmax_node, self.combined_softmax_node,
+            for key_node, field_match_node, softmax_node, weighted_soft_max_node, retrieved_node \
+                    in zip(self.key_input_nodes,
+                           self.field_match_nodes,
+                           self.softmax_nodes,
+                           self.weighted_softmax_nodes,
+                           self.retrieved_nodes[:self.num_keys]):
+                self.add_backpropagation_learning_pathway([key_node,
+                                                           field_match_node,
+                                                           softmax_node,
+                                                           weighted_soft_max_node,
+                                                           self.combined_softmax_node,
                                                            retrieved_node])
 
-            for retrieved_node in self.retrieved_nodes[self.num_keys:]:
+            for field_weight_node, weighted_softmax_node, retrieved_node in zip(self.field_weight_nodes,
+                                                                                 self.weighted_softmax_nodes,
+                                                                                 self.retrieved_nodes[:self.num_keys]):
+                self.add_backpropagation_learning_pathway([field_weight_node,
+                                                           weighted_softmax_node,
+                                                           self.combined_softmax_node,
+                                                           retrieved_node])
+
+            for retrieved_node in self.retrieved_nodes[self.num_keys:self.num_fields]:
                 self.add_backpropagation_learning_pathway([self.combined_softmax_node, retrieved_node])
 
-            for field_weight_node in self.field_weight_nodes:
-                self.add_backpropagation_learning_pathway([field_weight_node,
-                                                           self.combined_softmax_node,
-                                                           self.retrieved_nodes[:self.num_keys]])
             self.add_nodes(self.value_input_nodes)
 
+            # for key_node, field_match_node, softmax_node, weighted_soft_max_node, retrieved_node \
+            #         in zip(self.key_input_nodes,
+            #                self.field_match_nodes,
+            #                self.softmax_nodes,
+            #                self.weighted_softmax_nodes,
+            #                self.retrieved_nodes[:self.num_keys]):
+            #     self.add_linear_processing_pathway([key_node,
+            #                                                field_match_node,
+            #                                                softmax_node,
+            #                                                weighted_soft_max_node,
+            #                                                self.combined_softmax_node,
+            #                                                retrieved_node])
+            #
+            # for field_weight_node, weighted_softmax_node, retrieved_node in zip(self.field_weight_nodes,
+            #                                                                      self.weighted_softmax_nodes,
+            #                                                                      self.retrieved_nodes[:self.num_keys]):
+            #     self.add_linear_processing_pathway([field_weight_node,
+            #                                                weighted_softmax_node,
+            #                                                self.combined_softmax_node,
+            #                                                retrieved_node])
+            #
+            # for retrieved_node in self.retrieved_nodes[self.num_keys:self.num_fields]:
+            #     self.add_linear_processing_pathway([self.combined_softmax_node, retrieved_node])
+            #
+            # self.add_nodes(self.value_input_nodes)
     def _construct_key_input_nodes(self, field_weights)->list:
         """Create one node for each key to be used as cue for retrieval (and then stored) in memory.
         Used to assign new set of weights for Projection for key_input_node[i] -> field_match_node[i]
@@ -1743,11 +1777,11 @@ class EMComposition(AutodiffComposition):
                                                                              self.softmax_nodes))]
             else:
                 field_weight_nodes = [ProcessingMechanism(input_ports={VARIABLE: field_weights[i],
-                                                                              PARAMS:{DEFAULT_INPUT: DEFAULT_VARIABLE},
-                                                                              NAME: 'FIELD_WEIGHT'},
-                                                                 name= 'WEIGHT' if self.num_keys == 1
-                                                                 else f'WEIGHT FOR {self.key_names[i]}')
-                                             for i in range(self.num_keys)]
+                                                                       PARAMS:{DEFAULT_INPUT: DEFAULT_VARIABLE},
+                                                                       NAME: 'FIELD_WEIGHT'},
+                                                          name= 'WEIGHT' if self.num_keys == 1
+                                                          else f'WEIGHT FOR {self.key_names[i]}')
+                                      for i in range(self.num_keys)]
         return field_weight_nodes
 
     def _construct_weighted_softmax_nodes(self, memory_capacity, use_gating_for_weighting)->list:

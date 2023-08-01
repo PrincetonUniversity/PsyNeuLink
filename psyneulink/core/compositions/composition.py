@@ -7096,22 +7096,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     #                              allow_duplicates=False)
                     #         for r in receivers for s in senders}
                     # MODIFIED 7/30/23 NEW:
-                    # Check for any existing Projections and, if they are present, add them to the list
+                    # Check for any existing Projections between senders and receivers
+                    #   and, if they are present, use those
                     projs = {proj for proj in self.projections
                              if proj.sender.owner in senders and proj.receiver.owner in receivers}
+                    already_connected = {(proj.sender.owner, proj.receiver.owner) for proj in projs}
                     # Add Projections for any pairs that don't already have them
-                    # projs.add(*{self.add_projection(sender=s, receiver=r,
-                    #                                 default_matrix=default_projection_matrix,
-                    #                                 allow_duplicates=False)
-                    #             for r in receivers for s in senders})
                     new_projs = {self.add_projection(sender=s, receiver=r,
-                                                                default_matrix=default_projection_matrix,
-                                                                allow_duplicates=False)
-                                            for r in receivers for s in senders}
+                                                     default_matrix=default_projection_matrix,
+                                                     allow_duplicates=False)
+                                 for r in receivers for s in senders if not (s,r) in already_connected}
                     if any(new_projs):
                         projs.add(*new_projs)
-
                     # MODIFIED 7/30/23 END
+
                     # Warn about assignment of MappingProjections from ControlMechanisms
                     for ctl_mech in [s for s in senders if isinstance(s, ControlMechanism)]:
                         warnings.warn(f"A {MappingProjection.__name__} has been created from a "
