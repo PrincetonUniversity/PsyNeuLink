@@ -745,6 +745,9 @@ from psyneulink.core.globals.keywords import \
     AUTO, COMBINE, CONTROL, DEFAULT_INPUT, DEFAULT_VARIABLE, EM_COMPOSITION, FUNCTION, GAIN, IDENTITY_MATRIX, \
     MULTIPLICATIVE_PARAM, NAME, PARAMS, PRODUCT, PROJECTIONS, RANDOM, SIZE, VARIABLE
 from psyneulink.core.globals.utilities import all_within_range
+from psyneulink.core.scheduling.time import TimeScale
+import psyneulink.core.scheduling.condition as conditions
+
 
 __all__ = [
     'EMComposition'
@@ -1255,7 +1258,12 @@ class EMComposition(AutodiffComposition):
         #     self.scheduler.add_condition(self.storage_node, WhenFinished(node))
         # self.scheduler.add_condition(self.storage_node, WhenFinished(self.retrieved_nodes[1]))
         if self.use_storage_node:
-            self.scheduler.add_condition(self.storage_node, gs.AllHaveRun(*self.retrieved_nodes))
+            # Works, but seems to execute Input nodes twice (once at beginning, and once with Storage node)
+            self.scheduler.add_condition(self.storage_node, conditions.AllHaveRun(*self.retrieved_nodes))
+            # The following seem to run but hang (or take inordinately long to run):
+            # self.scheduler.add_condition(self.storage_node, conditions.AllHaveRun(*self.retrieved_nodes,
+            #                                                               time_scale=TimeScale.PASS))
+            # self.scheduler.add_condition(self.storage_node, conditions.JustRan(self.retrieved_nodes[0]))
 
         # Suppress warnings for no efferent Projections
         for node in self.value_input_nodes:
