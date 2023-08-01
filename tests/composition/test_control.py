@@ -3279,13 +3279,16 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
 
     @pytest.mark.benchmark(group="Model Based OCM")
     @pytest.mark.parametrize("mode, ocm_mode", pytest.helpers.get_comp_and_ocm_execution_modes())
-    def test_model_based_ocm_after(self, benchmark, mode, ocm_mode):
+    @pytest.mark.parametrize("controller_mode,result", [
+        pytest.param(pnl.AFTER, [[[1.]], [[1.5]], [[2.25]]], id="AFTER"),
+        pytest.param(pnl.BEFORE, [[[0.75]], [[1.5]], [[2.25]]], id="BEFORE")
+    ])
+    def test_model_based_ocm(self, benchmark, controller_mode, result, mode, ocm_mode):
 
         A = pnl.ProcessingMechanism(name='A')
         B = pnl.ProcessingMechanism(name='B')
 
-        comp = pnl.Composition(name='comp',
-                               controller_mode=pnl.AFTER)
+        comp = pnl.Composition(name='comp', controller_mode=controller_mode)
         comp.add_linear_processing_pathway([A, B])
 
         search_range = pnl.SampleSpec(start=0.25, stop=0.75, step=0.25)
@@ -3313,49 +3316,9 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
 
         results, saved_values = benchmark(comp_run, inputs, mode)
 
-        np.testing.assert_allclose(results, [[np.array([1.])], [np.array([1.5])], [np.array([2.25])]])
+        np.testing.assert_array_equal(results, result)
         if mode == pnl.ExecutionMode.Python:
-            np.testing.assert_allclose(saved_values.flatten(), [0.75, 1.5, 2.25])
-
-    @pytest.mark.benchmark(group="Model Based OCM")
-    @pytest.mark.parametrize("mode, ocm_mode", pytest.helpers.get_comp_and_ocm_execution_modes())
-    def test_model_based_ocm_before(self, benchmark, mode, ocm_mode):
-
-        A = pnl.ProcessingMechanism(name='A')
-        B = pnl.ProcessingMechanism(name='B')
-
-        comp = pnl.Composition(name='comp',
-                               controller_mode=pnl.BEFORE)
-        comp.add_linear_processing_pathway([A, B])
-
-        search_range = pnl.SampleSpec(start=0.25, stop=0.75, step=0.25)
-        control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, A)],
-                                           variable=1.0,
-                                           allocation_samples=search_range,
-                                           cost_options=pnl.CostFunctions.INTENSITY,
-                                           intensity_cost_function=pnl.Linear(slope=0.))
-
-        objective_mech = pnl.ObjectiveMechanism(monitor=[B])
-        ocm = pnl.OptimizationControlMechanism(agent_rep=comp,
-                                               state_features=[A.input_port],
-                                               objective_mechanism=objective_mech,
-                                               function=pnl.GridSearch(save_values=True),
-                                               control_signals=[control_signal],
-                                               comp_execution_mode=ocm_mode)
-
-        comp.add_controller(ocm)
-
-        inputs = {A: [[[1.0]], [[2.0]], [[3.0]]]}
-
-        def comp_run(inputs, execution_mode):
-            comp.run(inputs=inputs, execution_mode=execution_mode)
-            return comp.results.copy(), np.asfarray(ocm.function.saved_values)
-
-        results, saved_values = benchmark(comp_run, inputs, mode)
-
-        np.testing.assert_allclose(results, [[np.array([0.75])], [np.array([1.5])], [np.array([2.25])]])
-        if mode == pnl.ExecutionMode.Python:
-            np.testing.assert_allclose(saved_values.flatten(), [0.75, 1.5, 2.25])
+            np.testing.assert_array_equal(saved_values.flatten(), [0.75, 1.5, 2.25])
 
     def test_model_based_ocm_with_buffer(self):
 
