@@ -2403,14 +2403,13 @@ class TestControlMechanisms:
         (pnl.CostFunctions.ADJUSTMENT, 3, [3, 3, 3, 3, 3] ),
         (pnl.CostFunctions.INTENSITY | pnl.CostFunctions.ADJUSTMENT, 3, [0.2817181715409549, -4.389056098930649, -17.085536923187664, -51.59815003314423, -145.41315910257657]),
         (pnl.CostFunctions.DURATION, 3, [-7, -8, -9, -10, -11]),
-        # FIXME: combinations with DURATION are broken
-        # (pnl.CostFunctions.DURATION | pnl.CostFunctions.ADJUSTMENT, ,),
-        # (pnl.CostFunctions.ALL, ,),
+        (pnl.CostFunctions.DURATION | pnl.CostFunctions.ADJUSTMENT, None ,None),
+        (pnl.CostFunctions.ALL, None, None),
         pytest.param(pnl.CostFunctions.DEFAULTS, 7, [3, 4, 5, 6, 7], id="CostFunctions.DEFAULT")],
         ids=lambda x: x if isinstance(x, pnl.CostFunctions) else "")
     def test_modulation_simple(self, cost, expected, exp_values, comp_mode):
-        if comp_mode != pnl.ExecutionMode.Python and cost not in {pnl.CostFunctions.NONE, pnl.CostFunctions.INTENSITY}:
-            pytest.skip("Not implemented!")
+        if cost != pnl.CostFunctions.DURATION and pnl.CostFunctions.DURATION in cost:
+            pytest.skip("Cost calculations using duration in combination with other costs are broken!")
 
         obj = pnl.ObjectiveMechanism()
         mech = pnl.ProcessingMechanism()
@@ -2431,7 +2430,7 @@ class TestControlMechanisms:
                 ),
 
                 # Need to specify GridSearch since save_values is False by default and we
-                # going to check these values later in the test.
+                # check these values below
                 function=pnl.GridSearch(save_values=True)
             )
         )
@@ -3316,7 +3315,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
 
         np.testing.assert_allclose(results, [[np.array([1.])], [np.array([1.5])], [np.array([2.25])]])
         if mode == pnl.ExecutionMode.Python:
-            np.testing.assert_allclose(saved_values, [0.75, 1.5, 2.25])
+            np.testing.assert_allclose(saved_values.flatten(), [0.75, 1.5, 2.25])
 
     @pytest.mark.benchmark(group="Model Based OCM")
     @pytest.mark.parametrize("mode, ocm_mode", pytest.helpers.get_comp_and_ocm_execution_modes())
@@ -3356,7 +3355,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
 
         np.testing.assert_allclose(results, [[np.array([0.75])], [np.array([1.5])], [np.array([2.25])]])
         if mode == pnl.ExecutionMode.Python:
-            np.testing.assert_allclose(saved_values, [0.75, 1.5, 2.25])
+            np.testing.assert_allclose(saved_values.flatten(), [0.75, 1.5, 2.25])
 
     def test_model_based_ocm_with_buffer(self):
 
