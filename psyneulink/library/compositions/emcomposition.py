@@ -14,12 +14,12 @@
 #   - SHOULD MEMORY DECAY OCCUR IF STORAGE DOES NOT? CURRENTLY IT DOES NOT (SEE EMStorage Function)
 
 # - FIX: IMPLEMENT LearningMechanism FOR RETRIEVAL WEIGHTS:
-#        - FIX DERIVATIVE OF LinearCombination for PRODUCT (need "fat" Jacobian, one for each InputPort)
+#        - implement derivative for LinearCombination for PRODUCT (need "fat" Jacobian, one for each InputPort)
+#        - verify use of diagonal in derivative for softmax (see test_backprop in ScrathPad)
 #        - what is learning_update: AFTER doing?  Use for scheduling execution of storage_node?
-#        - search for learn_field_weights and attend to comments
 #        X implement derivative for concatenate
 # - FIX: implement add_storage_pathway to handle addition of storage_node as learning mechanism
-#        - in "_create_storage_learning_components()" assign "learning_update" arg
+#        - in "_create_storage_learing_components()" assign "learning_update" arg
 #          as BEORE OR DURING instead of AFTER (assigned to learning_enabled arg of LearningMechanism)
 # - FIX: Thresholded version of SoftMax gain (per Kamesh)
 # - FIX: DEAL WITH INDEXING IN NAMES FOR NON-CONTIGUOUS KEYS AND VALUES (reorder to keep all keys together?)
@@ -50,10 +50,7 @@
 # - FIX: ALLOW SOFTMAX SPEC TO BE A DICT WITH PARAMETERS FOR _get_softmax_gain() FUNCTION
 
 # - FIX: PSYNEULINK:
-#        - Composition:
-#          - add LearningProjections executed in EXECUTION_PHASE to self.projections
-#            and then remove MODIFIED 8/1/23 in _check_for_unused_projections
-#        - show_graph(): figure out how to get storage_node to show without all other learning stuff
+#        - show_graph(): filter out learning components if learning_disabled
 #        - Composition.add_nodes():
 #           - should check, on each call to add_node, to see if one that has a releavantprojection and, if so, add it.
 #           - Allow [None] as argument and treat as []
@@ -748,9 +745,6 @@ from psyneulink.core.globals.keywords import \
     AUTO, COMBINE, CONTROL, DEFAULT_INPUT, DEFAULT_VARIABLE, EM_COMPOSITION, FUNCTION, GAIN, IDENTITY_MATRIX, \
     MULTIPLICATIVE_PARAM, NAME, PARAMS, PRODUCT, PROJECTIONS, RANDOM, SIZE, VARIABLE
 from psyneulink.core.globals.utilities import all_within_range
-from psyneulink.core.scheduling.time import TimeScale
-import psyneulink.core.scheduling.condition as conditions
-
 
 __all__ = [
     'EMComposition'
@@ -1256,42 +1250,12 @@ class EMComposition(AutodiffComposition):
         # Assign learning-related attributes
         self._set_learning_attributes()
 
+        # Set condition on storage_node
+        # for node in self.retrieved_nodes:
+        #     self.scheduler.add_condition(self.storage_node, WhenFinished(node))
+        # self.scheduler.add_condition(self.storage_node, WhenFinished(self.retrieved_nodes[1]))
         if self.use_storage_node:
-            # ---------------------------------------
-            #
-            # CONDITION:
-            self.scheduler.add_condition(self.storage_node, conditions.AllHaveRun(*self.retrieved_nodes))
-            #
-            # Generates expected results, but execution_sets has a second set for INPUT nodes
-            #    and the the match_nodes again with storage_node
-            #
-            # ---------------------------------------
-            #
-            # CONDITION:
-            # self.scheduler.add_condition(self.storage_node, conditions.AllHaveRun(*self.retrieved_nodes,
-            #                                                               time_scale=TimeScale.PASS))
-            # Hangs (or takes inordinately long to run),
-            #     and evaluating list(execution_list) at LINE 11233 of composition.py hangs:
-            #
-            # ---------------------------------------
-            # CONDITION:
-            # self.scheduler.add_condition(self.storage_node, conditions.JustRan(self.retrieved_nodes[0]))
-            #
-            # Hangs (or takes inordinately long to run),
-            #     and evaluating list(execution_list) at LINE 11233 of composition.py hangs:
-            #
-            # ---------------------------------------
-            # CONDITION:
-            # self.scheduler.add_condition_set({n: conditions.BeforeNCalls(n, 1) for n in self.nodes})
-            # self.scheduler.add_condition(self.storage_node, conditions.AllHaveRun(*self.retrieved_nodes))
-            #
-            # Generates the desired execution set for a single pass, and runs with expected results,
-            #   but generates warning messages for every node of the following sort:
-            # /Users/jdc/PycharmProjects/PsyNeuLink/psyneulink/core/scheduling/scheduler.py:120:
-            #   UserWarning: BeforeNCalls((EMStorageMechanism STORAGE MECHANISM), 1) is dependent on
-            #   (EMStorageMechanism STORAGE MECHANISM), but you are assigning (EMStorageMechanism STORAGE MECHANISM)
-            #   as its owner. This may result in infinite loops or unknown behavior.
-            # super().add_condition_set(conditions)
+            self.scheduler.add_condition(self.storage_node, gs.AllHaveRun(*self.retrieved_nodes))
 
         # Suppress warnings for no efferent Projections
         for node in self.value_input_nodes:
@@ -1602,26 +1566,27 @@ class EMComposition(AutodiffComposition):
 
         # Set up backpropagation pathways for learning field weights
         else:
-            # Main processing pathway
-            main_processing_pathway = [self.key_input_nodes,
-                                       self.field_match_nodes,
-                                       self.softmax_nodes,
-                                       [self.combined_softmax_node] * self.num_keys,
-                                       self.retrieved_nodes[:self.num_keys]]
-            if self.weighted_softmax_nodes:
-                main_processing_pathway.insert(3, self.weighted_softmax_nodes)
-            for pathway in zip(*main_processing_pathway):
-                self.add_backpropagation_learning_pathway(list(pathway))
+            for key_node, field_match_node, softmax_node, weighted_soft_max_node, retrieved_node \
+                    in zip(self.key_input_nodes,
+                           self.field_match_nodes,
+                           self.softmax_nodes,
+                           self.weighted_softmax_nodes,
+                           self.retrieved_nodes[:self.num_keys]):
+                self.add_backpropagation_learning_pathway([key_node,
+                                                           field_match_node,
+                                                           softmax_node,
+                                                           weighted_soft_max_node,
+                                                           self.combined_softmax_node,
+                                                           retrieved_node])
 
-            # Field weight learning pathway
-            if self.weighted_softmax_nodes:
-                field_weights_pathway = [self.field_weight_nodes,
-                                         self.weighted_softmax_nodes,
-                                         [self.combined_softmax_node] * self.num_keys,
-                                         self.retrieved_nodes[:self.num_keys]]
-                for pathway in zip(*field_weights_pathway):
-                    self.add_backpropagation_learning_pathway(list(pathway))
-            # Retrieval pathways
+            for field_weight_node, weighted_softmax_node, retrieved_node in zip(self.field_weight_nodes,
+                                                                                 self.weighted_softmax_nodes,
+                                                                                 self.retrieved_nodes[:self.num_keys]):
+                self.add_backpropagation_learning_pathway([field_weight_node,
+                                                           weighted_softmax_node,
+                                                           self.combined_softmax_node,
+                                                           retrieved_node])
+
             for retrieved_node in self.retrieved_nodes[self.num_keys:self.num_fields]:
                 self.add_backpropagation_learning_pathway([self.combined_softmax_node, retrieved_node])
 
