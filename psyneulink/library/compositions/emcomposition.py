@@ -735,7 +735,7 @@ from psyneulink.core.components.functions.nonstateful.transferfunctions import S
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import Concatenate, LinearCombination
 from psyneulink.core.components.functions.function import \
     DEFAULT_SEED, _random_state_getter, _seed_setter
-from psyneulink.core.compositions.composition import CompositionError, NodeRole
+from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
 from psyneulink.library.components.mechanisms.modulatory.learning.EMstoragemechanism import EMStorageMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
@@ -2019,9 +2019,12 @@ class EMComposition(AutodiffComposition):
             # Assign updated matrix to Projection
             self.retrieved_nodes[i].path_afferents[0].parameters.matrix.set(field_memories, context)
 
-    def learn(self, **kwargs):
-        # raise EMCompositionError(f"EMComposition can be constructed, but 'learn' method not yet working")
-        super().learn(**kwargs)
+    def learn(self, *args, **kwargs):
+        # FIX: Skip AutodiffComposition.learn for now, until Pytorch implementation is done
+        super(AutodiffComposition, self).learn(*args, **kwargs)
+
+    def _update_learning_parameters(self, context):
+        pass
 
     def get_output_values(self, context=None):
         """Override to provide ordering of retrieved_nodes that matches order of inputs.
