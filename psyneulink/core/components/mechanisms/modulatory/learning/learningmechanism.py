@@ -1002,6 +1002,9 @@ class LearningMechanism(ModulatoryMechanism_Base):
             read_only=True,
             structural=True,
         )
+        # MODIFIED 8/1/23 NEW:
+        learning_type = LearningType.SUPERVISED
+        # MODIFIED 8/1/23 END
 
     @check_user_specified
     @beartype
