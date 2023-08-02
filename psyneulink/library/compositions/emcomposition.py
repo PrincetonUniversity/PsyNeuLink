@@ -1259,11 +1259,14 @@ class EMComposition(AutodiffComposition):
         # self.scheduler.add_condition(self.storage_node, WhenFinished(self.retrieved_nodes[1]))
         if self.use_storage_node:
             # Works, but seems to execute Input nodes twice (once at beginning, and once with Storage node)
-            self.scheduler.add_condition(self.storage_node, conditions.AllHaveRun(*self.retrieved_nodes))
+            # self.scheduler.add_condition(self.storage_node, conditions.AllHaveRun(*self.retrieved_nodes))
             # The following seem to run but hang (or take inordinately long to run):
             # self.scheduler.add_condition(self.storage_node, conditions.AllHaveRun(*self.retrieved_nodes,
             #                                                               time_scale=TimeScale.PASS))
             # self.scheduler.add_condition(self.storage_node, conditions.JustRan(self.retrieved_nodes[0]))
+            pass
+            # self.scheduler.add_condition_set({n: conditions.BeforeNCalls(n, 1) for n in self.nodes})
+            # self.scheduler.add_condition(self.storage_node, conditions.AllHaveRun(*self.retrieved_nodes))
 
         # Suppress warnings for no efferent Projections
         for node in self.value_input_nodes:
