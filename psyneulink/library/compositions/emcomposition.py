@@ -2019,8 +2019,9 @@ class EMComposition(AutodiffComposition):
             # Assign updated matrix to Projection
             self.retrieved_nodes[i].path_afferents[0].parameters.matrix.set(field_memories, context)
 
-    def learn(self):
-        raise EMCompositionError(f"EMComposition can be constructed, but 'learn' method not yet working")
+    def learn(self, **kwargs):
+        # raise EMCompositionError(f"EMComposition can be constructed, but 'learn' method not yet working")
+        super().learn(**kwargs)
 
     def get_output_values(self, context=None):
         """Override to provide ordering of retrieved_nodes that matches order of inputs.
