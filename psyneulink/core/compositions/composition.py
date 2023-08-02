@@ -2812,7 +2812,7 @@ from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism i
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP, \
     OptimizationControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
-    LearningMechanism, LearningTiming, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
+    LearningMechanism, LearningTiming, LearningType, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -6469,12 +6469,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 node._check_for_unused_projections(context)
             if isinstance(node, Mechanism):
                 for proj in [p for p in node.projections if p not in self.projections]:
+                    # MODIFIED 8/1/23 NEW:
                     # LearningProjections not listed in self.projections but executed during EXECUTION_PHASE are OK
                     #     (e.g., EMComposition.storage_node)
                     if (isinstance(proj, LearningProjection)
                             and proj.sender.owner.learning_timing is LearningTiming.EXECUTION_PHASE
                             and proj.receiver.owner in self.projections):
                         continue
+                    # MODIFIED 8/1/23 NEW:
                     proj_deferred = proj._initialization_status & ContextFlags.DEFERRED_INIT
                     proj_name = proj._name if proj_deferred else proj.name
                     if proj in node.afferents:
@@ -8501,7 +8503,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # For each LearningProjection to that afferent, if its LearningMechanism doesn't already receiver
             for learning_projection in [lp for lp in afferent.parameter_ports[MATRIX].mod_afferents
                                         if (isinstance(lp, LearningProjection)
-                                            and error_source not in lp.sender.owner.error_sources)]:
+                                            and error_source not in lp.sender.owner.error_sources
+                                            # MODIFIED 8/1/23 NEW:
+                                            and lp.sender.owner.learning_type is LearningType.SUPERVISED)]:
+                                            # MODIFIED 8/1/23 END:
                 dependent_learning_mech = learning_projection.sender.owner
                 error_signal_input_port = dependent_learning_mech.add_ports(
                                                     InputPort(projections=error_source.output_ports[ERROR_SIGNAL],

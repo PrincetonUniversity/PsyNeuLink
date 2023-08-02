@@ -1602,31 +1602,9 @@ class EMComposition(AutodiffComposition):
 
             self.add_nodes(self.value_input_nodes)
 
-            # for key_node, field_match_node, softmax_node, weighted_soft_max_node, retrieved_node \
-            #         in zip(self.key_input_nodes,
-            #                self.field_match_nodes,
-            #                self.softmax_nodes,
-            #                self.weighted_softmax_nodes,
-            #                self.retrieved_nodes[:self.num_keys]):
-            #     self.add_linear_processing_pathway([key_node,
-            #                                                field_match_node,
-            #                                                softmax_node,
-            #                                                weighted_soft_max_node,
-            #                                                self.combined_softmax_node,
-            #                                                retrieved_node])
-            #
-            # for field_weight_node, weighted_softmax_node, retrieved_node in zip(self.field_weight_nodes,
-            #                                                                      self.weighted_softmax_nodes,
-            #                                                                      self.retrieved_nodes[:self.num_keys]):
-            #     self.add_linear_processing_pathway([field_weight_node,
-            #                                                weighted_softmax_node,
-            #                                                self.combined_softmax_node,
-            #                                                retrieved_node])
-            #
-            # for retrieved_node in self.retrieved_nodes[self.num_keys:self.num_fields]:
-            #     self.add_linear_processing_pathway([self.combined_softmax_node, retrieved_node])
-            #
-            # self.add_nodes(self.value_input_nodes)
+            if use_storage_node:
+                self.add_node(self.storage_node)
+
     def _construct_key_input_nodes(self, field_weights)->list:
         """Create one node for each key to be used as cue for retrieval (and then stored) in memory.
         Used to assign new set of weights for Projection for key_input_node[i] -> field_match_node[i]
