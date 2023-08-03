@@ -50,6 +50,7 @@
 # - FIX: ALLOW SOFTMAX SPEC TO BE A DICT WITH PARAMETERS FOR _get_softmax_gain() FUNCTION
 
 # - FIX: PSYNEULINK:
+#        - Allow set of lists as specification for pathways in Composition
 #        - AutodiffComposition:
 #          - allow it to learn with execution_mode=ExecutioMode.Python, with warning on initial call to learn()
 #        - Composition:
