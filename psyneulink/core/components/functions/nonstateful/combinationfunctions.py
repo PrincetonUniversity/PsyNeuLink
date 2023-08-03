@@ -1448,9 +1448,9 @@ class LinearCombination(
         """
 
         # FIX: NEED TO DEAL WITH PRODUCT HERE WRT TO WHICH INPUT PORT IS BEING "DERIVED"
-        # return np.eye(len(output)) * self._get_current_parameter_value(SCALE, context)
-        return np.diag(np.eye(len(output)) * self._get_current_parameter_value(SCALE, context))
         # return self._get_current_parameter_value(SCALE, context)
+        # return np.diag(np.eye(len(output)) * self._get_current_parameter_value(SCALE, context))
+        return np.eye(len(output)) * (output * self._get_current_parameter_value(SCALE, context))
 
     def _get_input_struct_type(self, ctx):
         # FIXME: Workaround a special case of simple array.
