@@ -352,11 +352,11 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         values = list(self.visit(value) for value in node.values)
 
         self._update_debug_metadata(self.builder, node)
-        values = (self.get_rval(v) for v in values)
-        ret_val = next(values)
-        for value in values:
-            assert ret_val.type == value.type, "Don't know how to mix types in boolean expressions!"
-            ret_val = operator(self.builder, ret_val, value)
+        rvals = (self.get_rval(v) for v in values)
+        ret_val = next(rvals)
+        for val in rvals:
+            assert ret_val.type == val.type, "Don't know how to mix types in boolean expressions!"
+            ret_val = operator(self.builder, ret_val, val)
         return ret_val
 
     def visit_And(self, node):
