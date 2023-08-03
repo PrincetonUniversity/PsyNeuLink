@@ -7823,7 +7823,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     **kwargs                  # Use of type-specific learning arguments
                                     ):
 
-        # ONLY DO THIS IF ONE DOESN'T ALREADY EXIST (?pass in argument determining this?)
         learning_mechanism = LearningMechanism(function=learning_function,
                                                default_variable=[sender_activity_source.output_ports[0].value,
                                                                  receiver_activity_source.output_ports[0].value,
@@ -7833,7 +7832,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                in_composition=True,
                                                name="Learning Mechanism for " + learned_projection.name,
                                                **kwargs)
-
 
         return learning_mechanism
 
@@ -7856,12 +7854,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 raise CompositionError(f"'learning_function' argument for add_linear_learning_pathway "
                                        f"({learning_function}) must be a class of {LearningFunction.__name__}")
 
-            target_mechanism, objective_mechanism, learning_mechanism  = creation_method(input_source,
-                                                                                          output_source,
-                                                                                          error_function,
-                                                                                          learned_projection,
-                                                                                          learning_rate,
-                                                                                          learning_update)
+            target_mechanism, objective_mechanism, learning_mechanism = creation_method(input_source,
+                                                                                        output_source,
+                                                                                        error_function,
+                                                                                        learned_projection,
+                                                                                        learning_rate,
+                                                                                        learning_update)
 
         elif is_function_type(learning_function):
             target_mechanism = ProcessingMechanism(name='Target')
@@ -7874,18 +7872,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                       output_ports=[OUTCOME, Loss.MSE.name],
                                                       )
             learning_mechanism = LearningMechanism(
-                                    function=learning_function(
-                                                         default_variable=[input_source.output_ports[0].value,
-                                                                           output_source.output_ports[0].value,
-                                                                           objective_mechanism.output_ports[0].value],
-                                                         learning_rate=learning_rate),
-                                    default_variable=[input_source.output_ports[0].value,
-                                                      output_source.output_ports[0].value,
-                                                      objective_mechanism.output_ports[0].value],
-                                    error_sources=objective_mechanism,
-                                    learning_enabled=learning_update,
-                                    in_composition=True,
-                                    name="Learning Mechanism for " + learned_projection.name)
+                function=learning_function(
+                    default_variable=[input_source.output_ports[0].value,
+                                      output_source.output_ports[0].value,
+                                      objective_mechanism.output_ports[0].value],
+                    learning_rate=learning_rate),
+                default_variable=[input_source.output_ports[0].value,
+                                  output_source.output_ports[0].value,
+                                  objective_mechanism.output_ports[0].value],
+                error_sources=objective_mechanism,
+                learning_enabled=learning_update,
+                in_composition=True,
+                name="Learning Mechanism for " + learned_projection.name)
 
             objective_mechanism.modulatory_mechanism = learning_mechanism
 
@@ -7895,7 +7893,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    f"learning-compatible function")
 
         learning_mechanism.output_ports[ERROR_SIGNAL].parameters.require_projection_in_composition.set(False,
-                                                                                                         override=True)
+                                                                                                       override=True)
         return target_mechanism, objective_mechanism, learning_mechanism
 
     def _create_learning_related_projections(self, input_source, output_source, target, comparator, learning_mechanism):
@@ -7980,11 +7978,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                default_variable=output_source.defaults.value)
 
         objective_mechanism = PredictionErrorMechanism(name='PredictionError',
-                                                        sample={NAME: SAMPLE,
-                                                                VARIABLE: np.zeros_like(output_source.output_ports[0].defaults.value)},
-                                                        target={NAME: TARGET,
-                                                                VARIABLE: np.zeros_like(output_source.output_ports[0].defaults.value)},
-                                                        function=PredictionErrorDeltaFunction(gamma=1.0))
+                                                       sample={NAME: SAMPLE,
+                                                               VARIABLE: np.zeros_like(
+                                                                   output_source.output_ports[0].defaults.value)},
+                                                       target={NAME: TARGET,
+                                                               VARIABLE: np.zeros_like(
+                                                                   output_source.output_ports[0].defaults.value)},
+                                                       function=PredictionErrorDeltaFunction(gamma=1.0))
 
         learning_mechanism = LearningMechanism(function=TDLearning(learning_rate=learning_rate),
                                                default_variable=[input_source.output_ports[0].defaults.value,
@@ -8133,6 +8133,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # loop backwards through the rest of the processing_pathway to create and connect
         # the remaining learning mechanisms
+        # ONLY DO THIS IF ONE DOESN'T ALREADY EXIST (?pass in argument determining this?)
+
         learning_mechanisms = [learning_mechanism]
         learned_projections = [learned_projection]
         for i in range(sequence_end, 1, -2):

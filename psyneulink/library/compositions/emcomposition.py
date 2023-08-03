@@ -50,6 +50,8 @@
 # - FIX: ALLOW SOFTMAX SPEC TO BE A DICT WITH PARAMETERS FOR _get_softmax_gain() FUNCTION
 
 # - FIX: PSYNEULINK:
+#        - AutodiffComposition:
+#          - allow it to learn with execution_mode=ExecutioMode.Python, with warning on initial call to learn()
 #        - Composition:
 #          - add LearningProjections executed in EXECUTION_PHASE to self.projections
 #            and then remove MODIFIED 8/1/23 in _check_for_unused_projections
