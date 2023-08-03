@@ -1726,9 +1726,18 @@ class Parameter(ParameterBase):
     # KDM 7/30/18: the below is weird like this in order to use this like a property, but also include it
     # in the interface for user simplicity: that is, inheritable (by this Parameter's children or from its parent),
     # visible in a Parameter's repr, and easily settable by the user
-    def _set_default_value(self, value):
-        value = self._parse(value)
-        self._validate(value)
+    def _set_default_value(self, value, directly=False):
+        """
+        Set default_value
+
+        Args:
+            value: new default_value
+            directly (bool, optional): if False, passes **value**
+                through parse and validation steps. Defaults to False.
+        """
+        if not directly:
+            value = self._parse(value)
+            self._validate(value)
 
         super().__setattr__('default_value', value)
 
