@@ -686,6 +686,8 @@ class ShowGraph():
 
         enclosing_g = enclosing_comp._show_graph.G if enclosing_comp else None
         processing_graph = composition.graph_processing.dependency_dict
+        # IMPLEMENTATION_NOTE:  Take diff with following to get scheduling edges not in compostion graph:
+        # processing_graph = composition.scheduler.dependency_dict
 
         # Validate active_items  ~~~~~~~~~~~~~~~~~~~~~~~~~
         active_items = active_items or []
