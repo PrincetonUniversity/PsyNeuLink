@@ -1299,12 +1299,10 @@ class LearningMechanism(ModulatoryMechanism_Base):
         self._error_signal_input_ports = [s for s in self.input_ports if ERROR_SIGNAL in s.name]
 
     def _execute(
-        self,
-        variable=None,
-        context=None,
-        runtime_params=None,
-
-    ):
+            self,
+            variable=None,
+            context=None,
+            runtime_params=None)->list:
         """Execute LearningMechanism function and return learning_signal
 
         Identify error_signals received from LearningMechanisms currently being executed
