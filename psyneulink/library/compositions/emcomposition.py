@@ -1940,8 +1940,8 @@ class EMComposition(AutodiffComposition):
     # *****************************************************************************************************************
 
     def execute(self, inputs, context, **kwargs):
-        """Set input to weights of Projection to field_match_node."""
-        results = super().execute(inputs, **kwargs)
+        """Set input to weights of Projections to field_match_nodes and retrieved_nodes if not use_storage_node."""
+        results = super().execute(inputs=inputs, context=context, **kwargs)
         if not self.use_storage_node:
             self._store_memory(inputs, context)
         return results
