@@ -209,10 +209,10 @@ def _memory_matrix_getter(owning_component=None, context=None)->list:
     <Mechanism_Base.afferents>` MappingProjections to each of the `retrieved_nodes <EMComposition.retrieved_nodes>`.
     """
     if owning_component.is_initializing:
-        if owning_component.learning_signals is None or owning_component.fields is None:
+        if owning_component.learning_signals is None or owning_component.input_ports is None:
             return None
 
-    num_fields = len(owning_component.fields)
+    num_fields = len(owning_component.input_ports)
 
     # Get learning_signals that project to retrieved_nodes
     num_learning_signals = len(owning_component.learning_signals)
@@ -504,21 +504,14 @@ class EMStorageMechanism(LearningMechanism):
                     :type: ``float``
 
         """
-        # input_ports = Parameter([], # FIX: SHOULD BE ABLE TO UE THIS WITH 'fields' AS CONSTRUCTOR ARGUMENT
-        #                         stateful=False,
-        #                         loggable=False,
-        #                         read_only=True,
-        #                         structural=True,
-        #                         parse_spec=True,
-        #                         # constructor_argument='fields',
-        #                         )
-        fields = Parameter([],
-                           stateful=False,
-                           loggable=False,
-                           read_only=True,
-                           structural=True,
-                           parse_spec=True,
-                           )
+        input_ports = Parameter([], # FIX: SHOULD BE ABLE TO UE THIS WITH 'fields' AS CONSTRUCTOR ARGUMENT
+                                stateful=False,
+                                loggable=False,
+                                read_only=True,
+                                structural=True,
+                                parse_spec=True,
+                                constructor_argument='fields',
+                                )
         field_types = Parameter([],stateful=False,
                                 loggable=False,
                                 read_only=True,
@@ -558,16 +551,16 @@ class EMStorageMechanism(LearningMechanism):
         learning_timing = LearningTiming.EXECUTION_PHASE
 
     def _validate_field_types(self, field_types):
-        if not len(field_types) or len(field_types) != len(self.fields):
+        if not len(field_types) or len(field_types) != len(self.input_ports):
             return f"must be specified with a number of items equal to " \
-                   f"the number of fields specified {len(self.fields)}"
+                   f"the number of fields specified {len(self.input_ports)}"
         if not all(item in {1,0} for item in field_types):
             return f"must be a list of 1s (for keys) and 0s (for values)."
 
     def _validate_field_weights(self, field_weights):
-        if not field_weights or len(field_weights) != len(self.fields):
+        if not field_weights or len(field_weights) != len(self.input_ports):
             return f"must be specified with a number of items equal to " \
-                   f"the number of fields specified {len(self.fields)}"
+                   f"the number of fields specified {len(self.input_ports)}"
         if not all(isinstance(item, (int, float)) and (0 <= item  <= 1) for item in field_weights):
             return f"must be a list floats from 0 to 1."
 
@@ -700,7 +693,7 @@ class EMStorageMechanism(LearningMechanism):
         input_ports = [{NAME: f"KEY_INPUT_{i}" if self.field_types[i] == 1 else f"VALUE_INPUT_{i}",
                         VARIABLE: self.variable[i],
                         PROJECTIONS: field}
-                       for i, field in enumerate(self.fields)]
+                       for i, field in enumerate(self.input_ports)]
         return super()._instantiate_input_ports(input_ports=input_ports, context=context)
 
     def _instantiate_output_ports(self, output_ports=None, reference_value=None, context=None):
