@@ -8321,15 +8321,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                           learning_update,
                                                           context):
 
-        def _get_acts_in_and_out(input_source, output_source):
+        def _get_acts_in_and_out(input_source, output_source, learned_projection):
             """Get shapes of activation_input and activation_output used by LearningMechanism and BackPropagation Fct"""
             # activation_input has more than one value if activation function has more than one argument
-            activation_input = input_source.output_ports[0].value
+            activation_input = [input_source.output_ports[0].value]
             # activation_input = [output_source.input_ports[i].variable
             #                     for i in range(len(output_source.input_ports))]
             # activation_output is always a single value since activation function is assumed to have only one output
-            activation_output = output_source.output_ports[0].value
-            return [activation_input, activation_output]
+            activation_output = [output_source.output_ports[0].value]
+            # FIX: CHECK FOR USE OF PRODUCT BY ACTIVATION FUNCTION OF output_source
+            covariates = [[input_port.value for input_port in output_source.input_ports
+                          if input_port is not learned_projection.receiver]]
+            # FIX 8/1/23: ADD ALL OTHER INPUTS TO
+            #               OTHER THAN
+            # ACTIVATION_INPUT
+            return [activation_input, activation_output, covariates]
 
         # Get existing LearningMechanism if one exists (i.e., if this is a crossing point with another pathway)
         learning_mechanism = \
@@ -8352,17 +8358,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             error_sources, error_projections = self._get_back_prop_error_sources(output_source, context=context)
             error_signal_template = [error_source.output_ports[ERROR_SIGNAL].value for error_source in error_sources]
 
+            activation_input, activation_output, covariates = _get_acts_in_and_out(input_source,
+                                                                                   output_source,
+                                                                                   learned_projection)
             # Use only one errot_signal_template for learning_function, since it gets only one source of error at a time
-            learning_function = BackPropagation(default_variable=_get_acts_in_and_out(input_source, output_source)
-                                                                 + [error_signal_template[0]],
+            learning_function = BackPropagation(default_variable=activation_input +
+                                                                 activation_output +
+                                                                 [error_signal_template[0]],
+                                                covariates=covariates,
                                                 loss_spec=None,
                                                 activation_derivative_fct=output_source.function.derivative,
                                                 learning_rate=learning_rate)
 
             # Use all error_signal_templates since LearningMechanisms handles all sources of error
             learning_mechanism = LearningMechanism(function=learning_function,
-                                                   default_variable=_get_acts_in_and_out(input_source, output_source)
-                                                                    + error_signal_template,
+                                                   default_variable=activation_input +
+                                                                    activation_output +
+                                                                    error_signal_template +
+                                                                    covariates,
                                                    error_sources=error_sources,
                                                    learning_enabled=learning_update,
                                                    in_composition=True,
@@ -8381,6 +8394,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                 receiver=learning_mechanism.input_ports[0])
             act_out_projection = MappingProjection(sender=output_source.output_ports[0],
                                                 receiver=learning_mechanism.input_ports[1])
+            for i, covariates in enumerate(covariates):
+                pass # FIX 8/1/23: IMPLEMENT PROJECTIONS FOR COVARIATES HERE
             self.add_projections([act_in_projection, act_out_projection] + error_projections)
 
             learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)

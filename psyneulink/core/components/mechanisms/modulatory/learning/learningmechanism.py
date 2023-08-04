@@ -1134,7 +1134,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         #    and that there is the correct number of error_signal_input_ports and and error_matrices:
         #    (which should be the number of items for error_signals in variable)
 
-        assert ASSERT, "ADD TEST FOR LEN OF VARIABLE AGAINST NUMBER OF ERROR_SIGNALS AND ERROR_MATRICES"
+        assert ASSERT, "ADD TEST FOR LEN OF VARIABLE AGAINST NUMBER OF ERROR_SIGNALS, ERROR_MATRICES AND COVARIATES"
 
         for i in range(len(variable)):
             item_num_string = "Item {} ".format(i)
