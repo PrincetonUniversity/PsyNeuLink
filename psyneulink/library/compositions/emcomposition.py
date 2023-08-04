@@ -50,6 +50,13 @@
 # - FIX: ALLOW SOFTMAX SPEC TO BE A DICT WITH PARAMETERS FOR _get_softmax_gain() FUNCTION
 
 # - FIX: PSYNEULINK:
+#        - ADD DOCUMENTATION FOR MULTIPLE EXISTING PROJECTONS:
+#         IMPLEMENTATION NOTE:
+#             Currently if the sender and/or the receiver is specified as a Mechanism,
+#             a Projection from/to any of its OutputPorts/InputPorts will be considered a match.
+#             However, if both sender and receiver are specified as Ports, then only a Projection
+#             from the sender to the receiver will be considered a match, allowing other Projections
+#             to remain between that pair of Nodes.
 #        - Allow set of lists as specification for pathways in Composition
 #        - AutodiffComposition:
 #          - allow it to learn with execution_mode=ExecutioMode.Python, with warning on initial call to learn()
