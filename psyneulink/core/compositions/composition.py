@@ -8371,11 +8371,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                 learning_rate=learning_rate)
 
             # Use all error_signal_templates since LearningMechanisms handles all sources of error
+            default_variable = activation_input + activation_output + error_signal_template
+            default_variable.extend(covariates)
             learning_mechanism = LearningMechanism(function=learning_function,
-                                                   default_variable=activation_input +
-                                                                    activation_output +
-                                                                    error_signal_template +
-                                                                    covariates,
+                                                   # default_variable=activation_input +
+                                                   #                  activation_output +
+                                                   #                  error_signal_template +
+                                                   #                  covariates,
+                                                   default_variable=default_variable,
                                                    error_sources=error_sources,
                                                    learning_enabled=learning_update,
                                                    in_composition=True,

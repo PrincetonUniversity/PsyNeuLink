@@ -2552,8 +2552,8 @@ def _instantiate_port_list(owner,
         else:
             comparison_string = 'fewer'
         raise PortError(f"There are {comparison_string} {port_Param_identifier}s specified ({num_ports}) "
-                         f"than the number of items ({num_constraint_items}) in the {reference_value_name} "
-                         f"of the function for {repr(owner.name)}.")
+                         f"than the number of items ({num_constraint_items}) in the '{reference_value_name}' "
+                         f"of the function for '{repr(owner.name)}'.")
 
     # INSTANTIATE EACH PORT
 

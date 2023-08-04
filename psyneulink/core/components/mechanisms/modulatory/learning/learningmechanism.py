@@ -560,8 +560,9 @@ from psyneulink.core.components.functions.nonstateful.learningfunctions import B
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-from psyneulink.core.components.ports.modulatorysignals.learningsignal import LearningSignal
+from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.parameterport import ParameterPort
+from psyneulink.core.components.ports.modulatorysignals.learningsignal import LearningSignal
 from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
@@ -1145,12 +1146,20 @@ class LearningMechanism(ModulatoryMechanism_Base):
                     item_name = input_port_names[i]
                 except IndexError:
                     item_name = f'{ERROR_SIGNAL}-{i-2}'
-            if not np.array(variable[i]).ndim == 1:
-                raise LearningMechanismError(f"{item_num_string} of variable for {self.name} ({item_name}:{variable[i]}) "
-                                             f"is not a list or 1d np.array.")
-            if not (is_numeric(variable[i])):
-                raise LearningMechanismError("{} of variable for {} ({}:{}) is not numeric".
-                                              format(item_num_string, self.name, item_name, variable[i]))
+                    raise LearningMechanismError(f"PROGRAM ERROR: Mismatch between number of items ({len(variable)}) "
+                                                 f"in variable for '{self.name}' and number of InputPorts "
+                                                 f"({len(self.input_ports)})")
+            if i < 3:
+                if not np.array(variable[i]).ndim == 1:
+                    raise LearningMechanismError(f"{item_num_string} of variable for '{self.name}' ({item_name}: "
+                                                 f"{variable[i]}) is not a list of numeric values or 1d np.array.")
+                if not (is_numeric(variable[i])):
+                    raise LearningMechanismError("{item_num_string} of variable for {self.name} ({item_name}: "
+                                                 "{variable[i]}) is not numeric.")
+            elif i + len(variable[i]) != len(self.input_ports):
+                assert True
+                assert False, f"Number of items ({len(variable)}) in variable for '{self.name}' doesn't match the " \
+                              f"number of its InputPorts ({len(self.input_ports)})"
         return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -1174,11 +1183,11 @@ class LearningMechanism(ModulatoryMechanism_Base):
             error_sources = self._error_sources
             if not isinstance(error_sources, list):
                 error_sources = [error_sources]
-
-            if not len(error_sources) == len(self.defaults.variable[ERROR_SIGNAL_INDEX:]):
+            # FIX: 8/1/23 COVARIATES_INDEX NEEDS TO BE UPDATED TO HANDLE VARIABLE NUMBER OF ERROR_SIGNALS
+            if not len(error_sources) == len(self.defaults.variable[ERROR_SIGNAL_INDEX:COVARIATES_INDEX]):
                 raise LearningMechanismError(f"Number of items specified in {repr(ERROR_SOURCES)} arg "
-                                             f"for {self.name} ({len(error_sources)}) must equal the number "
-                                             f"of its {InputPort.__name__} {ERROR_SIGNAL.upper()}s "
+                                             f"for '{self.name}' ({len(error_sources)}) must equal the number "
+                                             f"of its {InputPort.__name__} {ERROR_SIGNAL.upper()}(S) "
                                              f"({len(self.error_signal_input_ports)}).")
 
             for error_source in error_sources:
