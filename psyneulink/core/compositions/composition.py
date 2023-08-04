@@ -5806,7 +5806,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
             Calls `add_projection <Composition.add_projection>` for each Projection in the *projections* list. Each
             Projection must have its `sender <Projection_Base.sender>` and `receiver <Projection_Base.receiver>`
-            already specified.  If an item in the list is a list of projections, called recursively on that list.
+            already specified.  If an item in the list is a list of projections, ``add_projections`` is called
+            recursively on that list.  See `add_projection <Composition.add_projection>` for additional details
+            of how duplicates are determined and handled.
 
             Arguments
             ---------
@@ -5858,7 +5860,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             - if there is only one, the request is ignored and the existing Projection is returned
             - if there is more than one, an exception is raised as this should never be the case
           - if it is NOT in the Composition:
-            - if there is only one, that Projection is used;
+            - if there is only one, that Projection is used (it can be between any pair of the sender's OutputPort
+              and receiver's InputPort)
             - if there is more than one, the last in the list (presumably the most recent) is used;
             in either case, processing continues, to activate it for the Composition,
             construct any "shadow" projections that may be specified, and assign feedback if specified.
@@ -5882,7 +5885,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         .. technical_note::
             Duplicates are determined by the `Ports <Port>` to which they project, not the `Mechanisms <Mechanism>`
-            (to allow multiple Projections to exist between the same pair of Mechanisms using different Ports).
+            (to allow multiple Projections to exist between the same pair of Mechanisms using different Ports);
+            If the sender and/or the receiver is specified as a Mechanism, a Projection from any of a specified
+            sender's OutputPorts to any of a specified receiver's InputPorts will be considered a match. However,
+            if both sender and receiver are specified as Ports, then only a Projection from the sender to the receiver
+            will be considered a match, allowing other Projections to remain between that pair of Nodes.
             ..
             If an already instantiated Projection is passed to add_projection and is a duplicate of an existing one,
             it is detected and suppressed, with a warning, in Port._instantiate_projections_to_port.
@@ -7111,31 +7118,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                  default_matrix=default_projection_matrix,
                                                  allow_duplicates=False)
                             for r in receivers for s in senders}
-                    # # MODIFIED 8/1/23 NEW:
-                    # # Check for any existing Projections between senders and receivers
-                    # #   and, if they are present, use those
-                    # projs = {proj for proj in self.projections
-                    #          if proj.sender.owner in senders and proj.receiver.owner in receivers}
-                    # already_connected = {(proj.sender.owner, proj.receiver.owner) for proj in projs}
-                    # # Add Projections for any pairs that don't already have them
-                    # new_projs = {self.add_projection(sender=s, receiver=r,
-                    #                                  default_matrix=default_projection_matrix,
-                    #                                  allow_duplicates=False)
-                    #              for r in receivers for s in senders if not (s,r) in already_connected}
-                    # if any(new_projs):
-                    #     projs |= new_projs
-                    # # MODIFIED 8/1/23 NEWER:
-                    # # Check for any existing Projections between senders and receivers
-                    # #   and, if they are present, use those
-                    # already_connected = {(sender, receiver) for sender in senders for receiver in receivers
-                    #                      if sender in [proj.sender.owner for proj in receiver.afferents]}
-                    # # Add Projections for any pairs that don't already have them
-                    # projs = {self.add_projection(sender=s, receiver=r,
-                    #                                  default_matrix=default_projection_matrix,
-                    #                                  allow_duplicates=False)
-                    #              for r in receivers for s in senders if not (s,r) in already_connected}
-                    # MODIFIED 8/1/23 END
-
                     # Warn about assignment of MappingProjections from ControlMechanisms
                     for ctl_mech in [s for s in senders if isinstance(s, ControlMechanism)]:
                         warnings.warn(f"A {MappingProjection.__name__} has been created from a "
