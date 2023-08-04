@@ -6500,9 +6500,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        sender=None,
                                        receiver=None,
                                        in_composition:bool=True):
-        """Check for Projection with same sender and receiver
+        """Check for Projection between the same pair of Nodes
         If **in_composition** is True, return only Projections found in the current Composition
         If **in_composition** is False, return only Projections that are found outside the current Composition
+        IMPLEMENTATION NOTE:
+            Currently if the sender and/or the receiver is specified as a Mechanism,
+            a Projection from/to any of its OutputPorts/InputPorts will be considered a match.
+            However, if both sender and receiver are specified as Ports, then only a Projection
+            from the sender to the receiver will be considered a match, allowing other Projections
+            to remain between that pair of Nodes.
 
         Return Projection or list of Projections that satisfies the conditions, else False
         """
@@ -6510,32 +6516,41 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             f'_check_for_existing_projection must be passed a projection or a sender and receiver'
 
         if projection:
-            sender = projection.sender
-            receiver = projection.receiver
+            sender_ports = [projection.sender]
+            receiver_ports = [projection.receiver]
         else:
             try:
+                if isinstance(sender, Port):
+                    err_msg = f"'{sender.owner.name}' does not have an '{OutputPort.__name__}'."
+                    sender_ports = [sender]
                 if isinstance(sender, Mechanism):
                     err_msg = f"'{sender.name}' does not have an '{OutputPort.__name__}'."
-                    sender = sender.output_port
+                    sender_ports = sender.output_ports
                 elif isinstance(sender, Composition):
                     if not sender.nodes:
                         err_msg = f"'{self.name}' does not have any nodes that can project to '{receiver.name}'."
                         raise IndexError
-                    sender = sender.output_CIM.output_port
+                    sender_ports = sender.output_CIM.output_ports
+                if isinstance(receiver, Port):
+                    err_msg = f"'{receiver.owner.name}' does not have an '{InputPort.__name__}'."
+                    receiver_ports = [receiver]
                 if isinstance(receiver, Mechanism):
                     err_msg = f"'{receiver.name}' does not have an {InputPort.__name__}."
-                    receiver = receiver.input_port
+                    receiver_ports = receiver.input_ports
                 elif isinstance(receiver, Composition):
                     if not receiver.nodes:
                         err_msg = f'{self.name} does not have any nodes that can project to {receiver.name}.'
                         raise IndexError
-                    receiver = receiver.input_CIM.input_port
+                    receiver_ports = receiver.input_CIM.input_ports
             except IndexError:
                 err_msg = f"Can't create a {Projection.__name__} from '{sender.name}' to '{receiver.name}': " + err_msg
                 raise CompositionError(err_msg)
 
         # Check for existing Projections from specified sender
-        existing_projections = [proj for proj in sender.efferents if proj.receiver is receiver]
+        existing_projections = []
+        for sndr in sender_ports:
+            for rcvr in receiver_ports:
+                existing_projections.extend([proj for proj in sndr.efferents if proj.receiver is rcvr])
         existing_projections_in_composition = [proj for proj in existing_projections if proj in self.projections]
         assert len(existing_projections_in_composition) <= 1, \
             f"PROGRAM ERROR: More than one identical projection found " \
@@ -7091,25 +7106,35 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    else {pathway[c - 1]})
                 if all(_is_node_spec(sender) for sender in preceding_entry):
                     senders = _get_node_specs_for_entry(preceding_entry, NodeRole.OUTPUT)
-                    # # MODIFIED 7/30/23 OLD:
+                    # # MODIFIED 8/1/23 OLD:
+                    projs = {self.add_projection(sender=s, receiver=r,
+                                                 default_matrix=default_projection_matrix,
+                                                 allow_duplicates=False)
+                            for r in receivers for s in senders}
+                    # # MODIFIED 8/1/23 NEW:
+                    # # Check for any existing Projections between senders and receivers
+                    # #   and, if they are present, use those
+                    # projs = {proj for proj in self.projections
+                    #          if proj.sender.owner in senders and proj.receiver.owner in receivers}
+                    # already_connected = {(proj.sender.owner, proj.receiver.owner) for proj in projs}
+                    # # Add Projections for any pairs that don't already have them
+                    # new_projs = {self.add_projection(sender=s, receiver=r,
+                    #                                  default_matrix=default_projection_matrix,
+                    #                                  allow_duplicates=False)
+                    #              for r in receivers for s in senders if not (s,r) in already_connected}
+                    # if any(new_projs):
+                    #     projs |= new_projs
+                    # # MODIFIED 8/1/23 NEWER:
+                    # # Check for any existing Projections between senders and receivers
+                    # #   and, if they are present, use those
+                    # already_connected = {(sender, receiver) for sender in senders for receiver in receivers
+                    #                      if sender in [proj.sender.owner for proj in receiver.afferents]}
+                    # # Add Projections for any pairs that don't already have them
                     # projs = {self.add_projection(sender=s, receiver=r,
-                    #                              default_matrix=default_projection_matrix,
-                    #                              allow_duplicates=False)
-                    #         for r in receivers for s in senders}
-                    # MODIFIED 7/30/23 NEW:
-                    # Check for any existing Projections between senders and receivers
-                    #   and, if they are present, use those
-                    projs = {proj for proj in self.projections
-                             if proj.sender.owner in senders and proj.receiver.owner in receivers}
-                    already_connected = {(proj.sender.owner, proj.receiver.owner) for proj in projs}
-                    # Add Projections for any pairs that don't already have them
-                    new_projs = {self.add_projection(sender=s, receiver=r,
-                                                     default_matrix=default_projection_matrix,
-                                                     allow_duplicates=False)
-                                 for r in receivers for s in senders if not (s,r) in already_connected}
-                    if any(new_projs):
-                        projs |= new_projs
-                    # MODIFIED 7/30/23 END
+                    #                                  default_matrix=default_projection_matrix,
+                    #                                  allow_duplicates=False)
+                    #              for r in receivers for s in senders if not (s,r) in already_connected}
+                    # MODIFIED 8/1/23 END
 
                     # Warn about assignment of MappingProjections from ControlMechanisms
                     for ctl_mech in [s for s in senders if isinstance(s, ControlMechanism)]:
