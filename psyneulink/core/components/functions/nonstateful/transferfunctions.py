@@ -3303,6 +3303,9 @@ class SoftMax(TransferFunction):
         if not per_item:
             output = [output]
 
+        if np.array(output).ndim == 1:
+            output = np.atleast_2d(output)
+
         result = []
         for sm in output:
             size = len(sm)
@@ -3343,7 +3346,7 @@ class SoftMax(TransferFunction):
             result.append(derivative)
 
         assert per_item or len(result) == 1
-        return result[0] if not per_item else result
+        return result[0] if not per_item or np.array(result).ndim == 3 else result
 
 
 # **********************************************************************************************************************

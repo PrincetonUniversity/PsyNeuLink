@@ -7064,8 +7064,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # NODE ENTRY ----------------------------------------------------------------------------------------
             def _get_node_specs_for_entry(entry, include_roles=None, exclude_roles=None):
-                """Extract Nodes from any tuple specs and replace Compositions with their INPUT Nodes
-                """
+                """Extract Nodes from any tuple specs and replace Compositions with their INPUT Nodes"""
                 nodes = []
                 for node in entry:
                     # Extract Nodes from any tuple specs
@@ -7080,6 +7079,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     nodes.extend(node)
                 return nodes
 
+            # NODE ENTRY ----------------------------------------------------------------------------------------
             # The current entry is a Node or a set of them:
             #  - if it is a set, list or array, leave as is, else place in set for consistency of processing below
             current_entry = pathway[c] if isinstance(pathway[c], (set, list, np.ndarray)) else {pathway[c]}
@@ -7091,16 +7091,32 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    else {pathway[c - 1]})
                 if all(_is_node_spec(sender) for sender in preceding_entry):
                     senders = _get_node_specs_for_entry(preceding_entry, NodeRole.OUTPUT)
-                    projs = {self.add_projection(sender=s, receiver=r,
-                                                 default_matrix=default_projection_matrix,
-                                                 allow_duplicates=False)
-                            for r in receivers for s in senders}
+                    # # MODIFIED 7/30/23 OLD:
+                    # projs = {self.add_projection(sender=s, receiver=r,
+                    #                              default_matrix=default_projection_matrix,
+                    #                              allow_duplicates=False)
+                    #         for r in receivers for s in senders}
+                    # MODIFIED 7/30/23 NEW:
+                    # Check for any existing Projections between senders and receivers
+                    #   and, if they are present, use those
+                    projs = {proj for proj in self.projections
+                             if proj.sender.owner in senders and proj.receiver.owner in receivers}
+                    already_connected = {(proj.sender.owner, proj.receiver.owner) for proj in projs}
+                    # Add Projections for any pairs that don't already have them
+                    new_projs = {self.add_projection(sender=s, receiver=r,
+                                                     default_matrix=default_projection_matrix,
+                                                     allow_duplicates=False)
+                                 for r in receivers for s in senders if not (s,r) in already_connected}
+                    if any(new_projs):
+                        projs |= new_projs
+                    # MODIFIED 7/30/23 END
+
                     # Warn about assignment of MappingProjections from ControlMechanisms
-                    for cm in [s for s in senders if isinstance(s, ControlMechanism)]:
+                    for ctl_mech in [s for s in senders if isinstance(s, ControlMechanism)]:
                         warnings.warn(f"A {MappingProjection.__name__} has been created from a "
-                                      f"{ControlSignal.__name__} of '{cm.name}' -- specified {pathway_arg_str} -- "
-                                      f"to another {Mechanism.__name__} in that pathway.  If this is not the "
-                                      f"intended behavior, add '{cm.name}' separately to '{self.name}'.")
+                                      f"{ControlSignal.__name__} of '{ctl_mech.name}' -- specified {pathway_arg_str} "
+                                      f"-- to another {Mechanism.__name__} in that pathway.  If this is not the "
+                                      f"intended behavior, add '{ctl_mech.name}' separately to '{self.name}'.")
                     if all(projs):
                         projs = projs.pop() if len(projs) == 1 else projs
                         projections.append(projs)
@@ -7839,12 +7855,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 raise CompositionError(f"'learning_function' argument for add_linear_learning_pathway "
                                        f"({learning_function}) must be a class of {LearningFunction.__name__}")
 
-            target_mechanism, objective_mechanism, learning_mechanism  = creation_method(input_source,
-                                                                                          output_source,
-                                                                                          error_function,
-                                                                                          learned_projection,
-                                                                                          learning_rate,
-                                                                                          learning_update)
+            target_mechanism, objective_mechanism, learning_mechanism = creation_method(input_source,
+                                                                                        output_source,
+                                                                                        error_function,
+                                                                                        learned_projection,
+                                                                                        learning_rate,
+                                                                                        learning_update)
 
         elif is_function_type(learning_function):
             target_mechanism = ProcessingMechanism(name='Target')
@@ -8298,6 +8314,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                           learning_update,
                                                           context):
 
+        def _get_acts_in_and_out(input_source, output_soruce):
+            """Get shapes of activation_input and activation_output used by LearningMechanism and BackPropagation Fct"""
+            # activation_input has more than one value if activation function has more than one argument
+            activation_input = input_source.output_ports[0].value
+            # activation_input = [output_source.input_ports[i].variable
+            #                     for i in range(len(output_source.input_ports))]
+            # activation_output is always a single value since activation function is assumed to have only one output
+            activation_output = output_source.output_ports[0].value
+            return [activation_input, activation_output]
+
         # Get existing LearningMechanism if one exists (i.e., if this is a crossing point with another pathway)
         learning_mechanism = \
             next((lp.sender.owner for lp in learned_projection.parameter_ports[MATRIX].mod_afferents
@@ -8318,21 +8344,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             error_sources, error_projections = self._get_back_prop_error_sources(output_source, context=context)
             error_signal_template = [error_source.output_ports[ERROR_SIGNAL].value for error_source in error_sources]
-            default_variable = [input_source.output_ports[0].value,
-                                output_source.output_ports[0].value] + error_signal_template
 
-            learning_function = BackPropagation(default_variable=[input_source.output_ports[0].value,
-                                                                  output_source.output_ports[0].value,
-                                                                  error_signal_template[0]],
+            # Use only one errot_signal_template for learning_function, since it gets only one source of error at a time
+            learning_function = BackPropagation(default_variable=_get_acts_in_and_out(input_source, output_source)
+                                                                 + [error_signal_template[0]],
                                                 loss_spec=None,
                                                 activation_derivative_fct=output_source.function.derivative,
                                                 learning_rate=learning_rate)
 
+            # Use all error_signal_templates since LearningMechanisms handles all sources of error
             learning_mechanism = LearningMechanism(function=learning_function,
-                                                   # default_variable=[input_source.output_ports[0].value,
-                                                   #                   output_source.output_ports[0].value,
-                                                   #                   error_signal_template],
-                                                   default_variable=default_variable,
+                                                   default_variable=_get_acts_in_and_out(input_source, output_source)
+                                                                    + error_signal_template,
                                                    error_sources=error_sources,
                                                    learning_enabled=learning_update,
                                                    in_composition=True,
