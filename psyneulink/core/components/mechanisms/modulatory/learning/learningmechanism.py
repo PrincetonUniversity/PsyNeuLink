@@ -170,10 +170,21 @@ names and roles (shown in the `figure <LearningMechanism_Single_Layer_Learning_F
   as an item of the LearningMechanism's `variable <LearningMechanism.variable>` attribute, beginning with its third
   item (i.e., following the `value <InputPort.value>` of the *ACTIVATION_INPUT* and *ACTIVATION_VALUE* InputPorts).
 
+.. _LearningMechanism_Covariates:
+
+* *COVARIATES* - one or more InputPorts that receive the value of the inputs to `output_source (i.e., the
+  *ProcessingMechanism* to which the `primary_learned_projection` projects) other than `primary_learned_projection
+  <LearningMechanism_Primary_Learned_Projection>`, if the `output_source <LearningMechanism.output_source>`'s
+  `function <Mechanism_Base.function>` takes more than one argument and they affect its derivative.  These are
+  assigned in a list as fourth variable in the LearningMechanism's `variable <LearningMechanism.variable>`
+  attribute, and are used to calculate the `learning_signal <LearningMechanism.learning_signal>` (see `below
+  <LearningMechanism_Function>`).
+
 The Mechanisms from the which the `value <InputPort.values>`\\s above are received are listed in the
 LearningMechanism's `input_source <LearningMechanism.input_source>`, `output_source <LearningMechanism.output_source>`,
 and `error_sources <LearningMechanism.error_sources>` attributes, respectively (see
 `LearningMechanism_Additional_Attributes` for additional details).
+
 
 .. _LearningMechanism_Function:
 
@@ -324,6 +335,10 @@ refer to the Components being learned and/or its operation:
   `error_sources <LearningMechanism.error_sources>`;  that is, of any of the `output_source
   <LearningMechanism.output_source>`'s `efferents <OutputPorts.efferents>` that are also being learned.
 ..
+* `covariates_sources` - the `Mechanism>`(s) that provide covariates used in calculating the derivative of the
+  `output_source <LearningMechanism.output_source>`'s `function <Mechanism_Base.function>` (see `above
+    <LearningMechanism_Covariates>`), and project to its *COVARIATES* `InputPort <LearningMechanism_Covariates>`.
+..
 * `modulation` - the default value used for the `modulation <LearningSignal.modulation>` attribute of
   LearningMechanism's `LearningSignals <LearningSignal>` (i.e. those for which it is not explicitly specified).
   This determines the way in which the `learning_signal <LearningMechanism.learning_signal>` is used to modify the
@@ -437,14 +452,18 @@ sequence, the following additional MappingProjections are created for learning (
 <LearningMechanism_Multilayer_Learning_Figure>` below):
 
 * from the `input_source <LearningMechanism.input_source>` to the LearningMechanism's *ACTIVATION_INPUT* `InputPort
-  <LearningMechanism_Activation_Input>`.
+  <LearningMechanism_Activation_Input>`; 
 ..
 * from the `output_source <LearningMechanism.output_source>` to the LearningMechanism's *ACTIVATION_OUTPUT* `InputPort
-  <LearningMechanism_Activation_Output>`.
+  <LearningMechanism_Activation_Output>`;
 ..
 * from the *ERROR_SIGNAL* `OutputPort <LearningMechanism_Output_Error_Signal>` of each of the LearningMechanism's
   `error_sources <LearningMechanisms.error_sources>` to each of its corresponding *ERROR_SIGNAL* `InputPort(s)
-  <LearningMechanism_Input_Error_Signal>`.
+  <LearningMechanism_Input_Error_Signal>`;
+
+* from the `covariates_source <LearningMechanism.covariates_source>` to the LearningMechanism's *COVARIATES*
+  `InputPort`(s)  if the `function <Mechaism_Base.function>` of the `output_source <LearningMechanism.output_source>`
+  takes more than one argument and they affect its derivative (see `above <LearningMechanism_Covariates>`).
 
 In addition, a `LearningProjection` is created from the `LearningSignal <LearningMechanism_LearningSignal>` for the
 `primary_learned_projection` of each LearningMechanism in the sequence, to the `ParameterPort` for the `matrix
@@ -556,8 +575,8 @@ from psyneulink.core.globals.utilities import ContentAddressableList, convert_to
     convert_to_list
 
 __all__ = [
-    'ACTIVATION_INPUT', 'ACTIVATION_INPUT_INDEX', 'ACTIVATION_OUTPUT', 'ACTIVATION_OUTPUT_INDEX',
-    'DefaultTrainingMechanism', 'ERROR_SIGNAL', 'ERROR_SIGNAL_INDEX', 'ERROR_SOURCES',
+    'ACTIVATION_INPUT', 'ACTIVATION_INPUT_INDEX', 'ACTIVATION_OUTPUT', 'ACTIVATION_OUTPUT_INDEX', 
+    'COVARIATES', 'COVARIATES_INDEX', 'DefaultTrainingMechanism', 'ERROR_SIGNAL', 'ERROR_SIGNAL_INDEX', 'ERROR_SOURCES',
     'LearningMechanism', 'LearningMechanismError', 'input_port_names', 'output_port_names'
 ]
 
@@ -636,12 +655,14 @@ LEARNING_TIMING = 'learning_timing'
 ACTIVATION_INPUT_INDEX = 0
 ACTIVATION_OUTPUT_INDEX = 1
 ERROR_SIGNAL_INDEX = 2
+COVARIATES_INDEX = 3
 
 # Used to name input_ports and output_ports:
 ACTIVATION_INPUT = 'activation_input'     # InputPort
 ACTIVATION_OUTPUT = 'activation_output'   # InputPort
 ERROR_SIGNAL = 'error_signal'
-input_port_names = [ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL]
+COVARIATES = 'covariate'                  # Basename for one or more InputPorts
+input_port_names = [ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL, COVARIATES]
 output_port_names = [LEARNING_SIGNAL, ERROR_SIGNAL]
 
 ERROR_SOURCES = 'error_sources'
@@ -732,16 +753,18 @@ class LearningMechanism(ModulatoryMechanism_Base):
         `variable <Function_Base.variable>` must have three items, each of which must be a list or 1d array of
         numeric values, corresponding to values provided by the LearningMechanism's *ACTIVATION_INPUT*,
         *ACTIVATION_OUTPUT*, and *ERROR_SOURCES* InputPorts, respectively (see `LearningMechanism_InputPorts
-        `LearningMechanism_Function` and `LearningMechanism_InputPorts` for additional details).
+        `LearningMechanism_Function` and `LearningMechanism_InputPorts` for additional details). If supports an
+        activation function that takes more than one argument that impact its derivative, then it must also accept a
+        potential fourth keyword argument (``covariates``), that is a list or 1d array of numeric values provided by
+        the LearningMechanism's *COVARIATES* InputPort(s) (see `LearningMechanism_Covariates` for additional details).
 
     learning_rate : float : default None
         specifies the learning rate for the LearningMechanism (see `learning_rate <LearningMechanism.learning_rate>`
         for details).
 
     learning_signals : List[parameter of Projection, ParameterPort, Projection, tuple[str, Projection] or dict] :
-    default *LEARNING_SIGNAL*
-        specifies the parameter(s) to be learned (see `learning_signals <LearningMechanism.learning_signals>` for
-        details).
+        default *LEARNING_SIGNAL* specifies the parameter(s) to be learned (see `learning_signals
+        <LearningMechanism.learning_signals>` for details).
 
     modulation : str : default ADDITIVE
         specifies the default form of modulation used by the LearningMechanism's LearningSignals,
@@ -767,7 +790,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
 
     input_ports : ContentAddressableList[OutputPort]
         list containing the LearningMechanism's three `InputPorts <LearningMechanism_InputPorts>`:
-        *ACTIVATION_INPUT*,  *ACTIVATION_OUTPUT*, and *ERROR_SIGNAL*.
+        *ACTIVATION_INPUT*, *ACTIVATION_OUTPUT*, *ERROR_SIGNAL*, and possible its *COVARIATES*.
 
     error_signal_input_ports : list[InputPorts]
         list of InputPorts that receive error_signals from the LearningMechanism's `error_sources
@@ -780,6 +803,12 @@ class LearningMechanism(ModulatoryMechanism_Base):
     output_source : ProcessingMechanism
         the Mechanism that receives the `primary_learned_projection`, and  projects to the
         LearningMechanism's *ACTIVATION_OUTPUT* `InputPort <LearningMechanism_Activation_Output>`.
+
+    covariates_sources : List[ProcessingMechanism]
+        the Mechanism(s) that send Projections to InputPorts of the LearningMechanism's `output_source
+        <LearningMechanism.output_source>` other than the `primary_learned_projection`.  These are used as
+        covariates in the calculation of the derivative of its `function <LearningMechanism.function>` (see
+        `LearningMechanism_Covariates` for additional details).
 
     error_sources : list[ComparatorMechanism or LearningMechanism]
         the Mechanism(s) that calculate the error signal(s) provided to the
@@ -919,7 +948,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
                 input_ports
                     see `input_ports <LearningMechanism.input_ports>`
 
-                    :default value: [`ACTIVATION_INPUT`, `ACTIVATION_OUTPUT`, `ERROR_SIGNAL`]
+                    :default value: [`ACTIVATION_INPUT`, `ACTIVATION_OUTPUT`, `ERROR_SIGNAL`, `COVARIATES`]
                     :type: ``list``
                     :read only: True
 
@@ -970,7 +999,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         learning_enabled = True
         modulation = ADDITIVE
         input_ports = Parameter(
-            [ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL],
+            [ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL, COVARIATES],
             stateful=False,
             loggable=False,
             read_only=True,
@@ -1072,13 +1101,18 @@ class LearningMechanism(ModulatoryMechanism_Base):
                                                 repr(LEARNING_TIMING)))
 
     def _parse_function_variable(self, variable, context=None):
-        function_variable = np.zeros_like(
-            variable[np.array([ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL_INDEX])]
-        )
+        function_variable = np.zeros_like(variable[np.array([ACTIVATION_INPUT_INDEX,
+                                                             ACTIVATION_OUTPUT_INDEX,
+                                                             ERROR_SIGNAL_INDEX])])
         function_variable[ACTIVATION_INPUT_INDEX] = variable[ACTIVATION_INPUT_INDEX]
         function_variable[ACTIVATION_OUTPUT_INDEX] = variable[ACTIVATION_OUTPUT_INDEX]
         function_variable[ERROR_SIGNAL_INDEX] = variable[ERROR_SIGNAL_INDEX]
-
+        # If There are any covariates, add them to function_variable
+        if len(variable) > COVARIATES_INDEX:
+            # Put all covariate values into a single array and place in function_variable[COVARIATES_INDEX]
+            for i in range(COVARIATES_INDEX, len(variable)):
+                covariates = np.append(covariates, np.zeros_like(variable[i]))
+            function_variable = np.append(function_variable, [covariates], axis=0)
         return function_variable
 
     def _validate_variable(self, variable, context=None):
@@ -1093,6 +1127,8 @@ class LearningMechanism(ModulatoryMechanism_Base):
                                                 ACTIVATION_INPUT,
                                                 ACTIVATION_OUTPUT,
                                                 ERROR_SIGNAL,"(s)"))
+
+        # FIX: 8/1/23:  ADD VALIDATION OF COVARIATES HERE
 
         # Validate that activation_input, activation_output are numeric and lists or 1d np.ndarrays
         #    and that there is the correct number of error_signal_input_ports and and error_matrices:
@@ -1365,6 +1401,9 @@ class LearningMechanism(ModulatoryMechanism_Base):
                     error_signal_input
                 ]
             )
+            if len(variable) == COVARIATES_INDEX + 1:
+                function_variable = np.append(function_variable, variable[COVARIATES_INDEX])
+
             learning_signal, error_signal = super()._execute(variable=function_variable,
                                                              context=context,
                                                              error_matrix=error_matrix,

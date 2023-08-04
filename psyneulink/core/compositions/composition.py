@@ -8321,7 +8321,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                           learning_update,
                                                           context):
 
-        def _get_acts_in_and_out(input_source, output_soruce):
+        def _get_acts_in_and_out(input_source, output_source):
             """Get shapes of activation_input and activation_output used by LearningMechanism and BackPropagation Fct"""
             # activation_input has more than one value if activation function has more than one argument
             activation_input = input_source.output_ports[0].value
