@@ -180,6 +180,11 @@ names and roles (shown in the `figure <LearningMechanism_Single_Layer_Learning_F
   attribute, and are used to calculate the `learning_signal <LearningMechanism.learning_signal>` (see `below
   <LearningMechanism_Function>`).
 
+  .. note::
+     The LearningMechanism has a separate InputPort for each covariate, however their
+     values are combined into a single item of the LearningMechanism's `variable <LearningMechanism.variable>`
+     that is provided to its `function <LearningMechanism.function>` at the fourth position.
+
 The Mechanisms from the which the `value <InputPort.values>`\\s above are received are listed in the
 LearningMechanism's `input_source <LearningMechanism.input_source>`, `output_source <LearningMechanism.output_source>`,
 and `error_sources <LearningMechanism.error_sources>` attributes, respectively (see
@@ -1053,9 +1058,9 @@ class LearningMechanism(ModulatoryMechanism_Base):
                  **kwargs
                  ):
         # IMPLEMENTATION NOTE:
-        #    assign to private attribute as self.error_sources is used as a property
+        #    assign to private attribute as self.error_sources;
         #    private attribute is used for validation and in _instantiate_attribute_before_function;
-        #    thereafter, self.error_sources contains actual error_sources
+        #    thereafter, self.error_sources contains actual error_sources.
         if error_sources:
             error_sources = convert_to_list(error_sources)
         self._error_sources = error_sources
@@ -1108,12 +1113,12 @@ class LearningMechanism(ModulatoryMechanism_Base):
         function_variable[ACTIVATION_INPUT_INDEX] = variable[ACTIVATION_INPUT_INDEX]
         function_variable[ACTIVATION_OUTPUT_INDEX] = variable[ACTIVATION_OUTPUT_INDEX]
         function_variable[ERROR_SIGNAL_INDEX] = variable[ERROR_SIGNAL_INDEX]
-        # If There are any covariates, add them to function_variable
-        if len(variable) > COVARIATES_INDEX:
-            # Put all covariate values into a single array and place in function_variable[COVARIATES_INDEX]
-            for i in range(COVARIATES_INDEX, len(variable)):
-                covariates = np.append(covariates, np.zeros_like(variable[i]))
-            function_variable = np.append(function_variable, [covariates], axis=0)
+        # # If There are any covariates, add them to function_variable
+        # # FIX: 8/1/23 - COORDINATE THIS WITH NUMBER OF ERROR SIGNALS INPUTPORTS
+        # if len(variable) > COVARIATES_INDEX:
+        #     # Put all covariate values into a single array and place in function_variable[COVARIATES_INDEX]
+        #     covariates = [covariate for covariate in variable[COVARIATES_INDEX:]]
+        #     function_variable = function_variable.tolist() + [covariates]
         return function_variable
 
     def _validate_variable(self, variable, context=None):
@@ -1156,8 +1161,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
                 if not (is_numeric(variable[i])):
                     raise LearningMechanismError("{item_num_string} of variable for {self.name} ({item_name}: "
                                                  "{variable[i]}) is not numeric.")
-            elif i + len(variable[i]) != len(self.input_ports):
-                assert True
+            elif len(variable[i]) != len(self.input_ports):
                 assert False, f"Number of items ({len(variable)}) in variable for '{self.name}' doesn't match the " \
                               f"number of its InputPorts ({len(self.input_ports)})"
         return variable
@@ -1220,6 +1224,19 @@ class LearningMechanism(ModulatoryMechanism_Base):
                                            context=context)
                 else:
                     pass
+
+
+    def _instantiate_input_ports(self, input_ports=None, reference_value=None, context=None):
+        """Instantiate COVARIATES InputPorts"""
+        num_covariates = len(self.defaults.variable[COVARIATES_INDEX:])
+        input_ports = self.input_ports
+        if num_covariates == 1:
+            input_ports += [COVARIATES]
+        else:
+            for i in range(num_covariates):
+                input_ports += [f'{COVARIATES}_{i}']
+                # input_ports[i].reference_value = reference_value[i]
+        super()._instantiate_input_ports(input_ports=input_ports, reference_value=reference_value, context=context)
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
         """Instantiates MappingProjection(s) from error_sources (if specified) to LearningMechanism
@@ -1413,11 +1430,12 @@ class LearningMechanism(ModulatoryMechanism_Base):
             if len(variable) == COVARIATES_INDEX + 1:
                 function_variable = np.append(function_variable, variable[COVARIATES_INDEX])
 
+            covariates = variable[COVARIATES_INDEX] if len(variable) == COVARIATES_INDEX + 1 else None
             learning_signal, error_signal = super()._execute(variable=function_variable,
                                                              context=context,
                                                              error_matrix=error_matrix,
-                                                             runtime_params=runtime_params,
-                                                             )
+                                                             covariates=covariates,
+                                                             runtime_params=runtime_params)
             # Sum learning_signals and error_signals
             summed_learning_signal += learning_signal
             summed_error_signal += error_signal

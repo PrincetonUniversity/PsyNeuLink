@@ -1426,7 +1426,7 @@ class LinearCombination(
         return self.convert_output_type(result)
 
     @handle_external_context()
-    def derivative(self, input=None, output=None, context=None):
+    def derivative(self, input=None, output=None, covariates=None, context=None):
         """
         derivative(input)
 
@@ -1435,10 +1435,16 @@ class LinearCombination(
         Arguments
         ---------
 
-        input : 1d or 2d np.array : default class_defaults.variable
+        output : 1d np.array : default class_defaults.variable[0]
             value of the input to the Linear transform at which derivative is to be taken.
            a single numeric array or multiple arrays being combined, and at which derivative is to be taken.
 
+           .. technical_note::
+              output arg is used for consistency with other derivatives used by BackPropagation, and is ignored.
+
+        covariates : 2d np.array : default class_defaults.variable[1:]
+            the input(s) to the LinearCombination function other than the one for which the derivative is being
+            computed;  these are used to calculate the Jacobian of the LinearCombination function.
 
         Returns
         -------
@@ -1446,11 +1452,12 @@ class LinearCombination(
         Scale :  number (if input is 1d) or array (if input is 2d)
 
         """
+        if covariates is None or self.operation == SUM:
+            jacobian = self._get_current_parameter_value(SCALE, context)
+        else:
+            jacobian = np.prod(np.vstack(covariates), axis=0)  * self._get_current_parameter_value(SCALE, context)
 
-        # FIX: NEED TO DEAL WITH PRODUCT HERE WRT TO WHICH INPUT PORT IS BEING "DERIVED"
-        # return self._get_current_parameter_value(SCALE, context)
-        # return np.diag(np.eye(len(output)) * self._get_current_parameter_value(SCALE, context))
-        return np.eye(len(output)) * (output * self._get_current_parameter_value(SCALE, context))
+        return np.eye(len(output)) * (output * jacobian)
 
     def _get_input_struct_type(self, ctx):
         # FIXME: Workaround a special case of simple array.

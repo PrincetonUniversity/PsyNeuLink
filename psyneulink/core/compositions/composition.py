@@ -8330,8 +8330,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # activation_output is always a single value since activation function is assumed to have only one output
             activation_output = [output_source.output_ports[0].value]
             # FIX: CHECK FOR USE OF PRODUCT BY ACTIVATION FUNCTION OF output_source
-            covariates = [[input_port.value for input_port in output_source.input_ports
-                          if input_port is not learned_projection.receiver]]
+            covariates = [input_port.value for input_port in output_source.input_ports
+                          if input_port is not learned_projection.receiver]
             # FIX 8/1/23: ADD ALL OTHER INPUTS TO
             #               OTHER THAN
             # ACTIVATION_INPUT
@@ -8371,14 +8371,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                 learning_rate=learning_rate)
 
             # Use all error_signal_templates since LearningMechanisms handles all sources of error
-            default_variable = activation_input + activation_output + error_signal_template
-            default_variable.extend(covariates)
             learning_mechanism = LearningMechanism(function=learning_function,
-                                                   # default_variable=activation_input +
-                                                   #                  activation_output +
-                                                   #                  error_signal_template +
-                                                   #                  covariates,
-                                                   default_variable=default_variable,
+                                                   default_variable=activation_input +
+                                                                    activation_output +
+                                                                    error_signal_template +
+                                                                    covariates,
                                                    error_sources=error_sources,
                                                    learning_enabled=learning_update,
                                                    in_composition=True,
