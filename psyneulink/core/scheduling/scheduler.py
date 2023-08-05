@@ -10,15 +10,17 @@
 import copy
 import logging
 import typing
+from typing import Hashable
 
 import graph_scheduler
 import pint
 
+import psyneulink as pnl
 from psyneulink import _unit_registry
 from psyneulink.core.globals.context import Context, handle_external_context
 from psyneulink.core.globals.mdf import MDFSerializable
 from psyneulink.core.globals.utilities import parse_valid_identifier
-from psyneulink.core.scheduling.condition import _create_as_pnl_condition
+from psyneulink.core.scheduling.condition import _create_as_pnl_condition, graph_structure_conditions_available, gsc_unavailable_message
 
 __all__ = [
     'Scheduler', 'SchedulingMode'
@@ -50,6 +52,7 @@ class Scheduler(graph_scheduler.Scheduler, MDFSerializable):
             graph = composition.graph_processing.prune_feedback_edges()[0]
             if default_execution_id is None:
                 default_execution_id = composition.default_execution_id
+            self.composition = composition
 
         # TODO: consider integrating something like this into graph-scheduler?
         self._user_specified_conds = graph_scheduler.ConditionSet()
@@ -77,8 +80,15 @@ class Scheduler(graph_scheduler.Scheduler, MDFSerializable):
 
     def _validate_conditions(self):
         unspecified_nodes = []
+
+        # pre-graph-structure-condition compatibility
+        try:
+            conditions_basic = self.conditions.conditions_basic
+        except AttributeError:
+            conditions_basic = self.conditions.conditions
+
         for node in self.nodes:
-            if node not in self.conditions:
+            if node not in conditions_basic:
                 dependencies = list(self.dependency_dict[node])
                 if len(dependencies) == 0:
                     cond = graph_scheduler.Always()
@@ -90,12 +100,8 @@ class Scheduler(graph_scheduler.Scheduler, MDFSerializable):
                 # TODO: replace this call in graph-scheduler if adding _user_specified_conds
                 self._add_condition(node, cond)
                 unspecified_nodes.append(node)
-        if len(unspecified_nodes) > 0:
-            logger.info(
-                'These nodes have no Conditions specified, and will be scheduled with conditions: {0}'.format(
-                    {node: self.conditions[node] for node in unspecified_nodes}
-                )
-            )
+
+        super()._validate_conditions()
 
     def add_condition(self, owner, condition):
         self._user_specified_conds.add_condition(owner, condition)
@@ -105,21 +111,36 @@ class Scheduler(graph_scheduler.Scheduler, MDFSerializable):
         condition = _create_as_pnl_condition(condition)
         super().add_condition(owner, condition)
 
+        if graph_structure_conditions_available:
+            if isinstance(condition, pnl.GraphStructureCondition):
+                self.composition._analyze_graph()
+
     def add_condition_set(self, conditions):
         self._user_specified_conds.add_condition_set(conditions)
         self._add_condition_set(conditions)
 
     def _add_condition_set(self, conditions):
-        try:
-            conditions = conditions.conditions
-        except AttributeError:
-            pass
-
         conditions = {
             node: _create_as_pnl_condition(conditions[node])
             for node in conditions
         }
         super().add_condition_set(conditions)
+
+    def remove_condition(self, owner_or_condition):
+        try:
+            res = super().remove_condition(owner_or_condition)
+        except AttributeError as e:
+            if "has no attribute 'remove_condition'" in str(e):
+                raise graph_scheduler.SchedulerError(
+                    f'remove_condition unavailable in your installed graph-scheduler v{graph_scheduler.__version__}'
+                )
+            else:
+                raise
+        else:
+            if isinstance(res, pnl.GraphStructureCondition):
+                self.composition._analyze_graph()
+
+        return res
 
     @graph_scheduler.Scheduler.termination_conds.setter
     def termination_conds(self, termination_conds):
@@ -159,6 +180,22 @@ class Scheduler(graph_scheduler.Scheduler, MDFSerializable):
     @handle_external_context()
     def get_clock(self, context):
         return super().get_clock(context.execution_id)
+
+    def add_graph_edge(self, sender: Hashable, receiver: Hashable) -> 'pnl.AddEdgeTo':
+        if not graph_structure_conditions_available:
+            raise graph_scheduler.SchedulerError(gsc_unavailable_message)
+
+        cond = pnl.AddEdgeTo(receiver)
+        self.add_condition(sender, cond)
+        return cond
+
+    def remove_graph_edge(self, sender: Hashable, receiver: Hashable) -> 'pnl.RemoveEdgeFrom':
+        if not graph_structure_conditions_available:
+            raise graph_scheduler.SchedulerError(gsc_unavailable_message)
+
+        cond = pnl.RemoveEdgeFrom(sender)
+        self.add_condition(receiver, cond)
+        return cond
 
 
 _doc_subs = {
