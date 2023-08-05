@@ -342,7 +342,7 @@ class TestLearningPathwayMethods:
                                                                           hidden_to_out_comp,
                                                                           output_comp],
                                                                          learning_rate=10)
-        # Try readd the same learning pathway (shouldn't error)
+        # Try read the same learning pathway (shouldn't error)
         backprop_pathway = xor_comp.add_backpropagation_learning_pathway([input_comp,
                                                                           in_to_hidden_comp,
                                                                           hidden_comp,

@@ -175,8 +175,8 @@ names and roles (shown in the `figure <LearningMechanism_Single_Layer_Learning_F
 * *COVARIATES* - one or more InputPorts that receive the value of the inputs to `output_source (i.e., the
   *ProcessingMechanism* to which the `primary_learned_projection` projects) other than `primary_learned_projection
   <LearningMechanism_Primary_Learned_Projection>`, if the `output_source <LearningMechanism.output_source>`'s
-  `function <Mechanism_Base.function>` takes more than one argument and they affect its derivative.  These are
-  assigned in a list as fourth variable in the LearningMechanism's `variable <LearningMechanism.variable>`
+  `function <Mechanism_Base.function>` takes more than one argument and they affect its derivative. These are
+  assigned as a list to the fourth item in the LearningMechanism's `variable <LearningMechanism.variable>`
   attribute, and are used to calculate the `learning_signal <LearningMechanism.learning_signal>` (see `below
   <LearningMechanism_Function>`).
 
@@ -184,6 +184,15 @@ names and roles (shown in the `figure <LearningMechanism_Single_Layer_Learning_F
      The LearningMechanism has a separate InputPort for each covariate, however their
      values are combined into a single item of the LearningMechanism's `variable <LearningMechanism.variable>`
      that is provided to its `function <LearningMechanism.function>` at the fourth position.
+
+  .. technical_note::
+     Although the *COVARIATES* InputPorts receive Projections from the same senders as the corresponding
+     Projections to the `output_source <LearningMechanism.output_source>`, these are for display only,
+     and are not to actually compute the LearningSignal, since they are not subject to learning and therefore
+     do not provide the same value as the actual Projections they shadow.  Rather, those values are accessed
+     directly by the LearningMechanism from the InputPorts of the `output_source <LearningMechanism.output_source>`,
+     in a manner similar to its access of the `error_matrices <LearningMechanism.error_matrices>` from the
+     `ParameterPort`s of the `error_sources <LearningMechanism.error_sources>`.
 
 The Mechanisms from the which the `value <InputPort.values>`\\s above are received are listed in the
 LearningMechanism's `input_source <LearningMechanism.input_source>`, `output_source <LearningMechanism.output_source>`,
@@ -582,7 +591,8 @@ from psyneulink.core.globals.utilities import ContentAddressableList, convert_to
 
 __all__ = [
     'ACTIVATION_INPUT', 'ACTIVATION_INPUT_INDEX', 'ACTIVATION_OUTPUT', 'ACTIVATION_OUTPUT_INDEX', 
-    'COVARIATES', 'COVARIATES_INDEX', 'DefaultTrainingMechanism', 'ERROR_SIGNAL', 'ERROR_SIGNAL_INDEX', 'ERROR_SOURCES',
+    'COVARIATES', 'COVARIATES_INDEX', 'COVARIATES_SOURCES', 'DefaultTrainingMechanism',
+    'ERROR_SIGNAL', 'ERROR_SIGNAL_INDEX', 'ERROR_SOURCES',
     'LearningMechanism', 'LearningMechanismError', 'input_port_names', 'output_port_names'
 ]
 
@@ -672,6 +682,7 @@ input_port_names = [ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL, COVARIATE
 output_port_names = [LEARNING_SIGNAL, ERROR_SIGNAL]
 
 ERROR_SOURCES = 'error_sources'
+COVARIATES_SOURCES = 'covariates_sources'
 
 DefaultTrainingMechanism = ObjectiveMechanism
 
@@ -697,6 +708,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
     """
     LearningMechanism(                    \
         variable,                         \
+        covariates_sources,               \
         error_sources,                    \
         function=BackPropagation,         \
         learning_rate=None,               \
@@ -745,6 +757,11 @@ class LearningMechanism(ModulatoryMechanism_Base):
         <LearningMechanism.function>`;  they must each be compatible (in number and type) with the `value
         <InputPort.value>` of the corresponding `InputPort <LearningMechanism_InputPorts>` (see `variable
         <LearningMechanism.variable>` for additional details).
+
+    covariates_sources : InputPort or list of them : default None
+        specifies the `InputPort`(s) of the LearningMechanism's `output_source <LearningMechanism.output_source>`
+        other than the one to which the `primary_learned_projection` projects. (see `LearningMechanism_Covariates`
+        for additional details).
 
     error_sources : ComparatorMechanism, LearningMechanism, OutputPort or list of them
         specifies the source(s) of the error signal(s) used by the LearningMechanism's `function
@@ -810,11 +827,18 @@ class LearningMechanism(ModulatoryMechanism_Base):
         the Mechanism that receives the `primary_learned_projection`, and  projects to the
         LearningMechanism's *ACTIVATION_OUTPUT* `InputPort <LearningMechanism_Activation_Output>`.
 
-    covariates_sources : List[ProcessingMechanism]
-        the Mechanism(s) that send Projections to InputPorts of the LearningMechanism's `output_source
-        <LearningMechanism.output_source>` other than the `primary_learned_projection`.  These are used as
-        covariates in the calculation of the derivative of its `function <LearningMechanism.function>` (see
-        `LearningMechanism_Covariates` for additional details).
+    covariates_sources : List[InputPort]
+        the `InputPort`(s) of the LearningMechanism's `output_source <LearningMechanism.output_source>`
+        other than the one to which the `primary_learned_projection` projects;  these are used as
+        covariates in the calculation of the derivative of `output_source <LearningMechanism.output_source>`\\'s
+        `function <LearningMechanism.function>` with respect to `value <MappingProjection.value>` of the
+        `primary_learned_projection` (see `LearningMechanism_Covariates` for additional details).
+
+    covariates_values : List[1d np.array]
+        the values of the InputPorts to which the `covariates_sources <LearningMechanism.covariates_sources>` project;
+        passed to the LearningMechanism's `function <LearningMechanism.function>` as the *COVARIATES* item of its
+        `variable <LearningMechanism.variable>`, and assigned as the `value <InputPort.value>` of the LearningMechanism's
+        *COVARIATES* `InputPort <LearningMechanism_Covariates>`s.
 
     error_sources : list[ComparatorMechanism or LearningMechanism]
         the Mechanism(s) that calculate the error signal(s) provided to the
@@ -1044,6 +1068,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
                  # default_variable:Union[list, np.ndarray],
                  default_variable=None,
                  size=None,
+                 covariates_sources: Optional[Union[InputPort, list]] = None,
                  error_sources: Optional[Union[Mechanism, list]] = None,
                  function=None,
                  learning_signals: Optional[list] = None,
@@ -1057,10 +1082,14 @@ class LearningMechanism(ModulatoryMechanism_Base):
                  prefs: Optional[ValidPrefSet] = None,
                  **kwargs
                  ):
+
+        # FIX: 8/1/23 - ??MAKE THESE Parameters??
+        if covariates_sources:
+            covariates_sources = convert_to_list(covariates_sources)
+        self.covariates_sources = covariates_sources or []
         # IMPLEMENTATION NOTE:
-        #    assign to private attribute as self.error_sources;
-        #    private attribute is used for validation and in _instantiate_attribute_before_function;
-        #    thereafter, self.error_sources contains actual error_sources.
+        #    assign to private attribute as self._error_sources;
+        #    private attribute is used for validation and in _instantiate_attribute_before_function
         if error_sources:
             error_sources = convert_to_list(error_sources)
         self._error_sources = error_sources
@@ -1413,11 +1442,6 @@ class LearningMechanism(ModulatoryMechanism_Base):
         summed_learning_signal = 0
         summed_error_signal = 0
 
-        # FIX: DEAL WITH POSSIBILITY OF MORE THAN ONE VALUE IN ACTIVATION INPUT
-        #   (IF activation_function HAS MORE THAN ONE ARGUMENT);
-        #   PASS LEARNING FUNCTION THE INDEX OF THE ONE WRT WHICH THE DERIVATIVE SHOULD BE COMPUTED
-        #   AS THE index_of_derivative ARGUMENT, WHICH THE DERIVATIVE OF THE FUNCTION MUST BE ABLE TO ACCEPT
-        #   IN ITS "params" ARGUMENT (SHOUDL BE PUT THERE BY component AS FOR LearningFunctions)
         # Compute learning_signal for each error_signal (and corresponding error-Matrix):
         for error_signal_input, error_matrix in zip(error_signal_inputs, error_matrices):
             function_variable = convert_to_np_array(
@@ -1427,15 +1451,18 @@ class LearningMechanism(ModulatoryMechanism_Base):
                     error_signal_input
                 ]
             )
-            if len(variable) == COVARIATES_INDEX + 1:
-                function_variable = np.append(function_variable, variable[COVARIATES_INDEX])
 
-            covariates = variable[COVARIATES_INDEX] if len(variable) == COVARIATES_INDEX + 1 else None
+            # Get covariates_values and pass in covariates arg
+            covariates_values = [source.value for source in self.covariates_sources]
             learning_signal, error_signal = super()._execute(variable=function_variable,
                                                              context=context,
                                                              error_matrix=error_matrix,
-                                                             covariates=covariates,
+                                                             covariates=covariates_values or None,
                                                              runtime_params=runtime_params)
+            # Assign covariates values to their input_ports (not needed for computation; make available for reference)
+            for i, covariate_input_port in enumerate(self.input_ports[COVARIATES_INDEX:]):
+                covariate_input_port.parameters.value._set(covariates_values[i], context, override=True)
+
             # Sum learning_signals and error_signals
             summed_learning_signal += learning_signal
             summed_error_signal += error_signal
