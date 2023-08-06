@@ -1042,9 +1042,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         learning_rate = FunctionParameter(None)
         learning_enabled = True
         modulation = ADDITIVE
-        # MODIFIED 8/1/23 NEW:
         learning_type = LearningType.SUPERVISED
-        # MODIFIED 8/1/23 END
 
         input_ports = Parameter([ACTIVATION_INPUT, ACTIVATION_OUTPUT],
                                 stateful=False,
@@ -1093,17 +1091,6 @@ class LearningMechanism(ModulatoryMechanism_Base):
                  prefs: Optional[ValidPrefSet] = None,
                  **kwargs
                  ):
-
-        # FIX: 8/1/23 - ??MAKE THESE Parameters??
-        # if covariates_sources:
-        #     covariates_sources = convert_to_list(covariates_sources)
-        # self.covariates_sources = covariates_sources or []
-        # # IMPLEMENTATION NOTE:
-        # #    assign to private attribute as self._error_sources;
-        # #    private attribute is used for validation and in _instantiate_attribute_before_function
-        # if error_sources:
-        #     error_sources = convert_to_list(error_sources)
-        # self._error_sources = error_sources
 
         self.in_composition = in_composition
 
@@ -1170,11 +1157,8 @@ class LearningMechanism(ModulatoryMechanism_Base):
                                                 ACTIVATION_OUTPUT,
                                                 ERROR_SIGNAL,"(s)"))
 
-        # FIX: 8/1/23:  ADD VALIDATION OF COVARIATES HERE
-
-        # Validate that activation_input, activation_output are numeric and lists or 1d np.ndarrays
-        #    and that there is the correct number of items beyond those for the number of error_sources
-        #    and covariates_sources
+        # Validate that activation_input, activation_output are numeric and lists or 1d np.ndarrays and that
+        # there is the correct number of items beyond those for the number of error_sources and covariates_sources
 
         assert ASSERT, "ADD TEST FOR LEN OF VARIABLE AGAINST NUMBER OF ERROR_SIGNALS AND COVARIATES"
 
