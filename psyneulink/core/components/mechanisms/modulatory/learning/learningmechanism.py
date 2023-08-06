@@ -466,7 +466,7 @@ sequence, the following additional MappingProjections are created for learning (
 <LearningMechanism_Multilayer_Learning_Figure>` below):
 
 * from the `input_source <LearningMechanism.input_source>` to the LearningMechanism's *ACTIVATION_INPUT* `InputPort
-  <LearningMechanism_Activation_Input>`; 
+  <LearningMechanism_Activation_Input>`;
 ..
 * from the `output_source <LearningMechanism.output_source>` to the LearningMechanism's *ACTIVATION_OUTPUT* `InputPort
   <LearningMechanism_Activation_Output>`;
@@ -590,7 +590,7 @@ from psyneulink.core.globals.utilities import ContentAddressableList, convert_to
     convert_to_list
 
 __all__ = [
-    'ACTIVATION_INPUT', 'ACTIVATION_INPUT_INDEX', 'ACTIVATION_OUTPUT', 'ACTIVATION_OUTPUT_INDEX', 
+    'ACTIVATION_INPUT', 'ACTIVATION_INPUT_INDEX', 'ACTIVATION_OUTPUT', 'ACTIVATION_OUTPUT_INDEX',
     'COVARIATES', 'COVARIATES_INDEX', 'COVARIATES_SOURCES', 'DefaultTrainingMechanism',
     'ERROR_SIGNAL', 'ERROR_SIGNAL_INDEX', 'ERROR_SOURCES',
     'LearningMechanism', 'LearningMechanismError', 'input_port_names', 'output_port_names'
