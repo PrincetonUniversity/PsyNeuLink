@@ -591,7 +591,7 @@ from psyneulink.core.globals.utilities import ContentAddressableList, convert_to
 
 __all__ = [
     'ACTIVATION_INPUT', 'ACTIVATION_INPUT_INDEX', 'ACTIVATION_OUTPUT', 'ACTIVATION_OUTPUT_INDEX',
-    'COVARIATES', 'COVARIATES_INDEX', 'COVARIATES_SOURCES', 'DefaultTrainingMechanism',
+    'COVARIATES', 'COVARIATES_SOURCES', 'DefaultTrainingMechanism',
     'ERROR_SIGNAL', 'ERROR_SIGNAL_INDEX', 'ERROR_SOURCES',
     'LearningMechanism', 'LearningMechanismError', 'input_port_names', 'output_port_names'
 ]
@@ -671,7 +671,6 @@ LEARNING_TIMING = 'learning_timing'
 ACTIVATION_INPUT_INDEX = 0
 ACTIVATION_OUTPUT_INDEX = 1
 ERROR_SIGNAL_INDEX = 2
-COVARIATES_INDEX = 3
 
 # Used to name input_ports and output_ports:
 ACTIVATION_INPUT = 'activation_input'     # InputPort
@@ -1152,12 +1151,6 @@ class LearningMechanism(ModulatoryMechanism_Base):
         function_variable[ACTIVATION_INPUT_INDEX] = variable[ACTIVATION_INPUT_INDEX]
         function_variable[ACTIVATION_OUTPUT_INDEX] = variable[ACTIVATION_OUTPUT_INDEX]
         function_variable[ERROR_SIGNAL_INDEX] = variable[ERROR_SIGNAL_INDEX]
-        # # If There are any covariates, add them to function_variable
-        # # FIX: 8/1/23 - COORDINATE THIS WITH NUMBER OF ERROR SIGNALS INPUTPORTS
-        # if len(variable) > COVARIATES_INDEX:
-        #     # Put all covariate values into a single array and place in function_variable[COVARIATES_INDEX]
-        #     covariates = [covariate for covariate in variable[COVARIATES_INDEX:]]
-        #     function_variable = function_variable.tolist() + [covariates]
         return function_variable
 
     def _validate_variable(self, variable, context=None):
@@ -1176,23 +1169,16 @@ class LearningMechanism(ModulatoryMechanism_Base):
         # FIX: 8/1/23:  ADD VALIDATION OF COVARIATES HERE
 
         # Validate that activation_input, activation_output are numeric and lists or 1d np.ndarrays
-        #    and that there is the correct number of error_signal_input_ports and and error_matrices:
-        #    (which should be the number of items for error_signals in variable)
+        #    and that there is the correct number of items beyond those for the number of error_sources
+        #    and covariates_sources
 
-        assert ASSERT, "ADD TEST FOR LEN OF VARIABLE AGAINST NUMBER OF ERROR_SIGNALS, ERROR_MATRICES AND COVARIATES"
+        assert ASSERT, "ADD TEST FOR LEN OF VARIABLE AGAINST NUMBER OF ERROR_SIGNALS AND COVARIATES"
 
         for i in range(len(variable)):
             item_num_string = "Item {i+1}"
-            try:
-                item_name = self.input_ports.names[i]
-            except:
-                try:
-                    item_name = input_port_names[i]
-                except IndexError:
-                    item_name = f'{ERROR_SIGNAL}-{i-2}'
-                    raise LearningMechanismError(f"PROGRAM ERROR: Mismatch between number of items ({len(variable)}) "
-                                                 f"in variable for '{self.name}' and number of InputPorts "
-                                                 f"({len(self.input_ports)})")
+
+            # Ensure that activation_input and activation_output are numeric and lists or 1d np.ndarrays
+            # (harder to do this for error_sources and covariates_sources, since they may have different shapes
             if i < 3:
                 if not np.array(variable[i]).ndim == 1:
                     raise LearningMechanismError(f"{item_num_string} of variable for '{self.name}' ({item_name}: "
@@ -1200,13 +1186,17 @@ class LearningMechanism(ModulatoryMechanism_Base):
                 if not (is_numeric(variable[i])):
                     raise LearningMechanismError("{item_num_string} of variable for {self.name} ({item_name}: "
                                                  "{variable[i]}) is not numeric.")
+
+            # Any input_ports for error_sources > 1 (the default) and/or ones for covariates haven't yet been assigned
+            #    so length of variable should be short that number
             elif self.is_initializing:
-                # Any additional input_ports for error_sources and/or covariates have not yet been assigned
-                num_additional_error_sources = len(self.parameters.error_sources.get())-1 # 1 is already in input_ports
-                num_covariates_sources = len(self.parameters.covariates_sources.get())
+                num_additional_error_sources = len(self.error_sources) - 1 # 1 is already in input_ports
+                num_covariates_sources = len(self.covariates_sources) if self.covariates_sources else 0
                 if len(variable) != len(self.input_ports) + num_additional_error_sources + num_covariates_sources:
                     assert False, f"Number of items ({len(variable)}) in variable for '{self.name}' doesn't match " \
                                   f"the number of expected InputPorts ({len(self.input_ports)}) during initialization."
+
+            # All input_ports have been assigned, so number of items in variable should match number of input_ports
             elif len(variable) != len(self.input_ports):
                 # All input_ports have been assigned, so number of items in variable should match number of input_ports
                 assert False, f"Number of items ({len(variable)}) in variable for '{self.name}' doesn't match " \
@@ -1232,15 +1222,15 @@ class LearningMechanism(ModulatoryMechanism_Base):
         from psyneulink.core.components.projections.projection import _validate_receiver
 
         if COVARIATES_SOURCES in target_set and target_set[COVARIATES_SOURCES]:
-            covariates_sources = self.parameters.covariates_sources.get()
-            if not all(isinstance(item, InputPort)  for item in covariates_sources):
+            if not all(isinstance(item, InputPort) for item in self.covariates_sources):
                 raise LearningMechanismError(f"Each item in {repr(COVARIATES_SOURCES)} arg for '{self.name}' "
                                              f"must be an {InputPort.__name__}.")
 
         if ERROR_SOURCES in target_set and target_set[ERROR_SOURCES]:
             error_sources = self.parameters.error_sources.get()
-            # FIX: 8/1/23 COVARIATES_INDEX NEEDS TO BE UPDATED TO HANDLE VARIABLE NUMBER OF ERROR_SIGNALS ZZZ
-            if not len(error_sources) == len(self.defaults.variable[ERROR_SIGNAL_INDEX:COVARIATES_INDEX]):
+            num_error_sources = len(error_sources)
+            if not num_error_sources == \
+                   len(self.defaults.variable[ERROR_SIGNAL_INDEX:ERROR_SIGNAL_INDEX + num_error_sources]):
                 raise LearningMechanismError(f"Number of items specified in {repr(ERROR_SOURCES)} arg "
                                              f"for '{self.name}' ({len(error_sources)}) must equal the number "
                                              f"of its {InputPort.__name__} {ERROR_SIGNAL.upper()}(S) "
@@ -1283,22 +1273,23 @@ class LearningMechanism(ModulatoryMechanism_Base):
 
         input_ports = self.input_ports
 
-        error_sources = self.parameters.error_sources.get(context)
-        if error_sources:
-            self.parameters.input_ports._set(self.input_ports[:2] + [ERROR_SIGNAL] * len(error_sources),context)
+        if self.error_sources:
+            input_ports += [ERROR_SIGNAL] * (len(self.error_sources) - 1)  # 1 ERROR_SIGNAL InputPort is assigned by default
+        num_error_sources = len(self.error_sources) if self.error_sources else 0
 
-        # FIX: REPLACE THIS WITH NUMBER OF COVARIATES_SOURCES, AND PLACE AFTER ERROR_SIGNALS
-        # FIX: THEN ASSIGN self.num_error_sources AND self.num_covariates_sources FOR INDEXING InputPorts ELSEWHERE
-        #      OR ASSIGN NEW self.covariates_sources_input_ports AND self.error_signal_input_ports?
+        if self.covariates_sources:
+            num_covariates = len(self.covariates_sources)
+            if num_covariates == 1:
+                input_ports += [COVARIATES]
+            else:
+                for i in range(num_covariates):
+                    input_ports += [f'{COVARIATES}_{i}']
+                    # input_ports[i].reference_value = reference_value[i]
 
-        num_covariates = len(self.defaults.variable[COVARIATES_INDEX:])
-        if num_covariates == 1:
-            input_ports += [COVARIATES]
-        else:
-            for i in range(num_covariates):
-                input_ports += [f'{COVARIATES}_{i}']
-                # input_ports[i].reference_value = reference_value[i]
         super()._instantiate_input_ports(input_ports=input_ports, reference_value=reference_value, context=context)
+
+        self.error_signal_input_ports = self.input_ports[ERROR_SIGNAL_INDEX:ERROR_SIGNAL_INDEX + num_error_sources]
+        self.covariates_input_ports = self.input_ports[ERROR_SIGNAL_INDEX + num_error_sources:]
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
         """Instantiates MappingProjection(s) from error_sources (if specified) to LearningMechanism
@@ -1314,10 +1305,10 @@ class LearningMechanism(ModulatoryMechanism_Base):
         super()._instantiate_attributes_before_function(function=function, context=context)
 
         self.error_matrices = None
-        error_sources = self.parameters.error_sources.get()
-        if error_sources:
-            self.error_matrices = [None] * len(error_sources)
-            for i, error_source in enumerate(error_sources):
+        # error_sources = self.parameters.error_sources.get()
+        if self.error_sources:
+            self.error_matrices = [None] * len(self.error_sources)
+            for i, error_source in enumerate(self.error_sources):
                 if not self.in_composition:
                     # IMPLEMENTATION NOTE:
                     #    _create_terminal_backprop_sequence_components and _create_multilayer_backprop_components
@@ -1388,9 +1379,9 @@ class LearningMechanism(ModulatoryMechanism_Base):
             context
         )
 
-        # Initialize _error_signals;  this is assigned for efficiency (rather than just using the property)
-        #    since it is used by the execute method
-        self._error_signal_input_ports = self.error_signal_input_ports
+        # # Initialize _error_signals;  this is assigned for efficiency (rather than just using the property)
+        # #    since it is used by the execute method
+        # self._error_signal_input_ports = self.error_signal_input_ports
 
     @handle_external_context()
     def add_ports(self, error_sources, context=None):
@@ -1402,7 +1393,8 @@ class LearningMechanism(ModulatoryMechanism_Base):
             error_source = input_port.path_afferents[0].sender.owner
             self.error_matrices.append(error_source.primary_learned_projection.parameter_ports[MATRIX])
             if ERROR_SIGNAL in input_port.name:
-                self._error_signal_input_ports.append(input_port)
+                # self._error_signal_input_ports.append(input_port)
+                self.error_signal_input_ports.append(input_port)
             instantiated_input_ports.append(input_port)
 
         # TODO: enable this. fails because LearningMechanism does not have a
@@ -1418,7 +1410,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         for i, port in enumerate([s for s in ports if s in self.error_signal_input_ports]):
             del self.error_matrices[i]
         super().remove_ports(ports=ports)
-        self._error_signal_input_ports = [s for s in self.input_ports if ERROR_SIGNAL in s.name]
+        self.error_signal_input_ports = [s for s in self.input_ports if ERROR_SIGNAL in s.name]
 
     def _execute(
             self,
@@ -1439,7 +1431,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         """
 
         # Get error_signals (from ERROR_SIGNAL InputPorts) and error_matrices relevant for the current execution:
-        error_signal_indices = self.error_signal_indices
+        error_signal_indices = [self.input_ports.index(s) for s in self.error_signal_input_ports]
         error_signal_inputs = variable[error_signal_indices]
         # FIX 7/22/19 [JDC]: MOVE THIS TO ITS OWN METHOD CALLED ON INITALIZATION AND UPDATE AS NECESSARY
         if self.error_matrices is None:
@@ -1474,14 +1466,9 @@ class LearningMechanism(ModulatoryMechanism_Base):
 
         # Compute learning_signal for each error_signal (and corresponding error-Matrix):
         for error_signal_input, error_matrix in zip(error_signal_inputs, error_matrices):
-            function_variable = convert_to_np_array(
-                [
-                    variable[ACTIVATION_INPUT_INDEX],
-                    variable[ACTIVATION_OUTPUT_INDEX],
-                    error_signal_input
-                ]
-            )
-
+            function_variable = convert_to_np_array([variable[ACTIVATION_INPUT_INDEX],
+                                                     variable[ACTIVATION_OUTPUT_INDEX],
+                                                     error_signal_input])
             # Get covariates_values and pass in covariates arg
             if self.covariates_sources:
                 covariates_values = [source.value for source in self.covariates_sources]
@@ -1493,7 +1480,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
                                                              covariates=covariates_values,
                                                              runtime_params=runtime_params)
             # Assign covariates values to their input_ports (not needed for computation; make available for reference)
-            for i, covariate_input_port in enumerate(self.input_ports[COVARIATES_INDEX:]):
+            for i, covariate_input_port in enumerate(self.covariates_input_ports):
                 covariate_input_port.parameters.value._set(covariates_values[i], context, override=True)
 
             # Sum learning_signals and error_signals
@@ -1539,32 +1526,6 @@ class LearningMechanism(ModulatoryMechanism_Base):
             return self.input_ports[ACTIVATION_OUTPUT].path_afferents[0].sender.owner
         except IndexError:
             return None
-
-    # FIX 7/28/19 [JDC]:  PROPERLY MANAGE BACKGING FIELD
-    #                     (?WITH SETTER, AND LINKED TO INPUT_PORTS PROPERTY?/LIST?)
-    @property
-    def error_signal_input_ports(self):
-        try:
-            # This is maintained for efficiency (since it is called by execute method)
-            return self._error_signal_input_ports
-        except AttributeError:
-            try:
-                return [s for s in self.input_ports if ERROR_SIGNAL in s.name]
-            except:
-                return [s for s in self.input_ports if ERROR_SIGNAL in s]
-
-    @property
-    def error_signal_indices(self):
-        current_error_signal_inputs = self.error_signal_input_ports
-        return [self.input_ports.index(s) for s in current_error_signal_inputs]
-
-    @property
-    def error_sources(self):
-        error_sources = []
-        for error_signal_input_port in self.error_signal_input_ports:
-            for error_signal_projection in error_signal_input_port.path_afferents:
-                error_sources.append(error_signal_projection.sender.owner)
-        return error_sources
 
     @property
     def primary_learned_projection(self):

@@ -2812,8 +2812,7 @@ from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism i
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP, \
     OptimizationControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
-    LearningMechanism, LearningTiming, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, \
-    COVARIATES, COVARIATES_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
+    LearningMechanism, LearningTiming, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -8386,13 +8385,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #    error_sources will be empty (as they have been dealt with in self._get_back_prop_error_sources
         #    error_projections will contain list of any created to be added to the Composition below
         if learning_mechanism:
+            # This should only be reached for duplicate learning pathways or when and AutodiffComposition is being
+            #  trained (as it creates a duplicate of the learning pathways)
             error_sources, error_projections = self._get_back_prop_error_sources(output_source,
                                                                                  learning_mechanism,
                                                                                  context)
-            # This should only be reached for duplicate learning pathways;  issue warning?
             # REMOVE AFTER TESTING 8/1/23: SHOULD ONLY FAIL IN test_multiple_of_same_learning_pathway
-            assert False, "EXISTING LearningMechanism FOUND IN _create_non_terminal_backprop_learning_components"
-            # FIX: 8/1/23 - IF THESER ARE ANYTHING OTHER THAN SIMPLE DUPLICATES,
+            # assert False, "EXISTING LearningMechanism FOUND IN _create_non_terminal_backprop_learning_components"
+            # FIX: 8/1/23 - IF THESE ARE ANYTHING OTHER THAN SIMPLE DUPLICATES,
             #               WILL AN EXISTING LearningMechanism HAVE ALL THE COVARIATES INFO IT NEEDS
             #               WITHOUT A CALL TO _get_acts_in_out_cov() PER BELOW?
 
@@ -8417,12 +8417,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                 learning_rate=learning_rate)
 
             # Use all error_signal_templates since LearningMechanisms handles all sources of error
-            # FIX: COULD ASSIGN InputPorts HERE USING Projections FROM IDENTIFED SOURCES, INCLUDING COVARIATES
-            #      AND USING "SHADOW INPUTS" TO CREATE THEM.
-            # FIX: 8/1/23 - IS COVARIATES NEEDED IN VARIABLE,
-            #               IF COVARIATES_SOURCES IS BEING PASSED AND IT IS NOT IN function_variable?
-            #               MAY STILL BE NEEDED FOR COMPATIBILITY WITH *COVARIATES* INPUT_PORTS
-            #               (UNLESS MECHANISM'S VARIABLE IS RESHAPED WHEN THEY ARE ADDED)
+            # FIX: 8/1/23 COULD ASSIGN InputPorts HERE USING Projections FROM IDENTIFED SOURCES,
+            #      INCLUDING COVARIATES, AND POSSIBLY USING "SHADOW INPUTS" TO CREATE THEM.
+            # Include any covariates_sources in default_variable so that it aligns with number of InputPorts
             learning_mechanism = LearningMechanism(function=learning_function,
                                                    default_variable=activation_input +
                                                                     activation_output +
@@ -8479,11 +8476,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for i, source in enumerate(covariates_sources):
                 # All of the afferents to the same InputPort of output_source
                 #   should go to the same (corresponding) *COVARIATES* InputPort of the LearningMechanism
-                covariates_input_port_index = COVARIATES_INDEX + i
                 for proj in source.path_afferents:
                     covariates_projections.append(
                         MappingProjection(sender=proj.sender,
-                                          receiver=learning_mechanism.input_ports[covariates_input_port_index]))
+                                          receiver=learning_mechanism.covariates_input_ports[i]))
             # Add Projections for covariates to aux_components since they may involve Nodes not yet in Composition
             #   and do so before adding LearningMechanism to Composition so they are registered as in need of addition
             learning_mechanism.aux_components.extend(covariates_projections)
@@ -8496,7 +8492,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Add all the Projections to the Composition
             self.add_projections([act_in_projection, act_out_projection] + error_projections)
-            # self.add_projections([act_in_projection, act_out_projection] + error_projections + covariates_projections)
             self.add_projection(learning_projection, feedback=True)
 
         except DuplicateProjectionError as e:
