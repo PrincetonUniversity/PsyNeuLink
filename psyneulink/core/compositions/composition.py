@@ -8322,6 +8322,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                           learning_update,
                                                           context):
 
+        # FIX: 8/1/23: CONSIDER MOVING ALL OF THIS TO LEARNING_MECHAINSM,
+        #              TO BE INFERRED FROM output_source IN _instantiate_input_ports
         def _get_covariate_info(output_source, learned_projection)->(list[InputPort]):
             """Get the templates and Projections from potential covariates"""
             def _non_additive_comb_fct(function, allow)->Union[bool, None]:
@@ -8334,8 +8336,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         return True
                     if not isinstance(function, LinearCombination):
                         fct_err_msg = f"uses a function other than LinearCombination"
-                    elif function.operation is not SUM: \
-                            fct_err_msg = f"uses LinearCombination with an operation other than SUM"
+                    elif function.operation is not SUM:
+                        fct_err_msg = f"uses LinearCombination with an operation other than SUM"
                     raise CompositionError(
                         f"Can't implement BackPropagation learning for {learned_projection.name} since it projects "
                         f"to an InputPort ('{function.owner.name}') of '{output_source.name}' that {fct_err_msg};"
@@ -8353,7 +8355,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # for input_port in [p for p in output_source.input_ports if p is not learned_projection.receiver]:
                 for input_port in output_source.input_ports:
                     # Projections to output_source should only ever be combined using LinearCombination(operation=SUM)
-                    #   so that they can be ignored by the derivative of its function;  
+                    #   so that they can be ignored by the derivative of its function;
                     #   any non-additive interactions must be restricted to *its* function, and treated as covariates
                     _non_additive_comb_fct(input_port.function, allow=False)
                     if input_port is learned_projection.receiver:
@@ -8366,13 +8368,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return covariates_sources
 
         def _get_acts_in_out_cov(input_source, output_source, learned_projection)->list[list,list,list]:
-                """Get shapes of activation_input and activation_output used by LearningMechanism and BackPropagation Fct"""
-                # activation_input has more than one value if activation function has more than one argument
-                activation_input = [input_source.output_ports[0].value]
-                covariates_sources = _get_covariate_info(output_source, learned_projection)
-                # activation_output is always a single value since activation function is assumed to have only one output
-                activation_output = [output_source.output_ports[0].value]
-                return [activation_input, activation_output, covariates_sources]
+            """Get shapes of activation_input and activation_output used by LearningMechanism and BackPropagation Fct"""
+            # activation_input has more than one value if activation function has more than one argument
+            activation_input = [input_source.output_ports[0].value]
+            covariates_sources = _get_covariate_info(output_source, learned_projection)
+            # activation_output is always a single value since activation function is assumed to have only one output
+            activation_output = [output_source.output_ports[0].value]
+            return [activation_input, activation_output, covariates_sources]
 
         # Get existing LearningMechanism if one exists (i.e., if this is a crossing point with another pathway)
         learning_mechanism = \
@@ -8415,8 +8417,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                 learning_rate=learning_rate)
 
             # Use all error_signal_templates since LearningMechanisms handles all sources of error
-            # FIX: COULD ASSIGN InputPorts HERE USING Projections FROM IDENTIIFED SOURCES, INCLUDING COVARIATES
+            # FIX: COULD ASSIGN InputPorts HERE USING Projections FROM IDENTIFED SOURCES, INCLUDING COVARIATES
             #      AND USING "SHADOW INPUTS" TO CREATE THEM.
+            # FIX: 8/1/23 - IS COVARIATES NEEDED IN VARIABLE,
+            #               IF COVARIATES_SOURCES IS BEING PASSED AND IT IS NOT IN function_variable?
+            #               MAY STILL BE NEEDED FOR COMPATIBILITY WITH *COVARIATES* INPUT_PORTS
+            #               (UNLESS MECHANISM'S VARIABLE IS RESHAPED WHEN THEY ARE ADDED)
             learning_mechanism = LearningMechanism(function=learning_function,
                                                    default_variable=activation_input +
                                                                     activation_output +
@@ -8442,12 +8448,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #      - IF PROJECTIONS THAT HAVE BEEN CREATED HAVE BEEN ADDED TO COMP OR THAT NEEDS TO BE DONE WITH
         #      add_projections()
 
-        # Create MappingProjections for INPUT_SOURCE, OUTPUT_SOURCE and COVARIATES (if any)
+        # Use try here to be able to abort in case duplicates are found
         try:
+            # Create MappingProjections for INPUT_SOURCE, OUTPUT_SOURCE and COVARIATES (if any)
             # FIX: SHOULD CONSTRUCT THESE MAPPING PROJECTIONS ABOVE AND USE TO SEPCIFY INPUTPORTS FOR LEARNING MECHANISM
             # FIX: NO NEED TO MAKE PROJECTIONS IF SPECIFIED ABOVE
             #      STILL NEED ADD THEM TO COMPOSITION IF LEARNING MECHANISM IS ALREADY IN COMPOSITION?
             #      IF SO, JUST ITERATE OVER PROJECTIONS TO INPUT PORTS TO PUT THEM IN COMPOSITION
+
             # Projection from input_source
             act_in_projection = MappingProjection(sender=input_source.output_ports[0],
                                                   receiver=learning_mechanism.input_ports[0],
@@ -8458,7 +8466,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                    receiver=learning_mechanism.input_ports[1],
                                                    matrix=IDENTITY_MATRIX)
 
-            # FIX: THIS IS PROBABLY BETTER DONE ABOVE WHERE THE LearningMechanism IS CONSTRUCTED:
+            # Projections to the InputPort for each covariate
+            # FIX: COULD DO THIS ABOVE WHERE THE LearningMechanism IS CONSTRUCTED, AND USE TO CREATE InputPorts
             # IMPLEMENTATION NOTE:
             #   The following are for display purposes only (i.e., so they can be shown in show_graph);
             #   they can't be used by the LearningMechanism, since their values may not be the same as the
@@ -8466,7 +8475,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #   - the actual projections are subject to learning whereas the ones created here are not
             #   - can't create a Projection from the output_source's Inputport that has their actual values
             #   This can be averted by using a Mechanism to assign a different InputPort for each Projection
-            # Projections to the InputPort for each covariate
             covariates_projections = []
             for i, source in enumerate(covariates_sources):
                 # All of the afferents to the same InputPort of output_source
@@ -8476,20 +8484,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     covariates_projections.append(
                         MappingProjection(sender=proj.sender,
                                           receiver=learning_mechanism.input_ports[covariates_input_port_index]))
-            # Add all the Projections to the Composition
-            # FIX: 8/1/23 - IF covariates_projections HAS A PROJECTION TO OR FROM A NODE THAT IS NOT YET IN SELF,
-            #               THE ADDD IT TO learning_mechanism's aux_components?
-            #               DO THIS FOR ALL OF THEM ABOVE, BEFORE add_node, RATHER THAN HERE?
-            #               OR JUST USE THEM TO CONSTRUCT INPUT_PORTS ABOVE, AND LET THEM BE FOUND THAT WAY?
+            # Add Projections for covariates to aux_components since they may involve Nodes not yet in Composition
+            #   and do so before adding LearningMechanism to Composition so they are registered as in need of addition
             learning_mechanism.aux_components.extend(covariates_projections)
-
-            self.add_node(learning_mechanism, required_roles=NodeRole.LEARNING, context=context)
-
-            self.add_projections([act_in_projection, act_out_projection] + error_projections)
-            # self.add_projections([act_in_projection, act_out_projection] + error_projections + covariates_projections)
 
             # Create LearningProjection
             learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
+
+            # Add LearningMechanism to Composition before adding Projections
+            self.add_node(learning_mechanism, required_roles=NodeRole.LEARNING, context=context)
+
+            # Add all the Projections to the Composition
+            self.add_projections([act_in_projection, act_out_projection] + error_projections)
+            # self.add_projections([act_in_projection, act_out_projection] + error_projections + covariates_projections)
             self.add_projection(learning_projection, feedback=True)
 
         except DuplicateProjectionError as e:
