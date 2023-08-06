@@ -503,7 +503,7 @@ class TestRecurrentTransferMechanismFunction:
                 integrator_mode=True
             )
             R.execute([0, 0, 0, 0])
-        assert "must be a TRANSFER FUNCTION TYPE" in str(error_text.value)
+        assert "must be a TransferFunction or SelectionFunction" in str(error_text.value)
 
     def test_recurrent_mech_reinforcement_fun(self):
         with pytest.raises(TransferError) as error_text:
@@ -515,7 +515,7 @@ class TestRecurrentTransferMechanismFunction:
                 integrator_mode=True
             )
             R.execute([0, 0, 0, 0])
-        assert "must be a TRANSFER FUNCTION TYPE" in str(error_text.value)
+        assert "must be a TransferFunction or SelectionFunction" in str(error_text.value)
 
     def test_recurrent_mech_integrator_fun(self):
         with pytest.raises(TransferError) as error_text:
@@ -527,7 +527,7 @@ class TestRecurrentTransferMechanismFunction:
                 integrator_mode=True
             )
             R.execute([0, 0, 0, 0])
-        assert "must be a TRANSFER FUNCTION TYPE" in str(error_text.value)
+        assert "must be a TransferFunction or SelectionFunction" in str(error_text.value)
 
     def test_recurrent_mech_reduce_fun(self):
         with pytest.raises(TransferError) as error_text:
@@ -539,7 +539,7 @@ class TestRecurrentTransferMechanismFunction:
                 integrator_mode=True
             )
             R.execute([0, 0, 0, 0])
-        assert "must be a TRANSFER FUNCTION TYPE" in str(error_text.value)
+        assert "must be a TransferFunction or SelectionFunction" in str(error_text.value)
 
 
 class TestRecurrentTransferMechanismTimeConstant:

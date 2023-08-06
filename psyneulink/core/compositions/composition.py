@@ -8627,9 +8627,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for learning_projection in [lp for lp in afferent.parameter_ports[MATRIX].mod_afferents
                                         if (isinstance(lp, LearningProjection)
                                             and error_source not in lp.sender.owner.error_sources
-                                            # MODIFIED 8/1/23 NEW:
                                             and lp.sender.owner.learning_type is LearningType.SUPERVISED)]:
-                                            # MODIFIED 8/1/23 END:
                 dependent_learning_mech = learning_projection.sender.owner
                 error_signal_input_port = dependent_learning_mech.add_ports(
                                                     InputPort(projections=error_source.output_ports[ERROR_SIGNAL],

@@ -1042,6 +1042,10 @@ class LearningMechanism(ModulatoryMechanism_Base):
         learning_rate = FunctionParameter(None)
         learning_enabled = True
         modulation = ADDITIVE
+        # MODIFIED 8/1/23 NEW:
+        learning_type = LearningType.SUPERVISED
+        # MODIFIED 8/1/23 END
+
         input_ports = Parameter([ACTIVATION_INPUT, ACTIVATION_OUTPUT],
                                 stateful=False,
                                 loggable=False,

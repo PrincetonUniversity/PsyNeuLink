@@ -880,7 +880,7 @@ class EMComposition(AutodiffComposition):
         specifies rate at which `field_weights <EMComposition.field_weights>` are learned
         if ``learn_field_weights`` is True.
 
-    .. technical_note::    
+    .. technical_note::
         use_storage_node : bool : default True
             specifies whether to use a `LearningMechanism` to store entries in `memory <EMComposition.memory>`.
             If False, a method on EMComposition is used rather than a LearningMechanism.  This is meant for
