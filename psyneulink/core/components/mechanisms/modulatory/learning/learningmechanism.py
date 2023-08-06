@@ -1281,6 +1281,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         self.error_signal_input_ports = self.input_ports[ERROR_SIGNAL_INDEX:ERROR_SIGNAL_INDEX + num_error_sources]
         self.covariates_input_ports = self.input_ports[ERROR_SIGNAL_INDEX + num_error_sources:]
 
+
     def _instantiate_attributes_before_function(self, function=None, context=None):
         """Instantiates MappingProjection(s) from error_sources (if specified) to LearningMechanism
 
@@ -1491,18 +1492,6 @@ class LearningMechanism(ModulatoryMechanism_Base):
 
         return [summed_learning_signal, summed_error_signal]
 
-    # @property
-    # def learning_enabled(self):
-    #     try:
-    #         return self._learning_enabled
-    #     except AttributeError:
-    #         self._learning_enabled = True
-    #         return self._learning_enabled
-    #
-    # @learning_enabled.setter
-    # def learning_enabled(self, assignment: Optional[Union[bool, Literal['online', 'after']]] = None):
-    #     self._learning_enabled = assignment
-
     @property
     def input_source(self):
         try:
@@ -1529,3 +1518,11 @@ class LearningMechanism(ModulatoryMechanism_Base):
     def dependent_learning_mechanisms(self):
         return [p.parameter_ports[MATRIX].mod_afferents[0].sender.owner for p in self.input_source.path_afferents
                 if p.has_learning_projection]
+
+    @property
+    def validate_error_signal_and_covariate_sources(self):
+        assert set(input_port.path_afferents[0].sender.owner
+                   for input_port in self.error_signal_input_ports) == set(self.error_sources)
+        assert set(input_port.path_afferents[0].sender.owner
+                   for input_port in self.covariates_input_ports) == set(self.covariates_sources)
+

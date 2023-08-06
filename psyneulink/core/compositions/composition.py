@@ -7114,7 +7114,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    else {pathway[c - 1]})
                 if all(_is_node_spec(sender) for sender in preceding_entry):
                     senders = _get_node_specs_for_entry(preceding_entry, NodeRole.OUTPUT)
-                    # # MODIFIED 8/1/23 OLD:
                     projs = {self.add_projection(sender=s, receiver=r,
                                                  default_matrix=default_projection_matrix,
                                                  allow_duplicates=False)
@@ -8258,7 +8257,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if loss_spec == Loss.CROSS_ENTROPY:
                 # error function:  use LinearCombination to implement cross_entropy: (SoftMax(sample), SoftMax(target))
                 sample.update({FUNCTION: SoftMax(output=ALL)})
-                # [JDC 12/4/22]: FIX: IS THIS COORRECT, OR SHOULD IT BE ASSUMED TO BE A ONE-HOT AND COMPLAIN IF NOT?
+                # [JDC 12/4/22]: FIX: IS THIS CORRECT, OR SHOULD IT BE ASSUMED TO BE A ONE-HOT AND COMPLAIN IF NOT?
                 target.update({FUNCTION: SoftMax(output=ALL)})
                 error_function = LinearCombination(operation=CROSS_ENTROPY)
                 output_ports = [OUTCOME, SUM.upper()]
@@ -8380,10 +8379,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         learning_mechanism = next((lp.sender.owner
                                    for lp in learned_projection.parameter_ports[MATRIX].mod_afferents
                                    if (isinstance(lp, LearningProjection)
-                                       # MODIFIED 7/31/23 NEW:
-                                       # Only consider LearningMechanisms that use backprop
                                        and isinstance(lp.sender.owner.function, BackPropagation))),
-                                       # MODIFIED 7/31/23 END:
                                   None)
 
         # If learning_mechanism exists:
