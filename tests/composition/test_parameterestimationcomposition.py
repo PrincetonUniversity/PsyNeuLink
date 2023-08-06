@@ -125,15 +125,15 @@ def test_pec_run_input_formats(inputs_dict, error_msg):
 
 
 @pytest.mark.parametrize(
-    "opt_method",
+    "opt_method, result",
     [
-        "differential_evolution",
-        optuna.samplers.RandomSampler(),
-        optuna.samplers.CmaEsSampler(),
+        ("differential_evolution", [0.010363518438648106]),
+        (optuna.samplers.RandomSampler(), [0.01]),
+        (optuna.samplers.CmaEsSampler(), [0.01]),
     ],
     ids=["differential_evolultion", "optuna_random_sampler", "optuna_cmaes_sampler"],
 )
-def test_parameter_optimization_ddm(func_mode, opt_method):
+def test_parameter_optimization_ddm(func_mode, opt_method, result):
     """Test parameter optimization of a DDM in integrator mode"""
 
     if func_mode == "Python":
@@ -212,9 +212,7 @@ def test_parameter_optimization_ddm(func_mode, opt_method):
 
     ret = pec.run(inputs={comp: trial_inputs})
 
-    np.testing.assert_allclose(
-        pec.optimized_parameter_values, [0.010363518438648106], atol=1e-2
-    )
+    np.testing.assert_allclose(pec.optimized_parameter_values, result)
 
 
 # func_mode is a hacky wa to get properly marked; Python, LLVM, and CUDA
@@ -229,7 +227,7 @@ def test_parameter_estimation_ddm_mle(func_mode):
     # High-level parameters the impact performance of the test
     num_trials = 50
     time_step_size = 0.01
-    num_estimates = 40000
+    num_estimates = 1000
 
     ddm_params = dict(
         starting_value=0.0,

@@ -3273,7 +3273,6 @@ class OptimizationControlMechanism(ControlMechanism):
         assert "net_outcome" in tags
         args = [ctx.get_param_struct_type(self).as_pointer(),
                 ctx.get_state_struct_type(self).as_pointer(),
-                self._get_evaluate_alloc_struct_type(ctx).as_pointer(),
                 ctx.float_ty.as_pointer(),
                 self._get_evaluate_output_struct_type(ctx, tags=tags).as_pointer()]
 
@@ -3281,64 +3280,61 @@ class OptimizationControlMechanism(ControlMechanism):
         llvm_func = builder.function
         for p in llvm_func.args:
             p.attributes.add('nonnull')
-        params, state, allocation_sample, objective_ptr, arg_out = llvm_func.args
+        _, state, objective_ptr, arg_out = llvm_func.args
 
-        op_params = pnlvm.helpers.get_param_ptr(builder, self, params,
-                                                "output_ports")
         op_states = pnlvm.helpers.get_state_ptr(builder, self, state,
                                                 "output_ports", None)
 
         # calculate cost function
-        total_cost = builder.alloca(ctx.float_ty, name="total_cost")
-        builder.store(ctx.float_ty(-0.0), total_cost)
+        total_cost_ptr = builder.alloca(ctx.float_ty, name="total_cost")
+        builder.store(total_cost_ptr.type.pointee(-0.0), total_cost_ptr)
+
         for i, op in enumerate(self.output_ports):
-            op_i_params = builder.gep(op_params, [ctx.int32_ty(0),
-                                                  ctx.int32_ty(i)])
+            # FIXME Issue #2712: Use port total cost here
+            port_cost_ptr = builder.alloca(ctx.float_ty, name="port_{}_total_cost".format(i))
+            builder.store(port_cost_ptr.type.pointee(-0.0), port_cost_ptr)
+
             op_i_state = builder.gep(op_states, [ctx.int32_ty(0),
                                                  ctx.int32_ty(i)])
 
-            op_f = ctx.import_llvm_function(op, tags=frozenset({"costs"}))
+            # Python uses alias-ed Parameters on Signals, but here we must get
+            # the function state values.
+            op_func = op.function
+            op_func_state = pnlvm.helpers.get_state_ptr(builder, op, op_i_state, "function")
 
-            op_in = builder.alloca(op_f.args[2].type.pointee,
-                                   name="output_port_cost_in")
+            costs = [(CostFunctions.INTENSITY, op_func.parameters.intensity_cost),
+                     (CostFunctions.ADJUSTMENT, op_func.parameters.adjustment_cost),
+                     (CostFunctions.DURATION, op_func.parameters.duration_cost)]
 
-            # copy allocation_sample, the input is 1-element array in a struct
-            data_in = builder.gep(allocation_sample, [ctx.int32_ty(0),
-                                                      ctx.int32_ty(i)])
+            for (flag, param) in costs:
 
-            # Port input struct is {data, modulation} if modulation is present,
-            # otherwise it's just data
-            if len(op.mod_afferents) > 0:
-                data_out = builder.gep(op_in, [ctx.int32_ty(0), ctx.int32_ty(0),
-                                               ctx.int32_ty(0)])
-            else:
-                data_out = builder.gep(op_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+                # The check for enablement is structural and has to be done in Python.
+                # If a cost function is not enabled the cost parameter is None
+                if flag in op.parameters.cost_options.get():
+                    cost_ptr = pnlvm.helpers.get_state_ptr(builder, op_func, op_func_state, param.name)
+                    cost = pnlvm.helpers.load_extract_scalar_array_one(builder, cost_ptr)
+                    port_cost = builder.load(port_cost_ptr)
 
-            if data_in.type != data_out.type:
-                warnings.warn("Shape mismatch: Allocation sample '{}' ({}) doesn't match input port input ({}).".format(
-                               i, self.parameters.control_allocation_search_space.get(), op.defaults.variable),
-                               pnlvm.PNLCompilerWarning)
-                assert len(data_out.type.pointee) == 1
-                data_out = builder.gep(data_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+                    # FIXME Issue #2712: This assume addition as port cost combination function
+                    port_cost = builder.fadd(port_cost, cost)
+                    builder.store(port_cost, port_cost_ptr)
 
-            builder.store(builder.load(data_in), data_out)
 
-            # Invoke cost function
-            cost = builder.call(op_f, [op_i_params, op_i_state, op_in])
+            port_cost = builder.load(port_cost_ptr)
 
             # simplified version of combination fmax(cost, 0)
-            ltz = builder.fcmp_ordered("<", cost, cost.type(0))
-            cost = builder.select(ltz, cost.type(0), cost)
+            ltz = builder.fcmp_ordered("<", port_cost, port_cost.type(0))
+            port_cost = builder.select(ltz, port_cost.type(0), port_cost)
 
             # combine is not a PNL function
             assert self.combine_costs is np.sum
-            val = builder.load(total_cost)
-            val = builder.fadd(val, cost)
-            builder.store(val, total_cost)
+            total_cost = builder.load(total_cost_ptr)
+            total_cost = builder.fadd(total_cost, port_cost)
+            builder.store(total_cost, total_cost_ptr)
 
         # compute net_outcome
-        objective = builder.load(objective_ptr)
-        net_outcome = builder.fsub(objective, builder.load(total_cost))
+        objective_val = builder.load(objective_ptr)
+        net_outcome = builder.fsub(objective_val, builder.load(total_cost_ptr))
         builder.store(net_outcome, arg_out)
 
         builder.ret_void()
@@ -3444,18 +3440,29 @@ class OptimizationControlMechanism(ControlMechanism):
 
         # Apply allocation sample to simulation data
         assert len(self.output_ports) == len(allocation_sample.type.pointee)
-        idx = self.agent_rep._get_node_index(self)
-        ocm_out = builder.gep(comp_data, [ctx.int32_ty(0), ctx.int32_ty(0),
-                                          ctx.int32_ty(idx)])
-        for i, _ in enumerate(self.output_ports):
-            idx = ctx.int32_ty(i)
-            sample_ptr = builder.gep(allocation_sample, [ctx.int32_ty(0), idx])
-            sample_dst = builder.gep(ocm_out, [ctx.int32_ty(0), idx, ctx.int32_ty(0)])
-            if sample_ptr.type != sample_dst.type:
-                assert len(sample_dst.type.pointee) == 1
-                sample_dst = builder.gep(sample_dst, [ctx.int32_ty(0),
-                                                      ctx.int32_ty(0)])
+        controller_out = builder.gep(comp_data, [ctx.int32_ty(0), ctx.int32_ty(0),
+                                                 ctx.int32_ty(controller_idx)])
+        all_op_state = pnlvm.helpers.get_state_ptr(builder, self,
+                                                   controller_state, "output_ports")
+        all_op_params = pnlvm.helpers.get_param_ptr(builder, self,
+                                                    controller_params, "output_ports")
+        for i, op in enumerate(self.output_ports):
+            op_idx = ctx.int32_ty(i)
+
+            op_f = ctx.import_llvm_function(op, tags=frozenset({"simulation"}))
+            op_state = builder.gep(all_op_state, [ctx.int32_ty(0), op_idx])
+            op_params = builder.gep(all_op_params, [ctx.int32_ty(0), op_idx])
+            op_in = builder.alloca(op_f.args[2].type.pointee)
+            op_out = builder.gep(controller_out, [ctx.int32_ty(0), op_idx])
+
+            # FIXME: Allocation samples are generated as scalars but
+            #        output ports consume 1d arrays
+            sample_ptr = builder.gep(allocation_sample, [ctx.int32_ty(0), op_idx])
+            sample_dst = builder.gep(op_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
             builder.store(builder.load(sample_ptr), sample_dst)
+            builder.call(op_f, [op_params, op_state, op_in, op_out])
+
 
         # Get simulation function
         agent_tags = {"run", "simulation"}
@@ -3508,20 +3515,19 @@ class OptimizationControlMechanism(ControlMechanism):
             assert self.objective_mechanism, f"objective_mechanism on OptimizationControlMechanism cannot be None " \
                                              f"in compiled mode"
 
-            idx = self.agent_rep._get_node_index(self.objective_mechanism)
+            obj_idx = self.agent_rep._get_node_index(self.objective_mechanism)
             # Mechanisms' results are stored in the first substructure
             objective_op_ptr = builder.gep(comp_data, [ctx.int32_ty(0),
                                                        ctx.int32_ty(0),
-                                                       ctx.int32_ty(idx)])
+                                                       ctx.int32_ty(obj_idx)])
             # Objective mech output shape should be 1 single element 2d array
             objective_val_ptr = builder.gep(objective_op_ptr,
-                                            [ctx.int32_ty(0), ctx.int32_ty(0),
-                                             ctx.int32_ty(0)], "obj_val_ptr")
+                                            [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)],
+                                            "obj_val_ptr")
 
+            # Apply total cost to objective value
             net_outcome_f = ctx.import_llvm_function(self, tags=tags.union({"net_outcome"}))
-            builder.call(net_outcome_f, [controller_params, controller_state,
-                                         allocation_sample, objective_val_ptr,
-                                         arg_out])
+            builder.call(net_outcome_f, [controller_params, controller_state, objective_val_ptr, arg_out])
         elif "evaluate_type_all_results" in tags:
             pass
         else:

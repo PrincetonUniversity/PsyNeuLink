@@ -57,6 +57,7 @@ LEARNING_ACTIVATION_FUNCTION = 'activation_function'
 LEARNING_ACTIVATION_INPUT = 0  # a(j)
 LEARNING_ACTIVATION_OUTPUT = 1  # a(i)
 LEARNING_ERROR_OUTPUT = 2
+LEARNING_COVARIATES = 3
 
 # Other indices
 WT_MATRIX_SENDERS_DIM = 0
@@ -65,6 +66,7 @@ WT_MATRIX_RECEIVERS_DIM = 1
 # Argument and attribute names:
 ACTIVATION_INPUT = 'activation_input'
 ACTIVATION_OUTPUT = 'activation_output'
+COVARIATES = 'covariates'
 ERROR_SIGNAL = 'error_signal'
 ERROR_MATRIX = 'error_matrix'
 MEMORY_MATRIX = 'memory_matrix'
@@ -76,12 +78,12 @@ ReturnVal = namedtuple('ReturnVal', 'learning_signal, error_signal')
 class LearningFunction(Function_Base):
     """Abstract class of `Function <Function>` used for learning.
 
-    COMMENT:
-    IMPLEMENTATION NOTE:
-       The function method of a LearningFunction *must* include a **kwargs argument, which accomodates
-       Function-specific parameters;  this is to accommodate the ability of LearningMechanisms to call
-       the function of a LearningFunction with arguments that may not be implemented for all LearningFunctions
-    COMMENT
+    .. technical_note::
+       The ``_function`` method of a LearningFunction *must* include a **kwargs argument, which accomodates
+       Function-specific parameters;  this is to accommodate the ability of LearningMechanisms to accomodate
+       all LearningFunctions, by calling their ``_function`` method with arguments that may not be implemented
+       for all LearningFunctions. Such arguments placed in the **params** argument of the ``_function`` method
+       of a LearningFunction by Component._execute, and passed to the LearningFunction's ``_function`` method.
 
     Attributes
     ----------
@@ -2064,7 +2066,7 @@ class BackPropagation(LearningFunction):
         default_variable=None,                           \
         activation_derivative_fct=Logistic().derivative, \
         learning_rate=None,                              \
-        loss_spec=None,                              \
+        loss_spec=None,                                  \
         params=None,                                     \
         name=None,                                       \
         prefs=None)
@@ -2128,12 +2130,19 @@ class BackPropagation(LearningFunction):
           at the point that generates each of its entries.
 
     The values of `activation_input <BackPropagation.activation_input>`, `activation_output
-    <BackPropagation.activation_output>` and  `error_signal <BackPropagation.error_signal>` are specified as
+    <BackPropagation.activation_output>` and `error_signal <BackPropagation.error_signal>` are specified as
     items of the `variable <BackPropgation.variable>` both in the constructor for the BackPropagation Function,
-    and in calls to its `function <BackPropagation.function>`.  Although `error_matrix <BackPropagation.error_matrix>`
-    is not specified in the constructor, it is required as an argument of the `function <BackPropagation.function>`;
-    it is assumed that it's value is determined in context at the time of execution (e.g., by a `LearningMechanism`
-    that uses the BackPropagation LearningFunction).
+    and in calls to its `function <BackPropagation.function>`.  If the activation function (i.e., the `function
+    of that generates `activation_output <BackPropagation.activation_output>`) takes more than one argument that
+    influence its `activation_function_derivative <BackPropagation.activation_function_derivative>`, then a
+    template for these (exhibiting their shape) must be passed in the **covariates** argument of the constructor
+    for the BackPropagation Function, and the values of these must be specified in the **covariates** argument of
+    a call to its `function <BackPropagation.function>`, which is passed in the **params** argument of to the
+    _function method.
+
+    Although `error_matrix <BackPropagation.error_matrix>` is not specified in the constructor, it must be provided
+    in the **error_matrix** argument of a call to the `function <BackPropagation.function>`, which is passed in the
+    **params** argument to the _function method.
 
     The BackPropagation `function <BackPropagation.function>` returns the *weight_change_matrix* as well as the
     `error_signal <BackPropagation.error_signal>` it receives weighted by the contribution made by each
@@ -2153,6 +2162,12 @@ class BackPropagation(LearningFunction):
     activation_derivative_fct : Function or function
         specifies the derivative for the function of the Mechanism that generates
         `activation_output <BackPropagation.activation_output>`.
+
+    covariates : List[1d array]
+        specifies a template for values of arguments used by the `activation_derivative_fct
+        <BackPropagation.activation_derivative_fct>` other than `activation_input <BackPropagation.activation_input>`
+        and `activation_output <BackPropagation.activation_output>`, to compute the derivative of the activation
+        function with respect to activation_output.
 
     COMMENT:
     error_derivative : Function or function
@@ -2196,8 +2211,9 @@ class BackPropagation(LearningFunction):
     variable: 2d array
         contains the three values used as input to the `function <BackPropagation.function>`:
        `activation_input <BackPropagation.activation_input>`,
-       `activation_output <BackPropagation.activation_output>`, and
-       `error_signal <BackPropagation.error_signal>`.
+       `activation_output <BackPropagation.activation_output>`,
+       `error_signal <BackPropagation.error_signal>`, and
+       `covariates <BackPropagation.covariates>`.
 
     activation_input : 1d array
         the input to the matrix being modified; same as 1st item of `variable <BackPropagation.variable>`.
@@ -2214,6 +2230,12 @@ class BackPropagation(LearningFunction):
         the error signal for the next matrix (layer above) in the learning pathway, or the error computed from the
         target (training signal) and the output of the last Mechanism in the sequence;
         same as 3rd item of `variable <BackPropagation.variable>`.
+
+    covariates : List[1d array]
+        a template for the values of arguments used by the `activation_derivative_fct
+        <BackPropagation.activation_derivative_fct>` other than activation_input and activation_output, to compute
+        the derivative of the activation function
+        with respect to activation_output.
 
     error_matrix : 2d array or ParameterPort
         matrix, the input of which is `activation_output <BackPropagation.activation_output>` and the output of which
@@ -2276,6 +2298,13 @@ class BackPropagation(LearningFunction):
                     :type: ``list``
                     :read only: True
 
+                covariates
+                    see `covariates <BackPropagation.covariates>`
+
+                    :default value: []
+                    :type: ``list``
+                    :read only: True
+
                 error_matrix
                     see `error_matrix <BackPropagation.error_matrix>`
 
@@ -2312,6 +2341,7 @@ class BackPropagation(LearningFunction):
         activation_input = Parameter([0], read_only=True, getter=_activation_input_getter)
         activation_output = Parameter([0], read_only=True, getter=_activation_output_getter)
         error_signal = Parameter([0], read_only=True, getter=_error_signal_getter)
+        covariates = Parameter([], read_only=True)
         error_matrix = Parameter(None, read_only=True)
         activation_derivative_fct = Parameter(Logistic.derivative, stateful=False, loggable=False)
 
@@ -2323,6 +2353,7 @@ class BackPropagation(LearningFunction):
                  default_variable=None,
                  activation_derivative_fct: Optional[Union[types.FunctionType, types.MethodType]]=None,
                  # learning_rate: Optional[ValidParamSpecType] = None,
+                 covariates=None,
                  learning_rate=None,
                  loss_spec=None,
                  params=None,
@@ -2337,6 +2368,7 @@ class BackPropagation(LearningFunction):
         super().__init__(
             default_variable=default_variable,
             activation_derivative_fct=activation_derivative_fct,
+            covariates=covariates,
             error_matrix=error_matrix,
             learning_rate=learning_rate,
             loss_spec=loss_spec,
@@ -2388,6 +2420,9 @@ class BackPropagation(LearningFunction):
 
         if LEARNING_RATE in target_set and target_set[LEARNING_RATE] is not None:
             self._validate_learning_rate(target_set[LEARNING_RATE], AUTOASSOCIATIVE)
+
+        # FIX: 8/1/ 23 - ADD VALIDATION OF COVARIATES, INSURING THAT # OF THEM MATCHES NUMBER OF ARGS TAKEN BY
+        #                ACTIVATION FUNCTION AND THAT DERIVATIVE EXISTS AND TAKES COVARIATES AS ARGS
 
         # Validate error_matrix specification
         if ERROR_MATRIX in target_set:
@@ -2465,6 +2500,11 @@ class BackPropagation(LearningFunction):
            `activation_output <BackPropagation.activation_output>` (1d array),
            `error_signal <BackPropagation.error_signal>` (1d array).
 
+        covariates : List[1d array]
+            values of arguments used by the `activation_derivative_fct <BackPropagation.activation_derivative_fct>`
+            other than activation_input and activation_output, to compute the derivative of the activation function
+            with respect to `activation_output <BackPropagation.activation_output>`.
+
         error_matrix : List, 2d array, np.matrix, ParameterPort, or MappingProjection
             matrix of weights that were used to generate the `error_signal <BackPropagation.error_signal>` (3rd item
             of `variable <BackPropagation.variable>` from `activation_output <BackPropagation.activation_output>`;
@@ -2496,6 +2536,10 @@ class BackPropagation(LearningFunction):
         error_matrix = None
         if params:
             error_matrix = params.pop(ERROR_MATRIX, None)
+
+        covariates = None
+        if params:
+            covariates = params.pop(COVARIATES, None)
 
         # Manage error_matrix param
         # During init, function is called directly from Component (i.e., not from LearningMechanism execute() method),
@@ -2545,19 +2589,22 @@ class BackPropagation(LearningFunction):
         # Derivative of the output activity
         # FIX: THIS SHOULD BE dA(output)/dA(input to function) [using function's derivative]
         #                   * dA(input to function)/dW
+        # FIX: 8/1/23: ADD COVARIATES TO CALL
         activation_output = self._get_current_parameter_value(ACTIVATION_OUTPUT, context)
-        dA_dW = self.activation_derivative_fct(input=None, output=activation_output, context=context)
+        if covariates is None:
+            dA_dW = self.activation_derivative_fct(input=None, output=activation_output, context=context)
+        else:
+            dA_dW = self.activation_derivative_fct(input=None, output=activation_output,
+                                                   covariates=covariates, context=context)
 
         # Chain rule to get the derivative of the error with respect to the weights
-        # MODIFIED 8/1/23 NEW:
         if dA_dW.ndim == 1:
-            dE_dW = dE_dA * dA_dW  # FIX: <- THIS WAS THE ORIGINAL CODE
+            dE_dW = dE_dA * dA_dW
         elif dA_dW.ndim == 2:
-            dE_dW = np.matmul(dE_dA, dA_dW)   # FIX: <- THIS HAD BEEN COMMENTED OUT
+            dE_dW = np.matmul(dE_dA, dA_dW)
         else:
             owner_str = f" of {self.owner.name}" if self.owner else ""
             raise FunctionError(f"Dimensionality of dA_dW ({dA_dW.ndim}) for {self.name}{owner_str} is not 1 or 2.")
-        # MODIFIED 8/1/23 END
 
         # Weight changes = delta rule (learning rate * activity * error)
         weight_change_matrix = learning_rate * activation_input * dE_dW

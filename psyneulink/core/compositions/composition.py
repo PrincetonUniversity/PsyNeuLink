@@ -5806,7 +5806,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
             Calls `add_projection <Composition.add_projection>` for each Projection in the *projections* list. Each
             Projection must have its `sender <Projection_Base.sender>` and `receiver <Projection_Base.receiver>`
-            already specified.  If an item in the list is a list of projections, called recursively on that list.
+            already specified.  If an item in the list is a list of projections, ``add_projections`` is called
+            recursively on that list.  See `add_projection <Composition.add_projection>` for additional details
+            of how duplicates are determined and handled.
 
             Arguments
             ---------
@@ -5858,7 +5860,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             - if there is only one, the request is ignored and the existing Projection is returned
             - if there is more than one, an exception is raised as this should never be the case
           - if it is NOT in the Composition:
-            - if there is only one, that Projection is used;
+            - if there is only one, that Projection is used (it can be between any pair of the sender's OutputPort
+              and receiver's InputPort)
             - if there is more than one, the last in the list (presumably the most recent) is used;
             in either case, processing continues, to activate it for the Composition,
             construct any "shadow" projections that may be specified, and assign feedback if specified.
@@ -5882,7 +5885,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         .. technical_note::
             Duplicates are determined by the `Ports <Port>` to which they project, not the `Mechanisms <Mechanism>`
-            (to allow multiple Projections to exist between the same pair of Mechanisms using different Ports).
+            (to allow multiple Projections to exist between the same pair of Mechanisms using different Ports);
+            If the sender and/or the receiver is specified as a Mechanism, a Projection from any of a specified
+            sender's OutputPorts to any of a specified receiver's InputPorts will be considered a match. However,
+            if both sender and receiver are specified as Ports, then only a Projection from the sender to the receiver
+            will be considered a match, allowing other Projections to remain between that pair of Nodes.
             ..
             If an already instantiated Projection is passed to add_projection and is a duplicate of an existing one,
             it is detected and suppressed, with a warning, in Port._instantiate_projections_to_port.
@@ -6502,9 +6509,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        sender=None,
                                        receiver=None,
                                        in_composition:bool=True):
-        """Check for Projection with same sender and receiver
+        """Check for Projection between the same pair of Nodes
         If **in_composition** is True, return only Projections found in the current Composition
         If **in_composition** is False, return only Projections that are found outside the current Composition
+        IMPLEMENTATION NOTE:
+            Currently if the sender and/or the receiver is specified as a Mechanism,
+            a Projection from/to any of its OutputPorts/InputPorts will be considered a match.
+            However, if both sender and receiver are specified as Ports, then only a Projection
+            from the sender to the receiver will be considered a match, allowing other Projections
+            to remain between that pair of Nodes.
 
         Return Projection or list of Projections that satisfies the conditions, else False
         """
@@ -6512,32 +6525,41 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             f'_check_for_existing_projection must be passed a projection or a sender and receiver'
 
         if projection:
-            sender = projection.sender
-            receiver = projection.receiver
+            sender_ports = [projection.sender]
+            receiver_ports = [projection.receiver]
         else:
             try:
+                if isinstance(sender, Port):
+                    err_msg = f"'{sender.owner.name}' does not have an '{OutputPort.__name__}'."
+                    sender_ports = [sender]
                 if isinstance(sender, Mechanism):
                     err_msg = f"'{sender.name}' does not have an '{OutputPort.__name__}'."
-                    sender = sender.output_port
+                    sender_ports = sender.output_ports
                 elif isinstance(sender, Composition):
                     if not sender.nodes:
                         err_msg = f"'{self.name}' does not have any nodes that can project to '{receiver.name}'."
                         raise IndexError
-                    sender = sender.output_CIM.output_port
+                    sender_ports = sender.output_CIM.output_ports
+                if isinstance(receiver, Port):
+                    err_msg = f"'{receiver.owner.name}' does not have an '{InputPort.__name__}'."
+                    receiver_ports = [receiver]
                 if isinstance(receiver, Mechanism):
                     err_msg = f"'{receiver.name}' does not have an {InputPort.__name__}."
-                    receiver = receiver.input_port
+                    receiver_ports = receiver.input_ports
                 elif isinstance(receiver, Composition):
                     if not receiver.nodes:
                         err_msg = f'{self.name} does not have any nodes that can project to {receiver.name}.'
                         raise IndexError
-                    receiver = receiver.input_CIM.input_port
+                    receiver_ports = receiver.input_CIM.input_ports
             except IndexError:
                 err_msg = f"Can't create a {Projection.__name__} from '{sender.name}' to '{receiver.name}': " + err_msg
                 raise CompositionError(err_msg)
 
         # Check for existing Projections from specified sender
-        existing_projections = [proj for proj in sender.efferents if proj.receiver is receiver]
+        existing_projections = []
+        for sndr in sender_ports:
+            for rcvr in receiver_ports:
+                existing_projections.extend([proj for proj in sndr.efferents if proj.receiver is rcvr])
         existing_projections_in_composition = [proj for proj in existing_projections if proj in self.projections]
         assert len(existing_projections_in_composition) <= 1, \
             f"PROGRAM ERROR: More than one identical projection found " \
@@ -7092,26 +7114,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    else {pathway[c - 1]})
                 if all(_is_node_spec(sender) for sender in preceding_entry):
                     senders = _get_node_specs_for_entry(preceding_entry, NodeRole.OUTPUT)
-                    # # MODIFIED 7/30/23 OLD:
-                    # projs = {self.add_projection(sender=s, receiver=r,
-                    #                              default_matrix=default_projection_matrix,
-                    #                              allow_duplicates=False)
-                    #         for r in receivers for s in senders}
-                    # MODIFIED 7/30/23 NEW:
-                    # Check for any existing Projections between senders and receivers
-                    #   and, if they are present, use those
-                    projs = {proj for proj in self.projections
-                             if proj.sender.owner in senders and proj.receiver.owner in receivers}
-                    already_connected = {(proj.sender.owner, proj.receiver.owner) for proj in projs}
-                    # Add Projections for any pairs that don't already have them
-                    new_projs = {self.add_projection(sender=s, receiver=r,
-                                                     default_matrix=default_projection_matrix,
-                                                     allow_duplicates=False)
-                                 for r in receivers for s in senders if not (s,r) in already_connected}
-                    if any(new_projs):
-                        projs |= new_projs
-                    # MODIFIED 7/30/23 END
-
+                    # # MODIFIED 8/1/23 OLD:
+                    projs = {self.add_projection(sender=s, receiver=r,
+                                                 default_matrix=default_projection_matrix,
+                                                 allow_duplicates=False)
+                            for r in receivers for s in senders}
                     # Warn about assignment of MappingProjections from ControlMechanisms
                     for ctl_mech in [s for s in senders if isinstance(s, ControlMechanism)]:
                         warnings.warn(f"A {MappingProjection.__name__} has been created from a "
@@ -8133,8 +8140,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # loop backwards through the rest of the processing_pathway to create and connect
         # the remaining learning mechanisms
-        # ONLY DO THIS IF ONE DOESN'T ALREADY EXIST (?pass in argument determining this?)
-
         learning_mechanisms = [learning_mechanism]
         learned_projections = [learned_projection]
         for i in range(sequence_end, 1, -2):
@@ -8317,6 +8322,60 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                           learning_update,
                                                           context):
 
+        # FIX: 8/1/23: CONSIDER MOVING ALL OF THIS TO LEARNING_MECHAINSM,
+        #              TO BE INFERRED FROM output_source IN _instantiate_input_ports
+        def _get_covariate_info(output_source, learned_projection)->(list[InputPort]):
+            """Get the templates and Projections from potential covariates"""
+            def _non_additive_comb_fct(function, allow)->Union[bool, None]:
+                """Check whether input_port's function is LinearCombination with operation=SUM
+                If it is anything else, then raise error and give advice about reconfiguring Composition
+                """
+                if (not isinstance(function, LinearCombination)
+                        or function.operation is not SUM):
+                    if allow:
+                        return True
+                    if not isinstance(function, LinearCombination):
+                        fct_err_msg = f"uses a function other than LinearCombination"
+                    elif function.operation is not SUM:
+                        fct_err_msg = f"uses LinearCombination with an operation other than SUM"
+                    raise CompositionError(
+                        f"Can't implement BackPropagation learning for {learned_projection.name} since it projects "
+                        f"to an InputPort ('{function.owner.name}') of '{output_source.name}' that {fct_err_msg};"
+                        f"Consider refactoring '{self.name}' so that all of the Projections to that InputPort to "
+                        f"instead each project to its own InputPort of a ProcessingMechanism "
+                        f"that uses a comparable function to combine them.")
+
+            covariates_sources = []
+            # Need to worry about covariates only if output_source's function:
+            #  - takes more than one argument and
+            #  - it is not LinearCombination(operation=SUM)
+            if (len(output_source.variable) >= 1 and _non_additive_comb_fct(output_source.function, allow=True)):
+                # for input_port if input_port is not learned_projection.receiver in output_source.input_ports]:
+                # for input_port in output_source.input_ports if input_port is not learned_projection.receiver]:
+                # for input_port in [p for p in output_source.input_ports if p is not learned_projection.receiver]:
+                for input_port in output_source.input_ports:
+                    # Projections to output_source should only ever be combined using LinearCombination(operation=SUM)
+                    #   so that they can be ignored by the derivative of its function;
+                    #   any non-additive interactions must be restricted to *its* function, and treated as covariates
+                    _non_additive_comb_fct(input_port.function, allow=False)
+                    if input_port is learned_projection.receiver:
+                        continue
+                    # All inputs to output_source other than from learned_projection should be treated as covariates
+                    # (again, it is assumed that all interactions among them -- other than in output_source's function --
+                    # are additive, as ensured by call to _non_additive_comb_fct() above)
+                    covariates_sources.append(input_port)
+
+            return covariates_sources
+
+        def _get_acts_in_out_cov(input_source, output_source, learned_projection)->list[list,list,list]:
+            """Get shapes of activation_input and activation_output used by LearningMechanism and BackPropagation Fct"""
+            # activation_input has more than one value if activation function has more than one argument
+            activation_input = [input_source.output_ports[0].value]
+            covariates_sources = _get_covariate_info(output_source, learned_projection)
+            # activation_output is always a single value since activation function is assumed to have only one output
+            activation_output = [output_source.output_ports[0].value]
+            return [activation_input, activation_output, covariates_sources]
+
         # Get existing LearningMechanism if one exists (i.e., if this is a crossing point with another pathway)
         learning_mechanism = next((lp.sender.owner
                                    for lp in learned_projection.parameter_ports[MATRIX].mod_afferents
@@ -8331,9 +8390,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #    error_sources will be empty (as they have been dealt with in self._get_back_prop_error_sources
         #    error_projections will contain list of any created to be added to the Composition below
         if learning_mechanism:
+            # This should only be reached for duplicate learning pathways or when and AutodiffComposition is being
+            #  trained (as it creates a duplicate of the learning pathways)
             error_sources, error_projections = self._get_back_prop_error_sources(output_source,
                                                                                  learning_mechanism,
                                                                                  context)
+            # REMOVE AFTER TESTING 8/1/23: SHOULD ONLY FAIL IN test_multiple_of_same_learning_pathway
+            # assert False, "EXISTING LearningMechanism FOUND IN _create_non_terminal_backprop_learning_components"
+            # FIX: 8/1/23 - IF THESE ARE ANYTHING OTHER THAN SIMPLE DUPLICATES,
+            #               WILL AN EXISTING LearningMechanism HAVE ALL THE COVARIATES INFO IT NEEDS
+            #               WITHOUT A CALL TO _get_acts_in_out_cov() PER BELOW?
+
         # If learning_mechanism does not yet exist:
         #    error_sources will contain ones needed to create learning_mechanism
         #    error_projections will be empty since they can't be created until the learning_mechanism is created below;
@@ -8341,45 +8408,99 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             error_sources, error_projections = self._get_back_prop_error_sources(output_source, context=context)
             error_signal_template = [error_source.output_ports[ERROR_SIGNAL].value for error_source in error_sources]
-            default_variable = [input_source.output_ports[0].value,
-                                output_source.output_ports[0].value] + error_signal_template
 
-            learning_function = BackPropagation(default_variable=[input_source.output_ports[0].value,
-                                                                  output_source.output_ports[0].value,
-                                                                  error_signal_template[0]],
+            activation_input, activation_output, covariates_sources = _get_acts_in_out_cov(input_source,
+                                                                                           output_source,
+                                                                                           learned_projection)
+            # Use only one error_signal_template for learning_function, since it gets only one source of error at a time
+            learning_function = BackPropagation(default_variable=activation_input +
+                                                                 activation_output +
+                                                                 [error_signal_template[0]],
+                                                covariates=[source.value for source in covariates_sources],
                                                 loss_spec=None,
                                                 activation_derivative_fct=output_source.function.derivative,
                                                 learning_rate=learning_rate)
 
+            # Use all error_signal_templates since LearningMechanisms handles all sources of error
+            # FIX: 8/1/23 COULD ASSIGN InputPorts HERE USING Projections FROM IDENTIFED SOURCES,
+            #      INCLUDING COVARIATES, AND POSSIBLY USING "SHADOW INPUTS" TO CREATE THEM.
+            # Include any covariates_sources in default_variable so that it aligns with number of InputPorts
             learning_mechanism = LearningMechanism(function=learning_function,
-                                                   # default_variable=[input_source.output_ports[0].value,
-                                                   #                   output_source.output_ports[0].value,
-                                                   #                   error_signal_template],
-                                                   default_variable=default_variable,
+                                                   default_variable=activation_input +
+                                                                    activation_output +
+                                                                    error_signal_template +
+                                                                    [source.value for source in covariates_sources],
+                                                   covariates_sources = covariates_sources,
                                                    error_sources=error_sources,
                                                    learning_enabled=learning_update,
                                                    in_composition=True,
                                                    name="Learning Mechanism for " + learned_projection.name)
 
             # Create MappingProjections from ERROR_SIGNAL OutputPort of each error_source
-            #    to corresponding error_input_ports
+            #    to corresponding error_input_ports, including for an existing LearningMechanism
+            #    retrieved from call to _get_back_prop_error_sources() above
             for i, error_source in enumerate(error_sources):
                 error_projection = MappingProjection(sender=error_source,
                                                      receiver=learning_mechanism.error_signal_input_ports[i])
                 error_projections.append(error_projection)
 
-        self.add_node(learning_mechanism, required_roles=NodeRole.LEARNING, context=context)
-        try:
-            act_in_projection = MappingProjection(sender=input_source.output_ports[0],
-                                                receiver=learning_mechanism.input_ports[0])
-            act_out_projection = MappingProjection(sender=output_source.output_ports[0],
-                                                receiver=learning_mechanism.input_ports[1])
-            self.add_projections([act_in_projection, act_out_projection] + error_projections)
+        # self.add_node(learning_mechanism, required_roles=NodeRole.LEARNING, context=context)
+        # FIX: CHECK:
+        #      - IF PROJECTIONS EXIST (ON EXISTING LEARNING MECHANISM) AND ADD THEM IF NOT
+        #      - IF PROJECTIONS THAT HAVE BEEN CREATED HAVE BEEN ADDED TO COMP OR THAT NEEDS TO BE DONE WITH
+        #      add_projections()
 
+        # Use try here to be able to abort in case duplicates are found
+        try:
+            # Create MappingProjections for INPUT_SOURCE, OUTPUT_SOURCE and COVARIATES (if any)
+            # FIX: SHOULD CONSTRUCT THESE MAPPING PROJECTIONS ABOVE AND USE TO SEPCIFY INPUTPORTS FOR LEARNING MECHANISM
+            # FIX: NO NEED TO MAKE PROJECTIONS IF SPECIFIED ABOVE
+            #      STILL NEED ADD THEM TO COMPOSITION IF LEARNING MECHANISM IS ALREADY IN COMPOSITION?
+            #      IF SO, JUST ITERATE OVER PROJECTIONS TO INPUT PORTS TO PUT THEM IN COMPOSITION
+
+            # Projection from input_source
+            act_in_projection = MappingProjection(sender=input_source.output_ports[0],
+                                                  receiver=learning_mechanism.input_ports[0],
+                                                  matrix=IDENTITY_MATRIX)
+
+            # Projection from output_source
+            act_out_projection = MappingProjection(sender=output_source.output_ports[0],
+                                                   receiver=learning_mechanism.input_ports[1],
+                                                   matrix=IDENTITY_MATRIX)
+
+            # Projections to the InputPort for each covariate
+            # FIX: COULD DO THIS ABOVE WHERE THE LearningMechanism IS CONSTRUCTED, AND USE TO CREATE InputPorts
+            # IMPLEMENTATION NOTE:
+            #   The following are for display purposes only (i.e., so they can be shown in show_graph);
+            #   they can't be used by the LearningMechanism, since their values may not be the same as the
+            #   actual projections they shadow (i.e., that project to output_source).  This is because:
+            #   - the actual projections are subject to learning whereas the ones created here are not
+            #   - can't create a Projection from the output_source's Inputport that has their actual values
+            #   This can be averted by using a Mechanism to assign a different InputPort for each Projection
+            covariates_projections = []
+            for i, source in enumerate(covariates_sources):
+                # All of the afferents to the same InputPort of output_source
+                #   should go to the same (corresponding) *COVARIATES* InputPort of the LearningMechanism
+                for proj in source.path_afferents:
+                    covariates_projections.append(
+                        MappingProjection(sender=proj.sender,
+                                          receiver=learning_mechanism.covariates_input_ports[i]))
+            # Add Projections for covariates to aux_components since they may involve Nodes not yet in Composition
+            #   and do so before adding LearningMechanism to Composition so they are registered as in need of addition
+            learning_mechanism.aux_components.extend(covariates_projections)
+
+            # Create LearningProjection
             learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
+
+            # Add LearningMechanism to Composition before adding Projections
+            self.add_node(learning_mechanism, required_roles=NodeRole.LEARNING, context=context)
+
+            # Add all the Projections to the Composition
+            self.add_projections([act_in_projection, act_out_projection] + error_projections)
             self.add_projection(learning_projection, feedback=True)
+
         except DuplicateProjectionError as e:
-            # we don't care if there is a duplicate
+            # Ignore duplicates since the corresponding LearningMechanism was identified and ignored above
             return learning_mechanism
         except Exception as e:
             raise e
