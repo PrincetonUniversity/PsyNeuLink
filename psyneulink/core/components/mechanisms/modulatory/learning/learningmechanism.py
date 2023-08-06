@@ -1521,6 +1521,8 @@ class LearningMechanism(ModulatoryMechanism_Base):
 
     @property
     def validate_error_signal_and_covariate_sources(self):
+        # FIX: 8/1/23 - NEEDS ERROR MESSAGES, AND TO BE CALLED SOMEWHERE
+        #               (MAYBE BY COMPOSITION ONCE ALL NODES AND PROJECTIONS HAVE BEEN INSTANTIATED)
         assert set(input_port.path_afferents[0].sender.owner
                    for input_port in self.error_signal_input_ports) == set(self.error_sources)
         assert set(input_port.path_afferents[0].sender.owner
