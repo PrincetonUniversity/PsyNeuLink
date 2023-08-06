@@ -677,7 +677,7 @@ ACTIVATION_INPUT = 'activation_input'     # InputPort
 ACTIVATION_OUTPUT = 'activation_output'   # InputPort
 ERROR_SIGNAL = 'error_signal'
 COVARIATES = 'covariate'                  # Basename for one or more InputPorts
-input_port_names = [ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL, COVARIATES]
+input_port_names = [ACTIVATION_INPUT, ACTIVATION_OUTPUT]
 output_port_names = [LEARNING_SIGNAL, ERROR_SIGNAL]
 
 ERROR_SOURCES = 'error_sources'
@@ -1042,7 +1042,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         learning_rate = FunctionParameter(None)
         learning_enabled = True
         modulation = ADDITIVE
-        input_ports = Parameter([ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL],
+        input_ports = Parameter([ACTIVATION_INPUT, ACTIVATION_OUTPUT],
                                 stateful=False,
                                 loggable=False,
                                 read_only=True,
@@ -1190,9 +1190,9 @@ class LearningMechanism(ModulatoryMechanism_Base):
             # Any input_ports for error_sources > 1 (the default) and/or ones for covariates haven't yet been assigned
             #    so length of variable should be short that number
             elif self.is_initializing:
-                num_additional_error_sources = len(self.error_sources) - 1 # 1 is already in input_ports
+                num_error_sources = len(self.error_sources) # 1 is already in input_ports
                 num_covariates_sources = len(self.covariates_sources) if self.covariates_sources else 0
-                if len(variable) != len(self.input_ports) + num_additional_error_sources + num_covariates_sources:
+                if len(variable) != len(self.input_ports) + num_error_sources + num_covariates_sources:
                     assert False, f"Number of items ({len(variable)}) in variable for '{self.name}' doesn't match " \
                                   f"the number of expected InputPorts ({len(self.input_ports)}) during initialization."
 
@@ -1273,9 +1273,11 @@ class LearningMechanism(ModulatoryMechanism_Base):
 
         input_ports = self.input_ports
 
-        if self.error_sources:
-            input_ports += [ERROR_SIGNAL] * (len(self.error_sources) - 1)  # 1 ERROR_SIGNAL InputPort is assigned by default
+        # if self.error_sources:
+        #     input_ports += [ERROR_SIGNAL] * (len(self.error_sources) - 1)  # 1 ERROR_SIGNAL InputPort is assigned by default
+        # num_error_sources = len(self.error_sources) if self.error_sources else 0
         num_error_sources = len(self.error_sources) if self.error_sources else 0
+        input_ports += [ERROR_SIGNAL] * num_error_sources
 
         if self.covariates_sources:
             num_covariates = len(self.covariates_sources)

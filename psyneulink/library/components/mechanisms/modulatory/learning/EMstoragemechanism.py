@@ -698,7 +698,7 @@ class EMStorageMechanism(LearningMechanism):
                         VARIABLE: self.variable[i],
                         PROJECTIONS: field}
                        for i, field in enumerate(self.fields)]
-        return super()._instantiate_input_ports(input_ports=input_ports, context=context)
+        return super(LearningMechanism,self)._instantiate_input_ports(input_ports=input_ports, context=context)
 
     def _instantiate_output_ports(self, output_ports=None, reference_value=None, context=None):
         learning_signal_dicts = []
