@@ -1035,8 +1035,8 @@ class LearningMechanism(ModulatoryMechanism_Base):
                     :read only: True
         """
         function = Parameter(BackPropagation, stateful=False, loggable=False)
-        covariates_sources = Parameter(None, structural=True, read_only=True)
-        error_sources = Parameter(None, structural=True, read_only=True)
+        covariates_sources = Parameter(None, stateful=False, structural=True, read_only=True)
+        error_sources = Parameter(None, stateful=False, structural=True, read_only=True)
         error_matrix = Parameter(None, modulable=True)
         learning_signal = Parameter(None, read_only=True, getter=_learning_signal_getter)
         error_signal = Parameter(None, read_only=True, getter=_error_signal_getter)
@@ -1182,7 +1182,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         assert ASSERT, "ADD TEST FOR LEN OF VARIABLE AGAINST NUMBER OF ERROR_SIGNALS, ERROR_MATRICES AND COVARIATES"
 
         for i in range(len(variable)):
-            item_num_string = "Item {} ".format(i)
+            item_num_string = "Item {i+1}"
             try:
                 item_name = self.input_ports.names[i]
             except:
@@ -1200,9 +1200,18 @@ class LearningMechanism(ModulatoryMechanism_Base):
                 if not (is_numeric(variable[i])):
                     raise LearningMechanismError("{item_num_string} of variable for {self.name} ({item_name}: "
                                                  "{variable[i]}) is not numeric.")
-            elif len(variable[i]) != len(self.input_ports):
-                assert False, f"Number of items ({len(variable)}) in variable for '{self.name}' doesn't match the " \
-                              f"number of its InputPorts ({len(self.input_ports)})"
+            elif self.is_initializing:
+                # Any additional input_ports for error_sources and/or covariates have not yet been assigned
+                num_additional_error_sources = len(self.parameters.error_sources.get())-1 # 1 is already in input_ports
+                num_covariates_sources = len(self.parameters.covariates_sources.get())
+                if len(variable) != len(self.input_ports) + num_additional_error_sources + num_covariates_sources:
+                    assert False, f"Number of items ({len(variable)}) in variable for '{self.name}' doesn't match " \
+                                  f"the number of expected InputPorts ({len(self.input_ports)}) during initialization."
+            elif len(variable) != len(self.input_ports):
+                # All input_ports have been assigned, so number of items in variable should match number of input_ports
+                assert False, f"Number of items ({len(variable)}) in variable for '{self.name}' doesn't match " \
+                              f"the number of its assigned InputPorts ({len(self.input_ports)})"
+
         return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -1305,10 +1314,10 @@ class LearningMechanism(ModulatoryMechanism_Base):
         super()._instantiate_attributes_before_function(function=function, context=context)
 
         self.error_matrices = None
-        if self.error_sources:
-        # if self._error_sources:
-            self.error_matrices = [None] * len(self._error_sources)
-            for i, error_source in enumerate(self._error_sources):
+        error_sources = self.parameters.error_sources.get()
+        if error_sources:
+            self.error_matrices = [None] * len(error_sources)
+            for i, error_source in enumerate(error_sources):
                 if not self.in_composition:
                     # IMPLEMENTATION NOTE:
                     #    _create_terminal_backprop_sequence_components and _create_multilayer_backprop_components
