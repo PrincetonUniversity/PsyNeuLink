@@ -1424,29 +1424,11 @@ class LearningMechanism(ModulatoryMechanism_Base):
         # Get error_signals (from ERROR_SIGNAL InputPorts) and error_matrices relevant for the current execution:
         error_signal_indices = [self.input_ports.index(s) for s in self.error_signal_input_ports]
         error_signal_inputs = variable[error_signal_indices]
-        # FIX 7/22/19 [JDC]: MOVE THIS TO ITS OWN METHOD CALLED ON INITALIZATION AND UPDATE AS NECESSARY
         if self.error_matrices is None:
-            # KAM 6/28/19 Hack to get the correct shape and contents for initial error matrix in backprop
-            if self.function is BackPropagation or isinstance(self.function, BackPropagation):
-                mat = []
-                for i in range(len(error_signal_inputs[0])):
-                    row = []
-                    for j in range(len(error_signal_inputs[0])):
-                        if i == j:
-                            row.append(1.)
-                        else:
-                            row.append(0.)
-                    mat.append(row)
-                self.error_matrices = mat
-                error_matrices = mat
-
-            else:
-                self.error_matrices = [[0.]]
-                error_matrices = \
-                    np.array(self.error_matrices)[np.array([c - ERROR_SIGNAL_INDEX for c in error_signal_indices])]
+            error_matrices = self._init_error_matrices(error_signal_inputs)
         else:
-            error_matrices = \
-                np.array(self.error_matrices)[np.array([c - ERROR_SIGNAL_INDEX for c in error_signal_indices])]
+            error_matrices = np.array(self.error_matrices)[np.array([c - ERROR_SIGNAL_INDEX
+                                                                     for c in error_signal_indices])]
 
         for i, matrix in enumerate(error_matrices):
             if isinstance(error_matrices[i], ParameterPort):
@@ -1528,3 +1510,22 @@ class LearningMechanism(ModulatoryMechanism_Base):
         assert set(input_port.path_afferents[0].sender.owner
                    for input_port in self.covariates_input_ports) == set(self.covariates_sources)
 
+    def _init_error_matrices(self, error_signal_inputs):
+        # KAM 6/28/19 Hack to get the correct shape and contents for initial error matrix in backprop
+        if self.function is BackPropagation or isinstance(self.function, BackPropagation):
+            mat = []
+            for i in range(len(error_signal_inputs[0])):
+                row = []
+                for j in range(len(error_signal_inputs[0])):
+                    if i == j:
+                        row.append(1.)
+                    else:
+                        row.append(0.)
+                mat.append(row)
+            self.error_matrices = mat
+            error_matrices = mat
+        else:
+            self.error_matrices = [[0.]]
+            error_matrices = \
+                np.array(self.error_matrices)[np.array([c - ERROR_SIGNAL_INDEX for c in error_signal_indices])]
+        return error_matrices
