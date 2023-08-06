@@ -2422,7 +2422,7 @@ class BackPropagation(LearningFunction):
             self._validate_learning_rate(target_set[LEARNING_RATE], AUTOASSOCIATIVE)
 
         # FIX: 8/1/ 23 - ADD VALIDATION OF COVARIATES, INSURING THAT # OF THEM MATCHES NUMBER OF ARGS TAKEN BY
-        #                ACTIVATION FUNCTION AND THAT DERIVATIVE EXISTS AND TAKES COVARIATES AS ARGS
+ #                ACTIVATION FUNCTION AND THAT DERIVATIVE EXISTS AND TAKES COVARIATES AS ARGS
 
         # Validate error_matrix specification
         if ERROR_MATRIX in target_set:
