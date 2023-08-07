@@ -6042,9 +6042,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 receiver = receiver_mechanism
             # Check if Projection to be initialized already exists in the current Composition;
             #    if so, mark as existing_projections and skip
+            # # MODIFIED 8/7/23 OLD:
+            # existing_projections = self._check_for_existing_projections(sender=sender, receiver=receiver)
+            # MODIFIED 8/7/23 NEW:
             existing_projections = self._check_for_existing_projections(sender=sender,
                                                                         receiver=receiver,
                                                                         in_composition=True)
+            # MODIFIED 8/7/23 END
             if existing_projections:
                 return
             else:
@@ -6054,10 +6058,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 projection._deferred_init()
 
         else:
+            # # MODIFIED 8/7/23 OLD:
+            # existing_projections = self._check_for_existing_projections(projection, sender=sender, receiver=receiver)
+            # MODIFIED 8/7/23 NEW:
             existing_projections = self._check_for_existing_projections(projection,
                                                                         sender=sender,
                                                                         receiver=receiver,
                                                                         in_composition=True)
+            # MODIFIED 8/7/23 END
 
         # # FIX: JDC HACK 6/13/19 to deal with projection from user-specified INPUT node added to the Composition
         # #      that projects directly to the Target node of a nested Composition
@@ -6584,48 +6592,48 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for rcvr in receiver_ports:
                 existing_projections.extend([proj for proj in sndr.efferents if proj.receiver is rcvr])
 
-        # # MODIFIED 8/1/23 OLD:
-        # existing_projections_in_composition = [proj for proj in existing_projections if proj in self.projections]
-        # assert len(existing_projections_in_composition) <= 1, \
-        #     f"PROGRAM ERROR: More than one identical projection found " \
-        #     f"in {self.name}: {existing_projections_in_composition}."
-        # if in_composition:
-        #     if existing_projections_in_composition:
-        #         return existing_projections_in_composition[0]
-        # else:
-        #     if existing_projections and not existing_projections_in_composition:
-        #         return existing_projections
-        # return False
-        # MODIFIED 8/1/23 NEW:
-        existing_projections_in_composition = [p for p in existing_projections if p in self.projections]
-        existing_projections_not_in_composition = [p for p in existing_projections if p not in self.projections]
-        # Ensure that there is only a *single* existing Projection (if any) in the current Composition
+        # MODIFIED 8/7/23 OLD:
+        existing_projections_in_composition = [proj for proj in existing_projections if proj in self.projections]
         assert len(existing_projections_in_composition) <= 1, \
             f"PROGRAM ERROR: More than one identical projection found " \
             f"in {self.name}: {existing_projections_in_composition}."
-        # Return existing Projection only if it is in the current Composition and there are no others
-        if in_composition is ONLY:
-            if existing_projections_in_composition and not existing_projections_not_in_composition:
-                return list(existing_projections_in_composition)
-
-        # Return existing Projection only if it is in the current Composition irrespective of whether there are others
-        elif in_composition is True:
+        if in_composition:
             if existing_projections_in_composition:
-                return list(existing_projections_in_composition)
-
-        # Return existing Projections only if all are *not* in the Composition
-        elif in_composition is False:
-            if existing_projections_not_in_composition and not existing_projections_in_composition:
-                return existing_projections_not_in_composition
-
-        # Return any existing Projection irrespective of whether they are in the current Composition
-        elif in_composition is ANY:
-            if existing_projections:
-                return existing_projections
-
+                return existing_projections_in_composition[0]
         else:
-            assert False, f"PROGRAM ERROR: Unrecognized value for in_composition arg ({in_composition})."
-        # MODIFIED 8/1/23 END
+            if existing_projections and not existing_projections_in_composition:
+                return existing_projections
+        return False
+        # # MODIFIED 8/7/23 NEW:
+        # existing_projections_in_composition = [p for p in existing_projections if p in self.projections]
+        # existing_projections_not_in_composition = [p for p in existing_projections if p not in self.projections]
+        # # Ensure that there is only a *single* existing Projection (if any) in the current Composition
+        # assert len(existing_projections_in_composition) <= 1, \
+        #     f"PROGRAM ERROR: More than one identical projection found " \
+        #     f"in {self.name}: {existing_projections_in_composition}."
+        # # Return existing Projection only if it is in the current Composition and there are no others
+        # if in_composition is ONLY:
+        #     if existing_projections_in_composition and not existing_projections_not_in_composition:
+        #         return list(existing_projections_in_composition)
+        #
+        # # Return existing Projection only if it is in the current Composition irrespective of whether there are others
+        # elif in_composition is True:
+        #     if existing_projections_in_composition:
+        #         return list(existing_projections_in_composition)
+        #
+        # # Return existing Projections only if all are *not* in the Composition
+        # elif in_composition is False:
+        #     if existing_projections_not_in_composition and not existing_projections_in_composition:
+        #         return existing_projections_not_in_composition
+        #
+        # # Return any existing Projection irrespective of whether they are in the current Composition
+        # elif in_composition is ANY:
+        #     if existing_projections:
+        #         return existing_projections
+        #
+        # else:
+        #     assert False, f"PROGRAM ERROR: Unrecognized value for in_composition arg ({in_composition})."
+        # MODIFIED 8/7/23 END
 
         return False
 
@@ -7185,13 +7193,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         # If it is a singleton, append on its own;  if it is set or list, need to keep that intact
                         projs = projs.pop() if len(projs) == 1 else projs
                         projections.append(projs)
-                    # MODIFIED 8/1/23 NEW:
-                    else:
-                        if any(projs):
-                            assert False, f"PROGRAM ERROR: some projs and some Nones returned from add_projections: " \
-                                          f"{projs}"
-                        # Add None for interleaving below
-                        projections.append(None)
+                    # # MODIFIED 8/1/23 NEW:
+                    # else:
+                    #     if any(projs):
+                    #         assert False, f"PROGRAM ERROR: some projs and some Nones returned from add_projections: " \
+                    #                       f"{projs}"
+                    #     # Add None for interleaving below
+                    #     projections.append(None)
                     # MODIFIED 8/1/23 END
 
 
@@ -7411,14 +7419,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # IMPLEMENTATION NOTE:
                 #    this is to support calls to add_learing_processing_pathway by add_learning_<> methods
                 #    that do not yet support a list or set of Projection specifications
-                if not proj_set:
-                    projections.append(None)
-                elif len(proj_set) == 1:
+                if len(proj_set) == 1:
+                # # MODIFIED 8/7/23 NEW:
+                # if not proj_set:
+                #     projections.append(None)
+                # elif len(proj_set) == 1:
+                # MODIFIED 8/7/23 END
                     projections.append(proj_set[0])
                 else:
                     projections.append(proj_set)
 
-            # BAD PATHWAY ITEM: contains neither Node nor Projection specification(s)
+            # BAD PATHWAY ENTRY: contains neither Node nor Projection specification(s)
             else:
                 assert False, f"PROGRAM ERROR : An entry {pathway_arg_str} is not a Node (Mechanism " \
                               f"or Composition) or a Projection nor a set of either: {repr(pathway[c])}."
@@ -7429,19 +7440,65 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if isinstance(n, tuple):
                     nodes[i] = nodes[i][0]
 
-        # # MODIFIED 8/1/23 OLD:
-        # # interleave (sets of) Nodes and (sets or lists of) Projections
+        # MODIFIED 8/7/23 OLD:
+        # interleave (sets of) Nodes and (sets or lists of) Projections
+        explicit_pathway = [node_entries[0]]
+        for i in range(len(projections)):
+            explicit_pathway.append(projections[i])
+            explicit_pathway.append(node_entries[i + 1])
+
+        # If pathway is an existing one, return that
+        existing_pathway = next((p for p in self.pathways if explicit_pathway==p.pathway), None)
+        if existing_pathway:
+            warnings.warn(f"Pathway specified {pathway_arg_str} already exists in {self.name}: {pathway}; "
+                          f"it will be ignored.")
+            return existing_pathway
+        # If the explicit pathway is shorter than the one specified, then need to do more checking
+        elif len(explicit_pathway) < len(pathway):
+            # Pathway without all Projections specified has same nodes in same order as existing one
+            existing_pathway = next((p for p in self.pathways
+                                     if [item for p in self.pathways for item in p.pathway
+                                         if not isinstance(item, Projection)]), None)
+            # Shorter because Projections generated for unspecified ones duplicated existing ones & were suppressed
+            if existing_pathway:
+                warnings.warn(f"Pathway specified {pathway_arg_str} has same Nodes in same order as "
+                              f"one already in {self.name}: {pathway}; it will be ignored.")
+                return existing_pathway
+            # # MODIFIED 8/7/23 NEW:
+            # elif next((p for p in pathway if not isinstance(p, Projection)), None):
+            #     pass
+            # MODIFIED 8/7/23 END
+            #
+            # Shorter because it contained one or more ControlMechanisms with monitor_for_control specified
+            #    or an ObjectiveMechanism that projects to a ControlMechanism.
+            elif explicit_pathway == [m for m in pathway if not (
+                    (isinstance(m, ControlMechanism)
+                      or (isinstance(m, tuple) and isinstance(m[0], ControlMechanism))
+                     or (isinstance(m, ObjectiveMechanism) and m.control_mechanism)))]:
+                pass
+            else:
+                # Otherwise, something has gone wrong
+                assert False, \
+                    f"PROGRAM ERROR: Bad pathway specification for {self.name} {pathway_arg_str}: {pathway}."
+
+        # # MODIFIED 8/7/23 NEW:
+        # # FIX: WOULD BE GOOD TO GET INFERRED Projections INTO projections AND USE THAT TO COMPARE TO EXPLICIT BELOW
+        # # interleave (sets of) Nodes and (sets or lists of) Projections, removing Nones (for unspecified Projections)
+        # # Start with first node
         # explicit_pathway = [node_entries[0]]
+        # # Then, for each Projection, add it (if not None) and the next node
         # for i in range(len(projections)):
-        #     explicit_pathway.append(projections[i])
+        #     if projections[i]:
+        #         explicit_pathway.append(projections[i])
         #     explicit_pathway.append(node_entries[i + 1])
         #
-        # # If pathway is an existing one, return that
+        # # If pathway is identical to an existing one (including how it is specified), return that with warning
         # existing_pathway = next((p for p in self.pathways if explicit_pathway==p.pathway), None)
         # if existing_pathway:
         #     warnings.warn(f"Pathway specified {pathway_arg_str} already exists in {self.name}: {pathway}; "
         #                   f"it will be ignored.")
         #     return existing_pathway
+        #
         # # If the explicit pathway is shorter than the one specified, then need to do more checking
         # elif len(explicit_pathway) < len(pathway):
         #     # Pathway without all Projections specified has same nodes in same order as existing one
@@ -7453,7 +7510,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #         warnings.warn(f"Pathway specified {pathway_arg_str} has same Nodes in same order as "
         #                       f"one already in {self.name}: {pathway}; it will be ignored.")
         #         return existing_pathway
-        #     elif next((p for p in pathway if not isinstance(p, Projection)), None):
+        #
+        #     # ----------
+        #     # MODIFIED 8/7/23 NEW:
+        #     existing_pathway_nodes = next((p for p in self.pathways
+        #                              if [item for p in self.pathways for item in p.pathway
+        #                                  if not isinstance(item, Projection)]), None)
+        #     explicit_pathway_nodes = [item for item in explicit_pathway if not isinstance(item, Projection)]
+        #
+        #     # ----------
+        #
+        #     if next((p for p in pathway if not isinstance(p, Projection)), None):
         #         pass
         #
         #     # Shorter because it contained one or more ControlMechanisms with monitor_for_control specified
@@ -7467,61 +7534,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #         # Otherwise, something has gone wrong
         #         assert False, \
         #             f"PROGRAM ERROR: Bad pathway specification for {self.name} {pathway_arg_str}: {pathway}."
-
-
-        # MODIFIED 8/1/23 NEW:
-        # interleave (sets of) Nodes and (sets or lists of) Projections, removing Nones (for unspecified Projections)
-        # Start with first node
-        explicit_pathway = [node_entries[0]]
-        # Then, for each Projection, add it (if not None) and the next node
-        for i in range(len(projections)):
-            if projections[i]:
-                explicit_pathway.append(projections[i])
-            explicit_pathway.append(node_entries[i + 1])
-
-        # If pathway is identical to an existing one (including how it is specified), return that with warning
-        existing_pathway = next((p for p in self.pathways if explicit_pathway==p.pathway), None)
-        if existing_pathway:
-            warnings.warn(f"Pathway specified {pathway_arg_str} already exists in {self.name}: {pathway}; "
-                          f"it will be ignored.")
-            return existing_pathway
-
-        # If the explicit pathway is shorter than the one specified, then need to do more checking
-        elif len(explicit_pathway) < len(pathway):
-            # Pathway without all Projections specified has same nodes in same order as existing one
-            existing_pathway = next((p for p in self.pathways
-                                     if [item for p in self.pathways for item in p.pathway
-                                         if not isinstance(item, Projection)]), None)
-            # Shorter because Projections generated for unspecified ones duplicated existing ones & were suppressed
-            if existing_pathway:
-                warnings.warn(f"Pathway specified {pathway_arg_str} has same Nodes in same order as "
-                              f"one already in {self.name}: {pathway}; it will be ignored.")
-                return existing_pathway
-
-            # ----------
-            # MODIFIED 8/7/23 NEW:
-            existing_pathway_nodes = next((p for p in self.pathways
-                                     if [item for p in self.pathways for item in p.pathway
-                                         if not isinstance(item, Projection)]), None)
-            explicit_pathway_nodes = [item for item in explicit_pathway if not isinstance(item, Projection)]
-
-            # ----------
-
-            if next((p for p in pathway if not isinstance(p, Projection)), None):
-                pass
-
-            # Shorter because it contained one or more ControlMechanisms with monitor_for_control specified
-            #    or an ObjectiveMechanism that projects to a ControlMechanism.
-            elif explicit_pathway == [m for m in pathway if not (
-                    (isinstance(m, ControlMechanism)
-                      or (isinstance(m, tuple) and isinstance(m[0], ControlMechanism))
-                     or (isinstance(m, ObjectiveMechanism) and m.control_mechanism)))]:
-                pass
-            else:
-                # Otherwise, something has gone wrong
-                assert False, \
-                    f"PROGRAM ERROR: Bad pathway specification for {self.name} {pathway_arg_str}: {pathway}."
-        # MODIFIED 8/1/23 END
+        # # MODIFIED 8/7/23 END
 
         pathway = Pathway(pathway=explicit_pathway,
                           composition=self,
