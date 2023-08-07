@@ -5946,8 +5946,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if sender and receiver and projection is None:
             existing_projections = self._check_for_existing_projections(sender=sender,
                                                                         receiver=receiver,
-                                                                        # in_composition=False
-                                                                        )
+                                                                        in_composition=False)
             if existing_projections:
                 if isinstance(sender, Port):
                     sender_check = sender.owner
@@ -6509,16 +6508,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        projection=None,
                                        sender=None,
                                        receiver=None,
-                                       in_composition:bool=True)->list[Projection]:
+                                       in_composition:Union[bool,Literal[ANY]]=True)->Union[bool, list[Projection]]:
         """Check for Projection between the same pair of Nodes
-        If **in_composition** is True, return only Projections found in the current Composition
+        If **in_composition** is True, return only Projections found in the current Composition,
+                                       irrespective of whether there are also any outside of the Composition.
+        If **in_composition** is ANY, return all existing Projections in and/or out of the current Composition.
         If **in_composition** is False, return only Projections that are found outside the current Composition
+                                        and only if there are none found within the current Composition.
         IMPLEMENTATION NOTE:
-            Currently if the sender and/or the receiver is specified as a Mechanism,
-            a Projection from/to any of its OutputPorts/InputPorts will be considered a match.
-            However, if both sender and receiver are specified as Ports, then only a Projection
-            from the sender to the receiver will be considered a match, allowing other Projections
-            to remain between that pair of Nodes.
+            If the sender and/or the receiver is specified as a Mechanism, then any Projection between that Mechanism
+            the other specification will be considered a match, irrespective of whether they use the same InputPorts
+            (if it is a receiver) and/or OutputPorts (if it is a sender); if both are Mechanisms, then *any*
+            Projection between them will count as a match, irrespective of the InputPorts and/or OutputPorts used.
+            However, if both sender and receiver are specified as Ports, then only a Projection from the sender to the
+            receiver will be considered a match, allowing other Projections to remain between pair of Nodes
 
         Return Projection or list of Projections that satisfies the conditions, else False
         """
@@ -6561,16 +6564,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for sndr in sender_ports:
             for rcvr in receiver_ports:
                 existing_projections.extend([proj for proj in sndr.efferents if proj.receiver is rcvr])
+
         existing_projections_in_composition = [proj for proj in existing_projections if proj in self.projections]
+        existing_projections_not_in_composition = set(existing_projections) - set(existing_projections_in_composition)
+        # Ensure that there is only a *single* existing Projection (if any) in the current Composition
         assert len(existing_projections_in_composition) <= 1, \
             f"PROGRAM ERROR: More than one identical projection found " \
             f"in {self.name}: {existing_projections_in_composition}."
-        if in_composition:
+
+        # Return existing Projection only if it is in the current Composition
+        if in_composition is True:
             if existing_projections_in_composition:
                 return existing_projections_in_composition
-        else:
-            if existing_projections and not existing_projections_in_composition:
+
+        elif in_composition is ANY:
+            if existing_projections:
                 return existing_projections
+
+        # Return existing Projections only if all are *not* in the Composition
+        else:
+            if existing_projections_not_in_composition and not existing_projections_in_composition:
+                return existing_projections_not_in_composition
         return False
 
     def _check_for_unnecessary_feedback_projections(self):

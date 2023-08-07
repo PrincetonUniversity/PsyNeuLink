@@ -57,7 +57,6 @@ LEARNING_ACTIVATION_FUNCTION = 'activation_function'
 LEARNING_ACTIVATION_INPUT = 0  # a(j)
 LEARNING_ACTIVATION_OUTPUT = 1  # a(i)
 LEARNING_ERROR_OUTPUT = 2
-LEARNING_COVARIATES = 3
 
 # Other indices
 WT_MATRIX_SENDERS_DIM = 0
@@ -209,15 +208,13 @@ class EMStorage(LearningFunction):
         specifies shape of `entry <EMStorage.entry>` passed in the call to the `function <EMStorage.function>`.
 
     axis : int : default 0
-        specifies the axis of `memory_matrix <EMStorage.memory_matrix>` referenced by `storage_location
-        <EMStorage.storage_location>` to which `entry <EMStorage.entry>` is assigned.
+        specifies the axis of `memory_matrix <EMStorage.memory_matrix>` to which `entry <EMStorage.entry>` is assigned.
 
     storage_location : int : default None
         specifies the location (row or col determined by `axis <EMStorage.axis>`) of `memory_matrix
         <EMStorage.memory_matrix>` at which the new entry is stored (replacing the existing one);
-        if None, the weakest entry (one with the lowest norm) along `axis <EMStorage.axis>` of
-        `memory_matrix <EMStorage.memory_matrix>` is used; if an int is specified, that row (if ``axis``=0) or
-        column (if ``axis``=1) is used.
+        if None, the weeakest entry (one with the lowest norm) along `axis <EMStorage.axis>` of
+        `memory_matrix <EMStorage.memory_matrix>` is used.
 
     storage_prob : float : default default_learning_rate
         specifies the probability with which `entry <EMStorage.entry>` is assigned to `memory_matrix
@@ -253,12 +250,11 @@ class EMStorage(LearningFunction):
         matrix to which the entry is assigned along `axis <EMstorage.axis>`.
 
     axis : int
-        determines axis of `memory_matrix <EMStorage.memory_matrix>` referenced by `storage_location
-        <EMStorage.storage_location>` that determines where `entry <EMStorage.entry>` is stored.
+        determines axis of `memory_matrix <EMStorage.memory_matrix>` to which `entry <EMStorage.entry>` is assigned.
 
     storage_location : int
-        specifies the location (row if `axis <EMStorage.axis>` is 0, or col if `axis <EMStorage.axis>` is 1) of
-        `memory_matrix <EMStorage.memory_matrix>` at which the new entry is stored.
+        specifies the location (row or col determined by `axis <EMStorage.axis>`) of `memory_matrix
+        <EMStorage.memory_matrix>` at which the new entry is stored.
 
     storage_prob : float
         determines the probability with which `entry <EMStorage.entry>` is stored in `memory_matrix
@@ -2421,8 +2417,8 @@ class BackPropagation(LearningFunction):
         if LEARNING_RATE in target_set and target_set[LEARNING_RATE] is not None:
             self._validate_learning_rate(target_set[LEARNING_RATE], AUTOASSOCIATIVE)
 
-        # FIX: 8/1/ 23 - ADD VALIDATION OF COVARIATES, INSURING THAT # OF THEM MATCHES NUMBER OF ARGS TAKEN BY
- #                ACTIVATION FUNCTION AND THAT DERIVATIVE EXISTS AND TAKES COVARIATES AS ARGS
+        # FIX: ADD VALIDATION OF COVARIATES, INSURING THAT # OF THEM MATCHES NUMBER OF ARGS TAKEN BY ACTIVATION FUNCTION
+        #      AND THAT DERIVATIVE EXISTS AND TAKES COVARIATES AS ARGS
 
         # Validate error_matrix specification
         if ERROR_MATRIX in target_set:
