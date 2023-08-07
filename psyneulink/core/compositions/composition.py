@@ -5947,8 +5947,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if sender and receiver and projection is None:
             existing_projections = self._check_for_existing_projections(sender=sender,
                                                                         receiver=receiver,
-                                                                        in_composition=ONLY
-                                                                        # in_composition=True
+                                                                        # in_composition=ONLY
+                                                                        in_composition=False
                                                                         )
             if existing_projections:
                 if isinstance(sender, Port):
@@ -5971,7 +5971,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             port.remove_projection(proj, context=context)
                 else:
                     #  Need to do stuff at end, so can't just return
-                    if self.prefs.verbosePref:
+                    if self.prefs.verbosePref and len(existing_projections) > 1:
                         warnings.warn(f"Several existing projections were identified between "
                                       f"{sender.name} and {receiver.name}: {[p.name for p in existing_projections]}; "
                                       f"the last of these will be used in {self.name}.")
@@ -7181,13 +7181,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                       f"{ControlSignal.__name__} of '{ctl_mech.name}' -- specified {pathway_arg_str} "
                                       f"-- to another {Mechanism.__name__} in that pathway.  If this is not the "
                                       f"intended behavior, add '{ctl_mech.name}' separately to '{self.name}'.")
-                    # FIX: NEED TO ADD "None" HERE IF NO PROJECTIONS SEPECIFIED, SO INTERLEAVING CAN BE DONE BELOW
-                    #      WHY MUST IT BE all(projs)?  WHAT IF THERE IS A MIXTURE OF Nones AND PROJECTIONS?
                     if all(projs):
+                        # If it is a singleton, append on its own;  if it is set or list, need to keep that intact
                         projs = projs.pop() if len(projs) == 1 else projs
                         projections.append(projs)
                     # MODIFIED 8/1/23 NEW:
                     else:
+                        if any(projs):
+                            assert False, f"PROGRAM ERROR: some projs and some Nones returned from add_projections: " \
+                                          f"{projs}"
+                        # Add None for interleaving below
                         projections.append(None)
                     # MODIFIED 8/1/23 END
 
@@ -7464,8 +7467,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #         # Otherwise, something has gone wrong
         #         assert False, \
         #             f"PROGRAM ERROR: Bad pathway specification for {self.name} {pathway_arg_str}: {pathway}."
-        # MODIFIED 8/1/23 NEW:
 
+        # MODIFIED 8/1/23 NEW:
         # interleave (sets of) Nodes and (sets or lists of) Projections, removing Nones (for unspecified Projections)
         # Start with first node
         explicit_pathway = [node_entries[0]]
