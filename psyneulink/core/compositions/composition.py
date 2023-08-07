@@ -6584,35 +6584,49 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for rcvr in receiver_ports:
                 existing_projections.extend([proj for proj in sndr.efferents if proj.receiver is rcvr])
 
-        existing_projections_in_composition = [p for p in existing_projections if p in self.projections]
-        existing_projections_not_in_composition = [p for p in existing_projections if p not in self.projections]
-        # Ensure that there is only a *single* existing Projection (if any) in the current Composition
+        # MODIFIED 8/1/23 OLD:
+        existing_projections_in_composition = [proj for proj in existing_projections if proj in self.projections]
         assert len(existing_projections_in_composition) <= 1, \
             f"PROGRAM ERROR: More than one identical projection found " \
             f"in {self.name}: {existing_projections_in_composition}."
-
-        # Return existing Projection only if it is in the current Composition and there are no others
-        if in_composition is ONLY:
-            if existing_projections_in_composition and not existing_projections_not_in_composition:
-                return list(existing_projections_in_composition)
-
-        # Return existing Projection only if it is in the current Composition irrespective of whether there are others
-        elif in_composition is True:
+        if in_composition:
             if existing_projections_in_composition:
-                return list(existing_projections_in_composition)
-
-        # Return existing Projections only if all are *not* in the Composition
-        elif in_composition is False:
-            if existing_projections_not_in_composition and not existing_projections_in_composition:
-                return existing_projections_not_in_composition
-
-        # Return any existing Projection irrespective of whether they are in the current Composition
-        elif in_composition is ANY:
-            if existing_projections:
-                return existing_projections
-
+                return existing_projections_in_composition[0]
         else:
-            assert False, f"PROGRAM ERROR: Unrecognized value for in_composition arg ({in_composition})."
+            if existing_projections and not existing_projections_in_composition:
+                return existing_projections
+        return False
+        # # MODIFIED 8/1/23 NEW:
+        # existing_projections_in_composition = [p for p in existing_projections if p in self.projections]
+        # existing_projections_not_in_composition = [p for p in existing_projections if p not in self.projections]
+        # # Ensure that there is only a *single* existing Projection (if any) in the current Composition
+        # assert len(existing_projections_in_composition) <= 1, \
+        #     f"PROGRAM ERROR: More than one identical projection found " \
+        #     f"in {self.name}: {existing_projections_in_composition}."
+        # # Return existing Projection only if it is in the current Composition and there are no others
+        # if in_composition is ONLY:
+        #     if existing_projections_in_composition and not existing_projections_not_in_composition:
+        #         return list(existing_projections_in_composition)
+        #
+        # # Return existing Projection only if it is in the current Composition irrespective of whether there are others
+        # elif in_composition is True:
+        #     if existing_projections_in_composition:
+        #         return list(existing_projections_in_composition)
+        #
+        # # Return existing Projections only if all are *not* in the Composition
+        # elif in_composition is False:
+        #     if existing_projections_not_in_composition and not existing_projections_in_composition:
+        #         return existing_projections_not_in_composition
+        #
+        # # Return any existing Projection irrespective of whether they are in the current Composition
+        # elif in_composition is ANY:
+        #     if existing_projections:
+        #         return existing_projections
+        #
+        # else:
+        #     assert False, f"PROGRAM ERROR: Unrecognized value for in_composition arg ({in_composition})."
+        # MODIFIED 8/1/23 END
+
         return False
 
     def _check_for_unnecessary_feedback_projections(self):
