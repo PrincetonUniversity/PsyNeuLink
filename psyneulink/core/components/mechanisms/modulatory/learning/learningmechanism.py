@@ -1425,7 +1425,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         error_signal_indices = [self.input_ports.index(s) for s in self.error_signal_input_ports]
         error_signal_inputs = variable[error_signal_indices]
         if self.error_matrices is None:
-            error_matrices = self._init_error_matrices(error_signal_inputs)
+            error_matrices = self._init_error_matrices(error_signal_inputs, error_signal_indices)
         else:
             error_matrices = np.array(self.error_matrices)[np.array([c - ERROR_SIGNAL_INDEX
                                                                      for c in error_signal_indices])]
@@ -1437,11 +1437,6 @@ class LearningMechanism(ModulatoryMechanism_Base):
         summed_learning_signal = 0
         summed_error_signal = 0
 
-        # FIX: DEAL WITH POSSIBILITY OF MORE THAN ONE VALUE IN ACTIVATION INPUT
-        #   (IF activation_function HAS MORE THAN ONE ARGUMENT);
-        #   PASS LEARNING FUNCTION THE INDEX OF THE ONE WRT WHICH THE DERIVATIVE SHOULD BE COMPUTED
-        #   AS THE index_of_derivative ARGUMENT, WHICH THE DERIVATIVE OF THE FUNCTION MUST BE ABLE TO ACCEPT
-        #   IN ITS "params" ARGUMENT (SHOUDL BE PUT THERE BY component AS FOR LearningFunctions)
         # Compute learning_signal for each error_signal (and corresponding error-Matrix):
         for error_signal_input, error_matrix in zip(error_signal_inputs, error_matrices):
             function_variable = convert_to_np_array([variable[ACTIVATION_INPUT_INDEX],
@@ -1515,7 +1510,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         assert set(input_port.path_afferents[0].sender.owner
                    for input_port in self.covariates_input_ports) == set(self.covariates_sources)
 
-    def _init_error_matrices(self, error_signal_inputs):
+    def _init_error_matrices(self, error_signal_inputs, error_signal_indices):
         # KAM 6/28/19 Hack to get the correct shape and contents for initial error matrix in backprop
         if self.function is BackPropagation or isinstance(self.function, BackPropagation):
             mat = []
