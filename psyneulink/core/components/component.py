@@ -1419,7 +1419,16 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             blacklist.update(['combination_function'])
 
         def _is_compilation_param(p):
-            if p.name not in blacklist and not isinstance(p, (ParameterAlias, SharedParameter)):
+            def _is_user_only_param(p):
+                if p.read_only and p.getter is not None:
+                    return True
+                if isinstance(p, (ParameterAlias, SharedParameter)):
+                    return True
+
+                return False
+
+
+            if p.name not in blacklist and not _is_user_only_param(p):
                 # FIXME: this should use defaults
                 val = p.get()
                 # Check if the value type is valid for compilation
