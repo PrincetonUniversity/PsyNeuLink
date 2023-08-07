@@ -2842,7 +2842,7 @@ from psyneulink.core.globals.keywords import \
     INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
     LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, Loss, \
     MATRIX, MAYBE, MODEL_SPEC_ID_METADATA, \
-    MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, NODE, OBJECTIVE_MECHANISM, ONLINE, OUTCOME, \
+    MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, NODE, OBJECTIVE_MECHANISM, ONLINE, ONLY, OUTCOME, \
     OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
     PARAMETER, PARAMETER_CIM_NAME, PORT, \
     PROCESSING_PATHWAY, PROJECTION, PROJECTION_TYPE, PROJECTION_PARAMS, PULSE_CLAMP, RECEIVER, \
@@ -5939,14 +5939,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #    check whether there is *any* projection like that
         #    (i.e., whether it/they are already in the current Composition or not);  if so:
         #    - if there is only one, use that;
-        #    - if there are several, use the last in the list (on the assumption in that it is the most recent).
+        #    - if there are several (that is, one or none in the current Composition, and one or more outside of it),
+        #      use the one in the Composition, otherwise use the last outside (on the assumption it is the most recent).
         # Note:  Skip this if **projection** was specified, as it might include parameters that are different
         #        than the existing ones, in which case should use that rather than any existing ones;
         #        will handle any existing Projections that are in the current Composition below.
         if sender and receiver and projection is None:
             existing_projections = self._check_for_existing_projections(sender=sender,
                                                                         receiver=receiver,
-                                                                        in_composition=False)
+                                                                        # in_composition=False
+                                                                        in_composition=True
+                                                                        )
             if existing_projections:
                 if isinstance(sender, Port):
                     sender_check = sender.owner
@@ -5972,6 +5975,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         warnings.warn(f"Several existing projections were identified between "
                                       f"{sender.name} and {receiver.name}: {[p.name for p in existing_projections]}; "
                                       f"the last of these will be used in {self.name}.")
+                    # FIX: ??DEAL WITH WHETHER IT IS IN OR OUTSIDE OF COMPOSITION??
                     projection = existing_projections[-1]
 
         # If Projection is one that is instantiated and is directly between Nodes in nested Compositions,
@@ -6038,7 +6042,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 receiver = receiver_mechanism
             # Check if Projection to be initialized already exists in the current Composition;
             #    if so, mark as existing_projections and skip
-            existing_projections = self._check_for_existing_projections(sender=sender, receiver=receiver)
+            existing_projections = self._check_for_existing_projections(sender=sender,
+                                                                        receiver=receiver,
+                                                                        in_composition=True)
             if existing_projections:
                 return
             else:
@@ -6048,7 +6054,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 projection._deferred_init()
 
         else:
-            existing_projections = self._check_for_existing_projections(projection, sender=sender, receiver=receiver)
+            existing_projections = self._check_for_existing_projections(projection,
+                                                                        sender=sender,
+                                                                        receiver=receiver,
+                                                                        in_composition=True)
 
         # # FIX: JDC HACK 6/13/19 to deal with projection from user-specified INPUT node added to the Composition
         # #      that projects directly to the Target node of a nested Composition
@@ -6505,16 +6514,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return projection in self.feedback_projections
 
     def _check_for_existing_projections(self,
-                                       projection=None,
-                                       sender=None,
-                                       receiver=None,
-                                       in_composition:Union[bool,Literal[ANY]]=True)->Union[bool, list[Projection]]:
+                                        projection=None,
+                                        sender=None,
+                                        receiver=None,
+                                        in_composition:Union[bool,Literal[ANY, ONLY]]=True)\
+            ->Union[bool, list[Projection]]:
         """Check for Projection between the same pair of Nodes
-        If **in_composition** is True, return only Projections found in the current Composition,
-                                       irrespective of whether there are also any outside of the Composition.
-        If **in_composition** is ANY, return all existing Projections in and/or out of the current Composition.
-        If **in_composition** is False, return only Projections that are found outside the current Composition
-                                        and only if there are none found within the current Composition.
+
+        Finding more than one Projection in the current Composition raises an error (should never be the case).
+        Finding one in the current Composition and any number outside of it is allowed, and handled as follows:
+          - if **in_composition** is ONLY, return the Projection if one is found in the current Composition,
+          -                                and none are found outside of it.
+          - if **in_composition** is True, return the Projection found in the current Composition,
+          -                                irrespective of whether there are also any outside of the Composition.
+          - if **in_composition** is False, return only Projections that are found outside the current Composition
+          -                                 and only if there are none found within the current Composition.
+          - if **in_composition** is ANY, return all existing Projections in or out of the current Composition.
+
+        If the condition specified above is satisfied, then return the Projection(s) found.
+        Otherwise, return False.
+
         IMPLEMENTATION NOTE:
             If the sender and/or the receiver is specified as a Mechanism, then any Projection between that Mechanism
             the other specification will be considered a match, irrespective of whether they use the same InputPorts
@@ -6572,19 +6591,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             f"PROGRAM ERROR: More than one identical projection found " \
             f"in {self.name}: {existing_projections_in_composition}."
 
-        # Return existing Projection only if it is in the current Composition
-        if in_composition is True:
-            if existing_projections_in_composition:
+        # Return existing Projection only if it is in the current Composition and there are no others
+        if in_composition is ONLY:
+            if existing_projections_in_composition and not existing_projections_not_in_composition:
                 return list(existing_projections_in_composition)
 
-        elif in_composition is ANY:
-            if existing_projections:
-                return existing_projections
+        # Return existing Projection only if it is in the current Composition irrespective of whether there are others
+        elif in_composition is True:
+            if existing_projections_in_composition:
+                return list(existing_projections_in_composition)
 
         # Return existing Projections only if all are *not* in the Composition
         elif in_composition is False:
             if existing_projections_not_in_composition and not existing_projections_in_composition:
                 return existing_projections_not_in_composition
+
+        # Return any existing Projection irrespective of whether they are in the current Composition
+        elif in_composition is ANY:
+            if existing_projections:
+                return existing_projections
+
         else:
             assert False, f"PROGRAM ERROR: Unrecognized value for in_composition arg ({in_composition})."
         return False
