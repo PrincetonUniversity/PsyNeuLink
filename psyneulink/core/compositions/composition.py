@@ -7468,6 +7468,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #         assert False, \
         #             f"PROGRAM ERROR: Bad pathway specification for {self.name} {pathway_arg_str}: {pathway}."
 
+
         # MODIFIED 8/1/23 NEW:
         # interleave (sets of) Nodes and (sets or lists of) Projections, removing Nones (for unspecified Projections)
         # Start with first node
