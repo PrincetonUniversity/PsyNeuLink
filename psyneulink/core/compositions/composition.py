@@ -6565,8 +6565,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for rcvr in receiver_ports:
                 existing_projections.extend([proj for proj in sndr.efferents if proj.receiver is rcvr])
 
-        existing_projections_in_composition = [proj for proj in existing_projections if proj in self.projections]
-        existing_projections_not_in_composition = set(existing_projections) - set(existing_projections_in_composition)
+        existing_projections_in_composition = [p for p in existing_projections if p in self.projections]
+        existing_projections_not_in_composition = [p for p in existing_projections if p not in self.projections]
         # Ensure that there is only a *single* existing Projection (if any) in the current Composition
         assert len(existing_projections_in_composition) <= 1, \
             f"PROGRAM ERROR: More than one identical projection found " \
@@ -6575,16 +6575,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Return existing Projection only if it is in the current Composition
         if in_composition is True:
             if existing_projections_in_composition:
-                return existing_projections_in_composition
+                return list(existing_projections_in_composition)
 
         elif in_composition is ANY:
             if existing_projections:
                 return existing_projections
 
         # Return existing Projections only if all are *not* in the Composition
-        else:
+        elif in_composition is False:
             if existing_projections_not_in_composition and not existing_projections_in_composition:
                 return existing_projections_not_in_composition
+        else:
+            assert False, f"PROGRAM ERROR: Unrecognized value for in_composition arg ({in_composition})."
         return False
 
     def _check_for_unnecessary_feedback_projections(self):
