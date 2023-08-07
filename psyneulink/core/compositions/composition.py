@@ -5946,7 +5946,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if sender and receiver and projection is None:
             existing_projections = self._check_for_existing_projections(sender=sender,
                                                                         receiver=receiver,
-                                                                        in_composition=False)
+                                                                        # in_composition=False
+                                                                        )
             if existing_projections:
                 if isinstance(sender, Port):
                     sender_check = sender.owner
@@ -6508,7 +6509,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        projection=None,
                                        sender=None,
                                        receiver=None,
-                                       in_composition:bool=True):
+                                       in_composition:bool=True)->list[Projection]:
         """Check for Projection between the same pair of Nodes
         If **in_composition** is True, return only Projections found in the current Composition
         If **in_composition** is False, return only Projections that are found outside the current Composition
@@ -6566,7 +6567,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             f"in {self.name}: {existing_projections_in_composition}."
         if in_composition:
             if existing_projections_in_composition:
-                return existing_projections_in_composition[0]
+                return existing_projections_in_composition
         else:
             if existing_projections and not existing_projections_in_composition:
                 return existing_projections
@@ -8619,9 +8620,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                          if (p in self.projections
                              and hasattr(p, 'has_learning_projection')
                              and p.has_learning_projection)]:
-            # For each LearningProjection to that afferent, if its LearningMechanism doesn't already receiver
+            # For each LearningProjection to that afferent, if its LearningMechanism doesn't already have a receiver
             for learning_projection in [lp for lp in afferent.parameter_ports[MATRIX].mod_afferents
                                         if (isinstance(lp, LearningProjection)
+                                            and lp.sender.owner.error_sources
                                             and error_source not in lp.sender.owner.error_sources
                                             and lp.sender.owner.learning_type is LearningType.SUPERVISED)]:
                 dependent_learning_mech = learning_projection.sender.owner

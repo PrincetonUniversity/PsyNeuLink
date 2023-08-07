@@ -14,7 +14,7 @@
 #   - SHOULD MEMORY DECAY OCCUR IF STORAGE DOES NOT? CURRENTLY IT DOES NOT (SEE EMStorage Function)
 
 # - FIX: IMPLEMENT LearningMechanism FOR RETRIEVAL WEIGHTS:
-#        - FIX DERIVATIVE OF LinearCombination for PRODUCT (need "fat" Jacobian, one for each InputPort)
+#        - Projections to COVARIATES dpn't seem to be getting added to Composition (getting warnins)
 #        - what is learning_update: AFTER doing?  Use for scheduling execution of storage_node?
 #        - search for learn_field_weights and attend to comments
 #        X implement derivative for concatenate
@@ -38,6 +38,7 @@
 #                for non-contiguous keys (e.g, field_weights = [1,0,1]))
 #         - explicitly that storage occurs after retrieval
 # - FIX: WARNING NOT OCCURRING FOR Normalize ON ZEROS WITH MULTIPLE ENTRIES (HAPPENS IF *ANY* KEY IS EVER ALL ZEROS)
+# - FIX: IMPLEMENT use OF multiple inheritance from AutoDiff and Composition
 # - FIX: DOCUMENTATION:
 #        - USE OF EMStore.storage_location (NONE => LOCAL, SPECIFIED => GLOBAL)
 #        - define "keys" and "values" explicitly
@@ -50,20 +51,33 @@
 # - FIX: ALLOW SOFTMAX SPEC TO BE A DICT WITH PARAMETERS FOR _get_softmax_gain() FUNCTION
 
 # - FIX: PSYNEULINK:
-#        - ADD DOCUMENTATION FOR MULTIPLE EXISTING PROJECTONS:
-#         IMPLEMENTATION NOTE:
-#             Currently if the sender and/or the receiver is specified as a Mechanism,
-#             a Projection from/to any of its OutputPorts/InputPorts will be considered a match.
-#             However, if both sender and receiver are specified as Ports, then only a Projection
-#             from the sender to the receiver will be considered a match, allowing other Projections
-#             to remain between that pair of Nodes.
-#        - Allow set of lists as specification for pathways in Composition
+#         - REFACTORING OF LEARNING:
+#           - LearningMechanism: Document that ERROR_SIGNAL is OPTIONAL
+#                               (only implemented when there is an error_source specified)
+#          - LLVM problem with ComparatorMechanism
+#          - CHECK FOR EXISTING LM ASSERT IN pytests
+#          - WRITE TESTS FOR USE OF COVARIATES AND RELATED VIOLATIONS: (see ScratchPad)
+#            - Use of LinearCombination with PRODUCT in output_source
+#            - Use of LinearCombination with PRODUCT in InputPort of output_source
+
 #        - AutodiffComposition:
-#          - allow it to learn with execution_mode=ExecutioMode.Python, with warning on initial call to learn()
+#          - DOCUMENTATION: execution_mode=ExecutioMode.Python allowed
+#          - Add warning of this on initial call to learn()
+
 #        - Composition:
+#          - Allow set of lists as specification for pathways in Composition
+#          - Make sure that shadow inputs (see InputPort_Shadow_Inputs) uses the same matrix as shadowed input.
+#          - composition.add_backpropagation_learning_pathway(): support use of set notation for multiple nodes that
+#          project to a single one.
 #          - add LearningProjections executed in EXECUTION_PHASE to self.projections
 #            and then remove MODIFIED 8/1/23 in _check_for_unused_projections
-#        - show_graph(): figure out how to get storage_node to show without all other learning stuff
+
+#        - show_graph():
+#          - figure out how to get storage_node to show without all other learning stuff
+#          - show 'operation' parameter for LinearCombination in show_node_structure=ALL
+#          - specify set of nodes to show and only show those
+#          - fix: show_learning=ALL (or merge from EM branch)
+
 #        - Composition.add_nodes():
 #           - should check, on each call to add_node, to see if one that has a releavantprojection and, if so, add it.
 #           - Allow [None] as argument and treat as []
@@ -2032,7 +2046,8 @@ class EMComposition(AutodiffComposition):
 
     def learn(self, *args, **kwargs):
         # FIX: Skip AutodiffComposition.learn for now, until Pytorch implementation is done
-        super(AutodiffComposition, self).learn(*args, **kwargs)
+        # super(AutodiffComposition, self).learn(*args, **kwargs)
+        super().learn(*args, **kwargs)
 
     def _update_learning_parameters(self, context):
         pass

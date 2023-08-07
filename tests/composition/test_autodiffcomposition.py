@@ -1776,20 +1776,21 @@ class TestMiscTrainingFunctionality:
         assert not np.allclose(pt_weights_hid, hid_map.parameters.matrix.get(None))
         assert not np.allclose(pt_weights_out, out_map.parameters.matrix.get(None))
 
-    def test_execution_mode_python_error(self):
-        A = TransferMechanism(name="learning-process-mech-A")
-        B = TransferMechanism(name="learning-process-mech-B")
-        adc = AutodiffComposition(name='AUTODIFFCOMP')
-        pway = adc.add_backpropagation_learning_pathway(pathway=[A,B])
-        # Call learn with default_variable specified for target (for comparison with missing target)
-        with pytest.raises(AutodiffCompositionError) as error:
-            adc.learn(inputs={A: 1.0,
-                              pway.target: 0.0},
-                      execution_mode=pnl.ExecutionMode.Python,
-                      num_trials=2)
-        assert error.value.error_value == 'AUTODIFFCOMP is an AutodiffComposition so its learn() ' \
-                                          'cannot be called with execution_mode = ExecutionMode.Python; ' \
-                                          'use ExecutionMode.PyTorch or ExecutionMode.LLVMRun.'
+    # NOW PERMITTED:
+    # def test_execution_mode_python_error(self):
+    #     A = TransferMechanism(name="learning-process-mech-A")
+    #     B = TransferMechanism(name="learning-process-mech-B")
+    #     adc = AutodiffComposition(name='AUTODIFFCOMP')
+    #     pway = adc.add_backpropagation_learning_pathway(pathway=[A,B])
+    #     # Call learn with default_variable specified for target (for comparison with missing target)
+    #     with pytest.raises(AutodiffCompositionError) as error:
+    #         adc.learn(inputs={A: 1.0,
+    #                           pway.target: 0.0},
+    #                   execution_mode=pnl.ExecutionMode.Python,
+    #                   num_trials=2)
+    #     assert error.value.error_value == 'AUTODIFFCOMP is an AutodiffComposition so its learn() ' \
+    #                                       'cannot be called with execution_mode = ExecutionMode.Python; ' \
+    #                                       'use ExecutionMode.PyTorch or ExecutionMode.LLVMRun.'
 
 @pytest.mark.pytorch
 @pytest.mark.actime

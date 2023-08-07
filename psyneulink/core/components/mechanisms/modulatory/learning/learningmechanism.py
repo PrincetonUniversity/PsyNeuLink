@@ -349,9 +349,9 @@ refer to the Components being learned and/or its operation:
   `error_sources <LearningMechanism.error_sources>`;  that is, of any of the `output_source
   <LearningMechanism.output_source>`'s `efferents <OutputPorts.efferents>` that are also being learned.
 ..
-* `covariates_sources` - the `Mechanism>`(s) that provide covariates used in calculating the derivative of the
-  `output_source <LearningMechanism.output_source>`'s `function <Mechanism_Base.function>` (see `above
-    <LearningMechanism_Covariates>`), and project to its *COVARIATES* `InputPort <LearningMechanism_Covariates>`.
+* `covariates_sources` - the `InputPort`s of `Mechanism`(s) that provide covariates used in calculating the derivative
+  of the `output_source <LearningMechanism.output_source>`'s `function <Mechanism_Base.function>` (see `above
+  `LearningMechanism_Covariates`), and project to its *COVARIATES* `InputPort <LearningMechanism_Covariates>`.
 ..
 * `modulation` - the default value used for the `modulation <LearningSignal.modulation>` attribute of
   LearningMechanism's `LearningSignals <LearningSignal>` (i.e. those for which it is not explicitly specified).
