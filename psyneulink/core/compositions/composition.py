@@ -7490,7 +7490,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if pre_existing_Pathway and (specified_pathway == parsed_pathway):
             # FIX: 8/8/23 CHANGE ERROR MESSAGE HERE AND IN TESTS TO: "the latter will be used"
             warnings.warn(f"Pathway specified {pathway_arg_str} is identical to one already in '{self.name}': "
-                          f"{pre_existing_Pathway.name}; the latter will be used.")
+                          f"'{pre_existing_Pathway.name}'; the latter will be used.")
             return pre_existing_Pathway
 
         # If the parsed (inferred) pathway used existing components and is identical to the specified one
@@ -8221,7 +8221,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Add pathway to graph and get its full specification (includes all ProcessingMechanisms and MappingProjections)
         # Pass ContextFlags.INITIALIZING so that it can be passed on to _analyze_graph() and then
         #    _check_for_projection_assignments() in order to ignore checks for require_projection_in_composition
-        context.string = f"in 'pathway' arg for add_backpropagation_learning_pathway method of {self.name}"
+        context.string = f"in 'pathway' arg for add_backpropagation_learning_pathway method of '{self.name}'"
         learning_pathway = self.add_linear_processing_pathway(pathway=pathway,
                                                               name=name,
                                                               default_projection_matrix=default_projection_matrix,

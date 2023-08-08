@@ -1168,11 +1168,8 @@ class TestDuplicatePathwayWarnings:
         comp = Composition()
         comp.add_backpropagation_learning_pathway(pathway=[A,P,B])
 
-        regexp = f"Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method of {comp.name} " \
-                 f"already exists in {comp.name}.*; it will be ignored"
-
-                 f"Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method of '{comp.name}' " \
-                 f"is identical to one already in '{comp.name}': Pathway-0; the latter will be used."
+        regexp = f"Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method of " \
+                 f"'{comp.name}' is identical to one already in '{comp.name}': 'Pathway-0'; the latter will be used."
 
         with pytest.warns(UserWarning, match=regexp):
             comp.add_backpropagation_learning_pathway(pathway=[A,P,B])
@@ -1184,11 +1181,9 @@ class TestDuplicatePathwayWarnings:
         comp = Composition()
         comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
 
-        regexp = f"Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method of {comp.name} " \
-                 f"already exists in {comp.name}.*; it will be ignored"
+        regexp = f"Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method of '{comp.name}' " \
+                 f"has same Nodes in same order as one already in '{comp.name}':.*; the latter will be used."
 
-        regexp = f"Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method of {comp.name} " \
-                 f"has same Nodes in same order as one already in {comp.name}: .*; the latter will be used."
         with pytest.warns(UserWarning, match=regexp):
             comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
 
@@ -1199,8 +1194,8 @@ class TestDuplicatePathwayWarnings:
         comp = Composition()
         comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
 
-        regexp = "Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method .*"\
-                 f"has same Nodes in same order as one already in {comp.name}"
+        regexp = f"Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method of '{comp.name}'" \
+                 f" has a subset of nodes in a Pathway already in '{comp.name}':.*; the latter will be used."
         with pytest.warns(UserWarning, match=regexp):
             comp.add_backpropagation_learning_pathway(pathway=[A,B])
 
