@@ -4885,7 +4885,7 @@ class TransferWithCosts(TransferFunction):
         trans_in = arg_in
         trans_out = arg_out
         builder.call(trans_f, [trans_p, trans_s, trans_in, trans_out])
-        intensity_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, self.parameters.intensity.name)
+        intensity_ptr = pnlvm.helpers.get_state_space(builder, self, state, self.parameters.intensity.name)
 
         costs = [(self.parameters.intensity_cost_fct, CostFunctions.INTENSITY, self.parameters.intensity_cost),
                  (self.parameters.adjustment_cost_fct, CostFunctions.ADJUSTMENT, self.parameters.adjustment_cost),
@@ -4899,7 +4899,7 @@ class TransferWithCosts(TransferFunction):
                 cost_f = ctx.import_llvm_function(func.get())
                 cost_p = pnlvm.helpers.get_param_ptr(builder, self, params, func.name)
                 cost_s = pnlvm.helpers.get_state_ptr(builder, self, state, func.name)
-                cost_out = pnlvm.helpers.get_state_ptr(builder, self, state, out.name)
+                cost_out = pnlvm.helpers.get_state_space(builder, self, state, out.name)
                 cost_in = trans_out
 
                 if flag == CostFunctions.ADJUSTMENT:
