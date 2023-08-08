@@ -1397,7 +1397,10 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "enabled_cost_functions", "control_signal_costs",
                      "default_allocation", "same_seed_for_all_allocations",
                      "search_statefulness", "initial_seed", "combine",
-                     "random_variables", "smoothing_factor",
+                     "random_variables", "smoothing_factor", "per_item",
+                     "key_size", "val_size", "max_entries", "random_draw",
+                     "randomization_dimension", "save_values", "save_samples",
+                     "max_iterations",
                      # not used in compiled learning
                      "learning_results", "learning_signal", "learning_signals",
                      "error_matrix", "error_signal", "activation_input",
@@ -1419,7 +1422,16 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             blacklist.update(['combination_function'])
 
         def _is_compilation_param(p):
-            if p.name not in blacklist and not isinstance(p, (ParameterAlias, SharedParameter)):
+            def _is_user_only_param(p):
+                if p.read_only and p.getter is not None:
+                    return True
+                if isinstance(p, (ParameterAlias, SharedParameter)):
+                    return True
+
+                return False
+
+
+            if p.name not in blacklist and not _is_user_only_param(p):
                 # FIXME: this should use defaults
                 val = p.get()
                 # Check if the value type is valid for compilation
