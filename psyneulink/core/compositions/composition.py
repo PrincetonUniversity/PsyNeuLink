@@ -7519,12 +7519,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 warnings.warn(f"Pathway specified {pathway_arg_str} has a subset of nodes in a Pathway already "
                               f"in '{self.name}': {pre_existing_Pathway.name}; the latter will be used.")
 
-            # Same nodes but no/fewer Projection, and inferred Projections were identical to existing ones so warn
-            elif self._pre_existing_pathway_components[PROJECTIONS]:
-                warnings.warn(f"Pathway assigned to {pathway_arg_str} specified Projections already in '{self.name}': "
-                              f"the latter will be used.")
-            # MODIFIED 8/7/23 END
-            #
+            # Same nodes but no/fewer Projections
+            elif ([node for node in specified_pathway if not isinstance(node, Projection)]
+                  == [node for node in parsed_pathway  if not isinstance(node, Projection)]):
+                # Warn if inferred Projections were identical to existing ones so warn
+                if self._pre_existing_pathway_components[PROJECTIONS]:
+                    warnings.warn(f"Pathway assigned to {pathway_arg_str} specified Projections already in "
+                                  f"'{self.name}': the latter will be used.")
+
             # Shorter because it contained one or more ControlMechanisms with monitor_for_control specified
             #    or an ObjectiveMechanism that projects to a ControlMechanism.
             elif parsed_pathway == [m for m in specified_pathway if not (
@@ -7712,7 +7714,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pathway_arg_str = context.string
         # Otherwise, refer to call from this method
         else:
-            pathway_arg_str = f"in 'pathway' arg for add_linear_procesing_pathway method of {self.name}"
+            pathway_arg_str = f"in 'pathway' arg for add_linear_processing_pathway method of {self.name}"
         context.source = ContextFlags.METHOD
         context.string = pathway_arg_str
 

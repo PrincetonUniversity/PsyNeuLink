@@ -792,7 +792,7 @@ class TestCompositionPathwayArgsAndAdditionMethods:
         c = Composition()
 
         regexp = "LearningFunction found in 'pathway' arg for "\
-                 "add_linear_procesing_pathway method .*"\
+                 "add_linear_processing_pathway method .*"\
                 r"Reinforcement'>; it will be ignored"
         with pytest.warns(UserWarning, match=regexp):
             c.add_linear_processing_pathway(pathway=p)
@@ -825,7 +825,7 @@ class TestCompositionPathwayArgsAndAdditionMethods:
         with pytest.raises(pnl.CompositionError) as error_text:
             c.add_linear_learning_pathway(pathway=p, learning_function=BackPropagation)
         assert ("Specification in 'pathway' arg for " in str(error_text.value) and
-                "add_linear_procesing_pathway method" in str(error_text.value) and
+                "add_linear_processing_pathway method" in str(error_text.value) and
                 "contains a tuple that specifies a different LearningFunction (Reinforcement)" in str(error_text.value)
                 and "than the one specified in its 'learning_function' arg (BackPropagation)" in str(error_text.value))
 
@@ -1116,7 +1116,7 @@ class TestCompositionPathwayArgsAndAdditionMethods:
         with pytest.raises(pnl.CompositionError) as error_text:
             C.add_backpropagation_learning_pathway(pathway=[A,C])
         assert f"Attempt to add Composition as a Node to itself in 'pathway' arg for " \
-               f"add_backpropagation_learning_pathway method of {C.name}." in str(error_text.value)
+               f"add_backpropagation_learning_pathway method of '{C.name}'." in str(error_text.value)
 
 
 @pytest.mark.pathways
@@ -3626,8 +3626,9 @@ class TestRun:
         with pytest.raises(CompositionError) as error_text:
             comp.add_linear_processing_pathway([A, A_to_B, B, C, D, E, C_to_E])
 
-        assert ("The last item in \'pathway\' arg for add_linear_procesing_pathway method" in str(error_text.value)
+        assert ("The last item in \'pathway\' arg for add_linear_processing_pathway method" in str(error_text.value)
                 and "cannot be a Projection:" in str(error_text.value))
+        
 
     def test_LPP_two_projections_in_a_row(self):
         comp = Composition()
@@ -3638,7 +3639,7 @@ class TestRun:
         B_to_C = MappingProjection(sender=B, receiver=C)
         with pytest.raises(CompositionError) as error_text:
             comp.add_linear_processing_pathway([A, B_to_C, A_to_B, B, C])
-        assert ("A Projection specified in \'pathway\' arg for add_linear_procesing_pathway" in str(error_text.value)
+        assert ("A Projection specified in \'pathway\' arg for add_linear_processing_pathway" in str(error_text.value)
                 and "is not between two Nodes:" in str(error_text.value))
 
     def test_LPP_start_with_projection(self):
@@ -3648,7 +3649,7 @@ class TestRun:
         B = TransferMechanism(name="composition-pytests-B", function=Linear(slope=2.0))
         with pytest.raises(CompositionError) as error_text:
             comp.add_linear_processing_pathway([Nonsense_Projection, A, B])
-        assert ("First item in 'pathway' arg for add_linear_procesing_pathway method" in str(error_text.value)
+        assert ("First item in 'pathway' arg for add_linear_processing_pathway method" in str(error_text.value)
                 and "must be a Node (Mechanism or Composition)" in str(error_text.value))
 
     def test_LPP_wrong_component(self):
@@ -3660,7 +3661,7 @@ class TestRun:
         with pytest.raises(CompositionError) as error_text:
             comp.add_linear_processing_pathway([A, Nonsense, B])
         assert ("Bad Projection specification in \'pathway\' arg " in str(error_text.value)
-                and "for add_linear_procesing_pathway method" in str(error_text.value)
+                and "for add_linear_processing_pathway method" in str(error_text.value)
                 and "Attempt to assign Projection" in str(error_text.value)
                 and "using InputPort" in str(error_text.value)
                 and "that is in deferred init" in str(error_text.value))
