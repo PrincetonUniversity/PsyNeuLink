@@ -8320,8 +8320,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                           learning_update,
                                                           context):
 
-        # FIX: 8/1/23: CONSIDER MOVING ALL OF THIS TO LEARNING_MECHAINSM,
-        #              TO BE INFERRED FROM output_source IN _instantiate_input_ports
         def _get_covariate_info(output_source, learned_projection)->(list[InputPort]):
             """Get the templates and Projections from potential covariates"""
             def _non_additive_comb_fct(function, allow)->Union[bool, None]:
