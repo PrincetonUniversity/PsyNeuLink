@@ -1178,15 +1178,12 @@ class Distance(ObjectiveFunction):
 
         # Cosine similarity of v1 and v2
         elif self.metric in {COSINE, COSINE_SIMILARITY}:
-            # result = np.correlate(v1, v2)
             result = 1.0 - np.fabs(Distance.cosine(v1, v2))
-            return self.convert_output_type(result)
 
         # Correlation of v1 and v2
         elif self.metric == CORRELATION:
             # result = np.correlate(v1, v2)
             result = 1.0 - np.fabs(Distance.correlation(v1, v2))
-            return self.convert_output_type(result)
 
         # FIX: IMPLEMENT VERSION THAT DIRECTLY COMPUTES THE LUCE RATIO
         # Cross-entropy of v1 and v2
@@ -1207,7 +1204,7 @@ class Distance(ObjectiveFunction):
         else:
             assert False, '{} not a recognized metric in {}'.format(self.metric, self.__class__.__name__)
 
-        if self.normalize and self.metric not in {MAX_ABS_DIFF, CORRELATION}:
+        if self.normalize and self.metric not in {MAX_ABS_DIFF, CORRELATION, COSINE, COSINE_SIMILARITY}:
             if self.metric == ENERGY:
                 result /= len(v1) ** 2.0
             else:
