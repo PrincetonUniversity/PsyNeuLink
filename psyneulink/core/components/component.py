@@ -1406,7 +1406,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "error_matrix", "error_signal", "activation_input",
                      "activation_output", "error_sources", "covariates_sources"
                      }
-        # Mechanism's need few extra entires:
+        # Mechanism's need few extra entries:
         # * matrix -- is never used directly, and is flatened below
         # * integration rate -- shape mismatch with param port input
         if hasattr(self, 'ports'):
