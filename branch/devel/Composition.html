@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.14.0.0+20.g9a9ef686a documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.14.0.0+26.g95cd326c5 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.14.0.0+20
+                  0.14.0.0+26
                 </div>
               
             
@@ -3878,7 +3878,9 @@ Return relevant port of relevant CIM if found and nested Composition in which it
 <span class="sig-name descname"><span class="pre">add_projections</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">projections</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_projections" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calls <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.add_projection" title="psyneulink.core.compositions.composition.Composition.add_projection"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">add_projection</span></code></a> for each Projection in the <em>projections</em> list. Each
 Projection must have its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a> and <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">receiver</span></code></a>
-already specified.  If an item in the list is a list of projections, called recursively on that list.</p>
+already specified.  If an item in the list is a list of projections, <code class="docutils literal notranslate"><span class="pre">add_projections</span></code> is called
+recursively on that list.  See <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.add_projection" title="psyneulink.core.compositions.composition.Composition.add_projection"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">add_projection</span></code></a> for additional details
+of how duplicates are determined and handled.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>projections</strong> (<em>list of Projections</em>) – list of Projections to be added to the Composition</p>
@@ -3906,12 +3908,18 @@ of <strong>projection</strong>.</p></li>
 <li><p>if there is more than one, an exception is raised as this should never be the case</p></li>
 </ul>
 </div></blockquote>
-<ul class="simple">
+<ul>
 <li><p>if it is NOT in the Composition:
-- if there is only one, that Projection is used;
-- if there is more than one, the last in the list (presumably the most recent) is used;
-in either case, processing continues, to activate it for the Composition,
-construct any “shadow” projections that may be specified, and assign feedback if specified.</p></li>
+- if there is only one, that Projection is used (it can be between any pair of the sender’s OutputPort</p>
+<blockquote>
+<div><p>and receiver’s InputPort)</p>
+</div></blockquote>
+<ul class="simple">
+<li><p>if there is more than one, the last in the list (presumably the most recent) is used;</p></li>
+</ul>
+<p>in either case, processing continues, to activate it for the Composition,
+construct any “shadow” projections that may be specified, and assign feedback if specified.</p>
+</li>
 </ul>
 </li>
 <li><p>if the status of <strong>projection</strong> is <code class="xref any docutils literal notranslate"><span class="pre">deferred_init</span></code>:</p>
@@ -3934,7 +3942,11 @@ generated and the request is ignored.</p>
 </div>
 <div class="technical-note docutils container">
 <p>Duplicates are determined by the <a class="reference internal" href="Port.html"><span class="doc">Ports</span></a> to which they project, not the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>
-(to allow multiple Projections to exist between the same pair of Mechanisms using different Ports).
+(to allow multiple Projections to exist between the same pair of Mechanisms using different Ports);
+If the sender and/or the receiver is specified as a Mechanism, a Projection from any of a specified
+sender’s OutputPorts to any of a specified receiver’s InputPorts will be considered a match. However,
+if both sender and receiver are specified as Ports, then only a Projection from the sender to the receiver
+will be considered a match, allowing other Projections to remain between that pair of Nodes.
 ..
 If an already instantiated Projection is passed to add_projection and is a duplicate of an existing one,
 it is detected and suppressed, with a warning, in Port._instantiate_projections_to_port.
@@ -4000,9 +4012,17 @@ in the Composition, else False.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition._check_for_existing_projections">
 <span class="sig-name descname"><span class="pre">_check_for_existing_projections</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">projection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sender</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">receiver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_composition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition._check_for_existing_projections" title="Permalink to this definition">¶</a></dt>
-<dd><p>Check for Projection with same sender and receiver
+<dd><p>Check for Projection between the same pair of Nodes
 If <strong>in_composition</strong> is True, return only Projections found in the current Composition
-If <strong>in_composition</strong> is False, return only Projections that are found outside the current Composition</p>
+If <strong>in_composition</strong> is False, return only Projections that are found outside the current Composition
+IMPLEMENTATION NOTE:</p>
+<blockquote>
+<div><p>Currently if the sender and/or the receiver is specified as a Mechanism,
+a Projection from/to any of its OutputPorts/InputPorts will be considered a match.
+However, if both sender and receiver are specified as Ports, then only a Projection
+from the sender to the receiver will be considered a match, allowing other Projections
+to remain between that pair of Nodes.</p>
+</div></blockquote>
 <p>Return Projection or list of Projections that satisfies the conditions, else False</p>
 </dd></dl>
 
