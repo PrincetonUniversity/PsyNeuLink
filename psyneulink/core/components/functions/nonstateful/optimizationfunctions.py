@@ -1747,8 +1747,7 @@ class GridSearch(OptimizationFunction):
         # remove the attribute for 'samples_ptr'.
         samples_ptr.attributes.remove('nonnull')
 
-        random_state = pnlvm.helpers.get_state_ptr(builder, self, state,
-                                                   self.parameters.random_state.name)
+        random_state = ctx.get_random_state_ptr(builder, self, state, params)
         select_random_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
                                                         self.parameters.select_randomly_from_optimal_values.name)
 

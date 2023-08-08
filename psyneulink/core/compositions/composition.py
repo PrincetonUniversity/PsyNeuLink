@@ -7113,7 +7113,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    else {pathway[c - 1]})
                 if all(_is_node_spec(sender) for sender in preceding_entry):
                     senders = _get_node_specs_for_entry(preceding_entry, NodeRole.OUTPUT)
-                    # # MODIFIED 8/1/23 OLD:
                     projs = {self.add_projection(sender=s, receiver=r,
                                                  default_matrix=default_projection_matrix,
                                                  allow_duplicates=False)

@@ -1466,6 +1466,11 @@ class LearningMechanism(ModulatoryMechanism_Base):
         summed_learning_signal = 0
         summed_error_signal = 0
 
+        # FIX: DEAL WITH POSSIBILITY OF MORE THAN ONE VALUE IN ACTIVATION INPUT
+        #   (IF activation_function HAS MORE THAN ONE ARGUMENT);
+        #   PASS LEARNING FUNCTION THE INDEX OF THE ONE WRT WHICH THE DERIVATIVE SHOULD BE COMPUTED
+        #   AS THE index_of_derivative ARGUMENT, WHICH THE DERIVATIVE OF THE FUNCTION MUST BE ABLE TO ACCEPT
+        #   IN ITS "params" ARGUMENT (SHOUDL BE PUT THERE BY component AS FOR LearningFunctions)
         # Compute learning_signal for each error_signal (and corresponding error-Matrix):
         for error_signal_input, error_matrix in zip(error_signal_inputs, error_matrices):
             function_variable = convert_to_np_array([variable[ACTIVATION_INPUT_INDEX],
