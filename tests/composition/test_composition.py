@@ -1156,7 +1156,7 @@ class TestDuplicatePathwayWarnings:
         comp.add_linear_processing_pathway(pathway=[A,B,C])
 
         regexp = f"Pathway specified in 'pathway' arg for add_linear_processing_pathway method of '{comp.name}' " \
-                 f"has a subset of nodes in a Pathway already in '{comp.name}': that Pathway will be used."
+                 f"has a subset of nodes in a Pathway already in '{comp.name}': Pathway-0; the latter will be used."
         with pytest.warns(UserWarning, match=regexp):
             comp.add_linear_processing_pathway(pathway=[A,B])
             assert True
@@ -1170,6 +1170,10 @@ class TestDuplicatePathwayWarnings:
 
         regexp = f"Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method of {comp.name} " \
                  f"already exists in {comp.name}.*; it will be ignored"
+
+                 f"Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method of '{comp.name}' " \
+                 f"is identical to one already in '{comp.name}': Pathway-0; the latter will be used."
+
         with pytest.warns(UserWarning, match=regexp):
             comp.add_backpropagation_learning_pathway(pathway=[A,P,B])
 

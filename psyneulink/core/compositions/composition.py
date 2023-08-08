@@ -7492,47 +7492,33 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             warnings.warn(f"Pathway specified {pathway_arg_str} is identical to one already in '{self.name}': "
                           f"{pre_existing_Pathway.name}; the latter will be used.")
             return pre_existing_Pathway
-        # If the explicit pathway is shorter than the one specified, then need to do more checking
-        # # MODIFIED 8/8/23 OLD:
-        # elif len(parsed_pathway) < len(specified_pathway):
 
-        # MODIFIED 8/8/23 NEW:
         # If the parsed (inferred) pathway used existing components and is identical to the specified one
         elif parsed_pathway == specified_pathway and \
                 (self._pre_existing_pathway_components[NODES] or self._pre_existing_pathway_components[PROJECTIONS]):
-            # FIX: 8/8/23 CHANGE ERROR MESSAGE HERE AND IN test_add_processing_pathway_exact_duplicate_warning
-            #             TO: "and so specification will be ignored"
-            warnings.warn(f"Pathway specified {pathway_arg_str} is identical to one that already exists in "
-                          f"'{self.name}': {specified_pathway.name}; the existing one will be used.")
-        # MODIFIED 8/8/23 END
+            if self.prefs.verbosePref:
+                warnings.warn(f"Pathway specified {pathway_arg_str} uses Nodes and/or Projections already in "
+                              f"'{self.name}'.")
 
         # Elements of parsed pathway were inferred (i.e., not explicitly specified in specified_pathway)
         elif len(specified_pathway) < len(parsed_pathway):
-        # MODIFIED 8/8/23 END
-            # Note: nodes are not inferred, so only need to check their order
-            # If all nodes are in the same order, then it is either an existing Pathway or Projections were inferred
-            # Existing Pathway:
-            # pre_existing_Pathway = next((P for P in self.pathways
-            #                          if [item for P in self.pathways for item in P.pathway
-            #                              if not isinstance(item, Projection)]), None)
+
+            # Resulting (parsed) pathway is identical to an existing one
             pre_existing_Pathway = next((P for P in self.pathways if parsed_pathway==P.pathway), None)
             if pre_existing_Pathway:
-                # Same as pre-existing Pathway, so use that
                 warnings.warn(f"Pathway specified {pathway_arg_str} has same Nodes in same order as "
                               f"one already in '{self.name}': {pre_existing_Pathway.name}; the latter will be used.")
                 return pre_existing_Pathway
-            # # MODIFIED 8/7/23 NEW:
-            elif next((P for P in self.pathways if
-                       [[s for s in specified_pathway if not isinstance(s, Projection)]
-                        for i in range(len([p for p in P.pathway if not isinstance(p, Projection)]))
-                        if [p for p in P.pathway
-                            if not isinstance(p, Projection)][i:i+len([s for s in specified_pathway
-                                                                       if not isinstance(s, Projection)])] ==
-                           [s for s in specified_pathway if not isinstance(s, Projection)]]), None):
-                       # [s for s in specified_pathway if not isinstance(s, Projection)]
-                       # [p for p in P.pathway if not isinstance(p, Projection)]
+
+            # Specified pathway has a subset of nodes of those in an existing Pathway
+            pre_existing_Pathway = \
+                next((P for P in self.pathways if
+                      str([s for s in specified_pathway if not isinstance(s, Projection)]).strip('[]') \
+                      in str([s for s in specified_pathway if not isinstance(s, Projection)]).strip('[]')), None)
+            if pre_existing_Pathway:
                 warnings.warn(f"Pathway specified {pathway_arg_str} has a subset of nodes in a Pathway already "
-                              f"in '{self.name}': that Pathway will be used.")
+                              f"in '{self.name}': {pre_existing_Pathway.name}; the latter will be used.")
+
             # Same nodes but no/fewer Projection, and inferred Projections were identical to existing ones so warn
             elif self._pre_existing_pathway_components[PROJECTIONS]:
                 warnings.warn(f"Pathway assigned to {pathway_arg_str} specified Projections already in '{self.name}': "
