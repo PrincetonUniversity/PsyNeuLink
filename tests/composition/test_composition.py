@@ -1108,7 +1108,7 @@ class TestCompositionPathwayArgsAndAdditionMethods:
         with pytest.raises(pnl.CompositionError) as error_text:
             C.add_linear_processing_pathway(pathway=[A,C])
         assert f"Attempt to add Composition as a Node to itself in 'pathway' arg for " \
-               f"add_linear_procesing_pathway method of '{C.name}'." in str(error_text.value)
+               f"add_linear_processing_pathway method of '{C.name}'." in str(error_text.value)
 
     def test_for_add_learning_pathway_recursion_error(self):
         A = TransferMechanism()
@@ -1129,8 +1129,9 @@ class TestDuplicatePathwayWarnings:
         comp = Composition()
         comp.add_linear_processing_pathway(pathway=[A,P,B])
 
-        regexp = "Pathway specified in 'pathway' arg for add_linear_procesing_pathway method .*"\
-                f"already exists in {comp.name}"
+        regexp = f"Pathway specified in 'pathway' arg for add_linear_processing_pathway method of '{comp.name}' " \
+                 f"is identical to one already in '{comp.name}': .*; the latter will be used."
+
         with pytest.warns(UserWarning, match=regexp):
             comp.add_linear_processing_pathway(pathway=[A,P,B])
 
@@ -1141,8 +1142,9 @@ class TestDuplicatePathwayWarnings:
         comp = Composition()
         comp.add_linear_processing_pathway(pathway=[A,B,C])
 
-        regexp = "Pathway specified in 'pathway' arg for add_linear_procesing_pathway method .*"\
-                f"has same Nodes in same order as one already in {comp.name}"
+        regexp = f"Pathway specified in 'pathway' arg for add_linear_processing_pathway method of '{comp.name}' " \
+                 f"has same Nodes in same order as one already in '{comp.name}':.*; the latter will be used."
+
         with pytest.warns(UserWarning, match=regexp):
             comp.add_linear_processing_pathway(pathway=[A,B,C])
 
@@ -1153,8 +1155,8 @@ class TestDuplicatePathwayWarnings:
         comp = Composition()
         comp.add_linear_processing_pathway(pathway=[A,B,C])
 
-        regexp = "Pathway specified in 'pathway' arg for add_linear_procesing_pathway method .*"\
-                 f"has same Nodes in same order as one already in {comp.name}"
+        regexp = f"Pathway specified in 'pathway' arg for add_linear_processing_pathway method of '{comp.name}' " \
+                 f"has a subset of nodes in a Pathway already in '{comp.name}': that Pathway will be used."
         with pytest.warns(UserWarning, match=regexp):
             comp.add_linear_processing_pathway(pathway=[A,B])
             assert True
@@ -1166,8 +1168,8 @@ class TestDuplicatePathwayWarnings:
         comp = Composition()
         comp.add_backpropagation_learning_pathway(pathway=[A,P,B])
 
-        regexp = "Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method .*"\
-                f"already exists in {comp.name}"
+        regexp = f"Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method of {comp.name} " \
+                 f"already exists in {comp.name}.*; it will be ignored"
         with pytest.warns(UserWarning, match=regexp):
             comp.add_backpropagation_learning_pathway(pathway=[A,P,B])
 
@@ -1178,8 +1180,11 @@ class TestDuplicatePathwayWarnings:
         comp = Composition()
         comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
 
-        regexp = "Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method .*"\
-               f"has same Nodes in same order as one already in {comp.name}"
+        regexp = f"Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method of {comp.name} " \
+                 f"already exists in {comp.name}.*; it will be ignored"
+
+        regexp = f"Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method of {comp.name} " \
+                 f"has same Nodes in same order as one already in {comp.name}: .*; the latter will be used."
         with pytest.warns(UserWarning, match=regexp):
             comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
 
@@ -5099,7 +5104,7 @@ class TestNestedCompositions:
         assert result == [4500]
 
     @pytest.mark.control
-    @pytest.mark.parametrize('nesting', ("unnested", "nested"))
+    @pytest.mark.parametrize('nesting', ("unnested","nested"))
     def test_partially_overlapping_local_and_control_mech_control_specs_in_unnested_and_nested_comp(self, nesting):
         pnl.clear_registry()
         samples = np.arange(0.1, 1.01, 0.3)
