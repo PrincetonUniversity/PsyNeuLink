@@ -64,6 +64,10 @@
 #            - Use of LinearCombination with PRODUCT in InputPort of output_source
 
 #        - AutodiffComposition:
+#          - Input construction has to be:
+#                   same for Autodiff in Python mode and PyTorch mode
+#                   and different from Composition (in Python mode)
+#                - test: test_identicalness_of_input_types
 #          - DOCUMENTATION: execution_mode=ExecutionMode.Python allowed
 #          - Add warning of this on initial call to learn()
 
