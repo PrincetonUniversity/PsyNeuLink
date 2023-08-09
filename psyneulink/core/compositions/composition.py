@@ -7494,8 +7494,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return pre_existing_Pathway
 
         # If the parsed (inferred) pathway used existing components and is identical to the specified one
-        elif parsed_pathway == specified_pathway and \
-                (self._pre_existing_pathway_components[NODES] or self._pre_existing_pathway_components[PROJECTIONS]):
+        elif (len(parsed_pathway) == len(specified_pathway) and
+              all(parsed == specified for parsed, specified in zip(parsed_pathway, specified_pathway)
+                  if (not isinstance(parsed, Projection) or isinstance(specified, Projection))) and
+              (self._pre_existing_pathway_components[NODES] or self._pre_existing_pathway_components[PROJECTIONS])):
             if self.prefs.verbosePref:
                 warnings.warn(f"Pathway specified {pathway_arg_str} uses Nodes and/or Projections already in "
                               f"'{self.name}'.")
@@ -7513,7 +7515,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Specified pathway has a subset of nodes of those in an existing Pathway
             pre_existing_Pathway = \
                 next((P for P in self.pathways if
-                      str([s for s in specified_pathway if not isinstance(s, Projection)]).strip('[]') \
+                      str([s for s in specified_pathway if not isinstance(s, Projection)]).strip('[]')
                       in str([s for s in specified_pathway if not isinstance(s, Projection)]).strip('[]')), None)
             if pre_existing_Pathway:
                 warnings.warn(f"Pathway specified {pathway_arg_str} has a subset of nodes in a Pathway already "
@@ -7521,7 +7523,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Same nodes but no/fewer Projections
             elif ([node for node in specified_pathway if not isinstance(node, Projection)]
-                  == [node for node in parsed_pathway  if not isinstance(node, Projection)]):
+                  == [node for node in parsed_pathway if not isinstance(node, Projection)]):
                 # Warn if inferred Projections were identical to existing ones so warn
                 if self._pre_existing_pathway_components[PROJECTIONS]:
                     warnings.warn(f"Pathway assigned to {pathway_arg_str} specified Projections already in "

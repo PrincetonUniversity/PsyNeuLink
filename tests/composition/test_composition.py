@@ -3628,7 +3628,6 @@ class TestRun:
 
         assert ("The last item in \'pathway\' arg for add_linear_processing_pathway method" in str(error_text.value)
                 and "cannot be a Projection:" in str(error_text.value))
-        
 
     def test_LPP_two_projections_in_a_row(self):
         comp = Composition()
