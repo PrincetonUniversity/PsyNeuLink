@@ -599,7 +599,9 @@ class AutodiffComposition(Composition):
         return ret
 
     def learn(self, *args, **kwargs):
-        if self._built_pathways is False:
+        # if self._built_pathways is False:
+        if (self._built_pathways is False
+                and ('execution_mode' not in kwargs or kwargs['execution_mode'] is not pnlvm.ExecutionMode.Python)):
             self.infer_backpropagation_learning_pathways()
             self._built_pathways = True
 
@@ -647,6 +649,38 @@ class AutodiffComposition(Composition):
                 report=None,
                 report_num=None,
                 ):
+
+        # MODIFIED 8/8/23 NEW:
+        # if execution_mode is pnlvm.ExecutionMode.Python:
+        #     return super().execute(inputs=inputs,
+        #                            num_trials=num_trials,
+        #                            minibatch_size=minibatch_size,
+        #                            do_logging=do_logging,
+        #                            scheduler=scheduler,
+        #                            termination_processing=termination_processing,
+        #                            call_before_minibatch=call_before_minibatch,
+        #                            call_after_minibatch=call_after_minibatch,
+        #                            call_before_time_step=call_before_time_step,
+        #                            call_before_pass=call_before_pass,
+        #                            call_after_time_step=call_after_time_step,
+        #                            call_after_pass=call_after_pass,
+        #                            reset_stateful_functions_to=reset_stateful_functions_to,
+        #                            context=context,
+        #                            base_context=base_context,
+        #                            clamp_input=clamp_input,
+        #                            targets=targets,
+        #                            runtime_params=runtime_params,
+        #                            skip_initialization=skip_initialization,
+        #                            report_output=report_output,
+        #                            report_params=report_params,
+        #                            report_progress=report_progress,
+        #                            report_simulations=report_simulations,
+        #                            report_to_devices=report_to_devices,
+        #                            report=report,
+        #                            report_num=report_num,
+        #                            )
+        # MODIFIED 8/8/23 END
+
         self._assign_execution_ids(context)
         context.composition = self
         context.source = ContextFlags.COMPOSITION
@@ -671,11 +705,14 @@ class AutodiffComposition(Composition):
                    content='trial_start',
                    context=context)
 
+            # MODIFIED 8/8/23 NEW:
+            # if execution_mode is not pnlvm.ExecutionMode.Python:
             self._build_pytorch_representation(context)
             output = self.autodiff_training(autodiff_inputs,
                                             autodiff_targets,
                                             context,
                                             scheduler)
+            # MODIFIED 8/8/23 END
 
             # FIX 5/28/20:
             # context.add_flag(ContextFlags.PROCESSING)
