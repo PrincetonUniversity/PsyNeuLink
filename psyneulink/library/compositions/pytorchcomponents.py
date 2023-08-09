@@ -52,7 +52,7 @@ def pytorch_function_creator(function, device, context=None):
         return lambda x: (torch.dropout(input=x, p=prob, train=False))
 
     else:
-        raise Exception(f"Function {function} is not currently supported in AutodiffCompositions!")
+        raise Exception(f"Function {function} is not currently supported by AutodiffComposition")
 
 class PytorchMechanismWrapper():
     """
