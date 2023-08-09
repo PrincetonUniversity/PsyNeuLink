@@ -66,6 +66,8 @@
 #        - AutodiffComposition:
 #          - Input construction has to be:
 #                   same for Autodiff in Python mode and PyTorch mode
+#                       (NOTE: used to be that autodiff could get left in Python mode
+#                              so only where tests for Autodiff happened did it branch)
 #                   and different from Composition (in Python mode)
 #                - test: test_identicalness_of_input_types
 #          - DOCUMENTATION: execution_mode=ExecutionMode.Python allowed
