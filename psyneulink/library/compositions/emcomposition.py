@@ -7,7 +7,6 @@
 
 
 # ********************************************* EMComposition *************************************************
-
 # TODO:
 # - QUESTION:
 #   - SHOULD differential of SoftmaxGainControl Node be included in learning?
@@ -51,7 +50,11 @@
 # - FIX: ALLOW SOFTMAX SPEC TO BE A DICT WITH PARAMETERS FOR _get_softmax_gain() FUNCTION
 
 # - FIX: PSYNEULINK:
-#         - REFACTORING OF LEARNING:
+# -    - pytorchcreator_function:
+#           SoftMax implementation:  torch.nn.Softmax(dim=0) is not getting passed correctly
+#           Implement LinearCombination
+# -      - LinearMatrix Function:
+#      - REFACTORING OF LEARNING:
 #           - LearningMechanism: Document that ERROR_SIGNAL is OPTIONAL
 #                               (only implemented when there is an error_source specified)
 #          - LLVM problem with ComparatorMechanism
@@ -92,9 +95,6 @@
 # -         (example:  reverse order of the following in _construct_pathways
 #                      self.add_nodes(self.softmax_nodes)
 # -                    self.add_nodes(self.field_weight_nodes)
-
-# -    FIX: LinearMatrix Function:
-#           - add derivative
 #           - add Normalize as option
 #           - Anytime a row's norm is 0, replace with 1s
 # -    FIX: LinearCombination Function:
