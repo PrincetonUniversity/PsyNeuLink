@@ -8362,7 +8362,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             return covariates_sources
 
-        def _get_acts_in_out_cov(input_source, output_source, learned_projection)->List[list,list,list]:
+        def _get_acts_in_out_cov(input_source, output_source, learned_projection)->List[list]:
             """Get shapes of activation_input and activation_output used by LearningMechanism and BackPropagation Fct"""
             # activation_input has more than one value if activation function has more than one argument
             activation_input = [input_source.output_ports[0].value]
