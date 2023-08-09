@@ -598,11 +598,13 @@ class AutodiffComposition(Composition):
                 ret[node] = values
         return ret
 
-    def learn(self, *args, **kwargs):
+    # def learn(self, *args,**kwargs):
+    def learn(self, *args, execution_mode=pnlvm.ExecutionMode.PyTorch,**kwargs):
         if self._built_pathways is False:
             self.infer_backpropagation_learning_pathways()
             self._built_pathways = True
-        return super().learn(*args, **kwargs)
+
+        return super().learn(*args, execution_mode=execution_mode, **kwargs)
 
     @handle_external_context()
     def execute(self,
