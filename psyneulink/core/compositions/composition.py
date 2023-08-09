@@ -2795,7 +2795,7 @@ import numpy as np
 import pint
 from beartype import beartype
 
-from psyneulink._typing import Optional, Union, Literal, Type, Callable
+from psyneulink._typing import Optional, Union, Literal, Type, Callable, List
 
 from PIL import Image
 
@@ -8320,7 +8320,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                           learning_update,
                                                           context):
 
-        def _get_covariate_info(output_source, learned_projection)->(list[InputPort]):
+        def _get_covariate_info(output_source, learned_projection)->(List[InputPort]):
             """Get the templates and Projections from potential covariates"""
             def _non_additive_comb_fct(function, allow)->Union[bool, None]:
                 """Check whether input_port's function is LinearCombination with operation=SUM
