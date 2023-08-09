@@ -2793,11 +2793,10 @@ import graph_scheduler
 import networkx
 import numpy as np
 import pint
+from PIL import Image
 from beartype import beartype
 
-from psyneulink._typing import Optional, Union, Literal, Type, Callable
-
-from PIL import Image
+from psyneulink._typing import Optional, Union, Literal, Type, Callable, List
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentError, ComponentsMeta
@@ -8524,9 +8523,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                           learning_update,
                                                           context):
 
-        # FIX: 8/1/23: CONSIDER MOVING ALL OF THIS TO LEARNING_MECHAINSM,
-        #              TO BE INFERRED FROM output_source IN _instantiate_input_ports
-        def _get_covariate_info(output_source, learned_projection)->(list[InputPort]):
+        def _get_covariate_info(output_source, learned_projection)->(List[InputPort]):
             """Get the templates and Projections from potential covariates"""
             def _non_additive_comb_fct(function, allow)->Union[bool, None]:
                 """Check whether input_port's function is LinearCombination with operation=SUM
@@ -8569,7 +8566,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             return covariates_sources
 
-        def _get_acts_in_out_cov(input_source, output_source, learned_projection)->list[list,list,list]:
+        def _get_acts_in_out_cov(input_source, output_source, learned_projection)->List[list]:
             """Get shapes of activation_input and activation_output used by LearningMechanism and BackPropagation Fct"""
             # activation_input has more than one value if activation function has more than one argument
             activation_input = [input_source.output_ports[0].value]
