@@ -2793,11 +2793,10 @@ import graph_scheduler
 import networkx
 import numpy as np
 import pint
+from PIL import Image
 from beartype import beartype
 
 from psyneulink._typing import Optional, Union, Literal, Type, Callable, List
-
-from PIL import Image
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentError, ComponentsMeta
