@@ -64,7 +64,7 @@
 #            - Use of LinearCombination with PRODUCT in InputPort of output_source
 
 #        - AutodiffComposition:
-#          - DOCUMENTATION: execution_mode=ExecutioMode.Python allowed
+#          - DOCUMENTATION: execution_mode=ExecutionMode.Python allowed
 #          - Add warning of this on initial call to learn()
 
 #        - Composition:
