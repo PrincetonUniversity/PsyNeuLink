@@ -26,12 +26,12 @@ class CompositionRunner():
     def __init__(self, compostion: Composition):
         self._composition = compostion
 
-    def _calculate_loss(self, num_trials, context):
+    def _calculate_loss(self, num_trials:int, execution_mode:pnlvm.ExecutionMode, context):
         """
         Returns a value that is the sum of all the losses from the last iteration
         """
         from psyneulink.library.compositions import AutodiffComposition
-        if isinstance(self._composition, AutodiffComposition):
+        if isinstance(self._composition, AutodiffComposition) and execution_mode is not pnlvm.ExecutionMode.Python:
             return self._composition._get_total_loss(num_trials, context)
         total_loss = 0
         for terminal_sequence in self._composition._terminal_backprop_sequences.values():
@@ -49,6 +49,7 @@ class CompositionRunner():
                       call_before_minibatch=None,
                       call_after_minibatch=None,
                       early_stopper=None,
+                      execution_mode:pnlvm.ExecutionMode=pnlvm.ExecutionMode.Python,
                       context=None):
         """
         Chunks input dict into pieces where each chunk is a dict with values of length batch_size
@@ -78,7 +79,8 @@ class CompositionRunner():
                     call_after_minibatch()
 
                 # Update weights if not in LLVM Mode
-                if not self._is_llvm_mode:
+                # if not self._is_llvm_mode:
+                if execution_mode is pnlvm.ExecutionMode.PyTorch:
                     self._composition._update_learning_parameters(context)
 
             # Compiled mode does not need more identical inputs.
@@ -86,11 +88,20 @@ class CompositionRunner():
             if self._is_llvm_mode and not randomize:
                 return
             if (not self._is_llvm_mode and early_stopper is not None
-                    and early_stopper.step(self._calculate_loss(num_trials, context))):
+                    and early_stopper.step(self._calculate_loss(num_trials, execution_mode, context))):
                 # end early if patience exceeded
                 pass
 
-    def _batch_function_inputs(self, inputs: dict, epochs: int, num_trials: int, batch_size: int = 1, call_before_minibatch=None, call_after_minibatch=None, early_stopper=None, context=None):
+    def _batch_function_inputs(self,
+                               inputs: dict,
+                               epochs: int,
+                               num_trials: int,
+                               batch_size: int = 1,
+                               call_before_minibatch=None,
+                               call_after_minibatch=None,
+                               early_stopper=None,
+                               execution_mode:pnlvm.ExecutionMode=pnlvm.ExecutionMode.Python,
+                               context=None):
 
         assert early_stopper is None or not self._is_llvm_mode, "Early stopper doesn't work in compiled mode"
         assert call_before_minibatch is None or not self._is_llvm_mode, "minibatch calls don't work in compiled mode"
@@ -117,12 +128,15 @@ class CompositionRunner():
                     if call_after_minibatch:
                         call_after_minibatch()
 
-                    if not self._is_llvm_mode:
+                    # if not self._is_llvm_mode:
+                    if execution_mode is pnlvm.ExecutionMode.PyTorch:
                         self._composition._update_learning_parameters(context)
                 else:
                     break
 
-            if not self._is_llvm_mode and early_stopper is not None and early_stopper.step(self._calculate_loss(num_trials, context)):
+            if (not self._is_llvm_mode
+                    and early_stopper is not None
+                    and early_stopper.step(self._calculate_loss(num_trials, execution_mode, context))):
                 # end early if patience exceeded
                 pass
 
@@ -214,6 +228,7 @@ class CompositionRunner():
                                                        call_before_minibatch=call_before_minibatch,
                                                        call_after_minibatch=call_after_minibatch,
                                                        early_stopper=early_stopper,
+                                                       execution_mode=execution_mode,
                                                        context=context)
 
             # The above generators generate:

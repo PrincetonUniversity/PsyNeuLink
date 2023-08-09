@@ -11627,7 +11627,8 @@ _
 
             #Update matrix parameter of PathwayProjections being learned with learning_enabled==AFTER
             from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
-            if self._is_learning(context) and not isinstance(self, AutodiffComposition):
+            if self._is_learning(context) \
+                    and (not isinstance(self, AutodiffComposition) or execution_mode is pnlvm.ExecutionMode.Python):
                 context.execution_phase = ContextFlags.LEARNING
                 for projection in [p for p in self.projections if
                                    hasattr(p, 'has_learning_projection') and p.has_learning_projection]:
