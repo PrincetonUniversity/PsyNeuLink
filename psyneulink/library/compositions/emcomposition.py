@@ -50,6 +50,8 @@
 # - FIX: ALLOW SOFTMAX SPEC TO BE A DICT WITH PARAMETERS FOR _get_softmax_gain() FUNCTION
 
 # - FIX: PSYNEULINK:
+# -     - IMPLEMENTATION OF LEARNING: NEED ERROR IF TRY TO CALL LEARN ON A COMPOSITION THAT HAS NO LEARNING MECHANISMS
+#         INCLUDING IN PYTHON MODE??  OR JUST ALLOW IT TO CONSTRUCT THE PATHWAY AUTOMATICALLY?
 # -    - pytorchcreator_function:
 #           SoftMax implementation:  torch.nn.Softmax(dim=0) is not getting passed correctly
 #           Implement LinearCombination
