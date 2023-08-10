@@ -2580,10 +2580,10 @@ class BackPropagation(LearningFunction):
             dE_dA = np.dot(error_matrix, self._get_current_parameter_value(ERROR_SIGNAL, context)) * 2
         else:
             # Use L0 (this applies to hidden layers)
-            dE_dA = np.dot(error_matrix, self._get_current_parameter_value(ERROR_SIGNAL, context))
             # FIX 8/10/23:  THIS WORKS RELATIVE TO PYTORCH, BUT NOT SURE WHY;
             #               - COULD BE THAT NEED TO MULTIPLY BY NUMBER OF AFFERENT UNITS
             #               - OR COULD BE THAT SHOULD BE USING SSE FOR HIDDEN LAYERS (SEE ABOVE)
+            dE_dA = np.dot(error_matrix, self._get_current_parameter_value(ERROR_SIGNAL, context))
             # dE_dA = np.dot(error_matrix, self._get_current_parameter_value(ERROR_SIGNAL, context)) * 2
 
         # Derivative of the output activity
