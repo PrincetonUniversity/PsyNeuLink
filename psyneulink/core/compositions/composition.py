@@ -10778,6 +10778,8 @@ _
         from psyneulink.library.compositions import AutodiffComposition
         runner = CompositionRunner(self)
 
+
+        # Non-Python (i.e. PyTorch and LLVM) learning modes only supported for AutodiffComposition
         if ((execution_mode is not pnlvm.ExecutionMode.Python)
                 and not isinstance(self, AutodiffComposition)):
             raise CompositionError(f"ExecutionMode.{execution_mode.name} cannot be used in the learn() method of "
@@ -11625,7 +11627,7 @@ _
 
             context.remove_flag(ContextFlags.PROCESSING)
 
-            #Update matrix parameter of PathwayProjections being learned with learning_enabled==AFTER
+            # Update matrix parameter of PathwayProjections being learned with learning_enabled==AFTER
             from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
             if self._is_learning(context) \
                     and (not isinstance(self, AutodiffComposition) or execution_mode is pnlvm.ExecutionMode.Python):
