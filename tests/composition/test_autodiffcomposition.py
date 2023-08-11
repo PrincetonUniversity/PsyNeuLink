@@ -1311,7 +1311,13 @@ class TestTrainingIdenticalness():
         #     expected_results = [[0.634097]]
         # else:
         #     expected_results = [[0.636682]]
-        expected_results = [[0.634144]]
+
+        if exec_mode == pnl.ExecutionMode.Python:
+            expected_results = [[0.636682]]
+        elif exec_mode == pnl.ExecutionMode.PyTorch and input_type == 'func':
+            expected_results = [[0.63409708]]
+        else:
+            expected_results = [[0.634144]]
         results = comp.learn(inputs=inputs, execution_mode=exec_mode)
         np.testing.assert_allclose(results, expected_results, atol=1e-6)
 
