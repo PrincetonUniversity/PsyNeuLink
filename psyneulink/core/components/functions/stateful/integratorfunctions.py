@@ -3174,7 +3174,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
 
         try:
             variable = variable.flatten()
-            drift = variable if len(variable) == dimension-1 else np.full(dimension - 1, variable)
+            drift = variable if len(variable) == dimension - 1 else np.full(dimension - 1, variable)
 
         except ValueError:
             owner_str = f"'of '{self.owner.name}" if self.owner else ""
