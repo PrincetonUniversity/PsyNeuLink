@@ -1457,7 +1457,7 @@ class LinearCombination(
         else:
             jacobian = np.prod(np.vstack(covariates), axis=0)  * self._get_current_parameter_value(SCALE, context)
 
-        return np.eye(len(output)) * (output * jacobian)
+        return np.eye(len(output)) * jacobian
 
     def _get_input_struct_type(self, ctx):
         # FIXME: Workaround a special case of simple array.
