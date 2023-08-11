@@ -777,9 +777,9 @@ from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmecha
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.keywords import \
-    AUTO, COMBINE, CONTROL, DEFAULT_INPUT, DEFAULT_VARIABLE, EM_COMPOSITION, FUNCTION, GAIN, IDENTITY_MATRIX, \
-    MULTIPLICATIVE_PARAM, NAME, PARAMS, PRODUCT, PROJECTIONS, RANDOM, SIZE, VARIABLE
-from psyneulink.core.globals.utilities import all_within_range
+    (AUTO, CONTROL, DEFAULT_INPUT, DEFAULT_VARIABLE, EM_COMPOSITION, FULL_CONNECTIVITY_MATRIX,
+     GAIN, IDENTITY_MATRIX, MULTIPLICATIVE_PARAM, NAME, PARAMS, PRODUCT, PROJECTIONS, RANDOM, SIZE, VARIABLE)
+from psyneulink.core.globals.utilities import all_within_range, random_matrix
 from psyneulink.core.scheduling.time import TimeScale
 import psyneulink.core.scheduling.condition as conditions
 
@@ -1712,6 +1712,7 @@ class EMComposition(AutodiffComposition):
                                        input_ports=[{NAME: 'CONCATENATE_KEYS',
                                                      SIZE: len(self.key_input_nodes[i].output_port.value),
                                                      PROJECTIONS: MappingProjection(
+                                                         name=f'{self.key_names[i]} to CONCATENATE',
                                                          sender=self.key_input_nodes[i].output_port,
                                                          matrix=IDENTITY_MATRIX)}
                                                     for i in range(self.num_keys)],
@@ -1752,8 +1753,8 @@ class EMComposition(AutodiffComposition):
                     input_ports= {
                         SIZE:memory_capacity,
                         PROJECTIONS: MappingProjection(sender=self.key_input_nodes[i].output_port,
-                                                       matrix = np.array(memory_template[:,i].tolist()
-                                                                         ).transpose().astype(float),
+                                                       matrix = np.array(
+                                                           memory_template[:,i].tolist()).transpose().astype(float),
                                                        function=LinearMatrix(normalize=normalize_memories),
                                                        name=f'MEMORY for {self.key_names[i]}')},
                     name=f'MATCH {self.key_names[i]}')
@@ -1781,7 +1782,10 @@ class EMComposition(AutodiffComposition):
             softmax_gain = None
 
         softmax_nodes = [TransferMechanism(input_ports={SIZE:memory_capacity,
-                                                        PROJECTIONS: field_match_node.output_port},
+                                                        PROJECTIONS: MappingProjection(
+                                                            sender=field_match_node.output_port,
+                                                            matrix=IDENTITY_MATRIX,
+                                                            name=f'MATCH to SOFTMAX for {self.key_names[i]}')},
                                            function=SoftMax(gain=softmax_gain),
                                            name='SOFTMAX' if len(self.field_match_nodes) == 1
                                            else f'SOFTMAX for {self.key_names[i]}')
@@ -1832,13 +1836,21 @@ class EMComposition(AutodiffComposition):
         if use_gating_for_weighting:
             return []
 
-        weighted_softmax_nodes = [ProcessingMechanism(input_ports=[sm_fw_pair[0],
-                                                                   {SIZE:len(self.softmax_nodes[i].output_port.value),
-                                                                    PROJECTIONS:sm_fw_pair[1]}],
-                                                      function=LinearCombination(operation=PRODUCT),
-                                                      name=f'WEIGHTED SOFTMAX FOR {self.key_names[i]}')
-                                  for i, sm_fw_pair in enumerate(zip(self.softmax_nodes,
-                                                                     self.field_weight_nodes))]
+        weighted_softmax_nodes = \
+            [ProcessingMechanism(
+                default_variable=[self.softmax_nodes[i].output_port.value,
+                                  self.softmax_nodes[i].output_port.value],
+                input_ports=[
+                    {PROJECTIONS: MappingProjection(sender=sm_fw_pair[0],
+                                                    matrix=IDENTITY_MATRIX,
+                                                    name=f'SOFTMAX to WEIGHTED SOFTMAX for {self.key_names[i]}')},
+                    {PROJECTIONS: MappingProjection(sender=sm_fw_pair[1],
+                                                    matrix=FULL_CONNECTIVITY_MATRIX,
+                                                    name=f'WEIGHT to WEIGHTED SOFTMAX for {self.key_names[i]}')}],
+                function=LinearCombination(operation=PRODUCT),
+                name=f'WEIGHTED SOFTMAX FOR {self.key_names[i]}')
+                for i, sm_fw_pair in enumerate(zip(self.softmax_nodes,
+                                                   self.field_weight_nodes))]
         return weighted_softmax_nodes
 
     def _construct_combined_softmax_node(self,
@@ -1855,9 +1867,15 @@ class EMComposition(AutodiffComposition):
         else:
             input_source = self.weighted_softmax_nodes
 
-        combined_softmax_node = ProcessingMechanism(input_ports=[{SIZE:memory_capacity,
-                                                                  PROJECTIONS:[s for s in input_source]}],
-                                                    name='RETRIEVAL')
+        combined_softmax_node = (
+            ProcessingMechanism(input_ports=[{SIZE:memory_capacity,
+                                              # PROJECTIONS:[s for s in input_source]}],
+                                              PROJECTIONS:[MappingProjection(sender=s,
+                                                                             matrix=IDENTITY_MATRIX,
+                                                                             name=f'WEIGHTED SOFTMAX to RETRIEVAL for '
+                                                                                  f'{self.key_names[i]}')
+                                                           for i, s in enumerate(input_source)]}],
+                                name='RETRIEVAL'))
 
         assert len(combined_softmax_node.output_port.value) == memory_capacity, \
             'PROGRAM ERROR: number of items in combined_softmax_node ' \

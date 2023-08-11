@@ -7525,7 +7525,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                   == [node for node in parsed_pathway if not isinstance(node, Projection)]):
                 # Warn if inferred Projections were identical to existing ones so warn
                 if self._pre_existing_pathway_components[PROJECTIONS]:
-                    warnings.warn(f"Pathway assigned to {pathway_arg_str} specified Projections already in "
+                    warnings.warn(f"Pathway assigned {pathway_arg_str} specified Projections already in "
                                   f"'{self.name}': the latter will be used.")
 
             # Shorter because it contained one or more ControlMechanisms with monitor_for_control specified
