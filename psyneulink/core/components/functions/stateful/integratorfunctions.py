@@ -3175,9 +3175,12 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         try:
             # # MODIFIED 8/11/23 OLD:
             # drift = np.full(dimension - 1, variable)
-            # MODIFIED 8/11/23 NEW:
-            variable = np.squeeze(variable) if variable.ndim > 1 else variable
-            drift = variable if len(variable) == dimension-1 else np.full(dimension - 1, variable)
+            # # MODIFIED 8/11/23 NEW:
+            # variable = np.squeeze(variable) if variable.ndim > 1 else np.atleast_1d(variable)
+            # drift = variable if len(variable) == dimension-1 else np.full(dimension - 1, variable)
+            # MODIFIED 8/11/23 NEWER:  FIX: STILL DOESN'T HANDLE 2D VARIABLE
+            drift = variable if variable.ndim > 1 and len(variable) == dimension-1 \
+                else np.full(dimension - 1, variable)
             # MODIFIED 8/11/23 END
         except ValueError:
             owner_str = f"'of '{self.owner.name}" if self.owner else ""

@@ -143,21 +143,22 @@ ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation
 
 # Names:
 MODEL_NAME = "EGO Model"
-EM_NAME = "EPISODIC MEMORY (dict)"
-DECISION_LAYER = "DECISION"
-CONTROLLER = "READ/WRITE CONTROLLER"
 CONTEXT_INPUT_NAME = 'CONTEXT INPUT'
 TIME_INPUT_LAYER_NAME = "TIME"
 REWARD_INPUT_LAYER_NAME = "REWARD"
 CONTEXT_LAYER_NAME = 'CONTEXT'
 RETRIEVED_TIME_NAME = "RETRIEVED TIME"
 RETRIEVED_REWARD_NAME = "RETRIEVED REWARD"
+EM_NAME = "EPISODIC MEMORY (dict)"
+DECISION_LAYER_NAME = "DECISION"
+CONTROLLER_NAME = "READ/WRITE CONTROLLER"
 
 # Constructor parameters:
 STATE_SIZE = 8                 # length of stimulus vector
 CONTEXT_SIZE = 10              # length of context vector
 TIME_SIZE = 25                 # length of time vector
 REWARD_SIZE = 1                # length of reward vector
+DECISION_SIZE = 2              # length of decision vector
 CONTEXT_INTEGRATION_RATE = .1  # rate of integration of context vector
 TIME_DRIFT_NOISE = 0.0         # noise used by DriftOnASphereIntegrator (function of Context mech)
 CONTEXT_RETRIEVAL_WEIGHT = 1   # weight of context field in retrieval from em
@@ -204,6 +205,12 @@ def construct_model(model_name:str=MODEL_NAME,
 
                     em_name:str=EM_NAME,
                     retrieval_retrieval_gain=RETRIEVAL_SOFTMAX_GAIN,
+                    retrieval_hazard_rate=RETRIEVAL_HAZARD_RATE,
+                    
+                    controller_name=CONTROLLER_NAME,
+                    
+                    decision_layer_name:str=DECISION_LAYER_NAME,
+                    decision_size:int=DECISION_SIZE,
 
                     )->Composition:
 
@@ -241,6 +248,10 @@ def construct_model(model_name:str=MODEL_NAME,
                                      # equidistant_entries_select=NEWEST,
                                      selection_function=SoftMax(gain=retrieval_retrieval_gain)))
 
+    decision_layer = TransferMechanism(name=decision_layer_name,
+                                       size=decision_size,
+                                       function=SoftMax(output=MAX_INDICATOR))
+
     # Control Mechanism
     #  Ensures current stimulus and context are only encoded in EM once (at beginning of trial)
     #    by controlling the storage_prob parameter of em:
@@ -250,12 +261,12 @@ def construct_model(model_name:str=MODEL_NAME,
     #      - if outcome of decision signifies a non-match
     #        - set  EM[store_prob]=0 (as prep for another retrieval from EM without storage)
     #        - continue trial
-    control = ControlMechanism(name=CONTROLLER,
+    retrieval_control_layer = ControlMechanism(name=controller_name,
                                default_variable=[[1]],  # Ensure EM[store_prob]=1 at beginning of first trial
                                # ---------
                                # VERSION *WITH* ObjectiveMechanism:
                                objective_mechanism=ObjectiveMechanism(name="OBJECTIVE MECHANISM",
-                                                                      monitor=decision,
+                                                                      monitor=decision_layer,
                                                                       # Outcome=1 if match, else 0
                                                                       function=lambda x: int(x[0][0]>x[0][1])),
                                # Set ControlSignal for EM[store_prob]
@@ -269,7 +280,7 @@ def construct_model(model_name:str=MODEL_NAME,
                                # # Set Evaluate outcome and set ControlSignal for EM[store_prob]
                                # #   - outcome is received from decision as one hot in the form: [[match, no-match]]
                                # function=lambda outcome: int(int(outcome[0][1]>outcome[0][0])
-                               #                              or (np.random.random() > retrieval_hazard_rate)),
+                               #                              or (np.random.random() < retrieval_hazard_rate)),
                                # ---------
                                control=(STORAGE_PROB, em))
 
@@ -278,11 +289,12 @@ def construct_model(model_name:str=MODEL_NAME,
                            nodes=[context_input_layer, time_input_layer, reward_input_layer,
                                   context_layer,
                                   em, 
-                                  retrieved_time_layer, retrieved_reward_layer],
+                                  retrieved_time_layer, retrieved_reward_layer,
+                                  retrieval_control_layer, decision_layer],
                            # Terminate trial if value of control is still 1 after first pass through execution
-                           termination_processing={TimeScale.TRIAL: And(Condition(lambda: control.value),
-                                                                        AfterPass(0, TimeScale.TRIAL))},
-                           )
+                           termination_processing={
+                               TimeScale.TRIAL: And(Condition(lambda: retrieval_control_layer.value),
+                                                    AfterPass(0, TimeScale.TRIAL))})
     # # Terminate trial if value of control is still 1 after first pass through execution
     EGO_comp.add_projection(MappingProjection(), context_input_layer, context_layer)
     EGO_comp.add_projection(MappingProjection(), context_layer, em.input_ports["CONTEXT_FIELD"])
@@ -291,6 +303,7 @@ def construct_model(model_name:str=MODEL_NAME,
     EGO_comp.add_projection(MappingProjection(), em.output_ports["RETRIEVED_CONTEXT_FIELD"], context_layer)
     EGO_comp.add_projection(MappingProjection(), em.output_ports["RETRIEVED_TIME_FIELD"], retrieved_time_layer)
     EGO_comp.add_projection(MappingProjection(), em.output_ports["RETRIEVED_REWARD_FIELD"], retrieved_reward_layer)
+    EGO_comp.add_projection(MappingProjection(), retrieved_reward_layer, decision_layer)
 
     print(f'{model_name} constructed')
     return EGO_comp
