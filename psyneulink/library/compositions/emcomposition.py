@@ -50,14 +50,18 @@
 # - FIX: ALLOW SOFTMAX SPEC TO BE A DICT WITH PARAMETERS FOR _get_softmax_gain() FUNCTION
 
 # - FIX: PSYNEULINK:
+
 # -     - WRITE TESTS FOR DriftOnASphere variable = scalar, 2d vector or 1d vector of correct and incorrect lengths
 # -     - WRITE TESTS FOR LEARNING WITH LinearCombination of 1, 2 and 3 inputs
+
 # -     - IMPLEMENTATION OF LEARNING: NEED ERROR IF TRY TO CALL LEARN ON A COMPOSITION THAT HAS NO LEARNING MECHANISMS
 #         INCLUDING IN PYTHON MODE??  OR JUST ALLOW IT TO CONSTRUCT THE PATHWAY AUTOMATICALLY?
+
 # -    - pytorchcreator_function:
 #           SoftMax implementation:  torch.nn.Softmax(dim=0) is not getting passed correctly
 #           Implement LinearCombination
 # -      - LinearMatrix Function:
+
 #      - REFACTORING OF LEARNING:
 #           - LearningMechanism: Document that ERROR_SIGNAL is OPTIONAL
 #                               (only implemented when there is an error_source specified)
@@ -69,9 +73,7 @@
 
 #        - AutodiffComposition:
 #          - FIX: - Fix bug in input_type (test_idencompositionrunner.run_learning input assignment
-#                 - Are weights getting written back to PNL properly in Pytorch mode?
-#                  _update_learning_parameters & copy_weights_to_psyneulink -> mod_matrix (CHECK WITH KATHERINE)
-#                  - set default learning_rate to be same as Composition (0.05)
+#                 - ??set default learning_rate to be same as Composition (0.05) -- will that break tests?
 #          - Input construction has to be:
 #                   same for Autodiff in Python mode and PyTorch mode
 #                       (NOTE: used to be that autodiff could get left in Python mode
