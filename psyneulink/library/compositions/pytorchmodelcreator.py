@@ -340,6 +340,8 @@ class PytorchModelCreator(torch.nn.Module):
         for projection, pytorch_rep in self.projection_map.items():
             projection.parameters.matrix._set(
                 pytorch_rep.matrix.detach().cpu().numpy(), context)
+            projection.parameters.matrix._set(
+                pytorch_rep.matrix.detach().cpu().numpy(), context)
             projection.parameter_ports['matrix'].parameters.value._set(
                 pytorch_rep.matrix.detach().cpu().numpy(), context)
 

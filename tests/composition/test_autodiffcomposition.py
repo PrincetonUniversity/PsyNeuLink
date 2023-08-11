@@ -1241,7 +1241,7 @@ class TestTrainingIdenticalness():
                                                  matrix=np.full((10,1), 0.1),
                                                  sender=hidden_layer,
                                                  receiver=output_layer)
-        xor = AutodiffComposition()
+        xor = AutodiffComposition(learning_rate=0.1)
         xor.add_node(input_layer)
         xor.add_node(hidden_layer)
         xor.add_node(output_layer)
@@ -1307,14 +1307,12 @@ class TestTrainingIdenticalness():
         else:
             assert False, f"Unrecognized input_type: {input_type}"
 
-        if exec_mode == pnl.ExecutionMode.PyTorch:
-            expected_results = [[0.634144]]
-        elif exec_mode == pnl.ExecutionMode.LLVM:
+        if exec_mode == pnl.ExecutionMode.LLVM or (exec_mode == pnl.ExecutionMode.PyTorch and input_type == 'func'):
             expected_results = [[0.634097]]
-        elif exec_mode == pnl.ExecutionMode.Python:
+        else:
             expected_results = [[0.636682]]
         results = comp.learn(inputs=inputs, execution_mode=exec_mode)
-        np.testing.assert_allclose(results, expected_results, atol=1e-5)
+        np.testing.assert_allclose(results, expected_results, atol=1e-7)
 
 @pytest.mark.pytorch
 @pytest.mark.acmisc
