@@ -78,7 +78,13 @@
 #                     - add test test_identicalness_of_input_types for Composition (in test_learning)
 #                     - ??set default learning_rate to be same as Composition (0.05) -- will that break tests?
 #                     -    at the least, Autodiff.learn(learning_rate) should be set, but it doesn't seem to be
-#                     - Autodiff, if "epochs" is not in input_dict, then:
+#                     - learning_rate set in:
+#                          Autodiff construction IS recognized by inputs = dict, gen or gen_func but NOT func
+#                          in .learn() IS recognized by inputs = dict, gen or gen_func but NOT func or LLVM
+#                     - with expected_results = [[0.634144]] and  atol=1e-6 only the following fail:
+#                             all Python, and Pytorch = func
+#
+#                     - Check that if "epochs" is not in input_dict for Autodiff, then:
 #                             - set to num_trials as default,
 #                             - leave it to override num_trials if specified (add this to DOCUMENTATION)
 #          - Input construction has to be:
