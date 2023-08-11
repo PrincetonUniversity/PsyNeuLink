@@ -68,7 +68,8 @@
 #            - Use of LinearCombination with PRODUCT in InputPort of output_source
 
 #        - AutodiffComposition:
-#          - Fix XXX
+#          - Fix bug in input_type (test_idencompositionrunner.run_learning input assignment
+#          - Are weights getting written back to PNL propery in Pytorch mode? (mod_matrix?)
 #          - set default learning_rate to be same as Composition (0.05)
 #          - Input construction has to be:
 #                   same for Autodiff in Python mode and PyTorch mode
