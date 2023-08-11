@@ -2579,7 +2579,7 @@ class BackPropagation(LearningFunction):
         elif loss_spec == Loss.SSE:
             dE_dA = np.dot(error_matrix, self._get_current_parameter_value(ERROR_SIGNAL, context)) * 2
         else:
-            # Use L0 (this applies to hidden layers)
+            # Use L0 (this applies to hidden layers) (Jacobian vector product)
             dE_dA = np.dot(error_matrix, self._get_current_parameter_value(ERROR_SIGNAL, context))
 
         # Derivative of the output activity
