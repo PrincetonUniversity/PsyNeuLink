@@ -250,7 +250,7 @@ def construct_model(model_name:str=MODEL_NAME,
 
     decision_layer = TransferMechanism(name=decision_layer_name,
                                        size=decision_size,
-                                       function=SoftMax(output=MAX_INDICATOR))
+                                       function=SoftMax(output=PROB))
 
     # Control Mechanism
     #  Ensures current stimulus and context are only encoded in EM once (at beginning of trial)
@@ -300,9 +300,9 @@ def construct_model(model_name:str=MODEL_NAME,
     EGO_comp.add_projection(MappingProjection(), context_layer, em.input_ports["CONTEXT_FIELD"])
     EGO_comp.add_projection(MappingProjection(), time_input_layer, em.input_ports["TIME_FIELD"])
     EGO_comp.add_projection(MappingProjection(), reward_input_layer, em.input_ports["REWARD_FIELD"])
-    EGO_comp.add_projection(MappingProjection(), em.output_ports["RETRIEVED_CONTEXT_FIELD"], context_layer)
-    EGO_comp.add_projection(MappingProjection(), em.output_ports["RETRIEVED_TIME_FIELD"], retrieved_time_layer)
-    EGO_comp.add_projection(MappingProjection(), em.output_ports["RETRIEVED_REWARD_FIELD"], retrieved_reward_layer)
+    EGO_comp.add_projection(MappingProjection(), em.output_ports[0], context_layer)
+    EGO_comp.add_projection(MappingProjection(), em.output_ports[1], retrieved_time_layer)
+    EGO_comp.add_projection(MappingProjection(), em.output_ports[2], retrieved_reward_layer)
     EGO_comp.add_projection(MappingProjection(), retrieved_reward_layer, decision_layer)
 
     print(f'{model_name} constructed')
@@ -316,7 +316,7 @@ if DISPLAY_MODEL:
     if model:
         model.show_graph(
             # show_cim=True,
-            # show_node_structure=ALL,
+            show_node_structure=True,
             # show_dimensions=True
         )
     else:
