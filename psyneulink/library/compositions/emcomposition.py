@@ -77,6 +77,7 @@
 #                     - at least in test_identicalness_of_input_types), change learning_rate to 0.05 for all tests??
 #                     - add test test_identicalness_of_input_types for Composition (in test_learning)
 #                     - ??set default learning_rate to be same as Composition (0.05) -- will that break tests?
+#                     -    at the least, Autodiff.learn(learning_rate) should be set, but it doesn't seem to be
 #                     - Autodiff, if "epochs" is not in input_dict, then:
 #                             - set to num_trials as default,
 #                             - leave it to override num_trials if specified (add this to DOCUMENTATION)
