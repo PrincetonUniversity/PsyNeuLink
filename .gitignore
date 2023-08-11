@@ -198,3 +198,4 @@ tests/*.pdf
 
 /tests/mdf/*.json
 /tests/mdf/*.yml
+/Scripts/ScratchPad FIGURES/
