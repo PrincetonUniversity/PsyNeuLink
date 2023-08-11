@@ -1,66 +1,54 @@
-
 """
+
+QUESTIONS:
+- WHERE DOES INPUT TO REWARD FIELD OF EM COME FROM?
 
 **Overview**
 ------------
 
-This implements a model of the `nback task <https://en.wikipedia.org/wiki/N-back#Neurobiology_of_n-back_task>`_
-described in `Beukers et al. (2022) <https://psyarxiv.com/jtw5p>`_.  The model uses a simple implementation of episodic
-memory (EM, as a form of content-retrieval memory) to store previous stimuli along with the temporal context in which
-they occurred, and a feedforward neural network (FFN) to evaluate whether the current stimulus is a match to the n'th
-preceding stimulus (n-back level) retrieved from EM.
+This implements a model of...
 
-The model is an example of proposed interactions between working memory (subserved by neocortical structures) and
-episodic memory (subserved by hippocampus, and possibly cerebellum) in the performance of tasks demanding of sequential
-processing and control, along the lines of models emerging from machine learning that augment the use of recurrent
-neural networks (e.g., long short-term memory mechanisms; LSTMs) for active memory and control, with an external memory
-capable of rapid storage and content-based retrieval, such as the
-Neural Turing Machine (NTN; `Graves et al., 2016 <https://arxiv.org/abs/1410.5401>`_),
-Episodic Planning Networks (EPN; `Ritter et al., 2020 <https://arxiv.org/abs/2006.03662>`_), and
-Emergent Symbols through Binding Networks (ESBN; `Webb et al., 2021 <https://arxiv.org/abs/2012.14601>`_).
+The model is an example of...
 
-The script conatins methods to construct, train, and run the model, and analyze the results of its execution:
+The script contains methods to construct, train, and run the model, and analyze the results of its execution:
 
-* `construct_model <nback.construct_model>`:
+* `construct_model <EGO.construct_model>`:
   takes as arguments parameters used to construct the model;  for convenience, defaults are defined below,
   (under "Construction parameters")
 
-* `train_network <nback.train_network>`:
+* `train_network <EGO.train_network>`:
   takes as arguments the feedforward neural network Composition (FFN_COMPOSITION) and number of epochs to train.
   Note: learning_rate is set at construction (can specify using LEARNING_RATE under "Training parameters" below).
 
-* `run_model <nback.run_model>`:
+* `run_model <EGO.run_model>`:
   takes as arguments the drift rate in the temporal context vector to be applied on each trial,
   and the number of trials to execute, as well as reporting and animation specifications
   (see "Execution parameters").
 
-* `analyze_results <nback.analyze_results>`:
-  takes as arguments the results of executing the model, and optionally a number of trials and nback_level to analyze;
-  returns d-prime statistics and plots results for different conditions at each nback_level executed.
+* `analyze_results <EGO.analyze_results>`:
+  takes as arguments the results of executing the model, and optionally a number of trials and EGO_level to analyze;
+  returns d-prime statistics and plots results for different conditions at each EGO_level executed.
 
 
 **The Model**
 -------------
 
-The model is comprised of two `Compositions <Composition>`: an outer one that contains the full model (`nback_model
-<nback_model_composition>`), and an `AutodiffComposition`, nested within nback_model, that implements the feedforward
-neural network (`ffn <nback_ffn_composition>`) (see red box in the figure below).  Both of these are constructed in
-the `construct_model <nback.construct_model>` function (see `below <nback_methods_reference>`).
+The model is comprised of...
 
-.. _nback_Fig:
+.. _EGO_Fig:
 
 .. figure:: _static/N-Back_Model_movie.gif
    :align: left
    :alt: N-Back Model Animation
 
-.. _nback_model_composition:
+.. _EGO_model_composition:
 
-*nback_model Composition*
+*EGO_model Composition*
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This is comprised of three input Mechanisms, and the nested `ffn <nback_ffn_composition>` `Composition`.
+This is comprised of three input Mechanisms, and the nested `ffn <EGO_ffn_composition>` `Composition`.
 
-.. _nback_ffn_composition:
+.. _EGO_ffn_composition:
 
 *FFN Composition*
 ~~~~~~~~~~~~~~~~~
@@ -80,7 +68,7 @@ The ffn Composition is trained using the train_network() method
 **Construction and Execution**
 ------------------------------
 
-.. _nback_settings:
+.. _EGO_settings:
 
 *Settings*
 ~~~~~~~~~~
@@ -91,7 +79,7 @@ The default parameters are ones that have been fit to empirical data concerning 
 See "Settings for running the script" to specify whether the model is trained and/or executed when the script is run,
 and whether a graphic display of the network is generated when it is constructed.
 
-.. _nback_stimuli:
+.. _EGO_stimuli:
 
 *Stimuli*
 ~~~~~~~~~
@@ -104,53 +92,25 @@ Sequences of stimuli are constructed either using `SweetPea <https://sites.googl
        Use of SweetPea for stimulus generation requires it be installed::
        >> pip install sweetpea
 
-.. _nback_training:
+.. _EGO_training:
 
 *Training*
 ~~~~~~~~~~
 
 MORE HERE
 
-.. _nback_execution:
+.. _EGO_execution:
 
 *Execution*
 ~~~~~~~~~~~
 
 MORE HERE
 
-.. _nback_methods_reference:
+.. _EGO_methods_reference:
 
 **Methods Reference**
 ---------------------
 
-COMMENT:
-TODO:
-    - from Andre
-             - network architecture;  in particular, size of hidden layer and projection patterns to and from it
-                - the stim+context input vector (length 90) projects to a hidden layer (length 80);
-                - the task input vector (length 2) projects to a different hidden layer (length 80);
-                - those two hidden layers project (over fixed, nonlearnable, one-one-projections?) to a third hidden layer (length 80) that simply sums them;
-                - the third hidden layer projects to the length 2 output layer;
-                - a softmax is taken over the output layer to determine the response.
-                - fix: were biases trained?
-          - training:
-              - learning rate: 0.001; epoch: 1 trial per epoch of training
-              - fix: state_dict with weights (still needed)
-          - get empirical stimulus sequences (still needed)
-          - put nback script (with pointer to latest version on PNL) in nback-paper repo
-    - train_network() and run_model(): refactor to take inputs and trial_types, and training_set, respectively
-    - fix: get rid of objective_mechanism (see "VERSION *WITHOUT* ObjectiveMechanism" under control(...)
-    - fix: warnings on run
-    - fix: remove num_nback_levels from contruct_model
-    - complete documentation in BeukersNbackModel.rst
-    - validate against nback-paper results
-    - after validation:
-        - try with STIM_SIZE = NUM_STIMS rather than 20 (as in nback-paper)
-        - refactor generate_stim_sequence() to use actual empirical stimulus sequences
-        - replace get_input_sequence and _get_training_inputs with generators passed to nback_model.run() and ffn.learn
-        - build version that *can* maintain in WM, and uses EVC to decide which would be easier:
-           maintenance in WM vs. storage/retrieval from EM (and the fit to Jarrod's data)
-COMMENT
 
 """
 
@@ -168,12 +128,11 @@ from graph_scheduler import *
 from psyneulink import *
 
 # Settings for running script:
-CONSTRUCT_MODEL = True # THIS MUST BE SET TO True to run the script
-DISPLAY_MODEL = True # True = show visual graphic of model
-TRAIN_FFN = False  # True => train the FFN (WM)
-TEST_FFN = False  # True => test the FFN on training stimuli (WM)
-RUN_MODEL = False  # True => test the model on sample stimulus sequences
-ANALYZE_RESULTS = False # True => output analysis of results of run
+CONSTRUCT_MODEL = True                 # THIS MUST BE SET TO True to run the script
+DISPLAY_MODEL = True                   # True => show visual graphic of model
+# TRAIN_MODEL = False                  # True => train the model
+RUN_MODEL = False                      # True => run the model
+ANALYZE_RESULTS = False                # True => output analysis of results of run
 REPORT_OUTPUT = ReportOutput.OFF       # Sets console output during run
 REPORT_PROGRESS = ReportProgress.OFF   # Sets console progress bar during run
 ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
@@ -182,68 +141,170 @@ ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation
 
 # Fixed (structural) parameters:
 
-# Layer Names:
-CONTEXT_LAYER = 'CONTEXT_LAYER'
+# Names:
+MODEL_NAME = "EGO Model"
+EM_NAME = "EPISODIC MEMORY (dict)"
+DECISION_LAYER = "DECISION"
+CONTROLLER = "READ/WRITE CONTROLLER"
+CONTEXT_INPUT_NAME = 'CONTEXT INPUT'
+TIME_INPUT_LAYER_NAME = "TIME"
+REWARD_INPUT_LAYER_NAME = "REWARD"
+CONTEXT_LAYER_NAME = 'CONTEXT'
+RETRIEVED_TIME_NAME = "RETRIEVED TIME"
+RETRIEVED_REWARD_NAME = "RETRIEVED REWARD"
 
-# Constructor parameters:  (values are from nback-paper)
-STIM_SIZE = 8 # length of stimulus vector
-CONTEXT_SIZE = 25 # length of context vector
-HIDDEN_SIZE = STIM_SIZE * 4 # dimension of hidden units in ff
-CONTEXT_DRIFT_NOISE = 0.0  # noise used by DriftOnASphereIntegrator (function of Context mech)
+# Constructor parameters:
+STATE_SIZE = 8                 # length of stimulus vector
+CONTEXT_SIZE = 10              # length of context vector
+TIME_SIZE = 25                 # length of time vector
+REWARD_SIZE = 1                # length of reward vector
+CONTEXT_INTEGRATION_RATE = .1  # rate of integration of context vector
+TIME_DRIFT_NOISE = 0.0         # noise used by DriftOnASphereIntegrator (function of Context mech)
+CONTEXT_RETRIEVAL_WEIGHT = 1   # weight of context field in retrieval from em
+TIME_RETRIEVAL_WEIGHT = 1      # weight of time field in retrieval from em
+REWARD_RETRIEVAL_WEIGHT = 0    # weight of reward field in retrieval from em
+RETRIEVAL_SOFTMAX_GAIN = 10    # gain on softmax retrieval function
+RETRIEVAL_HAZARD_RATE = 0.04   # rate of re=sampling of em following non-match determination in a pass through ffn
 RANDOM_WEIGHTS_INITIALIZATION=RandomMatrix(center=0.0, range=0.1)  # Matrix spec used to initialize all Projections
-DROPOUT_PROB = 0.05
-RETRIEVAL_SOFTMAX_TEMP = 1 / 8 # express as gain # precision of retrieval process
-RETRIEVAL_HAZARD_RATE = 0.04 # rate of re=sampling of em following non-match determination in a pass through ffn
-RETRIEVAL_STIM_WEIGHT = .05 # weighting of stimulus field in retrieval from em
-RETRIEVAL_CONTEXT_WEIGHT = 1 - RETRIEVAL_STIM_WEIGHT # weighting of context field in retrieval from em
-# DECISION_SOFTMAX_TEMP=1
 
 # Training parameters:
 NUM_TRAINING_SETS_PER_EPOCH = 1
 MINIBATCH_SIZE=None
-NUM_EPOCHS= 500 # 6250 # 12500 # 20000  # nback-paper: 400,000 @ one trial per epoch = 6,250 @ 64 trials per epoch
-LEARNING_RATE=0.001  # nback-paper: .001
+NUM_EPOCHS= 500 # 6250 # 12500 # 20000  # EGO-paper: 400,000 @ one trial per epoch = 6,250 @ 64 trials per epoch
+LEARNING_RATE=0.001  # EGO-paper: .001
 
 # Execution parameters:
 CONTEXT_DRIFT_RATE=.1 # drift rate used for DriftOnASphereIntegrator (function of Context mech) on each trial
 NUM_TRIALS = 48 # number of stimuli presented in a trial sequence
 
-# Names of Compositions and Mechanisms:
-EM = "EPISODIC MEMORY (dict)"
-DECISION = "DECISION"
-CONTROLLER = "READ/WRITE CONTROLLER"
-
-context_fct = DriftOnASphereIntegrator(initializer=np.random.random(CONTEXT_SIZE - 1),
-                                       noise=CONTEXT_DRIFT_NOISE,
-                                       dimension=CONTEXT_SIZE)
-
-context_layer = TransferMechanism(name=CONTEXT_LAYER,
-                                 size=CONTEXT_SIZE)
-
-time_layer = TransferMechanism(name=TIME_LAYER,
-                               function=context_fct,
-                               TIME_SIZE)
-
-retrieved_reward = TransferMechanism(name=RETRIEVED_REWARD,
-                                    size=REWARD_SIZE)
-
-retrieved_state = TransferMechanism(name=RETRIEVED_STATE,
-                                    size=STATE_SIZE)
+time_fct = DriftOnASphereIntegrator(initializer=np.random.random(TIME_SIZE - 1),
+                                    noise=TIME_DRIFT_NOISE,
+                                    dimension=TIME_SIZE)
 
 
-em = EpisodicMemoryMechanism(name=EM,
-                             input_ports=[{NAME:"CONTEXT_FIELD",
-                                           SIZE:CONTEXT_SIZE},
-                                          {NAME:"TIME_FIELD",
-                                           SIZE:TIME_SIZE}],
-                             function=ContentAddressableMemory(
-                                 initializer=[[[0] * CONTEXT_SIZE, [0] * TIME_SIZE]],
-                                 distance_field_weights=[CONTEXT_RETRIEVAL_WEIGHT,
-                                                         TIME_RETRIEVAL_WEIGHT],
-                                 # equidistant_entries_select=NEWEST,
-                                 selection_function=SoftMax(gain=RETRIEVAL_SOFTMAX_TEMP)))
+def construct_model(model_name:str=MODEL_NAME,
+
+                    context_input_name:str=CONTEXT_INPUT_NAME,
+
+                    time_input_name:str=TIME_INPUT_LAYER_NAME,
+                    time_size:int=TIME_SIZE,
+
+                    reward_input_name = REWARD_INPUT_LAYER_NAME,
+                    reward_size:int=REWARD_SIZE,
+
+                    context_name:str=CONTEXT_LAYER_NAME,
+                    context_size:int=CONTEXT_SIZE,
+                    context_integration_rate:float=CONTEXT_INTEGRATION_RATE,
+                    context_retrieval_weight:Union[float,int]=CONTEXT_RETRIEVAL_WEIGHT,
+
+                    retrieved_time_name:str=RETRIEVED_TIME_NAME,
+                    time_retrieval_weight:Union[float,int]=TIME_RETRIEVAL_WEIGHT,
+                    retrieved_reward_name:str=RETRIEVED_REWARD_NAME,
+                    reward_retrieval_weight:Union[float,int]=REWARD_RETRIEVAL_WEIGHT,
+
+                    em_name:str=EM_NAME,
+                    retrieval_retrieval_gain=RETRIEVAL_SOFTMAX_GAIN,
+
+                    )->Composition:
+
+    context_input_layer = ProcessingMechanism(name=context_input_name,
+                                              size=context_size)
+
+    context_layer = TransferMechanism(name=context_name,
+                                      size=context_size,
+                                      integrator_mode=True,
+                                      integration_rate=context_integration_rate)
+
+    time_input_layer = ProcessingMechanism(name=time_input_name,
+                                           size=time_size)
+
+    reward_input_layer = ProcessingMechanism(name=reward_input_name,
+                                              size=reward_size)
+
+    retrieved_time_layer = TransferMechanism(name=retrieved_time_name,
+                                       size=time_size)
+
+    retrieved_reward_layer = TransferMechanism(name=retrieved_reward_name,
+                                         size=reward_size)
+
+    em = EpisodicMemoryMechanism(name=em_name,
+                                 input_ports=[{NAME:"CONTEXT_FIELD", SIZE:context_size},
+                                              {NAME:"TIME_FIELD", SIZE:time_size},
+                                              {NAME:"REWARD_FIELD", SIZE:reward_size}],
+                                 function=ContentAddressableMemory(
+                                     initializer=[[[0] * context_size,
+                                                   [0] * time_size,
+                                                   [0] * reward_size]],
+                                     distance_field_weights=[context_retrieval_weight,
+                                                             time_retrieval_weight,
+                                                             reward_retrieval_weight],
+                                     # equidistant_entries_select=NEWEST,
+                                     selection_function=SoftMax(gain=retrieval_retrieval_gain)))
+
+    # Control Mechanism
+    #  Ensures current stimulus and context are only encoded in EM once (at beginning of trial)
+    #    by controlling the storage_prob parameter of em:
+    #      - if outcome of decision signifies a match or hazard rate is realized:
+    #        - set  EM[store_prob]=1 (as prep encoding stimulus in EM on next trial)
+    #        - this also serves to terminate trial (see nback_model.termination_processing condition)
+    #      - if outcome of decision signifies a non-match
+    #        - set  EM[store_prob]=0 (as prep for another retrieval from EM without storage)
+    #        - continue trial
+    control = ControlMechanism(name=CONTROLLER,
+                               default_variable=[[1]],  # Ensure EM[store_prob]=1 at beginning of first trial
+                               # ---------
+                               # VERSION *WITH* ObjectiveMechanism:
+                               objective_mechanism=ObjectiveMechanism(name="OBJECTIVE MECHANISM",
+                                                                      monitor=decision,
+                                                                      # Outcome=1 if match, else 0
+                                                                      function=lambda x: int(x[0][0]>x[0][1])),
+                               # Set ControlSignal for EM[store_prob]
+                               #   to 1 if match or hazard rate is realized (i.e., store stimulus and end trial)
+                               #   else 0 (i.e., don't store stimulus and continue retrieving)
+                               function=lambda outcome: int(bool(outcome)
+                                                            or (np.random.random() < retrieval_hazard_rate)),
+                               # ---------
+                               # # VERSION *WITHOUT* ObjectiveMechanism:
+                               # monitor_for_control=decision,
+                               # # Set Evaluate outcome and set ControlSignal for EM[store_prob]
+                               # #   - outcome is received from decision as one hot in the form: [[match, no-match]]
+                               # function=lambda outcome: int(int(outcome[0][1]>outcome[0][0])
+                               #                              or (np.random.random() > retrieval_hazard_rate)),
+                               # ---------
+                               control=(STORAGE_PROB, em))
 
 
-EGO_comp = Composition(name=MODEL_NAME,
-                       pathways=[])
+    EGO_comp = Composition(name=model_name,
+                           nodes=[context_input_layer, time_input_layer, reward_input_layer,
+                                  context_layer,
+                                  em, 
+                                  retrieved_time_layer, retrieved_reward_layer],
+                           # Terminate trial if value of control is still 1 after first pass through execution
+                           termination_processing={TimeScale.TRIAL: And(Condition(lambda: control.value),
+                                                                        AfterPass(0, TimeScale.TRIAL))},
+                           )
+    # # Terminate trial if value of control is still 1 after first pass through execution
+    EGO_comp.add_projection(MappingProjection(), context_input_layer, context_layer)
+    EGO_comp.add_projection(MappingProjection(), context_layer, em.input_ports["CONTEXT_FIELD"])
+    EGO_comp.add_projection(MappingProjection(), time_input_layer, em.input_ports["TIME_FIELD"])
+    EGO_comp.add_projection(MappingProjection(), reward_input_layer, em.input_ports["REWARD_FIELD"])
+    EGO_comp.add_projection(MappingProjection(), em.output_ports["RETRIEVED_CONTEXT_FIELD"], context_layer)
+    EGO_comp.add_projection(MappingProjection(), em.output_ports["RETRIEVED_TIME_FIELD"], retrieved_time_layer)
+    EGO_comp.add_projection(MappingProjection(), em.output_ports["RETRIEVED_REWARD_FIELD"], retrieved_reward_layer)
 
+    print(f'{model_name} constructed')
+    return EGO_comp
+
+model = None
+if CONSTRUCT_MODEL:
+    model = construct_model()
+
+if DISPLAY_MODEL:
+    if model:
+        model.show_graph(
+            # show_cim=True,
+            # show_node_structure=ALL,
+            # show_dimensions=True
+        )
+    else:
+        print("Model not yet constructed")

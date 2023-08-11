@@ -3173,7 +3173,12 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         previous_value = self.parameters.previous_value._get(context)
 
         try:
-            drift = np.full(dimension - 1, variable)
+            # # MODIFIED 8/11/23 OLD:
+            # drift = np.full(dimension - 1, variable)
+            # MODIFIED 8/11/23 NEW:
+            variable = np.squeeze(variable) if variable.ndim > 1 else variable
+            drift = variable if len(variable) == dimension-1 else np.full(dimension - 1, variable)
+            # MODIFIED 8/11/23 END
         except ValueError:
             owner_str = f"'of '{self.owner.name}" if self.owner else ""
             raise FunctionError(f"Length of 'variable' for {self.name}{owner_str} ({len(variable)}) must be "
