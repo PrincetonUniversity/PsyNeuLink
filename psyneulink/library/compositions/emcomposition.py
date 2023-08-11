@@ -72,8 +72,14 @@
 #            - Use of LinearCombination with PRODUCT in InputPort of output_source
 
 #        - AutodiffComposition:
-#          - FIX: - Fix bug in input_type (test_idencompositionrunner.run_learning input assignment
-#                 - ??set default learning_rate to be same as Composition (0.05) -- will that break tests?
+#          - IN feat/autodiff_python_mode:
+#              - FIX: - Fix bug in input_type (test_idencompositionrunner.run_learning input assignment
+#                     - at least in test_identicalness_of_input_types), change learning_rate to 0.05 for all tests??
+#                     - add test test_identicalness_of_input_types for Composition (in test_learning)
+#                     - ??set default learning_rate to be same as Composition (0.05) -- will that break tests?
+#                     - Autodiff, if "epochs" is not in input_dict, then:
+#                             - set to num_trials as default,
+#                             - leave it to override num_trials if specified (add this to DOCUMENTATION)
 #          - Input construction has to be:
 #                   same for Autodiff in Python mode and PyTorch mode
 #                       (NOTE: used to be that autodiff could get left in Python mode
