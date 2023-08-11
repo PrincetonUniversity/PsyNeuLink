@@ -68,6 +68,8 @@
 #            - Use of LinearCombination with PRODUCT in InputPort of output_source
 
 #        - AutodiffComposition:
+#          - Fix XXX
+#          - set default learning_rate to be same as Composition (0.05)
 #          - Input construction has to be:
 #                   same for Autodiff in Python mode and PyTorch mode
 #                       (NOTE: used to be that autodiff could get left in Python mode
