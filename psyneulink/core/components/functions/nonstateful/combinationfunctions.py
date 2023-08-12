@@ -119,6 +119,9 @@ class Concatenate(CombinationFunction):  # -------------------------------------
     `function <Concatenate.function>` returns a 1d array with length equal to the sum of the lengths of the items
     in `variable <Concatenate.variable>`.
 
+    `derivative <Concatenate.derivative>` returns `scale <Concatenate.slope>`.
+
+
     Arguments
     ---------
 
@@ -288,6 +291,31 @@ class Concatenate(CombinationFunction):  # -------------------------------------
 
         return self.convert_output_type(result)
 
+    @handle_external_context()
+    def derivative(self, input=None, output=None, covariates=None, context=None):
+        """
+        derivative(input)
+
+        Derivative of `function <Concatenate._function>` at **input**.
+
+        Arguments
+        ---------
+
+        input : number
+            value of the input to the function at which derivative is to be taken.
+
+        covariates : 2d np.array : default class_defaults.variable[1:]
+            the input(s) to the Concatenate function other than the one for which the derivative is being
+            computed;  these are ignored and are accepted for consistency with other functions.
+
+        Returns
+        -------
+
+        Scale of function :  number or array
+
+        """
+
+        return self._get_current_parameter_value(SCALE, context)
 
 class Rearrange(CombinationFunction):  # ------------------------------------------------------------------------
     """

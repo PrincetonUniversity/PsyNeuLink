@@ -12,6 +12,10 @@
 #   - SHOULD differential of SoftmaxGainControl Node be included in learning?
 #   - SHOULD MEMORY DECAY OCCUR IF STORAGE DOES NOT? CURRENTLY IT DOES NOT (SEE EMStorage Function)
 
+# - FIX: Concatenation:
+# -      LLVM for function and derivative
+# -      Add Concatenate to pytorchcreator_function
+# -      Deal with matrix assignment in LearningProjection LINE 643
 # - FIX: WRITE MORE TESTS FOR EXECUTION, WARNINGS, AND ERROR MESSAGES
 #         - learning (with and without learning field weights
 #         - 3d tuple with first entry != memory_capacity if specified
@@ -106,6 +110,7 @@
 #            and then remove MODIFIED 8/1/23 in _check_for_unused_projections
 
 #        - show_graph():
+#          - add mode for showing projections as diamonds without show_learning (e.g., "show_projections")
 #          - figure out how to get storage_node to show without all other learning stuff
 #          - show 'operation' parameter for LinearCombination in show_node_structure=ALL
 #          - specify set of nodes to show and only show those
@@ -357,7 +362,7 @@ An EMComposition is created by calling its constructor, that takes the following
   (i.e., all non-zero values) are all equal *and* ``normalize_memories`` is set to True, then setting
   ``concatenate_keys`` then a concatenate_keys_node <EMComposition.concatenate_keys_node>` is created that
   receives input from all of the `key_input_nodes <EMComposition.key_input_nodes>` and passes them as a single
-  vector to the `mactch_node <EMComposition.field_match_node>`.
+  vector to the `mactch_node <EMComposition.match_nodes>`.
 
       .. note::
          While this is computationally more efficient, it can affect the outcome of the `matching process
@@ -431,10 +436,10 @@ and the number of entries is determined by the `memory_capacity <EMComposition_M
      from the `combined_softmax_node <EMComposition.combined_softmax_node>` to each of the `retrieved_nodes
      <EMComposition.retrieved_nodes>`. Memories associated with each key are also stored in the `matrix
      <MappingProjection.matrix>` parameters of the `MappingProjections` from the `key_input_nodes
-     <EMComposition.key_input_nodes>` to each of the corresponding `field_match_nodes <EMComposition.field_match_nodes>`.
+     <EMComposition.key_input_nodes>` to each of the corresponding `match_nodes <EMComposition.match_nodes>`.
      This is done so that the match of each key to the memories for the corresponding field can be computed simply
      by passing the input for each key through the Projection (which computes the dot product of the input with
-     the Projection's `matrix <MappingProjection.matrix>` parameter) to the corresponding field_match_node; and, similarly,
+     the Projection's `matrix <MappingProjection.matrix>` parameter) to the corresponding match_node; and, similarly,
      retrieivals can be computed by passing the softmax disintributions and weighting for each field computed
      in the `combined_softmax_node <EMComposition.combined_softmax_node>` through its Projection to each
      `retrieved_node <EMComposition.retrieved_nodes>` (which computes the dot product of the weighted softmax over
@@ -471,34 +476,34 @@ When the EMComposition is executed, the following sequence of operations occur
   for matching.
 
 * **Concatenation**. By default, the input to every `key_input_node <EMComposition.key_input_nodes>` is passed to a
-  to its own `field_match_node <EMComposition.field_match_nodes>` through a `MappingProjection` that computes its
+  to its own `match_node <EMComposition.match_nodes>` through a `MappingProjection` that computes its
   dot product with the corresponding field of each entry in `memory <EMComposition.memory>`.  In this way, each
   match is normalized so that, absent `field_weighting <EMComposition_Field_Weights>`, all keys contribute equally to
   retrieval irrespective of relative differences in the norms of inputs or their entries in memory.  However, if the
   `field_weights <EMComposition.field_weights>` are the same for all `keys
   <EMComposition_Field_Weights>` and `normalize_memories <EMComposition.normalize_memories>` is True, then the inputs
   provided to the `key_input_nodes <EMComposition.key_input_nodes>` are concatenated into a single vector (in the
-  `concatenate_keys_node <EMComposition.concatenate_keys_node>`), which is passed to a single `field_match_node
-  <EMComposition.field_match_nodes>`.  This may be more computationally efficient than passing each key through its own
-  `field_match_node <EMComposition.field_match_nodes>`,
+  `concatenate_keys_node <EMComposition.concatenate_keys_node>`), which is passed to a single `match_node
+  <EMComposition.match_nodes>`.  This may be more computationally efficient than passing each key through its own
+  `match_node <EMComposition.match_nodes>`,
   COMMENT:
   FROM CodePilot: (OF HISTORICAL INTEREST?)
   and may also be more effective if the keys are highly correlated (e.g., if they are different representations of
   the same stimulus).
   COMMENT
-  however it will not necessarily produce the same results as passing each key through its own `field_match_node
-  <EMComposition.field_match_nodes>` (see `concatenate keys <`concatenate_keys_node
+  however it will not necessarily produce the same results as passing each key through its own `match_node
+  <EMComposition.match_nodes>` (see `concatenate keys <`concatenate_keys_node
   >` for additional
   information).
 
 * **Match memories by field**. The values of each `key_input_node <EMComposition.key_input_nodes>` (or the
   `concatenate_keys_node <EMComposition.concatenate_keys_node>` if `concatenate_keys <EMComposition_Concatenate_Keys>`
   attribute is True) are passed through a `MappingProjection` that computes the dot product of the input with each
-  memory for the corresponding field, the result of which is passed to the corresponding `field_match_node
-  <EMComposition.field_match_nodes>`.
+  memory for the corresponding field, the result of which is passed to the corresponding `match_node
+  <EMComposition.match_nodes>`.
 
-* **Softmax normalize matches over fields**. The dot product for each key field is passed from the `field_match_node
-  <EMComposition.field_match_nodes>` to the corresponding `softmax_node <EMComposition.softmax_nodes>`, which applies
+* **Softmax normalize matches over fields**. The dot product for each key field is passed from the `match_node
+  <EMComposition.match_nodes>` to the corresponding `softmax_node <EMComposition.softmax_nodes>`, which applies
   a softmax function to normalize the dot products for each key field.  If a numerical value is specified for
   `softmax_gain <EMComposition.softmax_gain>`, that is used as the gain (inverse temperature) for the softmax function;
   otherwise, if it is specified as *CONTROL* or None, then the `softmax_gain <EMComposition.softmax_gain>` function is
@@ -524,7 +529,7 @@ When the EMComposition is executed, the following sequence of operations occur
        the `combined_softmax_node <EMComposition.combined_softmax_node>` to each of the `retrieved_nodes
        <EMComposition.retrieved_nodes>`, as well as the `matrix <MappingProjection.matrix>` parameter of the
        `MappingProjection` from each `key_input_node <EMComposition.key_input_nodes>` to the corresponding
-       `field_match_node <EMComposition.field_match_nodes>` by `memory_decay <EMComposition.memory_decay_rate>`,
+       `match_node <EMComposition.match_nodes>` by `memory_decay <EMComposition.memory_decay_rate>`,
         by 1 - `memory_decay <EMComposition.memory_decay_rate>`.
 
 .. _EMComposition_Storage:
@@ -539,7 +544,7 @@ When the EMComposition is executed, the following sequence of operations occur
        of the `MappingProjection` from the `retreival_weighting_node <EMComposition.combined_softmax_node>` to each
        of the `retrieved_nodes <EMComposition.retrieved_nodes>`, as well as the `matrix <MappingProjection.matrix>`
        parameter of the `MappingProjection` from each `key_input_node <EMComposition.key_input_nodes>` to the
-       corresponding `field_match_node <EMComposition.field_match_nodes>` (see note `above <EMComposition_Memory_Storage>` for
+       corresponding `match_node <EMComposition.match_nodes>` (see note `above <EMComposition_Memory_Storage>` for
        additional details). If `memory_capacity <EMComposition_Memory_Capacity>` has been reached, then the weakest
        memory (i.e., the one with the lowest norm across all fields) is replaced by the new memory.
 
@@ -1039,7 +1044,7 @@ class EMComposition(AutodiffComposition):
         This is not created if the ``concatenate_keys`` argument to the EMComposition's constructor is False or is
         overridden (see `concatenate_keys <EMComposition_Concatenate_Keys>`), or there is only one key_input_node.
 
-    field_match_nodes : list[TransferMechanism]
+    match_nodes : list[TransferMechanism]
         `TransferMechanisms <TransferMechanism>` that receive the dot product of each key and those stored in
         the corresponding field of `memory <EMComposition.memory>` (see `Match memories by field
         <EMComposition_Processing>` for additional details).  These are assigned names that prepend *MATCH_n* to the
@@ -1053,7 +1058,7 @@ class EMComposition(AutodiffComposition):
 
     softmax_nodes : list[TransferMechanism]
         `TransferMechanisms <TransferMechanism>` that compute the softmax over the vectors received
-        from the corresponding `field_match_nodes <EMComposition.field_match_nodes>` (see `Softmax normalize matches over fields
+        from the corresponding `match_nodes <EMComposition.match_nodes>` (see `Softmax normalize matches over fields
         <EMComposition_Processing>` for additional details).
 
     field_weight_nodes : list[ProcessingMechanism]
@@ -1635,6 +1640,8 @@ class EMComposition(AutodiffComposition):
                             ):
         """Construct Nodes and Pathways for EMComposition"""
 
+        # Construct Nodes --------------------------------------------------------------------------------
+
         field_weighting = len([weight for weight in field_weights if weight]) > 1 and not concatenate_keys
 
         # First, construct Nodes of Composition with their Projections
@@ -1642,7 +1649,7 @@ class EMComposition(AutodiffComposition):
         self.value_input_nodes = self._construct_value_input_nodes(field_weights)
         self.input_nodes = self.key_input_nodes + self.value_input_nodes
         self.concatenate_keys_node = self._construct_concatenate_keys_node(concatenate_keys)
-        self.field_match_nodes = self._construct_field_match_nodes(memory_template, memory_capacity,
+        self.match_nodes = self._construct_match_nodes(memory_template, memory_capacity,
                                                                    concatenate_keys,normalize_memories)
         self.softmax_nodes = self._construct_softmax_nodes(memory_capacity, field_weights, softmax_gain)
         self.field_weight_nodes = self._construct_field_weight_nodes(field_weights,
@@ -1659,39 +1666,70 @@ class EMComposition(AutodiffComposition):
                                                              self.concatenate_keys_node,
                                                              memory_decay_rate, storage_prob)
 
-        # Then Construct the Pathways
+        # Do some validation and get singleton Nodes for concatenated keys
+        if self.concatenate_keys:
+            softmax_node = self.softmax_nodes.pop()
+            assert not self.softmax_nodes, \
+                f"PROGRAM ERROR: Too many softmax_nodes ({len(self.softmax_nodes)}) for concatenated keys."
+            assert len(self.softmax_gain_control_nodes) <= 1, \
+                (f"PROGRAM ERROR: Too many softmax_gain_control_nodes "
+                 f"{len(self.softmax_gain_control_nodes)}) for concatenated keys.")
+            match_node = self.match_nodes.pop()
+            assert not self.softmax_nodes, \
+                f"PROGRAM ERROR: Too many match_nodes ({len(self.match_nodes)}) for concatenated keys."
+            assert not self.field_weight_nodes, \
+                f"PROGRAM ERROR: There should be no field_weight_nodes for concatenated keys."
+
+        # Construct Pathways --------------------------------------------------------------------------------
+
+        # Set up pathways without PsyNeuLink learning pathways
         if not self.enable_learning:
-            self.add_nodes(self.key_input_nodes)
-            self.add_nodes(self.value_input_nodes)
-            if self.concatenate_keys_node is not None:
-                self.add_node(self.concatenate_keys_node)
-            self.add_nodes(self.field_match_nodes)
-            self.add_nodes(self.softmax_nodes)
-            self.add_nodes(self.field_weight_nodes)
-            self.add_nodes(self.weighted_softmax_nodes)
-            self.add_nodes(self.softmax_gain_control_nodes)
-            self.add_node(self.combined_softmax_node)
-            self.add_nodes(self.retrieved_nodes)
+            self.add_nodes(self.key_input_nodes + self.value_input_nodes)
+            if self.concatenate_keys:
+                self.add_nodes([self.concatenate_keys_node, match_node, softmax_node])
+            else:
+                self.add_nodes(self.match_nodes +
+                               self.softmax_nodes +
+                               self.field_weight_nodes +
+                               self.weighted_softmax_nodes)
+            self.add_nodes(self.softmax_gain_control_nodes +
+                           [self.combined_softmax_node] +
+                           self.retrieved_nodes)
             if use_storage_node:
                 self.add_node(self.storage_node)
                 # self.add_projections(proj for proj in self.storage_node.efferents)
 
-        # Set up backpropagation pathways for learning field weights
+        # Set up psyneulink backpropagation pathways for learning field weights
         else:
 
             # Key pathways
             for i in range(self.num_keys):
-                pathway = [self.key_input_nodes[i],
-                           self.field_match_nodes[i],
-                           self.softmax_nodes[i],
-                           self.combined_softmax_node]
-                if self.weighted_softmax_nodes:
-                    pathway.insert(3, self.weighted_softmax_nodes[i])
+                # Regular pathways
+                if not self.concatenate_keys:
+                    pathway = [self.key_input_nodes[i],
+                               self.match_nodes[i],
+                               self.softmax_nodes[i],
+                               self.combined_softmax_node]
+                    if self.weighted_softmax_nodes:
+                        pathway.insert(3, self.weighted_softmax_nodes[i])
+                    if self.softmax_gain_control_nodes:
+                        pathway.insert(4, self.softmax_gain_control_nodes[i])
+                # Key-concatenated pathways
+                else:
+                    pathway = [self.key_input_nodes[i],
+                               self.concatenate_keys_node,
+                               match_node,
+                               softmax_node,
+                               self.combined_softmax_node]
+                    if self.softmax_gain_control_nodes:
+                        pathway.insert(4, self.softmax_gain_control_nodes[0]) # Only one, ensured above
                 self.add_backpropagation_learning_pathway(pathway)
 
-            # Field weighting pathways
-            for i in range(self.num_keys):
-                self.add_backpropagation_learning_pathway([self.field_weight_nodes[i], self.weighted_softmax_nodes[i]])
+            # field_weights -> weighted_softmax pathways
+            if self.field_weight_nodes:
+                for i in range(self.num_keys):
+                    self.add_backpropagation_learning_pathway([self.field_weight_nodes[i],
+                                                               self.weighted_softmax_nodes[i]])
 
             self.add_nodes(self.value_input_nodes)
 
@@ -1706,7 +1744,7 @@ class EMComposition(AutodiffComposition):
 
     def _construct_key_input_nodes(self, field_weights)->list:
         """Create one node for each key to be used as cue for retrieval (and then stored) in memory.
-        Used to assign new set of weights for Projection for key_input_node[i] -> field_match_node[i]
+        Used to assign new set of weights for Projection for key_input_node[i] -> match_node[i]
         where i is selected randomly without replacement from (0->memory_capacity)
         """
 
@@ -1744,7 +1782,7 @@ class EMComposition(AutodiffComposition):
 
     def _construct_concatenate_keys_node(self, concatenate_keys)->ProcessingMechanism:
         """Create node that concatenates the inputs for all keys into a single vector
-        Used to create a matrix for Projectoin from match / memory weights from concatenate_node -> field_match_node
+        Used to create a matrix for Projectoin from match / memory weights from concatenate_node -> match_node
         """
         # One node that concatenates inputs from all keys
         if not concatenate_keys:
@@ -1760,13 +1798,13 @@ class EMComposition(AutodiffComposition):
                                                     for i in range(self.num_keys)],
                                        name='CONCATENATE KEYS')
 
-    def _construct_field_match_nodes(self, memory_template, memory_capacity, concatenate_keys, normalize_memories)->list:
+    def _construct_match_nodes(self, memory_template, memory_capacity, concatenate_keys, normalize_memories)->list:
         """Create nodes that, for each key field, compute the similarity between the input and each item in memory.
         - If self.concatenate_keys is True, then all inputs for keys from concatenated_keys_node are assigned a single
-            field_match_node, and weights from memory_template are assigned to a Projection from concatenated_keys_node to
-            that field_match_node.
-        - Otherwise, each key has its own field_match_node, and weights from memory_template are assigned to a Projection
-            from each key_input_node[i] to each field_match_node[i].
+            match_node, and weights from memory_template are assigned to a Projection from concatenated_keys_node to
+            that match_node.
+        - Otherwise, each key has its own match_node, and weights from memory_template are assigned to a Projection
+            from each key_input_node[i] to each match_node[i].
         - Each element of the output represents the similarity between the key_input and one item in memory.
         """
 
@@ -1777,7 +1815,7 @@ class EMComposition(AutodiffComposition):
             matrix =np.array([np.concatenate((memory_template[:,:self.num_keys][i]))
                               for i in range(memory_capacity)]).transpose()
             matrix = np.array(matrix.tolist())
-            field_match_nodes = [
+            match_nodes = [
                 TransferMechanism(
                     input_ports={NAME: 'CONCATENATED_INPUTS',
                                  SIZE: memory_capacity,
@@ -1790,7 +1828,7 @@ class EMComposition(AutodiffComposition):
 
         # One node for each key
         else:
-            field_match_nodes = [
+            match_nodes = [
                 TransferMechanism(
                     input_ports= {
                         SIZE:memory_capacity,
@@ -1803,11 +1841,11 @@ class EMComposition(AutodiffComposition):
                 for i in range(self.num_keys)
             ]
 
-        return field_match_nodes
+        return match_nodes
 
     def _construct_softmax_nodes(self, memory_capacity, field_weights, softmax_gain)->list:
         """Create nodes that, for each key field, compute the softmax over the similarities between the input and the
-        memories in the corresponding field_match_node.
+        memories in the corresponding match_node.
         """
 
         # Get indices of field_weights that specify keys:
@@ -1825,13 +1863,13 @@ class EMComposition(AutodiffComposition):
 
         softmax_nodes = [TransferMechanism(input_ports={SIZE:memory_capacity,
                                                         PROJECTIONS: MappingProjection(
-                                                            sender=field_match_node.output_port,
+                                                            sender=match_node.output_port,
                                                             matrix=IDENTITY_MATRIX,
                                                             name=f'MATCH to SOFTMAX for {self.key_names[i]}')},
                                            function=SoftMax(gain=softmax_gain),
-                                           name='SOFTMAX' if len(self.field_match_nodes) == 1
+                                           name='SOFTMAX' if len(self.match_nodes) == 1
                                            else f'SOFTMAX for {self.key_names[i]}')
-                         for i, field_match_node in enumerate(self.field_match_nodes)]
+                         for i, match_node in enumerate(self.match_nodes)]
 
         return softmax_nodes
 
@@ -1840,12 +1878,12 @@ class EMComposition(AutodiffComposition):
 
         softmax_gain_control_nodes = []
         if softmax_gain == CONTROL:
-            softmax_gain_control_nodes = [ControlMechanism(monitor_for_control=field_match_node,
+            softmax_gain_control_nodes = [ControlMechanism(monitor_for_control=match_node,
                                                       control_signals=[(GAIN, self.softmax_nodes[i])],
                                                       function=get_softmax_gain,
                                                       name='SOFTMAX GAIN CONTROL' if len(self.softmax_nodes) == 1
                                                       else f'SOFTMAX GAIN CONTROL {i}')
-                                     for i, field_match_node in enumerate(self.field_match_nodes)]
+                                     for i, match_node in enumerate(self.match_nodes)]
 
         return softmax_gain_control_nodes
 
@@ -1986,8 +2024,8 @@ class EMComposition(AutodiffComposition):
          - **storage_prob** -- probability for storing an entry in `memory <EMComposition.memory>`.
         """
 
-        learning_signals = [field_match_node.input_port.path_afferents[0]
-                            for field_match_node in self.field_match_nodes] + \
+        learning_signals = [match_node.input_port.path_afferents[0]
+                            for match_node in self.match_nodes] + \
                            [retrieved_node.input_port.path_afferents[0]
                             for retrieved_node in self.retrieved_nodes]
 
@@ -2022,7 +2060,7 @@ class EMComposition(AutodiffComposition):
     # *****************************************************************************************************************
 
     def execute(self, inputs, context, **kwargs):
-        """Set input to weights of Projections to field_match_nodes and retrieved_nodes if not use_storage_node."""
+        """Set input to weights of Projections to match_nodes and retrieved_nodes if not use_storage_node."""
         # FIX: FOR NOW, SKIP AUTODIFF EXECUTION UNTIL FULLY IMPLEMENTED (INCLUDING LinearCombination FUNCTION in torch)
         results = super(AutodiffComposition, self).execute(inputs=inputs, context=context, **kwargs)
         if not self.use_storage_node:
@@ -2059,11 +2097,11 @@ class EMComposition(AutodiffComposition):
         row_norms = np.sum(field_norms, axis=1)
         idx_of_min = np.argmin(row_norms)
 
-        # If concatenate_keys is True, assign entry to col of matrix for Projection from concatenate_node to field_match_node
+        # If concatenate_keys is True, assign entry to col of matrix for Projection from concatenate_node to match_node
         if self.concatenate_keys_node:
             # Get entry to store from concatenate_keys_node
             entry_to_store = self.concatenate_keys_node.value[0]
-            # Get matrix of weights for Projection from concatenate_node to field_match_node
+            # Get matrix of weights for Projection from concatenate_node to match_node
             field_memories = self.concatenate_keys_node.efferents[0].parameters.matrix.get(context)
             # Decay existing memories before storage if memory_decay_rate is specified
             if self.memory_decay_rate:
@@ -2073,12 +2111,12 @@ class EMComposition(AutodiffComposition):
             # Assign updated matrix to Projection
             self.concatenate_keys_node.efferents[0].parameters.matrix.set(field_memories, context)
 
-        # Otherwise, assign input for each key field to col of matrix for Projection from key_input_node to field_match_node
+        # Otherwise, assign input for each key field to col of matrix for Projection from key_input_node to match_node
         else:
             for i, input_node in enumerate(self.key_input_nodes):
                 # Get entry to store from key_input_node
                 entry_to_store = input_node.value[0]
-                # Get matrix of weights for Projection from key_input_node to field_match_node
+                # Get matrix of weights for Projection from key_input_node to match_node
                 field_memories = input_node.efferents[0].parameters.matrix.get(context)
                 # Decay existing memories before storage if memory_decay_rate is specified
                 if self.memory_decay_rate:
@@ -2092,7 +2130,7 @@ class EMComposition(AutodiffComposition):
         for i, input_node in enumerate(self.key_input_nodes + self.value_input_nodes):
             # Get entry to store from key_input_node or value_input_node
             entry_to_store = input_node.value[0]
-            # Get matrix of weights for Projection from input_node to field_match_node
+            # Get matrix of weights for Projection from input_node to match_node
             field_memories = self.retrieved_nodes[i].path_afferents[0].parameters.matrix.get(context)
             # Decay existing memories before storage if memory_decay_rate is specified
             if self.memory_decay_rate:

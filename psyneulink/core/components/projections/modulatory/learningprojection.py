@@ -643,8 +643,8 @@ class LearningProjection(ModulatoryProjection_Base):
             if learning_signal.shape != matrix.shape:
                 non_diag = np.count_nonzero(matrix - np.diag(np.diagonal(matrix)))
                 learning_fct = self.sender.owner.function
-                if isinstance(learning_fct, Reinforcement) and non_diag:
-                    learning_fct_msg = f"; for {learning_fct.componentName} it must be a diagonal matrix"
+                learning_fct_msg = f"; for {learning_fct.componentName} it must be a diagonal matrix" \
+                    if (isinstance(learning_fct, Reinforcement) and non_diag) else ''
                 raise LearningProjectionError(f"Problem matching the shape of learning_signal from"
                                               f" {self.sender.owner.name} ({learning_signal.shape}) to the shape "
                                               f"of the matrix of {self.receiver.owner.name} "

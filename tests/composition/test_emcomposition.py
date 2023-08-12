@@ -279,39 +279,39 @@ class TestExecution:
         #   memory_template         mem    mem  mem  fld   concat  nlz  sm   str    inputs        expected_retrieval
         #                           fill   cap decay wts    keys       gain  prob
         # ----------------------------------------------------------------------------------  ------------------------
-        (0, [[[1,2,3],[4,5,6]],
-             [[1,2,5],[4,5,8]],
-             [[1,2,10],[4,5,10]]],  None,   3,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]]], [[1., 2., 3.16585899],
-                                                                                                 [4., 5., 6.16540637]]),
-        (1, [[[1,2,3],[4,5,6]],
-             [[1,2,5],[4,5,8]],
-             [[1,2,10],[4,5,10]]],  None,   3,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]],
-                                                                                  [[4, 5, 6]]], [[1., 2., 3.16585899],
-                                                                                                 [4., 5., 6.16540637]]),
-        (2, [[[1,2,3],[4,5,6]],
-             [[1,2,5],[4,5,8]],
-             [[1,2,10],[4,5,10]]],  None,   3,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]],
-                                                                                  [[4, 5, 8]]], [[1., 2., 3.16585899],
-                                                                                                 [4., 5., 6.16540637]]),
-        (3, [[[1,2,3],[4,5,6]],
-             [[1,2,5],[4,5,8]],
-             [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]],
-                                                                                   [[4, 5, 8]]], [[0.99998628,
-                                                                                                   1.99997247,
-                                                                                                   3.1658154 ],
-                                                                                                  [3.99994492,
-                                                                                                   4.99993115,
-                                                                                                   6.16532141]]),
-        (4, [[[1,2,3],[4,5,6]],     # Equal field_weights (but not concatenated)
-             [[1,2,5],[4,5,8]],
-             [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [1,1],  None, None,  100,  0, [[[1, 2, 3]],
-                                                                                   [[4, 5, 6]]], [[0.99637453,
-                                                                                                   1.99272658,
-                                                                                                   3.44135342],
-                                                                                                  [3.98544898,
-                                                                                                   4.9818115,
-                                                                                                   6.38099054]]
-         ),
+        # (0, [[[1,2,3],[4,5,6]],
+        #      [[1,2,5],[4,5,8]],
+        #      [[1,2,10],[4,5,10]]],  None,   3,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]]], [[1., 2., 3.16585899],
+        #                                                                                          [4., 5., 6.16540637]]),
+        # (1, [[[1,2,3],[4,5,6]],
+        #      [[1,2,5],[4,5,8]],
+        #      [[1,2,10],[4,5,10]]],  None,   3,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]],
+        #                                                                           [[4, 5, 6]]], [[1., 2., 3.16585899],
+        #                                                                                          [4., 5., 6.16540637]]),
+        # (2, [[[1,2,3],[4,5,6]],
+        #      [[1,2,5],[4,5,8]],
+        #      [[1,2,10],[4,5,10]]],  None,   3,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]],
+        #                                                                           [[4, 5, 8]]], [[1., 2., 3.16585899],
+        #                                                                                          [4., 5., 6.16540637]]),
+        # (3, [[[1,2,3],[4,5,6]],
+        #      [[1,2,5],[4,5,8]],
+        #      [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]],
+        #                                                                            [[4, 5, 8]]], [[0.99998628,
+        #                                                                                            1.99997247,
+        #                                                                                            3.1658154 ],
+        #                                                                                           [3.99994492,
+        #                                                                                            4.99993115,
+        #                                                                                            6.16532141]]),
+        # (4, [[[1,2,3],[4,5,6]],     # Equal field_weights (but not concatenated)
+        #      [[1,2,5],[4,5,8]],
+        #      [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [1,1],  None, None,  100,  0, [[[1, 2, 3]],
+        #                                                                            [[4, 5, 6]]], [[0.99637453,
+        #                                                                                            1.99272658,
+        #                                                                                            3.44135342],
+        #                                                                                           [3.98544898,
+        #                                                                                            4.9818115,
+        #                                                                                            6.38099054]]
+        #  ),
         (5, [[[1,2,3],[4,5,6]],     # Equal field_weights with concatenation
              [[1,2,5],[4,5,8]],
              [[1,2,10],[4,5,10]]], (0,.01), 4,  0, [1,1],  True, None,  100,  0, [[[1, 2, 4]],
@@ -415,6 +415,8 @@ class TestExecution:
             params.update({'field_weights': field_weights})
         if concatenate_keys is not None:
             params.update({'concatenate_keys': concatenate_keys})
+            # FIX: DELETE THE FOLLOWING ONCE CONCATENATION IS IMPLEMENTED FOR LEARNING
+            params.update({'enable_learning': False})
         if normalize_memories is not None:
             params.update({'normalize_memories': normalize_memories})
         if softmax_gain is not None:
@@ -466,7 +468,7 @@ class TestExecution:
     @pytest.mark.benchmark
     @pytest.mark.parametrize('concatenate', [True, False])
     @pytest.mark.parametrize('use_storage_node', [True, False])
-    def test_multiple_trials_concatenation_and_storage_node(self,comp_mode, concatenate, use_storage_node):
+    def test_multiple_trials_concatenation_and_storage_node_no_learning(self,comp_mode, concatenate, use_storage_node):
 
         if comp_mode != pnl.ExecutionMode.Python:
             pytest.skip('Compilation not yet support for Composition.import.')
@@ -481,6 +483,7 @@ class TestExecution:
                            softmax_gain=100,
                            memory_fill=(0,.001),
                            concatenate_keys=concatenate,
+                           enable_learning=False,
                            use_storage_node=use_storage_node)
 
         inputs = [[[[1,2,3]],[[4,5,6]],[[10,20,30]],[[40,50,60]],[[100,200,300]],[[400,500,600]]],

@@ -4410,7 +4410,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if transfer_required_roles:
             for entry in composition.required_node_roles:
                 if entry[0] in nodes:
-                    self.require_node_roles(entry)
+                    self.require_node_roles(*entry)
 
         if transfer_excluded_roles:
             for entry in composition.excluded_node_roles:
