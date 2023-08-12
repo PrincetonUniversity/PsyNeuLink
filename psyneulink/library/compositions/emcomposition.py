@@ -12,15 +12,21 @@
 #   - SHOULD differential of SoftmaxGainControl Node be included in learning?
 #   - SHOULD MEMORY DECAY OCCUR IF STORAGE DOES NOT? CURRENTLY IT DOES NOT (SEE EMStorage Function)
 
+# - FIX: WRITE MORE TESTS FOR EXECUTION, WARNINGS, AND ERROR MESSAGES
+#         - learning (with and without learning field weights
+#         - 3d tuple with first entry != memory_capacity if specified
+#         - list with number of entries > memory_capacity if specified
+#         - input is added to the correct row of the matrix for each key and value for
+#                for non-contiguous keys (e.g, field_weights = [1,0,1]))
+#         - explicitly that storage occurs after retrieval
+# - FIX: WARNING NOT OCCURRING FOR Normalize ON ZEROS WITH MULTIPLE ENTRIES (HAPPENS IF *ANY* KEY IS EVER ALL ZEROS)
 # - FIX: IMPLEMENT LearningMechanism FOR RETRIEVAL WEIGHTS:
-#        - Projections to COVARIATES dpn't seem to be getting added to Composition (getting warnins)
 #        - what is learning_update: AFTER doing?  Use for scheduling execution of storage_node?
-#        - search for learn_field_weights and attend to comments
-#        X implement derivative for concatenate
+#        ?? implement derivative for concatenate
 # - FIX: implement add_storage_pathway to handle addition of storage_node as learning mechanism
 #        - in "_create_storage_learning_components()" assign "learning_update" arg
 #          as BEORE OR DURING instead of AFTER (assigned to learning_enabled arg of LearningMechanism)
-# - FIX: Add StorageMechanism LearningProjections to Composition?
+# - FIX: Add StorageMechanism LearningProjections to Composition? -> CAUSES TEST FAILURES; NEEDS INVESTIGATION
 # - FIX: Thresholded version of SoftMax gain (per Kamesh)
 # - FIX: DEAL WITH INDEXING IN NAMES FOR NON-CONTIGUOUS KEYS AND VALUES (reorder to keep all keys together?)
 # - FIX: _import_composition:
@@ -29,17 +35,11 @@
 # - FIX: IMPLEMENT _integrate_into_composition METHOD THAT CALLS _import_composition ON ANOTHER COMPOSITION
 # -      AND TRANSFERS RELEVANT ATTRIBUTES (SUCH AS MEMORY, KEY_INPUT_NODES, ETC., POSSIBLY APPENDING NAMES)
 # - FIX: ADD Option to suppress field_weights when computing norm for weakest entry in EMStorageMechanism
-
 # - FIX: GENERATE ANIMATION w/ STORAGE (uses Learning but not in usual way)
-# - FIX: WRITE MORE TESTS FOR EXECUTION, WARNINGS, AND ERROR MESSAGES
-#         - 3d tuple with first entry != memory_capacity if specified
-#         - list with number of entries > memory_capacity if specified
-#         - input is added to the correct row of the matrix for each key and value for
-#                for non-contiguous keys (e.g, field_weights = [1,0,1]))
-#         - explicitly that storage occurs after retrieval
-# - FIX: WARNING NOT OCCURRING FOR Normalize ON ZEROS WITH MULTIPLE ENTRIES (HAPPENS IF *ANY* KEY IS EVER ALL ZEROS)
-# - FIX: IMPLEMENT use OF multiple inheritance from AutoDiff and Composition
+# - IMPLEMENT use OF multiple inheritance of EMComposition from AutoDiff and Composition
+
 # - FIX: DOCUMENTATION:
+#        - enable_learning vs. learning_field_weights
 #        - USE OF EMStore.storage_location (NONE => LOCAL, SPECIFIED => GLOBAL)
 #        - define "keys" and "values" explicitly
 #        - define "key weights" explicitly as field_weights for all non-zero values
@@ -71,7 +71,7 @@
 #          - WRITE TESTS FOR USE OF COVARIATES AND RELATED VIOLATIONS: (see ScratchPad)
 #            - Use of LinearCombination with PRODUCT in output_source
 #            - Use of LinearCombination with PRODUCT in InputPort of output_source
-
+#
 #        - AutodiffComposition:
 #          - IN feat/autodiff_python_mode:
 #              - FIX: - Fix bug in input_type (test_idencompositionrunner.run_learning input assignment
@@ -1985,17 +1985,6 @@ class EMComposition(AutodiffComposition):
 
          - **storage_prob** -- probability for storing an entry in `memory <EMComposition.memory>`.
         """
-
-        # if concatenate_keys:
-        #     projections = [self.concatenate_keys_node.input_ports[i].path_afferents[0] for i in range(self.num_keys)] + \
-        #                   [self.retrieved_nodes[i].input_port.path_afferents[0] for i in range(len(self.input_nodes))]
-        #     variable = [self.input_nodes[i].value[0] for i in range(self.num_fields)]
-        #     fields = [self.input_nodes[i] for i in range(self.num_fields)]
-        # else:
-        #     variable = [self.input_nodes[i].value[0] for i in range(self.num_fields)]
-        #     fields = [self.input_nodes[i] for i in range(self.num_fields)]
-        #     projections = [self.field_match_nodes[i].input_port.path_afferents[0] for i in range(self.num_keys)] + \
-        #                   [self.retrieved_nodes[i].input_port.path_afferents[0] for i in range(len(self.input_nodes))]
 
         learning_signals = [field_match_node.input_port.path_afferents[0]
                             for field_match_node in self.field_match_nodes] + \

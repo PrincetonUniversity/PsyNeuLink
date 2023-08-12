@@ -7476,7 +7476,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if isinstance(n, tuple):
                     nodes[i] = nodes[i][0]
 
-        # MODIFIED 8/7/23 OLD [WITH MODIFIED LOCAL VARIABLE NAMES]:
         specified_pathway = pathway
         # interleave (sets of) Nodes and (sets or lists of) Projections
         parsed_pathway = [node_entries[0]]
@@ -7526,8 +7525,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Warn if inferred Projections were identical to existing ones
                 if self._pre_existing_pathway_components[PROJECTIONS]:
                     if self.prefs.verbosePref:
-                        warnings.warn(f"Pathway assigned {pathway_arg_str} specified Projections already in "
-                                      f"'{self.name}': the latter will be used.")
+                        warnings.warn(f"Pathway assigned {pathway_arg_str} specified Projections "
+                                      f"already in '{self.name}': the latter will be used.")
 
             # Shorter because it contained one or more ControlMechanisms with monitor_for_control specified
             #    or an ObjectiveMechanism that projects to a ControlMechanism.
@@ -7542,61 +7541,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Otherwise, something has gone wrong
                 assert False, \
                     f"PROGRAM ERROR: Bad pathway specification for {self.name} {pathway_arg_str}: {pathway}."
-
-        # # MODIFIED 8/7/23 NEW:
-        # # FIX: WOULD BE GOOD TO GET INFERRED Projections INTO projections AND USE THAT TO COMPARE TO EXPLICIT BELOW
-        # # interleave (sets of) Nodes and (sets or lists of) Projections, removing Nones (for unspecified Projections)
-        # # Start with first node
-        # explicit_pathway = [node_entries[0]]
-        # # Then, for each Projection, add it (if not None) and the next node
-        # for i in range(len(projections)):
-        #     if projections[i]:
-        #         explicit_pathway.append(projections[i])
-        #     explicit_pathway.append(node_entries[i + 1])
-        #
-        # # If pathway is identical to an existing one (including how it is specified), return that with warning
-        # existing_pathway = next((p for p in self.pathways if explicit_pathway==p.pathway), None)
-        # if existing_pathway:
-        #     warnings.warn(f"Pathway specified {pathway_arg_str} already exists in {self.name}: {pathway}; "
-        #                   f"it will be ignored.")
-        #     return existing_pathway
-        #
-        # # If the explicit pathway is shorter than the one specified, then need to do more checking
-        # elif len(explicit_pathway) < len(pathway):
-        #     # Pathway without all Projections specified has same nodes in same order as existing one
-        #     existing_pathway = next((p for p in self.pathways
-        #                              if [item for p in self.pathways for item in p.pathway
-        #                                  if not isinstance(item, Projection)]), None)
-        #     # Shorter because Projections generated for unspecified ones duplicated existing ones & were suppressed
-        #     if existing_pathway:
-        #         warnings.warn(f"Pathway specified {pathway_arg_str} has same Nodes in same order as "
-        #                       f"one already in {self.name}: {pathway}; it will be ignored.")
-        #         return existing_pathway
-        #
-        #     # ----------
-        #     # MODIFIED 8/7/23 NEW:
-        #     existing_pathway_nodes = next((p for p in self.pathways
-        #                              if [item for p in self.pathways for item in p.pathway
-        #                                  if not isinstance(item, Projection)]), None)
-        #     explicit_pathway_nodes = [item for item in explicit_pathway if not isinstance(item, Projection)]
-        #
-        #     # ----------
-        #
-        #     if next((p for p in pathway if not isinstance(p, Projection)), None):
-        #         pass
-        #
-        #     # Shorter because it contained one or more ControlMechanisms with monitor_for_control specified
-        #     #    or an ObjectiveMechanism that projects to a ControlMechanism.
-        #     elif explicit_pathway == [m for m in pathway if not (
-        #             (isinstance(m, ControlMechanism)
-        #               or (isinstance(m, tuple) and isinstance(m[0], ControlMechanism))
-        #              or (isinstance(m, ObjectiveMechanism) and m.control_mechanism)))]:
-        #         pass
-        #     else:
-        #         # Otherwise, something has gone wrong
-        #         assert False, \
-        #             f"PROGRAM ERROR: Bad pathway specification for {self.name} {pathway_arg_str}: {pathway}."
-        # # MODIFIED 8/7/23 END
 
         pathway = Pathway(pathway=parsed_pathway,
                           composition=self,
