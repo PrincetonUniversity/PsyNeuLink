@@ -16,6 +16,11 @@
 # -      LLVM for function and derivative
 # -      Add Concatenate to pytorchcreator_function
 # -      Deal with matrix assignment in LearningProjection LINE 643
+# -      Reinstate test for execution of Concatenate with learning in test_emcomposition (currently commented out)
+# - FIX: Softmax Gain Control:
+#        Test if it current works (they are added to Compostion but not in BackProp processing pathway)
+#        Does backprop have to run through this if not learnable?
+#        If so, need to add PNL Function, with derivative and LLVM and Pytorch implementations
 # - FIX: WRITE MORE TESTS FOR EXECUTION, WARNINGS, AND ERROR MESSAGES
 #         - learning (with and without learning field weights
 #         - 3d tuple with first entry != memory_capacity if specified
@@ -1682,7 +1687,7 @@ class EMComposition(AutodiffComposition):
 
         # Construct Pathways --------------------------------------------------------------------------------
 
-        # Set up pathways without PsyNeuLink learning pathways
+        # Set up pathways WITHOUT PsyNeuLink learning pathways
         if not self.enable_learning:
             self.add_nodes(self.key_input_nodes + self.value_input_nodes)
             if self.concatenate_keys:
@@ -1699,7 +1704,7 @@ class EMComposition(AutodiffComposition):
                 self.add_node(self.storage_node)
                 # self.add_projections(proj for proj in self.storage_node.efferents)
 
-        # Set up psyneulink backpropagation pathways for learning field weights
+        # Set up pathways WITH psyneulink backpropagation learning field weights
         else:
 
             # Key pathways
@@ -1712,8 +1717,8 @@ class EMComposition(AutodiffComposition):
                                self.combined_softmax_node]
                     if self.weighted_softmax_nodes:
                         pathway.insert(3, self.weighted_softmax_nodes[i])
-                    if self.softmax_gain_control_nodes:
-                        pathway.insert(4, self.softmax_gain_control_nodes[i])
+                    # if self.softmax_gain_control_nodes:
+                    #     pathway.insert(4, self.softmax_gain_control_nodes[i])
                 # Key-concatenated pathways
                 else:
                     pathway = [self.key_input_nodes[i],
@@ -1721,9 +1726,13 @@ class EMComposition(AutodiffComposition):
                                match_node,
                                softmax_node,
                                self.combined_softmax_node]
-                    if self.softmax_gain_control_nodes:
-                        pathway.insert(4, self.softmax_gain_control_nodes[0]) # Only one, ensured above
+                    # if self.softmax_gain_control_nodes:
+                    #     pathway.insert(4, self.softmax_gain_control_nodes[0]) # Only one, ensured above
                 self.add_backpropagation_learning_pathway(pathway)
+
+            # softmax gain control is specified:
+            for gain_control_node in self.softmax_gain_control_nodes:
+                self.add_node(gain_control_node)
 
             # field_weights -> weighted_softmax pathways
             if self.field_weight_nodes:
