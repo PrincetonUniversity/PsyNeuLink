@@ -7487,7 +7487,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # If pathway is identical to an existing Pathway, return the existing one
         pre_existing_Pathway = next((P for P in self.pathways if parsed_pathway==P.pathway), None)
         if pre_existing_Pathway and (specified_pathway == parsed_pathway):
-            # FIX: 8/8/23 CHANGE ERROR MESSAGE HERE AND IN TESTS TO: "the latter will be used"
             warnings.warn(f"Pathway specified {pathway_arg_str} is identical to one already in '{self.name}': "
                           f"'{pre_existing_Pathway.name}'; the latter will be used.")
             return pre_existing_Pathway
@@ -7524,10 +7523,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Same nodes but no/fewer Projections
             if ([node for node in specified_pathway if not isinstance(node, Projection)]
                   == [node for node in parsed_pathway if not isinstance(node, Projection)]):
-                # Warn if inferred Projections were identical to existing ones so warn
+                # Warn if inferred Projections were identical to existing ones
                 if self._pre_existing_pathway_components[PROJECTIONS]:
-                    warnings.warn(f"Pathway assigned {pathway_arg_str} specified Projections already in "
-                                  f"'{self.name}': the latter will be used.")
+                    if self.prefs.verbosePref:
+                        warnings.warn(f"Pathway assigned {pathway_arg_str} specified Projections already in "
+                                      f"'{self.name}': the latter will be used.")
 
             # Shorter because it contained one or more ControlMechanisms with monitor_for_control specified
             #    or an ObjectiveMechanism that projects to a ControlMechanism.
