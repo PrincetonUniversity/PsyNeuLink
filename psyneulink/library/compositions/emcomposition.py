@@ -82,6 +82,7 @@
 #            - Use of LinearCombination with PRODUCT in InputPort of output_source
 #
 #        - AutodiffComposition:
+#          - For now (until bugs below are fixed), put warning in about Python mode, and revert to PyTorch mode?
 #          - IN feat/autodiff_python_mode:
 #              - FIX: - Fix bug in input_type (test_idencompositionrunner.run_learning input assignment
 #                     - at least in test_identicalness_of_input_types), change learning_rate to 0.05 for all tests??
@@ -113,6 +114,7 @@
 #          project to a single one.
 #          - add LearningProjections executed in EXECUTION_PHASE to self.projections
 #            and then remove MODIFIED 8/1/23 in _check_for_unused_projections
+#          - Why can't verbosePref be set directly on a composition?
 
 #        - show_graph():
 #          - add mode for showing projections as diamonds without show_learning (e.g., "show_projections")

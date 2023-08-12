@@ -33,13 +33,14 @@ from psyneulink.core.compositions.composition import Composition, NodeRole, Comp
 from psyneulink.core.compositions.pathway import Pathway, PathwayRole
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.keywords import \
-    ADDITIVE, ALLOCATION_SAMPLES, BEFORE, DEFAULT, DISABLE, INPUT_PORT, INTERCEPT, LEARNING_MECHANISMS, \
+    ADDITIVE, ALLOCATION_SAMPLES, BEFORE, DEFAULT, DISABLE, INPUT_PORT, INTERCEPT, LEARNING_MECHANISMS,\
     LEARNED_PROJECTIONS, RANDOM_CONNECTIVITY_MATRIX, CONTROL, \
     NAME, PROJECTIONS, RESULT, OBJECTIVE_MECHANISM, OUTPUT_MECHANISM, OVERRIDE, SLOPE, TARGET_MECHANISM, VARIANCE
 from psyneulink.core.scheduling.condition import AtTimeStep, AtTrial, Never, TimeInterval
 from psyneulink.core.scheduling.condition import EveryNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler, SchedulingMode
 from psyneulink.core.scheduling.time import TimeScale
+from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 from psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism import LCControlMechanism
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
@@ -1148,18 +1149,26 @@ class TestDuplicatePathwayWarnings:
         with pytest.warns(UserWarning, match=regexp):
             comp.add_linear_processing_pathway(pathway=[A,B,C])
 
-    def test_add_processing_pathway_subset_duplicate_warning(self):
+    @pytest.mark.parametrize('verbosity', [True, False], ids=['verbose', 'silent'])
+    def test_add_processing_pathway_subset_duplicate_warning(self, verbosity):
         A = TransferMechanism()
         B = TransferMechanism()
         C = TransferMechanism()
         comp = Composition()
+
         comp.add_linear_processing_pathway(pathway=[A,B,C])
 
-        regexp = f"Pathway specified in 'pathway' arg for add_linear_processing_pathway method of '{comp.name}' " \
-                 f"has a subset of nodes in a Pathway already in '{comp.name}': Pathway-0; the latter will be used."
-        with pytest.warns(UserWarning, match=regexp):
-            comp.add_linear_processing_pathway(pathway=[A,B])
-            assert True
+        # Test for warning if verbosePref is set to True
+        if verbosity:
+            regexp = f"Pathway specified in 'pathway' arg for add_linear_processing_pathway method of '{comp.name}' " \
+                     f"has a subset of nodes in a Pathway already in '{comp.name}': Pathway-0; the latter will be used."
+            with pytest.warns(UserWarning, match=regexp):
+                comp.verbosePref = PreferenceEntry(True, PreferenceLevel.INSTANCE)
+                comp.add_linear_processing_pathway(pathway=[A,B])
+        else:
+            # Test for suppression of warning if verbosePref not set
+            with pytest.warns(None):
+                comp.add_linear_processing_pathway(pathway=[A,B])
 
     def test_add_backpropagation_pathway_exact_duplicate_warning(self):
         A = TransferMechanism()
@@ -1170,7 +1179,6 @@ class TestDuplicatePathwayWarnings:
 
         regexp = f"Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method of " \
                  f"'{comp.name}' is identical to one already in '{comp.name}': 'Pathway-0'; the latter will be used."
-
         with pytest.warns(UserWarning, match=regexp):
             comp.add_backpropagation_learning_pathway(pathway=[A,P,B])
 
@@ -1187,17 +1195,26 @@ class TestDuplicatePathwayWarnings:
         with pytest.warns(UserWarning, match=regexp):
             comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
 
-    def test_add_backpropagation_pathway_contiguous_subset_duplicate_warning(self):
+    @pytest.mark.parametrize('verbosity', [True, False], ids=['verbose', 'silent'])
+    def test_add_backpropagation_pathway_contiguous_subset_duplicate_warning(self, verbosity):
         A = TransferMechanism()
         B = TransferMechanism()
         C = TransferMechanism()
         comp = Composition()
         comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
 
-        regexp = f"Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method of '{comp.name}'" \
-                 f" has a subset of nodes in a Pathway already in '{comp.name}':.*; the latter will be used."
-        with pytest.warns(UserWarning, match=regexp):
-            comp.add_backpropagation_learning_pathway(pathway=[A,B])
+        # Test for warning if verbosePref is set to True
+        if verbosity:
+            regexp = f"Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method of '{comp.name}'" \
+                     f" has a subset of nodes in a Pathway already in '{comp.name}':.*; the latter will be used."
+            with pytest.warns(UserWarning, match=regexp):
+                comp.verbosePref = PreferenceEntry(True, PreferenceLevel.INSTANCE)
+                comp.add_backpropagation_learning_pathway(pathway=[A,B])
+        else:
+            # Test for suppression of warning if verbosePref is not set
+            with pytest.warns(None):
+                comp.add_backpropagation_learning_pathway(pathway=[A,B])
+
 
     def test_add_processing_pathway_non_contiguous_subset_is_OK(self):
         A = TransferMechanism()
