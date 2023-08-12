@@ -1655,31 +1655,28 @@ class EMComposition(AutodiffComposition):
 
         # Set up backpropagation pathways for learning field weights
         else:
-            # Main processing pathway
-            main_processing_pathway = [self.key_input_nodes,
-                                       self.field_match_nodes,
-                                       self.softmax_nodes,
-                                       [self.combined_softmax_node] * self.num_keys,
-                                       self.retrieved_nodes[:self.num_keys]]
-            if self.weighted_softmax_nodes:
-                main_processing_pathway.insert(3, self.weighted_softmax_nodes)
-            for pathway in zip(*main_processing_pathway):
-                self.add_backpropagation_learning_pathway(list(pathway))
 
-            # Field weight learning pathway
-            if self.weighted_softmax_nodes:
-                field_weights_pathway = [self.field_weight_nodes,
-                                         self.weighted_softmax_nodes,
-                                         [self.combined_softmax_node] * self.num_keys,
-                                         self.retrieved_nodes[:self.num_keys]]
-                for pathway in zip(*field_weights_pathway):
-                    self.add_backpropagation_learning_pathway(list(pathway))
-            # Retrieval pathways
-            for retrieved_node in self.retrieved_nodes[self.num_keys:self.num_fields]:
-                self.add_backpropagation_learning_pathway([self.combined_softmax_node, retrieved_node])
+            # Key pathways
+            for i in range(self.num_keys):
+                pathway = [self.key_input_nodes[i],
+                           self.field_match_nodes[i],
+                           self.softmax_nodes[i],
+                           self.combined_softmax_node]
+                if self.weighted_softmax_nodes:
+                    pathway.insert(3, self.weighted_softmax_nodes[i])
+                self.add_backpropagation_learning_pathway(pathway)
+
+            # Field weighting pathways
+            for i in range(self.num_keys):
+                self.add_backpropagation_learning_pathway([self.field_weight_nodes[i], self.weighted_softmax_nodes[i]])
 
             self.add_nodes(self.value_input_nodes)
 
+            # Retrieval pathways
+            for i in range(len(self.retrieved_nodes)):
+                self.add_backpropagation_learning_pathway([self.combined_softmax_node, self.retrieved_nodes[i]])
+
+            # Storage Nodes
             if use_storage_node:
                 self.add_node(self.storage_node)
 

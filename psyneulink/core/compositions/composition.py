@@ -7517,11 +7517,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                       str([s for s in specified_pathway if not isinstance(s, Projection)]).strip('[]')
                       in str([s for s in specified_pathway if not isinstance(s, Projection)]).strip('[]')), None)
             if pre_existing_Pathway:
-                warnings.warn(f"Pathway specified {pathway_arg_str} has a subset of nodes in a Pathway already "
-                              f"in '{self.name}': {pre_existing_Pathway.name}; the latter will be used.")
+                if self.prefs.verbosePref:
+                    warnings.warn(f"Pathway specified {pathway_arg_str} has a subset of nodes in a Pathway already "
+                                  f"in '{self.name}': {pre_existing_Pathway.name}; the latter will be used.")
 
             # Same nodes but no/fewer Projections
-            elif ([node for node in specified_pathway if not isinstance(node, Projection)]
+            if ([node for node in specified_pathway if not isinstance(node, Projection)]
                   == [node for node in parsed_pathway if not isinstance(node, Projection)]):
                 # Warn if inferred Projections were identical to existing ones so warn
                 if self._pre_existing_pathway_components[PROJECTIONS]:
