@@ -20,6 +20,7 @@
 # - FIX: implement add_storage_pathway to handle addition of storage_node as learning mechanism
 #        - in "_create_storage_learning_components()" assign "learning_update" arg
 #          as BEORE OR DURING instead of AFTER (assigned to learning_enabled arg of LearningMechanism)
+# - FIX: Add StorageMechanism LearningProjections to Composition?
 # - FIX: Thresholded version of SoftMax gain (per Kamesh)
 # - FIX: DEAL WITH INDEXING IN NAMES FOR NON-CONTIGUOUS KEYS AND VALUES (reorder to keep all keys together?)
 # - FIX: _import_composition:
@@ -558,6 +559,8 @@ COMMENT
 *Learning*
 ~~~~~~~~~~
 
+FIX: MODIFY TO INDICATE THAT enable_learning ALLOWS PROPAGATION OF ERROR TRHOUGH THE NETWORK,
+     WHILE learn_field_weights ALLOWS LEARNING OF THE FIELD_WEIGHTS, WHICH REQUIRES enable_learning TO BE True
 If `learn <Composition.learn>` is called and the `learn_field_weights <EMComposition.learn_field_weights>` attribute
 is True, then the `field_weights <EMComposition.field_weights>` are modified to minimize the error passed to the
 EMComposition retrieved nodes, using the learning_rate specified in the `learning_rate <EMComposition.learning_rate>`
@@ -860,6 +863,7 @@ class EMComposition(AutodiffComposition):
         softmax_gain=CONTROL,           \
         storage_prob=1.0,               \
         memory_decay_rate=AUTO,         \
+        enable_learning=True,           \
         learn_field_weights=True,       \
         learning_rate=True,             \
         use_gating_for_weighting=False, \
@@ -915,9 +919,14 @@ class EMComposition(AutodiffComposition):
         specifies the rate at which items in the EMComposition's memory decay;
         see `memory_decay_rate <EMComposition_Memory_Decay_Rate>` for details.
 
-    learn_field_weights : bool : default False
+    enable_learning : bool : default True
+        specifies whether learning pathway is constructed for the EMComposition (see `enable_learning
+        <Composition.enable_learning>` for additional details).
+
+    learn_field_weights : bool : default True
         specifies whether `field_weights <EMComposition.field_weights>` are learnable during training;
-        see `Learning <EMComposition_Learning>` for additional details.
+        requires **enable_learning** to be True to have any effect;  see `learn_field_weights
+        <EMComposition_Learning>` for additional details.
 
     learning_rate : float : default .01
         specifies rate at which `field_weights <EMComposition.field_weights>` are learned
@@ -993,9 +1002,16 @@ class EMComposition(AutodiffComposition):
         determines the rate at which items in the EMComposition's memory decay (see `memory_decay_rate
         <EMComposition_Memory_Decay_Rate>` for details).
 
+    enable_learning : bool
+        determines whether `learning <Composition_Learning>` is enabled for the EMComposition, allowing any error
+        received by the `retrieved_nodes <EMComposition.retrieved_nodes>` to be propagated to the `key_input_nodes
+        <EMComposition.key_input_nodes>` and `value_input_nodes <EMComposition.value_input_nodes>`, and on to any
+        `Nodes <Composition_Nodes>` that project to them.
+
     learn_field_weights : bool
-        determines whether `field_weights <EMComposition.field_weights>` are learnable during training; see
-        `Learning <EMComposition_Learning>` for additional details.
+        determines whether `field_weights <EMComposition.field_weights>` are learnable during training;
+        requires `enable_learning <EMComposition.enable_learning>` to be True;  see `Learning
+        <EMComposition_Learning>` for additional details.
 
     learning_rate : float
         determines whether the rate at which `field_weights <EMComposition.field_weights>` are learned
@@ -1105,6 +1121,12 @@ class EMComposition(AutodiffComposition):
                     :default value: False
                     :type: ``bool``
 
+                enable_learning
+                    see `enable_learning <EMComposition.enable_learning>`
+
+                    :default value: True
+                    :type: ``bool``
+
                 field_names
                     see `field_names <EMComposition.field_names>`
 
@@ -1126,7 +1148,7 @@ class EMComposition(AutodiffComposition):
                 learn_field_weights
                     see `learn_field_weights <EMComposition.learn_field_weights>`
 
-                    :default value: False # False UNTIL IMPLEMENTED
+                    :default value: True
                     :type: ``bool``
 
                 memory
@@ -1186,7 +1208,8 @@ class EMComposition(AutodiffComposition):
         softmax_gain = Parameter(CONTROL, modulable=True)
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         memory_decay_rate = Parameter(AUTO, modulable=True)
-        learn_field_weights = Parameter(False, structural=True)
+        enable_learning = Parameter(True, structural=True)
+        learn_field_weights = Parameter(True, structural=True)
         learning_rate = Parameter(.001, modulable=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
@@ -1246,7 +1269,8 @@ class EMComposition(AutodiffComposition):
                  softmax_gain:Union[float, CONTROL]=CONTROL,
                  storage_prob:float=1.0,
                  memory_decay_rate:Union[float,AUTO]=AUTO,
-                 learn_field_weights:bool=False, # FIX: False FOR NOW, UNTIL IMPLEMENTED
+                 enable_learning:bool=True,
+                 learn_field_weights:bool=True,
                  learning_rate:float=None,
                  use_storage_node:bool=True,
                  use_gating_for_weighting:bool=False,
@@ -1266,7 +1290,6 @@ class EMComposition(AutodiffComposition):
                                                                           field_names,
                                                                           concatenate_keys,
                                                                           normalize_memories,
-                                                                          learn_field_weights,
                                                                           learning_rate,
                                                                           name)
         if memory_decay_rate is AUTO:
@@ -1287,6 +1310,7 @@ class EMComposition(AutodiffComposition):
                          storage_prob = storage_prob,
                          memory_decay_rate = memory_decay_rate,
                          normalize_memories = normalize_memories,
+                         enable_learning=enable_learning,
                          learn_field_weights = learn_field_weights,
                          learning_rate = learning_rate,
                          random_state = random_state,
@@ -1302,6 +1326,8 @@ class EMComposition(AutodiffComposition):
                                  self.storage_prob,
                                  self.memory_decay_rate,
                                  self.use_storage_node,
+                                 self.enable_learning,
+                                 self.learn_field_weights,
                                  use_gating_for_weighting)
 
         # Final Configuration and Clean-up ---------------------------------------------------------------------------
@@ -1512,7 +1538,6 @@ class EMComposition(AutodiffComposition):
                       field_names,
                       concatenate_keys,
                       normalize_memories,
-                      learn_field_weights,
                       learning_rate,
                       name):
 
@@ -1573,11 +1598,6 @@ class EMComposition(AutodiffComposition):
             warnings.warn(f"The 'concatenate_keys' arg for '{name}' is True but {error_msg}; "
                           f"concatenation will be ignored. To use concatenation, {correction_msg}.")
 
-        # FIX: UNTIL FULLY IMPLEMENTED
-        # if learn_field_weights:
-        #     warnings.warn(f"The 'learn_field_weights' arg for '{name}' is True but not yet implemented; "
-        #                   f"automatically set to False for now;  stay tuned...")
-        self.learn_field_weights = learn_field_weights
         self.learning_rate = learning_rate
         return parsed_field_weights, parsed_field_names, parsed_concatenate_keys
 
@@ -1609,6 +1629,8 @@ class EMComposition(AutodiffComposition):
                             storage_prob,
                             memory_decay_rate,
                             use_storage_node,
+                            enable_learning,
+                            learn_field_weights,
                             use_gating_for_weighting,
                             ):
         """Construct Nodes and Pathways for EMComposition"""
@@ -1638,7 +1660,7 @@ class EMComposition(AutodiffComposition):
                                                              memory_decay_rate, storage_prob)
 
         # Then Construct the Pathways
-        if not self.learn_field_weights:
+        if not self.enable_learning:
             self.add_nodes(self.key_input_nodes)
             self.add_nodes(self.value_input_nodes)
             if self.concatenate_keys_node is not None:
@@ -1652,6 +1674,7 @@ class EMComposition(AutodiffComposition):
             self.add_nodes(self.retrieved_nodes)
             if use_storage_node:
                 self.add_node(self.storage_node)
+                # self.add_projections(proj for proj in self.storage_node.efferents)
 
         # Set up backpropagation pathways for learning field weights
         else:
@@ -1679,6 +1702,7 @@ class EMComposition(AutodiffComposition):
             # Storage Nodes
             if use_storage_node:
                 self.add_node(self.storage_node)
+                # self.add_projections(proj for proj in self.storage_node.efferents)
 
     def _construct_key_input_nodes(self, field_weights)->list:
         """Create one node for each key to be used as cue for retrieval (and then stored) in memory.
@@ -1996,9 +2020,10 @@ class EMComposition(AutodiffComposition):
         # self.require_node_roles(self.storage_node, NodeRole.LEARNING)
 
         for projection in self.projections:
-            if projection.sender.owner in self.field_weight_nodes:
-                # projection.learnable = self.learn_field_weights
-                projection.learnable = True # FIX: FOR NOW, UNTIL LEARNING OF RETRIEVAL WEIGHTING IS IMPLEMENTED
+            if (projection.sender.owner in self.field_weight_nodes
+                    and self.enable_learning
+                    and self.learn_field_weights):
+                projection.learnable = True
             else:
                 projection.learnable = False
 
