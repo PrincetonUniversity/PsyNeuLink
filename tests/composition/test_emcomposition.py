@@ -98,23 +98,23 @@ class TestConstruction:
         # NOTE: None => use default value (i.e., don't specify in constructor, rather than forcing None as value of arg)
         # ------------------ SPECS ---------------------------------------------   ------- EXPECTED -------------------
         #   memory_template       memory_fill   field_wts cncat_ky nmlze sm_gain   repeat  #fields #keys #vals  concat
-        # (0,    (2,3),                  None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
-        # (0.1,  (2,3),                   .1,       None,    None,    None,  None,    False,    2,     1,   1,    False,),
-        # (0.2,  (2,3),                 (0,.1),     None,    None,    None,  None,    False,    2,     1,   1,    False,),
-        # (0.3,  (4,2,3),                 .1,       None,    None,    None,  None,    False,    2,     1,   1,    False,),
-        # (1,    [[0,0],[0,0]],          None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
-        # (1.1,  [[0,0],[0,0]],          None,      [1,1],   None,    None,  None,    False,    2,     2,   0,    False,),
-        # (2,    [[0,0],[0,0],[0,0]],    None,      None,    None,    None,  None,    False,    3,     2,   1,    False,),
-        # (2.1,  [[0,0],[0,0],[0,0]],    None,      None,    None,    None,   1.5,    False,    3,     2,   1,    False,),
-        # (2.2,  [[0,0],[0,0],[0,0]],    None,      None,    None,    None, CONTROL,  False,    3,     2,   1,    False,),
-        # (3,    [[0,0,0],[0,0]],        None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
-        # (4,    [[0,0,0],[0],[0,0]],    None,      None,    None,    None,  None,    False,    3,     2,   1,    False,),
-        # (5,    [[0,0],[0,0],[0,0]],    None,       1,      None,    None,  None,    False,    3,     3,   0,    False,),
-        # (5.1,  [[0,0],[0,0],[0,0]],    None,       1,      None,    None,   0.1,    False,    3,     3,   0,    False,),
-        # (5.2,  [[0,0],[0,0],[0,0]],    None,       1,      None,    None, CONTROL,  False,    3,     3,   0,    False,),
-        # (6,    [[0,0,0],[0],[0,0]],    None,    [1,1,1],   False,   None,  None,    False,    3,     3,   0,    False,),
-        # (7,    [[0,0,0],[0],[0,0]],    None,    [1,1,1],   True,    None,  None,    False,    3,     3,   0,    True,),
-        # (7.1,  [[0,0,0],[0],[0,0]],    None,    [1,1,1],   True ,   False, None,    False,    3,     3,   0,    False,),
+        (0,    (2,3),                  None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        (0.1,  (2,3),                   .1,       None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        (0.2,  (2,3),                 (0,.1),     None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        (0.3,  (4,2,3),                 .1,       None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        (1,    [[0,0],[0,0]],          None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        (1.1,  [[0,0],[0,0]],          None,      [1,1],   None,    None,  None,    False,    2,     2,   0,    False,),
+        (2,    [[0,0],[0,0],[0,0]],    None,      None,    None,    None,  None,    False,    3,     2,   1,    False,),
+        (2.1,  [[0,0],[0,0],[0,0]],    None,      None,    None,    None,   1.5,    False,    3,     2,   1,    False,),
+        (2.2,  [[0,0],[0,0],[0,0]],    None,      None,    None,    None, CONTROL,  False,    3,     2,   1,    False,),
+        (3,    [[0,0,0],[0,0]],        None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        (4,    [[0,0,0],[0],[0,0]],    None,      None,    None,    None,  None,    False,    3,     2,   1,    False,),
+        (5,    [[0,0],[0,0],[0,0]],    None,       1,      None,    None,  None,    False,    3,     3,   0,    False,),
+        (5.1,  [[0,0],[0,0],[0,0]],    None,       1,      None,    None,   0.1,    False,    3,     3,   0,    False,),
+        (5.2,  [[0,0],[0,0],[0,0]],    None,       1,      None,    None, CONTROL,  False,    3,     3,   0,    False,),
+        (6,    [[0,0,0],[0],[0,0]],    None,    [1,1,1],   False,   None,  None,    False,    3,     3,   0,    False,),
+        (7,    [[0,0,0],[0],[0,0]],    None,    [1,1,1],   True,    None,  None,    False,    3,     3,   0,    True,),
+        (7.1,  [[0,0,0],[0],[0,0]],    None,    [1,1,1],   True ,   False, None,    False,    3,     3,   0,    False,),
         (8,    [[0,0],[0,0],[0,0]],    None,    [1,2,0],   None,    None,  None,    False,    3,     2,   1,    False,),
         (8.1,  [[0,0],[0,0],[0,0]],    None,    [1,2,0],   True,    None,  None,    False,    3,     2,   1,    False,),
         (9,    [[0,1],[0,0],[0,0]],    None,    [1,2,0],   None,    None,  None,    [0,1],    3,     2,   1,    False,),
@@ -137,10 +137,10 @@ class TestConstruction:
                 [[0,2],[0,0,0],[0,0]]],  .1,    [1,2,0],   None,    None,  None,      2,      3,     2,   1,    False),
         (15.1, [[[0,1],[0,0,0],[0,0]], # two entries specified; fields have different weights, random memory_fill
                 [[0,2],[0,0,0],[0,0]]], (0,.1), [1,2,0],   None,    None,  None,      2,      3,     2,   1,    False),
-        (16,   [[[0,1],[0,0,0],[0,0]], # three enrtries specified
+        (16,   [[[0,1],[0,0,0],[0,0]], # three entries specified
                 [[0,2],[0,0,0],[0,0]],
                 [[0,3],[0,0,0],[0,0]]],  .1,     [1,2,0],   None,    None,  None,     3,      3,     2,   1,    False),
-        (17,   [[[0,1],[0,0,0],[0,0]], # all four enrtries allowed by memory_capacity specified
+        (17,   [[[0,1],[0,0,0],[0,0]], # all four entries allowed by memory_capacity specified
                 [[0,2],[0,0,0],[0,0]],
                 [[0,3],[0,0,0],[0,0]],
                 [[0,4],[0,0,0],[0,0]]],  .1,     [1,2,0],   None,    None,  None,      4,      3,     2,   1,    False),
@@ -184,6 +184,8 @@ class TestConstruction:
             params.update({'field_weights': field_weights})
         if concatenate_keys is not None:
             params.update({'concatenate_keys': concatenate_keys})
+            # FIX: DELETE THE FOLLOWING ONCE CONCATENATION IS IMPLEMENTED FOR LEARNING
+            params.update({'enable_learning': False})
         if normalize_memories is not None:
             params.update({'normalize_memories': normalize_memories})
         if softmax_gain is not None:
@@ -230,17 +232,17 @@ class TestConstruction:
         assert len(em.value_input_nodes) == num_values
         assert isinstance(em.concatenate_keys_node, Mechanism) == concatenate_node
         if em.concatenate_keys:
-            assert em.retrieval_weighting_nodes == []
-            assert bool(softmax_gain in {None, CONTROL}) == bool(len(em.softmax_control_nodes))
+            assert em.field_weight_nodes == []
+            assert bool(softmax_gain in {None, CONTROL}) == bool(len(em.softmax_gain_control_nodes))
         else:
             if num_keys > 1:
-                assert len(em.retrieval_weighting_nodes) == num_keys
+                assert len(em.field_weight_nodes) == num_keys
             else:
-                assert em.retrieval_weighting_nodes == []
+                assert em.field_weight_nodes == []
             if softmax_gain in {None, CONTROL}:
-                assert len(em.softmax_control_nodes) == num_keys
+                assert len(em.softmax_gain_control_nodes) == num_keys
             else:
-                assert em.softmax_control_nodes == []
+                assert em.softmax_gain_control_nodes == []
         assert len(em.retrieved_nodes) == num_fields
 
         def test_memory_fill(start, memory_fill):
@@ -415,6 +417,8 @@ class TestExecution:
             params.update({'field_weights': field_weights})
         if concatenate_keys is not None:
             params.update({'concatenate_keys': concatenate_keys})
+            # FIX: DELETE THE FOLLOWING ONCE CONCATENATION IS IMPLEMENTED FOR LEARNING
+            params.update({'enable_learning': False})
         if normalize_memories is not None:
             params.update({'normalize_memories': normalize_memories})
         if softmax_gain is not None:
@@ -435,11 +439,11 @@ class TestExecution:
         retrieved = em.run(inputs=inputs, execution_mode=comp_mode)
         np.testing.assert_allclose(retrieved, expected_retrieval)
 
-        # Validate that sum of weighted softmax distributions in retrieval_weighting_node itself sums to 1
-        np.testing.assert_allclose(np.sum(em.softmax_weighting_node.value), 1.0, atol=1e-15)
+        # Validate that sum of weighted softmax distributions in field_weight_node itself sums to 1
+        np.testing.assert_allclose(np.sum(em.combined_softmax_node.value), 1.0, atol=1e-15)
 
         # Validate that sum of its output ports also sums to 1
-        np.testing.assert_allclose(np.sum([port.value for port in em.softmax_weighting_node.output_ports]),
+        np.testing.assert_allclose(np.sum([port.value for port in em.combined_softmax_node.output_ports]),
                                    1.0, atol=1e-15)
 
         # Validate storage
@@ -466,7 +470,7 @@ class TestExecution:
     @pytest.mark.benchmark
     @pytest.mark.parametrize('concatenate', [True, False])
     @pytest.mark.parametrize('use_storage_node', [True, False])
-    def test_multiple_trials_concatenation_and_storage_node(self,comp_mode, concatenate, use_storage_node):
+    def test_multiple_trials_concatenation_and_storage_node_no_learning(self,comp_mode, concatenate, use_storage_node):
 
         if comp_mode != pnl.ExecutionMode.Python:
             pytest.skip('Compilation not yet support for Composition.import.')
@@ -481,6 +485,7 @@ class TestExecution:
                            softmax_gain=100,
                            memory_fill=(0,.001),
                            concatenate_keys=concatenate,
+                           enable_learning=False,
                            use_storage_node=use_storage_node)
 
         inputs = [[[[1,2,3]],[[4,5,6]],[[10,20,30]],[[40,50,60]],[[100,200,300]],[[400,500,600]]],

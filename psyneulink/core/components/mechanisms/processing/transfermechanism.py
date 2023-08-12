@@ -1368,9 +1368,9 @@ class TransferMechanism(ProcessingMechanism_Base):
 
             if issubclass(transfer_function_class, Function):
                 if not issubclass(transfer_function_class, (TransferFunction, SelectionFunction, UserDefinedFunction)):
-                    raise TransferError(f"Function specified as {repr(FUNCTION)} param of {self.name} "
+                    raise TransferError(f"Function specified as {repr(FUNCTION)} param of '{self.name}' "
                                         f"({transfer_function_class.__name__}) must be a "
-                                        f"{' or '.join([TRANSFER_FUNCTION_TYPE, SELECTION_FUNCTION_TYPE])}.")
+                                        f"{' or '.join([TransferFunction.__name__,SelectionFunction.__name__])}.")
             elif not isinstance(transfer_function, (types.FunctionType, types.MethodType)):
                 raise TransferError(f"Unrecognized specification for {repr(FUNCTION)} param "
                                     f"of {self.name} ({transfer_function}).")

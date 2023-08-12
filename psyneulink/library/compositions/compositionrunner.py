@@ -26,6 +26,7 @@ class CompositionRunner():
     def __init__(self, compostion: Composition):
         self._composition = compostion
 
+    # FIX: CHANGES TO autodiff LEARNING HERE
     def _calculate_loss(self, num_trials:int, execution_mode:pnlvm.ExecutionMode, context):
         """
         Returns a value that is the sum of all the losses from the last iteration
@@ -49,6 +50,7 @@ class CompositionRunner():
                       call_before_minibatch=None,
                       call_after_minibatch=None,
                       early_stopper=None,
+                      # FIX: CHANGES TO autodiff LEARNING HERE
                       execution_mode:pnlvm.ExecutionMode=pnlvm.ExecutionMode.Python,
                       context=None):
         """
@@ -79,7 +81,9 @@ class CompositionRunner():
                     call_after_minibatch()
 
                 # Update weights if not in LLVM Mode
+                # # MODIFIED 8/8/23 OLD:
                 # if not self._is_llvm_mode:
+                # MODIFIED 8/8/23 NEW:
                 if execution_mode is pnlvm.ExecutionMode.PyTorch:
                     self._composition._update_learning_parameters(context)
 
@@ -87,6 +91,7 @@ class CompositionRunner():
             # number_of_runs will be set appropriately to cycle over the set
             if self._is_llvm_mode and not randomize:
                 return
+            # FIX: CHANGES TO autodiff LEARNING HERE
             if (not self._is_llvm_mode and early_stopper is not None
                     and early_stopper.step(self._calculate_loss(num_trials, execution_mode, context))):
                 # end early if patience exceeded
@@ -100,6 +105,7 @@ class CompositionRunner():
                                call_before_minibatch=None,
                                call_after_minibatch=None,
                                early_stopper=None,
+                               # FIX: CHANGES TO autodiff LEARNING HERE
                                execution_mode:pnlvm.ExecutionMode=pnlvm.ExecutionMode.Python,
                                context=None):
 
@@ -128,12 +134,17 @@ class CompositionRunner():
                     if call_after_minibatch:
                         call_after_minibatch()
 
+                    # FIX: CHANGES TO autodiff LEARNING HERE
+                    # MODIFIED 8/8/23 OLD:
                     # if not self._is_llvm_mode:
+                    # MODIFIED 8/8/23 NEW:
                     if execution_mode is pnlvm.ExecutionMode.PyTorch:
+                    # MODIFIED 8/8/23 END
                         self._composition._update_learning_parameters(context)
                 else:
                     break
 
+            # FIX: CHANGES TO autodiff LEARNING HERE
             if (not self._is_llvm_mode
                     and early_stopper is not None
                     and early_stopper.step(self._calculate_loss(num_trials, execution_mode, context))):

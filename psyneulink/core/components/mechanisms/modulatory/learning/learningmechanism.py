@@ -349,9 +349,9 @@ refer to the Components being learned and/or its operation:
   `error_sources <LearningMechanism.error_sources>`;  that is, of any of the `output_source
   <LearningMechanism.output_source>`'s `efferents <OutputPorts.efferents>` that are also being learned.
 ..
-* `covariates_sources` - the `Mechanism>`(s) that provide covariates used in calculating the derivative of the
-  `output_source <LearningMechanism.output_source>`'s `function <Mechanism_Base.function>` (see `above
-    <LearningMechanism_Covariates>`), and project to its *COVARIATES* `InputPort <LearningMechanism_Covariates>`.
+* `covariates_sources` - the `InputPort`s of `Mechanism`(s) that provide covariates used in calculating the derivative
+  of the `output_source <LearningMechanism.output_source>`'s `function <Mechanism_Base.function>` (see `above
+  `LearningMechanism_Covariates`), and project to its *COVARIATES* `InputPort <LearningMechanism_Covariates>`.
 ..
 * `modulation` - the default value used for the `modulation <LearningSignal.modulation>` attribute of
   LearningMechanism's `LearningSignals <LearningSignal>` (i.e. those for which it is not explicitly specified).
@@ -1042,6 +1042,8 @@ class LearningMechanism(ModulatoryMechanism_Base):
         learning_rate = FunctionParameter(None)
         learning_enabled = True
         modulation = ADDITIVE
+        learning_type = LearningType.SUPERVISED
+
         input_ports = Parameter([ACTIVATION_INPUT, ACTIVATION_OUTPUT],
                                 stateful=False,
                                 loggable=False,
@@ -1089,17 +1091,6 @@ class LearningMechanism(ModulatoryMechanism_Base):
                  prefs: Optional[ValidPrefSet] = None,
                  **kwargs
                  ):
-
-        # FIX: 8/1/23 - ??MAKE THESE Parameters??
-        # if covariates_sources:
-        #     covariates_sources = convert_to_list(covariates_sources)
-        # self.covariates_sources = covariates_sources or []
-        # # IMPLEMENTATION NOTE:
-        # #    assign to private attribute as self._error_sources;
-        # #    private attribute is used for validation and in _instantiate_attribute_before_function
-        # if error_sources:
-        #     error_sources = convert_to_list(error_sources)
-        # self._error_sources = error_sources
 
         self.in_composition = in_composition
 
@@ -1166,11 +1157,8 @@ class LearningMechanism(ModulatoryMechanism_Base):
                                                 ACTIVATION_OUTPUT,
                                                 ERROR_SIGNAL,"(s)"))
 
-        # FIX: 8/1/23:  ADD VALIDATION OF COVARIATES HERE
-
-        # Validate that activation_input, activation_output are numeric and lists or 1d np.ndarrays
-        #    and that there is the correct number of items beyond those for the number of error_sources
-        #    and covariates_sources
+        # Validate that activation_input, activation_output are numeric and lists or 1d np.ndarrays and that
+        # there is the correct number of items beyond those for the number of error_sources and covariates_sources
 
         assert ASSERT, "ADD TEST FOR LEN OF VARIABLE AGAINST NUMBER OF ERROR_SIGNALS AND COVARIATES"
 
@@ -1292,6 +1280,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
 
         self.error_signal_input_ports = self.input_ports[ERROR_SIGNAL_INDEX:ERROR_SIGNAL_INDEX + num_error_sources]
         self.covariates_input_ports = self.input_ports[ERROR_SIGNAL_INDEX + num_error_sources:]
+
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
         """Instantiates MappingProjection(s) from error_sources (if specified) to LearningMechanism
@@ -1435,29 +1424,11 @@ class LearningMechanism(ModulatoryMechanism_Base):
         # Get error_signals (from ERROR_SIGNAL InputPorts) and error_matrices relevant for the current execution:
         error_signal_indices = [self.input_ports.index(s) for s in self.error_signal_input_ports]
         error_signal_inputs = variable[error_signal_indices]
-        # FIX 7/22/19 [JDC]: MOVE THIS TO ITS OWN METHOD CALLED ON INITALIZATION AND UPDATE AS NECESSARY
         if self.error_matrices is None:
-            # KAM 6/28/19 Hack to get the correct shape and contents for initial error matrix in backprop
-            if self.function is BackPropagation or isinstance(self.function, BackPropagation):
-                mat = []
-                for i in range(len(error_signal_inputs[0])):
-                    row = []
-                    for j in range(len(error_signal_inputs[0])):
-                        if i == j:
-                            row.append(1.)
-                        else:
-                            row.append(0.)
-                    mat.append(row)
-                self.error_matrices = mat
-                error_matrices = mat
-
-            else:
-                self.error_matrices = [[0.]]
-                error_matrices = \
-                    np.array(self.error_matrices)[np.array([c - ERROR_SIGNAL_INDEX for c in error_signal_indices])]
+            error_matrices = self._init_error_matrices(error_signal_inputs, error_signal_indices)
         else:
-            error_matrices = \
-                np.array(self.error_matrices)[np.array([c - ERROR_SIGNAL_INDEX for c in error_signal_indices])]
+            error_matrices = np.array(self.error_matrices)[np.array([c - ERROR_SIGNAL_INDEX
+                                                                     for c in error_signal_indices])]
 
         for i, matrix in enumerate(error_matrices):
             if isinstance(error_matrices[i], ParameterPort):
@@ -1466,11 +1437,6 @@ class LearningMechanism(ModulatoryMechanism_Base):
         summed_learning_signal = 0
         summed_error_signal = 0
 
-        # FIX: DEAL WITH POSSIBILITY OF MORE THAN ONE VALUE IN ACTIVATION INPUT
-        #   (IF activation_function HAS MORE THAN ONE ARGUMENT);
-        #   PASS LEARNING FUNCTION THE INDEX OF THE ONE WRT WHICH THE DERIVATIVE SHOULD BE COMPUTED
-        #   AS THE index_of_derivative ARGUMENT, WHICH THE DERIVATIVE OF THE FUNCTION MUST BE ABLE TO ACCEPT
-        #   IN ITS "params" ARGUMENT (SHOUDL BE PUT THERE BY component AS FOR LearningFunctions)
         # Compute learning_signal for each error_signal (and corresponding error-Matrix):
         for error_signal_input, error_matrix in zip(error_signal_inputs, error_matrices):
             function_variable = convert_to_np_array([variable[ACTIVATION_INPUT_INDEX],
@@ -1508,18 +1474,6 @@ class LearningMechanism(ModulatoryMechanism_Base):
 
         return [summed_learning_signal, summed_error_signal]
 
-    # @property
-    # def learning_enabled(self):
-    #     try:
-    #         return self._learning_enabled
-    #     except AttributeError:
-    #         self._learning_enabled = True
-    #         return self._learning_enabled
-    #
-    # @learning_enabled.setter
-    # def learning_enabled(self, assignment: Optional[Union[bool, Literal['online', 'after']]] = None):
-    #     self._learning_enabled = assignment
-
     @property
     def input_source(self):
         try:
@@ -1546,3 +1500,32 @@ class LearningMechanism(ModulatoryMechanism_Base):
     def dependent_learning_mechanisms(self):
         return [p.parameter_ports[MATRIX].mod_afferents[0].sender.owner for p in self.input_source.path_afferents
                 if p.has_learning_projection]
+
+    @property
+    def validate_error_signal_and_covariate_sources(self):
+        # FIX: 8/1/23 - NEEDS ERROR MESSAGES, AND TO BE CALLED SOMEWHERE
+        #               (MAYBE BY COMPOSITION ONCE ALL NODES AND PROJECTIONS HAVE BEEN INSTANTIATED)
+        assert set(input_port.path_afferents[0].sender.owner
+                   for input_port in self.error_signal_input_ports) == set(self.error_sources)
+        assert set(input_port.path_afferents[0].sender.owner
+                   for input_port in self.covariates_input_ports) == set(self.covariates_sources)
+
+    def _init_error_matrices(self, error_signal_inputs, error_signal_indices):
+        # KAM 6/28/19 Hack to get the correct shape and contents for initial error matrix in backprop
+        if self.function is BackPropagation or isinstance(self.function, BackPropagation):
+            mat = []
+            for i in range(len(error_signal_inputs[0])):
+                row = []
+                for j in range(len(error_signal_inputs[0])):
+                    if i == j:
+                        row.append(1.)
+                    else:
+                        row.append(0.)
+                mat.append(row)
+            self.error_matrices = mat
+            error_matrices = mat
+        else:
+            self.error_matrices = [[0.]]
+            error_matrices = \
+                np.array(self.error_matrices)[np.array([c - ERROR_SIGNAL_INDEX for c in error_signal_indices])]
+        return error_matrices

@@ -833,10 +833,11 @@ class TestTrainingCorrectness:
 
 
         mnet.learn(
-                inputs=input_set,
-                minibatch_size=1,
-                patience=patience,
-                min_delta=min_delt
+            inputs=input_set,
+            minibatch_size=1,
+            patience=patience,
+            min_delta=min_delt,
+            execution_mode=pnl.ExecutionMode.PyTorch,
         )
 
         print(mnet.parameters.results.get(mnet))
@@ -1147,7 +1148,7 @@ class TestTrainingIdenticalness():
                    "targets": targets_dict,
                    "epochs": eps}
         g = g_f()
-        sem_net_autodiff.learn(inputs=g_f)
+        sem_net_autodiff.learn(inputs=g_f, execution_mode=pnl.ExecutionMode.PyTorch)
 
         # SET UP COMPOSITION
         sem_net_comp = Composition()
@@ -2204,7 +2205,8 @@ class TestACLogging:
         num_epochs = 10
         xor.learn(inputs={"inputs": {xor_in: xor_inputs},
                         "targets": {xor_out: xor_targets},
-                        "epochs": num_epochs})
+                        "epochs": num_epochs},
+                  execution_mode=pnl.ExecutionMode.PyTorch)
 
         exec_id = xor.default_execution_id
 
@@ -2279,7 +2281,8 @@ class TestACLogging:
         num_epochs = 100
         xor.learn(inputs={"inputs": {xor_in: xor_inputs},
                         "targets": {xor_out: xor_targets},
-                        "epochs": num_epochs})
+                        "epochs": num_epochs},
+                  execution_mode=pnl.ExecutionMode.PyTorch)
 
         losses = xor.losses
         # Since the losses track average losses per weight update, and weights are updated every minibatch,

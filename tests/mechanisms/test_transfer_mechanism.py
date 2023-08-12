@@ -449,7 +449,7 @@ class TestTransferMechanismFunctions:
                 integrator_mode=True
             )
             T.execute([0, 0, 0, 0])
-        assert "must be a TRANSFER FUNCTION TYPE" in str(error_text.value)
+        assert "must be a TransferFunction or SelectionFunction" in str(error_text.value)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -463,7 +463,7 @@ class TestTransferMechanismFunctions:
                 integrator_mode=True
             )
             T.execute([0, 0, 0, 0])
-        assert "must be a TRANSFER FUNCTION TYPE" in str(error_text.value)
+        assert "must be a TransferFunction or SelectionFunction" in str(error_text.value)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -477,7 +477,7 @@ class TestTransferMechanismFunctions:
                 integrator_mode=True
             )
             T.execute([0, 0, 0, 0])
-        assert "must be a TRANSFER FUNCTION TYPE" in str(error_text.value)
+        assert "must be a TransferFunction or SelectionFunction" in str(error_text.value)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -491,7 +491,7 @@ class TestTransferMechanismFunctions:
                 integrator_mode=True
             )
             T.execute([0, 0, 0, 0])
-        assert "must be a TRANSFER FUNCTION TYPE" in str(error_text.value)
+        assert "must be a TransferFunction or SelectionFunction" in str(error_text.value)
 
 
 class TestTransferMechanismIntegratorFunctionParams:

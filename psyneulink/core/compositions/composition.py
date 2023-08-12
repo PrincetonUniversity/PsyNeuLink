@@ -2811,7 +2811,7 @@ from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism i
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP, \
     OptimizationControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
-    LearningMechanism, LearningTiming, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
+    LearningMechanism, LearningTiming, LearningType, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -2841,10 +2841,10 @@ from psyneulink.core.globals.keywords import \
     INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
     LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, Loss, \
     MATRIX, MAYBE, MODEL_SPEC_ID_METADATA, \
-    MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, NODE, OBJECTIVE_MECHANISM, ONLINE, OUTCOME, \
+    MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, NODE, NODES, OBJECTIVE_MECHANISM, ONLINE, ONLY, OUTCOME, \
     OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
     PARAMETER, PARAMETER_CIM_NAME, PORT, \
-    PROCESSING_PATHWAY, PROJECTION, PROJECTION_TYPE, PROJECTION_PARAMS, PULSE_CLAMP, RECEIVER, \
+    PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PROJECTION_TYPE, PROJECTION_PARAMS, PULSE_CLAMP, RECEIVER, \
     SAMPLE, SENDER, SHADOW_INPUTS, SOFT_CLAMP, SUM, \
     TARGET, TARGET_MECHANISM, TEXT, VARIABLE, WEIGHT, OWNER_MECH
 from psyneulink.core.globals.log import CompositionLog, LogCondition
@@ -3929,7 +3929,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.add_nodes(nodes)
 
         if projections is not None:
-            self.add_projections(projections)
+            self.add_projections(projections, context=context)
 
         # CONSTRUCTOR flag is needed for warning check tests, but this
         # must be changed immediately to COMMAND_LINE because any
@@ -4119,6 +4119,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             required_roles : `NodeRole` or list of NodeRoles
                 any NodeRoles roles that this Node should have in addition to those determined by analyze graph.
         """
+        if context.flags & ContextFlags.COMMAND_LINE:
+            self._pre_existing_pathway_components = {NODES: [], PROJECTIONS: []}
 
         # FIX 5/25/20 [JDC]: ADD ERROR STRING (as in pathway_arg_str in add_linear_processing_pathway)
         # Raise error if Composition is added to itself
@@ -4144,8 +4146,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         node._check_for_composition(context=context)
 
         # Add node to Composition's graph
-        if node not in [vertex.component for vertex in
-                        self.graph.vertices]:  # Only add if it doesn't already exist in graph
+        # Only add if it doesn't already exist in graph
+        if node not in [vertex.component for vertex in self.graph.vertices]:
             node.is_processing = True
             self.graph.add_component(node)  # Set incoming edge list of node to empty
             self.nodes.append(node)
@@ -4156,6 +4158,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.needs_update_graph_processing = True
             self.needs_update_scheduler = True
             self.needs_update_controller = True
+        # Otherwise, put in list of existing_components
+        else:
+            self._pre_existing_pathway_components[NODES].append(node)
 
         invalid_aux_components = self._add_node_aux_components(node, context=context)
 
@@ -4383,7 +4388,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            and projection.receiver.owner in nodes
                            # and not isinstance(projection.receiver.owner, CompositionInterfaceMechanism)
                            )]
-        self.add_projections(projections)
+        self.add_projections(projections, context=context)
 
         # CONNECT Inputs and Outputs ==========================================================================
 
@@ -4405,7 +4410,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if transfer_required_roles:
             for entry in composition.required_node_roles:
                 if entry[0] in nodes:
-                    self.require_node_roles(entry)
+                    self.require_node_roles(*entry)
 
         if transfer_excluded_roles:
             for entry in composition.excluded_node_roles:
@@ -5801,7 +5806,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # region ----------------------------------- PROJECTIONS -----------------------------------------------------------
     # ******************************************************************************************************************
 
-    def add_projections(self, projections=None):
+    @handle_external_context(source=ContextFlags.COMMAND_LINE)
+    def add_projections(self, projections=None, context=None):
         """
             Calls `add_projection <Composition.add_projection>` for each Projection in the *projections* list. Each
             Projection must have its `sender <Projection_Base.sender>` and `receiver <Projection_Base.receiver>`
@@ -5820,11 +5826,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         for projection in projections:
             if isinstance(projection, list):
-                self.add_projections(projection)
+                self.add_projections(projection, context=context)
             elif isinstance(projection, Projection) and \
                     hasattr(projection, "sender") and \
                     hasattr(projection, "receiver"):
-                self.add_projection(projection)
+                self.add_projection(projection, context=context)
             else:
                 raise CompositionError(f"Invalid projections specification for {self.name}. The add_projections "
                                        f"method of Composition requires a list of Projections, each of which must "
@@ -5931,6 +5937,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             `Projection` if added, else None
 
     """
+        if context.flags & ContextFlags.COMMAND_LINE:
+            self._pre_existing_pathway_components = {NODES: [], PROJECTIONS: []}
 
         existing_projections = False
 
@@ -5938,14 +5946,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #    check whether there is *any* projection like that
         #    (i.e., whether it/they are already in the current Composition or not);  if so:
         #    - if there is only one, use that;
-        #    - if there are several, use the last in the list (on the assumption in that it is the most recent).
+        #    - if there are several (that is, one or none in the current Composition, and one or more outside of it),
+        #      use the one in the Composition, otherwise use the last outside (on the assumption it is the most recent).
         # Note:  Skip this if **projection** was specified, as it might include parameters that are different
         #        than the existing ones, in which case should use that rather than any existing ones;
         #        will handle any existing Projections that are in the current Composition below.
-        if sender and receiver and projection is None:
+        if sender and receiver and (projection is None):
             existing_projections = self._check_for_existing_projections(sender=sender,
                                                                         receiver=receiver,
-                                                                        in_composition=False)
+                                                                        # # MODIFIED 8/7/23 OLD:
+                                                                        # in_composition=False
+                                                                        # # MODIFIED 8/7/23 NEW:
+                                                                        # # FIX: CAUSING TROUBLE WITH CTL & NESTING
+                                                                        # in_composition=True
+                                                                        # # MODIFIED 8/7/23 NEWER:
+                                                                        # # FIX: CAUSING TROUBLE WITH CTL & NESTING
+                                                                        in_composition=ANY
+                                                                        # # MODIFIED 8/7/23 END
+                                                                        )
             if existing_projections:
                 if isinstance(sender, Port):
                     sender_check = sender.owner
@@ -5967,10 +5985,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             port.remove_projection(proj, context=context)
                 else:
                     #  Need to do stuff at end, so can't just return
-                    if self.prefs.verbosePref:
+                    if self.prefs.verbosePref and len(existing_projections) > 1:
                         warnings.warn(f"Several existing projections were identified between "
                                       f"{sender.name} and {receiver.name}: {[p.name for p in existing_projections]}; "
                                       f"the last of these will be used in {self.name}.")
+                    # FIX: ??DEAL WITH WHETHER IT IS IN OR OUTSIDE OF COMPOSITION??
                     projection = existing_projections[-1]
 
         # If Projection is one that is instantiated and is directly between Nodes in nested Compositions,
@@ -5998,6 +6017,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Note: this does NOT initialize the Projection if it is in deferred_init
             projection = self._instantiate_projection_from_spec(projection, name)
         except DuplicateProjectionError:
+            self._pre_existing_pathway_components[PROJECTIONS].append(projection)
             # return projection
             return
 
@@ -6037,9 +6057,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 receiver = receiver_mechanism
             # Check if Projection to be initialized already exists in the current Composition;
             #    if so, mark as existing_projections and skip
-            existing_projections = self._check_for_existing_projections(sender=sender, receiver=receiver)
+            # # MODIFIED 8/7/23 OLD:
+            # existing_projections = self._check_for_existing_projections(sender=sender, receiver=receiver)
+            # if existing_projections:
+            #     return
+            # # MODIFIED 8/7/23 NEW:
+            # existing_projections = self._check_for_existing_projections(sender=sender,
+            #                                                             receiver=receiver,
+            #                                                             in_composition=True)
+            # if existing_projections:
+            #     return
+            # MODIFIED 8/7/23 NEWER:
+            # FIX: EXISTING DEFERRED_INIT SHOULD COME BACK WITH THE PROJECTION ?IF IS NOW INITIALIZED?
+            #      CURRENTLY IT GETS INTERPRETED AS SPECIFIED A DUPLICATE
+            #      CHANGE in_composition TO ANY??
+            existing_projections = self._check_for_existing_projections(sender=sender,
+                                                                        receiver=receiver,
+                                                                        in_composition=ANY)
             if existing_projections:
-                return
+                projection = existing_projections[-1]
+            # MODIFIED 8/7/23 END
             else:
                 # Initialize Projection
                 projection._init_args[SENDER] = sender
@@ -6047,7 +6084,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 projection._deferred_init()
 
         else:
-            existing_projections = self._check_for_existing_projections(projection, sender=sender, receiver=receiver)
+            # # MODIFIED 8/7/23 OLD:
+            # existing_projections = self._check_for_existing_projections(projection, sender=sender, receiver=receiver)
+            # MODIFIED 8/7/23 NEW:
+            existing_projections = self._check_for_existing_projections(projection,
+                                                                        sender=sender,
+                                                                        receiver=receiver,
+                                                                        in_composition=True)
+            # MODIFIED 8/7/23 END
 
         # # FIX: JDC HACK 6/13/19 to deal with projection from user-specified INPUT node added to the Composition
         # #      that projects directly to the Target node of a nested Composition
@@ -6101,6 +6145,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                       sender, receiver,
                                       sender_mechanism, receiver_mechanism,
                                       learning_projection)
+        else:
+            self._pre_existing_pathway_components[PROJECTIONS].append(projection)
+
         self.needs_update_graph = True
         self.needs_update_graph_processing = True
         self.needs_update_scheduler = True
@@ -6475,12 +6522,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 node._check_for_unused_projections(context)
             if isinstance(node, Mechanism):
                 for proj in [p for p in node.projections if p not in self.projections]:
+                    # MODIFIED 8/1/23 NEW:
                     # LearningProjections not listed in self.projections but executed during EXECUTION_PHASE are OK
                     #     (e.g., EMComposition.storage_node)
                     if (isinstance(proj, LearningProjection)
                             and proj.sender.owner.learning_timing is LearningTiming.EXECUTION_PHASE
                             and proj.receiver.owner in self.projections):
                         continue
+                    # MODIFIED 8/1/23 NEW:
                     proj_deferred = proj._initialization_status & ContextFlags.DEFERRED_INIT
                     proj_name = proj._name if proj_deferred else proj.name
                     if proj in node.afferents:
@@ -6502,19 +6551,33 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return projection in self.feedback_projections
 
     def _check_for_existing_projections(self,
-                                       projection=None,
-                                       sender=None,
-                                       receiver=None,
-                                       in_composition:bool=True):
+                                        projection=None,
+                                        sender=None,
+                                        receiver=None,
+                                        in_composition:Union[bool,Literal[ANY, ONLY]]=True)\
+            ->Union[bool, list[Projection]]:
         """Check for Projection between the same pair of Nodes
-        If **in_composition** is True, return only Projections found in the current Composition
-        If **in_composition** is False, return only Projections that are found outside the current Composition
+
+        Finding more than one Projection in the current Composition raises an error (should never be the case).
+        Finding one in the current Composition and any number outside of it is allowed, and handled as follows:
+          - if **in_composition** is ONLY, return the Projection if one is found in the current Composition,
+          -                                and none are found outside of it.
+          - if **in_composition** is True, return the Projection found in the current Composition,
+          -                                irrespective of whether there are also any outside of the Composition.
+          - if **in_composition** is False, return only Projections that are found outside the current Composition
+          -                                 and only if there are none found within the current Composition.
+          - if **in_composition** is ANY, return all existing Projections in or out of the current Composition.
+
+        If the condition specified above is satisfied, then return the Projection(s) found.
+        Otherwise, return False.
+
         IMPLEMENTATION NOTE:
-            Currently if the sender and/or the receiver is specified as a Mechanism,
-            a Projection from/to any of its OutputPorts/InputPorts will be considered a match.
-            However, if both sender and receiver are specified as Ports, then only a Projection
-            from the sender to the receiver will be considered a match, allowing other Projections
-            to remain between that pair of Nodes.
+            If the sender and/or the receiver is specified as a Mechanism, then any Projection between that Mechanism
+            the other specification will be considered a match, irrespective of whether they use the same InputPorts
+            (if it is a receiver) and/or OutputPorts (if it is a sender); if both are Mechanisms, then *any*
+            Projection between them will count as a match, irrespective of the InputPorts and/or OutputPorts used.
+            However, if both sender and receiver are specified as Ports, then only a Projection from the sender to the
+            receiver will be considered a match, allowing other Projections to remain between pair of Nodes
 
         Return Projection or list of Projections that satisfies the conditions, else False
         """
@@ -6557,16 +6620,50 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for sndr in sender_ports:
             for rcvr in receiver_ports:
                 existing_projections.extend([proj for proj in sndr.efferents if proj.receiver is rcvr])
-        existing_projections_in_composition = [proj for proj in existing_projections if proj in self.projections]
+
+        # # MODIFIED 8/7/23 OLD:
+        # existing_projections_in_composition = [proj for proj in existing_projections if proj in self.projections]
+        # assert len(existing_projections_in_composition) <= 1, \
+        #     f"PROGRAM ERROR: More than one identical projection found " \
+        #     f"in {self.name}: {existing_projections_in_composition}."
+        # if in_composition:
+        #     if existing_projections_in_composition:
+        #         return existing_projections_in_composition[0]
+        # else:
+        #     if existing_projections and not existing_projections_in_composition:
+        #         return existing_projections
+        # return False
+        # MODIFIED 8/7/23 NEW:
+        existing_projections_in_composition = [p for p in existing_projections if p in self.projections]
+        existing_projections_not_in_composition = [p for p in existing_projections if p not in self.projections]
+        # Ensure that there is only a *single* existing Projection (if any) in the current Composition
         assert len(existing_projections_in_composition) <= 1, \
             f"PROGRAM ERROR: More than one identical projection found " \
             f"in {self.name}: {existing_projections_in_composition}."
-        if in_composition:
+        # Return existing Projection only if it is in the current Composition and there are no others
+        if in_composition is ONLY:
+            if existing_projections_in_composition and not existing_projections_not_in_composition:
+                return list(existing_projections_in_composition)
+
+        # Return existing Projection only if it is in the current Composition irrespective of whether there are others
+        elif in_composition is True:
             if existing_projections_in_composition:
-                return existing_projections_in_composition[0]
+                return list(existing_projections_in_composition)
+
+        # Return existing Projections only if they are all *not* in the Composition
+        elif in_composition is False:
+            if existing_projections_not_in_composition and not existing_projections_in_composition:
+                return existing_projections_not_in_composition
+
+        # Return any existing Projection irrespective of whether or not they are in the current Composition
+        elif in_composition is ANY:
+            if existing_projections:
+                # Put any in_composition first so they are prioritized
+                return existing_projections_in_composition + existing_projections_not_in_composition
         else:
-            if existing_projections and not existing_projections_in_composition:
-                return existing_projections
+            assert False, f"PROGRAM ERROR: Unrecognized value for in_composition arg ({in_composition})."
+        # MODIFIED 8/7/23 END
+
         return False
 
     def _check_for_unnecessary_feedback_projections(self):
@@ -6719,6 +6816,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         pathway : the `Pathway <Composition_Pathways>` to be added
 
         """
+        self._pre_existing_pathway_components = {NODES:[],
+                                             PROJECTIONS:[]}
 
         # identify nodes and projections
         nodes, projections = [], []
@@ -7000,6 +7099,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
 
         from psyneulink.core.compositions.pathway import Pathway, _is_node_spec, _is_pathway_entry_spec
+        # MODIFIED 8/8/23 NEW:
+        self._pre_existing_pathway_components = {NODES:[],
+                                             PROJECTIONS:[]}
+        # MODIFIED 8/8/23 END
 
         def _get_spec_if_tuple(spec):
             return spec[0] if isinstance(spec, tuple) else spec
@@ -7012,7 +7115,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pathway_arg_str = context.string
         # Otherwise, refer to call from this method
         else:
-            pathway_arg_str = f"in 'pathway' arg for add_linear_procesing_pathway method of '{self.name}'"
+            pathway_arg_str = f"in 'pathway' arg for add_linear_processing_pathway method of '{self.name}'"
 
         context.string = pathway_arg_str
 
@@ -7083,7 +7186,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         projections = []
         for c in range(1, len(pathway)):
 
-            # NODE ENTRY ----------------------------------------------------------------------------------------
             def _get_node_specs_for_entry(entry, include_roles=None, exclude_roles=None):
                 """Extract Nodes from any tuple specs and replace Compositions with their INPUT Nodes"""
                 nodes = []
@@ -7114,7 +7216,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     senders = _get_node_specs_for_entry(preceding_entry, NodeRole.OUTPUT)
                     projs = {self.add_projection(sender=s, receiver=r,
                                                  default_matrix=default_projection_matrix,
-                                                 allow_duplicates=False)
+                                                 allow_duplicates=False,
+                                                 context=context)
                             for r in receivers for s in senders}
                     # Warn about assignment of MappingProjections from ControlMechanisms
                     for ctl_mech in [s for s in senders if isinstance(s, ControlMechanism)]:
@@ -7123,8 +7226,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                       f"-- to another {Mechanism.__name__} in that pathway.  If this is not the "
                                       f"intended behavior, add '{ctl_mech.name}' separately to '{self.name}'.")
                     if all(projs):
+                        # If it is a singleton, append on its own;  if it is set or list, need to keep that intact
                         projs = projs.pop() if len(projs) == 1 else projs
                         projections.append(projs)
+                    # # MODIFIED 8/7/23 NEW:
+                    # else:
+                    #     if any(projs):
+                    #         assert False, f"PROGRAM ERROR: some projs and some Nones returned from add_projections: " \
+                    #                       f"{projs}; TEST TO SEE IF THIS EVER HAPPENS; REMOVE ONCE DETERMINED"
+                    #     # Add None for interleaving below
+                    #     projections.append(None)
+                    # MODIFIED 8/7/23 END
+
 
             # PROJECTION ENTRY --------------------------------------------------------------------------
             # Validate that it is between two nodes, then add the Projection;
@@ -7343,6 +7456,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #    this is to support calls to add_learing_processing_pathway by add_learning_<> methods
                 #    that do not yet support a list or set of Projection specifications
                 if len(proj_set) == 1:
+                # # MODIFIED 8/7/23 NEW:
+                # if not proj_set:
+                #     projections.append(None)
+                # elif len(proj_set) == 1:
+                # MODIFIED 8/7/23 END
                     projections.append(proj_set[0])
                 else:
                     projections.append(proj_set)
@@ -7357,43 +7475,74 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for n in convert_to_list(n_e):
                 if isinstance(n, tuple):
                     nodes[i] = nodes[i][0]
-        # interleave (sets of) Nodes and (sets or lists of) Projections
-        explicit_pathway = [node_entries[0]]
-        for i in range(len(projections)):
-            explicit_pathway.append(projections[i])
-            explicit_pathway.append(node_entries[i + 1])
 
-        # If pathway is an existing one, return that
-        existing_pathway = next((p for p in self.pathways if explicit_pathway==p.pathway), None)
-        if existing_pathway:
-            warnings.warn(f"Pathway specified {pathway_arg_str} already exists in {self.name}: {pathway}; "
-                          f"it will be ignored.")
-            return existing_pathway
-        # If the explicit pathway is shorter than the one specified, then need to do more checking
-        elif len(explicit_pathway) < len(pathway):
-            # Pathway without all Projections specified has same nodes in same order as existing one
-            existing_pathway = next((p for p in self.pathways
-                                     if [item for p in self.pathways for item in p.pathway
-                                         if not isinstance(item, Projection)]), None)
-            # Shorter because Projections generated for unspecified ones duplicated existing ones & were suppressed
-            if existing_pathway:
+        specified_pathway = pathway
+        # interleave (sets of) Nodes and (sets or lists of) Projections
+        parsed_pathway = [node_entries[0]]
+        for i in range(len(projections)):
+            parsed_pathway.append(projections[i])
+            parsed_pathway.append(node_entries[i + 1])
+
+        # If pathway is identical to an existing Pathway, return the existing one
+        pre_existing_Pathway = next((P for P in self.pathways if parsed_pathway==P.pathway), None)
+        if pre_existing_Pathway and (specified_pathway == parsed_pathway):
+            warnings.warn(f"Pathway specified {pathway_arg_str} is identical to one already in '{self.name}': "
+                          f"'{pre_existing_Pathway.name}'; the latter will be used.")
+            return pre_existing_Pathway
+
+        # If the parsed (inferred) pathway used existing components and is identical to the specified one
+        elif (len(parsed_pathway) == len(specified_pathway) and
+              all(parsed == specified for parsed, specified in zip(parsed_pathway, specified_pathway)
+                  if (not isinstance(parsed, Projection) or isinstance(specified, Projection))) and
+              (self._pre_existing_pathway_components[NODES] or self._pre_existing_pathway_components[PROJECTIONS])):
+            if self.prefs.verbosePref:
+                warnings.warn(f"Pathway specified {pathway_arg_str} uses Nodes and/or Projections already in "
+                              f"'{self.name}'.")
+
+        # Elements of parsed pathway were inferred (i.e., not explicitly specified in specified_pathway)
+        elif len(specified_pathway) < len(parsed_pathway):
+
+            # Resulting (parsed) pathway is identical to an existing one
+            pre_existing_Pathway = next((P for P in self.pathways if parsed_pathway==P.pathway), None)
+            if pre_existing_Pathway:
                 warnings.warn(f"Pathway specified {pathway_arg_str} has same Nodes in same order as "
-                              f"one already in {self.name}: {pathway}; it will be ignored.")
-                return existing_pathway
-            #
+                              f"one already in '{self.name}': {pre_existing_Pathway.name}; the latter will be used.")
+                return pre_existing_Pathway
+
+            # Specified pathway has a subset of nodes of those in an existing Pathway
+            pre_existing_Pathway = \
+                next((P for P in self.pathways if
+                      str([s for s in specified_pathway if not isinstance(s, Projection)]).strip('[]')
+                      in str([s for s in specified_pathway if not isinstance(s, Projection)]).strip('[]')), None)
+            if pre_existing_Pathway:
+                if self.prefs.verbosePref:
+                    warnings.warn(f"Pathway specified {pathway_arg_str} has a subset of nodes in a Pathway already "
+                                  f"in '{self.name}': {pre_existing_Pathway.name}; the latter will be used.")
+
+            # Same nodes but no/fewer Projections
+            if ([node for node in specified_pathway if not isinstance(node, Projection)]
+                  == [node for node in parsed_pathway if not isinstance(node, Projection)]):
+                # Warn if inferred Projections were identical to existing ones
+                if self._pre_existing_pathway_components[PROJECTIONS]:
+                    if self.prefs.verbosePref:
+                        warnings.warn(f"Pathway assigned {pathway_arg_str} specified Projections "
+                                      f"already in '{self.name}': the latter will be used.")
+
             # Shorter because it contained one or more ControlMechanisms with monitor_for_control specified
             #    or an ObjectiveMechanism that projects to a ControlMechanism.
-            elif explicit_pathway == [m for m in pathway if not (
+            elif parsed_pathway == [m for m in specified_pathway if not (
                     (isinstance(m, ControlMechanism)
                       or (isinstance(m, tuple) and isinstance(m[0], ControlMechanism))
                      or (isinstance(m, ObjectiveMechanism) and m.control_mechanism)))]:
+                pass
+            elif not self._pre_existing_pathway_components[NODES]:
                 pass
             else:
                 # Otherwise, something has gone wrong
                 assert False, \
                     f"PROGRAM ERROR: Bad pathway specification for {self.name} {pathway_arg_str}: {pathway}."
 
-        pathway = Pathway(pathway=explicit_pathway,
+        pathway = Pathway(pathway=parsed_pathway,
                           composition=self,
                           # default_projection_matrix=default_projection_matrix,
                           name=pathway_name,
@@ -7511,7 +7660,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pathway_arg_str = context.string
         # Otherwise, refer to call from this method
         else:
-            pathway_arg_str = f"in 'pathway' arg for add_linear_procesing_pathway method of {self.name}"
+            pathway_arg_str = f"in 'pathway' arg for add_linear_processing_pathway method of {self.name}"
         context.source = ContextFlags.METHOD
         context.string = pathway_arg_str
 
@@ -7827,7 +7976,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     **kwargs                  # Use of type-specific learning arguments
                                     ):
 
-        # ONLY DO THIS IF ONE DOESN'T ALREADY EXIST (?pass in argument determining this?)
         learning_mechanism = LearningMechanism(function=learning_function,
                                                default_variable=[sender_activity_source.output_ports[0].value,
                                                                  receiver_activity_source.output_ports[0].value,
@@ -7837,7 +7985,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                in_composition=True,
                                                name="Learning Mechanism for " + learned_projection.name,
                                                **kwargs)
-
 
         return learning_mechanism
 
@@ -7878,18 +8025,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                       output_ports=[OUTCOME, Loss.MSE.name],
                                                       )
             learning_mechanism = LearningMechanism(
-                                    function=learning_function(
-                                                         default_variable=[input_source.output_ports[0].value,
-                                                                           output_source.output_ports[0].value,
-                                                                           objective_mechanism.output_ports[0].value],
-                                                         learning_rate=learning_rate),
-                                    default_variable=[input_source.output_ports[0].value,
-                                                      output_source.output_ports[0].value,
-                                                      objective_mechanism.output_ports[0].value],
-                                    error_sources=objective_mechanism,
-                                    learning_enabled=learning_update,
-                                    in_composition=True,
-                                    name="Learning Mechanism for " + learned_projection.name)
+                function=learning_function(
+                    default_variable=[input_source.output_ports[0].value,
+                                      output_source.output_ports[0].value,
+                                      objective_mechanism.output_ports[0].value],
+                    learning_rate=learning_rate),
+                default_variable=[input_source.output_ports[0].value,
+                                  output_source.output_ports[0].value,
+                                  objective_mechanism.output_ports[0].value],
+                error_sources=objective_mechanism,
+                learning_enabled=learning_update,
+                in_composition=True,
+                name="Learning Mechanism for " + learned_projection.name)
 
             objective_mechanism.modulatory_mechanism = learning_mechanism
 
@@ -7899,7 +8046,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    f"learning-compatible function")
 
         learning_mechanism.output_ports[ERROR_SIGNAL].parameters.require_projection_in_composition.set(False,
-                                                                                                         override=True)
+                                                                                                       override=True)
         return target_mechanism, objective_mechanism, learning_mechanism
 
     def _create_learning_related_projections(self, input_source, output_source, target, comparator, learning_mechanism):
@@ -7984,11 +8131,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                default_variable=output_source.defaults.value)
 
         objective_mechanism = PredictionErrorMechanism(name='PredictionError',
-                                                        sample={NAME: SAMPLE,
-                                                                VARIABLE: np.zeros_like(output_source.output_ports[0].defaults.value)},
-                                                        target={NAME: TARGET,
-                                                                VARIABLE: np.zeros_like(output_source.output_ports[0].defaults.value)},
-                                                        function=PredictionErrorDeltaFunction(gamma=1.0))
+                                                       sample={NAME: SAMPLE,
+                                                               VARIABLE: np.zeros_like(
+                                                                   output_source.output_ports[0].defaults.value)},
+                                                       target={NAME: TARGET,
+                                                               VARIABLE: np.zeros_like(
+                                                                   output_source.output_ports[0].defaults.value)},
+                                                       function=PredictionErrorDeltaFunction(gamma=1.0))
 
         learning_mechanism = LearningMechanism(function=TDLearning(learning_rate=learning_rate),
                                                default_variable=[input_source.output_ports[0].defaults.value,
@@ -8020,7 +8169,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Add pathway to graph and get its full specification (includes all ProcessingMechanisms and MappingProjections)
         # Pass ContextFlags.INITIALIZING so that it can be passed on to _analyze_graph() and then
         #    _check_for_projection_assignments() in order to ignore checks for require_projection_in_composition
-        context.string = f"in 'pathway' arg for add_backpropagation_learning_pathway method of {self.name}"
+        context.string = f"in 'pathway' arg for add_backpropagation_learning_pathway method of '{self.name}'"
         learning_pathway = self.add_linear_processing_pathway(pathway=pathway,
                                                               name=name,
                                                               default_projection_matrix=default_projection_matrix,
@@ -8255,7 +8404,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if loss_spec == Loss.CROSS_ENTROPY:
                 # error function:  use LinearCombination to implement cross_entropy: (SoftMax(sample), SoftMax(target))
                 sample.update({FUNCTION: SoftMax(output=ALL)})
-                # [JDC 12/4/22]: FIX: IS THIS COORRECT, OR SHOULD IT BE ASSUMED TO BE A ONE-HOT AND COMPLAIN IF NOT?
+                # [JDC 12/4/22]: FIX: IS THIS CORRECT, OR SHOULD IT BE ASSUMED TO BE A ONE-HOT AND COMPLAIN IF NOT?
                 target.update({FUNCTION: SoftMax(output=ALL)})
                 error_function = LinearCombination(operation=CROSS_ENTROPY)
                 output_ports = [OUTCOME, SUM.upper()]
@@ -8372,10 +8521,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return [activation_input, activation_output, covariates_sources]
 
         # Get existing LearningMechanism if one exists (i.e., if this is a crossing point with another pathway)
-        learning_mechanism = \
-            next((lp.sender.owner for lp in learned_projection.parameter_ports[MATRIX].mod_afferents
-                  if isinstance(lp, LearningProjection)),
-                 None)
+        learning_mechanism = next((lp.sender.owner
+                                   for lp in learned_projection.parameter_ports[MATRIX].mod_afferents
+                                   if (isinstance(lp, LearningProjection)
+                                       and isinstance(lp.sender.owner.function, BackPropagation))),
+                                  None)
 
         # If learning_mechanism exists:
         #    error_sources will be empty (as they have been dealt with in self._get_back_prop_error_sources
@@ -8614,10 +8764,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                          if (p in self.projections
                              and hasattr(p, 'has_learning_projection')
                              and p.has_learning_projection)]:
-            # For each LearningProjection to that afferent, if its LearningMechanism doesn't already receiver
+            # For each LearningProjection to that afferent, if its LearningMechanism doesn't already have a receiver
             for learning_projection in [lp for lp in afferent.parameter_ports[MATRIX].mod_afferents
                                         if (isinstance(lp, LearningProjection)
-                                            and error_source not in lp.sender.owner.error_sources)]:
+                                            and lp.sender.owner.error_sources
+                                            and error_source not in lp.sender.owner.error_sources
+                                            and lp.sender.owner.learning_type is LearningType.SUPERVISED)]:
                 dependent_learning_mech = learning_projection.sender.owner
                 error_signal_input_port = dependent_learning_mech.add_ports(
                                                     InputPort(projections=error_source.output_ports[ERROR_SIGNAL],

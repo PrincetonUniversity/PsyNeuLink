@@ -600,10 +600,26 @@ class AutodiffComposition(Composition):
 
     # def learn(self, *args,**kwargs):
     def learn(self, *args, execution_mode=pnlvm.ExecutionMode.PyTorch,**kwargs):
+        # FIX: CHANGES TO autodiff LEARNING HERE
         if self._built_pathways is False:
+        # if (self._built_pathways is False
+        #         and ('execution_mode' not in kwargs or kwargs['execution_mode'] is not pnlvm.ExecutionMode.Python)):
             self.infer_backpropagation_learning_pathways()
             self._built_pathways = True
 
+        # If execution_mode = Ptyhon, raise error for now (until fully validated)
+        if 'execution_mode' in kwargs:
+            execution_mode = kwargs['execution_mode']
+            if execution_mode == pnlvm.ExecutionMode.Python:
+                raise AutodiffCompositionError(f"Learning in Python mode is not yet supported for AutodiffComposition;"
+                                               f"use ExecutionMode.PyTorch or ExecutionMode.LLVMRun.")
+        # If execution_mode is not specified, use PyTorch (until Autodiff learning using Python is fully validated)
+        else:
+            warnings.warn(f"The execution_mode argument was not specified in the learn() method of {self.name}. "
+                          f"ExecutionMode.PyTorch will be used by default.")
+            kwargs['execution_mode'] = pnlvm.ExecutionMode.PyTorch
+
+        # return super().learn(*args, **kwargs)
         return super().learn(*args, execution_mode=execution_mode, **kwargs)
 
     @handle_external_context()
@@ -637,7 +653,10 @@ class AutodiffComposition(Composition):
                 report_num=None,
                 ):
 
+        # FIX: CHANGES TO autodiff LEARNING HERE
+        # MODIFIED NEW:
         if execution_mode is not pnlvm.ExecutionMode.Python:
+        # MODIFIED ALL OF THE FOLLOWING HAS BEEN INDENTED:
             self._assign_execution_ids(context)
             context.composition = self
             context.source = ContextFlags.COMPOSITION
@@ -667,6 +686,14 @@ class AutodiffComposition(Composition):
                                                 autodiff_targets,
                                                 context,
                                                 scheduler)
+                # MODIFIED 8/8/23 NEW:
+                # if execution_mode is not pnlvm.ExecutionMode.Python:
+                self._build_pytorch_representation(context)
+                output = self.autodiff_training(autodiff_inputs,
+                                                autodiff_targets,
+                                                context,
+                                                scheduler)
+                # MODIFIED 8/8/23 END
 
                 execution_phase = context.execution_phase
                 context.execution_phase = ContextFlags.PROCESSING
@@ -685,6 +712,7 @@ class AutodiffComposition(Composition):
                 scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
 
                 return output
+        # MODIFIED NEW:
 
         return super(AutodiffComposition, self).execute(inputs=inputs,
                                                         scheduler=scheduler,
