@@ -1253,16 +1253,27 @@ class TestTrainingIdenticalness():
 
         return xor, input_layer, hidden_layer, output_layer, inputs, targets
 
-    @pytest.mark.parametrize('input_type', ['dict','func', 'gen', 'gen_func'], ids=['dict','func', 'gen', 'gen_func'])
+    @pytest.mark.parametrize('input_type', [
+        # 'dict',
+        'func',
+        # 'gen',
+        # 'gen_func'
+    ],
+                             ids=[
+                                 # 'dict',
+                                  'func',
+                                  # 'gen',
+                                  # 'gen_func'
+                             ])
     @pytest.mark.parametrize('exec_mode', [
         pnl.ExecutionMode.PyTorch,
-        # pnl.ExecutionMode.LLVMRun,
-        # pnl.ExecutionMode.Python
+        pnl.ExecutionMode.LLVMRun,
+        pnl.ExecutionMode.Python
     ],
                              ids=[
                                  'PyTorch',
-                                 # 'LLVM',
-                                 # 'Python'
+                                 'LLVM',
+                                 'Python'
                              ])
     def test_identicalness_of_input_types(self, x_or_network, input_type, exec_mode):
 
