@@ -108,6 +108,8 @@
 #          - Add warning of this on initial call to learn()
 
 #        - Composition:
+#          - Add Composition.run_status attribute assigned a context flag, with is_preparing property that checks it
+#                 (paralleling handling of is_initializing)
 #          - Allow set of lists as specification for pathways in Composition
 #          - Make sure that shadow inputs (see InputPort_Shadow_Inputs) uses the same matrix as shadowed input.
 #          - composition.add_backpropagation_learning_pathway(): support use of set notation for multiple nodes that

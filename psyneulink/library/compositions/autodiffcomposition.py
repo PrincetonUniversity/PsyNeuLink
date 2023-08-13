@@ -272,14 +272,13 @@ from psyneulink.core.compositions.composition import Composition, NodeRole
 from psyneulink.core.compositions.composition import CompositionError
 from psyneulink.core.compositions.report \
     import ReportOutput, ReportParams, ReportProgress, ReportSimulations, ReportDevices, \
-    LEARN_REPORT, EXECUTE_REPORT, PROGRESS_REPORT
-from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
+    EXECUTE_REPORT, LEARN_REPORT, PROGRESS_REPORT
+from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context, CONTEXT
 from psyneulink.core.globals.keywords import AUTODIFF_COMPOSITION, SOFT_CLAMP, Loss
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.core import llvm as pnlvm
-
 
 
 logger = logging.getLogger(__name__)
@@ -601,8 +600,12 @@ class AutodiffComposition(Composition):
                 ret[node] = values
         return ret
 
-    # def learn(self, *args,**kwargs):
+    # @handle_external_context(source=ContextFlags.COMMAND_LINE)
+    @handle_external_context()
     def learn(self, *args, **kwargs):
+
+        context = kwargs[CONTEXT]
+        context.execution_phase = ContextFlags.PREPARING
 
         if self._built_pathways is False:
             self.infer_backpropagation_learning_pathways()

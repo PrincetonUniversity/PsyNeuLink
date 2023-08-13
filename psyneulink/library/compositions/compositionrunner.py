@@ -33,11 +33,9 @@ class CompositionRunner():
         """
         from psyneulink.library.compositions import AutodiffComposition
 
-        # MODIFIED 8/12/23 OLD:
+        # FIX: CHANGES TO autodiff LEARNING HERE  - BOTH OF THE FOLLOWING WORK
         # if isinstance(self._composition, AutodiffComposition) and execution_mode is not ExecutionMode.Python:
-        # MODIFIED 8/12/23 NEW:
         if isinstance(self._composition, AutodiffComposition):
-        # MODIFIED 8/12/23 END
             return self._composition._get_total_loss(num_trials, context)
 
         total_loss = 0
@@ -138,7 +136,7 @@ class CompositionRunner():
                         call_after_minibatch()
 
                     # FIX: CHANGES TO autodiff LEARNING HERE
-                    # MODIFIED 8/8/23 OLD:
+                    # # MODIFIED 8/8/23 OLD:
                     # if not self._is_llvm_mode:
                     # MODIFIED 8/8/23 NEW:
                     if execution_mode is ExecutionMode.PyTorch:

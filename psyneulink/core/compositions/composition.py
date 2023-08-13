@@ -8335,7 +8335,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return learning_pathway
 
-    def infer_backpropagation_learning_pathways(self):
+    def infer_backpropagation_learning_pathways(self, context=None):
         """Convenience method that automatically creates backpropapagation learning pathways for every
         Input Node --> Output Node pathway
         """
@@ -10175,11 +10175,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     #                                           EXECUTION
     # ******************************************************************************************************************
 
-    # MODIFIED 3/28/22 OLD:
     @handle_external_context()
-    # # MODIFIED 3/28/22 NEW:
-    # @handle_external_context(source = ContextFlags.COMMAND_LINE)
-    # MODIFIED 3/28/22 END
     def run(
             self,
             inputs=None,
@@ -10437,7 +10433,7 @@ _
         if context.source == ContextFlags.COMMAND_LINE:
             self._executed_from_command_line = True
         context.source = ContextFlags.COMPOSITION
-        execution_phase = context.execution_phase
+        execution_phase_at_entry = context.execution_phase
         context.execution_phase = ContextFlags.PREPARING
 
         # IMPLEMENTATION NOTE:  Restore if ExecutionMode.PyTorch can be distinguished from ExecutionMode.Python
@@ -10655,7 +10651,7 @@ _
         else:
             trial_output = None
 
-        context.execution_phase = execution_phase
+        context.execution_phase = execution_phase_at_entry
 
         # EXECUTE TRIALS -------------------------------------------------------------
 
@@ -10930,19 +10926,16 @@ _
         from psyneulink.library.compositions import AutodiffComposition
         runner = CompositionRunner(self)
 
-
         # Non-Python (i.e. PyTorch and LLVM) learning modes only supported for AutodiffComposition
         if execution_mode is not pnlvm.ExecutionMode.Python and not isinstance(self, AutodiffComposition):
             raise CompositionError(f"ExecutionMode.{execution_mode.name} cannot be used in the learn() method of "
                                    f"'{self.name}' because it is not an {AutodiffComposition.componentCategory}")
 
         context.add_flag(ContextFlags.LEARNING_MODE)
-        # # MODIFIED 3/28/22 NEW:
-        # context.source = ContextFlags.COMPOSITION
-        # MODIFIED 3/28/22 END
-        # # FIX 5/28/20
-        # context.add_flag(ContextFlags.PREPARING)
-        # context.execution_phase=ContextFlags.PREPARING
+
+        # MODIFIED 8/13/23 NEW:
+        context.execution_phase=ContextFlags.PREPARING
+        # MODIFIED 8/13/23 END
 
         self._analyze_graph()
 
