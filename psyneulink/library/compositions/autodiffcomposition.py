@@ -624,9 +624,9 @@ class AutodiffComposition(Composition):
                 self.execution_mode_warned_about_default = True
             execution_mode = pnlvm.ExecutionMode.PyTorch
 
-        if execution_mode == pnlvm.ExecutionMode.Python:
-            raise AutodiffCompositionError(f"Learning in Python mode is not yet supported for AutodiffComposition; "
-                                           f"use ExecutionMode.PyTorch or ExecutionMode.LLVMRun.")
+        # if execution_mode == pnlvm.ExecutionMode.Python:
+        #     raise AutodiffCompositionError(f"Learning in Python mode is not yet supported for AutodiffComposition; "
+        #                                    f"use ExecutionMode.PyTorch or ExecutionMode.LLVMRun.")
         return execution_mode
 
     @handle_external_context()

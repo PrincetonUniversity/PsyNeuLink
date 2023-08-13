@@ -9,7 +9,7 @@
 # ********************************************* AutodiffComposition *************************************************
 import numpy as np
 
-from psyneulink.core import llvm as pnlvm
+from psyneulink.core.llvm import ExecutionMode
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.compositions.report import Report, ReportProgress, ReportDevices, LEARN_REPORT, PROGRESS_REPORT
 from psyneulink.core.globals.keywords import OBJECTIVE_MECHANISM, TRAINING_SET
@@ -27,18 +27,23 @@ class CompositionRunner():
         self._composition = compostion
 
     # FIX: CHANGES TO autodiff LEARNING HERE
-    def _calculate_loss(self, num_trials:int, execution_mode:pnlvm.ExecutionMode, context):
+    def _calculate_loss(self, num_trials:int, execution_mode:ExecutionMode, context):
         """
         Returns a value that is the sum of all the losses from the last iteration
         """
         from psyneulink.library.compositions import AutodiffComposition
-        if isinstance(self._composition, AutodiffComposition) and execution_mode is not pnlvm.ExecutionMode.Python:
+
+        # MODIFIED 8/12/23 OLD:
+        # if isinstance(self._composition, AutodiffComposition) and execution_mode is not ExecutionMode.Python:
+        # MODIFIED 8/12/23 NEW:
+        if isinstance(self._composition, AutodiffComposition):
+        # MODIFIED 8/12/23 END
             return self._composition._get_total_loss(num_trials, context)
+
         total_loss = 0
         for terminal_sequence in self._composition._terminal_backprop_sequences.values():
             comparator = terminal_sequence[OBJECTIVE_MECHANISM]
             total_loss += comparator.value[0][0]
-
         return total_loss
 
     def _batch_inputs(self,
@@ -50,8 +55,7 @@ class CompositionRunner():
                       call_before_minibatch=None,
                       call_after_minibatch=None,
                       early_stopper=None,
-                      # FIX: CHANGES TO autodiff LEARNING HERE
-                      execution_mode:pnlvm.ExecutionMode=pnlvm.ExecutionMode.Python,
+                      execution_mode:ExecutionMode=ExecutionMode.Python,
                       context=None):
         """
         Chunks input dict into pieces where each chunk is a dict with values of length batch_size
@@ -84,7 +88,7 @@ class CompositionRunner():
                 # # MODIFIED 8/8/23 OLD:
                 # if not self._is_llvm_mode:
                 # MODIFIED 8/8/23 NEW:
-                if execution_mode is pnlvm.ExecutionMode.PyTorch:
+                if execution_mode is ExecutionMode.PyTorch:
                     self._composition._update_learning_parameters(context)
 
             # Compiled mode does not need more identical inputs.
@@ -105,8 +109,7 @@ class CompositionRunner():
                                call_before_minibatch=None,
                                call_after_minibatch=None,
                                early_stopper=None,
-                               # FIX: CHANGES TO autodiff LEARNING HERE
-                               execution_mode:pnlvm.ExecutionMode=pnlvm.ExecutionMode.Python,
+                               execution_mode:ExecutionMode=ExecutionMode.Python,
                                context=None):
 
         assert early_stopper is None or not self._is_llvm_mode, "Early stopper doesn't work in compiled mode"
@@ -138,7 +141,7 @@ class CompositionRunner():
                     # MODIFIED 8/8/23 OLD:
                     # if not self._is_llvm_mode:
                     # MODIFIED 8/8/23 NEW:
-                    if execution_mode is pnlvm.ExecutionMode.PyTorch:
+                    if execution_mode is ExecutionMode.PyTorch:
                     # MODIFIED 8/8/23 END
                         self._composition._update_learning_parameters(context)
                 else:
@@ -164,8 +167,7 @@ class CompositionRunner():
                      call_before_minibatch = None,
                      call_after_minibatch = None,
                      context=None,
-                     # FIX: CHANGES TO autodiff LEARNING HERE
-                     execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
+                     execution_mode:ExecutionMode = ExecutionMode.Python,
                      **kwargs):
         """
         Runs the composition repeatedly with the specified parameters.
@@ -175,7 +177,7 @@ class CompositionRunner():
         Outputs from the final execution
         """
 
-        if not (execution_mode & pnlvm.ExecutionMode.COMPILED):
+        if not (execution_mode & ExecutionMode.COMPILED):
             self._is_llvm_mode = False
         else:
             self._is_llvm_mode = True
