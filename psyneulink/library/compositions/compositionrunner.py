@@ -12,6 +12,7 @@ import numpy as np
 from psyneulink.core.llvm import ExecutionMode
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.compositions.report import Report, ReportProgress, ReportDevices, LEARN_REPORT, PROGRESS_REPORT
+from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import LearningMechanism
 from psyneulink.core.globals.keywords import OBJECTIVE_MECHANISM, TRAINING_SET
 from inspect import isgeneratorfunction
 
@@ -26,15 +27,12 @@ class CompositionRunner():
     def __init__(self, compostion: Composition):
         self._composition = compostion
 
-    # FIX: CHANGES TO autodiff LEARNING HERE
     def _calculate_loss(self, num_trials:int, execution_mode:ExecutionMode, context):
         """
         Returns a value that is the sum of all the losses from the last iteration
         """
         from psyneulink.library.compositions import AutodiffComposition
 
-        # FIX: CHANGES TO autodiff LEARNING HERE  - BOTH OF THE FOLLOWING WORK
-        # if isinstance(self._composition, AutodiffComposition) and execution_mode is not ExecutionMode.Python:
         if isinstance(self._composition, AutodiffComposition):
             return self._composition._get_total_loss(num_trials, context)
 
@@ -82,11 +80,8 @@ class CompositionRunner():
                 if call_after_minibatch:
                     call_after_minibatch()
 
-                # Update weights if not in LLVM Mode
-                # # MODIFIED 8/8/23 OLD:
-                # if not self._is_llvm_mode:
-                # MODIFIED 8/8/23 NEW:
-                # FIX: 8/13/23 - SHOULD THIS BE CALLED IN Python mode as well?
+                # Update weights if in PyTorch execution_mode;
+                #  handled by Composition.execute in Python mode and in compiled version in LLVM mode
                 if execution_mode is ExecutionMode.PyTorch:
                     self._composition._update_learning_parameters(context)
 
@@ -94,7 +89,6 @@ class CompositionRunner():
             # number_of_runs will be set appropriately to cycle over the set
             if self._is_llvm_mode and not randomize:
                 return
-            # FIX: CHANGES TO autodiff LEARNING HERE
             if (not self._is_llvm_mode and early_stopper is not None
                     and early_stopper.step(self._calculate_loss(num_trials, execution_mode, context))):
                 # end early if patience exceeded
@@ -136,17 +130,13 @@ class CompositionRunner():
                     if call_after_minibatch:
                         call_after_minibatch()
 
-                    # FIX: CHANGES TO autodiff LEARNING HERE
-                    # # MODIFIED 8/8/23 OLD:
-                    # if not self._is_llvm_mode:
-                    # MODIFIED 8/8/23 NEW:
+                    # Update weights if in PyTorch execution_mode;
+                    #  handled by Composition.execute in Python mode and in compiled version in LLVM mode
                     if execution_mode is ExecutionMode.PyTorch:
-                    # MODIFIED 8/8/23 END
                         self._composition._update_learning_parameters(context)
                 else:
                     break
 
-            # FIX: CHANGES TO autodiff LEARNING HERE
             if (not self._is_llvm_mode
                     and early_stopper is not None
                     and early_stopper.step(self._calculate_loss(num_trials, execution_mode, context))):
@@ -183,6 +173,19 @@ class CompositionRunner():
 
         # This is used by local learning-related methods to override the default learning_rate set at construction.
         self._composition._runtime_learning_rate = learning_rate
+
+        # For Pytorch mode:
+        #   pass learning_rate to runtime_params for all LearningMechanisms
+        #   FIX:  IF LearningMechanism.learning_rate can be left at None unless specified,
+        #         then can restrict runtime_param to only those that don't have learning_rate individually specified
+        if learning_rate and execution_mode is ExecutionMode.Python:
+            runtime_params = {learning_mechanism:{'learning_rate':learning_rate}
+                              for learning_mechanism in self._composition.nodes
+                              if isinstance(learning_mechanism, LearningMechanism)}
+            if 'runtime_params' in kwargs:
+                kwargs['runtime_params'].update(runtime_params)
+            else:
+                kwargs['runtime_params'] = runtime_params
 
         # Handle function and generator inputs
         if isgeneratorfunction(inputs):

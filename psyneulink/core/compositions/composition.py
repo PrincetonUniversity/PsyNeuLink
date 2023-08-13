@@ -10463,6 +10463,7 @@ _
         execution_phase_at_entry = context.execution_phase
         context.execution_phase = ContextFlags.PREPARING
 
+        # FIX: 8/13/23
         # IMPLEMENTATION NOTE:  Restore if ExecutionMode.PyTorch can be distinguished from ExecutionMode.Python
         # from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
         # if execution_mode is pnlvm.ExecutionMode.PyTorch and not isinstance(self, AutodiffComposition):
@@ -11640,6 +11641,7 @@ _
 
                     if isinstance(node, Mechanism):
 
+                        # Get runtime params for node
                         execution_runtime_params = {}
                         if node in runtime_params:
                             execution_runtime_params.update(

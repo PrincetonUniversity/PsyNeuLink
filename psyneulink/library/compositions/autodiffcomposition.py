@@ -124,6 +124,7 @@ the constructor (see `AutodiffComposition <AutodiffComposition_Class_Reference>`
 *PyTorch mode*
 ~~~~~~~~~~~~~~
 
+# FIX: 8/13/23 - UPDATE DOCUMENTATION
 This is specified by setting **execution_mode = `ExecutionMode.PyTorch` in the `learn <Composition.learn>` method of
 an AutodiffCompositon (see `example <BasicsAndPrimer_Rumelhart_Model>` in `BasicsAndPrimer`).  This automatically
 translates the AutodiffComposition to a `PyTorch <https://pytorch.org>`_ model and uses that for execution.  This is
@@ -144,10 +145,7 @@ maps <https://github.com/giannisnik/som>`_).
       * Specifying `ExecutionMode.LLVM` or `ExecutionMode.PyTorch` in the learn() method of a standard
         `Composition` causes an error.
 
-    .. note::
-      * Specifying `ExecutionMode.Python` in the learn() method of a `AutodiffComposition` is treated as a
-        synonym of `ExecutionMode.PyTorch` (see table).
-
+# FIX: 8/13/23 - UPDATE DOCUMENTATION
 .. technical_note::
    `ExecutionMode.PyTorch` is a synonym for `ExecutionMode.Python`, that is provided for clarity of the user interface:
    the default for an AutodiffComposition (i.e., if **execution_mode** is not specified, or it is set to
@@ -625,9 +623,6 @@ class AutodiffComposition(Composition):
                 self.execution_mode_warned_about_default = True
             execution_mode = pnlvm.ExecutionMode.PyTorch
 
-        # if execution_mode == pnlvm.ExecutionMode.Python:
-        #     raise AutodiffCompositionError(f"Learning in Python mode is not yet supported for AutodiffComposition; "
-        #                                    f"use ExecutionMode.PyTorch or ExecutionMode.LLVMRun.")
         return execution_mode
 
     @handle_external_context()
@@ -661,10 +656,7 @@ class AutodiffComposition(Composition):
                 report_num=None,
                 ):
 
-        # FIX: CHANGES TO autodiff LEARNING HERE
-        # MODIFIED NEW:
         if execution_mode is not pnlvm.ExecutionMode.Python:
-        # MODIFIED ALL OF THE FOLLOWING HAS BEEN INDENTED:
             self._assign_execution_ids(context)
             context.composition = self
             context.source = ContextFlags.COMPOSITION
@@ -689,7 +681,7 @@ class AutodiffComposition(Composition):
                        content='trial_start',
                        context=context)
 
-                # FIX: CHANGES TO autodiff LEARNING HERE
+                # FIX: CHANGES TO autodiff LEARNING HERE - NEEDED FOR Python mode?  IF NOT, THEN RESTORE if STATMENT?
                 # MODIFIED 8/8/23 NEW:
                 # if execution_mode is not pnlvm.ExecutionMode.Python:
                 self._build_pytorch_representation(context)

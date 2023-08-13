@@ -2162,7 +2162,6 @@ class EMComposition(AutodiffComposition):
             self.retrieved_nodes[i].path_afferents[0].parameters.matrix.set(field_memories, context)
 
     def learn(self, *args, **kwargs):
-        # FIX: Skip AutodiffComposition.learn for now, until Pytorch implementation is done
         # super(AutodiffComposition, self).learn(*args, **kwargs)
         super().learn(*args, **kwargs)
 
