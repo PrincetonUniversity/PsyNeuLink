@@ -99,9 +99,10 @@ class LearningFunction(Function_Base):
     default_learning_rate : numeric
         the value used for the function's `learning_rate <LearningFunction.learning_rate>` parameter if none of the
         following are specified:  the `learning_rate <LearningMechanism.learning_rate>` for the `LearningMechanism` to
-        which the function has been assigned, the `learning_rate <Process.learning_rate>` for any `Process` or
-        the `learning_rate <System.learning_rate>` for any `System` to which that LearningMechanism belongs.
-        The exact form of the value (i.e., whether it is a scalar or array) depends on the function's type.
+        which the function has been assigned, the `learning_rate <Composition.learning_rate>` for any `Composition`
+        to which that LearningMechanism belongs, or a **learning** specified in a call to the Composition's `learn
+        <Composition.learn>` method. The exact form of the value (i.e., whether it is a scalar or array) depends on
+        the function's type.
 
     learning_rate : numeric
         generally used to multiply the result of the function before it is returned;  however, both the form of the

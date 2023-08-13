@@ -3373,6 +3373,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         allow_probes=True,                 \
         include_probes_in_output=False     \
         disable_learning=False,            \
+        learning_rate=None,                \
         controller=None,                   \
         enable_controller=None,            \
         controller_mode=AFTER,             \
@@ -3431,9 +3432,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <NodeRole.PROBE>` Nodes *are excluded* from those attributes;  if True (the default) they are included
         (see `Probes <Composition_Probes>` for additional details).
 
-    disable_learning: bool : default False
+    disable_learning : bool : default False
         specifies whether `LearningMechanisms <LearningMechanism>` in the Composition are executed when run in
         `learning mode <Composition.learn>`.
+
+    learning_rate: float or int : default None
+        specifies the learning_rate to be used by `LearningMechanisms <LearningMechanism>` in the Composition
+        that do not have their own `learning_rate <LearningMechanism.learning_rate>` otherwise specified
+        (see `learning_rate <Composition.learning_rate>` for additional details).
 
     controller : `OptimizationControlMechanism` : default None
         specifies the `OptimizationControlMechanism` to use as the `Composition's controller
@@ -3444,17 +3450,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Composition is run.  Set to True by default if **controller** specified (see `enable_controller
         <Composition.enable_controller>` for additional details).
 
-    controller_mode: enum.Enum[BEFORE|AFTER] : default AFTER
+    controller_mode : enum.Enum[BEFORE|AFTER] : default AFTER
         specifies whether the `controller <Composition.controller>` is executed before or after the rest of the
         Composition when it is run, at the `TimeScale` specified by **controller_time_scale**). Must be either the
         keyword *BEFORE* or *AFTER* (see `controller_mode <Composition.controller_mode>` for additional details).
 
-    controller_time_scale: TimeScale[TIME_STEP, PASS, TRIAL, RUN] : default TRIAL
+    controller_time_scale : TimeScale[TIME_STEP, PASS, TRIAL, RUN] : default TRIAL
         specifies the frequency at which the `controller <Composition.controller>` is executed, either before or
         after the Composition is run as specified by **controller_mode** (see `controller_time_scale
         <Composition.controller_time_scale>` for additional details).
 
-    controller_condition: Condition : default Always()
+    controller_condition : Condition : default Always()
         specifies a specific `Condition` for whether the Composition's `controller <Composition.controller>` is
         executed  in a trial (see `controller_condition <Composition.controller_condition>` for additional details).
 
@@ -3697,6 +3703,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         determines whether `LearningMechanisms <LearningMechanism>` in the Composition are executed when run in
         `learning mode <Composition.learn>`.
 
+    learning_rate : float or int
+        if specified, used as the default value for the `learning_rate <LearningMechanism.learning_rate>` of
+        `LearningMechanisms <LearningMechanism>` in the Composition that do not have their learning_rate otherwise
+        specified; it is superceded by the **learning_rate** argument of a `learning construction method
+        <Composition_Learning_Methods>`, and can also be overriden by specifying the **learning_rate** argument in a
+        call to the `learn <Composition.learn>` method of a Composition (see `LearningMechanism_Learning_Rate` for
+        additional details).
+
     learning_components : list[list]
         a list of the learning-related components in the Composition, all or many of which may have been
         created automatically in a call to one of its `add_<*learning_type*>_pathway' methods (see
@@ -3829,6 +3843,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             allow_probes: Union[bool, CONTROL] = True,
             include_probes_in_output: bool = False,
             disable_learning: bool = False,
+            learning_rate:Union[float, int] = None,
             controller: ControlMechanism = None,
             enable_controller=None,
             controller_mode: Literal['before', 'after'] = 'after',
@@ -3891,6 +3906,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._partially_added_nodes = []
 
         self.disable_learning = disable_learning
+        self.learning_rate = learning_rate
         self._runtime_learning_rate = None
 
         # graph and scheduler status attributes
@@ -7873,7 +7889,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     @beartype
     def add_backpropagation_learning_pathway(self,
                                              pathway: Union[list, 'psyneulink.core.compositions.pathway.Pathway'],
-                                             learning_rate: Union[int, float] = 0.05,
+                                             learning_rate: Union[int, float] = None,
                                              error_function: Optional[Function] = None,
                                              loss_spec: Optional[Loss] = Loss.MSE,
                                              learning_update: Optional[Union[bool, Literal['online', 'after']]] = 'after',
@@ -7921,6 +7937,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             BackPropagation `learning Pathway` <Composition_Learning_Pathway>` added to the Composition.
 
         """
+        learning_rate = learning_rate if learning_rate is not None \
+            else self.learning_rate if self.learning_rate is not None \
+            else 0.05
         return self.add_linear_learning_pathway(pathway,
                                                 learning_rate=learning_rate,
                                                 learning_function=BackPropagation,
@@ -7982,6 +8001,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                  error_sources.output_ports[0].value],
                                                error_sources=error_sources,
                                                learning_enabled=learning_update,
+                                               learning_rate=learning_rate,
                                                in_composition=True,
                                                name="Learning Mechanism for " + learned_projection.name,
                                                **kwargs)
@@ -8024,19 +8044,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                       function=error_function,
                                                       output_ports=[OUTCOME, Loss.MSE.name],
                                                       )
-            learning_mechanism = LearningMechanism(
-                function=learning_function(
-                    default_variable=[input_source.output_ports[0].value,
-                                      output_source.output_ports[0].value,
-                                      objective_mechanism.output_ports[0].value],
-                    learning_rate=learning_rate),
-                default_variable=[input_source.output_ports[0].value,
-                                  output_source.output_ports[0].value,
-                                  objective_mechanism.output_ports[0].value],
-                error_sources=objective_mechanism,
-                learning_enabled=learning_update,
-                in_composition=True,
-                name="Learning Mechanism for " + learned_projection.name)
+            learning_mechanism = LearningMechanism(function=learning_function(default_variable=[input_source.output_ports[0].value,
+                                                                                                output_source.output_ports[0].value,
+                                                                                                objective_mechanism.output_ports[0].value],
+                                                                              learning_rate=learning_rate),
+                                                   default_variable=[input_source.output_ports[0].value,
+                                                                     output_source.output_ports[0].value,
+                                                                     objective_mechanism.output_ports[0].value],
+                                                   error_sources=objective_mechanism,
+                                                   learning_enabled=learning_update,
+                                                   learning_rate=learning_rate,
+                                                   in_composition=True,
+                                                   name="Learning Mechanism for " + learned_projection.name)
 
             objective_mechanism.modulatory_mechanism = learning_mechanism
 
@@ -8112,6 +8131,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                 objective_mechanism.output_ports[0].value],
                               error_sources=objective_mechanism,
                               learning_enabled=learning_update,
+                              learning_rate=learning_rate,
                               in_composition=True,
                               name="Learning Mechanism for " + learned_projection.name)
 
@@ -8145,6 +8165,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                  objective_mechanism.output_ports[0].defaults.value],
                                                error_sources=objective_mechanism,
                                                learning_enabled=learning_update,
+                                               learning_rate=learning_rate,
                                                in_composition=True,
                                                name="Learning Mechanism for " + learned_projection.name)
 
@@ -8436,6 +8457,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                  objective_mechanism.output_ports[0].value],
                                                error_sources=objective_mechanism,
                                                learning_enabled=learning_update,
+                                               learning_rate=learning_rate,
                                                in_composition=True,
                                                name="Learning Mechanism for " + learned_projection.name)
 
@@ -8574,6 +8596,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                    covariates_sources = covariates_sources,
                                                    error_sources=error_sources,
                                                    learning_enabled=learning_update,
+                                                   learning_rate = learning_rate,
                                                    in_composition=True,
                                                    name="Learning Mechanism for " + learned_projection.name)
 

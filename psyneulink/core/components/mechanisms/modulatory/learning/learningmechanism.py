@@ -363,27 +363,36 @@ refer to the Components being learned and/or its operation:
 
 .. _LearningMechanism_Learning_Rate:
 
-* `learning_rate <LearningMechanism.learning_rate>` - specifies the :keyword:`learning_rate` parameter used by the
+* `learning_rate <LearningMechanism.learning_rate>` - specifies the `learning_rate` parameter used by the
   LearningMechanism's `function <LearningMechanism.function>`, which uses it to multiply the weight change matrix
   before returning it as the `learning_signal <LearningMechanism.learning_signal>`.  This can be specified in the
   **learning_rate** argument of the LearningMechanism's constructor (or the constructor for its `function
-  <LearningMechanism.function>`;  doing so supersedes specification of the **learning_rate** for a
-  `RecurrentTransferMechanism <RecurrentTransferMechanism_Learning>` used to implement `unsupervised learning
-  <Composition_Learning_Unsupervised>`, or a Composition's `learning method <Composition_Learning_Methods>` used to
-  implement a `supervised learning pathway <Composition_Learning_Supervised>`.  The default value for a
-  LearningMechanism's `learning_rate <LearningMechanism.learning_rate>` attribute is `None`, in which case the
-  LearningMechanism (and its `function <LearningMechanism.function>`) inherit the learning_rate from the
-  `RecurrentTransferMechanism <RecurrentTransferMechanism_Learning>` or the `learning method
-  <Composition_Learning_Methods>` of a Composition in which learning was defined.  If that is `None`, then it inherits
-  the learning_rate specified in the constructor of the `RecurrentTransferMechanism
-  <RecurrentTransferMechanism_Learning>` (for unsupervised learning) or Composition's `learning method
-  <Composition_Learning_Methods>` (for supervised learning). If that is also `None`, then it uses the value of the
-  `default_learning_rate <LearningFunction.default_learning_rate>` parameter of its `function
-  <LearningMechanism.function>`. A :keyword:`learning_rate` parameter can also be specified for individual
-  `LearningSignals <LearningSignal>` and/or their associated `LearningProjections <LearningProjection>`.
-  Those have a direct multiplicative effect on the `learning_signal <LearningProjection.learning_signal>` of the
-  LearningSignal and/or it LearningProjections (see `LearningSignal learning_rate <LearningSignal_Learning_Rate>`
-  for additional details).
+  <LearningMechanism.function>`; doing so supersedes specification of the **learning_rate** for a Composition in its
+  constructor or any of its `learning construction methods <Composition_Learning_Methods>` used to implement a
+  `supervised learning pathway <Composition_Learning_Supervised>`, or for a `RecurrentTransferMechanism
+  <RecurrentTransferMechanism_Learning>` used to implement `unsupervised learning <Composition_Learning_Unsupervised>`.
+  COMMENT:
+  FIX: TRUE?  SEE NEXT PPG AND LearningSignal.learning_rate
+  However, it is superceded by any `learning_rate <LearningSignal.learning_rate>` specified for the LearningMechanism's
+  `LearningSignals <LearningSignal>`, or for the `LearningProjections <LearningProjection>` to which they project.
+  COMMENT
+  The default value for a LearningMechanism's `learning_rate <LearningMechanism.learning_rate>` attribute is `None`,
+  in which case the LearningMechanism (and its `function <LearningMechanism.function>`) inherit the learning_rate
+  from the value specified in the `learning construction method <Composition_Learning_Methods>` of a Composition in
+  which learning was defined (for supervised learning) or of a `RecurrentTransferMechanism
+  <RecurrentTransferMechanism_Learning>` (for unsupervised learning).  If neither of those was specified, then the
+  it inherits any value specified in the **learning_rate** argument of the constructor for the Composition. If that is
+  None, then it uses the value of the `default_learning_rate <LearningFunction.default_learning_rate>` parameter of
+  its `function <LearningMechanism.function>`.  All of these are superceded by the specification of a learning_rate
+  in a call to a Composition's `learn <Composition.learn>` method.
+
+  A `learning_rate` parameter can also be specified for individual `LearningSignals <LearningSignal>` and/or their
+  associated `LearningProjections <LearningProjection>`. Those have a direct multiplicative effect on the
+  `learning_signal <LearningProjection.learning_signal>` of the LearningSignal and/or it LearningProjections (see
+  `LearningSignal learning_rate <LearningSignal_Learning_Rate>` for additional details).
+
+
+
 
 .. _LearningMechanism_Learning_Configurations:
 

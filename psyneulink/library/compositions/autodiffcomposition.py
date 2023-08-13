@@ -618,7 +618,6 @@ class AutodiffComposition(Composition):
         """Parse execution_mode argument and return a valid execution mode for the learn() method
         Can be overridden by subclasses to change the permitted and/or default execution mode for learning
         """
-        # FIX: CHANGES TO autodiff LEARNING HERE
         if execution_mode is None:
             if self.execution_mode_warned_about_default is False:
                 warnings.warn(f"The execution_mode argument was not specified in the learn() method of {self.name}; "

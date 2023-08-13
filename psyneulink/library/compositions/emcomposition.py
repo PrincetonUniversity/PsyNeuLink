@@ -107,7 +107,14 @@
 #          - support use of pathway argument in Autodff
 #          - DOCUMENTATION: execution_mode=ExecutionMode.Python allowed
 #          - Add warning of this on initial call to learn()
-
+#
+#        - Backpropagation LearningFunction:
+#          - DOCUMENTATION: weight_change_matrix = gradient (result of delta rule) * learning_rate
+#        - LearningMechanism / LearningSignal:  sort out what is going on with their learning_rate assignments
+#        - Implement _runtime_learning_rate for Composition in learn() method:
+#          ?? *always* use this by setting runtime params for call to LearningFunction?
+#             (and, if _runtime_learning_rate is None, then use most local static value)
+#
 #        - Composition:
 #          - Add Composition.run_status attribute assigned a context flag, with is_preparing property that checks it
 #                 (paralleling handling of is_initializing)
