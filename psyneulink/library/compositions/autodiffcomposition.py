@@ -600,18 +600,17 @@ class AutodiffComposition(Composition):
                 ret[node] = values
         return ret
 
-    # @handle_external_context(source=ContextFlags.COMMAND_LINE)
     @handle_external_context()
     def learn(self, *args, **kwargs):
-
-        context = kwargs[CONTEXT]
-        context.execution_phase = ContextFlags.PREPARING
+        execution_phase_at_entry = kwargs[CONTEXT].execution_phase
+        kwargs[CONTEXT].execution_phase = ContextFlags.PREPARING
 
         if self._built_pathways is False:
             self.infer_backpropagation_learning_pathways()
             self._built_pathways = True
 
         execution_mode = self._get_execution_mode(kwargs.pop('execution_mode', None))
+        kwargs[CONTEXT].execution_phase = execution_phase_at_entry
 
         return super().learn(*args, execution_mode=execution_mode, **kwargs)
 

@@ -10933,9 +10933,8 @@ _
 
         context.add_flag(ContextFlags.LEARNING_MODE)
 
-        # MODIFIED 8/13/23 NEW:
+        execution_phase_at_entry = context.execution_phase
         context.execution_phase=ContextFlags.PREPARING
-        # MODIFIED 8/13/23 END
 
         self._analyze_graph()
 
@@ -10954,6 +10953,8 @@ _
                         f'A reference to {target.name}, with which you can create the needed projection, can be found '
                         f'as the target attribute of the relevant pathway in {comp.name}.pathways. '
                     )
+
+        context.execution_phase = execution_phase_at_entry
 
         result = runner.run_learning(
             inputs=inputs,
