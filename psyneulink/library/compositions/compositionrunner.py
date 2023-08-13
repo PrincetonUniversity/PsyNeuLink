@@ -175,10 +175,13 @@ class CompositionRunner():
         self._composition._runtime_learning_rate = learning_rate
 
         # For Pytorch mode:
-        #   pass learning_rate to runtime_params for all LearningMechanisms
+        # FIX: MOVE THIS ABOVE self._composition._runtime_learning_rate ASSIGNMENT AND USE IF THIS OR ELSE THAT
+        #   pass self._composition._runtime_learning_rate to runtime_params for all LearningMechanisms
         #   FIX:  IF LearningMechanism.learning_rate can be left at None unless specified,
         #         then can restrict runtime_param to only those that don't have learning_rate individually specified
-        if learning_rate and execution_mode is ExecutionMode.Python:
+        if (learning_rate or self._composition.learning_rate) and execution_mode is ExecutionMode.Python:
+            # User learning_rate specified in call to learn, else the one specified for the Composition
+            curr_learning_rate = learning_rate if learning_rate is not None else self._composition.learning_rate
             runtime_params = {learning_mechanism:{'learning_rate':learning_rate}
                               for learning_mechanism in self._composition.nodes
                               if isinstance(learning_mechanism, LearningMechanism)}
