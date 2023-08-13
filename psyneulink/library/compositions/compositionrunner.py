@@ -231,7 +231,15 @@ class CompositionRunner():
                 early_stopper = EarlyStopping(min_delta=min_delta, patience=patience)
 
             if callable(stim_input) and not isgeneratorfunction(stim_input):
-                minibatched_input = self._batch_function_inputs(stim_input, stim_epoch, num_trials, minibatch_size, call_before_minibatch=call_before_minibatch, call_after_minibatch=call_after_minibatch, early_stopper=early_stopper, context=context)
+                minibatched_input = self._batch_function_inputs(stim_input,
+                                                                stim_epoch,
+                                                                num_trials,
+                                                                minibatch_size,
+                                                                call_before_minibatch=call_before_minibatch,
+                                                                call_after_minibatch=call_after_minibatch,
+                                                                early_stopper=early_stopper,
+                                                                execution_mode=execution_mode,
+                                                                context=context)
             else:
                 minibatched_input = self._batch_inputs(stim_input,
                                                        stim_epoch,
