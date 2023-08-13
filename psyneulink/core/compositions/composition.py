@@ -10932,8 +10932,7 @@ _
 
 
         # Non-Python (i.e. PyTorch and LLVM) learning modes only supported for AutodiffComposition
-        if ((execution_mode is not pnlvm.ExecutionMode.Python)
-                and not isinstance(self, AutodiffComposition)):
+        if execution_mode is not pnlvm.ExecutionMode.Python and not isinstance(self, AutodiffComposition):
             raise CompositionError(f"ExecutionMode.{execution_mode.name} cannot be used in the learn() method of "
                                    f"'{self.name}' because it is not an {AutodiffComposition.componentCategory}")
 

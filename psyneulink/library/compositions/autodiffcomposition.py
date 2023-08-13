@@ -408,6 +408,9 @@ class AutodiffComposition(Composition):
         else:
             self.device = torch.device('cpu')
 
+        # Set to True after first warning about failure to specify execution mode so warning is issued only once
+        self.execution_mode_warned_about_default = False
+
     # CLEANUP: move some of what's done in the methods below to a "validate_params" type of method
     @handle_external_context()
     def _build_pytorch_representation(self, context=None, refresh=False):
@@ -599,28 +602,32 @@ class AutodiffComposition(Composition):
         return ret
 
     # def learn(self, *args,**kwargs):
-    def learn(self, *args, execution_mode=pnlvm.ExecutionMode.PyTorch,**kwargs):
-        # FIX: CHANGES TO autodiff LEARNING HERE
+    def learn(self, *args, **kwargs):
+
         if self._built_pathways is False:
-        # if (self._built_pathways is False
-        #         and ('execution_mode' not in kwargs or kwargs['execution_mode'] is not pnlvm.ExecutionMode.Python)):
             self.infer_backpropagation_learning_pathways()
             self._built_pathways = True
 
-        # If execution_mode = Ptyhon, raise error for now (until fully validated)
-        if 'execution_mode' in kwargs:
-            execution_mode = kwargs['execution_mode']
-            if execution_mode == pnlvm.ExecutionMode.Python:
-                raise AutodiffCompositionError(f"Learning in Python mode is not yet supported for AutodiffComposition;"
-                                               f"use ExecutionMode.PyTorch or ExecutionMode.LLVMRun.")
-        # If execution_mode is not specified, use PyTorch (until Autodiff learning using Python is fully validated)
-        else:
-            warnings.warn(f"The execution_mode argument was not specified in the learn() method of {self.name}. "
-                          f"ExecutionMode.PyTorch will be used by default.")
-            kwargs['execution_mode'] = pnlvm.ExecutionMode.PyTorch
+        execution_mode = self._get_execution_mode(kwargs.pop('execution_mode', None))
 
-        # return super().learn(*args, **kwargs)
         return super().learn(*args, execution_mode=execution_mode, **kwargs)
+
+    def _get_execution_mode(self, execution_mode):
+        """Parse execution_mode argument and return a valid execution mode for the learn() method
+        Can be overridden by subclasses to change the permitted and/or default execution mode for learning
+        """
+        # FIX: CHANGES TO autodiff LEARNING HERE
+        if execution_mode is None:
+            if self.execution_mode_warned_about_default is False:
+                warnings.warn(f"The execution_mode argument was not specified in the learn() method of {self.name}; "
+                              f"ExecutionMode.PyTorch will be used by default.")
+                self.execution_mode_warned_about_default = True
+            execution_mode = pnlvm.ExecutionMode.PyTorch
+
+        if execution_mode == pnlvm.ExecutionMode.Python:
+            raise AutodiffCompositionError(f"Learning in Python mode is not yet supported for AutodiffComposition; "
+                                           f"use ExecutionMode.PyTorch or ExecutionMode.LLVMRun.")
+        return execution_mode
 
     @handle_external_context()
     def execute(self,
@@ -681,11 +688,7 @@ class AutodiffComposition(Composition):
                        content='trial_start',
                        context=context)
 
-                self._build_pytorch_representation(context)
-                output = self.autodiff_training(autodiff_inputs,
-                                                autodiff_targets,
-                                                context,
-                                                scheduler)
+                # FIX: CHANGES TO autodiff LEARNING HERE
                 # MODIFIED 8/8/23 NEW:
                 # if execution_mode is not pnlvm.ExecutionMode.Python:
                 self._build_pytorch_representation(context)

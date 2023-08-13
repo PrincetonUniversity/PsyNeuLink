@@ -164,6 +164,7 @@ class CompositionRunner():
                      call_before_minibatch = None,
                      call_after_minibatch = None,
                      context=None,
+                     # FIX: CHANGES TO autodiff LEARNING HERE
                      execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
                      **kwargs):
         """

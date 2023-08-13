@@ -796,6 +796,7 @@ Class Reference
 import numpy as np
 import graph_scheduler as gs
 import warnings
+import psyneulink.core.scheduling.condition as conditions
 
 from psyneulink._typing import Optional, Union
 
@@ -803,7 +804,7 @@ from psyneulink.core.components.functions.nonstateful.transferfunctions import S
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import Concatenate, LinearCombination
 from psyneulink.core.components.functions.function import \
     DEFAULT_SEED, _random_state_getter, _seed_setter
-from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
+from psyneulink.core.compositions.composition import CompositionError, NodeRole
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
 from psyneulink.library.components.mechanisms.modulatory.learning.EMstoragemechanism import EMStorageMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
@@ -815,9 +816,8 @@ from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.keywords import \
     (AUTO, CONTROL, DEFAULT_INPUT, DEFAULT_VARIABLE, EM_COMPOSITION, FULL_CONNECTIVITY_MATRIX,
      GAIN, IDENTITY_MATRIX, MULTIPLICATIVE_PARAM, NAME, PARAMS, PRODUCT, PROJECTIONS, RANDOM, SIZE, VARIABLE)
-from psyneulink.core.globals.utilities import all_within_range, random_matrix
-from psyneulink.core.scheduling.time import TimeScale
-import psyneulink.core.scheduling.condition as conditions
+from psyneulink.core.globals.utilities import all_within_range
+from psyneulink.core.llvm import ExecutionMode
 
 
 __all__ = [
@@ -2155,6 +2155,16 @@ class EMComposition(AutodiffComposition):
         # FIX: Skip AutodiffComposition.learn for now, until Pytorch implementation is done
         # super(AutodiffComposition, self).learn(*args, **kwargs)
         super().learn(*args, **kwargs)
+
+    def _get_execution_mode(self, execution_mode):
+        """Parse execution_mode argument and return a valid execution mode for the learn() method"""
+        if execution_mode is None:
+            if self.execution_mode_warned_about_default is False:
+                warnings.warn(f"The execution_mode argument was not specified in the learn() method of {self.name}; "
+                              f"ExecutionMode.Python will be used by default.")
+                self.execution_mode_warned_about_default = True
+            execution_mode = ExecutionMode.Python
+        return execution_mode
 
     def _update_learning_parameters(self, context):
         pass
