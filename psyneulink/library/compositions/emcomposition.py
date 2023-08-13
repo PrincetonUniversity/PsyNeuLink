@@ -104,6 +104,7 @@
 #                              so only where tests for Autodiff happened did it branch)
 #                   and different from Composition (in Python mode)
 #                - test: test_identicalness_of_input_types
+#          - support use of pathway argument in Autodff
 #          - DOCUMENTATION: execution_mode=ExecutionMode.Python allowed
 #          - Add warning of this on initial call to learn()
 

@@ -86,6 +86,7 @@ class CompositionRunner():
                 # # MODIFIED 8/8/23 OLD:
                 # if not self._is_llvm_mode:
                 # MODIFIED 8/8/23 NEW:
+                # FIX: 8/13/23 - SHOULD THIS BE CALLED IN Python mode as well?
                 if execution_mode is ExecutionMode.PyTorch:
                     self._composition._update_learning_parameters(context)
 

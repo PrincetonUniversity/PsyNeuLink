@@ -9408,6 +9408,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             return net_outcome
 
+    def _is_preparing(self, context):
+        """Returns true if the composition is currently preparing to execute (run or learn)"""
+        return ContextFlags.PREPARING in context.execution_phase
+
     def _infer_target_nodes(self, targets: dict):
         """
         Maps targets onto target mechanisms (as needed by learning)
@@ -11629,10 +11633,10 @@ _
                         #   AutoAssociativeMechanism should be handling learning - not the RTM itself.
                         if self._is_learning(context) and not isinstance(node, RecurrentTransferMechanism):
                             projections = set(self.projections).intersection(set(node.path_afferents))
-                            if any([p for p in projections if
-                                    any([a for a in p.parameter_ports[MATRIX].mod_afferents
+                            if any(p for p in projections if
+                                    any(a for a in p.parameter_ports[MATRIX].mod_afferents
                                          if (hasattr(a, 'learning_enabled')
-                                             and a.learning_enabled in {True, ONLINE})])]):
+                                             and a.learning_enabled in {True, ONLINE}))):
                                 context.replace_flag(ContextFlags.PROCESSING, ContextFlags.LEARNING)
 
                         # Execute Mechanism
