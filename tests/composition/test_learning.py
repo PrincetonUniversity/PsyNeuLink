@@ -12,53 +12,55 @@ import psyneulink.core.llvm as pnlvm
 from psyneulink.core.globals.keywords import Loss
 # from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import SSE, MSE, L0
 
+@pytest.fixture
+def xor_network():
+
+    # SET UP MECHANISMS
+    input_layer = TransferMechanism(name='input_layer',
+                                   default_variable=np.zeros(2))
+    hidden_layer = TransferMechanism(name='hidden_layer',
+                                    default_variable=np.zeros(10),
+                                    function=pnl.Logistic())
+    output_layer = TransferMechanism(name='output_layer',
+                                    default_variable=np.zeros(1),
+                                    function=pnl.Logistic())
+    input_to_hidden_wts = pnl.MappingProjection(name='input_to_hidden',
+                                            matrix=np.full((2,10), 0.1),
+                                            sender=input_layer,
+                                            receiver=hidden_layer)
+    hidden_to_output_wts = pnl.MappingProjection(name='hidden_to_output',
+                                             matrix=np.full((10,1), 0.1),
+                                             sender=hidden_layer,
+                                             receiver=output_layer)
+
+    inputs = np.array([[0, 0],[0, 1],[1, 0],[1, 1]])
+    targets = np.array([[0],[1],[1],[0]])
+
+    def _get_comp_type(comp_type, comp_learning_rate, pathway_learning_rate):
+        if comp_type == 'composition':
+            xor = Composition(learning_rate=comp_learning_rate)
+            pathway = xor.add_backpropagation_learning_pathway(pathway=[input_layer,hidden_layer,output_layer],
+                                                               learning_rate=pathway_learning_rate)
+            target_mechanism = pathway.learning_components[pnl.TARGET_MECHANISM]
+        elif comp_type == 'autodiff':
+            # FIX: the format commented out below doesn't work for LLVM:
+            # xor = pnl.AutodiffComposition(nodes=[input_layer,hidden_layer,output_layer])
+            # xor.add_projections([input_to_hidden_wts, hidden_to_output_wts])
+            xor = pnl.AutodiffComposition()
+            xor.add_node(input_layer)
+            xor.add_node(hidden_layer)
+            xor.add_node(output_layer)
+            xor.add_projection(sender=input_layer, projection=input_to_hidden_wts, receiver=hidden_layer)
+            xor.add_projection(sender=hidden_layer, projection=hidden_to_output_wts, receiver=output_layer)
+            target_mechanism = None
+        else:
+            assert False, f"Bad composition type parameter passed to xor_net fixture"
+        return xor, input_layer, hidden_layer, output_layer, target_mechanism, inputs, targets,
+
+    return _get_comp_type
+
+
 class TestInputAndTargetSpecs:
-
-    @pytest.fixture
-    def x_or_network(self):
-
-        # SET UP MECHANISMS
-        input_layer = TransferMechanism(name='input_layer',
-                                       default_variable=np.zeros(2))
-        hidden_layer = TransferMechanism(name='hidden_layer',
-                                        default_variable=np.zeros(10),
-                                        function=pnl.Logistic())
-        output_layer = TransferMechanism(name='output_layer',
-                                        default_variable=np.zeros(1),
-                                        function=pnl.Logistic())
-        input_to_hidden_wts = pnl.MappingProjection(name='input_to_hidden',
-                                                matrix=np.full((2,10), 0.1),
-                                                sender=input_layer,
-                                                receiver=hidden_layer)
-        hidden_to_output_wts = pnl.MappingProjection(name='hidden_to_output',
-                                                 matrix=np.full((10,1), 0.1),
-                                                 sender=hidden_layer,
-                                                 receiver=output_layer)
-
-        inputs = np.array([[0, 0],[0, 1],[1, 0],[1, 1]])
-        targets = np.array([[0],[1],[1],[0]])
-
-        def _get_comp_type(comp_type):
-            if comp_type == 'composition':
-                xor = Composition()
-                pathway = (xor.add_backpropagation_learning_pathway([input_layer,hidden_layer,output_layer]))
-                target_mechanism = pathway.learning_components[pnl.TARGET_MECHANISM]
-            elif comp_type == 'autodiff':
-                # FIX: the format commented out below doesn't work for LLVM:
-                # xor = pnl.AutodiffComposition(nodes=[input_layer,hidden_layer,output_layer])
-                # xor.add_projections([input_to_hidden_wts, hidden_to_output_wts])
-                xor = pnl.AutodiffComposition()
-                xor.add_node(input_layer)
-                xor.add_node(hidden_layer)
-                xor.add_node(output_layer)
-                xor.add_projection(sender=input_layer, projection=input_to_hidden_wts, receiver=hidden_layer)
-                xor.add_projection(sender=hidden_layer, projection=hidden_to_output_wts, receiver=output_layer)
-                target_mechanism = None
-            else:
-                assert False, f"Bad composition type parameter passed to xor_net fixture"
-            return xor, input_layer, hidden_layer, output_layer, target_mechanism, inputs, targets,
-
-        return _get_comp_type
 
     @pytest.mark.parametrize('input_type', ['dict', 'func', 'gen', 'gen_func'],
                              ids=['dict', 'func', 'gen', 'gen_func'])
@@ -68,13 +70,13 @@ class TestInputAndTargetSpecs:
                              ids=['PyTorch', 'LLVM', 'Python'])
     @pytest.mark.parametrize('comp_type', ['composition', 'autodiff'],
                              ids=['composition', 'autodiff'])
-
-    def test_identicalness_of_input_types(self, x_or_network, comp_type, input_type, exec_mode):
+    def test_identicalness_of_input_types(self, xor_network, comp_type, input_type, exec_mode):
 
         if comp_type == 'composition' and exec_mode != pnl.ExecutionMode.Python:
             pytest.skip(f"Execution mode {exec_mode} not relevant for Composition")
 
-        comp, input_layer, hidden_layer, output_layer, target_mechanism, stims, targets = x_or_network(comp_type)
+        comp, input_layer, hidden_layer, output_layer, target_mechanism, stims, targets =\
+            xor_network(comp_type, 0.001, None)
 
         if comp_type == 'composition':
             target_node = target_mechanism
@@ -110,7 +112,7 @@ class TestInputAndTargetSpecs:
 
         expected_results = [[0.6341436044849351]]
         if comp_type is 'composition':
-            results = comp.learn(inputs=inputs, learning_rate=.001)
+            results = comp.learn(inputs=inputs)
         else:
             results = comp.learn(inputs=inputs, execution_mode=exec_mode)
         np.testing.assert_allclose(results, expected_results)
@@ -1869,6 +1871,33 @@ class TestBackPropLearning:
         C.learning_components[2].learning_rate.base = 0.5
         C.learn(inputs=inputs, num_trials=2)
         np.testing.assert_allclose(C.learning_results, [[[0.52497919]], [[0.55439853]]])
+
+    spec_types = [
+        # Determiner        LearningMech   learning_pathway  Composition   Runtime    Expected Value
+        ('default',            None,          None,             None,        None,    [[0.63668214]]),
+        ('runtime',            None,          None,             None,        .04,     [[0.63612349]]),
+        ('composition',        None,          None,             .03,         None,    [[0.63558543]]),
+        ('learning_pathway',   None,          .02,              .03,         None,    [[0.63506819]]),
+        # ('learning_mech',      .01,           .02,              .03,         .04,     [[0]]),
+    ]
+    @pytest.mark.parametrize('spec_types',
+                             spec_types,
+                             ids=[x[0] for x in spec_types]
+                             )
+    def test_different_learning_rate_specs(self, xor_network, spec_types):
+        learning_mech_learning_rate = spec_types[1]
+        learning_pathway_learning_rate = spec_types[2]
+        composition_learning_rate = spec_types[3]
+        runtime_learning_rate = spec_types[4]
+        expected_value = spec_types[5]
+        comp, input_layer, hidden_layer, output_layer, target_mechanism, stims, targets = \
+            xor_network('composition', composition_learning_rate, learning_pathway_learning_rate)
+
+        inputs = {input_layer: stims,
+                  target_mechanism: targets}
+        result = comp.learn(inputs=inputs, learning_rate=runtime_learning_rate)
+        np.testing.assert_allclose(result, expected_value)
+        assert True
 
     @pytest.mark.pytorch
     def test_back_prop(self):

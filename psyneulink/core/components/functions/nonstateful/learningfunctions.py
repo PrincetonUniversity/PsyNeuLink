@@ -2333,7 +2333,7 @@ class BackPropagation(LearningFunction):
                              read_only=True,
                              pnl_internal=True,
                              constructor_argument='default_variable')
-        learning_rate = Parameter(1.0, modulable=True)
+        learning_rate = Parameter(0.05, modulable=True)
         loss_spec = Parameter(None, read_only=True)
         activation_input = Parameter([0], read_only=True, getter=_activation_input_getter)
         activation_output = Parameter([0], read_only=True, getter=_activation_output_getter)
@@ -2341,8 +2341,6 @@ class BackPropagation(LearningFunction):
         covariates = Parameter([], read_only=True)
         error_matrix = Parameter(None, read_only=True)
         activation_derivative_fct = Parameter(Logistic.derivative, stateful=False, loggable=False)
-
-    default_learning_rate = 1.0
 
     @check_user_specified
     @beartype

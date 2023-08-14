@@ -182,6 +182,7 @@ class CompositionRunner():
         if (learning_rate or self._composition.learning_rate) and execution_mode is ExecutionMode.Python:
             # User learning_rate specified in call to learn, else the one specified for the Composition
             curr_learning_rate = learning_rate if learning_rate is not None else self._composition.learning_rate
+            # runtime_params = {learning_mechanism:{'learning_rate':curr_learning_rate}
             runtime_params = {learning_mechanism:{'learning_rate':learning_rate}
                               for learning_mechanism in self._composition.nodes
                               if isinstance(learning_mechanism, LearningMechanism)}

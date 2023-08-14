@@ -118,6 +118,10 @@
 #          ?? *always* use this by setting runtime params for call to LearningFunction?
 #             (and, if _runtime_learning_rate is None, then use most local static value)
 #
+#        - MappingProjection / LearningMechanism:
+#          - Add learning_rate parameter to MappingProjection (if learnable is True)
+#          - Refactor LearningMechanism to use MappingProjection learning_rate specification if present
+#
 #        - Composition:
 #          - Add Composition.run_status attribute assigned a context flag, with is_preparing property that checks it
 #                 (paralleling handling of is_initializing)

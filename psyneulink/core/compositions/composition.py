@@ -3843,7 +3843,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             allow_probes: Union[bool, CONTROL] = True,
             include_probes_in_output: bool = False,
             disable_learning: bool = False,
-            learning_rate:Union[float, int] = None,
+            learning_rate:Optional[Union[float, int]] = None,
             controller: ControlMechanism = None,
             enable_controller=None,
             controller_mode: Literal['before', 'after'] = 'after',
@@ -7579,7 +7579,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     pathway,
                                     learning_function: Union[Type[LearningFunction], LearningFunction, Callable] = None,
                                     loss_spec: Optional[Loss] = Loss.MSE,
-                                    learning_rate: Union[int, float] = None,
+                                    learning_rate: Optional[Union[int, float]] = None,
                                     error_function=LinearCombination,
                                     learning_update: Union[bool, Literal['online', 'after']] = 'after',
                                     default_projection_matrix=None,
@@ -7778,7 +7778,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     @beartype
     def add_reinforcement_learning_pathway(self,
                                            pathway: Union[list, 'psyneulink.core.compositions.pathway.Pathway'],
-                                           learning_rate: Union[float, int] = None,
+                                           learning_rate: Optional[Union[float, int]] = None,
                                            error_function: Optional[Function] = None,
                                            learning_update: Union[bool, Literal['online', 'after']] = 'online',
                                            default_projection_matrix=None,
@@ -7834,7 +7834,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     @beartype
     def add_td_learning_pathway(self,
                                 pathway: Union[list, 'psyneulink.core.compositions.pathway.Pathway'],
-                                learning_rate: Union[int, float] = None,
+                                learning_rate: Optional[Union[int, float]] = None,
                                 error_function: Optional[Function] = None,
                                 learning_update: Union[bool, Literal['online', 'after']] = 'online',
                                 default_projection_matrix=None,
@@ -7889,7 +7889,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     @beartype
     def add_backpropagation_learning_pathway(self,
                                              pathway: Union[list, 'psyneulink.core.compositions.pathway.Pathway'],
-                                             learning_rate: Union[int, float] = None,
+                                             learning_rate: Optional[Union[int, float]] = None,
                                              error_function: Optional[Function] = None,
                                              loss_spec: Optional[Loss] = Loss.MSE,
                                              learning_update: Optional[Union[bool, Literal['online', 'after']]] = 'after',
@@ -7939,7 +7939,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         learning_rate = learning_rate if learning_rate is not None \
             else self.learning_rate if self.learning_rate is not None \
-            else 0.05
+            else None
+            # else 0.05
         return self.add_linear_learning_pathway(pathway,
                                                 learning_rate=learning_rate,
                                                 learning_function=BackPropagation,
@@ -10835,7 +10836,7 @@ _
             targets: Optional[dict] = None,
             num_trials: Optional[int] = None,
             epochs: int = 1,
-            learning_rate = None,
+            learning_rate: Optional[Union[int,float]]=None,
             minibatch_size: int = 1,
             patience: Optional[int] = None,
             min_delta: int = 0,
