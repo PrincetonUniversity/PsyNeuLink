@@ -2245,10 +2245,6 @@ class TestBackPropLearning:
                            hidden_to_out_comp.get_mod_matrix(xor_comp))
         np.testing.assert_allclose(result_comp, result_autodiff)
 
-    def test_learning_rate_specifications(self, spec_type):
-        pass
-
-
     @pytest.mark.parametrize('configuration', [
         'Y UP',
         'BRANCH UP',

@@ -96,17 +96,15 @@ class LearningFunction(Function_Base):
 
         However, the exact specification depends on the function's type.
 
-    default_learning_rate : numeric
-        the value used for the function's `learning_rate <LearningFunction.learning_rate>` parameter if none of the
-        following are specified:  the `learning_rate <LearningMechanism.learning_rate>` for the `LearningMechanism` to
-        which the function has been assigned, the `learning_rate <Composition.learning_rate>` for any `Composition`
-        to which that LearningMechanism belongs, or a **learning** specified in a call to the Composition's `learn
-        <Composition.learn>` method. The exact form of the value (i.e., whether it is a scalar or array) depends on
-        the function's type.
-
-    learning_rate : numeric
-        generally used to multiply the result of the function before it is returned;  however, both the form of the
-        value (i.e., whether it is a scalar or array) and how it is used depend on the function's type.
+    learning_rate : array, float or int : function.defaults.parameter
+        the value used for the function's `learning_rate <LearningFunction.learning_rate>` parameter, generally used
+        to multiply the result of the function before it is returned;  however, both the form of the value (i.e.,
+        whether it is a scalar or array) and how it is used depend on the function's type.  The parameter's default
+        value is used if none of the following is specified:  the `learning_rate <LearningMechanism.learning_rate>`
+        for the `LearningMechanism` to which the function has been assigned, the `learning_rate
+        <Composition.learning_rate>` for any `Composition` to which that LearningMechanism belongs, or a **learning**
+        specified in either one of the Composition's `learning construction methods <Composition_Learning_Methods>` or
+        a call to the Composition's `learn <Composition.learn>` method at runtime.
 
     Returns
     -------
@@ -217,11 +215,11 @@ class EMStorage(LearningFunction):
         if None, the weeakest entry (one with the lowest norm) along `axis <EMStorage.axis>` of
         `memory_matrix <EMStorage.memory_matrix>` is used.
 
-    storage_prob : float : default default_learning_rate
+    storage_prob : float or int : default 1.0
         specifies the probability with which `entry <EMStorage.entry>` is assigned to `memory_matrix
         <EMStorage.memory_matrix>`.
 
-    decay_rate : float : default 0.0
+    decay_rate : float or int : default 0.0
         specifies the rate at which pre-existing entries in `memory_matrix <EMStorage.memory_matrix>` are decayed.
 
     params : Dict[param keyword: param value] : default None
@@ -346,8 +344,6 @@ class EMStorage(LearningFunction):
         decay_rate = Parameter(0.0, modulable=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
-
-    default_learning_rate = 1.0
 
     def _validate_storage_prob(self, storage_prob):
         storage_prob = float(storage_prob)
@@ -1000,9 +996,8 @@ class Kohonen(LearningFunction):  # --------------------------------------------
     variable: List[array(float64), array(float64), 2d array[[float64]]] : default class_defaults.variable
         input pattern, array of activation values, and matrix used to calculate the weights changes.
 
-    learning_rate : scalar or list, 1d or 2d array, or np.matrix of numeric values: default default_learning_rate
-        specifies the learning rate used by the `function <Kohonen.function>`; supersedes any specification  for the
-        `Process` and/or `System` to which the function's `owner <Function.owner>` belongs (see `learning_rate
+    learning_rate : scalar or list, 1d or 2d array, or np.matrix of numeric values: default .05
+        specifies the learning rate used by the `function <Kohonen.function>` (see `learning_rate
         <Kohonen.learning_rate>` for details).
 
     distance_measure : GAUSSIAN, LINEAR, EXPONENTIAL, SINUSOID or function
@@ -1032,18 +1027,11 @@ class Kohonen(LearningFunction):  # --------------------------------------------
 
     learning_rate : float, 1d or 2d array
         used by the `function <Kohonen.function>` to scale the weight change matrix returned by the `function
-        <Kohonen.function>`.  If specified, it supersedes any learning_rate specified for the `Process
-        <Process_Base_Learning>` and/or `System <System_Learning>` to which the function's `owner <Kohonen.owner>`
-        belongs.  If it is a scalar, it is multiplied by the weight change matrix;  if it is a 1d array, it is
-        multiplied Hadamard (elementwise) by the `variable` <Kohonen.variable>` before calculating the weight change
-        matrix;  if it is a 2d array, it is multiplied Hadamard (elementwise) by the weight change matrix; if it is
-        `None`, then the `learning_rate <Process.learning_rate>` specified for the Process to which the `owner
-        <Kohonen.owner>` belongs is used;  and, if that is `None`, then the `learning_rate <System.learning_rate>`
-        for the System to which it belongs is used. If all are `None`, then the `default_learning_rate
-        <Kohonen.default_learning_rate>` is used.
-
-    default_learning_rate : float
-        the value used for the `learning_rate <Kohonen.learning_rate>` if it is not otherwise specified.
+        <Kohonen.function>`.  If it is a scalar, it is multiplied by the weight change matrix;  if it is a 1d array,
+        it is multiplied Hadamard (elementwise) by the `variable` <Kohonen.variable>` before calculating the weight
+        change matrix;  if it is a 2d array, it is multiplied Hadamard (elementwise) by the weight change matrix. If
+        learning_rate is not specified explicitly in the constructor for the function or otherwise (see `learning_rate
+        <LearningMechanism.learning_rate>`) then the function's default learning_rate is used.
 
     function : function
          calculates a matrix of weight changes from: i) the difference between an input pattern (variable
@@ -1093,8 +1081,6 @@ class Kohonen(LearningFunction):  # --------------------------------------------
             else:
                 # returns error message
                 return 'not one of {0}'.format(options)
-
-    default_learning_rate = 0.05
 
     @check_user_specified
     def __init__(self,
@@ -1203,11 +1189,6 @@ class Kohonen(LearningFunction):  # --------------------------------------------
 
         """
 
-        # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
-        #                      1) if no learning_rate is specified for the Mechanism, need to assign None
-        #                          so that the process or system can see it is free to be assigned
-        #                      2) if neither the system nor the process assigns a value to the learning_rate,
-        #                          then need to assign it to the default value
         # If learning_rate was not specified for instance or composition, use default value
         learning_rate = self._get_current_parameter_value(LEARNING_RATE, context)
         if learning_rate is None:
@@ -1282,9 +1263,8 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         activations in `variable <Hebbian.variable>`.
     COMMENT
 
-    learning_rate : scalar or list, 1d or 2d array, or np.matrix of numeric values: default default_learning_rate
-        specifies the learning rate used by the `function <Hebbian.function>`; supersedes any specification  for the
-        `Process` and/or `System` to which the function's `owner <Function.owner>` belongs (see `learning_rate
+    learning_rate : scalar or list, 1d or 2d array, or np.matrix of numeric values: default .05
+        specifies the learning rate used by the `function <Hebbian.function>`; (see `learning_rate
         <Hebbian.learning_rate>` for details).
 
     params : Dict[param keyword: param value] : default None
@@ -1315,18 +1295,11 @@ class Hebbian(LearningFunction):  # --------------------------------------------
 
     learning_rate : float, 1d or 2d array
         used by the `function <Hebbian.function>` to scale the weight change matrix returned by the `function
-        <Hebbian.function>`.  If specified, it supersedes any learning_rate specified for the `Process
-        <Process_Base_Learning>` and/or `System <System_Learning>` to which the function's `owner <Hebbian.owner>`
-        belongs.  If it is a scalar, it is multiplied by the weight change matrix;  if it is a 1d array, it is
-        multiplied Hadamard (elementwise) by the `variable` <Hebbian.variable>` before calculating the weight change
-        matrix;  if it is a 2d array, it is multiplied Hadamard (elementwise) by the weight change matrix; if it is
-        `None`, then the `learning_rate <Process.learning_rate>` specified for the Process to which the `owner
-        <Hebbian.owner>` belongs is used;  and, if that is `None`, then the `learning_rate <System.learning_rate>`
-        for the System to which it belongs is used. If all are `None`, then the `default_learning_rate
-        <Hebbian.default_learning_rate>` is used.
-
-    default_learning_rate : float
-        the value used for the `learning_rate <Hebbian.learning_rate>` if it is not otherwise specified.
+        <Hebbian.function>`.  If it is a scalar, it is multiplied by the weight change matrix;  if it is a 1d array,
+        it is multiplied Hadamard (elementwise) by the `variable` <Hebbian.variable>` before calculating the weight
+        change matrix;  if it is a 2d array, it is multiplied Hadamard (elementwise) by the weight change matrix. If
+        learning_rate is not specified explicitly in the constructor for the function or otherwise (see `learning_rate
+        <LearningMechanism.learning_rate>`) then the function's default learning_rate is used.
 
     function : function
          calculates the pairwise product of all elements in the `variable <Hebbian.variable>`, and then
@@ -1354,19 +1327,11 @@ class Hebbian(LearningFunction):  # --------------------------------------------
                     :type: ``numpy.ndarray``
                     :read only: True
 
-                learning_rate
-                    see `learning_rate <Hebbian.learning_rate>`
-
-                    :default value: 0.05
-                    :type: ``float``
         """
         variable = Parameter(np.array([0, 0]),
                              read_only=True,
                              pnl_internal=True,
                              constructor_argument='default_variable')
-        learning_rate = Parameter(0.05,
-                                  modulable=True)
-    default_learning_rate = 0.05
 
     @check_user_specified
     def __init__(self,
@@ -1437,11 +1402,6 @@ class Hebbian(LearningFunction):  # --------------------------------------------
 
         self._check_args(variable=variable, context=context, params=params)
 
-        # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
-        #                      1) if no learning_rate is specified for the Mechanism, need to assign None
-        #                          so that the process or system can see it is free to be assigned
-        #                      2) if neither the system nor the process assigns a value to the learning_rate,
-        #                          then need to assign it to the default value
         # If learning_rate was not specified for instance or composition, use default value
         learning_rate = self._get_current_parameter_value(LEARNING_RATE, context)
         if learning_rate is None:
@@ -1522,10 +1482,9 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
         activations in `variable <ContrastiveHebbian.variable>`.
     COMMENT
 
-    learning_rate : scalar or list, 1d or 2d array, or np.matrix of numeric values: default default_learning_rate
-        specifies the learning rate used by the `function <ContrastiveHebbian.function>`; supersedes any specification
-        for the `Process` and/or `System` to which the function's `owner <ContrastiveHebbian.owner>` belongs (see
-        `learning_rate <ContrastiveHebbian.learning_rate>` for details).
+    learning_rate : scalar or list, 1d or 2d array, or np.matrix of numeric values: default .05
+        specifies the learning rate used by the `function <ContrastiveHebbian.function>`. (see `learning_rate
+        <ContrastiveHebbian.learning_rate>` for details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the function.
@@ -1555,18 +1514,12 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
 
     learning_rate : float, 1d or 2d array
         used by the `function <ContrastiveHebbian.function>` to scale the weight change matrix returned by the `function
-        <ContrastiveHebbian.function>`.  If specified, it supersedes any learning_rate specified for the `Process
-        <Process_Base_Learning>` and/or `System <System_Learning>` to which the function's `owner
-        <ContrastiveHebbian.owner>` belongs.  If it is a scalar, it is multiplied by the weight change matrix;  if it
+        <ContrastiveHebbian.function>`.  If it is a scalar, it is multiplied by the weight change matrix;  if it
         is a 1d array, it is multiplied Hadamard (elementwise) by the `variable` <ContrastiveHebbian.variable>`
         before calculating the weight change matrix;  if it is a 2d array, it is multiplied Hadamard (elementwise) by
-        the weight change matrix; if it is `None`, then the `learning_rate <Process.learning_rate>` specified for the
-        Process to which the `owner <ContrastiveHebbian.owner>` belongs is used;  and, if that is `None`, then the
-        `learning_rate <System.learning_rate>` for the System to which it belongs is used. If all are `None`, then the
-        `default_learning_rate <ContrastiveHebbian.default_learning_rate>` is used.
-
-    default_learning_rate : float
-        the value used for the `learning_rate <ContrastiveHebbian.learning_rate>` if it is not otherwise specified.
+        the weight change matrix.  If learning_rate is not specified explicitly in the constructor for the function
+        or otherwise (see `learning_rate <LearningMechanism.learning_rate>`) then the function's defaultlearning_rate
+        is used.
 
     function : function
          calculates the pairwise product of all elements in the `variable <ContrastiveHebbian.variable>`, and then
@@ -1599,13 +1552,11 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
                              pnl_internal=True,
                              constructor_argument='default_variable')
 
-    default_learning_rate = 0.05
-
     @check_user_specified
     def __init__(self,
                  default_variable=None,
                  # learning_rate: Optional[ValidParamSpecType] = None,
-                 learning_rate=None,
+                 learning_rate:Optional[Union[int,float]]=None,
                  params=None,
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None):
@@ -1671,11 +1622,6 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
 
         self._check_args(variable=variable, context=context, params=params)
 
-        # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
-        #                      1) if no learning_rate is specified for the Mechanism, need to assign None
-        #                          so that the process or system can see it is free to be assigned
-        #                      2) if neither the system nor the process assigns a value to the learning_rate,
-        #                          then need to assign it to the default value
         # If learning_rate was not specified for instance or composition, use default value
         learning_rate = self._get_current_parameter_value(LEARNING_RATE, context)
         if learning_rate is None:
@@ -1788,9 +1734,9 @@ class Reinforcement(LearningFunction):  # --------------------------------------
 
            * `error_signal <Reinforcement.error_signal>`  (1d array with a single scalar element).
 
-    learning_rate : float : default default_learning_rate
-        supersedes any specification for the `Process` and/or `System` to which the function's
-        `owner <Function.owner>` belongs (see `learning_rate <Reinforcement.learning_rate>` for details).
+    learning_rate : float : default 0.05
+        specifies the learning_rate used by the function (see `learning_rate <Reinforcement.learning_rate>` for
+        details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -1831,15 +1777,9 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         associated with the non-zero item in `activation_output <Reinforcement.activation_output>`.
 
     learning_rate : float
-        the learning rate used by the function.  If specified, it supersedes any learning_rate specified for the
-        `Process <Process_Base_Learning>` and/or `System <System_Learning>` to which the function's
-        `owner <Reinforcement.owner>` belongs.  If it is `None`, then the `learning_rate <Process.learning_rate>`
-        specified for the Process to which the `owner <Reinforcement.owner>` belongs is used;  and, if that is `None`,
-        then the `learning_rate <System.learning_rate>` for the System to which it belongs is used. If all are
-        `None`, then the `default_learning_rate <Reinforcement.default_learning_rate>` is used.
-
-    default_learning_rate : float
-        the value used for the `learning_rate <Reinforcement.learning_rate>` if it is not otherwise specified.
+        the learning rate used by the function. If learning_rate is not specified explicitly in the constructor for
+        the function or otherwise (see `learning_rate <LearningMechanism.learning_rate>`) then the function's default
+        learning_rate is used.
 
     function : function
          the function that computes the weight change matrix, and returns that along with the
@@ -1993,11 +1933,6 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         error = self._get_current_parameter_value(ERROR_SIGNAL, context)
         learning_rate = self._get_current_parameter_value(LEARNING_RATE, context)
 
-        # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
-        #                      1) if no learning_rate is specified for the Mechanism, need to assign None
-        #                          so that the process or system can see it is free to be assigned
-        #                      2) if neither the system nor the process assigns a value to the learning_rate,
-        #                          then need to assign it to the default value
         # If learning_rate was not specified for instance or composition, use default value
         if learning_rate is None:
             learning_rate = self.defaults.learning_rate
@@ -2181,8 +2116,8 @@ class BackPropagation(LearningFunction):
     COMMENT
 
     learning_rate : float : default default_learning_rate
-        supersedes any specification for the `Process` and/or `System` to which the function's
-        `owner <Function.owner>` belongs (see `learning_rate <BackPropagation.learning_rate>` for details).
+        specifies the learning_rate used by the function (see `learning_rate <BackPropagation.learning_rate>` for
+        details).
 
     loss_spec : Loss : default None
         specifies the operation to apply to the error signal (i.e., method of calculating the derivative of the errror
@@ -2240,15 +2175,9 @@ class BackPropagation(LearningFunction):
         it refers to the MATRIX parameterPort of the `MappingProjection` being learned.
 
     learning_rate : float
-        the learning rate used by the function.  If specified, it supersedes any learning_rate specified for the
-        `process <Process.learning_Rate>` and/or `system <System.learning_rate>` to which the function's  `owner
-        <BackPropagation.owner>` belongs.  If it is `None`, then the learning_rate specified for the process to
-        which the `owner <BackPropagation.owner>` belongs is used;  and, if that is `None`, then the learning_rate for
-        the system to which it belongs is used. If all are `None`, then the
-        `default_learning_rate <BackPropagation.default_learning_rate>` is used.
-
-    default_learning_rate : float
-        the value used for the `learning_rate <BackPropagation.learning_rate>` if it is not otherwise specified.
+        the learning rate used by the function.   If learning_rate is not specified explicitly in the constructor for
+        the function or otherwise (see `learning_rate <LearningMechanism.learning_rate>`) then the function's default
+        learning_rate is used.
 
     loss_spec : Loss or None
         the operation to apply to the error signal (i.e., method of calculating the derivative of the errror
@@ -2316,12 +2245,6 @@ class BackPropagation(LearningFunction):
                     :type: ``list``
                     :read only: True
 
-                learning_rate
-                    see `learning_rate <BackPropagation.learning_rate>`
-
-                    :default value: 1.0
-                    :type: ``float``
-
                 loss_spec
                     see `loss_spec <BackPropagation.loss_spec>`
 
@@ -2333,7 +2256,6 @@ class BackPropagation(LearningFunction):
                              read_only=True,
                              pnl_internal=True,
                              constructor_argument='default_variable')
-        learning_rate = Parameter(0.05, modulable=True)
         loss_spec = Parameter(None, read_only=True)
         activation_input = Parameter([0], read_only=True, getter=_activation_input_getter)
         activation_output = Parameter([0], read_only=True, getter=_activation_output_getter)
@@ -2347,9 +2269,8 @@ class BackPropagation(LearningFunction):
     def __init__(self,
                  default_variable=None,
                  activation_derivative_fct: Optional[Union[types.FunctionType, types.MethodType]]=None,
-                 # learning_rate: Optional[ValidParamSpecType] = None,
                  covariates=None,
-                 learning_rate=None,
+                 learning_rate:Optional[Union[int,float]]=None,
                  loss_spec=None,
                  params=None,
                  owner=None,
@@ -2555,12 +2476,6 @@ class BackPropagation(LearningFunction):
         self.parameters.error_matrix._set(error_matrix, context)
         # self._check_args(variable=variable, context=context, params=params, context=context)
 
-        # Manage learning_rate
-        # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
-        #                      1) if no learning_rate is specified for the Mechanism, need to assign None
-        #                          so that the process or system can see it is free to be assigned
-        #                      2) if neither the system nor the process assigns a value to the learning_rate,
-        #                          then need to assign it to the default value
         # If learning_rate was not specified for instance or composition, use default value
         learning_rate = self._get_current_parameter_value(LEARNING_RATE, context)
         if learning_rate is None:

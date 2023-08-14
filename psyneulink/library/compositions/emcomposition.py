@@ -111,16 +111,25 @@
 #          - DOCUMENTATION: execution_mode=ExecutionMode.Python allowed
 #          - Add warning of this on initial call to learn()
 #
-#        - Backpropagation LearningFunction:
-#          - DOCUMENTATION: weight_change_matrix = gradient (result of delta rule) * learning_rate
-#        - LearningMechanism / LearningSignal:  sort out what is going on with their learning_rate assignments
-#        - Implement _runtime_learning_rate for Composition in learn() method:
-#          ?? *always* use this by setting runtime params for call to LearningFunction?
-#             (and, if _runtime_learning_rate is None, then use most local static value)
-#
-#        - MappingProjection / LearningMechanism:
-#          - Add learning_rate parameter to MappingProjection (if learnable is True)
-#          - Refactor LearningMechanism to use MappingProjection learning_rate specification if present
+#        - LEARNING - Backpropagation LearningFunction / LearningMechanism
+#          - DOCUMENTATION:
+#             - weight_change_matrix = gradient (result of delta rule) * learning_rate
+#             - Move explanation of learning_rate assignments in LearningFunction to section on
+#                learning_rate in Composition_Learning
+#          - LearningMechanism vs. LearningSignal:
+#                sort out what is going on with their learning_rate assignments and use
+#          - learning_pathway constructors:  assigned learning_rate arg to constructor of LearningFunctions,
+#                leaving learningMechanism's to be None and therefore detectable as user-specified so it can override
+#                runtime assignment in CompositionRunner.run_learning method (LINE 185)
+#                - check that this works (i.e., that assigning learning_rate to LearningFunction directly
+#                    doesn't cause LearningMechanism's learning_rate either to be "_user_specified" or to not be able
+#                    to override the value assigned at construction to the LearningFunction
+#                - DOCUMENTATION: note this in IMPLEMENTATION NOTE both in learning construction methods and
+#                                 CompositionRunner.run_learning method
+#          - MappingProjection / LearningMechanism:
+#            - Add learning_rate parameter to MappingProjection (if learnable is True)
+#            - Refactor LearningMechanism to use MappingProjection learning_rate specification if present
+
 #
 #        - Composition:
 #          - Add Composition.run_status attribute assigned a context flag, with is_preparing property that checks it
