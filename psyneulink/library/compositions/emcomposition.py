@@ -105,6 +105,9 @@
 #                   and different from Composition (in Python mode)
 #                - test: test_identicalness_of_input_types
 #          - support use of pathway argument in Autodff
+#          - the following format doesn't work for LLVM (see test_identicalness_of_input_types:
+#             xor = pnl.AutodiffComposition(nodes=[input_layer,hidden_layer,output_layer])
+#             xor.add_projections([input_to_hidden_wts, hidden_to_output_wts])
 #          - DOCUMENTATION: execution_mode=ExecutionMode.Python allowed
 #          - Add warning of this on initial call to learn()
 #

@@ -7579,7 +7579,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     pathway,
                                     learning_function: Union[Type[LearningFunction], LearningFunction, Callable] = None,
                                     loss_spec: Optional[Loss] = Loss.MSE,
-                                    learning_rate: Union[int, float] = 0.05,
+                                    learning_rate: Union[int, float] = None,
                                     error_function=LinearCombination,
                                     learning_update: Union[bool, Literal['online', 'after']] = 'after',
                                     default_projection_matrix=None,
@@ -7778,7 +7778,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     @beartype
     def add_reinforcement_learning_pathway(self,
                                            pathway: Union[list, 'psyneulink.core.compositions.pathway.Pathway'],
-                                           learning_rate: Union[float, int] = 0.05,
+                                           learning_rate: Union[float, int] = None,
                                            error_function: Optional[Function] = None,
                                            learning_update: Union[bool, Literal['online', 'after']] = 'online',
                                            default_projection_matrix=None,
@@ -7834,7 +7834,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     @beartype
     def add_td_learning_pathway(self,
                                 pathway: Union[list, 'psyneulink.core.compositions.pathway.Pathway'],
-                                learning_rate: Union[int, float] = 0.05,
+                                learning_rate: Union[int, float] = None,
                                 error_function: Optional[Function] = None,
                                 learning_update: Union[bool, Literal['online', 'after']] = 'online',
                                 default_projection_matrix=None,
@@ -8173,7 +8173,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _create_backpropagation_learning_pathway(self,
                                                  pathway,
-                                                 learning_rate=0.05,
+                                                 learning_rate=None,
                                                  error_function=None,
                                                  loss_spec=Loss.MSE,
                                                  learning_update=AFTER,

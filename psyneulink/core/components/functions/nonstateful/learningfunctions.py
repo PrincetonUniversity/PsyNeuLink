@@ -2572,6 +2572,8 @@ class BackPropagation(LearningFunction):
         activation_input = self._get_current_parameter_value(ACTIVATION_INPUT, context)
         activation_input = np.array(activation_input).reshape(len(activation_input), 1)
 
+        if not self.is_initializing:
+            print(f"executed learning_rate: {learning_rate}")
         # Derivative of error with respect to output activity (contribution of each output unit to the error above)
         loss_spec = self.parameters.loss_spec.get(context)
         if loss_spec == Loss.MSE:
