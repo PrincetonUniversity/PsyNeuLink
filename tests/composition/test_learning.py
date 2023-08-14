@@ -1882,7 +1882,7 @@ class TestBackPropLearning:
         ('runtime+comp',       None,          None,             .03,         .04,     [[0.63612349]]),
         ('runtime+pway',       None,          .02,              None,        .04,     [[0.63612349]]),
         ('runtime+pway+comp',  None,          .02,              .03,         .04,     [[0.63612349]]),
-        # ('learning_mech',    .01,           .02,              .03,         .04,     [[0]]),
+        ('learning_mech',      .01,           .02,              .03,         .04,     [[0.63458688]]),
     ]
     @pytest.mark.parametrize('spec_types',
                              spec_types,
@@ -1896,10 +1896,16 @@ class TestBackPropLearning:
         expected_value = spec_types[5]
         comp, input_layer, hidden_layer, output_layer, target_mechanism, stims, targets = \
             xor_network('composition', composition_learning_rate, learning_pathway_learning_rate)
-
         inputs = {input_layer: stims,
                   target_mechanism: targets}
+        if learning_mech_learning_rate is not None:
+            assert comp.nodes[5].name == 'Learning Mechanism for hidden_to_output'
+            assert comp.nodes[6].name == 'Learning Mechanism for input_to_hidden'
+            comp.nodes[5].parameters.learning_rate.set(.01)
         result = comp.learn(inputs=inputs, learning_rate=runtime_learning_rate)
+        if learning_mech_learning_rate is not None:
+            assert comp.nodes[5].parameters.learning_rate.get(comp) == learning_mech_learning_rate
+            assert comp.nodes[6].parameters.learning_rate.get(comp) == learning_pathway_learning_rate
         np.testing.assert_allclose(result, expected_value)
 
     @pytest.mark.pytorch
