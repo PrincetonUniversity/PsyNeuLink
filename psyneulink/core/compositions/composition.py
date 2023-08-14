@@ -8027,12 +8027,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     **kwargs                  # Use of type-specific learning arguments
                                     ):
 
-        learning_mechanism = LearningMechanism(function=learning_function(learning_rate=learning_rate),
+        learning_mechanism = LearningMechanism(function=learning_function(),
                                                default_variable=[sender_activity_source.output_ports[0].value,
                                                                  receiver_activity_source.output_ports[0].value,
                                                                  error_sources.output_ports[0].value],
                                                error_sources=error_sources,
                                                learning_enabled=learning_update,
+                                               learning_rate=learning_rate,
                                                in_composition=True,
                                                name="Learning Mechanism for " + learned_projection.name,
                                                **kwargs)
@@ -8079,13 +8080,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 LearningMechanism(
                     function=learning_function(default_variable=[input_source.output_ports[0].value,
                                                                  output_source.output_ports[0].value,
-                                                                 objective_mechanism.output_ports[0].value],
-                                               learning_rate=learning_rate),
+                                                                 objective_mechanism.output_ports[0].value]),
                     default_variable=[input_source.output_ports[0].value,
                                       output_source.output_ports[0].value,
                                       objective_mechanism.output_ports[0].value],
                     error_sources=objective_mechanism,
                     learning_enabled=learning_update,
+                    learning_rate=learning_rate,
                     in_composition=True,
                     name="Learning Mechanism for " + learned_projection.name)
 
@@ -8156,8 +8157,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         learning_mechanism = \
             LearningMechanism(function=Reinforcement(default_variable=[input_source.output_ports[0].value,
                                                                        output_source.output_ports[0].value,
-                                                                       objective_mechanism.output_ports[0].value],
-                                                     learning_rate=learning_rate),
+                                                                       objective_mechanism.output_ports[0].value]),
                               default_variable=[input_source.output_ports[0].value,
                                                 output_source.output_ports[0].value,
                                                 objective_mechanism.output_ports[0].value],
@@ -8191,7 +8191,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                    output_source.output_ports[0].defaults.value)},
                                                        function=PredictionErrorDeltaFunction(gamma=1.0))
 
-        learning_mechanism = LearningMechanism(function=TDLearning(learning_rate=learning_rate),
+        learning_mechanism = LearningMechanism(function=TDLearning(),
                                                default_variable=[input_source.output_ports[0].defaults.value,
                                                                  output_source.output_ports[0].defaults.value,
                                                                  objective_mechanism.output_ports[0].defaults.value],
@@ -8480,7 +8480,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                               output_source.output_ports[0].value,
                                                               objective_mechanism.output_ports[0].value],
                                             activation_derivative_fct=output_source.function.derivative,
-                                            learning_rate=learning_rate,
                                             loss_spec=loss_spec)
 
         learning_mechanism = LearningMechanism(function=learning_function,
@@ -8489,6 +8488,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                  objective_mechanism.output_ports[0].value],
                                                error_sources=objective_mechanism,
                                                learning_enabled=learning_update,
+                                               learning_rate=learning_rate,
                                                in_composition=True,
                                                name="Learning Mechanism for " + learned_projection.name)
 
@@ -8612,8 +8612,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                  [error_signal_template[0]],
                                                 covariates=[source.value for source in covariates_sources],
                                                 loss_spec=None,
-                                                activation_derivative_fct=output_source.function.derivative,
-                                                learning_rate=learning_rate)
+                                                activation_derivative_fct=output_source.function.derivative)
 
             # Use all error_signal_templates since LearningMechanisms handles all sources of error
             # FIX: 8/1/23 COULD ASSIGN InputPorts HERE USING Projections FROM IDENTIFED SOURCES,
@@ -8627,6 +8626,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                    covariates_sources = covariates_sources,
                                                    error_sources=error_sources,
                                                    learning_enabled=learning_update,
+                                                   learning_rate=learning_rate,
                                                    in_composition=True,
                                                    name="Learning Mechanism for " + learned_projection.name)
 
