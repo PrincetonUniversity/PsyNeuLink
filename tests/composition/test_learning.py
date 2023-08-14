@@ -14,8 +14,10 @@ from psyneulink.core.globals.keywords import Loss
 
 @pytest.fixture
 def xor_network():
-
-    # SET UP MECHANISMS
+    """Create simple sample network for testing learning specifications
+    Returns a function that takes a Composition type and learning_rate specifications and
+    returns an instantiated Composition and its components
+    """
     input_layer = TransferMechanism(name='input_layer',
                                    default_variable=np.zeros(2))
     hidden_layer = TransferMechanism(name='hidden_layer',
@@ -32,13 +34,12 @@ def xor_network():
                                              matrix=np.full((10,1), 0.1),
                                              sender=hidden_layer,
                                              receiver=output_layer)
-
     inputs = np.array([[0, 0],[0, 1],[1, 0],[1, 1]])
     targets = np.array([[0],[1],[1],[0]])
-
     def _get_comp_type(comp_type, comp_learning_rate, pathway_learning_rate):
         if comp_type == 'composition':
             xor = Composition(learning_rate=comp_learning_rate)
+            # Note: uses Projections specified above by inference
             pathway = xor.add_backpropagation_learning_pathway(pathway=[input_layer,hidden_layer,output_layer],
                                                                learning_rate=pathway_learning_rate)
             target_mechanism = pathway.learning_components[pnl.TARGET_MECHANISM]
@@ -56,7 +57,6 @@ def xor_network():
         else:
             assert False, f"Bad composition type parameter passed to xor_net fixture"
         return xor, input_layer, hidden_layer, output_layer, target_mechanism, inputs, targets,
-
     return _get_comp_type
 
 
@@ -1901,7 +1901,6 @@ class TestBackPropLearning:
                   target_mechanism: targets}
         result = comp.learn(inputs=inputs, learning_rate=runtime_learning_rate)
         np.testing.assert_allclose(result, expected_value)
-        assert True
 
     @pytest.mark.pytorch
     def test_back_prop(self):
