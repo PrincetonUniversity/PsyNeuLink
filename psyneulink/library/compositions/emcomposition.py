@@ -116,6 +116,7 @@
 #             - weight_change_matrix = gradient (result of delta rule) * learning_rate
 #             - Move explanation of learning_rate assignments in LearningFunction to section on
 #                learning_rate in Composition_Learning
+#          - Backprop: handle call to constructor with default_variable = None
 #          - LearningMechanism vs. LearningSignal:
 #                sort out what is going on with their learning_rate assignments and use
 #          - learning_pathway constructors:  assigned learning_rate arg to constructor of LearningFunctions,

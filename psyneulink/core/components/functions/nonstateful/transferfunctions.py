@@ -753,11 +753,9 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
         Returns
         -------
-
         derivative :  number or array
-
-
         """
+
         rate = self._get_current_parameter_value(RATE, context)
         scale = self._get_current_parameter_value(SCALE, context)
         bias = self._get_current_parameter_value(BIAS, context)
@@ -1072,9 +1070,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
         Returns
         -------
-
-        Deriviative of logistic transform at output:  number or array
-
+        derivative  of logistic transform at output :  number or array
         """
 
         gain = self._get_current_parameter_value(GAIN, context)
@@ -1393,8 +1389,8 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         Returns
         -------
         derivative :  number or array
-
         """
+
         gain = self._get_current_parameter_value(GAIN, context)
         bias = self._get_current_parameter_value(BIAS, context)
         x_0 = self._get_current_parameter_value(X_0, context)
@@ -1627,7 +1623,6 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
         Returns
         -------
-
         derivative :  number or array
         """
 

@@ -1884,10 +1884,7 @@ class TestBackPropLearning:
         ('runtime+pway+comp',  None,          .02,              .03,         .04,     [[0.63612349]]),
         ('learning_mech',      .01,           .02,              .03,         .04,     [[0.63458688]]),
     ]
-    @pytest.mark.parametrize('spec_types',
-                             spec_types,
-                             ids=[x[0] for x in spec_types]
-                             )
+    @pytest.mark.parametrize('spec_types', spec_types, ids=[x[0] for x in spec_types])
     def test_different_learning_rate_specs_for_comp(self, xor_network, spec_types):
         learning_mech_learning_rate = spec_types[1]
         learning_pathway_learning_rate = spec_types[2]
