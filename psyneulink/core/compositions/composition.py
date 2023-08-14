@@ -670,8 +670,8 @@ it modifies the `matrix <MappingProjection.matrix>` parameter of the `MappingPro
 associations between representations in the Mechanisms) within a `Pathway`.  If learning is implemented for a
 Composition, it can be executed calling the Composition's `learn <Composition.learn>` method (see
 `Composition_Learning_Execution` and `Composition_Execution` for additional details). The rate at which learning
-occurs is determined by the learning_rate parameter, which can be assigned in various ways and is described
-in `Learning Rate <Composition_Learning_Rate>` below.
+occurs is determined by the learning_rate parameter, which can be assigned in various ways and is described under
+`Composition_Learning_Rate` below.
 
 .. _Composition_Learning_Configurations:
 
@@ -1529,56 +1529,37 @@ COMMENT
 
 .. _Composition_Learning_Rate:
 
+*Learning Rate*
+^^^^^^^^^^^^^^^
+
 The `learning_rate <LearningMechanism.learning_rate>` parameter of a LearningMechanism (and its associated
-`function <LearningMechanism.function>`) determines rate of learning of the `matrix <MappingProjection.matrix>`
+`function <LearningMechanism.function>`) determines the rate of learning of the `matrix <MappingProjection.matrix>`
 parameter ("connection weights") of each `MappingProjection` in a `learning pathway <Composition_Learning_Pathway>`.
 If not otherwise specified, each LearningMechanism uses the `default value <Component.defaults>` for its
 `learning_rate <LearningMechanism.learning_rate>`, which is determined by its `function <LearningMechanism.function>`.
 However, the learning_rate for `learning pathway <Composition_Learning_Pathway>` can be specified in several other
-ways, both at construct and/or execution.
+ways, both at construction and/or execution.  At construction, it can be specified using the **learning_rate**
+argument of the Compostion's constructor, in which case it applies to all learning pathways, or in the
+**learning_rate** argument of a `learning construction method <Composition_Learning_Methods>`, in which case it
+applies to only the LearningMechanisms in that Pathway.  Specifications for a Pathway take precedence over the
+specification in the Composition's constructor.  The *learning_rate* can also be specified in the Composition's
+`learn <Composition.learn>` method, in which case it applies to all learning pathways and supercedes any specifications
+made at construction for that execution. All of these are superceded by direct specification of the `learning_rate
+<LearningMechanism.learning_rate>` Parameter for individual LearningMechanisms, allowing different LearningMechanisms
+witin a Composition to be assigned different learning_rates;  these will be used even if the **learning_rate** argument
+of the `learn <Composition.learn>` method is used.  Finally, the `learning_rate <LearningSignal.learning_rate>` for a
+LearningMechanism interacts with any specifications of the learning_rate for its `LearningSignals <LearningSignal>`
+(see `LearningMechanism_Learning_Rate` for additional details). The following shows the inheritance and precedence
+hierarchy for the specification of learning_rates to LearningMechanisms, their functions, LearningSignals and
+LearningProjections, and to a Composition and its learning methods.
 
-------------------
+.. _Composition_Learning_Rate_Inheritance:
 
-
-If learning_rate is not specified, the default learning rate for the LearningMechanisms in the Composition
-are used (see `learning_rate <LearningMechanism.learning_rate>` for details).  However, the learning_rate can be
-specified for the Comopsition or individual `learning pathways <Composition_Learning_Pathway>` when they are
-constructed, as well as in the call to the `Composition`'s `learn <Composition.method>`.
-
-
-
-There four ways in which learning_rate(s) can be specified, three at construction and one at run time.
-
-
-*At construction*
-
-
-
- 
-FIX: 8/13/23 -
-ADD TECHNICAL NOTES IN CODE FOR create_pathway METHODS ABOUT DIRECT ASSIGNMENT OF LEARNING RATE TO LEARNING_FUNCTIONS
-(OR REVISE TO ASSIGN DIRECTLY TO LEARNINGMECHHANISMS, SINCE _user_specified IS NO LONGER NEEDED, AND IT WOUDL REFLECT
-SPECIFICATION AT ANY LEVEL (COMPOSITION, PATHWAY, OR LEARNINGMECHANISM AT CONSTRUCTION)
-
-doing so supersedes specification of the
-**learning_rate** for a Composition in its
-constructor or any of its `learning construction methods <Composition_Learning_Methods>` used to implement a
-`supervised learning pathway <Composition_Learning_Supervised>`, or for a `RecurrentTransferMechanism
-<RecurrentTransferMechanism_Learning>` used to implement `unsupervised learning <Composition_Learning_Unsupervised>`.
-COMMENT:
-FIX: TRUE?  SEE NEXT PPG AND LearningSignal.learning_rate
-However, it is superceded by any `learning_rate <LearningSignal.learning_rate>` specified for the LearningMechanism's
-`LearningSignals <LearningSignal>`, or for the `LearningProjections <LearningProjection>` to which they project.
-COMMENT
-The default value for a LearningMechanism's `learning_rate <LearningMechanism.learning_rate>` attribute is `None`,
-in which case the LearningMechanism (and its `function <LearningMechanism.function>`) inherit the learning_rate
-from the value specified in the `learning construction method <Composition_Learning_Methods>` of a Composition in
-which learning was defined (for supervised learning) or of a `RecurrentTransferMechanism
-<RecurrentTransferMechanism_Learning>` (for unsupervised learning).  If neither of those was specified, then the
-it inherits any value specified in the **learning_rate** argument of the constructor for the Composition. If that is
-None, then it uses the value of the `default_learning_rate <LearningFunction.default_learning_rate>` parameter of
-its `function <LearningMechanism.function>`.  All of these are superceded by the specification of a learning_rate
-in a call to a Composition's `learn <Composition.learn>` method.
+Highest:   LearningMechanism learning_rate Parameter assignment after construction
+           Composition's learn() method
+           LearningSignal constructor / LearningProjection constructor / LearningMechanism
+           Composition learning pathway construction method
+Lowest:    Composition constructor
 
 .. _Composition_Runtime_Params:
 
@@ -3497,7 +3478,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     learning_rate: float or int : default None
         specifies the learning_rate to be used by `LearningMechanisms <LearningMechanism>` in the Composition
         that do not have their own `learning_rate <LearningMechanism.learning_rate>` otherwise specified
-        (see `Learning Rate <Composition_Learning_Rate>` for additional details).
+        (see `Composition_Learning_Rate` for additional details).
 
     controller : `OptimizationControlMechanism` : default None
         specifies the `OptimizationControlMechanism` to use as the `Composition's controller
@@ -7694,7 +7675,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         learning_rate : float : default 0.05
             specifies the `learning_rate <LearningMechanism.learning_rate>` used for the **learning_function**
-            of the `LearningMechanism` in the **pathway** (see `Learning Rate <Composition_Learning_Rate>` for
+            of the `LearningMechanism` in the **pathway** (see `Composition_Learning_Rate` for
             additional details).
 
         error_function : function : default LinearCombination
@@ -7860,8 +7841,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         learning_rate : float : default 0.05
             specifies the `learning_rate <ReinforcementLearning.learning_rate>` used for the `ReinforcementLearning`
-            function of the `LearningMechanism` in the **pathway** (see `Learning Rate <Composition_Learning_Rate>`
-            for additional details).
+            function of the `LearningMechanism` in the **pathway** (see `Composition_Learning_Rate` for additional
+            details).
 
         error_function : function : default LinearCombination
             specifies the function assigned to `ComparatorMechanism` used to compute the error from the target and
@@ -7912,7 +7893,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         learning_rate : float : default 0.05
             specifies the `learning_rate <TDLearning.learning_rate>` used for the `TDLearning` function of the
-            `LearningMechanism` in the **pathway** (see `Learning Rate <Composition_Learning_Rate>` for details).
+            `LearningMechanism` in the **pathway** (see `Composition_Learning_Rate` for details).
 
         error_function : function : default LinearCombination
             specifies the function assigned to `ComparatorMechanism` used to compute the error from the target and
@@ -7966,9 +7947,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             <MappingProjection>` specified or constructed for the Pathway are assigned as `learned_projections`.
 
         learning_rate : float : default 0.05
-            specifies the `learning_rate <Backpropagation.learning_rate>` used for the `Backpropagation` function of
-            the `LearningMechanisms <LearningMechanism>` in the **pathway** (see `Learning Rate
-            <Composition_Learning_Rate>` for additional details).
+            specifies the `learning_rate <Backpropagation.learning_rate>` used for the `Backpropagation` function
+            of the `LearningMechanisms <LearningMechanism>` in the **pathway** (see `Composition_Learning_Rate` for
+            additional details).
 
         error_function : function : default LinearCombination
             specifies the function assigned to `ComparatorMechanism` used to compute the error from the target and the
@@ -8058,12 +8039,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     **kwargs                  # Use of type-specific learning arguments
                                     ):
 
-        learning_mechanism = LearningMechanism(function=learning_function(learning_rate=learning_rate),
+        learning_mechanism = LearningMechanism(function=learning_function(),
                                                default_variable=[sender_activity_source.output_ports[0].value,
                                                                  receiver_activity_source.output_ports[0].value,
                                                                  error_sources.output_ports[0].value],
                                                error_sources=error_sources,
                                                learning_enabled=learning_update,
+                                               learning_rate=learning_rate,
                                                in_composition=True,
                                                name="Learning Mechanism for " + learned_projection.name,
                                                **kwargs)
@@ -8110,13 +8092,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 LearningMechanism(
                     function=learning_function(default_variable=[input_source.output_ports[0].value,
                                                                  output_source.output_ports[0].value,
-                                                                 objective_mechanism.output_ports[0].value],
-                                               learning_rate=learning_rate),
+                                                                 objective_mechanism.output_ports[0].value]),
                     default_variable=[input_source.output_ports[0].value,
                                       output_source.output_ports[0].value,
                                       objective_mechanism.output_ports[0].value],
                     error_sources=objective_mechanism,
                     learning_enabled=learning_update,
+                    learning_rate=learning_rate,
                     in_composition=True,
                     name="Learning Mechanism for " + learned_projection.name)
 
@@ -8187,8 +8169,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         learning_mechanism = \
             LearningMechanism(function=Reinforcement(default_variable=[input_source.output_ports[0].value,
                                                                        output_source.output_ports[0].value,
-                                                                       objective_mechanism.output_ports[0].value],
-                                                     learning_rate=learning_rate),
+                                                                       objective_mechanism.output_ports[0].value]),
                               default_variable=[input_source.output_ports[0].value,
                                                 output_source.output_ports[0].value,
                                                 objective_mechanism.output_ports[0].value],
@@ -8222,7 +8203,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                    output_source.output_ports[0].defaults.value)},
                                                        function=PredictionErrorDeltaFunction(gamma=1.0))
 
-        learning_mechanism = LearningMechanism(function=TDLearning(learning_rate=learning_rate),
+        learning_mechanism = LearningMechanism(function=TDLearning(),
                                                default_variable=[input_source.output_ports[0].defaults.value,
                                                                  output_source.output_ports[0].defaults.value,
                                                                  objective_mechanism.output_ports[0].defaults.value],
@@ -8511,7 +8492,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                               output_source.output_ports[0].value,
                                                               objective_mechanism.output_ports[0].value],
                                             activation_derivative_fct=output_source.function.derivative,
-                                            learning_rate=learning_rate,
                                             loss_spec=loss_spec)
 
         learning_mechanism = LearningMechanism(function=learning_function,
@@ -8520,6 +8500,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                  objective_mechanism.output_ports[0].value],
                                                error_sources=objective_mechanism,
                                                learning_enabled=learning_update,
+                                               learning_rate=learning_rate,
                                                in_composition=True,
                                                name="Learning Mechanism for " + learned_projection.name)
 
@@ -8643,8 +8624,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                  [error_signal_template[0]],
                                                 covariates=[source.value for source in covariates_sources],
                                                 loss_spec=None,
-                                                activation_derivative_fct=output_source.function.derivative,
-                                                learning_rate=learning_rate)
+                                                activation_derivative_fct=output_source.function.derivative)
 
             # Use all error_signal_templates since LearningMechanisms handles all sources of error
             # FIX: 8/1/23 COULD ASSIGN InputPorts HERE USING Projections FROM IDENTIFED SOURCES,
@@ -8658,6 +8638,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                    covariates_sources = covariates_sources,
                                                    error_sources=error_sources,
                                                    learning_enabled=learning_update,
+                                                   learning_rate=learning_rate,
                                                    in_composition=True,
                                                    name="Learning Mechanism for " + learned_projection.name)
 
@@ -10949,7 +10930,7 @@ _
                 specifies the learning_rate used by all `learning pathways <Composition_Learning_Pathway>`
                 when the Composition's learn method is called.  This overrides the `learning_rate specified
                 for any individual Pathways at construction, but only applies for the current execution of
-                the learn method (see `Learning Rate <Composition_Learning_Rate>` for additional details).
+                the learn method (see `Composition_Learning_Rate` for additional details).
 
             minibatch_size : int (default=1)
                 specifies the size of the minibatches to use. The input trials will be batched and run, after which
