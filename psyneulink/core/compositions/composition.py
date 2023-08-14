@@ -661,34 +661,6 @@ constructed by assigning the desired value to the corresponding attribute.
 
 .. _Composition_Learning:
 
-FIX: 8/13/23 -
- INTEGRATE THE FOLLOWING INTO SECTION WITH THE FOLLOWING LABEL:
- ADD TECHNICAL NOTES IN CODE ABOUTT DIRECT ASSIGNMENT TO LEARNING_FUNCTIONS
-
- .. _Composition_Learning_Rate:
-
-  doing so supersedes specification of the
-  **learning_rate** for a Composition in its
-  constructor or any of its `learning construction methods <Composition_Learning_Methods>` used to implement a
-  `supervised learning pathway <Composition_Learning_Supervised>`, or for a `RecurrentTransferMechanism
-  <RecurrentTransferMechanism_Learning>` used to implement `unsupervised learning <Composition_Learning_Unsupervised>`.
-  COMMENT:
-  FIX: TRUE?  SEE NEXT PPG AND LearningSignal.learning_rate
-  However, it is superceded by any `learning_rate <LearningSignal.learning_rate>` specified for the LearningMechanism's
-  `LearningSignals <LearningSignal>`, or for the `LearningProjections <LearningProjection>` to which they project.
-  COMMENT
-  The default value for a LearningMechanism's `learning_rate <LearningMechanism.learning_rate>` attribute is `None`,
-  in which case the LearningMechanism (and its `function <LearningMechanism.function>`) inherit the learning_rate
-  from the value specified in the `learning construction method <Composition_Learning_Methods>` of a Composition in
-  which learning was defined (for supervised learning) or of a `RecurrentTransferMechanism
-  <RecurrentTransferMechanism_Learning>` (for unsupervised learning).  If neither of those was specified, then the
-  it inherits any value specified in the **learning_rate** argument of the constructor for the Composition. If that is
-  None, then it uses the value of the `default_learning_rate <LearningFunction.default_learning_rate>` parameter of
-  its `function <LearningMechanism.function>`.  All of these are superceded by the specification of a learning_rate
-  in a call to a Composition's `learn <Composition.learn>` method.
-
-
-
 Learning in a Composition
 -------------------------
 
@@ -697,8 +669,9 @@ it modifies the `matrix <MappingProjection.matrix>` parameter of the `MappingPro
 `learning Pathway <Composition_Learning_Pathway>`, which implements the conection weights (i.e., strengths of
 associations between representations in the Mechanisms) within a `Pathway`.  If learning is implemented for a
 Composition, it can be executed calling the Composition's `learn <Composition.learn>` method (see
-`Composition_Learning_Execution` and `Composition_Execution` for additional details).
-
+`Composition_Learning_Execution` and `Composition_Execution` for additional details). The rate at which learning
+occurs is determined by the learning_rate parameter, which can be assigned in various ways and is described
+in `Learning Rate <Composition_Learning_Rate>` below.
 
 .. _Composition_Learning_Configurations:
 
@@ -1091,6 +1064,7 @@ Executing a Composition
         • `Composition_Input_Dictionary`
         • `Composition_Programmatic_Inputs`
     - `Composition_Execution_Factors`
+        • `Composition_Learning_Rate`
         • `Composition_Runtime_Params`
         • `Composition_Cycles_and_Feedback`
         • `Composition_Execution_Context`
@@ -1544,12 +1518,67 @@ COMMENT
 *Execution Factors*
 ~~~~~~~~~~~~~~~~~~~
 
+  • `Composition_Learning_Rate`
   • `Composition_Runtime_Params`
   • `Composition_Cycles_and_Feedback`
   • `Composition_Execution_Context`
   • `Composition_Timing`
   • `Composition_Reset`
   • `Composition_Compilation`
+
+
+.. _Composition_Learning_Rate:
+
+The `learning_rate <LearningMechanism.learning_rate>` parameter of a LearningMechanism (and its associated
+`function <LearningMechanism.function>`) determines rate of learning of the `matrix <MappingProjection.matrix>`
+parameter ("connection weights") of each `MappingProjection` in a `learning pathway <Composition_Learning_Pathway>`.
+If not otherwise specified, each LearningMechanism uses the `default value <Component.defaults>` for its
+`learning_rate <LearningMechanism.learning_rate>`, which is determined by its `function <LearningMechanism.function>`.
+However, the learning_rate for `learning pathway <Composition_Learning_Pathway>` can be specified in several other
+ways, both at construct and/or execution.
+
+------------------
+
+
+If learning_rate is not specified, the default learning rate for the LearningMechanisms in the Composition
+are used (see `learning_rate <LearningMechanism.learning_rate>` for details).  However, the learning_rate can be
+specified for the Comopsition or individual `learning pathways <Composition_Learning_Pathway>` when they are
+constructed, as well as in the call to the `Composition`'s `learn <Composition.method>`.
+
+
+
+There four ways in which learning_rate(s) can be specified, three at construction and one at run time.
+
+
+*At construction*
+
+
+
+ 
+FIX: 8/13/23 -
+ADD TECHNICAL NOTES IN CODE FOR create_pathway METHODS ABOUT DIRECT ASSIGNMENT OF LEARNING RATE TO LEARNING_FUNCTIONS
+(OR REVISE TO ASSIGN DIRECTLY TO LEARNINGMECHHANISMS, SINCE _user_specified IS NO LONGER NEEDED, AND IT WOUDL REFLECT
+SPECIFICATION AT ANY LEVEL (COMPOSITION, PATHWAY, OR LEARNINGMECHANISM AT CONSTRUCTION)
+
+doing so supersedes specification of the
+**learning_rate** for a Composition in its
+constructor or any of its `learning construction methods <Composition_Learning_Methods>` used to implement a
+`supervised learning pathway <Composition_Learning_Supervised>`, or for a `RecurrentTransferMechanism
+<RecurrentTransferMechanism_Learning>` used to implement `unsupervised learning <Composition_Learning_Unsupervised>`.
+COMMENT:
+FIX: TRUE?  SEE NEXT PPG AND LearningSignal.learning_rate
+However, it is superceded by any `learning_rate <LearningSignal.learning_rate>` specified for the LearningMechanism's
+`LearningSignals <LearningSignal>`, or for the `LearningProjections <LearningProjection>` to which they project.
+COMMENT
+The default value for a LearningMechanism's `learning_rate <LearningMechanism.learning_rate>` attribute is `None`,
+in which case the LearningMechanism (and its `function <LearningMechanism.function>`) inherit the learning_rate
+from the value specified in the `learning construction method <Composition_Learning_Methods>` of a Composition in
+which learning was defined (for supervised learning) or of a `RecurrentTransferMechanism
+<RecurrentTransferMechanism_Learning>` (for unsupervised learning).  If neither of those was specified, then the
+it inherits any value specified in the **learning_rate** argument of the constructor for the Composition. If that is
+None, then it uses the value of the `default_learning_rate <LearningFunction.default_learning_rate>` parameter of
+its `function <LearningMechanism.function>`.  All of these are superceded by the specification of a learning_rate
+in a call to a Composition's `learn <Composition.learn>` method.
 
 .. _Composition_Runtime_Params:
 
@@ -1563,7 +1592,8 @@ COMMENT:
     runtime_params are passed to the execute method of the Node whenever it is called for execution
 COMMENT
 
-The value of one or more of a Composition's `Nodes <Composition_Nodes>` can be temporarily modified during execution
+In addition to the `learning_rate <Composition_Learning_Rate>`, the values of other `Parameter`s of a Composition's
+Mechanisms (including but not limited to its `LearningMechanism`s) can be temporarily modified during execution
 using the **runtime_params** argument of one of its `execution methods <Composition_Execution_Methods>`.  These are
 handled as described for `Mechanism_Runtime_Params` of Mechanisms, with the addition that one or more `Conditions
 <Condition>` can be specified such that a value will apply only when the specificied Conditions are satisfied;
