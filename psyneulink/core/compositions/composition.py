@@ -663,6 +663,7 @@ constructed by assigning the desired value to the corresponding attribute.
 
 FIX: 8/13/23 -
  INTEGRATE THE FOLLOWING INTO SECTION WITH THE FOLLOWING LABEL:
+ ADD TECHNICAL NOTES IN CODE ABOUTT DIRECT ASSIGNMENT TO LEARNING_FUNCTIONS
 
  .. _Composition_Learning_Rate:
 
