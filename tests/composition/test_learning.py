@@ -1875,16 +1875,20 @@ class TestBackPropLearning:
     spec_types = [
         # Determiner        LearningMech   learning_pathway  Composition   Runtime    Expected Value
         ('default',            None,          None,             None,        None,    [[0.63668214]]),
-        ('runtime',            None,          None,             None,        .04,     [[0.63612349]]),
         ('composition',        None,          None,             .03,         None,    [[0.63558543]]),
-        ('learning_pathway',   None,          .02,              .03,         None,    [[0.63506819]]),
-        # ('learning_mech',      .01,           .02,              .03,         .04,     [[0]]),
+        ('learning_pathway',   None,          .02,              None,        None,    [[0.63506819]]),
+        ('pathway+comp',       None,          .02,              .03,         None,    [[0.63506819]]),
+        ('runtime',            None,          None,             None,        .04,     [[0.63612349]]),
+        ('runtime+comp',       None,          None,             .03,         .04,     [[0.63612349]]),
+        ('runtime+pway',       None,          .02,              None,        .04,     [[0.63612349]]),
+        ('runtime+pway+comp',  None,          .02,              .03,         .04,     [[0.63612349]]),
+        # ('learning_mech',    .01,           .02,              .03,         .04,     [[0]]),
     ]
     @pytest.mark.parametrize('spec_types',
                              spec_types,
                              ids=[x[0] for x in spec_types]
                              )
-    def test_different_learning_rate_specs(self, xor_network, spec_types):
+    def test_different_learning_rate_specs_for_comp(self, xor_network, spec_types):
         learning_mech_learning_rate = spec_types[1]
         learning_pathway_learning_rate = spec_types[2]
         composition_learning_rate = spec_types[3]
