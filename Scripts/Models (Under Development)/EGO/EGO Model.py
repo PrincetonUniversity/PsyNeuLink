@@ -263,25 +263,11 @@ def construct_model(model_name:str=MODEL_NAME,
     #        - continue trial
     retrieval_control_layer = ControlMechanism(name=controller_name,
                                default_variable=[[1]],  # Ensure EM[store_prob]=1 at beginning of first trial
-                               # ---------
-                               # VERSION *WITH* ObjectiveMechanism:
-                               objective_mechanism=ObjectiveMechanism(name="OBJECTIVE MECHANISM",
-                                                                      monitor=decision_layer,
-                                                                      # Outcome=1 if match, else 0
-                                                                      function=lambda x: int(x[0][0]>x[0][1])),
-                               # Set ControlSignal for EM[store_prob]
-                               #   to 1 if match or hazard rate is realized (i.e., store stimulus and end trial)
-                               #   else 0 (i.e., don't store stimulus and continue retrieving)
-                               function=lambda outcome: int(bool(outcome)
+                               monitor_for_control=decision,
+                               # Set Evaluate outcome and set ControlSignal for EM[store_prob]
+                               #   - outcome is received from decision as one hot in the form: [[match, no-match]]
+                               function=lambda outcome: int(int(outcome[0][1]>outcome[0][0])
                                                             or (np.random.random() < retrieval_hazard_rate)),
-                               # ---------
-                               # # VERSION *WITHOUT* ObjectiveMechanism:
-                               # monitor_for_control=decision,
-                               # # Set Evaluate outcome and set ControlSignal for EM[store_prob]
-                               # #   - outcome is received from decision as one hot in the form: [[match, no-match]]
-                               # function=lambda outcome: int(int(outcome[0][1]>outcome[0][0])
-                               #                              or (np.random.random() < retrieval_hazard_rate)),
-                               # ---------
                                control=(STORAGE_PROB, em))
 
 

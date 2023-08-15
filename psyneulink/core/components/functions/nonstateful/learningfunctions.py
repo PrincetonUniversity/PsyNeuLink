@@ -2512,7 +2512,7 @@ class BackPropagation(LearningFunction):
                                                    covariates=covariates, context=context)
 
         # Chain rule to get the derivative of the error with respect to the weights
-        if dA_dW.ndim == 1:
+        if np.array(dA_dW).ndim <= 1:
             dE_dW = dE_dA * dA_dW
         elif dA_dW.ndim == 2:
             dE_dW = np.matmul(dE_dA, dA_dW)
