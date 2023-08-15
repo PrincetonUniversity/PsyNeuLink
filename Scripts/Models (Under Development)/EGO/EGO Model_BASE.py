@@ -274,7 +274,7 @@ def construct_model(model_name:str=MODEL_NAME,
     EGO_comp = Composition(name=model_name,
                            nodes=[context_input_layer, time_input_layer, reward_input_layer,
                                   context_layer,
-                                  em, 
+                                  em,
                                   retrieved_time_layer, retrieved_reward_layer,
                                   retrieval_control_layer, decision_layer],
                            # Terminate trial if value of control is still 1 after first pass through execution
@@ -282,14 +282,19 @@ def construct_model(model_name:str=MODEL_NAME,
                                TimeScale.TRIAL: And(Condition(lambda: retrieval_control_layer.value),
                                                     AfterPass(0, TimeScale.TRIAL))})
     # # Terminate trial if value of control is still 1 after first pass through execution
-    EGO_comp.add_projection(MappingProjection(), context_input_layer, context_layer)
-    EGO_comp.add_projection(MappingProjection(), context_layer, em.input_ports["CONTEXT_FIELD"])
-    EGO_comp.add_projection(MappingProjection(), time_input_layer, em.input_ports["TIME_FIELD"])
-    EGO_comp.add_projection(MappingProjection(), reward_input_layer, em.input_ports["REWARD_FIELD"])
-    EGO_comp.add_projection(MappingProjection(), em.output_ports[0], context_layer)
-    EGO_comp.add_projection(MappingProjection(), em.output_ports[1], retrieved_time_layer)
-    EGO_comp.add_projection(MappingProjection(), em.output_ports[2], retrieved_reward_layer)
-    EGO_comp.add_projection(MappingProjection(), retrieved_reward_layer, decision_layer)
+    EGO_comp.show_graph()
+    EGO_comp.add_projection(MappingProjection(context_input_layer, context_layer))
+    EGO_comp.add_projection(MappingProjection(context_layer, em.input_ports["CONTEXT_FIELD"]))
+    EGO_comp.add_projection(MappingProjection(time_input_layer, em.input_ports["TIME_FIELD"]))
+    EGO_comp.add_projection(MappingProjection(reward_input_layer, em.input_ports["REWARD_FIELD"]))
+    EGO_comp.add_projection(MappingProjection(em.output_ports[0], context_layer))
+    EGO_comp.show_graph(show_node_structure=ALL)
+    EGO_comp.add_projection(MappingProjection(em.output_ports[1], retrieved_time_layer))
+    EGO_comp.show_graph(show_node_structure=ALL)
+    EGO_comp.add_projection(MappingProjection(em.output_ports[2], retrieved_reward_layer))
+    EGO_comp.show_graph(show_node_structure=ALL)
+    EGO_comp.add_projection(MappingProjection(retrieved_reward_layer, decision_layer))
+    EGO_comp.show_graph(show_node_structure=ALL)
 
     print(f'{model_name} constructed')
     return EGO_comp

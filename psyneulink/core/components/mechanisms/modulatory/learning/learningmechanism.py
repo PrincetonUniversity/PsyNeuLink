@@ -961,6 +961,12 @@ class LearningMechanism(ModulatoryMechanism_Base):
             Attributes
             ----------
 
+                variable
+                    see `variable <LearningMechanism.variable>`
+
+                    :default value: numpy.array([[0],[0],[0]])
+                    :type: numpy.ndarray
+
                 covariates_sources
                     see `covariates_source <LearningMechanism.covariates_source>`
 
@@ -1039,6 +1045,9 @@ class LearningMechanism(ModulatoryMechanism_Base):
                     :type: ``list``
                     :read only: True
         """
+        # variable = Parameter(np.array([[0],[0],[0]]),
+        #                      pnl_internal=True,
+        #                      constructor_argument='default_variable')
         function = Parameter(BackPropagation, stateful=False, loggable=False)
         covariates_sources = Parameter(None, stateful=False, structural=True, read_only=True)
         error_sources = Parameter(None, stateful=False, structural=True, read_only=True)
