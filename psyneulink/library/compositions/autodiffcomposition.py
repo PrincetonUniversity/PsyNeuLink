@@ -124,7 +124,6 @@ the constructor (see `AutodiffComposition <AutodiffComposition_Class_Reference>`
 *PyTorch mode*
 ~~~~~~~~~~~~~~
 
-# FIX: 8/13/23 - UPDATE DOCUMENTATION
 This is specified by setting **execution_mode = `ExecutionMode.PyTorch` in the `learn <Composition.learn>` method of
 an AutodiffCompositon (see `example <BasicsAndPrimer_Rumelhart_Model>` in `BasicsAndPrimer`).  This automatically
 translates the AutodiffComposition to a `PyTorch <https://pytorch.org>`_ model and uses that for execution.  This is
@@ -145,14 +144,13 @@ maps <https://github.com/giannisnik/som>`_).
       * Specifying `ExecutionMode.LLVM` or `ExecutionMode.PyTorch` in the learn() method of a standard
         `Composition` causes an error.
 
-# FIX: 8/13/23 - UPDATE DOCUMENTATION
-.. technical_note::
-   `ExecutionMode.PyTorch` is a synonym for `ExecutionMode.Python`, that is provided for clarity of the user interface:
-   the default for an AutodiffComposition (i.e., if **execution_mode** is not specified, or it is set to
-   `ExecutionMode.Python`) is to use PyTorch translation in `learn <Composition.learn>` but the Python interpreter
-   for `run <Composition.run>`.  The use of `ExecutionMode.PyTorch` is simply to make it clear that, during learning,
-   it will use PyTorch. This contrasts with the use of `ExecutionMode.LLVMrun`, in which case both the `learn
-   <Composition.learn>` and `run <Composition.run>` methods use LLVM compilation.
+COMMENT:
+FIX: 8/13/23 - COMPLETE DOCS HERE
+*Python mode*
+~~~~~~~~~~~~~
+An AutodiffComposition can also be run using the standard PsyNeuLink learning components
+COMMENT
+
 
 .. _AutodiffComposition_Nested_Modulation:
 
@@ -681,15 +679,12 @@ class AutodiffComposition(Composition):
                        content='trial_start',
                        context=context)
 
-                # FIX: CHANGES TO autodiff LEARNING HERE - NEEDED FOR Python mode?  IF NOT, THEN RESTORE if STATMENT?
-                # MODIFIED 8/8/23 NEW:
                 # if execution_mode is not pnlvm.ExecutionMode.Python:
                 self._build_pytorch_representation(context)
                 output = self.autodiff_training(autodiff_inputs,
                                                 autodiff_targets,
                                                 context,
                                                 scheduler)
-                # MODIFIED 8/8/23 END
 
                 execution_phase = context.execution_phase
                 context.execution_phase = ContextFlags.PROCESSING

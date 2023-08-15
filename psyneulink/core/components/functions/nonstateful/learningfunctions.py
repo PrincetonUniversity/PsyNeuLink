@@ -2502,9 +2502,6 @@ class BackPropagation(LearningFunction):
             dE_dA = np.dot(error_matrix, self._get_current_parameter_value(ERROR_SIGNAL, context))
 
         # Derivative of the output activity
-        # FIX: THIS SHOULD BE dA(output)/dA(input to function) [using function's derivative]
-        #                   * dA(input to function)/dW
-        # FIX: 8/1/23: ADD COVARIATES TO CALL
         activation_output = self._get_current_parameter_value(ACTIVATION_OUTPUT, context)
         if covariates is None:
             dA_dW = self.activation_derivative_fct(input=None, output=activation_output, context=context)

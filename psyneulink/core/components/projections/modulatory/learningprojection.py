@@ -121,9 +121,6 @@ the LearningProjection's `learning_rate <LearningProjection.learning_rate>` para
 `learning_signal <LearningProjection.learning_signal>` it receives, in addition to (and on top of) the effects of the
 `learning_rate <LearningMechanism.learning_rate>` for the `LearningMechanism` from which it receives the
 `learning_signal <LearningProjection.learning_signal>`.
-COMMENT:
-FIX: IS THE FOLLOWING TRUE? 8/13/23
-COMMENT
 However, its
 `learning_rate <LearningProjection.learning_rate>` can be specified by the `LearningSignal
 <LearningSignal_Learning_Rate>` that is its `sender <LearningProjection.sender>`;  that specification takes precedence
