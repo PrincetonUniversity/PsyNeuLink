@@ -97,14 +97,16 @@ class LearningFunction(Function_Base):
         However, the exact specification depends on the function's type.
 
     learning_rate : array, float or int : function.defaults.parameter
-        the value used for the function's `learning_rate <LearningFunction.learning_rate>` parameter, generally used
-        to multiply the result of the function before it is returned;  however, both the form of the value (i.e.,
+        the value used for the function's `learning_rate <LearningFunction.learning_rate>` parameter, generally
+        used to multiply the result of the function before it is returned;  however, both the form of the value (i.e.,
         whether it is a scalar or array) and how it is used depend on the function's type.  The parameter's default
         value is used if none of the following is specified:  the `learning_rate <LearningMechanism.learning_rate>`
         for the `LearningMechanism` to which the function has been assigned, the `learning_rate
-        <Composition.learning_rate>` for any `Composition` to which that LearningMechanism belongs, or a **learning**
-        specified in either one of the Composition's `learning construction methods <Composition_Learning_Methods>` or
-        a call to the Composition's `learn <Composition.learn>` method at runtime.
+        <Composition.learning_rate>` for any `Composition` to which that LearningMechanism belongs, or
+        a **learning_rate** argument specified in either a Composition's `learning construction method
+        <Composition_Learning_Methods>` or a call to the Composition's `learn <Composition.learn>` method at
+        runtime (see description of learning_rate for `LearningMechanisms <LearningMechanism_Learning_Rate>`
+        and for `Compositions <Composition_Learning_Rate>` for additional details).
 
     Returns
     -------

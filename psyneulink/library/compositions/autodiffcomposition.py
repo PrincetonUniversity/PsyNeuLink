@@ -303,7 +303,8 @@ class AutodiffComposition(Composition):
     ---------
 
     learning_rate : float : default 0.001
-        the learning rate passed to the optimizer if none is specified in the learn method of the AutodiffComposition.
+        specified the learning rate passed to the optimizer if none is specified in the learn method of the
+        AutodiffComposition.
 
     disable_learning : bool: default False
         specifies whether the AutodiffComposition should disable learning when run in `learning mode
@@ -324,6 +325,9 @@ class AutodiffComposition(Composition):
     optimizer : PyTorch optimizer function
         the optimizer used for training. Depends on the **optimizer_type**, **learning_rate**, and **weight_decay**
         arguments from initialization.
+
+    learning_rate : float
+        the learning rate passed to the optimizer if none is specified in the learn method of the AutodiffComposition.
 
     loss : PyTorch loss function
         the loss function used for training. Depends on the **loss_spec** argument from initialization.

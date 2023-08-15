@@ -38,9 +38,9 @@ Contents
            - `Composition_Learning_Methods`
            - `Composition_Learning_Components`
            - `Composition_Learning_Execution`
+        • `Composition_Learning_Rate`
      - `Composition_Learning_AutodiffComposition`
      - `Composition_Learning_UDF`
-     - `Composition_Learning_Rate`
   * `Composition_Execution`
      - `Execution Methods <Composition_Execution_Methods>`
      - `Composition_Execution_Inputs`
@@ -671,10 +671,10 @@ Learning in a Composition
       - `Composition_Learning_Methods`
       - `Composition_Learning_Components`
       - `Composition_Learning_Execution`
+   • `Composition_Learning_Rate`
 - `Composition_Learning_AutodiffComposition`
 - `Comparison of Learning Modes <Composition_Compilation_Table>`
 - `Composition_Learning_UDF`
-- `Composition_Learning_Rate`
 
 Learning is used to modify the `Projections <Projection>` between Mechanisms in a Composition.  More specifically,
 it modifies the `matrix <MappingProjection.matrix>` parameter of the `MappingProjections <MappingProjection>` within a
@@ -940,8 +940,8 @@ they project to another Mechanism (the *OBJECTIVE_MECHANISM*) in the Composition
 
 .. _Composition_Learning_Execution:
 
-*Execution of Learning*
-=======================
+*Execution of Supervised Learning*
+==================================
 
 For learning to occur when a Composition is run, its `learn <Composition.learn>` method must be used instead of the
 `run <Composition.run>` method, and its `disable_learning <Composition.disable_learning>` attribute must be False.
@@ -979,6 +979,62 @@ method, as well as additonal ones that are specific to learning.  Also like `run
 `output_values <Composition.output_values>` of the Composition after the last trial of execution.  The results for the
 last epoch of learning are stored in its `learning_results <Composition.learning_results>` attribute.
 
+
+.. _Composition_Learning_Rate:
+
+Learning Rate
+^^^^^^^^^^^^^
+COMMENT:
+Add explanation of how learning_rate applies to Unsupervised forms of learning
+COMMENT
+The rate at which learning occurs in a `learning pathway <Composition_Learning_Pathway>` is determined by the
+`learning_rate <LearningMechanism_Learning_Rate> Parameter of the `LearningMechanism(s) <LearningMechanism>` in that
+Pathway.  If it is not specified, then the `default value <Parameter_Defaults>` for the LearningMechanism's `function
+<LearningMechanism.function>` is used, which is determined by the kind of learning in that Pathway. However, the
+learning_rate can be specified in several other ways, both at construction and/or execution.  At construction, it can
+be specified using the **learning_rate** argument of the Compostion's constructor, in which case it serves as the
+default learning_rate for all learning pathways;  it can also be specified in the **learning_rate** argument of a
+`learning construction method <Composition_Learning_Methods>`, in which case it applies to only the LearningMechanisms
+in that Pathway. Specifications for a Pathway take precedence over the specification in the Composition's constructor.
+The **learning_rate** can also be specified at execution, in the Composition's `learn <Composition.learn>` method,
+in which case it applies to all learning pathways during that (and only that) execution, and supersedes any
+specifications made at construction. It can also be specified for one or more individual LearningMechanisms (which
+applies to the `matrix <MappingProjection.matrix>` parameter ("connection weights") of the `MappingProjection` for
+which each LearningMechanism is responsible), by assigning a value directly to the LearningMechanism's `learning_rate
+<LearningMechanism.learning_rate>` Parameter.  This supersedes any other specifications of learning_rate, including
+in the Composition's learn() method, and applies to all subsequent executions of learning, allowing different
+LearningMechanisms (and their corresponding MappingProjections) within a Composition to be assigned different
+learning_rates.  The table below shows the precedence for the specificadtion of learning_rates.
+COMMENT:
+Finally, the `learning_rate <LearningSignal.learning_rate>` for
+a LearningMechanism interacts with any specifications of the `learning_rate <LearningSignal.learning_rate>` for its
+`learning_projections <LearningMechanism.learning_projections>` (see `LearningProjection_Function`
+for additional details).
+COMMENT
+
+.. _Composition_Learning_Rate_Precedence_Hierarchy
+
+.. table::
+
+   +-------------------------------------------------------------------------------------------------------------------------------------+
+   |                          **Learning Rate Precedence Hierarchy**                                                                     |
+   +----------------+--------------------------------------------------------------------------------------------------------------------+
+   |  **Highest**:  |  Assignment to LearningMechanism `learning_rate <LearningMechanism_Learning_Rate>` Parameter (after construction)  |
+   |                |    ``my_learning_mechanism.parameters.learning_rate.set(val)``                                                     |
+   +----------------+--------------------------------------------------------------------------------------------------------------------+
+   |                |  Call to `Composition.learn`\() (execution)                                                                        |
+   |                |    ``my_composition.learn(learning_rate=val)``                                                                     |
+   +----------------+--------------------------------------------------------------------------------------------------------------------+
+   |                |  Assignment in `LearningMechanism` constructor                                                                     |
+   |                |    ``my_learning_mechanimsm=LearningMechanism(learning_rate=val)``                                                 |
+   +----------------+--------------------------------------------------------------------------------------------------------------------+
+   |                |  Assignment in `learning pathway <Composition_Learning_Pathway>` constructor                                       |
+   |                |    ``my_composition.add_linear_learning_pathway(learning_rate=val)``                                               |
+   +----------------+--------------------------------------------------------------------------------------------------------------------+
+   |                |  Assignment in Composition constructor                                                                             |
+   |  **Lowest**:   |    ``my_composition=Composition(learning_rate=val)``                                                               |
+   +----------------+--------------------------------------------------------------------------------------------------------------------+
+
 .. _Composition_Learning_AutodiffComposition:
 
 *Learning Using AutodiffCompositon*
@@ -987,7 +1043,6 @@ last epoch of learning are stored in its `learning_results <Composition.learning
 COMMENT:
     Change reference to example below to point to Rumelhart Semantic Network Model Script once implemented
 COMMENT
-
 `AutodiffCompositions <AutodiffComposition>` provide the ability to execute backpropagation learning much more
 efficiently than using a standard Composition.  An AutodiffComposition is constructed in the same way, but there
 is no need to specify any `learning components <Composition_Learning_Components>`>` or use any `learning methods
@@ -1008,9 +1063,13 @@ that they can provide up to three orders of magnitude speed-up in training a mod
 on the kinds of Compositions that be implemented in this way.  The features of the different ways to implement and
 execute learning are outlined in the following table, and described in more detail in `AutodiffComposition`.
 
+The `learning_rate <AutodiffComposition.learning_rate>` for an AutodiffComposition can be specified in its constructor
+(which assigns it as the default) or in its `learn <AutodiffComposition.learn>` method, in which case it applies to
+that execution only.
+
   .. note::
     * Using `ExecutionMode.Python` in an AutodffComposition is the same as using a standard Composition, allowing
-      it to be run in any mode (e.g., for comparison and/or compatibility purposes).
+      an AutodffComposition to be run in any mode (e.g., for comparison and/or compatibility purposes).
 
   .. warning::
     * `ExecutionMode.LLVM` and `ExecutionMode.PyTorch` can only be used in the `learn <AutodiffComposition.learn>`
@@ -1068,60 +1127,6 @@ of a `UserDefinedFunction`. It must be carefully coordinated with the execution 
 in the Composition, to insure that each function is called at the appropriate times during execution.  Furthermore, as
 with an `AutodiffComposition`, the internal constituents of the object (e.g., intermediates layers of a neural network
 model) are not accessible to other Components in the Composition (e.g., as a source of information or for modulation).
-
-
-.. _Composition_Learning_Rate:
-
-*Learning Rate*
-~~~~~~~~~~~~~~~
-
-The `learning_rate <LearningMechanism.learning_rate>` parameter of a `LearningMechanism` (and its associated
-`function <LearningMechanism.function>`) determines the rate of learning of the `matrix <MappingProjection.matrix>`
-parameter ("connection weights") of each `MappingProjection` in a `learning pathway <Composition_Learning_Pathway>`.
-If not otherwise specified, each LearningMechanism uses the `default value <Parameter_Defaults>` for its
-`learning_rate <LearningMechanism.learning_rate>`, which is determined by its `function <LearningMechanism.function>`.
-However, the learning_rate for a Composition or `learning pathways <Composition_Learning_Pathway>` within it can be
-specified in several other ways, both at construction and/or execution.  At construction, it can be specified using
-the **learning_rate** argument of the Compostion's constructor, in which case it applies to all learning pathways, or
-in the **learning_rate** argument of a `learning construction method <Composition_Learning_Methods>`, in which case it
-applies to only the LearningMechanisms in that Pathway.  Specifications for a Pathway take precedence over the
-specification in the Composition's constructor.  The **learning_rate** can also be specified in the Composition's
-`learn <Composition.learn>` method, in which case it applies to all learning pathways during that (and only that)
-execution, and supersedes any specifications made at construction . All of these are superseded by direct specification
-of the `learning_rate <LearningMechanism.learning_rate>` Parameter for individual LearningMechanisms, allowing
-different LearningMechanisms witin a Composition to be assigned different learning_rates; these are used even
-if the **learning_rate** argument of the `learn <Composition.learn>` method is specified at execution.
-COMMENT:
-Finally, the `learning_rate <LearningSignal.learning_rate>` for
-a LearningMechanism interacts with any specifications of the `learning_rate <LearningSignal.learning_rate>` for its
-`learning_projections <LearningMechanism.learning_projections>` (see `LearningProjection_Function`
-for additional details).
-COMMENT
-The following shows the inheritance and precedence hierarchy for the specification of
-learning_rates to LearningMechanisms, their functions, and to a Composition and its learning methods.
-
-.. _Composition_Learning_Rate_Precedence_Hierarchy
-
-.. table::
-
-   +-------------------------------------------------------------------------------------------------------------------------------------+
-   |                          **Learning Rate Precedence Hierarchy**                                                                     |
-   +----------------+--------------------------------------------------------------------------------------------------------------------+
-   |  **Highest**:  |  Assignment to LearningMechanism `learning_rate <LearningMechanism.learning_rate>` Parameter (after construction)  |
-   |                |    ``my_learning_mechanism.parameters.learning_rate.set(val)``                                                     |
-   +----------------+--------------------------------------------------------------------------------------------------------------------+
-   |                |  Call to `Composition.learn`\() (execution)                                                                        |
-   |                |    ``my_composition.learn(learning_rate=val)``                                                                     |
-   +----------------+--------------------------------------------------------------------------------------------------------------------+
-   |                |  Assignment in `LearningMechanism` constructor                                                                     |
-   |                |    ``my_learning_mechanimsm=LearningMechanism(learning_rate=val)``                                                 |
-   +----------------+--------------------------------------------------------------------------------------------------------------------+
-   |                |  Assignment in `learning pathway <Composition_Learning_Pathway>` constructor                                       |
-   |                |    ``my_composition.add_linear_learning_pathway(learning_rate=val)``                                               |
-   +----------------+--------------------------------------------------------------------------------------------------------------------+
-   |                |  Assignment in Composition constructor                                                                             |
-   |  **Lowest**:   |    ``my_composition=Composition(learning_rate=val)``                                                               |
-   +----------------+--------------------------------------------------------------------------------------------------------------------+
 
 
 .. _Composition_Execution:

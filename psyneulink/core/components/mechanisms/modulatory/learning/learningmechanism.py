@@ -365,19 +365,21 @@ refer to the Components being learned and/or its operation:
 
 .. _LearningMechanism_Learning_Rate:
 
-* `learning_rate <LearningMechanism.learning_rate>` - specifies the `learning_rate` parameter used by the
-  LearningMechanism's `function <LearningMechanism.function>` which, for most forms of learning, uses it to multiply
-  the weight change matrix before returning it as the `learning_signal <LearningMechanism.learning_signal>`.  The
-  value can be specified in the **learning_rate** argument of the LearningMechanism's constructor, or in the
-  constructor for its `function <LearningMechanism.function>`.  If both are specified, the specification for the
-  function takes precedence; in either case, the value of the learning_rate parameter is always the same for the
-  LearningMechanism and its function.  If neither is specified, then it inherits its value from any specifications
-  made for the `Composition` a `learning Pathway <Composition_Learning_Pathway>` of the Composition to which it belongs;
-  however, if a learning_rate is specified for the LearningMechanism after the Composition and/or its `learning
-  pathways <Composition_Learning_Pathway>` have been constructed, that overrides any specifications made for the
-  Composition or its learning pathways (see `Composition_Learning_Rate` for additional details)  If the learning_rate
-  is not explicitly specified anywhere, the `default value <Parameter_Defaults>` for the LearningMechanism's
-  `function <LearningMechanism.function>` is used.
+* `learning_rate <LearningMechanism.learning_rate>` - specifies the `learning_rate <LearningFunction.learning_rate>`
+  parameter used by the LearningMechanism's `function <LearningMechanism.function>` which, for most forms of learning,
+  uses it to multiply the weight change matrix before returning it as the `learning_signal
+  <LearningMechanism.learning_signal>`.  The value can be specified in the **learning_rate** argument of the
+  LearningMechanism's constructor, or in the constructor for its `function <LearningMechanism.function>`.  If both
+  are specified, the specification for the function takes precedence; in either case, the value of the learning_rate
+  parameter is always the same for the LearningMechanism and its function.  If neither is specified, then it inherits
+  its value from any specifications made for the `Composition` or a `learning Pathway <Composition_Learning_Pathway>`
+  of the Composition to which it belongs (see `Composition_Learning_Rate` for additional details). However, after the
+  Composition and/or its `learning pathways <Composition_Learning_Pathway>` have been constructed, specifying the
+  `learning_rate <LearningMechanism.learning_rate>` for a LearningMechanism (or its function) overrides any
+  specifications made for the Composition or its learning pathways, including in calls the Composition's `learn
+  <Composition.learn>` method.  In this way, individual LearningMechanisms can be assigned specific learning rates
+  that apply whenever those are executed. If the learning_rate is not explicitly specified anywhere, the `default
+  value <Parameter_Defaults>` for the LearningMechanism's `function <LearningMechanism.function>` is used.
 
   COMMENT: TBI
   A `learning_rate` parameter can also be specified for individual `LearningSignals <LearningSignal>` and/or their
