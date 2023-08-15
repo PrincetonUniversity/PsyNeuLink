@@ -1022,7 +1022,7 @@ COMMENT
    |  **Highest**:  |  Assignment to LearningMechanism `learning_rate <LearningMechanism_Learning_Rate>` Parameter (after construction)  |
    |                |    ``my_learning_mechanism.parameters.learning_rate.set(val)``                                                     |
    +----------------+--------------------------------------------------------------------------------------------------------------------+
-   |                |  Call to `Composition.learn`\\() (execution)                                                                       |
+   |                |  Call to `Composition.learn` method (execution)                                                                    |
    |                |    ``my_composition.learn(learning_rate=val)``                                                                     |
    +----------------+--------------------------------------------------------------------------------------------------------------------+
    |                |  Assignment in `LearningMechanism` constructor                                                                     |
