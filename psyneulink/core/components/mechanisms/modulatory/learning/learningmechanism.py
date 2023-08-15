@@ -302,11 +302,13 @@ They are each described below:
   corresponding MappingProjections. Multiple LearningSignals can be specified for a LearningMechanism by including
   them in a list assigned to the **learning_signals** argument of the LearningMechanism's constructor.
 
+  COMMENT:
   The `learning_rate <LearningSignal.learning_rate>` for each LearningSignal, and the `learning_rate
   <LearningProjection.learning_rate>` for each of its `LearningProjections <LearningProjection>`, can all be assigned
   different values (with the latter taking precedence over the former).  If none of these are specified, the
   `learning_rate <LearningMechanism.learning_rate>` of the LearningMechanism is used (see `below
   <LearningMechanism_Learning_Rate>`).
+  COMMENT
 
   All of the LearningSignals of a LearningMechanism are listed in its `learning_signals` attribute.  Because these
   are `OutputPorts <OutputPort>`, they are also listed in the `output_ports <LearningMechanism.output_ports>`
@@ -377,10 +379,15 @@ refer to the Components being learned and/or its operation:
   is not explicitly specified anywhere, the `default value <Component.defaults>` for the LearningMechanism's
   `function <LearningMechanism.function>` is used.
 
+  COMMENT: TBI
   A `learning_rate` parameter can also be specified for individual `LearningSignals <LearningSignal>` and/or their
   associated `LearningProjections <LearningProjection>`. Those have a direct multiplicative effect on the
   `learning_signal <LearningProjection.learning_signal>` of the LearningSignal and/or it LearningProjections (see
   `LearningSignal learning_rate <LearningSignal_Learning_Rate>` for additional details).
+  A `learning_rate` parameter can also be specified for individual `LearningProjections <LearningProjection>`.
+  Those have a direct multiplicative effect on the `learning_signal <LearningProjection.learning_signal>` of the
+  LearningSignal (see `LearningProjection_Function_and_Learning_Rate>` for additional details).
+  COMMENT
 
 .. _LearningMechanism_Learning_Configurations:
 

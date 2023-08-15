@@ -114,11 +114,8 @@
 #        - LEARNING - Backpropagation LearningFunction / LearningMechanism
 #          - DOCUMENTATION:
 #             - weight_change_matrix = gradient (result of delta rule) * learning_rate
-#             - Move explanation of learning_rate assignments in LearningFunction to section on
-#                learning_rate in Composition_Learning
 #          - Backprop: handle call to constructor with default_variable = None
-#          - LearningMechanism vs. LearningSignal:
-#                sort out what is going on with their learning_rate assignments and use
+#          - Implement functionality of learning_rate for LearningProjection
 #          - learning_pathway constructors:  assigned learning_rate arg to constructor of LearningFunctions,
 #                leaving learningMechanism's to be None and therefore detectable as user-specified so it can override
 #                runtime assignment in CompositionRunner.run_learning method (LINE 185)

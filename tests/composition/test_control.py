@@ -18,7 +18,7 @@ class TestControlSpecification:
     #    with adding a controller that may also specify control of that node.
     # Principles:
     #    1) there should be no redundant ControlSignals or ControlProjections created;
-    #    2) specification of control in controller supercedes any conflicting specification on a node;
+    #    2) specification of control in controller supersedes any conflicting specification on a node;
     #    3) order of addition to the composition does not matter (i.e., Principle 2 always applies)
 
     def test_add_node_with_control_specified_then_add_controller(self):
@@ -81,7 +81,7 @@ class TestControlSpecification:
     def test_redundant_control_spec_add_controller_in_comp_constructor_then_add_node_with_control_specified(self):
         # First create Composition with controller that has HAS control specification,
         #    then add Mechanism with control specification to Composition;
-        # Control specification on controller should supercede one on Mechanism (which should be ignored)
+        # Control specification on controller should supersede one on Mechanism (which should be ignored)
         ddm = pnl.DDM(function=pnl.DriftDiffusionAnalytical(
                                 drift_rate=(1.0,
                                             pnl.ControlProjection(
@@ -101,7 +101,7 @@ class TestControlSpecification:
     def test_redundant_control_spec_add_controller_in_comp_constructor_then_add_node_with_alloc_samples_specified(self,control_spec):
         # First create Composition with controller that has HAS control specification that includes allocation_samples,
         #    then add Mechanism with control specification to Composition;
-        # Control specification on controller should supercede one on Mechanism (which should be ignored)
+        # Control specification on controller should supersede one on Mechanism (which should be ignored)
         ddm = pnl.DDM(function=pnl.DriftDiffusionAnalytical(
                                 drift_rate=(1.0,
                                             pnl.ControlProjection(

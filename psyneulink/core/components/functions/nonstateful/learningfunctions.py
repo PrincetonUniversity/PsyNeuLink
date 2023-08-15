@@ -2482,12 +2482,14 @@ class BackPropagation(LearningFunction):
         if learning_rate is None:
             learning_rate = self.defaults.learning_rate
 
+        # IMPLEMENTATION NOTE: FOR DEBUGGING
+        # if not self.is_initializing:
+        #     print(f"{self.owner.name}: executed learning_rate: {learning_rate}")
+
         # make activation_input a 1D row array
         activation_input = self._get_current_parameter_value(ACTIVATION_INPUT, context)
         activation_input = np.array(activation_input).reshape(len(activation_input), 1)
 
-        if not self.is_initializing:
-            print(f"executed learning_rate: {learning_rate}")
         # Derivative of error with respect to output activity (contribution of each output unit to the error above)
         loss_spec = self.parameters.loss_spec.get(context)
         if loss_spec == Loss.MSE:

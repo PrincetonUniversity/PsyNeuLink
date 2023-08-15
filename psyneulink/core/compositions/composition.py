@@ -895,7 +895,7 @@ properly computed and propagated by each LearningMechanism to the next in the co
 that, in doing so, the status of a Mechanism in the final configuration takes precedence over its status in any of
 the individual sequences specified in the `learning methods <Composition_Learning_Methods>` when building the
 Composition.  In particular, whereas ordinarily the last ProcessingMechanism of a sequence specified in a learning
-method projects to a *OBJECTIVE_MECHANISM*, this may be superceded if multiple sequences are created. This is the
+method projects to a *OBJECTIVE_MECHANISM*, this may be superseded if multiple sequences are created. This is the
 case if: i) the Mechanism is in a seqence that is contiguous (i.e., abuts or intersects) with others already in the
 Composition, ii) the Mechanism appears in any of those other sequences and, iii) it is not the last Mechanism in
 *all* of them; in that in that case, it will not project to a *OBJECTIVE_MECHANISM* (see `figure below
@@ -1543,21 +1543,25 @@ argument of the Compostion's constructor, in which case it applies to all learni
 **learning_rate** argument of a `learning construction method <Composition_Learning_Methods>`, in which case it
 applies to only the LearningMechanisms in that Pathway.  Specifications for a Pathway take precedence over the
 specification in the Composition's constructor.  The *learning_rate* can also be specified in the Composition's
-`learn <Composition.learn>` method, in which case it applies to all learning pathways and supercedes any specifications
-made at construction for that execution. All of these are superceded by direct specification of the `learning_rate
+`learn <Composition.learn>` method, in which case it applies to all learning pathways and supersedes any specifications
+made at construction for that execution. All of these are superseded by direct specification of the `learning_rate
 <LearningMechanism.learning_rate>` Parameter for individual LearningMechanisms, allowing different LearningMechanisms
 witin a Composition to be assigned different learning_rates;  these will be used even if the **learning_rate** argument
-of the `learn <Composition.learn>` method is used.  Finally, the `learning_rate <LearningSignal.learning_rate>` for a
-LearningMechanism interacts with any specifications of the learning_rate for its `LearningSignals <LearningSignal>`
-(see `LearningMechanism_Learning_Rate` for additional details). The following shows the inheritance and precedence
-hierarchy for the specification of learning_rates to LearningMechanisms, their functions, LearningSignals and
-LearningProjections, and to a Composition and its learning methods.
+of the `learn <Composition.learn>` method is used.
+COMMENT:
+Finally, the `learning_rate <LearningSignal.learning_rate>` for
+a LearningMechanism interacts with any specifications of the `learning_rate <LearningSignal.learning_rate>` for its
+`learning_projections <LearningMechanism.learning_projections>` (see `LearningProjection_Function`
+for additional details).
+COMMENT
+The following shows the inheritance and precedence hierarchy for the specification of
+learning_rates to LearningMechanisms, their functions, and to a Composition and its learning methods.
 
 .. _Composition_Learning_Rate_Inheritance:
 
-Highest:   LearningMechanism learning_rate Parameter assignment after construction
+Highest:   assignment to learning_rate Parameter of a LearningMechanism or its function after construction
            Composition's learn() method
-           LearningSignal constructor / LearningProjection constructor / LearningMechanism
+           LearningMechanism's constructor
            Composition learning pathway construction method
 Lowest:    Composition constructor
 
@@ -1848,7 +1852,7 @@ COMMENT:
                                    THESE ARE USED AS THE VALUES WHEN EACH NODE'S reset_integrator_when CONDITION IS MET;
                                    IF NOT SPECIIFED, THEN RESET TO previous_value ATTRIBUTE, WHICH IS SET TO THE
                                    MECHANISM'S <object>.defaults.value WHEN CONSTRUCTED
-        FIX: ?? CONSIDER MAKING RESET_STATEFUL_FUNCTIONS_WHEN A DICT THAT IS USED TO SUPERCEDE THE attirbute of a Mechanism
+        FIX: ?? CONSIDER MAKING RESET_STATEFUL_FUNCTIONS_WHEN A DICT THAT IS USED TO supersede THE attirbute of a Mechanism
         - reset_integrator_nodes_when arg OF RUN: EITHER JUST A Condition, OR A DICT OF {node: Condition} pairs
                                                      IF JUST A CONDITION:  IT SETS THE DEFAULT FOR ALL NODES FOR WHICH
                                                                            THEIR reset_integrator_when ATTRIBUTE IS None
@@ -3743,12 +3747,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         `learning mode <Composition.learn>`.
 
     learning_rate : float or int
-        # FIX: 8/13/23 - REFERENCE `Learning Rate <Composition_Learning_Rate>` ABOVE
         if specified, used as the default value for the `learning_rate <LearningMechanism.learning_rate>` of
         `LearningMechanisms <LearningMechanism>` in the Composition that do not have their learning_rate otherwise
-        specified; it is superceded by the **learning_rate** argument of a `learning construction method
+        specified; it is superseded by the **learning_rate** argument of a `learning construction method
         <Composition_Learning_Methods>`, and can also be overriden by specifying the **learning_rate** argument in a
-        call to the `learn <Composition.learn>` method of a Composition (see `LearningMechanism_Learning_Rate` for
+        call to the `learn <Composition.learn>` method of a Composition or direct specification of the `learning_rate
+        <LearningMechanism.learning_rate>` Parameter of a LearningMechanism (see `Composition_Learning_Rate` for
         additional details).
 
     learning_components : list[list]
@@ -7124,7 +7128,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
            Any specifications of the **monitor_for_control** `argument <ControlMechanism_Monitor_for_Control_Argument>`
            of a constructor for a `ControlMechanism` or the **monitor** argument in the constructor for an
            `ObjectiveMechanism` in the **objective_mechanism** `argument <ControlMechanism_ObjectiveMechanism>` of a
-           ControlMechanism supercede any MappingProjections that would otherwise be created for them when specified
+           ControlMechanism supersede any MappingProjections that would otherwise be created for them when specified
            in the **pathway** argument of add_linear_processing_pathway.
 
         Arguments
@@ -7145,7 +7149,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             see `MappingProjection_Matrix_Specification` for details of specification)
 
         name : str
-            species the name used for `Pathway`; supercedes `name <Pathway.name>` of `Pathway` object if it is has one.
+            species the name used for `Pathway`; supersedes `name <Pathway.name>` of `Pathway` object if it is has one.
 
         Returns
         -------
@@ -7155,10 +7159,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
 
         from psyneulink.core.compositions.pathway import Pathway, _is_node_spec, _is_pathway_entry_spec
-        # MODIFIED 8/8/23 NEW:
         self._pre_existing_pathway_components = {NODES:[],
                                              PROJECTIONS:[]}
-        # MODIFIED 8/8/23 END
 
         def _get_spec_if_tuple(spec):
             return spec[0] if isinstance(spec, tuple) else spec
@@ -7700,7 +7702,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             see `MappingProjection_Matrix_Specification` for details of specification)
 
         name : str :
-            species the name used for `Pathway`; supercedes `name <Pathway.name>` of `Pathway` object if it is has one.
+            species the name used for `Pathway`; supersedes `name <Pathway.name>` of `Pathway` object if it is has one.
 
         Returns
         --------
@@ -7856,7 +7858,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             <LearningMechanism.learning_enabled>` for meaning of values).
 
         name : str :
-            species the name used for `Pathway`; supercedes `name <Pathway.name>` of `Pathway` object if it is has one.
+            species the name used for `Pathway`; supersedes `name <Pathway.name>` of `Pathway` object if it is has one.
 
         Returns
         --------
@@ -7912,7 +7914,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             see `MappingProjection_Matrix_Specification` for details of specification)
 
         name : str :
-            species the name used for `Pathway`; supercedes `name <Pathway.name>` of `Pathway` object if it is has one.
+            species the name used for `Pathway`; supersedes `name <Pathway.name>` of `Pathway` object if it is has one.
 
         Returns
         --------
@@ -7971,7 +7973,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             see `MappingProjection_Matrix_Specification` for details of specification)
 
         name : str :
-            species the name used for `Pathway`; supercedes `name <Pathway.name>` of `Pathway` object if it is has one.
+            species the name used for `Pathway`; supersedes `name <Pathway.name>` of `Pathway` object if it is has one.
 
         Returns
         --------
@@ -10505,12 +10507,10 @@ _
         execution_phase_at_entry = context.execution_phase
         context.execution_phase = ContextFlags.PREPARING
 
-        # FIX: 8/13/23
-        # IMPLEMENTATION NOTE:  Restore if ExecutionMode.PyTorch can be distinguished from ExecutionMode.Python
-        # from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
-        # if execution_mode is pnlvm.ExecutionMode.PyTorch and not isinstance(self, AutodiffComposition):
-        #     warnings.warn(f"{pnlvm.ExecutionMode.PyTorch.name} is being used to execute {self.name} "
-        #                   f"but it is not an AutodiffComposition, therefore PyTorch will not be used.")
+        from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
+        if execution_mode is not pnlvm.ExecutionMode.Python and not isinstance(self, AutodiffComposition):
+            warnings.warn(f"{execution_mode.name} is being used to execute {self.name} "
+                          f"but it is not an AutodiffComposition, therefore it will be executed Python instead.")
 
         for node in self.nodes:
             num_execs = node.parameters.num_executions._get(context)

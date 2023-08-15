@@ -17,7 +17,10 @@ Contents
   * `LearningProjection_Creation`
       - `LearningProjection_Deferred_Initialization`
       - `LearningProjection_Sender`
+      COMMENT:
       - `LearningProjection_Function_and_Learning_Rate`
+      COMMENT
+      - `LearningProjection_Function`
       - `LearningProjection_Receiver`
   * `LearningProjection_Structure`
   * `LearningProjection_Execution`
@@ -91,6 +94,18 @@ is used by the LearningProjection as its `variable <LearningProjection.variable>
 `learning_signal <LearningProjection.learning_signal>` attribute, and serves as the input to the LearningProjection's
 `function <LearningProjection.function>`.
 
+.. _LearningProjection_Function:
+
+*Function*
+~~~~~~~~~~
+
+The default `function <LearningProjection.function>` of a LearningProjection is an identity function (`Linear` with
+**slope**\\ =1 and **intercept**\\ =0), that assigns the `learning_signal <LearningProjection.learning_signal>` received
+from its `sender <LearningProjection.sender>` unmodified as the LearningProjection's `value
+<LearningProjection.value>` and `weight_change_matrix <LearningProjection.weight_change_matrix>` attributes.
+
+COMMENT:
+TBI
 .. _LearningProjection_Function_and_Learning_Rate:
 
 *Function and learning_rate*
@@ -105,10 +120,11 @@ If specified, it is applied multiplicatively to the output of the LearningProjec
 the LearningProjection's `learning_rate <LearningProjection.learning_rate>` parameter can be used to modulate the
 `learning_signal <LearningProjection.learning_signal>` it receives, in addition to (and on top of) the effects of the
 `learning_rate <LearningMechanism.learning_rate>` for the `LearningMechanism` from which it receives the
-`learning_signal <LearningProjection.learning_signal>`. Specification of the `learning_rate
-<LearningProjection.learning_rate>` for a LearningProjection supersedes any specification(s) of the
-:keyword:`learning_rate` for any `Process <Process_Learning_Sequence>` and/or `System <System_Learning>` to which the
-Projection belongs (see `learning_rate <LearningMechanism_Learning_Rate>` for additional details).  However, its
+`learning_signal <LearningProjection.learning_signal>`.
+COMMENT:
+FIX: IS THE FOLLOWING TRUE? 8/13/23
+COMMENT
+However, its
 `learning_rate <LearningProjection.learning_rate>` can be specified by the `LearningSignal
 <LearningSignal_Learning_Rate>` that is its `sender <LearningProjection.sender>`;  that specification takes precedence
 over the direct specification of the `learning_rate <LearningProjection.learning_rate>` for the LearningProjection
@@ -116,6 +132,7 @@ over the direct specification of the `learning_rate <LearningProjection.learning
 `learning_rate <LearningProjection.learning_rate>` is not specified for the LearningProjection, then the result of its
 `function <LearningProjection.function>` is assigned unmodified as the LearningProjection's `value
 <LearningProjection.value>` (and `weight_change_matrix <LearningProjection.weight_change_matrix>` attributes.
+COMMENT
 
 .. _Learning_Weight_Exponent:
 
@@ -131,8 +148,11 @@ additional details).
 .. note::
    The `weight <Projection_Base.weight>` and `exponent <Projection_Base.exponent>` attributes of a LearningProjection
    are not commonly used, and are implemented largely for generality and compatibility with other types of `Projection`.
+   COMMENT:
    They are distinct from, and are applied in addition to the LearningProjection's `learning_rate
-   <LearningProjection.learning_rate>` attribute.  As noted under  `Projection <Projection_Weight_Exponent>`, they are
+   <LearningProjection.learning_rate>` attribute.
+   COMMENT
+   As noted under  `Projection <Projection_Weight_Exponent>`, they are
    not normalized and thus their effects aggregate if a ParameterPort receives one or more LearningProjections with
    non-default values of their  `weight <Projection_Base.weight>` and `exponent <Projection_Base.exponent>` attributes.
 
@@ -161,9 +181,12 @@ ParameterPort belongs) is updated. Note that these events occur only when the Pr
 <LearningProjection.learning_enabled>` is *AFTER*, then LearningProjection is executed at the end of the `TRIAL
 <TimeScale.TRIAL>` of the Composition to which it belongs.  When the LearningProjection is executed, its `function
 <LearningProjection.function>` gets the `learning_signal <LearningProjection.learning_signal>` from its `sender
-<LearningProjection.sender>` and conveys that to its `receiver <LearningProjection.receiver>`, possibly modified by
+<LearningProjection.sender>` and conveys that to its `receiver <LearningProjection.receiver>`.
+COMMENT:
+, possibly modified by
 a `learning_rate <LearningProjection.learning_rate>` if that is specified for it or its `sender
 <LearningProjection.sender>` (see `above <LearningProjection_Function_and_Learning_Rate>`).
+COMMENT
 
 .. note::
    The changes to the `matrix <MappingProjection.matrix>` parameter of a `MappingProjection` in response to the
@@ -243,7 +266,9 @@ class LearningProjection(ModulatoryProjection_Base):
                  receiver=None,        \
                  error_function,       \
                  learning_function,    \
+                 COMMENT:
                  learning_rate=None,   \
+                 COMMENT
                  learning_enabled=None \
                  weight=None,          \
                  exponent=None,        \
@@ -271,8 +296,10 @@ class LearningProjection(ModulatoryProjection_Base):
 
     function : TransferFunction : default Linear(slope=1, intercept=0)
         specifies the function used to convert the `learning_signal` to the `weight_change_matrix
-        <LearningProjection.weight_change_matrix>`, prior to applying the `learning_rate
-        <LearningProjection.learning_rate>`.
+        <LearningProjection.weight_change_matrix>`.
+        COMMENT:
+         prior to applying the `learning_rate <LearningProjection.learning_rate>`.
+        COMMENT
 
     error_function : Optional[Function or function] : default LinearCombination(weights=[[-1], [1]])
         specifies a function to be used by the `TARGET Mechanism <LearningMechanism_Targets>` to compute the error
@@ -288,6 +315,7 @@ class LearningProjection(ModulatoryProjection_Base):
            the **learning_function** argument is implemented to preserve backward compatibility with previous versions;
            its use is not advised.
 
+    COMMENT:
     learning_rate : Optional[float or int]
         if specified, it is applied multiplicatively to the `learning_signal <LearningProjection.learning_signal>`
         received from the `sender <LearningProjection.sender>`; specification of the `learning_rate
@@ -297,6 +325,7 @@ class LearningProjection(ModulatoryProjection_Base):
         <LearningMechanism.learning_rate>` for the `LearningMechanism` from which the LearningProjection receives its
         `learning_signal <LearningProjection.learning_signal>` (see `LearningProjection_Function_and_Learning_Rate` for
         additional details).
+    COMMENT
 
     learning_enabled : Optional[bool or Enum[ONLINE|AFTER]] : default : None
         determines whether or when the `value <LearningProjection.value>` of the LearningProjection is used to modify
@@ -340,18 +369,26 @@ class LearningProjection(ModulatoryProjection_Base):
 
     function : Function
         assigns the `learning_signal` received from the `sender <LearningProjection.sender>` to the
-        LearningProjection's `value <LearningProjection.value>`, possibly modified by its `learning_rate
+        LearningProjection's `value <LearningProjection.value>`.
+        COMMENT:
+        , possibly modified by its `learning_rate
         <LearningProjection.learning_rate>`; the default in an identity function.
+        COMMENT
 
+    COMMENT:
     learning_rate : float or `None`
         determines the learning_rate for the LearningProjection.  If specified, it is applied multiplicatively to the
         `learning_signal <LearningProjection.learning_signal>`; its specification may be superseded by the
         `learning_rate <LearningSignal.learning_rate>` of its `sender <LearningProjection.sender>`
         (see `LearningProjection_Function_and_Learning_Rate` for additional details);
+    COMMENT
 
     weight_change_matrix : 2d np.array
-        output of the LearningProjection's `function <LearningProjection.function>`, possibly modified by its
-        `learning_rate <LearningProjection.learning_rate>`;  reflects the matrix of weight changes to be made to the
+        output of the LearningProjection's `function <LearningProjection.function>`
+        COMMENT:
+        , possibly modified by its `learning_rate <LearningProjection.learning_rate>`;
+        COMMENT
+        reflects the matrix of weight changes to be made to the
         `matrix <MappingProjection.matrix>` parameter of the `learned_projection
         <LearningProjection.learned_projection>` (rows correspond to the `sender <MappingProjection.sender>` of the
         `learned_projection <LearningProjection.learned_projection>`, columns to its `receiver
@@ -409,11 +446,13 @@ class LearningProjection(ModulatoryProjection_Base):
                     :default value: `BackPropagation`
                     :type: `Function`
 
+                COMMENT:
                 learning_rate
                     see `learning_rate <LearningProjection.learning_rate>`
 
                     :default value: None
                     :type:
+                COMMENT
 
                 learning_signal
                     see `learning_signal <LearningProjection.learning_signal>`
@@ -427,7 +466,7 @@ class LearningProjection(ModulatoryProjection_Base):
         error_function = Parameter(LinearCombination(weights=[[-1], [1]]),
                                    stateful=False, loggable=False, reference=True)
         learning_function = Parameter(BackPropagation, stateful=False, loggable=False, reference=True)
-        learning_rate = Parameter(None, modulable=True)
+        # learning_rate = Parameter(None, modulable=True)
         learning_signal = Parameter(None, read_only=True,
                                     getter=_learning_signal_getter,
                                     setter=_learning_signal_setter,
@@ -446,7 +485,7 @@ class LearningProjection(ModulatoryProjection_Base):
                  learning_function: Optional[Callable] = None,
                  # FIX: 10/3/17 - TEST IF THIS OK AND REINSTATE IF SO
                  # learning_signal_params:Optional[dict]=None,
-                 learning_rate: Optional[ValidParamSpecType] = None,
+                 # learning_rate: Optional[ValidParamSpecType] = None,
                  learning_enabled: Optional[Union[bool, Literal['online', 'after']]] = None,
                  weight=None,
                  exponent=None,
@@ -469,15 +508,15 @@ class LearningProjection(ModulatoryProjection_Base):
             # parameters should be passed through methods like
             # instantiate_sender instead of grabbed from attributes like this
             self._learning_function = learning_function
-            self._learning_rate = learning_rate
+            # self._learning_rate = learning_rate
             self._error_function = error_function
 
-        # replaces similar code in _instantiate_sender
-        try:
-            if sender.owner.defaults.learning_rate is not None:
-                learning_rate = sender.owner.defaults.learning_rate
-        except AttributeError:
-            pass
+        # # replaces similar code in _instantiate_sender
+        # try:
+        #     if sender.owner.defaults.learning_rate is not None:
+        #         learning_rate = sender.owner.defaults.learning_rate
+        # except AttributeError:
+        #     pass
 
         super().__init__(sender=sender,
                          receiver=receiver,
@@ -488,7 +527,7 @@ class LearningProjection(ModulatoryProjection_Base):
                          prefs=prefs,
                          error_function=error_function,
                          learning_function=learning_function,
-                         learning_rate=learning_rate,
+                         # learning_rate=learning_rate,
                          learning_enabled=learning_enabled,
                          **kwargs)
 

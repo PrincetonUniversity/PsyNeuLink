@@ -998,7 +998,7 @@ or its `name <Port_Base.name>` as the key, and a dictionary containing parameter
        and `num_executions <Component_Num_Executions>` attributes will be incremented (since the OutputPorts --
        Components of the Mechanism -- executed).
 
-     - As expected, specifying `value <Port_Base.value>` supercedes any specification of `variable
+     - As expected, specifying `value <Port_Base.value>` supersedes any specification of `variable
        <Port_Base.variable>` or of the parameters of its `function <Port_Base.function>`.
 
 COMMENT:
@@ -1018,7 +1018,7 @@ as the key, and a dictionary containing parameter specifications as its value.
    .. note::
      If the `value <Projection_Base.value>` of a Projection is specified as a runtime parameter, then it will not be
      executed (see `Lazy Evaluation <Component_Lazy_Updating>`); accordingly, specifying `value <Port_Base.value>`
-     supercedes any specification of `variable <Port_Base.variable>` or of the parameters of its `function
+     supersedes any specification of `variable <Port_Base.variable>` or of the parameters of its `function
      <Projection_Base.function>.`
 
 COMMENT:
