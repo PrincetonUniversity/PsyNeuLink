@@ -141,6 +141,7 @@
 #          - Why can't verbosePref be set directly on a composition?
 
 #        - show_graph():
+#          - bug in EGO in which it shows efferents from EM all from the firt OutputPort
 #          - add mode for showing projections as diamonds without show_learning (e.g., "show_projections")
 #          - figure out how to get storage_node to show without all other learning stuff
 #          - show 'operation' parameter for LinearCombination in show_node_structure=ALL
