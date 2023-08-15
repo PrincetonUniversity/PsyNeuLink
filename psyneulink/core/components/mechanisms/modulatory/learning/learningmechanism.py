@@ -376,7 +376,7 @@ refer to the Components being learned and/or its operation:
   however, if a learning_rate is specified for the LearningMechanism after the Composition and/or its `learning
   pathways <Composition_Learning_Pathway>` have been constructed, that overrides any specifications made for the
   Composition or its learning pathways (see `Composition_Learning_Rate` for additional details)  If the learning_rate
-  is not explicitly specified anywhere, the `default value <Component.defaults>` for the LearningMechanism's
+  is not explicitly specified anywhere, the `default value <Parameter_Defaults>` for the LearningMechanism's
   `function <LearningMechanism.function>` is used.
 
   COMMENT: TBI
