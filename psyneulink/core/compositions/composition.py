@@ -6586,7 +6586,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                         sender=None,
                                         receiver=None,
                                         in_composition:Union[bool,Literal[ANY, ONLY]]=True)\
-            ->Union[bool, list[Projection]]:
+            ->Union[bool, list]:
         """Check for Projection between the same pair of Nodes
 
         Finding more than one Projection in the current Composition raises an error (should never be the case).
