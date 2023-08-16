@@ -2259,6 +2259,7 @@ class ShowGraph():
             # HACK: FIX 6/13/20 - ADD USER-SPECIFIED TARGET NODE FOR INNER COMPOSITION (NOT IN processing_graph)
 
         def assign_sender_edge(sndr:Union[Mechanism, Composition],
+                               proj:Projection,
                                proj_color:str, proj_arrowhead:str
                                ) -> None:
             """Assign edge from sender to rcvr"""
@@ -2283,9 +2284,14 @@ class ShowGraph():
                                                     rcvr.parameter_CIM})):
                 if show_node_structure and isinstance(sndr, Mechanism):
                     # MODIFIED 8/15/23 OLD:
-                    # sndr_port = proj.sender if show_cim else sndr.output_port
-                    # MODIFIED 8/15/23 NEW:
-                    sndr_port = proj.sender
+                    sndr_port = proj.sender if show_cim else sndr.output_port
+                    # # MODIFIED 8/15/23 NEWER:
+                    # if (isinstance(proj, ControlProjection) and
+                    #         isinstance(proj.sender.owner, CompositionInterfaceMechanism)):
+                    #     sndr_port = sndr.output_port
+                    # Usual case
+                    # else:
+                    #     sndr_port = proj.sender
                     # MODIFIED 8/15/23 END
                     sndr_port_owner = sndr_port.owner
                     if isinstance(sndr_port_owner, CompositionInterfaceMechanism) and rcvr is not composition.controller:
@@ -2452,7 +2458,7 @@ class ShowGraph():
                                     proj_color = self.control_color
                                     proj_arrowhead = self.control_projection_arrow
                                 assign_proj_to_enclosing_comp = True
-                                assign_sender_edge(sndr, proj_color, proj_arrowhead)
+                                assign_sender_edge(sndr, proj, proj_color, proj_arrowhead)
                             continue
 
                         # sender is output_CIM
@@ -2479,7 +2485,7 @@ class ShowGraph():
                     else:
                         sndr = sender
 
-                    assign_sender_edge(sndr, proj_color, proj_arrowhead)
+                    assign_sender_edge(sndr, proj, proj_color, proj_arrowhead)
 
     def _generate_output(self,
                          G,
