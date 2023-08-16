@@ -266,6 +266,12 @@ def construct_model(model_name:str=MODEL_NAME,
                                        size=decision_size,
                                        function=SoftMax(output=PROB))
 
+    def trial_number(variable,context):
+        if context and context.composition:
+            return [context.composition.get_current_execution_time(context)[TimeScale.TRIAL]]
+        else:
+            return variable
+
     # Control Mechanism
     #  Ensures current stimulus and context are only encoded in EM once (at beginning of trial)
     #    by controlling the storage_prob parameter of em:
