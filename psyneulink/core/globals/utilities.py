@@ -420,6 +420,7 @@ def is_distance_metric(s):
 DistanceMetricLiteral = Literal[
     'max_abs_diff',
     'difference',
+    'dot_product',
     'normed_L0_similarity',
     'euclidean',
     'angle',
