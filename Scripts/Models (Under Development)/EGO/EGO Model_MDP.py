@@ -130,8 +130,8 @@ from psyneulink import *
 CONSTRUCT_MODEL = True                 # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = (                      # Only one of the following can be uncommented:
     # None                             # suppress display of model
-    {}                               # show summary visual display of model
-    # {'show_node_structure': ALL}       # show detailed view of node structures and projections
+    # {}                               # show summary visual display of model
+    {'show_node_structure': True}      # show detailed view of node structures and projections
 )
 # TRAIN_MODEL = False                  # True => train the model
 RUN_MODEL = False                      # True => run the model
@@ -146,6 +146,8 @@ ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation
 
 # Names:
 MODEL_NAME = "EGO Model"
+CONTEXT_STATE_INPUT = 'STATE_INPUT'
+CONTEXT_RETRIEVAL_INPUT = 'RETRIEVED_CONTEXT'
 STATE_INPUT_LAYER_NAME = "STATE"
 TIME_INPUT_LAYER_NAME = "TIME"
 REWARD_INPUT_LAYER_NAME = "REWARD"
@@ -154,7 +156,12 @@ RETRIEVED_TIME_NAME = "RETRIEVED TIME"
 RETRIEVED_REWARD_NAME = "RETRIEVED REWARD"
 EM_NAME = "EPISODIC MEMORY"
 DECISION_LAYER_NAME = "DECISION"
-CONTROLLER_NAME = "READ/WRITE CONTROLLER"
+CONTROLLER_NAME = "ENCODING CONTROLLER"
+
+class ControlSignalIndex(Enum):
+    STORE_TO_EM_CONTROL_SIGNAL = 0
+    STATE_INPUT_CONTROL_SIGNAL = 1
+    RETRIEVE_CONTEXT_CONTROL_SIGNAL = 2
 
 # Constructor parameters:
 STATE_SIZE = 8                 # length of state vector
@@ -230,10 +237,10 @@ def construct_model(model_name:str=MODEL_NAME,
     time_input_layer = ProcessingMechanism(name=time_input_name,
                                            size=time_size)
 
-    context_layer = TransferMechanism(name=context_name,
-                                      size=context_size,
-                                      integrator_mode=True,
-                                      integration_rate=context_integration_rate)
+    context_layer = ProcessingMechanism(name=context_name,
+                                        input_ports=[CONTEXT_STATE_INPUT, CONTEXT_RETRIEVAL_INPUT],
+                                        function=LinearCombination,
+                                        )
 
     reward_input_layer = ProcessingMechanism(name=reward_input_name,
                                               size=reward_size)
@@ -266,11 +273,23 @@ def construct_model(model_name:str=MODEL_NAME,
                                        size=decision_size,
                                        function=SoftMax(output=PROB))
 
-    def trial_number(variable,context):
+    def encoding_function(variable,context):
+        # Trial Number:
         if context and context.composition:
-            return [context.composition.get_current_execution_time(context)[TimeScale.TRIAL]]
+            time = [context.composition.get_current_execution_time(context)[TimeScale.TRIAL]]
         else:
-            return variable
+            time = [0]
+
+        # Store to EM:
+        # Set Evaluate outcome and set ControlSignal for EM[store_prob]
+        #   - variable is received from decision as one hot in the form: [[pick left, pick right
+        # FIX: THIS CURRENT IS CONDITIONAL ON HAZARD RATE, BUT WILL WANT TO PUT THIS UNDER CONTROL OF OCM
+        store = int(int(variable[0][1]>variable[0][0])
+                    or (np.random.random() < retrieval_hazard_rate))
+
+        control_signals = [store, int(not time), int(bool(time))]
+
+        return control_signals
 
     # Control Mechanism
     #  Ensures current stimulus and context are only encoded in EM once (at beginning of trial)
@@ -282,19 +301,17 @@ def construct_model(model_name:str=MODEL_NAME,
     #        - set  EM[store_prob]=0 (as prep for another retrieval from EM without storage)
     #        - continue trial
     retrieval_control_layer = ControlMechanism(name=controller_name,
-                               default_variable=[[1]],  # Ensure EM[store_prob]=1 at beginning of first trial
-                               monitor_for_control=decision_layer,
-                               # Set Evaluate outcome and set ControlSignal for EM[store_prob]
-                               #   - outcome is received from decision as one hot in the form: [[match, no-match]]
-                               function=lambda outcome: int(int(outcome[0][1]>outcome[0][0])
-                                                            or (np.random.random() < retrieval_hazard_rate)),
-                               control=(STORAGE_PROB, em))
+                                               default_variable=[[1]],  # Ensure EM[store_prob]=1 at beginning of first trial
+                                               monitor_for_control=decision_layer,
+                                               function = encoding_function,
+                                               control=[(STORAGE_PROB, em),
+                                                        context_layer.input_ports[CONTEXT_STATE_INPUT],
+                                                        context_layer.input_ports[CONTEXT_RETRIEVAL_INPUT]]
+                                               )
 
 
     EGO_comp = Composition(name=model_name,
-                           pathways=[[state_input_layer, context_layer],  # Input
-                                     [em],
-                                     [retrieved_reward_layer, decision_layer, retrieval_control_layer]], # Decision
+                           pathways=[retrieved_reward_layer, decision_layer], # Decision
                            # Terminate trial if value of control is still 1 after first pass through execution
                            termination_processing={
                                TimeScale.TRIAL: And(Condition(lambda: retrieval_control_layer.value),
@@ -302,15 +319,22 @@ def construct_model(model_name:str=MODEL_NAME,
     # # Terminate trial if value of control is still 1 after first pass through execution
     # EGO_comp.show_graph()
     # EGO_comp.add_projection(MappingProjection(context_input_layer, context_layer))
-    EGO_comp.add_nodes([time_input_layer, reward_input_layer, retrieved_time_layer])
+    EGO_comp.add_nodes([state_input_layer,
+                        time_input_layer,
+                        context_layer,
+                        reward_input_layer,
+                        retrieved_time_layer,  # Input
+                        em])
+    EGO_comp.add_projection(MappingProjection(state_input_layer, context_layer.input_ports[CONTEXT_STATE_INPUT]))
     EGO_comp.add_projection(MappingProjection(state_input_layer, em.input_ports["STATE_FIELD"]))
     EGO_comp.add_projection(MappingProjection(time_input_layer, em.input_ports["TIME_FIELD"]))
     EGO_comp.add_projection(MappingProjection(context_layer, em.input_ports["CONTEXT_FIELD"]))
     EGO_comp.add_projection(MappingProjection(reward_input_layer, em.input_ports["REWARD_FIELD"]))
     EGO_comp.add_projection(MappingProjection(em.output_ports[0], context_layer))
     EGO_comp.add_projection(MappingProjection(em.output_ports[1], retrieved_time_layer))
-    EGO_comp.add_projection(MappingProjection(em.output_ports[2], context_layer))
+    EGO_comp.add_projection(MappingProjection(em.output_ports[2], context_layer.input_ports[CONTEXT_RETRIEVAL_INPUT]))
     EGO_comp.add_projection(MappingProjection(em.output_ports[3], retrieved_reward_layer))
+    EGO_comp.add_node(retrieval_control_layer)
     # EGO_comp.add_projection(MappingProjection(retrieved_reward_layer, decision_layer))
 
     print(f'{model_name} constructed')
