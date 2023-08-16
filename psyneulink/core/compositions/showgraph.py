@@ -2269,14 +2269,10 @@ class ShowGraph():
 
             # Skip any projections to ObjectiveMechanism for controller
             #   (those are handled in _assign_controller_components)
-            # FIX 6/2/20 MOVE TO BELOW FOLLOWING IF STATEMENT AND REPLACE proj.receiver.owner WITH rcvr?
-            # FIX 7/19/20 Can't exclude projections to composition.controller because that skips shadow projections
-            # to controller's input ports
             if (composition.controller and
                     proj.receiver.owner in {composition.controller.objective_mechanism}):
                 return
 
-            # FIX 6/6/20: ADD HANDLING OF parameter_CIM HERE??
             # Only consider Projections to the rcvr (or its CIM if rcvr is a Composition)
             if ((isinstance(rcvr, (Mechanism, Projection)) and proj.receiver.owner == rcvr)
                     or (isinstance(rcvr, Composition)
