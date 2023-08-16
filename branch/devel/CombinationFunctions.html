@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>CombinationFunctions &mdash; PsyNeuLink 0.14.0.0+27.g8732aaa31 documentation</title>
+  <title>CombinationFunctions &mdash; PsyNeuLink 0.14.0.0+33.g071702f58 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.14.0.0+27
+                  0.14.0.0+33
                 </div>
               
             
@@ -1095,8 +1095,16 @@ arguments of the constructor.</p></li>
 <dd><p>Derivative of <a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.LinearCombination._function" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a> at <strong>input</strong>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>input</strong> (<em>1d</em><em> or </em><em>2d np.array : default class_defaults.variable</em>) – value of the input to the Linear transform at which derivative is to be taken.
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> (<em>1d np.array : default class_defaults.variable</em><em>[</em><em>0</em><em>]</em>) – <p>value of the input to the Linear transform at which derivative is to be taken.
 a single numeric array or multiple arrays being combined, and at which derivative is to be taken.</p>
+<div class="technical-note docutils container">
+<p>output arg is used for consistency with other derivatives used by BackPropagation, and is ignored.</p>
+</div>
+</p></li>
+<li><p><strong>covariates</strong> (<em>2d np.array : default class_defaults.variable</em><em>[</em><em>1:</em><em>]</em>) – the input(s) to the LinearCombination function other than the one for which the derivative is being
+computed;  these are used to calculate the Jacobian of the LinearCombination function.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>Scale</strong></p>
