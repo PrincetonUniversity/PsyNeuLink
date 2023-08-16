@@ -133,7 +133,6 @@ DISPLAY_MODEL = (                      # Only one of the following can be uncomm
     {}                               # show summary visual display of model
     # {'show_node_structure': True}      # show detailed view of node structures and projections
 )
-# TRAIN_MODEL = False                  # True => train the model
 RUN_MODEL = False                      # True => run the model
 ANALYZE_RESULTS = False                # True => output analysis of results of run
 REPORT_OUTPUT = ReportOutput.OFF       # Sets console output during run
@@ -364,3 +363,6 @@ if DISPLAY_MODEL is not None:
         model.show_graph(**DISPLAY_MODEL)
     else:
         print("Model not yet constructed")
+
+if RUN_MODEL:
+    model.run()
