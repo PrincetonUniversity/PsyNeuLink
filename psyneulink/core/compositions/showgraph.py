@@ -2283,16 +2283,13 @@ class ShowGraph():
                         and proj.receiver.owner in {rcvr.input_CIM,
                                                     rcvr.parameter_CIM})):
                 if show_node_structure and isinstance(sndr, Mechanism):
-                    # MODIFIED 8/15/23 OLD:
-                    sndr_port = proj.sender if show_cim else sndr.output_port
-                    # # MODIFIED 8/15/23 NEWER:
-                    # if (isinstance(proj, ControlProjection) and
-                    #         isinstance(proj.sender.owner, CompositionInterfaceMechanism)):
-                    #     sndr_port = sndr.output_port
-                    # Usual case
-                    # else:
-                    #     sndr_port = proj.sender
-                    # MODIFIED 8/15/23 END
+                    # If proj is a ControlProjection that comes from a parameter_CIM, get the port for the sender
+                    if (isinstance(proj, ControlProjection) and
+                            isinstance(proj.sender.owner, CompositionInterfaceMechanism)):
+                        sndr_port = sndr.output_port
+                    # Usual case: get port from Projection's sender
+                    else:
+                        sndr_port = proj.sender
                     sndr_port_owner = sndr_port.owner
                     if isinstance(sndr_port_owner, CompositionInterfaceMechanism) and rcvr is not composition.controller:
                         # Sender is input_CIM or parameter_CIM
