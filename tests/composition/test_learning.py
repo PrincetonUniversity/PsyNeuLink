@@ -12,6 +12,8 @@ import psyneulink.core.llvm as pnlvm
 from psyneulink.core.globals.keywords import Loss
 # from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import SSE, MSE, L0
 
+@pytest.mark.pytorch
+@pytest.mark.composition
 @pytest.fixture
 def xor_network():
     """Create simple sample network for testing learning specifications
@@ -117,6 +119,8 @@ class TestInputAndTargetSpecs:
             results = comp.learn(inputs=inputs, execution_mode=exec_mode)
         np.testing.assert_allclose(results, expected_results)
 
+    @pytest.mark.composition
+    @pytest.mark.pytorch
     def test_target_spec_default_assignment(self):
         A = TransferMechanism(name="learning-process-mech-A")
         B = TransferMechanism(name="learning-process-mech-B")
