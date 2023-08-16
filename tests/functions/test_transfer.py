@@ -261,6 +261,7 @@ def combine_costs(costs):
 
 @pytest.mark.parametrize("cost_functions", map(combine_costs, pytest.helpers.power_set(cf for cf in pnl.CostFunctions if cf != pnl.CostFunctions.NONE and cf != pnl.CostFunctions.ALL)))
 @pytest.mark.benchmark
+@pytest.mark.function
 def test_transfer_with_costs(cost_functions, func_mode, benchmark):
 
     f = Functions.TransferWithCosts(enabled_cost_functions=cost_functions)
