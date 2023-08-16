@@ -129,7 +129,11 @@ from psyneulink import *
 
 # Settings for running script:
 CONSTRUCT_MODEL = True                 # THIS MUST BE SET TO True to run the script
-DISPLAY_MODEL = True                   # True => show visual graphic of model
+DISPLAY_MODEL = (                      # Only one of the following can be uncommented:
+    # None                             # suppress display of model
+    # {}                               # show summary visual display of model
+    {'show_node_structure': ALL}       # show detailed view of node structures and projections
+)
 # TRAIN_MODEL = False                  # True => train the model
 RUN_MODEL = False                      # True => run the model
 ANALYZE_RESULTS = False                # True => output analysis of results of run
@@ -143,26 +147,27 @@ ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation
 
 # Names:
 MODEL_NAME = "EGO Model"
-CONTEXT_INPUT_NAME = 'CONTEXT INPUT'
+STATE_INPUT_LAYER_NAME = "STATE"
 TIME_INPUT_LAYER_NAME = "TIME"
 REWARD_INPUT_LAYER_NAME = "REWARD"
 CONTEXT_LAYER_NAME = 'CONTEXT'
 RETRIEVED_TIME_NAME = "RETRIEVED TIME"
 RETRIEVED_REWARD_NAME = "RETRIEVED REWARD"
-EM_NAME = "EPISODIC MEMORY (dict)"
+EM_NAME = "EPISODIC MEMORY"
 DECISION_LAYER_NAME = "DECISION"
 CONTROLLER_NAME = "READ/WRITE CONTROLLER"
 
 # Constructor parameters:
-STATE_SIZE = 8                 # length of stimulus vector
-CONTEXT_SIZE = 10              # length of context vector
+STATE_SIZE = 8                 # length of state vector
 TIME_SIZE = 25                 # length of time vector
+CONTEXT_SIZE = 10              # length of context vector
 REWARD_SIZE = 1                # length of reward vector
 DECISION_SIZE = 2              # length of decision vector
 CONTEXT_INTEGRATION_RATE = .1  # rate of integration of context vector
 TIME_DRIFT_NOISE = 0.0         # noise used by DriftOnASphereIntegrator (function of Context mech)
-CONTEXT_RETRIEVAL_WEIGHT = 1   # weight of context field in retrieval from em
+STATE_RETRIEVAL_WEIGHT = 1     # weight of state field in retrieval from em
 TIME_RETRIEVAL_WEIGHT = 1      # weight of time field in retrieval from em
+CONTEXT_RETRIEVAL_WEIGHT = 1   # weight of context field in retrieval from em
 REWARD_RETRIEVAL_WEIGHT = 0    # weight of reward field in retrieval from em
 RETRIEVAL_SOFTMAX_GAIN = 10    # gain on softmax retrieval function
 RETRIEVAL_HAZARD_RATE = 0.04   # rate of re=sampling of em following non-match determination in a pass through ffn
@@ -185,26 +190,32 @@ time_fct = DriftOnASphereIntegrator(initializer=np.random.random(TIME_SIZE - 1),
 
 def construct_model(model_name:str=MODEL_NAME,
 
-                    context_input_name:str=CONTEXT_INPUT_NAME,
+                    state_input_name:str=STATE_INPUT_LAYER_NAME,
+                    state_size:int=STATE_SIZE,
 
                     time_input_name:str=TIME_INPUT_LAYER_NAME,
                     time_size:int=TIME_SIZE,
 
-                    reward_input_name = REWARD_INPUT_LAYER_NAME,
-                    reward_size:int=REWARD_SIZE,
 
                     context_name:str=CONTEXT_LAYER_NAME,
                     context_size:int=CONTEXT_SIZE,
                     context_integration_rate:float=CONTEXT_INTEGRATION_RATE,
+
+
+                    reward_input_name = REWARD_INPUT_LAYER_NAME,
+                    reward_size:int=REWARD_SIZE,
+
+                    state_retrieval_weight:Union[float,int]=STATE_RETRIEVAL_WEIGHT,
                     context_retrieval_weight:Union[float,int]=CONTEXT_RETRIEVAL_WEIGHT,
 
                     retrieved_time_name:str=RETRIEVED_TIME_NAME,
                     time_retrieval_weight:Union[float,int]=TIME_RETRIEVAL_WEIGHT,
+
                     retrieved_reward_name:str=RETRIEVED_REWARD_NAME,
                     reward_retrieval_weight:Union[float,int]=REWARD_RETRIEVAL_WEIGHT,
 
                     em_name:str=EM_NAME,
-                    retrieval_retrieval_gain=RETRIEVAL_SOFTMAX_GAIN,
+                    retrieval_softmax_gain=RETRIEVAL_SOFTMAX_GAIN,
                     retrieval_hazard_rate=RETRIEVAL_HAZARD_RATE,
                     
                     controller_name=CONTROLLER_NAME,
@@ -214,16 +225,16 @@ def construct_model(model_name:str=MODEL_NAME,
 
                     )->Composition:
 
-    context_input_layer = ProcessingMechanism(name=context_input_name,
-                                              size=context_size)
+    state_input_layer = ProcessingMechanism(name=state_input_name,
+                                              size=state_size)
+
+    time_input_layer = ProcessingMechanism(name=time_input_name,
+                                           size=time_size)
 
     context_layer = TransferMechanism(name=context_name,
                                       size=context_size,
                                       integrator_mode=True,
                                       integration_rate=context_integration_rate)
-
-    time_input_layer = ProcessingMechanism(name=time_input_name,
-                                           size=time_size)
 
     reward_input_layer = ProcessingMechanism(name=reward_input_name,
                                               size=reward_size)
@@ -235,18 +246,22 @@ def construct_model(model_name:str=MODEL_NAME,
                                          size=reward_size)
 
     em = EpisodicMemoryMechanism(name=em_name,
-                                 input_ports=[{NAME:"CONTEXT_FIELD", SIZE:context_size},
+                                 input_ports=[{NAME:"STATE_FIELD", SIZE:state_size},
                                               {NAME:"TIME_FIELD", SIZE:time_size},
-                                              {NAME:"REWARD_FIELD", SIZE:reward_size}],
+                                              {NAME:"CONTEXT_FIELD", SIZE:context_size},
+                                              {NAME:"REWARD_FIELD", SIZE:reward_size}
+                                              ],
                                  function=ContentAddressableMemory(
-                                     initializer=[[[0] * context_size,
-                                                   [0] * time_size,
-                                                   [0] * reward_size]],
-                                     distance_field_weights=[context_retrieval_weight,
+                                     initializer=[[0] * state_size,
+                                                  [0] * time_size,
+                                                  [0] * context_size,
+                                                  [0] * reward_size],
+                                     distance_field_weights=[state_retrieval_weight,
                                                              time_retrieval_weight,
+                                                             context_retrieval_weight,
                                                              reward_retrieval_weight],
                                      # equidistant_entries_select=NEWEST,
-                                     selection_function=SoftMax(gain=retrieval_retrieval_gain)))
+                                     selection_function=SoftMax(gain=retrieval_softmax_gain)))
 
     decision_layer = TransferMechanism(name=decision_layer_name,
                                        size=decision_size,
@@ -263,49 +278,35 @@ def construct_model(model_name:str=MODEL_NAME,
     #        - continue trial
     retrieval_control_layer = ControlMechanism(name=controller_name,
                                default_variable=[[1]],  # Ensure EM[store_prob]=1 at beginning of first trial
-                               # ---------
-                               # VERSION *WITH* ObjectiveMechanism:
-                               objective_mechanism=ObjectiveMechanism(name="OBJECTIVE MECHANISM",
-                                                                      monitor=decision_layer,
-                                                                      # Outcome=1 if match, else 0
-                                                                      function=lambda x: int(x[0][0]>x[0][1])),
-                               # Set ControlSignal for EM[store_prob]
-                               #   to 1 if match or hazard rate is realized (i.e., store stimulus and end trial)
-                               #   else 0 (i.e., don't store stimulus and continue retrieving)
-                               function=lambda outcome: int(bool(outcome)
+                               monitor_for_control=decision_layer,
+                               # Set Evaluate outcome and set ControlSignal for EM[store_prob]
+                               #   - outcome is received from decision as one hot in the form: [[match, no-match]]
+                               function=lambda outcome: int(int(outcome[0][1]>outcome[0][0])
                                                             or (np.random.random() < retrieval_hazard_rate)),
-                               # ---------
-                               # # VERSION *WITHOUT* ObjectiveMechanism:
-                               # monitor_for_control=decision,
-                               # # Set Evaluate outcome and set ControlSignal for EM[store_prob]
-                               # #   - outcome is received from decision as one hot in the form: [[match, no-match]]
-                               # function=lambda outcome: int(int(outcome[0][1]>outcome[0][0])
-                               #                              or (np.random.random() < retrieval_hazard_rate)),
-                               # ---------
                                control=(STORAGE_PROB, em))
 
 
     EGO_comp = Composition(name=model_name,
-                           nodes=[context_input_layer, time_input_layer, reward_input_layer,
-                                  context_layer,
-                                  em,
-                                  retrieved_time_layer, retrieved_reward_layer,
-                                  retrieval_control_layer, decision_layer],
+                           pathways=[[state_input_layer, context_layer],  # Input
+                                     [em],
+                                     [retrieved_reward_layer, decision_layer, retrieval_control_layer]], # Decision
                            # Terminate trial if value of control is still 1 after first pass through execution
                            termination_processing={
                                TimeScale.TRIAL: And(Condition(lambda: retrieval_control_layer.value),
                                                     AfterPass(0, TimeScale.TRIAL))})
     # # Terminate trial if value of control is still 1 after first pass through execution
     # EGO_comp.show_graph()
-    EGO_comp.add_projection(MappingProjection(context_input_layer, context_layer))
-    EGO_comp.add_projection(MappingProjection(context_layer, em.input_ports["CONTEXT_FIELD"]))
+    # EGO_comp.add_projection(MappingProjection(context_input_layer, context_layer))
+    EGO_comp.add_nodes([time_input_layer, reward_input_layer, retrieved_time_layer])
+    EGO_comp.add_projection(MappingProjection(state_input_layer, em.input_ports["STATE_FIELD"]))
     EGO_comp.add_projection(MappingProjection(time_input_layer, em.input_ports["TIME_FIELD"]))
+    EGO_comp.add_projection(MappingProjection(context_layer, em.input_ports["CONTEXT_FIELD"]))
     EGO_comp.add_projection(MappingProjection(reward_input_layer, em.input_ports["REWARD_FIELD"]))
     EGO_comp.add_projection(MappingProjection(em.output_ports[0], context_layer))
     EGO_comp.add_projection(MappingProjection(em.output_ports[1], retrieved_time_layer))
-    EGO_comp.add_projection(MappingProjection(em.output_ports[2], retrieved_reward_layer))
-    EGO_comp.add_projection(MappingProjection(retrieved_reward_layer, decision_layer))
-    EGO_comp.show_graph(show_node_structure=ALL)
+    EGO_comp.add_projection(MappingProjection(em.output_ports[2], context_layer))
+    EGO_comp.add_projection(MappingProjection(em.output_ports[3], retrieved_reward_layer))
+    # EGO_comp.add_projection(MappingProjection(retrieved_reward_layer, decision_layer))
 
     print(f'{model_name} constructed')
     return EGO_comp
@@ -314,12 +315,8 @@ model = None
 if CONSTRUCT_MODEL:
     model = construct_model()
 
-if DISPLAY_MODEL:
+if DISPLAY_MODEL is not None:
     if model:
-        model.show_graph(
-            # show_cim=True,
-            show_node_structure=True,
-            # show_dimensions=True
-        )
+        model.show_graph(**DISPLAY_MODEL)
     else:
         print("Model not yet constructed")
