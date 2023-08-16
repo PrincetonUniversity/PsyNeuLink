@@ -2259,6 +2259,7 @@ class ShowGraph():
             # HACK: FIX 6/13/20 - ADD USER-SPECIFIED TARGET NODE FOR INNER COMPOSITION (NOT IN processing_graph)
 
         def assign_sender_edge(sndr:Union[Mechanism, Composition],
+                               proj:Projection,
                                proj_color:str, proj_arrowhead:str
                                ) -> None:
             """Assign edge from sender to rcvr"""
@@ -2268,32 +2269,28 @@ class ShowGraph():
 
             # Skip any projections to ObjectiveMechanism for controller
             #   (those are handled in _assign_controller_components)
-            # FIX 6/2/20 MOVE TO BELOW FOLLOWING IF STATEMENT AND REPLACE proj.receiver.owner WITH rcvr?
-            # FIX 7/19/20 Can't exclude projections to composition.controller because that skips shadow projections
-            # to controller's input ports
             if (composition.controller and
                     proj.receiver.owner in {composition.controller.objective_mechanism}):
                 return
 
-            # FIX 6/6/20: ADD HANDLING OF parameter_CIM HERE??
             # Only consider Projections to the rcvr (or its CIM if rcvr is a Composition)
             if ((isinstance(rcvr, (Mechanism, Projection)) and proj.receiver.owner == rcvr)
                     or (isinstance(rcvr, Composition)
                         and proj.receiver.owner in {rcvr.input_CIM,
-                                                    # MODIFIED 6/6/20 NEW:
-                                                    rcvr.parameter_CIM
-                                                    # MODIFIED 6/6/20 END
-                                                    })):
+                                                    rcvr.parameter_CIM})):
                 if show_node_structure and isinstance(sndr, Mechanism):
-                    sndr_port = proj.sender if show_cim else sndr.output_port
+                    # If proj is a ControlProjection that comes from a parameter_CIM, get the port for the sender
+                    if (isinstance(proj, ControlProjection) and
+                            isinstance(proj.sender.owner, CompositionInterfaceMechanism)):
+                        sndr_port = sndr.output_port
+                    # Usual case: get port from Projection's sender
+                    else:
+                        sndr_port = proj.sender
                     sndr_port_owner = sndr_port.owner
                     if isinstance(sndr_port_owner, CompositionInterfaceMechanism) and rcvr is not composition.controller:
                         # Sender is input_CIM or parameter_CIM
                         if sndr_port_owner in {sndr_port_owner.composition.input_CIM,
-                                               # MODIFIED 6/6/20 NEW:
-                                               sndr_port_owner.composition.parameter_CIM
-                                               # MODIFIED 6/6/20 END
-                                               }:
+                                               sndr_port_owner.composition.parameter_CIM}:
                             # Get port for node of outer Composition that projects to it
                             sndr_port = [v[0] for k,v in sender.port_map.items()
                                          if k is proj.receiver][0].path_afferents[0].sender
@@ -2454,7 +2451,7 @@ class ShowGraph():
                                     proj_color = self.control_color
                                     proj_arrowhead = self.control_projection_arrow
                                 assign_proj_to_enclosing_comp = True
-                                assign_sender_edge(sndr, proj_color, proj_arrowhead)
+                                assign_sender_edge(sndr, proj, proj_color, proj_arrowhead)
                             continue
 
                         # sender is output_CIM
@@ -2481,7 +2478,7 @@ class ShowGraph():
                     else:
                         sndr = sender
 
-                    assign_sender_edge(sndr, proj_color, proj_arrowhead)
+                    assign_sender_edge(sndr, proj, proj_color, proj_arrowhead)
 
     def _generate_output(self,
                          G,

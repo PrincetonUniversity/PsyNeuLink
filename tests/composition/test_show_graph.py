@@ -526,11 +526,9 @@ class TestControl:
         ),
         ids=[str(x) for x in _nested_show_graph_kwargs]
     )
-    def test_of_show_nested_show_cim_and_show_node_structure(
-        self,
-        show_graph_kwargs,
-        expected_output
-    ):
+    def test_of_show_nested_show_cim_and_show_node_structure(self,
+                                                             show_graph_kwargs,
+                                                             expected_output):
         # Inner Composition
         ia = TransferMechanism(name='ia')
         icomp = Composition(name='icomp', pathways=[ia])
@@ -580,11 +578,9 @@ class TestControl:
         ),
         ids=[str(x) for x in _nested_show_graph_kwargs]
     )
-    def test_of_show_3_level_nested_show_cim_and_show_node_structure(
-        self,
-        show_graph_kwargs,
-        expected_output
-    ):
+    def test_of_show_3_level_nested_show_cim_and_show_node_structure(self,
+                                                                     show_graph_kwargs,
+                                                                     expected_output):
         # Inner Composition
         ia = TransferMechanism(name='ia')
         icomp = Composition(name='icomp', pathways=[ia])
@@ -641,11 +637,9 @@ class TestControl:
         ),
         ids=[str(x) for x in _nested_show_graph_kwargs[:-1]]
     )
-    def test_of_show_nested_show_cim_and_show_node_structure_with_singleton_in_outer_comp_added_last(
-        self,
-        show_graph_kwargs,
-        expected_output
-    ):
+    def test_of_show_nested_show_cim_and_show_node_structure_with_singleton_in_outer_comp_added_last(self,
+                                                                                                     show_graph_kwargs,
+                                                                                                     expected_output):
         # Inner Composition
         ia = TransferMechanism(name='ia')
         icomp = Composition(name='icomp', pathways=[ia])
