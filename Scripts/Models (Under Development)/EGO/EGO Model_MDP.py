@@ -130,8 +130,8 @@ from psyneulink import *
 CONSTRUCT_MODEL = True                 # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = (                      # Only one of the following can be uncommented:
     # None                             # suppress display of model
-    # {}                               # show summary visual display of model
-    {'show_node_structure': ALL}       # show detailed view of node structures and projections
+    {}                               # show summary visual display of model
+    # {'show_node_structure': ALL}       # show detailed view of node structures and projections
 )
 # TRAIN_MODEL = False                  # True => train the model
 RUN_MODEL = False                      # True => run the model
@@ -265,6 +265,12 @@ def construct_model(model_name:str=MODEL_NAME,
     decision_layer = TransferMechanism(name=decision_layer_name,
                                        size=decision_size,
                                        function=SoftMax(output=PROB))
+
+    def trial_number(variable,context):
+        if context and context.composition:
+            return [context.composition.get_current_execution_time(context)[TimeScale.TRIAL]]
+        else:
+            return variable
 
     # Control Mechanism
     #  Ensures current stimulus and context are only encoded in EM once (at beginning of trial)
