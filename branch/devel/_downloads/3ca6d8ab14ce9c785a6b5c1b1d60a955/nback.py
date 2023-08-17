@@ -203,7 +203,7 @@ RETRIEVAL_CONTEXT_WEIGHT = 1 - RETRIEVAL_STIM_WEIGHT # weighting of context fiel
 # Training parameters:
 NUM_TRAINING_SETS_PER_EPOCH = 1
 MINIBATCH_SIZE=None
-NUM_EPOCHS= 500 # 6250 # 12500 # 20000  # nback-paper: 400,000 @ one trial per epoch = 6,250 @ 64 trials per epoch
+NUM_EPOCHS= 10 # 500 # 6250 # 12500 # 20000  # nback-paper: 400,000 @ one trial per epoch = 6,250 @ 64 trials per epoch
 FOILS_ALLOWED_BEFORE = False
 LEARNING_RATE=0.001  # nback-paper: .001
 
@@ -406,7 +406,7 @@ def construct_model(stim_size:int = STIM_SIZE,
     control = ControlMechanism(name=CONTROLLER,
                                default_variable=[[1]],  # Ensure EM[store_prob]=1 at beginning of first trial
                                # ---------
-                               # VERSION *WITH* ObjectiveMechanism:
+                               # # VERSION *WITH* ObjectiveMechanism:
                                objective_mechanism=ObjectiveMechanism(name="OBJECTIVE MECHANISM",
                                                                       monitor=decision,
                                                                       # Outcome=1 if match, else 0
@@ -417,7 +417,7 @@ def construct_model(stim_size:int = STIM_SIZE,
                                function=lambda outcome: int(bool(outcome)
                                                             or (np.random.random() < retrieval_hazard_rate)),
                                # ---------
-                               # # VERSION *WITHOUT* ObjectiveMechanism:
+                               # VERSION *WITHOUT* ObjectiveMechanism:
                                # monitor_for_control=decision,
                                # # Set Evaluate outcome and set ControlSignal for EM[store_prob]
                                # #   - outcome is received from decision as one hot in the form: [[match, no-match]]
@@ -448,7 +448,7 @@ def construct_model(stim_size:int = STIM_SIZE,
     if DISPLAY_MODEL:
         nback_model.show_graph(
             # show_cim=True,
-            # show_node_structure=ALL,
+            show_node_structure=ALL,
             # show_dimensions=True
         )
 

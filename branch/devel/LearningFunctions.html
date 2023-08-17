@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LearningFunctions &mdash; PsyNeuLink 0.14.0.0+36.g7260d59a1 documentation</title>
+  <title>LearningFunctions &mdash; PsyNeuLink 0.14.0.0+37.g082040cde documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.14.0.0+36
+                  0.14.0.0+37
                 </div>
               
             
@@ -241,28 +241,19 @@ of a LearningFunction by Component._execute, and passed to the LearningFunction�
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.LearningFunction.default_learning_rate">
-<span class="sig-name descname"><span class="pre">default_learning_rate</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.LearningFunction.default_learning_rate" title="Permalink to this definition">¶</a></dt>
-<dd><p>the value used for the function’s <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.LearningFunction.learning_rate" title="psyneulink.core.components.functions.learningfunctions.LearningFunction.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> parameter if none of the
-following are specified:  the <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_rate" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> for the <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanism</span></a> to
-which the function has been assigned, the <code class="xref any docutils literal notranslate"><span class="pre">learning_rate</span></code> for any <code class="xref any docutils literal notranslate"><span class="pre">Process</span></code> or
-the <code class="xref any docutils literal notranslate"><span class="pre">learning_rate</span></code> for any <code class="xref any docutils literal notranslate"><span class="pre">System</span></code> to which that LearningMechanism belongs.
-The exact form of the value (i.e., whether it is a scalar or array) depends on the function’s type.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>numeric</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.LearningFunction.learning_rate">
 <span class="sig-name descname"><span class="pre">learning_rate</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.LearningFunction.learning_rate" title="Permalink to this definition">¶</a></dt>
-<dd><p>generally used to multiply the result of the function before it is returned;  however, both the form of the
-value (i.e., whether it is a scalar or array) and how it is used depend on the function’s type.</p>
+<dd><p>the value used for the function’s <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.LearningFunction.learning_rate" title="psyneulink.core.components.functions.learningfunctions.LearningFunction.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> parameter, generally
+used to multiply the result of the function before it is returned;  however, both the form of the value (i.e.,
+whether it is a scalar or array) and how it is used depend on the function’s type.  The parameter’s default
+value is used if none of the following is specified:  the <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_rate" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a>
+for the <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanism</span></a> to which the function has been assigned, the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learning_rate" title="psyneulink.core.compositions.composition.Composition.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> for any <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> to which that LearningMechanism belongs, or
+a <strong>learning_rate</strong> argument specified in either a Composition’s <a class="reference internal" href="Composition.html#composition-learning-methods"><span class="std std-ref">learning construction method</span></a> or a call to the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method at
+runtime (see description of learning_rate for <a class="reference internal" href="LearningMechanism.html#learningmechanism-learning-rate"><span class="std std-ref">LearningMechanisms</span></a>
+and for <a class="reference internal" href="Composition.html#composition-learning-rate"><span class="std std-ref">Compositions</span></a> for additional details).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>numeric</p>
+<dd class="field-odd"><p>array, float or int : function.defaults.parameter</p>
 </dd>
 </dl>
 </dd></dl>
@@ -298,8 +289,7 @@ the jth element of the activity array in <a class="reference internal" href="#ps
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>variable</strong> (<em>List</em><em>[</em><em>array</em><em>(</em><em>float64</em><em>)</em><em>, </em><em>array</em><em>(</em><em>float64</em><em>)</em><em>, </em><em>2d array</em><em>[</em><em>[</em><em>float64</em><em>]</em><em>]</em><em>] </em><em>: default class_defaults.variable</em>) – input pattern, array of activation values, and matrix used to calculate the weights changes.</p></li>
-<li><p><strong>learning_rate</strong> (<em>scalar</em><em> or </em><em>list</em><em>, </em><em>1d</em><em> or </em><em>2d array</em><em>, or </em><em>np.matrix of numeric values: default default_learning_rate</em>) – specifies the learning rate used by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.function" title="psyneulink.core.components.functions.learningfunctions.Kohonen.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>; supersedes any specification  for the
-<code class="xref any docutils literal notranslate"><span class="pre">Process</span></code> and/or <code class="xref any docutils literal notranslate"><span class="pre">System</span></code> to which the function’s <code class="xref any docutils literal notranslate"><span class="pre">owner</span></code> belongs (see <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.learning_rate" title="psyneulink.core.components.functions.learningfunctions.Kohonen.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> for details).</p></li>
+<li><p><strong>learning_rate</strong> (<em>scalar</em><em> or </em><em>list</em><em>, </em><em>1d</em><em> or </em><em>2d array</em><em>, or </em><em>np.matrix of numeric values: default .05</em>) – specifies the learning rate used by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.function" title="psyneulink.core.components.functions.learningfunctions.Kohonen.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> (see <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.learning_rate" title="psyneulink.core.components.functions.learningfunctions.Kohonen.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> for details).</p></li>
 <li><p><strong>distance_measure</strong> (<em>GAUSSIAN</em><em>, </em><em>LINEAR</em><em>, </em><em>EXPONENTIAL</em><em>, </em><em>SINUSOID</em><em> or </em><em>function</em>) – specifies the method used to calculate the distance of each element in <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.variable" title="psyneulink.core.components.functions.learningfunctions.Kohonen.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>[2]
 from the one with the greatest value.</p></li>
 <li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the function.
@@ -326,26 +316,13 @@ returned by <a class="reference internal" href="#psyneulink.core.components.func
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.Kohonen.learning_rate">
 <span class="sig-name descname"><span class="pre">learning_rate</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.learning_rate" title="Permalink to this definition">¶</a></dt>
-<dd><p>used by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.function" title="psyneulink.core.components.functions.learningfunctions.Kohonen.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> to scale the weight change matrix returned by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.function" title="psyneulink.core.components.functions.learningfunctions.Kohonen.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.  If specified, it supersedes any learning_rate specified for the <code class="xref any docutils literal notranslate"><span class="pre">Process</span></code> and/or <code class="xref any docutils literal notranslate"><span class="pre">System</span></code> to which the function’s <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.owner" title="psyneulink.core.components.functions.learningfunctions.Kohonen.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a>
-belongs.  If it is a scalar, it is multiplied by the weight change matrix;  if it is a 1d array, it is
-multiplied Hadamard (elementwise) by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.variable" title="psyneulink.core.components.functions.learningfunctions.Kohonen.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> &lt;Kohonen.variable&gt;` before calculating the weight change
-matrix;  if it is a 2d array, it is multiplied Hadamard (elementwise) by the weight change matrix; if it is
-<code class="xref any docutils literal notranslate"><span class="pre">None</span></code>, then the <code class="xref any docutils literal notranslate"><span class="pre">learning_rate</span></code> specified for the Process to which the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.owner" title="psyneulink.core.components.functions.learningfunctions.Kohonen.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a> belongs is used;  and, if that is <code class="xref any docutils literal notranslate"><span class="pre">None</span></code>, then the <code class="xref any docutils literal notranslate"><span class="pre">learning_rate</span></code>
-for the System to which it belongs is used. If all are <code class="xref any docutils literal notranslate"><span class="pre">None</span></code>, then the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.default_learning_rate" title="psyneulink.core.components.functions.learningfunctions.Kohonen.default_learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">default_learning_rate</span></code></a> is used.</p>
+<dd><p>used by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.function" title="psyneulink.core.components.functions.learningfunctions.Kohonen.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> to scale the weight change matrix returned by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.function" title="psyneulink.core.components.functions.learningfunctions.Kohonen.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.  If it is a scalar, it is multiplied by the weight change matrix;  if it is a 1d array,
+it is multiplied Hadamard (elementwise) by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.variable" title="psyneulink.core.components.functions.learningfunctions.Kohonen.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> &lt;Kohonen.variable&gt;` before calculating the weight
+change matrix;  if it is a 2d array, it is multiplied Hadamard (elementwise) by the weight change matrix. If
+learning_rate is not specified explicitly in the constructor for the function or otherwise (see <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_rate" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a>) then the function’s default learning_rate is used.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>float, 1d or 2d array</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.Kohonen.default_learning_rate">
-<span class="sig-name descname"><span class="pre">default_learning_rate</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.default_learning_rate" title="Permalink to this definition">¶</a></dt>
-<dd><p>the value used for the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.learning_rate" title="psyneulink.core.components.functions.learningfunctions.Kohonen.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> if it is not otherwise specified.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>float</p>
 </dd>
 </dl>
 </dd></dl>
@@ -465,8 +442,7 @@ similar to that input pattern.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>variable</strong> (<em>List</em><em>[</em><em>number</em><em>] or </em><em>1d array : default class_defaults.variable</em>) – specifies the activation values, the pair-wise products of which are used to generate the weight change matrix.</p></li>
-<li><p><strong>learning_rate</strong> (<em>scalar</em><em> or </em><em>list</em><em>, </em><em>1d</em><em> or </em><em>2d array</em><em>, or </em><em>np.matrix of numeric values: default default_learning_rate</em>) – specifies the learning rate used by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.function" title="psyneulink.core.components.functions.learningfunctions.Hebbian.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>; supersedes any specification  for the
-<code class="xref any docutils literal notranslate"><span class="pre">Process</span></code> and/or <code class="xref any docutils literal notranslate"><span class="pre">System</span></code> to which the function’s <code class="xref any docutils literal notranslate"><span class="pre">owner</span></code> belongs (see <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.learning_rate" title="psyneulink.core.components.functions.learningfunctions.Hebbian.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> for details).</p></li>
+<li><p><strong>learning_rate</strong> (<em>scalar</em><em> or </em><em>list</em><em>, </em><em>1d</em><em> or </em><em>2d array</em><em>, or </em><em>np.matrix of numeric values: default .05</em>) – specifies the learning rate used by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.function" title="psyneulink.core.components.functions.learningfunctions.Hebbian.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>; (see <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.learning_rate" title="psyneulink.core.components.functions.learningfunctions.Hebbian.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> for details).</p></li>
 <li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the function.
 Values specified for parameters in the dictionary override any assigned to those parameters in arguments
 of the constructor.</p></li>
@@ -491,26 +467,13 @@ the <a class="reference internal" href="#psyneulink.core.components.functions.le
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.Hebbian.learning_rate">
 <span class="sig-name descname"><span class="pre">learning_rate</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.learning_rate" title="Permalink to this definition">¶</a></dt>
-<dd><p>used by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.function" title="psyneulink.core.components.functions.learningfunctions.Hebbian.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> to scale the weight change matrix returned by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.function" title="psyneulink.core.components.functions.learningfunctions.Hebbian.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.  If specified, it supersedes any learning_rate specified for the <code class="xref any docutils literal notranslate"><span class="pre">Process</span></code> and/or <code class="xref any docutils literal notranslate"><span class="pre">System</span></code> to which the function’s <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.owner" title="psyneulink.core.components.functions.learningfunctions.Hebbian.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a>
-belongs.  If it is a scalar, it is multiplied by the weight change matrix;  if it is a 1d array, it is
-multiplied Hadamard (elementwise) by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.variable" title="psyneulink.core.components.functions.learningfunctions.Hebbian.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> &lt;Hebbian.variable&gt;` before calculating the weight change
-matrix;  if it is a 2d array, it is multiplied Hadamard (elementwise) by the weight change matrix; if it is
-<code class="xref any docutils literal notranslate"><span class="pre">None</span></code>, then the <code class="xref any docutils literal notranslate"><span class="pre">learning_rate</span></code> specified for the Process to which the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.owner" title="psyneulink.core.components.functions.learningfunctions.Hebbian.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a> belongs is used;  and, if that is <code class="xref any docutils literal notranslate"><span class="pre">None</span></code>, then the <code class="xref any docutils literal notranslate"><span class="pre">learning_rate</span></code>
-for the System to which it belongs is used. If all are <code class="xref any docutils literal notranslate"><span class="pre">None</span></code>, then the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.default_learning_rate" title="psyneulink.core.components.functions.learningfunctions.Hebbian.default_learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">default_learning_rate</span></code></a> is used.</p>
+<dd><p>used by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.function" title="psyneulink.core.components.functions.learningfunctions.Hebbian.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> to scale the weight change matrix returned by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.function" title="psyneulink.core.components.functions.learningfunctions.Hebbian.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.  If it is a scalar, it is multiplied by the weight change matrix;  if it is a 1d array,
+it is multiplied Hadamard (elementwise) by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.variable" title="psyneulink.core.components.functions.learningfunctions.Hebbian.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> &lt;Hebbian.variable&gt;` before calculating the weight
+change matrix;  if it is a 2d array, it is multiplied Hadamard (elementwise) by the weight change matrix. If
+learning_rate is not specified explicitly in the constructor for the function or otherwise (see <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_rate" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a>) then the function’s default learning_rate is used.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>float, 1d or 2d array</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.Hebbian.default_learning_rate">
-<span class="sig-name descname"><span class="pre">default_learning_rate</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.default_learning_rate" title="Permalink to this definition">¶</a></dt>
-<dd><p>the value used for the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.learning_rate" title="psyneulink.core.components.functions.learningfunctions.Hebbian.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> if it is not otherwise specified.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>float</p>
 </dd>
 </dl>
 </dd></dl>
@@ -630,9 +593,7 @@ activities of those elements in the <a class="reference internal" href="Contrast
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>variable</strong> (<em>List</em><em>[</em><em>number</em><em>] or </em><em>1d array : default class_defaults.variable</em>) – specifies the activation values, the pair-wise products of which are used to generate the a weight change matrix.</p></li>
-<li><p><strong>learning_rate</strong> (<em>scalar</em><em> or </em><em>list</em><em>, </em><em>1d</em><em> or </em><em>2d array</em><em>, or </em><em>np.matrix of numeric values: default default_learning_rate</em>) – specifies the learning rate used by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>; supersedes any specification
-for the <code class="xref any docutils literal notranslate"><span class="pre">Process</span></code> and/or <code class="xref any docutils literal notranslate"><span class="pre">System</span></code> to which the function’s <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.owner" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a> belongs (see
-<a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.learning_rate" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> for details).</p></li>
+<li><p><strong>learning_rate</strong> (<em>scalar</em><em> or </em><em>list</em><em>, </em><em>1d</em><em> or </em><em>2d array</em><em>, or </em><em>np.matrix of numeric values: default .05</em>) – specifies the learning rate used by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>. (see <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.learning_rate" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> for details).</p></li>
 <li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the function.
 Values specified for parameters in the dictionary override any assigned to those parameters in arguments
 of the constructor.</p></li>
@@ -657,27 +618,15 @@ the <a class="reference internal" href="#psyneulink.core.components.functions.le
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.learning_rate">
 <span class="sig-name descname"><span class="pre">learning_rate</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.learning_rate" title="Permalink to this definition">¶</a></dt>
-<dd><p>used by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> to scale the weight change matrix returned by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.  If specified, it supersedes any learning_rate specified for the <code class="xref any docutils literal notranslate"><span class="pre">Process</span></code> and/or <code class="xref any docutils literal notranslate"><span class="pre">System</span></code> to which the function’s <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.owner" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a> belongs.  If it is a scalar, it is multiplied by the weight change matrix;  if it
+<dd><p>used by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> to scale the weight change matrix returned by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.  If it is a scalar, it is multiplied by the weight change matrix;  if it
 is a 1d array, it is multiplied Hadamard (elementwise) by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.variable" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> &lt;ContrastiveHebbian.variable&gt;`
 before calculating the weight change matrix;  if it is a 2d array, it is multiplied Hadamard (elementwise) by
-the weight change matrix; if it is <code class="xref any docutils literal notranslate"><span class="pre">None</span></code>, then the <code class="xref any docutils literal notranslate"><span class="pre">learning_rate</span></code> specified for the
-Process to which the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.owner" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a> belongs is used;  and, if that is <code class="xref any docutils literal notranslate"><span class="pre">None</span></code>, then the
-<code class="xref any docutils literal notranslate"><span class="pre">learning_rate</span></code> for the System to which it belongs is used. If all are <code class="xref any docutils literal notranslate"><span class="pre">None</span></code>, then the
-<a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.default_learning_rate" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.default_learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">default_learning_rate</span></code></a> is used.</p>
+the weight change matrix.  If learning_rate is not specified explicitly in the constructor for the function
+or otherwise (see <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_rate" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a>) then the function’s defaultlearning_rate
+is used.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>float, 1d or 2d array</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.default_learning_rate">
-<span class="sig-name descname"><span class="pre">default_learning_rate</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.default_learning_rate" title="Permalink to this definition">¶</a></dt>
-<dd><p>the value used for the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.learning_rate" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> if it is not otherwise specified.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>float</p>
 </dd>
 </dl>
 </dd></dl>
@@ -819,8 +768,8 @@ attributes, respectively (the first item is used by other LearningFunctions as t
 </ul>
 </div></blockquote>
 </p></li>
-<li><p><strong>learning_rate</strong> (<em>float : default default_learning_rate</em>) – supersedes any specification for the <code class="xref any docutils literal notranslate"><span class="pre">Process</span></code> and/or <code class="xref any docutils literal notranslate"><span class="pre">System</span></code> to which the function’s
-<code class="xref any docutils literal notranslate"><span class="pre">owner</span></code> belongs (see <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.learning_rate" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> for details).</p></li>
+<li><p><strong>learning_rate</strong> (<em>float : default 0.05</em>) – specifies the learning_rate used by the function (see <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.learning_rate" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> for
+details).</p></li>
 <li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</p></li>
@@ -887,23 +836,9 @@ associated with the non-zero item in <a class="reference internal" href="#psyneu
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.Reinforcement.learning_rate">
 <span class="sig-name descname"><span class="pre">learning_rate</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.learning_rate" title="Permalink to this definition">¶</a></dt>
-<dd><p>the learning rate used by the function.  If specified, it supersedes any learning_rate specified for the
-<code class="xref any docutils literal notranslate"><span class="pre">Process</span></code> and/or <code class="xref any docutils literal notranslate"><span class="pre">System</span></code> to which the function’s
-<a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.owner" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a> belongs.  If it is <code class="xref any docutils literal notranslate"><span class="pre">None</span></code>, then the <code class="xref any docutils literal notranslate"><span class="pre">learning_rate</span></code>
-specified for the Process to which the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.owner" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a> belongs is used;  and, if that is <code class="xref any docutils literal notranslate"><span class="pre">None</span></code>,
-then the <code class="xref any docutils literal notranslate"><span class="pre">learning_rate</span></code> for the System to which it belongs is used. If all are
-<code class="xref any docutils literal notranslate"><span class="pre">None</span></code>, then the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.default_learning_rate" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.default_learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">default_learning_rate</span></code></a> is used.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>float</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.Reinforcement.default_learning_rate">
-<span class="sig-name descname"><span class="pre">default_learning_rate</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.default_learning_rate" title="Permalink to this definition">¶</a></dt>
-<dd><p>the value used for the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.learning_rate" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> if it is not otherwise specified.</p>
+<dd><p>the learning rate used by the function. If learning_rate is not specified explicitly in the constructor for
+the function or otherwise (see <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_rate" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a>) then the function’s default
+learning_rate is used.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>float</p>
@@ -1390,8 +1325,8 @@ element of <a class="reference internal" href="#psyneulink.core.components.funct
 <li><p><strong>covariates</strong> (<em>List</em><em>[</em><em>1d array</em><em>]</em>) – specifies a template for values of arguments used by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_derivative_fct" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_derivative_fct"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">activation_derivative_fct</span></code></a> other than <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_input" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_input"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">activation_input</span></code></a>
 and <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">activation_output</span></code></a>, to compute the derivative of the activation
 function with respect to activation_output.</p></li>
-<li><p><strong>learning_rate</strong> (<em>float : default default_learning_rate</em>) – supersedes any specification for the <code class="xref any docutils literal notranslate"><span class="pre">Process</span></code> and/or <code class="xref any docutils literal notranslate"><span class="pre">System</span></code> to which the function’s
-<code class="xref any docutils literal notranslate"><span class="pre">owner</span></code> belongs (see <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.learning_rate" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> for details).</p></li>
+<li><p><strong>learning_rate</strong> (<em>float : default default_learning_rate</em>) – specifies the learning_rate used by the function (see <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.learning_rate" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> for
+details).</p></li>
 <li><p><strong>loss_spec</strong> (<em>Loss : default None</em>) – specifies the operation to apply to the error signal (i.e., method of calculating the derivative of the errror
 with respect to activation) before computing weight changes.</p></li>
 <li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
@@ -1497,22 +1432,9 @@ it refers to the MATRIX parameterPort of the <a class="reference internal" href=
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BackPropagation.learning_rate">
 <span class="sig-name descname"><span class="pre">learning_rate</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.learning_rate" title="Permalink to this definition">¶</a></dt>
-<dd><p>the learning rate used by the function.  If specified, it supersedes any learning_rate specified for the
-<code class="xref any docutils literal notranslate"><span class="pre">process</span></code> and/or <code class="xref any docutils literal notranslate"><span class="pre">system</span></code> to which the function’s  <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.owner" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a> belongs.  If it is <code class="xref any docutils literal notranslate"><span class="pre">None</span></code>, then the learning_rate specified for the process to
-which the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.owner" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a> belongs is used;  and, if that is <code class="xref any docutils literal notranslate"><span class="pre">None</span></code>, then the learning_rate for
-the system to which it belongs is used. If all are <code class="xref any docutils literal notranslate"><span class="pre">None</span></code>, then the
-<a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.default_learning_rate" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.default_learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">default_learning_rate</span></code></a> is used.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>float</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BackPropagation.default_learning_rate">
-<span class="sig-name descname"><span class="pre">default_learning_rate</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.default_learning_rate" title="Permalink to this definition">¶</a></dt>
-<dd><p>the value used for the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.learning_rate" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> if it is not otherwise specified.</p>
+<dd><p>the learning rate used by the function.   If learning_rate is not specified explicitly in the constructor for
+the function or otherwise (see <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_rate" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a>) then the function’s default
+learning_rate is used.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>float</p>

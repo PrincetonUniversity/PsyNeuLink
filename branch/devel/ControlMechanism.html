@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ControlMechanism &mdash; PsyNeuLink 0.14.0.0+36.g7260d59a1 documentation</title>
+  <title>ControlMechanism &mdash; PsyNeuLink 0.14.0.0+37.g082040cde documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.14.0.0+36
+                  0.14.0.0+37
                 </div>
               
             
@@ -354,10 +354,10 @@ OutputPorts monitored (see <a class="reference internal" href="#controlmechanism
 than its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a> <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> to be specified in the <strong>monitor_for_control</strong>
 argument of the ControlMechanism’s constructor or, if <strong>objective_mechanism</strong> is specified, in the
 <strong>monitor</strong> argument of the ObjectiveMechanism’s constructor (see above).  If the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.allow_probes" title="psyneulink.core.compositions.composition.Composition.allow_probes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">allow_probes</span></code></a> attribute is False, it is set to <em>CONTROL</em>, and only a ControlMechanism can receive
-projections from <a class="reference internal" href="Composition.html#id29" title="psyneulink.core.compositions.composition.NodeRole.PROBE"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">PROBE</span></code></a> Nodes of a nested Composition (the current one as well as any others in
+projections from <a class="reference internal" href="Composition.html#id27" title="psyneulink.core.compositions.composition.NodeRole.PROBE"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">PROBE</span></code></a> Nodes of a nested Composition (the current one as well as any others in
 the same Composition);  if the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.allow_probes" title="psyneulink.core.compositions.composition.Composition.allow_probes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">allow_probes</span></code></a> attribute is True, then it
 is left that way, and any node within the Comopsition, including the ControlMechanism, can receive projections from
-<a class="reference internal" href="Composition.html#id29" title="psyneulink.core.compositions.composition.NodeRole.PROBE"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">PROBE</span></code></a> Nodes (see <a class="reference internal" href="Composition.html#composition-probes"><span class="std std-ref">Probes</span></a> for additional details).</p></li>
+<a class="reference internal" href="Composition.html#id27" title="psyneulink.core.compositions.composition.NodeRole.PROBE"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">PROBE</span></code></a> Nodes (see <a class="reference internal" href="Composition.html#composition-probes"><span class="std std-ref">Probes</span></a> for additional details).</p></li>
 </ul>
 </div></blockquote>
 <p>The OutputPorts monitored by a ControlMechanism or its <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">objective_mechanism</span></code></a>
@@ -365,7 +365,7 @@ are listed in the ControlMechanism’s <a class="reference internal" href="#psyn
 (and are the same as those listed in the <a class="reference internal" href="ObjectiveMechanism.html#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">monitor</span></code></a> attribute of the
 <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">objective_mechanism</span></code></a>, if specified).</p>
 <p id="controlmechanism-add-linear-processing-pathway">Note that the MappingProjections created by specification of a ControlMechanism’s <strong>monitor_for_control</strong> <a class="reference internal" href="#controlmechanism-monitor-for-control-argument"><span class="std std-ref">argument</span></a> or the <strong>monitor</strong> argument in the constructor for an
-ObjectiveMechanism in the ControlMechanism’s <strong>objective_mechanism</strong> <a class="reference internal" href="#controlmechanism-objective-mechanism-argument"><span class="std std-ref">argument</span></a> supercede any MappingProjections that would otherwise be created for
+ObjectiveMechanism in the ControlMechanism’s <strong>objective_mechanism</strong> <a class="reference internal" href="#controlmechanism-objective-mechanism-argument"><span class="std std-ref">argument</span></a> supersede any MappingProjections that would otherwise be created for
 them when included in the <strong>pathway</strong> argument of a Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.add_linear_processing_pathway" title="psyneulink.core.compositions.composition.Composition.add_linear_processing_pathway"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">add_linear_processing_pathway</span></code></a> method.</p>
 <section id="objective-mechanism">
 <span id="controlmechanism-objectivemechanism"></span><h4>Objective Mechanism<a class="headerlink" href="#objective-mechanism" title="Permalink to this headline">¶</a></h4>

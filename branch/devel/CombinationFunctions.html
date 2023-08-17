@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>CombinationFunctions &mdash; PsyNeuLink 0.14.0.0+36.g7260d59a1 documentation</title>
+  <title>CombinationFunctions &mdash; PsyNeuLink 0.14.0.0+37.g082040cde documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.14.0.0+36
+                  0.14.0.0+37
                 </div>
               
             
@@ -224,6 +224,7 @@ when the CombinationFunction is used as the function of an InputPort or OutputPo
 optionally scaling and/or adding an offset to the result after concatenating.</p>
 <p><code class="xref any docutils literal notranslate"><span class="pre">function</span></code> returns a 1d array with length equal to the sum of the lengths of the items
 in <code class="xref any docutils literal notranslate"><span class="pre">variable</span></code>.</p>
+<p><a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.Concatenate.derivative" title="psyneulink.core.components.functions.combinationfunctions.Concatenate.derivative"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">derivative</span></code></a> returns <code class="xref any docutils literal notranslate"><span class="pre">scale</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -350,6 +351,27 @@ arguments of the constructor.</p></li>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.combinationfunctions.Concatenate.derivative">
+<span class="sig-name descname"><span class="pre">derivative</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.Concatenate.derivative" title="Permalink to this definition">¶</a></dt>
+<dd><p>Derivative of <a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.Concatenate._function" title="psyneulink.core.components.functions.combinationfunctions.Concatenate._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a> at <strong>input</strong>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input</strong> (<em>number</em>) – value of the input to the function at which derivative is to be taken.</p></li>
+<li><p><strong>covariates</strong> (<em>2d np.array : default class_defaults.variable</em><em>[</em><em>1:</em><em>]</em>) – the input(s) to the Concatenate function other than the one for which the derivative is being
+computed;  these are ignored and are accepted for consistency with other functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>Scale of function</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>number or array</p>
 </dd>
 </dl>
 </dd></dl>
