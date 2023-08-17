@@ -1,7 +1,7 @@
 """
 QUESTIONS:
-- Each TRIAL is a single state presention (PNL convention);
-- Should a run = a sequence of 3 trials or all trials across all tasks, conditions, etc.?
+
+-
 
 **Overview**
 ------------
@@ -149,6 +149,7 @@ MODEL_NAME = "EGO Model"
 TASK_INPUT_LAYER_NAME = "TASK"
 STATE_INPUT_LAYER_NAME = "STATE"
 TIME_INPUT_LAYER_NAME = "TIME"
+ATTENTION_LAYER_NAME = "STATE ATTENTION"
 ATTENTION_LAYER = "ATTENTION"
 ACTUAL_STATE_INPUT = 'ACTUAL_STATE_INPUT'
 RETRIEVED_STATE_INPUT = 'RETRIEVED_STATE'
@@ -158,89 +159,148 @@ RETRIEVED_TIME_NAME = "RETRIEVED TIME"
 RETRIEVED_REWARD_NAME = "RETRIEVED REWARD"
 EM_NAME = "EPISODIC MEMORY"
 DECISION_LAYER_NAME = "DECISION"
-CONTROLLER_NAME = "ENCODING CONTROLLER"
 
 class Task(IntEnum):
     EXPERIENCE = 0
     PREDICT = 1
 
-# Constructor parameters:
+# CONSTRUCTION PARAMETERS
+
+# Layer sizes:
 TASK_SIZE = 1                  # length of task vector
 STATE_SIZE = 8                 # length of state vector
 TIME_SIZE = 25                 # length of time vector
 REWARD_SIZE = 1                # length of reward vector
 DECISION_SIZE = 2              # length of decision vector
-CONTEXT_INTEGRATION_RATE = .1  # rate of integration of context vector
+
+# Context processing:
+STATE_WEIGHT = .1    # rate at which actual vs. retrieved state (from EM) are integrated in context_layer
+CONTEXT_INTEGRATION_RATE = .1  # rate at which retrieved context (from EM) is integrated into context_layer
 TIME_DRIFT_NOISE = 0.0         # noise used by DriftOnASphereIntegrator (function of Context mech)
-STATE_RETRIEVAL_WEIGHT = 1     # weight of state field in retrieval from em
-TIME_RETRIEVAL_WEIGHT = 1      # weight of time field in retrieval from em
-CONTEXT_RETRIEVAL_WEIGHT = 1   # weight of context field in retrieval from em
-REWARD_RETRIEVAL_WEIGHT = 0    # weight of reward field in retrieval from em
+
+# EM retrieval
+STATE_RETRIEVAL_WEIGHT = 1     # weight of state field in retrieval from EM
+TIME_RETRIEVAL_WEIGHT = 1      # weight of time field in retrieval from EM
+CONTEXT_RETRIEVAL_WEIGHT = 1   # weight of context field in retrieval from EM
+REWARD_RETRIEVAL_WEIGHT = 0    # weight of reward field in retrieval from EM
 RETRIEVAL_SOFTMAX_GAIN = 10    # gain on softmax retrieval function
-RETRIEVAL_HAZARD_RATE = 0.04   # rate of re=sampling of em following non-match determination in a pass through ffn
+# RETRIEVAL_HAZARD_RATE = 0.04   # rate of re=sampling of em following non-match determination in a pass through ffn
+
 RANDOM_WEIGHTS_INITIALIZATION=RandomMatrix(center=0.0, range=0.1)  # Matrix spec used to initialize all Projections
 
 # Execution parameters:
-CONTEXT_DRIFT_RATE=.1 # drift rate used for DriftOnASphereIntegrator (function of Context mech) on each trial
 
-NUM_ROLL_OUT = 3     # number of trials in a sequence
-NUM_EXPERIENCE_TRIALS = 9      # number of trials for Task.EXPERIENCE
-NUM_PREDICT_TRIALS = 9         # number of trials Task.PREDICT
+# Temporal context vector generation as input to time_input_layer of model
+CONTEXT_DRIFT_RATE=.1 # drift rate used for DriftOnASphereIntegrator (function of Context mech) on each trial
+time_fct = DriftOnASphereIntegrator(initializer=np.random.random(TIME_SIZE - 1),
+                                    noise=TIME_DRIFT_NOISE,
+                                    dimension=TIME_SIZE)
+# Task environment:
+NUM_EXPERIENCE_TRIALS = 9      # number of trials for Task.EXPERIENCE (passive encoding into EM)
+NUM_PREDICT_TRIALS = 9         # number of trials Task.PREDICT (active retrieval from EM and reward prediction)
+NUM_ROLL_OUT = 3               # number of trials of roll-out under OCM control
 NUM_TRIALS = NUM_EXPERIENCE_TRIALS + NUM_PREDICT_TRIALS # total number of trials
 assert NUM_PREDICT_TRIALS % NUM_ROLL_OUT == 0, \
     f"NUM_PREDICT_TRIALS ({NUM_PREDICT_TRIALS}) " \
     f"must be evenly divisible by NUM_ROLL_OUT ({NUM_ROLL_OUT})"
-
-# Used to generate input to time_input_layer of model
-time_fct = DriftOnASphereIntegrator(initializer=np.random.random(TIME_SIZE - 1),
-                                    noise=TIME_DRIFT_NOISE,
-                                    dimension=TIME_SIZE)
 
 inputs = {STATE_INPUT_LAYER_NAME: [[1],[2],[3]] * STATE_SIZE * NUM_TRIALS,
           TIME_INPUT_LAYER_NAME: np.array([time_fct(i) for i in range(NUM_TRIALS)]).reshape(NUM_TRIALS,TIME_SIZE,1),
           REWARD_INPUT_LAYER_NAME: [[0],[0],[1]] * REWARD_SIZE * NUM_TRIALS,
           TASK_INPUT_LAYER_NAME: [[Task.EXPERIENCE.value]] * NUM_EXPERIENCE_TRIALS
                                  + [[Task.PREDICT.value]] * NUM_PREDICT_TRIALS}
+def gen_baseline_trials_exp1(dim=STATE_SIZE, num_trials=NUM_EXPERIENCE_TRIALS):
+    # Generate one-hots
+    state_reps = np.eye(dim)
+    visited_states, rewards = [], []
+
+    for trial_idx in range(num_trials):
+        if np.random.random()<.5:
+            visited_states.extend([1,3,5])
+            rewards.extend([0,0,10])
+        else:
+            visited_states.extend([2,4,6])
+            rewards.extend([0,0,1])
+
+    # Pick one-hots corresponding to each state
+    visited_states = state_reps[visited_states]
+    rewards = np.array(rewards)
+
+    return visited_states, rewards
+def gen_reward_revaluation_trials_exp1(dim=STATE_SIZE, num_trials=NUM_PREDICT_TRIALS):
+    # Generate one-hots
+    state_reps = np.eye(dim)
+    visited_states, rewards = [], []
+
+    for trial_idx in range(num_trials):
+        if np.random.random()<.5:
+            visited_states.extend([3,5])
+            rewards.extend([0,1])
+        else:
+            visited_states.extend([4,6])
+            rewards.extend([0,10])
+
+    # Pick one-hots corresponding to each state
+    visited_states = state_reps[visited_states]
+    rewards = np.array(rewards)
+
+    return visited_states, rewards
+
 assert True
 
 def construct_model(model_name:str=MODEL_NAME,
 
+                    # Inputs:
                     task_input_name:str=TASK_INPUT_LAYER_NAME,
                     task_size:int=1,
-
                     state_input_name:str=STATE_INPUT_LAYER_NAME,
                     state_size:int=STATE_SIZE,
-
                     time_input_name:str=TIME_INPUT_LAYER_NAME,
                     time_size:int=TIME_SIZE,
-
-                    attention_layer_name:str=ATTENTION_LAYER,
-
-                    context_name:str=CONTEXT_LAYER_NAME,
-                    context_integration_rate:float=CONTEXT_INTEGRATION_RATE,
-
                     reward_input_name = REWARD_INPUT_LAYER_NAME,
                     reward_size:int=REWARD_SIZE,
 
-                    state_retrieval_weight:Union[float,int]=STATE_RETRIEVAL_WEIGHT,
-                    context_retrieval_weight:Union[float,int]=CONTEXT_RETRIEVAL_WEIGHT,
+                    # Context processing:
+                    attention_layer_name=ATTENTION_LAYER_NAME,
+                    context_name:str=CONTEXT_LAYER_NAME,
+                    state_weight:Union[float,int]=STATE_WEIGHT,
+                    context_integration_rate:Union[float,int]=CONTEXT_INTEGRATION_RATE,
 
-                    retrieved_time_name:str=RETRIEVED_TIME_NAME,
-                    time_retrieval_weight:Union[float,int]=TIME_RETRIEVAL_WEIGHT,
-
-                    retrieved_reward_name:str=RETRIEVED_REWARD_NAME,
-                    reward_retrieval_weight:Union[float,int]=REWARD_RETRIEVAL_WEIGHT,
-
+                    # EM:
                     em_name:str=EM_NAME,
                     retrieval_softmax_gain=RETRIEVAL_SOFTMAX_GAIN,
-                    retrieval_hazard_rate=RETRIEVAL_HAZARD_RATE,
-                    
-                    controller_name=CONTROLLER_NAME,
-                    
+                    # retrieval_hazard_rate=RETRIEVAL_HAZARD_RATE,
+                    state_retrieval_weight:Union[float,int]=STATE_RETRIEVAL_WEIGHT,
+                    time_retrieval_weight:Union[float,int]=TIME_RETRIEVAL_WEIGHT,
+                    context_retrieval_weight:Union[float,int]=CONTEXT_RETRIEVAL_WEIGHT,
+                    reward_retrieval_weight:Union[float,int]=REWARD_RETRIEVAL_WEIGHT,
+                    # retrieved_time_name:str=RETRIEVED_TIME_NAME,
+                    retrieved_reward_name:str=RETRIEVED_REWARD_NAME,
+
+                    # Output / decision processing:
                     decision_layer_name:str=DECISION_LAYER_NAME,
                     decision_size:int=DECISION_SIZE,
 
                     )->Composition:
+
+    # Apportionment of contributions of state (actual or em) vs. context (em) to context_layer integration:
+
+    # state input (EXPERIENCE) -\
+    #                            --> state_weight -------\
+    # state from em (PREDICT)---/                         -> * (context_integration_rate) -----\
+    #                          /-----> context_weight ---/                                      --> context
+    # context from em --------/      (=1- state_weight)                                        /
+    #                                                    /---> 1 - context_integration_rate --/
+    # context from prev. cycle -------------------------/
+
+    assert 0 <= context_integration_rate <= 1,\
+        f"context_retrieval_weight must be a number from 0 to 1"
+    assert 0 <= state_weight <= 1,\
+        f"context_retrieval_weight must be a number from 0 to 1"
+    context_weight = 1 - state_weight
+    state_weight *= context_integration_rate
+    context_weight *= context_integration_rate
+
 
     task_input_layer = ProcessingMechanism(name=task_input_name,
                                            size=task_size)
@@ -251,7 +311,7 @@ def construct_model(model_name:str=MODEL_NAME,
     time_input_layer = ProcessingMechanism(name=time_input_name,
                                            size=time_size)
 
-    attention_layer = ProcessingMechanism(name=attention_layer_name,
+    attention_layer = ProcessingMechanism(name=ATTENTION_LAYER_NAME,
                                           input_ports=[ACTUAL_STATE_INPUT, RETRIEVED_STATE_INPUT],
                                           function=LinearCombination)
 
@@ -263,28 +323,27 @@ def construct_model(model_name:str=MODEL_NAME,
     reward_input_layer = ProcessingMechanism(name=reward_input_name,
                                               size=reward_size)
 
-    retrieved_time_layer = TransferMechanism(name=retrieved_time_name,
-                                       size=time_size)
+    # retrieved_time_layer = TransferMechanism(name=retrieved_time_name,
+    #                                    size=time_size)
 
     retrieved_reward_layer = TransferMechanism(name=retrieved_reward_name,
                                          size=reward_size)
 
     em = EpisodicMemoryMechanism(name=em_name,
-                                 input_ports=[{NAME:STATE_INPUT_LAYER_NAME, SIZE:state_size},
-                                              {NAME:TIME_INPUT_LAYER_NAME, SIZE:time_size},
-                                              {NAME:CONTEXT_LAYER_NAME, SIZE:state_size},
-                                              {NAME:REWARD_INPUT_LAYER_NAME, SIZE:reward_size}
+                                 input_ports=[{NAME:state_input_name, SIZE:state_size},
+                                              {NAME:time_input_name, SIZE:time_size},
+                                              {NAME:context_name, SIZE:state_size},
+                                              {NAME:reward_input_name, SIZE:reward_size}
                                               ],
                                  function=ContentAddressableMemory(
-                                     initializer=[[0] * state_size,
-                                                  [0] * time_size,
-                                                  [0] * state_size,
-                                                  [0] * reward_size],
+                                     initializer=[[0] * state_size,   # state
+                                                  [0] * time_size,    # time
+                                                  [0] * state_size,   # context
+                                                  [0] * reward_size], # reward
                                      distance_field_weights=[state_retrieval_weight,
                                                              time_retrieval_weight,
                                                              context_retrieval_weight,
                                                              reward_retrieval_weight],
-                                     # equidistant_entries_select=NEWEST,
                                      selection_function=SoftMax(gain=retrieval_softmax_gain)))
 
     decision_layer = TransferMechanism(name=decision_layer_name,
@@ -292,7 +351,7 @@ def construct_model(model_name:str=MODEL_NAME,
                                        function=SoftMax(output=PROB))
 
     def encoding_control_function(variable,context):
-        """Use by retrieval_control_layer to control encoding of state info in context_layer and storing in EM
+        """Used by attention_layer to control encoding of state info in context_layer and storing in EM
 
         If task is:
 
@@ -313,7 +372,7 @@ def construct_model(model_name:str=MODEL_NAME,
 
         # Tas
         task = int(variable)
-        
+
         # Trial Number:
         if context and context.composition:
             trial = int([context.composition.get_current_execution_time(context)[TimeScale.TRIAL]])
@@ -322,7 +381,7 @@ def construct_model(model_name:str=MODEL_NAME,
 
         if task == Task.EXPERIENCE:
             attend_actual = 1
-            
+
         elif task == Task.PREDICT:
             attend_actual = 1 if not (trial % NUM_ROLL_OUT) else 1
             attend_retrieved = 1 if (trial % NUM_ROLL_OUT) else 0
@@ -340,12 +399,12 @@ def construct_model(model_name:str=MODEL_NAME,
     # Uses the encoding_control_function (see above) to control:
     #   - encoding of state info in context_layer (from stimulus vs. em)
     #   - storage of info in em
-    retrieval_control_layer = ControlMechanism(name=controller_name,
-                                               monitor_for_control=task_input_layer,
-                                               function = encoding_control_function,
-                                               control=[(STORAGE_PROB, em),
-                                                        attention_layer.input_ports[ACTUAL_STATE_INPUT],
-                                                        attention_layer.input_ports[RETRIEVED_STATE_INPUT]])
+    attention_layer = ControlMechanism(name=attention_layer_name,
+                                                 monitor_for_control=task_input_layer,
+                                                 function = encoding_control_function,
+                                                 control=[(STORAGE_PROB, em),
+                                                          attention_layer.input_ports[ACTUAL_STATE_INPUT],
+                                                          attention_layer.input_ports[RETRIEVED_STATE_INPUT]])
 
     EGO_comp = Composition(name=model_name,
                            pathways=[retrieved_reward_layer, decision_layer], # Decision
@@ -355,7 +414,7 @@ def construct_model(model_name:str=MODEL_NAME,
                                                     )}
                            )
 
-    # Nodes not in (decision output) Pathway specified above
+    # Nodes not included in (decision output) Pathway specified above
     EGO_comp.add_nodes([task_input_layer,
                         state_input_layer,
                         time_input_layer,
@@ -366,27 +425,35 @@ def construct_model(model_name:str=MODEL_NAME,
                         em])
     EGO_comp.exclude_node_roles(task_input_layer, NodeRole.OUTPUT)
 
-    # Projections not in (decision output) Pathway specified above
-    # Attentional control of input to context_layer
-    EGO_comp.add_projection(MappingProjection(state_input_layer, attention_layer.input_ports[ACTUAL_STATE_INPUT]))
-    EGO_comp.add_projection(MappingProjection(attention_layer, context_layer))
+    # Projections not included in (decision output) Pathway specified above
     # EM encoding
     EGO_comp.add_projection(MappingProjection(state_input_layer, em.input_ports[STATE_INPUT_LAYER_NAME]))
     EGO_comp.add_projection(MappingProjection(time_input_layer, em.input_ports[TIME_INPUT_LAYER_NAME]))
     EGO_comp.add_projection(MappingProjection(context_layer, em.input_ports[CONTEXT_LAYER_NAME]))
     EGO_comp.add_projection(MappingProjection(reward_input_layer, em.input_ports[REWARD_INPUT_LAYER_NAME]))
-    # EM retrieval
+
+    # Inputs to Context
+    # actual state -> attention_layer
+    EGO_comp.add_projection(MappingProjection(state_input_layer,
+                                              attention_layer.input_ports[ACTUAL_STATE_INPUT]))
+    # retrieved state -> attention_layer
     EGO_comp.add_projection(MappingProjection(em.output_ports[f'RETRIEVED_{STATE_INPUT_LAYER_NAME}'],
-                                              attention_layer.input_ports[RETRIEVED_STATE_INPUT],
-                                              weight=context_integration_rate))
-    # EGO_comp.add_projection(MappingProjection(em.output_ports[f'RETRIEVED_{CONTEXT_LAYER_NAME}'],
-    #                                           attention_layer.input_ports[CONTEXT_RETRIEVAL_INPUT],
-    #                                           weight=1-context_integration_rate))
+                                              attention_layer.input_ports[RETRIEVED_STATE_INPUT]))
+    # attention_layer -> context_layer
+    EGO_comp.add_projection(MappingProjection(attention_layer,
+                                              context_layer,
+                                              state_weight))
+    # retrieved context -> context_layer
+    EGO_comp.add_projection(MappingProjection(em.output_ports[f'RETRIEVED_{CONTEXT_LAYER_NAME}'],
+                                              context_layer,
+                                              weight=context_weight))
+
+    # Rest of EM retrieval
     # EGO_comp.add_projection(MappingProjection(em.output_ports[f'RETRIEVED_{TIME_INPUT_LAYER_NAME}'],
     #                                           retrieved_time_layer)),
     EGO_comp.add_projection(MappingProjection(em.output_ports[f'RETRIEVED_{REWARD_INPUT_LAYER_NAME}'],
                                               retrieved_reward_layer))
-    EGO_comp.add_node(retrieval_control_layer)
+    EGO_comp.add_node(attention_layer)
 
     print(f'{model_name} constructed')
     return EGO_comp

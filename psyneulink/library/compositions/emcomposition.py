@@ -130,6 +130,7 @@
 
 #
 #        - Composition:
+#          - Change size argument in constructor to use standard numpy shape format if tupe, and PNL format if list
 #          - Write convenience Function for returning current time from context
 #               - requires it be called from execution within aComposition, error otherwise)
 #               - takes argument for time scale (e.g., TimeScale.TRIAL, TimeScale.RUN, etc.)

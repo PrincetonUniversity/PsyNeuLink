@@ -131,10 +131,10 @@ from psyneulink import *
 CONSTRUCT_MODEL = True                 # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = (                      # Only one of the following can be uncommented:
     # None                             # suppress display of model
-    {}                               # show simple visual display of model
-    # {'show_node_structure': True}    # show detailed view of node structures and projections
+    # {}                               # show simple visual display of model
+    {'show_node_structure': True}    # show detailed view of node structures and projections
 )
-RUN_MODEL = True                      # True => run the model
+RUN_MODEL = False                      # True => run the model
 ANALYZE_RESULTS = False                # True => output analysis of results of run
 REPORT_OUTPUT = ReportOutput.ON       # Sets console output during run
 REPORT_PROGRESS = ReportProgress.OFF   # Sets console progress bar during run
@@ -150,7 +150,7 @@ TASK_INPUT_LAYER_NAME = "TASK"
 STATE_INPUT_LAYER_NAME = "STATE"
 TIME_INPUT_LAYER_NAME = "TIME"
 ATTENTION_LAYER_NAME = "STATE ATTENTION"
-ATTENTION_LAYER = "ATTENTION"
+ATTENTIONAL_CONTROL_LAYER_NAME = "ATTENTIONAL CONTROL"
 ACTUAL_STATE_INPUT = 'ACTUAL_STATE_INPUT'
 RETRIEVED_STATE_INPUT = 'RETRIEVED_STATE'
 CONTEXT_LAYER_NAME = 'CONTEXT'
@@ -174,7 +174,7 @@ REWARD_SIZE = 1                # length of reward vector
 DECISION_SIZE = 2              # length of decision vector
 
 # Context processing:
-STATE_INTEGRATION_WEIGHT = .1    # rate at which actual vs. retrieved state (from EM) are integrated in context_layer
+STATE_WEIGHT = .1    # rate at which actual vs. retrieved state (from EM) are integrated in context_layer
 CONTEXT_INTEGRATION_RATE = .1  # rate at which retrieved context (from EM) is integrated into context_layer
 TIME_DRIFT_NOISE = 0.0         # noise used by DriftOnASphereIntegrator (function of Context mech)
 
@@ -209,6 +209,43 @@ inputs = {STATE_INPUT_LAYER_NAME: [[1],[2],[3]] * STATE_SIZE * NUM_TRIALS,
           REWARD_INPUT_LAYER_NAME: [[0],[0],[1]] * REWARD_SIZE * NUM_TRIALS,
           TASK_INPUT_LAYER_NAME: [[Task.EXPERIENCE.value]] * NUM_EXPERIENCE_TRIALS
                                  + [[Task.PREDICT.value]] * NUM_PREDICT_TRIALS}
+def gen_baseline_trials_exp1(dim=STATE_SIZE, num_trials=NUM_EXPERIENCE_TRIALS):
+    # Generate one-hots
+    state_reps = np.eye(dim)
+    visited_states, rewards = [], []
+
+    for trial_idx in range(num_trials):
+        if np.random.random()<.5:
+            visited_states.extend([1,3,5])
+            rewards.extend([0,0,10])
+        else:
+            visited_states.extend([2,4,6])
+            rewards.extend([0,0,1])
+
+    # Pick one-hots corresponding to each state
+    visited_states = state_reps[visited_states]
+    rewards = np.array(rewards)
+
+    return visited_states, rewards
+def gen_reward_revaluation_trials_exp1(dim=STATE_SIZE, num_trials=NUM_PREDICT_TRIALS):
+    # Generate one-hots
+    state_reps = np.eye(dim)
+    visited_states, rewards = [], []
+
+    for trial_idx in range(num_trials):
+        if np.random.random()<.5:
+            visited_states.extend([3,5])
+            rewards.extend([0,1])
+        else:
+            visited_states.extend([4,6])
+            rewards.extend([0,10])
+
+    # Pick one-hots corresponding to each state
+    visited_states = state_reps[visited_states]
+    rewards = np.array(rewards)
+
+    return visited_states, rewards
+
 assert True
 
 def construct_model(model_name:str=MODEL_NAME,
@@ -225,8 +262,9 @@ def construct_model(model_name:str=MODEL_NAME,
 
                     # Context processing:
                     attention_layer_name=ATTENTION_LAYER_NAME,
+                    attentional_control_name=ATTENTIONAL_CONTROL_LAYER_NAME,
                     context_name:str=CONTEXT_LAYER_NAME,
-                    state_integration_weight:Union[float,int]=STATE_INTEGRATION_WEIGHT,
+                    state_weight:Union[float,int]=STATE_WEIGHT,
                     context_integration_rate:Union[float,int]=CONTEXT_INTEGRATION_RATE,
 
                     # EM:
@@ -249,20 +287,20 @@ def construct_model(model_name:str=MODEL_NAME,
     # Apportionment of contributions of state (actual or em) vs. context (em) to context_layer integration:
 
     # state input (EXPERIENCE) -\
-    #                            --> state_integration_weight -------\
-    # state from em (PREDICT)---/                                     -> * (1-context_integration_rate) --\
-    #                          /-----> context_integration_weight -/                                       --> context
-    # context from em --------/      (=1- state_integration_weight)                                       /
-    #                                                               /----> context_integration_rate -----/
-    # context from prev. cycle ------------------------------------/
+    #                            --> state_weight -------\
+    # state from em (PREDICT)---/                         -> * (context_integration_rate) -----\
+    #                          /-----> context_weight ---/                                      --> context
+    # context from em --------/      (=1- state_weight)                                        /
+    #                                                    /---> 1 - context_integration_rate --/
+    # context from prev. cycle -------------------------/
 
     assert 0 <= context_integration_rate <= 1,\
         f"context_retrieval_weight must be a number from 0 to 1"
-    assert 0 <= state_integration_weight <= 1,\
+    assert 0 <= state_weight <= 1,\
         f"context_retrieval_weight must be a number from 0 to 1"
-    context_integration_weight = 1 - state_integration_weight
-    state_integration_weight *= 1 - context_integration_rate
-    context_integration_weight *= 1 - context_integration_rate
+    context_weight = 1 - state_weight
+    state_weight *= context_integration_rate
+    context_weight *= context_integration_rate
 
 
     task_input_layer = ProcessingMechanism(name=task_input_name,
@@ -275,12 +313,13 @@ def construct_model(model_name:str=MODEL_NAME,
                                            size=time_size)
 
     attention_layer = ProcessingMechanism(name=ATTENTION_LAYER_NAME,
+                                          size=(state_size,state_size),
                                           input_ports=[ACTUAL_STATE_INPUT, RETRIEVED_STATE_INPUT],
                                           function=LinearCombination)
 
     context_layer = RecurrentTransferMechanism(name=context_name,
                                                size=state_size,
-                                               auto=1-state_integration_weight,
+                                               auto=1-context_integration_rate,
                                                hetero=0.0)
 
     reward_input_layer = ProcessingMechanism(name=reward_input_name,
@@ -362,7 +401,7 @@ def construct_model(model_name:str=MODEL_NAME,
     # Uses the encoding_control_function (see above) to control:
     #   - encoding of state info in context_layer (from stimulus vs. em)
     #   - storage of info in em
-    attention_layer = ControlMechanism(name=attention_layer_name,
+    attentional_control_layer = ControlMechanism(name=attentional_control_name,
                                                  monitor_for_control=task_input_layer,
                                                  function = encoding_control_function,
                                                  control=[(STORAGE_PROB, em),
@@ -397,24 +436,33 @@ def construct_model(model_name:str=MODEL_NAME,
 
     # Inputs to Context
     # actual state -> attention_layer
-    EGO_comp.add_projection(MappingProjection(state_input_layer, attention_layer.input_ports[ACTUAL_STATE_INPUT]))
+    EGO_comp.add_projection(MappingProjection(state_input_layer, 
+                                              attention_layer.input_ports[ACTUAL_STATE_INPUT]))
     # retrieved state -> attention_layer
     EGO_comp.add_projection(MappingProjection(em.output_ports[f'RETRIEVED_{STATE_INPUT_LAYER_NAME}'],
-                                              attention_layer.input_ports[RETRIEVED_STATE_INPUT],
-                                              weight=state_integration_weight))
+                                              attention_layer.input_ports[RETRIEVED_STATE_INPUT]))
     # attention_layer -> context_layer
-    EGO_comp.add_projection(MappingProjection(attention_layer, context_layer))
+    EGO_comp.add_projection(MappingProjection(attention_layer, 
+                                              context_layer,
+                                              matrix=np.eye(STATE_SIZE) * state_weight))
     # retrieved context -> context_layer
     EGO_comp.add_projection(MappingProjection(em.output_ports[f'RETRIEVED_{CONTEXT_LAYER_NAME}'],
                                               context_layer,
-                                              weight=context_integration_rate))
+                                              matrix=np.eye(STATE_SIZE) * context_weight))
 
     # Rest of EM retrieval
     # EGO_comp.add_projection(MappingProjection(em.output_ports[f'RETRIEVED_{TIME_INPUT_LAYER_NAME}'],
     #                                           retrieved_time_layer)),
     EGO_comp.add_projection(MappingProjection(em.output_ports[f'RETRIEVED_{REWARD_INPUT_LAYER_NAME}'],
                                               retrieved_reward_layer))
-    EGO_comp.add_node(attention_layer)
+    EGO_comp.add_node(attentional_control_layer)
+
+    assert context_layer.input_port.path_afferents[0].sender.owner == context_layer
+    assert context_layer.input_port.path_afferents[0].parameters.matrix.get()[0][0] == 1-context_integration_rate
+    assert context_layer.input_port.path_afferents[1].sender.owner == attention_layer
+    assert context_layer.input_port.path_afferents[1].parameters.matrix.get()[0][0] == state_weight
+    assert context_layer.input_port.path_afferents[2].sender.owner == em
+    assert context_layer.input_port.path_afferents[2].parameters.matrix.get()[0][0] == context_weight
 
     print(f'{model_name} constructed')
     return EGO_comp
