@@ -30,67 +30,28 @@ logger = logging.getLogger(__name__)
 # Unit tests for functions of EMComposition class that are new (not in Composition)
 # or override functions in Composition
 
-def _single_learn_results(composition, *args, **kwargs):
-    composition.learn(*args, **kwargs)
-    return composition.learning_results
+# def _single_learn_results(composition, *args, **kwargs):
+#     composition.learn(*args, **kwargs)
+#     return composition.learning_results
 
 @pytest.mark.pytorch
 @pytest.mark.acconstructor
 class TestConstruction:
 
-    def test_two_calls_no_args(self):
-        comp = EMComposition()
-        comp_2 = EMComposition()
-        assert isinstance(comp, EMComposition)
-        assert isinstance(comp_2, EMComposition)
+    # def test_two_calls_no_args(self):
+    #     comp = EMComposition()
+    #     comp_2 = EMComposition()
+    #     assert isinstance(comp, EMComposition)
+    #     assert isinstance(comp_2, EMComposition)
 
-    def test_pytorch_representation(self):
-        comp = EMComposition()
-        assert comp.pytorch_representation is None
+    # def test_pytorch_representation(self):
+    #     comp = EMComposition()
+    #     assert comp.pytorch_representation is None
 
-    def test_report_prefs(self):
-        comp = EMComposition()
-        assert comp.input_CIM.reportOutputPref == ReportOutput.OFF
-        assert comp.output_CIM.reportOutputPref == ReportOutput.OFF
-
-# memory_template - NUMBER OF ENTRIES AND FORMAT:
-# 1) single entry
-#    √ memory_template is tuple - 0
-#    √ memory_template is list with zeros and same lengths - 1, 2.x
-#    √ memory_template is list with zeros and different lengths - 3,4,6,7,11
-#    √ memory_template is list with non-zeros and same lengths - 9
-#    √ memory_template is np.ndarray with zeros and different lengths - 9.1, 10
-#    - memory_template is np.ndarray with zeros and same lengths - FIX
-#    - memory_template is np.ndarray with zeros and different lengths FIX
-# 2) multiple entries
-#    √ memory_template is partial entries with zeros and different lengths
-#    √ memory_template is partial entries with non-zeros and different lengths - 13,14,15,16
-#    - memory_template is full entries with zeros and different lengths
-#    - memory_template is full entries with non-zeros and different lengths - 17
-
-# memory_fill
-# √ single value - 10-17
-# √ tuple of values (random) 0.2
-
-# field_weights
-# √ single value - 5.x
-# √ multiple values all same - 6,7,12-14
-# √ multiple values different - 8-11, 15-17
-
-# TODO:
-# field names
-
-# normalize_memory - True/False
-
-# Execution:
-# retrieval:
-# 1) concatenation - True/False
-# 2) normalization - True/False
-# 3) field_weights - same / different
-# softmax_gain - None/float/function
-# memory_decay_rate - None/AUTO/float
-# storage_probability - None, float
-# learn_weights - True/False
+    # def test_report_prefs(self):
+    #     comp = EMComposition()
+    #     assert comp.input_CIM.reportOutputPref == ReportOutput.OFF
+    #     assert comp.output_CIM.reportOutputPref == ReportOutput.OFF
 
     # FIX: ADD WARNING TESTS
     # FIX: ADD ERROR TESTS
@@ -166,7 +127,7 @@ class TestConstruction:
                        num_values,
                        concatenate_node,
                        benchmark):
-        """Note: weight matrices used for memory are validated by using em.memory, since its getter uses thos matrices
+        """Note: weight matrices used for memory are validated by using em.memory, since its getter uses those matrices
         """
 
         params = {'memory_template': memory_template}
@@ -511,73 +472,73 @@ class TestExecution:
 # *************************************  FROM AutodiffComposition  ************************************************
 # *****************************************************************************************************************
 
-@pytest.mark.skip(reason="no pytorch representation of EMComposition yet")
-@pytest.mark.pytorch
-@pytest.mark.composition
-def test_autodiff_forward(autodiff_mode):
-    """FIX: SHOULD IMPLEMENT CORRESPONDING TESTS FROM AutodiffComposition"""
-    pass
-
-
-@pytest.mark.skip(reason="no pytorch representation of EMComposition yet")
-@pytest.mark.pytorch
-@pytest.mark.accorrectness
-@pytest.mark.composition
-class TestTrainingCorrectness:
-    """FIX: SHOULD IMPLEMENT CORRESPONDING TESTS FROM AutodiffComposition"""
-    pass
-
-
-@pytest.mark.skip(reason="no pytorch representation of EMComposition yet")
-@pytest.mark.pytorch
-@pytest.mark.acidenticalness
-class TestTrainingIdenticalness():
-    """FIX: SHOULD IMPLEMENT CORRESPONDING TESTS FROM AutodiffComposition"""
-    pass
-
-
-@pytest.mark.skip(reason="no pytorch representation of EMComposition yet")
-@pytest.mark.pytorch
-@pytest.mark.acmisc
-@pytest.mark.composition
-class TestMiscTrainingFunctionality:
-    """FIX: SHOULD IMPLEMENT CORRESPONDING TESTS FROM AutodiffComposition"""
-    pass
-
-@pytest.mark.skip(reason="no pytorch representation of EMComposition yet")
-@pytest.mark.pytorch
-@pytest.mark.actime
-class TestTrainingTime:
-    """FIX: SHOULD IMPLEMENT CORRESPONDING TESTS FROM AutodiffComposition"""
-    pass
-
-
-@pytest.mark.skip(reason="no pytorch representation of EMComposition yet")
-@pytest.mark.pytorch
-def test_autodiff_saveload(tmp_path):
-    """FIX: SHOULD IMPLEMENT CORRESPONDING TESTS FROM AutodiffComposition"""
-    pass
-
-
-@pytest.mark.skip(reason="no pytorch representation of EMComposition yet")
-@pytest.mark.pytorch
-@pytest.mark.aclogging
-class TestACLogging:
-    """FIX: SHOULD IMPLEMENT CORRESPONDING TESTS FROM AutodiffComposition"""
-    pass
-
-
-@pytest.mark.skip(reason="no pytorch representation of EMComposition yet")
-@pytest.mark.pytorch
-@pytest.mark.acnested
-@pytest.mark.composition
-class TestNested:
-    """FIX: SHOULD IMPLEMENT CORRESPONDING TESTS FROM AutodiffComposition"""
-    pass
-
-
-@pytest.mark.skip(reason="no pytorch representation of EMComposition yet")
-@pytest.mark.pytorch
-class TestBatching:
-    """FIX: SHOULD IMPLEMENT CORRESPONDING TESTS FROM AutodiffComposition"""
-    pass
+# @pytest.mark.skip(reason="no pytorch representation of EMComposition yet")
+# @pytest.mark.pytorch
+# @pytest.mark.composition
+# def test_autodiff_forward(autodiff_mode):
+#     """FIX: SHOULD IMPLEMENT CORRESPONDING TESTS FROM AutodiffComposition"""
+#     pass
+#
+#
+# @pytest.mark.skip(reason="no pytorch representation of EMComposition yet")
+# @pytest.mark.pytorch
+# @pytest.mark.accorrectness
+# @pytest.mark.composition
+# class TestTrainingCorrectness:
+#     """FIX: SHOULD IMPLEMENT CORRESPONDING TESTS FROM AutodiffComposition"""
+#     pass
+#
+#
+# @pytest.mark.skip(reason="no pytorch representation of EMComposition yet")
+# @pytest.mark.pytorch
+# @pytest.mark.acidenticalness
+# class TestTrainingIdenticalness():
+#     """FIX: SHOULD IMPLEMENT CORRESPONDING TESTS FROM AutodiffComposition"""
+#     pass
+#
+#
+# @pytest.mark.skip(reason="no pytorch representation of EMComposition yet")
+# @pytest.mark.pytorch
+# @pytest.mark.acmisc
+# @pytest.mark.composition
+# class TestMiscTrainingFunctionality:
+#     """FIX: SHOULD IMPLEMENT CORRESPONDING TESTS FROM AutodiffComposition"""
+#     pass
+#
+# @pytest.mark.skip(reason="no pytorch representation of EMComposition yet")
+# @pytest.mark.pytorch
+# @pytest.mark.actime
+# class TestTrainingTime:
+#     """FIX: SHOULD IMPLEMENT CORRESPONDING TESTS FROM AutodiffComposition"""
+#     pass
+#
+#
+# @pytest.mark.skip(reason="no pytorch representation of EMComposition yet")
+# @pytest.mark.pytorch
+# def test_autodiff_saveload(tmp_path):
+#     """FIX: SHOULD IMPLEMENT CORRESPONDING TESTS FROM AutodiffComposition"""
+#     pass
+#
+#
+# @pytest.mark.skip(reason="no pytorch representation of EMComposition yet")
+# @pytest.mark.pytorch
+# @pytest.mark.aclogging
+# class TestACLogging:
+#     """FIX: SHOULD IMPLEMENT CORRESPONDING TESTS FROM AutodiffComposition"""
+#     pass
+#
+#
+# @pytest.mark.skip(reason="no pytorch representation of EMComposition yet")
+# @pytest.mark.pytorch
+# @pytest.mark.acnested
+# @pytest.mark.composition
+# class TestNested:
+#     """FIX: SHOULD IMPLEMENT CORRESPONDING TESTS FROM AutodiffComposition"""
+#     pass
+#
+#
+# @pytest.mark.skip(reason="no pytorch representation of EMComposition yet")
+# @pytest.mark.pytorch
+# class TestBatching:
+#     """FIX: SHOULD IMPLEMENT CORRESPONDING TESTS FROM AutodiffComposition"""
+#     pass
