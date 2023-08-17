@@ -64,6 +64,7 @@ def xor_network():
 
 class TestInputAndTargetSpecs:
 
+    @pytest.mark.pytorch
     @pytest.mark.parametrize('input_type', ['dict', 'func', 'gen', 'gen_func'],
                              ids=['dict', 'func', 'gen', 'gen_func'])
     @pytest.mark.parametrize('exec_mode', [pnl.ExecutionMode.PyTorch,
