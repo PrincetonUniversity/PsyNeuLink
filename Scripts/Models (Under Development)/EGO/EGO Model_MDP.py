@@ -130,8 +130,10 @@ from psyneulink import *
 CONSTRUCT_MODEL = True                 # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = (                      # Only one of the following can be uncommented:
     # None                             # suppress display of model
-    {}                               # show summary visual display of model
-    # {'show_node_structure': True}      # show detailed view of node structures and projections
+    # {}                               # show simple visual display of model
+    # {'show_node_structure': True}    # show detailed view of node structures and projections
+    {'show_node_structure': True,      # show detailed view with autoassociative projections
+     'show_learning': True}
 )
 RUN_MODEL = False                      # True => run the model
 ANALYZE_RESULTS = False                # True => output analysis of results of run
