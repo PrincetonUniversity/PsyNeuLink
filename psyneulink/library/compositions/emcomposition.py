@@ -130,10 +130,6 @@
 
 #
 #        - Composition:
-#          - Write convenience Function for returning current time from context
-#               - requires it be called from execution within aComposition, error otherwise)
-#               - takes argument for time scale (e.g., TimeScale.TRIAL, TimeScale.RUN, etc.)
-#               - Add TimeMechanism for which this is the function, and can be configured to report at a timescale
 #          - Add Composition.run_status attribute assigned a context flag, with is_preparing property that checks it
 #                 (paralleling handling of is_initializing)
 #          - Allow set of lists as specification for pathways in Composition

@@ -133,9 +133,9 @@ DISPLAY_MODEL = (                      # Only one of the following can be uncomm
     {}                               # show summary visual display of model
     # {'show_node_structure': True}      # show detailed view of node structures and projections
 )
-RUN_MODEL = False                      # True => run the model
+RUN_MODEL = True                      # True => run the model
 ANALYZE_RESULTS = False                # True => output analysis of results of run
-REPORT_OUTPUT = ReportOutput.OFF       # Sets console output during run
+REPORT_OUTPUT = ReportOutput.ON       # Sets console output during run
 REPORT_PROGRESS = ReportProgress.OFF   # Sets console progress bar during run
 ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
 
@@ -330,7 +330,7 @@ def construct_model(model_name:str=MODEL_NAME,
                         attention_layer,
                         context_layer,
                         reward_input_layer,
-                        retrieved_time_layer,
+                        # retrieved_time_layer,
                         em])
     EGO_comp.exclude_node_roles(task_input_layer, NodeRole.OUTPUT)
     EGO_comp.add_projection(MappingProjection(state_input_layer, attention_layer.input_ports[ACTUAL_STATE_INPUT]))
