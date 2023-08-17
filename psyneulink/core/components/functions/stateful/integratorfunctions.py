@@ -209,6 +209,12 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
                     :default value: numpy.array([0])
                     :type: ``numpy.ndarray``
 
+                reset
+                    see `reset <SimpleIntegrator.reset>`
+
+                    :default value: 0.0
+                    :type: ``float``
+
                 rate
                     see `rate <IntegratorFunction.rate>`
 
@@ -216,11 +222,10 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
                     :type: ``float``
         """
         rate = Parameter(1.0, modulable=True, function_arg=True)
-        noise = Parameter(
-            0.0, modulable=True, function_arg=True, setter=_noise_setter
-        )
-        previous_value = Parameter(np.array([0]), initializer='initializer')
+        noise = Parameter(0.0, modulable=True, function_arg=True, setter=_noise_setter)
+        previous_value = Parameter(np.array([0]), initializer='initializer', function_arg=True, modulable=True)
         initializer = Parameter(np.array([0]), pnl_internal=True)
+        # reset = Parameter(0.0, modulable=True, function_arg=True)
 
     @check_user_specified
     @beartype
