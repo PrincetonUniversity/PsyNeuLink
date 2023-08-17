@@ -131,8 +131,8 @@ from psyneulink import *
 CONSTRUCT_MODEL = True                 # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = (                      # Only one of the following can be uncommented:
     # None                             # suppress display of model
-    # {}                               # show simple visual display of model
-    {'show_node_structure': True}    # show detailed view of node structures and projections
+    {}                               # show simple visual display of model
+    # {'show_node_structure': True}    # show detailed view of node structures and projections
 )
 RUN_MODEL = False                      # True => run the model
 ANALYZE_RESULTS = False                # True => output analysis of results of run
@@ -421,6 +421,7 @@ def construct_model(model_name:str=MODEL_NAME,
                         state_input_layer,
                         time_input_layer,
                         attention_layer,
+                        attentional_control_layer,
                         context_layer,
                         reward_input_layer,
                         # retrieved_time_layer,
@@ -455,8 +456,8 @@ def construct_model(model_name:str=MODEL_NAME,
     #                                           retrieved_time_layer)),
     EGO_comp.add_projection(MappingProjection(em.output_ports[f'RETRIEVED_{REWARD_INPUT_LAYER_NAME}'],
                                               retrieved_reward_layer))
-    EGO_comp.add_node(attentional_control_layer)
 
+    # Validate construction
     assert context_layer.input_port.path_afferents[0].sender.owner == context_layer
     assert context_layer.input_port.path_afferents[0].parameters.matrix.get()[0][0] == 1-context_integration_rate
     assert context_layer.input_port.path_afferents[1].sender.owner == attention_layer
