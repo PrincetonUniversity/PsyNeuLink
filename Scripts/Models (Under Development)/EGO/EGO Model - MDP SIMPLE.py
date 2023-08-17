@@ -183,21 +183,25 @@ RANDOM_WEIGHTS_INITIALIZATION=RandomMatrix(center=0.0, range=0.1)  # Matrix spec
 # Execution parameters:
 CONTEXT_DRIFT_RATE=.1 # drift rate used for DriftOnASphereIntegrator (function of Context mech) on each trial
 
-NUM_TRIALS_IN_SEQUENCE = 3                              # number of trials in a sequence
-NUM_EXPERIENCE_TRIALS = 24                              # number of trials for Task.EXPERIENCE
-NUM_PREDICT_TRIALS = 24                                 # number of trials Task.PREDICT
+NUM_ROLL_OUT = 3     # number of trials in a sequence
+NUM_EXPERIENCE_TRIALS = 9      # number of trials for Task.EXPERIENCE
+NUM_PREDICT_TRIALS = 9         # number of trials Task.PREDICT
 NUM_TRIALS = NUM_EXPERIENCE_TRIALS + NUM_PREDICT_TRIALS # total number of trials
+assert NUM_PREDICT_TRIALS % NUM_ROLL_OUT == 0, \
+    f"NUM_PREDICT_TRIALS ({NUM_PREDICT_TRIALS}) " \
+    f"must be evenly divisible by NUM_ROLL_OUT ({NUM_ROLL_OUT})"
 
 # Used to generate input to time_input_layer of model
 time_fct = DriftOnASphereIntegrator(initializer=np.random.random(TIME_SIZE - 1),
                                     noise=TIME_DRIFT_NOISE,
                                     dimension=TIME_SIZE)
 
-inputs = {STATE_INPUT_LAYER_NAME: [[0] * STATE_SIZE] * NUM_TRIALS,
-          TIME_INPUT_LAYER_NAME: [time_fct(i) for i in range(NUM_TRIALS)],
-          REWARD_INPUT_LAYER_NAME: [[0] * REWARD_SIZE] * NUM_TRIALS,
-          TASK_INPUT_LAYER_NAME: [[Task.EXPERIENCE]] * NUM_EXPERIENCE_TRIALS + [[Task.PREDICT]] * NUM_PREDICT_TRIALS}
-
+inputs = {STATE_INPUT_LAYER_NAME: [[1],[2],[3]] * STATE_SIZE * NUM_TRIALS,
+          TIME_INPUT_LAYER_NAME: np.array([time_fct(i) for i in range(NUM_TRIALS)]).reshape(NUM_TRIALS,TIME_SIZE,1),
+          REWARD_INPUT_LAYER_NAME: [[0],[0],[1]] * REWARD_SIZE * NUM_TRIALS,
+          TASK_INPUT_LAYER_NAME: [[Task.EXPERIENCE.value]] * NUM_EXPERIENCE_TRIALS
+                                 + [[Task.PREDICT.value]] * NUM_PREDICT_TRIALS}
+assert True
 
 def construct_model(model_name:str=MODEL_NAME,
 
@@ -312,21 +316,21 @@ def construct_model(model_name:str=MODEL_NAME,
         
         # Trial Number:
         if context and context.composition:
-            trial = [context.composition.get_current_execution_time(context)[TimeScale.TRIAL]]
+            trial = int([context.composition.get_current_execution_time(context)[TimeScale.TRIAL]])
         else:
-            trial = [0]
+            trial = 0
 
         if task == Task.EXPERIENCE:
             attend_actual = 1
             
         elif task == Task.PREDICT:
-            attend_actual = 1 if not (trial % NUM_TRIALS_IN_SEQUENCE) else 1
-            attend_retrieved = 1 if (trial % NUM_TRIALS_IN_SEQUENCE) else 0
+            attend_actual = 1 if not (trial % NUM_ROLL_OUT) else 1
+            attend_retrieved = 1 if (trial % NUM_ROLL_OUT) else 0
         else:
             raise ValueError(f"Unrecognized task value in encoding_control_function: {task}")
 
         # Store to EM to
-        store = 1 if variable[0] == Task.EXPERIENCE else 0
+        store = 1 if task == Task.EXPERIENCE.value else 0
 
         control_signals = [store, attend_actual, attend_retrieved]
 
@@ -401,4 +405,4 @@ if DISPLAY_MODEL is not None:
         print("Model not yet constructed")
 
 if RUN_MODEL:
-    model.run()
+    model.run(inputs=inputs)
