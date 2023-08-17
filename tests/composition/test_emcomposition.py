@@ -7,16 +7,9 @@ import pytest
 
 import psyneulink as pnl
 
-from psyneulink.core.components.functions.nonstateful.transferfunctions import Logistic
-from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation
-from psyneulink.core.compositions.composition import Composition
-from psyneulink.core.globals import Context
 from psyneulink.core.globals.keywords import AUTO, CONTROL
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
-from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.library.compositions.emcomposition import EMComposition, EMCompositionError
-from psyneulink.core.compositions.report import ReportOutput
+from psyneulink.library.compositions.emcomposition import EMComposition
 
 module_seed = 0
 np.random.seed(0)
@@ -27,12 +20,15 @@ logger = logging.getLogger(__name__)
 # All tests are set to run. If you need to skip certain tests,
 # see http://doc.pytest.org/en/latest/skipping.html
 
-# Unit tests for functions of EMComposition class that are new (not in Composition)
-# or override functions in Composition
-
-# def _single_learn_results(composition, *args, **kwargs):
-#     composition.learn(*args, **kwargs)
-#     return composition.learning_results
+# Unit tests for functions of EMComposition class that are new (not in Composition or AutodiffComposition)
+# or override functions in those classes
+#
+# TODO:
+#     FIX: ADD WARNING TESTS
+#     FIX: ADD ERROR TESTS
+#     FIX: ADD TESTS FOR LEARNING COMPONENTS in TestStructure
+#     FIX: ADD TESTS FOR ACTUAL CALL TO learn() FOR LEARNING in TestExecution
+#     FIX: ENABLE TESTS FOR LEARNING ONCE CONCATENATION IS IMPLEMENTED FOR THAT
 
 @pytest.mark.pytorch
 @pytest.mark.acconstructor
@@ -53,21 +49,19 @@ class TestConstruction:
     #     assert comp.input_CIM.reportOutputPref == ReportOutput.OFF
     #     assert comp.output_CIM.reportOutputPref == ReportOutput.OFF
 
-    # FIX: ADD WARNING TESTS
-    # FIX: ADD ERROR TESTS
     test_structure_data = [
         # NOTE: None => use default value (i.e., don't specify in constructor, rather than forcing None as value of arg)
         # ------------------ SPECS ---------------------------------------------   ------- EXPECTED -------------------
         #   memory_template       memory_fill   field_wts cncat_ky nmlze sm_gain   repeat  #fields #keys #vals  concat
-        # (0,    (2,3),                  None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
-        # (0.1,  (2,3),                   .1,       None,    None,    None,  None,    False,    2,     1,   1,    False,),
-        # (0.2,  (2,3),                 (0,.1),     None,    None,    None,  None,    False,    2,     1,   1,    False,),
-        # (0.3,  (4,2,3),                 .1,       None,    None,    None,  None,    False,    2,     1,   1,    False,),
-        # (1,    [[0,0],[0,0]],          None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
-        # (1.1,  [[0,0],[0,0]],          None,      [1,1],   None,    None,  None,    False,    2,     2,   0,    False,),
-        # (2,    [[0,0],[0,0],[0,0]],    None,      None,    None,    None,  None,    False,    3,     2,   1,    False,),
-        # (2.1,  [[0,0],[0,0],[0,0]],    None,      None,    None,    None,   1.5,    False,    3,     2,   1,    False,),
-        # (2.2,  [[0,0],[0,0],[0,0]],    None,      None,    None,    None, CONTROL,  False,    3,     2,   1,    False,),
+        (0,    (2,3),                  None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        (0.1,  (2,3),                   .1,       None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        (0.2,  (2,3),                 (0,.1),     None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        (0.3,  (4,2,3),                 .1,       None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        (1,    [[0,0],[0,0]],          None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        (1.1,  [[0,0],[0,0]],          None,      [1,1],   None,    None,  None,    False,    2,     2,   0,    False,),
+        (2,    [[0,0],[0,0],[0,0]],    None,      None,    None,    None,  None,    False,    3,     2,   1,    False,),
+        (2.1,  [[0,0],[0,0],[0,0]],    None,      None,    None,    None,   1.5,    False,    3,     2,   1,    False,),
+        (2.2,  [[0,0],[0,0],[0,0]],    None,      None,    None,    None, CONTROL,  False,    3,     2,   1,    False,),
         (3,    [[0,0,0],[0,0]],        None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
         (4,    [[0,0,0],[0],[0,0]],    None,      None,    None,    None,  None,    False,    3,     2,   1,    False,),
         (5,    [[0,0],[0,0],[0,0]],    None,       1,      None,    None,  None,    False,    3,     3,   0,    False,),
@@ -112,9 +106,11 @@ class TestConstruction:
                              test_structure_data,
                              ids=[x[0] for x in test_structure_data]
                              )
+    @pytest.mark.parametrize('enable_learning', [False, True], ids=['no_learning','learning'])
     @pytest.mark.benchmark
     def test_structure(self,
                        test_num,
+                       enable_learning,
                        memory_template,
                        memory_fill,
                        field_weights,
@@ -130,7 +126,12 @@ class TestConstruction:
         """Note: weight matrices used for memory are validated by using em.memory, since its getter uses those matrices
         """
 
-        params = {'memory_template': memory_template}
+        # Restrict testing of learning configurations (which are much larger) to select tests
+        if enable_learning and test_num not in {2, 2.2, 4, 8}:
+            pytest.skip('Limit tests of learning to subset of parametrizations (for efficiency)')
+
+        params = {'memory_template': memory_template,
+                  'enable_learning': enable_learning}
         # Add explicit argument specifications (to avoid forcing to None in constructor)
         if isinstance(memory_template, tuple) and len(memory_template) == 3:
             # Assign for tests below, but allow it to be inferred in constructor
@@ -346,28 +347,35 @@ class TestExecution:
     @pytest.mark.parametrize(args_names,
                              test_execution_data,
                              ids=[x[0] for x in test_execution_data])
+    @pytest.mark.parametrize('enable_learning', [False, True], ids=['no_learning','learning'])
     @pytest.mark.composition
     @pytest.mark.benchmark
-    def test_simple_execution(self,
-                              comp_mode,
-                              test_num,
-                              memory_template,
-                              memory_capacity,
-                              memory_fill,
-                              memory_decay_rate,
-                              field_weights,
-                              concatenate_keys,
-                              normalize_memories,
-                              softmax_gain,
-                              storage_prob,
-                              inputs,
-                              expected_retrieval):
+    def test_simple_execution_without_learning(self,
+                                               comp_mode,
+                                               enable_learning,
+                                               test_num,
+                                               memory_template,
+                                               memory_capacity,
+                                               memory_fill,
+                                               memory_decay_rate,
+                                               field_weights,
+                                               concatenate_keys,
+                                               normalize_memories,
+                                               softmax_gain,
+                                               storage_prob,
+                                               inputs,
+                                               expected_retrieval):
 
         if comp_mode != pnl.ExecutionMode.Python:
             pytest.skip('Compilation not yet support for Composition.import.')
 
+        # Restrict testing of learning configurations (which are much larger) to select tests
+        if enable_learning and test_num not in {10}:
+            pytest.skip('Limit tests of learning to subset of parametrizations (for efficiency)')
+
         params = {'memory_template': memory_template,
                   'memory_capacity': memory_capacity,
+                  'enable_learning': enable_learning,
                   }
         # Add explicit argument specifications only for args that are not None
         # (to avoid forcing to None in constructor)
@@ -466,79 +474,3 @@ class TestExecution:
                # call_after_trial=temp
                )
         np.testing.assert_equal(em.memory, expected_memory)
-
-
-# *****************************************************************************************************************
-# *************************************  FROM AutodiffComposition  ************************************************
-# *****************************************************************************************************************
-
-# @pytest.mark.skip(reason="no pytorch representation of EMComposition yet")
-# @pytest.mark.pytorch
-# @pytest.mark.composition
-# def test_autodiff_forward(autodiff_mode):
-#     """FIX: SHOULD IMPLEMENT CORRESPONDING TESTS FROM AutodiffComposition"""
-#     pass
-#
-#
-# @pytest.mark.skip(reason="no pytorch representation of EMComposition yet")
-# @pytest.mark.pytorch
-# @pytest.mark.accorrectness
-# @pytest.mark.composition
-# class TestTrainingCorrectness:
-#     """FIX: SHOULD IMPLEMENT CORRESPONDING TESTS FROM AutodiffComposition"""
-#     pass
-#
-#
-# @pytest.mark.skip(reason="no pytorch representation of EMComposition yet")
-# @pytest.mark.pytorch
-# @pytest.mark.acidenticalness
-# class TestTrainingIdenticalness():
-#     """FIX: SHOULD IMPLEMENT CORRESPONDING TESTS FROM AutodiffComposition"""
-#     pass
-#
-#
-# @pytest.mark.skip(reason="no pytorch representation of EMComposition yet")
-# @pytest.mark.pytorch
-# @pytest.mark.acmisc
-# @pytest.mark.composition
-# class TestMiscTrainingFunctionality:
-#     """FIX: SHOULD IMPLEMENT CORRESPONDING TESTS FROM AutodiffComposition"""
-#     pass
-#
-# @pytest.mark.skip(reason="no pytorch representation of EMComposition yet")
-# @pytest.mark.pytorch
-# @pytest.mark.actime
-# class TestTrainingTime:
-#     """FIX: SHOULD IMPLEMENT CORRESPONDING TESTS FROM AutodiffComposition"""
-#     pass
-#
-#
-# @pytest.mark.skip(reason="no pytorch representation of EMComposition yet")
-# @pytest.mark.pytorch
-# def test_autodiff_saveload(tmp_path):
-#     """FIX: SHOULD IMPLEMENT CORRESPONDING TESTS FROM AutodiffComposition"""
-#     pass
-#
-#
-# @pytest.mark.skip(reason="no pytorch representation of EMComposition yet")
-# @pytest.mark.pytorch
-# @pytest.mark.aclogging
-# class TestACLogging:
-#     """FIX: SHOULD IMPLEMENT CORRESPONDING TESTS FROM AutodiffComposition"""
-#     pass
-#
-#
-# @pytest.mark.skip(reason="no pytorch representation of EMComposition yet")
-# @pytest.mark.pytorch
-# @pytest.mark.acnested
-# @pytest.mark.composition
-# class TestNested:
-#     """FIX: SHOULD IMPLEMENT CORRESPONDING TESTS FROM AutodiffComposition"""
-#     pass
-#
-#
-# @pytest.mark.skip(reason="no pytorch representation of EMComposition yet")
-# @pytest.mark.pytorch
-# class TestBatching:
-#     """FIX: SHOULD IMPLEMENT CORRESPONDING TESTS FROM AutodiffComposition"""
-#     pass
