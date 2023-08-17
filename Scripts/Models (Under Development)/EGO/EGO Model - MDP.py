@@ -130,10 +130,8 @@ from psyneulink import *
 CONSTRUCT_MODEL = True                 # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = (                      # Only one of the following can be uncommented:
     # None                             # suppress display of model
-    # {}                               # show simple visual display of model
+    {}                               # show simple visual display of model
     # {'show_node_structure': True}    # show detailed view of node structures and projections
-    {'show_node_structure': True,      # show detailed view with autoassociative projections
-     'show_learning': True}
 )
 RUN_MODEL = True                      # True => run the model
 ANALYZE_RESULTS = False                # True => output analysis of results of run
@@ -181,13 +179,13 @@ RETRIEVAL_SOFTMAX_GAIN = 10    # gain on softmax retrieval function
 RETRIEVAL_HAZARD_RATE = 0.04   # rate of re=sampling of em following non-match determination in a pass through ffn
 RANDOM_WEIGHTS_INITIALIZATION=RandomMatrix(center=0.0, range=0.1)  # Matrix spec used to initialize all Projections
 
-CONTEXT_STATE_WEIGHT = .1
-CONTEXT_EM_WEIGHT = 1 - CONTEXT_STATE_WEIGHT
+CONTEXT_INTEGRATION_RATE = .1  # rate of integration of context vector
 
 # Execution parameters:
 CONTEXT_DRIFT_RATE=.1 # drift rate used for DriftOnASphereIntegrator (function of Context mech) on each trial
 NUM_TRIALS = 48 # number of stimuli presented in a trial sequence
 
+# Used to generate input to time_input_layer of model
 time_fct = DriftOnASphereIntegrator(initializer=np.random.random(TIME_SIZE - 1),
                                     noise=TIME_DRIFT_NOISE,
                                     dimension=TIME_SIZE)
@@ -207,9 +205,7 @@ def construct_model(model_name:str=MODEL_NAME,
                     attention_layer_name:str=ATTENTION_LAYER,
 
                     context_name:str=CONTEXT_LAYER_NAME,
-                    context_state_weight:float=CONTEXT_STATE_WEIGHT,
-                    context_em_weight:float=CONTEXT_EM_WEIGHT,
-
+                    context_integration_rate:float=CONTEXT_INTEGRATION_RATE,
 
                     reward_input_name = REWARD_INPUT_LAYER_NAME,
                     reward_size:int=REWARD_SIZE,
@@ -248,7 +244,9 @@ def construct_model(model_name:str=MODEL_NAME,
                                           function=LinearCombination)
 
     context_layer = RecurrentTransferMechanism(name=context_name,
-                                               size=state_size)
+                                               size=state_size,
+                                               auto=1-context_integration_rate,
+                                               hetero=0.0)
 
     reward_input_layer = ProcessingMechanism(name=reward_input_name,
                                               size=reward_size)
@@ -282,6 +280,24 @@ def construct_model(model_name:str=MODEL_NAME,
                                        function=SoftMax(output=PROB))
 
     def encoding_function(variable,context):
+        """Use by retrieval_control_layer to control encoding of state info in context_layer and storing in EM
+
+        If task is:
+
+         Task.EXPERIENCE (0):
+          - stores state info in em on every trial (control_signal[0]=1)
+          - always attends to actual state (control_signal[1]=1, control_signal[2]=0)
+
+         Task.PREDICT: (1):
+          - never stores info in em (control_signal[0]=0)
+          - attends to actual state on first trial (control_signal[1]=1, control_signal[2]=0)
+          - attends to retrieved state on all subsequent trials (control_signal[1]=0, control_signal[2]=1)
+
+        Returns:
+            control_signal[0]: 1 if store, 0 otherwise
+            control_signal[1]: 1 if attend to actual state, 0 otherwise
+            control_signal[2]: 1 if attend to retrieved state, 0 otherwise
+        """
 
         # Trial Number:
         if context and context.composition:
@@ -300,16 +316,10 @@ def construct_model(model_name:str=MODEL_NAME,
         return control_signals
 
     # Control Mechanism
-    #  Ensures current stimulus and context are only encoded in EM once (at beginning of trial)
-    #    by controlling the storage_prob parameter of em:
-    #      - if outcome of decision signifies a match or hazard rate is realized:
-    #        - set  EM[store_prob]=1 (as prep encoding stimulus in EM on next trial)
-    #        - this also serves to terminate trial (see nback_model.termination_processing condition)
-    #      - if outcome of decision signifies a non-match
-    #        - set  EM[store_prob]=0 (as prep for another retrieval from EM without storage)
-    #        - continue trial
+    # Uses the encoding_function (see above) to control:
+    #   - encoding of state info in context_layer (from stimulus vs. em)
+    #   - storage of info in em
     retrieval_control_layer = ControlMechanism(name=controller_name,
-                                               # default_variable=[[1]],  # Ensure EM[store_prob]=1 at beginning of first trial
                                                monitor_for_control=task_input_layer,
                                                function = encoding_function,
                                                control=[(STORAGE_PROB, em),
@@ -323,9 +333,8 @@ def construct_model(model_name:str=MODEL_NAME,
                                TimeScale.TRIAL: And(WhenFinished(decision_layer),
                                                     )}
                            )
-    # # Terminate trial if value of control is still 1 after first pass through execution
-    # EGO_comp.show_graph()
-    # EGO_comp.add_projection(MappingProjection(context_input_layer, context_layer))
+
+    # Nodes not in (decision output) Pathway specified above
     EGO_comp.add_nodes([task_input_layer,
                         state_input_layer,
                         time_input_layer,
@@ -335,6 +344,9 @@ def construct_model(model_name:str=MODEL_NAME,
                         # retrieved_time_layer,
                         em])
     EGO_comp.exclude_node_roles(task_input_layer, NodeRole.OUTPUT)
+
+    # Projections not in (decision output) Pathway specified above
+    # Attentional control of input to context_layer
     EGO_comp.add_projection(MappingProjection(state_input_layer, attention_layer.input_ports[ACTUAL_STATE_INPUT]))
     EGO_comp.add_projection(MappingProjection(attention_layer, context_layer))
     # EM encoding
@@ -345,21 +357,23 @@ def construct_model(model_name:str=MODEL_NAME,
     # EM retrieval
     EGO_comp.add_projection(MappingProjection(em.output_ports[f'RETRIEVED_{STATE_INPUT_LAYER_NAME}'],
                                               attention_layer.input_ports[RETRIEVED_STATE_INPUT],
-                                              weight=context_state_weight))
+                                              weight=context_integration_rate))
     # EGO_comp.add_projection(MappingProjection(em.output_ports[f'RETRIEVED_{CONTEXT_LAYER_NAME}'],
     #                                           attention_layer.input_ports[CONTEXT_RETRIEVAL_INPUT],
-    #                                           weight=context_em_weight))
+    #                                           weight=1-context_integration_rate))
     # EGO_comp.add_projection(MappingProjection(em.output_ports[f'RETRIEVED_{TIME_INPUT_LAYER_NAME}'],
     #                                           retrieved_time_layer)),
     EGO_comp.add_projection(MappingProjection(em.output_ports[f'RETRIEVED_{REWARD_INPUT_LAYER_NAME}'],
                                               retrieved_reward_layer))
     EGO_comp.add_node(retrieval_control_layer)
-    # EGO_comp.add_projection(MappingProjection(retrieved_reward_layer, decision_layer))
 
     print(f'{model_name} constructed')
     return EGO_comp
 
+# Script execution:
+
 model = None
+
 if CONSTRUCT_MODEL:
     model = construct_model()
 

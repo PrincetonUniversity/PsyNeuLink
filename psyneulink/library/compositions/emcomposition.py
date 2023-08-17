@@ -141,7 +141,6 @@
 #          - Why can't verbosePref be set directly on a composition?
 
 #        - showgraph:  (show_graph)
-#          - not showing Context recurrent projection (even with show_learning)
 #          - add mode for showing projections as diamonds without show_learning (e.g., "show_projections")
 #          - figure out how to get storage_node to show without all other learning stuff
 #          - show 'operation' parameter for LinearCombination in show_node_structure=ALL
