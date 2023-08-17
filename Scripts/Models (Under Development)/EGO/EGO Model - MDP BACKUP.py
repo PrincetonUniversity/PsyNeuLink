@@ -1,5 +1,7 @@
 """
-QUESTIONS:
+
+FIX: THIS VERSION HAS ONLY PARTIAL CONTROLLER
+
 
 -
 
@@ -159,7 +161,6 @@ RETRIEVED_TIME_NAME = "RETRIEVED TIME"
 RETRIEVED_REWARD_NAME = "RETRIEVED REWARD"
 EM_NAME = "EPISODIC MEMORY"
 DECISION_LAYER_NAME = "DECISION"
-RESPONSE_LAYER_NAME = "RESPONSE_LAYER"
 
 class Task(IntEnum):
     EXPERIENCE = 0
@@ -168,15 +169,14 @@ class Task(IntEnum):
 # CONSTRUCTION PARAMETERS
 
 # Layer sizes:
-TASK_SIZE = 1       # length of task vector
-STATE_SIZE = 8      # length of state vector
-TIME_SIZE = 25      # length of time vector
-REWARD_SIZE = 1     # length of reward vector
-DECISION_SIZE = 2   # length of decision vector
-RESPONSE_SIZE = 2   # length of response vector
+TASK_SIZE = 1                  # length of task vector
+STATE_SIZE = 8                 # length of state vector
+TIME_SIZE = 25                 # length of time vector
+REWARD_SIZE = 1                # length of reward vector
+DECISION_SIZE = 2              # length of decision vector
 
 # Context processing:
-STATE_WEIGHT = .1              # rate at which actual vs. retrieved state (from EM) are integrated in context_layer
+STATE_WEIGHT = .1    # rate at which actual vs. retrieved state (from EM) are integrated in context_layer
 CONTEXT_INTEGRATION_RATE = .1  # rate at which retrieved context (from EM) is integrated into context_layer
 TIME_DRIFT_NOISE = 0.0         # noise used by DriftOnASphereIntegrator (function of Context mech)
 
@@ -284,9 +284,6 @@ def construct_model(model_name:str=MODEL_NAME,
                     decision_layer_name:str=DECISION_LAYER_NAME,
                     decision_size:int=DECISION_SIZE,
 
-                    response_layer_name:str=RESPONSE_LAYER_NAME,
-                    response_size:int=RESPONSE_SIZE,
-
                     )->Composition:
 
     # Apportionment of contributions of state (actual or em) vs. context (em) to context_layer integration:
@@ -356,9 +353,6 @@ def construct_model(model_name:str=MODEL_NAME,
                                        size=decision_size,
                                        function=SoftMax(output=PROB))
 
-    response_layer = TransferMechanism(name=response_layer_name,
-                                       size=response_size)
-
     def encoding_control_function(variable,context):
         """Used by attention_layer to control encoding of state info in context_layer and storing in EM
 
@@ -402,16 +396,12 @@ def construct_model(model_name:str=MODEL_NAME,
             store = 1
 
         # FIX: ADD CONNECTION FROM REWARD RETRIEVAL TO CONTROLLER
-        #      ADD OBJECTIVE_MECHANISM AS A COUNTER (USING A SIMPLE INTEGRATOR FUNCTION)
-        #                        (ALT: GET CURRENT TIME AND ELAPSED TIME AND USE THAT TO COUNT)
-        #            RESET IT USING CONTROL?
+        #      ADD COUNTER
         #      ADD CONTROL SIGNAL FOR GATING TO COUNTER AND DECISION
         #      MAKE DECISION A DDM (OR SIMPLE INTEGRATOR)
         #      ADD TERMINATION CONDITION FOR TRIAL EITHER:
         #      - FOR WHEN COUNTER == (or %) NUM_ROLL_OUTS (AND RESET DECISION LAYER AT TRIAL START)
         #      - OR OUTPUT GATE DECISION TO RESPONSE NODE, AND PUT TERMINATION ON RESPONSE NODE > 0
-        #      RESET COUNTER ON TERMINATION (USING CONTROL?)
-        #      ?BUT: NEED TO IMPLEMENT TERMINATION FOR EXPERIENCE TRIAL
 
         if task == Task.PREDICT.value:
             attend_actual = 0 if trial % NUM_ROLL_OUT else 1
@@ -434,11 +424,10 @@ def construct_model(model_name:str=MODEL_NAME,
                                                           attention_layer.input_ports[RETRIEVED_STATE_INPUT]])
 
     EGO_comp = Composition(name=model_name,
-                           pathways=[retrieved_reward_layer, decision_layer, response_layer], # Decision
+                           pathways=[retrieved_reward_layer, decision_layer], # Decision
                            # # Use this to terminate a Task.PREDICT trial
                            termination_processing={
-                               # FIX: NEEDS TO BE PROPERLY CONFIGURED
-                               TimeScale.TRIAL: And(WhenFinished(response_layer),
+                               TimeScale.TRIAL: And(WhenFinished(decision_layer),
                                                     )}
                            )
 

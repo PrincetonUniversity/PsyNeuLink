@@ -71,7 +71,9 @@
 #           SoftMax implementation:  torch.nn.Softmax(dim=0) is not getting passed correctly
 #           Implement LinearCombination
 # -      - LinearMatrix Function:
-
+#
+#      - ObjectiveMechanism:  add modulatory signal for reset
+#
 #      - REFACTORING OF LEARNING:
 #           - LearningMechanism: Document that ERROR_SIGNAL is OPTIONAL
 #                               (only implemented when there is an error_source specified)
@@ -127,7 +129,6 @@
 #          - MappingProjection / LearningMechanism:
 #            - Add learning_rate parameter to MappingProjection (if learnable is True)
 #            - Refactor LearningMechanism to use MappingProjection learning_rate specification if present
-
 #
 #        - Composition:
 #          - Change size argument in constructor to use standard numpy shape format if tupe, and PNL format if list
@@ -162,12 +163,14 @@
 #        - Autodiff support for IdentityFunction
 #        - LinearMatrix to add normalization
 #        - _store() method to assign weights to memory
+#
 # -    FIX: Adding GatingMechanism after Mechanisms they gate fails to implement gating projections
 # -         (example:  reverse order of the following in _construct_pathways
 #                      self.add_nodes(self.softmax_nodes)
 # -                    self.add_nodes(self.field_weight_nodes)
 #           - add Normalize as option
 #           - Anytime a row's norm is 0, replace with 1s
+#
 # -    FIX: LinearCombination Function:
 #           - finish adding derivative (for if exponents are specified)
 #           - remove properties (use getter and setter for Parameters)
