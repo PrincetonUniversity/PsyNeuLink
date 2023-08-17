@@ -19,7 +19,9 @@ Contents:
   * `LearningSignal_Structure`
       - `LearningSignal_Projections`
       - `LearningSignal_Modulation`
+      COMMENT:
       - `LearningSignal_Learning_Rate`
+      COMMENT
   * `LearningSignal_Execution`
   * `LearningSignal_Class_Reference`
 
@@ -83,8 +85,11 @@ specified.  This can take any of the following forms:
         the MappingProjection must be valid `projection specification <Projection_Specification>`
         for the one to be learned.
 
-    The dictionary can also contain entries for any other LearningSignal attributes to be specified
-    (e.g., a *LEARNING_RATE* entry); see `below <LearningSignal_Structure>` for a description of LearningSignal
+    The dictionary can also contain entries for any other LearningSignal attributes to be specified;
+    COMMENT:
+    (e.g., a *LEARNING_RATE* entry);
+    COMMENT
+    see `below <LearningSignal_Structure>` for a description of LearningSignal
     attributes.
 
 .. _LearningSignal_Structure:
@@ -134,6 +139,8 @@ specification dictionary where the LearningSignal itself is specified, as descri
 `above <LearningSignal_Specification>`. The `modulation <LearningSignal.modulation>` value of a LearningSignal is
 used by all of the `LearningProjections <LearningProjection>` that project from that LearningSignal.
 
+COMMENT:
+TBI
 .. _LearningSignal_Learning_Rate:
 
 *Learning Rate and Function*
@@ -146,9 +153,13 @@ multiplicatively to the LearningProjection`s `learning_signal <LearningProjectio
 used to modulate the learning_rate in addition to (and on top of) one specified for the `LearningMechanism` or its
 `function <LearningMechanism.function>`.  Specification of the `learning_rate <LearningSignal.learning_rate>` for a
 LearningSignal supersedes the `learning_rate <LearningProjection.learning_rate>` for its LearningProjections,
-as well the `learning_rate <Process.learning_rate>` for any Process(es) and/or the
-`learning_rate <System.learning_rate>` for any System(s) to which the LearningSignal's owner belongs
-(see `learning_rate <LearningMechanism_Learning_Rate>` of LearningMechanism for additional details).
+as well the `learning_rate <Composition.learning_rate>` for any `Composition`s to which the LearningSignal's owner
+belongs (see `learning_rate <LearningMechanism_Learning_Rate>` of LearningMechanism and `Composition_Learning_Rate`
+for Composition for additional details).
+COMMENT
+
+*LearningSignal Function*
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The `function <LearningSignal.function>` of a LearningSignal converts the `learning_signal
 <LearningMechanism.learning_signal>` it receives from the LearningMechanism to which it belongs to its `value
@@ -216,7 +227,9 @@ class LearningSignal(ModulatorySignal):
         owner,                                           \
         function=Linear(),                               \
         modulation=MULTIPLICATIVE                        \
+        COMMENT:
         learning_rate=None                               \
+        COMMENT
         params=None,                                     \
         projections=None,                                \
         name=None,                                       \
@@ -227,7 +240,7 @@ class LearningSignal(ModulatorySignal):
     `ModulatorySignal <ModulatorySignal_Class_Reference>` for additional arguments and attributes.
 
     COMMENT:
-   PortRegistry
+    PortRegistry
     -------------
 
         All OutputPorts are registered in PortRegistry, which maintains an entry for the subclass,
@@ -242,9 +255,12 @@ class LearningSignal(ModulatorySignal):
         specifies the function used by the LearningSignal to generate its
         `learning_signal <LearningSignal.learning_signal>`.
 
+    COMMENT:
+    TBI
     learning_rate : float or None : default None
         specifies the learning_rate for the LearningSignal's `LearningProjections <LearningProjection>`
         (see `learning_rate <LearningSignal.learning_rate>` for details).
+    COMMENT
 
     modulation : str : default ADDITIVE
         specifies the way in which the `value <LearningSignal.value>` of the LearningSignal is used to modify the value
@@ -264,10 +280,13 @@ class LearningSignal(ModulatorySignal):
         <LearningSignal.learning_signal>`. The default is the `Identity` Function, that assigns the LearningSignal's
         `variable <Projection_Base.variable>` as its `learning_signal <LearningSignal.learning_signal>`.
 
+    COMMENT:
+    TBI
     learning_rate : float : None
         determines the learning rate for the LearningSignal.  It is used to specify the
         `learning_rate <LearningProjection.learning_rate>` parameter for its LearningProjection(s) (listed in the
         `efferents <LearningSignal.efferents>` attribute). See `LearningSignal_Learning_Rate` for additional details.
+    COMMENT
 
     value : number, list or np.ndarray
         result of the LearningSignal's `function <LearningSignal.function>`; same as its
@@ -321,14 +340,16 @@ class LearningSignal(ModulatorySignal):
                     :type: ``numpy.ndarray``
                     :read only: True
 
+                COMMENT:
                 learning_rate
                     see `learning_rate <LearningSignal_Learning_Rate>`
 
                     :default value: None
                     :type:
+                COMMENT
         """
         value = Parameter(np.array([0]), read_only=True, aliases=['learning_signal'], pnl_internal=True)
-        learning_rate = None
+        # learning_rate = None
 
     @check_user_specified
     @beartype
@@ -340,7 +361,7 @@ class LearningSignal(ModulatorySignal):
                  index=PRIMARY,
                  assign=None,
                  function=None,
-                 learning_rate: Optional[ValidParamSpecType] = None,
+                 # learning_rate: Optional[ValidParamSpecType] = None,
                  modulation:Optional[str]=None,
                  modulates=None,
                  params=None,
@@ -363,7 +384,7 @@ class LearningSignal(ModulatorySignal):
                          assign=None,
                          function=function,
                          modulates=modulates,
-                         learning_rate=learning_rate,
+                         # learning_rate=learning_rate,
                          params=params,
                          name=name,
                          prefs=prefs,

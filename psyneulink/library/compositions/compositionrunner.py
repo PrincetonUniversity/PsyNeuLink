@@ -9,9 +9,10 @@
 # ********************************************* AutodiffComposition *************************************************
 import numpy as np
 
-from psyneulink.core import llvm as pnlvm
+from psyneulink.core.llvm import ExecutionMode
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.compositions.report import Report, ReportProgress, ReportDevices, LEARN_REPORT, PROGRESS_REPORT
+from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import LearningMechanism
 from psyneulink.core.globals.keywords import OBJECTIVE_MECHANISM, TRAINING_SET
 from inspect import isgeneratorfunction
 
@@ -26,18 +27,19 @@ class CompositionRunner():
     def __init__(self, compostion: Composition):
         self._composition = compostion
 
-    def _calculate_loss(self, num_trials, context):
+    def _calculate_loss(self, num_trials:int, execution_mode:ExecutionMode, context):
         """
         Returns a value that is the sum of all the losses from the last iteration
         """
         from psyneulink.library.compositions import AutodiffComposition
+
         if isinstance(self._composition, AutodiffComposition):
             return self._composition._get_total_loss(num_trials, context)
+
         total_loss = 0
         for terminal_sequence in self._composition._terminal_backprop_sequences.values():
-            comparator = terminal_sequence[OBJECTIVE_MECHANISM, ]
+            comparator = terminal_sequence[OBJECTIVE_MECHANISM]
             total_loss += comparator.value[0][0]
-
         return total_loss
 
     def _batch_inputs(self,
@@ -49,6 +51,7 @@ class CompositionRunner():
                       call_before_minibatch=None,
                       call_after_minibatch=None,
                       early_stopper=None,
+                      execution_mode:ExecutionMode=ExecutionMode.Python,
                       context=None):
         """
         Chunks input dict into pieces where each chunk is a dict with values of length batch_size
@@ -77,8 +80,9 @@ class CompositionRunner():
                 if call_after_minibatch:
                     call_after_minibatch()
 
-                # Update weights if not in LLVM Mode
-                if not self._is_llvm_mode:
+                # Update weights if in PyTorch execution_mode;
+                #  handled by Composition.execute in Python mode and in compiled version in LLVM mode
+                if execution_mode is ExecutionMode.PyTorch:
                     self._composition._update_learning_parameters(context)
 
             # Compiled mode does not need more identical inputs.
@@ -86,11 +90,20 @@ class CompositionRunner():
             if self._is_llvm_mode and not randomize:
                 return
             if (not self._is_llvm_mode and early_stopper is not None
-                    and early_stopper.step(self._calculate_loss(num_trials, context))):
+                    and early_stopper.step(self._calculate_loss(num_trials, execution_mode, context))):
                 # end early if patience exceeded
                 pass
 
-    def _batch_function_inputs(self, inputs: dict, epochs: int, num_trials: int, batch_size: int = 1, call_before_minibatch=None, call_after_minibatch=None, early_stopper=None, context=None):
+    def _batch_function_inputs(self,
+                               inputs: dict,
+                               epochs: int,
+                               num_trials: int,
+                               batch_size: int = 1,
+                               call_before_minibatch=None,
+                               call_after_minibatch=None,
+                               early_stopper=None,
+                               execution_mode:ExecutionMode=ExecutionMode.Python,
+                               context=None):
 
         assert early_stopper is None or not self._is_llvm_mode, "Early stopper doesn't work in compiled mode"
         assert call_before_minibatch is None or not self._is_llvm_mode, "minibatch calls don't work in compiled mode"
@@ -117,12 +130,16 @@ class CompositionRunner():
                     if call_after_minibatch:
                         call_after_minibatch()
 
-                    if not self._is_llvm_mode:
+                    # Update weights if in PyTorch execution_mode;
+                    #  handled by Composition.execute in Python mode and in compiled version in LLVM mode
+                    if execution_mode is ExecutionMode.PyTorch:
                         self._composition._update_learning_parameters(context)
                 else:
                     break
 
-            if not self._is_llvm_mode and early_stopper is not None and early_stopper.step(self._calculate_loss(num_trials, context)):
+            if (not self._is_llvm_mode
+                    and early_stopper is not None
+                    and early_stopper.step(self._calculate_loss(num_trials, execution_mode, context))):
                 # end early if patience exceeded
                 pass
 
@@ -139,7 +156,7 @@ class CompositionRunner():
                      call_before_minibatch = None,
                      call_after_minibatch = None,
                      context=None,
-                     execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
+                     execution_mode:ExecutionMode = ExecutionMode.Python,
                      **kwargs):
         """
         Runs the composition repeatedly with the specified parameters.
@@ -149,13 +166,26 @@ class CompositionRunner():
         Outputs from the final execution
         """
 
-        if not (execution_mode & pnlvm.ExecutionMode.COMPILED):
+        if not (execution_mode & ExecutionMode.COMPILED):
             self._is_llvm_mode = False
         else:
             self._is_llvm_mode = True
 
-        # This is used by local learning-related methods to override the default learning_rate set at construction.
-        self._composition._runtime_learning_rate = learning_rate
+        if execution_mode is ExecutionMode.Python and learning_rate is not None:
+            # User learning_rate specified in call to learn, so use that by passing it in runtime_params,
+            #   excluding any LearningMechanisms for which learning_rate has been individually specified
+            runtime_params = {learning_mechanism:{'learning_rate':learning_rate}
+                              for learning_mechanism in self._composition.nodes
+                              if isinstance(learning_mechanism, LearningMechanism) and
+                              learning_mechanism.parameters.learning_rate.get() == # If learning_rate != default
+                              learning_mechanism.defaults.learning_rate}           # it was individually specified
+            if 'runtime_params' in kwargs:
+                kwargs['runtime_params'].update(runtime_params)
+            else:
+                kwargs['runtime_params'] = runtime_params
+        else:
+            # This is used by local learning-related methods to override the default learning_rate set at construction.
+            self._composition._runtime_learning_rate = learning_rate
 
         # Handle function and generator inputs
         if isgeneratorfunction(inputs):
@@ -204,7 +234,15 @@ class CompositionRunner():
                 early_stopper = EarlyStopping(min_delta=min_delta, patience=patience)
 
             if callable(stim_input) and not isgeneratorfunction(stim_input):
-                minibatched_input = self._batch_function_inputs(stim_input, stim_epoch, num_trials, minibatch_size, call_before_minibatch=call_before_minibatch, call_after_minibatch=call_after_minibatch, early_stopper=early_stopper, context=context)
+                minibatched_input = self._batch_function_inputs(stim_input,
+                                                                stim_epoch,
+                                                                num_trials,
+                                                                minibatch_size,
+                                                                call_before_minibatch=call_before_minibatch,
+                                                                call_after_minibatch=call_after_minibatch,
+                                                                early_stopper=early_stopper,
+                                                                execution_mode=execution_mode,
+                                                                context=context)
             else:
                 minibatched_input = self._batch_inputs(stim_input,
                                                        stim_epoch,
@@ -214,6 +252,7 @@ class CompositionRunner():
                                                        call_before_minibatch=call_before_minibatch,
                                                        call_after_minibatch=call_after_minibatch,
                                                        early_stopper=early_stopper,
+                                                       execution_mode=execution_mode,
                                                        context=context)
 
             # The above generators generate:

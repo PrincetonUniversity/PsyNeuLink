@@ -33,13 +33,14 @@ from psyneulink.core.compositions.composition import Composition, NodeRole, Comp
 from psyneulink.core.compositions.pathway import Pathway, PathwayRole
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.keywords import \
-    ADDITIVE, ALLOCATION_SAMPLES, BEFORE, DEFAULT, DISABLE, INPUT_PORT, INTERCEPT, LEARNING_MECHANISMS, \
+    ADDITIVE, ALLOCATION_SAMPLES, BEFORE, DEFAULT, DISABLE, INPUT_PORT, INTERCEPT, LEARNING_MECHANISMS,\
     LEARNED_PROJECTIONS, RANDOM_CONNECTIVITY_MATRIX, CONTROL, \
     NAME, PROJECTIONS, RESULT, OBJECTIVE_MECHANISM, OUTPUT_MECHANISM, OVERRIDE, SLOPE, TARGET_MECHANISM, VARIANCE
 from psyneulink.core.scheduling.condition import AtTimeStep, AtTrial, Never, TimeInterval
 from psyneulink.core.scheduling.condition import EveryNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler, SchedulingMode
 from psyneulink.core.scheduling.time import TimeScale
+from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 from psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism import LCControlMechanism
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
@@ -792,7 +793,7 @@ class TestCompositionPathwayArgsAndAdditionMethods:
         c = Composition()
 
         regexp = "LearningFunction found in 'pathway' arg for "\
-                 "add_linear_procesing_pathway method .*"\
+                 "add_linear_processing_pathway method .*"\
                 r"Reinforcement'>; it will be ignored"
         with pytest.warns(UserWarning, match=regexp):
             c.add_linear_processing_pathway(pathway=p)
@@ -825,7 +826,7 @@ class TestCompositionPathwayArgsAndAdditionMethods:
         with pytest.raises(pnl.CompositionError) as error_text:
             c.add_linear_learning_pathway(pathway=p, learning_function=BackPropagation)
         assert ("Specification in 'pathway' arg for " in str(error_text.value) and
-                "add_linear_procesing_pathway method" in str(error_text.value) and
+                "add_linear_processing_pathway method" in str(error_text.value) and
                 "contains a tuple that specifies a different LearningFunction (Reinforcement)" in str(error_text.value)
                 and "than the one specified in its 'learning_function' arg (BackPropagation)" in str(error_text.value))
 
@@ -1108,7 +1109,7 @@ class TestCompositionPathwayArgsAndAdditionMethods:
         with pytest.raises(pnl.CompositionError) as error_text:
             C.add_linear_processing_pathway(pathway=[A,C])
         assert f"Attempt to add Composition as a Node to itself in 'pathway' arg for " \
-               f"add_linear_procesing_pathway method of '{C.name}'." in str(error_text.value)
+               f"add_linear_processing_pathway method of '{C.name}'." in str(error_text.value)
 
     def test_for_add_learning_pathway_recursion_error(self):
         A = TransferMechanism()
@@ -1116,7 +1117,7 @@ class TestCompositionPathwayArgsAndAdditionMethods:
         with pytest.raises(pnl.CompositionError) as error_text:
             C.add_backpropagation_learning_pathway(pathway=[A,C])
         assert f"Attempt to add Composition as a Node to itself in 'pathway' arg for " \
-               f"add_backpropagation_learning_pathway method of {C.name}." in str(error_text.value)
+               f"add_backpropagation_learning_pathway method of '{C.name}'." in str(error_text.value)
 
 
 @pytest.mark.pathways
@@ -1129,8 +1130,9 @@ class TestDuplicatePathwayWarnings:
         comp = Composition()
         comp.add_linear_processing_pathway(pathway=[A,P,B])
 
-        regexp = "Pathway specified in 'pathway' arg for add_linear_procesing_pathway method .*"\
-                f"already exists in {comp.name}"
+        regexp = f"Pathway specified in 'pathway' arg for add_linear_processing_pathway method of '{comp.name}' " \
+                 f"is identical to one already in '{comp.name}': .*; the latter will be used."
+
         with pytest.warns(UserWarning, match=regexp):
             comp.add_linear_processing_pathway(pathway=[A,P,B])
 
@@ -1141,23 +1143,32 @@ class TestDuplicatePathwayWarnings:
         comp = Composition()
         comp.add_linear_processing_pathway(pathway=[A,B,C])
 
-        regexp = "Pathway specified in 'pathway' arg for add_linear_procesing_pathway method .*"\
-                f"has same Nodes in same order as one already in {comp.name}"
+        regexp = f"Pathway specified in 'pathway' arg for add_linear_processing_pathway method of '{comp.name}' " \
+                 f"has same Nodes in same order as one already in '{comp.name}':.*; the latter will be used."
+
         with pytest.warns(UserWarning, match=regexp):
             comp.add_linear_processing_pathway(pathway=[A,B,C])
 
-    def test_add_processing_pathway_subset_duplicate_warning(self):
+    @pytest.mark.parametrize('verbosity', [True, False], ids=['verbose', 'silent'])
+    def test_add_processing_pathway_subset_duplicate_warning(self, verbosity):
         A = TransferMechanism()
         B = TransferMechanism()
         C = TransferMechanism()
         comp = Composition()
+
         comp.add_linear_processing_pathway(pathway=[A,B,C])
 
-        regexp = "Pathway specified in 'pathway' arg for add_linear_procesing_pathway method .*"\
-                 f"has same Nodes in same order as one already in {comp.name}"
-        with pytest.warns(UserWarning, match=regexp):
-            comp.add_linear_processing_pathway(pathway=[A,B])
-            assert True
+        # Test for warning if verbosePref is set to True
+        if verbosity:
+            regexp = f"Pathway specified in 'pathway' arg for add_linear_processing_pathway method of '{comp.name}' " \
+                     f"has a subset of nodes in a Pathway already in '{comp.name}': Pathway-0; the latter will be used."
+            with pytest.warns(UserWarning, match=regexp):
+                comp.verbosePref = PreferenceEntry(True, PreferenceLevel.INSTANCE)
+                comp.add_linear_processing_pathway(pathway=[A,B])
+        else:
+            # Test for suppression of warning if verbosePref not set
+            with pytest.warns(None):
+                comp.add_linear_processing_pathway(pathway=[A,B])
 
     def test_add_backpropagation_pathway_exact_duplicate_warning(self):
         A = TransferMechanism()
@@ -1166,8 +1177,8 @@ class TestDuplicatePathwayWarnings:
         comp = Composition()
         comp.add_backpropagation_learning_pathway(pathway=[A,P,B])
 
-        regexp = "Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method .*"\
-                f"already exists in {comp.name}"
+        regexp = f"Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method of " \
+                 f"'{comp.name}' is identical to one already in '{comp.name}': 'Pathway-0'; the latter will be used."
         with pytest.warns(UserWarning, match=regexp):
             comp.add_backpropagation_learning_pathway(pathway=[A,P,B])
 
@@ -1178,22 +1189,32 @@ class TestDuplicatePathwayWarnings:
         comp = Composition()
         comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
 
-        regexp = "Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method .*"\
-               f"has same Nodes in same order as one already in {comp.name}"
+        regexp = f"Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method of '{comp.name}' " \
+                 f"has same Nodes in same order as one already in '{comp.name}':.*; the latter will be used."
+
         with pytest.warns(UserWarning, match=regexp):
             comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
 
-    def test_add_backpropagation_pathway_contiguous_subset_duplicate_warning(self):
+    @pytest.mark.parametrize('verbosity', [True, False], ids=['verbose', 'silent'])
+    def test_add_backpropagation_pathway_contiguous_subset_duplicate_warning(self, verbosity):
         A = TransferMechanism()
         B = TransferMechanism()
         C = TransferMechanism()
         comp = Composition()
         comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
 
-        regexp = "Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method .*"\
-                 f"has same Nodes in same order as one already in {comp.name}"
-        with pytest.warns(UserWarning, match=regexp):
-            comp.add_backpropagation_learning_pathway(pathway=[A,B])
+        # Test for warning if verbosePref is set to True
+        if verbosity:
+            regexp = f"Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method of '{comp.name}'" \
+                     f" has a subset of nodes in a Pathway already in '{comp.name}':.*; the latter will be used."
+            with pytest.warns(UserWarning, match=regexp):
+                comp.verbosePref = PreferenceEntry(True, PreferenceLevel.INSTANCE)
+                comp.add_backpropagation_learning_pathway(pathway=[A,B])
+        else:
+            # Test for suppression of warning if verbosePref is not set
+            with pytest.warns(None):
+                comp.add_backpropagation_learning_pathway(pathway=[A,B])
+
 
     def test_add_processing_pathway_non_contiguous_subset_is_OK(self):
         A = TransferMechanism()
@@ -3622,7 +3643,7 @@ class TestRun:
         with pytest.raises(CompositionError) as error_text:
             comp.add_linear_processing_pathway([A, A_to_B, B, C, D, E, C_to_E])
 
-        assert ("The last item in \'pathway\' arg for add_linear_procesing_pathway method" in str(error_text.value)
+        assert ("The last item in \'pathway\' arg for add_linear_processing_pathway method" in str(error_text.value)
                 and "cannot be a Projection:" in str(error_text.value))
 
     def test_LPP_two_projections_in_a_row(self):
@@ -3634,7 +3655,7 @@ class TestRun:
         B_to_C = MappingProjection(sender=B, receiver=C)
         with pytest.raises(CompositionError) as error_text:
             comp.add_linear_processing_pathway([A, B_to_C, A_to_B, B, C])
-        assert ("A Projection specified in \'pathway\' arg for add_linear_procesing_pathway" in str(error_text.value)
+        assert ("A Projection specified in \'pathway\' arg for add_linear_processing_pathway" in str(error_text.value)
                 and "is not between two Nodes:" in str(error_text.value))
 
     def test_LPP_start_with_projection(self):
@@ -3644,7 +3665,7 @@ class TestRun:
         B = TransferMechanism(name="composition-pytests-B", function=Linear(slope=2.0))
         with pytest.raises(CompositionError) as error_text:
             comp.add_linear_processing_pathway([Nonsense_Projection, A, B])
-        assert ("First item in 'pathway' arg for add_linear_procesing_pathway method" in str(error_text.value)
+        assert ("First item in 'pathway' arg for add_linear_processing_pathway method" in str(error_text.value)
                 and "must be a Node (Mechanism or Composition)" in str(error_text.value))
 
     def test_LPP_wrong_component(self):
@@ -3656,7 +3677,7 @@ class TestRun:
         with pytest.raises(CompositionError) as error_text:
             comp.add_linear_processing_pathway([A, Nonsense, B])
         assert ("Bad Projection specification in \'pathway\' arg " in str(error_text.value)
-                and "for add_linear_procesing_pathway method" in str(error_text.value)
+                and "for add_linear_processing_pathway method" in str(error_text.value)
                 and "Attempt to assign Projection" in str(error_text.value)
                 and "using InputPort" in str(error_text.value)
                 and "that is in deferred init" in str(error_text.value))
@@ -5099,7 +5120,7 @@ class TestNestedCompositions:
         assert result == [4500]
 
     @pytest.mark.control
-    @pytest.mark.parametrize('nesting', ("unnested", "nested"))
+    @pytest.mark.parametrize('nesting', ("unnested","nested"))
     def test_partially_overlapping_local_and_control_mech_control_specs_in_unnested_and_nested_comp(self, nesting):
         pnl.clear_registry()
         samples = np.arange(0.1, 1.01, 0.3)

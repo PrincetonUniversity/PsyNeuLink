@@ -93,7 +93,7 @@ with the one exception of `prefs <Component_Prefs>`.
 
 * **variable** - used as the input to its `function <Component_Function>`.  Specification of the **default_variable**
   argument in the constructor for a Component determines both its format (e.g., whether its value is numeric, its
-  dimensionality and shape if it is an array, etc.) as well as its `default value <Component.defaults>` (the value
+  dimensionality and shape if it is an array, etc.) as well as its `default_value <Component.defaults>` (the value
   used when the Component is executed and no input is provided), and takes precedence over the specification of `size
   <Component_Size>`.
 
@@ -1406,7 +1406,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "error_matrix", "error_signal", "activation_input",
                      "activation_output", "error_sources", "covariates_sources"
                      }
-        # Mechanism's need few extra entires:
+        # Mechanism's need few extra entries:
         # * matrix -- is never used directly, and is flatened below
         # * integration rate -- shape mismatch with param port input
         if hasattr(self, 'ports'):

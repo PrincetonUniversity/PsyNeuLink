@@ -144,17 +144,13 @@ maps <https://github.com/giannisnik/som>`_).
       * Specifying `ExecutionMode.LLVM` or `ExecutionMode.PyTorch` in the learn() method of a standard
         `Composition` causes an error.
 
-    .. note::
-      * Specifying `ExecutionMode.Python` in the learn() method of a `AutodiffComposition` is treated as a
-        synonym of `ExecutionMode.PyTorch` (see table).
+COMMENT:
+FIX: 8/13/23 - COMPLETE DOCS HERE
+*Python mode*
+~~~~~~~~~~~~~
+An AutodiffComposition can also be run using the standard PsyNeuLink learning components
+COMMENT
 
-.. technical_note::
-   `ExecutionMode.PyTorch` is a synonym for `ExecutionMode.Python`, that is provided for clarity of the user interface:
-   the default for an AutodiffComposition (i.e., if **execution_mode** is not specified, or it is set to
-   `ExecutionMode.Python`) is to use PyTorch translation in `learn <Composition.learn>` but the Python interpreter
-   for `run <Composition.run>`.  The use of `ExecutionMode.PyTorch` is simply to make it clear that, during learning,
-   it will use PyTorch. This contrasts with the use of `ExecutionMode.LLVMrun`, in which case both the `learn
-   <Composition.learn>` and `run <Composition.run>` methods use LLVM compilation.
 
 .. _AutodiffComposition_Nested_Modulation:
 
@@ -272,14 +268,13 @@ from psyneulink.core.compositions.composition import Composition, NodeRole
 from psyneulink.core.compositions.composition import CompositionError
 from psyneulink.core.compositions.report \
     import ReportOutput, ReportParams, ReportProgress, ReportSimulations, ReportDevices, \
-    LEARN_REPORT, EXECUTE_REPORT, PROGRESS_REPORT
-from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
+    EXECUTE_REPORT, LEARN_REPORT, PROGRESS_REPORT
+from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context, CONTEXT
 from psyneulink.core.globals.keywords import AUTODIFF_COMPOSITION, SOFT_CLAMP, Loss
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.core import llvm as pnlvm
-
 
 
 logger = logging.getLogger(__name__)
@@ -308,7 +303,8 @@ class AutodiffComposition(Composition):
     ---------
 
     learning_rate : float : default 0.001
-        the learning rate passed to the optimizer if none is specified in the learn method of the AutodiffComposition.
+        specified the learning rate passed to the optimizer if none is specified in the learn method of the
+        AutodiffComposition.
 
     disable_learning : bool: default False
         specifies whether the AutodiffComposition should disable learning when run in `learning mode
@@ -329,6 +325,9 @@ class AutodiffComposition(Composition):
     optimizer : PyTorch optimizer function
         the optimizer used for training. Depends on the **optimizer_type**, **learning_rate**, and **weight_decay**
         arguments from initialization.
+
+    learning_rate : float
+        the learning rate passed to the optimizer if none is specified in the learn method of the AutodiffComposition.
 
     loss : PyTorch loss function
         the loss function used for training. Depends on the **loss_spec** argument from initialization.
@@ -408,6 +407,9 @@ class AutodiffComposition(Composition):
         else:
             self.device = torch.device('cpu')
 
+        # Set to True after first warning about failure to specify execution mode so warning is issued only once
+        self.execution_mode_warned_about_default = False
+
     # CLEANUP: move some of what's done in the methods below to a "validate_params" type of method
     @handle_external_context()
     def _build_pytorch_representation(self, context=None, refresh=False):
@@ -483,8 +485,8 @@ class AutodiffComposition(Composition):
                                            f"likelihood), POISSONNLL (Poisson negative log likelihood, "
                                            f"and KL_DIV (KL divergence.")
 
-    # performs learning/training on all input-target pairs it recieves for given number of epochs
     def autodiff_training(self, inputs, targets, context=None, scheduler=None):
+        """Perform learning/training on all input-target pairs received for given number of epochs"""
 
         # compute total loss across output neurons for current trial
         tracked_loss = self.parameters.tracked_loss._get(context)
@@ -598,23 +600,32 @@ class AutodiffComposition(Composition):
                 ret[node] = values
         return ret
 
+    @handle_external_context()
     def learn(self, *args, **kwargs):
+        execution_phase_at_entry = kwargs[CONTEXT].execution_phase
+        kwargs[CONTEXT].execution_phase = ContextFlags.PREPARING
+
         if self._built_pathways is False:
             self.infer_backpropagation_learning_pathways()
             self._built_pathways = True
 
-        if 'execution_mode' in kwargs:
-            execution_mode = kwargs['execution_mode']
-            if execution_mode == pnlvm.ExecutionMode.Python:
-                raise AutodiffCompositionError(f"{self.name} is an AutodiffComposition so its learn() "
-                                               f"cannot be called with execution_mode = ExecutionMode.Python; "
-                                               f"use ExecutionMode.PyTorch or ExecutionMode.LLVMRun.")
-            # OK, now that the user has been advised to use ExecutionMode.PyTorch and warned *not* to ExecutionMdoe.Python,
-            #     convert ExecutionMode.PyTorch specification to ExecutionMode.Python for internal use (nice, eh?)
-            if execution_mode == pnlvm.ExecutionMode.PyTorch:
-                kwargs['execution_mode'] = pnlvm.ExecutionMode.Python
+        execution_mode = self._get_execution_mode(kwargs.pop('execution_mode', None))
+        kwargs[CONTEXT].execution_phase = execution_phase_at_entry
 
-        return super().learn(*args, **kwargs)
+        return super().learn(*args, execution_mode=execution_mode, **kwargs)
+
+    def _get_execution_mode(self, execution_mode):
+        """Parse execution_mode argument and return a valid execution mode for the learn() method
+        Can be overridden by subclasses to change the permitted and/or default execution mode for learning
+        """
+        if execution_mode is None:
+            if self.execution_mode_warned_about_default is False:
+                warnings.warn(f"The execution_mode argument was not specified in the learn() method of {self.name}; "
+                              f"ExecutionMode.PyTorch will be used by default.")
+                self.execution_mode_warned_about_default = True
+            execution_mode = pnlvm.ExecutionMode.PyTorch
+
+        return execution_mode
 
     @handle_external_context()
     def execute(self,
@@ -646,56 +657,57 @@ class AutodiffComposition(Composition):
                 report=None,
                 report_num=None,
                 ):
-        self._assign_execution_ids(context)
-        context.composition = self
-        context.source = ContextFlags.COMPOSITION
 
-        if scheduler is None:
-            scheduler = self.scheduler
+        if execution_mode is not pnlvm.ExecutionMode.Python:
+            self._assign_execution_ids(context)
+            context.composition = self
+            context.source = ContextFlags.COMPOSITION
 
-        if self._is_learning(context):
-            # TBI: How are we supposed to use base_context and statefulness here?
-            # TBI: can we call _build_pytorch_representation in _analyze_graph so that pytorch
-            # model may be modified between runs?
+            if scheduler is None:
+                scheduler = self.scheduler
+
+            if self._is_learning(context):
+                # TBI: How are we supposed to use base_context and statefulness here?
+                # TBI: can we call _build_pytorch_representation in _analyze_graph so that pytorch
+                # model may be modified between runs?
 
 
-            autodiff_inputs = self._infer_input_nodes(inputs)
-            autodiff_targets = self._infer_output_nodes(inputs)
+                autodiff_inputs = self._infer_input_nodes(inputs)
+                autodiff_targets = self._infer_output_nodes(inputs)
 
-            report(self,
-                   LEARN_REPORT,
-                   # EXECUTE_REPORT,
-                   report_num=report_num,
-                   scheduler=scheduler,
-                   content='trial_start',
-                   context=context)
+                report(self,
+                       LEARN_REPORT,
+                       # EXECUTE_REPORT,
+                       report_num=report_num,
+                       scheduler=scheduler,
+                       content='trial_start',
+                       context=context)
 
-            self._build_pytorch_representation(context)
-            output = self.autodiff_training(autodiff_inputs,
-                                            autodiff_targets,
-                                            context,
-                                            scheduler)
+                # if execution_mode is not pnlvm.ExecutionMode.Python:
+                self._build_pytorch_representation(context)
+                output = self.autodiff_training(autodiff_inputs,
+                                                autodiff_targets,
+                                                context,
+                                                scheduler)
 
-            # FIX 5/28/20:
-            # context.add_flag(ContextFlags.PROCESSING)
-            execution_phase = context.execution_phase
-            context.execution_phase = ContextFlags.PROCESSING
+                execution_phase = context.execution_phase
+                context.execution_phase = ContextFlags.PROCESSING
 
-            self.output_CIM.execute(output, context=context)
-            # FIX 5/28/20:
-            context.execution_phase = execution_phase
+                self.output_CIM.execute(output, context=context)
+                context.execution_phase = execution_phase
 
-            report(self,
-                   # [LEARN_REPORT],
-                   [EXECUTE_REPORT, PROGRESS_REPORT],
-                   report_num=report_num,
-                   scheduler=scheduler,
-                   content='trial_end',
-                   context=context)
+                report(self,
+                       # [LEARN_REPORT],
+                       [EXECUTE_REPORT, PROGRESS_REPORT],
+                       report_num=report_num,
+                       scheduler=scheduler,
+                       content='trial_end',
+                       context=context)
 
-            scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
+                scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
 
-            return output
+                return output
+        # MODIFIED NEW:
 
         return super(AutodiffComposition, self).execute(inputs=inputs,
                                                         scheduler=scheduler,

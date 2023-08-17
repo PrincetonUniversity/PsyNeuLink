@@ -833,10 +833,11 @@ class TestTrainingCorrectness:
 
 
         mnet.learn(
-                inputs=input_set,
-                minibatch_size=1,
-                patience=patience,
-                min_delta=min_delt
+            inputs=input_set,
+            minibatch_size=1,
+            patience=patience,
+            min_delta=min_delt,
+            execution_mode=pnl.ExecutionMode.PyTorch,
         )
 
         print(mnet.parameters.results.get(mnet))
@@ -1147,7 +1148,7 @@ class TestTrainingIdenticalness():
                    "targets": targets_dict,
                    "epochs": eps}
         g = g_f()
-        sem_net_autodiff.learn(inputs=g_f)
+        sem_net_autodiff.learn(inputs=g_f, execution_mode=pnl.ExecutionMode.PyTorch)
 
         # SET UP COMPOSITION
         sem_net_comp = Composition()
@@ -1218,253 +1219,6 @@ class TestTrainingIdenticalness():
                            map_h2_has_comp.get_mod_matrix(sem_net_comp))
         np.testing.assert_allclose(map_h2_can.parameters.matrix.get(sem_net_autodiff),
                            map_h2_can_comp.get_mod_matrix(sem_net_comp))
-
-    def test_identicalness_of_input_types(self):
-        # SET UP MECHANISMS FOR COMPOSITION
-        from copy import copy
-        hid_map_mat = np.random.rand(2, 10)
-        out_map_mat = np.random.rand(10, 1)
-        xor_in_dict = TransferMechanism(name='xor_in',
-                                        default_variable=np.zeros(2))
-
-        xor_hid_dict = TransferMechanism(name='xor_hid',
-                                         default_variable=np.zeros(10),
-                                         function=Logistic())
-
-        xor_out_dict = TransferMechanism(name='xor_out',
-                                         default_variable=np.zeros(1),
-                                         function=Logistic())
-
-        # SET UP PROJECTIONS FOR COMPOSITION
-
-        hid_map_dict = MappingProjection(name='hid_map',
-                                         matrix=copy(hid_map_mat),
-                                         sender=xor_in_dict,
-                                         receiver=xor_hid_dict)
-
-        out_map_dict = MappingProjection(name='out_map',
-                                         matrix=copy(out_map_mat),
-                                         sender=xor_hid_dict,
-                                         receiver=xor_out_dict)
-
-        # SET UP COMPOSITION
-
-        xor_dict = AutodiffComposition()
-
-        xor_dict.add_node(xor_in_dict)
-        xor_dict.add_node(xor_hid_dict)
-        xor_dict.add_node(xor_out_dict)
-
-        xor_dict.add_projection(sender=xor_in_dict, projection=hid_map_dict, receiver=xor_hid_dict)
-        xor_dict.add_projection(sender=xor_hid_dict, projection=out_map_dict, receiver=xor_out_dict)
-        # SET UP INPUTS AND TARGETS
-
-        xor_inputs_dict = np.array(  # the inputs we will provide to the model
-                [[0, 0],
-                 [0, 1],
-                 [1, 0],
-                 [1, 1]])
-
-        xor_targets_dict = np.array(  # the outputs we wish to see from the model
-                [[0],
-                 [1],
-                 [1],
-                 [0]])
-
-        input_dict = {
-                "inputs": {
-                    xor_in_dict: xor_inputs_dict
-                },
-                "targets": {
-                    xor_out_dict: xor_targets_dict
-                }
-            }
-
-        result_dict = xor_dict.learn(inputs=input_dict)
-
-        # SET UP MECHANISMS FOR COMPOSITION
-        xor_in_func = TransferMechanism(name='xor_in',
-                                        default_variable=np.zeros(2))
-
-        xor_hid_func = TransferMechanism(name='xor_hid',
-                                         default_variable=np.zeros(10),
-                                         function=Logistic())
-
-        xor_out_func = TransferMechanism(name='xor_out',
-                                         default_variable=np.zeros(1),
-                                         function=Logistic())
-
-        # SET UP PROJECTIONS FOR COMPOSITION
-
-        hid_map_func = MappingProjection(name='hid_map',
-                                         matrix=copy(hid_map_mat),
-                                         sender=xor_in_func,
-                                         receiver=xor_hid_func)
-
-        out_map_func = MappingProjection(name='out_map',
-                                         matrix=copy(out_map_mat),
-                                         sender=xor_hid_func,
-                                         receiver=xor_out_func)
-
-        # SET UP COMPOSITION
-
-        xor_func = AutodiffComposition()
-
-        xor_func.add_node(xor_in_func)
-        xor_func.add_node(xor_hid_func)
-        xor_func.add_node(xor_out_func)
-
-        xor_func.add_projection(sender=xor_in_func, projection=hid_map_func, receiver=xor_hid_func)
-        xor_func.add_projection(sender=xor_hid_func, projection=out_map_func, receiver=xor_out_func)
-
-        # SET UP INPUTS AND TARGETS
-
-        xor_inputs_func = np.array(  # the inputs we will provide to the model
-                [[0, 0],
-                 [0, 1],
-                 [1, 0],
-                 [1, 1]])
-
-        xor_targets_func = np.array(  # the outputs we wish to see from the model
-                [[0],
-                 [1],
-                 [1],
-                 [0]])
-
-        def get_inputs(idx):
-            return {
-                "inputs": {
-                    xor_in_func: xor_inputs_func[idx]
-                },
-                "targets": {
-                    xor_out_func: xor_targets_func[idx]
-                }
-            }
-
-        result_func = xor_func.learn(inputs=get_inputs)
-
-        # SET UP MECHANISMS FOR COMPOSITION
-        xor_in_gen = TransferMechanism(name='xor_in',
-                                       default_variable=np.zeros(2))
-
-        xor_hid_gen = TransferMechanism(name='xor_hid',
-                                        default_variable=np.zeros(10),
-                                        function=Logistic())
-
-        xor_out_gen = TransferMechanism(name='xor_out',
-                                        default_variable=np.zeros(1),
-                                        function=Logistic())
-
-        # SET UP PROJECTIONS FOR COMPOSITION
-
-        hid_map_gen = MappingProjection(name='hid_map',
-                                        matrix=copy(hid_map_mat),
-                                        sender=xor_in_gen,
-                                        receiver=xor_hid_gen)
-
-        out_map_gen = MappingProjection(name='out_map',
-                                        matrix=copy(out_map_mat),
-                                        sender=xor_hid_gen,
-                                        receiver=xor_out_gen)
-
-        # SET UP COMPOSITION
-
-        xor_gen = AutodiffComposition()
-
-        xor_gen.add_node(xor_in_gen)
-        xor_gen.add_node(xor_hid_gen)
-        xor_gen.add_node(xor_out_gen)
-
-        xor_gen.add_projection(sender=xor_in_gen, projection=hid_map_gen, receiver=xor_hid_gen)
-        xor_gen.add_projection(sender=xor_hid_gen, projection=out_map_gen, receiver=xor_out_gen)
-        # SET UP INPUTS AND TARGETS
-
-        xor_inputs_gen = np.array(  # the inputs we will provide to the model
-                [[0, 0],
-                 [0, 1],
-                 [1, 0],
-                 [1, 1]])
-
-        xor_targets_gen = np.array(  # the outputs we wish to see from the model
-                [[0],
-                 [1],
-                 [1],
-                 [0]])
-
-        def get_inputs_gen():
-            yield {
-                "inputs": {
-                    xor_in_gen: xor_inputs_gen
-                },
-                "targets": {
-                    xor_out_gen: xor_targets_gen
-                }
-            }
-
-        g = get_inputs_gen()
-        result_gen = xor_gen.learn(inputs=g)
-
-        # SET UP MECHANISMS FOR COMPOSITION
-        xor_in_gen_func = TransferMechanism(name='xor_in',
-                                            default_variable=np.zeros(2))
-
-        xor_hid_gen_func = TransferMechanism(name='xor_hid',
-                                             default_variable=np.zeros(10),
-                                             function=Logistic())
-
-        xor_out_gen_func = TransferMechanism(name='xor_out',
-                                             default_variable=np.zeros(1),
-                                             function=Logistic())
-
-        # SET UP PROJECTIONS FOR COMPOSITION
-
-        hid_map_gen_func = MappingProjection(name='hid_map',
-                                             matrix=copy(hid_map_mat),
-                                             sender=xor_in_gen_func,
-                                             receiver=xor_hid_gen_func)
-
-        out_map_gen_func = MappingProjection(name='out_map',
-                                             matrix=copy(out_map_mat),
-                                             sender=xor_hid_gen_func,
-                                             receiver=xor_out_gen_func)
-
-        # SET UP COMPOSITION
-
-        xor_gen_func = AutodiffComposition()
-
-        xor_gen_func.add_node(xor_in_gen_func)
-        xor_gen_func.add_node(xor_hid_gen_func)
-        xor_gen_func.add_node(xor_out_gen_func)
-
-        xor_gen_func.add_projection(sender=xor_in_gen_func, projection=hid_map_gen_func, receiver=xor_hid_gen_func)
-        xor_gen_func.add_projection(sender=xor_hid_gen_func, projection=out_map_gen_func, receiver=xor_out_gen_func)
-        # SET UP INPUTS AND TARGETS
-
-        xor_inputs_gen_func = np.array(  # the inputs we will provide to the model
-                [[0, 0],
-                 [0, 1],
-                 [1, 0],
-                 [1, 1]])
-
-        xor_targets_gen_func = np.array(  # the outputs we wish to see from the model
-                [[0],
-                 [1],
-                 [1],
-                 [0]])
-
-        def get_inputs_gen_func():
-            yield {
-                "inputs": {
-                    xor_in_gen_func: xor_inputs_gen_func
-                },
-                "targets": {
-                    xor_out_gen_func: xor_targets_gen_func
-                }
-            }
-
-        result_gen_func = xor_gen_func.learn(inputs=get_inputs_gen_func)
-
-        assert result_dict == result_func == result_gen == result_gen_func
 
 
 @pytest.mark.pytorch
@@ -1775,21 +1529,6 @@ class TestMiscTrainingFunctionality:
         # parameters (they should now be different)
         assert not np.allclose(pt_weights_hid, hid_map.parameters.matrix.get(None))
         assert not np.allclose(pt_weights_out, out_map.parameters.matrix.get(None))
-
-    def test_execution_mode_python_error(self):
-        A = TransferMechanism(name="learning-process-mech-A")
-        B = TransferMechanism(name="learning-process-mech-B")
-        adc = AutodiffComposition(name='AUTODIFFCOMP')
-        pway = adc.add_backpropagation_learning_pathway(pathway=[A,B])
-        # Call learn with default_variable specified for target (for comparison with missing target)
-        with pytest.raises(AutodiffCompositionError) as error:
-            adc.learn(inputs={A: 1.0,
-                              pway.target: 0.0},
-                      execution_mode=pnl.ExecutionMode.Python,
-                      num_trials=2)
-        assert error.value.error_value == 'AUTODIFFCOMP is an AutodiffComposition so its learn() ' \
-                                          'cannot be called with execution_mode = ExecutionMode.Python; ' \
-                                          'use ExecutionMode.PyTorch or ExecutionMode.LLVMRun.'
 
 @pytest.mark.pytorch
 @pytest.mark.actime
@@ -2364,8 +2103,9 @@ class TestACLogging:
         # train model for a few epochs
         num_epochs = 10
         xor.learn(inputs={"inputs": {xor_in: xor_inputs},
-                        "targets": {xor_out: xor_targets},
-                        "epochs": num_epochs})
+                          "targets": {xor_out: xor_targets},
+                          "epochs": num_epochs},
+                  execution_mode=pnl.ExecutionMode.PyTorch)
 
         exec_id = xor.default_execution_id
 
@@ -2440,7 +2180,8 @@ class TestACLogging:
         num_epochs = 100
         xor.learn(inputs={"inputs": {xor_in: xor_inputs},
                         "targets": {xor_out: xor_targets},
-                        "epochs": num_epochs})
+                        "epochs": num_epochs},
+                  execution_mode=pnl.ExecutionMode.PyTorch)
 
         losses = xor.losses
         # Since the losses track average losses per weight update, and weights are updated every minibatch,

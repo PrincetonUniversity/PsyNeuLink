@@ -1,5 +1,6 @@
 from psyneulink.core.components.functions.nonstateful.transferfunctions import \
     Linear, Logistic, ReLU, SoftMax, Dropout, Identity
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination, PRODUCT, SUM
 from psyneulink.library.compositions.pytorchllvmhelper import *
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core import llvm as pnlvm
@@ -7,6 +8,9 @@ from psyneulink.core import llvm as pnlvm
 import torch
 
 __all__ = ['PytorchMechanismWrapper', 'PytorchProjectionWrapper']
+
+# def lincomb_product(x):
+#     return x[0] * x[1]
 
 def pytorch_function_creator(function, device, context=None):
     """
@@ -19,8 +23,7 @@ def pytorch_function_creator(function, device, context=None):
             param_name, context=context)
         if val is None:
             val = getattr(function.defaults, param_name)
-
-        return float(val)
+        return val if isinstance(val, str) else float(val)
 
     if isinstance(function, Identity):
         return lambda x: x
@@ -29,6 +32,12 @@ def pytorch_function_creator(function, device, context=None):
         slope = get_fct_param_value('slope')
         intercept = get_fct_param_value('intercept')
         return lambda x: x * slope + intercept
+
+    elif isinstance(function, LinearCombination):
+        if get_fct_param_value('operation') == PRODUCT:
+            return lambda x: torch.tensor(x[0], device=device).double() * torch.tensor(x[1], device=device).double()
+        else:
+            return lambda x: torch.tensor(x[0], device=device).double() + torch.tensor(x[1], device=device).double()
 
     elif isinstance(function, Logistic):
         gain = get_fct_param_value('gain')
@@ -52,7 +61,7 @@ def pytorch_function_creator(function, device, context=None):
         return lambda x: (torch.dropout(input=x, p=prob, train=False))
 
     else:
-        raise Exception(f"Function {function} is not currently supported in AutodiffCompositions!")
+        raise Exception(f"Function {function} is not currently supported by AutodiffComposition")
 
 class PytorchMechanismWrapper():
     """
@@ -84,7 +93,13 @@ class PytorchMechanismWrapper():
         """
         Returns weight-multiplied sum of all afferent projections
         """
-        return sum((proj.execute(proj.sender.value) for proj in self.afferents))
+        # FIX: AUGMENT THIS TO SUPPORT InputPort's function
+        # return sum((proj.execute(proj.sender.value) for proj in self.afferents))
+        if len(self._mechanism.input_ports) == 1:
+            return sum((proj.execute(proj.sender.value) for proj in self.afferents))
+        else:
+            return [sum(proj.execute(proj.sender.value) for proj in input_port.path_afferents)
+                    for input_port in self._mechanism.input_ports]
 
     def execute(self, variable):
         self.value = self.function(variable)

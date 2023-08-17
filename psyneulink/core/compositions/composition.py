@@ -38,6 +38,7 @@ Contents
            - `Composition_Learning_Methods`
            - `Composition_Learning_Components`
            - `Composition_Learning_Execution`
+        • `Composition_Learning_Rate`
      - `Composition_Learning_AutodiffComposition`
      - `Composition_Learning_UDF`
   * `Composition_Execution`
@@ -664,13 +665,25 @@ constructed by assigning the desired value to the corresponding attribute.
 Learning in a Composition
 -------------------------
 
+- `Composition_Learning_Standard`
+   • `Composition_Learning_Unsupervised`
+   • `Composition_Learning_Supervised`
+      - `Composition_Learning_Methods`
+      - `Composition_Learning_Components`
+      - `Composition_Learning_Execution`
+   • `Composition_Learning_Rate`
+- `Composition_Learning_AutodiffComposition`
+- `Comparison of Learning Modes <Composition_Compilation_Table>`
+- `Composition_Learning_UDF`
+
 Learning is used to modify the `Projections <Projection>` between Mechanisms in a Composition.  More specifically,
 it modifies the `matrix <MappingProjection.matrix>` parameter of the `MappingProjections <MappingProjection>` within a
 `learning Pathway <Composition_Learning_Pathway>`, which implements the conection weights (i.e., strengths of
 associations between representations in the Mechanisms) within a `Pathway`.  If learning is implemented for a
 Composition, it can be executed calling the Composition's `learn <Composition.learn>` method (see
-`Composition_Learning_Execution` and `Composition_Execution` for additional details).
-
+`Composition_Learning_Execution` and `Composition_Execution` for additional details). The rate at which learning
+occurs is determined by the learning_rate parameter, which can be assigned in various ways and is described under
+`Composition_Learning_Rate` at the end of this section.
 
 .. _Composition_Learning_Configurations:
 
@@ -894,7 +907,7 @@ properly computed and propagated by each LearningMechanism to the next in the co
 that, in doing so, the status of a Mechanism in the final configuration takes precedence over its status in any of
 the individual sequences specified in the `learning methods <Composition_Learning_Methods>` when building the
 Composition.  In particular, whereas ordinarily the last ProcessingMechanism of a sequence specified in a learning
-method projects to a *OBJECTIVE_MECHANISM*, this may be superceded if multiple sequences are created. This is the
+method projects to a *OBJECTIVE_MECHANISM*, this may be superseded if multiple sequences are created. This is the
 case if: i) the Mechanism is in a seqence that is contiguous (i.e., abuts or intersects) with others already in the
 Composition, ii) the Mechanism appears in any of those other sequences and, iii) it is not the last Mechanism in
 *all* of them; in that in that case, it will not project to a *OBJECTIVE_MECHANISM* (see `figure below
@@ -927,8 +940,8 @@ they project to another Mechanism (the *OBJECTIVE_MECHANISM*) in the Composition
 
 .. _Composition_Learning_Execution:
 
-*Execution of Learning*
-=======================
+*Execution of Supervised Learning*
+==================================
 
 For learning to occur when a Composition is run, its `learn <Composition.learn>` method must be used instead of the
 `run <Composition.run>` method, and its `disable_learning <Composition.disable_learning>` attribute must be False.
@@ -966,6 +979,62 @@ method, as well as additonal ones that are specific to learning.  Also like `run
 `output_values <Composition.output_values>` of the Composition after the last trial of execution.  The results for the
 last epoch of learning are stored in its `learning_results <Composition.learning_results>` attribute.
 
+
+.. _Composition_Learning_Rate:
+
+Learning Rate
+^^^^^^^^^^^^^
+COMMENT:
+Add explanation of how learning_rate applies to Unsupervised forms of learning
+COMMENT
+The rate at which learning occurs in a `learning pathway <Composition_Learning_Pathway>` is determined by the
+`learning_rate <LearningMechanism_Learning_Rate> Parameter of the `LearningMechanism(s) <LearningMechanism>` in that
+Pathway.  If it is not specified, then the `default value <Parameter_Defaults>` for the LearningMechanism's `function
+<LearningMechanism.function>` is used, which is determined by the kind of learning in that Pathway. However, the
+learning_rate can be specified in several other ways, both at construction and/or execution.  At construction, it can
+be specified using the **learning_rate** argument of the Compostion's constructor, in which case it serves as the
+default learning_rate for all learning pathways;  it can also be specified in the **learning_rate** argument of a
+`learning construction method <Composition_Learning_Methods>`, in which case it applies to only the LearningMechanisms
+in that Pathway. Specifications for a Pathway take precedence over the specification in the Composition's constructor.
+The **learning_rate** can also be specified at execution, in the Composition's `learn <Composition.learn>` method,
+in which case it applies to all learning pathways during that (and only that) execution, and supersedes any
+specifications made at construction. It can also be specified for one or more individual LearningMechanisms (which
+applies to the `matrix <MappingProjection.matrix>` parameter ("connection weights") of the `MappingProjection` for
+which each LearningMechanism is responsible), by assigning a value directly to the LearningMechanism's `learning_rate
+<LearningMechanism.learning_rate>` Parameter.  This supersedes any other specifications of learning_rate, including
+in the Composition's learn() method, and applies to all subsequent executions of learning, allowing different
+LearningMechanisms (and their corresponding MappingProjections) within a Composition to be assigned different
+learning_rates.  The table below shows the precedence for the specificadtion of learning_rates.
+COMMENT:
+Finally, the `learning_rate <LearningSignal.learning_rate>` for
+a LearningMechanism interacts with any specifications of the `learning_rate <LearningSignal.learning_rate>` for its
+`learning_projections <LearningMechanism.learning_projections>` (see `LearningProjection_Function`
+for additional details).
+COMMENT
+
+.. _Composition_Learning_Rate_Precedence_Hierarchy
+
+.. table::
+
+   +-------------------------------------------------------------------------------------------------------------------------------------+
+   |                          **Learning Rate Precedence Hierarchy**                                                                     |
+   +----------------+--------------------------------------------------------------------------------------------------------------------+
+   |  **Highest**:  |  Assignment to LearningMechanism `learning_rate <LearningMechanism_Learning_Rate>` Parameter (after construction)  |
+   |                |    ``my_learning_mechanism.parameters.learning_rate.set(val)``                                                     |
+   +----------------+--------------------------------------------------------------------------------------------------------------------+
+   |                |  Call to `Composition.learn` method (execution)                                                                    |
+   |                |    ``my_composition.learn(learning_rate=val)``                                                                     |
+   +----------------+--------------------------------------------------------------------------------------------------------------------+
+   |                |  Assignment in `LearningMechanism` constructor                                                                     |
+   |                |    ``my_learning_mechanimsm=LearningMechanism(learning_rate=val)``                                                 |
+   +----------------+--------------------------------------------------------------------------------------------------------------------+
+   |                |  Assignment in `learning pathway <Composition_Learning_Pathway>` constructor                                       |
+   |                |    ``my_composition.add_linear_learning_pathway(learning_rate=val)``                                               |
+   +----------------+--------------------------------------------------------------------------------------------------------------------+
+   |                |  Assignment in Composition constructor                                                                             |
+   |  **Lowest**:   |    ``my_composition=Composition(learning_rate=val)``                                                               |
+   +----------------+--------------------------------------------------------------------------------------------------------------------+
+
 .. _Composition_Learning_AutodiffComposition:
 
 *Learning Using AutodiffCompositon*
@@ -974,10 +1043,9 @@ last epoch of learning are stored in its `learning_results <Composition.learning
 COMMENT:
     Change reference to example below to point to Rumelhart Semantic Network Model Script once implemented
 COMMENT
-
 `AutodiffCompositions <AutodiffComposition>` provide the ability to execute backpropagation learning much more
 efficiently than using a standard Composition.  An AutodiffComposition is constructed in the same way, but there
-is no need to specify any `learning components <Composition_Learning_Components>`>` or using any `learning methods
+is no need to specify any `learning components <Composition_Learning_Components>`>` or use any `learning methods
 <Composition_Learning_Methods>` -- in fact, they should *not* be specified (see `warning
 <Autodiff_Learning_Components_Warning>`) -- an AutodiffComposition automatically creates backpropagation
 `learning pathways <Composition_Learning_Pathway>` from all input to all output `Nodes <Composition_Nodes>`.
@@ -995,6 +1063,14 @@ that they can provide up to three orders of magnitude speed-up in training a mod
 on the kinds of Compositions that be implemented in this way.  The features of the different ways to implement and
 execute learning are outlined in the following table, and described in more detail in `AutodiffComposition`.
 
+The `learning_rate <AutodiffComposition.learning_rate>` for an AutodiffComposition can be specified in its constructor
+(which assigns it as the default) or in its `learn <AutodiffComposition.learn>` method, in which case it applies to
+that execution only.
+
+  .. note::
+    * Using `ExecutionMode.Python` in an AutodffComposition is the same as using a standard Composition, allowing
+      an AutodffComposition to be run in any mode (e.g., for comparison and/or compatibility purposes).
+
   .. warning::
     * `ExecutionMode.LLVM` and `ExecutionMode.PyTorch` can only be used in the `learn <AutodiffComposition.learn>`
       method of an `AutodiffComposition`;  specifying them in the `learn <Composition.learn>`()` method of a standard
@@ -1003,8 +1079,8 @@ execute learning are outlined in the following table, and described in more deta
 |
 .. _Composition_Compilation_Table:
 
-**Comparison of Learning Modes**
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+*Comparison of Learning Modes*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. table::
    :widths: 5 34 33 33
@@ -1063,6 +1139,7 @@ Executing a Composition
         • `Composition_Input_Dictionary`
         • `Composition_Programmatic_Inputs`
     - `Composition_Execution_Factors`
+        • `Composition_Learning_Rate`
         • `Composition_Runtime_Params`
         • `Composition_Cycles_and_Feedback`
         • `Composition_Execution_Context`
@@ -1523,6 +1600,7 @@ COMMENT
   • `Composition_Reset`
   • `Composition_Compilation`
 
+
 .. _Composition_Runtime_Params:
 
 *Runtime Parameters*
@@ -1535,7 +1613,8 @@ COMMENT:
     runtime_params are passed to the execute method of the Node whenever it is called for execution
 COMMENT
 
-The value of one or more of a Composition's `Nodes <Composition_Nodes>` can be temporarily modified during execution
+In addition to the `learning_rate <Composition_Learning_Rate>`, the values of other `Parameter`s of a Composition's
+Mechanisms (including but not limited to its `LearningMechanism`s) can be temporarily modified during execution
 using the **runtime_params** argument of one of its `execution methods <Composition_Execution_Methods>`.  These are
 handled as described for `Mechanism_Runtime_Params` of Mechanisms, with the addition that one or more `Conditions
 <Condition>` can be specified such that a value will apply only when the specificied Conditions are satisfied;
@@ -1809,7 +1888,7 @@ COMMENT:
                                    THESE ARE USED AS THE VALUES WHEN EACH NODE'S reset_integrator_when CONDITION IS MET;
                                    IF NOT SPECIIFED, THEN RESET TO previous_value ATTRIBUTE, WHICH IS SET TO THE
                                    MECHANISM'S <object>.defaults.value WHEN CONSTRUCTED
-        FIX: ?? CONSIDER MAKING RESET_STATEFUL_FUNCTIONS_WHEN A DICT THAT IS USED TO SUPERCEDE THE attirbute of a Mechanism
+        FIX: ?? CONSIDER MAKING RESET_STATEFUL_FUNCTIONS_WHEN A DICT THAT IS USED TO supersede THE attirbute of a Mechanism
         - reset_integrator_nodes_when arg OF RUN: EITHER JUST A Condition, OR A DICT OF {node: Condition} pairs
                                                      IF JUST A CONDITION:  IT SETS THE DEFAULT FOR ALL NODES FOR WHICH
                                                                            THEIR reset_integrator_when ATTRIBUTE IS None
@@ -2811,7 +2890,7 @@ from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism i
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP, \
     OptimizationControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
-    LearningMechanism, LearningTiming, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
+    LearningMechanism, LearningTiming, LearningType, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -2841,10 +2920,10 @@ from psyneulink.core.globals.keywords import \
     INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
     LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, Loss, \
     MATRIX, MAYBE, MODEL_SPEC_ID_METADATA, \
-    MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, NODE, OBJECTIVE_MECHANISM, ONLINE, OUTCOME, \
+    MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, NODE, NODES, OBJECTIVE_MECHANISM, ONLINE, ONLY, OUTCOME, \
     OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
     PARAMETER, PARAMETER_CIM_NAME, PORT, \
-    PROCESSING_PATHWAY, PROJECTION, PROJECTION_TYPE, PROJECTION_PARAMS, PULSE_CLAMP, RECEIVER, \
+    PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PROJECTION_TYPE, PROJECTION_PARAMS, PULSE_CLAMP, RECEIVER, \
     SAMPLE, SENDER, SHADOW_INPUTS, SOFT_CLAMP, SUM, \
     TARGET, TARGET_MECHANISM, TEXT, VARIABLE, WEIGHT, OWNER_MECH
 from psyneulink.core.globals.log import CompositionLog, LogCondition
@@ -3373,6 +3452,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         allow_probes=True,                 \
         include_probes_in_output=False     \
         disable_learning=False,            \
+        learning_rate=None,                \
         controller=None,                   \
         enable_controller=None,            \
         controller_mode=AFTER,             \
@@ -3431,9 +3511,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <NodeRole.PROBE>` Nodes *are excluded* from those attributes;  if True (the default) they are included
         (see `Probes <Composition_Probes>` for additional details).
 
-    disable_learning: bool : default False
+    disable_learning : bool : default False
         specifies whether `LearningMechanisms <LearningMechanism>` in the Composition are executed when run in
         `learning mode <Composition.learn>`.
+
+    learning_rate: float or int : default None
+        specifies the learning_rate to be used by `LearningMechanisms <LearningMechanism>` in the Composition
+        that do not have their own `learning_rate <LearningMechanism.learning_rate>` otherwise specified
+        (see `Composition_Learning_Rate` for additional details).
 
     controller : `OptimizationControlMechanism` : default None
         specifies the `OptimizationControlMechanism` to use as the `Composition's controller
@@ -3444,17 +3529,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Composition is run.  Set to True by default if **controller** specified (see `enable_controller
         <Composition.enable_controller>` for additional details).
 
-    controller_mode: enum.Enum[BEFORE|AFTER] : default AFTER
+    controller_mode : enum.Enum[BEFORE|AFTER] : default AFTER
         specifies whether the `controller <Composition.controller>` is executed before or after the rest of the
         Composition when it is run, at the `TimeScale` specified by **controller_time_scale**). Must be either the
         keyword *BEFORE* or *AFTER* (see `controller_mode <Composition.controller_mode>` for additional details).
 
-    controller_time_scale: TimeScale[TIME_STEP, PASS, TRIAL, RUN] : default TRIAL
+    controller_time_scale : TimeScale[TIME_STEP, PASS, TRIAL, RUN] : default TRIAL
         specifies the frequency at which the `controller <Composition.controller>` is executed, either before or
         after the Composition is run as specified by **controller_mode** (see `controller_time_scale
         <Composition.controller_time_scale>` for additional details).
 
-    controller_condition: Condition : default Always()
+    controller_condition : Condition : default Always()
         specifies a specific `Condition` for whether the Composition's `controller <Composition.controller>` is
         executed  in a trial (see `controller_condition <Composition.controller_condition>` for additional details).
 
@@ -3697,6 +3782,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         determines whether `LearningMechanisms <LearningMechanism>` in the Composition are executed when run in
         `learning mode <Composition.learn>`.
 
+    learning_rate : float or int
+        if specified, used as the default value for the `learning_rate <LearningMechanism.learning_rate>` of
+        `LearningMechanisms <LearningMechanism>` in the Composition that do not have their learning_rate otherwise
+        specified; it is superseded by the **learning_rate** argument of a `learning construction method
+        <Composition_Learning_Methods>`, and can also be overriden by specifying the **learning_rate** argument in a
+        call to the `learn <Composition.learn>` method of a Composition or direct specification of the `learning_rate
+        <LearningMechanism.learning_rate>` Parameter of a LearningMechanism (see `Composition_Learning_Rate` for
+        additional details).
+
     learning_components : list[list]
         a list of the learning-related components in the Composition, all or many of which may have been
         created automatically in a call to one of its `add_<*learning_type*>_pathway' methods (see
@@ -3829,6 +3923,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             allow_probes: Union[bool, CONTROL] = True,
             include_probes_in_output: bool = False,
             disable_learning: bool = False,
+            learning_rate:Optional[Union[float, int]] = None,
             controller: ControlMechanism = None,
             enable_controller=None,
             controller_mode: Literal['before', 'after'] = 'after',
@@ -3891,6 +3986,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._partially_added_nodes = []
 
         self.disable_learning = disable_learning
+        self.learning_rate = learning_rate
         self._runtime_learning_rate = None
 
         # graph and scheduler status attributes
@@ -3929,7 +4025,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.add_nodes(nodes)
 
         if projections is not None:
-            self.add_projections(projections)
+            self.add_projections(projections, context=context)
 
         # CONSTRUCTOR flag is needed for warning check tests, but this
         # must be changed immediately to COMMAND_LINE because any
@@ -4119,6 +4215,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             required_roles : `NodeRole` or list of NodeRoles
                 any NodeRoles roles that this Node should have in addition to those determined by analyze graph.
         """
+        if context.flags & ContextFlags.COMMAND_LINE:
+            self._pre_existing_pathway_components = {NODES: [], PROJECTIONS: []}
 
         # FIX 5/25/20 [JDC]: ADD ERROR STRING (as in pathway_arg_str in add_linear_processing_pathway)
         # Raise error if Composition is added to itself
@@ -4144,8 +4242,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         node._check_for_composition(context=context)
 
         # Add node to Composition's graph
-        if node not in [vertex.component for vertex in
-                        self.graph.vertices]:  # Only add if it doesn't already exist in graph
+        # Only add if it doesn't already exist in graph
+        if node not in [vertex.component for vertex in self.graph.vertices]:
             node.is_processing = True
             self.graph.add_component(node)  # Set incoming edge list of node to empty
             self.nodes.append(node)
@@ -4156,6 +4254,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.needs_update_graph_processing = True
             self.needs_update_scheduler = True
             self.needs_update_controller = True
+        # Otherwise, put in list of existing_components
+        else:
+            self._pre_existing_pathway_components[NODES].append(node)
 
         invalid_aux_components = self._add_node_aux_components(node, context=context)
 
@@ -4383,7 +4484,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            and projection.receiver.owner in nodes
                            # and not isinstance(projection.receiver.owner, CompositionInterfaceMechanism)
                            )]
-        self.add_projections(projections)
+        self.add_projections(projections, context=context)
 
         # CONNECT Inputs and Outputs ==========================================================================
 
@@ -4405,7 +4506,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if transfer_required_roles:
             for entry in composition.required_node_roles:
                 if entry[0] in nodes:
-                    self.require_node_roles(entry)
+                    self.require_node_roles(*entry)
 
         if transfer_excluded_roles:
             for entry in composition.excluded_node_roles:
@@ -5801,7 +5902,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # region ----------------------------------- PROJECTIONS -----------------------------------------------------------
     # ******************************************************************************************************************
 
-    def add_projections(self, projections=None):
+    @handle_external_context(source=ContextFlags.COMMAND_LINE)
+    def add_projections(self, projections=None, context=None):
         """
             Calls `add_projection <Composition.add_projection>` for each Projection in the *projections* list. Each
             Projection must have its `sender <Projection_Base.sender>` and `receiver <Projection_Base.receiver>`
@@ -5820,11 +5922,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         for projection in projections:
             if isinstance(projection, list):
-                self.add_projections(projection)
+                self.add_projections(projection, context=context)
             elif isinstance(projection, Projection) and \
                     hasattr(projection, "sender") and \
                     hasattr(projection, "receiver"):
-                self.add_projection(projection)
+                self.add_projection(projection, context=context)
             else:
                 raise CompositionError(f"Invalid projections specification for {self.name}. The add_projections "
                                        f"method of Composition requires a list of Projections, each of which must "
@@ -5931,6 +6033,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             `Projection` if added, else None
 
     """
+        if context.flags & ContextFlags.COMMAND_LINE:
+            self._pre_existing_pathway_components = {NODES: [], PROJECTIONS: []}
 
         existing_projections = False
 
@@ -5938,14 +6042,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #    check whether there is *any* projection like that
         #    (i.e., whether it/they are already in the current Composition or not);  if so:
         #    - if there is only one, use that;
-        #    - if there are several, use the last in the list (on the assumption in that it is the most recent).
+        #    - if there are several (that is, one or none in the current Composition, and one or more outside of it),
+        #      use the one in the Composition, otherwise use the last outside (on the assumption it is the most recent).
         # Note:  Skip this if **projection** was specified, as it might include parameters that are different
         #        than the existing ones, in which case should use that rather than any existing ones;
         #        will handle any existing Projections that are in the current Composition below.
-        if sender and receiver and projection is None:
+        if sender and receiver and (projection is None):
             existing_projections = self._check_for_existing_projections(sender=sender,
                                                                         receiver=receiver,
-                                                                        in_composition=False)
+                                                                        in_composition=ANY
+                                                                        )
             if existing_projections:
                 if isinstance(sender, Port):
                     sender_check = sender.owner
@@ -5967,10 +6073,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             port.remove_projection(proj, context=context)
                 else:
                     #  Need to do stuff at end, so can't just return
-                    if self.prefs.verbosePref:
+                    if self.prefs.verbosePref and len(existing_projections) > 1:
                         warnings.warn(f"Several existing projections were identified between "
                                       f"{sender.name} and {receiver.name}: {[p.name for p in existing_projections]}; "
                                       f"the last of these will be used in {self.name}.")
+                    # FIX: ??DEAL WITH WHETHER IT IS IN OR OUTSIDE OF COMPOSITION??
                     projection = existing_projections[-1]
 
         # If Projection is one that is instantiated and is directly between Nodes in nested Compositions,
@@ -5998,6 +6105,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Note: this does NOT initialize the Projection if it is in deferred_init
             projection = self._instantiate_projection_from_spec(projection, name)
         except DuplicateProjectionError:
+            self._pre_existing_pathway_components[PROJECTIONS].append(projection)
             # return projection
             return
 
@@ -6037,9 +6145,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 receiver = receiver_mechanism
             # Check if Projection to be initialized already exists in the current Composition;
             #    if so, mark as existing_projections and skip
-            existing_projections = self._check_for_existing_projections(sender=sender, receiver=receiver)
+            existing_projections = self._check_for_existing_projections(sender=sender,
+                                                                        receiver=receiver,
+                                                                        in_composition=ANY)
             if existing_projections:
-                return
+                projection = existing_projections[-1]
             else:
                 # Initialize Projection
                 projection._init_args[SENDER] = sender
@@ -6047,7 +6157,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 projection._deferred_init()
 
         else:
-            existing_projections = self._check_for_existing_projections(projection, sender=sender, receiver=receiver)
+            existing_projections = self._check_for_existing_projections(projection,
+                                                                        sender=sender,
+                                                                        receiver=receiver,
+                                                                        in_composition=True)
 
         # # FIX: JDC HACK 6/13/19 to deal with projection from user-specified INPUT node added to the Composition
         # #      that projects directly to the Target node of a nested Composition
@@ -6101,6 +6214,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                       sender, receiver,
                                       sender_mechanism, receiver_mechanism,
                                       learning_projection)
+        else:
+            self._pre_existing_pathway_components[PROJECTIONS].append(projection)
+
         self.needs_update_graph = True
         self.needs_update_graph_processing = True
         self.needs_update_scheduler = True
@@ -6502,19 +6618,33 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return projection in self.feedback_projections
 
     def _check_for_existing_projections(self,
-                                       projection=None,
-                                       sender=None,
-                                       receiver=None,
-                                       in_composition:bool=True):
+                                        projection=None,
+                                        sender=None,
+                                        receiver=None,
+                                        in_composition:Union[bool,Literal[ANY, ONLY]]=True)\
+            ->Union[bool, list]:
         """Check for Projection between the same pair of Nodes
-        If **in_composition** is True, return only Projections found in the current Composition
-        If **in_composition** is False, return only Projections that are found outside the current Composition
+
+        Finding more than one Projection in the current Composition raises an error (should never be the case).
+        Finding one in the current Composition and any number outside of it is allowed, and handled as follows:
+          - if **in_composition** is ONLY, return the Projection if one is found in the current Composition,
+          -                                and none are found outside of it.
+          - if **in_composition** is True, return the Projection found in the current Composition,
+          -                                irrespective of whether there are also any outside of the Composition.
+          - if **in_composition** is False, return only Projections that are found outside the current Composition
+          -                                 and only if there are none found within the current Composition.
+          - if **in_composition** is ANY, return all existing Projections in or out of the current Composition.
+
+        If the condition specified above is satisfied, then return the Projection(s) found.
+        Otherwise, return False.
+
         IMPLEMENTATION NOTE:
-            Currently if the sender and/or the receiver is specified as a Mechanism,
-            a Projection from/to any of its OutputPorts/InputPorts will be considered a match.
-            However, if both sender and receiver are specified as Ports, then only a Projection
-            from the sender to the receiver will be considered a match, allowing other Projections
-            to remain between that pair of Nodes.
+            If the sender and/or the receiver is specified as a Mechanism, then any Projection between that Mechanism
+            the other specification will be considered a match, irrespective of whether they use the same InputPorts
+            (if it is a receiver) and/or OutputPorts (if it is a sender); if both are Mechanisms, then *any*
+            Projection between them will count as a match, irrespective of the InputPorts and/or OutputPorts used.
+            However, if both sender and receiver are specified as Ports, then only a Projection from the sender to the
+            receiver will be considered a match, allowing other Projections to remain between pair of Nodes
 
         Return Projection or list of Projections that satisfies the conditions, else False
         """
@@ -6557,16 +6687,36 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for sndr in sender_ports:
             for rcvr in receiver_ports:
                 existing_projections.extend([proj for proj in sndr.efferents if proj.receiver is rcvr])
-        existing_projections_in_composition = [proj for proj in existing_projections if proj in self.projections]
+
+        existing_projections_in_composition = [p for p in existing_projections if p in self.projections]
+        existing_projections_not_in_composition = [p for p in existing_projections if p not in self.projections]
+        # Ensure that there is only a *single* existing Projection (if any) in the current Composition
         assert len(existing_projections_in_composition) <= 1, \
             f"PROGRAM ERROR: More than one identical projection found " \
             f"in {self.name}: {existing_projections_in_composition}."
-        if in_composition:
+        # Return existing Projection only if it is in the current Composition and there are no others
+        if in_composition is ONLY:
+            if existing_projections_in_composition and not existing_projections_not_in_composition:
+                return list(existing_projections_in_composition)
+
+        # Return existing Projection only if it is in the current Composition irrespective of whether there are others
+        elif in_composition is True:
             if existing_projections_in_composition:
-                return existing_projections_in_composition[0]
+                return list(existing_projections_in_composition)
+
+        # Return existing Projections only if they are all *not* in the Composition
+        elif in_composition is False:
+            if existing_projections_not_in_composition and not existing_projections_in_composition:
+                return existing_projections_not_in_composition
+
+        # Return any existing Projection irrespective of whether or not they are in the current Composition
+        elif in_composition is ANY:
+            if existing_projections:
+                # Put any in_composition first so they are prioritized
+                return existing_projections_in_composition + existing_projections_not_in_composition
         else:
-            if existing_projections and not existing_projections_in_composition:
-                return existing_projections
+            assert False, f"PROGRAM ERROR: Unrecognized value for in_composition arg ({in_composition})."
+
         return False
 
     def _check_for_unnecessary_feedback_projections(self):
@@ -6719,6 +6869,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         pathway : the `Pathway <Composition_Pathways>` to be added
 
         """
+        self._pre_existing_pathway_components = {NODES:[],
+                                             PROJECTIONS:[]}
 
         # identify nodes and projections
         nodes, projections = [], []
@@ -6969,7 +7121,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
            Any specifications of the **monitor_for_control** `argument <ControlMechanism_Monitor_for_Control_Argument>`
            of a constructor for a `ControlMechanism` or the **monitor** argument in the constructor for an
            `ObjectiveMechanism` in the **objective_mechanism** `argument <ControlMechanism_ObjectiveMechanism>` of a
-           ControlMechanism supercede any MappingProjections that would otherwise be created for them when specified
+           ControlMechanism supersede any MappingProjections that would otherwise be created for them when specified
            in the **pathway** argument of add_linear_processing_pathway.
 
         Arguments
@@ -6990,7 +7142,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             see `MappingProjection_Matrix_Specification` for details of specification)
 
         name : str
-            species the name used for `Pathway`; supercedes `name <Pathway.name>` of `Pathway` object if it is has one.
+            species the name used for `Pathway`; supersedes `name <Pathway.name>` of `Pathway` object if it is has one.
 
         Returns
         -------
@@ -7000,6 +7152,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
 
         from psyneulink.core.compositions.pathway import Pathway, _is_node_spec, _is_pathway_entry_spec
+        self._pre_existing_pathway_components = {NODES:[],
+                                             PROJECTIONS:[]}
 
         def _get_spec_if_tuple(spec):
             return spec[0] if isinstance(spec, tuple) else spec
@@ -7012,7 +7166,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pathway_arg_str = context.string
         # Otherwise, refer to call from this method
         else:
-            pathway_arg_str = f"in 'pathway' arg for add_linear_procesing_pathway method of '{self.name}'"
+            pathway_arg_str = f"in 'pathway' arg for add_linear_processing_pathway method of '{self.name}'"
 
         context.string = pathway_arg_str
 
@@ -7083,7 +7237,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         projections = []
         for c in range(1, len(pathway)):
 
-            # NODE ENTRY ----------------------------------------------------------------------------------------
             def _get_node_specs_for_entry(entry, include_roles=None, exclude_roles=None):
                 """Extract Nodes from any tuple specs and replace Compositions with their INPUT Nodes"""
                 nodes = []
@@ -7114,7 +7267,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     senders = _get_node_specs_for_entry(preceding_entry, NodeRole.OUTPUT)
                     projs = {self.add_projection(sender=s, receiver=r,
                                                  default_matrix=default_projection_matrix,
-                                                 allow_duplicates=False)
+                                                 allow_duplicates=False,
+                                                 context=context)
                             for r in receivers for s in senders}
                     # Warn about assignment of MappingProjections from ControlMechanisms
                     for ctl_mech in [s for s in senders if isinstance(s, ControlMechanism)]:
@@ -7123,6 +7277,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                       f"-- to another {Mechanism.__name__} in that pathway.  If this is not the "
                                       f"intended behavior, add '{ctl_mech.name}' separately to '{self.name}'.")
                     if all(projs):
+                        # If it is a singleton, append on its own;  if it is set or list, need to keep that intact
                         projs = projs.pop() if len(projs) == 1 else projs
                         projections.append(projs)
 
@@ -7357,43 +7512,74 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for n in convert_to_list(n_e):
                 if isinstance(n, tuple):
                     nodes[i] = nodes[i][0]
-        # interleave (sets of) Nodes and (sets or lists of) Projections
-        explicit_pathway = [node_entries[0]]
-        for i in range(len(projections)):
-            explicit_pathway.append(projections[i])
-            explicit_pathway.append(node_entries[i + 1])
 
-        # If pathway is an existing one, return that
-        existing_pathway = next((p for p in self.pathways if explicit_pathway==p.pathway), None)
-        if existing_pathway:
-            warnings.warn(f"Pathway specified {pathway_arg_str} already exists in {self.name}: {pathway}; "
-                          f"it will be ignored.")
-            return existing_pathway
-        # If the explicit pathway is shorter than the one specified, then need to do more checking
-        elif len(explicit_pathway) < len(pathway):
-            # Pathway without all Projections specified has same nodes in same order as existing one
-            existing_pathway = next((p for p in self.pathways
-                                     if [item for p in self.pathways for item in p.pathway
-                                         if not isinstance(item, Projection)]), None)
-            # Shorter because Projections generated for unspecified ones duplicated existing ones & were suppressed
-            if existing_pathway:
+        specified_pathway = pathway
+        # interleave (sets of) Nodes and (sets or lists of) Projections
+        parsed_pathway = [node_entries[0]]
+        for i in range(len(projections)):
+            parsed_pathway.append(projections[i])
+            parsed_pathway.append(node_entries[i + 1])
+
+        # If pathway is identical to an existing Pathway, return the existing one
+        pre_existing_Pathway = next((P for P in self.pathways if parsed_pathway==P.pathway), None)
+        if pre_existing_Pathway and (specified_pathway == parsed_pathway):
+            warnings.warn(f"Pathway specified {pathway_arg_str} is identical to one already in '{self.name}': "
+                          f"'{pre_existing_Pathway.name}'; the latter will be used.")
+            return pre_existing_Pathway
+
+        # If the parsed (inferred) pathway used existing components and is identical to the specified one
+        elif (len(parsed_pathway) == len(specified_pathway) and
+              all(parsed == specified for parsed, specified in zip(parsed_pathway, specified_pathway)
+                  if (not isinstance(parsed, Projection) or isinstance(specified, Projection))) and
+              (self._pre_existing_pathway_components[NODES] or self._pre_existing_pathway_components[PROJECTIONS])):
+            if self.prefs.verbosePref:
+                warnings.warn(f"Pathway specified {pathway_arg_str} uses Nodes and/or Projections already in "
+                              f"'{self.name}'.")
+
+        # Elements of parsed pathway were inferred (i.e., not explicitly specified in specified_pathway)
+        elif len(specified_pathway) < len(parsed_pathway):
+
+            # Resulting (parsed) pathway is identical to an existing one
+            pre_existing_Pathway = next((P for P in self.pathways if parsed_pathway==P.pathway), None)
+            if pre_existing_Pathway:
                 warnings.warn(f"Pathway specified {pathway_arg_str} has same Nodes in same order as "
-                              f"one already in {self.name}: {pathway}; it will be ignored.")
-                return existing_pathway
-            #
+                              f"one already in '{self.name}': {pre_existing_Pathway.name}; the latter will be used.")
+                return pre_existing_Pathway
+
+            # Specified pathway has a subset of nodes of those in an existing Pathway
+            pre_existing_Pathway = \
+                next((P for P in self.pathways if
+                      str([s for s in specified_pathway if not isinstance(s, Projection)]).strip('[]')
+                      in str([s for s in specified_pathway if not isinstance(s, Projection)]).strip('[]')), None)
+            if pre_existing_Pathway:
+                if self.prefs.verbosePref:
+                    warnings.warn(f"Pathway specified {pathway_arg_str} has a subset of nodes in a Pathway already "
+                                  f"in '{self.name}': {pre_existing_Pathway.name}; the latter will be used.")
+
+            # Same nodes but no/fewer Projections
+            if ([node for node in specified_pathway if not isinstance(node, Projection)]
+                  == [node for node in parsed_pathway if not isinstance(node, Projection)]):
+                # Warn if inferred Projections were identical to existing ones
+                if self._pre_existing_pathway_components[PROJECTIONS]:
+                    if self.prefs.verbosePref:
+                        warnings.warn(f"Pathway assigned {pathway_arg_str} specified Projections "
+                                      f"already in '{self.name}': the latter will be used.")
+
             # Shorter because it contained one or more ControlMechanisms with monitor_for_control specified
             #    or an ObjectiveMechanism that projects to a ControlMechanism.
-            elif explicit_pathway == [m for m in pathway if not (
+            elif parsed_pathway == [m for m in specified_pathway if not (
                     (isinstance(m, ControlMechanism)
                       or (isinstance(m, tuple) and isinstance(m[0], ControlMechanism))
                      or (isinstance(m, ObjectiveMechanism) and m.control_mechanism)))]:
+                pass
+            elif not self._pre_existing_pathway_components[NODES]:
                 pass
             else:
                 # Otherwise, something has gone wrong
                 assert False, \
                     f"PROGRAM ERROR: Bad pathway specification for {self.name} {pathway_arg_str}: {pathway}."
 
-        pathway = Pathway(pathway=explicit_pathway,
+        pathway = Pathway(pathway=parsed_pathway,
                           composition=self,
                           # default_projection_matrix=default_projection_matrix,
                           name=pathway_name,
@@ -7414,7 +7600,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     pathway,
                                     learning_function: Union[Type[LearningFunction], LearningFunction, Callable] = None,
                                     loss_spec: Optional[Loss] = Loss.MSE,
-                                    learning_rate: Union[int, float] = 0.05,
+                                    learning_rate: Optional[Union[int, float]] = None,
                                     error_function=LinearCombination,
                                     learning_update: Union[bool, Literal['online', 'after']] = 'after',
                                     default_projection_matrix=None,
@@ -7470,7 +7656,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         learning_rate : float : default 0.05
             specifies the `learning_rate <LearningMechanism.learning_rate>` used for the **learning_function**
-            of the `LearningMechanism` in the **pathway**.
+            of the `LearningMechanism` in the **pathway** (see `Composition_Learning_Rate` for
+            additional details).
 
         error_function : function : default LinearCombination
             specifies the function assigned to Mechanism used to compute the error from the target and the output
@@ -7494,7 +7681,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             see `MappingProjection_Matrix_Specification` for details of specification)
 
         name : str :
-            species the name used for `Pathway`; supercedes `name <Pathway.name>` of `Pathway` object if it is has one.
+            species the name used for `Pathway`; supersedes `name <Pathway.name>` of `Pathway` object if it is has one.
 
         Returns
         --------
@@ -7511,7 +7698,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pathway_arg_str = context.string
         # Otherwise, refer to call from this method
         else:
-            pathway_arg_str = f"in 'pathway' arg for add_linear_procesing_pathway method of {self.name}"
+            pathway_arg_str = f"in 'pathway' arg for add_linear_processing_pathway method of {self.name}"
         context.source = ContextFlags.METHOD
         context.string = pathway_arg_str
 
@@ -7613,7 +7800,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     @beartype
     def add_reinforcement_learning_pathway(self,
                                            pathway: Union[list, 'psyneulink.core.compositions.pathway.Pathway'],
-                                           learning_rate: Union[float, int] = 0.05,
+                                           learning_rate: Optional[Union[float, int]] = None,
                                            error_function: Optional[Function] = None,
                                            learning_update: Union[bool, Literal['online', 'after']] = 'online',
                                            default_projection_matrix=None,
@@ -7635,7 +7822,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         learning_rate : float : default 0.05
             specifies the `learning_rate <ReinforcementLearning.learning_rate>` used for the `ReinforcementLearning`
-            function of the `LearningMechanism` in the **pathway**.
+            function of the `LearningMechanism` in the **pathway** (see `Composition_Learning_Rate` for additional
+            details).
 
         error_function : function : default LinearCombination
             specifies the function assigned to `ComparatorMechanism` used to compute the error from the target and
@@ -7649,7 +7837,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             <LearningMechanism.learning_enabled>` for meaning of values).
 
         name : str :
-            species the name used for `Pathway`; supercedes `name <Pathway.name>` of `Pathway` object if it is has one.
+            species the name used for `Pathway`; supersedes `name <Pathway.name>` of `Pathway` object if it is has one.
 
         Returns
         --------
@@ -7669,7 +7857,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     @beartype
     def add_td_learning_pathway(self,
                                 pathway: Union[list, 'psyneulink.core.compositions.pathway.Pathway'],
-                                learning_rate: Union[int, float] = 0.05,
+                                learning_rate: Optional[Union[int, float]] = None,
                                 error_function: Optional[Function] = None,
                                 learning_update: Union[bool, Literal['online', 'after']] = 'online',
                                 default_projection_matrix=None,
@@ -7686,7 +7874,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         learning_rate : float : default 0.05
             specifies the `learning_rate <TDLearning.learning_rate>` used for the `TDLearning` function of the
-            `LearningMechanism` in the **pathway**.
+            `LearningMechanism` in the **pathway** (see `Composition_Learning_Rate` for details).
 
         error_function : function : default LinearCombination
             specifies the function assigned to `ComparatorMechanism` used to compute the error from the target and
@@ -7705,7 +7893,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             see `MappingProjection_Matrix_Specification` for details of specification)
 
         name : str :
-            species the name used for `Pathway`; supercedes `name <Pathway.name>` of `Pathway` object if it is has one.
+            species the name used for `Pathway`; supersedes `name <Pathway.name>` of `Pathway` object if it is has one.
 
         Returns
         --------
@@ -7724,7 +7912,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     @beartype
     def add_backpropagation_learning_pathway(self,
                                              pathway: Union[list, 'psyneulink.core.compositions.pathway.Pathway'],
-                                             learning_rate: Union[int, float] = 0.05,
+                                             learning_rate: Optional[Union[int, float]] = None,
                                              error_function: Optional[Function] = None,
                                              loss_spec: Optional[Loss] = Loss.MSE,
                                              learning_update: Optional[Union[bool, Literal['online', 'after']]] = 'after',
@@ -7740,8 +7928,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             <MappingProjection>` specified or constructed for the Pathway are assigned as `learned_projections`.
 
         learning_rate : float : default 0.05
-            specifies the `learning_rate <Backpropagation.learning_rate>` used for the `Backpropagation` function of
-            the `LearningMechanisms <LearningMechanism>` in the **pathway**.
+            specifies the `learning_rate <Backpropagation.learning_rate>` used for the `Backpropagation` function
+            of the `LearningMechanisms <LearningMechanism>` in the **pathway** (see `Composition_Learning_Rate` for
+            additional details).
 
         error_function : function : default LinearCombination
             specifies the function assigned to `ComparatorMechanism` used to compute the error from the target and the
@@ -7763,7 +7952,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             see `MappingProjection_Matrix_Specification` for details of specification)
 
         name : str :
-            species the name used for `Pathway`; supercedes `name <Pathway.name>` of `Pathway` object if it is has one.
+            species the name used for `Pathway`; supersedes `name <Pathway.name>` of `Pathway` object if it is has one.
 
         Returns
         --------
@@ -7772,6 +7961,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             BackPropagation `learning Pathway` <Composition_Learning_Pathway>` added to the Composition.
 
         """
+        learning_rate = learning_rate if learning_rate is not None \
+            else self.learning_rate if self.learning_rate is not None \
+            else None
+            # else 0.05
         return self.add_linear_learning_pathway(pathway,
                                                 learning_rate=learning_rate,
                                                 learning_function=BackPropagation,
@@ -7827,17 +8020,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     **kwargs                  # Use of type-specific learning arguments
                                     ):
 
-        # ONLY DO THIS IF ONE DOESN'T ALREADY EXIST (?pass in argument determining this?)
-        learning_mechanism = LearningMechanism(function=learning_function,
+        learning_mechanism = LearningMechanism(function=learning_function(),
                                                default_variable=[sender_activity_source.output_ports[0].value,
                                                                  receiver_activity_source.output_ports[0].value,
                                                                  error_sources.output_ports[0].value],
                                                error_sources=error_sources,
                                                learning_enabled=learning_update,
+                                               learning_rate=learning_rate,
                                                in_composition=True,
                                                name="Learning Mechanism for " + learned_projection.name,
                                                **kwargs)
-
 
         return learning_mechanism
 
@@ -7877,19 +8069,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                       function=error_function,
                                                       output_ports=[OUTCOME, Loss.MSE.name],
                                                       )
-            learning_mechanism = LearningMechanism(
-                                    function=learning_function(
-                                                         default_variable=[input_source.output_ports[0].value,
-                                                                           output_source.output_ports[0].value,
-                                                                           objective_mechanism.output_ports[0].value],
-                                                         learning_rate=learning_rate),
-                                    default_variable=[input_source.output_ports[0].value,
-                                                      output_source.output_ports[0].value,
-                                                      objective_mechanism.output_ports[0].value],
-                                    error_sources=objective_mechanism,
-                                    learning_enabled=learning_update,
-                                    in_composition=True,
-                                    name="Learning Mechanism for " + learned_projection.name)
+            learning_mechanism = \
+                LearningMechanism(
+                    function=learning_function(default_variable=[input_source.output_ports[0].value,
+                                                                 output_source.output_ports[0].value,
+                                                                 objective_mechanism.output_ports[0].value]),
+                    default_variable=[input_source.output_ports[0].value,
+                                      output_source.output_ports[0].value,
+                                      objective_mechanism.output_ports[0].value],
+                    error_sources=objective_mechanism,
+                    learning_enabled=learning_update,
+                    learning_rate=learning_rate,
+                    in_composition=True,
+                    name="Learning Mechanism for " + learned_projection.name)
 
             objective_mechanism.modulatory_mechanism = learning_mechanism
 
@@ -7899,7 +8091,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    f"learning-compatible function")
 
         learning_mechanism.output_ports[ERROR_SIGNAL].parameters.require_projection_in_composition.set(False,
-                                                                                                         override=True)
+                                                                                                       override=True)
         return target_mechanism, objective_mechanism, learning_mechanism
 
     def _create_learning_related_projections(self, input_source, output_source, target, comparator, learning_mechanism):
@@ -7958,13 +8150,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         learning_mechanism = \
             LearningMechanism(function=Reinforcement(default_variable=[input_source.output_ports[0].value,
                                                                        output_source.output_ports[0].value,
-                                                                       objective_mechanism.output_ports[0].value],
-                                                     learning_rate=learning_rate),
+                                                                       objective_mechanism.output_ports[0].value]),
                               default_variable=[input_source.output_ports[0].value,
                                                 output_source.output_ports[0].value,
                                                 objective_mechanism.output_ports[0].value],
                               error_sources=objective_mechanism,
                               learning_enabled=learning_update,
+                              learning_rate=learning_rate,
                               in_composition=True,
                               name="Learning Mechanism for " + learned_projection.name)
 
@@ -7984,18 +8176,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                default_variable=output_source.defaults.value)
 
         objective_mechanism = PredictionErrorMechanism(name='PredictionError',
-                                                        sample={NAME: SAMPLE,
-                                                                VARIABLE: np.zeros_like(output_source.output_ports[0].defaults.value)},
-                                                        target={NAME: TARGET,
-                                                                VARIABLE: np.zeros_like(output_source.output_ports[0].defaults.value)},
-                                                        function=PredictionErrorDeltaFunction(gamma=1.0))
+                                                       sample={NAME: SAMPLE,
+                                                               VARIABLE: np.zeros_like(
+                                                                   output_source.output_ports[0].defaults.value)},
+                                                       target={NAME: TARGET,
+                                                               VARIABLE: np.zeros_like(
+                                                                   output_source.output_ports[0].defaults.value)},
+                                                       function=PredictionErrorDeltaFunction(gamma=1.0))
 
-        learning_mechanism = LearningMechanism(function=TDLearning(learning_rate=learning_rate),
+        learning_mechanism = LearningMechanism(function=TDLearning(),
                                                default_variable=[input_source.output_ports[0].defaults.value,
                                                                  output_source.output_ports[0].defaults.value,
                                                                  objective_mechanism.output_ports[0].defaults.value],
                                                error_sources=objective_mechanism,
                                                learning_enabled=learning_update,
+                                               learning_rate=learning_rate,
                                                in_composition=True,
                                                name="Learning Mechanism for " + learned_projection.name)
 
@@ -8003,7 +8198,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _create_backpropagation_learning_pathway(self,
                                                  pathway,
-                                                 learning_rate=0.05,
+                                                 learning_rate=None,
                                                  error_function=None,
                                                  loss_spec=Loss.MSE,
                                                  learning_update=AFTER,
@@ -8020,7 +8215,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Add pathway to graph and get its full specification (includes all ProcessingMechanisms and MappingProjections)
         # Pass ContextFlags.INITIALIZING so that it can be passed on to _analyze_graph() and then
         #    _check_for_projection_assignments() in order to ignore checks for require_projection_in_composition
-        context.string = f"in 'pathway' arg for add_backpropagation_learning_pathway method of {self.name}"
+        context.string = f"in 'pathway' arg for add_backpropagation_learning_pathway method of '{self.name}'"
         learning_pathway = self.add_linear_processing_pathway(pathway=pathway,
                                                               name=name,
                                                               default_projection_matrix=default_projection_matrix,
@@ -8186,7 +8381,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return learning_pathway
 
-    def infer_backpropagation_learning_pathways(self):
+    def infer_backpropagation_learning_pathways(self, context=None):
         """Convenience method that automatically creates backpropapagation learning pathways for every
         Input Node --> Output Node pathway
         """
@@ -8255,7 +8450,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if loss_spec == Loss.CROSS_ENTROPY:
                 # error function:  use LinearCombination to implement cross_entropy: (SoftMax(sample), SoftMax(target))
                 sample.update({FUNCTION: SoftMax(output=ALL)})
-                # [JDC 12/4/22]: FIX: IS THIS COORRECT, OR SHOULD IT BE ASSUMED TO BE A ONE-HOT AND COMPLAIN IF NOT?
+                # [JDC 12/4/22]: FIX: IS THIS CORRECT, OR SHOULD IT BE ASSUMED TO BE A ONE-HOT AND COMPLAIN IF NOT?
                 target.update({FUNCTION: SoftMax(output=ALL)})
                 error_function = LinearCombination(operation=CROSS_ENTROPY)
                 output_ports = [OUTCOME, SUM.upper()]
@@ -8278,7 +8473,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                               output_source.output_ports[0].value,
                                                               objective_mechanism.output_ports[0].value],
                                             activation_derivative_fct=output_source.function.derivative,
-                                            learning_rate=learning_rate,
                                             loss_spec=loss_spec)
 
         learning_mechanism = LearningMechanism(function=learning_function,
@@ -8287,6 +8481,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                  objective_mechanism.output_ports[0].value],
                                                error_sources=objective_mechanism,
                                                learning_enabled=learning_update,
+                                               learning_rate=learning_rate,
                                                in_composition=True,
                                                name="Learning Mechanism for " + learned_projection.name)
 
@@ -8372,10 +8567,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return [activation_input, activation_output, covariates_sources]
 
         # Get existing LearningMechanism if one exists (i.e., if this is a crossing point with another pathway)
-        learning_mechanism = \
-            next((lp.sender.owner for lp in learned_projection.parameter_ports[MATRIX].mod_afferents
-                  if isinstance(lp, LearningProjection)),
-                 None)
+        learning_mechanism = next((lp.sender.owner
+                                   for lp in learned_projection.parameter_ports[MATRIX].mod_afferents
+                                   if (isinstance(lp, LearningProjection)
+                                       and isinstance(lp.sender.owner.function, BackPropagation))),
+                                  None)
 
         # If learning_mechanism exists:
         #    error_sources will be empty (as they have been dealt with in self._get_back_prop_error_sources
@@ -8386,11 +8582,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             error_sources, error_projections = self._get_back_prop_error_sources(output_source,
                                                                                  learning_mechanism,
                                                                                  context)
-            # REMOVE AFTER TESTING 8/1/23: SHOULD ONLY FAIL IN test_multiple_of_same_learning_pathway
-            # assert False, "EXISTING LearningMechanism FOUND IN _create_non_terminal_backprop_learning_components"
-            # FIX: 8/1/23 - IF THESE ARE ANYTHING OTHER THAN SIMPLE DUPLICATES,
-            #               WILL AN EXISTING LearningMechanism HAVE ALL THE COVARIATES INFO IT NEEDS
-            #               WITHOUT A CALL TO _get_acts_in_out_cov() PER BELOW?
 
         # If learning_mechanism does not yet exist:
         #    error_sources will contain ones needed to create learning_mechanism
@@ -8409,12 +8600,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                  [error_signal_template[0]],
                                                 covariates=[source.value for source in covariates_sources],
                                                 loss_spec=None,
-                                                activation_derivative_fct=output_source.function.derivative,
-                                                learning_rate=learning_rate)
+                                                activation_derivative_fct=output_source.function.derivative)
 
             # Use all error_signal_templates since LearningMechanisms handles all sources of error
-            # FIX: 8/1/23 COULD ASSIGN InputPorts HERE USING Projections FROM IDENTIFED SOURCES,
-            #      INCLUDING COVARIATES, AND POSSIBLY USING "SHADOW INPUTS" TO CREATE THEM.
             # Include any covariates_sources in default_variable so that it aligns with number of InputPorts
             learning_mechanism = LearningMechanism(function=learning_function,
                                                    default_variable=activation_input +
@@ -8424,6 +8612,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                    covariates_sources = covariates_sources,
                                                    error_sources=error_sources,
                                                    learning_enabled=learning_update,
+                                                   learning_rate=learning_rate,
                                                    in_composition=True,
                                                    name="Learning Mechanism for " + learned_projection.name)
 
@@ -8614,10 +8803,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                          if (p in self.projections
                              and hasattr(p, 'has_learning_projection')
                              and p.has_learning_projection)]:
-            # For each LearningProjection to that afferent, if its LearningMechanism doesn't already receiver
+            # For each LearningProjection to that afferent, if its LearningMechanism doesn't already have a receiver
             for learning_projection in [lp for lp in afferent.parameter_ports[MATRIX].mod_afferents
                                         if (isinstance(lp, LearningProjection)
-                                            and error_source not in lp.sender.owner.error_sources)]:
+                                            and lp.sender.owner.error_sources
+                                            and error_source not in lp.sender.owner.error_sources
+                                            and lp.sender.owner.learning_type is LearningType.SUPERVISED)]:
                 dependent_learning_mech = learning_projection.sender.owner
                 error_signal_input_port = dependent_learning_mech.add_ports(
                                                     InputPort(projections=error_source.output_ports[ERROR_SIGNAL],
@@ -9255,6 +9446,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return net_outcome, self.results
         else:
             return net_outcome
+
+    def _is_preparing(self, context):
+        """Returns true if the composition is currently preparing to execute (run or learn)"""
+        return ContextFlags.PREPARING in context.execution_phase
 
     def _infer_target_nodes(self, targets: dict):
         """
@@ -10023,11 +10218,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     #                                           EXECUTION
     # ******************************************************************************************************************
 
-    # MODIFIED 3/28/22 OLD:
     @handle_external_context()
-    # # MODIFIED 3/28/22 NEW:
-    # @handle_external_context(source = ContextFlags.COMMAND_LINE)
-    # MODIFIED 3/28/22 END
     def run(
             self,
             inputs=None,
@@ -10285,14 +10476,13 @@ _
         if context.source == ContextFlags.COMMAND_LINE:
             self._executed_from_command_line = True
         context.source = ContextFlags.COMPOSITION
-        execution_phase = context.execution_phase
+        execution_phase_at_entry = context.execution_phase
         context.execution_phase = ContextFlags.PREPARING
 
-        # IMPLEMENTATION NOTE:  Restore if ExecutionMode.PyTorch can be distinguished from ExecutionMode.Python
-        # from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
-        # if execution_mode is pnlvm.ExecutionMode.PyTorch and not isinstance(self, AutodiffComposition):
-        #     warnings.warn(f"{pnlvm.ExecutionMode.PyTorch.name} is being used to execute {self.name} "
-        #                   f"but it is not an AutodiffComposition, therefore PyTorch will not be used.")
+        from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
+        if execution_mode is not pnlvm.ExecutionMode.Python and not isinstance(self, AutodiffComposition):
+            warnings.warn(f"{execution_mode.name} is being used to execute {self.name} "
+                          f"but it is not an AutodiffComposition, therefore it will be executed Python instead.")
 
         for node in self.nodes:
             num_execs = node.parameters.num_executions._get(context)
@@ -10503,7 +10693,7 @@ _
         else:
             trial_output = None
 
-        context.execution_phase = execution_phase
+        context.execution_phase = execution_phase_at_entry
 
         # EXECUTE TRIALS -------------------------------------------------------------
 
@@ -10659,7 +10849,7 @@ _
             targets: Optional[dict] = None,
             num_trials: Optional[int] = None,
             epochs: int = 1,
-            learning_rate = None,
+            learning_rate: Optional[Union[int,float]]=None,
             minibatch_size: int = 1,
             patience: Optional[int] = None,
             min_delta: int = 0,
@@ -10712,7 +10902,7 @@ _
                 specifies the learning_rate used by all `learning pathways <Composition_Learning_Pathway>`
                 when the Composition's learn method is called.  This overrides the `learning_rate specified
                 for any individual Pathways at construction, but only applies for the current execution of
-                the learn method.
+                the learn method (see `Composition_Learning_Rate` for additional details).
 
             minibatch_size : int (default=1)
                 specifies the size of the minibatches to use. The input trials will be batched and run, after which
@@ -10778,18 +10968,15 @@ _
         from psyneulink.library.compositions import AutodiffComposition
         runner = CompositionRunner(self)
 
-        if ((execution_mode is not pnlvm.ExecutionMode.Python)
-                and not isinstance(self, AutodiffComposition)):
+        # Non-Python (i.e. PyTorch and LLVM) learning modes only supported for AutodiffComposition
+        if execution_mode is not pnlvm.ExecutionMode.Python and not isinstance(self, AutodiffComposition):
             raise CompositionError(f"ExecutionMode.{execution_mode.name} cannot be used in the learn() method of "
                                    f"'{self.name}' because it is not an {AutodiffComposition.componentCategory}")
 
         context.add_flag(ContextFlags.LEARNING_MODE)
-        # # MODIFIED 3/28/22 NEW:
-        # context.source = ContextFlags.COMPOSITION
-        # MODIFIED 3/28/22 END
-        # # FIX 5/28/20
-        # context.add_flag(ContextFlags.PREPARING)
-        # context.execution_phase=ContextFlags.PREPARING
+
+        execution_phase_at_entry = context.execution_phase
+        context.execution_phase=ContextFlags.PREPARING
 
         self._analyze_graph()
 
@@ -10808,6 +10995,8 @@ _
                         f'A reference to {target.name}, with which you can create the needed projection, can be found '
                         f'as the target attribute of the relevant pathway in {comp.name}.pathways. '
                     )
+
+        context.execution_phase = execution_phase_at_entry
 
         result = runner.run_learning(
             inputs=inputs,
@@ -11466,6 +11655,7 @@ _
 
                     if isinstance(node, Mechanism):
 
+                        # Get runtime params for node
                         execution_runtime_params = {}
                         if node in runtime_params:
                             execution_runtime_params.update(
@@ -11482,10 +11672,10 @@ _
                         #   AutoAssociativeMechanism should be handling learning - not the RTM itself.
                         if self._is_learning(context) and not isinstance(node, RecurrentTransferMechanism):
                             projections = set(self.projections).intersection(set(node.path_afferents))
-                            if any([p for p in projections if
-                                    any([a for a in p.parameter_ports[MATRIX].mod_afferents
+                            if any(p for p in projections if
+                                    any(a for a in p.parameter_ports[MATRIX].mod_afferents
                                          if (hasattr(a, 'learning_enabled')
-                                             and a.learning_enabled in {True, ONLINE})])]):
+                                             and a.learning_enabled in {True, ONLINE}))):
                                 context.replace_flag(ContextFlags.PROCESSING, ContextFlags.LEARNING)
 
                         # Execute Mechanism
@@ -11625,9 +11815,10 @@ _
 
             context.remove_flag(ContextFlags.PROCESSING)
 
-            #Update matrix parameter of PathwayProjections being learned with learning_enabled==AFTER
+            # Update matrix parameter of PathwayProjections being learned with learning_enabled==AFTER
             from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
-            if self._is_learning(context) and not isinstance(self, AutodiffComposition):
+            if self._is_learning(context) \
+                    and (not isinstance(self, AutodiffComposition) or execution_mode is pnlvm.ExecutionMode.Python):
                 context.execution_phase = ContextFlags.LEARNING
                 for projection in [p for p in self.projections if
                                    hasattr(p, 'has_learning_projection') and p.has_learning_projection]:

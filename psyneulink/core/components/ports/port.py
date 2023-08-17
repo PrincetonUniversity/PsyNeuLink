@@ -2017,7 +2017,7 @@ class Port_Base(Port):
             projection_variable = projection_type_params.pop(VARIABLE, None)
             projection_value = projection_type_params.pop(VALUE, None)
 
-            # Projection value specifed in runtime_port_params, so just assign its value
+            # Projection value specified in runtime_port_params, so just assign its value
             if projection_value:
                 set_projection_value(projection, projection_value, context)
 

@@ -556,7 +556,7 @@ class TestConnectCompositionsViaCIMS:
     ):
         ia, ib, cm, icomp, ocomp = parameter_CIM_routing_composition
         warning_msg = f"A MappingProjection has been created from a ControlSignal of 'control_mechanism' " \
-                      f"-- specified in 'pathway' arg for add_linear_procesing_pathway method of 'ocomp' -- " \
+                      f"-- specified in 'pathway' arg for add_linear_processing_pathway method of 'ocomp' -- " \
                       f"to another Mechanism in that pathway.  " \
                       f"If this is not the intended behavior, add 'control_mechanism' separately to 'ocomp'."
         with pytest.warns(UserWarning, match=warning_msg):
