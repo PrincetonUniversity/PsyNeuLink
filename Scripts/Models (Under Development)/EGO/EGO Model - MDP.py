@@ -1,6 +1,7 @@
 """
 QUESTIONS:
-- WHERE DOES INPUT TO REWARD FIELD OF EM COME FROM?
+- Each TRIAL is a single state presention (PNL convention);
+- Should a run = a sequence of 3 trials or all trials across all tasks, conditions, etc.?
 
 **Overview**
 ------------
@@ -179,16 +180,23 @@ RETRIEVAL_SOFTMAX_GAIN = 10    # gain on softmax retrieval function
 RETRIEVAL_HAZARD_RATE = 0.04   # rate of re=sampling of em following non-match determination in a pass through ffn
 RANDOM_WEIGHTS_INITIALIZATION=RandomMatrix(center=0.0, range=0.1)  # Matrix spec used to initialize all Projections
 
-CONTEXT_INTEGRATION_RATE = .1  # rate of integration of context vector
-
 # Execution parameters:
 CONTEXT_DRIFT_RATE=.1 # drift rate used for DriftOnASphereIntegrator (function of Context mech) on each trial
-NUM_TRIALS = 48 # number of stimuli presented in a trial sequence
+
+NUM_TRIALS_IN_SEQUENCE = 3                              # number of trials in a sequence
+NUM_EXPERIENCE_TRIALS = 24                              # number of trials for Task.EXPERIENCE
+NUM_PREDICT_TRIALS = 24                                 # number of trials Task.PREDICT
+NUM_TRIALS = NUM_EXPERIENCE_TRIALS + NUM_PREDICT_TRIALS # total number of trials
 
 # Used to generate input to time_input_layer of model
 time_fct = DriftOnASphereIntegrator(initializer=np.random.random(TIME_SIZE - 1),
                                     noise=TIME_DRIFT_NOISE,
                                     dimension=TIME_SIZE)
+
+inputs = {STATE_INPUT_LAYER_NAME: [[0] * STATE_SIZE] * NUM_TRIALS,
+          TIME_INPUT_LAYER_NAME: [time_fct(i) for i in range(NUM_TRIALS)],
+          REWARD_INPUT_LAYER_NAME: [[0] * REWARD_SIZE] * NUM_TRIALS,
+          TASK_INPUT_LAYER_NAME: [[Task.EXPERIENCE]] * NUM_EXPERIENCE_TRIALS + [[Task.PREDICT]] * NUM_PREDICT_TRIALS}
 
 
 def construct_model(model_name:str=MODEL_NAME,
@@ -279,19 +287,19 @@ def construct_model(model_name:str=MODEL_NAME,
                                        size=decision_size,
                                        function=SoftMax(output=PROB))
 
-    def encoding_function(variable,context):
+    def encoding_control_function(variable,context):
         """Use by retrieval_control_layer to control encoding of state info in context_layer and storing in EM
 
         If task is:
 
          Task.EXPERIENCE (0):
           - stores state info in em on every trial (control_signal[0]=1)
-          - always attends to actual state (control_signal[1]=1, control_signal[2]=0)
+          - always attend to actual state (control_signal[1]=1, control_signal[2]=0)
 
          Task.PREDICT: (1):
-          - never stores info in em (control_signal[0]=0)
-          - attends to actual state on first trial (control_signal[1]=1, control_signal[2]=0)
-          - attends to retrieved state on all subsequent trials (control_signal[1]=0, control_signal[2]=1)
+          - never store info in em (control_signal[0]=0)
+          - attend to actual state on first trial (control_signal[1]=1, control_signal[2]=0)
+          - attend to retrieved state on all subsequent trials (control_signal[1]=0, control_signal[2]=1)
 
         Returns:
             control_signal[0]: 1 if store, 0 otherwise
@@ -299,14 +307,23 @@ def construct_model(model_name:str=MODEL_NAME,
             control_signal[2]: 1 if attend to retrieved state, 0 otherwise
         """
 
+        # Tas
+        task = int(variable)
+        
         # Trial Number:
         if context and context.composition:
             trial = [context.composition.get_current_execution_time(context)[TimeScale.TRIAL]]
         else:
             trial = [0]
 
-        attend_actual = 1 if trial == 0 else 1
-        attend_retrieved = 1 if trial == 1 else 0
+        if task == Task.EXPERIENCE:
+            attend_actual = 1
+            
+        elif task == Task.PREDICT:
+            attend_actual = 1 if not (trial % NUM_TRIALS_IN_SEQUENCE) else 1
+            attend_retrieved = 1 if (trial % NUM_TRIALS_IN_SEQUENCE) else 0
+        else:
+            raise ValueError(f"Unrecognized task value in encoding_control_function: {task}")
 
         # Store to EM to
         store = 1 if variable[0] == Task.EXPERIENCE else 0
@@ -316,12 +333,12 @@ def construct_model(model_name:str=MODEL_NAME,
         return control_signals
 
     # Control Mechanism
-    # Uses the encoding_function (see above) to control:
+    # Uses the encoding_control_function (see above) to control:
     #   - encoding of state info in context_layer (from stimulus vs. em)
     #   - storage of info in em
     retrieval_control_layer = ControlMechanism(name=controller_name,
                                                monitor_for_control=task_input_layer,
-                                               function = encoding_function,
+                                               function = encoding_control_function,
                                                control=[(STORAGE_PROB, em),
                                                         attention_layer.input_ports[ACTUAL_STATE_INPUT],
                                                         attention_layer.input_ports[RETRIEVED_STATE_INPUT]])
