@@ -26,14 +26,14 @@ class TestReset:
     @pytest.mark.parametrize('test_name, reset_default, modulation', test_args, ids=[x[0] for x in test_args])
     def test_reset_integrator_mechanism(self, test_name, reset_default, modulation):
         input = pnl.ProcessingMechanism(name='INPUT')
-        fixed_value = pnl.ProcessingMechanism(function=lambda x: 1, name="FIXED INPUT")
         counter = IntegratorMechanism(function=SimpleIntegrator,
+                                      default_variable=1,
                                       reset_default=reset_default,
                                       name='COUNTER')
         ctl = pnl.ControlMechanism(monitor_for_control=input,
-                               modulation=modulation,
-                               control=('reset', counter))
-        c = Composition(pathways=[[input,ctl],[fixed_value,counter]])
+                                   modulation=modulation,
+                                   control=('reset', counter))
+        c = Composition(nodes=[input, ctl, counter])
         c.run(inputs={input:[0,0,1,0,0]})
         expected = [[[0.],[1.]], [[0.],[2.]], [[1.],[0.]], [[0.],[1.]], [[0.],[2.]]]
         np.testing.assert_allclose(c.results, expected)
