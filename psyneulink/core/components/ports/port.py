@@ -2030,6 +2030,7 @@ class Port_Base(Port):
                    and (ContextFlags.LEARNING not in context.execution_phase
                         or not projection.receiver.owner.learnable)):
                 projection_value = projection.defaults.value * 0.0
+            # FIX: WHAT IS THE FOLLOWING IF CHECKING FOR?  THAT IT IS AN IDENTITY FUNCTION SO NO EXECUTION NEEDED?
             elif (
                 # learning projections add extra behavior in _execute that invalidates identity function
                 not isinstance(projection, LearningProjection)
