@@ -144,8 +144,15 @@ class IntegratorMechanism(ProcessingMechanism_Base):
 
                     :default value: `AdaptiveIntegrator`(initializer=numpy.array([0]), rate=0.5)
                     :type: `Function`
+
+                reset
+                    see `reset <IntegratorMechanism.reset>`
+
+                    :default value: None
+                    :type: 'list or np.ndarray'
         """
         function = Parameter(AdaptiveIntegrator(rate=0.5), stateful=False, loggable=False)
+        reset = Parameter(None, modulable=True)
 
         #
     @check_user_specified
@@ -227,3 +234,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
                                                 input_ports=input_ports,
                                                 function=function,
                                                 params=params)
+
+    def _execute(self, variable=None, context=None, runtime_params=None, **kwargs):
+        """Overrride to check for call to reset by ModulatorySignal"""
+        
