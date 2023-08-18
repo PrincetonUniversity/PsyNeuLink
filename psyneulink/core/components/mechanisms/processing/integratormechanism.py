@@ -99,10 +99,10 @@ In this case, any non-zero value of the ControlMechanism's `ControlSignal` will 
 of *MULTIPLICATIVE*), so that the value of the ControlMechanism's `ControlSignal` is assigned directly to the
 IntegratorMechanism's `reset <IntegratorMechanism.reset>` parameter (otherwise, since the default of the `reset
 <IntegratorMechanism.reset>` parameter is 0, the ControlSignal's value has no effect). An alternative is to specify
-the **reset** agument of the IntegratorMechanism constructor to a non-zero value; in this case, using the default form
-of modulation (*MULTIPLICATIVE*), a ControlSignal with a zero value suppresses a reset by multiplying the `reset
-<IntegratorMechanism.reset>` parameter by 0, whereas a ControlSignal with a non-zero value multiplied by the `reset
-<IntegratorMechanism.reset>` parameter's non-zero value elicits a reset.
+the **reset_default** agument in the IntegratorMechanism constructor with a non-zero value; in this case, using the
+default form of modulation (*MULTIPLICATIVE*), a ControlSignal with a zero value suppresses a reset by multiplying the
+`reset <IntegratorMechanism.reset>` parameter by 0, whereas a ControlSignal with a non-zero value multiplied by the
+`reset <IntegratorMechanism.reset>` parameter's non-zero value elicits a reset.
 
 .. _IntegratorMechanism_Class_Reference:
 
@@ -152,6 +152,9 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     function : IntegratorFunction : default IntegratorFunction
         specifies the function used to integrate the input.  Must take a single numeric value, or a list or np.array
         of values, and return one of the same form.
+
+    reset_default : number, list or np.ndarray : default 0
+        specifies the default value used for the `reset <IntegratorMechanism.reset>` parameter.
 
     Attributes
     ----------
