@@ -164,6 +164,13 @@
 #      - Composition:
 #        - pathways arg:  the following should treat simple_mech as an INPUT node but it doesn't
 #              c = Composition(pathways=[[input,ctl],[simple_mech]])
+#        - parsing of input dict in constructor:
+#             improve error message, though the following attempt in XXX causes errors:
+#             try:
+#                 inputs, num_inputs_sets = self._parse_run_inputs(inputs, context)
+#             except:
+#                 raise CompositionError(f"PROGRAM ERROR: Unexpected problem parsing inputs in run() for {self.name}.")
+#
 #      -LearningMechanism / Backpropagation LearningFunction:
 #         - Construction of LearningMechanism on its own fails; e.g.:
 #             lm = LearningMechanism(learning_rate=.01, learning_function=BackPropagation())
