@@ -10554,7 +10554,10 @@ _
 
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
 
-        inputs, num_inputs_sets = self._parse_run_inputs(inputs, context)
+        try:
+            inputs, num_inputs_sets = self._parse_run_inputs(inputs, context)
+        except:
+            raise CompositionError(f"PROGRAM ERROR: Unexpected problem parsing inputs in run() for {self.name}.")
 
         if num_trials is None:
             num_trials = num_inputs_sets

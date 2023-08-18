@@ -300,3 +300,4 @@ class ProcessingMechanism(ProcessingMechanism_Base):
                                                   name=name,
                                                   prefs=prefs,
                                                   **kwargs)
+
