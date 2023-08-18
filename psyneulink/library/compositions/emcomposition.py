@@ -125,7 +125,7 @@
 #           xor.add_projections([input_to_hidden_wts, hidden_to_output_wts])
 #          - DOCUMENTATION: execution_mode=ExecutionMode.Python allowed
 #          - Add warning of this on initial call to learn()
-##
+#
 #      - Composition:
 # -      - IMPLEMENTATION OF LEARNING: NEED ERROR IF TRY TO CALL LEARN ON A COMPOSITION THAT HAS NO LEARNING MECHANISMS
 #          INCLUDING IN PYTHON MODE??  OR JUST ALLOW IT TO CONSTRUCT THE PATHWAY AUTOMATICALLY?
@@ -161,6 +161,9 @@
 #        - remove properties (use getter and setter for Parameters)
 #
 #    - FIX: BUGS:
+#      - Composition:
+#        - pathways arg:  the following should treat simple_mech as an INPUT node but it doesn't
+#              c = Composition(pathways=[[input,ctl],[simple_mech]])
 #      -LearningMechanism / Backpropagation LearningFunction:
 #         - Construction of LearningMechanism on its own fails; e.g.:
 #             lm = LearningMechanism(learning_rate=.01, learning_function=BackPropagation())
