@@ -427,7 +427,10 @@ def construct_model(model_name:str=MODEL_NAME,
     #   - encoding of state info in context_layer (from stimulus vs. em)
     #   - storage of info in em
     attentional_control_layer = ControlMechanism(name=attentional_control_name,
-                                                 monitor_for_control=task_input_layer,
+                                                 objective_mechanism=ObjectiveMechanism(
+                                                     function=SimpleIntegrator(rate=1),
+                                                     monitor=task_input_layer),
+                                                 # monitor_for_control=task_input_layer,
                                                  function = encoding_control_function,
                                                  control=[(STORAGE_PROB, em),
                                                           attention_layer.input_ports[ACTUAL_STATE_INPUT],
