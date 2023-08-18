@@ -65,14 +65,49 @@ the `value <OutputPort.OutputPort.value>` of which is assigned the result of  th
 Execution
 ---------
 
-When an IntegratorMechanism is executed, it carries out the specified integration, and assigns the
-result to the `value <Mechanism_Base.value>` of its `primary OutputPort <OutputPort_Primary>`.  For the default
-function (`IntegratorFunction`), if the value specified for **default_variable** is a list or array, or **size** is greater
+When an IntegratorMechanism is executed, it carries out the specified integration, and assigns the result to the
+`value <Mechanism_Base.value>` of its `primary OutputPort <OutputPort_Primary>`.  For the default function
+(`IntegratorFunction`), if the value specified for **default_variable** is a list or array, or **size** is greater
 than 1, each element of the array is independently integrated.  If its `rate <IntegratorFunction.rate>` parameter is a
-single value,  that rate will be used for integrating each element.  If the `rate <IntegratorFunction.rate>` parameter is a
-list or array, then each element will be used as the rate for the corresponding element of the input (in this case,
-`rate <IntegratorFunction.rate>` must be the same length as the value specified for **default_variable** or **size**).
+single value, that rate is used for integrating each element. If the `rate <IntegratorFunction.rate>` parameter is a
+list or array, then each element is used as the rate for the corresponding element of the input (in this case, `rate
+<IntegratorFunction.rate>` must be the same length as the value specified for **default_variable** or **size**).
+Integration can be reset to the value of its `function <IntegratorMechanism.function>`\\s `initializer by setting
+its `reset <IntegratorMechanism.reset>` parameter to a non-zero value, as described below.
 
+.. _IntegratorMechanism_Reset:
+
+*Resetting the IntegratorMechanism*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+An IntegatorMechanism has a `modulable <ModulatorySignal_Modulation>` `reset <IntergatorMechanism.reset>` parameter
+that can be used to reset its value to the value of its `function <IntegratorMechanism.function>`\\s `initializer
+<IntegratorFunction.initializer>`. This also clears the `value <Mechanism_Base.value>` `history <Parameter.history>`,
+thus effectively setting the `previous_value <IntegratorFunction.previous_value>`  of its `function
+<IntegratorMechanism.function>` to None.
+
+The `reset <IntegratorMechanism.reset>` parameter can be used to reset the IntegratorMechanism under the control of a
+`ControlMechanism`.  This simplest way to do this is to specify the `reset <IntegratorMechanism.reset>` parameter of
+the IntgeratorMechanism in the **control** argument of the ControlMechanism's constructor, and to specify *OVERRIDE*
+in its **modulation** argument, as in the following example::
+
+    >>> my_integrator = IntegratorMechanism()
+    >>> ctl_mech = pnl.ControlMechanism(modulation=pnl.OVERRIDE, control=(pnl.RESET, my_integrator))
+
+In this case, any non-zero value of the ControlMechanism's `ControlSignal` will reset the IntegratorMechanism.
+*OVERRIDE* must be used as its `modulation <ControlMechanism.modulation>` parameter (instead of its default value
+of *MULTIPLICATIVE*), so that the value of the ControlMechanism's `ControlSignal` is assigned directly to the
+IntegratorMechanism's `reset <IntegratorMechanism.reset>` parameter (otherwise, since the default of the `reset
+<IntegratorMechanism.reset>` parameter is 0, the ControlSignal's value has no effect). An alternative is to specify
+the **reset_default** agument in the IntegratorMechanism constructor with a non-zero value, and while allowing the
+ControlMechanism to use its default value for `modulation <ControlMechanism.modulation>` (i.e., *MULTIPLICATIVE*)::
+
+    >>> my_integrator = IntegratorMechanism(reset_default=1)
+    >>> ctl_mech = pnl.ControlMechanism(control=(pnl.RESET, my_integrator))
+
+In this case, a ControlSignal with a zero value suppresses a reset by multiplying the `reset
+<IntegratorMechanism.reset>` parameter by 0, whereas a ControlSignal with a non-zero value multiples the `reset
+<IntegratorMechanism.reset>` parameter's non-zero default value, resulting in a non-zero value that elicits a reset.
 
 .. _IntegratorMechanism_Class_Reference:
 
@@ -92,7 +127,7 @@ from psyneulink.core.components.functions.stateful.integratorfunctions import Ad
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, MechanismError
 from psyneulink.core.globals.keywords import \
-    DEFAULT_VARIABLE, INTEGRATOR_MECHANISM, VARIABLE, PREFERENCE_SET_NAME
+    DEFAULT_VARIABLE, INTEGRATOR_MECHANISM, VARIABLE, PREFERENCE_SET_NAME, RESET
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -116,13 +151,23 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     Subclass of `ProcessingMechanism <ProcessingMechanism>` that integrates its input.
     See `Mechanism <Mechanism_Class_Reference>` for additional arguments and attributes.
 
-
     Arguments
     ---------
 
     function : IntegratorFunction : default IntegratorFunction
         specifies the function used to integrate the input.  Must take a single numeric value, or a list or np.array
         of values, and return one of the same form.
+
+    reset_default : number, list or np.ndarray : default 0
+        specifies the default value used for the `reset <IntegratorMechanism.reset>` parameter.
+
+    Attributes
+    ----------
+
+    reset : int, float or 1d array of length 1 : default 0
+        if non-zero, the IntegratorMechanism's `reset <Mechanism_Base.reset>` method is called, which resets the
+        `value <IntegratorMechanism.value>` of the IntegratorMechanism to its initial value (see
+        `IntegratorMechanism_Reset` for additional details).
 
     """
 
@@ -144,8 +189,15 @@ class IntegratorMechanism(ProcessingMechanism_Base):
 
                     :default value: `AdaptiveIntegrator`(initializer=numpy.array([0]), rate=0.5)
                     :type: `Function`
+
+                reset
+                    see `reset <IntegratorMechanism.reset>`
+
+                    :default value: None
+                    :type: 'list or np.ndarray'
         """
         function = Parameter(AdaptiveIntegrator(rate=0.5), stateful=False, loggable=False)
+        reset = Parameter([0], modulable=True, stateful=True, constructor_argument='reset_default')
 
         #
     @check_user_specified
@@ -155,6 +207,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
                  size=None,
                  input_ports:Optional[Union[list, dict]]=None,
                  function=None,
+                 reset_default=0,
                  output_ports:Optional[Union[str, Iterable]]=None,
                  params=None,
                  name=None,
@@ -166,6 +219,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         super(IntegratorMechanism, self).__init__(default_variable=default_variable,
                                                   size=size,
                                                   function=function,
+                                                  reset_default=reset_default,
                                                   params=params,
                                                   name=name,
                                                   prefs=prefs,
@@ -227,3 +281,16 @@ class IntegratorMechanism(ProcessingMechanism_Base):
                                                 input_ports=input_ports,
                                                 function=function,
                                                 params=params)
+
+    def _execute(self, variable=None, context=None, runtime_params=None, **kwargs):
+        """Override to check for call to reset by ControlSignal"""
+        # IMPLEMENTATION NOTE:
+        #  This could be augmented to use reset parameter value as argument to reset()
+        #  if it is the same shape an an initializer for the Mechanism
+        value = super()._execute(variable=variable, context=context, runtime_params=runtime_params, **kwargs)
+        # No need to reset during initialization (which will occur if **reset_default** != 0)
+        if not self.is_initializing:
+            if np.array(self._get_current_parameter_value(RESET,context)).squeeze():
+                self.reset(context=context)
+                value = self.parameters.value._get(context).reshape(value.shape)
+        return value
