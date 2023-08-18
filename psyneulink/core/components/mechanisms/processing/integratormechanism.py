@@ -92,7 +92,7 @@ the IntgeratorMechanism in the **control** argument of the ControlMechanism's co
 in its **modulation** argument, as in the following example::
 
     >>> my_integrator = IntegratorMechanism()
-    >>> ctl_mech = ControlMechanism(modulation=OVERRIDE, control=(RESET, counter))
+    >>> ctl_mech = pnl.ControlMechanism(modulation=pnl.OVERRIDE, control=(pnl.RESET, my_integrator))
 
 In this case, any non-zero value of the ControlMechanism's `ControlSignal` will reset the IntegratorMechanism.
 *OVERRIDE* must be used as its `modulation <ControlMechanism.modulation>` parameter (instead of its default value
