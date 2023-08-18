@@ -412,6 +412,23 @@ def construct_model(model_name:str=MODEL_NAME,
         #      - OR OUTPUT GATE DECISION TO RESPONSE NODE, AND PUT TERMINATION ON RESPONSE NODE > 0
         #      RESET COUNTER ON TERMINATION (USING CONTROL?)
         #      ?BUT: NEED TO IMPLEMENT TERMINATION FOR EXPERIENCE TRIAL
+        #      CONTROL PROTOCOL:
+        #           ON COUNT 0:
+        #             - RETRIEVE FROM EM USING EXTERNAL INFO + CONTEXT
+        #             - ATTEND TO STATE FOR STATE -> CONTEXT
+        #           ON COUNT > 0:
+        #             - ATTEND TO EM FOR STATE -> CONTEXT
+        #             - RETRIEVE ONLY USING CONTEXT (OR ALSO PREVIOUSLY RETRIEVED TIME, REWARD AND STATE?)
+        #           ON RETRIEVED REWARD:
+        #             - EITHER:
+        #               - ALLOW DECISION LAYER AND RESPONSE LAYER TO EXECUTE (Condition?)
+        #             - IF TIME.PASS? %? NUM_ROLL_OUTS == 0 (or == NUM_STIMS_PER_ROLL_OUT * NUM_ROLL_OUTS?):
+        #                 - TERMINATE TRIAL
+        #             - ELSE:
+        #                 - RESET COUNTER TO 0
+        #                 - RINSE AND REPEAT
+
+
 
         if task == Task.PREDICT.value:
             attend_actual = 0 if trial % NUM_ROLL_OUT else 1
