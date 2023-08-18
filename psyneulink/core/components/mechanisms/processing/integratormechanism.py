@@ -86,15 +86,23 @@ that can be used to reset its value to the value of its `function <IntegratorMec
 thus effectively setting the `previous_value <IntegratorFunction.previous_value>`  of its `function
 <IntegratorMechanism.function>` to None.
 
-The `reset <IntegratorMechanism.reset>` parameter can be used by a `ControlMechanism` to reset accumulation. This can
-be implemented in two ways.  One is to specify the `modulation <ControlMechanism>` Parameter of the ControlMechanism
-(or the `ControlSignal` used to modulate the `reset <IntegratorMechanism.reset>` parameter) as *OVERRIDE*, which
-assigns the ControlSignal's value directly to the `reset <IntegratorMechanism.reset>` parameter, such that any
-non-zero value resets the IntegratorMechanism.  The other is specify a non-zero value to the `reset
-<IntegratorMechanism.reset>` Parameter in the IntegratorMechanism's constructor, and use the ControlSignal's default
-form of modulation (MULTIPLICATIVE); in this case, a ControlSignal of zero multpled by the value of the `reset
-<IntegratorMechanism.reset>` parameter results in zero, suppressing a reset, whereas a   ControlSignal with a
-non-zero value multiplied by the `reset <IntegratorMechanism.reset>` parameter will reset the IntegratorMechanism.
+The `reset <IntegratorMechanism.reset>` parameter can be used to reset the IntegratorMechanism under the control of a
+`ControlMechanism`.  This simplest way to do this is to specify the `reset <IntegratorMechanism.reset>` parameter of
+the IntgeratorMechanism in the **control** argument of the ControlMechanism's constructor, and to specify *OVERRIDE*
+in its **modulation** argument, as in the following example::
+
+    >>> my_integrator = IntegratorMechanism()
+    >>> ctl_mech = ControlMechanism(modulation=OVERRIDE, control=(RESET, counter))
+
+In this case, any non-zero value of the ControlMechanism's `ControlSignal` will reset the IntegratorMechanism.
+*OVERRIDE* must be used as its `modulation <ControlMechanism.modulation>` parameter (instead of its default value
+of *MULTIPLICATIVE*), so that the value of the ControlMechanism's `ControlSignal` is assigned directly to the
+IntegratorMechanism's `reset <IntegratorMechanism.reset>` parameter (otherwise, since the default of the `reset
+<IntegratorMechanism.reset>` parameter is 0, the ControlSignal's value has no effect). An alternative is to specify
+the **reset** agument of the IntegratorMechanism constructor to a non-zero value; in this case, using the default form
+of modulation (*MULTIPLICATIVE*), a ControlSignal with a zero value suppresses a reset by multiplying the `reset
+<IntegratorMechanism.reset>` parameter by 0, whereas a ControlSignal with a non-zero value multiplied by the `reset
+<IntegratorMechanism.reset>` parameter's non-zero value elicits a reset.
 
 .. _IntegratorMechanism_Class_Reference:
 
@@ -114,7 +122,7 @@ from psyneulink.core.components.functions.stateful.integratorfunctions import Ad
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, MechanismError
 from psyneulink.core.globals.keywords import \
-    DEFAULT_VARIABLE, INTEGRATOR_MECHANISM, VARIABLE, PREFERENCE_SET_NAME
+    DEFAULT_VARIABLE, INTEGRATOR_MECHANISM, VARIABLE, PREFERENCE_SET_NAME, RESET
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -272,9 +280,9 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         #  This could be augmented to use reset parameter value as argument to reset()
         #  if it is the same shape an an initializer for the Mechanism
         value = super()._execute(variable=variable, context=context, runtime_params=runtime_params, **kwargs)
-        # FIX: self.parameters.reset._get(context) IS NOT RETURNING THE VALUE OF THE PARAMETER PORT
-        if np.array(self.parameter_ports['reset'].parameters.value._get(context)).squeeze():
-            self.reset(context=context)
-            value = self.parameters.value._get(context)
+        # No need to reset during initialization (which will occur if **reset_default** != 0)
+        if not self.is_initializing:
+            if np.array(self._get_current_parameter_value(RESET,context)).squeeze():
+                self.reset(context=context)
+                value = self.parameters.value._get(context).reshape(value.shape)
         return value
-        

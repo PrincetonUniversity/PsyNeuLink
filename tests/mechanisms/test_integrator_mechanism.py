@@ -20,6 +20,24 @@ from psyneulink.core.scheduling.condition import Never
 
 
 class TestReset:
+    #                        reset_default_value     modulation
+    test_args = [('default',       1,                   None),
+                 ('OVERRIDE',     None,             pnl.OVERRIDE)]
+    @pytest.mark.parametrize('test_name, reset_default, modulation', test_args, ids=[x[0] for x in test_args])
+    def test_reset_integrator_mechanism(self, test_name, reset_default, modulation):
+        input = pnl.ProcessingMechanism(name='INPUT')
+        fixed_value = pnl.ProcessingMechanism(function=lambda x: 1, name="FIXED INPUT")
+        counter = IntegratorMechanism(function=SimpleIntegrator,
+                                      reset_default=reset_default,
+                                      name='COUNTER')
+        ctl = pnl.ControlMechanism(monitor_for_control=input,
+                               modulation=modulation,
+                               control=('reset', counter))
+        c = Composition(pathways=[[input,ctl],[fixed_value,counter]])
+        c.run(inputs={input:[0,0,1,0,0]})
+        expected = [[[0.],[1.]], [[0.],[2.]], [[1.],[0.]], [[0.],[1.]], [[0.],[2.]]]
+        np.testing.assert_allclose(c.results, expected)
+
     def test_FitzHughNagumo_valid(self):
         I = IntegratorMechanism(name="I",
                                 function=FitzHughNagumoIntegrator())
@@ -620,6 +638,7 @@ class TestIntegratorFunctions:
         val = benchmark(ex, [10])
         np.testing.assert_allclose(val, [[7.5]])
 
+
 class TestIntegratorInputs:
     # Part 1: VALID INPUT:
 
@@ -1179,6 +1198,7 @@ class TestIntegratorNoise:
         val = I.execute(2.5)
 
         # np.testing.assert_allclose(val, 4.356601554140335)
+
 
 class TestStatefulness:
 
