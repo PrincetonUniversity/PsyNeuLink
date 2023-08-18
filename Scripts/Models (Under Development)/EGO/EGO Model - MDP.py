@@ -401,34 +401,36 @@ def construct_model(model_name:str=MODEL_NAME,
             attend_actual = 1
             store = 1
 
-        # FIX: ADD CONNECTION FROM REWARD RETRIEVAL TO CONTROLLER
-        #      ADD OBJECTIVE_MECHANISM AS A COUNTER (USING A SIMPLE INTEGRATOR FUNCTION)
-        #                        (ALT: GET CURRENT TIME AND ELAPSED TIME AND USE THAT TO COUNT)
-        #            RESET IT USING CONTROL?
-        #      ADD CONTROL SIGNAL FOR GATING TO COUNTER AND DECISION
-        #      MAKE DECISION A DDM (OR SIMPLE INTEGRATOR)
-        #      ADD TERMINATION CONDITION FOR TRIAL EITHER:
-        #      - FOR WHEN COUNTER == (or %) NUM_ROLL_OUTS (AND RESET DECISION LAYER AT TRIAL START)
-        #      - OR OUTPUT GATE DECISION TO RESPONSE NODE, AND PUT TERMINATION ON RESPONSE NODE > 0
-        #      RESET COUNTER ON TERMINATION (USING CONTROL?)
-        #      ?BUT: NEED TO IMPLEMENT TERMINATION FOR EXPERIENCE TRIAL
-        #      CONTROL PROTOCOL:
+        # FIX:
+        #      ROLL_OUT_COUNTER WITH FIXED INPUT OF 1 AND RESET CONTROL FROM CONTROLLER
+        #      DDM FOR DECISION WITH NO NOISE, AND INPUT GATING FROM CONTROLLER (ON REWARD)
+        #       - USE DDM DECISION_TIME AS COUNTER FOR TERMINATION CONDITION
+        #      COUNTER WITH RESET CONTROLLED BY CONTROLLER
+        #      RESPONSE LAYER THAT IS INPUT GATED BY CONTROLLER
+        #      CONTROL SIGNALS TO EM FOR FIELD WEIGHTS
+        #      -----------
+        #      CONTROL PROTOCOL FOR PREDICT TRIALS:
+        #           EM STORAGE PROB  CONTROL SIGNAL = 0
         #           ON COUNT 0:
-        #             - RETRIEVE FROM EM USING EXTERNAL INFO + CONTEXT
-        #             - ATTEND TO STATE FOR STATE -> CONTEXT
+        #             - STATE ATTENTION CONTROL SIGNAL -> STATE 1, CONTEXT 0
+        #             - EM FIELD WEIGHTS CONTROL SIGNAL:  TIME, STATE, REWARD, CONTEXT
+        #             - EM STORAGE PROB  CONTROL SIGNAL = 0
+        #             - COUNTER RESET CONTROL SIGNAL = 0
+        #             - TERMINATE CONTROL SIGNAL = 0
         #           ON COUNT > 0:
-        #             - ATTEND TO EM FOR STATE -> CONTEXT
-        #             - RETRIEVE ONLY USING CONTEXT (OR ALSO PREVIOUSLY RETRIEVED TIME, REWARD AND STATE?)
-        #           ON RETRIEVED REWARD:
-        #             - EITHER:
-        #               - ALLOW DECISION LAYER AND RESPONSE LAYER TO EXECUTE (Condition?)
-        #             - IF TIME.PASS? %? NUM_ROLL_OUTS == 0 (or == NUM_STIMS_PER_ROLL_OUT * NUM_ROLL_OUTS?):
-        #                 - TERMINATE TRIAL
-        #             - ELSE:
-        #                 - RESET COUNTER TO 0
-        #                 - RINSE AND REPEAT
-
-
+        #             - EM STORAGE PROB  CONTROL SIGNAL = 0
+        #             - STATE ATTENTION CONTROL SIGNAL -> STATE 0, CONTEXT 1
+        #             - EM FIELD WEIGHTS CONTROL SIGNAL:  TIME, CONTEXT
+        #             - COUNTER RESET CONTROL SIGNAL = 0
+        #             - TERMINATE CONTROL SIGNAL = 0
+        #           ON RETRIEVED REWARD > 0:
+        #             - COUNTER RESET CONTROL SIGNAL = 1
+        #             - DECISION INPUT GATE CONTROL SIGNAL (NEEDED, IF OTHERWISE REWARDS ARE ALWAYS 0?)
+        #             - INCREMENT DECISION COUNTER (OR JUST USE DECISION TIME IF DDM?)
+        #           TERMINATION @  NUM_ROLL_OUTS * NUM_STIM_PER_ROLL_OUT, USING EITHER:
+        #             - CONDITION FOR DDM DECISION TIME AS COUNTER
+        #             - OR INPUT_GATE RESPONSE LAYER USING DDM DECISION TIME AS COUNTER,
+        #               AND TERMINATION ON RESPONSE.VALUE > 0
 
         if task == Task.PREDICT.value:
             attend_actual = 0 if trial % NUM_ROLL_OUT else 1
