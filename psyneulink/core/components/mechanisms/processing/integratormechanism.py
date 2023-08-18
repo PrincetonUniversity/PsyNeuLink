@@ -82,10 +82,19 @@ its `reset <IntegratorMechanism.reset>` parameter to a non-zero value, as descri
 
 An IntegatorMechanism has a `modulable <ModulatorySignal_Modulation>` `reset <IntergatorMechanism.reset>` parameter
 that can be used to reset its value to the value of its `function <IntegratorMechanism.function>`\\s `initializer
-<IntegratorFunction.initializer>`.  This can be used by a `ControlSignal` to reset accumulation, which will occur
-whenever the ControlSignal's `value <ControlSignal.value>` is non-zero.  This also clears the `value
-<Mechanism_Base.value>` `history <Parameter.history>`, thus effectively setting the `previous_value
-<IntegratorFunction.previous_value>`  of its `function <IntegratorMechanism.function>` to None.
+<IntegratorFunction.initializer>`. This also clears the `value <Mechanism_Base.value>` `history <Parameter.history>`,
+thus effectively setting the `previous_value <IntegratorFunction.previous_value>`  of its `function
+<IntegratorMechanism.function>` to None.
+
+The `reset <IntegratorMechanism.reset>` parameter can be used by a `ControlMechanism` to reset accumulation. This can
+be implemented in two ways.  One is to specify the `modulation <ControlMechanism>` Parameter of the ControlMechanism
+(or the `ControlSignal` used to modulate the `reset <IntegratorMechanism.reset>` parameter) as *OVERRIDE*, which
+assigns the ControlSignal's value directly to the `reset <IntegratorMechanism.reset>` parameter, such that any
+non-zero value resets the IntegratorMechanism.  The other is specify a non-zero value to the `reset
+<IntegratorMechanism.reset>` Parameter in the IntegratorMechanism's constructor, and use the ControlSignal's default
+form of modulation (MULTIPLICATIVE); in this case, a ControlSignal of zero multpled by the value of the `reset
+<IntegratorMechanism.reset>` parameter results in zero, suppressing a reset, whereas a   ControlSignal with a
+non-zero value multiplied by the `reset <IntegratorMechanism.reset>` parameter will reset the IntegratorMechanism.
 
 .. _IntegratorMechanism_Class_Reference:
 
@@ -144,7 +153,6 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         `value <IntegratorMechanism.value>` of the IntegratorMechanism to its initial value (see
         `IntegratorMechanism_Reset` for additional details).
 
-
     """
 
     componentType = INTEGRATOR_MECHANISM
@@ -173,7 +181,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
                     :type: 'list or np.ndarray'
         """
         function = Parameter(AdaptiveIntegrator(rate=0.5), stateful=False, loggable=False)
-        reset = Parameter([0], modulable=True, stateful=True)
+        reset = Parameter([0], modulable=True, stateful=True, constructor_argument='reset_default')
 
         #
     @check_user_specified
@@ -183,6 +191,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
                  size=None,
                  input_ports:Optional[Union[list, dict]]=None,
                  function=None,
+                 reset_default=0,
                  output_ports:Optional[Union[str, Iterable]]=None,
                  params=None,
                  name=None,
@@ -194,6 +203,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         super(IntegratorMechanism, self).__init__(default_variable=default_variable,
                                                   size=size,
                                                   function=function,
+                                                  reset_default=reset_default,
                                                   params=params,
                                                   name=name,
                                                   prefs=prefs,
