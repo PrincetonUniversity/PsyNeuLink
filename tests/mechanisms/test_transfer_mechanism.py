@@ -1355,17 +1355,17 @@ class TestIntegratorMode:
                               integration_rate=0.1,
                               noise=0.0)
         T.reset_stateful_function_when = Never()
-        np.testing.assert_allclose(T.integrator_function.previous_value, 0.5)
+        np.testing.assert_allclose(T.integrator_function.parameters.previous_value.get(), 0.5)
 
         T.execute(1.0)
         # integration: 0.9*0.5 + 0.1*1.0 + 0.0 = 0.55  --->  previous value = 0.55
         # linear fn: 0.55*1.0 = 0.55
-        np.testing.assert_allclose(T.integrator_function.previous_value, 0.55)
+        np.testing.assert_allclose(T.integrator_function.parameters.previous_value.get(), 0.55)
 
         T.execute(1.0)
         # integration: 0.9*0.55 + 0.1*1.0 + 0.0 = 0.595  --->  previous value = 0.595
         # linear fn: 0.595*1.0 = 0.595
-        np.testing.assert_allclose(T.integrator_function.previous_value, 0.595)
+        np.testing.assert_allclose(T.integrator_function.parameters.previous_value.get(), 0.595)
 
     @pytest.mark.composition
     def test_previous_value_persistence_run(self):
@@ -1377,7 +1377,7 @@ class TestIntegratorMode:
         C = Composition(pathways=[T])
         T.reset_stateful_function_when = Never()
 
-        np.testing.assert_allclose(T.integrator_function.previous_value, 0.5)
+        np.testing.assert_allclose(T.integrator_function.parameters.previous_value.get(), 0.5)
 
         C.run(inputs={T: 1.0}, num_trials=2)
         # Trial 1
@@ -1405,34 +1405,34 @@ class TestIntegratorMode:
                               integration_rate=0.1,
                               noise=0.0)
         T.reset_stateful_function_when = Never()
-        np.testing.assert_allclose(T.integrator_function.previous_value, 0.5)
+        np.testing.assert_allclose(T.integrator_function.parameters.previous_value.get(), 0.5)
         T.execute(1.0)
         # integration: 0.9*0.5 + 0.1*1.0 + 0.0 = 0.55  --->  previous value = 0.55
         # linear fn: 0.55*1.0 = 0.55
-        np.testing.assert_allclose(T.integrator_function.previous_value, 0.55)
+        np.testing.assert_allclose(T.integrator_function.parameters.previous_value.get(), 0.55)
         np.testing.assert_allclose(T.value, 0.55)
 
         # Reset integrator_function ONLY
         T.integrator_function.reset(0.6)
 
-        np.testing.assert_allclose(T.integrator_function.previous_value, 0.6)   # previous_value is a property that looks at integrator_function
+        np.testing.assert_allclose(T.integrator_function.parameters.previous_value.get(), 0.6)   # previous_value is a property that looks at integrator_function
         np.testing.assert_allclose(T.value, 0.55)           # on mechanism only, so does not update until execution
 
         T.execute(1.0)
         # integration: 0.9*0.6 + 0.1*1.0 + 0.0 = 0.64  --->  previous value = 0.55
         # linear fn: 0.64*1.0 = 0.64
-        np.testing.assert_allclose(T.integrator_function.previous_value, 0.64)   # property that looks at integrator_function
+        np.testing.assert_allclose(T.integrator_function.parameters.previous_value.get(), 0.64)   # property that looks at integrator_function
         np.testing.assert_allclose(T.value, 0.64)            # on mechanism, but updates with execution
 
         T.reset(0.4)
         # linear fn: 0.4*1.0 = 0.4
-        np.testing.assert_allclose(T.integrator_function.previous_value, 0.4)   # property that looks at integrator, which updated with mech reset
+        np.testing.assert_allclose(T.integrator_function.parameters.previous_value.get(), 0.4)   # property that looks at integrator, which updated with mech reset
         np.testing.assert_allclose(T.value, 0.4)  # on mechanism, but updates with mech reset
 
         T.execute(1.0)
         # integration: 0.9*0.4 + 0.1*1.0 + 0.0 = 0.46  --->  previous value = 0.46
         # linear fn: 0.46*1.0 = 0.46
-        np.testing.assert_allclose(T.integrator_function.previous_value, 0.46)  # property that looks at integrator, which updated with mech exec
+        np.testing.assert_allclose(T.integrator_function.parameters.previous_value.get(), 0.46)  # property that looks at integrator, which updated with mech exec
         np.testing.assert_allclose(T.value, 0.46)  # on mechanism, but updates with exec
 
     @pytest.mark.composition
@@ -1446,7 +1446,7 @@ class TestIntegratorMode:
 
         T.reset_stateful_function_when = Never()
 
-        np.testing.assert_allclose(T.integrator_function.previous_value, 0.5)
+        np.testing.assert_allclose(T.integrator_function.parameters.previous_value.get(), 0.5)
 
         C.run(inputs={T: 1.0}, num_trials=2)
         # Trial 1
@@ -1487,7 +1487,7 @@ class TestIntegratorMode:
         C = Composition(pathways=[T])
         T.reset_stateful_function_when = Never()
 
-        np.testing.assert_allclose(T.integrator_function.previous_value, [[0.5, 0.5, 0.5]])
+        np.testing.assert_allclose(T.integrator_function.parameters.previous_value.get(), [[0.5, 0.5, 0.5]])
 
         C.run(inputs={T: [1.0, 1.0, 1.0]}, num_trials=2)
         # Trial 1
@@ -1530,7 +1530,7 @@ class TestIntegratorMode:
         C = Composition(pathways=[T])
         T.reset_stateful_function_when = Never()
 
-        np.testing.assert_allclose(T.integrator_function.previous_value, initial_val)
+        np.testing.assert_allclose(T.integrator_function.parameters.previous_value.get(), initial_val)
 
         C.run(inputs={T: [1.0, 1.0, 1.0]}, num_trials=2)
         # Trial 1

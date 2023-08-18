@@ -58,126 +58,8 @@
 # - FIX: ?ADD add_memory() METHOD FOR STORING W/O RETRIEVAL, OR JUST ADD retrieval_prob AS modulable Parameter
 # - FIX: CONFIDENCE COMPUTATION (USING SIGMOID ON DOT PRODUCTS) AND REPORT THAT (EVEN ON FIRST CALL)
 # - FIX: ALLOW SOFTMAX SPEC TO BE A DICT WITH PARAMETERS FOR _get_softmax_gain() FUNCTION
-
-# - FIX: PSYNEULINK:
-
-# -     - WRITE TESTS FOR DriftOnASphere variable = scalar, 2d vector or 1d vector of correct and incorrect lengths
-# -     - WRITE TESTS FOR LEARNING WITH LinearCombination of 1, 2 and 3 inputs
-
-# -     - IMPLEMENTATION OF LEARNING: NEED ERROR IF TRY TO CALL LEARN ON A COMPOSITION THAT HAS NO LEARNING MECHANISMS
-#         INCLUDING IN PYTHON MODE??  OR JUST ALLOW IT TO CONSTRUCT THE PATHWAY AUTOMATICALLY?
-
-# -    - pytorchcreator_function:
-#           SoftMax implementation:  torch.nn.Softmax(dim=0) is not getting passed correctly
-#           Implement LinearCombination
-# -      - LinearMatrix Function:
-#
-#      - ObjectiveMechanism:  add modulatory signal for reset
-#
-#      - REFACTORING OF LEARNING:
-#           - LearningMechanism: Document that ERROR_SIGNAL is OPTIONAL
-#                               (only implemented when there is an error_source specified)
-#          - LLVM problem with ComparatorMechanism
-#          - CHECK FOR EXISTING LM ASSERT IN pytests
-#          - WRITE TESTS FOR USE OF COVARIATES AND RELATED VIOLATIONS: (see ScratchPad)
-#            - Use of LinearCombination with PRODUCT in output_source
-#            - Use of LinearCombination with PRODUCT in InputPort of output_source
-#
-#        - AutodiffComposition:
-#          - For now (until bugs below are fixed), put warning in about Python mode, and revert to PyTorch mode?
-#          - IN feat/autodiff_python_mode:
-#              - FIX: - Fix bug in input_type (test_idencompositionrunner.run_learning input assignment
-#                     - at least in test_identicalness_of_input_types), change learning_rate to 0.05 for all tests??
-#                     - add test test_identicalness_of_input_types for Composition (in test_learning)
-#                     - ??set default learning_rate to be same as Composition (0.05) -- will that break tests?
-#                     -    at the least, Autodiff.learn(learning_rate) should be set, but it doesn't seem to be
-#                     - learning_rate set in:
-#                          Autodiff construction IS recognized by inputs = dict, gen or gen_func but NOT func
-#                          in .learn() IS recognized by inputs = dict, gen or gen_func but NOT func or LLVM
-#                     - with expected_results = [[0.634144]] and  atol=1e-6 only the following fail:
-#                             all Python, and Pytorch = func
-#
-#                     - Check that if "epochs" is not in input_dict for Autodiff, then:
-#                             - set to num_trials as default,
-#                             - leave it to override num_trials if specified (add this to DOCUMENTATION)
-#          - Input construction has to be:
-#                   same for Autodiff in Python mode and PyTorch mode
-#                       (NOTE: used to be that autodiff could get left in Python mode
-#                              so only where tests for Autodiff happened did it branch)
-#                   and different from Composition (in Python mode)
-#                - test: test_identicalness_of_input_types
-#          - support use of pathway argument in Autodff
-#          - the following format doesn't work for LLVM (see test_identicalness_of_input_types:
-#             xor = pnl.AutodiffComposition(nodes=[input_layer,hidden_layer,output_layer])
-#             xor.add_projections([input_to_hidden_wts, hidden_to_output_wts])
-#          - DOCUMENTATION: execution_mode=ExecutionMode.Python allowed
-#          - Add warning of this on initial call to learn()
-#
-#        - LEARNING - Backpropagation LearningFunction / LearningMechanism
-#          - DOCUMENTATION:
-#             - weight_change_matrix = gradient (result of delta rule) * learning_rate
-#          - Backprop: handle call to constructor with default_variable = None
-#          - Implement functionality of learning_rate for LearningProjection
-#          - learning_pathway constructors:  assigned learning_rate arg to constructor of LearningFunctions,
-#                leaving learningMechanism's to be None and therefore detectable as user-specified so it can override
-#                runtime assignment in CompositionRunner.run_learning method (LINE 185)
-#                - check that this works (i.e., that assigning learning_rate to LearningFunction directly
-#                    doesn't cause LearningMechanism's learning_rate either to be "_user_specified" or to not be able
-#                    to override the value assigned at construction to the LearningFunction
-#                - DOCUMENTATION: note this in IMPLEMENTATION NOTE both in learning construction methods and
-#                                 CompositionRunner.run_learning method
-#          - MappingProjection / LearningMechanism:
-#            - Add learning_rate parameter to MappingProjection (if learnable is True)
-#            - Refactor LearningMechanism to use MappingProjection learning_rate specification if present
-#
-#        - Composition:
-#          - Change size argument in constructor to use standard numpy shape format if tupe, and PNL format if list
-#          - Write convenience Function for returning current time from context
-#               - requires it be called from execution within aComposition, error otherwise)
-#               - takes argument for time scale (e.g., TimeScale.TRIAL, TimeScale.RUN, etc.)
-#               - Add TimeMechanism for which this is the function, and can be configured to report at a timescale
-#          - Add Composition.run_status attribute assigned a context flag, with is_preparing property that checks it
-#                 (paralleling handling of is_initializing)
-#          - Allow set of lists as specification for pathways in Composition
-#          - Make sure that shadow inputs (see InputPort_Shadow_Inputs) uses the same matrix as shadowed input.
-#          - composition.add_backpropagation_learning_pathway(): support use of set notation for multiple nodes that
-#          project to a single one.
-#          - add LearningProjections executed in EXECUTION_PHASE to self.projections
-#            and then remove MODIFIED 8/1/23 in _check_for_unused_projections
-#          - Why can't verbosePref be set directly on a composition?
-
-#        - showgraph:  (show_graph)
-#          - add mode for showing projections as diamonds without show_learning (e.g., "show_projections")
-#          - figure out how to get storage_node to show without all other learning stuff
-#          - show 'operation' parameter for LinearCombination in show_node_structure=ALL
-#          - specify set of nodes to show and only show those
-#          - fix: show_learning=ALL (or merge from EM branch)
-
-#        - Composition.add_nodes():
-#           - should check, on each call to add_node, to see if one that has a releavantprojection and, if so, add it.
-#           - Allow [None] as argument and treat as []
-# -      - IF InputPort HAS default_input = DEFAULT_VARIABLE,
-#           THEN IT SHOULD BE IGNORED AS AN INPUT NODE IN A COMPOSITION
-#        COMPILATION:
-#        - Remove CIM projections on import to another composition
-#        - Autodiff support for IdentityFunction
-#        - LinearMatrix to add normalization
-#        - _store() method to assign weights to memory
-#
-# -    FIX: Adding GatingMechanism after Mechanisms they gate fails to implement gating projections
-# -         (example:  reverse order of the following in _construct_pathways
-#                      self.add_nodes(self.softmax_nodes)
-# -                    self.add_nodes(self.field_weight_nodes)
-#           - add Normalize as option
-#           - Anytime a row's norm is 0, replace with 1s
-#
-# -    FIX: LinearCombination Function:
-#           - finish adding derivative (for if exponents are specified)
-#           - remove properties (use getter and setter for Parameters)
-#           - should derivative be a scalar or an array of scalars?
-# -    FIX: WHY IS Concatenate NOT WORKING AS FUNCTION OF AN INPUTPORT (WASN'T THAT USED IN CONTEXT OF BUFFER?
-#           SEE NOTES TO KATHERINE
-# - WRITE TESTS FOR INPUT_PORT and MATRIX SPECS CORRECT IN LATEST BRANCHEs
+# MISC:
+# - WRITE TESTS FOR INPUT_PORT and MATRIX SPECS CORRECT IN LATEST BRANCHs
 # - ACCESSIBILITY OF DISTANCES (SEE BELOW): MAKE IT A LOGGABLE PARAMETER (I.E., WITH APPROPRIATE SETTER)
 #   ADD COMPILED VERSION OF NORMED LINEAR_COMBINATION FUNCTION TO LinearCombination FUNCTION: dot / (norm a * norm b)
 # - DECAY WEIGHTS BY:
@@ -196,6 +78,103 @@
 # - ADAPTIVE TEMPERATURE: KAMESH FOR FORMULA
 # - ADD MEMORY_DECAY TO ContentAddressableMemory FUNCTION (and compiled version by Samyak)
 # - MAKE memory_template A CONSTRUCTOR ARGUMENT FOR default_variable
+
+# - FIX: PSYNEULINK:
+#      - TESTS:
+#        - WRITE TESTS FOR DriftOnASphere variable = scalar, 2d vector or 1d vector of correct and incorrect lengths
+#        - WRITE TESTS FOR LEARNING WITH LinearCombination of 1, 2 and 3 inputs
+#
+#      - COMPILATION:
+#        - Remove CIM projections on import to another composition
+#        - Autodiff support for IdentityFunction
+#        - LinearMatrix to add normalization
+#        - _store() method to assign weights to memory
+#        - LLVM problem with ComparatorMechanism
+#
+#      - pytorchcreator_function:
+#           SoftMax implementation:  torch.nn.Softmax(dim=0) is not getting passed correctly
+#           Implement LinearCombination
+#        - LinearMatrix Function:
+#
+#      - LEARNING - Backpropagation LearningFunction / LearningMechanism
+#        - DOCUMENTATION:
+#           - weight_change_matrix = gradient (result of delta rule) * learning_rate
+#           - ERROR_SIGNAL is OPTIONAL (only implemented when there is an error_source specified)
+#        - Backprop: (related to above?) handle call to constructor with default_variable = None
+#        - WRITE TESTS FOR USE OF COVARIATES AND RELATED VIOLATIONS: (see ScratchPad)
+#          - Use of LinearCombination with PRODUCT in output_source
+#          - Use of LinearCombination with PRODUCT in InputPort of output_source
+#                  - Construction of LearningMechanism with Backprop:
+#        - MappingProjection / LearningMechanism:
+#          - Add learning_rate parameter to MappingProjection (if learnable is True)
+#          - Refactor LearningMechanism to use MappingProjection learning_rate specification if present
+#        - CHECK FOR EXISTING LM ASSERT IN pytests
+#
+#      - AutodiffComposition:
+#         - Check that if "epochs" is not in input_dict for Autodiff, then:
+#           - set to num_trials as default,
+#           - leave it to override num_trials if specified (add this to DOCUMENTATION)
+#        - Input construction has to be:
+#           - same for Autodiff in Python mode and PyTorch mode
+#               (NOTE: used to be that autodiff could get left in Python mode
+#                      so only where tests for Autodiff happened did it branch)
+#           - AND different from Composition (in Python mode)
+#        - support use of pathway argument in Autodff
+#        - the following format doesn't work for LLVM (see test_identicalness_of_input_types:
+#           xor = pnl.AutodiffComposition(nodes=[input_layer,hidden_layer,output_layer])
+#           xor.add_projections([input_to_hidden_wts, hidden_to_output_wts])
+#          - DOCUMENTATION: execution_mode=ExecutionMode.Python allowed
+#          - Add warning of this on initial call to learn()
+##
+#      - Composition:
+# -      - IMPLEMENTATION OF LEARNING: NEED ERROR IF TRY TO CALL LEARN ON A COMPOSITION THAT HAS NO LEARNING MECHANISMS
+#          INCLUDING IN PYTHON MODE??  OR JUST ALLOW IT TO CONSTRUCT THE PATHWAY AUTOMATICALLY?
+#        - Change size argument in constructor to use standard numpy shape format if tupe, and PNL format if list
+#        - Write convenience Function for returning current time from context
+#             - requires it be called from execution within aComposition, error otherwise)
+#             - takes argument for time scale (e.g., TimeScale.TRIAL, TimeScale.RUN, etc.)
+#             - Add TimeMechanism for which this is the function, and can be configured to report at a timescale
+#        - Add Composition.run_status attribute assigned a context flag, with is_preparing property that checks it
+#               (paralleling handling of is_initializing)
+#        - Allow set of lists as specification for pathways in Composition
+#        - Make sure that shadow inputs (see InputPort_Shadow_Inputs) uses the same matrix as shadowed input.
+#        - composition.add_backpropagation_learning_pathway(): support use of set notation for multiple nodes that
+#        project to a single one.
+#        - add LearningProjections executed in EXECUTION_PHASE to self.projections
+#          and then remove MODIFIED 8/1/23 in _check_for_unused_projections
+#        - Why can't verbosePref be set directly on a composition?
+#        - Composition.add_nodes():
+#           - should check, on each call to add_node, to see if one that has a releavantprojection and, if so, add it.
+#           - Allow [None] as argument and treat as []
+#        - IF InputPort HAS default_input = DEFAULT_VARIABLE,
+#           THEN IT SHOULD BE IGNORED AS AN INPUT NODE IN A COMPOSITION
+#
+#      - showgraph:  (show_graph)
+#        - add mode for showing projections as diamonds without show_learning (e.g., "show_projections")
+#        - figure out how to get storage_node to show without all other learning stuff
+#        - show 'operation' parameter for LinearCombination in show_node_structure=ALL
+#        - specify set of nodes to show and only show those
+#        - fix: show_learning=ALL (or merge from EM branch)
+
+#      - LinearCombination Function:
+#        - finish adding derivative (for if exponents are specified)
+#        - remove properties (use getter and setter for Parameters)
+#
+#    - FIX: BUGS:
+#      -LearningMechanism / Backpropagation LearningFunction:
+#         - Construction of LearningMechanism on its own fails; e.g.:
+#             lm = LearningMechanism(learning_rate=.01, learning_function=BackPropagation())
+#             causes the folllowing error:
+#                TypeError("Logistic.derivative() missing 1 required positional argument: 'self'")
+
+#      - Adding GatingMechanism after Mechanisms they gate fails to implement gating projections
+#           (example:  reverse order of the following in _construct_pathways
+#                      self.add_nodes(self.softmax_nodes)
+#                      self.add_nodes(self.field_weight_nodes)
+#           - add Normalize as option
+#           - Anytime a row's norm is 0, replace with 1s
+#      - WHY IS Concatenate NOT WORKING AS FUNCTION OF AN INPUTPORT (WASN'T THAT USED IN CONTEXT OF BUFFER?
+#           SEE NOTES TO KATHERINE
 
 """
 

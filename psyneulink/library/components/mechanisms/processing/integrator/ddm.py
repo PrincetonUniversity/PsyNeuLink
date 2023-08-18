@@ -565,8 +565,8 @@ class DDM(ProcessingMechanism):
             element is set to 0. \n
           • `integration mode <DDM_Integration_Mode>`: the value of the element in the stimulus array based on the
             decision variable (1st item of the DDM's `value <DDM.value>`) at the current TIME_STEP of execution:
-            it is assigned to the 1st element if the decision variable is closer to the upper threshold, and to the  2nd
-            element if the decision variable is closer to the lower threshold; the other element is set to 0. \n
+            it is assigned to the 1st element if the decision variable is closer to the upper threshold, and to the
+            2nd element if the decision variable is closer to the lower threshold; the other element is set to 0. \n
 
         .. _DDM_RESPONSE_TIME:
 
@@ -574,17 +574,17 @@ class DDM(ProcessingMechanism):
           • `analytic mode <DDM_Analytic_Mode>`: mean time (in seconds) for the decision variable to reach the positive
             or negative value of the DDM `function <DDM.function>`'s threshold attribute as estimated by the analytic
             solution calculated by the `function <DDM.function>`); \n
-          • `integration mode <DDM_Integration_Mode>`: the number of `TIME_STEP` that have occurred since the DDM began
-            to execute in the current `TRIAL <TimeScale.TRIAL>` or, if it has reached the positive or negative value of
-            the DDM `function <DDM.function>`'s threshold attribute, the `TIME_STEP` at which that occurred. \n
-          Corresponds to the 2nd item of the DDM's `value <DDM.value>`.
+          • `integration mode <DDM_Integration_Mode>`: the number of `TIME_STEP`\\s that have occurred since the DDM
+            began to execute in the current `TRIAL <TimeScale.TRIAL>` or, if it has reached the positive or negative
+            value of the DDM `function <DDM.function>`'s threshold attribute, the `TIME_STEP` at which that occurred. \n
+            Corresponds to the 2nd item of the DDM's `value <DDM.value>`.
 
         .. _DDM_DECISION_OUTCOME:
 
         *DECISION_OUTCOME* : float
-          • `analytic mode <DDM_Analytic_Mode>`: 1.0 if the value of the threshold crossed by the decision variable on the
-            current TRIAL (which is either the value of the DDM `function <DDM.function>`'s threshold attribute or its
-            negative) is positive, 0 otherwise. \n
+          • `analytic mode <DDM_Analytic_Mode>`: 1.0 if the value of the threshold crossed by the decision variable on
+            the current TRIAL (which is either the value of the DDM `function <DDM.function>`'s threshold attribute or
+            its negative) is positive, 0 otherwise. \n
           • `integration mode <DDM_Integration_Mode>`: 1if the value of the decision variable at the current
             TIME_STEP of execution is positive, 0 otherwise. \n
 
