@@ -160,6 +160,10 @@
 #        - finish adding derivative (for if exponents are specified)
 #        - remove properties (use getter and setter for Parameters)
 #
+#     - DDM:
+#        - make reset_stateful_function_when a Parameter and arg in constructor
+#          and align with reset Parameter of IntegratorMechanism)
+#
 #    - FIX: BUGS:
 #      - Composition:
 #        - pathways arg:  the following should treat simple_mech as an INPUT node but it doesn't
@@ -185,6 +189,11 @@
 #           - Anytime a row's norm is 0, replace with 1s
 #      - WHY IS Concatenate NOT WORKING AS FUNCTION OF AN INPUTPORT (WASN'T THAT USED IN CONTEXT OF BUFFER?
 #           SEE NOTES TO KATHERINE
+#
+#     - TESTS
+#       For duplicate Projections (e.g., assign a Mechanism in **monitor** of ControlMechanism
+#            and use comp.add_projection(MappingProjection(mointored, control_mech) -> should generate a duplicate
+#            then search for other instances of the same error message
 
 """
 
