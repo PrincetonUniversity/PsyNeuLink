@@ -131,8 +131,8 @@ from psyneulink import *
 CONSTRUCT_MODEL = True                 # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = (                      # Only one of the following can be uncommented:
     # None                             # suppress display of model
-    # {}                               # show simple visual display of model
-    {'show_node_structure': True}    # show detailed view of node structures and projections
+    {}                               # show simple visual display of model
+    # {'show_node_structure': True}    # show detailed view of node structures and projections
 )
 RUN_MODEL = False                      # True => run the model
 ANALYZE_RESULTS = False                # True => output analysis of results of run
@@ -157,7 +157,7 @@ CONTEXT_LAYER_NAME = 'CONTEXT'
 REWARD_INPUT_LAYER_NAME = "REWARD"
 RETRIEVED_TIME_NAME = "RETRIEVED TIME"
 RETRIEVED_REWARD_NAME = "RETRIEVED REWARD"
-EM_NAME = "EPISODIC MEMORY"
+EM_NAME = "EM"
 DECISION_LAYER_NAME = "DECISION"
 RESPONSE_LAYER_NAME = "RESPONSE_LAYER"
 
@@ -166,13 +166,21 @@ Task = IntEnum('Task', ['EXPERIENCE', 'PREDICT'],
                start=0)
 
 
+StateFeatureIndex = IntEnum('StateFeatureIndex',
+                            ['TASK',
+                             'REWARD',
+                             'SIM_STEP',
+                             'SIM_TOTAL'],
+                            start=0)
+
 ControlSignalIndex = IntEnum('ControlSignalIndex',
                              ['ATTEND_ACTUAL',
                               'ATTEND_RETRIEVED',
                               'EM_FIELD_WEIGHTS',
                               'STORAGE_PROB',
                               'COUNTER_RESET',
-                              'DECISION_GATE'],
+                              'DECISION_GATE',
+                              'RESPONSE_GATE'],
                              start=0)
 
 # CONSTRUCTION PARAMETERS
@@ -381,23 +389,32 @@ def construct_model(model_name:str=MODEL_NAME,
     # -------------------------------------------------  Control  ----------------------------------------------------
     # ----------------------------------------------------------------------------------------------------------------
     def control_function(variable,context):
-        """Used by attention_layer to control encoding of state info in context_layer and storing in EM
+        """Use by control_layer to govern EM storage & retrieval, access to context, and gating decision and response
 
-        If task is:
+        .. table::
+           +--------------------------------------------------------------------------------------------------------+
+           |                                     **CONTROL POLICY**                                                 |
+           +-----------------------+--------------------------------------------------------------------------------+
+           |"STATE FEATURE" VECTOR |                      CONTROL ALLOCATION VECTOR                                 |
+           | (monitor_for_control) +-------------+---------------------------------------+-----------+--------------+
+           |                       | STATE ATTN  |                  EM CONTROL           | CTR RESET |  GATES       |
+           |                       |             +-------------------------------+-------+-----------+--------------+
+           |                       |             |            MATCH              | STORE |           |              |
+           |                       |             |                               |       |           |              |
+           |TASK  COUNT DDM REWARD | ACTUAL  EM  |   TIME  STATE  CONTEXT REWARD |       |           | DDM  | RESP  |
+           +-----------------------+-------------+-------------------------------+-------+-----------+------+-------+
+           | EXP   ANY  !RO   ANY  |   1     0   |   0      0       0       0    |   1   |     0     |   0  |   0   |
+           | PRED   0   !RO    0   |   1     0   |   1      1       1       0    |   0   |     1     |   0  |   0   |
+           | PRED   1   !RO    0   |   0     1   |   1      0       1       0    |   0   |     0     |   1  |   0   |
+           | PRED   2   !RO    0   |   0     1   |   1      0       1       0    |   0   |     0     |   1  |   0   |
+           | PRED   2   !RO    1   |   0     1   |   1      0       1       0    |   0   |     1     |   1  |   1   |
+           | PRED   2    RO    1   |   0     1   |   1      0       1       0    |   0   |     1     |   1  |   1   |
+           +-----------------------+-------------+-------------------------------+-------+-----------+------+-------+
+           NOTES:
+           - DDM is open gated on each PREDICT step because REWARD is 0 so it won't accumulate,
+                     but it will increment its counter (RESPONSE TIME) that can be used to determine when to terminate
+           - RO: NUM_ROLL_OUTS * NUM_STIM_PER_ROLL_OUT
 
-         Task.EXPERIENCE (0):
-          - stores state info in em on every trial (control_signal[0]=1)
-          - always attend to actual state (control_signal[1]=1, control_signal[2]=0)
-
-         Task.PREDICT: (1):
-          - never store info in em (control_signal[0]=0)
-          - attend to actual state on first trial (control_signal[1]=1, control_signal[2]=0)
-          - attend to retrieved state on all subsequent trials (control_signal[1]=0, control_signal[2]=1)
-
-        Returns:
-            control_signal[0]: 1 if store, 0 otherwise
-            control_signal[1]: 1 if attend to actual state, 0 otherwise
-            control_signal[2]: 1 if attend to retrieved state, 0 otherwise
         """
 
         # Get task, counter, and trial number
@@ -458,9 +475,14 @@ def construct_model(model_name:str=MODEL_NAME,
         control_signals = [store, attend_actual, attend_retrieved]
         return control_signals
 
-    # Uses the control_function (see above) to control:
-    #   - encoding of state info in context_layer (from stimulus vs. em)
-    #   - storage of info in em
+    # Monitored for control
+    state_features = [None] * len(StateFeatureIndex)
+    state_features[StateFeatureIndex.TASK] = task_input_layer
+    state_features[StateFeatureIndex.REWARD] = retrieved_reward_layer
+    state_features[StateFeatureIndex.SIM_STEP] = counter_layer
+    state_features[StateFeatureIndex.SIM_TOTAL] = decision_layer.output_ports[RESPONSE_TIME]
+
+    # Control signals
     control_signals = [None] * len(ControlSignalIndex)
     control_signals[ControlSignalIndex.ATTEND_ACTUAL] = attention_layer.input_ports[ACTUAL_STATE_INPUT]
     control_signals[ControlSignalIndex.ATTEND_RETRIEVED] = attention_layer.input_ports[RETRIEVED_STATE_INPUT]
@@ -468,10 +490,11 @@ def construct_model(model_name:str=MODEL_NAME,
     control_signals[ControlSignalIndex.STORAGE_PROB] = (STORAGE_PROB, em)
     control_signals[ControlSignalIndex.COUNTER_RESET] = (RESET, counter_layer)
     control_signals[ControlSignalIndex.DECISION_GATE] = decision_layer.input_port
-    attentional_control_layer = ControlMechanism(name=attentional_control_name,
-                                                 monitor_for_control=[task_input_layer, counter_layer],
-                                                 function = control_function,
-                                                 control=control_signals)
+    control_signals[ControlSignalIndex.RESPONSE_GATE] = response_layer.input_port
+    control_layer = ControlMechanism(name=attentional_control_name,
+                                     monitor_for_control=state_features,
+                                     function = control_function,
+                                     control=control_signals)
     
     # ----------------------------------------------------------------------------------------------------------------
     # -------------------------------------------------  EGO Composition  --------------------------------------------
@@ -494,7 +517,7 @@ def construct_model(model_name:str=MODEL_NAME,
                         counter_layer,
                         reward_input_layer,
                         em,
-                        attentional_control_layer,
+                        control_layer,
                         ])
     EGO_comp.exclude_node_roles(task_input_layer, NodeRole.OUTPUT)
     EGO_comp.exclude_node_roles(counter_layer, [NodeRole.INPUT, NodeRole.OUTPUT])
