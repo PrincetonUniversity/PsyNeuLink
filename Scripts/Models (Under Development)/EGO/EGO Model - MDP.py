@@ -404,8 +404,8 @@ def construct_model(model_name:str=MODEL_NAME,
     control_em = ContentAddressableMemory(initializer=control_policy,
                                           storage_prob=0.0,
                                           selection_function=SoftMax(gain=10))
-    num_keys = 4
-    num_vals = 6
+    num_keys = len(StateFeatureIndex)
+    num_vals = len(ControlSignalIndex)
     num_fields = num_keys + num_vals
 
     def control_function(variable, context):
