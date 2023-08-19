@@ -1,3 +1,10 @@
+# Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and limitations under the License.
+
 """
 QUESTIONS:
 
@@ -134,13 +141,18 @@ DISPLAY_MODEL = (                      # Only one of the following can be uncomm
     {}                               # show simple visual display of model
     # {'show_node_structure': True}    # show detailed view of node structures and projections
 )
-RUN_MODEL = False                      # True => run the model
+# RUN_MODEL = True                       # True => run the model
+RUN_MODEL = False                      # False => don't run the model
 ANALYZE_RESULTS = False                # True => output analysis of results of run
 REPORT_OUTPUT = ReportOutput.ON       # Sets console output during run
 REPORT_PROGRESS = ReportProgress.OFF   # Sets console progress bar during run
 ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
 
-#region ========================================= PARAMETERS ===========================================================
+
+#region   PARAMETERS
+# ======================================================================================================================
+#                                                   PARAMETERS
+# ======================================================================================================================
 
 # Fixed (structural) parameters:
 
@@ -149,17 +161,17 @@ MODEL_NAME = "EGO Model"
 TASK_INPUT_LAYER_NAME = "TASK"
 STATE_INPUT_LAYER_NAME = "STATE"
 TIME_INPUT_LAYER_NAME = "TIME"
-ATTENTION_LAYER_NAME = "STATE ATTENTION"
+ATTENTION_LAYER_NAME = "ENCODE\nSTATE"
 CONTROL_LAYER_NAME = "CONTROL"
 ACTUAL_STATE_INPUT = 'ACTUAL_STATE_INPUT'
 RETRIEVED_STATE_INPUT = 'RETRIEVED_STATE'
 CONTEXT_LAYER_NAME = 'CONTEXT'
 REWARD_INPUT_LAYER_NAME = "REWARD"
-RETRIEVED_TIME_NAME = "RETRIEVED TIME"
-RETRIEVED_REWARD_NAME = "RETRIEVED REWARD"
+RETRIEVED_TIME_NAME = "RETRIEVED\nTIME"
+RETRIEVED_REWARD_NAME = "RETRIEVED\nREWARD"
 EM_NAME = "EM"
 DECISION_LAYER_NAME = "DECISION"
-RESPONSE_LAYER_NAME = "RESPONSE_LAYER"
+RESPONSE_LAYER_NAME = "RESPONSE"
 
 
 Task = IntEnum('Task', ['EXPERIENCE', 'PREDICT'],
@@ -208,7 +220,13 @@ RETRIEVAL_SOFTMAX_GAIN = 10    # gain on softmax retrieval function
 
 RANDOM_WEIGHTS_INITIALIZATION=RandomMatrix(center=0.0, range=0.1)  # Matrix spec used to initialize all Projections
 
-# Execution parameters:
+#endregion
+
+#region ENVIRONMENT
+# ======================================================================================================================
+#                                                   ENVIRONMENT
+# ======================================================================================================================
+
 
 # Temporal context vector generation as input to time_input_layer of model
 CONTEXT_DRIFT_RATE=.1 # drift rate used for DriftOnASphereIntegrator (function of Context mech) on each trial
@@ -267,7 +285,12 @@ def gen_reward_revaluation_trials_exp1(dim=STATE_SIZE, num_trials=NUM_PREDICT_TR
 
     return visited_states, rewards
 
-assert True
+#endregion
+
+#region   MODEL
+# ======================================================================================================================
+#                                                      MODEL
+# ======================================================================================================================
 
 def construct_model(model_name:str=MODEL_NAME,
 
@@ -381,7 +404,8 @@ def construct_model(model_name:str=MODEL_NAME,
                                         name='COUNTER')
 
     decision_layer = DDM(function=DriftDiffusionIntegrator(noise=0.0, rate=1.0),
-                         execute_until_finished=False)
+                         execute_until_finished=False,
+                         name=DECISION_LAYER_NAME)
 
     response_layer = TransferMechanism(name=response_layer_name,
                                        size=response_size)
@@ -391,16 +415,16 @@ def construct_model(model_name:str=MODEL_NAME,
     # ----------------------------------------------------------------------------------------------------------------
 
     tot = NUM_ROLL_OUTS * NUM_STIM_PER_ROLL_OUT
-    #                  +--------------------------------------------------------------------------------------+
-    #                  |         KEYS           |                         VALUES                              |
-    #                  +--------------------------------------------------------------------------------------+
-    #                   TASK  COUNT DDM  REWARD | ACTUAL EM |TIME STATE CONTEXT REWARD| STORE | CT | DDM | RESP
-    control_policy = ([[[[0], [-1], [-1], [-1],     [1], [0], [0,    0,    0,     0],    [1],   [0]], [0], [0]],
-                       [[[1],  [0], [-1],  [0],     [1], [0], [1,    1,    1,     0],    [0],   [1]], [0], [0]],
-                       [[[1],  [1], [-1],  [0],     [0], [1], [1,    0,    1,     0],    [0],   [0]], [1], [0]],
-                       [[[1],  [2], [-1],  [0],     [0], [1], [1,    0,    1,     0],    [0],   [0]], [1], [0]],
-                       [[[1],  [2], [-1],  [1],     [0], [1], [1,    0,    1,     0],    [0],   [1]], [1], [1]],
-                       [[[1],  [2], [tot], [1],     [0], [1], [1,    0,    1,     0],    [0],   [1]], [1], [1]]])
+    #                +--------------------------------------------------------------------------------------------+
+    #                |         KEYS            |                        VALUES                                    |
+    #                +--------------------------------------------------------------------------------------------+
+    #                 TASK  COUNT  DDM  REWARD | ACTUAL EM | TIME STATE CONTEXT REWARD | STORE | CT  | DDM | RESP
+    control_policy = [[[0], [-1], [-1], [-1],     [1], [0],  [0,    0,     0,      0],    [1],   [0],  [0],  [0]],
+                      [[1],  [0], [-1],  [0],     [1], [0],  [1,    1,     1,      0],    [0],   [1],  [0],  [0]],
+                      [[1],  [1], [-1],  [0],     [0], [1],  [1,    0,     1,      0],    [0],   [0],  [1],  [0]],
+                      [[1],  [2], [-1],  [0],     [0], [1],  [1,    0,     1,      0],    [0],   [0],  [1],  [0]],
+                      [[1],  [2], [-1],  [1],     [0], [1],  [1,    0,     1,      0],    [0],   [1],  [1],  [1]],
+                      [[1],  [2], [tot], [1],     [0], [1],  [1,    0,     1,      0],    [0],   [1],  [1],  [1]]]
     control_em = ContentAddressableMemory(initializer=control_policy,
                                           storage_prob=0.0,
                                           selection_function=SoftMax(gain=10))
@@ -472,13 +496,13 @@ def construct_model(model_name:str=MODEL_NAME,
         query = np.array(list(variable) + [[0],[0],[0,0,0,0],[0],[0],[0],[0]], dtype=object)
         if task == Task.EXPERIENCE:
             # Set distance_field_weights for EXPERIENCE
-            em.parameters.distance_field_weights.set([1] + [0] * (num_fields - 1), context)
+            em.function.parameters.distance_field_weights.set([1] + [0] * (num_fields - 1), context)
             # Get control_signals for EXPERIENCE
             control_signals = control_em.execute(query, context)[num_keys:]
 
         elif task == Task.PREDICT:
             # Set distance_field_weights for PREDICT
-            em.parameters.distance_field_weights.set([1] * num_keys + [0] * num_vals, context)
+            em.function.parameters.distance_field_weights.set([1] * num_keys + [0] * num_vals, context)
             # Set control_signals for PREDICT
             control_signals = control_em.execute(query, context)[num_keys:]
 
@@ -572,10 +596,12 @@ def construct_model(model_name:str=MODEL_NAME,
 
     print(f'{model_name} constructed')
     return EGO_comp
+#endregion
 
-# --------------------------------------------------------------------------------------------------------------------
-# -------------------------------------------------  Script Execution  -----------------------------------------------
-# --------------------------------------------------------------------------------------------------------------------
+#region SCRIPT EXECUTION
+# ======================================================================================================================
+#                                                   SCRIPT EXECUTION
+# ======================================================================================================================
 
 model = None
 
@@ -589,4 +615,6 @@ if DISPLAY_MODEL is not None:
         print("Model not yet constructed")
 
 if RUN_MODEL:
-    model.run(inputs=inputs)
+    # model.run(inputs=inputs)
+    model.run()
+#endregion
