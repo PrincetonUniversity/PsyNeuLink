@@ -684,15 +684,22 @@ class TestContentAddressableMemory:
         assert c.distance == 2.5 * Distance(metric=COSINE)([retrieved,[[1,2,4],[4,5,9]]])
         np.testing.assert_allclose(c.distances_by_field, [2.5 * 0.00397616, 2.5 * 0.00160159], rtol=1e-5, atol=1e-8)
 
-        # Test with 0 as field weight
+        # Test with 0 as one field weight
         c.distance_field_weights=[1,0]
         retrieved = c([[1, 2, 3], [4, 5, 10]])
         np.testing.assert_equal(retrieved, [[1, 2, 3], [4, 5, 6]])
         assert c.distances_by_field == [0.0, 0.0]
 
+        # Test with 0 as the other field weight
         c.distance_field_weights=[0,1]
         retrieved = c([[1, 2, 3], [4, 5, 10]])
         np.testing.assert_equal(retrieved, [[1, 2, 10], [4, 5, 10]])
+        assert c.distances_by_field == [0.0, 0.0]
+
+        # Test with 0 as both field weights (equvialent to setting retrieval_prob=0, so should return 0's)
+        c.distance_field_weights=[0,0]
+        retrieved = c([[1, 2, 3], [4, 5, 10]])
+        np.testing.assert_equal(retrieved, [[0, 0, 0], [0, 0, 0]])
         assert c.distances_by_field == [0.0, 0.0]
 
         # Test with None as field weight

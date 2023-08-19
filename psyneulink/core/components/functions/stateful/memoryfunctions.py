@@ -29,12 +29,13 @@ import warnings
 from collections import deque
 from itertools import combinations, product
 
-from psyneulink._typing import Optional, Union, Callable
+from psyneulink._typing import Callable, List, Literal
 
 import numpy as np
 from beartype import beartype
 
-from psyneulink._typing import Optional, Union, Literal
+from typing import Optional, Union
+# from psyneulink._typing import
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import (
@@ -42,6 +43,7 @@ from psyneulink.core.components.functions.function import (
 )
 from psyneulink.core.components.functions.nonstateful.objectivefunctions import Distance
 from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot
+from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
 from psyneulink.core.components.functions.stateful.integratorfunctions import StatefulFunction
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import \
@@ -531,9 +533,11 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             corresponding element of `distance_field_weights<ContentAddressableMemory.distance_field_weights>`.
 
             .. note::
-               Fields assigned a weight of *0* or *None* are ignored in the distance calculation; that is, the distances
-               between `variable <ContentAddressableMemory.variable>` and entries for those fields are not included
-               in the averaging of distances by field.
+               Fields assigned a weight of *0* or *None* are ignored in the distance calculation; that is, the
+               distances between `variable <ContentAddressableMemory.variable>` and entries for those fields are
+               not included in the averaging of distances by field. If all of the `distance_field_weights
+               <ContentAddressableMemory.memory>` are 0 or None, then no memory is retrieved (this is equivalent
+               to setting `retrieval_prob <ContentAddressableMemory.retrieval_prob>` to 0).
 
         * `selection_function <ContentAddressableMemory.selection_function>`: called with the list of distances
           to determine which entries to select for consideration. If more than on entry from `memory
@@ -1099,10 +1103,8 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         previous_value = Parameter(None, initializer='initializer')
         retrieval_prob = Parameter(1.0, modulable=True)
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        # FIX: MAKE THESE ATTRIBUTES RATHER THAN PARAMETERS:
         memory_num_fields = Parameter(None, stateful=False, read_only=True)
         memory_field_shapes = Parameter(None, stateful=False, read_only=True)
-        # FIX: --------------------
         distance_field_weights = Parameter([1], stateful=True, modulable=True, dependencies='initializer')
         duplicate_entries_allowed = Parameter(False, stateful=True)
         duplicate_threshold = Parameter(EPSILON, stateful=False, modulable=True)
@@ -1164,38 +1166,21 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     @beartype
     def __init__(self,
                  # FIX: REINSTATE WHEN 3.6 IS RETIRED:
-                 # default_variable=None,
-                 # retrieval_prob: Optional[Union[int, float]]=None,
-                 # storage_prob: Optional[Union[int, float]]=None,
-                 # rate: Optional[Union[int, float, list, np.ndarray]]=None,
-                 # noise: Optional[Union[int, float, list, np.ndarray, callable]]=None,
-                 # initializer:Optional[Union[list, np.ndarray]]=None,
-                 # distance_field_weights:Optional[Union[list, np.ndarray]]=None,
-                 # distance_function:Optional[Union[Distance, is_function_type]]=None,
-                 # selection_function:Optional[Union[OneHot, is_function_type]]=None,
-                 # duplicate_entries_allowed:Optional[Union[(bool, Literal[OVERWRITE]]]=None,
-                 # duplicate_threshold:Optional[int]=None,
-                 # equidistant_entries_select:Optional[Literal[Union[RANDOM, OLDEST, NEWEST]]]=None,
-                 # max_entries:Optional[int]=None,
-                 # seed:Optional[int]=None,
-                 # params:Optional[Union[list, np.ndarray]]=None,
-                 # owner=None,
-                 # prefs:  Optional[ValidPrefSet] = None):
                  default_variable=None,
-                 retrieval_prob=None,
-                 storage_prob=None,
-                 rate=None,
-                 noise=None,
-                 initializer=None,
-                 distance_field_weights=None,
-                 distance_function=None,
-                 selection_function=None,
-                 duplicate_entries_allowed=None,
-                 duplicate_threshold=None,
-                 equidistant_entries_select=None,
-                 max_entries=None,
-                 seed=None,
-                 params=None,
+                 retrieval_prob: Optional[Union[int, float]]=None,
+                 storage_prob: Optional[Union[int, float]]=None,
+                 rate: Optional[Union[int, float, List, np.ndarray]]=None,
+                 noise: Optional[Union[int, float, List, np.ndarray, Callable]]=None,
+                 initializer:Optional[Union[int, float, List, np.ndarray]]=None,
+                 distance_field_weights:Optional[Union[List, np.ndarray]]=None,
+                 distance_function:Optional[Union[Distance, Callable]]=None,
+                 selection_function:Optional[Union[OneHot, SoftMax, Callable]]=None,
+                 duplicate_entries_allowed:Optional[Union[str, bool, Literal[OVERWRITE]]]=None,
+                 duplicate_threshold:Optional[int]=None,
+                 equidistant_entries_select:Optional[Union[str, Literal[RANDOM, OLDEST, NEWEST]]]=None,
+                 max_entries:Optional[int]=None,
+                 seed:Optional[int]=None,
+                 params:Optional[Union[List, np.ndarray]]=None,
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None):
 
@@ -1413,6 +1398,9 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
         # get memory field weights (which are modulable)
         distance_field_weights = self._get_current_parameter_value('distance_field_weights', context)
+        if not any(distance_field_weights):
+            # FIX: RETURN ZEROS HERE?
+            retrieval_prob = 0.0
 
         # If this is an initialization run, leave memory empty (don't want to count it as an execution step),
         # but set entry size and then return current value (variable[1]) for validation.
@@ -1520,7 +1508,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             if (not self.duplicate_entries_allowed
                     and any(self._is_duplicate(_memory[i],_memory[j], field_weights, context)
                             for i, j in combinations(indices_of_selected_items, 2))):
-                warnings.warn(f"More than one entry matched cue ({cue}) in memory for {self.name}"
+                warnings.warn(f"More than one entry matched cue ({cue}) in memory for {self.name} "
                               f"{'of ' + self.owner.name if self.owner else ''} even though "
                               f"{repr('duplicate_entries_allowed')} is False; zeros returned as retrieved item.")
                 return self.uniform_entry(0, context)

@@ -121,31 +121,24 @@ MORE HERE
 
 """
 
-import os
-import random
-import time
-import timeit
-import numpy as np
 from typing import Union
-from enum import Enum, IntEnum, auto
-from pathlib import Path
-
-from graph_scheduler import *
+from enum import IntEnum
 
 from psyneulink import *
 
 # Settings for running script:
 CONSTRUCT_MODEL = True                 # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = (                      # Only one of the following can be uncommented:
-    # None                             # suppress display of model
-    {}                               # show simple visual display of model
+    None                             # suppress display of model
+    # {}                               # show simple visual display of model
     # {'show_node_structure': True}    # show detailed view of node structures and projections
 )
-# RUN_MODEL = True                       # True => run the model
-RUN_MODEL = False                      # False => don't run the model
+RUN_MODEL = True                       # True => run the model
+# RUN_MODEL = False                      # False => don't run the model
 ANALYZE_RESULTS = False                # True => output analysis of results of run
-REPORT_OUTPUT = ReportOutput.ON       # Sets console output during run
+REPORT_OUTPUT = ReportOutput.TERSE     # Sets console output during run [alt: ReportOutput.FULL or .ON]
 REPORT_PROGRESS = ReportProgress.OFF   # Sets console progress bar during run
+PRINT_RESULTS = False                  # print model.results after execution
 ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
 
 
@@ -161,14 +154,17 @@ MODEL_NAME = "EGO Model"
 TASK_INPUT_LAYER_NAME = "TASK"
 STATE_INPUT_LAYER_NAME = "STATE"
 TIME_INPUT_LAYER_NAME = "TIME"
-ATTENTION_LAYER_NAME = "ENCODE\nSTATE"
+# ATTENTION_LAYER_NAME = "ENCODE\nSTATE"
+ATTENTION_LAYER_NAME = "ENCODE STATE"
 CONTROL_LAYER_NAME = "CONTROL"
 ACTUAL_STATE_INPUT = 'ACTUAL_STATE_INPUT'
 RETRIEVED_STATE_INPUT = 'RETRIEVED_STATE'
 CONTEXT_LAYER_NAME = 'CONTEXT'
 REWARD_INPUT_LAYER_NAME = "REWARD"
-RETRIEVED_TIME_NAME = "RETRIEVED\nTIME"
-RETRIEVED_REWARD_NAME = "RETRIEVED\nREWARD"
+# RETRIEVED_TIME_NAME = "RETRIEVED\nTIME"
+RETRIEVED_TIME_NAME = "RETRIEVED TIME"
+# RETRIEVED_REWARD_NAME = "RETRIEVED\nREWARD"
+RETRIEVED_REWARD_NAME = "RETRIEVED REWARD"
 EM_NAME = "EM"
 DECISION_LAYER_NAME = "DECISION"
 RESPONSE_LAYER_NAME = "RESPONSE"
@@ -208,7 +204,6 @@ RESPONSE_SIZE = 1   # length of response vector
 # Context processing:
 STATE_WEIGHT = .1              # rate at which actual vs. retrieved state (from EM) are integrated in context_layer
 CONTEXT_INTEGRATION_RATE = .1  # rate at which retrieved context (from EM) is integrated into context_layer
-TIME_DRIFT_NOISE = 0.0         # noise used by DriftOnASphereIntegrator (function of Context mech)
 
 # EM retrieval
 STATE_RETRIEVAL_WEIGHT = 1     # weight of state field in retrieval from EM
@@ -229,61 +224,114 @@ RANDOM_WEIGHTS_INITIALIZATION=RandomMatrix(center=0.0, range=0.1)  # Matrix spec
 
 
 # Temporal context vector generation as input to time_input_layer of model
-CONTEXT_DRIFT_RATE=.1 # drift rate used for DriftOnASphereIntegrator (function of Context mech) on each trial
+TIME_DRIFT_RATE = 0.1          # noise used by DriftOnASphereIntegrator (function of Context mech)
+TIME_DRIFT_NOISE = 0.0         # noise used by DriftOnASphereIntegrator (function of Context mech)
 time_fct = DriftOnASphereIntegrator(initializer=np.random.random(TIME_SIZE - 1),
                                     noise=TIME_DRIFT_NOISE,
                                     dimension=TIME_SIZE)
 # Task environment:
-NUM_EXPERIENCE_TRIALS = 9      # number of trials for Task.EXPERIENCE (passive encoding into EM)
-NUM_PREDICT_TRIALS = 9         # number of trials Task.PREDICT (active retrieval from EM and reward prediction)
-NUM_STIM_PER_ROLL_OUT = 3      # number of stimuli in a sequence
-NUM_ROLL_OUTS = 3              # number of times to roll out each sequence
-NUM_TRIALS = NUM_EXPERIENCE_TRIALS + NUM_PREDICT_TRIALS # total number of trials
+NUM_BASELINE_SEQS = 20       # number of trials for Task.EXPERIENCE (passive encoding into EM) BEFORE revaluation
+NUM_REVALUATION_SEQS = 10    # number of trials for Task.EXPERIENCE (passive encoding into EM) AFTER revaluation 
+NUM_EXPERIENCE_SEQS = NUM_BASELINE_SEQS + NUM_REVALUATION_SEQS # total number of trials for Task.EXPERIENCE
+NUM_PREDICT_TRIALS = 9       # number of trials Task.PREDICT (active retrieval from EM and reward prediction)
+NUM_STIM_PER_SEQ = 3         # number of stimuli in a sequence
+NUM_ROLL_OUTS = 3            # number of times to roll out each sequence
+TOTAL_NUM_TRIALS = NUM_EXPERIENCE_SEQS * NUM_STIM_PER_SEQ + NUM_PREDICT_TRIALS # total number of trials
 assert NUM_PREDICT_TRIALS % NUM_ROLL_OUTS == 0, \
     f"NUM_PREDICT_TRIALS ({NUM_PREDICT_TRIALS}) " \
     f"must be evenly divisible by NUM_ROLL_OUTS ({NUM_ROLL_OUTS})"
 
-inputs = {STATE_INPUT_LAYER_NAME: [[1],[2],[3]] * STATE_SIZE * NUM_TRIALS,
-          TIME_INPUT_LAYER_NAME: np.array([time_fct(i) for i in range(NUM_TRIALS)]).reshape(NUM_TRIALS,TIME_SIZE,1),
-          REWARD_INPUT_LAYER_NAME: [[0],[0],[1]] * REWARD_SIZE * NUM_TRIALS,
-          TASK_INPUT_LAYER_NAME: [[Task.EXPERIENCE.value]] * NUM_EXPERIENCE_TRIALS
+def build_inputs(state_size:int=STATE_SIZE,
+                 time_drift_rate:float=TIME_DRIFT_RATE,
+                 num_baseline_seqs:int=NUM_BASELINE_SEQS,
+                 num_revaluation_seqs:int=NUM_REVALUATION_SEQS,
+                 num_predict_trials:int=NUM_PREDICT_TRIALS)->tuple:
+    """Build inputs for full sequence of trials (with one stim per trial) for EGO MDP model
+    Return tuple in which each item is list of all trials for a layer of the model: (time, task, state, reward)
+    """
+    def gen_baseline_states_and_rewards_exp1(dim:int=state_size,
+                                             num_seqs:int=NUM_BASELINE_SEQS)->tuple:
+        """Generate states and rewards for reward revaluation phase of Experiment 1
+        Return tuple with one-hot representations of (states, rewards, length of a single sequence)
+        """
+        # Generate one-hots
+        state_reps = np.eye(dim)
+        visited_states, rewards = [], []
+        seq_len = 3
+
+        for trial_idx in range(num_seqs):
+            if np.random.random()<.5:
+                visited_states.extend([1,3,5])
+                rewards.extend([0,0,10])
+            else:
+                visited_states.extend([2,4,6])
+                rewards.extend([0,0,1])
+
+        # Pick one-hots corresponding to each state
+        visited_states = state_reps[visited_states]
+        rewards = np.array(rewards)
+
+        return visited_states, rewards, seq_len
+
+    def gen_reward_revaluation_states_and_reward_exp1(dim:int=STATE_SIZE,
+                                                      num_seqs:int=NUM_REVALUATION_SEQS)->tuple:
+        """Generate states and rewards for reward revaluation phase of Experiment 1
+        Return tuple with one-hot representations of (states, rewards, length of a single sequence)
+        """
+
+        # Generate one-hots
+        state_reps = np.eye(dim)
+        visited_states, rewards = [], []
+        seq_len = 2
+
+        for trial_idx in range(num_seqs):
+            if np.random.random()<.5:
+                visited_states.extend([3,5])
+                rewards.extend([0,1])
+            else:
+                visited_states.extend([4,6])
+                rewards.extend([0,10])
+
+        # Pick one-hots corresponding to each state
+        visited_states = state_reps[visited_states]
+        rewards = np.array(rewards)
+
+        return visited_states, rewards, seq_len
+
+    # Get sequences of states and rewards for baseline trials
+    baseline_states, baseline_rewards, num_stim_per_baseline_seq = (
+        gen_baseline_states_and_rewards_exp1(state_size, num_baseline_seqs))
+
+    # Get sequences of states and rewards for reward revaluation trials
+    reward_revaluation_states, reward_revaluation_rewards, num_stim_per_revaluation_seq =(
+        gen_reward_revaluation_states_and_reward_exp1(state_size,num_revaluation_seqs))
+
+    # FIX: NEED TO GENERATE CORRECT states and rewards for num_predict_trials
+    experience_trials_states = np.concatenate((baseline_states, reward_revaluation_states))
+    experience_trials_rewards = np.concatenate((baseline_rewards, reward_revaluation_rewards))
+    states = np.concatenate((experience_trials_states, np.zeros((num_predict_trials, state_size))))
+    rewards = np.concatenate((experience_trials_rewards, np.zeros(num_predict_trials)))
+
+    # Get sequences of task and time inputs
+    num_experience_trials = (num_baseline_seqs * num_stim_per_baseline_seq
+                             + num_revaluation_seqs * num_stim_per_revaluation_seq)
+    total_num_trials = num_experience_trials + num_predict_trials
+    tasks = np.array([Task.EXPERIENCE.value] * num_experience_trials + [Task.PREDICT.value] * num_predict_trials)
+    times = np.array([time_fct(time_drift_rate) for i in range(total_num_trials)])
+
+    assert len(times) == total_num_trials
+    assert len(tasks) == total_num_trials
+    assert len(states) == total_num_trials
+    assert len(rewards) == total_num_trials
+
+    return times, tasks, states, rewards
+
+
+inputs = {STATE_INPUT_LAYER_NAME: [[1],[2],[3]] * STATE_SIZE * TOTAL_NUM_TRIALS,
+          TIME_INPUT_LAYER_NAME: np.array([time_fct(i) for i in range(TOTAL_NUM_TRIALS)]).reshape(TOTAL_NUM_TRIALS,TIME_SIZE,1),
+          REWARD_INPUT_LAYER_NAME: [[0],[0],[1]] * REWARD_SIZE * TOTAL_NUM_TRIALS,
+          TASK_INPUT_LAYER_NAME: [[Task.EXPERIENCE.value]] * NUM_EXPERIENCE_SEQS
                                  + [[Task.PREDICT.value]] * NUM_PREDICT_TRIALS}
-def gen_baseline_trials_exp1(dim=STATE_SIZE, num_trials=NUM_EXPERIENCE_TRIALS):
-    # Generate one-hots
-    state_reps = np.eye(dim)
-    visited_states, rewards = [], []
-
-    for trial_idx in range(num_trials):
-        if np.random.random()<.5:
-            visited_states.extend([1,3,5])
-            rewards.extend([0,0,10])
-        else:
-            visited_states.extend([2,4,6])
-            rewards.extend([0,0,1])
-
-    # Pick one-hots corresponding to each state
-    visited_states = state_reps[visited_states]
-    rewards = np.array(rewards)
-
-    return visited_states, rewards
-def gen_reward_revaluation_trials_exp1(dim=STATE_SIZE, num_trials=NUM_PREDICT_TRIALS):
-    # Generate one-hots
-    state_reps = np.eye(dim)
-    visited_states, rewards = [], []
-
-    for trial_idx in range(num_trials):
-        if np.random.random()<.5:
-            visited_states.extend([3,5])
-            rewards.extend([0,1])
-        else:
-            visited_states.extend([4,6])
-            rewards.extend([0,10])
-
-    # Pick one-hots corresponding to each state
-    visited_states = state_reps[visited_states]
-    rewards = np.array(rewards)
-
-    return visited_states, rewards
 
 #endregion
 
@@ -395,8 +443,7 @@ def construct_model(model_name:str=MODEL_NAME,
                                      distance_field_weights=[state_retrieval_weight,
                                                              time_retrieval_weight,
                                                              context_retrieval_weight,
-                                                             reward_retrieval_weight],
-                                     selection_function=SoftMax(gain=retrieval_softmax_gain)))
+                                                             reward_retrieval_weight]))
 
     counter_layer = IntegratorMechanism(function=SimpleIntegrator,
                                         default_variable=1,
@@ -414,7 +461,7 @@ def construct_model(model_name:str=MODEL_NAME,
     # -------------------------------------------------  Control  ----------------------------------------------------
     # ----------------------------------------------------------------------------------------------------------------
 
-    tot = NUM_ROLL_OUTS * NUM_STIM_PER_ROLL_OUT
+    tot = NUM_ROLL_OUTS * NUM_STIM_PER_SEQ
     #                +--------------------------------------------------------------------------------------------+
     #                |         KEYS            |                        VALUES                                    |
     #                +--------------------------------------------------------------------------------------------+
@@ -426,13 +473,13 @@ def construct_model(model_name:str=MODEL_NAME,
                       [[1],  [2], [-1],  [1],     [0], [1],  [1,    0,     1,      0],    [0],   [1],  [1],  [1]],
                       [[1],  [2], [tot], [1],     [0], [1],  [1,    0,     1,      0],    [0],   [1],  [1],  [1]]]
     control_em = ContentAddressableMemory(initializer=control_policy,
-                                          storage_prob=0.0,
-                                          selection_function=SoftMax(gain=10))
+                                          distance_function=Distance(metric=EUCLIDEAN),
+                                          storage_prob=0.0)
     num_keys = len(StateFeatureIndex)
     num_vals = len(ControlSignalIndex)
     num_fields = num_keys + num_vals
 
-    def control_function(variable, context):
+    def control_function(variable, context=None, **kwargs):
         """Use by control_layer to govern EM storage & retrieval, access to context, and gating decision and response
 
         FIX:
@@ -459,7 +506,7 @@ def construct_model(model_name:str=MODEL_NAME,
             - COUNTER RESET CONTROL SIGNAL = 1
             - DECISION INPUT GATE CONTROL SIGNAL (NEEDED, IF OTHERWISE REWARDS ARE ALWAYS 0?)
             - INCREMENT DECISION COUNTER (OR JUST USE DECISION TIME IF DDM?)
-          TERMINATION @  NUM_ROLL_OUTS * NUM_STIM_PER_ROLL_OUT, USING EITHER:
+          TERMINATION @  NUM_ROLL_OUTS * NUM_STIM_PER_SEQ, USING EITHER:
             - CONDITION FOR DDM DECISION TIME AS COUNTER
             - OR INPUT_GATE RESPONSE LAYER USING DDM DECISION TIME AS COUNTER,
               AND TERMINATION ON RESPONSE.VALUE > 0
@@ -488,7 +535,7 @@ def construct_model(model_name:str=MODEL_NAME,
            NOTES:
            - DDM is open gated on each PREDICT step because REWARD is 0 so it won't accumulate,
                      but it will increment its counter (RESPONSE TIME) that can be used to determine when to terminate
-           - RO: NUM_ROLL_OUTS * NUM_STIM_PER_ROLL_OUT
+           - RO: NUM_ROLL_OUTS * NUM_STIM_PER_SEQ
 
         """
 
@@ -496,15 +543,15 @@ def construct_model(model_name:str=MODEL_NAME,
         query = np.array(list(variable) + [[0],[0],[0,0,0,0],[0],[0],[0],[0]], dtype=object)
         if task == Task.EXPERIENCE:
             # Set distance_field_weights for EXPERIENCE
-            em.function.parameters.distance_field_weights.set([1] + [0] * (num_fields - 1), context)
+            control_em.parameters.distance_field_weights.set([1] + [0] * (num_fields - 1), context)
             # Get control_signals for EXPERIENCE
-            control_signals = control_em.execute(query, context)[num_keys:]
+            control_signals = control_em(query)[num_keys:]
 
         elif task == Task.PREDICT:
             # Set distance_field_weights for PREDICT
-            em.function.parameters.distance_field_weights.set([1] * num_keys + [0] * num_vals, context)
+            control_em.parameters.distance_field_weights.set([1] * num_keys + [0] * num_vals, context)
             # Set control_signals for PREDICT
-            control_signals = control_em.execute(query, context)[num_keys:]
+            control_signals = control_em.execute(query)[num_keys:]
 
         return control_signals
 
@@ -537,9 +584,9 @@ def construct_model(model_name:str=MODEL_NAME,
                            # Decision output pathway
                            pathways=[retrieved_reward_layer, decision_layer, response_layer], # Decision
                            # # Use this to terminate a Task.PREDICT trial
-                           termination_processing={
-                               # FIX: NEEDS TO BE PROPERLY CONFIGURED
-                               TimeScale.TRIAL: And(WhenFinished(response_layer))})
+                           # FIX: NEEDS TO BE PROPERLY CONFIGURED
+                           # termination_processing={TimeScale.TRIAL: WhenFinished(response_layer)}
+                           )
 
     # Nodes not included in (decision output) Pathway specified above
     EGO_comp.add_nodes([task_input_layer,
@@ -615,6 +662,21 @@ if DISPLAY_MODEL is not None:
         print("Model not yet constructed")
 
 if RUN_MODEL:
-    # model.run(inputs=inputs)
-    model.run()
+    inputs = build_inputs(state_size=STATE_SIZE,
+                          time_drift_rate=TIME_DRIFT_RATE,
+                          num_baseline_seqs=NUM_BASELINE_SEQS,
+                          num_revaluation_seqs=NUM_REVALUATION_SEQS,
+                          num_predict_trials=NUM_PREDICT_TRIALS)
+    input_layers = [TIME_INPUT_LAYER_NAME,
+                    TASK_INPUT_LAYER_NAME,
+                    STATE_INPUT_LAYER_NAME,
+                    REWARD_INPUT_LAYER_NAME]
+    inputs_dicts = {k: v for k, v in zip(input_layers, inputs)}
+
+    model.run(inputs=inputs_dicts,
+              report_output=REPORT_OUTPUT,
+              report_progress=REPORT_PROGRESS)
+
+    if PRINT_RESULTS:
+        print(model.results)
 #endregion

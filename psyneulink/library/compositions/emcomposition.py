@@ -180,7 +180,14 @@
 #             lm = LearningMechanism(learning_rate=.01, learning_function=BackPropagation())
 #             causes the folllowing error:
 #                TypeError("Logistic.derivative() missing 1 required positional argument: 'self'")
-
+#      - ContentAddressableMemory Function:
+#           - insure that selection function returns only one non-zero value or, if it weights them parametrically,
+#             then checks against the duplicate_entries setting and warns if that is set.
+#             (cf LINE 1509)
+#           - add tests for field_weights = 0 not retrieving (what *does* happen to output_ports (ie. value), set to 0?
+#           - add tests for use of softmax (and worning if no duplicate_entries is set to True)
+#           - rename "cue" -> "query"
+#           - add field_weights as parameter of EM, and make it a shared_parameter ?as well as a function_parameter?
 #      - Adding GatingMechanism after Mechanisms they gate fails to implement gating projections
 #           (example:  reverse order of the following in _construct_pathways
 #                      self.add_nodes(self.softmax_nodes)
