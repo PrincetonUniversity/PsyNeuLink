@@ -218,11 +218,12 @@ time_fct = DriftOnASphereIntegrator(initializer=np.random.random(TIME_SIZE - 1),
 # Task environment:
 NUM_EXPERIENCE_TRIALS = 9      # number of trials for Task.EXPERIENCE (passive encoding into EM)
 NUM_PREDICT_TRIALS = 9         # number of trials Task.PREDICT (active retrieval from EM and reward prediction)
-NUM_ROLL_OUT = 3               # number of trials of roll-out under OCM control
+NUM_STIM_PER_ROLL_OUT = 3      # number of stimuli in a sequence
+NUM_ROLL_OUTS = 3              # number of times to roll out each sequence
 NUM_TRIALS = NUM_EXPERIENCE_TRIALS + NUM_PREDICT_TRIALS # total number of trials
-assert NUM_PREDICT_TRIALS % NUM_ROLL_OUT == 0, \
+assert NUM_PREDICT_TRIALS % NUM_ROLL_OUTS == 0, \
     f"NUM_PREDICT_TRIALS ({NUM_PREDICT_TRIALS}) " \
-    f"must be evenly divisible by NUM_ROLL_OUT ({NUM_ROLL_OUT})"
+    f"must be evenly divisible by NUM_ROLL_OUTS ({NUM_ROLL_OUTS})"
 
 inputs = {STATE_INPUT_LAYER_NAME: [[1],[2],[3]] * STATE_SIZE * NUM_TRIALS,
           TIME_INPUT_LAYER_NAME: np.array([time_fct(i) for i in range(NUM_TRIALS)]).reshape(NUM_TRIALS,TIME_SIZE,1),
@@ -388,28 +389,78 @@ def construct_model(model_name:str=MODEL_NAME,
     # ----------------------------------------------------------------------------------------------------------------
     # -------------------------------------------------  Control  ----------------------------------------------------
     # ----------------------------------------------------------------------------------------------------------------
-    def control_function(variable,context):
+
+    tot = NUM_ROLL_OUTS * NUM_STIM_PER_ROLL_OUT
+    #                  +--------------------------------------------------------------------------------------+
+    #                  |         KEYS           |                         VALUES                              |
+    #                  +--------------------------------------------------------------------------------------+
+    #                   TASK  COUNT DDM  REWARD | ACTUAL EM |TIME STATE CONTEXT REWARD| STORE | CT | DDM | RESP
+    control_policy = ([[[[0], [-1], [-1], [-1],     [1], [0], [0,    0,    0,     0],    [1],   [0]], [0], [0]],
+                       [[[1],  [0], [-1],  [0],     [1], [0], [1,    1,    1,     0],    [0],   [1]], [0], [0]],
+                       [[[1],  [1], [-1],  [0],     [0], [1], [1,    0,    1,     0],    [0],   [0]], [1], [0]],
+                       [[[1],  [2], [-1],  [0],     [0], [1], [1,    0,    1,     0],    [0],   [0]], [1], [0]],
+                       [[[1],  [2], [-1],  [1],     [0], [1], [1,    0,    1,     0],    [0],   [1]], [1], [1]],
+                       [[[1],  [2], [tot], [1],     [0], [1], [1,    0,    1,     0],    [0],   [1]], [1], [1]]])
+    control_em = ContentAddressableMemory(initializer=control_policy,
+                                          storage_prob=0.0,
+                                          selection_function=SoftMax(gain=10))
+    num_keys = 4
+    num_vals = 6
+    num_fields = num_keys + num_vals
+
+    def control_function(variable, context):
         """Use by control_layer to govern EM storage & retrieval, access to context, and gating decision and response
 
+        FIX:
+        - Use control_layer variable ("state_features" per ocm) to get control_allocation from control_em:
+            - for Task EXPERIENCE, set distance_field_weights to [1] + [0] * 9
+            - for Task PREDICT, set distance_field_weights to [1] * 4 + [0] * 6
+        - Use retrieved values from control_em to set control_signals for control_layer
+
+        CONTROL PROTOCOL FOR PREDICT TRIALS:
+          EM STORAGE PROB  CONTROL SIGNAL = 0
+          ON COUNT 0:
+            - STATE ATTENTION CONTROL SIGNAL -> STATE 1, CONTEXT 0
+            - EM FIELD WEIGHTS CONTROL SIGNAL:  TIME, STATE, REWARD, CONTEXT
+            - EM STORAGE PROB  CONTROL SIGNAL = 0
+            - COUNTER RESET CONTROL SIGNAL = 0
+            - TERMINATE CONTROL SIGNAL = 0
+          ON COUNT > 0:
+            - EM STORAGE PROB  CONTROL SIGNAL = 0
+            - STATE ATTENTION CONTROL SIGNAL -> STATE 0, CONTEXT 1
+            - EM FIELD WEIGHTS CONTROL SIGNAL:  TIME, CONTEXT
+            - COUNTER RESET CONTROL SIGNAL = 0
+            - TERMINATE CONTROL SIGNAL = 0
+          ON RETRIEVED REWARD > 0:
+            - COUNTER RESET CONTROL SIGNAL = 1
+            - DECISION INPUT GATE CONTROL SIGNAL (NEEDED, IF OTHERWISE REWARDS ARE ALWAYS 0?)
+            - INCREMENT DECISION COUNTER (OR JUST USE DECISION TIME IF DDM?)
+          TERMINATION @  NUM_ROLL_OUTS * NUM_STIM_PER_ROLL_OUT, USING EITHER:
+            - CONDITION FOR DDM DECISION TIME AS COUNTER
+            - OR INPUT_GATE RESPONSE LAYER USING DDM DECISION TIME AS COUNTER,
+              AND TERMINATION ON RESPONSE.VALUE > 0
+
         .. table::
-           +--------------------------------------------------------------------------------------------------------+
-           |                                     **CONTROL POLICY**                                                 |
-           +-----------------------+--------------------------------------------------------------------------------+
-           |"STATE FEATURE" VECTOR |                      CONTROL ALLOCATION VECTOR                                 |
-           | (monitor_for_control) +-------------+---------------------------------------+-----------+--------------+
-           |                       | STATE ATTN  |                  EM CONTROL           | CTR RESET |  GATES       |
-           |                       |             +-------------------------------+-------+-----------+--------------+
-           |                       |             |            MATCH              | STORE |           |              |
-           |                       |             |                               |       |           |              |
-           |TASK  COUNT DDM REWARD | ACTUAL  EM  |   TIME  STATE  CONTEXT REWARD |       |           | DDM  | RESP  |
-           +-----------------------+-------------+-------------------------------+-------+-----------+------+-------+
-           | EXP   ANY  !RO   ANY  |   1     0   |   0      0       0       0    |   1   |     0     |   0  |   0   |
-           | PRED   0   !RO    0   |   1     0   |   1      1       1       0    |   0   |     1     |   0  |   0   |
-           | PRED   1   !RO    0   |   0     1   |   1      0       1       0    |   0   |     0     |   1  |   0   |
-           | PRED   2   !RO    0   |   0     1   |   1      0       1       0    |   0   |     0     |   1  |   0   |
-           | PRED   2   !RO    1   |   0     1   |   1      0       1       0    |   0   |     1     |   1  |   1   |
-           | PRED   2    RO    1   |   0     1   |   1      0       1       0    |   0   |     1     |   1  |   1   |
-           +-----------------------+-------------+-------------------------------+-------+-----------+------+-------+
+             :align: left
+             :alt: Player Piano (aka Production System)
+           +-----------------------------------------------------------------------------------------------------------+
+           |                                       **CONTROL POLICY**                                                  |
+           +--------------------------+--------------------------------------------------------------------------------+
+           | "STATE FEATURE" VECTOR   |                      CONTROL ALLOCATION VECTOR                                 |
+           |  (monitor_for_control)   +-------------+---------------------------------------+-----------+--------------+
+           |                          | STATE ATTN  |                  EM CONTROL           | CTR RESET |    GATES     |
+           |                          |             +-------------------------------+-------+-----------+--------------+
+           |                          |             |            MATCH              | STORE |           |              |
+           |                          |             |        (field_weights)        |       |           |              |
+           | TASK  COUNT  DDM  REWARD | ACTUAL  EM  |   TIME  STATE  CONTEXT REWARD |       |           | DDM  | RESP  |
+           +--------------------------+-------------+-------------------------------+-------+-----------+------+-------+
+           |  EXP   ANY  !=TOT  ANY   |   1     0   |   0      0       0       0    |   1   |     0     |   0  |   0   |
+           |  PRED   0   !=TOT   0    |   1     0   |   1      1       1       0    |   0   |     1     |   0  |   0   |
+           |  PRED   1   !=TOT   0    |   0     1   |   1      0       1       0    |   0   |     0     |   1  |   0   |
+           |  PRED   2   !=TOT   0    |   0     1   |   1      0       1       0    |   0   |     0     |   1  |   0   |
+           |  PRED   2   !=TOT   1    |   0     1   |   1      0       1       0    |   0   |     1     |   1  |   1   |
+           |  PRED   2   ==TOT   1    |   0     1   |   1      0       1       0    |   0   |     1     |   1  |   1   |
+           +--------------------------+-------------+-------------------------------+-------+-----------+------+-------+
            NOTES:
            - DDM is open gated on each PREDICT step because REWARD is 0 so it won't accumulate,
                      but it will increment its counter (RESPONSE TIME) that can be used to determine when to terminate
@@ -417,62 +468,20 @@ def construct_model(model_name:str=MODEL_NAME,
 
         """
 
-        # Get task, counter, and trial number
-        task = int(variable[0])
-        counter = int(variable[1])
-        if context and context.composition:
-            trial = int([context.composition.get_current_execution_time(context)[TimeScale.TRIAL]])
-        else:
-            trial = 0
+        task = variable[StateFeatureIndex.TASK]
+        query = np.array(list(variable) + [[0],[0],[0,0,0,0],[0],[0],[0],[0]], dtype=object)
+        if task == Task.EXPERIENCE:
+            # Set distance_field_weights for EXPERIENCE
+            em.parameters.distance_field_weights.set([1] + [0] * (num_fields - 1), context)
+            # Get control_signals for EXPERIENCE
+            control_signals = control_em.execute(query, context)[num_keys:]
 
-        # if task == Task.EXPERIENCE:
-        #     attend_actual = 1
-        # elif task == Task.PREDICT:
-        #     attend_actual = 1 if not (trial % NUM_ROLL_OUT) else 1
-        #     attend_retrieved = 1 if (trial % NUM_ROLL_OUT) else 0
-        # else:
-        #     raise ValueError(f"Unrecognized task value in control_function: {task}")
-        #
-        # # Store to EM to
-        # store = 1 if task == Task.EXPERIENCE.value else 0
+        elif task == Task.PREDICT:
+            # Set distance_field_weights for PREDICT
+            em.parameters.distance_field_weights.set([1] * num_keys + [0] * num_vals, context)
+            # Set control_signals for PREDICT
+            control_signals = control_em.execute(query, context)[num_keys:]
 
-        if task == Task.EXPERIENCE.value:
-            attend_actual = 1
-            attend_retrieved = 0
-            store = 1
-
-        # FIX:
-        #      USE DDM DECISION_TIME AS COUNTER FOR TERMINATION CONDITION
-        #      -----------
-        #      CONTROL PROTOCOL FOR PREDICT TRIALS:
-        #           EM STORAGE PROB  CONTROL SIGNAL = 0
-        #           ON COUNT 0:
-        #             - STATE ATTENTION CONTROL SIGNAL -> STATE 1, CONTEXT 0
-        #             - EM FIELD WEIGHTS CONTROL SIGNAL:  TIME, STATE, REWARD, CONTEXT
-        #             - EM STORAGE PROB  CONTROL SIGNAL = 0
-        #             - COUNTER RESET CONTROL SIGNAL = 0
-        #             - TERMINATE CONTROL SIGNAL = 0
-        #           ON COUNT > 0:
-        #             - EM STORAGE PROB  CONTROL SIGNAL = 0
-        #             - STATE ATTENTION CONTROL SIGNAL -> STATE 0, CONTEXT 1
-        #             - EM FIELD WEIGHTS CONTROL SIGNAL:  TIME, CONTEXT
-        #             - COUNTER RESET CONTROL SIGNAL = 0
-        #             - TERMINATE CONTROL SIGNAL = 0
-        #           ON RETRIEVED REWARD > 0:
-        #             - COUNTER RESET CONTROL SIGNAL = 1
-        #             - DECISION INPUT GATE CONTROL SIGNAL (NEEDED, IF OTHERWISE REWARDS ARE ALWAYS 0?)
-        #             - INCREMENT DECISION COUNTER (OR JUST USE DECISION TIME IF DDM?)
-        #           TERMINATION @  NUM_ROLL_OUTS * NUM_STIM_PER_ROLL_OUT, USING EITHER:
-        #             - CONDITION FOR DDM DECISION TIME AS COUNTER
-        #             - OR INPUT_GATE RESPONSE LAYER USING DDM DECISION TIME AS COUNTER,
-        #               AND TERMINATION ON RESPONSE.VALUE > 0
-
-        if task == Task.PREDICT.value:
-            attend_actual = 0 if trial % NUM_ROLL_OUT else 1
-            attend_retrieved = 1 if trial % NUM_ROLL_OUT else 0
-            store = 0
-
-        control_signals = [store, attend_actual, attend_retrieved]
         return control_signals
 
     # Monitored for control
