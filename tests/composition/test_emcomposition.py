@@ -107,7 +107,6 @@ class TestConstruction:
                              ids=[x[0] for x in test_structure_data]
                              )
     @pytest.mark.parametrize('enable_learning', [False, True], ids=['no_learning','learning'])
-    @pytest.mark.benchmark
     def test_structure(self,
                        test_num,
                        enable_learning,
@@ -121,8 +120,7 @@ class TestConstruction:
                        num_fields,
                        num_keys,
                        num_values,
-                       concatenate_node,
-                       benchmark):
+                       concatenate_node):
         """Note: weight matrices used for memory are validated by using em.memory, since its getter uses those matrices
         """
 
@@ -349,7 +347,6 @@ class TestExecution:
                              ids=[x[0] for x in test_execution_data])
     @pytest.mark.parametrize('enable_learning', [False, True], ids=['no_learning','learning'])
     @pytest.mark.composition
-    @pytest.mark.benchmark
     def test_simple_execution_without_learning(self,
                                                comp_mode,
                                                enable_learning,
@@ -437,10 +434,9 @@ class TestExecution:
 
 
     @pytest.mark.composition
-    @pytest.mark.benchmark
     @pytest.mark.parametrize('concatenate', [True, False])
     @pytest.mark.parametrize('use_storage_node', [True, False])
-    def test_multiple_trials_concatenation_and_storage_node_no_learning(self,comp_mode, concatenate, use_storage_node):
+    def test_multiple_trials_concatenation_and_storage_node_no_learning(self, comp_mode, concatenate, use_storage_node):
 
         if comp_mode != pnl.ExecutionMode.Python:
             pytest.skip('Compilation not yet support for Composition.import.')
