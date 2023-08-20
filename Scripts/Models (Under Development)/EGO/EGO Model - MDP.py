@@ -5,6 +5,9 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
 
+# TODO:
+# - Refactor to use only Reward and not Counter (though that may not work for transition devaluation?)
+
 """
 QUESTIONS:
 
@@ -121,6 +124,7 @@ MORE HERE
 
 """
 
+import numpy as np
 from typing import Union
 from enum import IntEnum
 
@@ -543,7 +547,8 @@ def construct_model(model_name:str=MODEL_NAME,
         query = np.array(list(variable) + [[0],[0],[0,0,0,0],[0],[0],[0],[0]], dtype=object)
         if task == Task.EXPERIENCE:
             # Set distance_field_weights for EXPERIENCE
-            control_em.parameters.distance_field_weights.set([1] + [0] * (num_fields - 1), context)
+            # control_em.parameters.distance_field_weights.set([1] + [0] * (num_fields - 1), context)
+            control_em.distance_field_weights = [1] + [0] * (num_fields - 1)
             # Get control_signals for EXPERIENCE
             control_signals = control_em(query)[num_keys:]
 
