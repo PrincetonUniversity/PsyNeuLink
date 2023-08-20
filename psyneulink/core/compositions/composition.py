@@ -10479,11 +10479,6 @@ _
         execution_phase_at_entry = context.execution_phase
         context.execution_phase = ContextFlags.PREPARING
 
-        from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
-        if execution_mode is not pnlvm.ExecutionMode.Python and not isinstance(self, AutodiffComposition):
-            warnings.warn(f"{execution_mode.name} is being used to execute {self.name} "
-                          f"but it is not an AutodiffComposition, therefore it will be executed Python instead.")
-
         for node in self.nodes:
             num_execs = node.parameters.num_executions._get(context)
             if num_execs is None:
