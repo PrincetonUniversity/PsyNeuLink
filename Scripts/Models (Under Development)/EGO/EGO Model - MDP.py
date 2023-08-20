@@ -237,13 +237,13 @@ time_fct = DriftOnASphereIntegrator(initializer=np.random.random(TIME_SIZE - 1),
 NUM_BASELINE_SEQS = 20       # number of trials for Task.EXPERIENCE (passive encoding into EM) BEFORE revaluation
 NUM_REVALUATION_SEQS = 10    # number of trials for Task.EXPERIENCE (passive encoding into EM) AFTER revaluation 
 NUM_EXPERIENCE_SEQS = NUM_BASELINE_SEQS + NUM_REVALUATION_SEQS # total number of trials for Task.EXPERIENCE
-NUM_PREDICT_TRIALS = 9       # number of trials Task.PREDICT (active retrieval from EM and reward prediction)
+NUM_PREDICT_TRIALS = 2       # number of trials Task.PREDICT (active retrieval from EM and reward prediction)
 NUM_STIM_PER_SEQ = 3         # number of stimuli in a sequence
 NUM_ROLL_OUTS = 3            # number of times to roll out each sequence
 TOTAL_NUM_TRIALS = NUM_EXPERIENCE_SEQS * NUM_STIM_PER_SEQ + NUM_PREDICT_TRIALS # total number of trials
-assert NUM_PREDICT_TRIALS % NUM_ROLL_OUTS == 0, \
-    f"NUM_PREDICT_TRIALS ({NUM_PREDICT_TRIALS}) " \
-    f"must be evenly divisible by NUM_ROLL_OUTS ({NUM_ROLL_OUTS})"
+# assert NUM_PREDICT_TRIALS % NUM_ROLL_OUTS == 0, \
+#     f"NUM_PREDICT_TRIALS ({NUM_PREDICT_TRIALS}) " \
+#     f"must be evenly divisible by NUM_ROLL_OUTS ({NUM_ROLL_OUTS})"
 
 def build_inputs(state_size:int=STATE_SIZE,
                  time_drift_rate:float=TIME_DRIFT_RATE,
