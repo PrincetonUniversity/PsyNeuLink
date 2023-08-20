@@ -1149,6 +1149,22 @@ class TestContentAddressableMemory:
                            [[ 1,  2,  3],[ 4,  5,  6]]]
         np.testing.assert_allclose(c.memory, expected_memory)
 
+    def test_ContentAddressableMemory_weighted_retrieval(self):
+
+        c = ContentAddressableMemory(
+            initializer=[[[1,2], [4,5,6]],
+                         [[7,8], [10,11,12]]],
+            duplicate_entries_allowed=False,
+            storage_prob=0.0,
+            selection_function=SoftMax,
+            seed=module_seed,
+        )
+
+        result = c([[1,2],[4,5,6]])
+        expected = np.array([[4.06045099, 5.06045099], [7.06045099, 8.06045099, 9.06045099]], dtype=object)
+        c.selection_type = 'weighted',
+        assert not any(np.testing.assert_allclose(e,r,atol=1e-8) for e,r in zip(expected, result))
+
     def test_ContentAddressableMemory_overwrite_mode(self):
 
         c = ContentAddressableMemory(
@@ -1302,19 +1318,19 @@ class TestContentAddressableMemory:
         with pytest.raises(ParameterError) as error_text:
             clear_registry(FunctionRegistry)
             c = ContentAddressableMemory(storage_prob=-1)
-        assert "Value (-1) assigned to parameter 'storage_prob' of (ContentAddressableMemory " \
-               "ContentAddressableMemory Function-0).parameters is not valid: " \
-               "must be a float in the interval [0,1]." in str(error_text.value)
+        assert f"Value (-1) assigned to parameter 'storage_prob' of (ContentAddressableMemory " \
+               f"ContentAddressableMemory Function-0).parameters is not valid: " \
+               f"must be a float in the interval [0,1]." in str(error_text.value)
 
-        text = "All weights in the 'distance_fields_weights' Parameter of ContentAddressableMemory Function-0 " \
-               "are set to '0', so all entries of its memory will be treated as duplicates."
-        with pytest.warns(UserWarning, match=text):
+        text = ("All weights in the 'distance_fields_weights' Parameter of ContentAddressableMemory Function-0 are "
+                "set to '0', no retrieval will occur (equivalent to setting 'retrieval_prob=0.0'.")
+        with pytest.warns(UserWarning) as warning:
             clear_registry(FunctionRegistry)
             c = ContentAddressableMemory(initializer=[[1,2],[1,2]],
                                          distance_field_weights=[0,0])
+            assert any(text in item.message.args[0] for item in warning.list)
 
         # Test storage and retrieval Function errors
-
         with pytest.raises(FunctionError) as error_text:
             clear_registry(FunctionRegistry)
             c = ContentAddressableMemory(initializer=[[1,1],[2,2]])
@@ -1380,6 +1396,19 @@ class TestContentAddressableMemory:
             c.add_to_memory([[[[1,2]]]])
         assert "The 'memories' arg for add_to_memory method of must be a list or array containing 1d or 2d arrays " \
                "(was 4d)." in str(error_text.value)
+
+        text = (f"Selection function (SoftMax Function) specified for ContentAddressableMemory Function-0 returns "
+                f"more than one item (3) while 'duplicate_entries_allowed'==True. If a weighted sum of entries is intended, "
+                f"set 'duplicate_entries_allowed'==False and use a selection function that returns a weighted sum "
+                f"(e.g., SoftMax with 'output='ALL').")
+        with pytest.warns(UserWarning) as warning:
+            clear_registry(FunctionRegistry)
+            c = ContentAddressableMemory(initializer=[[1,2],[1,2,3]],
+                                         distance_field_weights=[1,0],
+                                         duplicate_entries_allowed=True,
+                                         selection_function=SoftMax)
+            assert any(text in item.message.args[0] for item in warning.list)
+
 
     @pytest.mark.parametrize(
         'param_name',

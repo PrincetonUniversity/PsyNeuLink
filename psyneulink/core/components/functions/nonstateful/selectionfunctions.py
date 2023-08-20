@@ -251,7 +251,9 @@ class OneHot(SelectionFunction):
                                     format(MODE, self.__class__.__name__, Function.__name__, PROB, prob_dist))
             if self.is_initializing:
                 return
-            if not np.sum(prob_dist)==1:
+            # FIX 8/20/23: WHY DOES SUM COME UP WITH FLOATING POINT ERRORS?
+            # if not np.sum(prob_dist)==1:
+            if not np.allclose(np.sum(prob_dist), 1):
                 raise FunctionError("If {} for {} {} is set to {}, the 2nd item of its variable ({}) must be an "
                                     "array of probabilities that sum to 1".
                                     format(MODE, self.__class__.__name__, Function.__name__, PROB, prob_dist))
