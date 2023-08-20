@@ -95,7 +95,7 @@ These can be specified using any of the following arguments:
     specified are stored in `memory <EpisodicMemoryMechanism.memory>` and are available for retrieval in the first
     execution of the Mechanism (see `initializer <ContentAddressableMemory.initializer>` for an example).
 
-The above specifications are also used to to create the `input_ports <Mechanism_Base.input_ports>` for the Mechanism
+The above specifications are also used to create the `input_ports <Mechanism_Base.input_ports>` for the Mechanism
 in the same way that the `variable <Mechanism_Base.variable>` is used for any Mechanism (see `Mechanism Variable
 <Mechanism_Variable_and_InputPorts>` for additional information), with the number of InputPorts created equal to the
 number of fields in an entry of `memory <EpisodicMemoryMechanism.memory>`.  Each `input_port

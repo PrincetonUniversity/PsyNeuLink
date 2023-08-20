@@ -37,7 +37,7 @@ class TestReset:
         # reset function
         D.function.reset(2.0, 0.1)
         np.testing.assert_allclose(D.function.value[0], 2.0)
-        np.testing.assert_allclose(D.function.previous_value, 2.0)
+        np.testing.assert_allclose(D.function.parameters.previous_value.get(), 2.0)
         np.testing.assert_allclose(D.function.previous_time, 0.1)
         np.testing.assert_allclose(np.asfarray(D.value),  [[1.0], [1.0]])
         np.testing.assert_allclose(D.output_ports[0].value[0], 1.0)
@@ -46,7 +46,7 @@ class TestReset:
         # reset function without value spec
         D.function.reset()
         np.testing.assert_allclose(D.function.value[0], 0.0)
-        np.testing.assert_allclose(D.function.previous_value, 0.0)
+        np.testing.assert_allclose(D.function.parameters.previous_value.get(), 0.0)
         np.testing.assert_allclose(D.function.previous_time, 0.0)
         np.testing.assert_allclose(np.asfarray(D.value), [[1.0], [1.0]])
         np.testing.assert_allclose(D.output_ports[0].value[0], 1.0)
@@ -55,7 +55,7 @@ class TestReset:
         # reset mechanism
         D.reset(2.0, 0.1)
         np.testing.assert_allclose(D.function.value[0], 2.0)
-        np.testing.assert_allclose(D.function.previous_value, 2.0)
+        np.testing.assert_allclose(D.function.parameters.previous_value.get(), 2.0)
         np.testing.assert_allclose(D.function.previous_time, 0.1)
         np.testing.assert_allclose(np.asfarray(D.value), [[2.0], [0.1]])
         np.testing.assert_allclose(D.output_ports[0].value, 2.0)
@@ -70,7 +70,7 @@ class TestReset:
         # reset mechanism without value spec
         D.reset()
         np.testing.assert_allclose(D.function.value[0], 0.0)
-        np.testing.assert_allclose(D.function.previous_value, 0.0)
+        np.testing.assert_allclose(D.function.parameters.previous_value.get(), 0.0)
         np.testing.assert_allclose(D.function.previous_time, 0.0)
         np.testing.assert_allclose(D.output_ports[0].value[0], 0.0)
         np.testing.assert_allclose(D.output_ports[1].value[0], 0.0)
@@ -80,7 +80,7 @@ class TestReset:
         D.function.non_decision_time = 0.0
         D.reset()
         np.testing.assert_allclose(D.function.value[0], 1.0)
-        np.testing.assert_allclose(D.function.previous_value, 1.0)
+        np.testing.assert_allclose(D.function.parameters.previous_value.get(), 1.0)
         np.testing.assert_allclose(D.function.previous_time, 0.0)
         np.testing.assert_allclose(D.output_ports[0].value[0], 1.0)
         np.testing.assert_allclose(D.output_ports[1].value[0], 0.0)

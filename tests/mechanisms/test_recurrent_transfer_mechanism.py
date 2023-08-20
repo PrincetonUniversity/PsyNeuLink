@@ -948,7 +948,7 @@ class TestRecurrentTransferMechanismReset:
                  noise=0.0)
         R.reset_stateful_function_when = Never()
         C = Composition(pathways=[R])
-        np.testing.assert_allclose(R.integrator_function.previous_value, 0.5)
+        np.testing.assert_allclose(R.integrator_function.parameters.previous_value.get(), 0.5)
 
         # S.run(inputs={R: 1.0},
         #       num_trials=2,

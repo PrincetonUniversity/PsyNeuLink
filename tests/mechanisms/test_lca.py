@@ -284,7 +284,7 @@ class TestLCAReset:
         C = Composition(pathways=[L])
 
         L.reset_stateful_function_when = Never()
-        np.testing.assert_allclose(L.integrator_function.previous_value, 0.5)
+        np.testing.assert_allclose(L.integrator_function.parameters.previous_value.get(), 0.5)
         np.testing.assert_allclose(L.initial_value, 0.5)
         np.testing.assert_allclose(L.integrator_function.initializer, 0.5)
 
