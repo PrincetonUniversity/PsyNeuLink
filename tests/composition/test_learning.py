@@ -1957,6 +1957,90 @@ class TestBackPropLearning:
         #     else:
         #         print(node.name, " EMPTY LOG!")
 
+    def test_backprop_fct_with_product_of_2_args(self):
+
+        input_layer1 = pnl.TransferMechanism(name="input1",
+                                            size=2,
+                                            function=pnl.Linear())
+
+        input_layer2 = pnl.TransferMechanism(name="input2",
+                                            size=2,
+                                            function=pnl.Linear())
+
+        hidden_layer = pnl.ProcessingMechanism(name="hidden",
+                                               input_ports=['input1','input2'],
+                                               size=(4,4),
+                                               function=pnl.LinearCombination(operation=pnl.PRODUCT))
+
+        output_layer = pnl.TransferMechanism(name="output",
+                                             size=2,
+                                             # function=pnl.Logistic())
+                                             function=pnl.Linear())
+
+        i1_h_wts = pnl.MappingProjection(name='input_to_hidden1',
+                                     sender=input_layer1,
+                                     receiver=hidden_layer.input_ports[0],
+                                     matrix=np.full((2,4),0.1))
+        i2_h_wts = pnl.MappingProjection(name='input_to_hidden2',
+                                     sender=input_layer2,
+                                     receiver=hidden_layer.input_ports[1],
+                                     matrix=np.full((2,4),0.1))
+        h_o_wts = pnl.MappingProjection(name='hidden_to_output', matrix=np.full((4,2),0.1))
+
+
+        # comp = pnl.Composition(name="backprop-composition")
+        comp = pnl.AutodiffComposition(name="backprop-composition", optimizer_type='sgd')
+        learning_components1 = comp.add_backpropagation_learning_pathway(pathway=[input_layer1,
+                                                                                  hidden_layer,
+                                                                                  h_o_wts,
+                                                                                  output_layer],
+                                                                         learning_rate=0.5).learning_components
+
+        learning_components2 = comp.add_backpropagation_learning_pathway(pathway=[input_layer2,
+                                                                                  hidden_layer,
+                                                                                  h_o_wts,
+                                                                                  output_layer],
+                                                                         learning_rate=0.5).learning_components
+
+        learned_projections1 = learning_components1[pnl.LEARNED_PROJECTIONS]
+        learned_projections1[0].log.set_log_conditions(pnl.MATRIX)
+        learning_mechanisms1 = learning_components1[pnl.LEARNING_MECHANISMS]
+        target_mechanism = learning_components1[pnl.TARGET_MECHANISM]
+        comparator_mechanism = learning_components1[pnl.OBJECTIVE_MECHANISM]
+
+        # comp.set_log_conditions(['input_to_hidden', 'hidden_to_output'])
+        i1_h_wts.set_log_conditions('matrix')
+        i2_h_wts.set_log_conditions('matrix')
+        h_o_wts.set_log_conditions('matrix')
+
+        # comp.show_graph()
+        # comp.show_graph(show_node_structure=True)
+        # comp.show_graph(show_learning=True)
+        assert True
+
+        comp_inputs = {input_layer1: [[1.0, 1.0]],
+                       input_layer2: [[1.0, 1.0]],
+                       target_mechanism: [[1.0, 2.0]]}
+        autodiff_inputs = {'inputs': {input_layer1: [[1.0, 1.0]],
+                                      input_layer2: [[1.0, 1.0]]},
+                           'targets': {output_layer: [[1.0, 2.0]]},
+                           'epochs':5}
+        comp.learn(inputs=autodiff_inputs,
+                   # call_after_trial=print_weights,
+                   num_trials=5,
+                   # execution_mode=pnl.ExecutionMode.Python
+                   execution_mode=pnl.ExecutionMode.PyTorch
+                   # # execution_id=eid
+                   )
+        comp.log.print_entries()
+        i1_h_wts.log.print_entries()
+        i2_h_wts.log.print_entries()
+        h_o_wts.log.print_entries()
+        print(comp.results)
+        comp.run(inputs={input_layer1: [[1.0, 1.0]],
+                         input_layer2: [[1.0, 1.0]]})
+        assert True
+
     expected_quantities = [
         (
             Loss.L0,
@@ -2550,7 +2634,6 @@ class TestBackPropLearning:
             assert all(n in comp.get_nodes_by_role(pnl.NodeRole.INPUT) for n in {D,C})
             assert all(n in comp.get_nodes_by_role(pnl.NodeRole.OUTPUT) for n in {A,F})
             print(f'Completed configuration: {configuration}')
-
 
     @pytest.mark.parametrize('order', [
         # 'color_full',

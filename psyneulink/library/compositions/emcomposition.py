@@ -165,26 +165,12 @@
 #          and align with reset Parameter of IntegratorMechanism)
 #
 #    - FIX: BUGS:
-#      - Composition:
-#        - pathways arg:  the following should treat simple_mech as an INPUT node but it doesn't
-#              c = Composition(pathways=[[input,ctl],[simple_mech]])
-#        - parsing of input dict in constructor:
-#             improve error message, though the following attempt in XXX causes errors:
-#             try:
-#                 inputs, num_inputs_sets = self._parse_run_inputs(inputs, context)
-#             except:
-#                 raise CompositionError(f"PROGRAM ERROR: Unexpected problem parsing inputs in run() for {self.name}.")
-#
 #      -LearningMechanism / Backpropagation LearningFunction:
 #         - Construction of LearningMechanism on its own fails; e.g.:
 #             lm = LearningMechanism(learning_rate=.01, learning_function=BackPropagation())
-#             causes the folllowing error:
+#             causes the following error:
 #                TypeError("Logistic.derivative() missing 1 required positional argument: 'self'")
 #      - ContentAddressableMemory Function:
-#           - insure that selection function returns only one non-zero value or, if it weights them parametrically,
-#             then checks against the duplicate_entries setting and warns if that is set.
-#             (cf LINE 1509)
-#           - add tests for use of softmax (and worning if no duplicate_entries is set to True)
 #           - rename "cue" -> "query"
 #           - add field_weights as parameter of EM, and make it a shared_parameter ?as well as a function_parameter?
 #      - Adding GatingMechanism after Mechanisms they gate fails to implement gating projections
