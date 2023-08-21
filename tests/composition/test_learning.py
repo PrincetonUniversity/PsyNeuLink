@@ -1988,8 +1988,8 @@ class TestBackPropLearning:
         h_o_wts = pnl.MappingProjection(name='hidden_to_output', matrix=np.full((4,2),0.1))
 
 
-        # comp = pnl.Composition(name="backprop-composition")
-        comp = pnl.AutodiffComposition(name="backprop-composition", optimizer_type='sgd')
+        comp = pnl.Composition(name="backprop-composition")
+        # comp = pnl.AutodiffComposition(name="backprop-composition", optimizer_type='sgd')
         learning_components1 = comp.add_backpropagation_learning_pathway(pathway=[input_layer1,
                                                                                   hidden_layer,
                                                                                   h_o_wts,

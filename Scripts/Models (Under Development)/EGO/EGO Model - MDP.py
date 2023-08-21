@@ -133,14 +133,14 @@ from psyneulink import *
 # Settings for running script:
 CONSTRUCT_MODEL = True                 # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = (                      # Only one of the following can be uncommented:
-    None                             # suppress display of model
-    # {}                               # show simple visual display of model
+    # None                             # suppress display of model
+    {}                               # show simple visual display of model
     # {'show_node_structure': True}    # show detailed view of node structures and projections
 )
-RUN_MODEL = True                       # True => run the model
-# RUN_MODEL = False                      # False => don't run the model
+# RUN_MODEL = True                       # True => run the model
+RUN_MODEL = False                      # False => don't run the model
 ANALYZE_RESULTS = False                # True => output analysis of results of run
-REPORT_OUTPUT = ReportOutput.TERSE     # Sets console output during run [alt: ReportOutput.FULL or .ON]
+REPORT_OUTPUT = ReportOutput.FULL     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
 REPORT_PROGRESS = ReportProgress.OFF   # Sets console progress bar during run
 PRINT_RESULTS = False                  # print model.results after execution
 ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
@@ -158,17 +158,17 @@ MODEL_NAME = "EGO Model"
 TASK_INPUT_LAYER_NAME = "TASK"
 STATE_INPUT_LAYER_NAME = "STATE"
 TIME_INPUT_LAYER_NAME = "TIME"
-# ATTENTION_LAYER_NAME = "ENCODE\nSTATE"
-ATTENTION_LAYER_NAME = "ENCODE STATE"
+ATTENTION_LAYER_NAME = "ENCODE\nSTATE"
+# ATTENTION_LAYER_NAME = "ENCODE STATE"
 CONTROL_LAYER_NAME = "CONTROL"
 ACTUAL_STATE_INPUT = 'ACTUAL_STATE_INPUT'
 RETRIEVED_STATE_INPUT = 'RETRIEVED_STATE'
 CONTEXT_LAYER_NAME = 'CONTEXT'
 REWARD_INPUT_LAYER_NAME = "REWARD"
-# RETRIEVED_TIME_NAME = "RETRIEVED\nTIME"
-RETRIEVED_TIME_NAME = "RETRIEVED TIME"
-# RETRIEVED_REWARD_NAME = "RETRIEVED\nREWARD"
-RETRIEVED_REWARD_NAME = "RETRIEVED REWARD"
+RETRIEVED_TIME_NAME = "RETRIEVED\nTIME"
+# RETRIEVED_TIME_NAME = "RETRIEVED TIME"
+RETRIEVED_REWARD_NAME = "RETRIEVED\nREWARD"
+# RETRIEVED_REWARD_NAME = "RETRIEVED REWARD"
 EM_NAME = "EM"
 DECISION_LAYER_NAME = "DECISION"
 RESPONSE_LAYER_NAME = "RESPONSE"
@@ -471,10 +471,9 @@ def construct_model(model_name:str=MODEL_NAME,
     #                +--------------------------------------------------------------------------------------------+
     #                 TASK  COUNT  DDM  REWARD | ACTUAL EM | TIME STATE CONTEXT REWARD | STORE | CT  | DDM | RESP
     control_policy = [[[0], [-1], [-1], [-1],     [1], [0],  [0,    0,     0,      0],    [1],   [0],  [0],  [0]],
-                      [[1],  [0], [-1],  [0],     [1], [0],  [1,    1,     1,      0],    [0],   [1],  [0],  [0]],
+                      [[1],  [0], [-1],  [0],     [1], [1],  [1,    1,     1,      0],    [0],   [0],  [1],  [0]],
                       [[1],  [1], [-1],  [0],     [0], [1],  [1,    0,     1,      0],    [0],   [0],  [1],  [0]],
-                      [[1],  [2], [-1],  [0],     [0], [1],  [1,    0,     1,      0],    [0],   [0],  [1],  [0]],
-                      [[1],  [2], [-1],  [1],     [0], [1],  [1,    0,     1,      0],    [0],   [1],  [1],  [1]],
+                      [[1],  [2], [-1],  [1],     [0], [1],  [1,    0,     1,      0],    [0],   [0],  [1],  [0]],
                       [[1],  [2], [tot], [1],     [0], [1],  [1,    0,     1,      0],    [0],   [1],  [1],  [1]]]
     control_em = ContentAddressableMemory(initializer=control_policy,
                                           distance_function=Distance(metric=EUCLIDEAN),
@@ -530,16 +529,15 @@ def construct_model(model_name:str=MODEL_NAME,
            | TASK  COUNT  DDM  REWARD | ACTUAL  EM  |   TIME  STATE  CONTEXT REWARD |       |           | DDM  | RESP  |
            +--------------------------+-------------+-------------------------------+-------+-----------+------+-------+
            |  EXP   ANY  !=TOT  ANY   |   1     0   |   0      0       0       0    |   1   |     0     |   0  |   0   |
-           |  PRED   0   !=TOT   0    |   1     0   |   1      1       1       0    |   0   |     1     |   0  |   0   |
+           |  PRED   0   !=TOT   0    |   1     1   |   1      1       1       0    |   0   |     0     |   1  |   0   |
            |  PRED   1   !=TOT   0    |   0     1   |   1      0       1       0    |   0   |     0     |   1  |   0   |
-           |  PRED   2   !=TOT   0    |   0     1   |   1      0       1       0    |   0   |     0     |   1  |   0   |
-           |  PRED   2   !=TOT   1    |   0     1   |   1      0       1       0    |   0   |     1     |   1  |   1   |
+           |  PRED   2   !=TOT   1    |   0     1   |   1      0       1       0    |   0   |     0     |   1  |   0   |
            |  PRED   2   ==TOT   1    |   0     1   |   1      0       1       0    |   0   |     1     |   1  |   1   |
            +--------------------------+-------------+-------------------------------+-------+-----------+------+-------+
            NOTES:
            - DDM is open gated on each PREDICT step because REWARD is 0 so it won't accumulate,
                      but it will increment its counter (RESPONSE TIME) that can be used to determine when to terminate
-           - RO: NUM_ROLL_OUTS * NUM_STIM_PER_SEQ
+           - TOT: NUM_ROLL_OUTS * NUM_STIM_PER_SEQ
 
         """
 
