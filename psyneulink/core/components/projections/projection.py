@@ -927,13 +927,14 @@ class Projection_Base(Projection):
                 if dup.initialization_status == ContextFlags.DEFERRED_INIT:
                     del receiver.mod_afferents[receiver.mod_afferents.index(dup)]
                 else:
-                    raise DuplicateProjectionError(f"Attempt to assign {Projection.__name__} to {receiver.name} of "
-                                                   f"{receiver.owner.name} that already has an identical "
+                    raise DuplicateProjectionError(f"Attempt to assign {Projection.__name__} to '{receiver.name}' "
+                                                   f"of '{receiver.owner.name}' that already has an identical "
                                                    f"{Projection.__name__}.")
             self.sender.efferents.append(self)
         else:
-            raise DuplicateProjectionError(f"Attempt to assign {Projection.__name__} from {sender.name} of "
-                                           f"{sender.owner.name} that already has an identical {Projection.__name__}.")
+            raise DuplicateProjectionError(f"Attempt to assign {Projection.__name__} from '{sender.name}' of "
+                                           f"'{sender.owner.name}' that already has an identical "
+                                           f"{Projection.__name__}.")
 
     def _instantiate_attributes_after_function(self, context=None):
         from psyneulink.core.components.ports.parameterport import _instantiate_parameter_port
@@ -2194,9 +2195,9 @@ def _add_projection_to(receiver, port, projection_spec, context=None):
         try:
             key = receiver.input_ports[port]
         except IndexError:
-            raise ProjectionError("Attempt to assign projection_spec ({0}) to InputPort {1} of {2} "
-                                 "but it has only {3} input_ports".
-                                 format(projection_spec.name, port, receiver.name, len(receiver.input_ports)))
+            raise ProjectionError(
+                f"Attempt to assign projection_spec ('{projection_spec.name}') to InputPort {'port'} "
+                f"of {'receiver.name'} but it has only {len(receiver.input_ports)} input_ports.")
         else:
             input_port = key
 
@@ -2310,9 +2311,8 @@ def _add_projection_from(sender, port, projection_spec, receiver, context=None):
         try:
             key = list(sender.output_ports.keys)[port]
         except IndexError:
-            raise ProjectionError("Attempt to assign projection_spec ({0}) to OutputPort {1} of {2} "
-                                 "but it has only {3} OutputPorts".
-                                 format(projection_spec.name, port, sender.name, len(sender.output_ports)))
+            raise ProjectionError(f"Attempt to assign projection_spec ('{projection_spec.name}') to OutputPort {port} "
+                                  f"of {'sender.name'}, but it has only {len(sender.output_ports)} OutputPorts.")
         else:
             output_port = key
 

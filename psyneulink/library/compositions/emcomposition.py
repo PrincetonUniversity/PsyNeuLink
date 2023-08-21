@@ -160,23 +160,19 @@
 #        - finish adding derivative (for if exponents are specified)
 #        - remove properties (use getter and setter for Parameters)
 #
-#    - FIX: BUGS:
-#      - Composition:
-#        - pathways arg:  the following should treat simple_mech as an INPUT node but it doesn't
-#              c = Composition(pathways=[[input,ctl],[simple_mech]])
-#        - parsing of input dict in constructor:
-#             improve error message, though the following attempt in XXX causes errors:
-#             try:
-#                 inputs, num_inputs_sets = self._parse_run_inputs(inputs, context)
-#             except:
-#                 raise CompositionError(f"PROGRAM ERROR: Unexpected problem parsing inputs in run() for {self.name}.")
+#     - DDM:
+#        - make reset_stateful_function_when a Parameter and arg in constructor
+#          and align with reset Parameter of IntegratorMechanism)
 #
+#    - FIX: BUGS:
 #      -LearningMechanism / Backpropagation LearningFunction:
 #         - Construction of LearningMechanism on its own fails; e.g.:
 #             lm = LearningMechanism(learning_rate=.01, learning_function=BackPropagation())
-#             causes the folllowing error:
+#             causes the following error:
 #                TypeError("Logistic.derivative() missing 1 required positional argument: 'self'")
-
+#      - ContentAddressableMemory Function:
+#           - rename "cue" -> "query"
+#           - add field_weights as parameter of EM, and make it a shared_parameter ?as well as a function_parameter?
 #      - Adding GatingMechanism after Mechanisms they gate fails to implement gating projections
 #           (example:  reverse order of the following in _construct_pathways
 #                      self.add_nodes(self.softmax_nodes)
@@ -185,6 +181,11 @@
 #           - Anytime a row's norm is 0, replace with 1s
 #      - WHY IS Concatenate NOT WORKING AS FUNCTION OF AN INPUTPORT (WASN'T THAT USED IN CONTEXT OF BUFFER?
 #           SEE NOTES TO KATHERINE
+#
+#     - TESTS
+#       For duplicate Projections (e.g., assign a Mechanism in **monitor** of ControlMechanism
+#            and use comp.add_projection(MappingProjection(mointored, control_mech) -> should generate a duplicate
+#            then search for other instances of the same error message
 
 """
 

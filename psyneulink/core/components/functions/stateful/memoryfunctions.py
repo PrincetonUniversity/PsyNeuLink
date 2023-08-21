@@ -29,12 +29,13 @@ import warnings
 from collections import deque
 from itertools import combinations, product
 
-from psyneulink._typing import Optional, Union, Callable
+from psyneulink._typing import Callable, List, Literal
 
 import numpy as np
 from beartype import beartype
 
-from psyneulink._typing import Optional, Union, Literal
+from typing import Optional, Union
+# from psyneulink._typing import
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import (
@@ -42,12 +43,13 @@ from psyneulink.core.components.functions.function import (
 )
 from psyneulink.core.components.functions.nonstateful.objectivefunctions import Distance
 from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot
+from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
 from psyneulink.core.components.functions.stateful.integratorfunctions import StatefulFunction
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, BUFFER_FUNCTION, MEMORY_FUNCTION, COSINE, \
     ContentAddressableMemory_FUNCTION, DictionaryMemory_FUNCTION, \
-    MIN_INDICATOR, MULTIPLICATIVE_PARAM, NEWEST, NOISE, OLDEST, OVERWRITE, RATE, RANDOM, VARIABLE
+    MIN_INDICATOR, MULTIPLICATIVE_PARAM, NEWEST, NOISE, OLDEST, OVERWRITE, RATE, RANDOM, SINGLE, WEIGHTED
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.utilities import \
@@ -409,10 +411,11 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
     The ContentAddressableMemory `Function` implements a configurable, content-addressable storage and retrieval of
     entries from `memory <ContentAddressableMemory.memory>`. Storage is determined by `storage_prob
-    <ContentAddressableMemory.storage_prob>`, and retrieval of entries is determined by
-    `distance_function <ContentAddressableMemory.distance_function>`,
-    `selection_function <ContentAddressableMemory.selection_function>`, and `retrieval_prob
-    <ContentAddressableMemory.retrieval_prob>`.
+    <ContentAddressableMemory.storage_prob>`, retrieval of entries is determined by `distance_function
+    <ContentAddressableMemory.distance_function>`, `selection_function
+    <ContentAddressableMemory.selection_function>`, and `retrieval_prob <ContentAddressableMemory.retrieval_prob>`,
+    with the contribution that each field of the cue makes to retrieval determined by the `distance_field_weights
+    <ContentAddressableMemory.distance_field_weights>` parameter.
 
     .. _ContentAddressableMemory_Entries_and_Fields:
 
@@ -446,12 +449,14 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     those distances weighted by the coefficients specified in `distance_field_weights
     <ContentAddressableMemory.distance_field_weights>`. The distances computed between `variable
     `<ContentAddressableMemory.variable>` and each entry in `memory <ContentAddressableMemory.memory>` are then
-    used by `selection_function <ContentAddressableMemory.selection_function>` to determine which entry is retrieved.
-    The distance used for the last retrieval (i.e., between `variable <ContentAddressableMemory.variable>` and the
-    entry retrieved), the distances of each of their corresponding fields (weighted by `distance_field_weights
-    <ContentAddressableMemory.distance_field_weights>`), and the distances to all other entries are stored in `distance
-    <ContentAddressableMemory.distance>` and `distances_by_field <ContentAddressableMemory.distances_by_field>`, and
-    `distances_to_entries <ContentAddressableMemory.distances_to_entries>` respectively.
+    used by `selection_function <ContentAddressableMemory.selection_function>` to determine which entry is
+    retrieved (or how to weight the sum of them based on their distances from the cue -- see `selection_type
+    <ContentAddressableMemory.selection_type>`). The distance used for the last retrieval (i.e., between `variable
+    <ContentAddressableMemory.variable>` and the entry retrieved), the distances of each of their corresponding
+    fields (weighted by `distance_field_weights <ContentAddressableMemory.distance_field_weights>`), and
+    the distances to all other entries are stored in `distance <ContentAddressableMemory.distance>` and
+    `distances_by_field <ContentAddressableMemory.distances_by_field>`, and `distances_to_entries
+    <ContentAddressableMemory.distances_to_entries>` respectively.
 
     .. _ContentAddressableMemory_Duplicate_Entries:
 
@@ -504,9 +509,12 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
     .. _ContentAddressableMemory_Execution_Retrieval:
 
-    * **Retrieval:** first, with probability `retrieval_prob <ContentAddressableMemory.retrieval_prob>`,
-      the entry closest to `variable <ContentAddressableMemory.variable>` is retrieved from is retrieved from `memory
-      <ContentAddressableMemory.memory>`.  The entry is chosen by calling, in order:
+    * **Retrieval:** first, with probability `retrieval_prob <ContentAddressableMemory.retrieval_prob>`, a retrieval
+      is made from `memory <ContentAddressableMemory.memory>`. This is either the entry closest to `variable
+      <ContentAddressableMemory.variable>`, or weighted sum of the entries in `memory <ContentAddressableMemory.memory>`
+      based on their distances to `variable <ContentAddressableMemory.variable>`, as determined by `selection_function
+      <ContentAddressableMemory.selection_function>` and `selection_type <ContentAddressableMemory.selection_type>`.
+      The retrieval is made by calling, in order:
 
         * `distance_function <ContentAddressableMemory.distance_function>`: generates a list of and compares
           `distances <ContentAddressableMemory.distances>` between `variable <ContentAddressableMemory.variable>`
@@ -531,16 +539,24 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             corresponding element of `distance_field_weights<ContentAddressableMemory.distance_field_weights>`.
 
             .. note::
-               Fields assigned a weight of *0* or *None* are ignored in the distance calculation; that is, the distances
-               between `variable <ContentAddressableMemory.variable>` and entries for those fields are not included
-               in the averaging of distances by field.
+               Fields assigned a weight of *0* or *None* are ignored in the distance calculation; that is, the
+               distances between `variable <ContentAddressableMemory.variable>` and entries for those fields are
+               not included in the averaging of distances by field. If all of the `distance_field_weights
+               <ContentAddressableMemory.memory>` are 0 or None, then no memory is retrieved (this is equivalent
+               to setting `retrieval_prob <ContentAddressableMemory.retrieval_prob>` to 0).
 
         * `selection_function <ContentAddressableMemory.selection_function>`: called with the list of distances
-          to determine which entries to select for consideration. If more than on entry from `memory
-          <ContentAddressableMemory.memory>` is identified, `equidistant_entries_select
-          <ContentAddressableMemory.equidistant_entries_select>` is used to determine which to retrieve.  If no
-          retrieval occurs, an appropriately shaped zero-valued array is assigned as the retrieved memory, and
-          returned by the function.
+          to determine how to generate a retrieval based on the distance of each entry in `memory
+          <ContentAddressableMemory.memory>` from `variable <ContentAddressableMemory.variable>`.  The type of
+          retrieval is determined by the `selection_type <ContentAddressableMemory.selection_type>` of the function
+          (an attribute determined from the function on Construction of the ContentAddressableMemory function): if it
+          is *SINGLE*, then the entry with the minimum distance is retrieved;  if it is *WEIGHTED*, then the entries
+          are weighted by their distance from `variable <ContentAddressableMemory.variable>` and the weighted sum of
+          the entries is retrieved. If `selection_type <ContentAddressableMemory.selection_type>` is *SINGLE* and two
+          or more entries have the lowest and equal distance from `variable <ContentAddressableMemory.variable>`, the
+          `equidistant_entries_select <ContentAddressableMemory.equidistant_entries_select>` attribued is used to
+          determine which to retrieve.  If no retrieval occurs, an appropriately shaped zero-valued array is assigned
+          as the retrieved memory, and returned by the function.
 
         The distance between `variable <ContentAddressableMemory.variable>` and the retrieved entry is assigned to
         `distance `<ContentAddressableMemory.distance>`, the distance between of each of their fields is assigned to
@@ -913,6 +929,19 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         function used during retrieval to evaluate the distances returned by `distance_function
         <ContentAddressableMemory.distance_function>` and select the item(s) to return.
 
+    selection_type : SINGLE | WEIGHTED
+        indicates whether `selection_function <ContentAddressableMemory.selection_function>` returns a single
+        item (e.g., the default: `OneHot` using *MIN_INDICATOR* for its `mode <OneHot.mode>` attribute) or a
+        weighted sum over the items in memory (e.g., using `SoftMax` with *ALL*, its default, as its `output
+        <SoftMax.output>`attribute). In the latter case, the weighting is determined by the distance of each
+        item in memory from `variable <ContentAddressableMemory.variable>` along each field, weighted by the
+        corresponding element of `distance_field_weights <ContentAddressableMemory.distance_field_weights>`.
+
+        .. technical_note::
+           This attribute is assigned by evaluating the `selection_function
+           <ContentAddressableMemory.selection_function>` in the ContentAddressableMemory's
+           _instantiate_attributes_before_function method
+
     duplicate_entries_allowed : bool | OVERWRITE
         determines whether duplicate entries are allowed in `memory <ContentAddressableMemory.memory>`,
         as evaluated by `distance_function <ContentAddressableMemory.distance_function>` and `duplicate_threshold
@@ -1099,10 +1128,8 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         previous_value = Parameter(None, initializer='initializer')
         retrieval_prob = Parameter(1.0, modulable=True)
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        # FIX: MAKE THESE ATTRIBUTES RATHER THAN PARAMETERS:
         memory_num_fields = Parameter(None, stateful=False, read_only=True)
         memory_field_shapes = Parameter(None, stateful=False, read_only=True)
-        # FIX: --------------------
         distance_field_weights = Parameter([1], stateful=True, modulable=True, dependencies='initializer')
         duplicate_entries_allowed = Parameter(False, stateful=True)
         duplicate_threshold = Parameter(EPSILON, stateful=False, modulable=True)
@@ -1141,8 +1168,8 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                     return f"length ({fw_len}) must be same as number of fields " \
                            f"in entries of initializer ({num_fields})."
                 if not np.any(field_weights):
-                    warnings.warn(f"All weights in the 'distance_fields_weights' Parameter of {self._owner.name} "
-                                  f"are set to '0', so all entries of its memory will be treated as duplicates.")
+                    warnings.warn(f"All weights in the 'distance_fields_weights' Parameter of {self._owner.name} are "
+                                  f"set to '0', no retrieval will occur (equivalent to setting 'retrieval_prob=0.0'.")
 
         def _validate_equidistant_entries_select(self, equidistant_entries_select):
             if equidistant_entries_select not in equidistant_entries_select_keywords:
@@ -1163,39 +1190,21 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     @check_user_specified
     @beartype
     def __init__(self,
-                 # FIX: REINSTATE WHEN 3.6 IS RETIRED:
-                 # default_variable=None,
-                 # retrieval_prob: Optional[Union[int, float]]=None,
-                 # storage_prob: Optional[Union[int, float]]=None,
-                 # rate: Optional[Union[int, float, list, np.ndarray]]=None,
-                 # noise: Optional[Union[int, float, list, np.ndarray, callable]]=None,
-                 # initializer:Optional[Union[list, np.ndarray]]=None,
-                 # distance_field_weights:Optional[Union[list, np.ndarray]]=None,
-                 # distance_function:Optional[Union[Distance, is_function_type]]=None,
-                 # selection_function:Optional[Union[OneHot, is_function_type]]=None,
-                 # duplicate_entries_allowed:Optional[Union[(bool, Literal[OVERWRITE]]]=None,
-                 # duplicate_threshold:Optional[int]=None,
-                 # equidistant_entries_select:Optional[Literal[Union[RANDOM, OLDEST, NEWEST]]]=None,
-                 # max_entries:Optional[int]=None,
-                 # seed:Optional[int]=None,
-                 # params:Optional[Union[list, np.ndarray]]=None,
-                 # owner=None,
-                 # prefs:  Optional[ValidPrefSet] = None):
                  default_variable=None,
-                 retrieval_prob=None,
-                 storage_prob=None,
-                 rate=None,
-                 noise=None,
-                 initializer=None,
-                 distance_field_weights=None,
-                 distance_function=None,
-                 selection_function=None,
-                 duplicate_entries_allowed=None,
-                 duplicate_threshold=None,
-                 equidistant_entries_select=None,
-                 max_entries=None,
-                 seed=None,
-                 params=None,
+                 retrieval_prob: Optional[Union[int, float]]=None,
+                 storage_prob: Optional[Union[int, float]]=None,
+                 rate: Optional[Union[int, float, List, np.ndarray]]=None,
+                 noise: Optional[Union[int, float, List, np.ndarray, Callable]]=None,
+                 initializer:Optional[Union[int, float, List, np.ndarray]]=None,
+                 distance_field_weights:Optional[Union[List, np.ndarray]]=None,
+                 distance_function:Optional[Union[Distance, Callable]]=None,
+                 selection_function:Optional[Union[OneHot, SoftMax, Callable]]=None,
+                 duplicate_entries_allowed:Optional[Union[str, bool, Literal[OVERWRITE]]]=None,
+                 duplicate_threshold:Optional[Union[int,float]]=None,
+                 equidistant_entries_select:Optional[Union[str, Literal[RANDOM, OLDEST, NEWEST]]]=None,
+                 max_entries:Optional[int]=None,
+                 seed:Optional[int]=None,
+                 params:Optional[Union[List, np.ndarray]]=None,
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None):
 
@@ -1337,6 +1346,19 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     def _instantiate_attributes_before_function(self, function=None, context=None):
         self._initialize_previous_value(self.parameters.initializer._get(context), context)
 
+        # Assign selection_type based on selection_function
+        num_items = len(np.flatnonzero(self.selection_function([1,1,0])))
+        if self.duplicate_entries_allowed:
+            if num_items > 1:
+                warnings.warn(f"Selection function ({self.selection_function.componentName}) specified for "
+                                f"{self.name} returns more than one item ({num_items}) while "
+                                f"'duplicate_entries_allowed'==True. If a weighted sum of entries is intended, "
+                                f"set 'duplicate_entries_allowed'==False and use a selection function that "
+                                f"returns a weighted sum (e.g., SoftMax with 'output='ALL').")
+            self.selection_type = SINGLE
+        else:
+            self.selection_type = SINGLE if num_items == 1 else WEIGHTED
+
     @handle_external_context(fallback_most_recent=True)
     def reset(self, new_value=None, context=None):
         """
@@ -1413,6 +1435,9 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
         # get memory field weights (which are modulable)
         distance_field_weights = self._get_current_parameter_value('distance_field_weights', context)
+        if not any(distance_field_weights):
+            # FIX: RETURN ZEROS HERE?
+            retrieval_prob = 0.0
 
         # If this is an initialization run, leave memory empty (don't want to count it as an execution step),
         # but set entry size and then return current value (variable[1]) for validation.
@@ -1502,25 +1527,29 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         self._validate_entry(cue, context)
 
         # Get mean of field-wise distances between cue each entry in memory
-        distances_to_entries = []
-        for entry in _memory:
-            distances_to_entries.append(self._get_distance(cue, entry, field_weights, 'full_entry', context))
+        # FIX: REMOVE 8/20/23
+        # distances_to_entries = []
+        # for entry in _memory:
+        #     distances_to_entries.append(self._get_distance(cue, entry, field_weights, 'full_entry', context))
+        distances_to_entries = [self._get_distance(cue, entry, field_weights,'full_entry', context)
+                                for entry in self.memory]
 
         # Get the best-match(es) in memory based on selection_function and return as non-zero value(s) in an array
         selection_array = self.selection_function(distances_to_entries, context=context)
-        indices_of_selected_items = np.flatnonzero(selection_array)
 
         # Single entry identified
-        if len(indices_of_selected_items)==1:
-            index_of_selected_item = int(np.flatnonzero(selection_array))
+
+        if self.selection_type == WEIGHTED:
+            return selection_array @ _memory
 
         # More than one entry identified
-        else:
+        elif self.selection_type == SINGLE:
+            indices_of_selected_items = np.flatnonzero(selection_array)
             # Check for any duplicate entries in matches and, if they are not allowed, return zeros
             if (not self.duplicate_entries_allowed
                     and any(self._is_duplicate(_memory[i],_memory[j], field_weights, context)
                             for i, j in combinations(indices_of_selected_items, 2))):
-                warnings.warn(f"More than one entry matched cue ({cue}) in memory for {self.name}"
+                warnings.warn(f"More than one entry matched cue ({cue}) in memory for {self.name} "
                               f"{'of ' + self.owner.name if self.owner else ''} even though "
                               f"{repr('duplicate_entries_allowed')} is False; zeros returned as retrieved item.")
                 return self.uniform_entry(0, context)
@@ -1535,6 +1564,10 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                 assert False, f"PROGRAM ERROR:  bad specification ({repr(self.equidistant_entries_select)}) for " \
                               f"'equidistant_entries_select' parameter of {self.name}" \
                               f"{'for ' + self.owner.name if self.owner else ''}"
+        else:
+            assert False, (f"PROGRAM ERROR:  bad specification ({repr(self.selection_type)}) for "
+                           f"'selection_type' parameter of {self.name}")
+
 
         best_match = _memory[index_of_selected_item]
         best_match_distances = self._get_distance(cue,best_match,field_weights, 'per_field',context)
@@ -1648,8 +1681,9 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     def _get_distance(self, cue:Union[list, np.ndarray],
                       candidate:Union[list, np.ndarray],
                       field_weights:Union[list, np.ndarray],
-                      granularity:str,
-                      # granularity:Literal[Union['full_entry', 'per_field']],
+                      # FIX: REMOVE 8/20/23
+                      # granularity:str,
+                      granularity:Literal[Union['full_entry', 'per_field']],
                       context) -> Union[float, np.ndarray]:
         """Get distance of cue from candidate using `distance_function <ContentAddressableMemory.distance_function>`.
 

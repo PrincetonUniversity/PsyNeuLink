@@ -455,12 +455,12 @@ class DDM(ProcessingMechanism):
     See `Mechanism <Mechanism_Class_Reference>` for additional arguments and attributes.
 
     The default behaviour for the DDM is to reset its integration state on each new trial, this can be overridden by
-    setting the `reset_stateful_function_when <Component.reset_stateful_function_when>` attribute to a different condition.
-    In addition, unlike `TransferMechamism <TransferMechamism>`, the DDM's
-    `execute_until_finished <Component.execute_until_finished>`
-    attribute is set to :code:`True` by default. This will cause the DDM to execute multiple time steps per
-    call to its `execute <Component.execute>`  method until the decision threshold is reached. This default behavior can
-    be changed by setting `execute_until_finished <Component.execute_until_finished>` to :code:`False`.
+    setting the `reset_stateful_function_when <Component.reset_stateful_function_when>` attribute to a different
+    condition. In addition, unlike `TransferMechanism <TransferMechanism>`, the DDM's `execute_until_finished
+    <Component.execute_until_finished>` attribute is set to `True` by default. This will cause the DDM to execute
+    multiple time steps per call to its `execute <Component.execute>`  method until the decision threshold is reached.
+    This default behavior can be changed by setting `execute_until_finished <Component.execute_until_finished>` to
+    `False`.
 
 
     Arguments
@@ -865,6 +865,7 @@ class DDM(ProcessingMechanism):
         # is, it should execute until it reaches its threshold.
         self.parameters.execute_until_finished.default_value = True
 
+        # FIX: MAKE THIS A PARAMETER WITH ARGUMENT IN CONSTRUCTOR (ALIGN WITH reset Parameter OF IntegratorMechanism)
         # New (1/19/2021) default behavior of DDM mechanism is to reset stateful functions
         # on each new trial.
         if 'reset_stateful_function_when' not in kwargs:

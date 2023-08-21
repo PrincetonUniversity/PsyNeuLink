@@ -9,6 +9,9 @@ import torch
 
 __all__ = ['PytorchMechanismWrapper', 'PytorchProjectionWrapper']
 
+# def lincomb_sum(x, **kwargs):
+#     return torch.tensor(x[0]).double() + torch.tensor(x[1]).double()
+#
 # def lincomb_product(x):
 #     return x[0] * x[1]
 
@@ -38,6 +41,7 @@ def pytorch_function_creator(function, device, context=None):
             return lambda x: torch.tensor(x[0], device=device).double() * torch.tensor(x[1], device=device).double()
         else:
             return lambda x: torch.tensor(x[0], device=device).double() + torch.tensor(x[1], device=device).double()
+            # return lincomb_sum
 
     elif isinstance(function, Logistic):
         gain = get_fct_param_value('gain')

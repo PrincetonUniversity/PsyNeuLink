@@ -1,3 +1,13 @@
+# Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and limitations under the License.
+
+# TODO:
+# - Refactor to use only Reward and not Counter (though that may not work for transition devaluation?)
+
 """
 QUESTIONS:
 
@@ -114,33 +124,32 @@ MORE HERE
 
 """
 
-import os
-import random
-import time
-import timeit
 import numpy as np
 from typing import Union
-from enum import Enum, IntEnum
-from pathlib import Path
-
-from graph_scheduler import *
+from enum import IntEnum
 
 from psyneulink import *
 
 # Settings for running script:
 CONSTRUCT_MODEL = True                 # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = (                      # Only one of the following can be uncommented:
-    # None                             # suppress display of model
-    {}                               # show simple visual display of model
+    None                             # suppress display of model
+    # {}                               # show simple visual display of model
     # {'show_node_structure': True}    # show detailed view of node structures and projections
 )
-RUN_MODEL = False                      # True => run the model
+RUN_MODEL = True                       # True => run the model
+# RUN_MODEL = False                      # False => don't run the model
 ANALYZE_RESULTS = False                # True => output analysis of results of run
-REPORT_OUTPUT = ReportOutput.ON       # Sets console output during run
+REPORT_OUTPUT = ReportOutput.TERSE     # Sets console output during run [alt: ReportOutput.FULL or .ON]
 REPORT_PROGRESS = ReportProgress.OFF   # Sets console progress bar during run
+PRINT_RESULTS = False                  # print model.results after execution
 ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
 
-#region ========================================= PARAMETERS ===========================================================
+
+#region   PARAMETERS
+# ======================================================================================================================
+#                                                   PARAMETERS
+# ======================================================================================================================
 
 # Fixed (structural) parameters:
 
@@ -149,21 +158,42 @@ MODEL_NAME = "EGO Model"
 TASK_INPUT_LAYER_NAME = "TASK"
 STATE_INPUT_LAYER_NAME = "STATE"
 TIME_INPUT_LAYER_NAME = "TIME"
-ATTENTION_LAYER_NAME = "STATE ATTENTION"
-ATTENTIONAL_CONTROL_LAYER_NAME = "ATTENTIONAL CONTROL"
+# ATTENTION_LAYER_NAME = "ENCODE\nSTATE"
+ATTENTION_LAYER_NAME = "ENCODE STATE"
+CONTROL_LAYER_NAME = "CONTROL"
 ACTUAL_STATE_INPUT = 'ACTUAL_STATE_INPUT'
 RETRIEVED_STATE_INPUT = 'RETRIEVED_STATE'
 CONTEXT_LAYER_NAME = 'CONTEXT'
 REWARD_INPUT_LAYER_NAME = "REWARD"
+# RETRIEVED_TIME_NAME = "RETRIEVED\nTIME"
 RETRIEVED_TIME_NAME = "RETRIEVED TIME"
+# RETRIEVED_REWARD_NAME = "RETRIEVED\nREWARD"
 RETRIEVED_REWARD_NAME = "RETRIEVED REWARD"
-EM_NAME = "EPISODIC MEMORY"
+EM_NAME = "EM"
 DECISION_LAYER_NAME = "DECISION"
-RESPONSE_LAYER_NAME = "RESPONSE_LAYER"
+RESPONSE_LAYER_NAME = "RESPONSE"
 
-class Task(IntEnum):
-    EXPERIENCE = 0
-    PREDICT = 1
+
+Task = IntEnum('Task', ['EXPERIENCE', 'PREDICT'],
+               start=0)
+
+
+StateFeatureIndex = IntEnum('StateFeatureIndex',
+                            ['TASK',
+                             'REWARD',
+                             'SIM_STEP',
+                             'SIM_TOTAL'],
+                            start=0)
+
+ControlSignalIndex = IntEnum('ControlSignalIndex',
+                             ['ATTEND_ACTUAL',
+                              'ATTEND_RETRIEVED',
+                              'EM_FIELD_WEIGHTS',
+                              'STORAGE_PROB',
+                              'COUNTER_RESET',
+                              'DECISION_GATE',
+                              'RESPONSE_GATE'],
+                             start=0)
 
 # CONSTRUCTION PARAMETERS
 
@@ -172,13 +202,12 @@ TASK_SIZE = 1       # length of task vector
 STATE_SIZE = 8      # length of state vector
 TIME_SIZE = 25      # length of time vector
 REWARD_SIZE = 1     # length of reward vector
-DECISION_SIZE = 2   # length of decision vector
-RESPONSE_SIZE = 2   # length of response vector
+DECISION_SIZE = 1   # length of decision vector
+RESPONSE_SIZE = 1   # length of response vector
 
 # Context processing:
 STATE_WEIGHT = .1              # rate at which actual vs. retrieved state (from EM) are integrated in context_layer
 CONTEXT_INTEGRATION_RATE = .1  # rate at which retrieved context (from EM) is integrated into context_layer
-TIME_DRIFT_NOISE = 0.0         # noise used by DriftOnASphereIntegrator (function of Context mech)
 
 # EM retrieval
 STATE_RETRIEVAL_WEIGHT = 1     # weight of state field in retrieval from EM
@@ -190,65 +219,130 @@ RETRIEVAL_SOFTMAX_GAIN = 10    # gain on softmax retrieval function
 
 RANDOM_WEIGHTS_INITIALIZATION=RandomMatrix(center=0.0, range=0.1)  # Matrix spec used to initialize all Projections
 
-# Execution parameters:
+#endregion
+
+#region ENVIRONMENT
+# ======================================================================================================================
+#                                                   ENVIRONMENT
+# ======================================================================================================================
+
 
 # Temporal context vector generation as input to time_input_layer of model
-CONTEXT_DRIFT_RATE=.1 # drift rate used for DriftOnASphereIntegrator (function of Context mech) on each trial
+TIME_DRIFT_RATE = 0.1          # noise used by DriftOnASphereIntegrator (function of Context mech)
+TIME_DRIFT_NOISE = 0.0         # noise used by DriftOnASphereIntegrator (function of Context mech)
 time_fct = DriftOnASphereIntegrator(initializer=np.random.random(TIME_SIZE - 1),
                                     noise=TIME_DRIFT_NOISE,
                                     dimension=TIME_SIZE)
 # Task environment:
-NUM_EXPERIENCE_TRIALS = 9      # number of trials for Task.EXPERIENCE (passive encoding into EM)
-NUM_PREDICT_TRIALS = 9         # number of trials Task.PREDICT (active retrieval from EM and reward prediction)
-NUM_ROLL_OUT = 3               # number of trials of roll-out under OCM control
-NUM_TRIALS = NUM_EXPERIENCE_TRIALS + NUM_PREDICT_TRIALS # total number of trials
-assert NUM_PREDICT_TRIALS % NUM_ROLL_OUT == 0, \
-    f"NUM_PREDICT_TRIALS ({NUM_PREDICT_TRIALS}) " \
-    f"must be evenly divisible by NUM_ROLL_OUT ({NUM_ROLL_OUT})"
+NUM_BASELINE_SEQS = 20       # number of trials for Task.EXPERIENCE (passive encoding into EM) BEFORE revaluation
+NUM_REVALUATION_SEQS = 10    # number of trials for Task.EXPERIENCE (passive encoding into EM) AFTER revaluation 
+NUM_EXPERIENCE_SEQS = NUM_BASELINE_SEQS + NUM_REVALUATION_SEQS # total number of trials for Task.EXPERIENCE
+NUM_PREDICT_TRIALS = 2       # number of trials Task.PREDICT (active retrieval from EM and reward prediction)
+NUM_STIM_PER_SEQ = 3         # number of stimuli in a sequence
+NUM_ROLL_OUTS = 3            # number of times to roll out each sequence
+TOTAL_NUM_TRIALS = NUM_EXPERIENCE_SEQS * NUM_STIM_PER_SEQ + NUM_PREDICT_TRIALS # total number of trials
+# assert NUM_PREDICT_TRIALS % NUM_ROLL_OUTS == 0, \
+#     f"NUM_PREDICT_TRIALS ({NUM_PREDICT_TRIALS}) " \
+#     f"must be evenly divisible by NUM_ROLL_OUTS ({NUM_ROLL_OUTS})"
 
-inputs = {STATE_INPUT_LAYER_NAME: [[1],[2],[3]] * STATE_SIZE * NUM_TRIALS,
-          TIME_INPUT_LAYER_NAME: np.array([time_fct(i) for i in range(NUM_TRIALS)]).reshape(NUM_TRIALS,TIME_SIZE,1),
-          REWARD_INPUT_LAYER_NAME: [[0],[0],[1]] * REWARD_SIZE * NUM_TRIALS,
-          TASK_INPUT_LAYER_NAME: [[Task.EXPERIENCE.value]] * NUM_EXPERIENCE_TRIALS
+def build_inputs(state_size:int=STATE_SIZE,
+                 time_drift_rate:float=TIME_DRIFT_RATE,
+                 num_baseline_seqs:int=NUM_BASELINE_SEQS,
+                 num_revaluation_seqs:int=NUM_REVALUATION_SEQS,
+                 num_predict_trials:int=NUM_PREDICT_TRIALS)->tuple:
+    """Build inputs for full sequence of trials (with one stim per trial) for EGO MDP model
+    Return tuple in which each item is list of all trials for a layer of the model: (time, task, state, reward)
+    """
+    def gen_baseline_states_and_rewards_exp1(dim:int=state_size,
+                                             num_seqs:int=NUM_BASELINE_SEQS)->tuple:
+        """Generate states and rewards for reward revaluation phase of Experiment 1
+        Return tuple with one-hot representations of (states, rewards, length of a single sequence)
+        """
+        # Generate one-hots
+        state_reps = np.eye(dim)
+        visited_states, rewards = [], []
+        seq_len = 3
+
+        for trial_idx in range(num_seqs):
+            if np.random.random()<.5:
+                visited_states.extend([1,3,5])
+                rewards.extend([0,0,10])
+            else:
+                visited_states.extend([2,4,6])
+                rewards.extend([0,0,1])
+
+        # Pick one-hots corresponding to each state
+        visited_states = state_reps[visited_states]
+        rewards = np.array(rewards)
+
+        return visited_states, rewards, seq_len
+
+    def gen_reward_revaluation_states_and_reward_exp1(dim:int=STATE_SIZE,
+                                                      num_seqs:int=NUM_REVALUATION_SEQS)->tuple:
+        """Generate states and rewards for reward revaluation phase of Experiment 1
+        Return tuple with one-hot representations of (states, rewards, length of a single sequence)
+        """
+
+        # Generate one-hots
+        state_reps = np.eye(dim)
+        visited_states, rewards = [], []
+        seq_len = 2
+
+        for trial_idx in range(num_seqs):
+            if np.random.random()<.5:
+                visited_states.extend([3,5])
+                rewards.extend([0,1])
+            else:
+                visited_states.extend([4,6])
+                rewards.extend([0,10])
+
+        # Pick one-hots corresponding to each state
+        visited_states = state_reps[visited_states]
+        rewards = np.array(rewards)
+
+        return visited_states, rewards, seq_len
+
+    # Get sequences of states and rewards for baseline trials
+    baseline_states, baseline_rewards, num_stim_per_baseline_seq = (
+        gen_baseline_states_and_rewards_exp1(state_size, num_baseline_seqs))
+
+    # Get sequences of states and rewards for reward revaluation trials
+    reward_revaluation_states, reward_revaluation_rewards, num_stim_per_revaluation_seq =(
+        gen_reward_revaluation_states_and_reward_exp1(state_size,num_revaluation_seqs))
+
+    # FIX: NEED TO GENERATE CORRECT states and rewards for num_predict_trials
+    experience_trials_states = np.concatenate((baseline_states, reward_revaluation_states))
+    experience_trials_rewards = np.concatenate((baseline_rewards, reward_revaluation_rewards))
+    states = np.concatenate((experience_trials_states, np.zeros((num_predict_trials, state_size))))
+    rewards = np.concatenate((experience_trials_rewards, np.zeros(num_predict_trials)))
+
+    # Get sequences of task and time inputs
+    num_experience_trials = (num_baseline_seqs * num_stim_per_baseline_seq
+                             + num_revaluation_seqs * num_stim_per_revaluation_seq)
+    total_num_trials = num_experience_trials + num_predict_trials
+    tasks = np.array([Task.EXPERIENCE.value] * num_experience_trials + [Task.PREDICT.value] * num_predict_trials)
+    times = np.array([time_fct(time_drift_rate) for i in range(total_num_trials)])
+
+    assert len(times) == total_num_trials
+    assert len(tasks) == total_num_trials
+    assert len(states) == total_num_trials
+    assert len(rewards) == total_num_trials
+
+    return times, tasks, states, rewards
+
+
+inputs = {STATE_INPUT_LAYER_NAME: [[1],[2],[3]] * STATE_SIZE * TOTAL_NUM_TRIALS,
+          TIME_INPUT_LAYER_NAME: np.array([time_fct(i) for i in range(TOTAL_NUM_TRIALS)]).reshape(TOTAL_NUM_TRIALS,TIME_SIZE,1),
+          REWARD_INPUT_LAYER_NAME: [[0],[0],[1]] * REWARD_SIZE * TOTAL_NUM_TRIALS,
+          TASK_INPUT_LAYER_NAME: [[Task.EXPERIENCE.value]] * NUM_EXPERIENCE_SEQS
                                  + [[Task.PREDICT.value]] * NUM_PREDICT_TRIALS}
-def gen_baseline_trials_exp1(dim=STATE_SIZE, num_trials=NUM_EXPERIENCE_TRIALS):
-    # Generate one-hots
-    state_reps = np.eye(dim)
-    visited_states, rewards = [], []
 
-    for trial_idx in range(num_trials):
-        if np.random.random()<.5:
-            visited_states.extend([1,3,5])
-            rewards.extend([0,0,10])
-        else:
-            visited_states.extend([2,4,6])
-            rewards.extend([0,0,1])
+#endregion
 
-    # Pick one-hots corresponding to each state
-    visited_states = state_reps[visited_states]
-    rewards = np.array(rewards)
-
-    return visited_states, rewards
-def gen_reward_revaluation_trials_exp1(dim=STATE_SIZE, num_trials=NUM_PREDICT_TRIALS):
-    # Generate one-hots
-    state_reps = np.eye(dim)
-    visited_states, rewards = [], []
-
-    for trial_idx in range(num_trials):
-        if np.random.random()<.5:
-            visited_states.extend([3,5])
-            rewards.extend([0,1])
-        else:
-            visited_states.extend([4,6])
-            rewards.extend([0,10])
-
-    # Pick one-hots corresponding to each state
-    visited_states = state_reps[visited_states]
-    rewards = np.array(rewards)
-
-    return visited_states, rewards
-
-assert True
+#region   MODEL
+# ======================================================================================================================
+#                                                      MODEL
+# ======================================================================================================================
 
 def construct_model(model_name:str=MODEL_NAME,
 
@@ -264,7 +358,7 @@ def construct_model(model_name:str=MODEL_NAME,
 
                     # Context processing:
                     attention_layer_name=ATTENTION_LAYER_NAME,
-                    attentional_control_name=ATTENTIONAL_CONTROL_LAYER_NAME,
+                    attentional_control_name=CONTROL_LAYER_NAME,
                     context_name:str=CONTEXT_LAYER_NAME,
                     state_weight:Union[float,int]=STATE_WEIGHT,
                     context_integration_rate:Union[float,int]=CONTEXT_INTEGRATION_RATE,
@@ -306,6 +400,10 @@ def construct_model(model_name:str=MODEL_NAME,
     context_weight = 1 - state_weight
     state_weight *= context_integration_rate
     context_weight *= context_integration_rate
+
+    # ----------------------------------------------------------------------------------------------------------------
+    # -------------------------------------------------  Mechanisms  -------------------------------------------------
+    # ----------------------------------------------------------------------------------------------------------------
 
     task_input_layer = ProcessingMechanism(name=task_input_name,
                                            size=task_size)
@@ -349,119 +447,150 @@ def construct_model(model_name:str=MODEL_NAME,
                                      distance_field_weights=[state_retrieval_weight,
                                                              time_retrieval_weight,
                                                              context_retrieval_weight,
-                                                             reward_retrieval_weight],
-                                     selection_function=SoftMax(gain=retrieval_softmax_gain)))
+                                                             reward_retrieval_weight]))
 
-    decision_layer = TransferMechanism(name=decision_layer_name,
-                                       size=decision_size,
-                                       function=SoftMax(output=PROB))
+    counter_layer = IntegratorMechanism(function=SimpleIntegrator,
+                                        default_variable=1,
+                                        reset_default=1,
+                                        name='COUNTER')
+
+    decision_layer = DDM(function=DriftDiffusionIntegrator(noise=0.0, rate=1.0),
+                         execute_until_finished=False,
+                         name=DECISION_LAYER_NAME)
 
     response_layer = TransferMechanism(name=response_layer_name,
                                        size=response_size)
 
-    def encoding_control_function(variable,context):
-        """Used by attention_layer to control encoding of state info in context_layer and storing in EM
+    # ----------------------------------------------------------------------------------------------------------------
+    # -------------------------------------------------  Control  ----------------------------------------------------
+    # ----------------------------------------------------------------------------------------------------------------
 
-        If task is:
+    tot = NUM_ROLL_OUTS * NUM_STIM_PER_SEQ
+    #                +--------------------------------------------------------------------------------------------+
+    #                |         KEYS            |                        VALUES                                    |
+    #                +--------------------------------------------------------------------------------------------+
+    #                 TASK  COUNT  DDM  REWARD | ACTUAL EM | TIME STATE CONTEXT REWARD | STORE | CT  | DDM | RESP
+    control_policy = [[[0], [-1], [-1], [-1],     [1], [0],  [0,    0,     0,      0],    [1],   [0],  [0],  [0]],
+                      [[1],  [0], [-1],  [0],     [1], [0],  [1,    1,     1,      0],    [0],   [1],  [0],  [0]],
+                      [[1],  [1], [-1],  [0],     [0], [1],  [1,    0,     1,      0],    [0],   [0],  [1],  [0]],
+                      [[1],  [2], [-1],  [0],     [0], [1],  [1,    0,     1,      0],    [0],   [0],  [1],  [0]],
+                      [[1],  [2], [-1],  [1],     [0], [1],  [1,    0,     1,      0],    [0],   [1],  [1],  [1]],
+                      [[1],  [2], [tot], [1],     [0], [1],  [1,    0,     1,      0],    [0],   [1],  [1],  [1]]]
+    control_em = ContentAddressableMemory(initializer=control_policy,
+                                          distance_function=Distance(metric=EUCLIDEAN),
+                                          storage_prob=0.0)
+    num_keys = len(StateFeatureIndex)
+    num_vals = len(ControlSignalIndex)
+    num_fields = num_keys + num_vals
 
-         Task.EXPERIENCE (0):
-          - stores state info in em on every trial (control_signal[0]=1)
-          - always attend to actual state (control_signal[1]=1, control_signal[2]=0)
+    def control_function(variable, context=None, **kwargs):
+        """Use by control_layer to govern EM storage & retrieval, access to context, and gating decision and response
 
-         Task.PREDICT: (1):
-          - never store info in em (control_signal[0]=0)
-          - attend to actual state on first trial (control_signal[1]=1, control_signal[2]=0)
-          - attend to retrieved state on all subsequent trials (control_signal[1]=0, control_signal[2]=1)
+        FIX:
+        - Use control_layer variable ("state_features" per ocm) to get control_allocation from control_em:
+            - for Task EXPERIENCE, set distance_field_weights to [1] + [0] * 9
+            - for Task PREDICT, set distance_field_weights to [1] * 4 + [0] * 6
+        - Use retrieved values from control_em to set control_signals for control_layer
 
-        Returns:
-            control_signal[0]: 1 if store, 0 otherwise
-            control_signal[1]: 1 if attend to actual state, 0 otherwise
-            control_signal[2]: 1 if attend to retrieved state, 0 otherwise
+        CONTROL PROTOCOL FOR PREDICT TRIALS:
+          EM STORAGE PROB  CONTROL SIGNAL = 0
+          ON COUNT 0:
+            - STATE ATTENTION CONTROL SIGNAL -> STATE 1, CONTEXT 0
+            - EM FIELD WEIGHTS CONTROL SIGNAL:  TIME, STATE, REWARD, CONTEXT
+            - EM STORAGE PROB  CONTROL SIGNAL = 0
+            - COUNTER RESET CONTROL SIGNAL = 0
+            - TERMINATE CONTROL SIGNAL = 0
+          ON COUNT > 0:
+            - EM STORAGE PROB  CONTROL SIGNAL = 0
+            - STATE ATTENTION CONTROL SIGNAL -> STATE 0, CONTEXT 1
+            - EM FIELD WEIGHTS CONTROL SIGNAL:  TIME, CONTEXT
+            - COUNTER RESET CONTROL SIGNAL = 0
+            - TERMINATE CONTROL SIGNAL = 0
+          ON RETRIEVED REWARD > 0:
+            - COUNTER RESET CONTROL SIGNAL = 1
+            - DECISION INPUT GATE CONTROL SIGNAL (NEEDED, IF OTHERWISE REWARDS ARE ALWAYS 0?)
+            - INCREMENT DECISION COUNTER (OR JUST USE DECISION TIME IF DDM?)
+          TERMINATION @  NUM_ROLL_OUTS * NUM_STIM_PER_SEQ, USING EITHER:
+            - CONDITION FOR DDM DECISION TIME AS COUNTER
+            - OR INPUT_GATE RESPONSE LAYER USING DDM DECISION TIME AS COUNTER,
+              AND TERMINATION ON RESPONSE.VALUE > 0
+
+        .. table::
+             :align: left
+             :alt: Player Piano (aka Production System)
+           +-----------------------------------------------------------------------------------------------------------+
+           |                                       **CONTROL POLICY**                                                  |
+           +--------------------------+--------------------------------------------------------------------------------+
+           | "STATE FEATURE" VECTOR   |                      CONTROL ALLOCATION VECTOR                                 |
+           |  (monitor_for_control)   +-------------+---------------------------------------+-----------+--------------+
+           |                          | STATE ATTN  |                  EM CONTROL           | CTR RESET |    GATES     |
+           |                          |             +-------------------------------+-------+-----------+--------------+
+           |                          |             |            MATCH              | STORE |           |              |
+           |                          |             |        (field_weights)        |       |           |              |
+           | TASK  COUNT  DDM  REWARD | ACTUAL  EM  |   TIME  STATE  CONTEXT REWARD |       |           | DDM  | RESP  |
+           +--------------------------+-------------+-------------------------------+-------+-----------+------+-------+
+           |  EXP   ANY  !=TOT  ANY   |   1     0   |   0      0       0       0    |   1   |     0     |   0  |   0   |
+           |  PRED   0   !=TOT   0    |   1     0   |   1      1       1       0    |   0   |     1     |   0  |   0   |
+           |  PRED   1   !=TOT   0    |   0     1   |   1      0       1       0    |   0   |     0     |   1  |   0   |
+           |  PRED   2   !=TOT   0    |   0     1   |   1      0       1       0    |   0   |     0     |   1  |   0   |
+           |  PRED   2   !=TOT   1    |   0     1   |   1      0       1       0    |   0   |     1     |   1  |   1   |
+           |  PRED   2   ==TOT   1    |   0     1   |   1      0       1       0    |   0   |     1     |   1  |   1   |
+           +--------------------------+-------------+-------------------------------+-------+-----------+------+-------+
+           NOTES:
+           - DDM is open gated on each PREDICT step because REWARD is 0 so it won't accumulate,
+                     but it will increment its counter (RESPONSE TIME) that can be used to determine when to terminate
+           - RO: NUM_ROLL_OUTS * NUM_STIM_PER_SEQ
+
         """
 
-        # Get task and trial number
-        task = int(variable)
-        if context and context.composition:
-            trial = int([context.composition.get_current_execution_time(context)[TimeScale.TRIAL]])
-        else:
-            trial = 0
+        task = variable[StateFeatureIndex.TASK]
+        query = np.array(list(variable) + [[0],[0],[0,0,0,0],[0],[0],[0],[0]], dtype=object)
+        if task == Task.EXPERIENCE:
+            # Set distance_field_weights for EXPERIENCE
+            # control_em.parameters.distance_field_weights.set([1] + [0] * (num_fields - 1), context)
+            control_em.distance_field_weights = [1] + [0] * (num_fields - 1)
+            # Get control_signals for EXPERIENCE
+            control_signals = control_em(query)[num_keys:]
 
-        # if task == Task.EXPERIENCE:
-        #     attend_actual = 1
-        # elif task == Task.PREDICT:
-        #     attend_actual = 1 if not (trial % NUM_ROLL_OUT) else 1
-        #     attend_retrieved = 1 if (trial % NUM_ROLL_OUT) else 0
-        # else:
-        #     raise ValueError(f"Unrecognized task value in encoding_control_function: {task}")
-        #
-        # # Store to EM to
-        # store = 1 if task == Task.EXPERIENCE.value else 0
-
-        if task == Task.EXPERIENCE.value:
-            attend_actual = 1
-            store = 1
-
-        # FIX:
-        #      ROLL_OUT_COUNTER WITH FIXED INPUT OF 1 AND RESET CONTROL FROM CONTROLLER
-        #      DDM FOR DECISION WITH NO NOISE, AND INPUT GATING FROM CONTROLLER (ON REWARD)
-        #       - USE DDM DECISION_TIME AS COUNTER FOR TERMINATION CONDITION
-        #      COUNTER WITH RESET CONTROLLED BY CONTROLLER
-        #      RESPONSE LAYER THAT IS INPUT GATED BY CONTROLLER
-        #      CONTROL SIGNALS TO EM FOR FIELD WEIGHTS
-        #      -----------
-        #      CONTROL PROTOCOL FOR PREDICT TRIALS:
-        #           EM STORAGE PROB  CONTROL SIGNAL = 0
-        #           ON COUNT 0:
-        #             - STATE ATTENTION CONTROL SIGNAL -> STATE 1, CONTEXT 0
-        #             - EM FIELD WEIGHTS CONTROL SIGNAL:  TIME, STATE, REWARD, CONTEXT
-        #             - EM STORAGE PROB  CONTROL SIGNAL = 0
-        #             - COUNTER RESET CONTROL SIGNAL = 0
-        #             - TERMINATE CONTROL SIGNAL = 0
-        #           ON COUNT > 0:
-        #             - EM STORAGE PROB  CONTROL SIGNAL = 0
-        #             - STATE ATTENTION CONTROL SIGNAL -> STATE 0, CONTEXT 1
-        #             - EM FIELD WEIGHTS CONTROL SIGNAL:  TIME, CONTEXT
-        #             - COUNTER RESET CONTROL SIGNAL = 0
-        #             - TERMINATE CONTROL SIGNAL = 0
-        #           ON RETRIEVED REWARD > 0:
-        #             - COUNTER RESET CONTROL SIGNAL = 1
-        #             - DECISION INPUT GATE CONTROL SIGNAL (NEEDED, IF OTHERWISE REWARDS ARE ALWAYS 0?)
-        #             - INCREMENT DECISION COUNTER (OR JUST USE DECISION TIME IF DDM?)
-        #           TERMINATION @  NUM_ROLL_OUTS * NUM_STIM_PER_ROLL_OUT, USING EITHER:
-        #             - CONDITION FOR DDM DECISION TIME AS COUNTER
-        #             - OR INPUT_GATE RESPONSE LAYER USING DDM DECISION TIME AS COUNTER,
-        #               AND TERMINATION ON RESPONSE.VALUE > 0
-
-        if task == Task.PREDICT.value:
-            attend_actual = 0 if trial % NUM_ROLL_OUT else 1
-            attend_retrieved = 1 if trial % NUM_ROLL_OUT else 0
-            store = 0
-
-        control_signals = [store, attend_actual, attend_retrieved]
+        elif task == Task.PREDICT:
+            # Set distance_field_weights for PREDICT
+            control_em.parameters.distance_field_weights.set([1] * num_keys + [0] * num_vals, context)
+            # Set control_signals for PREDICT
+            control_signals = control_em.execute(query)[num_keys:]
 
         return control_signals
 
-    # Control Mechanism
-    # Uses the encoding_control_function (see above) to control:
-    #   - encoding of state info in context_layer (from stimulus vs. em)
-    #   - storage of info in em
-    attentional_control_layer = ControlMechanism(name=attentional_control_name,
-                                                 objective_mechanism=ObjectiveMechanism(
-                                                     function=SimpleIntegrator(rate=1),
-                                                     monitor=task_input_layer),
-                                                 # monitor_for_control=task_input_layer,
-                                                 function = encoding_control_function,
-                                                 control=[(STORAGE_PROB, em),
-                                                          attention_layer.input_ports[ACTUAL_STATE_INPUT],
-                                                          attention_layer.input_ports[RETRIEVED_STATE_INPUT]])
+    # Monitored for control
+    state_features = [None] * len(StateFeatureIndex)
+    state_features[StateFeatureIndex.TASK] = task_input_layer
+    state_features[StateFeatureIndex.REWARD] = retrieved_reward_layer
+    state_features[StateFeatureIndex.SIM_STEP] = counter_layer
+    state_features[StateFeatureIndex.SIM_TOTAL] = decision_layer.output_ports[RESPONSE_TIME]
 
+    # Control signals
+    control_signals = [None] * len(ControlSignalIndex)
+    control_signals[ControlSignalIndex.ATTEND_ACTUAL] = attention_layer.input_ports[ACTUAL_STATE_INPUT]
+    control_signals[ControlSignalIndex.ATTEND_RETRIEVED] = attention_layer.input_ports[RETRIEVED_STATE_INPUT]
+    control_signals[ControlSignalIndex.EM_FIELD_WEIGHTS] = ('distance_field_weights', em)
+    control_signals[ControlSignalIndex.STORAGE_PROB] = (STORAGE_PROB, em)
+    control_signals[ControlSignalIndex.COUNTER_RESET] = (RESET, counter_layer)
+    control_signals[ControlSignalIndex.DECISION_GATE] = decision_layer.input_port
+    control_signals[ControlSignalIndex.RESPONSE_GATE] = response_layer.input_port
+    control_layer = ControlMechanism(name=attentional_control_name,
+                                     monitor_for_control=state_features,
+                                     function = control_function,
+                                     control=control_signals)
+    
+    # ----------------------------------------------------------------------------------------------------------------
+    # -------------------------------------------------  EGO Composition  --------------------------------------------
+    # ----------------------------------------------------------------------------------------------------------------
+    
     EGO_comp = Composition(name=model_name,
+                           # Decision output pathway
                            pathways=[retrieved_reward_layer, decision_layer, response_layer], # Decision
                            # # Use this to terminate a Task.PREDICT trial
-                           termination_processing={
-                               # FIX: NEEDS TO BE PROPERLY CONFIGURED
-                               TimeScale.TRIAL: And(WhenFinished(response_layer),
-                                                    )}
+                           # FIX: NEEDS TO BE PROPERLY CONFIGURED
+                           # termination_processing={TimeScale.TRIAL: WhenFinished(response_layer)}
                            )
 
     # Nodes not included in (decision output) Pathway specified above
@@ -469,39 +598,43 @@ def construct_model(model_name:str=MODEL_NAME,
                         state_input_layer,
                         time_input_layer,
                         attention_layer,
-                        attentional_control_layer,
                         context_layer,
+                        counter_layer,
                         reward_input_layer,
-                        # retrieved_time_layer,
-                        em])
+                        em,
+                        control_layer,
+                        ])
     EGO_comp.exclude_node_roles(task_input_layer, NodeRole.OUTPUT)
+    EGO_comp.exclude_node_roles(counter_layer, [NodeRole.INPUT, NodeRole.OUTPUT])
 
     # Projections not included in (decision output) Pathway specified above
-    # EM encoding
+
+    # EM encoding --------------------------------------------------------------------------------
+    # state -> em
     EGO_comp.add_projection(MappingProjection(state_input_layer, em.input_ports[STATE_INPUT_LAYER_NAME]))
+    # time -> em
     EGO_comp.add_projection(MappingProjection(time_input_layer, em.input_ports[TIME_INPUT_LAYER_NAME]))
+    # context -> em
     EGO_comp.add_projection(MappingProjection(context_layer, em.input_ports[CONTEXT_LAYER_NAME]))
+    # reward -> em
     EGO_comp.add_projection(MappingProjection(reward_input_layer, em.input_ports[REWARD_INPUT_LAYER_NAME]))
 
-    # Inputs to Context
+    # Inputs to Context ---------------------------------------------------------------------------
     # actual state -> attention_layer
-    EGO_comp.add_projection(MappingProjection(state_input_layer, 
-                                              attention_layer.input_ports[ACTUAL_STATE_INPUT]))
+    EGO_comp.add_projection(MappingProjection(state_input_layer, attention_layer.input_ports[ACTUAL_STATE_INPUT]))
     # retrieved state -> attention_layer
     EGO_comp.add_projection(MappingProjection(em.output_ports[f'RETRIEVED_{STATE_INPUT_LAYER_NAME}'],
                                               attention_layer.input_ports[RETRIEVED_STATE_INPUT]))
     # attention_layer -> context_layer
-    EGO_comp.add_projection(MappingProjection(attention_layer, 
-                                              context_layer,
+    EGO_comp.add_projection(MappingProjection(attention_layer, context_layer,
                                               matrix=np.eye(STATE_SIZE) * state_weight))
     # retrieved context -> context_layer
     EGO_comp.add_projection(MappingProjection(em.output_ports[f'RETRIEVED_{CONTEXT_LAYER_NAME}'],
                                               context_layer,
                                               matrix=np.eye(STATE_SIZE) * context_weight))
 
-    # Rest of EM retrieval
-    # EGO_comp.add_projection(MappingProjection(em.output_ports[f'RETRIEVED_{TIME_INPUT_LAYER_NAME}'],
-    #                                           retrieved_time_layer)),
+    # Rest of EM retrieval ---------------------------------------------------------------------------
+    # retreieved reward -> retrieved reward
     EGO_comp.add_projection(MappingProjection(em.output_ports[f'RETRIEVED_{REWARD_INPUT_LAYER_NAME}'],
                                               retrieved_reward_layer))
 
@@ -515,8 +648,12 @@ def construct_model(model_name:str=MODEL_NAME,
 
     print(f'{model_name} constructed')
     return EGO_comp
+#endregion
 
-# Script execution:
+#region SCRIPT EXECUTION
+# ======================================================================================================================
+#                                                   SCRIPT EXECUTION
+# ======================================================================================================================
 
 model = None
 
@@ -530,4 +667,21 @@ if DISPLAY_MODEL is not None:
         print("Model not yet constructed")
 
 if RUN_MODEL:
-    model.run(inputs=inputs)
+    inputs = build_inputs(state_size=STATE_SIZE,
+                          time_drift_rate=TIME_DRIFT_RATE,
+                          num_baseline_seqs=NUM_BASELINE_SEQS,
+                          num_revaluation_seqs=NUM_REVALUATION_SEQS,
+                          num_predict_trials=NUM_PREDICT_TRIALS)
+    input_layers = [TIME_INPUT_LAYER_NAME,
+                    TASK_INPUT_LAYER_NAME,
+                    STATE_INPUT_LAYER_NAME,
+                    REWARD_INPUT_LAYER_NAME]
+    inputs_dicts = {k: v for k, v in zip(input_layers, inputs)}
+
+    model.run(inputs=inputs_dicts,
+              report_output=REPORT_OUTPUT,
+              report_progress=REPORT_PROGRESS)
+
+    if PRINT_RESULTS:
+        print(model.results)
+#endregion
