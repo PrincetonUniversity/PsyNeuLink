@@ -9,11 +9,6 @@ import torch
 
 __all__ = ['PytorchMechanismWrapper', 'PytorchProjectionWrapper']
 
-# def lincomb_sum(x, **kwargs):
-#     return torch.tensor(x[0]).double() + torch.tensor(x[1]).double()
-#
-# def lincomb_product(x):
-#     return x[0] * x[1]
 
 def pytorch_function_creator(function, device, context=None):
     """
@@ -21,6 +16,7 @@ def pytorch_function_creator(function, device, context=None):
     NOTE: This is needed due to PyTorch limitations
     (see: https://github.com/PrincetonUniversity/PsyNeuLink/pull/1657#discussion_r437489990)
     """
+
     def get_fct_param_value(param_name):
         val = function._get_current_parameter_value(
             param_name, context=context)
@@ -37,11 +33,24 @@ def pytorch_function_creator(function, device, context=None):
         return lambda x: x * slope + intercept
 
     elif isinstance(function, LinearCombination):
-        if get_fct_param_value('operation') == PRODUCT:
-            return lambda x: torch.tensor(x[0], device=device).double() * torch.tensor(x[1], device=device).double()
+        def linear_combination_sum(x):
+            result = torch.tensor([0] * len(x[0]), device=device).double()
+            for t in x:
+                result += t
+            return result
+        def linear_combination_product(x):
+            result = torch.tensor([1] * len(x[0]), device=device).double()
+            for t in x:
+                result *= t
+            return result
+        if function.operation == SUM:
+            return linear_combination_sum
+        elif function.operation == PRODUCT:
+            return linear_combination_product
         else:
-            return lambda x: torch.tensor(x[0], device=device).double() + torch.tensor(x[1], device=device).double()
-            # return lincomb_sum
+            from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
+            raise AutodiffCompositionError(f"The 'operation' parameter of {function.componentName} is not supported "
+                                           f"by AutodiffComposition; use 'SUM' or 'PRODUCT' if possible.")
 
     elif isinstance(function, Logistic):
         gain = get_fct_param_value('gain')
@@ -98,12 +107,12 @@ class PytorchMechanismWrapper():
         Returns weight-multiplied sum of all afferent projections
         """
         # FIX: AUGMENT THIS TO SUPPORT InputPort's function
-        # return sum((proj.execute(proj.sender.value) for proj in self.afferents))
         if len(self._mechanism.input_ports) == 1:
             return sum((proj.execute(proj.sender.value) for proj in self.afferents))
         else:
-            return [sum(proj.execute(proj.sender.value) for proj in input_port.path_afferents)
-                    for input_port in self._mechanism.input_ports]
+            # Sum projections to each input_port of the Mechanism and return array with the sums
+            return [sum(proj.execute(proj.sender.value) for proj in self.afferents if proj._projection in
+                        input_port.path_afferents) for input_port in self._mechanism.input_ports ]
 
     def execute(self, variable):
         self.value = self.function(variable)

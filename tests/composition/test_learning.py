@@ -1957,8 +1957,16 @@ class TestBackPropLearning:
         #     else:
         #         print(node.name, " EMPTY LOG!")
 
-    @pytest.mark.parametrize('comp_type', ['comp', 'autodiff'], ids=['comp', 'autodiff'])
-    def test_backprop_fct_with_2_inputs_to_linear_combination_product(self, comp_type):
+    test_vars = [
+        ('comp-python', 'comp', pnl.ExecutionMode.Python),
+        ('autodiff-python', 'autodiff', pnl.ExecutionMode.Python),
+        ('autodiff-pytorch', 'autodiff', pnl.ExecutionMode.PyTorch)
+    ]
+    @pytest.mark.parametrize('test_vars', test_vars, ids=[x[0] for x in test_vars])
+    def test_backprop_fct_with_2_inputs_to_linear_combination_product(self, test_vars):
+        test_name = test_vars[0]
+        comp_type = test_vars[1]
+        exec_mode = test_vars[2]
         input_layer1 = pnl.TransferMechanism(name="input1",
                                             size=2,
                                             function=pnl.Linear())
@@ -2009,14 +2017,17 @@ class TestBackPropLearning:
 
         comp.learn(inputs=inputs_dict,
                    num_trials=5,
-                   execution_mode=pnl.ExecutionMode.Python,
+                   execution_mode=exec_mode,
                    learning_rate = 0.1)
         expected = [[[0.024, 0.024]], [[0.0301045, 0.03181085]], [[0.03857725, 0.04305852]],
                     [[0.05066789, 0.05971998]], [[0.06846757, 0.08519742]]]
         np.testing.assert_allclose(comp.results, expected, atol=1e-8)
 
-    @pytest.mark.parametrize('comp_type', ['comp', 'autodiff'], ids=['comp', 'autodiff'])
-    def test_backprop_fct_with_3_inputs_to_linear_combination_product(self, comp_type):
+    @pytest.mark.parametrize('test_vars', test_vars, ids=[x[0] for x in test_vars])
+    def test_backprop_fct_with_3_inputs_to_linear_combination_product(self, test_vars):
+        test_name = test_vars[0]
+        comp_type = test_vars[1]
+        exec_mode = test_vars[2]
         input_layer1 = pnl.TransferMechanism(name="input1",
                                             size=2,
                                             function=pnl.Linear())
@@ -2075,7 +2086,7 @@ class TestBackPropLearning:
                                   input_layer3: [[3.0, 3.0]]},
                        'targets':{output_layer: [[1.0, 2.0]]}}
 
-        comp.learn(inputs=inputs_dict, learning_rate=.1, num_trials=5, execution_mode = pnl.ExecutionMode.Python)
+        comp.learn(inputs=inputs_dict, learning_rate=.1, num_trials=5, execution_mode = exec_mode)
         expected = [[[0.024, 0.024]], [[0.03085165, 0.03226625]], [[0.04114933, 0.04513236]],
                     [[0.05755718, 0.06642539]], [[0.08571825, 0.10452682]]]
         np.testing.assert_allclose(actual=comp.results, desired=expected, atol=1e-8)
