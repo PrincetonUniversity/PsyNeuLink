@@ -160,6 +160,10 @@
 #        - finish adding derivative (for if exponents are specified)
 #        - remove properties (use getter and setter for Parameters)
 #
+#      - ContentAddressableMemory Function:
+#           - rename "cue" -> "query"
+#           - add field_weights as parameter of EM, and make it a shared_parameter ?as well as a function_parameter?
+
 #     - DDM:
 #        - make reset_stateful_function_when a Parameter and arg in constructor
 #          and align with reset Parameter of IntegratorMechanism)
@@ -170,9 +174,6 @@
 #             lm = LearningMechanism(learning_rate=.01, learning_function=BackPropagation())
 #             causes the following error:
 #                TypeError("Logistic.derivative() missing 1 required positional argument: 'self'")
-#      - ContentAddressableMemory Function:
-#           - rename "cue" -> "query"
-#           - add field_weights as parameter of EM, and make it a shared_parameter ?as well as a function_parameter?
 #      - Adding GatingMechanism after Mechanisms they gate fails to implement gating projections
 #           (example:  reverse order of the following in _construct_pathways
 #                      self.add_nodes(self.softmax_nodes)
