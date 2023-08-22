@@ -35,6 +35,15 @@ class PytorchModelCreator(torch.nn.Module):
 
         # Instantiate pytorch mechanisms
         for node in set(composition.nodes) - set(composition.get_nodes_by_role(NodeRole.LEARNING)):
+            # FIX: ADD SUPPORT FOR NESTED AUTODIFFCOMPOSITION(S) HERE:
+            #      - WRITE FLATTEN METHOD, WHICH MUST:
+            #        - PRECLUDE CONTROLLERS AT ANY LEVEL OF NESTING
+            #        - CALL ITSELF RECURSIVELY FOR ALL LEVELS OF NESTING
+            #        - CREATE MAP OF PROJECTIONS IN FLATTENED VERSION TO input/output_CIM PROJECTIONS OF NESTED COMPS
+            #        - CREATE NEW SCHEDULER FOR FLATTENED COMP (FOR USE BY AUTODIFF)
+            #      - MAKE SURE ALL NESTED COMPS ARE AUTODIFF-COMPLIANT
+            #      - CALL Composition.flatten()
+            #      - IN update_parameters, MAP PYTORCH PARAMETERS BACK TO input/output_CIM PROJECTIONS OF NESTED COMPS
             pytorch_node = PytorchMechanismWrapper(node,
                                                    self._composition._get_node_index(node),
                                                    device,
