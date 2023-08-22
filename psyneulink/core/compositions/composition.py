@@ -8564,7 +8564,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             covariates_sources = _get_covariate_info(output_source, learned_projection)
             # activation_output is always a single value since activation function is assumed to have only one output
             activation_output = [output_source.output_ports[0].value]
-            # FIX: CHECK THAT output_source.function.derivative can handle covariates and raise exception if not
+            # insure that output_source.function.derivative can handle covariates
             if covariates_sources:
                 try:
                     output_source.function.derivative(input=None, output=activation_output,
