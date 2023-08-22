@@ -8564,6 +8564,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             covariates_sources = _get_covariate_info(output_source, learned_projection)
             # activation_output is always a single value since activation function is assumed to have only one output
             activation_output = [output_source.output_ports[0].value]
+            # FIX: CHECK THAT output_source.function.derivative can handle covariates and raise exception if not
+            if covariates_sources:
+                try:
+                    output_source.function.derivative(input=None, output=activation_output,
+                                                      covariates=[source.variable for source in covariates_sources])
+                except TypeError as error:
+                    if "derivative() got an unexpected keyword argument 'covariates'" in error.args[0]:
+                        raise CompositionError(
+                            f"'{output_source.name}' in '{self.name}' has more than one input_port, "
+                            f"but the derivative of its function ({output_source.function.componentName}) "
+                            f"cannot handle covariates required to determine the partial derivatives of "
+                            f"each input in computing the gradients for Backpropagation; use a function "
+                            f"(such as LinearCombination) that handles more than one argument, "
+                            f"or remove the extra input_ports.")
             return [activation_input, activation_output, covariates_sources]
 
         # Get existing LearningMechanism if one exists (i.e., if this is a crossing point with another pathway)
@@ -8594,6 +8608,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             activation_input, activation_output, covariates_sources = _get_acts_in_out_cov(input_source,
                                                                                            output_source,
                                                                                            learned_projection)
+
             # Use only one error_signal_template for learning_function, since it gets only one source of error at a time
             learning_function = BackPropagation(default_variable=activation_input +
                                                                  activation_output +
