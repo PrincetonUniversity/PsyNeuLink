@@ -103,8 +103,8 @@ class PytorchMechanismWrapper():
 
 
     def collate_afferents(self):
-        """
-        Returns weight-multiplied sum of all afferent projections
+        """Return weight-multiplied sum of all afferent projections for each input_port of the Mechanism
+        If there are multiple input_ports, return an array with the sum for each input_port
         """
         # FIX: AUGMENT THIS TO SUPPORT InputPort's function
         if len(self._mechanism.input_ports) == 1:
