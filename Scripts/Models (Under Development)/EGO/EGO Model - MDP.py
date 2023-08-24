@@ -470,8 +470,8 @@ def construct_model(model_name:str=MODEL_NAME,
     #                |         KEYS            |                        VALUES                                    |
     #                +--------------------------------------------------------------------------------------------+
     #                 TASK  COUNT  DDM  REWARD | ACTUAL EM | TIME STATE CONTEXT REWARD | STORE | CT  | DDM | RESP
-    control_policy = [[[0], [-1], [-1], [-1],     [1], [0],  [0,    0,     0,      0],    [1],   [0],  [0],  [0]],
-                      [[1],  [0], [-1],  [0],     [1], [1],  [1,    1,     1,      0],    [0],   [0],  [1],  [0]],
+    control_policy = [[[0], [-1], [-1], [-1],     [1], [0],  [1,    1,     1,      0],    [1],   [0],  [0],  [0]],
+                      [[1],  [0], [-1],  [0],     [1], [0],  [1,    1,     1,      0],    [0],   [0],  [1],  [0]],
                       [[1],  [1], [-1],  [0],     [0], [1],  [1,    0,     1,      0],    [0],   [0],  [1],  [0]],
                       [[1],  [2], [-1],  [1],     [0], [1],  [1,    0,     1,      0],    [0],   [0],  [1],  [0]],
                       [[1],  [2], [tot], [1],     [0], [1],  [1,    0,     1,      0],    [0],   [1],  [1],  [1]]]
@@ -528,16 +528,29 @@ def construct_model(model_name:str=MODEL_NAME,
            |                          |             |        (field_weights)        |       |           |              |
            | TASK  COUNT  DDM  REWARD | ACTUAL  EM  |   TIME  STATE  CONTEXT REWARD |       |           | DDM  | RESP  |
            +--------------------------+-------------+-------------------------------+-------+-----------+------+-------+
-           |  EXP   ANY  !=TOT  ANY   |   1     0   |   0      0       0       0    |   1   |     0     |   0  |   0   |
-           |  PRED   0   !=TOT   0    |   1     1   |   1      1       1       0    |   0   |     0     |   1  |   0   |
-           |  PRED   1   !=TOT   0    |   0     1   |   1      0       1       0    |   0   |     0     |   1  |   0   |
-           |  PRED   2   !=TOT   1    |   0     1   |   1      0       1       0    |   0   |     0     |   1  |   0   |
-           |  PRED   2   ==TOT   1    |   0     1   |   1      0       1       0    |   0   |     1     |   1  |   1   |
+           |  EXP   ANY    ANY  ANY   |   1     0   |    1      1       1       0   |   1   |     0     |   0  |   0   |
+           |  PRED   0   !=TOT   0    |   1     0   |    1      1       1       0   |   0   |     0     |   1  |   0   |
+           |  PRED   1   !=TOT   0    |   0     1   |    1      0       1       0   |   0   |     0     |   1  |   0   |
+           |  PRED   2   !=TOT   1    |   0     1   |    1      0       1       0   |   0   |     0     |   1  |   0   |
+           |  PRED   2   ==TOT   1    |   0     1   |    1      0       1       0   |   0   |     1     |   1  |   1   |
            +--------------------------+-------------+-------------------------------+-------+-----------+------+-------+
            NOTES:
            - DDM is open gated on each PREDICT step because REWARD is 0 so it won't accumulate,
                      but it will increment its counter (RESPONSE TIME) that can be used to determine when to terminate
            - TOT: NUM_ROLL_OUTS * NUM_STIM_PER_SEQ
+
+           # FIX: FOR NOW MAKE SURE EACH ROLL_OUT IS DEPENDENT ON COUNTER NOT REWARD
+           #      VALIDATION:
+           #      - SWITCH TO ARGMAX
+           #      - MAKE CONSTANT DRIFT TIME
+           #      - INITIALIZATION OF EM AND CONTEXT: .001
+           #      CHECK THAT EM IS EMPTY ON FIRST TIME_STEP
+           #      REFACTOR:
+           #        - GET RID OF COUNTER, AND SET run(num_trials) = NUM_ROLL_OUTS
+           #        - GET RID OF RESPONSE;  THAT IS JUST THE VALUE OF THE DDM AT THE END OF THE RUN
+           #        - REWARD > 0 ENDS EACH ROLL-OUT (I.E. TRIAL), SUCH THAT STIMULUS IS AGAIN ENCODED, ETC.
+           #        - DDM INTEGRATE CONTINUOUSLY ACROSS ROLL_OUTS (I.E., DON'T RESET ON EACH TRIAL)
+           #        - RUN ALL TRIALS CONTINUOUSLY, SO CONTEXT IS CONTINUOUSLY INTEGRATED ACROSS ROLLOUTS (i.e., TRIALS)
 
         """
 
