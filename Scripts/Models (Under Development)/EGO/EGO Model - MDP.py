@@ -515,29 +515,28 @@ def construct_model(model_name:str=MODEL_NAME,
               AND TERMINATION ON RESPONSE.VALUE > 0
 
         .. table::
-             :align: left
-             :alt: Player Piano (aka Production System)
-           +-----------------------------------------------------------------------------------------------------------+
-           |                                       **CONTROL POLICY**                                                  |
-           +--------------------------+--------------------------------------------------------------------------------+
-           | "STATE FEATURE" VECTOR   |                      CONTROL ALLOCATION VECTOR                                 |
-           |  (monitor_for_control)   +-------------+---------------------------------------+-----------+--------------+
-           |                          | STATE ATTN  |                  EM CONTROL           | CTR RESET |    GATES     |
-           |                          |             +-------------------------------+-------+-----------+--------------+
-           |                          |             |            MATCH              | STORE |           |              |
-           |                          |             |        (field_weights)        |       |           |              |
-           | TASK  COUNT  DDM  REWARD | ACTUAL  EM  |   TIME  STATE  CONTEXT REWARD |       |           | DDM  | RESP  |
-           +--------------------------+-------------+-------------------------------+-------+-----------+------+-------+
-           |  EXP   ANY    ANY  ANY   |   1     0   |    1      1       1       0   |   1   |     0     |   0  |   0   |
-           |  PRED   0   !=TOT   0    |   1     0   |    1      1       1       0   |   0   |     0     |   1  |   0   |
-           |  PRED   1   !=TOT   0    |   0     1   |    1      0       1       0   |   0   |     0     |   1  |   0   |
-           |  PRED   2   !=TOT   1    |   0     1   |    1      0       1       0   |   0   |     0     |   1  |   0   |
-           |  PRED   2   ==TOT   1    |   0     1   |    1      0       1       0   |   0   |     1     |   1  |   1   |
-           +--------------------------+-------------+-------------------------------+-------+-----------+------+-------+
+           :align: left
+           :alt: Player Piano (aka Production System)
+           +--------+--------------------------------------------------------------------------------------+-----------+
+           |        |                                      **CONTROL POLICY**                              |           |
+           |        +-------------------------+------------------------------------------------------------+           |
+           |        | "STATE FEATURE" VECTOR  |                       CONTROL ALLOCATION VECTOR            |           |
+           |        +  (monitor_for_control)  +--------------+---------------------------------------------+           |
+           |        |                         |  STATE ATTN  |                  EM CONTROL                 |           |
+           |        |                         |              +-------------------------------+-------+-----|           |
+           |        |                         |  NEXT PASS   |           MATCH               | STORE | DDM |           |
+           |  NUM   |                         | (W/IN TRIAL) |       (field_weights)         |       |     |           |
+           | TRIALS |    TASK       REWARD    |  ACTUAL  EM  |  TIME  STATE  CONTEXT REWARD  |       |     |           |
+           +--------+-------------------------+--------------+-------------------------------+-------+-----+-----------+
+           |   80   |     EXP        ANY      |    1     0   |   1      1       1       0    |   1   |  0  | TRIAL END |
+           +--------+-------------------------+--------------+-------------------------------+-------+-----+-----------+
+           |        |     PRED        0       |    0     1   |   1      1       1       0    |   0   |  1  |           |
+           |        |     PRED        0       |    0     1   |   1      0       1       0    |   0   |  1  |           |
+           | #R/O's |     PRED        1       |    1     0   |   1      0       1       0    |   0   |  1  | TRIAL END |
+           +--------+-------------------------+--------------+-------------------------------+-------+-----+-----------+
            NOTES:
-           - DDM is open gated on each PREDICT step because REWARD is 0 so it won't accumulate,
-                     but it will increment its counter (RESPONSE TIME) that can be used to determine when to terminate
-           - TOT: NUM_ROLL_OUTS * NUM_STIM_PER_SEQ
+           - DDM integrates continuously;  could end run on DDM.when_finished
+           - #R/O's = NUM_ROLL_OUTS
 
            # FIX: FOR NOW MAKE SURE EACH ROLL_OUT IS DEPENDENT ON COUNTER NOT REWARD
            #      VALIDATION:

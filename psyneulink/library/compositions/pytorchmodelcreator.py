@@ -31,7 +31,16 @@ class PytorchModelCreator(torch.nn.Module):
 
         self.params = nn.ParameterList()
         self.device = device
+
         self._composition = composition
+        # # FIX: FOR USE IN SUPPORT OF NESTED AUTOCOMPOSITIONS:
+        # from psyneulink.core.compositions.composition import Composition
+        # # First, if the composition has any nested compositions, flatten it.
+        # if any(isinstance(node, Composition) for node in composition.nodes):
+        #     self._composition = composition.flatten()
+        # else:
+        #     self._composition = composition
+
 
         # FIX: FLATTEN PNL COMPOSITION HERE:
         #  - CREATE A NEW SCHEDULER FOR FLATTENED COMPOSITION:
@@ -58,6 +67,7 @@ class PytorchModelCreator(torch.nn.Module):
             #      - MAKE SURE ALL NESTED COMPS ARE AUTODIFF-COMPLIANT
             #      - CALL Composition.flatten()
             #      - IN update_parameters, MAP PYTORCH PARAMETERS BACK TO input/output_CIM PROJECTIONS OF NESTED COMPS
+
             pytorch_node = PytorchMechanismWrapper(node,
                                                    self._composition._get_node_index(node),
                                                    device,
