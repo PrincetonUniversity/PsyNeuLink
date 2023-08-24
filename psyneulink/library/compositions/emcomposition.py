@@ -111,6 +111,7 @@
 #        - CHECK FOR EXISTING LM ASSERT IN pytests
 #
 #      - AutodiffComposition:
+#         - Check that error occurs for adding a controller to an AutodiffComposition
 #         - Check that if "epochs" is not in input_dict for Autodiff, then:
 #           - set to num_trials as default,
 #           - leave it to override num_trials if specified (add this to DOCUMENTATION)
