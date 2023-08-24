@@ -534,7 +534,7 @@ class AutodiffComposition(Composition):
         self.parameters.losses.set([], context=context)
 
     def _update_learning_parameters(self, context):
-        """
+        """Implement backward pass and update weights
         Updates parameters (weights) based on trials run since last update.
         """
         optimizer = self.parameters.optimizer._get(context=context)

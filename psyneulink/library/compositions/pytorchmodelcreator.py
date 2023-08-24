@@ -323,7 +323,7 @@ class PytorchModelCreator(torch.nn.Module):
                 if NodeRole.OUTPUT in self._composition.get_roles_by_node(component._mechanism):
                     outputs[component._mechanism] = component.value
 
-        # NOTE: Context source needs to be set to COMMAND_LINE to force logs to update independantly of timesteps
+        # NOTE: Context source needs to be set to COMMAND_LINE to force logs to update independently of timesteps
         old_source = context.source
         context.source = ContextFlags.COMMAND_LINE
         self.log_values()
