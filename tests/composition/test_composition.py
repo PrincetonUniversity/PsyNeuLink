@@ -336,23 +336,43 @@ class TestAddProjection:
             comp.add_projection("projection")
         assert "Invalid projection" in str(error_text.value)
 
-    # KAM commented out this test 7/24/18 because it does not work. Should it work?
-    # Or should the add_projection method of Composition only consider composition nodes as senders and receivers
+    def test_add_proj_parallel_projections_from_sender_to_receiver(self):
+        comp = Composition()
+        A = TransferMechanism(name='composition-pytests-A',
+                              default_variable=[[0.], [0.]])
+        B = TransferMechanism(name='composition-pytests-B',
+                              default_variable=[[0.], [0.]])
+        comp.add_node(A)
+        comp.add_node(B)
+        comp.add_projection(sender=A.output_ports[0], receiver=B.input_ports[0])
+        comp.add_projection(sender=A.output_ports[1], receiver=B.input_ports[1])
+        comp.run(num_trials=2, inputs={A: [[1.0], [2.0]]})
+        np.testing.assert_allclose(comp.results, [[[1.], [2.]], [[1.], [2.]]])
 
-    # def test_add_proj_states_as_sender_and_receiver(self):
-    #     comp = Composition()
-    #     A = TransferMechanism(name='composition-pytests-A',
-    #                           default_variable=[[0.], [0.]])
-    #     B = TransferMechanism(name='composition-pytests-B',
-    #                           function=Linear(slope=2.0),
-    #                           default_variable=[[0.], [0.]])
-    #     comp.add_node(A)
-    #     comp.add_node(B)
-    #
-    #     comp.add_projection(sender=A.output_ports[0], receiver=B.input_ports[0])
-    #     comp.add_projection(sender=A.output_ports[1], receiver=B.input_ports[1])
-    #
-    #     print(comp.run(inputs={A: [[1.0], [2.0]]}))
+    def test_add_proj_with_no_receiver_specified(self):
+        comp = Composition()
+        A = TransferMechanism(name='composition-pytests-A')
+        B = TransferMechanism(name='composition-pytests-B',
+                              function=Linear(slope=2.0))
+        comp.add_node(A)
+        comp.add_node(B)
+        error_msg = "'Deferred Init MappingProjection' is missing a receiver specification.  " \
+                    "For a Projection to be added to a Composition, a receiver must be specified " \
+                    "either on the Projection or in the call to Composition.add_projection()."
+        with pytest.raises(CompositionError) as error_text:
+            comp.add_projection(sender=A)
+        assert error_msg in str(error_text.value)
+
+    def test_add_proj_for_receiver_not_in_comp(self):
+        comp = Composition()
+        A = TransferMechanism(name='composition-pytests-A')
+        B = TransferMechanism(name='composition-pytests-B')
+        comp.add_node(A)
+        error_msg = "'composition-pytests-B', specified as receiver of ''Deferred Init MappingProjection'' from " \
+                    "'composition-pytests-A', is not in 'Composition-0' or any Compositions nested within it."
+        with pytest.raises(CompositionError) as error_text:
+            comp.add_projection(sender=A, receiver=B)
+        assert error_msg in str(error_text.value)
 
     def test_add_proj_weights_only(self):
         comp = Composition()

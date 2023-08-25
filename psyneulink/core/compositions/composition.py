@@ -6390,9 +6390,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if hasattr(projection, "receiver"):
                 receiver = projection.receiver.owner
             else:
-                raise CompositionError("For a Projection to be added to a Composition, a receiver must be specified, "
-                                       "either on the Projection or in the call to Composition.add_projection(). {}"
-                                       " is missing a receiver specification. ".format(projection.name))
+                raise CompositionError(f"'{projection.name}' is missing a receiver specification.  For a Projection "
+                                       f"to be added to a Composition, a receiver must be specified either on the "
+                                       f"Projection or in the call to Composition.add_projection().")
 
         # initialize all receiver-related variables
         graph_receiver = receiver_mechanism = receiver_input_port = receiver
@@ -6449,10 +6449,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # raise CompositionError(f"receiver arg ({repr(receiver_arg)}) in call to add_projection method of "
                 #                        f"{self.name} is not in it or any of its nested {Composition.__name__}s.")
                 receiver_str = f"{receiver_arg} of {receiver_arg.owner}" \
-                    if isinstance(receiver_arg, Port) else f"{receiver_arg}"
+                    if isinstance(receiver_arg, Port) else f"{receiver_arg.name}"
                 proj_name = f"'{projection.name}'" if isinstance(projection.name, str) else Projection.__name__
-                raise CompositionError(f"{receiver_str}, specified as receiver of {proj_name} from {sender.name}, "
-                                       f"is not in {self.name} or any {Composition.__name__}s nested within it.")
+                raise CompositionError(
+                    f"'{receiver_str}', specified as receiver of '{proj_name}' from '{sender.name}', "
+                    f"is not in '{self.name}' or any {Composition.__name__}s nested within it.")
 
         return receiver, receiver_mechanism, graph_receiver, receiver_input_port, \
                nested_compositions, learning_projection

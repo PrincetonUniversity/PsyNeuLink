@@ -233,9 +233,6 @@ NUM_PREDICT_TRIALS = 2       # number of trials Task.PREDICT (active retrieval f
 NUM_STIM_PER_SEQ = 3         # number of stimuli in a sequence
 NUM_ROLL_OUTS = 3            # number of times to roll out each sequence
 TOTAL_NUM_TRIALS = NUM_EXPERIENCE_SEQS * NUM_STIM_PER_SEQ + NUM_PREDICT_TRIALS # total number of trials
-# assert NUM_PREDICT_TRIALS % NUM_ROLL_OUTS == 0, \
-#     f"NUM_PREDICT_TRIALS ({NUM_PREDICT_TRIALS}) " \
-#     f"must be evenly divisible by NUM_ROLL_OUTS ({NUM_ROLL_OUTS})"
 
 def build_inputs(state_size:int=STATE_SIZE,
                  time_drift_rate:float=TIME_DRIFT_RATE,
@@ -358,17 +355,14 @@ def construct_model(model_name:str=MODEL_NAME,
                     # EM:
                     em_name:str=EM_NAME,
                     retrieval_softmax_gain=RETRIEVAL_SOFTMAX_GAIN,
-                    # retrieval_hazard_rate=RETRIEVAL_HAZARD_RATE,
                     state_retrieval_weight:Union[float,int]=STATE_RETRIEVAL_WEIGHT,
                     time_retrieval_weight:Union[float,int]=TIME_RETRIEVAL_WEIGHT,
                     context_retrieval_weight:Union[float,int]=CONTEXT_RETRIEVAL_WEIGHT,
                     reward_retrieval_weight:Union[float,int]=REWARD_RETRIEVAL_WEIGHT,
-                    # retrieved_time_name:str=RETRIEVED_TIME_NAME,
                     retrieved_reward_name:str=RETRIEVED_REWARD_NAME,
 
                     # Output / decision processing:
                     decision_layer_name:str=DECISION_LAYER_NAME,
-                    decision_size:int=DECISION_SIZE,
 
                     )->Composition:
 
@@ -411,13 +405,10 @@ def construct_model(model_name:str=MODEL_NAME,
     reward_input_layer = ProcessingMechanism(name=reward_input_name,
                                               size=reward_size)
 
-    attention_layer = ProcessingMechanism(name=ATTENTION_LAYER_NAME,
+    attention_layer = ProcessingMechanism(name=attention_layer_name,
                                           size=(state_size,state_size),
                                           input_ports=[ACTUAL_STATE_INPUT, RETRIEVED_STATE_INPUT],
                                           function=LinearCombination)
-
-    # retrieved_time_layer = TransferMechanism(name=retrieved_time_name,
-    #                                    size=time_size)
 
     retrieved_reward_layer = TransferMechanism(name=retrieved_reward_name,
                                          size=reward_size)
@@ -433,6 +424,7 @@ def construct_model(model_name:str=MODEL_NAME,
                                                   [0] * time_size,    # time
                                                   [0] * state_size,   # context
                                                   [0] * reward_size], # reward
+                                     selection_function=SoftMax(gain=retrieval_softmax_gain),
                                      distance_field_weights=[state_retrieval_weight,
                                                              time_retrieval_weight,
                                                              context_retrieval_weight,
