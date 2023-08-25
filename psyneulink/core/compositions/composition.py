@@ -6448,13 +6448,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if receiver is None:
                 # raise CompositionError(f"receiver arg ({repr(receiver_arg)}) in call to add_projection method of "
                 #                        f"{self.name} is not in it or any of its nested {Composition.__name__}s.")
-                if isinstance(receiver_arg, Port):
-                    receiver_str = f"{receiver_arg} of {receiver_arg.owner}"
-                else:
-                    receiver_str = f"{receiver_arg}"
-                raise CompositionError(f"{receiver_str}, specified as receiver of {Projection.__name__} from "
-                                       f"{sender.name}, is not in {self.name} or any {Composition.__name__}s nested "
-                                       f"within it.")
+                receiver_str = f"{receiver_arg} of {receiver_arg.owner}" \
+                    if isinstance(receiver_arg, Port) else f"{receiver_arg}"
+                proj_name = f"'{projection.name}'" if isinstance(projection.name, str) else Projection.__name__
+                raise CompositionError(f"{receiver_str}, specified as receiver of {proj_name} from {sender.name}, "
+                                       f"is not in {self.name} or any {Composition.__name__}s nested within it.")
 
         return receiver, receiver_mechanism, graph_receiver, receiver_input_port, \
                nested_compositions, learning_projection
