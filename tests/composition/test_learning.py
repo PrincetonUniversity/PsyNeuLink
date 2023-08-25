@@ -1962,6 +1962,8 @@ class TestBackPropLearning:
         ('autodiff-python', 'autodiff', pnl.ExecutionMode.Python),
         ('autodiff-pytorch', 'autodiff', pnl.ExecutionMode.PyTorch)
     ]
+
+    @ pytest.mark.pytorch
     @pytest.mark.parametrize('test_vars', test_vars, ids=[x[0] for x in test_vars])
     def test_backprop_fct_with_2_inputs_to_linear_combination_product(self, test_vars):
         test_name = test_vars[0]
@@ -2023,6 +2025,7 @@ class TestBackPropLearning:
                     [[0.05066789, 0.05971998]], [[0.06846757, 0.08519742]]]
         np.testing.assert_allclose(comp.results, expected, atol=1e-8)
 
+    @ pytest.mark.pytorch
     @pytest.mark.parametrize('test_vars', test_vars, ids=[x[0] for x in test_vars])
     def test_backprop_fct_with_3_inputs_to_linear_combination_product(self, test_vars):
         test_name = test_vars[0]

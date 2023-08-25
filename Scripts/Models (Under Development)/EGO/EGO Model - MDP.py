@@ -158,6 +158,7 @@ TASK_INPUT_LAYER_NAME = "TASK"
 STATE_INPUT_LAYER_NAME = "STATE"
 TIME_INPUT_LAYER_NAME = "TIME"
 ATTENTION_LAYER_NAME = "ENCODE\nSTATE"
+
 # ATTENTION_LAYER_NAME = "ENCODE STATE"
 CONTROL_LAYER_NAME = "CONTROL"
 ACTUAL_STATE_INPUT = 'ACTUAL_STATE_INPUT'
@@ -450,6 +451,7 @@ def construct_model(model_name:str=MODEL_NAME,
                       [[1],   [1],     [1], [0],  [1,    0,     1,      0],    [0],   [1]]]
     control_em = ContentAddressableMemory(initializer=control_policy,
                                           distance_function=Distance(metric=EUCLIDEAN),
+                                          distance_field_weights=[1, 1, 0, 0, 0, 0, 0],
                                           storage_prob=0.0)
     num_keys = len(StateFeatureIndex)
     num_vals = len(ControlSignalIndex)
@@ -501,6 +503,8 @@ def construct_model(model_name:str=MODEL_NAME,
            #          - CAUSES CONTROL TO GATE IN STATE INPUT AT BEGINNING OF NEXT TRIAL
            #        - DDM INTEGRATES CONTINUOUSLY ACROSS ROLL_OUTS (I.E., DON'T RESET ON EACH TRIAL)
            #        - RUN ALL TRIALS CONTINUOUSLY, SO CONTEXT IS CONTINUOUSLY INTEGRATED ACROSS ROLLOUTS (i.e., TRIALS)
+           #        - FIX: HOW TO TELL 1st AND 2nd STEPS OF ROLL-OUT APART (BOTH HAVE STATE FEATURES =  [PRED 0])?
+           #          FIX: COULD SPLIT ENCODE_STATE INTO TWO NODES THAT REFLECT WHICH WAS ATTENDED ON LAST PASS
 
         """
 
