@@ -545,9 +545,8 @@ def construct_model(model_name:str=MODEL_NAME,
     EGO_comp = Composition(name=model_name,
                            # FIX: ADD TERMINATION CONDITION FOR TRIAL BASED ON REWARD > 0
                            # Use this to terminate a Task.PREDICT trial
-                           # termination_processing={TimeScale.TRIAL: WhenFinished(decision_layer)}
-                           termination_processing={TimeScale.TRIAL: And(Condition(lambda: reward_input_layer.value),
-                                                                        JustRan(decision_layer))}
+                           # termination_processing={TimeScale.TRIAL: And(Condition(lambda: reward_input_layer.value),
+                           #                                              JustRan(decision_layer))}
                            )
 
     # Nodes not included in (decision output) Pathway specified above
