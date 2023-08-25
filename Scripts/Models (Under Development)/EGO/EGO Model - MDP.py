@@ -158,8 +158,8 @@ TASK_INPUT_LAYER_NAME = "TASK"
 STATE_INPUT_LAYER_NAME = "STATE"
 TIME_INPUT_LAYER_NAME = "TIME"
 # ATTENTION_LAYER_NAME = "ENCODE STATE"
-ATTEND_EXTERNAL_LAYER_NAME = "ATTEND\nEXTERNAL"
-ATTEND_MEMORY_LAYER_NAME = "ATTEND\nMEMORY"
+ATTEND_EXTERNAL_LAYER_NAME = "ATTEND\nEXTERNAL\nSTATE"
+ATTEND_MEMORY_LAYER_NAME = "ATTEND\nMEMORY\nOF STATE"
 CONTROL_LAYER_NAME = "CONTROL"
 CONTEXT_LAYER_NAME = 'CONTEXT'
 REWARD_INPUT_LAYER_NAME = "REWARD"
@@ -494,7 +494,9 @@ def construct_model(model_name:str=MODEL_NAME,
         """
 
         task = variable[StateFeatureIndex.TASK]
-        query = np.array(list(variable) + [[0],[0],[0,0,0,0],[0],[0]], dtype=object)
+        external_state = np.atleast_1d(int(any(variable[StateFeatureIndex.EXTERNAL_STATE])))
+        keys = [task, external_state, variable[StateFeatureIndex.REWARD]]
+        query = np.array(keys + [[0],[0],[0,0,0,0],[0],[0]], dtype=object)
         if task == Task.EXPERIENCE:
             # Set distance_field_weights for EXPERIENCE
             # control_em.parameters.distance_field_weights.set([1] + [0] * (num_fields - 1), context)
@@ -576,9 +578,11 @@ def construct_model(model_name:str=MODEL_NAME,
     # attend_external_layer -> context_layer
     EGO_comp.add_projection(MappingProjection(attend_external_layer, context_layer,
                                               matrix=np.eye(STATE_SIZE) * state_weight))
+    # attend_memory_layer -> context_layer
+    EGO_comp.add_projection(MappingProjection(attend_memory_layer, context_layer,
+                                              matrix=np.eye(STATE_SIZE) * state_weight))
     # retrieved context -> context_layer
-    EGO_comp.add_projection(MappingProjection(em.output_ports[f'RETRIEVED_{CONTEXT_LAYER_NAME}'],
-                                              context_layer,
+    EGO_comp.add_projection(MappingProjection(em.output_ports[f'RETRIEVED_{CONTEXT_LAYER_NAME}'], context_layer,
                                               matrix=np.eye(STATE_SIZE) * context_weight))
 
     # Decision pathway ---------------------------------------------------------------------------
@@ -589,12 +593,18 @@ def construct_model(model_name:str=MODEL_NAME,
     EGO_comp.add_projection(MappingProjection(retrieved_reward_layer, decision_layer))
 
     # Validate construction
-    assert context_layer.input_port.path_afferents[0].sender.owner == context_layer
+    assert context_layer.input_port.path_afferents[0].sender.owner == context_layer # recurrent projection
     assert context_layer.input_port.path_afferents[0].parameters.matrix.get()[0][0] == 1-context_integration_rate
-    assert context_layer.input_port.path_afferents[1].sender.owner == attend_external_layer
+    assert context_layer.input_port.path_afferents[1].sender.owner == attend_external_layer # external state
     assert context_layer.input_port.path_afferents[1].parameters.matrix.get()[0][0] == state_weight
-    assert context_layer.input_port.path_afferents[2].sender.owner == em
-    assert context_layer.input_port.path_afferents[2].parameters.matrix.get()[0][0] == context_weight
+    assert context_layer.input_port.path_afferents[2].sender.owner == attend_memory_layer # memory of state
+    assert context_layer.input_port.path_afferents[2].parameters.matrix.get()[0][0] == state_weight
+    assert context_layer.input_port.path_afferents[3].sender.owner == em  # memory of context
+    assert context_layer.input_port.path_afferents[3].parameters.matrix.get()[0][0] == context_weight
+    assert control_layer.input_ports[0].path_afferents[0].sender.owner == task_input_layer
+    assert control_layer.input_ports[1].path_afferents[0].sender.owner == attend_external_layer
+    assert control_layer.input_ports[2].path_afferents[0].sender.owner == retrieved_reward_layer
+
 
     print(f'{model_name} constructed')
     return EGO_comp

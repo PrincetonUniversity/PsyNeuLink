@@ -170,6 +170,7 @@
 #          and align with reset Parameter of IntegratorMechanism)
 #
 #    - FIX: BUGS:
+#      - FIX: show_graph(): EGO Model - MDP NOT SHOWING PROJECTION FROM REWARD TO CONTROL
 #      -LearningMechanism / Backpropagation LearningFunction:
 #         - Construction of LearningMechanism on its own fails; e.g.:
 #             lm = LearningMechanism(learning_rate=.01, learning_function=BackPropagation())
