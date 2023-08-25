@@ -539,11 +539,7 @@ class TestAddProjection:
                    'is incompatible with the positions of these Components in \'Composition-0\'.' == str(error.value)
 
     @pytest.mark.stress
-    @pytest.mark.parametrize(
-        'count', [
-            1000,
-        ]
-    )
+    @pytest.mark.parametrize('count', [1000,])
     def test_timing_stress(self, count):
         t = timeit('comp.add_projection(A, MappingProjection(), B)',
                    setup="""
