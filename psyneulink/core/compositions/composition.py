@@ -6390,9 +6390,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if hasattr(projection, "receiver"):
                 receiver = projection.receiver.owner
             else:
-                raise CompositionError("For a Projection to be added to a Composition, a receiver must be specified, "
-                                       "either on the Projection or in the call to Composition.add_projection(). {}"
-                                       " is missing a receiver specification. ".format(projection.name))
+                raise CompositionError(f"'{projection.name}' is missing a receiver specification.  For a Projection "
+                                       f"to be added to a Composition, a receiver must be specified either on the "
+                                       f"Projection or in the call to Composition.add_projection().")
 
         # initialize all receiver-related variables
         graph_receiver = receiver_mechanism = receiver_input_port = receiver
@@ -6448,13 +6448,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if receiver is None:
                 # raise CompositionError(f"receiver arg ({repr(receiver_arg)}) in call to add_projection method of "
                 #                        f"{self.name} is not in it or any of its nested {Composition.__name__}s.")
-                if isinstance(receiver_arg, Port):
-                    receiver_str = f"{receiver_arg} of {receiver_arg.owner}"
-                else:
-                    receiver_str = f"{receiver_arg}"
-                raise CompositionError(f"{receiver_str}, specified as receiver of {Projection.__name__} from "
-                                       f"{sender.name}, is not in {self.name} or any {Composition.__name__}s nested "
-                                       f"within it.")
+                receiver_str = f"{receiver_arg} of {receiver_arg.owner}" \
+                    if isinstance(receiver_arg, Port) else f"{receiver_arg.name}"
+                proj_name = f"'{projection.name}'" if isinstance(projection.name, str) else Projection.__name__
+                raise CompositionError(
+                    f"'{receiver_str}', specified as receiver of '{proj_name}' from '{sender.name}', "
+                    f"is not in '{self.name}' or any {Composition.__name__}s nested within it.")
 
         return receiver, receiver_mechanism, graph_receiver, receiver_input_port, \
                nested_compositions, learning_projection
@@ -8564,6 +8563,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             covariates_sources = _get_covariate_info(output_source, learned_projection)
             # activation_output is always a single value since activation function is assumed to have only one output
             activation_output = [output_source.output_ports[0].value]
+            # insure that output_source.function.derivative can handle covariates
+            if covariates_sources:
+                try:
+                    output_source.function.derivative(input=None, output=activation_output,
+                                                      covariates=[source.variable for source in covariates_sources])
+                except TypeError as error:
+                    if "derivative() got an unexpected keyword argument 'covariates'" in error.args[0]:
+                        raise CompositionError(
+                            f"'{output_source.name}' in '{self.name}' has more than one input_port, "
+                            f"but the derivative of its function ({output_source.function.componentName}) "
+                            f"cannot handle covariates required to determine the partial derivatives of "
+                            f"each input in computing the gradients for Backpropagation; use a function "
+                            f"(such as LinearCombination) that handles more than one argument, "
+                            f"or remove the extra input_ports.")
             return [activation_input, activation_output, covariates_sources]
 
         # Get existing LearningMechanism if one exists (i.e., if this is a crossing point with another pathway)
@@ -8594,6 +8607,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             activation_input, activation_output, covariates_sources = _get_acts_in_out_cov(input_source,
                                                                                            output_source,
                                                                                            learned_projection)
+
             # Use only one error_signal_template for learning_function, since it gets only one source of error at a time
             learning_function = BackPropagation(default_variable=activation_input +
                                                                  activation_output +

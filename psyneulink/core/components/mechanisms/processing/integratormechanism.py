@@ -197,7 +197,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
                     :type: 'list or np.ndarray'
         """
         function = Parameter(AdaptiveIntegrator(rate=0.5), stateful=False, loggable=False)
-        reset = Parameter([0], modulable=True, stateful=True, constructor_argument='reset_default')
+        reset = Parameter([0], modulable=True, constructor_argument='reset_default')
 
         #
     @check_user_specified

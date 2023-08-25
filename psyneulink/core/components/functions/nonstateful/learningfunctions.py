@@ -2279,10 +2279,11 @@ class BackPropagation(LearningFunction):
                  prefs:  Optional[ValidPrefSet] = None):
 
         default_variable = default_variable if default_variable is not None else [[0], [0], [0]]
-        error_matrix = np.zeros((len(default_variable[LEARNING_ACTIVATION_OUTPUT]),
-                                 len(default_variable[LEARNING_ERROR_OUTPUT])))
-
-        # self.return_val = ReturnVal(None, None)
+        try:
+            error_matrix = np.zeros((len(default_variable[LEARNING_ACTIVATION_OUTPUT]),
+                                     len(default_variable[LEARNING_ERROR_OUTPUT])))
+        except IndexError:
+            error_matrix = None
 
         super().__init__(
             default_variable=default_variable,

@@ -1258,9 +1258,14 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         if (isinstance(distance_function, Distance)
                 and distance_function.metric == COSINE
                 and any([len(v)==1 for v in test_var])):
-            warnings.warn(f"{self.__class__.__name__} is using {distance_function} with metric=COSINE and has "
-                          f"at least one memory field that is a scalar (i.e., size=1), which will always produce "
-                          f"a distance of 0 (the angle of scalars is not defined).")
+            fields_nums_msg = [str(i) for i,v in enumerate(test_var) if len(v)==1]
+            if len(fields_nums_msg) == 1:
+                fields_nums_msg = f"and memory field {fields_nums_msg[0]} that is a scalar; this will"
+            else:
+                fields_nums_msg = f"with memory fields {' ,'.join(fields_nums_msg)} that are scalars, " \
+                                  f"each of which will "
+            warnings.warn(f"{self.componentName} is using {distance_function.componentName} with metric=COSINE "
+                          f"{fields_nums_msg} always produce a distance of 0 (since angle of scalars is not defined).")
 
         field_wts_homog = np.full(len(test_var),1).tolist()
         field_wts_heterog = np.full(len(test_var),range(0,len(test_var))).tolist()

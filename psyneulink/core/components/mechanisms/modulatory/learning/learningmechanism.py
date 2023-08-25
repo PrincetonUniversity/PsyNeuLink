@@ -1045,9 +1045,9 @@ class LearningMechanism(ModulatoryMechanism_Base):
                     :type: ``list``
                     :read only: True
         """
-        # variable = Parameter(np.array([[0],[0],[0]]),
-        #                      pnl_internal=True,
-        #                      constructor_argument='default_variable')
+        variable = Parameter(np.array([[0],[0]]),
+                             pnl_internal=True,
+                             constructor_argument='default_variable')
         function = Parameter(BackPropagation, stateful=False, loggable=False)
         covariates_sources = Parameter(None, stateful=False, structural=True, read_only=True)
         error_sources = Parameter(None, stateful=False, structural=True, read_only=True)
@@ -1154,13 +1154,9 @@ class LearningMechanism(ModulatoryMechanism_Base):
                                                 repr(LEARNING_TIMING)))
 
     def _parse_function_variable(self, variable, context=None):
-        function_variable = np.zeros_like(variable[np.array([ACTIVATION_INPUT_INDEX,
-                                                             ACTIVATION_OUTPUT_INDEX,
-                                                             ERROR_SIGNAL_INDEX])])
-        function_variable[ACTIVATION_INPUT_INDEX] = variable[ACTIVATION_INPUT_INDEX]
-        function_variable[ACTIVATION_OUTPUT_INDEX] = variable[ACTIVATION_OUTPUT_INDEX]
-        function_variable[ERROR_SIGNAL_INDEX] = variable[ERROR_SIGNAL_INDEX]
-        return function_variable
+        # Return values of ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, and first ERROR_SIGNAL_INDEX InputPorts
+        #   in variable; remaining inputs (additional error signals and/or COVARITES) are passed in kwargs)
+        return variable[range(min(len(self.input_ports),3))]
 
     def _validate_variable(self, variable, context=None):
         """Validate that variable has exactly three items: activation_input, activation_output and error_signal
@@ -1168,18 +1164,15 @@ class LearningMechanism(ModulatoryMechanism_Base):
 
         variable = super()._validate_variable(variable, context)
 
-        if len(variable) < 3:
-            raise LearningMechanismError("Variable for {} ({}) must have at least three items ({}, {}, and {}{})".
-                                         format(self.name, variable,
-                                                ACTIVATION_INPUT,
-                                                ACTIVATION_OUTPUT,
-                                                ERROR_SIGNAL,"(s)"))
+        # if len(variable) < 3:
+        num_input_ports = len(self.input_ports)
+        error_signals_msg = f", and 'ERROR_SIGNAL(s)'" if num_input_ports > 2 else ""
+        if len(variable) < num_input_ports:
+            raise LearningMechanismError(f"Variable for {self.name} ({variable}) must have at least {num_input_ports} "
+                                         f"items: 'ACTIVATION_INPUT', 'ACTIVATION_INPUT'{error_signals_msg}")
 
-        # Validate that activation_input, activation_output are numeric and lists or 1d np.ndarrays and that
+        # Validate that activation_input, activation_output are numeric and lists or 1d arrays and that
         # there is the correct number of items beyond those for the number of error_sources and covariates_sources
-
-        assert ASSERT, "ADD TEST FOR LEN OF VARIABLE AGAINST NUMBER OF ERROR_SIGNALS AND COVARIATES"
-
         for i in range(len(variable)):
             item_num_string = "Item {i+1}"
 
