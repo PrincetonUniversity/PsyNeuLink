@@ -6,7 +6,6 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 # TODO:
-# - Refactor to use only Reward and not Counter (though that may not work for transition devaluation?)
 
 """
 QUESTIONS:
@@ -137,8 +136,8 @@ DISPLAY_MODEL = (                      # Only one of the following can be uncomm
     {}                               # show simple visual display of model
     # {'show_node_structure': True}    # show detailed view of node structures and projections
 )
-# RUN_MODEL = True                       # True => run the model
-RUN_MODEL = False                      # False => don't run the model
+RUN_MODEL = True                       # True => run the model
+# RUN_MODEL = False                      # False => don't run the model
 ANALYZE_RESULTS = False                # True => output analysis of results of run
 REPORT_OUTPUT = ReportOutput.FULL     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
 REPORT_PROGRESS = ReportProgress.OFF   # Sets console progress bar during run
@@ -171,8 +170,6 @@ RETRIEVED_REWARD_NAME = "RETRIEVED\nREWARD"
 # RETRIEVED_REWARD_NAME = "RETRIEVED REWARD"
 EM_NAME = "EM"
 DECISION_LAYER_NAME = "DECISION"
-RESPONSE_LAYER_NAME = "RESPONSE"
-
 
 Task = IntEnum('Task', ['EXPERIENCE', 'PREDICT'],
                start=0)
@@ -180,9 +177,7 @@ Task = IntEnum('Task', ['EXPERIENCE', 'PREDICT'],
 
 StateFeatureIndex = IntEnum('StateFeatureIndex',
                             ['TASK',
-                             'REWARD',
-                             'SIM_STEP',
-                             'SIM_TOTAL'],
+                             'REWARD'],
                             start=0)
 
 ControlSignalIndex = IntEnum('ControlSignalIndex',
@@ -190,9 +185,7 @@ ControlSignalIndex = IntEnum('ControlSignalIndex',
                               'ATTEND_RETRIEVED',
                               'EM_FIELD_WEIGHTS',
                               'STORAGE_PROB',
-                              'COUNTER_RESET',
-                              'DECISION_GATE',
-                              'RESPONSE_GATE'],
+                              'DECISION_GATE'],
                              start=0)
 
 # CONSTRUCTION PARAMETERS
@@ -203,7 +196,6 @@ STATE_SIZE = 8      # length of state vector
 TIME_SIZE = 25      # length of time vector
 REWARD_SIZE = 1     # length of reward vector
 DECISION_SIZE = 1   # length of decision vector
-RESPONSE_SIZE = 1   # length of response vector
 
 # Context processing:
 STATE_WEIGHT = .1              # rate at which actual vs. retrieved state (from EM) are integrated in context_layer
@@ -378,9 +370,6 @@ def construct_model(model_name:str=MODEL_NAME,
                     decision_layer_name:str=DECISION_LAYER_NAME,
                     decision_size:int=DECISION_SIZE,
 
-                    response_layer_name:str=RESPONSE_LAYER_NAME,
-                    response_size:int=RESPONSE_SIZE,
-
                     )->Composition:
 
     # Apportionment of contributions of state (actual or em) vs. context (em) to context_layer integration:
@@ -449,17 +438,10 @@ def construct_model(model_name:str=MODEL_NAME,
                                                              context_retrieval_weight,
                                                              reward_retrieval_weight]))
 
-    counter_layer = IntegratorMechanism(function=SimpleIntegrator,
-                                        default_variable=1,
-                                        reset_default=1,
-                                        name='COUNTER')
-
     decision_layer = DDM(function=DriftDiffusionIntegrator(noise=0.0, rate=1.0),
                          execute_until_finished=False,
-                         name=DECISION_LAYER_NAME)
+                         name=decision_layer_name)
 
-    response_layer = TransferMechanism(name=response_layer_name,
-                                       size=response_size)
 
     # ----------------------------------------------------------------------------------------------------------------
     # -------------------------------------------------  Control  ----------------------------------------------------
@@ -482,36 +464,13 @@ def construct_model(model_name:str=MODEL_NAME,
     num_fields = num_keys + num_vals
 
     def control_function(variable, context=None, **kwargs):
-        """Use by control_layer to govern EM storage & retrieval, access to context, and gating decision and response
+        """Use by control_layer to govern EM storage & retrieval, access to context, and gating decision
 
         FIX:
         - Use control_layer variable ("state_features" per ocm) to get control_allocation from control_em:
             - for Task EXPERIENCE, set distance_field_weights to [1] + [0] * 9
             - for Task PREDICT, set distance_field_weights to [1] * 4 + [0] * 6
         - Use retrieved values from control_em to set control_signals for control_layer
-
-        CONTROL PROTOCOL FOR PREDICT TRIALS:
-          EM STORAGE PROB  CONTROL SIGNAL = 0
-          ON COUNT 0:
-            - STATE ATTENTION CONTROL SIGNAL -> STATE 1, CONTEXT 0
-            - EM FIELD WEIGHTS CONTROL SIGNAL:  TIME, STATE, REWARD, CONTEXT
-            - EM STORAGE PROB  CONTROL SIGNAL = 0
-            - COUNTER RESET CONTROL SIGNAL = 0
-            - TERMINATE CONTROL SIGNAL = 0
-          ON COUNT > 0:
-            - EM STORAGE PROB  CONTROL SIGNAL = 0
-            - STATE ATTENTION CONTROL SIGNAL -> STATE 0, CONTEXT 1
-            - EM FIELD WEIGHTS CONTROL SIGNAL:  TIME, CONTEXT
-            - COUNTER RESET CONTROL SIGNAL = 0
-            - TERMINATE CONTROL SIGNAL = 0
-          ON RETRIEVED REWARD > 0:
-            - COUNTER RESET CONTROL SIGNAL = 1
-            - DECISION INPUT GATE CONTROL SIGNAL (NEEDED, IF OTHERWISE REWARDS ARE ALWAYS 0?)
-            - INCREMENT DECISION COUNTER (OR JUST USE DECISION TIME IF DDM?)
-          TERMINATION @  NUM_ROLL_OUTS * NUM_STIM_PER_SEQ, USING EITHER:
-            - CONDITION FOR DDM DECISION TIME AS COUNTER
-            - OR INPUT_GATE RESPONSE LAYER USING DDM DECISION TIME AS COUNTER,
-              AND TERMINATION ON RESPONSE.VALUE > 0
 
         .. table::
            :align: left
@@ -543,17 +502,18 @@ def construct_model(model_name:str=MODEL_NAME,
            #      - MAKE CONSTANT DRIFT TIME
            #      - INITIALIZATION OF EM AND CONTEXT: .001
            #      CHECK THAT EM IS EMPTY ON FIRST TIME_STEP
-           #      REFACTOR:
-           #        - GET RID OF COUNTER, AND SET run(num_trials) = NUM_ROLL_OUTS
-           #        - GET RID OF RESPONSE;  THAT IS JUST THE VALUE OF THE DDM AT THE END OF THE RUN
-           #        - REWARD > 0 ENDS EACH ROLL-OUT (I.E. TRIAL), SUCH THAT STIMULUS IS AGAIN ENCODED, ETC.
-           #        - DDM INTEGRATE CONTINUOUSLY ACROSS ROLL_OUTS (I.E., DON'T RESET ON EACH TRIAL)
+           #      FIX: REFACTOR:
+           #        - MAKE SURE THERE IS NO RESETTING OF ANYTHING ON EACH TRIAL
+           #        - REWARD > 0
+           #          - ENDS EACH ROLL-OUT (I.E. TRIAL), SUCH THAT STIMULUS IS AGAIN ENCODED, ETC.
+           #          - CAUSES CONTROL TO GATE IN STATE INPUT AT BEGINNING OF NEXT TRIAL
+           #        - DDM INTEGRATES CONTINUOUSLY ACROSS ROLL_OUTS (I.E., DON'T RESET ON EACH TRIAL)
            #        - RUN ALL TRIALS CONTINUOUSLY, SO CONTEXT IS CONTINUOUSLY INTEGRATED ACROSS ROLLOUTS (i.e., TRIALS)
 
         """
 
         task = variable[StateFeatureIndex.TASK]
-        query = np.array(list(variable) + [[0],[0],[0,0,0,0],[0],[0],[0],[0]], dtype=object)
+        query = np.array(list(variable) + [[0],[0],[0,0,0,0],[0],[0]], dtype=object)
         if task == Task.EXPERIENCE:
             # Set distance_field_weights for EXPERIENCE
             # control_em.parameters.distance_field_weights.set([1] + [0] * (num_fields - 1), context)
@@ -573,8 +533,6 @@ def construct_model(model_name:str=MODEL_NAME,
     state_features = [None] * len(StateFeatureIndex)
     state_features[StateFeatureIndex.TASK] = task_input_layer
     state_features[StateFeatureIndex.REWARD] = retrieved_reward_layer
-    state_features[StateFeatureIndex.SIM_STEP] = counter_layer
-    state_features[StateFeatureIndex.SIM_TOTAL] = decision_layer.output_ports[RESPONSE_TIME]
 
     # Control signals
     control_signals = [None] * len(ControlSignalIndex)
@@ -582,9 +540,7 @@ def construct_model(model_name:str=MODEL_NAME,
     control_signals[ControlSignalIndex.ATTEND_RETRIEVED] = attention_layer.input_ports[RETRIEVED_STATE_INPUT]
     control_signals[ControlSignalIndex.EM_FIELD_WEIGHTS] = ('distance_field_weights', em)
     control_signals[ControlSignalIndex.STORAGE_PROB] = (STORAGE_PROB, em)
-    control_signals[ControlSignalIndex.COUNTER_RESET] = (RESET, counter_layer)
     control_signals[ControlSignalIndex.DECISION_GATE] = decision_layer.input_port
-    control_signals[ControlSignalIndex.RESPONSE_GATE] = response_layer.input_port
     control_layer = ControlMechanism(name=attentional_control_name,
                                      monitor_for_control=state_features,
                                      function = control_function,
@@ -595,11 +551,11 @@ def construct_model(model_name:str=MODEL_NAME,
     # ----------------------------------------------------------------------------------------------------------------
     
     EGO_comp = Composition(name=model_name,
-                           # Decision output pathway
-                           pathways=[retrieved_reward_layer, decision_layer, response_layer], # Decision
-                           # # Use this to terminate a Task.PREDICT trial
-                           # FIX: NEEDS TO BE PROPERLY CONFIGURED
-                           # termination_processing={TimeScale.TRIAL: WhenFinished(response_layer)}
+                           # FIX: ADD TERMINATION CONDITION FOR TRIAL BASED ON REWARD > 0
+                           # Use this to terminate a Task.PREDICT trial
+                           # termination_processing={TimeScale.TRIAL: WhenFinished(decision_layer)}
+                           termination_processing={TimeScale.TRIAL: And(Condition(lambda: reward_input_layer.value),
+                                                                        JustRan(decision_layer))}
                            )
 
     # Nodes not included in (decision output) Pathway specified above
@@ -608,15 +564,15 @@ def construct_model(model_name:str=MODEL_NAME,
                         time_input_layer,
                         attention_layer,
                         context_layer,
-                        counter_layer,
                         reward_input_layer,
                         em,
                         control_layer,
+                        retrieved_reward_layer,
+                        decision_layer
                         ])
     EGO_comp.exclude_node_roles(task_input_layer, NodeRole.OUTPUT)
-    EGO_comp.exclude_node_roles(counter_layer, [NodeRole.INPUT, NodeRole.OUTPUT])
 
-    # Projections not included in (decision output) Pathway specified above
+    # Projections:
 
     # EM encoding --------------------------------------------------------------------------------
     # state -> em
@@ -642,10 +598,12 @@ def construct_model(model_name:str=MODEL_NAME,
                                               context_layer,
                                               matrix=np.eye(STATE_SIZE) * context_weight))
 
-    # Rest of EM retrieval ---------------------------------------------------------------------------
-    # retreieved reward -> retrieved reward
+    # Decision pathway ---------------------------------------------------------------------------
+    # retrieved reward -> retrieved reward
     EGO_comp.add_projection(MappingProjection(em.output_ports[f'RETRIEVED_{REWARD_INPUT_LAYER_NAME}'],
                                               retrieved_reward_layer))
+    # retrieved reward -> decision layer
+    EGO_comp.add_projection(MappingProjection(retrieved_reward_layer, decision_layer))
 
     # Validate construction
     assert context_layer.input_port.path_afferents[0].sender.owner == context_layer
