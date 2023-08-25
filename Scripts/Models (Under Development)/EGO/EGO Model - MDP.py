@@ -164,7 +164,7 @@ CONTROL_LAYER_NAME = "CONTROL"
 CONTEXT_LAYER_NAME = 'CONTEXT'
 REWARD_INPUT_LAYER_NAME = "REWARD"
 # RETRIEVED_TIME_NAME = "RETRIEVED\nTIME"
-RETRIEVED_TIME_NAME = "RETRIEVED TIME"
+# RETRIEVED_TIME_NAME = "RETRIEVED TIME"
 # RETRIEVED_REWARD_NAME = "RETRIEVED\nREWARD"
 RETRIEVED_REWARD_NAME = "RETRIEVED REWARD"
 EM_NAME = "EM"
@@ -497,8 +497,9 @@ def construct_model(model_name:str=MODEL_NAME,
 
         task = variable[StateFeatureIndex.TASK]
         external_state = np.atleast_1d(int(any(variable[StateFeatureIndex.EXTERNAL_STATE])))
-        keys = [task, external_state, variable[StateFeatureIndex.REWARD]]
-        query = np.array(keys + [[0],[0],[0,0,0,0]], dtype=object)
+        reward = variable[StateFeatureIndex.REWARD]
+        keys = [task, external_state, reward]
+        query = np.array(keys + [[0],[0],[0,0,0,0],[0],[0]], dtype=object)
         if task == Task.EXPERIENCE:
             # Set distance_field_weights for EXPERIENCE
             # control_em.parameters.distance_field_weights.set([1] + [0] * (num_fields - 1), context)
@@ -553,8 +554,8 @@ def construct_model(model_name:str=MODEL_NAME,
                         context_layer,
                         reward_input_layer,
                         em,
-                        control_layer,
                         retrieved_reward_layer,
+                        control_layer,
                         decision_layer
                         ])
     EGO_comp.exclude_node_roles(task_input_layer, NodeRole.OUTPUT)

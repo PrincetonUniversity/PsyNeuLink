@@ -413,6 +413,7 @@ class AutodiffComposition(Composition):
     # CLEANUP: move some of what's done in the methods below to a "validate_params" type of method
     @handle_external_context()
     def _build_pytorch_representation(self, context=None, refresh=False):
+        """Builds a Pytorch representation of the AutodiffComposition"""
         if self.scheduler is None:
             self.scheduler = Scheduler(graph=self.graph_processing)
         if self.parameters.pytorch_representation._get(context=context) is None or refresh:
@@ -534,8 +535,9 @@ class AutodiffComposition(Composition):
         self.parameters.losses.set([], context=context)
 
     def _update_learning_parameters(self, context):
-        """
+        """Carry out backpropagation learning for one or more trials
         Updates parameters (weights) based on trials run since last update.
+        Uses Pytorch backward method to compute gradients and update weights
         """
         optimizer = self.parameters.optimizer._get(context=context)
         optimizer.zero_grad()

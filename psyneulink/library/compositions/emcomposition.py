@@ -128,6 +128,9 @@
 #          - Add warning of this on initial call to learn()
 #
 #      - Composition:
+#        - addition of projections to a ControlMechanism seems too dependent on the order in which the
+#              the ControlMechanism is constructed with respect to its afferents (if it comes before one,
+#              the projection to it (i.e., for monitoring) does not get added to the Composition
 # -      - IMPLEMENTATION OF LEARNING: NEED ERROR IF TRY TO CALL LEARN ON A COMPOSITION THAT HAS NO LEARNING MECHANISMS
 #          INCLUDING IN PYTHON MODE??  OR JUST ALLOW IT TO CONSTRUCT THE PATHWAY AUTOMATICALLY?
 #        - Change size argument in constructor to use standard numpy shape format if tupe, and PNL format if list
@@ -170,7 +173,6 @@
 #          and align with reset Parameter of IntegratorMechanism)
 #
 #    - FIX: BUGS:
-#      - FIX: show_graph(): EGO Model - MDP NOT SHOWING PROJECTION FROM REWARD TO CONTROL
 #      -LearningMechanism / Backpropagation LearningFunction:
 #         - Construction of LearningMechanism on its own fails; e.g.:
 #             lm = LearningMechanism(learning_rate=.01, learning_function=BackPropagation())
