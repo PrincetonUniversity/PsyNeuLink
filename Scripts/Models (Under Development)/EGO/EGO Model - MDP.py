@@ -150,6 +150,24 @@ ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation
 #                                                   PARAMETERS
 # ======================================================================================================================
 
+# PyTorch Version Parameters:
+model_params = dict(
+    n_participants=58,
+    n_simulations = 100, # number of rollouts per participant
+    n_steps = 3, # number of steps per rollout
+    state_d = 7, # length of state vector
+    context_d = 7, # length of context vector
+    time_d = 25, # length of time vector
+    self_excitation = .25, # rate at which old context is carried over to new context
+    input_weight = .5, # rate at which state is integrated into new context
+    retrieved_context_weight = .25, # rate at which context retrieved from EM is integrated into new context
+    time_noise=.01,# noise std for time integrator (drift is set to 0)
+    state_weight = .5, # weight of the state used during memory retrieval
+    context_weight = .3, # weight of the context used during memory retrieval
+    time_weight = .2, # weight of the time used during memory retrieval
+    temperature = .05 # temperature of the softmax used during memory retrieval (smaller means more argmax-like
+)
+
 # Fixed (structural) parameters:
 
 # Names:
