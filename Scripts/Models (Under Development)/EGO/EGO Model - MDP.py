@@ -132,8 +132,8 @@ from psyneulink import *
 # Settings for running script:
 CONSTRUCT_MODEL = True                 # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = (                      # Only one of the following can be uncommented:
-    # None                             # suppress display of model
-    {}                               # show simple visual display of model
+    None                             # suppress display of model
+    # {}                               # show simple visual display of model
     # {'show_node_structure': True}    # show detailed view of node structures and projections
 )
 RUN_MODEL = True                       # True => run the model
@@ -164,7 +164,7 @@ CONTROL_LAYER_NAME = "CONTROL"
 CONTEXT_LAYER_NAME = 'CONTEXT'
 REWARD_INPUT_LAYER_NAME = "REWARD"
 # RETRIEVED_TIME_NAME = "RETRIEVED\nTIME"
-# RETRIEVED_TIME_NAME = "RETRIEVED TIME"
+RETRIEVED_TIME_NAME = "RETRIEVED_TIME"  # NAME OF EM OUTPUT PORT FOR TIME
 # RETRIEVED_REWARD_NAME = "RETRIEVED\nREWARD"
 RETRIEVED_REWARD_NAME = "RETRIEVED REWARD"
 EM_NAME = "EM"
@@ -418,6 +418,8 @@ def construct_model(model_name:str=MODEL_NAME,
                                                              time_retrieval_weight,
                                                              context_retrieval_weight,
                                                              reward_retrieval_weight]))
+    # em.output_ports[RETRIEVED_TIME_NAME].parameters.require_projection_in_composition.set(False, override=True)
+
     decision_layer = DDM(function=DriftDiffusionIntegrator(noise=0.0, rate=1.0),
                          execute_until_finished=False,
                          name=decision_layer_name)
@@ -540,9 +542,12 @@ def construct_model(model_name:str=MODEL_NAME,
     
     EGO_comp = Composition(name=model_name,
                            # FIX: ADD TERMINATION CONDITION FOR TRIAL BASED ON REWARD > 0
-                           # Use this to terminate a Task.PREDICT trial
-                           # termination_processing={TimeScale.TRIAL: And(Condition(lambda: reward_input_layer.value),
-                           #                                              JustRan(decision_layer))}
+                           #      AND MAKE SURE IT APPLIES ONLY TO PREDICT TRIALS
+                           # Terminate a Task.PREDICT trial
+                           # termination_processing={
+                           #     TimeScale.TRIAL: And(Condition(lambda: task_input_layer.value == Task.PREDICT),
+                           #                          Condition(lambda: reward_input_layer.value),
+                           #                          JustRan(decision_layer))} # Ensure that decision runs after reward
                            )
 
     # Nodes not included in (decision output) Pathway specified above

@@ -416,7 +416,7 @@ from psyneulink.core.components.functions.stateful.memoryfunctions import \
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.ports.inputport import InputPort
-from psyneulink.core.globals.keywords import EPISODIC_MEMORY_MECHANISM, INITIALIZER, NAME, OWNER_VALUE, VARIABLE
+from psyneulink.core.globals.keywords import EPISODIC_MEMORY_MECHANISM, NAME, OWNER_VALUE, PARAMS, VARIABLE
 from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.utilities import deprecation_warning, convert_to_np_array, convert_all_elements_to_np_array
@@ -650,25 +650,33 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
             if output_ports_spec is None or all(isinstance(o, str) for o in output_ports_spec):
                 output_ports = []
                 input_suffix_len = len(DEFAULT_INPUT_PORT_NAME_SUFFIX)
+
                 # Total number should be either the number of names provided, or default to length of Mech's value:
                 num_output_ports = len(output_ports_spec) if output_ports_spec else len(self.value)
+
                 for i in range(num_output_ports):
+
                     # Names specified, so use those:
                     if output_ports_spec:
-                        output_ports.append({NAME: self.output_ports[i],
-                                             VARIABLE: (OWNER_VALUE, i)})
+                        name = self.output_ports[i]
                     # Otherwise, use InputPort names as base, removing DEFAULT_INPUT_PORT_NAME_SUFFIX
                     else:
                         input_port_name = self.input_ports[i].name
-                        # if input_port_name[-input_suffix_len:] == DEFAULT_INPUT_PORT_NAME_SUFFIX:
-                        # if not self.input_ports[i]._user_specified:
                         if not self.parameters.input_ports._user_specified:
                             input_port_name = input_port_name[:-input_suffix_len]
-                        output_ports.append({NAME: DEFAULT_OUTPUT_PORT_PREFIX + input_port_name,
-                                             VARIABLE: (OWNER_VALUE, i)})
+                        name = DEFAULT_OUTPUT_PORT_PREFIX + input_port_name
+
+                    # Add port specification dictionary to list of output_ports
+                    output_ports.append({NAME: name,
+                                         VARIABLE: (OWNER_VALUE, i)})
+
                 self.parameters.output_ports._set(output_ports, override=True, context=context)
 
         super()._instantiate_output_ports(context=context)
+
+        # Suppress warning if no Projections from one of the OutputPorts (common case, e.g. for key fields)
+        for output_port in self.output_ports:
+            output_port.parameters.require_projection_in_composition._set(False, override=True, context=context)
 
     # IMPLEMENTATION NOTE: REMOVE THIS METHOD WHEN DictionaryMemory IS RETIRED
     def _parse_function_variable(self, variable, context=None):

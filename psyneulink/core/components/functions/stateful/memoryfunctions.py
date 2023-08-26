@@ -368,6 +368,49 @@ SELECTION_FUNCTION = 'selection_function'
 DISTANCE_FIELD_WEIGHTS = 'distance_field_weights'
 equidistant_entries_select_keywords = [RANDOM, OLDEST, NEWEST]
 
+def _distance_field_weights_setter(value, owning_component=None, context=None):
+    """Validate distance_field_weights specification
+    Warn if assigning a non-zero (or None) to a field with a scalar when using COSINE as metric for Distance"""
+
+    if owning_component.get_previous_value(context) is not None:
+        variable = owning_component.get_previous_value(context)[0]
+    elif owning_component.initializer is not None:
+        variable = (owning_component.initializer[0] if (owning_component.initializer.ndim == 3 or
+                                                       owning_component.initializer.dtype == object)
+                    else owning_component.initializer)
+    else:
+        variable = owning_component.variable
+    distance_function = owning_component.parameters.distance_function._get(context)
+    current_field_weights = (owning_component.parameters.distance_field_weights._get(context)
+                             if owning_component.parameters.distance_field_weights._get(context) is not None
+                             else owning_component.defaults.distance_field_weights)
+
+    # If assignment is same as current distance_field_weights, skip
+    # NOTE: need the following to accommodate various forms of specification (single value, None's, etc)
+    #       that are resolved elsewhere
+    # FIX: STANDARDIZE FORMAT FOR FIELDWEIGHTS HERE (AS LIST OF INTS) AND GET RID OF THE FOLLOWING
+    test_val = np.array([int(val) if val else 0 for val in value])
+    test_val = np.full(len(variable),test_val) if len(test_val) == 1 else test_val
+    test_curr_field_weights = np.array([int(val) if val else 0 for val in current_field_weights])
+    test_curr_field_weights = (np.full(len(variable),test_curr_field_weights) if len(variable) == 1
+                               else test_curr_field_weights)
+    if np.all(test_curr_field_weights == test_val) and not owning_component.is_initializing:
+        pass
+
+    # If Distance function uses COSINE, warn if any fields with non-zero / non-None weights are scalars
+    elif (isinstance(distance_function, Distance)
+            and distance_function.metric == COSINE
+            and any([len(v)==1 and test_val[i] for i, v in enumerate(variable)])):
+        fields_nums_msg = [str(i) for i,v in enumerate(variable) if len(v)==1]
+        if len(fields_nums_msg) == 1:
+            fields_nums_msg = f"and memory field {fields_nums_msg[0]} that is a scalar; this will"
+        else:
+            fields_nums_msg = f"with memory fields {' ,'.join(fields_nums_msg)} that are scalars, " \
+                              f"each of which will "
+        warnings.warn(f"{owning_component.componentName} is using {distance_function.componentName} with metric=COSINE "
+                      f"{fields_nums_msg} always produce a distance of 0 (since angle of scalars is not defined).")
+
+    return value
 
 class ContentAddressableMemory(MemoryFunction): # ---------------------------------------------------------------------
     """
@@ -1130,7 +1173,9 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         memory_num_fields = Parameter(None, stateful=False, read_only=True)
         memory_field_shapes = Parameter(None, stateful=False, read_only=True)
-        distance_field_weights = Parameter([1], stateful=True, modulable=True, dependencies='initializer')
+        distance_field_weights = Parameter([1], stateful=True, modulable=True, dependencies='initializer',
+                                           setter=_distance_field_weights_setter
+                                           )
         duplicate_entries_allowed = Parameter(False, stateful=True)
         duplicate_threshold = Parameter(EPSILON, stateful=False, modulable=True)
         equidistant_entries_select = Parameter(RANDOM)
@@ -1254,18 +1299,6 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             test_var = self.get_previous_value(context)[0]
         else:
             test_var = self.defaults.variable
-
-        if (isinstance(distance_function, Distance)
-                and distance_function.metric == COSINE
-                and any([len(v)==1 for v in test_var])):
-            fields_nums_msg = [str(i) for i,v in enumerate(test_var) if len(v)==1]
-            if len(fields_nums_msg) == 1:
-                fields_nums_msg = f"and memory field {fields_nums_msg[0]} that is a scalar; this will"
-            else:
-                fields_nums_msg = f"with memory fields {' ,'.join(fields_nums_msg)} that are scalars, " \
-                                  f"each of which will "
-            warnings.warn(f"{self.componentName} is using {distance_function.componentName} with metric=COSINE "
-                          f"{fields_nums_msg} always produce a distance of 0 (since angle of scalars is not defined).")
 
         field_wts_homog = np.full(len(test_var),1).tolist()
         field_wts_heterog = np.full(len(test_var),range(0,len(test_var))).tolist()

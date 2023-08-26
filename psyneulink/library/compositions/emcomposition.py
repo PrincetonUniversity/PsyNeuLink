@@ -128,7 +128,7 @@
 #          - Add warning of this on initial call to learn()
 #
 #      - Composition:
-#        - addition of projections to a ControlMechanism seems too dependent on the order in which the
+#        - Addition of projections to a ControlMechanism seems too dependent on the order in which the
 #              the ControlMechanism is constructed with respect to its afferents (if it comes before one,
 #              the projection to it (i.e., for monitoring) does not get added to the Composition
 # -      - IMPLEMENTATION OF LEARNING: NEED ERROR IF TRY TO CALL LEARN ON A COMPOSITION THAT HAS NO LEARNING MECHANISMS
