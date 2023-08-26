@@ -2538,7 +2538,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
             fct_string = 'Function'
         try:
             result = np.asarray(selection_function(test_var, context=context))
-        except e:
+        except:
             raise FunctionError(f'{fct_string} specified for {repr(SELECTION_FUNCTION)} arg of {self.__class__} '
                                 f'({selection_function}) must accept a 1d array as its argument')
         if result.shape != test_var.shape:
