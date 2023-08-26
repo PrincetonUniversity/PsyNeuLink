@@ -228,8 +228,8 @@ time_fct = DriftOnASphereIntegrator(initializer=np.random.random(TIME_SIZE - 1),
                                     noise=TIME_DRIFT_NOISE,
                                     dimension=TIME_SIZE)
 # Task environment:
-NUM_BASELINE_SEQS = 20       # number of trials for Task.EXPERIENCE (passive encoding into EM) BEFORE revaluation
-NUM_REVALUATION_SEQS = 10    # number of trials for Task.EXPERIENCE (passive encoding into EM) AFTER revaluation 
+NUM_BASELINE_SEQS = 1        # number of trials for Task.EXPERIENCE (passive encoding into EM) BEFORE revaluation
+NUM_REVALUATION_SEQS = 1     # number of trials for Task.EXPERIENCE (passive encoding into EM) AFTER revaluation
 NUM_EXPERIENCE_SEQS = NUM_BASELINE_SEQS + NUM_REVALUATION_SEQS # total number of trials for Task.EXPERIENCE
 NUM_PREDICT_TRIALS = 2       # number of trials Task.PREDICT (active retrieval from EM and reward prediction)
 NUM_STIM_PER_SEQ = 3         # number of stimuli in a sequence
@@ -442,6 +442,7 @@ def construct_model(model_name:str=MODEL_NAME,
                                           distance_function=Distance(metric=EUCLIDEAN),
                                           distance_field_weights=[1, 1, 1, 0, 0, 0, 0, 0],
                                           storage_prob=0.0)
+    control_em.name = 'CONTROL EM'
     num_keys = len(StateFeatureIndex)
     num_vals = len(ControlSignalIndex)
     num_fields = num_keys + num_vals
@@ -494,7 +495,6 @@ def construct_model(model_name:str=MODEL_NAME,
            #        - RUN ALL TRIALS CONTINUOUSLY, SO CONTEXT IS CONTINUOUSLY INTEGRATED ACROSS ROLLOUTS (i.e., TRIALS)
            #        - FIX: HOW TO TELL 1st AND 2nd STEPS OF ROLL-OUT APART (BOTH HAVE STATE FEATURES =  [PRED 0])?
            #          FIX: COULD SPLIT ENCODE_STATE INTO TWO NODES THAT REFLECT WHICH WAS ATTENDED ON LAST PASS
-
         """
 
         task = variable[StateFeatureIndex.TASK]
@@ -510,8 +510,14 @@ def construct_model(model_name:str=MODEL_NAME,
             control_signals = control_em(query)[num_keys:]
 
         elif task == Task.PREDICT:
+            # # Set distance_field_weights for PREDICT
+            # control_em.parameters.distance_field_weights.set([1] * num_keys + [0] * num_vals, context)
+            # # Set control_signals for PREDICT
+            # FIX: FAILS, COMPLAINTING ABOUT NEED FOR SEED:
+            # control_signals = control_em.execute(query, context)[num_keys:]
+
             # Set distance_field_weights for PREDICT
-            control_em.parameters.distance_field_weights.set([1] * num_keys + [0] * num_vals, context)
+            control_em.parameters.distance_field_weights.set([1] * num_keys + [0] * num_vals)
             # Set control_signals for PREDICT
             control_signals = control_em.execute(query)[num_keys:]
 
