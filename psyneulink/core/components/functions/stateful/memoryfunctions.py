@@ -370,7 +370,8 @@ equidistant_entries_select_keywords = [RANDOM, OLDEST, NEWEST]
 
 def _distance_field_weights_setter(value, owning_component=None, context=None):
     """Validate distance_field_weights specification
-    Warn if assigning a non-zero (or None) to a field with a scalar when using COSINE as metric for Distance"""
+    Warn if assigning a non-zero (or None) to a field with a scalar when using COSINE as metric for Distance
+    """
 
     if owning_component.get_previous_value(context) is not None:
         variable = owning_component.get_previous_value(context)[0]
