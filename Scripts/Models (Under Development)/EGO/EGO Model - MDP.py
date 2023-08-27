@@ -545,36 +545,6 @@ def construct_model(model_name:str=MODEL_NAME,
         .. table::
            :align: left
            :alt: Player Piano (aka Production System)
-           # # FIX: VERSION WITH CONTROL != FEEDBACK
-           # +--------+--------------------------------------------------------------------------------------+-----------+
-           # |        |                                      **CONTROL POLICY**                              |           |
-           # |        +-------------------------+------------------------------------------------------------+           |
-           # |        | "STATE FEATURE" VECTOR  |                       CONTROL ALLOCATION VECTOR            |           |
-           # |        |  (monitor_for_control)  +--------------+---------------------------------------------+           |
-           # |        |                         |  STATE ATTN  |                  EM CONTROL                 |           |
-           # |        |                         |              +-------------------------------+-------+-----+           |
-           # |        |         EXTERNAL        | ON NEXT PASS |      MATCH ON NEXT PASS       | STORE | DDM |           |
-           # |  NUM   |          STATE          | (W/IN TRIAL) |       (field_weights)         |       |     |           |
-           # | TRIALS |  TASK    INPUT   REWARD |  ACTUAL  EM  |  TIME  STATE  CONTEXT REWARD  |       |     |           |
-           # +--------+-------------------------+--------------+-------------------------------+-------+-----+-----------+
-           # |   80   |   EXP     ANY     ANY   |    1     0   |   1      1       1       0    |   1   |  0  | TRIAL END |
-           # +--------+-------------------------+--------------+-------------------------------+-------+-----+-----------+
-           # |        |   PRED     1       0    |    0     0   |   1      0       1       0    |   0   |  1  |           |
-           # |        |   PRED     0       0    |    0     0   |   1      0       1       0    |   0   |  1  |           |
-           # | #R/O's |   PRED     0       1    |    1     0   |   1      1       1       0    |   0   |  1  | TRIAL END |
-           # +--------+-------------------------+--------------+-------------------------------+-------+-----+-----------+
-           # NOTES:
-           # - STATE ATTN on first PREDICT trial is 1 0 since that is carried over from EXPERIENCE trials;
-           #       if no EXPERIENCE trials have been run, then it needs to be initialized
-           #       FIX: (make default_control_allocation?)
-           # - Control signal in response to retrieved_reward has its effect on next trial
-           #       (since Projection from retrieved_reward -> control is specified as feedback,
-           #        so that control will execute immediately after input and before EM,
-           #        but therefore also before retrieve_reward is updated on the current trial)
-           # - DDM integrates continuously;  could end run on DDM.when_finished
-           # - #R/O's = NUM_ROLL_OUTS
-
-           # FIX: VERSION WITH CONTROL == FEEDBACK
            +--------+------------------------------------------------------------------------------------+-----------+
            |        |                                    **CONTROL POLICY**                              |           |
            |        +-----------------------+------------------------------------------------------------+           |
@@ -592,15 +562,14 @@ def construct_model(model_name:str=MODEL_NAME,
            | #R/O's |      PRED      1      |    1     0   |   1      1       1       0    |   0   |  1  | TRIAL END |
            +--------+-----------------------+--------------+-------------------------------+-------+-----+-----------+
            NOTES:
+           - Requires that EXPERIENCE TRIALS be run first, so that
            - STATE ATTN on first PREDICT trial is [1 0] and RETRIEVED_REWARD is [1]
-             since those are carried over from last trial of EXPERIENCE phase;
-             if no EXPERIENCE trials have been run, then those need to be initialized
-                 FIX: (make default_control_allocation?)
+             (since those are carried over from last trial of EXPERIENCE phase)
            - Control signal in response to retrieved_reward has its effect on next trial
                  (since Projection from retrieved_reward -> control is specified as feedback,
                   so that control will execute immediately after input and before EM (in order to control it),
                   but therefore also before retrieve_reward is updated on the current trial)
-           - DDM integrates continuously;  could end run on DDM.when_finished
+           - DDM integrates continuously;  could end run on DDM.when_finished instead of fixed number of trials
            - #R/O's = NUM_ROLL_OUTS
 
            # FIX: FOR NOW MAKE SURE EACH ROLL_OUT IS DEPENDENT ON COUNTER NOT REWARD
