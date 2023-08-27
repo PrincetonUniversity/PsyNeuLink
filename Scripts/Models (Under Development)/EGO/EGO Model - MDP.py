@@ -7,7 +7,7 @@
 
 # TODO:
 
-# FIX: TERMINATION CONDITION IS GETTING TRIGGERED AFTER 1st TRIAL
+# FIX: TERMINATION CONDITION IS GETTING TRIGGED AFTER 1st TRIAL
 
 """
 QUESTIONS:
@@ -806,7 +806,7 @@ if RUN_MODEL:
     model.run(inputs={k: v for k, v in zip(input_layers, prediction_inputs)},
               report_output=REPORT_OUTPUT,
               report_progress=REPORT_PROGRESS,
-              # reset_stateful_functions_when={model.nodes[RETRIEVED_REWARD_NAME]: AtTrialStart()}
+              reset_stateful_functions_when={model.nodes[RETRIEVED_REWARD_NAME]: AtTrialStart()}
               )
 
     if PRINT_RESULTS:
