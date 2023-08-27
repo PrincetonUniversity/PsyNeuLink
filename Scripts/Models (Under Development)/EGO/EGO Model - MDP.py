@@ -202,6 +202,12 @@ RESPONSE_LAYER_NAME = "RESPONSE"
 Task = IntEnum('Task', ['EXPERIENCE', 'PREDICT'],
                start=0)
 
+EMFieldsIndex = IntEnum('EMFields',
+                        ['STATE',
+                         'TIME',
+                         'CONTEXT',
+                         'REWARD'],
+                        start=0)
 
 StateFeatureIndex = IntEnum('StateFeatureIndex',
                             ['TASK',
@@ -249,7 +255,6 @@ RANDOM_WEIGHTS_INITIALIZATION=RandomMatrix(center=0.0, range=0.1)  # Matrix spec
 # ======================================================================================================================
 #                                                   ENVIRONMENT
 # ======================================================================================================================
-
 
 # Temporal context vector generation as input to time_input_layer of model
 TIME_DRIFT_RATE = 0.1          # noise used by DriftOnASphereIntegrator (function of Context mech)
@@ -537,7 +542,6 @@ def construct_model(model_name:str=MODEL_NAME,
     def control_function(variable, context=None, **kwargs):
         """Use by control_layer to govern EM storage & retrieval, access to context, and gating decision
 
-        FIX:
         - Use control_layer variable ("state_features" per ocm) to get control_allocation from control_em:
             - for Task EXPERIENCE, set distance_field_weights to [1] + [0] * 9
             - for Task PREDICT, set distance_field_weights to [1] * 4 + [0] * 6
@@ -572,22 +576,6 @@ def construct_model(model_name:str=MODEL_NAME,
                   but therefore also before retrieve_reward is updated on the current trial)
            - DDM integrates continuously;  could end run on DDM.when_finished instead of fixed number of trials
            - #R/O's = NUM_ROLL_OUTS
-
-           # FIX: FOR NOW MAKE SURE EACH ROLL_OUT IS DEPENDENT ON COUNTER NOT REWARD
-           #      VALIDATION:
-           #      - SWITCH TO ARGMAX
-           #      - MAKE CONSTANT DRIFT TIME
-           #      - INITIALIZATION OF EM AND CONTEXT: .001
-           #      CHECK THAT EM IS EMPTY ON FIRST TIME_STEP
-           #      FIX: REFACTOR:
-           #        - MAKE SURE THERE IS NO RESETTING OF ANYTHING ON EACH TRIAL
-           #        - REWARD > 0
-           #          - ENDS EACH ROLL-OUT (I.E. TRIAL), SUCH THAT STIMULUS IS AGAIN ENCODED, ETC.
-           #          - CAUSES CONTROL TO GATE IN STATE INPUT AT BEGINNING OF NEXT TRIAL
-           #        - DDM INTEGRATES CONTINUOUSLY ACROSS ROLL_OUTS (I.E., DON'T RESET ON EACH TRIAL)
-           #        - RUN ALL TRIALS CONTINUOUSLY, SO CONTEXT IS CONTINUOUSLY INTEGRATED ACROSS ROLLOUTS (i.e., TRIALS)
-           #        - FIX: HOW TO TELL 1st AND 2nd STEPS OF ROLL-OUT APART (BOTH HAVE STATE FEATURES =  [PRED 0])?
-           #          FIX: COULD SPLIT ENCODE_STATE INTO TWO NODES THAT REFLECT WHICH WAS ATTENDED ON LAST PASS
         """
 
         task = variable[StateFeatureIndex.TASK]
