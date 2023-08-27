@@ -506,6 +506,7 @@ def construct_model(model_name:str=MODEL_NAME,
 
     decision_layer = DDM(function=DriftDiffusionIntegrator(noise=0.0, rate=1.0),
                          execute_until_finished=False,
+                         reset_stateful_function_when=AtRunStart(),
                          name=decision_layer_name)
 
 
@@ -801,12 +802,15 @@ if RUN_MODEL:
     model.termination_processing = {
         TimeScale.TRIAL: And(Condition(lambda: model.nodes[TASK_INPUT_LAYER_NAME].value == Task.PREDICT),
                              Condition(lambda: model.nodes[RETRIEVED_REWARD_NAME].value),
-                             JustRan(model.nodes[DECISION_LAYER_NAME]))}
+                             # JustRan(model.nodes[DECISION_LAYER_NAME])
+                             AllHaveRun()
+                             )
+    }
 
     model.run(inputs={k: v for k, v in zip(input_layers, prediction_inputs)},
               report_output=REPORT_OUTPUT,
               report_progress=REPORT_PROGRESS,
-              reset_stateful_functions_when={model.nodes[RETRIEVED_REWARD_NAME]: AtTrialStart()}
+              # reset_stateful_functions_when={model.nodes[RETRIEVED_REWARD_NAME]: AtTrialStart()}
               )
 
     if PRINT_RESULTS:
