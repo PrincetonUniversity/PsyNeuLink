@@ -11706,6 +11706,7 @@ _
                                              report_num=report_num,
                                              runtime_params=execution_runtime_params,
                                              )
+                                assert True
 
                         # Set execution_phase for node's context back to IDLE
                         if self._is_learning(context):
