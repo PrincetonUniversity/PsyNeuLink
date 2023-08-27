@@ -139,6 +139,7 @@
 #                   add to PROJECTIONS param of port spec?
 #              - why aren't FEEDBACK_SENDER and FEEDBACK_RECEIVER roles being assigned when feedback is specified?
 #              - DOCUMENTATION:  add to Projection and Composition_Feedback
+#        - add property of Composition that lists it cycles
 #        - Add warning if termination_condition is trigged (and verbosePref is set)
 #        - Addition of projections to a ControlMechanism seems too dependent on the order in which the
 #              the ControlMechanism is constructed with respect to its afferents (if it comes before one,
