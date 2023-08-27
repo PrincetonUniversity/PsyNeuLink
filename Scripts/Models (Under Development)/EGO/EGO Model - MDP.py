@@ -7,10 +7,14 @@
 
 # TODO:
 
+# FIX: TERMINATION CONDITION IS GETTING TRIGGED AFTER 1st TRIAL
+
 """
 QUESTIONS:
 
--
+NOTES:
+    *MUST* run Experience before Predict, as the latter requires retrieved_reward to be non-zero
+           (from last trial of Experience) in order to know to encode the next state (see control policy)
 
 **Overview**
 ------------
@@ -200,7 +204,6 @@ Task = IntEnum('Task', ['EXPERIENCE', 'PREDICT'],
 
 StateFeatureIndex = IntEnum('StateFeatureIndex',
                             ['TASK',
-                             'EXTERNAL_STATE',
                              'REWARD'],
                             start=0)
 
@@ -511,17 +514,18 @@ def construct_model(model_name:str=MODEL_NAME,
     # ----------------------------------------------------------------------------------------------------------------
 
     tot = NUM_ROLL_OUTS * NUM_STIM_PER_SEQ
-    #                +---------------------------------------------------------------------------+
-    #                |       KEYS         |                       VALUES                         |
-    #                +---------------------------------------------------------------------------+
-    #                 TASK  STATE  REWARD | ACTUAL EM | TIME STATE CONTEXT REWARD | STORE | DDM
-    control_policy = [[[0],  [0],  [-1],     [1], [0],  [1,    1,     1,      0],    [1],   [0]],  # EXPERIENCE
-                      [[1],  [1],   [0],     [0], [1],  [1,    1,     1,      0],    [0],   [1]],  # PREDICT - ENCODE
-                      [[1],  [0],   [0],     [0], [1],  [1,    0,     1,      0],    [0],   [1]],  # PREDICT - ROLL OUT
-                      [[1],  [0],   [1],     [1], [0],  [1,    0,     1,      0],    [0],   [1]]]  # PREDICT - REWARD
+    #                +-------------------------------------------------------------------+
+    #                |    KEYS    |                       VALUES                         |
+    #                |   state    |                 control_allocation                   |
+    #                |  features  |                                                      |
+    #                +-------------------------------------------------------------------+
+    #                 TASK REWARD | ACTUAL EM | TIME STATE CONTEXT REWARD | STORE | DDM
+    control_policy = [[[0], [-1],    [1], [0],  [1,    1,     1,      0],    [1],   [0]], # EXPERIENCE
+                      [[1],  [0],    [0], [0],  [1,    0,     1,      0],    [0],   [1]], # PREDICT - ROLLOUT
+                      [[1],  [1],    [1], [0],  [1,    1,     1,      0],    [0],   [1]]] # PREDICT - REWARD/ENCODE NEXT
     control_em = ContentAddressableMemory(initializer=control_policy,
                                           distance_function=Distance(metric=EUCLIDEAN),
-                                          distance_field_weights=[1, 1, 1, 0, 0, 0, 0, 0],
+                                          distance_field_weights=[1, 1, 0, 0, 0, 0, 0],
                                           storage_prob=0.0)
     control_em.name = 'CONTROL EM'
     num_keys = len(StateFeatureIndex)
@@ -540,26 +544,61 @@ def construct_model(model_name:str=MODEL_NAME,
         .. table::
            :align: left
            :alt: Player Piano (aka Production System)
-           +--------+--------------------------------------------------------------------------------------+-----------+
-           |        |                                      **CONTROL POLICY**                              |           |
-           |        +-------------------------+------------------------------------------------------------+           |
-           |        | "STATE FEATURE" VECTOR  |                       CONTROL ALLOCATION VECTOR            |           |
-           |        +  (monitor_for_control)  +--------------+---------------------------------------------+           |
-           |        |                         |  STATE ATTN  |                  EM CONTROL                 |           |
-           |        |                         |              +-------------------------------+-------+-----|           |
-           |        |         EXTERNAL        |  NEXT PASS   |           MATCH               | STORE | DDM |           |
-           |  NUM   |          STATE          | (W/IN TRIAL) |       (field_weights)         |       |     |           |
-           | TRIALS |  TASK    INPUT   REWARD |  ACTUAL  EM  |  TIME  STATE  CONTEXT REWARD  |       |     |           |
-           +--------+-------------------------+--------------+-------------------------------+-------+-----+-----------+
-           |   80   |   EXP     ANY     ANY   |    1     0   |   1      1       1       0    |   1   |  0  | TRIAL END |
-           +--------+-------------------------+--------------+-------------------------------+-------+-----+-----------+
-           |        |   PRED     1       0    |    0     1   |   1      0       1       0    |   0   |  1  |           |
-           |        |   PRED     0       0    |    0     1   |   1      0       1       0    |   0   |  1  |           |
-           | #R/O's |   PRED     0       1    |    1     0   |   1      1       1       0    |   0   |  1  | TRIAL END |
-           +--------+-------------------------+--------------+-------------------------------+-------+-----+-----------+
+           # # FIX: VERSION WITH CONTROL != FEEDBACK
+           # +--------+--------------------------------------------------------------------------------------+-----------+
+           # |        |                                      **CONTROL POLICY**                              |           |
+           # |        +-------------------------+------------------------------------------------------------+           |
+           # |        | "STATE FEATURE" VECTOR  |                       CONTROL ALLOCATION VECTOR            |           |
+           # |        |  (monitor_for_control)  +--------------+---------------------------------------------+           |
+           # |        |                         |  STATE ATTN  |                  EM CONTROL                 |           |
+           # |        |                         |              +-------------------------------+-------+-----+           |
+           # |        |         EXTERNAL        | ON NEXT PASS |      MATCH ON NEXT PASS       | STORE | DDM |           |
+           # |  NUM   |          STATE          | (W/IN TRIAL) |       (field_weights)         |       |     |           |
+           # | TRIALS |  TASK    INPUT   REWARD |  ACTUAL  EM  |  TIME  STATE  CONTEXT REWARD  |       |     |           |
+           # +--------+-------------------------+--------------+-------------------------------+-------+-----+-----------+
+           # |   80   |   EXP     ANY     ANY   |    1     0   |   1      1       1       0    |   1   |  0  | TRIAL END |
+           # +--------+-------------------------+--------------+-------------------------------+-------+-----+-----------+
+           # |        |   PRED     1       0    |    0     0   |   1      0       1       0    |   0   |  1  |           |
+           # |        |   PRED     0       0    |    0     0   |   1      0       1       0    |   0   |  1  |           |
+           # | #R/O's |   PRED     0       1    |    1     0   |   1      1       1       0    |   0   |  1  | TRIAL END |
+           # +--------+-------------------------+--------------+-------------------------------+-------+-----+-----------+
+           # NOTES:
+           # - STATE ATTN on first PREDICT trial is 1 0 since that is carried over from EXPERIENCE trials;
+           #       if no EXPERIENCE trials have been run, then it needs to be initialized
+           #       FIX: (make default_control_allocation?)
+           # - Control signal in response to retrieved_reward has its effect on next trial
+           #       (since Projection from retrieved_reward -> control is specified as feedback,
+           #        so that control will execute immediately after input and before EM,
+           #        but therefore also before retrieve_reward is updated on the current trial)
+           # - DDM integrates continuously;  could end run on DDM.when_finished
+           # - #R/O's = NUM_ROLL_OUTS
+
+           # FIX: VERSION WITH CONTROL == FEEDBACK
+           +--------+------------------------------------------------------------------------------------+-----------+
+           |        |                                    **CONTROL POLICY**                              |           |
+           |        +-----------------------+------------------------------------------------------------+           |
+           |        |   "STATE FEATURES"    |                   CONTROL ALLOCATION                       |           |
+           |        | (monitor_for_control) +--------------+---------------------------------------------+           |
+           |        |                       |  STATE ATTN  |                  EM CONTROL                 |           |
+           |        |                       |              +-------------------------------+-------+-----+           |
+           |        |                       | ON CURR PASS |      MATCH ON CURR PASS       | STORE | DDM |           |
+           |  NUM   |                       | (W/IN TRIAL) |       (field_weights)         |       |     |           |
+           | TRIALS |     TASK     REWARD   |  ACTUAL  EM  |  TIME  STATE  CONTEXT REWARD  |       |     |           |
+           +--------+-----------------------+--------------+-------------------------------+-------+-----+-----------+
+           |   80   |      EXP      ANY     |    1     0   |   1      1       1       0    |   1   |  0  | TRIAL END |
+           +--------+-----------------------+--------------+-------------------------------+-------+-----+-----------+
+           |        |      PRED      0      |    0     0   |   1      0       1       0    |   0   |  1  |           |
+           | #R/O's |      PRED      1      |    1     0   |   1      1       1       0    |   0   |  1  | TRIAL END |
+           +--------+-----------------------+--------------+-------------------------------+-------+-----+-----------+
            NOTES:
-           - Control allocation pertains to the next trial for all nodes except decision,
-                since it executes after reward_retrieval
+           - STATE ATTN on first PREDICT trial is [1 0] and RETRIEVED_REWARD is [1]
+             since those are carried over from last trial of EXPERIENCE phase;
+             if no EXPERIENCE trials have been run, then those need to be initialized
+                 FIX: (make default_control_allocation?)
+           - Control signal in response to retrieved_reward has its effect on next trial
+                 (since Projection from retrieved_reward -> control is specified as feedback,
+                  so that control will execute immediately after input and before EM (in order to control it),
+                  but therefore also before retrieve_reward is updated on the current trial)
            - DDM integrates continuously;  could end run on DDM.when_finished
            - #R/O's = NUM_ROLL_OUTS
 
@@ -581,26 +620,23 @@ def construct_model(model_name:str=MODEL_NAME,
         """
 
         task = variable[StateFeatureIndex.TASK]
-        external_state = np.atleast_1d(int(any(variable[StateFeatureIndex.EXTERNAL_STATE])))
-        reward = variable[StateFeatureIndex.REWARD]
-        keys = [task, external_state, reward]
+        reward = [1] if variable[StateFeatureIndex.REWARD] else [0]
+        keys = [task, reward]
+        # set values to 0 since they don't matter (should only be retrieving based on keys)
         query = np.array(keys + [[0],[0],[0,0,0,0],[0],[0]], dtype=object)
+
+        # FIX: IF PARAMETERS ARE USED AND CONTEXT IS ADDED TO CALLS BELOW, FAILS COMPLAINING ABOUT NEED FOR SEED
         if task == Task.EXPERIENCE:
             # Set distance_field_weights for EXPERIENCE
-            # control_em.parameters.distance_field_weights.set([1] + [0] * (num_fields - 1), context)
+            # control_em.parameters.distance_field_weights.set([1] + [0] * (num_fields - 1))
             control_em.distance_field_weights = [1] + [0] * (num_fields - 1)
             # Get control_signals for EXPERIENCE
-            control_signals = control_em(query)[num_keys:]
+            control_signals = control_em.execute(query)[num_keys:]
 
         elif task == Task.PREDICT:
-            # # Set distance_field_weights for PREDICT
-            # control_em.parameters.distance_field_weights.set([1] * num_keys + [0] * num_vals, context)
-            # # Set control_signals for PREDICT
-            # FIX: FAILS, COMPLAINTING ABOUT NEED FOR SEED:
-            # control_signals = control_em.execute(query, context)[num_keys:]
-
             # Set distance_field_weights for PREDICT
-            control_em.parameters.distance_field_weights.set([1] * num_keys + [0] * num_vals)
+            # control_em.parameters.distance_field_weights.set([1] * num_keys + [0] * num_vals)
+            control_em.distance_field_weights = [1] * num_keys + [0] * num_vals
             # Set control_signals for PREDICT
             control_signals = control_em.execute(query)[num_keys:]
 
@@ -609,7 +645,6 @@ def construct_model(model_name:str=MODEL_NAME,
     # Monitored for control
     state_features = [None] * len(StateFeatureIndex)
     state_features[StateFeatureIndex.TASK] = task_input_layer
-    state_features[StateFeatureIndex.EXTERNAL_STATE] = attend_external_layer
     state_features[StateFeatureIndex.REWARD] = (retrieved_reward_layer, FEEDBACK)
 
     # Control signals
@@ -630,13 +665,17 @@ def construct_model(model_name:str=MODEL_NAME,
     # ----------------------------------------------------------------------------------------------------------------
     
     EGO_comp = Composition(name=model_name,
-                           # FIX: ADD TERMINATION CONDITION FOR TRIAL BASED ON REWARD > 0
-                           #      AND MAKE SURE IT APPLIES ONLY TO PREDICT TRIALS
-                           # Terminate a Task.PREDICT trial
+                           # Terminate a Task.PREDICT trial after decision_layer executes if a reward is retrieved
                            # termination_processing={
-                           #     TimeScale.TRIAL: And(Condition(lambda: task_input_layer.value == Task.PREDICT),
-                           #                          Condition(lambda: reward_input_layer.value),
-                           #                          JustRan(decision_layer))} # Ensure that decision runs after reward
+                               # TimeScale.TRIAL: And(Condition(lambda: task_input_layer.value == Task.PREDICT),
+                               #                      Condition(lambda: retrieved_reward_layer.value),
+                               #                      JustRan(decision_layer))}
+                               # CRASHES:
+                               # TimeScale.TRIAL: Any(And(Condition(lambda: task_input_layer.value == Task.EXPERIENCE),
+                               #                          JustRan(em)),
+                               #                      And(Condition(lambda: task_input_layer.value == Task.PREDICT),
+                               #                          Condition(lambda: retrieved_reward_layer.value),
+                               #                          JustRan(decision_layer)))}
                            )
 
     # Nodes not included in (decision output) Pathway specified above
@@ -699,8 +738,7 @@ def construct_model(model_name:str=MODEL_NAME,
     assert context_layer.input_port.path_afferents[3].sender.owner == em  # memory of context
     assert context_layer.input_port.path_afferents[3].parameters.matrix.get()[0][0] == context_weight
     assert control_layer.input_ports[0].path_afferents[0].sender.owner == task_input_layer
-    assert control_layer.input_ports[1].path_afferents[0].sender.owner == attend_external_layer
-    assert control_layer.input_ports[2].path_afferents[0].sender.owner == retrieved_reward_layer
+    assert control_layer.input_ports[1].path_afferents[0].sender.owner == retrieved_reward_layer
 
     return EGO_comp
 #endregion
@@ -737,11 +775,11 @@ if RUN_MODEL:
                     STATE_INPUT_LAYER_NAME,
                     REWARD_INPUT_LAYER_NAME]
 
-    # Experience Phase
-    print(f"Presenting {model.name} with {TOTAL_NUM_EXPERIENCE_STIMS} EXPERIENCE stimuli")
-    model.run(inputs={k: v for k, v in zip(input_layers, experience_inputs)},
-              report_output=REPORT_OUTPUT,
-              report_progress=REPORT_PROGRESS)
+    # # Experience Phase
+    # print(f"Presenting {model.name} with {TOTAL_NUM_EXPERIENCE_STIMS} EXPERIENCE stimuli")
+    # model.run(inputs={k: v for k, v in zip(input_layers, experience_inputs)},
+    #           report_output=REPORT_OUTPUT,
+    #           report_progress=REPORT_PROGRESS)
 
     # Prediction Phase
     prediction_inputs = build_prediction_inputs(state_size=STATE_SIZE,
@@ -751,8 +789,20 @@ if RUN_MODEL:
                                                 reward_vals=REWARD_VALS,
                                                 seq_type=PREDICT_SEQ_TYPE)
     print(f"Running {model.name} for {NUM_ROLL_OUTS} PREDICT (ROLL OUT) trials")
-    # Initialize to not store on this run, since control doesn't execute until after EM
-    model.nodes[EM_NAME].storage_prob = 0.0
+    # FIX: If retrieved_reward -> control is not specified as feedback,
+    #      then need to initialize to not store on this run, since control doesn't execute until after EM
+    #      This is hack;  really Control of ROLLOUTS should be implemented as OCM
+    # model.nodes[EM_NAME].parameter_ports['storage_prob'].mod_afferents[0].parameters.value.set(0.0,
+    #                                                                                            override=True,
+    #                                                                                            context=MODEL_NAME)
+    # model.nodes[EM_NAME].parameter_ports['storage_prob'].parameters.value.set(0.0,
+    #                                                                           override=True,
+    #                                                                           context=MODEL_NAME)
+    model.termination_processing = {
+        TimeScale.TRIAL: And(Condition(lambda: model.nodes[TASK_INPUT_LAYER_NAME].value == Task.PREDICT),
+                             Condition(lambda: model.nodes[RETRIEVED_REWARD_NAME].value),
+                             JustRan(model.nodes[DECISION_LAYER_NAME]))}
+
     model.run(inputs={k: v for k, v in zip(input_layers, prediction_inputs)},
               report_output=REPORT_OUTPUT,
               report_progress=REPORT_PROGRESS)

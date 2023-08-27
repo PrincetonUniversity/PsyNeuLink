@@ -12,6 +12,12 @@
 #   - SHOULD differential of SoftmaxGainControl Node be included in learning?
 #   - SHOULD MEMORY DECAY OCCUR IF STORAGE DOES NOT? CURRENTLY IT DOES NOT (SEE EMStorage Function)
 
+# - FIX: MOVE BACK TO EGO Model - MDP branch
+# - FIX: Get rid of initial all zero's entry in em.memory on initialization
+# - FIX: Implement default_control_allocation:
+#        - for proper control of attention and EM on first PREDICT trial in case EXPERIENCE has not been run
+#          (currently relies on state of control after EXPERIENCE)
+# - FIX: Add EMFields IntEnum for em
 # - FIX: Concatenation:
 # -      LLVM for function and derivative
 # -      Add Concatenate to pytorchcreator_function
@@ -133,6 +139,7 @@
 #                   add to PROJECTIONS param of port spec?
 #              - why aren't FEEDBACK_SENDER and FEEDBACK_RECEIVER roles being assigned when feedback is specified?
 #              - DOCUMENTATION:  add to Projection and Composition_Feedback
+#        - Add warning if termination_condition is trigged (and verbosePref is set)
 #        - Addition of projections to a ControlMechanism seems too dependent on the order in which the
 #              the ControlMechanism is constructed with respect to its afferents (if it comes before one,
 #              the projection to it (i.e., for monitoring) does not get added to the Composition
@@ -159,6 +166,7 @@
 #           THEN IT SHOULD BE IGNORED AS AN INPUT NODE IN A COMPOSITION
 #
 #      - showgraph:  (show_graph)
+#        - show feedback projections as pink (shouldn't that already be the case?)
 #        - add mode for showing projections as diamonds without show_learning (e.g., "show_projections")
 #        - figure out how to get storage_node to show without all other learning stuff
 #        - show 'operation' parameter for LinearCombination in show_node_structure=ALL
@@ -168,7 +176,9 @@
 #      - ControlMechanism
 #        - refactor ControlMechanism per notes of 11/3/21, including:
 #                FIX: 11/3/21 - MOVE _parse_monitor_specs TO HERE FROM ObjectiveMechanism
-
+#      - EpisodicMemoryMechanism:
+#        - make storage_prob and retrieval_prob parameters linked to function
+#
 #      - LinearCombination Function:
 #        - finish adding derivative (for if exponents are specified)
 #        - remove properties (use getter and setter for Parameters)
