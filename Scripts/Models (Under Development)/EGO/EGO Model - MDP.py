@@ -132,11 +132,12 @@ from enum import IntEnum
 
 from psyneulink import *
 from psyneulink._typing import Union, Literal
+from psyneulink.core.scheduling.condition import Any, And, AllHaveRun, AtRunStart
 
 # Settings for running script:
 
-NUM_EXP_SEQS = 1               # Number of sequences to run in EXPERIENCE Phase (includes baseline + revaluation)
-NUM_PRED_TRIALS = 5            # Number of trials (ROLL OUTS) to run in PREDICTION Phase
+NUM_EXP_SEQS = 20               # Number of sequences to run in EXPERIENCE Phase (includes baseline + revaluation)
+NUM_PRED_TRIALS = 100           # Number of trials (ROLL OUTS) to run in PREDICTION Phase
 
 CONSTRUCT_MODEL = True                 # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = (                      # Only one of the following can be uncommented:
@@ -497,7 +498,7 @@ def construct_model(model_name:str=MODEL_NAME,
                                                   [0] * time_size,    # time
                                                   [0] * state_size,   # context
                                                   [0] * reward_size], # reward
-                                     selection_function=SoftMax(gain=retrieval_softmax_gain),
+                                     # selection_function=SoftMax(gain=retrieval_softmax_gain),
                                      distance_field_weights=[state_retrieval_weight,
                                                              time_retrieval_weight,
                                                              context_retrieval_weight,
@@ -635,17 +636,22 @@ def construct_model(model_name:str=MODEL_NAME,
     # ----------------------------------------------------------------------------------------------------------------
     
     EGO_comp = Composition(name=model_name,
-                           # Terminate a Task.PREDICT trial after decision_layer executes if a reward is retrieved
+                           # # Terminate a Task.PREDICT trial after decision_layer executes if a reward is retrieved
                            # termination_processing={
-                               # TimeScale.TRIAL: And(Condition(lambda: task_input_layer.value == Task.PREDICT),
-                               #                      Condition(lambda: retrieved_reward_layer.value),
-                               #                      JustRan(decision_layer))}
-                               # CRASHES:
-                               # TimeScale.TRIAL: Any(And(Condition(lambda: task_input_layer.value == Task.EXPERIENCE),
-                               #                          JustRan(em)),
-                               #                      And(Condition(lambda: task_input_layer.value == Task.PREDICT),
-                               #                          Condition(lambda: retrieved_reward_layer.value),
-                               #                          JustRan(decision_layer)))}
+                           #     # TimeScale.TRIAL: And(Condition(lambda: task_input_layer.value == Task.PREDICT),
+                           #     #                      Condition(lambda: retrieved_reward_layer.value),
+                           #     #                      JustRan(decision_layer))}
+                           #     # CRASHES:
+                           #     # TimeScale.TRIAL: Any(And(Condition(lambda: task_input_layer.value == Task.EXPERIENCE),
+                           #     #                          JustRan(em)),
+                           #     #                      And(Condition(lambda: task_input_layer.value == Task.PREDICT),
+                           #     #                          Condition(lambda: retrieved_reward_layer.value),
+                           #     #                          JustRan(decision_layer)))}
+                           #     TimeScale.TRIAL: Any(And(Condition(lambda: task_input_layer.value == Task.EXPERIENCE),
+                           #                              AllHaveRun()),
+                           #                          And(Condition(lambda: task_input_layer.value == Task.PREDICT),
+                           #                              Condition(lambda: retrieved_reward_layer.value),
+                           #                              AllHaveRun()))}
                            )
 
     # Nodes not included in (decision output) Pathway specified above
@@ -759,15 +765,6 @@ if RUN_MODEL:
                                                 reward_vals=REWARD_VALS,
                                                 seq_type=PREDICT_SEQ_TYPE)
     print(f"Running {model.name} for {NUM_ROLL_OUTS} PREDICT (ROLL OUT) trials")
-    # FIX: If retrieved_reward -> control is not specified as feedback,
-    #      then need to initialize to not store on this run, since control doesn't execute until after EM
-    #      This is hack;  really Control of ROLLOUTS should be implemented as OCM
-    # model.nodes[EM_NAME].parameter_ports['storage_prob'].mod_afferents[0].parameters.value.set(0.0,
-    #                                                                                            override=True,
-    #                                                                                            context=MODEL_NAME)
-    # model.nodes[EM_NAME].parameter_ports['storage_prob'].parameters.value.set(0.0,
-    #                                                                           override=True,
-    #                                                                           context=MODEL_NAME)
     model.termination_processing = {
         TimeScale.TRIAL: And(Condition(lambda: model.nodes[TASK_INPUT_LAYER_NAME].value == Task.PREDICT),
                              Condition(lambda: model.nodes[RETRIEVED_REWARD_NAME].value),
@@ -775,11 +772,9 @@ if RUN_MODEL:
                              AllHaveRun()
                              )
     }
-
     model.run(inputs={k: v for k, v in zip(input_layers, prediction_inputs)},
               report_output=REPORT_OUTPUT,
-              report_progress=REPORT_PROGRESS,
-              # reset_stateful_functions_when={model.nodes[RETRIEVED_REWARD_NAME]: AtTrialStart()}
+              report_progress=REPORT_PROGRESS
               )
 
     if PRINT_RESULTS:
