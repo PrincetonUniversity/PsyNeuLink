@@ -489,15 +489,15 @@ def construct_model(model_name:str=MODEL_NAME,
                                                auto=1-context_integration_rate,
                                                hetero=0.0)
     em = EpisodicMemoryMechanism(name=em_name,
+                                 default_variable=[[0] * state_size,   # state
+                                                   [0] * time_size,    # time
+                                                   [0] * state_size,   # context
+                                                   [0] * reward_size], # reward
                                  input_ports=[{NAME:state_input_name, SIZE:state_size},
                                               {NAME:time_input_name, SIZE:time_size},
                                               {NAME:context_name, SIZE:state_size},
                                               {NAME:reward_input_name, SIZE:reward_size}],
                                  function=ContentAddressableMemory(
-                                     initializer=[[0] * state_size,   # state
-                                                  [0] * time_size,    # time
-                                                  [0] * state_size,   # context
-                                                  [0] * reward_size], # reward
                                      # selection_function=SoftMax(gain=retrieval_softmax_gain),
                                      distance_field_weights=[state_retrieval_weight,
                                                              time_retrieval_weight,

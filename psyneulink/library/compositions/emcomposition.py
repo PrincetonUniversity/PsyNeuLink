@@ -12,7 +12,6 @@
 #   - SHOULD differential of SoftmaxGainControl Node be included in learning?
 #   - SHOULD MEMORY DECAY OCCUR IF STORAGE DOES NOT? CURRENTLY IT DOES NOT (SEE EMStorage Function)
 
-# - FIX: MOVE BACK TO EGO Model - MDP branch
 # - FIX: Get rid of initial all zero's entry in em.memory on initialization
 # - FIX: Implement default_control_allocation:
 #        - for proper control of attention and EM on first PREDICT trial in case EXPERIENCE has not been run
@@ -179,6 +178,7 @@
 #                FIX: 11/3/21 - MOVE _parse_monitor_specs TO HERE FROM ObjectiveMechanism
 #      - EpisodicMemoryMechanism:
 #        - make storage_prob and retrieval_prob parameters linked to function
+#        - make distance_field_weights a parameter linked to function
 #
 #      - LinearCombination Function:
 #        - finish adding derivative (for if exponents are specified)

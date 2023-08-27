@@ -84,6 +84,11 @@ These can be specified using any of the following arguments:
     in `memory <EpisodicMemoryMechanism.memory>`;  the `memory <EpisodicMemoryMechanism.memory>` itself remains
     empty until the Mechanism is executed and an item is stored.
 
+    .. hint::
+       Use **default_variable** rather than **memory** to specify the shape of memory but keep it empty
+       until the first entry is stored; note, however, that since retrieval is executed before storage
+       (see `EpisodicMemoryMechanism_Execution ), the first execution will return an entry of zeros.
+
   * **memory** -- specifies a set of entries to be stored in `memory <EpisodicMemoryMechanism.memory>`;  it is passed
     to the constructor for the EpisodicMemoryMechanism's `function <EpisodicMemoryMechanism.function>`) as its
     **initializer** argument (see `initializer <ContentAddressableMemory.initializer>` for an example).
