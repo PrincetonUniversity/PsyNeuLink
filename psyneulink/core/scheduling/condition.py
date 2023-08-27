@@ -296,3 +296,7 @@ class Threshold(graph_scheduler.condition._DependencyValidation, Condition):
             m.kwargs['parameter'] = f'{self.dependency.name}_OutputPort_0'
 
         return m
+
+
+class JustRan:
+    pass

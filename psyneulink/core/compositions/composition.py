@@ -1913,11 +1913,11 @@ or in arguments to its `run <Composition.run>` and `learn <Composition.learn>` m
      of Nodes in the Composition that have a `StatefulFunction`, each of which resets the `stateful parameters
      <Component_Stateful_Parameters>` of those Functions.
      COMMENT:
-        ?? OR JUST THEIR `previous_value <StatefulFunction.previous_value>` ??
+        ?? OR JUST THEIR `previous_value <StatefulFunction.previous_value>` of its `StatefulFunction`. ??
      COMMENT
-     of its `StatefulFunction`. If it is called  without any arguments, it calls the `reset <Component.reset>`
+     If it is called  without any arguments, it calls the `reset <Component.reset>`
      method for every `Node <Composition_Nodes>` in the Composition that has a `StatefulFunction`.
-     It can also be called with a dictionary that specifies a subsset of Nodes to reset (see format descdribed for
+     It can also be called with a dictionary that specifies a subsset of Nodes to reset (see format described for
      **reset_stateful_functions_when** below).
 
    * **reset_stateful_functions_when** and **reset_stateful_functions_to** -- these are arguments of the Composition's

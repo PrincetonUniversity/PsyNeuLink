@@ -7,7 +7,7 @@
 
 # TODO:
 
-# FIX: TERMINATION CONDITION IS GETTING TRIGGED AFTER 1st TRIAL
+# FIX: TERMINATION CONDITION IS GETTING TRIGGERED AFTER 1st TRIAL
 
 """
 QUESTIONS:
@@ -775,11 +775,11 @@ if RUN_MODEL:
                     STATE_INPUT_LAYER_NAME,
                     REWARD_INPUT_LAYER_NAME]
 
-    # # Experience Phase
-    # print(f"Presenting {model.name} with {TOTAL_NUM_EXPERIENCE_STIMS} EXPERIENCE stimuli")
-    # model.run(inputs={k: v for k, v in zip(input_layers, experience_inputs)},
-    #           report_output=REPORT_OUTPUT,
-    #           report_progress=REPORT_PROGRESS)
+    # Experience Phase
+    print(f"Presenting {model.name} with {TOTAL_NUM_EXPERIENCE_STIMS} EXPERIENCE stimuli")
+    model.run(inputs={k: v for k, v in zip(input_layers, experience_inputs)},
+              report_output=REPORT_OUTPUT,
+              report_progress=REPORT_PROGRESS)
 
     # Prediction Phase
     prediction_inputs = build_prediction_inputs(state_size=STATE_SIZE,
@@ -805,7 +805,9 @@ if RUN_MODEL:
 
     model.run(inputs={k: v for k, v in zip(input_layers, prediction_inputs)},
               report_output=REPORT_OUTPUT,
-              report_progress=REPORT_PROGRESS)
+              report_progress=REPORT_PROGRESS,
+              # reset_stateful_functions_when={model.nodes[RETRIEVED_REWARD_NAME]: AtTrialStart()}
+              )
 
     if PRINT_RESULTS:
         print(f"Predicted reward for last stimulus: {model.results}")
