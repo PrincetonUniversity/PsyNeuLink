@@ -627,7 +627,7 @@ from psyneulink.core.components.ports.port import Port, _parse_port_spec
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
     AUTO_ASSIGN_MATRIX, COMBINE, CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, CONTROL_SIGNALS, CONCATENATE, \
-    EID_SIMULATION, FUNCTION, GATING_SIGNAL, INIT_EXECUTE_METHOD_ONLY, INTERNAL_ONLY, NAME, \
+    EID_SIMULATION, FEEDBACK, FUNCTION, GATING_SIGNAL, INIT_EXECUTE_METHOD_ONLY, INTERNAL_ONLY, NAME, \
     MECHANISM, MULTIPLICATIVE, MODULATORY_SIGNALS, MONITOR_FOR_CONTROL, MONITOR_FOR_MODULATION, \
     OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PARAMS, PORT_TYPE, PRODUCT, PROJECTION_TYPE, PROJECTIONS, \
     SEPARATE, SIZE
@@ -1552,7 +1552,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         other_input_ports = input_ports or []
 
-        # FIX 11/3/21: THIS SHOULD BE MADE A PARAMETER
         self.parameters.outcome_input_ports.set(ContentAddressableList(component_type=OutputPort),
                                                 override=True)
 
@@ -1570,7 +1569,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
             # Get outcome_input_port_specs without including specifications of Projections to them, as those need to
             #     be constructed and specified as aux_components (below) for validation and activation by Composition
-            outcome_input_port_specs, outcome_value_sizes, projection_specs \
+            outcome_input_port_specs, outcome_value_sizes, projection_specs, feedback \
                 = self._parse_monitor_for_control_input_ports(context)
 
             # Get sizes of input_ports passed in (that are presumably used for other purposes;
@@ -1583,7 +1582,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
             super()._instantiate_input_ports(context=context,
                                              input_ports=input_ports,
                                              reference_value=input_port_value_sizes)
-            # FIX: 11/3/21 NEED TO MODIFY ONCE OUTCOME InputPorts ARE MOVED
             self.outcome_input_ports.extend(self.input_ports[:len(outcome_input_port_specs)])
 
             # Instantiate Projections to outcome_input_ports from items specified in monitor_for_control
@@ -1600,14 +1598,11 @@ class ControlMechanism(ModulatoryMechanism_Base):
                     # The single outcome_input_port gets all the Projections
                     outcome_port_index = 0
                 self.aux_components.append(MappingProjection(sender=projection_specs[i],
-                                                             receiver=self.outcome_input_ports[outcome_port_index]))
+                                                             receiver=self.outcome_input_ports[outcome_port_index],
+                                                             feedback=feedback[i]))
 
         # Nothing has been specified, so just instantiate the default OUTCOME InputPort with any input_ports passed in
         else:
-            # # MODIFIED 1/30/21 OLD:
-            # super()._instantiate_input_ports(context=context)
-            # self.outcome_input_ports.append(self.input_ports[OUTCOME])
-            # MODIFIED 1/30/21 NEW:
             other_input_port_value_sizes  = self._handle_arg_input_ports(other_input_ports)[0]
             # Construct full list of InputPort specifications and sizes
             input_ports = self.input_ports + other_input_ports
@@ -1616,7 +1611,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
                                              input_ports=input_ports,
                                              reference_value=input_port_value_sizes)
             self.outcome_input_ports.append(self.input_ports[OUTCOME])
-            # MODIFIED 1/30/21 END
 
     def _parse_monitor_for_control_input_ports(self, context):
         """Get outcome_input_port specification dictionaries for items specified in monitor_for_control.
@@ -1632,6 +1626,14 @@ class ControlMechanism(ModulatoryMechanism_Base):
         from psyneulink.core.components.mechanisms.processing.objectivemechanism import _parse_monitor_specs
 
         monitored_ports = _parse_monitor_specs(self.monitor_for_control)
+
+        # Handle FEEDBACK specification for monitored_ports
+        feedback = [False] * len(monitored_ports)
+        for i, port in enumerate(monitored_ports):
+            if isinstance(port, tuple) and port[1] == FEEDBACK:
+                monitored_ports[i] = port[0]
+                feedback[i] = True
+
         port_value_sizes = self._handle_arg_input_ports(self.monitor_for_control)[0]
 
         outcome_input_ports_option = self.outcome_input_ports_option
@@ -1674,7 +1676,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                                              NAME: 'OUTCOME',
                                              FUNCTION: function})
 
-        return outcome_input_port_specs, port_value_sizes, monitored_ports
+        return outcome_input_port_specs, port_value_sizes, monitored_ports, feedback
 
     def _validate_monitor_for_control(self, nodes):
         """Ensure all of the Components being monitored for control are in the Composition being controlled

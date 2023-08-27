@@ -646,6 +646,7 @@ class Projection_Base(Projection):
                  weight=None,
                  exponent=None,
                  function=None,
+                 feedback:bool=False,
                  exclude_in_autodiff=False,
                  params=None,
                  name=None,
@@ -710,6 +711,7 @@ class Projection_Base(Projection):
 
         self.receiver = receiver
         self._exclude_from_autodiff = exclude_in_autodiff
+        self.feedback = feedback
 
          # Register with ProjectionRegistry or create one
         register_category(entry=self,

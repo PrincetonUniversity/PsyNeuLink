@@ -128,6 +128,11 @@
 #          - Add warning of this on initial call to learn()
 #
 #      - Composition:
+#        - Generalize treatment of FEEDBACK specification:
+#              - move from ControlMechanism._parse_monitor_for_control to Port._parse_port_spec?
+#                   add to PROJECTIONS param of port spec?
+#              - why aren't FEEDBACK_SENDER and FEEDBACK_RECEIVER roles being assigned when feedback is specified?
+#              - DOCUMENTATION:  add to Projection and Composition_Feedback
 #        - Addition of projections to a ControlMechanism seems too dependent on the order in which the
 #              the ControlMechanism is constructed with respect to its afferents (if it comes before one,
 #              the projection to it (i.e., for monitoring) does not get added to the Composition
@@ -159,6 +164,10 @@
 #        - show 'operation' parameter for LinearCombination in show_node_structure=ALL
 #        - specify set of nodes to show and only show those
 #        - fix: show_learning=ALL (or merge from EM branch)
+#
+#      - ControlMechanism
+#        - refactor ControlMechanism per notes of 11/3/21, including:
+#                FIX: 11/3/21 - MOVE _parse_monitor_specs TO HERE FROM ObjectiveMechanism
 
 #      - LinearCombination Function:
 #        - finish adding derivative (for if exponents are specified)

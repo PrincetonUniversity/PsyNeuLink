@@ -130,6 +130,10 @@ from psyneulink import *
 from psyneulink._typing import Union, Literal
 
 # Settings for running script:
+
+NUM_EXP_SEQS = 1               # Number of sequences to run in EXPERIENCE Phase (includes baseline + revaluation)
+NUM_PRED_TRIALS = 5            # Number of trials (ROLL OUTS) to run in PREDICTION Phase
+
 CONSTRUCT_MODEL = True                 # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = (                      # Only one of the following can be uncommented:
     None                             # suppress display of model
@@ -251,11 +255,11 @@ time_fct = DriftOnASphereIntegrator(initializer=np.random.random(TIME_SIZE - 1),
                                     dimension=TIME_SIZE)
 # Task environment:
 NUM_STIM_PER_SEQ = model_params['n_steps'] # number of stimuli in a sequence
-NUM_BASELINE_SEQS = 20        # number of trials for Task.EXPERIENCE (passive encoding into EM) BEFORE revaluation
-NUM_REVALUATION_SEQS = 20     # number of trials for Task.EXPERIENCE (passive encoding into EM) AFTER revaluation
-NUM_EXPERIENCE_SEQS = NUM_BASELINE_SEQS + NUM_REVALUATION_SEQS # total number of trials for Task.EXPERIENCE
-TOTA_NUM_EXPERIENCE_STIMS = (NUM_BASELINE_SEQS * NUM_STIM_PER_SEQ) + (NUM_REVALUATION_SEQS * (NUM_STIM_PER_SEQ-1))
-NUM_ROLL_OUTS = 100          # number of times to roll out each sequence in Task.PREDICT
+NUM_BASELINE_SEQS = NUM_EXP_SEQS     # num trials for Task.EXPERIENCE (passive encoding into EM) BEFORE revaluation
+NUM_REVALUATION_SEQS = NUM_EXP_SEQS  # num trials for Task.EXPERIENCE (passive encoding into EM) AFTER revaluation
+NUM_EXPERIENCE_SEQS = NUM_BASELINE_SEQS + NUM_REVALUATION_SEQS  # total number of trials for Task.EXPERIENCE
+TOTAL_NUM_EXPERIENCE_STIMS = (NUM_BASELINE_SEQS * NUM_STIM_PER_SEQ) + (NUM_REVALUATION_SEQS * (NUM_STIM_PER_SEQ-1))
+NUM_ROLL_OUTS = NUM_PRED_TRIALS    # number of times to roll out each sequence in Task.PREDICT
 
 STIM_SEQS = [list(range(1,NUM_STIM_PER_SEQ*2,2)),
             list(range(2,NUM_STIM_PER_SEQ*2+1,2))]
@@ -549,11 +553,13 @@ def construct_model(model_name:str=MODEL_NAME,
            +--------+-------------------------+--------------+-------------------------------+-------+-----+-----------+
            |   80   |   EXP     ANY     ANY   |    1     0   |   1      1       1       0    |   1   |  0  | TRIAL END |
            +--------+-------------------------+--------------+-------------------------------+-------+-----+-----------+
-           |        |   PRED     1       0    |    0     1   |   1      1       1       0    |   0   |  1  |           |
+           |        |   PRED     1       0    |    0     1   |   1      0       1       0    |   0   |  1  |           |
            |        |   PRED     0       0    |    0     1   |   1      0       1       0    |   0   |  1  |           |
-           | #R/O's |   PRED     0       1    |    1     0   |   1      0       1       0    |   0   |  1  | TRIAL END |
+           | #R/O's |   PRED     0       1    |    1     0   |   1      1       1       0    |   0   |  1  | TRIAL END |
            +--------+-------------------------+--------------+-------------------------------+-------+-----+-----------+
            NOTES:
+           - Control allocation pertains to the next trial for all nodes except decision,
+                since it executes after reward_retrieval
            - DDM integrates continuously;  could end run on DDM.when_finished
            - #R/O's = NUM_ROLL_OUTS
 
@@ -604,7 +610,7 @@ def construct_model(model_name:str=MODEL_NAME,
     state_features = [None] * len(StateFeatureIndex)
     state_features[StateFeatureIndex.TASK] = task_input_layer
     state_features[StateFeatureIndex.EXTERNAL_STATE] = attend_external_layer
-    state_features[StateFeatureIndex.REWARD] = retrieved_reward_layer
+    state_features[StateFeatureIndex.REWARD] = (retrieved_reward_layer, FEEDBACK)
 
     # Control signals
     control_signals = [None] * len(ControlSignalIndex)
@@ -709,6 +715,7 @@ model = None
 if CONSTRUCT_MODEL:
     print(f'Constructing {MODEL_NAME}')
     model = construct_model()
+    assert 'DEBUGGING BREAK POINT'
 
 if DISPLAY_MODEL is not None:
     if model:
@@ -731,7 +738,7 @@ if RUN_MODEL:
                     REWARD_INPUT_LAYER_NAME]
 
     # Experience Phase
-    print(f"Running {model.name} for {TOTA_NUM_EXPERIENCE_STIMS} EXPERIENCE stimuli")
+    print(f"Presenting {model.name} with {TOTAL_NUM_EXPERIENCE_STIMS} EXPERIENCE stimuli")
     model.run(inputs={k: v for k, v in zip(input_layers, experience_inputs)},
               report_output=REPORT_OUTPUT,
               report_progress=REPORT_PROGRESS)
@@ -744,6 +751,8 @@ if RUN_MODEL:
                                                 reward_vals=REWARD_VALS,
                                                 seq_type=PREDICT_SEQ_TYPE)
     print(f"Running {model.name} for {NUM_ROLL_OUTS} PREDICT (ROLL OUT) trials")
+    # Initialize to not store on this run, since control doesn't execute until after EM
+    model.nodes[EM_NAME].storage_prob = 0.0
     model.run(inputs={k: v for k, v in zip(input_layers, prediction_inputs)},
               report_output=REPORT_OUTPUT,
               report_progress=REPORT_PROGRESS)
