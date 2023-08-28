@@ -136,8 +136,8 @@ from psyneulink.core.scheduling.condition import Any, And, AllHaveRun, AtRunStar
 
 # Settings for running script:
 
-NUM_EXP_SEQS = 20               # Number of sequences to run in EXPERIENCE Phase (includes baseline + revaluation)
-NUM_PRED_TRIALS = 100           # Number of trials (ROLL OUTS) to run in PREDICTION Phase
+NUM_EXP_SEQS = 5               # Number of sequences to run in EXPERIENCE Phase (includes baseline + revaluation)
+NUM_PRED_TRIALS = 10           # Number of trials (ROLL OUTS) to run in PREDICTION Phase
 
 CONSTRUCT_MODEL = True                 # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = (                      # Only one of the following can be uncommented:
@@ -184,7 +184,6 @@ MODEL_NAME = "EGO Model"
 TASK_INPUT_LAYER_NAME = "TASK"
 STATE_INPUT_LAYER_NAME = "STATE"
 TIME_INPUT_LAYER_NAME = "TIME"
-# ATTENTION_LAYER_NAME = "ENCODE STATE"
 ATTEND_EXTERNAL_LAYER_NAME = "ATTEND\nEXTERNAL\nSTATE"
 ATTEND_MEMORY_LAYER_NAME = "ATTEND\nMEMORY\nOF STATE"
 CONTROL_LAYER_NAME = "CONTROL"
@@ -693,6 +692,9 @@ def construct_model(model_name:str=MODEL_NAME,
     EGO_comp.add_projection(MappingProjection(retrieved_reward_layer, decision_layer))
 
     # Validate construction
+    proj_from_retrieved_reward_to_control = control_layer.input_ports[1].path_afferents[0]
+    assert proj_from_retrieved_reward_to_control._feedback == True
+    assert proj_from_retrieved_reward_to_control in EGO_comp.feedback_projections # retrieved_reward feedback
     assert context_layer.input_port.path_afferents[0].sender.owner == context_layer # recurrent projection
     assert context_layer.input_port.path_afferents[0].parameters.matrix.get()[0][0] == 1-context_integration_rate
     assert context_layer.input_port.path_afferents[1].sender.owner == attend_external_layer # external state
