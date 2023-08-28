@@ -142,7 +142,7 @@ RUN_MODEL = False                      # False => don't run the model
 ANALYZE_RESULTS = False                # True => output analysis of results of run
 REPORT_OUTPUT = ReportOutput.FULL     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
 REPORT_PROGRESS = ReportProgress.OFF   # Sets console progress bar during run
-PRINT_RESULTS = False                  # print model.results after execution
+PRINT_RESULTS = False                   # print model.results after execution
 ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
 
 
@@ -666,35 +666,34 @@ def construct_model(model_name:str=MODEL_NAME,
 #                                                   SCRIPT EXECUTION
 # ======================================================================================================================
 
-model = None
+if __name__ == "__main__":
+    model = None
 
-if CONSTRUCT_MODEL:
-    model = construct_model()
+    if CONSTRUCT_MODEL:
+        model = construct_model()
 
-if DISPLAY_MODEL is not None:
-    if model:
-        model.show_graph(**DISPLAY_MODEL)
-    else:
-        print("Model not yet constructed")
+    if DISPLAY_MODEL is not None:
+        if model:
+            model.show_graph(**DISPLAY_MODEL)
+        else:
+            print("Model not yet constructed")
 
-if RUN_MODEL:
-    inputs = build_inputs(state_size=STATE_SIZE,
-                          time_drift_rate=TIME_DRIFT_RATE,
-                          num_baseline_seqs=NUM_BASELINE_SEQS,
-                          num_revaluation_seqs=NUM_REVALUATION_SEQS,
-                          num_predict_trials=NUM_PREDICT_TRIALS)
-    input_layers = [TIME_INPUT_LAYER_NAME,
-                    TASK_INPUT_LAYER_NAME,
-                    STATE_INPUT_LAYER_NAME,
-                    REWARD_INPUT_LAYER_NAME]
-    inputs_dicts = {k: v for k, v in zip(input_layers, inputs)}
+    if RUN_MODEL:
+        inputs = build_inputs(state_size=STATE_SIZE,
+                              time_drift_rate=TIME_DRIFT_RATE,
+                              num_baseline_seqs=NUM_BASELINE_SEQS,
+                              num_revaluation_seqs=NUM_REVALUATION_SEQS,
+                              num_predict_trials=NUM_PREDICT_TRIALS)
+        input_layers = [TIME_INPUT_LAYER_NAME,
+                        TASK_INPUT_LAYER_NAME,
+                        STATE_INPUT_LAYER_NAME,
+                        REWARD_INPUT_LAYER_NAME]
+        inputs_dicts = {k: v for k, v in zip(input_layers, inputs)}
 
-    model.run(inputs=inputs_dicts,
-              report_output=REPORT_OUTPUT,
-              report_progress=REPORT_PROGRESS)
+        model.run(inputs=inputs_dicts,
+                  report_output=REPORT_OUTPUT,
+                  report_progress=REPORT_PROGRESS)
 
-    if PRINT_RESULTS:
-        print(model.results)
-    else:
-        pass
+        if PRINT_RESULTS:
+            print(model.results)
 #endregion
