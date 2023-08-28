@@ -1597,8 +1597,11 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 else:
                     # The single outcome_input_port gets all the Projections
                     outcome_port_index = 0
-                self.aux_components.append(MappingProjection(sender=projection_specs[i],
-                                                             receiver=self.outcome_input_ports[outcome_port_index]))
+                # MODIFIED 8/27/23 OLD:  SEEMS IN IMPLEMENTING FEEDBACK TUPLE SPEC, THESE HAVE ALREADY BEEN CREATED
+                #                        FIX: ?? NEED TO BE ADDED?
+                # self.aux_components.append(MappingProjection(sender=projection_specs[i],
+                #                                              receiver=self.outcome_input_ports[outcome_port_index]))
+                # MODIFIED 8/27/23 END
 
         # Nothing has been specified, so just instantiate the default OUTCOME InputPort with any input_ports passed in
         else:
