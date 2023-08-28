@@ -630,7 +630,7 @@ from psyneulink.core.globals.keywords import \
     EID_SIMULATION, FEEDBACK, FUNCTION, GATING_SIGNAL, INIT_EXECUTE_METHOD_ONLY, INTERNAL_ONLY, NAME, \
     MECHANISM, MULTIPLICATIVE, MODULATORY_SIGNALS, MONITOR_FOR_CONTROL, MONITOR_FOR_MODULATION, \
     OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PARAMS, PORT_TYPE, PRODUCT, PROJECTION_TYPE, PROJECTIONS, \
-    REFERENCE_VALUE, SEPARATE, SIZE
+    REFERENCE_VALUE, SEPARATE, SIZE, VALUE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
@@ -1521,7 +1521,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         # CONFIGURE FOR ASSIGNMENT TO COMPOSITION
 
-        # Insure that ObjectiveMechanism's input_ports are not assigned projections from a Composition's input_CIM
+        # Ensure that ObjectiveMechanism's input_ports are not assigned projections from a Composition's input_CIM
         for input_port in self.objective_mechanism.input_ports:
             input_port.internal_only = True
 
@@ -1597,11 +1597,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 else:
                     # The single outcome_input_port gets all the Projections
                     outcome_port_index = 0
-                # MODIFIED 8/28/23 OLD:  SEEMS IN IMPLEMENTING FEEDBACK TUPLE SPEC, THESE HAVE ALREADY BEEN CREATED
-                #                        FIX: ?? NEED TO BE ADDED?
-                # self.aux_components.append(MappingProjection(sender=projection_specs[i],
-                #                                              receiver=self.outcome_input_ports[outcome_port_index]))
-                # MODIFIED 8/28/23 END
 
         # Nothing has been specified, so just instantiate the default OUTCOME InputPort with any input_ports passed in
         else:
@@ -1664,18 +1659,14 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 assert False, f"PROGRAM ERROR:  Unrecognized option ({outcome_input_ports_option}) passed " \
                               f"to ControlMechanism._parse_monitor_for_control_input_ports() for {self.name}"
 
+            # Needs to be a list to be combined with other input_ports in _instantiate_input_ports
             port_value_sizes = [function().function(port_value_sizes)]
             # Return single outcome_input_port specification
-            # # MODIFIED 8/28/23 OLD:
-            # outcome_input_port_specs.append({PORT_TYPE: InputPort,
-            #                                  NAME: 'OUTCOME',
-            #                                  FUNCTION: function})
-            # MODIFIED 8/28/23 NEW:
             port_spec = _parse_port_spec(InputPort, self, port_spec=monitored_ports, name='OUTCOME')
             port_spec[FUNCTION] = function
-            port_spec[REFERENCE_VALUE] = port_value_sizes
+            port_spec[VALUE] = port_value_sizes[0]
+            port_spec[REFERENCE_VALUE] = port_value_sizes[0]  # Get reference_value for just this port
             outcome_input_port_specs.append(port_spec)
-            # MODIFIED 8/28/23 END
 
         return outcome_input_port_specs, port_value_sizes, monitored_ports
 
