@@ -709,6 +709,7 @@ def construct_model(model_name:str=MODEL_NAME,
     return EGO_comp
 #endregion
 
+
 #region SCRIPT EXECUTION
 # ======================================================================================================================
 #                                                   SCRIPT EXECUTION
