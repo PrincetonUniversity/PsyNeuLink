@@ -695,4 +695,6 @@ if RUN_MODEL:
 
     if PRINT_RESULTS:
         print(model.results)
+    else:
+        pass
 #endregion
