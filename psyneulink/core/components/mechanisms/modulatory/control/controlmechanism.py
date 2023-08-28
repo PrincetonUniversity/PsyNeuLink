@@ -630,7 +630,7 @@ from psyneulink.core.globals.keywords import \
     EID_SIMULATION, FEEDBACK, FUNCTION, GATING_SIGNAL, INIT_EXECUTE_METHOD_ONLY, INTERNAL_ONLY, NAME, \
     MECHANISM, MULTIPLICATIVE, MODULATORY_SIGNALS, MONITOR_FOR_CONTROL, MONITOR_FOR_MODULATION, \
     OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PARAMS, PORT_TYPE, PRODUCT, PROJECTION_TYPE, PROJECTIONS, \
-    SEPARATE, SIZE
+    REFERENCE_VALUE, SEPARATE, SIZE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
@@ -1597,11 +1597,11 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 else:
                     # The single outcome_input_port gets all the Projections
                     outcome_port_index = 0
-                # MODIFIED 8/27/23 OLD:  SEEMS IN IMPLEMENTING FEEDBACK TUPLE SPEC, THESE HAVE ALREADY BEEN CREATED
+                # MODIFIED 8/28/23 OLD:  SEEMS IN IMPLEMENTING FEEDBACK TUPLE SPEC, THESE HAVE ALREADY BEEN CREATED
                 #                        FIX: ?? NEED TO BE ADDED?
                 # self.aux_components.append(MappingProjection(sender=projection_specs[i],
                 #                                              receiver=self.outcome_input_ports[outcome_port_index]))
-                # MODIFIED 8/27/23 END
+                # MODIFIED 8/28/23 END
 
         # Nothing has been specified, so just instantiate the default OUTCOME InputPort with any input_ports passed in
         else:
@@ -1628,18 +1628,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
         from psyneulink.core.components.mechanisms.processing.objectivemechanism import _parse_monitor_specs
 
         monitored_ports = _parse_monitor_specs(self.monitor_for_control)
-
-        # # Handle FEEDBACK specification for monitored_ports
-        # feedback = [False] * len(monitored_ports)
-        # for i, port in enumerate(monitored_ports):
-        #     if isinstance(port, tuple) and port[1] == FEEDBACK:
-        #         monitored_ports[i] = port[0]
-        #         feedback[i] = True
-
         port_value_sizes = self._handle_arg_input_ports(self.monitor_for_control)[0]
-
         outcome_input_ports_option = self.outcome_input_ports_option
-
         outcome_input_port_specs = []
 
         # SEPARATE outcome_input_ports OPTION:
@@ -1647,7 +1637,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
         if outcome_input_ports_option == SEPARATE:
 
             # Construct port specification to assign its name
-            for i, monitored_port in enumerate(monitored_ports):
+            for monitored_port in monitored_ports:
+                # Parse port_spec first (e.g., in case it is a (spec, feedback) tuple)
                 port_spec = _parse_port_spec(InputPort, self, port_spec = monitored_port)
                 port = port_spec['params']['projections'][0][0]
                 name = port.name
@@ -1674,11 +1665,17 @@ class ControlMechanism(ModulatoryMechanism_Base):
                               f"to ControlMechanism._parse_monitor_for_control_input_ports() for {self.name}"
 
             port_value_sizes = [function().function(port_value_sizes)]
-
             # Return single outcome_input_port specification
-            outcome_input_port_specs.append({PORT_TYPE: InputPort,
-                                             NAME: 'OUTCOME',
-                                             FUNCTION: function})
+            # # MODIFIED 8/28/23 OLD:
+            # outcome_input_port_specs.append({PORT_TYPE: InputPort,
+            #                                  NAME: 'OUTCOME',
+            #                                  FUNCTION: function})
+            # MODIFIED 8/28/23 NEW:
+            port_spec = _parse_port_spec(InputPort, self, port_spec=monitored_ports, name='OUTCOME')
+            port_spec[FUNCTION] = function
+            port_spec[REFERENCE_VALUE] = port_value_sizes
+            outcome_input_port_specs.append(port_spec)
+            # MODIFIED 8/28/23 END
 
         return outcome_input_port_specs, port_value_sizes, monitored_ports
 

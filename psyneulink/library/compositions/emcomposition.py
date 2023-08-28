@@ -12,7 +12,6 @@
 #   - SHOULD differential of SoftmaxGainControl Node be included in learning?
 #   - SHOULD MEMORY DECAY OCCUR IF STORAGE DOES NOT? CURRENTLY IT DOES NOT (SEE EMStorage Function)
 
-# - FIX: Add EMFields IntEnum for em
 # - FIX: Concatenation:
 # -      LLVM for function and derivative
 # -      Add Concatenate to pytorchcreator_function
@@ -129,6 +128,8 @@
 #          - Add warning of this on initial call to learn()
 #
 #      - Composition:
+#        - FIX: ADD TESTS FOR FEEDBACK TUPLE SPECIFICATION OF Projection, DIRECT SPECIFICATION IN CONSTRUCTOR
+#        - FIX: ADD DOCUMENTATION in _Composition_Cycles_and_Feedback RE: DIRECT SPEC OF FEEDBACK FOR PROJECTION
 #        - Generalize treatment of FEEDBACK specification:
 #              - move from ControlMechanism._parse_monitor_for_control to Port._parse_port_spec?
 #                   add to PROJECTIONS param of port spec?

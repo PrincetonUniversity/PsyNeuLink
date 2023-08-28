@@ -1750,21 +1750,23 @@ using the `initialize <Composition.initialize>` method.
 
 .. _Composition_Feedback_Designation:
 
-**Feedback designation**. If any Projections in a loop are `designated as feedback <Composition_Feedback_Designation>`
-they are used to break the `cycle <Composition_Cycle_Structure>` of execution that would otherwise be formed, and the
-Nodes are executed sequentially as described `below <Composition_Feedback_Sequential_Execution>`.  Each Node that sends
-a feedback Projection is assigned the `NodeRole` `FEEDBACK_SENDER`, and the receiver is assigned the `NodeRole`
-`FEEDBACK_RECEIVER`.  By default, `MappingProjections <MappingProjection>` are not specified as feedback, and
+**Feedback designation**. If any Projections in a loop are designated as **feedback** they are used to break the
+`cycle <Composition_Cycle_Structure>` of execution that would otherwise be formed, and the Nodes are executed
+sequentially as described `below <Composition_Feedback_Sequential_Execution>`. Each Node that sends a feedback
+Projection is assigned the `NodeRole` `FEEDBACK_SENDER`, and the receiver is assigned the `NodeRole`
+`FEEDBACK_RECEIVER`. By default, `MappingProjections <MappingProjection>` are not specified as feedback, and
 therefore loops containing only MappingProjections are left as `cycles <Composition_Cycle_Structure>`. In
 contrast, `ModulatoryProjections <ModulatoryProjection>` *are* designated as feedback by default, and therefore any
 loops containing one or more ModulatoryProjections are broken, with the Mechanism that is `modulated
 <ModulatorySignal_Modulation>` designated as the `FEEDBACK_RECEIVER` and the `ModulatoryMechanism` that projects to
 it designated as the `FEEDBACK_SENDER`. However, either of these default behaviors can be overidden, by specifying the
-feedback status of a Projection explicitly, either in a tuple with the Projection where it is `specified in a Pathway
-<Pathway_Specification>` or in the Composition's `add_projections <Composition.add_projections>` method, or by using
-the **feedback** argument of the Composition's `add_projection <Composition.add_projection>` method. Specifying True
-or the keyword *FEEDBACK* forces its assignment as a *feedback* Projection, whereas False precludes it from being
-assigned as a feedback Projection (e.g., a `ControlProjection` that otherwise forms a cycle will no longer do so).
+feedback status of a Projection explicitly: in a tuple with the Projection specification (e.g. where it is `specified
+in a Pathway <Pathway_Specification>` or in the `monitor_for_control <ControlMechanism_Monitor_for_Control>` argument
+of a `ControlMechanism`); in the Composition's `add_projections <Composition.add_projections>` method; by using the
+**feedback** argument of the Composition's `add_projection <Composition.add_projection>` method; or in the constructor
+of the `Projection` itself using its **feedback** argument. Specifying True or the keyword *FEEDBACK* forces its
+assignment as a *feedback* Projection, whereas False precludes it from being assigned as a feedback Projection
+(e.g., a `ControlProjection` that otherwise forms a cycle will no longer do so).
 
     .. warning::
        Designating a Projection as **feeedback** that is *not* in a loop is allowed, but will issue a warning and
@@ -6191,12 +6193,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             projection.is_processing = False
 
-            # If Projection is explicitly specified as feedback, assign it as such
-            try:
-                feedback = projection.feedback
-            except:
-                # At present, only MappingProjections have a feedback attribute
-                pass
+            if projection._feedback is not None:
+                feedback = projection._feedback
 
             # Also check for required role specification of feedback projections
             for node, role in self.required_node_roles:
