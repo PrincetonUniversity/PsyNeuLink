@@ -416,7 +416,8 @@ from psyneulink.core.components.shellclasses import Mechanism, Process_Base, Pro
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.mdf import _get_variable_parameter_name
 from psyneulink.core.globals.keywords import \
-    CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, EXPONENT, FUNCTION_PARAMS, GATE, GATING_PROJECTION, GATING_SIGNAL, \
+    CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, EXPONENT, FEEDBACK, FUNCTION_PARAMS, \
+    GATE, GATING_PROJECTION, GATING_SIGNAL, \
     INPUT_PORT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, \
     MAPPING_PROJECTION, MATRIX, MECHANISM, \
     MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_RECEIVER_PORT, \
@@ -511,7 +512,8 @@ class Projection_Base(Projection):
     Projection_Base(           \
         sender=None,           \
         function=LinearMatrix, \
-        receiver=None          \
+        receiver=None,         \
+        feedback=None          \
         )
 
     Base class for all Projections.
@@ -549,12 +551,17 @@ class Projection_Base(Projection):
         <Projection_Base.sender>` `Port` to `variable <Port_Base.variable>` of `receiver <Projection_Base.receiver>`
         Port.
 
-    receiver: InputPort or Mechanism : default None
+    receiver : InputPort or Mechanism : default None
         specifies the destination of the Projection's output.  If a `Mechanism <Mechanism>` is specified, its
         `primary InputPort <InputPort_Primary>` will be used. If it is not specified, it will be assigned in
         the context in which the Projection is used, or its initialization will be `deferred
         <Projection_Deferred_Initialization>`.
 
+    feedback : bool or FEEDBACK : default None
+        specifies whether Projection is configured as a feedback edge in the graph of a `Composition` to which
+        it is assigned (see `Composition_Cycles_and_Feedback`); specifying True or the keyword *FEEDBACK* forces its
+        assignment as a *feedback* Projection, whereas False precludes it from being assigned as a feedback Projection;
+        None (the default) allows the Composition to determine whether it is assigned as a feedback Projection.
 
     Attributes
     ----------
@@ -646,6 +653,7 @@ class Projection_Base(Projection):
                  weight=None,
                  exponent=None,
                  function=None,
+                 feedback:Optional[Union[bool,Literal[FEEDBACK]]]=None,
                  exclude_in_autodiff=False,
                  params=None,
                  name=None,
@@ -710,6 +718,7 @@ class Projection_Base(Projection):
 
         self.receiver = receiver
         self._exclude_from_autodiff = exclude_in_autodiff
+        self._feedback = feedback # Assign to _feedback to avoid interference with vertex.feedback used in Composition
 
          # Register with ProjectionRegistry or create one
         register_category(entry=self,

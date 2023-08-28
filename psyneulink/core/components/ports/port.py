@@ -790,7 +790,7 @@ from psyneulink.core.globals.context import ContextFlags, handle_external_contex
 from psyneulink.core.globals.keywords import \
     ADDITIVE, ADDITIVE_PARAM, AUTO_ASSIGN_MATRIX, CONTEXT, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, \
     DEFAULT_INPUT, DEFAULT_VARIABLE, DEFERRED_INITIALIZATION, DISABLE, \
-    EXPONENT, FUNCTION, FUNCTION_PARAMS, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INPUT_PORTS, \
+    EXPONENT, FEEDBACK, FUNCTION, FUNCTION_PARAMS, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INPUT_PORTS, \
     LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, \
     MATRIX, MECHANISM, MODULATORY_PROJECTION, MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, \
     MULTIPLICATIVE, MULTIPLICATIVE_PARAM, \
@@ -1352,6 +1352,7 @@ class Port_Base(Port):
                 # Instantiate Projection
                 projection_spec[WEIGHT]=weight
                 projection_spec[EXPONENT]=exponent
+                projection_spec[FEEDBACK]
                 projection_type = projection_spec.pop(PROJECTION_TYPE, None) or default_projection_type
                 projection = projection_type(**projection_spec)
 
@@ -2541,7 +2542,7 @@ def _instantiate_port_list(owner,
     # * generally, this will be a list or an np.ndarray (either >= 2D np.array or with a dtype=object)
     # * for OutputPorts, this should correspond to its value
     try:
-        # Insure that reference_value is an indexible item (list, >=2D np.darray, or otherwise)
+        # Ensure that reference_value is an indexible item (list, >=2D np.darray, or otherwise)
         num_constraint_items = len(reference_value)
     except:
         raise PortError(f"PROGRAM ERROR: reference_value ({reference_value}) for {reference_value_name} of "
@@ -2996,6 +2997,11 @@ def _parse_port_spec(port_type=None,
                                                                                    Port.__name__))
     port_type_name = port_type.__name__
 
+    proj_is_feedback = False
+    if isinstance(port_specification, tuple) and port_specification[1] == FEEDBACK:
+        port_specification = port_specification[0]
+        proj_is_feedback = True
+
     # EXISTING PORTS
 
     # Determine whether specified Port is one to be instantiated or to be connected with,
@@ -3074,7 +3080,7 @@ def _parse_port_spec(port_type=None,
                                             Mechanism.__name__, port_owner.name))
             return port_specification
 
-        # Specication is a Port with which connectee can connect, so assume it is a Projection specification
+        # Specification is a Port with which connectee can connect, so assume it is a Projection specification
         elif port_specification.__class__.__name__ in port_type.connectsWith + port_type.modulators:
             projection = port_type
 
@@ -3401,6 +3407,9 @@ def _parse_port_spec(port_type=None,
         raise PortError(f"The value ({port_dict[VALUE]}) for {port_name} {port_type.__name__} of "
                         f"{owner.name} does not match the reference_value ({port_dict[REFERENCE_VALUE]}) "
                         f"used for it at construction.")
+
+    if proj_is_feedback:
+        port_dict['params']['projections'][0].projection[FEEDBACK]=True
 
     return port_dict
 

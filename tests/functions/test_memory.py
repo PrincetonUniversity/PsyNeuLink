@@ -627,7 +627,7 @@ class TestContentAddressableMemory:
 
     # Note:  this warning is issued because the default distance_function is Distance(metric=COSINE)
     #        if the default is changed, this warning may not occur
-    distance_warning_msg = "and has at least one memory field that is a scalar"
+    distance_warning_msg = "always produce a distance of 0 (since angle of scalars is not defined)."
 
     test_vars = [
         # initializer:      expected_result (as list):
@@ -643,8 +643,9 @@ class TestContentAddressableMemory:
     @pytest.mark.parametrize('initializer, expected_memory, warning_msg', test_vars)
     def test_ContentAddressableMemory_allowable_initializer_shapes(self, initializer, expected_memory, warning_msg):
         if warning_msg:
-            with pytest.warns(UserWarning, match=warning_msg):
+            with pytest.warns(UserWarning) as warning:
                 c = ContentAddressableMemory(initializer=initializer)
+            assert warning_msg in str(warning[0].message)
         else:
             c = ContentAddressableMemory(initializer=initializer)
 
@@ -1241,7 +1242,7 @@ class TestContentAddressableMemory:
 
         # Test constructor warnings and errors
 
-        text = "(the angle of scalars is not defined)."
+        text = "angle of scalars is not defined."
         with pytest.warns(UserWarning, match=text):
             clear_registry(FunctionRegistry)
             c = ContentAddressableMemory(

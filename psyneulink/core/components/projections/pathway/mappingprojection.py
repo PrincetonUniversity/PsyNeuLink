@@ -451,11 +451,11 @@ class MappingProjection(PathwayProjection_Base):
                  exponent=None,
                  matrix=None,
                  function=None,
+                 learnable=True,
                  params=None,
                  name=None,
                  prefs: Optional[ValidPrefSet] = None,
                  context=None,
-                 learnable=True,
                  **kwargs):
 
         # Assign matrix to function_params for use as matrix param of MappingProjection.function
@@ -467,8 +467,7 @@ class MappingProjection(PathwayProjection_Base):
         self.learning_mechanism = None
         self.has_learning_projection = None
         self.learnable = bool(learnable)
-        if not self.learnable:
-            assert True
+
         # If sender or receiver has not been assigned, defer init to Port.instantiate_projection_to_state()
         if sender is None or receiver is None:
             self.initialization_status = ContextFlags.DEFERRED_INIT
