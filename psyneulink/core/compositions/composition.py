@@ -6192,11 +6192,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             projection.is_processing = False
 
             # If Projection is explicitly specified as feedback, assign it as such
-            try:
-                feedback = projection.feedback
-            except:
-                # At present, only MappingProjections have a feedback attribute
-                pass
+            if projection._feedback:
+                feedback = True
 
             # Also check for required role specification of feedback projections
             for node, role in self.required_node_roles:

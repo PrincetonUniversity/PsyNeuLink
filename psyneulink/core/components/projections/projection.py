@@ -711,7 +711,7 @@ class Projection_Base(Projection):
 
         self.receiver = receiver
         self._exclude_from_autodiff = exclude_in_autodiff
-        self.feedback = feedback
+        self._feedback = feedback
 
          # Register with ProjectionRegistry or create one
         register_category(entry=self,
