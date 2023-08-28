@@ -136,8 +136,8 @@ from psyneulink.core.scheduling.condition import Any, And, AllHaveRun, AtRunStar
 
 # Settings for running script:
 
-NUM_EXP_SEQS = 20               # Number of sequences to run in EXPERIENCE Phase (includes baseline + revaluation)
-NUM_PRED_TRIALS = 100           # Number of trials (ROLL OUTS) to run in PREDICTION Phase
+NUM_EXP_SEQS = 5               # Number of sequences to run in EXPERIENCE Phase (includes baseline + revaluation)
+NUM_PRED_TRIALS = 10           # Number of trials (ROLL OUTS) to run in PREDICTION Phase
 
 CONSTRUCT_MODEL = True                 # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = (                      # Only one of the following can be uncommented:

@@ -1569,7 +1569,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
             # Get outcome_input_port_specs without including specifications of Projections to them, as those need to
             #     be constructed and specified as aux_components (below) for validation and activation by Composition
-            outcome_input_port_specs, outcome_value_sizes, projection_specs, feedback \
+            outcome_input_port_specs, outcome_value_sizes, projection_specs \
                 = self._parse_monitor_for_control_input_ports(context)
 
             # Get sizes of input_ports passed in (that are presumably used for other purposes;
@@ -1598,8 +1598,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                     # The single outcome_input_port gets all the Projections
                     outcome_port_index = 0
                 self.aux_components.append(MappingProjection(sender=projection_specs[i],
-                                                             receiver=self.outcome_input_ports[outcome_port_index],
-                                                             feedback=feedback[i]))
+                                                             receiver=self.outcome_input_ports[outcome_port_index]))
 
         # Nothing has been specified, so just instantiate the default OUTCOME InputPort with any input_ports passed in
         else:
@@ -1627,12 +1626,12 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         monitored_ports = _parse_monitor_specs(self.monitor_for_control)
 
-        # Handle FEEDBACK specification for monitored_ports
-        feedback = [False] * len(monitored_ports)
-        for i, port in enumerate(monitored_ports):
-            if isinstance(port, tuple) and port[1] == FEEDBACK:
-                monitored_ports[i] = port[0]
-                feedback[i] = True
+        # # Handle FEEDBACK specification for monitored_ports
+        # feedback = [False] * len(monitored_ports)
+        # for i, port in enumerate(monitored_ports):
+        #     if isinstance(port, tuple) and port[1] == FEEDBACK:
+        #         monitored_ports[i] = port[0]
+        #         feedback[i] = True
 
         port_value_sizes = self._handle_arg_input_ports(self.monitor_for_control)[0]
 
@@ -1646,12 +1645,14 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
             # Construct port specification to assign its name
             for i, monitored_port in enumerate(monitored_ports):
-                name = monitored_port.name
-                if isinstance(monitored_port, OutputPort):
-                    name = f"{monitored_port.owner.name}[{name.upper()}]"
+                port_spec = _parse_port_spec(InputPort, self, port_spec = monitored_port)
+                port = port_spec['params']['projections'][0][0]
+                name = port.name
+                if isinstance(port, OutputPort):
+                    name = f"{port.owner.name}[{name.upper()}]"
                 name = 'MONITOR ' + name
-                outcome_input_port_specs.append({PORT_TYPE: InputPort,
-                                                 NAME: name})
+                port_spec[NAME] = name
+                outcome_input_port_specs.append(port_spec)
             # Return list of outcome_input_port specifications (and their sizes) for each monitored item
 
         # SINGLE outcome_input_port OPTIONS:
@@ -1676,7 +1677,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                                              NAME: 'OUTCOME',
                                              FUNCTION: function})
 
-        return outcome_input_port_specs, port_value_sizes, monitored_ports, feedback
+        return outcome_input_port_specs, port_value_sizes, monitored_ports
 
     def _validate_monitor_for_control(self, nodes):
         """Ensure all of the Components being monitored for control are in the Composition being controlled
