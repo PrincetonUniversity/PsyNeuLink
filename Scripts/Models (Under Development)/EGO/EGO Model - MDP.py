@@ -693,6 +693,9 @@ def construct_model(model_name:str=MODEL_NAME,
     EGO_comp.add_projection(MappingProjection(retrieved_reward_layer, decision_layer))
 
     # Validate construction
+    proj_from_retrieved_reward_to_control = control_layer.input_ports[1].path_afferents[0]
+    assert proj_from_retrieved_reward_to_control._feedback == True
+    assert proj_from_retrieved_reward_to_control in EGO_comp.feedback_projections # retrieved_reward feedback
     assert context_layer.input_port.path_afferents[0].sender.owner == context_layer # recurrent projection
     assert context_layer.input_port.path_afferents[0].parameters.matrix.get()[0][0] == 1-context_integration_rate
     assert context_layer.input_port.path_afferents[1].sender.owner == attend_external_layer # external state

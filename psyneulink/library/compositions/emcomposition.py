@@ -128,13 +128,9 @@
 #          - Add warning of this on initial call to learn()
 #
 #      - Composition:
-#        - FIX: ADD TESTS FOR FEEDBACK TUPLE SPECIFICATION OF Projection, DIRECT SPECIFICATION IN CONSTRUCTOR
-#        - FIX: ADD DOCUMENTATION in _Composition_Cycles_and_Feedback RE: DIRECT SPEC OF FEEDBACK FOR PROJECTION
 #        - Generalize treatment of FEEDBACK specification:
-#              - move from ControlMechanism._parse_monitor_for_control to Port._parse_port_spec?
-#                   add to PROJECTIONS param of port spec?
-#              - why aren't FEEDBACK_SENDER and FEEDBACK_RECEIVER roles being assigned when feedback is specified?
-#              - DOCUMENTATION:  add to Projection and Composition_Feedback
+      #        - FIX: ADD TESTS FOR FEEDBACK TUPLE SPECIFICATION OF Projection, DIRECT SPECIFICATION IN CONSTRUCTOR
+#              - FIX: why aren't FEEDBACK_SENDER and FEEDBACK_RECEIVER roles being assigned when feedback is specified?
 #        - add property of Composition that lists it cycles
 #        - Add warning if termination_condition is trigged (and verbosePref is set)
 #        - Addition of projections to a ControlMechanism seems too dependent on the order in which the
