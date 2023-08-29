@@ -1697,9 +1697,9 @@ within a cycle are assigned the `NodeRole` `CYCLE`.
 .. _Composition_Cycle_Synchronous_Execution:
 
 **Synchronous execution**. Cycles are "flattened" for execution, meaning that all of the Nodes within a cycle are
-executed in the same `TIME_STEP <TimeScale.TIME_STEP>`). The input that each Node in a cycle receives from those that
+executed in the same `TIME_STEP <TimeScale.TIME_STEP>`. The input that each Node in a cycle receives from those that
 project to it from within the cycle is the `value <Component.value>` of those Nodes when the cycle was last executed
-in the same `execution context <Composition_Execution_Context>`;  this ensures not only that the execute in synchrony,
+in the same `execution context <Composition_Execution_Context>`;  this ensures not only that they execute in synchrony,
 but that the inputs received from any Nodes within the cycle are synchronized (i.e., from the same earlier `TIME_STEP
 <TimeScale.TIME_STEP>` of execution). However, this presents a problem for the first execution of the cycle since, by
 definition, none of the Nodes have a value from a previous execution.  In that case, each sender passes the value to
@@ -1715,7 +1715,7 @@ COMMENT
        they receive the *current* value of any Nodes that project to them from *outisde* the cycle, and pass their
        current value (i.e., the ones computed in the current execution of the cycle) to any Nodes to which they project
        outside of the cycle.  The former means that any Nodes within the cycle that receive such input are "a step
-       ahead" of those within the cycle and also, unless the use a `StatefulFunction`, others within the cycle will
+       ahead" of those within the cycle and also, unless they use a `StatefulFunction`, others within the cycle will
        not see the effects of that input within or across `TRIALS <TimeScale.TRIAL>`.
 
 .. _Composition_Cycle_Initialization:
@@ -1750,26 +1750,28 @@ using the `initialize <Composition.initialize>` method.
 
 .. _Composition_Feedback_Designation:
 
-**Feedback designation**. If any Projections in a loop are `designated as feedback <Composition_Feedback_Designation>`
-they are used to break the `cycle <Composition_Cycle_Structure>` of execution that would otherwise be formed, and the
-Nodes are executed sequentially as described `below <Composition_Feedback_Sequential_Execution>`.  Each Node that sends
-a feedback Projection is assigned the `NodeRole` `FEEDBACK_SENDER`, and the receiver is assigned the `NodeRole`
-`FEEDBACK_RECEIVER`.  By default, `MappingProjections <MappingProjection>` are not specified as feedback, and
+**Feedback designation**. If any Projections in a loop are designated as **feedback** they are used to break the
+`cycle <Composition_Cycle_Structure>` of execution that would otherwise be formed, and the Nodes are executed
+sequentially as described `below <Composition_Feedback_Sequential_Execution>`. Each Node that sends a feedback
+Projection is assigned the `NodeRole` `FEEDBACK_SENDER`, and the receiver is assigned the `NodeRole`
+`FEEDBACK_RECEIVER`. By default, `MappingProjections <MappingProjection>` are not specified as feedback, and
 therefore loops containing only MappingProjections are left as `cycles <Composition_Cycle_Structure>`. In
 contrast, `ModulatoryProjections <ModulatoryProjection>` *are* designated as feedback by default, and therefore any
 loops containing one or more ModulatoryProjections are broken, with the Mechanism that is `modulated
 <ModulatorySignal_Modulation>` designated as the `FEEDBACK_RECEIVER` and the `ModulatoryMechanism` that projects to
 it designated as the `FEEDBACK_SENDER`. However, either of these default behaviors can be overidden, by specifying the
-feedback status of a Projection explicitly, either in a tuple with the Projection where it is `specified in a Pathway
-<Pathway_Specification>` or in the Composition's `add_projections <Composition.add_projections>` method, or by using
-the **feedback** argument of the Composition's `add_projection <Composition.add_projection>` method. Specifying True
-or the keyword *FEEDBACK* forces its assignment as a *feedback* Projection, whereas False precludes it from being
-assigned as a feedback Projection (e.g., a `ControlProjection` that otherwise forms a cycle will no longer do so).
+feedback status of a Projection explicitly: in a tuple with the Projection specification (e.g. where it is `specified
+in a Pathway <Pathway_Specification>` or in the `monitor_for_control <ControlMechanism_Monitor_for_Control>` argument
+of a `ControlMechanism`); in the Composition's `add_projections <Composition.add_projections>` method; by using the
+**feedback** argument of the Composition's `add_projection <Composition.add_projection>` method; or in the constructor
+of the `Projection` itself using its **feedback** argument. Specifying True or the keyword *FEEDBACK* forces its
+assignment as a *feedback* Projection, whereas False precludes it from being assigned as a feedback Projection
+(e.g., a `ControlProjection` that otherwise forms a cycle will no longer do so).
 
     .. warning::
        Designating a Projection as **feeedback** that is *not* in a loop is allowed, but will issue a warning and
        can produce unexpected results.  Designating more than one Projection as **feedback** within a loop is also
-       permitted, by can also lead to complex and unexpected results.  In both cases, the `FEEDBACK_RECEIVER` for any
+       permitted, but can also lead to complex and unexpected results.  In both cases, the `FEEDBACK_RECEIVER` for any
        Projection designated as **feedback** will receive a value from the Projection that is based either on the
        `FEEDBACK_SENDER`\\'s initial_value (the first time it is executed) or its previous `value <Component.value>`
        (in subsequent executions), rather than its most recently computed `value <Component.value>` whether or not it
@@ -1797,7 +1799,7 @@ The `FEEDBACK_SENDER`\\s of a Composition are listed in its `feedback_senders <C
 and its `FEEDBACK_RECEIVER`\\s  in `feedback_senders <Composition.feedback_senders>`.  These can also be listed using
 the Composition's `get_nodes_by_role <Composition.get_nodes_by_role>` method.  The feedback Projections of a Composition
 are listed in its `feedback_projections <Composition.feedback_projections>`  attribute, and the feedback status of a
-Projection in a Composition is returned by its `get_feedback_status<Composition.get_feedback_status>` method.
+Projection can be ascertained using the Composition's `get_feedback_status<Composition.get_feedback_status>` method.
 
 
 .. _Composition_Execution_Context:
@@ -1913,11 +1915,11 @@ or in arguments to its `run <Composition.run>` and `learn <Composition.learn>` m
      of Nodes in the Composition that have a `StatefulFunction`, each of which resets the `stateful parameters
      <Component_Stateful_Parameters>` of those Functions.
      COMMENT:
-        ?? OR JUST THEIR `previous_value <StatefulFunction.previous_value>` ??
+        ?? OR JUST THEIR `previous_value <StatefulFunction.previous_value>` of its `StatefulFunction`. ??
      COMMENT
-     of its `StatefulFunction`. If it is called  without any arguments, it calls the `reset <Component.reset>`
+     If it is called  without any arguments, it calls the `reset <Component.reset>`
      method for every `Node <Composition_Nodes>` in the Composition that has a `StatefulFunction`.
-     It can also be called with a dictionary that specifies a subsset of Nodes to reset (see format descdribed for
+     It can also be called with a dictionary that specifies a subsset of Nodes to reset (see format described for
      **reset_stateful_functions_when** below).
 
    * **reset_stateful_functions_when** and **reset_stateful_functions_to** -- these are arguments of the Composition's
@@ -6190,10 +6192,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 and not learning_projection):
 
             projection.is_processing = False
-            # KDM 5/24/19: removing below rename because it results in several existing_projections
-            # projection.name = f'{sender} to {receiver}'
 
-            # check for required role specification of feedback projections
+            if projection._feedback is not None:
+                feedback = projection._feedback
+
+            # Also check for required role specification of feedback projections
             for node, role in self.required_node_roles:
                 if (
                     (node == projection.sender.owner and role == NodeRole.FEEDBACK_SENDER)
@@ -11701,6 +11704,7 @@ _
                                              report_num=report_num,
                                              runtime_params=execution_runtime_params,
                                              )
+                                assert True
 
                         # Set execution_phase for node's context back to IDLE
                         if self._is_learning(context):

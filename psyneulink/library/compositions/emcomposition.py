@@ -128,6 +128,14 @@
 #          - Add warning of this on initial call to learn()
 #
 #      - Composition:
+#        - Generalize treatment of FEEDBACK specification:
+      #        - FIX: ADD TESTS FOR FEEDBACK TUPLE SPECIFICATION OF Projection, DIRECT SPECIFICATION IN CONSTRUCTOR
+#              - FIX: why aren't FEEDBACK_SENDER and FEEDBACK_RECEIVER roles being assigned when feedback is specified?
+#        - add property of Composition that lists it cycles
+#        - Add warning if termination_condition is trigged (and verbosePref is set)
+#        - Addition of projections to a ControlMechanism seems too dependent on the order in which the
+#              the ControlMechanism is constructed with respect to its afferents (if it comes before one,
+#              the projection to it (i.e., for monitoring) does not get added to the Composition
 # -      - IMPLEMENTATION OF LEARNING: NEED ERROR IF TRY TO CALL LEARN ON A COMPOSITION THAT HAS NO LEARNING MECHANISMS
 #          INCLUDING IN PYTHON MODE??  OR JUST ALLOW IT TO CONSTRUCT THE PATHWAY AUTOMATICALLY?
 #        - Change size argument in constructor to use standard numpy shape format if tupe, and PNL format if list
@@ -151,12 +159,20 @@
 #           THEN IT SHOULD BE IGNORED AS AN INPUT NODE IN A COMPOSITION
 #
 #      - showgraph:  (show_graph)
+#        - show feedback projections as pink (shouldn't that already be the case?)
 #        - add mode for showing projections as diamonds without show_learning (e.g., "show_projections")
 #        - figure out how to get storage_node to show without all other learning stuff
 #        - show 'operation' parameter for LinearCombination in show_node_structure=ALL
 #        - specify set of nodes to show and only show those
 #        - fix: show_learning=ALL (or merge from EM branch)
-
+#
+#      - ControlMechanism
+#        - refactor ControlMechanism per notes of 11/3/21, including:
+#                FIX: 11/3/21 - MOVE _parse_monitor_specs TO HERE FROM ObjectiveMechanism
+#      - EpisodicMemoryMechanism:
+#        - make storage_prob and retrieval_prob parameters linked to function
+#        - make distance_field_weights a parameter linked to function
+#
 #      - LinearCombination Function:
 #        - finish adding derivative (for if exponents are specified)
 #        - remove properties (use getter and setter for Parameters)

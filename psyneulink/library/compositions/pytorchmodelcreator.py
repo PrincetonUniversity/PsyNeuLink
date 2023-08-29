@@ -67,6 +67,11 @@ class PytorchModelCreator(torch.nn.Module):
             #      - MAKE SURE ALL NESTED COMPS ARE AUTODIFF-COMPLIANT
             #      - CALL Composition.flatten()
             #      - IN update_parameters, MAP PYTORCH PARAMETERS BACK TO input/output_CIM PROJECTIONS OF NESTED COMPS
+            # FIX:  ALTERNATIVE: IF NODE IS A NESTED COMPOSITION
+            #       - 1) CHECK THAT IT IS AN AUTODIFFCOMPOSITION
+            #       - 2) CALL PYTORCHMODELCREATOR ON IT RECURSIVELY
+            #       - 3) AT TOP OF PYTORCHMODELCREATOR:
+            #             - MAKE SURE THAT NO CIMS ARE IN THIS LOOP (PER EXCLUSION ABOVE)
 
             pytorch_node = PytorchMechanismWrapper(node,
                                                    self._composition._get_node_index(node),
@@ -77,6 +82,8 @@ class PytorchModelCreator(torch.nn.Module):
 
         # Instantiate pytorch projections
         for projection in composition.projections:
+            # FIX: ADD DIRECT PROJECTIONS TO REPLACE CIM ONES FOR NESTED COMPS,
+            #      AND CREATE MAP OF THOSE FOR SAVING PROJECTIONS BACK TO PNL
             if projection.sender.owner in self.component_map and projection.receiver.owner in self.component_map:
                 proj_send = self.component_map[projection.sender.owner]
                 proj_recv = self.component_map[projection.receiver.owner]
@@ -343,6 +350,7 @@ class PytorchModelCreator(torch.nn.Module):
     # performs forward computation for the model
     @handle_external_context()
     def forward(self, inputs, context=None):
+        """Forward method of the model for PyTorch and LLVM modes"""
         outputs = {}  # dict for storing values of terminal (output) nodes
         for current_exec_set in self.execution_sets:
             for component in current_exec_set:
@@ -356,7 +364,7 @@ class PytorchModelCreator(torch.nn.Module):
                 if NodeRole.OUTPUT in self._composition.get_roles_by_node(component._mechanism):
                     outputs[component._mechanism] = component.value
 
-        # NOTE: Context source needs to be set to COMMAND_LINE to force logs to update independantly of timesteps
+        # NOTE: Context source needs to be set to COMMAND_LINE to force logs to update independently of timesteps
         old_source = context.source
         context.source = ContextFlags.COMMAND_LINE
         self.log_values()
