@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>EMComposition &mdash; PsyNeuLink 0.14.0.0+44.gd0ba283e5 documentation</title>
+  <title>EMComposition &mdash; PsyNeuLink 0.14.0.0+45.g81df7b3f3 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.14.0.0+44
+                  0.14.0.0+45
                 </div>
               
             
@@ -1389,7 +1389,9 @@ details and <a class="reference internal" href="Report.html#psyneulink.core.comp
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.EMComposition._update_learning_parameters">
 <span class="sig-name descname"><span class="pre">_update_learning_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition._update_learning_parameters" title="Permalink to this definition">¶</a></dt>
-<dd><p>Updates parameters (weights) based on trials run since last update.</p>
+<dd><p>Carry out backpropagation learning for one or more trials
+Updates parameters (weights) based on trials run since last update.
+Uses Pytorch backward method to compute gradients and update weights</p>
 </dd></dl>
 
 <dl class="py method">
