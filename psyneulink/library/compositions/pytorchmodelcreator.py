@@ -23,11 +23,12 @@ class PytorchModelCreator(torch.nn.Module):
 
         # Maps Mechanism -> PytorchMechanismWrapper
         self.nodes = []
-        self.component_map = {}
+        self.nodes_map = {}
 
         # Maps Projections -> PytorchProjectionWrappers
         self.projections = []
-        self.projection_map = {}
+        self.projections_map = {}
+        self.projections_to_nested_map = {}
 
         self.params = nn.ParameterList()
         self.device = device
@@ -57,13 +58,15 @@ class PytorchModelCreator(torch.nn.Module):
         #   AFTER) NODES
 
         # Instantiate pytorch mechanisms
+        from psyneulink.core.compositions.composition import Composition
+        from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition, AutodiffCompositionError
         for node in set(composition.nodes) - set(composition.get_nodes_by_role(NodeRole.LEARNING)):
             # FIX: ADD SUPPORT FOR NESTED AUTODIFFCOMPOSITION(S) HERE:
             #      - WRITE FLATTEN METHOD, WHICH MUST:
             #        - PRECLUDE CONTROLLERS AT ANY LEVEL OF NESTING
             #        - CALL ITSELF RECURSIVELY FOR ALL LEVELS OF NESTING
             #        - CREATE MAP OF PROJECTIONS IN FLATTENED VERSION TO input/output_CIM PROJECTIONS OF NESTED COMPS
-            #        - CREATE NEW SCHEDULER FOR FLATTENED COMP (FOR USE BY AUTODIFF) (see LINES 76-90 BELOW)
+            #        - ??CREATE NEW SCHEDULER FOR FLATTENED COMP (FOR USE BY AUTODIFF) (see LINES 76-90 BELOW)
             #      - MAKE SURE ALL NESTED COMPS ARE AUTODIFF-COMPLIANT
             #      - CALL Composition.flatten()
             #      - IN update_parameters, MAP PYTORCH PARAMETERS BACK TO input/output_CIM PROJECTIONS OF NESTED COMPS
@@ -73,21 +76,51 @@ class PytorchModelCreator(torch.nn.Module):
             #       - 3) AT TOP OF PYTORCHMODELCREATOR:
             #             - MAKE SURE THAT NO CIMS ARE IN THIS LOOP (PER EXCLUSION ABOVE)
 
-            pytorch_node = PytorchMechanismWrapper(node,
-                                                   self._composition._get_node_index(node),
-                                                   device,
-                                                   context=context)
-            self.component_map[node] = pytorch_node
+            # Handle nested composition
+            if isinstance(node, Composition):
+                # Nested Composition must be an Autodiff
+                if not isinstance(node, AutodiffComposition):
+                    raise AutodiffCompositionError(
+                        f"{node.name} is not an AutodiffComposition, and therefore cannot be nested in "
+                        f"{self._composition.name}; only an AutodiffComposition can be nested in another "
+                        f"AutodiffComposition.")
+                
+                # Create PytorchModelCreator for nested Composition
+                pytorch_node = PytorchModelCreator(node, device, context=context)
+
+                # Create dict mapping Projections to Ports of Nodes in nested Composition to which they project
+                #   used to construct replace those Projections with direct ones (below) and save the parameters
+                #   learned for those Projection in PyTorch back to the original Projections (in save)
+                for proj in composition.projections:
+                    if proj.receiver.owner == node.input_CIM:
+                        receiver_port = node.input_CIM._get_destination_info_from_input_CIM(proj.receiver)[0]
+                        self.projections_to_nested_map[proj] = receiver_port
+                    elif proj.receiver.owner == node.parameter_CIM_ports:
+                        receiver_port = node.parameter_CIM._get_modulated_info_from_parameter_CIM(proj.receiver)[0]
+                        self.projections_to_nested_map[proj] = receiver_port
+                    elif proj.sender.owner == node.output_CIM:
+                        sender_port = node.output_CIM._get_source_info_from_output_CIM(proj.sender)[0]
+                        self.projections_to_nested_map[proj] = sender_port
+
+            # Handle Mechanism
+            else:
+                pytorch_node = PytorchMechanismWrapper(node,
+                                                       self._composition._get_node_index(node),
+                                                       device,
+                                                       context=context)
+            self.nodes_map[node] = pytorch_node
             self.nodes.append(pytorch_node)
 
         # Instantiate pytorch projections
         for projection in composition.projections:
-            # FIX: ADD DIRECT PROJECTIONS TO REPLACE CIM ONES FOR NESTED COMPS,
-            #      AND CREATE MAP OF THOSE FOR SAVING PROJECTIONS BACK TO PNL
-            if projection.sender.owner in self.component_map and projection.receiver.owner in self.component_map:
-                proj_send = self.component_map[projection.sender.owner]
-                proj_recv = self.component_map[projection.receiver.owner]
 
+            # # Wrap Projections to Nodes in nested Compositions
+            # if projection in self.projections_to_nested_map:
+                
+            # Wrap all other (non-CIM) Projections
+            if projection.sender.owner in self.nodes_map and projection.receiver.owner in self.nodes_map:
+                proj_send = self.nodes_map[projection.sender.owner]
+                proj_recv = self.nodes_map[projection.receiver.owner]
                 port_idx = projection.sender.owner.output_ports.index(projection.sender)
                 new_proj = PytorchProjectionWrapper(projection,
                                                     list(self._composition._inner_projections).index(projection),
@@ -97,7 +130,7 @@ class PytorchModelCreator(torch.nn.Module):
                                                     context=context)
                 proj_send.add_efferent(new_proj)
                 proj_recv.add_afferent(new_proj)
-                self.projection_map[projection] = new_proj
+                self.projections_map[projection] = new_proj
                 self.projections.append(new_proj)
 
         self._regenerate_paramlist()
@@ -113,7 +146,7 @@ class PytorchModelCreator(torch.nn.Module):
         # 1) Remove all learning-specific nodes
         self.execution_sets = [x - set(composition.get_nodes_by_role(NodeRole.LEARNING)) for x in composition.scheduler.run(context=c)]
         # 2) Convert to pytorchcomponent representation
-        self.execution_sets = [{self.component_map[comp] for comp in s if comp in self.component_map} for s in self.execution_sets]
+        self.execution_sets = [{self.nodes_map[comp] for comp in s if comp in self.nodes_map} for s in self.execution_sets]
         # 3) Remove empty execution sets
         self.execution_sets = [x for x in self.execution_sets if len(x) > 0]
 
@@ -374,11 +407,11 @@ class PytorchModelCreator(torch.nn.Module):
         return outputs
 
     def detach_all(self):
-        for projection in self.projection_map.values():
+        for projection in self.projections_map.values():
             projection.matrix.detach()
 
     def copy_weights_to_psyneulink(self, context=None):
-        for projection, pytorch_rep in self.projection_map.items():
+        for projection, pytorch_rep in self.projections_map.items():
             projection.parameters.matrix._set(
                 pytorch_rep.matrix.detach().cpu().numpy(), context)
             projection.parameters.matrix._set(

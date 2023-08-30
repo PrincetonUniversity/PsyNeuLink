@@ -128,6 +128,7 @@
 #          - Add warning of this on initial call to learn()
 #
 #      - Composition:
+#        - FIX: Add warning for Composition that is called with learning but has no learning apparatus
 #        - Generalize treatment of FEEDBACK specification:
       #        - FIX: ADD TESTS FOR FEEDBACK TUPLE SPECIFICATION OF Projection, DIRECT SPECIFICATION IN CONSTRUCTOR
 #              - FIX: why aren't FEEDBACK_SENDER and FEEDBACK_RECEIVER roles being assigned when feedback is specified?

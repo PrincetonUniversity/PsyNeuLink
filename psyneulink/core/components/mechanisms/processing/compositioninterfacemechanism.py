@@ -148,9 +148,9 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         the function used to transform the variable before assigning it to the Mechanism's OutputPort(s)
 
     port_map : dict[Port:(InputPort,OutputPort)]
-        entries are comprised of keys designating a Component outside the Composition with which it communicates,
-        and values tuples that designate the corresponding `InputPort` - `OutputPort` pairs used to transmit that
-        information into or out of the Composition (see `CompositionInterfaceMechanism_Structure`, and
+        entries comprised of a key designating the Component outside the Composition with which the CIM communicates,
+        and a value that is a tuple designating the corresponding `InputPort` - `OutputPort` pair of the CIM used to
+        transmit that information into or out of the Composition (see `CompositionInterfaceMechanism_Structure`, and
         `Composition_CIMs` under Composition for additional details).
     """
 
@@ -263,7 +263,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     def _get_destination_info_from_input_CIM(self, port, comp=None):
         """Return Port, Node and Composition for "ultimate" destination of projection to **port**.
         **port**: InputPort or OutputPort of the input_CIM to which the projection of interest projects;
-                  used to find destination (key) in output_CIM's port_map.
+                  used to find destination (key) in input_CIM's port_map.
         **comp**: Composition at which to begin the search (or continue it when called recursively);
                  assumes the Composition for the input_CIM to which **port** belongs by default
         """
