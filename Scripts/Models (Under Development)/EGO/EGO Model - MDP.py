@@ -136,8 +136,8 @@ from psyneulink.core.scheduling.condition import Any, And, AllHaveRun, AtRunStar
 
 # Settings for running script:
 
-NUM_EXP_SEQS = 5               # Number of sequences to run in EXPERIENCE Phase (includes baseline + revaluation)
-NUM_PRED_TRIALS = 10           # Number of trials (ROLL OUTS) to run in PREDICTION Phase
+NUM_EXP_SEQS = 5                # Number of sequences to run in EXPERIENCE Phase (includes baseline + revaluation)
+NUM_PRED_TRIALS = 100           # Number of trials (ROLL OUTS) to run in PREDICTION Phase
 
 CONSTRUCT_MODEL = True                 # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = (                      # Only one of the following can be uncommented:
@@ -166,11 +166,11 @@ model_params = dict(
     n_steps = 3, # number of steps per rollout
     state_d = 7, # length of state vector
     context_d = 7, # length of context vector
-    time_d = 25, # length of time vector
+    time_d = 5,    # length of time vector
     self_excitation = .25, # rate at which old context is carried over to new context
     input_weight = .5, # rate at which state is integrated into new context
     retrieved_context_weight = .25, # rate at which context retrieved from EM is integrated into new context
-    time_noise=.01,# noise std for time integrator (drift is set to 0)
+    time_noise=.0,# noise std for time integrator (drift is set to 0)
     state_weight = .5, # weight of the state used during memory retrieval
     context_weight = .3, # weight of the context used during memory retrieval
     time_weight = .2, # weight of the time used during memory retrieval
@@ -232,11 +232,13 @@ DECISION_SIZE = 1                     # length of decision vector
 
 # Context processing:
 STATE_WEIGHT = model_params['input_weight']  # rate at which external vs. memory state are integrated in context_layer
-CONTEXT_INTEGRATION_RATE = model_params['retrieved_context_weight']  # rate at which retrieved context (from EM)
+CONTEXT_WEIGHT = model_params['retrieved_context_weight']  # rate at which retrieved context (from EM)
                                                                      # is integrated into context_layer
-assert (model_params['retrieved_context_weight'] + STATE_WEIGHT + CONTEXT_INTEGRATION_RATE) == 1,\
-    (f"Sum of STATE_WEIGHT ({STATE_WEIGHT}), CONTEXT_INTEGRATION_RATE ({CONTEXT_INTEGRATION_RATE}), "
-     f"and RETRIEVED_CONTEXT_WEIGHT ({model_params['retrieved_context_weight']}) must equal 1")
+CONTEXT_INTEGRATION_RATE = 1 - model_params['self_excitation']  # rate at which context is carried over to next trial
+# FIX ASSERT BELOW
+# assert (model_params['retrieved_context_weight'] + STATE_WEIGHT + CONTEXT_INTEGRATION_RATE) == 1,\
+#     (f"Sum of STATE_WEIGHT ({STATE_WEIGHT}), CONTEXT_INTEGRATION_RATE ({CONTEXT_INTEGRATION_RATE}), "
+#      f"and RETRIEVED_CONTEXT_WEIGHT ({model_params['retrieved_context_weight']}) must equal 1")
 
 # EM retrieval
 STATE_RETRIEVAL_WEIGHT = model_params['state_weight']     # weight of state field in retrieval from EM
@@ -256,24 +258,28 @@ RANDOM_WEIGHTS_INITIALIZATION=RandomMatrix(center=0.0, range=0.1)  # Matrix spec
 # ======================================================================================================================
 
 # Temporal context vector generation as input to time_input_layer of model
-TIME_DRIFT_RATE = 0.1          # noise used by DriftOnASphereIntegrator (function of Context mech)
+TIME_DRIFT_RATE = 0.01         # noise used by DriftOnASphereIntegrator (function of Context mech)
 TIME_DRIFT_NOISE = 0.0         # noise used by DriftOnASphereIntegrator (function of Context mech)
-time_fct = DriftOnASphereIntegrator(initializer=np.random.random(TIME_SIZE - 1),
-                                    noise=TIME_DRIFT_NOISE,
-                                    dimension=TIME_SIZE)
+# time_fct = DriftOnASphereIntegrator(initializer=np.random.random(TIME_SIZE - 1),
+#                                     noise=TIME_DRIFT_NOISE,
+#                                     dimension=TIME_SIZE)
+time_fct = SimpleIntegrator(initializer=np.zeros(TIME_SIZE))
+
 # Task environment:
 NUM_STIM_PER_SEQ = model_params['n_steps'] # number of stimuli in a sequence
-NUM_BASELINE_SEQS = NUM_EXP_SEQS     # num trials for Task.EXPERIENCE (passive encoding into EM) BEFORE revaluation
-NUM_REVALUATION_SEQS = NUM_EXP_SEQS  # num trials for Task.EXPERIENCE (passive encoding into EM) AFTER revaluation
+# NUM_BASELINE_SEQS = NUM_EXP_SEQS     # num trials for Task.EXPERIENCE (passive encoding into EM) BEFORE revaluation
+# NUM_REVALUATION_SEQS = NUM_EXP_SEQS  # num trials for Task.EXPERIENCE (passive encoding into EM) AFTER revaluation
+NUM_BASELINE_SEQS = 5     # num trials for Task.EXPERIENCE (passive encoding into EM) BEFORE revaluation
+NUM_REVALUATION_SEQS = 0  # num trials for Task.EXPERIENCE (passive encoding into EM) AFTER revaluation
 NUM_EXPERIENCE_SEQS = NUM_BASELINE_SEQS + NUM_REVALUATION_SEQS  # total number of trials for Task.EXPERIENCE
 TOTAL_NUM_EXPERIENCE_STIMS = (NUM_BASELINE_SEQS * NUM_STIM_PER_SEQ) + (NUM_REVALUATION_SEQS * (NUM_STIM_PER_SEQ-1))
 NUM_ROLL_OUTS = NUM_PRED_TRIALS    # number of times to roll out each sequence in Task.PREDICT
 
 STIM_SEQS = [list(range(1,NUM_STIM_PER_SEQ*2,2)),
             list(range(2,NUM_STIM_PER_SEQ*2+1,2))]
-REWARD_VALS = [10,1]         # reward values for seq_0 and seq_1, respectively
-RATIO = 1                    # ratio of seq_0 to seq_1 in EXPERIENCE phase (ratio / 1 + ratio)
-SAMPLING_TYPE = 'random'     # 'random' or 'alternating' in EXPERIENCE phase
+REWARD_VALS = [10,1]          # reward values for seq_0 and seq_1, respectively
+RATIO = 1                     # ratio of seq_0 to seq_1 in EXPERIENCE phase (ratio / 1 + ratio)
+SAMPLING_TYPE = 'alternating' # 'random' or 'alternating' in EXPERIENCE phase
 PREDICT_SEQ_TYPE = 'blocked' # 'blocked' or 'alternating' in PREDICT phase
 
 def get_states(state_size=STATE_SIZE):
@@ -443,6 +449,7 @@ def construct_model(model_name:str=MODEL_NAME,
                     attentional_control_name=CONTROL_LAYER_NAME,
                     context_name:str=CONTEXT_LAYER_NAME,
                     state_weight:Union[float,int]=STATE_WEIGHT,
+                    context_weight:Union[float,int]=CONTEXT_WEIGHT,
                     context_integration_rate:Union[float,int]=CONTEXT_INTEGRATION_RATE,
 
                     # EM:
@@ -473,14 +480,24 @@ def construct_model(model_name:str=MODEL_NAME,
         f"context_retrieval_weight must be a number from 0 to 1"
     assert 0 <= state_weight <= 1,\
         f"context_retrieval_weight must be a number from 0 to 1"
-    context_weight = 1 - state_weight
-    state_weight *= context_integration_rate
-    context_weight *= context_integration_rate
+    # context_weight = 1 - state_weight
+    # state_weight *= context_integration_rate
+    # context_weight *= context_integration_rate
+    assert (state_weight + context_weight + (1 - context_integration_rate)) == 1,\
+        f"Sum of state_weight ({state_weight}), context_weight ({context_weight}), and " \
+        f"context_integration_rate ({context_integration_rate}) must equal 1"
 
     # ----------------------------------------------------------------------------------------------------------------
     # -------------------------------------------------  Mechanisms  -------------------------------------------------
     # ----------------------------------------------------------------------------------------------------------------
 
+    # task_input_layer = ProcessingMechanism(name=task_input_name, size=task_size)
+    # state_input_layer = ProcessingMechanism(name=state_input_name, size=state_size)
+    # time_input_layer = ProcessingMechanism(name=time_input_name, size=time_size)
+    # reward_input_layer = ProcessingMechanism(name=reward_input_name, size=reward_size)
+    # attend_external_layer = ProcessingMechanism(name=attend_external_layer_name, size=state_size)
+    # attend_memory_layer = ProcessingMechanism(name=attend_memory_layer_name, size=state_size)
+    # retrieved_reward_layer = TransferMechanism(name=retrieved_reward_name, size=reward_size)
     task_input_layer = ProcessingMechanism(name=task_input_name, size=task_size)
     state_input_layer = ProcessingMechanism(name=state_input_name, size=state_size)
     time_input_layer = ProcessingMechanism(name=time_input_name, size=time_size)
@@ -489,7 +506,8 @@ def construct_model(model_name:str=MODEL_NAME,
     attend_memory_layer = ProcessingMechanism(name=attend_memory_layer_name, size=state_size)
     retrieved_reward_layer = TransferMechanism(name=retrieved_reward_name, size=reward_size)
     context_layer = RecurrentTransferMechanism(name=context_name,
-                                               size=state_size,
+                                               default_variable=np.full(state_size, 0.01),
+                                               # size=state_size,
                                                auto=1-context_integration_rate,
                                                hetero=0.0)
     em = EpisodicMemoryMechanism(name=em_name,
@@ -502,7 +520,7 @@ def construct_model(model_name:str=MODEL_NAME,
                                               {NAME:context_name, SIZE:state_size},
                                               {NAME:reward_input_name, SIZE:reward_size}],
                                  function=ContentAddressableMemory(
-                                     # selection_function=SoftMax(gain=retrieval_softmax_gain),
+                                     selection_function=SoftMax(gain=retrieval_softmax_gain, output=MAX_INDICATOR),
                                      distance_field_weights=[state_retrieval_weight,
                                                              time_retrieval_weight,
                                                              context_retrieval_weight,
@@ -655,6 +673,7 @@ def construct_model(model_name:str=MODEL_NAME,
                         decision_layer
                         ])
     EGO_comp.exclude_node_roles(task_input_layer, NodeRole.OUTPUT)
+    # EGO_comp.scheduler.add_condition(context_layer, AfterTrial(0))
 
     # Projections:
 
