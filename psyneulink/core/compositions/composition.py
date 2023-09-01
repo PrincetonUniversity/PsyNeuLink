@@ -6321,7 +6321,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # if a sender was not passed, check for a sender OutputPort stored on the Projection object
         if sender is None:
             if hasattr(projection, "sender"):
+                # FIX: WHY IS THIS NOT JUST:  (AS IT IS, SEEMS TO FORCE PRIMARY OUTPUT_PORT EVEN ANOTHER WAS SPECIFIED)
+                # MODIFIED 9/1/23 OLD:
                 sender = projection.sender.owner
+                # MODIFIED 9/1/23 NEW:
+                # sender = projection.sender
+                # MODIFIED 9/1/23 NEWER:
+                if isinstance(sender, CompositionInterfaceMechanism):
+                    sender = sender.composition
+                # MODIFIED 9/1/23 END
             else:
                 raise CompositionError(f"{projection.name} is missing a sender specification. "
                                        f"For a Projection to be added to a Composition a sender must be specified, "
@@ -7240,7 +7248,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for c in range(1, len(pathway)):
 
             def _get_node_specs_for_entry(entry, include_roles=None, exclude_roles=None):
-                """Extract Nodes from any tuple specs and replace Compositions with their INPUT Nodes"""
+                """Extract Nodes from any tuple specs and replace Compositions with Nodes of specified roles"""
                 nodes = []
                 for node in entry:
                     # Extract Nodes from any tuple specs
