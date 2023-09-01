@@ -7225,10 +7225,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     msg = f' since it has an ObjectiveMechanism that was specified in its constructor'
                 else:
                     msg = f' since there were ones already specified in ' \
-                          f'the {repr(MONITOR_FOR_CONTROL)} of its constructor'
+                          f'the {repr(MONITOR_FOR_CONTROL)} argument of its constructor'
             else:
                 msg = f' since there were ones already specified either in ' \
-                           f'the {repr(MONITOR)} arg of its constructor, ' \
+                           f'the {repr(MONITOR)} argument of its constructor, ' \
                            f'or in the {repr(MONITOR_FOR_CONTROL)} arg of its associated {ControlMechanism.__name__}'
             warnings.warn(f"No new {Projection.__name__}s were added to '{item.name}' "
                           f"that was included in the {pathway_arg_str},{msg}.")
@@ -11704,7 +11704,7 @@ _
                                              report_num=report_num,
                                              runtime_params=execution_runtime_params,
                                              )
-                                assert True
+                                assert 'DEBUGGING BREAK POINT'
 
                         # Set execution_phase for node's context back to IDLE
                         if self._is_learning(context):

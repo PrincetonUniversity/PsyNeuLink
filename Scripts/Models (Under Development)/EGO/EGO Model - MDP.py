@@ -137,7 +137,7 @@ from psyneulink.core.scheduling.condition import Any, And, AllHaveRun, AtRunStar
 # Settings for running script:
 
 NUM_EXP_SEQS = 5                # Number of sequences to run in EXPERIENCE Phase (includes baseline + revaluation)
-NUM_PRED_TRIALS = 100           # Number of trials (ROLL OUTS) to run in PREDICTION Phase
+NUM_PRED_TRIALS = 0             # Number of trials (ROLL OUTS) to run in PREDICTION Phase
 
 CONSTRUCT_MODEL = True                 # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = (                      # Only one of the following can be uncommented:
@@ -145,10 +145,10 @@ DISPLAY_MODEL = (                      # Only one of the following can be uncomm
     # {}                               # show simple visual display of model
     # {'show_node_structure': True}    # show detailed view of node structures and projections
 )
-RUN_MODEL = True                       # True => run the model
 # RUN_MODEL = False                      # False => don't run the model
+RUN_MODEL = True                       # True => run the model
 ANALYZE_RESULTS = False                # True => output analysis of results of run
-REPORT_OUTPUT = ReportOutput.FULL     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
+REPORT_OUTPUT = ReportOutput.FULL       # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
 REPORT_PROGRESS = ReportProgress.OFF   # Sets console progress bar during run
 PRINT_RESULTS = False                  # print model.results after execution
 ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
@@ -269,7 +269,7 @@ time_fct = SimpleIntegrator(initializer=np.zeros(TIME_SIZE))
 NUM_STIM_PER_SEQ = model_params['n_steps'] # number of stimuli in a sequence
 # NUM_BASELINE_SEQS = NUM_EXP_SEQS     # num trials for Task.EXPERIENCE (passive encoding into EM) BEFORE revaluation
 # NUM_REVALUATION_SEQS = NUM_EXP_SEQS  # num trials for Task.EXPERIENCE (passive encoding into EM) AFTER revaluation
-NUM_BASELINE_SEQS = 5     # num trials for Task.EXPERIENCE (passive encoding into EM) BEFORE revaluation
+NUM_BASELINE_SEQS = 2     # num trials for Task.EXPERIENCE (passive encoding into EM) BEFORE revaluation
 NUM_REVALUATION_SEQS = 0  # num trials for Task.EXPERIENCE (passive encoding into EM) AFTER revaluation
 NUM_EXPERIENCE_SEQS = NUM_BASELINE_SEQS + NUM_REVALUATION_SEQS  # total number of trials for Task.EXPERIENCE
 TOTAL_NUM_EXPERIENCE_STIMS = (NUM_BASELINE_SEQS * NUM_STIM_PER_SEQ) + (NUM_REVALUATION_SEQS * (NUM_STIM_PER_SEQ-1))
@@ -666,6 +666,7 @@ def construct_model(model_name:str=MODEL_NAME,
                         decision_layer
                         ])
     EGO_comp.exclude_node_roles(task_input_layer, NodeRole.OUTPUT)
+    EGO_comp.exclude_node_roles(context_layer, NodeRole.OUTPUT)
     # EGO_comp.scheduler.add_condition(context_layer, AfterTrial(0))
 
     # Projections:
@@ -676,7 +677,7 @@ def construct_model(model_name:str=MODEL_NAME,
     # time -> em
     EGO_comp.add_projection(MappingProjection(time_input_layer, em.input_ports[TIME_INPUT_LAYER_NAME]))
     # context -> em
-    EGO_comp.add_projection(MappingProjection(context_layer, em.input_ports[CONTEXT_LAYER_NAME]))
+    EGO_comp.add_projection(MappingProjection(context_layer, em.input_ports[CONTEXT_LAYER_NAME],feedback=True))
     # reward -> em
     EGO_comp.add_projection(MappingProjection(reward_input_layer, em.input_ports[REWARD_INPUT_LAYER_NAME]))
 
@@ -755,11 +756,20 @@ if __name__ == '__main__':
                         STATE_INPUT_LAYER_NAME,
                         REWARD_INPUT_LAYER_NAME]
 
+
+
         # Experience Phase
         print(f"Presenting {model.name} with {TOTAL_NUM_EXPERIENCE_STIMS} EXPERIENCE stimuli")
+        model.nodes[CONTEXT_LAYER_NAME].set_log_conditions('value')
+        model.termination_processing = {
+            TimeScale.TRIAL: Or(And(AtTrial(0),
+                                    AllHaveRun(*set(model.nodes).difference({model.nodes[CONTEXT_LAYER_NAME]}))),
+                                AllHaveRun())}
         model.run(inputs={k: v for k, v in zip(input_layers, experience_inputs)},
                   report_output=REPORT_OUTPUT,
                   report_progress=REPORT_PROGRESS)
+        model.nodes[CONTEXT_LAYER_NAME].log.print_entries()
+
 
         # Prediction Phase
         prediction_inputs = build_prediction_inputs(state_size=STATE_SIZE,
@@ -772,10 +782,7 @@ if __name__ == '__main__':
         model.termination_processing = {
             TimeScale.TRIAL: And(Condition(lambda: model.nodes[TASK_INPUT_LAYER_NAME].value == Task.PREDICT),
                                  Condition(lambda: model.nodes[RETRIEVED_REWARD_NAME].value),
-                                 # JustRan(model.nodes[DECISION_LAYER_NAME])
-                                 AllHaveRun()
-                                 )
-        }
+                                 AllHaveRun())}
         model.run(inputs={k: v for k, v in zip(input_layers, prediction_inputs)},
                   report_output=REPORT_OUTPUT,
                   report_progress=REPORT_PROGRESS

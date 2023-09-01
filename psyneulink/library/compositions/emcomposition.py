@@ -161,6 +161,8 @@
 #
 #      - showgraph:  (show_graph)
 #        - show feedback projections as pink (shouldn't that already be the case?)
+#          and show feedback_recivers in their own shape (upright triangle?)
+#             (and change feedback senders from octagons to upside down triangles?)
 #        - add mode for showing projections as diamonds without show_learning (e.g., "show_projections")
 #        - figure out how to get storage_node to show without all other learning stuff
 #        - show 'operation' parameter for LinearCombination in show_node_structure=ALL
@@ -185,6 +187,8 @@
 #     - DDM:
 #        - make reset_stateful_function_when a Parameter and arg in constructor
 #          and align with reset Parameter of IntegratorMechanism)
+#
+#     - IntegratorMechanism: verify that patch added to handle_default_variable works
 #
 #    - FIX: BUGS:
 #      -LearningMechanism / Backpropagation LearningFunction:

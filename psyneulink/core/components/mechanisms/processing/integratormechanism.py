@@ -244,7 +244,8 @@ class IntegratorMechanism(ProcessingMechanism_Base):
             variable = np.atleast_1d(default_variable)
             user_specified = True
         else:
-            variable = self.parameters.variable.default_value
+            # variable = self.parameters.variable.default_value
+            variable = default_variable
             user_specified = self.parameters.variable._user_specified
 
         # Only bother if an instantiated function was specified for the Mechanism
