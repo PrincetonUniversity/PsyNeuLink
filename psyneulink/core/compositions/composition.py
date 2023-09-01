@@ -8115,6 +8115,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         except DuplicateProjectionError:
             target_projection = [p for p in target.efferents
                                  if p in comparator.input_ports[TARGET].path_afferents]
+        # # MODIFIED 9/1/23 NEW:
+        # # FIX: NOTE THIS THIS ONY SUPPORT A SINGLE PROJECTION TO/FROM A NESTED COMPOSITION USING PRIMARY CIM PORTS
+        # #      WILL NEED TO AUGMENT TO SUPPORT MULTIPLE PROJECTIONS TO/FROM (E.G., FOR EMComposition)
+        # if isinstance(input_source, Composition):
+        #         _, input_source, _ = \
+        #             input_source.output_CIM._get_source_info_from_output_CIM(input_source.output_CIM.output_port)
+        # if isinstance(output_source, Composition):
+        #         _, output_source ,_ = \
+        #             output_source.output_CIM._get_destination_info_from_input_CIM(output_source.input_CIM.input_port)
+        # MODIFIED 9/1/23 END
         act_in_projection = MappingProjection(sender=input_source.output_ports[0],
                                               receiver=learning_mechanism.input_ports[ACTIVATION_INPUT_INDEX])
         act_out_projection = MappingProjection(sender=output_source.output_ports[0],
@@ -8231,6 +8241,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         path_length = len(processing_pathway)
 
+        def _get_nodes_if_nested(input_source, output_source):
+            # MODIFIED 9/1/23 NEW:
+            # FIX: NOTE THIS THIS ONY SUPPORT A SINGLE PROJECTION TO/FROM A NESTED COMPOSITION USING PRIMARY CIM PORTS
+            #      WILL NEED TO AUGMENT TO SUPPORT MULTIPLE PROJECTIONS TO/FROM (E.G., FOR EMComposition)
+            if isinstance(input_source, Composition):
+                    _, input_source, _ = \
+                        input_source.output_CIM._get_source_info_from_output_CIM(input_source.output_CIM.output_port)
+            if isinstance(output_source, Composition):
+                    _, output_source ,_ = \
+                        output_source.input_CIM._get_destination_info_from_input_CIM(output_source.input_CIM.input_port)
+            return input_source, output_source
+            # MODIFIED 9/1/23 END
+
         # Pathway length must be >=3 (Mechanism, Projection, Mechanism)
         if path_length >= 3:
             # get the "terminal_sequence" --
@@ -8244,6 +8267,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Unpack and process terminal_sequence:
         input_source, learned_projection, output_source = terminal_sequence
+        input_source, output_source = _get_nodes_if_nested(input_source, output_source)
 
         # If pathway includes existing terminal_sequence for the output_source, use that
         if output_source in self._terminal_backprop_sequences:
@@ -8346,6 +8370,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             input_source = processing_pathway[i - 2]
             learned_projection = processing_pathway[i - 1]
             output_source = processing_pathway[i]
+            input_source, output_source = _get_nodes_if_nested(input_source, output_source)
 
             learning_mechanism = self._create_non_terminal_backprop_learning_components(input_source,
                                                                                         output_source,
@@ -8546,7 +8571,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Need to worry about covariates only if output_source's function:
             #  - takes more than one argument and
             #  - it is not LinearCombination(operation=SUM)
-            if (len(output_source.variable) >= 1 and _non_additive_comb_fct(output_source.function, allow=True)):
+            if (len(output_source.variable) > 1 and _non_additive_comb_fct(output_source.function, allow=True)):
                 # for input_port if input_port is not learned_projection.receiver in output_source.input_ports]:
                 # for input_port in output_source.input_ports if input_port is not learned_projection.receiver]:
                 # for input_port in [p for p in output_source.input_ports if p is not learned_projection.receiver]:
