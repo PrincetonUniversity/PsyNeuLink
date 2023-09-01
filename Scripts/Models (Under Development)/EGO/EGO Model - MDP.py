@@ -105,6 +105,7 @@ Sequences of stimuli are constructed either using `SweetPea <https://sites.googl
        Use of SweetPea for stimulus generation requires it be installed::
        >> pip install sweetpea
 
+
 .. _EGO_training:
 
 *Training*
