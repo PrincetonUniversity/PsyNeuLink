@@ -6324,9 +6324,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if sender is None:
             if hasattr(projection, "sender"):
                 sender = projection.sender
-                # MODIFIED 9/1/23 END                # # MODIFIED 9/1/23 NEW:
-                #                 # if isinstance(sender, CompositionInterfaceMechanism):
-                #                 #     sender = sender.composition
+                # MODIFIED 9/1/23 NEW:
+                if isinstance(sender, CompositionInterfaceMechanism):
+                    sender = sender.composition
             else:
                 raise CompositionError(f"{projection.name} is missing a sender specification. "
                                        f"For a Projection to be added to a Composition a sender must be specified, "
