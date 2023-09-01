@@ -5997,26 +5997,26 @@ class TestInputSpecifications:
              [1],
              [0]])
 
-        in_to_hidden_matrix = np.random.rand(2,10)
+        input_to_hidden_matrix = np.random.rand(2,10)
         hidden_to_out_matrix = np.random.rand(10,1)
 
-        input_comp = pnl.TransferMechanism(name='input_comp',
+        input_comp = pnl.TransferMechanism(name='input',
                                     default_variable=np.zeros(2))
 
-        hidden_comp = pnl.TransferMechanism(name='hidden_comp',
+        hidden_comp = pnl.TransferMechanism(name='hidden',
                                     default_variable=np.zeros(10),
                                     function=pnl.Logistic())
 
-        output_comp = pnl.TransferMechanism(name='output_comp',
+        output_comp = pnl.TransferMechanism(name='output',
                                     default_variable=np.zeros(1),
                                     function=pnl.Logistic())
 
-        in_to_hidden_comp = pnl.MappingProjection(name='in_to_hidden_comp',
-                                    matrix=in_to_hidden_matrix.copy(),
+        input_to_hidden_comp = pnl.MappingProjection(name='input_to_hidden',
+                                    matrix=input_to_hidden_matrix.copy(),
                                     sender=input_comp,
                                     receiver=hidden_comp)
 
-        hidden_to_out_comp = pnl.MappingProjection(name='hidden_to_out_comp',
+        hidden_to_out_comp = pnl.MappingProjection(name='hidden_to_output',
                                     matrix=hidden_to_out_matrix.copy(),
                                     sender=hidden_comp,
                                     receiver=output_comp)
@@ -6024,7 +6024,7 @@ class TestInputSpecifications:
         xor_comp = pnl.Composition()
 
         backprop_pathway = xor_comp.add_backpropagation_learning_pathway([input_comp,
-                                                                            in_to_hidden_comp,
+                                                                            input_to_hidden_comp,
                                                                             hidden_comp,
                                                                             hidden_to_out_comp,
                                                                             output_comp],

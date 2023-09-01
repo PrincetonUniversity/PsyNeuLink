@@ -2899,6 +2899,7 @@ from psyneulink.core.components.mechanisms.processing.objectivemechanism import 
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.ports.inputport import InputPort, InputPortError
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
+from psyneulink.core.components.ports.modulatorysignals.learningsignal import LearningSignal
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.components.ports.port import Port, PortError
@@ -5941,7 +5942,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                        receiver=None,
                        default_matrix=None,
                        feedback=False,
-                       learning_projection=False,
+                       is_learning_projection=False,
                        name=None,
                        allow_duplicates=False,
                        context=None
@@ -6112,9 +6113,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return
 
         # Parse sender and receiver specs
-        sender, sender_mechanism, graph_sender, nested_compositions = self._parse_sender_spec(projection, sender)
-        receiver, receiver_mechanism, graph_receiver, receiver_input_port, nested_compositions, learning_projection = \
-            self._parse_receiver_spec(projection, receiver, sender, learning_projection)
+        sender, sender_mechanism, graph_sender, nested_compositions = \
+            self._parse_sender_spec(projection, sender, is_learning_projection)
+        receiver,receiver_mechanism,graph_receiver,receiver_input_port,nested_compositions,is_learning_projection = \
+            self._parse_receiver_spec(projection, receiver, sender, is_learning_projection)
 
         if (isinstance(receiver_mechanism, (CompositionInterfaceMechanism))
                 and receiver_input_port.owner not in self.nodes
@@ -6189,7 +6191,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 and receiver_mechanism != self.output_CIM
                 and receiver_mechanism != self.controller
                 and projection not in [vertex.component for vertex in self.graph.vertices]
-                and not learning_projection):
+                and not is_learning_projection):
 
             projection.is_processing = False
 
@@ -6216,7 +6218,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._validate_projection(projection,
                                       sender, receiver,
                                       sender_mechanism, receiver_mechanism,
-                                      learning_projection)
+                                      is_learning_projection)
         else:
             self._pre_existing_pathway_components[PROJECTIONS].append(projection)
 
@@ -6282,12 +6284,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                              sender, receiver,
                              graph_sender,
                              graph_receiver,
-                             learning_projection,
+                             is_learning_projection,
                              ):
 
         # FIX: [JDC 6/8/19] SHOULDN'T THERE BE A CHECK FOR THEM IN LearningProjections? OR ARE THOSE DONE ELSEWHERE?
         # Skip this validation on learning projections because they have non-standard senders and receivers
-        if not learning_projection:
+        if not is_learning_projection:
             if projection.sender.owner != graph_sender:
                 raise CompositionError(f"Sender ('{sender.name}') assigned to '{projection.name} is "
                                        f"incompatible with the positions of these Components in '{self.name}'.")
@@ -6316,20 +6318,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    f"Must be a Projection.")
         return projection
 
-    def _parse_sender_spec(self, projection, sender):
+    def _parse_sender_spec(self, projection, sender, is_learning_projection):
 
         # if a sender was not passed, check for a sender OutputPort stored on the Projection object
         if sender is None:
             if hasattr(projection, "sender"):
-                # FIX: WHY IS THIS NOT JUST:  (AS IT IS, SEEMS TO FORCE PRIMARY OUTPUT_PORT EVEN ANOTHER WAS SPECIFIED)
-                # MODIFIED 9/1/23 OLD:
-                sender = projection.sender.owner
-                # MODIFIED 9/1/23 NEW:
-                # sender = projection.sender
-                # MODIFIED 9/1/23 NEWER:
-                if isinstance(sender, CompositionInterfaceMechanism):
-                    sender = sender.composition
-                # MODIFIED 9/1/23 END
+                sender = projection.sender
+                # MODIFIED 9/1/23 END                # # MODIFIED 9/1/23 NEW:
+                #                 # if isinstance(sender, CompositionInterfaceMechanism):
+                #                 #     sender = sender.composition
             else:
                 raise CompositionError(f"{projection.name} is missing a sender specification. "
                                        f"For a Projection to be added to a Composition a sender must be specified, "
@@ -6392,7 +6389,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return sender, sender_mechanism, graph_sender, nested_compositions
 
-    def _parse_receiver_spec(self, projection, receiver, sender, learning_projection):
+    def _parse_receiver_spec(self, projection, receiver, sender, is_learning_projection):
 
         receiver_arg = receiver
 
@@ -6432,12 +6429,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         elif isinstance(receiver, AutoAssociativeProjection):
             receiver_mechanism = receiver.owner_mech
             receiver_input_port = receiver_mechanism.input_port
-            learning_projection = True
+            is_learning_projection = True
 
-        elif isinstance(sender, LearningMechanism):
+        elif isinstance(sender, (LearningSignal, LearningMechanism)):
             receiver_mechanism = receiver.receiver.owner
             receiver_input_port = receiver_mechanism.input_port
-            learning_projection = True
+            is_learning_projection = True
 
         else:
             raise CompositionError(f"receiver arg ({receiver_arg}) of call to add_projection method of {self.name} "
@@ -6447,7 +6444,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 and not isinstance(receiver, Composition)
                 and receiver_mechanism not in self.nodes
                 and receiver_mechanism != self.controller
-                and not learning_projection):
+                and not is_learning_projection):
 
             # if the receiver is IN a nested Composition AND receiver is an INPUT Node
             # then use the corresponding CIM on the nested comp as the receiver going forward
@@ -6467,7 +6464,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     f"is not in '{self.name}' or any {Composition.__name__}s nested within it.")
 
         return receiver, receiver_mechanism, graph_receiver, receiver_input_port, \
-               nested_compositions, learning_projection
+               nested_compositions, is_learning_projection
 
     def _update_shadow_projections(self, context=None):
         """Instantiate any missing shadow_projections that have been specified in Composition
@@ -7792,7 +7789,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Create Projection to learned Projection and add to Composition
         learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
-        self.add_projection(learning_projection, learning_projection=True)
+        self.add_projection(learning_projection, is_learning_projection=True, feedback=True)
 
         # FIX 5/8/20: WHY IS LEARNING_MECHANSIMS ASSIGNED A SINGLE MECHANISM?
         # Wrap up and return
@@ -8127,7 +8124,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                     receiver=learning_mechanism.input_ports[ERROR_SIGNAL_INDEX])
         return [target_projection, sample_projection, error_signal_projection, act_out_projection, act_in_projection]
 
-    def _create_learning_projection(self, learning_mechanism, learned_projection):
+    def _create_learning_projection(self, learning_mechanism, learned_projection)->LearningProjection:
         """Construct LearningProjections from LearningMechanisms to learned_projections in a learning pathway"""
 
         learning_projection = LearningProjection(name="Learning Projection",
@@ -8511,7 +8508,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.add_projections(learning_related_projections)
 
         learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
-        self.add_projection(learning_projection, feedback=True)
+        self.add_projection(learning_projection, is_learning_projection=True, feedback=True)
 
 
         return target_mechanism, objective_mechanism, learning_mechanism
@@ -8702,7 +8699,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Add all the Projections to the Composition
             self.add_projections([act_in_projection, act_out_projection] + error_projections)
-            self.add_projection(learning_projection, feedback=True)
+            self.add_projection(learning_projection, is_learning_projection=True, feedback=True)
 
         except DuplicateProjectionError as e:
             # Ignore duplicates since the corresponding LearningMechanism was identified and ignored above
