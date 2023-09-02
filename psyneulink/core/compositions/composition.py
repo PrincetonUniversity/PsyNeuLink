@@ -8121,11 +8121,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # FIX: THIS CURRENTLY ONLY SUPPORTS A SINGLE PROJECTION TO/FROM A NESTED COMPOSITION USING PRIMARY CIM PORTS
         #      NEED TO AUGMENT TO SUPPORT MULTIPLE PROJECTIONS TO/FROM (E.G., FOR EMComposition)
         if isinstance(input_source, Composition):
-                _, input_source, _ = \
-                    input_source.output_CIM._get_source_info_from_output_CIM(input_source.output_CIM.output_port)
+            _, input_source, _ = \
+                input_source.output_CIM._get_source_info_from_output_CIM(input_source.output_CIM.output_port)
         if isinstance(output_source, Composition):
-                _, output_source ,_ = \
-                    output_source.output_CIM._get_destination_info_from_input_CIM(output_source.input_CIM.input_port)
+            _, output_source ,_ = \
+                output_source.output_CIM._get_destination_info_from_input_CIM(output_source.input_CIM.input_port)
         # MODIFIED 9/1/23 END
         act_in_projection = MappingProjection(sender=input_source.output_ports[0],
                                               receiver=learning_mechanism.input_ports[ACTIVATION_INPUT_INDEX])
@@ -8847,7 +8847,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if learning_mech:
                     # FIX: REPLACE WITH learning_mech._add_error_signal_input_port ONCE IMPLEMENTED
                     error_signal_input_port = next((e for e in learning_mech.error_signal_input_ports
-                                                     if not e.path_afferents), None)
+                                                    if not e.path_afferents), None)
                     if error_signal_input_port is None:
                         error_signal_input_port = learning_mech.add_ports(
                             InputPort(projections=error_source.output_ports[ERROR_SIGNAL],
@@ -8858,7 +8858,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     #    error_signal_input_port of learning_mech in _create_non_terminal_backprop_learning_components
                     try:
                         error_projections.append(MappingProjection(sender=error_source.output_ports[ERROR_SIGNAL],
-                                                               receiver=error_signal_input_port))
+                                                                   receiver=error_signal_input_port))
                     except DuplicateProjectionError:
                         pass
                     except Exception as e:
