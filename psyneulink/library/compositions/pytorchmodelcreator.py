@@ -95,9 +95,6 @@ class PytorchModelCreator(torch.nn.Module):
         # Instantiate pytorch projections (ignoring any from/to CIMs in the same composition)
         for projection in composition._inner_projections:
             # FIX: 9/1/23 - ??CREATE MAP OF PROJECTIONS TO/FROM NESTED CIM FOR SAVING PROJECTIONS BACK TO PNL??
-            # if projection.sender.owner in self.nodes_map and projection.receiver.owner in self.nodes_map:
-            # if any(isinstance(proj_sndr_or_recvr, CompositionInterfaceMechanism) 
-            #        for proj_sndr_or_recvr in {projection.sender.owner, projection.receiver.owner}):
             sndr_mech = projection.sender.owner
             rcvr_mech = projection.receiver.owner
             
@@ -401,16 +398,6 @@ class PytorchModelCreator(torch.nn.Module):
                 # - get is inputs
                 # - calls its forward method recursively
                 if isinstance(node, PytorchModelCreator):
-                    # FIX: 9/1/23
-                    # FIX: REPLACE INPUTS FOR NESTED COMP IN inputs DICTIONARY WITH ITS OUTPUTS
-                    #      WITH VALUE OF PROJECTION TO THEM FROM OUTER COMP CREATED IN __init__
-                    # nested_inputs = {}
-                    # for k in [n._mechanism for n in node.nodes]:
-                    #     if k in inputs:
-                    #         nested_inputs[k] = inputs.pop(k)
-                    # node.forward(nested_inputs)
-                    # inputs_to_nested = True
-                    # FIX: SHOULDN'T HAVE TO WORRY ABOUT INPUTS SINCE DIRECT PROJECTION HANDLES THEM?
                     node.forward(inputs=None)
                     continue
                 # elif node._mechanism in [n[0] for n in self._composition._get_nested_nodes()]:

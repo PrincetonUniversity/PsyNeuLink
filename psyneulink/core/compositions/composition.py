@@ -6327,7 +6327,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if sender is None:
             if hasattr(projection, "sender"):
                 sender = projection.sender
-                # MODIFIED 9/1/23 NEW:
                 if isinstance(sender, CompositionInterfaceMechanism):
                     sender = sender.composition
             else:
