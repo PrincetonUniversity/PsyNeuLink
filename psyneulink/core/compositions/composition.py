@@ -8118,8 +8118,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             target_projection = [p for p in target.efferents
                                  if p in comparator.input_ports[TARGET].path_afferents]
         # MODIFIED 9/1/23 NEW:
-        # FIX: NOTE THIS THIS ONY SUPPORTS A SINGLE PROJECTION TO/FROM A NESTED COMPOSITION USING PRIMARY CIM PORTS
-        #      WILL NEED TO AUGMENT TO SUPPORT MULTIPLE PROJECTIONS TO/FROM (E.G., FOR EMComposition)
+        # FIX: THIS CURRENTLY ONLY SUPPORTS A SINGLE PROJECTION TO/FROM A NESTED COMPOSITION USING PRIMARY CIM PORTS
+        #      NEED TO AUGMENT TO SUPPORT MULTIPLE PROJECTIONS TO/FROM (E.G., FOR EMComposition)
         if isinstance(input_source, Composition):
                 _, input_source, _ = \
                     input_source.output_CIM._get_source_info_from_output_CIM(input_source.output_CIM.output_port)
@@ -8274,9 +8274,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Unpack and process terminal_sequence:
         input_source, learned_projection, output_source = terminal_sequence
-        # MODIFIED 9/1/23 NEW:
         input_source, output_source = _get_nodes_if_nested(input_source, output_source)
-        # MODIFIED 9/1/23 END
 
         # If pathway includes existing terminal_sequence for the output_source, use that
         if output_source in self._terminal_backprop_sequences:
