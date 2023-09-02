@@ -8444,7 +8444,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         pathways.append(p)
                     continue
                 for projection, efferent_node in [(p, p.receiver.owner) for p in curr_node.efferents]:
-                    if (not hasattr(projection,'learnable')) or (projection.learnable is False):
+                    if (((not hasattr(projection,'learnable')) or (projection.learnable is False))
+                            and not isinstance(efferent_node, CompositionInterfaceMechanism)):
                         continue
                     if isinstance(efferent_node, CompositionInterfaceMechanism):
                         if efferent_node == efferent_node.composition.input_CIM:
@@ -8778,11 +8779,28 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         error_sources = []
         error_projections = []
 
-        # First get all efferents of receiver_activity_mech with a LearningProjection that are in current Composition
-        for efferent in [p for p in receiver_activity_mech.efferents
-                         if (hasattr(p, 'has_learning_projection')
-                             and p.has_learning_projection
-                             and p in self.projections)]:
+        for efferent in [p for p in receiver_activity_mech.efferents]:
+
+            # Deal with OUTPUT Node of a nested Composition (note: this currenlty only handles one level of nesting)
+            if isinstance(efferent.receiver.owner, CompositionInterfaceMechanism):
+                try:
+                    efferent = efferent.receiver.owner.port_map[efferent.sender][1].efferents[0]
+                # FIX: 9/1/23 - THIS IS TO DEAL WITH EXTRA  MappingProjection FOR OUTPUT NODE OF NESTED COMPOSITION
+                #               TO output_CIM THAT DOESN'T HAVE ANY EFFERENTS OF ITS OWN
+                except IndexError:
+                    continue
+
+            # Only use efferents of receiver_activity_mech with a LearningProjection that are in current Composition
+            # or (if efferent is an output_CIM) in the outer Composition.
+            if not (hasattr(efferent, 'has_learning_projection')
+                      and efferent.has_learning_projection
+                    and efferent in self.projections):
+                      # and (efferent in self.projections or
+                      #      # note: per handling above, efferent is now the Projection *from* the output_CIM
+                      #      (isinstance(efferent.sender.owner, CompositionInterfaceMechanism) and
+                      #       efferent.sender.owner == self.output_CIM))):
+                 continue
+
             # Then get any LearningProjections to that efferent that are in current Composition
             for learning_projection in [mod_aff for mod_aff in efferent.parameter_ports[MATRIX].mod_afferents
                                         if (isinstance(mod_aff, LearningProjection) and mod_aff in self.projections)]:
