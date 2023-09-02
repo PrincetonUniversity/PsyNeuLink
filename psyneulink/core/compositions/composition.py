@@ -8437,6 +8437,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pathways = []
             prev = {}
             queue = collections.deque([start])
+
             # MODIFIED 9/1/23 OLD:
             while len(queue) > 0:
                 curr_node = queue.popleft()
@@ -8498,7 +8499,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #             prev[efferent_node] = projection
             #         prev[projection] = curr_node
             #         queue.append(efferent_node)
-            # MODIFIED 9/1/23 END
+            # # MODIFIED 9/1/23 END
+
             return pathways
 
         pathways = [p for n in self.get_nodes_by_role(NodeRole.INPUT) if
@@ -8506,6 +8508,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for pathway in pathways:
             self.add_backpropagation_learning_pathway(pathway=pathway,
                                                       loss_spec=self.loss_spec)
+        assert True
 
     def _create_terminal_backprop_learning_components(self,
                                                       input_source,
@@ -10000,11 +10003,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Construct input_dict from input_nodes of self
         for INPUT_Node in input_nodes:
 
-            # MODIFIED 12/11/22 NEW:
             if not inputs:
                 input_dict[INPUT_Node] = INPUT_Node.external_input_shape
                 continue
-            # MODIFIED 12/11/22 END
 
             # If entry is for an INPUT_Node of self, assign the entry directly to input_dict and proceed to next
             if INPUT_Node in inputs:
