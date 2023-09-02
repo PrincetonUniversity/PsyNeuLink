@@ -8438,68 +8438,68 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             prev = {}
             queue = collections.deque([start])
 
-            # MODIFIED 9/1/23 OLD:
+            # Keep track of nesting
+            composition_stack = collections.deque([self])
+
             while len(queue) > 0:
-                curr_node = queue.popleft()
-                if isinstance(curr_node, CompositionInterfaceMechanism):
-                    continue
-                if NodeRole.OUTPUT in self.get_roles_by_node(curr_node):
+                node = queue.popleft()
+
+                # Handle OUTPUT Node of outer Composition
+                if (composition_stack[0] == self
+                        and NodeRole.OUTPUT in composition_stack[0].get_roles_by_node(node)):
                     p = []
-                    while curr_node in prev:
-                        p.insert(0, curr_node)
-                        curr_node = prev[curr_node]
-                    p.insert(0, curr_node)
-                    # we only consider input -> projection -> ... -> output pathways
-                    # (since we can't learn on only one mechanism)
+                    while node in prev:
+                        p.insert(0, node)
+                        node = prev[node]
+                    p.insert(0, node)
+                    # Only consider input -> projection -> ... -> output pathways
+                    # (since can't learn on only one mechanism)
                     if len(p) >= 3:
                         pathways.append(p)
                     continue
-                for projection, efferent_node in [(p, p.receiver.owner) for p in curr_node.efferents]:
-                    if (not hasattr(projection,'learnable')) or (projection.learnable is False):
-                        continue
-                    prev[efferent_node] = projection
-                    prev[projection] = curr_node
-                    queue.append(efferent_node)
 
-            # # MODIFIED 9/1/23 NEW:
-            # composition_stack = collections.deque([self])
-            # while len(queue) > 0:
-            #     curr_node = queue.popleft()
-            #     if (composition_stack[0] == self
-            #             and NodeRole.OUTPUT in composition_stack[0].get_roles_by_node(curr_node)):
-            #         p = []
-            #         while curr_node in prev:
-            #             p.insert(0, curr_node)
-            #             curr_node = prev[curr_node]
-            #         p.insert(0, curr_node)
-            #         # we only consider input -> projection -> ... -> output pathways
-            #         # (since we can't learn on only one mechanism)
-            #         if len(p) >= 3:
-            #             pathways.append(p)
-            #         continue
-            #     for projection, efferent_node in [(p, p.receiver.owner) for p in curr_node.efferents]:
-            #         if (((not hasattr(projection,'learnable')) or (projection.learnable is False))
-            #                 and not isinstance(efferent_node, CompositionInterfaceMechanism)):
-            #             continue
-            #         if isinstance(efferent_node, CompositionInterfaceMechanism):
-            #             if efferent_node == efferent_node.composition.input_CIM:
-            #                 composition_stack.appendleft(efferent_node.composition)
-            #                 _, efferent_node, _ = \
-            #                     efferent_node._get_destination_info_from_input_CIM(projection.receiver)
-            #                 prev[efferent_node] = projection
-            #             elif efferent_node == composition_stack[0].output_CIM:
-            #                 _, efferent_node, _ = \
-            #                     efferent_node._get_destination_info_for_ouput_CIM(projection.receiver)
-            #                 projection = projection.receiver.owner.output_port.efferents[0]
-            #                 prev[efferent_node] = projection
-            #                 composition_stack.popleft()
-            #             else:
-            #                 assert False, f"PROGRAM ERROR:  Unrecognized CompositionInterfaceMechanism: {efferent_node}"
-            #         else:
-            #             prev[efferent_node] = projection
-            #         prev[projection] = curr_node
-            #         queue.append(efferent_node)
-            # # MODIFIED 9/1/23 END
+                # Consider all efferent Projections of node
+                for efferent_proj, rcvr in [(p, p.receiver.owner) for p in node.efferents]:
+                    # Ignore ones that are not learnable except to a CIM (deal with those next)
+                    if (((not hasattr(efferent_proj,'learnable')) or (efferent_proj.learnable is False))
+                            and not isinstance(rcvr, CompositionInterfaceMechanism)):
+                        continue
+
+                    # Deal with Projections to CIMs since nested comps can be learned in PyTorch mode
+                    if isinstance(rcvr, CompositionInterfaceMechanism):
+
+                        # Projection to input_CIM:  entry to nested Composition
+                        if rcvr == rcvr.composition.input_CIM:
+                            # Push nested Composition onto stack
+                            composition_stack.appendleft(rcvr.composition)
+                            # Replace rcvr with INPUT Node of nested Composition
+                            _, rcvr, _ = \
+                                rcvr._get_destination_info_from_input_CIM(efferent_proj.receiver)
+                            assert rcvr in composition_stack[0].get_nodes_by_role(NodeRole.INPUT), \
+                                f"PROGRAM ERROR: '{rcvr.name}' is not an INPUT Node of '{composition_stack[0].name}'"
+                            # Assign efferent_proj (Projection to input_CIM) since it should be learned in PyTorch mode
+                            prev[rcvr] = efferent_proj
+
+                        # Projection is to output_CIM:  exit from nested Composition
+                        elif rcvr == composition_stack[0].output_CIM:
+                            # Replace rcvr with Node in outer Composition to which node projects (via output_CIM)
+                            _, rcvr, _ = \
+                                rcvr._get_destination_info_for_ouput_CIM(efferent_proj.receiver)
+                            # Replace efferent_proj with one from output_CIM to rcvr in outer Composition
+                            #   (since that is the one that should be learned in PyTorch mode)
+                            efferent_proj = efferent_proj.receiver.owner.output_port.efferents[0]
+                            prev[rcvr] = efferent_proj
+                            # Pop the stack to return to outer Composition
+                            composition_stack.popleft()
+
+                        else:
+                            assert False, f"PROGRAM ERROR:  Unrecognized CompositionInterfaceMechanism: {rcvr}"
+
+                    else:
+                        prev[rcvr] = efferent_proj
+
+                    prev[efferent_proj] = node
+                    queue.append(rcvr)
 
             return pathways
 
