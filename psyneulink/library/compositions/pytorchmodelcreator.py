@@ -403,18 +403,20 @@ class PytorchModelCreator(torch.nn.Module):
                     # FIX: 9/1/23
                     # FIX: REPLACE INPUTS FOR NESTED COMP IN inputs DICTIONARY WITH ITS OUTPUTS
                     #      WITH VALUE OF PROJECTION TO THEM FROM OUTER COMP CREATED IN __init__
-                    # inputs = {k:v for k,v in inputs.items() if k in [n._mechanism for n in node.nodes]}
-                    nested_inputs = {}
-                    for k in [n._mechanism for n in node.nodes]:
-                        if k in inputs:
-                            nested_inputs[k] = inputs.pop(k)
-                    # nested_inputs = {k:inputs.pop(k) for k in inputs.keys()
-                    #                  if k in [n._mechanism for n in node.nodes]}
-                    node.forward(nested_inputs)
+                    # nested_inputs = {}
+                    # for k in [n._mechanism for n in node.nodes]:
+                    #     if k in inputs:
+                    #         nested_inputs[k] = inputs.pop(k)
+                    # node.forward(nested_inputs)
+                    # inputs_to_nested = True
+                    # FIX: SHOULDN'T HAVE TO WORRY ABOUT INPUTS SINCE DIRECT PROJECTION HANDLES THEM?
+                    node.forward(inputs=None)
                     continue
-                elif node._mechanism in [n[0] for n in self._composition._get_nested_nodes()]:
-                    continue
-                elif NodeRole.INPUT in self._composition.get_roles_by_node(node._mechanism):
+                # elif node._mechanism in [n[0] for n in self._composition._get_nested_nodes()]:
+                #     continue
+                elif (NodeRole.INPUT in self._composition.get_roles_by_node(node._mechanism) and
+                      not self._composition.is_nested):
+                    # FIX: IF ITS NESTED, JUST USE COLLATE_INPUTS SINCE IT HAS A DIRECTION PROJECTION?
                     node.execute(inputs[node._mechanism])
                 else:
                     variable = node.collate_afferents()
