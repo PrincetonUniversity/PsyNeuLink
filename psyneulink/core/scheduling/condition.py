@@ -144,7 +144,7 @@ pnl_conditions_module = locals()  # inserting into locals defines the classes
 
 for cond_name in graph_scheduler.condition.__all__:
     sched_module_cond_obj = getattr(graph_scheduler.condition, cond_name)
-    cond_dependencies[cond_name] = set(sched_module_cond_obj.__mro__[1:])
+    cond_dependencies[cond_name] = {c.__name__ for c in sched_module_cond_obj.__mro__ if c.__name__ != cond_name}
 
 # iterate in order such that superclass types are before subclass types
 for cond_name in sorted(
