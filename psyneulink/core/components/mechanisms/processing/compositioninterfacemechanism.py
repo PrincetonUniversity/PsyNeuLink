@@ -357,6 +357,30 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
             return sender, sender.owner, comp
         return self._get_source_info_from_output_CIM(sender, sender.owner.composition)
 
+    def _get_destination_info_for_ouput_CIM(self, port, comp=None):
+        """Return Port, Node and Composition for "ultimate" destination of projection to **port**.
+        **port**: InputPort or OutputPort of the output_CIM to which the projection of interest projects;
+                  used to find destination (key) in output_CIM's port_map.
+        **comp**: Composition at which to begin the search (or continue it when called recursively);
+                 assumes the Composition for the output_CIM to which **port** belongs by default
+        """
+        # Ensure method is being called on an output_CIM
+        assert self == self.composition.output_CIM
+        #  CIM MAP ENTRIES:  [SENDER PORT,  [output_CIM InputPort,  output_CIM OutputPort]]
+        # Get receiver of output_port of output_CIM
+        comp = comp or self.composition
+        port_map = port.owner.port_map
+        idx = 0 if isinstance(port, InputPort) else 1
+        output_port = [port_map[k][1] for k in port_map if port_map[k][idx] is port]
+        assert len(output_port)==1, f"PROGRAM ERROR: Expected exactly 1 output_port for {port.name} " \
+                                   f"in port_map for {port.owner}; found {len(output_port)}."
+        assert len(output_port[0].efferents)==1, f"PROGRAM ERROR: Port ({output_port.name}) expected to have " \
+                                                 f"just one efferent; has {len(output_port.efferents)}."
+        receiver = output_port[0].efferents[0].receiver
+        if not isinstance(receiver.owner, CompositionInterfaceMechanism):
+            return receiver, receiver.owner, comp
+        return self._get_destination_info_for_ouput_CIM(receiver, receiver.owner.composition)
+
     def _sender_is_probe(self, output_port):
         """Return True if source of output_port is a PROBE Node of the Composition to which it belongs"""
         from psyneulink.core.compositions.composition import NodeRole
