@@ -622,7 +622,7 @@ class AutodiffComposition(Composition):
         """
         if execution_mode is None:
             if self.execution_mode_warned_about_default is False:
-                warnings.warn(f"The execution_mode argument was not specified in the learn() method of {self.name}; "
+                warnings.warn(f"The execution_mode argument was not specified in the learn() method of '{self.name}'; "
                               f"ExecutionMode.PyTorch will be used by default.")
                 self.execution_mode_warned_about_default = True
             execution_mode = pnlvm.ExecutionMode.PyTorch

@@ -8437,11 +8437,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pathways = []
             prev = {}
             queue = collections.deque([start])
-            composition_stack = collections.deque([self])
+            # MODIFIED 9/1/23 OLD:
             while len(queue) > 0:
                 curr_node = queue.popleft()
-                if (composition_stack[0] == self
-                        and NodeRole.OUTPUT in composition_stack[0].get_roles_by_node(curr_node)):
+                if isinstance(curr_node, CompositionInterfaceMechanism):
+                    continue
+                if NodeRole.OUTPUT in self.get_roles_by_node(curr_node):
                     p = []
                     while curr_node in prev:
                         p.insert(0, curr_node)
@@ -8453,28 +8454,51 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         pathways.append(p)
                     continue
                 for projection, efferent_node in [(p, p.receiver.owner) for p in curr_node.efferents]:
-                    if (((not hasattr(projection,'learnable')) or (projection.learnable is False))
-                            and not isinstance(efferent_node, CompositionInterfaceMechanism)):
+                    if (not hasattr(projection,'learnable')) or (projection.learnable is False):
                         continue
-                    if isinstance(efferent_node, CompositionInterfaceMechanism):
-                        if efferent_node == efferent_node.composition.input_CIM:
-                            composition_stack.appendleft(efferent_node.composition)
-                            _, efferent_node, _ = \
-                                efferent_node._get_destination_info_from_input_CIM(projection.receiver)
-                            prev[efferent_node] = projection
-                        elif efferent_node == composition_stack[0].output_CIM:
-                            _, efferent_node, _ = \
-                                efferent_node._get_destination_info_for_ouput_CIM(projection.receiver)
-                            projection = projection.receiver.owner.output_port.efferents[0]
-                            prev[efferent_node] = projection
-                            composition_stack.popleft()
-                        else:
-                            assert False, f"PROGRAM ERROR:  Unrecognized CompositionInterfaceMechanism: {efferent_node}"
-                    else:
-                        prev[efferent_node] = projection
+                    prev[efferent_node] = projection
                     prev[projection] = curr_node
                     queue.append(efferent_node)
-                # MODIFIED 9/1/23 END
+
+            # # MODIFIED 9/1/23 NEW:
+            # composition_stack = collections.deque([self])
+            # while len(queue) > 0:
+            #     curr_node = queue.popleft()
+            #     if (composition_stack[0] == self
+            #             and NodeRole.OUTPUT in composition_stack[0].get_roles_by_node(curr_node)):
+            #         p = []
+            #         while curr_node in prev:
+            #             p.insert(0, curr_node)
+            #             curr_node = prev[curr_node]
+            #         p.insert(0, curr_node)
+            #         # we only consider input -> projection -> ... -> output pathways
+            #         # (since we can't learn on only one mechanism)
+            #         if len(p) >= 3:
+            #             pathways.append(p)
+            #         continue
+            #     for projection, efferent_node in [(p, p.receiver.owner) for p in curr_node.efferents]:
+            #         if (((not hasattr(projection,'learnable')) or (projection.learnable is False))
+            #                 and not isinstance(efferent_node, CompositionInterfaceMechanism)):
+            #             continue
+            #         if isinstance(efferent_node, CompositionInterfaceMechanism):
+            #             if efferent_node == efferent_node.composition.input_CIM:
+            #                 composition_stack.appendleft(efferent_node.composition)
+            #                 _, efferent_node, _ = \
+            #                     efferent_node._get_destination_info_from_input_CIM(projection.receiver)
+            #                 prev[efferent_node] = projection
+            #             elif efferent_node == composition_stack[0].output_CIM:
+            #                 _, efferent_node, _ = \
+            #                     efferent_node._get_destination_info_for_ouput_CIM(projection.receiver)
+            #                 projection = projection.receiver.owner.output_port.efferents[0]
+            #                 prev[efferent_node] = projection
+            #                 composition_stack.popleft()
+            #             else:
+            #                 assert False, f"PROGRAM ERROR:  Unrecognized CompositionInterfaceMechanism: {efferent_node}"
+            #         else:
+            #             prev[efferent_node] = projection
+            #         prev[projection] = curr_node
+            #         queue.append(efferent_node)
+            # MODIFIED 9/1/23 END
             return pathways
 
         pathways = [p for n in self.get_nodes_by_role(NodeRole.INPUT) if

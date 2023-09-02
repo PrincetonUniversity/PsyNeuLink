@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 
 from psyneulink.core.components.component import Component, ComponentsMeta
-from psyneulink.core.compositions.composition import NodeRole
+from psyneulink.core.compositions.composition import NodeRole, CompositionInterfaceMechanism
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core import llvm as pnlvm
 from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer, SGDOptimizer
@@ -17,17 +17,26 @@ __all__ = ['PytorchModelCreator']
 
 class PytorchModelCreator(torch.nn.Module):
     # sets up parameters of model & the information required for forward computation
-    def __init__(self, composition, device, context=None):
+    def __init__(self,
+                 composition,
+                 device,
+                 outer_creator=None,
+                 context=None):
 
         super(PytorchModelCreator, self).__init__()
 
+        from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
+
+        self.name = f"PytorchModelCreator[{composition.name}]"
+
         # Maps Mechanism -> PytorchMechanismWrapper
         self.nodes = []
-        self.component_map = {}
+        self.nodes_map = {}
 
         # Maps Projections -> PytorchProjectionWrappers
         self.projections = []
-        self.projection_map = {}
+        self.projection_maps = {}
+        self.nested_projection_maps = {}
 
         self.params = nn.ParameterList()
         self.device = device
@@ -57,7 +66,8 @@ class PytorchModelCreator(torch.nn.Module):
         #   AFTER) NODES
 
         # Instantiate pytorch mechanisms
-        for node in set(composition.nodes) - set(composition.get_nodes_by_role(NodeRole.LEARNING)):
+        nodes = list(set(composition.nodes) - set(composition.get_nodes_by_role(NodeRole.LEARNING)))
+        for node in sorted(nodes, key=lambda x: isinstance(x, AutodiffComposition)):
             # FIX: ADD SUPPORT FOR NESTED AUTODIFFCOMPOSITION(S) HERE:
             #      - WRITE FLATTEN METHOD, WHICH MUST:
             #        - PRECLUDE CONTROLLERS AT ANY LEVEL OF NESTING
@@ -72,33 +82,65 @@ class PytorchModelCreator(torch.nn.Module):
             #       - 2) CALL PYTORCHMODELCREATOR ON IT RECURSIVELY
             #       - 3) AT TOP OF PYTORCHMODELCREATOR:
             #             - MAKE SURE THAT NO CIMS ARE IN THIS LOOP (PER EXCLUSION ABOVE)
-
-            pytorch_node = PytorchMechanismWrapper(node,
-                                                   self._composition._get_node_index(node),
-                                                   device,
-                                                   context=context)
-            self.component_map[node] = pytorch_node
+            if isinstance(node, AutodiffComposition):
+                pytorch_node = PytorchModelCreator(node, device, outer_creator=self, context=context)
+            else:
+                pytorch_node = PytorchMechanismWrapper(node,
+                                                       self._composition._get_node_index(node),
+                                                       device,
+                                                       context=context)
+            self.nodes_map[node] = pytorch_node
             self.nodes.append(pytorch_node)
 
-        # Instantiate pytorch projections
-        for projection in composition.projections:
-            # FIX: ADD DIRECT PROJECTIONS TO REPLACE CIM ONES FOR NESTED COMPS,
-            #      AND CREATE MAP OF THOSE FOR SAVING PROJECTIONS BACK TO PNL
-            if projection.sender.owner in self.component_map and projection.receiver.owner in self.component_map:
-                proj_send = self.component_map[projection.sender.owner]
-                proj_recv = self.component_map[projection.receiver.owner]
+        # Instantiate pytorch projections (ignoring any from/to CIMs in the same composition)
+        for projection in composition._inner_projections:
+            # FIX: 9/1/23 - ??CREATE MAP OF PROJECTIONS TO/FROM NESTED CIM FOR SAVING PROJECTIONS BACK TO PNL??
+            # if projection.sender.owner in self.nodes_map and projection.receiver.owner in self.nodes_map:
+            # if any(isinstance(proj_sndr_or_recvr, CompositionInterfaceMechanism) 
+            #        for proj_sndr_or_recvr in {projection.sender.owner, projection.receiver.owner}):
+            sndr_mech = projection.sender.owner
+            rcvr_mech = projection.receiver.owner
+            
+            # Projection to input_CIM of a nested Composition: needed for learning, so create map for Projection 
+            if (isinstance(rcvr_mech, CompositionInterfaceMechanism) and rcvr_mech is not self._composition.output_CIM):
+                proj_sndr = self.nodes_map[sndr_mech]
+                # Replace rcvr_mech with the node in the nested Composition that receives the projection
+                _, nested_rcvr_mech, _ = rcvr_mech._get_destination_info_from_input_CIM(projection.receiver)
+                nested_pytorch_comp = self.nodes_map[rcvr_mech.composition]
+                proj_rcvr = nested_pytorch_comp.nodes_map[nested_rcvr_mech]
 
-                port_idx = projection.sender.owner.output_ports.index(projection.sender)
-                new_proj = PytorchProjectionWrapper(projection,
-                                                    list(self._composition._inner_projections).index(projection),
-                                                    port_idx, device,
-                                                    sender=proj_send,
-                                                    receiver=proj_recv,
-                                                    context=context)
-                proj_send.add_efferent(new_proj)
-                proj_recv.add_afferent(new_proj)
-                self.projection_map[projection] = new_proj
-                self.projections.append(new_proj)
+
+            # Projection from output_CIM of a nested Composition: needed for learning, so create map for Projection 
+            elif isinstance(sndr_mech, CompositionInterfaceMechanism) and sndr_mech is not self._composition.input_CIM:
+                proj_rcvr = self.nodes_map[rcvr_mech]
+                # Replace rcvr_mech with the node in the nested Composition that receives the projection
+                _, nested_sndr_mech, _ = sndr_mech._get_source_info_from_output_CIM(projection.sender)
+                nested_pytorch_comp = self.nodes_map[sndr_mech.composition]
+                proj_sndr = nested_pytorch_comp.nodes_map[nested_sndr_mech]
+
+            # Projection within composition
+            elif all(sndr_and_recvr in self.nodes_map for sndr_and_recvr in {sndr_mech, rcvr_mech}):
+                proj_sndr = self.nodes_map[sndr_mech]
+                proj_rcvr = self.nodes_map[rcvr_mech]
+
+            # Ignore CIMs within the same Composition (they don't need learning
+            elif sndr_mech is composition.input_CIM or rcvr_mech is composition.output_CIM:
+                continue
+
+            else:
+                assert False, f"Unrecognized projection {projection} in {composition.name}"
+
+            port_idx = projection.sender.owner.output_ports.index(projection.sender)
+            new_proj = PytorchProjectionWrapper(projection,
+                                                list(self._composition._inner_projections).index(projection),
+                                                port_idx, device,
+                                                sender=proj_sndr,
+                                                receiver=proj_rcvr,
+                                                context=context)
+            proj_sndr.add_efferent(new_proj)
+            proj_rcvr.add_afferent(new_proj)
+            self.projection_maps[projection] = new_proj
+            self.projections.append(new_proj)
 
         self._regenerate_paramlist()
 
@@ -113,7 +155,7 @@ class PytorchModelCreator(torch.nn.Module):
         # 1) Remove all learning-specific nodes
         self.execution_sets = [x - set(composition.get_nodes_by_role(NodeRole.LEARNING)) for x in composition.scheduler.run(context=c)]
         # 2) Convert to pytorchcomponent representation
-        self.execution_sets = [{self.component_map[comp] for comp in s if comp in self.component_map} for s in self.execution_sets]
+        self.execution_sets = [{self.nodes_map[comp] for comp in s if comp in self.nodes_map} for s in self.execution_sets]
         # 3) Remove empty execution sets
         self.execution_sets = [x for x in self.execution_sets if len(x) > 0]
 
@@ -353,18 +395,37 @@ class PytorchModelCreator(torch.nn.Module):
         """Forward method of the model for PyTorch and LLVM modes"""
         outputs = {}  # dict for storing values of terminal (output) nodes
         for current_exec_set in self.execution_sets:
-            for component in current_exec_set:
-                if NodeRole.INPUT in self._composition.get_roles_by_node(component._mechanism):
-                    component.execute(inputs[component._mechanism])
+            for node in current_exec_set:
+                # If node is nested Composition (wrapped in PytorchModelCreator),
+                # - get is inputs
+                # - calls its forward method recursively
+                if isinstance(node, PytorchModelCreator):
+                    # FIX: 9/1/23
+                    # FIX: REPLACE INPUTS FOR NESTED COMP IN inputs DICTIONARY WITH ITS OUTPUTS
+                    #      WITH VALUE OF PROJECTION TO THEM FROM OUTER COMP CREATED IN __init__
+                    # inputs = {k:v for k,v in inputs.items() if k in [n._mechanism for n in node.nodes]}
+                    nested_inputs = {}
+                    for k in [n._mechanism for n in node.nodes]:
+                        if k in inputs:
+                            nested_inputs[k] = inputs.pop(k)
+                    # nested_inputs = {k:inputs.pop(k) for k in inputs.keys()
+                    #                  if k in [n._mechanism for n in node.nodes]}
+                    node.forward(nested_inputs)
+                    continue
+                elif node._mechanism in [n[0] for n in self._composition._get_nested_nodes()]:
+                    continue
+                elif NodeRole.INPUT in self._composition.get_roles_by_node(node._mechanism):
+                    node.execute(inputs[node._mechanism])
                 else:
-                    variable = component.collate_afferents()
-                    component.execute(variable)
+                    variable = node.collate_afferents()
+                    node.execute(variable)
 
                 # save value in output list if we're at a node in the last execution set
-                if NodeRole.OUTPUT in self._composition.get_roles_by_node(component._mechanism):
-                    outputs[component._mechanism] = component.value
+                if NodeRole.OUTPUT in self._composition.get_roles_by_node(node._mechanism):
+                    outputs[node._mechanism] = node.value
 
         # NOTE: Context source needs to be set to COMMAND_LINE to force logs to update independently of timesteps
+        # if not self._composition.is_nested:
         old_source = context.source
         context.source = ContextFlags.COMMAND_LINE
         self.log_values()
@@ -374,11 +435,11 @@ class PytorchModelCreator(torch.nn.Module):
         return outputs
 
     def detach_all(self):
-        for projection in self.projection_map.values():
+        for projection in self.projection_maps.values():
             projection.matrix.detach()
 
     def copy_weights_to_psyneulink(self, context=None):
-        for projection, pytorch_rep in self.projection_map.items():
+        for projection, pytorch_rep in self.projection_maps.items():
             projection.parameters.matrix._set(
                 pytorch_rep.matrix.detach().cpu().numpy(), context)
             projection.parameters.matrix._set(
@@ -391,5 +452,5 @@ class PytorchModelCreator(torch.nn.Module):
             proj.log_matrix()
 
     def log_values(self):
-        for node in self.nodes:
+        for node in [n for n in self.nodes if not isinstance(n, PytorchModelCreator)]:
             node.log_value()

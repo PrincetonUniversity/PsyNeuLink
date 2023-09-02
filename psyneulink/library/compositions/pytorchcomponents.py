@@ -82,6 +82,7 @@ class PytorchMechanismWrapper():
     """
     def __init__(self, mechanism, component_idx, device, context=None):
         self._mechanism = mechanism
+        self.name = f"PytorchMechanismWrapper[{mechanism.name}]"
         self._idx = component_idx
         self._context = context
 
@@ -106,6 +107,8 @@ class PytorchMechanismWrapper():
         """Return weight-multiplied sum of all afferent projections for each input_port of the Mechanism
         If there are multiple input_ports, return an array with the sum for each input_port
         """
+        assert self.afferents,\
+            f"PROGRAM ERROR: No afferents found for '{self._mechanism.name}' in AutodiffComposition"
         # FIX: AUGMENT THIS TO SUPPORT InputPort's function
         if len(self._mechanism.input_ports) == 1:
             return sum((proj.execute(proj.sender.value) for proj in self.afferents))
@@ -186,6 +189,7 @@ class PytorchProjectionWrapper():
     An interpretation of a projection as an equivalent pytorch object
     """
     def __init__(self, projection, component_idx, port_idx, device, sender=None, receiver=None, context=None):
+        self.name = f"PytorchProjectionWrapper[{projection.name}]"
         self._projection = projection
         self._idx = component_idx
         self._context = context
