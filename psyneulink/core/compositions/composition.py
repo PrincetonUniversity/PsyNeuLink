@@ -8119,7 +8119,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             target_projection = [p for p in target.efferents
                                  if p in comparator.input_ports[TARGET].path_afferents]
         # MODIFIED 9/1/23 NEW:
-        # FIX: NOTE THIS THIS ONY SUPPORT A SINGLE PROJECTION TO/FROM A NESTED COMPOSITION USING PRIMARY CIM PORTS
+        # FIX: NOTE THIS THIS ONY SUPPORTS A SINGLE PROJECTION TO/FROM A NESTED COMPOSITION USING PRIMARY CIM PORTS
         #      WILL NEED TO AUGMENT TO SUPPORT MULTIPLE PROJECTIONS TO/FROM (E.G., FOR EMComposition)
         if isinstance(input_source, Composition):
                 _, input_source, _ = \
@@ -8245,9 +8245,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         path_length = len(processing_pathway)
 
         def _get_nodes_if_nested(input_source, output_source):
+
             # MODIFIED 9/1/23 NEW:
+            from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
+            if ((any(isinstance(source, Composition) or source not in self.nodes)
+                 for source in {input_source, output_source})
+                    and not isinstance(self, AutodiffComposition)):
+                raise CompositionError(f"Learning in Python mode does not currently support nested Compositions;  "
+                                       f"try using an AutodiffComposition with ExecutionMode.PyTorch.")
+
             # FIX: NOTE THIS THIS ONY SUPPORT A SINGLE PROJECTION TO/FROM A NESTED COMPOSITION USING PRIMARY CIM PORTS
             #      WILL NEED TO AUGMENT TO SUPPORT MULTIPLE PROJECTIONS TO/FROM (E.G., FOR EMComposition)
+
             if isinstance(input_source, Composition):
                 _, input_source, _ = \
                     input_source.output_CIM._get_source_info_from_output_CIM(input_source.output_CIM.output_port)
