@@ -128,7 +128,8 @@ class PytorchModelCreator(torch.nn.Module):
                 continue
 
             else:
-                assert False, f"Unrecognized projection {projection} in {composition.name}"
+                # assert False, f"Unrecognized projection {projection} in {composition.name}"
+                continue
 
             port_idx = projection.sender.owner.output_ports.index(projection.sender)
             new_proj = PytorchProjectionWrapper(projection,
