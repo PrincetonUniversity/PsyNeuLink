@@ -230,8 +230,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
             self.projections_map[projection] = new_proj
             self.projections.append(new_proj)
 
-        self._regenerate_paramlist()
-
         c = Context()
         try:
             composition.scheduler._init_counts(execution_id=c.execution_id, base_execution_id=context.execution_id)
@@ -270,18 +268,21 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # Flatten maps
         for node in self.nodes:
             if isinstance(node, PytorchCompositionWrapper):
-                # Not sure if this is needed, but just in case
-                self.nodes_map.update(node.nodes_map)
                 # For copying weights back to PNL in AutodiffComposition._update_learning_parameters
                 self.projections_map.update(node.projections_map)
+                # Not sure if this is needed, but just to be safe
+                self.nodes_map.update(node.nodes_map)
         # Purge nodes_map of entries for nested Compositions (their nodes are now in self.nodes_map)
         self.nodes_map = {k: v for k, v in self.nodes_map.items() if not isinstance(v, PytorchCompositionWrapper)}
 
-        # Flatten projections ??for backward pass in AutodiffComposition._update_learning_parameters
+        # Flatten projections so that they are all in the outer Composition and visible by _regenerate_paramlist
+        #     needed for call to backward() in AutodiffComposition._update_learning_parameters
         # FIX: MAYBE SHOULD DO THIS AS LIST IS CREATED ABOVE?
         self.projections = list(self.projections_map.values())
 
         composition.scheduler._delete_counts(c.execution_id)
+
+        self._regenerate_paramlist()
 
     __deepcopy__ = get_deepcopy_with_shared(shared_types=(Component, ComponentsMeta))
 
