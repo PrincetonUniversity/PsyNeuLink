@@ -114,41 +114,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
         self.device = device
 
         self._composition = composition
-        # # FIX: FOR USE IN SUPPORT OF NESTED AUTOCOMPOSITIONS:
-        # from psyneulink.core.compositions.composition import Composition
-        # # First, if the composition has any nested compositions, flatten it.
-        # if any(isinstance(node, Composition) for node in composition.nodes):
-        #     self._composition = composition.flatten()
-        # else:
-        #     self._composition = composition
-
-
-        # FIX: FLATTEN PNL COMPOSITION HERE:
-        #  - CREATE A NEW SCHEDULER FOR FLATTENED COMPOSITION:
-        #    flattened_comp_scheduler = graph_scheduler.Scheduler(flattened_composition)
-        #    flattened_comp_scheduler.add_condition_set(outer_composition.scheduler._user_specified_conds)
-        #    flattened_comp_scheduler.add_condition_set(nested_composition.scheduler._user_specified_conds) <- CAN'T
-        #    INCLUDE TIME-BASED
-        #    REMOVE NESTED COMP FROM OUTER COMPOSITION SCHEDULER
-        #  ON THE OUTER COMP SCHED THAT REFERENCES OR IS FOR THE NESTED COMP DEAL WIH THAT
-        #   USES: check for all dependencies of all outer_comp.scheduler.conditions for any on nest_comp,
-        #         recursing for All() and Any()
-        #   OWNS: if nested_comp in outer_comp.scheduler.conditions
-        #   FANCIER:  TRANSFER CONDITIONS THAT REFEFERENCE THE NESTED COMPOSITION TO ITS INPUT (?BEFORE) / OUTPUT (
-        #   AFTER) NODES
 
         # Instantiate pytorch mechanisms
         nodes = list(set(composition.nodes) - set(composition.get_nodes_by_role(NodeRole.LEARNING)))
         for node in sorted(nodes, key=lambda x: isinstance(x, AutodiffComposition)):
-            # FIX: ADD SUPPORT FOR NESTED AUTODIFFCOMPOSITION(S) HERE:
-            #      - WRITE FLATTEN METHOD, WHICH MUST:
-            #        - PRECLUDE CONTROLLERS AT ANY LEVEL OF NESTING
-            #        - CALL ITSELF RECURSIVELY FOR ALL LEVELS OF NESTING
-            #        - CREATE MAP OF PROJECTIONS IN FLATTENED VERSION TO input/output_CIM PROJECTIONS OF NESTED COMPS
-            #        - CREATE NEW SCHEDULER FOR FLATTENED COMP (FOR USE BY AUTODIFF) (see LINES 76-90 BELOW)
-            #      - MAKE SURE ALL NESTED COMPS ARE AUTODIFF-COMPLIANT
-            #      - CALL Composition.flatten()
-            #      - IN update_parameters, MAP PYTORCH PARAMETERS BACK TO input/output_CIM PROJECTIONS OF NESTED COMPS
             # FIX:  ALTERNATIVE: IF NODE IS A NESTED COMPOSITION
             #       - 1) CHECK THAT IT IS AN AUTODIFFCOMPOSITION
             #       - 2) CALL PytorchCompositionWrapper ON IT RECURSIVELY
@@ -177,7 +146,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 _, nested_rcvr_mech, _ = rcvr_mech._get_destination_info_from_input_CIM(projection.receiver)
                 nested_pytorch_comp = self.nodes_map[rcvr_mech.composition]
                 proj_rcvr = nested_pytorch_comp.nodes_map[nested_rcvr_mech]
-
 
             # Projection from output_CIM of a nested Composition: needed for learning, so create map for Projection
             elif isinstance(sndr_mech, CompositionInterfaceMechanism) and sndr_mech is not self._composition.input_CIM:
