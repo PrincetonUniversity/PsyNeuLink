@@ -130,11 +130,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         # Instantiate pytorch Mechanisms
         nodes = list(set(composition.nodes) - set(composition.get_nodes_by_role(NodeRole.LEARNING)))
-        # FIX: 9/1/23 - THIS IS REQUIRED DUE TO FLATTENING IN infer_backpropagation_learning_pathways; IS THAT NEEDED?
-        # Remove nested nodes from nodes list (put there in flattening by infer_backpropagation_learning_pathways)
-        #   so that they don't interfere with construction of execution_sets by scheduler
-        # Will re-flatten execution sets below
-        nodes = [n for n in nodes
+
+        nodes = [n for n in nodesa
                  # Leave nested Compositions
                  if (isinstance(n, AutodiffComposition)
                      # Needed since composition.nodes is flattened in infer_backpropagation_learning_pathways
