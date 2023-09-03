@@ -6,6 +6,7 @@ from psyneulink.core.components.component import Component, ComponentsMeta
 from psyneulink.core.components.functions.nonstateful.transferfunctions import \
     Linear, Logistic, ReLU, SoftMax, Dropout, Identity
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination, PRODUCT, SUM
+from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.compositions.composition import NodeRole, CompositionInterfaceMechanism
 from psyneulink.library.compositions.pytorchllvmhelper import *
 from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer, SGDOptimizer
@@ -108,7 +109,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # Maps Projections -> PytorchProjectionWrappers
         self.projections = []
         self.projection_maps = {}
-        self.nested_projection_maps = {}
+        self.nested_projections_maps = {}
 
         self.params = nn.ParameterList()
         self.device = device
@@ -135,41 +136,71 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         # Instantiate pytorch projections (ignoring any from/to CIMs in the same composition)
         for projection in composition._inner_projections:
-            # FIX: 9/1/23 - ??CREATE MAP OF PROJECTIONS TO/FROM NESTED CIM FOR SAVING PROJECTIONS BACK TO PNL??
             sndr_mech = projection.sender.owner
             rcvr_mech = projection.receiver.owner
 
-            # Projection to input_CIM of a nested Composition: needed for learning, so create map for Projection
-            if (isinstance(rcvr_mech, CompositionInterfaceMechanism) and rcvr_mech is not self._composition.output_CIM):
-                proj_sndr = self.nodes_map[sndr_mech]
-                # Replace rcvr_mech with the node in the nested Composition that receives the projection
-                _, nested_rcvr_mech, _ = rcvr_mech._get_destination_info_from_input_CIM(projection.receiver)
-                nested_pytorch_comp = self.nodes_map[rcvr_mech.composition]
-                proj_rcvr = nested_pytorch_comp.nodes_map[nested_rcvr_mech]
-
-            # Projection from output_CIM of a nested Composition: needed for learning, so create map for Projection
-            elif isinstance(sndr_mech, CompositionInterfaceMechanism) and sndr_mech is not self._composition.input_CIM:
-                proj_rcvr = self.nodes_map[rcvr_mech]
-                # Replace rcvr_mech with the node in the nested Composition that receives the projection
-                _, nested_sndr_mech, _ = sndr_mech._get_source_info_from_output_CIM(projection.sender)
-                nested_pytorch_comp = self.nodes_map[sndr_mech.composition]
-                proj_sndr = nested_pytorch_comp.nodes_map[nested_sndr_mech]
-
             # Projection within composition
-            elif all(sndr_and_recvr in self.nodes_map for sndr_and_recvr in {sndr_mech, rcvr_mech}):
+            if all(sndr_and_recvr in self.nodes_map for sndr_and_recvr in {sndr_mech, rcvr_mech}):
                 proj_sndr = self.nodes_map[sndr_mech]
                 proj_rcvr = self.nodes_map[rcvr_mech]
+                autodiff_projection = projection
 
-            # Ignore CIMs within the same Composition (they don't need learning
+            # Ignore CIMs within the same Composition (they are not learnable;  see below)
             elif sndr_mech is composition.input_CIM or rcvr_mech is composition.output_CIM:
                 continue
 
+            # Deal with Projections into our out of a nested Composition:
+            #  [      OUTER    ] [                            NESTED                               ] [    OUTER     ]
+            #          \learnable/      \not learnable/                      \not learnable/       \learnable/
+            #  ---> [Node] ----> [input_CIM] ~~~> [INPUT Node] ----> [OUTPUT Node] ~~~> [output_CIM] ----> [Node] --->
+            #        sndr            rcvr          nested_rcvr         nested_sndr         sndr             rcvr
+            #         ^--projection-->^                                                     ^---projection-->^
+            #         ^------autodiff_projection------>^                     ^------autodiff_projection----->^
+            #                  ENTRY                                                       EXIT
+
+            # ENTRY:
+            # Projection to input_CIM of a nested Composition: needed for learning, so create map for Projection
+            elif (isinstance(rcvr_mech, CompositionInterfaceMechanism)
+                  and rcvr_mech is not self._composition.output_CIM):
+                proj_sndr = self.nodes_map[sndr_mech]
+                # Replace rcvr_mech (input_CIM) with the node in the nested Composition that receives the projection
+                nested_rcvr_port, nested_rcvr_mech, _ = \
+                    rcvr_mech._get_destination_info_from_input_CIM(projection.receiver)
+                nested_pytorch_comp = self.nodes_map[rcvr_mech.composition]
+                proj_rcvr = nested_pytorch_comp.nodes_map[nested_rcvr_mech]
+                # Create direct Projection from sndr to nested_rcvr
+                autodiff_projection = MappingProjection(sender=projection.sender,
+                                                        receiver=nested_rcvr_port,
+                                                        matrix=projection.parameters.matrix._get(context),
+                                                        learnable=True)
+                # Map new direct Projection to original Projection (to input_CIM) for saving weights back to PNL
+                self.nested_projections_maps[autodiff_projection] = projection
+
+            # EXIT
+            # Projection from output_CIM of a nested Composition: needed for learning, so create map for Projection
+            elif (isinstance(sndr_mech, CompositionInterfaceMechanism)
+                  and sndr_mech is not self._composition.input_CIM):
+                proj_rcvr = self.nodes_map[rcvr_mech]
+                # Replace sndr_mech (output_CIM_ with the node in the nested Composition that sends the projection
+                nested_sndr_port, nested_sndr_mech, _ = \
+                    sndr_mech._get_source_info_from_output_CIM(projection.sender)
+                nested_pytorch_comp = self.nodes_map[sndr_mech.composition]
+                proj_sndr = nested_pytorch_comp.nodes_map[nested_sndr_mech]
+                # Create direct Projection from nested_sndr to rcvr
+                autodiff_projection = MappingProjection(sender=nested_sndr_port,
+                                                        receiver=projection.receiver,
+                                                        matrix=projection.parameters.matrix._get(context),
+                                                        learnable=True)
+                # Map new direct Projection to original Projection (from output_CIM) for saving weights back to PNL
+                self.nested_projections_maps[autodiff_projection] = projection
+
             else:
+                # FIX: 9/1/23 Check, as this seems to be True for Target nodes
                 # assert False, f"Unrecognized projection {projection} in {composition.name}"
                 continue
 
             port_idx = projection.sender.owner.output_ports.index(projection.sender)
-            new_proj = PytorchProjectionWrapper(projection,
+            new_proj = PytorchProjectionWrapper(autodiff_projection,
                                                 list(self._composition._inner_projections).index(projection),
                                                 port_idx, device,
                                                 sender=proj_sndr,
