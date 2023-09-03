@@ -258,7 +258,7 @@ try:
 except ImportError:
     torch_available = False
 else:
-    from psyneulink.library.compositions.pytorchmodelcreator import PytorchModelCreator
+    from psyneulink.library.compositions.pytorchcomponents import PytorchCompositionWrapper
 
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
@@ -417,7 +417,7 @@ class AutodiffComposition(Composition):
         if self.scheduler is None:
             self.scheduler = Scheduler(graph=self.graph_processing)
         if self.parameters.pytorch_representation._get(context=context) is None or refresh:
-            model = PytorchModelCreator(composition=self,
+            model = PytorchCompositionWrapper(composition=self,
                                         device=self.device,
                                         context=context)
 
