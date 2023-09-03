@@ -131,25 +131,15 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # Instantiate pytorch Mechanisms
         nodes = list(set(composition.nodes) - set(composition.get_nodes_by_role(NodeRole.LEARNING)))
 
-        nodes = [n for n in nodesa
-                 # Leave nested Compositions
-                 if (isinstance(n, AutodiffComposition)
-                     # Needed since composition.nodes is flattened in infer_backpropagation_learning_pathways
-                     or n not in [n[0] for n in self._composition._get_nested_nodes()])]
-        # Sort to be sure nested Compositions are processed last, as they need outer nodes that project in/out of them
-        for node in sorted(nodes, key=lambda x: isinstance(x, AutodiffComposition)):
-            # Wrap nested Composition
-            if isinstance(node, AutodiffComposition):
-                pytorch_node = PytorchCompositionWrapper(node, device, outer_creator=self, context=context)
-            # Wrap Mechanism
-            else:
-                pytorch_node = PytorchMechanismWrapper(node,
-                                                       self._composition._get_node_index(node),
-                                                       device,
-                                                       context=context)
-                # Mark INPUT Nodes of outer Composition for use in forward()
-                pytorch_node._is_input = (node in composition.get_nodes_by_role(NodeRole.INPUT)
-                                          and not composition.is_nested)
+        nodes = [n for n in nodes if not (isinstance (n, AutodiffComposition))]
+        for node in nodes:
+            pytorch_node = PytorchMechanismWrapper(node,
+                                                   self._composition._get_node_index(node),
+                                                   device,
+                                                   context=context)
+            # Mark INPUT Nodes of outer Composition for use in forward()
+            pytorch_node._is_input = (node in composition.get_nodes_by_role(NodeRole.INPUT)
+                                      and not composition.is_nested)
 
             self.nodes_map[node] = pytorch_node
             self.nodes.append(pytorch_node)
