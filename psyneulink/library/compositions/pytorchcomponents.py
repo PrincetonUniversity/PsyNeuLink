@@ -105,7 +105,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
     Deal with Projections into our out of a nested Composition as follows:
 
      [      OUTER     ][                            NESTED                               ][     OUTER      ]
-            \\learnable//    \\not learnable//                    \\not learnable//     \\learnable//
+            \\learnable//   \\not learnable//                     \\not learnable//    \\learnable//
      ---> [Node] ----> [input_CIM] ~~~> [INPUT Node] ----> [OUTPUT Node] ~~~> [output_CIM] ----> [Node] --->
            sndr            rcvr          nested_rcvr         nested_sndr         sndr             rcvr
             ^--projection-->^                                                     ^---projection-->^
