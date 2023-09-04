@@ -422,14 +422,14 @@ class AutodiffComposition(Composition):
         """
 
         self._analyze_graph()
-        def bfs(start)->list:
-            """Breadth-first search from start node to find all input -> output pathways
+        def bfs(input_node)->list:
+            """Breadth-first search from input_node to find all input -> output pathways
             IMPLEMENTATION NOTE:  flattens nested Compositions
-            Return a list of all pathways from start -> output node
+            Return a list of all pathways from input_node -> output node
             """
             pathways = []
             prev = {}
-            queue = collections.deque([start])
+            queue = collections.deque([input_node])
 
             # # MODIFIED 9/1/23 OLD:
             # while len(queue) > 0:
@@ -460,13 +460,15 @@ class AutodiffComposition(Composition):
             #                ?? TO OLD VERSION ABOVE (THOUGH CURRENTLY DOING SO SEEMS TO LOSE TARGET NODE)
             # Keep track of nesting
             composition_stack = collections.deque([self])
+            def current_comp():
+                return composition_stack[0]
 
             while len(queue) > 0:
                 node = queue.popleft()
 
                 # Handle OUTPUT Node of outer Composition
-                if (composition_stack[0] == self
-                        and NodeRole.OUTPUT in composition_stack[0].get_roles_by_node(node)):
+                if (current_comp() == self
+                        and NodeRole.OUTPUT in current_comp().get_roles_by_node(node)):
                     p = []
                     while node in prev:
                         p.insert(0, node)
@@ -479,7 +481,9 @@ class AutodiffComposition(Composition):
                     continue
 
                 # Consider all efferent Projections of node
-                for efferent_proj, rcvr in [(p, p.receiver.owner) for p in node.efferents]:
+                for efferent_proj, rcvr in [(p, p.receiver.owner)
+                                            for p in node.efferents
+                                            if p in current_comp().projections]:
                     # Ignore ones that are not learnable except to a CIM (deal with those next)
                     if (((not hasattr(efferent_proj,'learnable')) or (efferent_proj.learnable is False))
                             and not isinstance(rcvr, CompositionInterfaceMechanism)):
@@ -488,8 +492,6 @@ class AutodiffComposition(Composition):
                     # Deal with Projections to CIMs since nested comps can be learned in PyTorch mode
                     if isinstance(rcvr, CompositionInterfaceMechanism):
 
-                        assert True
-
                         # Projection to input_CIM:  entry to nested Composition
                         if rcvr == rcvr.composition.input_CIM:
                             # Push nested Composition onto stack
@@ -497,13 +499,13 @@ class AutodiffComposition(Composition):
                             # Replace rcvr with INPUT Node of nested Composition
                             _, rcvr, _ = \
                                 rcvr._get_destination_info_from_input_CIM(efferent_proj.receiver)
-                            assert rcvr in composition_stack[0].get_nodes_by_role(NodeRole.INPUT), \
-                                f"PROGRAM ERROR: '{rcvr.name}' is not an INPUT Node of '{composition_stack[0].name}'"
+                            assert rcvr in current_comp().get_nodes_by_role(NodeRole.INPUT), \
+                                f"PROGRAM ERROR: '{rcvr.name}' is not an INPUT Node of '{current_comp().name}'"
                             # Assign efferent_proj (Projection to input_CIM) since it should be learned in PyTorch mode
                             prev[rcvr] = efferent_proj
 
                         # Projection is to output_CIM:  exit from nested Composition
-                        elif rcvr == composition_stack[0].output_CIM:
+                        elif rcvr == current_comp().output_CIM:
                             # Replace rcvr with Node in outer Composition to which node projects (via output_CIM)
                             _, rcvr, _ = \
                                 rcvr._get_destination_info_for_ouput_CIM(efferent_proj.receiver)
@@ -526,8 +528,11 @@ class AutodiffComposition(Composition):
 
             return pathways
 
-        pathways = [p for n in self.get_nodes_by_role(NodeRole.INPUT) if
-                    NodeRole.TARGET not in self.get_roles_by_node(n) for p in bfs(n)]
+        # Construct a pathway for each INPUT Node (except the TARGET Node)
+        pathways = [pathway for node in self.get_nodes_by_role(NodeRole.INPUT)
+                    if NodeRole.TARGET not in self.get_roles_by_node(node)
+                    for pathway in bfs(node)]
+
         for pathway in pathways:
             self.add_backpropagation_learning_pathway(pathway=pathway,
                                                       loss_spec=self.loss_spec)

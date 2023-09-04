@@ -7392,9 +7392,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #    to catch any duplicates with exceptions below
 
                 # FIX: 4/9/22 - REFACTOR TO DO ANY SPECIFIED ASSIGNMENTS FIRST, AND THEN DEFAULT ASSIGNMENTS (IF ANY)
+                # If there is a default specification and no other Projection specs,
+                #    use default to construct Projections for all node_pairs
                 if default_proj_spec is not None and not proj_specs:
-                    # If there is a default specification and no other Projection specs,
-                    #    use default to construct Projections for all node_pairs
                     for sender, receiver in node_pairs:
                         try:
                             # Default is a Projection
@@ -7422,9 +7422,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         except DuplicateProjectionError:
                             handle_duplicates(sender, receiver)
 
+                # At least *some* Projections have been specified
                 else:
                     # FIX: 4/9/22 - PUT THIS FIRST (BEFORE BLOCK JUST ABOVE) AND THEN ASSIGN TO ANY LEFT IN node_pairs
-                    # Projections have been specified
                     for proj_spec in proj_specs:
                         try:
                             proj = _get_spec_if_tuple(proj_spec)

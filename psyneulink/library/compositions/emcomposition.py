@@ -161,6 +161,8 @@
 #            (including nested comps)
 #
 #      - showgraph:  (show_graph)
+#        - don't show INPUT/OUTPUT Nodes for nested Comps in green/red
+#                (as they don't really receive input or generate output on a run
 #        - show feedback projections as pink (shouldn't that already be the case?)
 #        - add mode for showing projections as diamonds without show_learning (e.g., "show_projections")
 #        - figure out how to get storage_node to show without all other learning stuff
