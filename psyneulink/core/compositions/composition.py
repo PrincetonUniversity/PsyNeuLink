@@ -8740,13 +8740,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Only use efferents of receiver_activity_mech with a LearningProjection that are in current Composition
             # or (if efferent is an output_CIM) in the outer Composition.
             if not (hasattr(efferent, 'has_learning_projection')
-                      and efferent.has_learning_projection
+                    and efferent.has_learning_projection
                     and efferent in self.projections):
-                      # and (efferent in self.projections or
-                      #      # note: per handling above, efferent is now the Projection *from* the output_CIM
-                      #      (isinstance(efferent.sender.owner, CompositionInterfaceMechanism) and
-                      #       efferent.sender.owner == self.output_CIM))):
-                 continue
+                # and (efferent in self.projections or
+                #      # note: per handling above, efferent is now the Projection *from* the output_CIM
+                #      (isinstance(efferent.sender.owner, CompositionInterfaceMechanism) and
+                #       efferent.sender.owner == self.output_CIM))):
+                continue
 
             # Then get any LearningProjections to that efferent that are in current Composition
             for learning_projection in [mod_aff for mod_aff in efferent.parameter_ports[MATRIX].mod_afferents

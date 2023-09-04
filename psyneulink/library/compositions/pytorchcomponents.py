@@ -6,7 +6,6 @@ from psyneulink.core.components.component import Component, ComponentsMeta
 from psyneulink.core.components.functions.nonstateful.transferfunctions import \
     Linear, Logistic, ReLU, SoftMax, Dropout, Identity
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination, PRODUCT, SUM
-from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.compositions.composition import NodeRole, CompositionInterfaceMechanism
 from psyneulink.library.compositions.pytorchllvmhelper import *
 from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer, SGDOptimizer
@@ -16,7 +15,6 @@ from psyneulink.core.globals.context import Context, ContextFlags, handle_extern
 from psyneulink.core.globals.utilities import get_deepcopy_with_shared
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core import llvm as pnlvm
-from .pytorchcomponents import *
 
 __all__ = ['PytorchCompositionWrapper', 'PytorchMechanismWrapper', 'PytorchProjectionWrapper']
 
@@ -256,7 +254,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         nested_execution_sets = {}
         for exec_set in self.execution_sets:
             for node in exec_set:
-                if isinstance (node, PytorchCompositionWrapper):
+                if isinstance(node, PytorchCompositionWrapper):
                     nested_execution_sets[node] = node.execution_sets
         for node, exec_sets in nested_execution_sets.items():
             index = self.execution_sets.index({node})
