@@ -488,6 +488,8 @@ class AutodiffComposition(Composition):
                     # Deal with Projections to CIMs since nested comps can be learned in PyTorch mode
                     if isinstance(rcvr, CompositionInterfaceMechanism):
 
+                        assert True
+
                         # Projection to input_CIM:  entry to nested Composition
                         if rcvr == rcvr.composition.input_CIM:
                             # Push nested Composition onto stack
@@ -781,6 +783,12 @@ class AutodiffComposition(Composition):
                 report=None,
                 report_num=None,
                 ):
+        """Override to execute autodiff_training() in learning mode if execute_mode is not Python"""
+
+        if (self._is_learning(context) and execution_mode is not pnlvm.ExecutionMode.PyTorch and
+                any([isinstance(node, Composition) for node in self.nodes])):
+            raise CompositionError(f"Must use execution_mode=ExecutionMode.PyTorch for learning "
+                                   f"that includes nested AutodiffComposition(s).")
 
         if execution_mode is not pnlvm.ExecutionMode.Python:
             self._assign_execution_ids(context)
@@ -807,7 +815,6 @@ class AutodiffComposition(Composition):
                        content='trial_start',
                        context=context)
 
-                # if execution_mode is not pnlvm.ExecutionMode.Python:
                 self._build_pytorch_representation(context)
                 output = self.autodiff_training(autodiff_inputs,
                                                 autodiff_targets,
@@ -831,8 +838,8 @@ class AutodiffComposition(Composition):
                 scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
 
                 return output
-        # MODIFIED NEW:
 
+        # Call Composition execute in Python mode
         return super(AutodiffComposition, self).execute(inputs=inputs,
                                                         scheduler=scheduler,
                                                         termination_processing=termination_processing,
