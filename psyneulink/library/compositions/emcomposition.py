@@ -157,6 +157,8 @@
 #           - Allow [None] as argument and treat as []
 #        - IF InputPort HAS default_input = DEFAULT_VARIABLE,
 #           THEN IT SHOULD BE IGNORED AS AN INPUT NODE IN A COMPOSITION
+#        - Add use of dict in pathways specification to map outputs from a set to inputs of another set
+#            (including nested comps)
 #
 #      - showgraph:  (show_graph)
 #        - show feedback projections as pink (shouldn't that already be the case?)
