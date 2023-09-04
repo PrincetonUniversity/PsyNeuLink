@@ -418,8 +418,8 @@ class AutodiffComposition(Composition):
             self.scheduler = Scheduler(graph=self.graph_processing)
         if self.parameters.pytorch_representation._get(context=context) is None or refresh:
             model = PytorchCompositionWrapper(composition=self,
-                                        device=self.device,
-                                        context=context)
+                                              device=self.device,
+                                              context=context)
 
             self.parameters.pytorch_representation._set(model, context, skip_history=True, skip_log=True)
 
@@ -543,10 +543,11 @@ class AutodiffComposition(Composition):
         optimizer.zero_grad()
 
         tracked_loss = self.parameters.tracked_loss._get(context=context) / self.parameters.tracked_loss_count._get(context=context)
-        if self.force_no_retain_graph:
-            tracked_loss.backward(retain_graph=False)
-        else:
-            tracked_loss.backward(retain_graph=True)
+        # if self.force_no_retain_graph:
+        #     tracked_loss.backward(retain_graph=False)
+        # else:
+        #     tracked_loss.backward(retain_graph=True)
+        tracked_loss.backward(retain_graph=not self.force_no_retain_graph)
         self.parameters.losses._get(context=context).append(tracked_loss.detach().cpu().numpy()[0])
         self.parameters.tracked_loss._set(torch.zeros(1, device=self.device).double(), context=context, skip_history=True, skip_log=True)
         self.parameters.tracked_loss_count._set(0, context=context, skip_history=True, skip_log=True)
