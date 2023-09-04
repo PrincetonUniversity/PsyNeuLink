@@ -89,7 +89,20 @@ def pytorch_function_creator(function, device, context=None):
 
 
 class PytorchCompositionWrapper(torch.nn.Module):
-    # sets up parameters of model & the information required for forward computation
+    """Wrap a Composition in a Pytorch Module
+    Set up parameters of PyTorch model & information required for forward computation
+
+    Handle nested compositions (flattened in infer_backpropagation_learning_pathways):
+    Deal with Projections into our out of a nested Composition as follows:
+
+     [      OUTER    ] [                            NESTED                               ] [    OUTER     ]
+             \learnable/      \not learnable/                      \not learnable/       \learnable/
+     ---> [Node] ----> [input_CIM] ~~~> [INPUT Node] ----> [OUTPUT Node] ~~~> [output_CIM] ----> [Node] --->
+           sndr            rcvr          nested_rcvr         nested_sndr         sndr             rcvr
+            ^--projection-->^                                                     ^---projection-->^
+            ^------autodiff_projection------>^                     ^------autodiff_projection----->^
+                     ENTRY                                                       EXIT
+    """
     def __init__(self,
                  composition,
                  device,
@@ -108,29 +121,39 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         # Maps Projections -> PytorchProjectionWrappers
         self.projections = []
-        self.projection_maps = {}
-        self.nested_projections_maps = {}
+        self.projections_map = {}
 
         self.params = nn.ParameterList()
         self.device = device
 
         self._composition = composition
 
-        # Instantiate pytorch mechanisms
+        # Instantiate pytorch Mechanisms
         nodes = list(set(composition.nodes) - set(composition.get_nodes_by_role(NodeRole.LEARNING)))
+        # FIX: 9/1/23 - THIS IS REQUIRED DUE TO FLATTENING IN infer_backpropagation_learning_pathways; IS THAT NEEDED?
+        # Remove nested nodes from nodes list (put there in flattening by infer_backpropagation_learning_pathways)
+        #   so that they don't interfere with construction of execution_sets by scheduler
+        # Will re-flatten execution sets below
+        nodes = [n for n in nodes
+                 # Leave nested Compositions
+                 if (isinstance(n, AutodiffComposition)
+                     # Needed since composition.nodes is flattened in infer_backpropagation_learning_pathways
+                     or n not in [n[0] for n in self._composition._get_nested_nodes()])]
+        # Sort to be sure nested Compositions are processed last, as they need outer nodes that project in/out of them
         for node in sorted(nodes, key=lambda x: isinstance(x, AutodiffComposition)):
-            # FIX:  ALTERNATIVE: IF NODE IS A NESTED COMPOSITION
-            #       - 1) CHECK THAT IT IS AN AUTODIFFCOMPOSITION
-            #       - 2) CALL PytorchCompositionWrapper ON IT RECURSIVELY
-            #       - 3) AT TOP OF PytorchCompositionWrapper:
-            #             - MAKE SURE THAT NO CIMS ARE IN THIS LOOP (PER EXCLUSION ABOVE)
+            # Wrap nested Composition
             if isinstance(node, AutodiffComposition):
                 pytorch_node = PytorchCompositionWrapper(node, device, outer_creator=self, context=context)
+            # Wrap Mechanism
             else:
                 pytorch_node = PytorchMechanismWrapper(node,
                                                        self._composition._get_node_index(node),
                                                        device,
                                                        context=context)
+                # Mark INPUT Nodes of outer Composition for use in forward()
+                pytorch_node._is_input = (node in composition.get_nodes_by_role(NodeRole.INPUT)
+                                          and not composition.is_nested)
+
             self.nodes_map[node] = pytorch_node
             self.nodes.append(pytorch_node)
 
@@ -143,20 +166,13 @@ class PytorchCompositionWrapper(torch.nn.Module):
             if all(sndr_and_recvr in self.nodes_map for sndr_and_recvr in {sndr_mech, rcvr_mech}):
                 proj_sndr = self.nodes_map[sndr_mech]
                 proj_rcvr = self.nodes_map[rcvr_mech]
-                autodiff_projection = projection
+                # autodiff_projection = projection
 
             # Ignore CIMs within the same Composition (they are not learnable;  see below)
             elif sndr_mech is composition.input_CIM or rcvr_mech is composition.output_CIM:
                 continue
 
-            # Deal with Projections into our out of a nested Composition:
-            #  [      OUTER    ] [                            NESTED                               ] [    OUTER     ]
-            #          \learnable/      \not learnable/                      \not learnable/       \learnable/
-            #  ---> [Node] ----> [input_CIM] ~~~> [INPUT Node] ----> [OUTPUT Node] ~~~> [output_CIM] ----> [Node] --->
-            #        sndr            rcvr          nested_rcvr         nested_sndr         sndr             rcvr
-            #         ^--projection-->^                                                     ^---projection-->^
-            #         ^------autodiff_projection------>^                     ^------autodiff_projection----->^
-            #                  ENTRY                                                       EXIT
+            # See table in docstring above for explanation of the following:
 
             # ENTRY:
             # Projection to input_CIM of a nested Composition: needed for learning, so create map for Projection
@@ -168,13 +184,13 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     rcvr_mech._get_destination_info_from_input_CIM(projection.receiver)
                 nested_pytorch_comp = self.nodes_map[rcvr_mech.composition]
                 proj_rcvr = nested_pytorch_comp.nodes_map[nested_rcvr_mech]
-                # Create direct Projection from sndr to nested_rcvr
-                autodiff_projection = MappingProjection(sender=projection.sender,
-                                                        receiver=nested_rcvr_port,
-                                                        matrix=projection.parameters.matrix._get(context),
-                                                        learnable=True)
-                # Map new direct Projection to original Projection (to input_CIM) for saving weights back to PNL
-                self.nested_projections_maps[autodiff_projection] = projection
+                # # Create direct Projection from sndr to nested_rcvr
+                # autodiff_projection = MappingProjection(sender=projection.sender,
+                #                                         receiver=nested_rcvr_port,
+                #                                         matrix=projection.parameters.matrix._get(context),
+                #                                         learnable=True)
+                # # Map new direct Projection to original Projection (to input_CIM) for saving weights back to PNL
+                # self.nested_projections_map[autodiff_projection] = projection
 
             # EXIT
             # Projection from output_CIM of a nested Composition: needed for learning, so create map for Projection
@@ -186,21 +202,24 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     sndr_mech._get_source_info_from_output_CIM(projection.sender)
                 nested_pytorch_comp = self.nodes_map[sndr_mech.composition]
                 proj_sndr = nested_pytorch_comp.nodes_map[nested_sndr_mech]
-                # Create direct Projection from nested_sndr to rcvr
-                autodiff_projection = MappingProjection(sender=nested_sndr_port,
-                                                        receiver=projection.receiver,
-                                                        matrix=projection.parameters.matrix._get(context),
-                                                        learnable=True)
-                # Map new direct Projection to original Projection (from output_CIM) for saving weights back to PNL
-                self.nested_projections_maps[autodiff_projection] = projection
+                # # Create direct Projection from nested_sndr to rcvr
+                # autodiff_projection = MappingProjection(sender=nested_sndr_port,
+                #                                         receiver=projection.receiver,
+                #                                         matrix=projection.parameters.matrix._get(context),
+                #                                         learnable=True)
+                # # Map new direct Projection to original Projection (from output_CIM) for saving weights back to PNL
+                # self.nested_projections_map[autodiff_projection] = projection
 
             else:
                 # FIX: 9/1/23 Check, as this seems to be True for Target nodes
                 # assert False, f"Unrecognized projection {projection} in {composition.name}"
                 continue
 
+
+
             port_idx = projection.sender.owner.output_ports.index(projection.sender)
-            new_proj = PytorchProjectionWrapper(autodiff_projection,
+            # new_proj = PytorchProjectionWrapper(autodiff_projection,
+            new_proj = PytorchProjectionWrapper(projection,
                                                 list(self._composition._inner_projections).index(projection),
                                                 port_idx, device,
                                                 sender=proj_sndr,
@@ -208,10 +227,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                 context=context)
             proj_sndr.add_efferent(new_proj)
             proj_rcvr.add_afferent(new_proj)
-            self.projection_maps[projection] = new_proj
+            self.projections_map[projection] = new_proj
             self.projections.append(new_proj)
-
-        self._regenerate_paramlist()
 
         c = Context()
         try:
@@ -228,15 +245,50 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # 3) Remove empty execution sets
         self.execution_sets = [x for x in self.execution_sets if len(x) > 0]
 
+
+        # FIX: 9/1/23 - THESE NEED TO BE TESTED FOR RECURSION WITH MULTIPLE LEVELS OF NESTING
+        #               ??COULD ALL BE AVOIDED BY JUST USING FLATTENED REPS FROM THE OUTSET??
+        #                 (BUT THEN HOW WOULD SCHEDULER KNOW HOW TO PRESERVE NESTED EXECUTION SETS?)
+
+        # Flattening for forward() and AutodiffComposition._update_learning_parameters
+
+        # Flatten nested execution sets:
+        nested_execution_sets = {}
+        for exec_set in self.execution_sets:
+            for node in exec_set:
+                if isinstance (node, PytorchCompositionWrapper):
+                    nested_execution_sets[node] = node.execution_sets
+        for node, exec_sets in nested_execution_sets.items():
+            index = self.execution_sets.index({node})
+            # Remove nested Composition from execution sets
+            self.execution_sets.remove({node})
+            # Insert nested execution sets in place of nested Composition
+            self.execution_sets[index:index] = exec_sets
+
+        # Flatten maps
+        for node in self.nodes:
+            if isinstance(node, PytorchCompositionWrapper):
+                # For copying weights back to PNL in AutodiffComposition._update_learning_parameters
+                self.projections_map.update(node.projections_map)
+                # Not sure if this is needed, but just to be safe
+                self.nodes_map.update(node.nodes_map)
+        # Purge nodes_map of entries for nested Compositions (their nodes are now in self.nodes_map)
+        self.nodes_map = {k: v for k, v in self.nodes_map.items() if not isinstance(v, PytorchCompositionWrapper)}
+
+        # Flatten projections so that they are all in the outer Composition and visible by _regenerate_paramlist
+        #     needed for call to backward() in AutodiffComposition._update_learning_parameters
+        # FIX: MAYBE SHOULD DO THIS AS LIST IS CREATED ABOVE?
+        self.projections = list(self.projections_map.values())
+
         composition.scheduler._delete_counts(c.execution_id)
+
+        self._regenerate_paramlist()
 
     __deepcopy__ = get_deepcopy_with_shared(shared_types=(Component, ComponentsMeta))
 
     def _regenerate_paramlist(self):
+        """Add Projection matrices to Pytorch Module's parameter list"""
         self.params = nn.ParameterList()
-        # for proj in self.projections:
-        #    if proj._projection._exclude_from_autodiff:
-        #        continue
         for proj in [p for p in self.projections if not p._projection._exclude_from_autodiff]:
             self.params.append(proj.matrix)
 
@@ -465,25 +517,21 @@ class PytorchCompositionWrapper(torch.nn.Module):
         outputs = {}  # dict for storing values of terminal (output) nodes
         for current_exec_set in self.execution_sets:
             for node in current_exec_set:
+                # FIX: THIS IS NOT CURRENTLY BE USED SINCE EXECUTION SETS ARE GETTING FLATTENED IN __init__()
                 # If node is nested Composition (wrapped in PytorchCompositionWrapper),
-                # - get is inputs
-                # - calls its forward method recursively
+                #    calls its forward method recursively
                 if isinstance(node, PytorchCompositionWrapper):
                     node.forward(inputs=None)
                     continue
-                # elif node._mechanism in [n[0] for n in self._composition._get_nested_nodes()]:
-                #     continue
-                elif (NodeRole.INPUT in self._composition.get_roles_by_node(node._mechanism) and
-                      not self._composition.is_nested):
-                    # FIX: IF ITS NESTED, JUST USE COLLATE_INPUTS SINCE IT HAS A DIRECTION PROJECTION?
+                elif node._is_input:
                     node.execute(inputs[node._mechanism])
                 else:
                     variable = node.collate_afferents()
                     node.execute(variable)
-
                 # save value in output list if we're at a node in the last execution set
                 if NodeRole.OUTPUT in self._composition.get_roles_by_node(node._mechanism):
                     outputs[node._mechanism] = node.value
+                assert True
 
         # NOTE: Context source needs to be set to COMMAND_LINE to force logs to update independently of timesteps
         # if not self._composition.is_nested:
@@ -496,17 +544,18 @@ class PytorchCompositionWrapper(torch.nn.Module):
         return outputs
 
     def detach_all(self):
-        for projection in self.projection_maps.values():
+        for projection in self.projections_map.values():
             projection.matrix.detach()
 
     def copy_weights_to_psyneulink(self, context=None):
-        for projection, pytorch_rep in self.projection_maps.items():
+        for projection, pytorch_rep in self.projections_map.items():
             projection.parameters.matrix._set(
                 pytorch_rep.matrix.detach().cpu().numpy(), context)
             projection.parameters.matrix._set(
                 pytorch_rep.matrix.detach().cpu().numpy(), context)
             projection.parameter_ports['matrix'].parameters.value._set(
                 pytorch_rep.matrix.detach().cpu().numpy(), context)
+            assert True
 
     def log_weights(self):
         for proj in self.projections:
@@ -534,6 +583,7 @@ class PytorchMechanismWrapper():
         self.efferents = []
 
         self._target_mechanism = None
+        self._is_input = False
 
     def add_efferent(self, efferent):
         assert efferent not in self.efferents
