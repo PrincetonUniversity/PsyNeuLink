@@ -538,7 +538,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     variable = node.collate_afferents()
                     node.execute(variable)
                 # save value in output list if we're at a node in the last execution set
-                if NodeRole.OUTPUT in self._composition.get_roles_by_node(node._mechanism):
+                # FIX: 9/1/23: TEST
+                # if NodeRole.OUTPUT in self._composition.get_roles_by_node(node._mechanism):
+                if node._mechanism in self._composition.get_nodes_by_role(NodeRole.OUTPUT):
                     outputs[node._mechanism] = node.value
                 assert True
 
