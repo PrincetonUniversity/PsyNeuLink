@@ -162,7 +162,7 @@
 #        - Add use of dict in pathways specification to map outputs from a set to inputs of another set
 #            (including nested comps)
 #
-#      - showgraph:  (show_graph)
+#      - ShowGraph:  (show_graph)
 #        - don't show INPUT/OUTPUT Nodes for nested Comps in green/red
 #                (as they don't really receive input or generate output on a run
 #        - show feedback projections as pink (shouldn't that already be the case?)
@@ -192,6 +192,29 @@
 #          and align with reset Parameter of IntegratorMechanism)
 #
 #    - FIX: BUGS:
+#      - composition:
+#          - if nested node projects to two outer nodes, then output_CIM has multiple projections
+#               and get_destination fails assert that there should be only 1
+#          - If any MappingProjection is specified from nested node to outer node,
+#            then direct projections are instatiated to the output_CIM of the outer comp,
+#            and nested comp treated as OUTPUT Node of outer comp even if all its projections are to nodes in outer comp
+#      - composition (?add_backpropagation_learning_pathway?):
+#           THIS FAILS:
+#             comp = Composition(name='a_outer')
+#             comp.add_backpropagation_learning_pathway([input_1, hidden_1, output_1])
+#             comp.add_backpropagation_learning_pathway([input_1, hidden_1, output_2])
+#           BUT THE FOLLOWING WORKS (WITH IDENTICAL show_graph(show_learning=True)):
+#             comp = Composition(name='a_outer')
+#             comp.add_backpropagation_learning_pathway([input_1, hidden_1, output_1])
+#             comp.add_backpropagation_learning_pathway([hidden_1, output_2])
+#      - show_graph(): QUIRK (BUT NOT BUG?):
+#           SHOWS TWO PROJECTIONS FROM a_inner.input_CIM -> hidden_x:
+#            ?? BECAUSE hidden_x HAS TWO input_ports SINCE ITS FUNCTION IS LinearCombination?
+#             a_inner = AutodiffComposition([hidden_x],name='a_inner')
+#             a_outer = AutodiffComposition([[input_1, a_inner, output_1],
+#                                            [a_inner, output_2]],
+#             a_outer.show_graph(show_cim=True)
+
 #      -LearningMechanism / Backpropagation LearningFunction:
 #         - Construction of LearningMechanism on its own fails; e.g.:
 #             lm = LearningMechanism(learning_rate=.01, learning_function=BackPropagation())

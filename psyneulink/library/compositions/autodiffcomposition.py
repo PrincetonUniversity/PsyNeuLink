@@ -504,6 +504,7 @@ class AutodiffComposition(Composition):
                             # Assign efferent_proj (Projection to input_CIM) since it should be learned in PyTorch mode
                             prev[rcvr] = efferent_proj
 
+                        # FIX: 9/1/23 - THIS FAILS WITH PROJECTION TO MORE THAN ONE OUTPUT
                         # Projection is to output_CIM:  exit from nested Composition
                         elif rcvr == current_comp().output_CIM:
                             # Replace rcvr with Node in outer Composition to which node projects (via output_CIM)
