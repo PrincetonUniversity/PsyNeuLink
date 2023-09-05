@@ -7392,9 +7392,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #    to catch any duplicates with exceptions below
 
                 # FIX: 4/9/22 - REFACTOR TO DO ANY SPECIFIED ASSIGNMENTS FIRST, AND THEN DEFAULT ASSIGNMENTS (IF ANY)
+                # If there is a default specification and no other Projection specs,
+                #    use default to construct Projections for all node_pairs
                 if default_proj_spec is not None and not proj_specs:
-                    # If there is a default specification and no other Projection specs,
-                    #    use default to construct Projections for all node_pairs
                     for sender, receiver in node_pairs:
                         try:
                             # Default is a Projection
@@ -7422,9 +7422,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         except DuplicateProjectionError:
                             handle_duplicates(sender, receiver)
 
+                # At least *some* Projections have been specified
                 else:
                     # FIX: 4/9/22 - PUT THIS FIRST (BEFORE BLOCK JUST ABOVE) AND THEN ASSIGN TO ANY LEFT IN node_pairs
-                    # Projections have been specified
                     for proj_spec in proj_specs:
                         try:
                             proj = _get_spec_if_tuple(proj_spec)
@@ -8420,88 +8420,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return learning_pathway
 
-    def infer_backpropagation_learning_pathways(self, context=None):
-        """Convenience method that automatically creates backpropapagation learning pathways for every
-        Input Node --> Output Node pathway
-        """
-        self._analyze_graph()
-        # returns a list of all pathways from start -> output node
-        def bfs(start):
-            pathways = []
-            prev = {}
-            queue = collections.deque([start])
-
-            # Keep track of nesting
-            composition_stack = collections.deque([self])
-
-            while len(queue) > 0:
-                node = queue.popleft()
-
-                # Handle OUTPUT Node of outer Composition
-                if (composition_stack[0] == self
-                        and NodeRole.OUTPUT in composition_stack[0].get_roles_by_node(node)):
-                    p = []
-                    while node in prev:
-                        p.insert(0, node)
-                        node = prev[node]
-                    p.insert(0, node)
-                    # Only consider input -> projection -> ... -> output pathways
-                    # (since can't learn on only one mechanism)
-                    if len(p) >= 3:
-                        pathways.append(p)
-                    continue
-
-                # Consider all efferent Projections of node
-                for efferent_proj, rcvr in [(p, p.receiver.owner) for p in node.efferents]:
-                    # Ignore ones that are not learnable except to a CIM (deal with those next)
-                    if (((not hasattr(efferent_proj,'learnable')) or (efferent_proj.learnable is False))
-                            and not isinstance(rcvr, CompositionInterfaceMechanism)):
-                        continue
-
-                    # Deal with Projections to CIMs since nested comps can be learned in PyTorch mode
-                    if isinstance(rcvr, CompositionInterfaceMechanism):
-
-                        # Projection to input_CIM:  entry to nested Composition
-                        if rcvr == rcvr.composition.input_CIM:
-                            # Push nested Composition onto stack
-                            composition_stack.appendleft(rcvr.composition)
-                            # Replace rcvr with INPUT Node of nested Composition
-                            _, rcvr, _ = \
-                                rcvr._get_destination_info_from_input_CIM(efferent_proj.receiver)
-                            assert rcvr in composition_stack[0].get_nodes_by_role(NodeRole.INPUT), \
-                                f"PROGRAM ERROR: '{rcvr.name}' is not an INPUT Node of '{composition_stack[0].name}'"
-                            # Assign efferent_proj (Projection to input_CIM) since it should be learned in PyTorch mode
-                            prev[rcvr] = efferent_proj
-
-                        # Projection is to output_CIM:  exit from nested Composition
-                        elif rcvr == composition_stack[0].output_CIM:
-                            # Replace rcvr with Node in outer Composition to which node projects (via output_CIM)
-                            _, rcvr, _ = \
-                                rcvr._get_destination_info_for_ouput_CIM(efferent_proj.receiver)
-                            # Replace efferent_proj with one from output_CIM to rcvr in outer Composition
-                            #   (since that is the one that should be learned in PyTorch mode)
-                            efferent_proj = efferent_proj.receiver.owner.output_port.efferents[0]
-                            prev[rcvr] = efferent_proj
-                            # Pop the stack to return to outer Composition
-                            composition_stack.popleft()
-
-                        else:
-                            assert False, f"PROGRAM ERROR:  Unrecognized CompositionInterfaceMechanism: {rcvr}"
-
-                    else:
-                        prev[rcvr] = efferent_proj
-
-                    prev[efferent_proj] = node
-                    queue.append(rcvr)
-
-            return pathways
-
-        pathways = [p for n in self.get_nodes_by_role(NodeRole.INPUT) if
-                    NodeRole.TARGET not in self.get_roles_by_node(n) for p in bfs(n)]
-        for pathway in pathways:
-            self.add_backpropagation_learning_pathway(pathway=pathway,
-                                                      loss_spec=self.loss_spec)
-        assert True
 
     def _create_terminal_backprop_learning_components(self,
                                                       input_source,
@@ -8822,13 +8740,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Only use efferents of receiver_activity_mech with a LearningProjection that are in current Composition
             # or (if efferent is an output_CIM) in the outer Composition.
             if not (hasattr(efferent, 'has_learning_projection')
-                      and efferent.has_learning_projection
+                    and efferent.has_learning_projection
                     and efferent in self.projections):
-                      # and (efferent in self.projections or
-                      #      # note: per handling above, efferent is now the Projection *from* the output_CIM
-                      #      (isinstance(efferent.sender.owner, CompositionInterfaceMechanism) and
-                      #       efferent.sender.owner == self.output_CIM))):
-                 continue
+                # and (efferent in self.projections or
+                #      # note: per handling above, efferent is now the Projection *from* the output_CIM
+                #      (isinstance(efferent.sender.owner, CompositionInterfaceMechanism) and
+                #       efferent.sender.owner == self.output_CIM))):
+                continue
 
             # Then get any LearningProjections to that efferent that are in current Composition
             for learning_projection in [mod_aff for mod_aff in efferent.parameter_ports[MATRIX].mod_afferents

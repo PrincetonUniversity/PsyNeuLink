@@ -7,6 +7,7 @@
 
 
 # ********************************************* AutodiffComposition *************************************************
+
 import numpy as np
 
 from psyneulink.core.llvm import ExecutionMode

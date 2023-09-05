@@ -146,6 +146,8 @@
 #        - Add Composition.run_status attribute assigned a context flag, with is_preparing property that checks it
 #               (paralleling handling of is_initializing)
 #        - Allow set of lists as specification for pathways in Composition
+#        - Add support for set notation in add_backpropagation_learning_pathway (to match add_linear_processing_pathway)
+#             see ScratchPad: COMPOSITION 2 INPUTS UNNESTED VERSION: MANY-TO-MANY
 #        - Make sure that shadow inputs (see InputPort_Shadow_Inputs) uses the same matrix as shadowed input.
 #        - composition.add_backpropagation_learning_pathway(): support use of set notation for multiple nodes that
 #        project to a single one.
@@ -157,8 +159,12 @@
 #           - Allow [None] as argument and treat as []
 #        - IF InputPort HAS default_input = DEFAULT_VARIABLE,
 #           THEN IT SHOULD BE IGNORED AS AN INPUT NODE IN A COMPOSITION
+#        - Add use of dict in pathways specification to map outputs from a set to inputs of another set
+#            (including nested comps)
 #
 #      - showgraph:  (show_graph)
+#        - don't show INPUT/OUTPUT Nodes for nested Comps in green/red
+#                (as they don't really receive input or generate output on a run
 #        - show feedback projections as pink (shouldn't that already be the case?)
 #        - add mode for showing projections as diamonds without show_learning (e.g., "show_projections")
 #        - figure out how to get storage_node to show without all other learning stuff
