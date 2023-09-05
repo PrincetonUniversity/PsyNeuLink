@@ -109,8 +109,18 @@ class PytorchCompositionWrapper(torch.nn.Module):
      ---> [Node] ----> [input_CIM] ~~~> [INPUT Node] ----> [OUTPUT Node] ~~~> [output_CIM] ----> [Node] --->
            sndr            rcvr          nested_rcvr         nested_sndr         sndr             rcvr
             ^--projection-->^                                                     ^---projection-->^
-            ^------autodiff_projection------>^                     ^------autodiff_projection----->^
+            ^----PytorchProjectionWrapper---->^                  ^----PytorchProjectionWrapper---->^
                      ENTRY                                                       EXIT
+
+    Attributes
+    ----------
+
+    nodes : List[PytorchMechanismWrapper]
+
+    projections_map : Dict[Projection, PytorchProjectionWrapper]
+        keys are Projections in the Composition being wrapped, and keys are the ProjectionWrappers to which they
+        are mapped (see above).
+
     """
     def __init__(self,
                  composition,
@@ -124,13 +134,11 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         self.name = f"PytorchCompositionWrapper[{composition.name}]"
 
-        # Maps Mechanism -> PytorchMechanismWrapper
-        self.nodes = []
-        self.nodes_map = {}
+        self.node_wrappers = []  # can be PytorchMechanismWrapper or PytorchCompositionWrapper
+        self.nodes_map = {} # maps Node (Mech or nested Comp) -> PytorchMechanismWrapper or PytorchCompositionWrapper
 
-        # Maps Projections -> PytorchProjectionWrappers
-        self.projections = []
-        self.projections_map = {}
+        self.projection_wrappers = [] # PytorchProjectionWrappers
+        self.projections_map = {}  # maps Projections -> PytorchProjectionWrappers
 
         self.params = nn.ParameterList()
         self.device = device
@@ -164,7 +172,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                           and not composition.is_nested)
 
             self.nodes_map[node] = pytorch_node
-            self.nodes.append(pytorch_node)
+            self.node_wrappers.append(pytorch_node)
 
         # Instantiate pytorch projections (ignoring any from/to CIMs in the same composition)
         for projection in composition._inner_projections:
@@ -181,7 +189,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             elif sndr_mech is composition.input_CIM or rcvr_mech is composition.output_CIM:
                 continue
 
-            # See table in docstring above for explanation of the following:
+            # See figure in docstring above for explanation of the following:
 
             # ENTRY:
             # Projection to input_CIM of a nested Composition: needed for learning, so create map for Projection
@@ -193,13 +201,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     rcvr_mech._get_destination_info_from_input_CIM(projection.receiver)
                 nested_pytorch_comp = self.nodes_map[rcvr_mech.composition]
                 proj_rcvr = nested_pytorch_comp.nodes_map[nested_rcvr_mech]
-                # # Create direct Projection from sndr to nested_rcvr
-                # autodiff_projection = MappingProjection(sender=projection.sender,
-                #                                         receiver=nested_rcvr_port,
-                #                                         matrix=projection.parameters.matrix._get(context),
-                #                                         learnable=True)
-                # # Map new direct Projection to original Projection (to input_CIM) for saving weights back to PNL
-                # self.nested_projections_map[autodiff_projection] = projection
 
             # EXIT
             # Projection from output_CIM of a nested Composition: needed for learning, so create map for Projection
@@ -211,33 +212,24 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     sndr_mech._get_source_info_from_output_CIM(projection.sender)
                 nested_pytorch_comp = self.nodes_map[sndr_mech.composition]
                 proj_sndr = nested_pytorch_comp.nodes_map[nested_sndr_mech]
-                # # Create direct Projection from nested_sndr to rcvr
-                # autodiff_projection = MappingProjection(sender=nested_sndr_port,
-                #                                         receiver=projection.receiver,
-                #                                         matrix=projection.parameters.matrix._get(context),
-                #                                         learnable=True)
-                # # Map new direct Projection to original Projection (from output_CIM) for saving weights back to PNL
-                # self.nested_projections_map[autodiff_projection] = projection
 
             else:
                 # FIX: 9/1/23 Check, as this seems to be True for Target nodes
                 # assert False, f"Unrecognized projection {projection} in {composition.name}"
                 continue
 
-
-
-            port_idx = projection.sender.owner.output_ports.index(projection.sender)
-            # new_proj = PytorchProjectionWrapper(autodiff_projection,
-            new_proj = PytorchProjectionWrapper(projection,
-                                                list(self._composition._inner_projections).index(projection),
-                                                port_idx, device,
-                                                sender=proj_sndr,
-                                                receiver=proj_rcvr,
-                                                context=context)
-            proj_sndr.add_efferent(new_proj)
-            proj_rcvr.add_afferent(new_proj)
-            self.projections_map[projection] = new_proj
-            self.projections.append(new_proj)
+            port_idx = projection.sender.owner.output_ports.index(projection.sender) # used by LLVM
+            pytorch_proj_wrapper = PytorchProjectionWrapper(
+                projection,
+                list(self._composition._inner_projections).index(projection),
+                port_idx, device,
+                sender=proj_sndr,
+                receiver=proj_rcvr,
+                context=context)
+            proj_sndr.add_efferent(pytorch_proj_wrapper)
+            proj_rcvr.add_afferent(pytorch_proj_wrapper)
+            self.projections_map[projection] = pytorch_proj_wrapper
+            self.projection_wrappers.append(pytorch_proj_wrapper)
 
         c = Context()
         try:
@@ -248,9 +240,11 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         # Setup execution sets
         # 1) Remove all learning-specific nodes
-        self.execution_sets = [x - set(composition.get_nodes_by_role(NodeRole.LEARNING)) for x in composition.scheduler.run(context=c)]
+        self.execution_sets = [x - set(composition.get_nodes_by_role(NodeRole.LEARNING))
+                               for x in composition.scheduler.run(context=c)]
         # 2) Convert to pytorchcomponent representation
-        self.execution_sets = [{self.nodes_map[comp] for comp in s if comp in self.nodes_map} for s in self.execution_sets]
+        self.execution_sets = [{self.nodes_map[comp] for comp in s if comp in self.nodes_map}
+                               for s in self.execution_sets]
         # 3) Remove empty execution sets
         self.execution_sets = [x for x in self.execution_sets if len(x) > 0]
 
@@ -275,19 +269,19 @@ class PytorchCompositionWrapper(torch.nn.Module):
             self.execution_sets[index:index] = exec_sets
 
         # Flatten maps
-        for node in self.nodes:
-            if isinstance(node, PytorchCompositionWrapper):
+        for node_wrapper in self.node_wrappers:
+            if isinstance(node_wrapper, PytorchCompositionWrapper):
                 # For copying weights back to PNL in AutodiffComposition._update_learning_parameters
-                self.projections_map.update(node.projections_map)
+                self.projections_map.update(node_wrapper.projections_map)
                 # Not sure if this is needed, but just to be safe
-                self.nodes_map.update(node.nodes_map)
+                self.nodes_map.update(node_wrapper.nodes_map)
         # Purge nodes_map of entries for nested Compositions (their nodes are now in self.nodes_map)
         self.nodes_map = {k: v for k, v in self.nodes_map.items() if not isinstance(v, PytorchCompositionWrapper)}
 
         # Flatten projections so that they are all in the outer Composition and visible by _regenerate_paramlist
         #     needed for call to backward() in AutodiffComposition._update_learning_parameters
         # FIX: MAYBE SHOULD DO THIS AS LIST IS CREATED ABOVE?
-        self.projections = list(self.projections_map.values())
+        self.projection_wrappers = list(self.projections_map.values())
 
         composition.scheduler._delete_counts(c.execution_id)
 
@@ -298,8 +292,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
     def _regenerate_paramlist(self):
         """Add Projection matrices to Pytorch Module's parameter list"""
         self.params = nn.ParameterList()
-        for proj in [p for p in self.projections if not p._projection._exclude_from_autodiff]:
-            self.params.append(proj.matrix)
+        for proj_wrapper in [p for p in self.projection_wrappers if not p._projection._exclude_from_autodiff]:
+            self.params.append(proj_wrapper.matrix)
 
     # generates llvm function for self.forward
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
@@ -313,7 +307,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
         if "learning" in tags:
             self._gen_llvm_training_function_body(ctx, builder, state, params, data)
         else:
-            model_input = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(self._composition._get_node_index(self._composition.input_CIM))])
+            model_input = builder.gep(data,
+                                      [ctx.int32_ty(0),
+                                       ctx.int32_ty(0),
+                                       ctx.int32_ty(self._composition._get_node_index(self._composition.input_CIM))])
             self._gen_llvm_forward_function_body(ctx, builder, state, params, model_input, data)
 
         builder.ret_void()
@@ -569,12 +566,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
             assert True
 
     def log_weights(self):
-        for proj in self.projections:
-            proj.log_matrix()
+        for proj_wrapper in self.projection_wrappers:
+            proj_wrapper.log_matrix()
 
     def log_values(self):
-        for node in [n for n in self.nodes if not isinstance(n, PytorchCompositionWrapper)]:
-            node.log_value()
+        for node_wrapper in [n for n in self.node_wrappers if not isinstance(n, PytorchCompositionWrapper)]:
+            node_wrapper.log_value()
 
 
 class PytorchMechanismWrapper():
@@ -612,12 +609,36 @@ class PytorchMechanismWrapper():
         assert self.afferents,\
             f"PROGRAM ERROR: No afferents found for '{self._mechanism.name}' in AutodiffComposition"
         # FIX: AUGMENT THIS TO SUPPORT InputPort's function
+        # Has only one input_port
         if len(self._mechanism.input_ports) == 1:
             return sum((proj.execute(proj.sender.value) for proj in self.afferents))
+        # Has multiple input_ports
         else:
             # Sum projections to each input_port of the Mechanism and return array with the sums
-            return [sum(proj.execute(proj.sender.value) for proj in self.afferents if proj._projection in
-                        input_port.path_afferents) for input_port in self._mechanism.input_ports ]
+            # return [sum(proj.execute(proj.sender.value) for proj in self.afferents if proj._projection in
+            #             input_port.path_afferents) for input_port in self._mechanism.input_ports]
+            aggs = []
+            for input_port in self._mechanism.input_ports:
+                agg = None
+                for proj in self.afferents:
+                # FIX: 9/1/23
+                #   proj._projection IS THE TO-BE-LEARNED PROJECTON in PytorchProjectionWrapper FROM input -> input_CIM
+                #   BUT input_port.path_afferents HAS THE ACTUAL PROJECTION FROM the input_CIM -> hidden_x
+                #                                 AS WELL AS A DIRECT ONE FROM input -> hidden_x (??CREATED WHERE??)
+                #   WHY IS THIS DIFFERENT THAN THE CASE WITH JUST ONE InputPort?
+                #        ?? BECAUSE THE AFFERENTS TO THE PORT IS NOT CHECKED IN THAT CASE
+                #   SOLUTION:  ?CHECK PytorchCompositionWrapper.projections_map?  BUT HOW TO GET ACCESS TO THAT?
+                #               OR, CHECK IF input+port.path_afferents IS input_CIM AND, IF SO,
+                #                    USE ITS get_source_info_from_input_CIM() TO GET THE ACTUAL PROJECTION
+                #               OR get_destination_info_from_input_CIM() on proj._projection.receiver:
+                #               OR Store original projection when ceating PytorchProjectionWrapper and use that??
+                #   => proj._projection.receiver.owner._get_destination_info_from_input_CIM(proj._projection.receiver)
+                    if proj._projection in input_port.path_afferents:
+                        if agg is None:
+                            agg = proj.execute(proj.sender.value)
+                        else:
+                            agg += proj.execute(proj.sender.value)
+                aggs.append(agg)
 
     def execute(self, variable):
         self.value = self.function(variable)
@@ -688,29 +709,36 @@ class PytorchMechanismWrapper():
 
 
 class PytorchProjectionWrapper():
+    """Wrapper of Projection the matrix of which maps to the parameters (connection weights) of a PyTorch Module
+
+    .. note::
+       In the case of a nested Composition, the sender and/or receiver attributes may be mapped to different Node(s)
+       than the Mechanism(s) of the Projection's actual sender and/or receiver, and the Projection being wrapped may
+       *not* be the one being learned. This is because the sender and/or receiver of the Projection may be a nested
+       Composition, in which case the actual sender and/or receiver of the Projection will be a
+       `CompositionInterfaceMechanism` (CIM) for the nested Composition.  In that case, the sender and/or receiver of
+       the PytorchProjectionWrapper will be assigned to the PytorchMechanismWrapper for the Node in the outer
+       Composition that Projects to/from the CIM, and that is the source/destination of the Projection actually being
+       learned, and that projection will be referenced in the `PytorchCompositionWrapper.projections_map`
+       (see `PytorchCompositionWrapper` for descriptive figure and additional details).
     """
-    An interpretation of a projection as an equivalent pytorch object
-    """
+
     def __init__(self, projection, component_idx, port_idx, device, sender=None, receiver=None, context=None):
         self.name = f"PytorchProjectionWrapper[{projection.name}]"
-        self._projection = projection
-        self._idx = component_idx
+        self._projection = projection # Projection being wrapped (may *not* be the one being learned; see note above)
+        self._idx = component_idx     # Index of Projection in Composition's list of projections
+        self._port_idx = port_idx     # Index of sender's port
+        self.sender = sender          # PytorchMechanismWrapper to which Projection's sender is mapped
+        self.receiver = receiver      # PytorchMechanismWrapper to which Projection's receiver is mapped
         self._context = context
-
-        self.sender = sender
-        self.receiver = receiver
-        self._port_idx = port_idx
 
         matrix = projection.parameters.matrix.get(
                             context=context)
         if matrix is None:
-            matrix = projection.parameters.matrix.get(
-                context=None
-            )
+            matrix = projection.parameters.matrix.get(context=None)
         self.matrix = torch.nn.Parameter(torch.tensor(matrix.copy(),
                                          device=device,
                                          dtype=torch.double))
-
         if projection.learnable is False:
             self.matrix.requires_grad = False
 
