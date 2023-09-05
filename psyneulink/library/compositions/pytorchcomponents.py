@@ -183,7 +183,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             if all(sndr_and_recvr in self.nodes_map for sndr_and_recvr in {sndr_mech, rcvr_mech}):
                 proj_sndr = self.nodes_map[sndr_mech]
                 proj_rcvr = self.nodes_map[rcvr_mech]
-                immediate_proj = projection
+                pnl_proj = projection
 
             # Ignore CIMs within the same Composition (they are not learnable;  see below)
             elif sndr_mech is composition.input_CIM or rcvr_mech is composition.output_CIM:
@@ -201,7 +201,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     rcvr_mech._get_destination_info_from_input_CIM(projection.receiver)
                 nested_pytorch_comp = self.nodes_map[rcvr_mech.composition]
                 proj_rcvr = nested_pytorch_comp.nodes_map[nested_rcvr_mech]
-                # FIX: assign immediate_proj TO input_CIM -> receiver
+                # Assign Projection from input_CIM to nested_rcvr_port as pnl_proj (for use in forward())
+                pnl_proj = projection.receiver.owner.port_map[nested_rcvr_port][1].efferents[0]
+                assert pnl_proj == nested_rcvr_port.path_afferents[0], \
+                    (f"PROGRAM ERROR: First afferent Projection to '{nested_rcvr_port.owner.name}' "
+                     f"(from '{nested_rcvr_port.path_afferents[0].sender.owner.name}') is not the same as its "
+                     f"Projection from '{projection.receiver.owner.composition.name}.input_CIM'")
 
             # EXIT
             # Projection from output_CIM of a nested Composition: needed for learning, so create map for Projection
@@ -213,7 +218,14 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     sndr_mech._get_source_info_from_output_CIM(projection.sender)
                 nested_pytorch_comp = self.nodes_map[sndr_mech.composition]
                 proj_sndr = nested_pytorch_comp.nodes_map[nested_sndr_mech]
-                # FIX: assign immediate_proj TO sender -> output_CIM
+
+                # # Assign Projection from nested_sndr_port to output_CIM as pnl_proj
+                # pnl_proj = projection.sender.owner.port_map[nested_sndr_port][0].path_afferents[0]
+                # assert pnl_proj == nested_sndr_port.efferents[0], \
+                #     (f"PROGRAM ERROR: First efferent Projection from '{nested_sndr_port.owner.name}' "
+                #      f"(to '{nested_sndr_port.efferents[0].receiver.owner.name}') is not the same as its "
+                #      f"Projection to '{projection.sender.owner.composition.name}.output_CIM'")
+                pnl_proj = projection
 
             else:
                 # FIX: 9/1/23 Check, as this seems to be True for Target nodes
@@ -223,7 +235,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             port_idx = projection.sender.owner.output_ports.index(projection.sender) # used by LLVM
             pytorch_proj_wrapper = PytorchProjectionWrapper(
                 projection,
-                immediate_proj,
+                pnl_proj,
                 list(self._composition._inner_projections).index(projection),
                 port_idx, device,
                 sender=proj_sndr,
@@ -618,31 +630,9 @@ class PytorchMechanismWrapper():
         # Has multiple input_ports
         else:
             # # Sum projections to each input_port of the Mechanism and return array with the sums
-            # return [sum(proj_wrapper.execute(proj_wrapper.sender.value)
-            #             for proj_wrapper in self.afferents if proj_wrapper._projection
-            #             in input_port.path_afferents) for input_port in self._mechanism.input_ports]
-            aggs = []
-            for input_port in self._mechanism.input_ports:
-                agg = None
-                for proj_wrapper in self.afferents:
-                # FIX: 9/1/23
-                #   proj._projection IS THE TO-BE-LEARNED PROJECTON in PytorchProjectionWrapper FROM input -> input_CIM
-                #   BUT input_port.path_afferents HAS THE ACTUAL PROJECTION FROM the input_CIM -> hidden_x
-                #                                 AS WELL AS A DIRECT ONE FROM input -> hidden_x (??CREATED WHERE??)
-                #   WHY IS THIS DIFFERENT THAN THE CASE WITH JUST ONE InputPort?
-                #        ?? BECAUSE THE AFFERENTS TO THE PORT IS NOT CHECKED IN THAT CASE
-                #   SOLUTION:  ?CHECK PytorchCompositionWrapper.projections_map?  BUT HOW TO GET ACCESS TO THAT?
-                #               OR, CHECK IF input_port.path_afferents IS input_CIM AND, IF SO,
-                #                    USE ITS get_source_info_from_input_CIM() TO GET THE ACTUAL PROJECTION
-                #               OR get_destination_info_from_input_CIM() on proj._projection.receiver:
-                #               OR Store original projection when ceating PytorchProjectionWrapper and use that??
-                #   => proj._projection.receiver.owner._get_destination_info_from_input_CIM(proj._projection.receiver)
-                    if proj_wrapper._projection in input_port.path_afferents:
-                        if agg is None:
-                            agg = proj_wrapper.execute(proj_wrapper.sender.value)
-                        else:
-                            agg += proj_wrapper.execute(proj_wrapper.sender.value)
-                aggs.append(agg)
+            return [sum(proj_wrapper.execute(proj_wrapper.sender.value)
+                        for proj_wrapper in self.afferents if proj_wrapper._pnl_proj
+                        in input_port.path_afferents) for input_port in self._mechanism.input_ports]
 
     def execute(self, variable):
         self.value = self.function(variable)
@@ -728,11 +718,11 @@ class PytorchProjectionWrapper():
        the outer Composition that Projects to/from the CIM, and that is the source/destination of the Projection
        actually being learned, and that projection will be referenced in the `PytorchCompositionWrapper.projections_map`
        (see `PytorchCompositionWrapper` for descriptive figure and additional details);  the actual projection is stored
-       in _immediate_proj.
+       in pnl_proj.
     """
 
     def __init__(self, projection,
-                 immediate_proj,
+                 pnl_proj,
                  component_idx,
                  port_idx, device,
                  sender=None,
@@ -740,7 +730,7 @@ class PytorchProjectionWrapper():
                  context=None):
         self.name = f"PytorchProjectionWrapper[{projection.name}]"
         self._projection = projection # Projection being wrapped (may *not* be the one being learned; see note above)
-        self._immediate_proj = immediate_proj # Projection that directly projects to/from sender/receiver (see above)
+        self._pnl_proj = pnl_proj # Projection that directly projects to/from sender/receiver (see above)
         self._idx = component_idx     # Index of Projection in Composition's list of projections
         self._port_idx = port_idx     # Index of sender's port
         self.sender = sender          # PytorchMechanismWrapper to which Projection's sender is mapped
