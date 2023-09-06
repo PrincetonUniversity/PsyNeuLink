@@ -5632,13 +5632,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.output_CIM.remove_ports(self.output_CIM_ports[output_port][1])
             # and from the dictionary of CIM OutputPort/InputPort pairs
             del self.output_CIM_ports[output_port]
-        # FIX 9/1/23 - INCLUDE IDENTIFICATION OF output_ports of the output_CIM of a nested Composition NO LONGER NEEDED
-        #              BY CHECKING FOR ANY output_CIM input_ports THAT RECEIVE PROJECTIONS FROM SAME output_port
-        #      THAT SENDS TO A NODE FROM WHICH output_CIM RECEIVES ANOTHER PROJECTION (TO A DIFFERENT output_port)
+
         # Identify any errant afferents to output_CIM input_ports (that can result from asynchronies in construction)
         defunct_input_ports = set()
         for input_port in self.output_CIM.input_ports:
-
             assert len(input_port.path_afferents) == 1, \
                 (f"PROGRAM ERROR: '{input_port}' of '{self.name}.output_CIM' has more than one afferent"
                  f"(that come from: {' ,'.join([proj.sender.owner.name for proj in input_port.path_afferents])}).")
@@ -5646,10 +5643,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # project to another node in the Composition, which means it is not an OUTPUT Node; so remove this
             # projection and the input_port from the output_CIM
             proj = input_port.path_afferents[0]
-            if len(proj.sender.efferents) > 1:
+            # if len(proj.sender.efferents) > 1:
+            if len([p for p in proj.sender.efferents if p in self.projections]) > 1:
                 defunct_input_ports.add(input_port)
         # Remove afferent to each defunct input_port and then the input_port itself
         for input_port in defunct_input_ports:
+            proj = input_port.path_afferents[0]
             self.remove_projection(proj)
             # FIX: THIS MAY NOT BE CORRECT, AND FOR LOOP CONDITION MAY NOT BE ABLE TO LOOP ON output_CIM.input_ports
             self.output_CIM.remove_ports(self.output_CIM_ports[proj.sender][0])
@@ -5797,9 +5796,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #                f"({p} does not match the number of its OutputPorts ({n})."
             elif type==OUTPUT:
                 n = len(cim.input_ports) - len(cim.user_added_ports[INPUT_PORTS])
-                o = sum([len(n.output_ports)
-                         for n in self.get_nodes_by_role(NodeRole.PROBE) + self.get_nodes_by_role(NodeRole.OUTPUT)])
-                assert n == o, f"PROGRAM ERROR:  Number of InputPorts on {self.output_CIM.name} ({n}) does not " \
+                # Get total number of output_ports for all OUTPUT and PROBE nodes
+                # Note: If the output_CIM of a nested Composition is one of the OUTPUT nodes of the outer Composition,
+                #       can't necessarily count *all* of its output_ports, since some my project directly to the
+                #       outer Composition's output_CIM (which is why it has been identified as an OUTPUT Node),
+                #       but some may project to other nodes in the outer Composition (which shouldn't be counted here)
+                #       (see _test_nested_autodiff_composition_with_one_direct_and_one_indirect_output_node for example)
+                o = sum([len([output_port for output_port in node.output_ports
+                              if isinstance(output_port.efferents[0].receiver.owner, CompositionInterfaceMechanism)])
+                         for node in self.get_nodes_by_role(NodeRole.PROBE) + self.get_nodes_by_role(NodeRole.OUTPUT)])
+                assert n == o, f"PROGRAM ERROR:  Number of InputPorts on '{self.output_CIM.name}' ({n}) does not " \
                                f"match the number of OutputPorts over all OUTPUT nodes of {self.name} ({o})."
                 # FIX 4/4/20 [JDC]: THIS FAILS FOR NESTED COMPS (AND OTHER PLACES?):
                 # p = len([p for p in self.projections if OUTPUT_CIM_NAME in p.name])
