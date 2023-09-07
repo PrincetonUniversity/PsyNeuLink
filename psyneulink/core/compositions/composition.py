@@ -5633,7 +5633,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # and from the dictionary of CIM OutputPort/InputPort pairs
             del self.output_CIM_ports[output_port]
 
-        # Identify any errant afferents to output_CIM input_ports (that can result from asynchronies in construction)
+        # Identify any errant afferents to output_CIM input_ports (that can result from order of construction)
         defunct_input_ports = set()
         for input_port in self.output_CIM.input_ports:
             assert len(input_port.path_afferents) == 1, \

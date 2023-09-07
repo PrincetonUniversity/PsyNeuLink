@@ -457,7 +457,7 @@ class AutodiffComposition(Composition):
             # MODIFIED 9/1/23 NEW:
             # FIX:  9/1/23 - THIS VERSION FLATTENS NESTED COMPOSITIONS;  MAY NOT STILL BE NEEDED
             #                SINCE EXECUTION SETS ARE NOW FLATTENED IN PytorchCompositionWrapper
-            #                ?? TO OLD VERSION ABOVE (THOUGH CURRENTLY DOING SO SEEMS TO LOSE TARGET NODE)
+            #                ?? REVERT TO OLD VERSION ABOVE? (THOUGH CURRENTLY DOING SO SEEMS TO LOSE TARGET NODE)
             # Keep track of nesting
             composition_stack = collections.deque([self])
             def current_comp():
@@ -467,8 +467,7 @@ class AutodiffComposition(Composition):
                 node = queue.popleft()
 
                 # Handle OUTPUT Node of outer Composition
-                if (current_comp() == self
-                        and NodeRole.OUTPUT in current_comp().get_roles_by_node(node)):
+                if (current_comp() == self and node in current_comp().get_nodes_by_role(NodeRole.OUTPUT)):
                     p = []
                     while node in prev:
                         p.insert(0, node)
@@ -492,10 +491,11 @@ class AutodiffComposition(Composition):
                     # Deal with Projections to CIMs since nested comps can be learned in PyTorch mode
                     if isinstance(rcvr, CompositionInterfaceMechanism):
 
-                        # Projection to input_CIM:  entry to nested Composition
+                        # Projection to input_CIM, possibly entering a nested Composition
                         if rcvr == rcvr.composition.input_CIM:
-                            # Push nested Composition onto stack
-                            composition_stack.appendleft(rcvr.composition)
+                            if rcvr.composition is not current_comp():
+                                # Push nested Composition onto stack
+                                composition_stack.appendleft(rcvr.composition)
                             # Replace rcvr with INPUT Node of nested Composition
                             _, rcvr, _ = \
                                 rcvr._get_destination_info_from_input_CIM(efferent_proj.receiver)
@@ -504,16 +504,22 @@ class AutodiffComposition(Composition):
                             # Assign efferent_proj (Projection to input_CIM) since it should be learned in PyTorch mode
                             prev[rcvr] = efferent_proj
 
-                        # FIX: 9/1/23 - THIS FAILS WITH PROJECTION TO MORE THAN ONE OUTPUT
-                        # Projection is to output_CIM:  exit from nested Composition
+                        # Projection is to output_CIM, possibly exiting from a nested Composition
                         elif rcvr == current_comp().output_CIM:
-                            # Replace rcvr with Node in outer Composition to which node projects (via output_CIM)
-                            _, rcvr, _ = \
-                                rcvr._get_destination_info_for_ouput_CIM(efferent_proj.receiver)
-                            # Replace efferent_proj with one from output_CIM to rcvr in outer Composition
-                            #   (since that is the one that should be learned in PyTorch mode)
-                            efferent_proj = efferent_proj.receiver.owner.output_port.efferents[0]
-                            prev[rcvr] = efferent_proj
+                            # Get Node(s) in outer Composition to which Node projects (via output_CIM)
+                            receivers = rcvr._get_destination_info_for_ouput_CIM(efferent_proj.receiver)
+                            for _, rcvr, _ in [receivers] if isinstance(receivers, tuple) else receivers:
+                                # Replace efferent_proj(s) with one(s) from output_CIM to rcvr(s) in outer Composition,
+                                #   since that(those) is(are the one(s) that should be learned in PyTorch mode
+                                efferent_proj = efferent_proj.receiver.owner.output_port.efferents[0]
+                                prev[rcvr] = efferent_proj
+                                assert rcvr not in current_comp()._all_nodes
+
+                                # FIX: SOMETHING LIKE THIS HERE??
+                                prev[efferent_proj] = node
+                                queue.append(rcvr)
+                                # FIX: END
+
                             # Pop the stack to return to outer Composition
                             composition_stack.popleft()
 
