@@ -115,7 +115,7 @@ def test_necker_cube(benchmark, comp_mode, n_nodes, n_time_steps, expected):
     #         pathway=((node_j, [pnl.NodeRole.INPUT, pnl.NodeRole.OUTPUT]), [-inhib_level], (node_i, [pnl.NodeRole.INPUT,
     #                                                                                         pnl.NodeRole.OUTPUT])))
 
-    # turn off report
+    # turn off reportd
     reportOutputPref = ReportOutput.OFF
     # MODIFIED 4/4/20 END
 

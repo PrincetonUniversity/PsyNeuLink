@@ -350,7 +350,7 @@ from Nodes in a nested Composition that are not `OUTPUT <NodeRole.OUTPUT>` Nodes
 
 * *Probes* -- Nodes that are not `OUTPUT <NodeRole.OUTPUT>` of a nested Composition, but project to ones in an
   outer Composition, are assigned `PROBE <NodeRole.PROBE>` in addition to their other `roles <NodeRole>` in the
-  nested Composition.  The only difference between `PROBE <NodeRole.PROBE>` and `OUTPUT <NodeRole.OUTPUT>` Nodes
+  nested Composition. The only difference between `PROBE <NodeRole.PROBE>` and `OUTPUT <NodeRole.OUTPUT>` Nodes
   is whether their output is included in the `output_values <Composition.output_values>` and `results
   <Composition.results>` attributes of the *outermost* Composition to which they project; this is determined by the
   `include_probes_in_output <Composition.include_probes_in_output>` attribute of the latter. If
@@ -359,7 +359,7 @@ from Nodes in a nested Composition that are not `OUTPUT <NodeRole.OUTPUT>` Nodes
   <Composition.results>` for the outermost Composition to which they project (although they *are* still included
   in those attributes of the nested Compositions; see note below). In this respect, they can be thought of as
   "probing" - that is, providing access to "latent variables" of -- the nested Composition to which they belong --
-  the values of which that are not otherwise reported as part of the outermost Composition's output or results. If
+  the values of which are not otherwise reported as part of the outermost Composition's output or results. If
   `include_probes_in_output <Composition.include_probes_in_output>` is True, then any `PROBE <NodeRole.PROBE>` Nodes
   of any nested Compositions are treated the same as `OUTPUT <NodeRole.OUTPUT>` Nodes: their outputs are included in
   the `output_values <Composition.output_values>` and `results <Composition.results>` of the outermost Composition.
@@ -383,6 +383,13 @@ from Nodes in a nested Composition that are not `OUTPUT <NodeRole.OUTPUT>` Nodes
             .. technical_note::
                This is because Compositions require access to the values of all of the output_CIM of any Compositions
                nested within them (see `below <Composition_Projections_to_CIMs>`).
+
+      .. note::
+         A Node can be both a `PROBE <NodeRole.PROBE>` and an `OUTPUT <NodeRole.OUTPUT>` Node of a nested Composition,
+         if it has some `output_ports <Mechanism_Base.output_ports>` that project only to Nodes in the outer
+         Composition (those are treated the same was as Projections from an `OUTPUT <NodeRole.OUTPUT>` Node),
+         as well as other(s) that project to Nodes both within the nested Composition and to the outer Composition
+         (those are treated in the same way as `PROBE <NodeRole.PROBE>` Nodes).
 
 .. _Composition_Nested_External_Input_Ports:
 
@@ -5563,8 +5570,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Set up ports on the output CIM for all output nodes in the Composition
         current_output_node_output_ports = set()
 
-        # loop through all output ports on OUTPUT and PROBE nodes
-        for node in self.get_nodes_by_role(NodeRole.OUTPUT) + self.get_nodes_by_role(NodeRole.PROBE):
+        # Loop through all output ports on OUTPUT and PROBE nodes
+        # Note: use set below, since a Node can be both an OUTPUT Node and a PROBE:
+        #       if some of its output_ports project to the output_CIM (making it an OUTPUT Node
+        #       while others project to another Node in the Composition (making it a PROBE Node)
+        for node in set(self.get_nodes_by_role(NodeRole.OUTPUT) + self.get_nodes_by_role(NodeRole.PROBE)):
             for output_port in node.output_ports:
                 current_output_node_output_ports.add(output_port)
 
@@ -5633,24 +5643,30 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # and from the dictionary of CIM OutputPort/InputPort pairs
             del self.output_CIM_ports[output_port]
 
-        # Identify any errant afferents to output_CIM input_ports (that can result from order of construction)
-        # by checking that none of the sources of the afferents project to any other OUTPUT Nodes in the Composition
+        # Check for any errant / residual output_CIM.input_ports (that can result from order of construction)
+        # Do this by checking if the source of the projection to each output_CIM.input_port has any other efferents;
+        #  if it does, and the following are true:
+        #  - the Node is not a PROBE or a CYCLE Node in a cycle all of which are output NODES
+        #  - and the other efferents are NOT to ones allowed for an OUTPUT Node
+        #    (i.e., AutoassociativeProjections, or ones to OBJECTIVE, CONTROL, or LEARNING Nodes)
+        #  then the Node should NOT be considered an OUTPUT Node,
+        #  so remove the input_port for it on the OutputCIM and the corresponding Projection
         defunct_input_ports = set()
-        for i, input_port in enumerate(self.output_CIM.input_ports):
+        for input_port in self.output_CIM.input_ports:
+            # First ensure that the input_port under consideration has only one afferent to it
             assert len(input_port.path_afferents) == 1, \
                 (f"PROGRAM ERROR: '{input_port}' of '{self.name}.output_CIM' has more than one afferent"
                  f"(that come from: {' ,'.join([proj.sender.owner.name for proj in input_port.path_afferents])}).")
-            # If the source of the projection to this output_CIM.input_port has another efferent, then it must
-            # project to another node in the Composition, which means it is not an OUTPUT Node; so remove this
-            # projection and the input_port from the output_CIM
+            # Then, get that Projection
             proj = input_port.path_afferents[0]
-            # FIX: INCLUDE EXCLUSION FOR PROBES HERE?
-            # There should be no Projections from sender to any other OUTPUT Nodes in the Composition
-            #   (except for AutoAssociativeProjections)
-            if len([p for p in proj.sender.efferents
-                    if (p in self.projections
-                        and p.receiver.owner in self.get_nodes_by_role(NodeRole.OUTPUT)
-                        and not isinstance(p, AutoAssociativeProjection))]):
+            node = proj.sender.owner
+            # And check the other efferents of its sender
+            # FIX: 9/1/23 - NEED TO CHECK THAT ALL NODES IN THE CYCLE ARE OUTPUT NODES, OTHERWISE THEY SHOULD BE PROBES
+            if (node not in self.get_nodes_by_role(NodeRole.PROBE) + self.get_nodes_by_role(NodeRole.CYCLE)
+                    and len([p for p in proj.sender.efferents
+                             if (p in self.projections
+                                 and p.receiver.owner in self.get_nodes_by_role(NodeRole.OUTPUT)
+                                 and not isinstance(p, AutoAssociativeProjection))]) != 0):
                 defunct_input_ports.add(input_port)
         # Remove afferent to each defunct input_port and then the input_port itself
         for input_port in defunct_input_ports:
@@ -5811,6 +5827,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #       to the outer Composition's output_CIM (which is why it has been identified as an OUTPUT Node),
                 #       but some may project to other nodes in the outer Composition (which shouldn't be counted here)
                 #       (see _test_nested_autodiff_composition_with_one_direct_and_one_indirect_output_node for example)
+                # Note: Use set below, since a Node can be both an OUTPUT Node and a PROBE:
+                #       if some of its output_ports project to the output_CIM (making it an OUTPUT Node
+                #       while others project to another Node in the Composition (making it a PROBE Node)
                 num_OUTPUT_Node_output_ports = sum([len([output_port for output_port in node.output_ports
                                                          if any(isinstance(efferent.receiver.owner,
                                                                            CompositionInterfaceMechanism)
@@ -5929,8 +5948,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         # FIX: IF CIM_port_for_nested_node COMES BACK WITH NONE,
                         #      OR IT CAN BE MORE DIRECTLY ASCERTAINED THAT, EVEN IF IT IS A PROJECTION FROM AN OUTPUT
                         #      NODE, IT *ITSELF* DOES NOT PROJECT TO AN OUTPUT_CIM, THEN TRY ASSIGNING AS PROBE?
+                        # FIX: USE ABOVE CALL TO try_assigining_as_probe ON CHECK THAT OUTPUT_PORT ALREADY PROJECTS
+                        #  TO A NODE IN THE COMPOSTION (EVEN THOUGH IT IS AN OUTPUT NODE
                         if not any(nested_node_CIM_port_spec):
-                            try_assigning_as_probe(node, NodeRole.PROBE, owning_composition)
+                            assert try_assigning_as_probe(node, NodeRole.PROBE, owning_composition), \
+                                (f"PROGRAM ERROR: Unable to assign '{node.name}' in '{owning_composition.name}' "
+                                 f"as a PROBE (for Projection from '{node_port.name}' to '{self.name}').")
+                            CIM_port_for_nested_node = nc.output_CIM_ports[node_port][1]
+                            CIM = nc.output_CIM
                         else:
                             CIM_port_for_nested_node = nc.output_CIM_ports[nested_node_CIM_port_spec[0]][1]
                             CIM = nc.output_CIM
@@ -6407,7 +6432,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    format(sender, self.name,
                                           Mechanism.__name__, OutputPort.__name__, Composition.__name__))
 
-        # Sender is in a nested Composition
+        # Sender is in a nested Composition (and must therefore be an OUTPUT or PROBE of that Composition)
         if (not isinstance(sender_mechanism, CompositionInterfaceMechanism)
                 and not isinstance(sender, Composition)
                 and sender_mechanism not in self.nodes

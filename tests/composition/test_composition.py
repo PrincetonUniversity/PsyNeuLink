@@ -6920,9 +6920,13 @@ class TestNodeRoles:
 
     def test_input_labels_and_results_by_node_and_no_orphaning_of_nested_output_nodes(self):
         """
-        Test that nested Composition with two outputs, one of which Projects to a node in the outer Composition is,
-        by virtue of its other output, still assigned as an OUTPUT Node of the outer Composition
-        Also test get_input_format and get_results_by_nodes methods
+        Test get_input_format and get_results_by_nodes methods
+
+        Also test that  a nested Composition with two outputs, one of which projects to a another node in the outer
+        Composition is, by virtue of its other output (that projects only to the output_CIM of the outer Composition)
+        is still assigned as an OUTPUT Node of the outer Composition, and that that output that projects to the other
+        Node does *NOT* project to the output_CIM of the outer Composition (meaning it's value  is not included in
+        the output_values of the outer Composition)
         """
         input_labels_dict = {0:{'red':0, 'green':1}}
         output_labels_dict = {0:{'red':0, 'green':1}}
@@ -6940,9 +6944,9 @@ class TestNodeRoles:
         O = ProcessingMechanism(name='O', input_ports=[Z])
         ocomp = Composition(name='OUTER COMP', nodes=[O, mcomp,Q])
 
-        len(ocomp.output_values)==3
+        assert len(ocomp.output_values)==3
         result = ocomp.run(inputs={mcomp:[[0],[0]]})
-        assert len(result)==4
+        assert len(result)==3
 
         input_format = ocomp.get_input_format(form=pnl.TEXT)
         assert repr(input_format) == '\'{\\n\\tMIDDLE COMP: [[0.0],[0.0]],\\n\\tQ: [[0.0]]\\n}\''
