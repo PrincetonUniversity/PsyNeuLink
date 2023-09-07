@@ -391,9 +391,14 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
                 if not isinstance(efferent.receiver.owner, CompositionInterfaceMechanism):
                     receivers_info.append([efferent.receiver, efferent.receiver.owner, comp])
                 else:
-                    receivers_info.append([self._get_destination_info_for_ouput_CIM(efferent.receiver,
-                                                                                    efferent.receiver.owner.composition)])
-            return receivers_info
+                    receivers_info.append(
+                        [self._get_destination_info_for_ouput_CIM(efferent.receiver,
+                                                                  efferent.receiver.owner.composition)])
+            # # MODIFIED 9/1/23 OLD:
+            # return receivers_info
+            # MODIFIED 9/1/23 NEW:
+            return receivers_info or (port, self, comp)
+            # MODIFIED 9/1/23 END
 
     def _sender_is_probe(self, output_port):
         """Return True if source of output_port is a PROBE Node of the Composition to which it belongs"""
