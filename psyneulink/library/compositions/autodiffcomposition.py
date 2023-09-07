@@ -532,12 +532,13 @@ class AutodiffComposition(Composition):
                                 #   since that(those) is(are the one(s) that should be learned in PyTorch mode
                                 efferent_proj = efferent_proj.receiver.owner.output_port.efferents[0]
                                 prev[rcvr] = efferent_proj
+                                # Ensure rcvr in an outer Composition
                                 assert rcvr not in current_comp()._all_nodes
 
-                                # FIX: SOMETHING LIKE THIS HERE??
-                                prev[efferent_proj] = node
-                                queue.append(rcvr)
-                                # FIX: END
+                                # # FIX: SOMETHING LIKE THIS HERE??
+                                # prev[efferent_proj] = node
+                                # queue.append(rcvr)
+                                # # FIX: END
                             # MODIFIED 9/1/23 END
 
                             # Pop the stack to return to outer Composition

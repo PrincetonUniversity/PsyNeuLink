@@ -397,7 +397,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
             # # MODIFIED 9/1/23 OLD:
             # return receivers_info
             # MODIFIED 9/1/23 NEW:
-            return receivers_info or (port, self, comp)
+            return receivers_info or (port, port.owner, port.owner.composition)
             # MODIFIED 9/1/23 END
 
     def _sender_is_probe(self, output_port):

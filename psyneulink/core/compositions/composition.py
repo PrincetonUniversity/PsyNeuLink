@@ -5634,8 +5634,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             del self.output_CIM_ports[output_port]
 
         # Identify any errant afferents to output_CIM input_ports (that can result from order of construction)
+        # by checking that none of the sources of the afferents project to any other OUTPUT Nodes in the Composition
         defunct_input_ports = set()
-        for input_port in self.output_CIM.input_ports:
+        for i, input_port in enumerate(self.output_CIM.input_ports):
             assert len(input_port.path_afferents) == 1, \
                 (f"PROGRAM ERROR: '{input_port}' of '{self.name}.output_CIM' has more than one afferent"
                  f"(that come from: {' ,'.join([proj.sender.owner.name for proj in input_port.path_afferents])}).")
@@ -5643,8 +5644,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # project to another node in the Composition, which means it is not an OUTPUT Node; so remove this
             # projection and the input_port from the output_CIM
             proj = input_port.path_afferents[0]
-            # if len(proj.sender.efferents) > 1:
-            if len([p for p in proj.sender.efferents if p in self.projections]) > 1:
+            # FIX: INCLUDE EXCLUSION FOR PROBES HERE?
+            # There should be no Projections from sender to any other OUTPUT Nodes in the Composition
+            #   (except for AutoAssociativeProjections)
+            if len([p for p in proj.sender.efferents
+                    if (p in self.projections
+                        and p.receiver.owner in self.get_nodes_by_role(NodeRole.OUTPUT)
+                        and not isinstance(p, AutoAssociativeProjection))]):
                 defunct_input_ports.add(input_port)
         # Remove afferent to each defunct input_port and then the input_port itself
         for input_port in defunct_input_ports:
@@ -5786,27 +5792,35 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             assert num_auto_input_ports == num_auto_output_ports
             if type==INPUT:
                 # FIX 4/4/20 [JDC]: NEED TO ADD ASSERTION FOR NUMBER OF SHADOW PROJECTIONS
-                n = len(cim.output_ports) - len(cim.user_added_ports[OUTPUT_PORTS])
-                i = sum([len(n.external_input_ports) for n in self.get_nodes_by_role(NodeRole.INPUT)])
-                assert n == i, f"PROGRAM ERROR:  Number of OutputPorts on {self.input_CIM.name} ({n}) does not match " \
-                               f"the number of external_input_ports over all INPUT nodes of {self.name} ({i})."
+                num_input_CIM_output_ports = len(cim.output_ports) - len(cim.user_added_ports[OUTPUT_PORTS])
+                num_INPUT_Node_input_ports = sum([len(n.external_input_ports)
+                                                  for n in self.get_nodes_by_role(NodeRole.INPUT)])
+                assert num_input_CIM_output_ports == num_INPUT_Node_input_ports, \
+                    (f"PROGRAM ERROR: Number of OutputPorts on {self.input_CIM.name} "
+                     f"({num_input_CIM_output_ports}) does not match the number of external_input_ports "
+                     f"over all INPUT nodes of {self.name} ({num_INPUT_Node_input_ports}).")
                 # FIX 4/4/20 [JDC]: THIS FAILS FOR NESTED COMPS (AND OTHER PLACES?):
                 # p = len([p for p in self.projections if (INPUT_CIM_NAME in p.name and SHADOW_INPUT_NAME not in p.name )])
                 # assert p == n, f"PROGRAM ERROR:  Number of Projections associated with {self.input_CIM.name})" \
                 #                f"({p} does not match the number of its OutputPorts ({n})."
             elif type==OUTPUT:
-                n = len(cim.input_ports) - len(cim.user_added_ports[INPUT_PORTS])
+                num_output_CIM_input_ports = len(cim.input_ports) - len(cim.user_added_ports[INPUT_PORTS])
                 # Get total number of output_ports for all OUTPUT and PROBE nodes
-                # Note: If the output_CIM of a nested Composition is one of the OUTPUT nodes of the outer Composition,
-                #       can't necessarily count *all* of its output_ports, since some my project directly to the
-                #       outer Composition's output_CIM (which is why it has been identified as an OUTPUT Node),
+                # Note: If a nested Composition is one of the OUTPUT nodes of the outer Composition,
+                #       can't necessarily count *all* of its output_CIM output_ports, since some may project directly
+                #       to the outer Composition's output_CIM (which is why it has been identified as an OUTPUT Node),
                 #       but some may project to other nodes in the outer Composition (which shouldn't be counted here)
                 #       (see _test_nested_autodiff_composition_with_one_direct_and_one_indirect_output_node for example)
-                o = sum([len([output_port for output_port in node.output_ports
-                              if isinstance(output_port.efferents[0].receiver.owner, CompositionInterfaceMechanism)])
-                         for node in self.get_nodes_by_role(NodeRole.PROBE) + self.get_nodes_by_role(NodeRole.OUTPUT)])
-                assert n == o, f"PROGRAM ERROR:  Number of InputPorts on '{self.output_CIM.name}' ({n}) does not " \
-                               f"match the number of OutputPorts over all OUTPUT nodes of {self.name} ({o})."
+                num_OUTPUT_Node_output_ports = sum([len([output_port for output_port in node.output_ports
+                                                         if any(isinstance(efferent.receiver.owner,
+                                                                           CompositionInterfaceMechanism)
+                                                                for efferent in output_port.efferents)])
+                                                    for node in (self.get_nodes_by_role(NodeRole.PROBE) +
+                                                                 self.get_nodes_by_role(NodeRole.OUTPUT))])
+                assert num_output_CIM_input_ports == num_OUTPUT_Node_output_ports, \
+                    (f"PROGRAM ERROR: Number of InputPorts on '{self.output_CIM.name}' ({num_output_CIM_input_ports}) "
+                     f"does not match the number of OutputPorts over all OUTPUT nodes of {self.name} "
+                     f"({num_OUTPUT_Node_output_ports}).")
                 # FIX 4/4/20 [JDC]: THIS FAILS FOR NESTED COMPS (AND OTHER PLACES?):
                 # p = len([p for p in self.projections if OUTPUT_CIM_NAME in p.name])
                 # assert p == n, f"PROGRAM ERROR:  Number of Projections associated with {self.output_CIM.name} " \
