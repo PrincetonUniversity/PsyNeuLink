@@ -5815,8 +5815,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                          if any(isinstance(efferent.receiver.owner,
                                                                            CompositionInterfaceMechanism)
                                                                 for efferent in output_port.efferents)])
-                                                    for node in (self.get_nodes_by_role(NodeRole.PROBE) +
-                                                                 self.get_nodes_by_role(NodeRole.OUTPUT))])
+                                                    for node in set(self.get_nodes_by_role(NodeRole.PROBE) +
+                                                                    self.get_nodes_by_role(NodeRole.OUTPUT))])
                 assert num_output_CIM_input_ports == num_OUTPUT_Node_output_ports, \
                     (f"PROGRAM ERROR: Number of InputPorts on '{self.output_CIM.name}' ({num_output_CIM_input_ports}) "
                      f"does not match the number of OutputPorts over all OUTPUT nodes of {self.name} "
@@ -5837,8 +5837,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _get_nested_node_CIM_port(self,
                                   node: Mechanism,
                                   node_port: Union[InputPort, OutputPort],
-                                  role: Literal[NodeRole.INPUT, NodeRole.PROBE, NodeRole.OUTPUT]
-                                  ):
+                                  role: Literal[NodeRole.INPUT, NodeRole.PROBE, NodeRole.OUTPUT]):
         """Check for node in nested Composition
         Assign NodeRole.PROBE to relevant nodes if allow_probes is specified (see handle_probes below)
         Return relevant port of relevant CIM if found and nested Composition in which it was found; else None's
@@ -5874,7 +5873,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # self._analyze_graph(context=Context(string='IGNORE_NO_AFFERENTS_WARNING'))
                     self._analyze_graph(context=Context(source=ContextFlags.COMPOSITION,
                                                         string='IGNORE_NO_AFFERENTS_WARNING'))
-                    return
+                    return True
 
             # Failed to assign node as PROBE, so get ControlMechanisms that may be trying to monitor it
             ctl_monitored_nodes = self._get_monitor_for_control_nodes()
@@ -5894,7 +5893,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         nested_comps = [i for i in self.nodes if isinstance(i, Composition)]
         for nc in nested_comps:
             nested_nodes = dict(nc._get_nested_nodes())
-            if node in nested_nodes or node in nc.nodes.data:
+            if node in nested_nodes or node in nc.nodes:
                 owning_composition = nc if node in nc.nodes else nested_nodes[node]
                 # Must be assigned Node.Role of INPUT, PROBE, or OUTPUT (depending on receiver vs sender)
                 # This validation does not apply to ParameterPorts. Externally modulated nodes
@@ -5927,8 +5926,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                                  node_port,
                                                                                  role)
                                                                                  # NodeRole.OUTPUT)
-                        CIM_port_for_nested_node = nc.output_CIM_ports[nested_node_CIM_port_spec[0]][1]
-                        CIM = nc.output_CIM
+                        # FIX: IF CIM_port_for_nested_node COMES BACK WITH NONE,
+                        #      OR IT CAN BE MORE DIRECTLY ASCERTAINED THAT, EVEN IF IT IS A PROJECTION FROM AN OUTPUT
+                        #      NODE, IT *ITSELF* DOES NOT PROJECT TO AN OUTPUT_CIM, THEN TRY ASSIGNING AS PROBE?
+                        if not any(nested_node_CIM_port_spec):
+                            try_assigning_as_probe(node, NodeRole.PROBE, owning_composition)
+                        else:
+                            CIM_port_for_nested_node = nc.output_CIM_ports[nested_node_CIM_port_spec[0]][1]
+                            CIM = nc.output_CIM
                 elif isinstance(node_port, ParameterPort):
                     # NOTE: there is special casing here for parameter ports. They don't have a node role
                     # associated with them in the way that input and output nodes do, so we don't know for sure
@@ -6402,6 +6407,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    format(sender, self.name,
                                           Mechanism.__name__, OutputPort.__name__, Composition.__name__))
 
+        # Sender is in a nested Composition
         if (not isinstance(sender_mechanism, CompositionInterfaceMechanism)
                 and not isinstance(sender, Composition)
                 and sender_mechanism not in self.nodes
@@ -6411,13 +6417,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 sender_name = sender.name
 
-            # if the sender is in a nested Composition AND sender is an OUTPUT Node
-            # then use the corresponding CIM on the nested comp as the sender going forward
-            # (note:  NodeRole.OUTPUT used even for PROBES, since those currently use same output_CIMS as OUTPUT nodes)
+            # If the sender_mechanism is an OUTPUT Node of the nested Composition,
+            #  then use the corresponding CIM on the nested comp as the sender going forward
+            #  (note:  NodeRole.OUTPUT used even for PROBES, since those currently use same output_CIMS as OUTPUT nodes)
             sender, sender_output_port, graph_sender, sender_mechanism = \
-                self._get_nested_node_CIM_port(sender_mechanism,
-                                               sender_output_port,
-                                               NodeRole.OUTPUT)
+                self._get_nested_node_CIM_port(sender_mechanism, sender_output_port, NodeRole.OUTPUT)
             nested_compositions.append(graph_sender)
             if sender is None:
                 receiver_name = 'node'
