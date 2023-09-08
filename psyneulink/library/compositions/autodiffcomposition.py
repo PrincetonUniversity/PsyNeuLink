@@ -664,9 +664,7 @@ class AutodiffComposition(Composition):
             curr_tensor_targets[component] = torch.tensor(target, device=self.device).double()
 
         # do forward computation on current inputs
-        curr_tensor_outputs = self.parameters.pytorch_representation._get(context).forward(curr_tensor_inputs,
-                                                                                           context,
-                                                                                           )
+        curr_tensor_outputs = self.parameters.pytorch_representation._get(context).forward(curr_tensor_inputs, context)
 
         for component in curr_tensor_outputs.keys():
             # possibly add custom loss option, which is a loss function that takes many args
