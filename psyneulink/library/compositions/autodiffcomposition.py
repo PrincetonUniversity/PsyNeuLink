@@ -485,7 +485,8 @@ class AutodiffComposition(Composition):
                     continue
 
                 # Consider all efferent Projections of node
-                # FIX: 9/8/23 PREVIOUS NODE IS LINGERING HERE;  NEED TO UPDATE/REASSIGN (BELOW, INSIDE LOOP? OR ABOVE?)
+                # FIX: 9/8/23 WHEN RETURNING TO HIDDEN_2, HAVE ALREADY POPPED FROM COMPOSITION STACK
+                #             SO BACK IN OUTER COMPOSITION;  NEED TO GET BACK DOWN INTO INNER ONE
                 for efferent_proj, rcvr in [(p, p.receiver.owner)
                                             for p in node.efferents
                                             if p in current_comp().projections]:
