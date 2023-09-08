@@ -506,13 +506,28 @@ class AutodiffComposition(Composition):
                                 # Push nested Composition onto stack
                                 composition_stack.appendleft(rcvr.composition)
                             # MODIFIED 9/1/23 END
-                            # Replace rcvr with INPUT Node of nested Composition
-                            _, rcvr, _ = \
-                                rcvr._get_destination_info_from_input_CIM(efferent_proj.receiver)
-                            assert rcvr in current_comp().get_nodes_by_role(NodeRole.INPUT), \
-                                f"PROGRAM ERROR: '{rcvr.name}' is not an INPUT Node of '{current_comp().name}'"
-                            # Assign efferent_proj (Projection to input_CIM) since it should be learned in PyTorch mode
-                            prev[rcvr] = efferent_proj
+                            # # MODIFIED 9/8/23 OLD:
+                            # # Replace rcvr with INPUT Node of nested Composition
+                            # _, rcvr, _ = \
+                            #     rcvr._get_destination_info_from_input_CIM(efferent_proj.receiver)
+                            # assert rcvr in current_comp().get_nodes_by_role(NodeRole.INPUT), \
+                            #     f"PROGRAM ERROR: '{rcvr.name}' is not an INPUT Node of '{current_comp().name}'"
+                            # # Assign efferent_proj (Projection to input_CIM) since it should be learned in PyTorch mode
+                            # prev[rcvr] = efferent_proj
+                            # MODIFIED 9/8/23 NEW:
+                            # Get Node(s) in inner Composition to which Node projects (via input_CIM)
+                            # FIX: NEED TO REFACTOR _get_destination_info_from_input_CIM TO HANDLE MULTIPLE DESTINATIONS
+                            receivers = rcvr._get_destination_info_from_input_CIM(efferent_proj.receiver)
+                            for _, rcvr, _ in [receivers] if isinstance(receivers, tuple) else receivers:
+                                assert rcvr in current_comp().get_nodes_by_role(NodeRole.INPUT), \
+                                    f"PROGRAM ERROR: '{rcvr.name}' is not an INPUT Node of '{current_comp().name}'"
+                                # Assign efferent_proj (Projection to input_CIM) since it should be learned in PyTorch mode
+                                prev[rcvr] = efferent_proj # <- OLD
+                                # FIX: SOMETHING LIKE THIS HERE?? [THIS IS ADDED TO OLD]
+                                prev[efferent_proj] = node
+                                queue.append(rcvr)
+                                assert True
+                            # MODIFIED 9/8/23 END
 
                         # Projection is to output_CIM, possibly exiting from a nested Composition
                         elif rcvr == current_comp().output_CIM:
@@ -534,11 +549,13 @@ class AutodiffComposition(Composition):
                                 prev[rcvr] = efferent_proj
                                 # Ensure rcvr in an outer Composition
                                 assert rcvr not in current_comp()._all_nodes
-
-                                # # FIX: SOMETHING LIKE THIS HERE??
-                                # prev[efferent_proj] = node
-                                # queue.append(rcvr)
-                                # # FIX: END
+                                # MODIFIED 9/8/23 NEW:
+                                # FIX: SOMETHING LIKE THIS HERE?? BUT PRODUCES DUPLICATE PATHWAYS FOR SOME REASON
+                                prev[efferent_proj] = node
+                                queue.append(rcvr)
+                                assert True
+                                # MODIFIED 9/8/23 END
+                                # FIX: END
                             # MODIFIED 9/1/23 END
 
                             # Pop the stack to return to outer Composition
