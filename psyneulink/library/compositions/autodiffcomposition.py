@@ -554,11 +554,10 @@ class AutodiffComposition(Composition):
                                 # MODIFIED 9/8/23 NEW:
                                 # FIX: SOMETHING LIKE THIS HERE?? BUT PRODUCES DUPLICATE PATHWAYS FOR SOME REASON
                                 prev[efferent_proj] = node
-                                # queue.append(rcvr)
-                                # # MODIFIED 9/8/23 OLD:
-                                # queue.append(rcvr)
                                 # MODIFIED 9/8/23 NEW:
-                                queue.appendleft(rcvr)
+                                queue.append(rcvr)
+                                # # MODIFIED 9/8/23 NEWER:
+                                # queue.appendleft(rcvr)
                                 # MODIFIED 9/8/23 END
                                 assert True
                                 # MODIFIED 9/8/23 END
