@@ -6932,7 +6932,7 @@ class TestNodeRoles:
         output_labels_dict = {0:{'red':0, 'green':1}}
         A = ProcessingMechanism(name='A', input_labels=input_labels_dict)
         B = ProcessingMechanism(name='B')
-        C = ProcessingMechanism(name='C')
+        C = ProcessingMechanism(name='C', output_labels=output_labels_dict)
         icomp = Composition(pathways=[[A,B,C]], name='INNER COMP')
 
         X = ProcessingMechanism(name='X')
@@ -6958,22 +6958,21 @@ class TestNodeRoles:
         assert input_format == "\nInputs to (nested) INPUT Nodes of OUTER COMP for 2 trials:\n\tMIDDLE COMP: \n\t\tX: [ [[0.0]], [[0.0]] ]\n\t\tINNER COMP: \n\t\t\tA: [ ['red'], ['green'] ]\n\tQ: [ ['red'], ['green'] \n\nFormat as follows for inputs to run():\n{\n\tMIDDLE COMP: [ [[0.0],[0.0]], [[0.0],[0.0]] ],\n\tQ: [ [[0.0]], [[0.0]] ]\n}"
 
         result = ocomp.run(inputs={mcomp:[[.2],['green']], Q:[4.6]})
-        assert result == [[0.2], [0.2], [1.],[4.6]]
+        assert result == [[0.2], [1.],[4.6]]
         results_by_node = ocomp.get_results_by_nodes()
         assert results_by_node[O] == [0.2]
-        assert results_by_node[Z] == [0.2]
         assert results_by_node[C] == [1.0]
         assert results_by_node[Q] == [4.6]
         results_by_node = ocomp.get_results_by_nodes(use_names=True)
-        assert repr(results_by_node) == '{\'O\': [0.2], \'Z\': [0.2], \'C\': [1.0], \'Q\': [4.6]}'
+        assert repr(results_by_node) == '{\'O\': [0.2], \'C\': [1.0], \'Q\': [4.6]}'
         results_by_node = ocomp.get_results_by_nodes(use_names=True, use_labels=True)
-        assert repr(results_by_node) == '{\'O\': [[0.2]], \'Z\': [\'red\'], \'C\': [[1.0]], \'Q\': [[4.6]]}'
-        results_by_node = ocomp.get_results_by_nodes(nodes=[Q, Z])
-        assert repr(results_by_node) == '{(ProcessingMechanism Z): [0.2], (ProcessingMechanism Q): [4.6]}'
+        assert repr(results_by_node) == '{\'O\': [[0.2]], \'C\': [\'red\'], \'Q\': [[4.6]]}'
+        results_by_node = ocomp.get_results_by_nodes(nodes=[Q, C])
+        assert repr(results_by_node) == '{(ProcessingMechanism C): [1.0], (ProcessingMechanism Q): [4.6]}'
         results_by_node = ocomp.get_results_by_nodes(nodes=Q, use_names=True)
         assert repr(results_by_node) == '{\'Q\': [4.6]}'
-        results_by_node = ocomp.get_results_by_nodes(nodes=Z, use_labels=True)
-        assert repr(results_by_node) == '{(ProcessingMechanism Z): [\'red\']}'
+        results_by_node = ocomp.get_results_by_nodes(nodes=C, use_labels=True)
+        assert repr(results_by_node) == '{(ProcessingMechanism C): [\'red\']}'
 
         label_not_in_dict_error_msg = 'Inappropriate use of \'purple\' as a stimulus for A in MIDDLE COMP: ' \
                                       'it is not a label in its input_labels_dict.'

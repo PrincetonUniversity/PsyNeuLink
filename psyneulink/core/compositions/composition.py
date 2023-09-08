@@ -322,6 +322,8 @@ roles from being assigned by default, using the `exclude_node_roles <Composition
 description of each `NodeRole` indicates whether it is modifiable using these methods.  All of the roles assigned
 to a particular Node can be listed using the `get_roles_by_node <Composition.get_roles_by_node>` method, and all of the
 nodes assigned a particular role can be listed using the `get_nodes_by_role <Composition.get_nodes_by_role>` method.
+The `get_required_roles_by_node` method lists the `NodeRoles <NodeRole>` that have been assigned to a Node using the
+`require_node_roles <Composition.require_node_roles>` method.
 
 
 .. _Composition_Nested:
@@ -4636,6 +4638,28 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self.required_node_roles.remove(node_role_pair)
             self._remove_node_role(node, role)
 
+    def get_required_roles_by_node(self, node):
+        """
+            Return a list of `NodeRoles <NodeRole>` that have been user-assigned to a specified **node**.
+
+            Arguments
+            _________
+
+            node : `Node <Composition_Nodes>`
+                `Node <Composition_Nodes>` for which assigned `NodeRoles <NodeRole>` are desired.
+
+            Returns
+            -------
+
+            List[`Mechanisms <Mechanism>` and/or `Compositions <Composition>`] :
+                list of `NodeRoles <NodeRole>` assigned to **node**.
+        """
+
+        try:
+            return [role for n, role in self.required_node_roles if n is node]
+        except KeyError:
+            raise CompositionError(f"Node {node} not found in {self.nodes_to_roles}.")
+
     def get_roles_by_node(self, node):
         """
             Return a list of `NodeRoles <NodeRole>` assigned to **node**.
@@ -5328,18 +5352,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # If node is a Composition and its output_CIM has OutputPorts that either have no Projections
                 #     or projections to self.output_CIM, then assign as OUTPUT Node
-                # Note: this ensures that if a nested Comp has both Nodes that project to ones in an outer Composition
-                #       *and* legit OUTPUT Nodes, the latter qualify to make the nested Comp an OUTPUT Node
+                # Note: this ensures that if a nested Comp has both Nodes that project to others in the outer
+                #       Composition *and* legit OUTPUT Nodes (i.e., ones that project only to the outer Composition's
+                #       output_CIM), the latter qualify to still make the nested Comp an OUTPUT Node
                 if isinstance(node, Composition):
                     # for port in node.output_CIM.output_ports:
                     #     if (not port.efferents
                     #             or any(proj.receiver.owner is self.output_CIM for proj in port.efferents)):
                     #         self._add_node_role(node, NodeRole.OUTPUT)
                     #         break
-                    if any(
-                            # not port.efferents or # <- FIX 9/1/23 - SHOULD ONLY INCLUDE THIS AT RUNTIME
-                            any(proj.receiver.owner is self.output_CIM for proj in port.efferents)
-                            for port in node.output_CIM.output_ports):
+                    if any(not port.efferents or # <- FIX 9/1/23 - SHOULD ONLY INCLUDE THIS AT RUNTIME
+                           any(proj.receiver.owner is self.output_CIM for proj in port.efferents)
+                           for port in node.output_CIM.output_ports):
                         self._add_node_role(node, NodeRole.OUTPUT)
 
         # Assign SINGLETON and INTERNAL nodes
@@ -5660,9 +5684,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Then, get that Projection
             proj = input_port.path_afferents[0]
             node = proj.sender.owner
+            if isinstance(node, CompositionInterfaceMechanism):
+                _, sender_mech, sender_comp = proj.sender.owner._get_source_info_from_output_CIM(proj.sender)
+                proj_sender_is_PROBE = sender_mech in sender_comp.get_nodes_by_role(NodeRole.PROBE)
+            else:
+                proj_sender_is_PROBE = node in self.get_nodes_by_role(NodeRole.PROBE)
             # And check the other efferents of its sender
             # FIX: 9/1/23 - NEED TO CHECK THAT ALL NODES IN THE CYCLE ARE OUTPUT NODES, OTHERWISE THEY SHOULD BE PROBES
+            #               LEAVE PROJECTION FROM SENDER TO AN OUTPUT_CIM.INPUT_PORT THAT IS A PROBE TO
             if (node not in self.get_nodes_by_role(NodeRole.PROBE) + self.get_nodes_by_role(NodeRole.CYCLE)
+                    and NodeRole.OUTPUT not in self.get_required_roles_by_node(node)
+                    and not proj_sender_is_PROBE
                     and len([p for p in proj.sender.efferents
                              if (p in self.projections
                                  and p.receiver.owner in self.get_nodes_by_role(NodeRole.OUTPUT)
