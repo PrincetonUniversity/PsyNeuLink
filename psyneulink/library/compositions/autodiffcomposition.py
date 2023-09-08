@@ -549,11 +549,11 @@ class AutodiffComposition(Composition):
                                 prev[rcvr] = efferent_proj
                                 # Ensure rcvr in an outer Composition
                                 assert rcvr not in current_comp()._all_nodes
-                                # MODIFIED 9/8/23 NEW:
-                                # FIX: SOMETHING LIKE THIS HERE?? BUT PRODUCES DUPLICATE PATHWAYS FOR SOME REASON
-                                prev[efferent_proj] = node
-                                queue.append(rcvr)
-                                assert True
+                                # # MODIFIED 9/8/23 NEW:
+                                # # FIX: SOMETHING LIKE THIS HERE?? BUT PRODUCES DUPLICATE PATHWAYS FOR SOME REASON
+                                # prev[efferent_proj] = node
+                                # queue.append(rcvr)
+                                # assert True
                                 # MODIFIED 9/8/23 END
                                 # FIX: END
                             # MODIFIED 9/1/23 END
