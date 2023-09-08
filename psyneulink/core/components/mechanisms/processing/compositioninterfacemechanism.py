@@ -274,12 +274,13 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         comp = comp or self.composition
         port_map = port.owner.port_map
         idx = 0 if isinstance(port, InputPort) else 1
-        output_port = [port_map[k][1] for k in port_map if port_map[k][idx] is port]
-        assert len(output_port)==1, f"PROGRAM ERROR: Expected exactly 1 output_port for {port.name} " \
-                                   f"in port_map for {port.owner}; found {len(output_port)}."
-        assert len(output_port[0].efferents)==1, f"PROGRAM ERROR: Port ({output_port.name}) expected to have " \
-                                                 f"just one efferent; has {len(output_port.efferents)}."
-        receiver = output_port[0].efferents[0].receiver
+        output_ports = [port_map[k][1] for k in port_map if port_map[k][idx] is port]
+        assert len(output_ports)==1, f"PROGRAM ERROR: Expected exactly 1 output_port for {port.name} " \
+                                   f"in port_map for {port.owner}; found {len(output_ports)}."
+        output_port = output_ports[0]
+        assert len(output_port.efferents)==1, f"PROGRAM ERROR: Port ({output_port.name}) expected to have " \
+                                              f"just one efferent; has {len(output_port.efferents)}."
+        receiver = output_port.efferents[0].receiver
         if not isinstance(receiver.owner, CompositionInterfaceMechanism):
             return receiver, receiver.owner, comp
         return self._get_destination_info_from_input_CIM(receiver, receiver.owner.composition)

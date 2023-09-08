@@ -485,9 +485,11 @@ class AutodiffComposition(Composition):
                     continue
 
                 # Consider all efferent Projections of node
+                # FIX: 9/8/23 PREVIOUS NODE IS LINGERING HERE;  NEED TO UPDATE/REASSIGN (BELOW, INSIDE LOOP? OR ABOVE?)
                 for efferent_proj, rcvr in [(p, p.receiver.owner)
                                             for p in node.efferents
                                             if p in current_comp().projections]:
+
                     # Ignore ones that are not learnable except to a CIM (deal with those next)
                     if (((not hasattr(efferent_proj,'learnable')) or (efferent_proj.learnable is False))
                             and not isinstance(rcvr, CompositionInterfaceMechanism)):
@@ -506,6 +508,7 @@ class AutodiffComposition(Composition):
                                 # Push nested Composition onto stack
                                 composition_stack.appendleft(rcvr.composition)
                             # MODIFIED 9/1/23 END
+                            # MODIFIED 9/8/23 OLD:
                             # Replace rcvr with INPUT Node of nested Composition
                             _, rcvr, _ = \
                                 rcvr._get_destination_info_from_input_CIM(efferent_proj.receiver)
@@ -513,6 +516,20 @@ class AutodiffComposition(Composition):
                                 f"PROGRAM ERROR: '{rcvr.name}' is not an INPUT Node of '{current_comp().name}'"
                             # Assign efferent_proj (Projection to input_CIM) since it should be learned in PyTorch mode
                             prev[rcvr] = efferent_proj
+                            # # MODIFIED 9/8/23 NEW:
+                            #   FIX: NEED TO BRANCH NOT ON EFFERENTS FROM input_CIM BUT RATHER FROM ITS AFFERENT(S) NODE(S)
+                            # # Get Node(s) in inner Composition to which Node projects (via input_CIM)
+                            # receivers = rcvr._get_destination_info_from_input_CIM(efferent_proj.receiver)
+                            # for _, rcvr, _ in [receivers] if isinstance(receivers, tuple) else receivers:
+                            #     assert rcvr in current_comp().get_nodes_by_role(NodeRole.INPUT), \
+                            #         f"PROGRAM ERROR: '{rcvr.name}' is not an INPUT Node of '{current_comp().name}'"
+                            #     # Assign efferent_proj (Projection to input_CIM) since it should be learned in PyTorch mode
+                            #     prev[rcvr] = efferent_proj # <- OLD
+                            #     # FIX: SOMETHING LIKE THIS HERE?? [THIS IS ADDED TO OLD]
+                            #     prev[efferent_proj] = node
+                            #     queue.append(rcvr)
+                            #     assert True
+                            # MODIFIED 9/8/23 END
 
                         # Projection is to output_CIM, possibly exiting from a nested Composition
                         elif rcvr == current_comp().output_CIM:
@@ -534,11 +551,18 @@ class AutodiffComposition(Composition):
                                 prev[rcvr] = efferent_proj
                                 # Ensure rcvr in an outer Composition
                                 assert rcvr not in current_comp()._all_nodes
-
-                                # # FIX: SOMETHING LIKE THIS HERE??
-                                # prev[efferent_proj] = node
+                                # MODIFIED 9/8/23 NEW:
+                                # FIX: SOMETHING LIKE THIS HERE?? BUT PRODUCES DUPLICATE PATHWAYS FOR SOME REASON
+                                prev[efferent_proj] = node
                                 # queue.append(rcvr)
-                                # # FIX: END
+                                # # MODIFIED 9/8/23 OLD:
+                                # queue.append(rcvr)
+                                # MODIFIED 9/8/23 NEW:
+                                queue.appendleft(rcvr)
+                                # MODIFIED 9/8/23 END
+                                assert True
+                                # MODIFIED 9/8/23 END
+                                # FIX: END
                             # MODIFIED 9/1/23 END
 
                             # Pop the stack to return to outer Composition
@@ -551,7 +575,11 @@ class AutodiffComposition(Composition):
                         prev[rcvr] = efferent_proj
 
                     prev[efferent_proj] = node
+                    # MODIFIED 9/8/23 OLD:
                     queue.append(rcvr)
+                    # # MODIFIED 9/8/23 NEW:
+                    # queue.appendleft(rcvr)
+                    # MODIFIED 9/8/23 END
             # MODIFIED 9/1/23 END ORIG/REVISED
 
             return pathways
