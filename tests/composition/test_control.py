@@ -1922,7 +1922,7 @@ class TestControlMechanisms:
                                                    allocation_samples=pnl.SampleSpec(start=1.0, stop=5.0, num=5))])
         )
         result = benchmark(ocomp.run, [5], execution_mode=mode)
-        np.testing.assert_allclose(result, [[50], [50]])
+        np.testing.assert_allclose(result, [[50]])
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -1986,7 +1986,7 @@ class TestControlMechanisms:
                                                                                      num=5))])
         )
         result = benchmark(ocomp.run, [5], execution_mode=mode)
-        np.testing.assert_allclose(result, [[70],[70]])
+        np.testing.assert_allclose(result, [[70]])
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2050,7 +2050,7 @@ class TestControlMechanisms:
                                                                                      num=5))])
         )
         result = benchmark(ocomp.run, [5], execution_mode=mode)
-        np.testing.assert_allclose(result, [[5],[5]])
+        np.testing.assert_allclose(result, [[5]])
 
     def test_two_tier_ocm(self):
         integrationConstant = 0.8  # Time Constant
