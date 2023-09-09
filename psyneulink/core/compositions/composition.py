@@ -13093,3 +13093,14 @@ def get_compositions():
     """Return list of Compositions in caller's namespace."""
     frame = inspect.currentframe()
     return [c for c in frame.f_back.f_locals.values() if isinstance(c, Composition)]
+
+def get_composition_for_node(node):
+    # Find first CIM to which node projects as indication of the Composition to which it belong
+    receiver = node
+    if not receiver.efferents:
+        return None
+    while not isinstance(receiver, CompositionInterfaceMechanism):
+        for efferent in receiver.efferents:
+            receiver = efferent.receiver.owner
+    return receiver.composition
+
