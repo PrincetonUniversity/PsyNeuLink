@@ -381,48 +381,19 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         assert len(output_ports)==1, f"PROGRAM ERROR: Expected exactly 1 output_port for {port.name} " \
                                    f"in port_map for {port.owner}; found {len(output_ports)}."
         output_port = output_ports[0]
-        # MODIFIED 9/9/23 OLD:
-        # if len(output_port.efferents)==1:
-        #     receiver = output_port.efferents[0].receiver
-        #     if not isinstance(receiver.owner, CompositionInterfaceMechanism):
-        #         assert comp.is_nested
-        #         receiver_comp = get_composition_for_node(receiver.owner)
-        #         return receiver, receiver.owner, receiver_comp
-        #     return self._get_destination_info_for_output_CIM(receiver, receiver.owner.composition)
-        # # An output_CIM output_port is allowed to have more than one efferent, if the Node in the nested Composition
-        # #    that projects to the output_CIM is specified to project to more than one Node in the outer Composition
-        # else:
-        #     receivers_info = []
-        #     for efferent in output_port.efferents:
-        #         if not isinstance(efferent.receiver.owner, CompositionInterfaceMechanism):
-        #             receivers_info.append([efferent.receiver, efferent.receiver.owner, comp])
-        #         else:
-        #             receivers_info.append(
-        #                 [self._get_destination_info_for_output_CIM(efferent.receiver,
-        #                                                           efferent.receiver.owner.composition)])
-        #     # # MODIFIED 9/1/23 OLD:
-        #     # return receivers_info
-        #     # MODIFIED 9/1/23 NEW:
-        #     return receivers_info or (port, port.owner, port.owner.composition)
-        #     # MODIFIED 9/1/23 END
-        # MODIFIED 9/9/23 NEW:
         receivers_info = []
+        if not output_port.efferents:
+            return None
         for efferent in output_port.efferents:
             receiver = efferent.receiver
             if not isinstance(efferent.receiver.owner, CompositionInterfaceMechanism):
                 assert comp.is_nested
                 receiver_comp = get_composition_for_node(receiver.owner)
-                receivers_info.append([efferent.receiver, efferent.receiver.owner, receiver_comp])
+                receivers_info.append((efferent.receiver, efferent.receiver.owner, receiver_comp))
             else:
-                receivers_info.append(
-                    [self._get_destination_info_for_output_CIM(efferent.receiver,
-                                                              efferent.receiver.owner.composition)])
-        # # MODIFIED 9/1/23 OLD:
-        # return receivers_info
-        # MODIFIED 9/1/23 NEW:
+                receivers_info.append(self._get_destination_info_for_output_CIM(efferent.receiver,
+                                                                                efferent.receiver.owner.composition))
         return receivers_info
-            # MODIFIED 9/1/23 END
-        # MODIFIED 9/9/23 END
 
     def _sender_is_probe(self, output_port):
         """Return True if source of output_port is a PROBE Node of the Composition to which it belongs"""

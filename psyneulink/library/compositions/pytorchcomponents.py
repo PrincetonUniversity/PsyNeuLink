@@ -219,12 +219,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 nested_pytorch_comp = self.nodes_map[sndr_mech.composition]
                 proj_sndr = nested_pytorch_comp.nodes_map[nested_sndr_mech]
 
-                # # Assign Projection from nested_sndr_port to output_CIM as pnl_proj
-                # pnl_proj = projection.sender.owner.port_map[nested_sndr_port][0].path_afferents[0]
-                # assert pnl_proj == nested_sndr_port.efferents[0], \
-                #     (f"PROGRAM ERROR: First efferent Projection from '{nested_sndr_port.owner.name}' "
-                #      f"(to '{nested_sndr_port.efferents[0].receiver.owner.name}') is not the same as its "
-                #      f"Projection to '{projection.sender.owner.composition.name}.output_CIM'")
+                # Assign Projection from nested_sndr_port to output_CIM as pnl_proj
+                pnl_proj = projection.sender.owner.port_map[nested_sndr_port][0].path_afferents[0]
+                assert pnl_proj == nested_sndr_port.efferents[0], \
+                    (f"PROGRAM ERROR: First efferent Projection from '{nested_sndr_port.owner.name}' "
+                     f"(to '{nested_sndr_port.efferents[0].receiver.owner.name}') is not the same as its "
+                     f"Projection to '{projection.sender.owner.composition.name}.output_CIM'")
                 pnl_proj = projection
 
             else:

@@ -261,12 +261,14 @@ except ImportError:
 else:
     from psyneulink.library.compositions.pytorchcomponents import PytorchCompositionWrapper
 
-from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
+from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
+from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
+from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
-from psyneulink.core.compositions.composition import Composition, NodeRole
-from psyneulink.core.compositions.composition import CompositionError
+from psyneulink.core.components.projections.projection import Projection_Base
+from psyneulink.core.compositions.composition import Composition, NodeRole, CompositionError, get_composition_for_node
 from psyneulink.core.compositions.report \
     import ReportOutput, ReportParams, ReportProgress, ReportSimulations, ReportDevices, \
     EXECUTE_REPORT, LEARN_REPORT, PROGRESS_REPORT
@@ -595,7 +597,7 @@ class AutodiffComposition(Composition):
             """
             pathways = []
             prev = {}
-            queue = collections.deque([(input_node, self)])
+            queue = collections.deque([(input_node, None, self)])
 
             # MODIFIED 9/1/23 REVISED:
             # FIX:  9/1/23 - THIS VERSION FLATTENS NESTED COMPOSITIONS;  MAY NOT STILL BE NEEDED
@@ -603,19 +605,43 @@ class AutodiffComposition(Composition):
             #                ?? REVERT TO OLD VERSION ABOVE? (THOUGH CURRENTLY DOING SO SEEMS TO LOSE TARGET NODE)
 
             while len(queue) > 0:
-                node, current_comp = queue.popleft()
+                node, input_port, current_comp = queue.popleft()
+
+                # node is output_CIM of nested Composition that projects directly to output_CIM of outer Composition
+                if isinstance(node, CompositionInterfaceMechanism):
+                    outer_comp = get_composition_for_node(node.composition)
+                    if node.composition in outer_comp.get_nodes_by_role(NodeRole.OUTPUT):
+                        _, source, _ = input_port.owner._get_source_info_from_output_CIM(input_port)
+                        raise AutodiffCompositionError(f"The output for '{source.name}' Node of nested Composition "
+                                                       f"'{node.composition.name}' must project to a node in the "
+                                                       f"outer composition ('{outer_comp.name}') to be learnable.")
+                # FIX: TRY TO INTERPOSE AN OUTPUT NODE TO MAKE PROJECTION LEARNABLE:
+                # # so need to construct an OUTPUT Node of the outer Composition to make it learnable, since the
+                # # afferent projection(s) of an output_CIM (in this case, of the outer Composition) are not learnable
+                #     _, source, _ = input_port.owner._get_source_info_from_output_CIM(input_port)
+                #     output_node = ProcessingMechanism(size=input_port.size, name=f"{source.name} OUTPUT")
+                #     self.add_node(output_node)
+                #     self.remove_projection(input_port.path_afferents[0])
+                #     Projection_Base._delete_projection(input_port.path_afferents[0])
+                #     output_proj = MappingProjection(sender=output_node, receiver=input_port)
+                #     self.add_projection(output_proj)
+                #     learnable_proj = MappingProjection(sender=input_port.path_afferents[0].sender, receiver=output_node)
+                #     self.add_projection(learnable_proj)
+                #     node = output_node
+                #     prev[node] = learnable_proj
 
                 # Handle OUTPUT Node of outer Composition
-                if (current_comp == self and node in current_comp.get_nodes_by_role(NodeRole.OUTPUT)):
-                    p = []
-                    while node in prev:
-                        p.insert(0, node)
-                        node = prev[node]
-                    p.insert(0, node)
+                if current_comp == self and node in current_comp.get_nodes_by_role(NodeRole.OUTPUT):
+                    pathway = []
+                    entry = node
+                    while entry in prev:
+                        pathway.insert(0, entry)
+                        entry = prev[entry]
+                    pathway.insert(0, entry)
                     # Only consider input -> projection -> ... -> output pathways
                     # (since can't learn on only one mechanism)
-                    if len(p) >= 3:
-                        pathways.append(p)
+                    if len(pathway) >= 3:
+                        pathways.append(pathway)
                     continue
 
                 # Consider all efferent Projections of node
@@ -646,7 +672,7 @@ class AutodiffComposition(Composition):
                                 # Assign efferent_proj (Projection to input_CIM) since it should be learned in PyTorch mode
                                 prev[rcvr] = efferent_proj # <- OLD
                                 prev[efferent_proj] = node
-                                queue.append((rcvr, rcvr_comp))
+                                queue.append((rcvr, efferent_proj.receiver, rcvr_comp))
 
                         # Projection is to output_CIM, possibly exiting from a nested Composition
                         elif rcvr == current_comp.output_CIM:
@@ -658,23 +684,26 @@ class AutodiffComposition(Composition):
 
                             # Get all Node(s) in outer Composition to which node projects (via output_CIM)
                             receivers = rcvr._get_destination_info_for_output_CIM(output_CIM_output_port)
+                            # Replace efferent_proj(s) with one(s) from output_CIM to rcvr(s) in outer Composition,
+                            #   since that(those) is(are the one(s) that should be learned in PyTorch mode
+                            # Note:  _get_destination_info_for_output_CIM returns list of destinations
+                            #        in order of output_CIM.output_port.efferents
                             for efferent_idx, receiver in enumerate(receivers):
-                                _, rcvr, rcvr_comp = receiver
-                                assert rcvr_comp is not current_comp
-                                # Replace efferent_proj(s) with one(s) from output_CIM to rcvr(s) in outer Composition,
-                                #   since that(those) is(are the one(s) that should be learned in PyTorch mode
-                                # Note:  _get_destination_info_for_output_CIM returns list of destinations
-                                #        in order of output_CIM.output_port.efferents
+                                if receiver:
+                                    _, rcvr, rcvr_comp = receiver
+                                    assert rcvr_comp is not current_comp
                                 efferent_proj = output_CIM_output_port.efferents[efferent_idx]
                                 prev[rcvr] = efferent_proj
                                 prev[efferent_proj] = node
-                                queue.append((rcvr, rcvr_comp))
+                                queue.append((rcvr, efferent_proj.receiver, rcvr_comp))
 
                         else:
                             assert False, f"PROGRAM ERROR:  Unrecognized CompositionInterfaceMechanism: {rcvr}"
 
                     else:
                         prev[rcvr] = efferent_proj
+                        prev[efferent_proj] = node
+                        queue.append((rcvr, efferent_proj.receiver, current_comp))
 
             return pathways
 
