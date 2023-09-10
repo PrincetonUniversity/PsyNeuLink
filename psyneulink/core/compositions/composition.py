@@ -8743,6 +8743,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Create MappingProjections from ERROR_SIGNAL OutputPort of each error_source
             #    to corresponding error_input_ports, including for an existing LearningMechanism
             #    retrieved from call to _get_back_prop_error_sources() above
+            # FIX: 9/9/23  THIS SHOULD BE DONE IN _get_back_prop_error_sources()?? TO CHECK FOR EXISTING ONES?
             for i, error_source in enumerate(error_sources):
                 error_projection = MappingProjection(sender=error_source,
                                                      receiver=learning_mechanism.error_signal_input_ports[i])
@@ -8834,7 +8835,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         for efferent in [p for p in receiver_activity_mech.efferents]:
 
-            # Deal with OUTPUT Node of a nested Composition (note: this currenlty only handles one level of nesting)
+            # FIX: 9/9/23 - ADD HANDLING OF MULTI-LEVEL NESTING
+            # Deal with OUTPUT Node of a nested Composition (note: this currently only handles one level of nesting)
             if isinstance(efferent.receiver.owner, CompositionInterfaceMechanism):
                 try:
                     efferent = efferent.receiver.owner.port_map[efferent.sender][1].efferents[0]
