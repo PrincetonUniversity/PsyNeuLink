@@ -8882,13 +8882,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             context=context)[0]
                     # Create Projection here so that don't have to worry about determining correct
                     #    error_signal_input_port of learning_mech in _create_non_terminal_backprop_learning_components
-                    try:
-                        error_projections.append(MappingProjection(sender=error_source.output_ports[ERROR_SIGNAL],
-                                                                   receiver=error_signal_input_port))
-                    except DuplicateProjectionError:
-                        pass
-                    except Exception as e:
-                        raise e
+                    # FIX: 9/10/23 - THE FOLLOWING SEEMS TO DUPLICATE THE CREATION OF THE PROJECTION JUST ABOVE
+                    #                TRY GETTING RID OF IT? ZZZ
+                    # try:
+                    #     error_projections.append(MappingProjection(sender=error_source.output_ports[ERROR_SIGNAL],
+                    #                                                receiver=error_signal_input_port))
+                    # except DuplicateProjectionError:
+                    #     pass
+                    # except Exception as e:
+                    #     raise e
 
         # Return error_sources so they can be used to create a new LearningMechanism if needed
         # Return error_projections created to existing learning_mech
@@ -8953,6 +8955,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                             and error_source not in lp.sender.owner.error_sources
                                             and lp.sender.owner.learning_type is LearningType.SUPERVISED)]:
                 dependent_learning_mech = learning_projection.sender.owner
+                # FIX: 9/10/23 - NEED CHECK FOR EXISTING ERROR_SIGNAL INPUT PORT ON dependent_learning_mech
+                #                THAT ALREADY RECEIVES THE DESIRED ERROR_SIGNAL MAPPING PROJECTION  ZZZ
+                if any(dependent_learning_mech == efferent.receiver.owner
+                       for efferent in error_source.output_ports[ERROR_SIGNAL].efferents):
+                    continue
                 error_signal_input_port = dependent_learning_mech.add_ports(
                                                     InputPort(projections=error_source.output_ports[ERROR_SIGNAL],
                                                               name=ERROR_SIGNAL,
@@ -13105,4 +13112,3 @@ def get_composition_for_node(node):
         for efferent in receiver.efferents:
             receiver = efferent.receiver.owner
     return receiver.composition
-
