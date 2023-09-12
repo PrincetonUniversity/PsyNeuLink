@@ -2480,12 +2480,6 @@ class BackPropagation(LearningFunction):
         self.parameters.error_matrix._set(error_matrix, context)
         # self._check_args(variable=variable, context=context, params=params, context=context)
 
-        # MODIFIED 9/11/23 OLD:
-        # # If learning_rate was not specified for instance or composition, use default value
-        # learning_rate = self._get_current_parameter_value(LEARNING_RATE, context)
-        # if learning_rate is None:
-        #     learning_rate = self.defaults.learning_rate
-        # MODIFIED 9/11/23 NEW:
         # If learning_rate was not specified for instance or composition or in params, use default value
         if params and LEARNING_RATE in params and params[LEARNING_RATE] is not None:
             learning_rate = params[LEARNING_RATE]
@@ -2493,7 +2487,6 @@ class BackPropagation(LearningFunction):
             learning_rate = self._get_current_parameter_value(LEARNING_RATE, context)
         if learning_rate is None:
             learning_rate = self.defaults.learning_rate
-        # MODIFIED 9/11/23 END
 
         # IMPLEMENTATION NOTE: FOR DEBUGGING
         # if not self.is_initializing:
