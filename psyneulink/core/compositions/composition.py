@@ -8750,7 +8750,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 error_projections.append(error_projection)
 
         # self.add_node(learning_mechanism, required_roles=NodeRole.LEARNING, context=context)
-        # FIX: CHECK:
+        # FIX: 9/1/23 CHECK:
         #      - IF PROJECTIONS EXIST (ON EXISTING LEARNING MECHANISM) AND ADD THEM IF NOT
         #      - IF PROJECTIONS THAT HAVE BEEN CREATED HAVE BEEN ADDED TO COMP OR THAT NEEDS TO BE DONE WITH
         #      add_projections()
@@ -8880,6 +8880,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                       name=ERROR_SIGNAL,
                                       context=context),
                             context=context)[0]
+                        error_projections.append(error_signal_input_port.path_afferents[0])
                     # Create Projection here so that don't have to worry about determining correct
                     #    error_signal_input_port of learning_mech in _create_non_terminal_backprop_learning_components
                     # FIX: 9/10/23 - THE FOLLOWING SEEMS TO DUPLICATE THE CREATION OF THE PROJECTION JUST ABOVE
