@@ -8758,12 +8758,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #                                            receiver=learning_mechanism.error_signal_input_ports[i]))
                 # MODIFIED 9/12/23 END
 
-        # self.add_node(learning_mechanism, required_roles=NodeRole.LEARNING, context=context)
-        # FIX: 9/1/23 CHECK:
-        #      - IF PROJECTIONS EXIST (ON EXISTING LEARNING MECHANISM) AND ADD THEM IF NOT
-        #      - IF PROJECTIONS THAT HAVE BEEN CREATED HAVE BEEN ADDED TO COMP OR THAT NEEDS TO BE DONE WITH
-        #      add_projections()
-
         # Use try here to be able to abort in case duplicates are found
         try:
             # Create MappingProjections for INPUT_SOURCE, OUTPUT_SOURCE and COVARIATES (if any)
@@ -8932,8 +8926,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # except Exception as e:
                     #     raise e
 
-        # Return error_sources so they can be used to create a new LearningMechanism if needed
-        # Return error_projections created to existing learning_mech
+        # Return error_sources so they can be used to create a new LearningMechanism if needed;
+        #   and return error_projections created here for existing learning_mech
         #    so they can be added to the Composition by _create_non_terminal_backprop_learning_components
         return error_sources, error_projections
 
