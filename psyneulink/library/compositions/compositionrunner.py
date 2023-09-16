@@ -221,9 +221,9 @@ class CompositionRunner():
             if not callable(stim_input) and 'epochs' in stim_input:
                 stim_epoch = stim_input['epochs']
 
-            stim_input, num_input_trials = self._composition._parse_learning_spec(stim_input,
-                                                                                  stim_target,
-                                                                                  execution_mode)
+            stim_input, num_input_trials = self._composition._parse_learning_spec(inputs=stim_input,
+                                                                                  targets=stim_target,
+                                                                                  execution_mode=execution_mode)
             if num_trials is None:
                 num_trials = num_input_trials
 

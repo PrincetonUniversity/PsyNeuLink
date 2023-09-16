@@ -395,6 +395,7 @@ class AutodiffComposition(Composition):
         self._runtime_learning_rate = None
         self.last_saved_weights = None
         self.last_loaded_weights = None
+        self.target_output_map = {}
 
         # keeps track of average loss per epoch
         self.losses = []
@@ -530,30 +531,30 @@ class AutodiffComposition(Composition):
                     if node not in self.get_nodes_by_role(NodeRole.TARGET)
                     for pathway in _get_pytorch_backprop_pathway(node)]
 
-        # FIX: 9/15/23 - THIS MAY NOT BE NEEDED IF TARGETS CAN BE INFERRED DIRECTLY (I.E., W/O BACKPROP PATHWAYS IN PNL)
-        #  USE CALL TO self._self._create_terminal_backprop_learning_components(input_source,
-        #                                                                        output_source,
-        #                                                                        error_function,
-        #                                                                        loss_spec,
-        #                                                                        learned_projection,
-        #                                                                        learning_rate,
-        #                                                                        learning_update,
-        #                                                                        context)
-        # # MODIFIED 9/16/23 OLD:
-        # for pathway in pathways:
-        #     self.add_backpropagation_learning_pathway(pathway=pathway,
-        #                                               loss_spec=self.loss_spec)
-        # # MODIFIED 9/16/23 NEW:
-        # self.target_mechanisms = {mech:mech.value for mech in [pathway[-1] for pathway in pathways]}
-        # # MODIFIED 9/16/23 NEWER:
         if execution_mode == pnlvm.ExecutionMode.PyTorch:
-            self.target_mechanisms = {mech:mech.value for mech in [pathway[-1] for pathway in pathways]}
+            # For PyTorch mode, only need to construct dummy TARGET Nodes, to allow targets to be:
+            #  - specified in the same way as for other execution_modes
+            #  - trial-by-trial values to kept aligned with inputs in batch / minibatch construction
+            #  - tracked for logging (as mechs of a Composition)
+            # IMPLEMENTATION NOTE: only add target nodes if not already present
+            #    (to avoid duplication in multiple calls, including from command line;
+            #     see test_xor_training_identicalness_standard_composition_vs_PyTorch_and_LLVM for example)
+            output_mechs = self.get_nodes_by_role(NodeRole.OUTPUT)
+            assert set([mech for mech in [pathway[-1] for pathway in pathways]]) == set(output_mechs)
+            target_mechs = [ProcessingMechanism(default_variable = np.zeros_like(mech.value),
+                                                name= 'TARGET for ' + mech.name)
+                            for mech in output_mechs if mech not in self.target_output_map.values()]
+            # Suppress warnings about role assignments
+            context = Context(source=ContextFlags.METHOD)
+            self.add_nodes(target_mechs, required_roles=[NodeRole.TARGET, NodeRole.LEARNING], context=context)
+            for target_mech in target_mechs:
+                self.exclude_node_roles(target_mech, NodeRole.OUTPUT, context)
+            self.target_output_map.update({target: output for target, output in zip(target_mechs, output_mechs)})
         else:
+            # Construct entire PNL backpropagation learning pathways for each INPUT Node
             for pathway in pathways:
                 self.add_backpropagation_learning_pathway(pathway=pathway,
                                                           loss_spec=self.loss_spec)
-        # MODIFIED 9/16/23 END
-        assert True
 
     # CLEANUP: move some of what's done in the methods below to a "validate_params" type of method
     @handle_external_context()
@@ -650,7 +651,9 @@ class AutodiffComposition(Composition):
             curr_tensor_inputs[component] = torch.tensor(input, device=self.device).double()
         for component in targets.keys():
             target = targets[component][0]
-            curr_tensor_targets[component] = torch.tensor(target, device=self.device).double()
+            # curr_tensor_targets[component] = torch.tensor(target, device=self.device).double()
+            # Convert Node back to output Node for indexing by component below
+            curr_tensor_targets[self.target_output_map[component]] = torch.tensor(target, device=self.device).double()
 
         # do forward computation on current inputs
         curr_tensor_outputs = self.parameters.pytorch_representation._get(context).forward(curr_tensor_inputs, context)
@@ -704,38 +707,12 @@ class AutodiffComposition(Composition):
         return sum(self.parameters.trial_losses._get(context)[-num_trials:]) /num_trials
 
     def _infer_output_nodes(self, nodes: dict):
-        """
-        Maps targets onto target mechanisms (as needed by learning)
-
+        """Remove input Nodes, and return dict with values for target Nodes
         Returns
         ---------
         A dict mapping TargetMechanisms -> target values
         """
-        # MODIFIED 9/16/23 OLD:
-        # ret = {}
-        # for node, values in nodes.items():
-        #     if NodeRole.TARGET in self.get_roles_by_node(node) and NodeRole.LEARNING in self.get_roles_by_node(node):
-        #         node_efferent_mechanisms = [x.receiver.owner for x in node.efferents]
-        #         comparators = [x for x in node_efferent_mechanisms
-        #                        if (isinstance(x, ComparatorMechanism)
-        #                            and NodeRole.LEARNING in self.get_roles_by_node(x))]
-        #         comparator_afferent_mechanisms = [x.sender.owner for c in comparators for x in c.afferents]
-        #         output_nodes = [t for t in comparator_afferent_mechanisms
-        #                         if (NodeRole.OUTPUT in self.get_roles_by_node(t)
-        #                             and NodeRole.LEARNING not in self.get_roles_by_node(t))]
-        #
-        #         if len(output_nodes) != 1:
-        #             # Either there are no valid target nodes, or there is ambiguity in which target node to choose
-        #             raise Exception(f"Unable to infer learning target node from output node {node}!")
-        #
-        #         ret[output_nodes[0]] = values
-        #     elif NodeRole.OUTPUT in self.get_roles_by_node(node):
-        #         ret[node] = values
-        # return ret
-        # MODIFIED 9/16/23 NEW:
-        assert True
-        return self.target_mechanisms
-        # MODIFIED 9/16/23 END
+        return {node:value for node,value in nodes.items() if node in self.target_output_map}
 
     def _infer_input_nodes(self, nodes: dict):
         """
@@ -830,6 +807,8 @@ class AutodiffComposition(Composition):
 
 
                 autodiff_inputs = self._infer_input_nodes(inputs)
+                # FIX: 9/16/23: SHOULD BE RENAMED AS _infer_target_nodes BUT CAN'T CONFLICT WITH EXISTING METHOD OF
+                #  THAT NAME
                 autodiff_targets = self._infer_output_nodes(inputs)
 
                 report(self,

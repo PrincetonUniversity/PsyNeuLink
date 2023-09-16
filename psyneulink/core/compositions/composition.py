@@ -9513,7 +9513,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """Returns true if the composition is currently preparing to execute (run or learn)"""
         return ContextFlags.PREPARING in context.execution_phase
 
-    def _infer_target_nodes(self, targets: dict):
+    def _infer_target_nodes(self, targets: dict, execution_mode):
         """
         Maps targets onto target mechanisms (as needed by learning)
 
@@ -9523,7 +9523,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         `dict`:
             Dict mapping TargetMechanisms -> target values
         """
-        # MODIFIED 9/16/23 OLD:
+
+        # # MODIFIED 9/16/23 NEW:
+        if execution_mode is pnlvm.ExecutionMode.PyTorch:
+            # Reassign target inputs from output Nodes to target mechanisms constructed for PyTorch execution
+            return {target: value
+                    for target, value in zip(self.target_output_map.keys(), targets.values())}
+
         ret = {}
         for node, values in targets.items():
             if (NodeRole.TARGET not in self.get_roles_by_node(node)
@@ -9545,12 +9551,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 ret[node] = values
         return ret
-        # # MODIFIED 9/16/23 NEW:
-        # assert targets.keys() == self.target_mechanisms.keys(), \
-        #     (f"PROGRAM ERROR: inconsistent item(s) in targets for {self.name}: "
-        #      f"{' ,'.join([target.name for target in targets.keys() - self.target_mechanisms.keys()])}.")
-        # # return self._infer_output_nodes(targets)
-        # return {}
         # MODIFIED 9/16/23 END
 
     def _parse_learning_spec(self, inputs, targets, execution_mode):
@@ -9590,25 +9590,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     d[key] = val
             return d
 
-        # # MODIFIED 9/16/23 OLD:
-        # if targets is not None:
-        #     targets = self._infer_target_nodes(targets)
-        #     inputs = _recursive_update(inputs, targets)
-        # MODIFIED 9/16/23 NEW:
         if targets is not None:
-            if execution_mode == pnlvm.ExecutionMode.PyTorch:
-                assert self.target_mechanisms, f"PROGRAM ERROR: no target mechanism(s) inferred for '{self.name}'"
-                assert self.target_mechanisms.keys() == targets.keys(), \
-                    (f"PROGRAM ERROR: inconsistent item(s) in targets for {self.name}: "
-                     f"{' ,'.join([target.name for target in targets.keys() - self.target_mechanisms.keys()])}.")
-                for target in targets.keys():
-                    self.target_mechanisms[target] = targets[target]
-                # Return empty targets (for consistency with expectations in processing below)
-                targets = {}
-            else:
-                targets = self._infer_target_nodes(targets)
+            targets = self._infer_target_nodes(targets, execution_mode)
             inputs = _recursive_update(inputs, targets)
-        # MODIFIED 9/16/23 END
 
         # 3) Resize inputs to be of the form [[[]]],
         # where each level corresponds to: <TRIALS <PORTS <INPUTS> > >
@@ -9754,7 +9738,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             _input = None
         return _input
 
-    def _parse_input_dict(self, inputs, context=None):
+    def _parse_input_dict(self, inputs):
         """
         Validate and parse a dict provided as input to a Composition into a standardized form to be used throughout
             its execution
@@ -10169,11 +10153,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # MODIFIED 3/12/22 NEW:
                     # FIX: MIS-REPORTS INCOMPATIBLITY AS BEING FOR SHAPE IF NUM TRIALS IS DIFFERENT FOR DIFF PORTS
                     #      SHOULD BE HANDLED SAME AS FOR DIFFERNCE ACROSS NODES (PER BELOW)
-                    receiver_shape = np.atleast_1d(np.squeeze(np.array(receiver_shape, dtype=object)))
+                    receiver_shape = np.atleast_1d(np.squeeze(np.array(receiver_shape, dtype=object))).shape
                     bad_stimulus = [stim for stim, _inp in zip(stimulus, _input) if _inp is None]
-                    bad_stimulus = np.atleast_1d(np.squeeze(np.array(bad_stimulus, dtype=object)))
-                    err_msg = f"Input stimulus ({bad_stimulus}) for {receiver_name} is incompatible with " \
-                              f"the shape of its external input ({receiver_shape})."
+                    bad_stimulus_shape = np.atleast_1d(np.squeeze(np.array(bad_stimulus, dtype=object))).shape
+                    err_msg = (f"Input stimulus shape ({bad_stimulus_shape}) for '{receiver_name}' is incompatible "
+                               f"with the shape of its external input ({receiver_shape}).")
                     # MODIFIED 3/12/22 END
                     # 8/3/17 CW: I admit the error message implementation here is very hacky;
                     # but it's at least not a hack for "functionality" but rather a hack for user clarity
