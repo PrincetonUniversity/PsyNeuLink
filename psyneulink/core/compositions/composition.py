@@ -9523,6 +9523,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         `dict`:
             Dict mapping TargetMechanisms -> target values
         """
+        # MODIFIED 9/16/23 OLD:
         ret = {}
         for node, values in targets.items():
             if (NodeRole.TARGET not in self.get_roles_by_node(node)
@@ -9544,8 +9545,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 ret[node] = values
         return ret
+        # # MODIFIED 9/16/23 NEW:
+        # assert targets.keys() == self.target_mechanisms.keys(), \
+        #     (f"PROGRAM ERROR: inconsistent item(s) in targets for {self.name}: "
+        #      f"{' ,'.join([target.name for target in targets.keys() - self.target_mechanisms.keys()])}.")
+        # # return self._infer_output_nodes(targets)
+        # return {}
+        # MODIFIED 9/16/23 END
 
-    def _parse_learning_spec(self, inputs, targets):
+    def _parse_learning_spec(self, inputs, targets, execution_mode):
         """
         Converts learning inputs and targets to a standardized form
 
@@ -9582,9 +9590,25 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     d[key] = val
             return d
 
+        # # MODIFIED 9/16/23 OLD:
+        # if targets is not None:
+        #     targets = self._infer_target_nodes(targets)
+        #     inputs = _recursive_update(inputs, targets)
+        # MODIFIED 9/16/23 NEW:
         if targets is not None:
-            targets = self._infer_target_nodes(targets)
+            if execution_mode == pnlvm.ExecutionMode.PyTorch:
+                assert self.target_mechanisms, f"PROGRAM ERROR: no target mechanism(s) inferred for '{self.name}'"
+                assert self.target_mechanisms.keys() == targets.keys(), \
+                    (f"PROGRAM ERROR: inconsistent item(s) in targets for {self.name}: "
+                     f"{' ,'.join([target.name for target in targets.keys() - self.target_mechanisms.keys()])}.")
+                for target in targets.keys():
+                    self.target_mechanisms[target] = targets[target]
+                # Return empty targets (for consistency with expectations in processing below)
+                targets = {}
+            else:
+                targets = self._infer_target_nodes(targets)
             inputs = _recursive_update(inputs, targets)
+        # MODIFIED 9/16/23 END
 
         # 3) Resize inputs to be of the form [[[]]],
         # where each level corresponds to: <TRIALS <PORTS <INPUTS> > >

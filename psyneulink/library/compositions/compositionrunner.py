@@ -119,7 +119,9 @@ class CompositionRunner():
 
                 for idx in range(i, i + batch_size):
                     try:
-                        trial_input, _ = self._composition._parse_learning_spec(inputs(idx), None)
+                        trial_input, _ = self._composition._parse_learning_spec(inputs=inputs(idx),
+                                                                                targets=None,
+                                                                                execution_mode=execution_mode)
                     except:
                         break
                     if trial_input is None:
@@ -219,8 +221,9 @@ class CompositionRunner():
             if not callable(stim_input) and 'epochs' in stim_input:
                 stim_epoch = stim_input['epochs']
 
-            stim_input, num_input_trials = self._composition._parse_learning_spec(stim_input, stim_target)
-
+            stim_input, num_input_trials = self._composition._parse_learning_spec(stim_input,
+                                                                                  stim_target,
+                                                                                  execution_mode)
             if num_trials is None:
                 num_trials = num_input_trials
 

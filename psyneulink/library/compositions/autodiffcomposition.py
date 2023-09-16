@@ -413,7 +413,7 @@ class AutodiffComposition(Composition):
         # Set to True after first warning about failure to specify execution mode so warning is issued only once
         self.execution_mode_warned_about_default = False
 
-    def infer_backpropagation_learning_pathways(self, context=None):
+    def infer_backpropagation_learning_pathways(self, execution_mode, context=None):
         """Create backpropapagation learning pathways for every Input Node --> Output Node pathway
         Flattens nested compositions:
           - only includes the Projections in outer Composition to/from the CIMs of the nested Composition
@@ -530,9 +530,30 @@ class AutodiffComposition(Composition):
                     if node not in self.get_nodes_by_role(NodeRole.TARGET)
                     for pathway in _get_pytorch_backprop_pathway(node)]
 
-        for pathway in pathways:
-            self.add_backpropagation_learning_pathway(pathway=pathway,
-                                                      loss_spec=self.loss_spec)
+        # FIX: 9/15/23 - THIS MAY NOT BE NEEDED IF TARGETS CAN BE INFERRED DIRECTLY (I.E., W/O BACKPROP PATHWAYS IN PNL)
+        #  USE CALL TO self._self._create_terminal_backprop_learning_components(input_source,
+        #                                                                        output_source,
+        #                                                                        error_function,
+        #                                                                        loss_spec,
+        #                                                                        learned_projection,
+        #                                                                        learning_rate,
+        #                                                                        learning_update,
+        #                                                                        context)
+        # # MODIFIED 9/16/23 OLD:
+        # for pathway in pathways:
+        #     self.add_backpropagation_learning_pathway(pathway=pathway,
+        #                                               loss_spec=self.loss_spec)
+        # # MODIFIED 9/16/23 NEW:
+        # self.target_mechanisms = {mech:mech.value for mech in [pathway[-1] for pathway in pathways]}
+        # # MODIFIED 9/16/23 NEWER:
+        if execution_mode == pnlvm.ExecutionMode.PyTorch:
+            self.target_mechanisms = {mech:mech.value for mech in [pathway[-1] for pathway in pathways]}
+        else:
+            for pathway in pathways:
+                self.add_backpropagation_learning_pathway(pathway=pathway,
+                                                          loss_spec=self.loss_spec)
+        # MODIFIED 9/16/23 END
+        assert True
 
     # CLEANUP: move some of what's done in the methods below to a "validate_params" type of method
     @handle_external_context()
@@ -690,22 +711,31 @@ class AutodiffComposition(Composition):
         ---------
         A dict mapping TargetMechanisms -> target values
         """
-        ret = {}
-        for node, values in nodes.items():
-            if NodeRole.TARGET in self.get_roles_by_node(node) and NodeRole.LEARNING in self.get_roles_by_node(node):
-                node_efferent_mechanisms = [x.receiver.owner for x in node.efferents]
-                comparators = [x for x in node_efferent_mechanisms if (isinstance(x, ComparatorMechanism) and NodeRole.LEARNING in self.get_roles_by_node(x))]
-                comparator_afferent_mechanisms = [x.sender.owner for c in comparators for x in c.afferents]
-                output_nodes = [t for t in comparator_afferent_mechanisms if (NodeRole.OUTPUT in self.get_roles_by_node(t) and NodeRole.LEARNING not in self.get_roles_by_node(t))]
-
-                if len(output_nodes) != 1:
-                    # Invalid specification! Either we have no valid target nodes, or there is ambiguity in which target node to choose
-                    raise Exception(f"Unable to infer learning target node from output node {node}!")
-
-                ret[output_nodes[0]] = values
-            elif NodeRole.OUTPUT in self.get_roles_by_node(node):
-                ret[node] = values
-        return ret
+        # MODIFIED 9/16/23 OLD:
+        # ret = {}
+        # for node, values in nodes.items():
+        #     if NodeRole.TARGET in self.get_roles_by_node(node) and NodeRole.LEARNING in self.get_roles_by_node(node):
+        #         node_efferent_mechanisms = [x.receiver.owner for x in node.efferents]
+        #         comparators = [x for x in node_efferent_mechanisms
+        #                        if (isinstance(x, ComparatorMechanism)
+        #                            and NodeRole.LEARNING in self.get_roles_by_node(x))]
+        #         comparator_afferent_mechanisms = [x.sender.owner for c in comparators for x in c.afferents]
+        #         output_nodes = [t for t in comparator_afferent_mechanisms
+        #                         if (NodeRole.OUTPUT in self.get_roles_by_node(t)
+        #                             and NodeRole.LEARNING not in self.get_roles_by_node(t))]
+        #
+        #         if len(output_nodes) != 1:
+        #             # Either there are no valid target nodes, or there is ambiguity in which target node to choose
+        #             raise Exception(f"Unable to infer learning target node from output node {node}!")
+        #
+        #         ret[output_nodes[0]] = values
+        #     elif NodeRole.OUTPUT in self.get_roles_by_node(node):
+        #         ret[node] = values
+        # return ret
+        # MODIFIED 9/16/23 NEW:
+        assert True
+        return self.target_mechanisms
+        # MODIFIED 9/16/23 END
 
     def _infer_input_nodes(self, nodes: dict):
         """
@@ -726,12 +756,12 @@ class AutodiffComposition(Composition):
         execution_phase_at_entry = kwargs[CONTEXT].execution_phase
         kwargs[CONTEXT].execution_phase = ContextFlags.PREPARING
 
-        if self._built_pathways is False:
-            self.infer_backpropagation_learning_pathways()
-            self._built_pathways = True
-
         execution_mode = self._get_execution_mode(kwargs.pop('execution_mode', None))
         kwargs[CONTEXT].execution_phase = execution_phase_at_entry
+
+        if self._built_pathways is False:
+            self.infer_backpropagation_learning_pathways(execution_mode)
+            self._built_pathways = True
 
         return super().learn(*args, execution_mode=execution_mode, **kwargs)
 
