@@ -8495,11 +8495,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             learned_projections.append(learned_projection)
 
         # Add error_signal projections to any learning_mechanisms that are now dependent on the new one
-        # # FIX: 9/15/23:
         for lm in learning_mechanisms:
             if lm.dependent_learning_mechanisms:
-                # projections = self._add_error_projection_to_dependent_learning_mechs(lm, context)
-                # self.add_projections(projections)
                 self._add_error_projection_to_dependent_learning_mechs(lm, context)
 
         # Suppress "no efferent connections" warning for:
@@ -8702,8 +8699,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #    error_sources will be empty (as they have been dealt with in self._get_back_prop_error_sources
         #    error_projections will contain list of any created to be added to the Composition below
         if learning_mechanism:
-            # This should only be reached for duplicate learning pathways or when and AutodiffComposition is being
-            #  trained (as it creates a duplicate of the learning pathways)
+            # This should only be reached for duplicate learning pathways
+            #  or when and AutodiffComposition is being trained (as it creates a duplicate of the learning pathways)
             error_sources, error_projections = self._get_back_prop_error_sources(output_source,
                                                                                  learning_mechanism,
                                                                                  context)
@@ -8751,14 +8748,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #    retrieved from call to _get_back_prop_error_sources() above
             # FIX: 9/9/23  THIS SHOULD BE DONE IN _get_back_prop_error_sources()?? TO CHECK FOR EXISTING ONES?
             for i, error_source in enumerate(error_sources):
-                # MODIFIED 9/12/23 OLD:
                 error_projection = MappingProjection(sender=error_source,
                                                      receiver=learning_mechanism.error_signal_input_ports[i])
                 error_projections.append(error_projection)
-                # # MODIFIED 9/12/23 NEW:
-                # error_projections.append(MappingProjection(sender=error_source,
-                #                                            receiver=learning_mechanism.error_signal_input_ports[i]))
-                # MODIFIED 9/12/23 END
 
         # Use try here to be able to abort in case duplicates are found
         try:
@@ -8831,9 +8823,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         except DuplicateProjectionError as e:
             # Ignore duplicates since the corresponding LearningMechanism was identified and ignored above
-            # # FIX: 9/15/23:
             self.add_projections(error_projections)
             return learning_mechanism
+
         except Exception as e:
             raise e
 
@@ -8918,90 +8910,31 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                       context=context),
                             context=context)[0]
                         error_projections.append(error_signal_input_port.path_afferents[0])
-                    # Create Projection here so that don't have to worry about determining correct
-                    #    error_signal_input_port of learning_mech in _create_non_terminal_backprop_learning_components
-                    # FIX: 9/10/23 - THE FOLLOWING SEEMS TO DUPLICATE THE CREATION OF THE PROJECTION JUST ABOVE
-                    #                TRY GETTING RID OF IT? ZZZ
-                    # try:
-                    #     error_projections.append(MappingProjection(sender=error_source.output_ports[ERROR_SIGNAL],
-                    #                                                receiver=error_signal_input_port))
-                    # except DuplicateProjectionError:
-                    #     pass
-                    # except Exception as e:
-                    #     raise e
 
-        # Return error_sources so they can be used to create a new LearningMechanism if needed;
-        #   and return error_projections created here for existing learning_mech
-        #    so they can be added to the Composition by _create_non_terminal_backprop_learning_components
+        # Return:
+        # - error_sources,
+        #     so they can be used to create a new LearningMechanism if needed
+        # - error_projections created to existing learning_mech,
+        #     so they can be added to the Composition by _create_non_terminal_backprop_learning_components
         return error_sources, error_projections
 
-    # # FIX: 9/15/23
-    # def _get_backprop_error_projections(self, learning_mech, receiver_activity_mech, context):
-    #     error_sources = []
-    #     error_projections = []
-    #     # for error_source in learning_mech.error_sources:
-    #     #     if error_source in self.nodes:
-    #     #         error_sources.append(error_source)
-    #     # Add any LearningMechanisms associated with efferent projection from receiver_activity_mech
-    #     # First get all efferents of receiver_activity_mech with a LearningProjection that are in current Composition
-    #     for efferent in [p for p in receiver_activity_mech.efferents
-    #                      if (hasattr(p, 'has_learning_projection')
-    #                          and p.has_learning_projection
-    #                          and p in self.projections)]:
-    #         # Then any LearningProjections to that efferent that are in current Composition
-    #         for learning_projection in [mod_aff for mod_aff in efferent.parameter_ports[MATRIX].mod_afferents
-    #                                     if (isinstance(mod_aff, LearningProjection) and mod_aff in self.projections)]:
-    #             error_source = learning_projection.sender.owner
-    #             if (error_source in learning_mech.error_sources
-    #                     and error_source in self.nodes
-    #                     and learning_mech in [p.receiver.owner for p in error_source.efferents]):
-    #                 continue
-    #             error_sources.append(error_source)
-    #             # FIX: REPLACE WITH learning_mech._add_error_signal_input_port ONCE IMPLEMENTED
-    #             error_signal_input_port = next((e for e in learning_mech.error_signal_input_ports
-    #                                              if not e.path_afferents), None)
-    #             if error_signal_input_port is None:
-    #                 error_signal_input_port = learning_mech.add_ports(
-    #                                                     InputPort(projections=error_source.output_ports[ERROR_SIGNAL],
-    #                                                               name=ERROR_SIGNAL,
-    #                                                               context=context),
-    #                                                     context=context)
-    #             # FIX: 9/13/23:
-    #             # DOES THE ABOVE GENERATE A PROJECTION?  IF SO, JUST GET AND RETURN THAT;  ELSE DO THE FOLLOWING:
-    #             error_projections.append(MappingProjection(sender=error_source.output_ports[ERROR_SIGNAL],
-    #                                                        receiver=error_signal_input_port))
-    #     return error_projections
-    #     #  2) For non-terminal sequences, determine # of error_signals coming from LearningMechanisms associated with
-    #     #     all efferentprojections of ProcessingMechanism that projects to ACTIVATION_OUTPUT of LearningMechanism
-    #     #     - check validity of existing error_signal projections with respect to those and, if possible,
-    #     #       their correspondence with error_matrices
-    #     #     - check if any ERROR_SIGNAL input_ports are empty (vacated by terminal sequence elements deleted in
-    #     #       add_projection)
-    #     #     - call add_ports method on LearningMechanism to add new ERROR_SIGNAL input_port to its input_ports
-    #     #       and error_matrix to its self.error_matrices attribute
-    #     #     - add new error_signal projection
-
     def _add_error_projection_to_dependent_learning_mechs(self, error_source, context=None):
-        # projections = []
+
         # Get all afferents to receiver_activity_mech in Composition that have LearningProjections
         for afferent in [p for p in error_source.input_source.path_afferents
                          if (p in self.projections
                              and hasattr(p, 'has_learning_projection')
                              and p.has_learning_projection)]:
+
             # For each LearningProjection to that afferent, if its LearningMechanism doesn't already have a receiver
             for learning_projection in [lp for lp in afferent.parameter_ports[MATRIX].mod_afferents
                                         if (isinstance(lp, LearningProjection)
                                             and lp.sender.owner.error_sources
                                             and error_source not in lp.sender.owner.error_sources
                                             and lp.sender.owner.learning_type is LearningType.SUPERVISED)]:
+
                 dependent_learning_mech = learning_projection.sender.owner
-                # # MODIFIED 9/12/23 NEW:
-                # FIX: 9/12/23 - NEED TO CHECK FOR EXISTING ERROR_SIGNAL_INPUT_PORT ON dependent_learning_mech
-                # FIX: ALT - ADD TO self.projections WHERE THEY ARE CREATED RATHER THAN WAITING FOR HERE
-                # If dependent_learning_mech already has a Projection from the error_source, can skip
-                #  check for any that are not in self.projections (i.e., just created) and add them to projections
-                #  so they can be added to the Composition in _create_backpropagation_learning_pathway()
-                # # FIX: 9/15/23:
+
                 # If dependent_learning_mech already has a Projection from the error_source, can skip
                 if any(dependent_learning_mech == efferent.receiver.owner
                        for efferent in error_source.output_ports[ERROR_SIGNAL].efferents):
@@ -9009,18 +8942,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     #     if efferent not in self.projections:
                     #         projections.append(efferent)
                     continue
-                # MODIFIED 9/12/23 END
+
                 error_signal_input_port = dependent_learning_mech.add_ports(
                                                     InputPort(projections=error_source.output_ports[ERROR_SIGNAL],
                                                               name=ERROR_SIGNAL,
                                                               context=context),
                                                     context=context)[0]
-                # projections.append(error_signal_input_port.path_afferents[0])
-                # projections.append(MappingProjection(sender=error_source.output_ports[ERROR_SIGNAL],
-                #                                      receiver=error_signal_input_port[0]))
                 self.add_projections(error_signal_input_port.path_afferents[0])
-
-        # return projections
 
     def _get_deeply_nested_aux_projections(self, node):
         deeply_nested_projections = {}
