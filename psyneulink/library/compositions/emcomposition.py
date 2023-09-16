@@ -193,11 +193,10 @@
 #
 #    - FIX: BUGS:
 #      - composition:
-#          - if nested node projects to two outer nodes, then output_CIM has multiple projections
-#               and get_destination fails assert that there should be only 1
 #          - If any MappingProjection is specified from nested node to outer node,
-#            then direct projections are instatiated to the output_CIM of the outer comp,
-#            and nested comp treated as OUTPUT Node of outer comp even if all its projections are to nodes in outer comp
+#            then direct projections are instantiated to the output_CIM of the outer comp, and the
+#            nested comp is treated as OUTPUT Node of outer comp even if all its projections are to nodes in outer comp
+#            LOOK IN add_projections? for nested comps
 #      - composition (?add_backpropagation_learning_pathway?):
 #           THIS FAILS:
 #             comp = Composition(name='a_outer')

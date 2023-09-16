@@ -9,6 +9,9 @@
 
 # FIX: TERMINATION CONDITION IS GETTING TRIGGED AFTER 1st TRIAL
 
+# FOR INPUT NODES: scheduler.add_condition(A, BeforeNCalls(A,1)
+# Termination: AfterNCalls(Ctl,2)
+
 """
 QUESTIONS:
 
