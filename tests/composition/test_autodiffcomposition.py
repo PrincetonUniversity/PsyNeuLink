@@ -1220,6 +1220,376 @@ class TestTrainingIdenticalness():
         np.testing.assert_allclose(map_h2_can.parameters.matrix.get(sem_net_autodiff),
                            map_h2_can_comp.get_mod_matrix(sem_net_comp))
 
+class TestNestedLearning:
+
+    @pytest.fixture
+    def nodes_for_testing_nested_comps(self):
+        input_nodes = [pnl.ProcessingMechanism(name='input_1', size=2),
+                       pnl.ProcessingMechanism(name='input_2', size=3),
+                       pnl.ProcessingMechanism(name='input_3', size=3)]
+        hidden_nodes = [pnl.ProcessingMechanism(name='hidden_1', size=3),
+                        pnl.ProcessingMechanism(name='hidden_2', size=4),
+                        pnl.ProcessingMechanism(name='hidden_3', size=5),
+                        pnl.ProcessingMechanism(name='hidden_4', size=6),
+                        pnl.ProcessingMechanism(name='hidden_x', size=(3,3), function=pnl.LinearCombination)]
+        output_nodes = [pnl.ProcessingMechanism(name='output_1', size=3),
+                        pnl.ProcessingMechanism(name='output_2', size=5)]
+        def _get_nodes(num_input_nodes, num_hidden_nodes, num_output_nodes):
+            return (input_nodes[0:num_input_nodes], hidden_nodes[0:num_hidden_nodes], output_nodes[0:num_output_nodes])
+        return _get_nodes
+
+
+    @pytest.fixture
+    def execute_learning(self):
+        def _execute_learning(comp_type, execution_mode, pathways, inputs, learning_rate=.01, num_trials=5):
+
+            if comp_type == 'composition':
+                comp = Composition(name='comp')
+                for p in pathways:
+                    comp.add_backpropagation_learning_pathway(p)
+
+            elif comp_type == 'autodiff':
+                comp = AutodiffComposition(pathways, name='autodiff_comp')
+
+            else:
+                assert False, f'Invalid comp_type: {comp_type}'
+
+            comp.learn(inputs=inputs,
+                       learning_rate = learning_rate,
+                       num_trials=num_trials,
+                       execution_mode=execution_mode)
+            return comp.results
+        return _execute_learning
+
+    def test_1_nested_hidden(self, nodes_for_testing_nested_comps, execute_learning):
+        nodes = nodes_for_testing_nested_comps(1, 1, 1)
+        input_nodes, hidden_nodes, output_nodes = nodes
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
+
+        nested_hidden_1 = AutodiffComposition(name='nested', nodes=[hidden_nodes[0]])
+        autodiff_results = execute_learning(comp_type='autodiff',
+                                            execution_mode=pnl.ExecutionMode.PyTorch,
+                                            pathways=[input_nodes[0], nested_hidden_1, output_nodes[0]],
+                                            inputs=inputs)
+
+        comp_results = execute_learning(comp_type='composition',
+                                        execution_mode=pnl.ExecutionMode.Python,
+                                        pathways=[[input_nodes[0],hidden_nodes[0], output_nodes[0]]],
+                                        inputs=inputs)
+
+        np.testing.assert_allclose(comp_results, autodiff_results)
+
+    def test_2_nested_hidden(self, nodes_for_testing_nested_comps, execute_learning):
+        nodes = nodes_for_testing_nested_comps(1, 2, 1)
+        input_nodes, hidden_nodes, output_nodes = nodes
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
+
+        nested_hiddens = AutodiffComposition(name='nested', pathways=[hidden_nodes[0],
+                                                                      hidden_nodes[1]])
+        autodiff_results = execute_learning(comp_type='autodiff',
+                                            execution_mode=pnl.ExecutionMode.PyTorch,
+                                            pathways=[input_nodes[0], nested_hiddens, output_nodes[0]],
+                                            inputs=inputs)
+
+        comp_results = execute_learning(comp_type='composition',
+                                        execution_mode=pnl.ExecutionMode.Python,
+                                        pathways=[[input_nodes[0],
+                                                   hidden_nodes[0],
+                                                   hidden_nodes[1],
+                                                   output_nodes[0]]],
+                                        inputs=inputs)
+
+        np.testing.assert_allclose(comp_results, autodiff_results)
+
+    def test_2_level_nested(self, nodes_for_testing_nested_comps, execute_learning):
+
+        nodes = nodes_for_testing_nested_comps(1, 4, 1)
+        input_nodes, hidden_nodes, output_nodes = nodes
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
+
+        nested_b = AutodiffComposition(name='nested_b', pathways=[hidden_nodes[1],
+                                                                  hidden_nodes[2]])
+        nested_a = AutodiffComposition(name='nested_a', pathways=[hidden_nodes[0],
+                                                                  nested_b,
+                                                                  hidden_nodes[3]])
+        autodiff_results = execute_learning(comp_type='autodiff',
+                                            execution_mode=pnl.ExecutionMode.PyTorch,
+                                            pathways=[input_nodes[0], nested_a, output_nodes[0]],
+                                            inputs=inputs)
+
+        comp_results = execute_learning(comp_type='composition',
+                                        execution_mode=pnl.ExecutionMode.Python,
+                                        pathways=[[input_nodes[0],
+                                                   hidden_nodes[0],
+                                                   hidden_nodes[1],
+                                                   hidden_nodes[2],
+                                                   hidden_nodes[3],
+                                                   output_nodes[0]]],
+                                        inputs=inputs)
+
+        np.testing.assert_allclose(comp_results, autodiff_results)
+
+
+    # REMAINING TESTS:
+
+        # COMPOSITION VERSIONS: --------------------------------------------------------------------
+
+
+        # # COMPOSITION NESTED
+        # a_inner = Composition(pathways=[hidden_1, hidden_2], name='a_inner')
+        # a_outer = Composition(name='a_outer')
+        # a_outer.add_linear_processing_pathway([input_1, a_inner, output_1])
+
+        # # COMPOSITION UNNESTED NO LEARNING
+        # a_outer = Composition(name='a_outer')
+        # a_outer.add_linear_processing_pathway([input_1, hidden_1, hidden_2, output_1])
+
+        # # COMPOSITION NESTED LEARNING
+        # a_inner = Composition(pathways=[hidden_1, hidden_2], name='a_inner')
+        # a_outer = Composition(name='a_outer')
+        # a_outer.add_backpropagation_learning_pathway([input_1, a_inner, output_1])
+        # execution_mode=ExecutionMode.Python
+
+        # # COMPOSITION UNNESTED LEARNING
+        # a_outer = Composition(name='a_outer')
+        # a_outer.add_backpropagation_learning_pathway([input_1, hidden_1, hidden_2, output_1])
+        # execution_mode=ExecutionMode.Python
+
+        # # COMPOSITION 2 InputPorts UNNESTED LEARNING:
+        # a_outer = Composition(name='a_outer')
+        # a_outer.add_backpropagation_learning_pathway([input_1,
+        #                                               MappingProjection(input_1, hidden_x.input_ports[0]),
+        #                                               hidden_x,
+        #                                               output_1])
+        # a_outer.add_backpropagation_learning_pathway([input_2,
+        #                                               MappingProjection(input_2, hidden_x.input_ports[1]),
+        #                                               hidden_x,
+        #                                               output_1])
+        # a_outer.show_graph()
+        # execution_mode=ExecutionMode.Python
+
+        # # COMPOSITION 2 INPUTS NESTED ONE-TO-ONE
+        # a_inner = Composition([[hidden_1, hidden_3],[hidden_2, hidden_3]], name='a_inner')
+        # a_outer = Composition([[input_1, MappingProjection(input_1, hidden_1), a_inner, output_1],
+        #                        [input_2, MappingProjection(input_2, hidden_2), a_inner, output_1]],
+        #                       name='a_outer')
+        # a_outer.show_graph()
+
+        # # # COMPOSITION 2 INPUTS NESTED ONE-TO-MANY
+        # a_inner = Composition([[hidden_1, hidden_3],[hidden_2, hidden_3]], name='a_inner')
+        # a_outer = Composition([input_1, a_inner, output_1],
+        #                       name='a_outer')
+        # a_outer.show_graph(show_cim=True, show_node_structure=True)
+
+        # # COMPOSITION 2 INPUTS UNNESTED ONE-TO-ONE LEARNING:
+        # a_outer = Composition(name='a_outer')
+        # a_outer.add_backpropagation_learning_pathway([input_1, hidden_1, hidden_3, output_1])
+        # a_outer.add_backpropagation_learning_pathway([input_2, hidden_2, hidden_3, output_1])
+        # a_outer.show_graph()
+        # execution_mode=ExecutionMode.Python
+
+        # # # COMPOSITION 2 INPUTS UNNESTED MANY-TO-MANY
+        # a_outer = Composition([[input_1, hidden_1, hidden_3, output_1],
+        #                        [input_2, hidden_2, hidden_3, output_1]],
+        #                       name='a_outer')
+
+        # # COMPOSITION 2 INPUTS UNNESTED MANY-TO-MANY LEARNING
+        # a_outer = Composition(name='a_outer')
+        # # a_outer.add_backpropagation_learning_pathway([{input_1, input_2}, {hidden_1, hidden_2}, hidden_3, output_1])
+        # # a_outer.add_linear_processing_pathway([{input_1, input_2}, {hidden_1, hidden_2}, hidden_3, output_1])
+        # a_outer.add_backpropagation_learning_pathway([input_1, hidden_1, hidden_3, output_1])
+        # a_outer.add_backpropagation_learning_pathway([input_1, hidden_2, hidden_3, output_1])
+        # a_outer.add_backpropagation_learning_pathway([input_2, hidden_1, hidden_3, output_1])
+        # a_outer.add_backpropagation_learning_pathway([input_2, hidden_2, hidden_3, output_1])
+        # execution_mode=ExecutionMode.Python
+        # a_outer.show_graph()
+
+        # # COMPOSITION 2 OUTPUTS ONE-TO-ONE NESTED
+        # a_inner = Composition(nodes=[hidden_1,
+        #                              # hidden_2
+        #                              ],
+        #                       name='a_outer')
+        # a_outer = Composition([[input_1,
+        #                         MappingProjection(input_1, hidden_1),
+        #                         a_inner,
+        #                         MappingProjection(hidden_1, output_1),
+        #                         output_1],
+        #                        [
+        #                            # input_1,
+        #                            # MappingProjection(input_1, hidden_1),
+        #                            a_inner,
+        #                            MappingProjection(hidden_1, output_2),
+        #                            output_2
+        #                        ]
+        #                         ],
+        #                       name='a_outer')
+        # a_outer.show_graph(show_cim=True, show_node_structure=True)
+        # # print(a_outer.output_CIM._get_destination_info_for_output_CIM(hidden_1.efferents[0].receiver))
+
+        # # COMPOSITION 2 OUTPUTS ONE TO MANY NESTED
+        # a_inner = Composition([[hidden_1, hidden_2]], name='a_inner')
+        # a_outer = Composition([input_1, a_inner, {output_1, output_2}],
+        #                       name='a_outer')
+        # a_outer.show_graph(show_cim=True, show_node_structure=True)
+
+        # # COMPOSITION 1 INPUT 1 HIDDEN 2 OUTPUTS (ONE TO MANY OUTPUTS) UNNESTED LEARNING
+        # a_outer = Composition(name='a_outer')
+        # a_outer.add_backpropagation_learning_pathway([input_1, hidden_1, output_1])
+        # a_outer.add_backpropagation_learning_pathway([input_1, hidden_1, output_2])
+        # execution_mode=ExecutionMode.Python
+        # # a_outer.show_graph(show_cim=True, show_node_structure=True)
+        # # a_outer.show_graph(show_learning=True)
+
+        # # COMPOSITION 2-LEVEL NESTED
+        # a_inner_2 = Composition([hidden_2, hidden_3], name='a_inner')
+        # a_inner_1 = Composition([hidden_1, a_inner_2, hidden_4], name='a_inner')
+        # a_outer = Composition([input_1, a_inner_1, output_1], name='a_outer')
+        # execution_mode = ExecutionMode.Python
+
+        # # COMPOSITION 2-LEVEL UNNESTED CONTROL
+        # a_outer = Composition(pathways=[input_1, hidden_1, hidden_2, hidden_3, hidden_4, output_1],
+        #                               name='a_outer')
+
+        # a_outer.run()
+        # assert True
+
+        # AUTODIFF VERSIONS: --------------------------------------------------------------------
+
+        # # AUTODIFF 2 INPUTS 1 HIDDEN 1 OUTPUT OutputPorts NESTED
+        # # NOTE: SINCE 2nd INPUT IS (CURRENTLY) ZERO, SAME RESULT AS ABOVE
+        # a_inner = AutodiffComposition([hidden_x],name='a_inner')
+        # a_outer = AutodiffComposition([[input_1, MappingProjection(input_1,hidden_x.input_ports[0]), a_inner, output_1],
+        #                                [input_2, MappingProjection(input_2,hidden_x.input_ports[1]), a_inner, output_1]],
+        #                               name='a_outer')
+        # execution_mode=ExecutionMode.PyTorch
+        # a_outer.show_graph(show_cim=True, show_node_structure=True)
+
+
+        # # # AUTODIFF 2 INPUTS ALL-TO_ALL 2 HIDDEN CONVERGE ONE 1 HIDDEN NESTED
+        # a_inner = AutodiffComposition([[hidden_1, hidden_3],[hidden_2, hidden_3]], name='a_inner')
+        # a_outer = AutodiffComposition([[input_1, a_inner, output_1], [input_2, a_inner, output_1]], name='a_outer')
+        # execution_mode=ExecutionMode.PyTorch
+        # a_outer.show_graph(show_cim=True, show_node_structure=True)
+
+        # # AUTODIFF 2 INPUTS ONE-TO-ONE TO 2 HIDDEN CONVERGE ON 1 HIDDEN NESTED
+        # a_inner = AutodiffComposition([[hidden_1, hidden_3],[hidden_2, hidden_3]], name='a_inner')
+        # a_outer = AutodiffComposition([[input_1, MappingProjection(input_1, hidden_1), a_inner, output_1],
+        #                                [input_2, MappingProjection(input_2, hidden_2), a_inner, output_1]],
+        #                               name='a_outer')
+        # execution_mode=ExecutionMode.PyTorch
+        # a_outer.show_graph(show_cim=True, show_node_structure=True)
+
+        # # AUTODIFF 2 INPUTS ONE-TO-ONE TO 2 HIDDEN CONVERGE ON 1 HIDDEN AND 1 OUTPUT UNNESTED
+        # a_outer = AutodiffComposition([[input_1, hidden_1, hidden_3, output_1],
+        #                                [input_2, hidden_2, hidden_3, output_1]],
+        #                               name='a_outer')
+        # a_outer.show_graph(show_cim=True, show_node_structure=True)
+        # execution_mode=ExecutionMode.PyTorch
+
+        # # AUTODIFF 2 InputPorts NESTED
+        # a_inner = AutodiffComposition([hidden_x],name='a_inner')
+        # a_outer = AutodiffComposition([[input_1, MappingProjection(input_1,hidden_x.input_ports[0]), a_inner, output_1],
+        #                                [input_2, MappingProjection(input_2,hidden_x.input_ports[1]), a_inner, output_1]],
+        #                               name='a_outer')
+        # a_outer.show_graph()
+        # execution_mode=ExecutionMode.PyTorch
+
+        # # AUTODIFF 2 InputPorts UNNESTED [BENCHMARK]
+        # a_outer = AutodiffComposition([[input_1, MappingProjection(input_1,hidden_x.input_ports[0]), hidden_x, output_1],
+        #                                [input_2, MappingProjection(input_2,hidden_x.input_ports[1]), hidden_x, output_1]],
+        #                               name='a_outer')
+        # a_outer.show_graph()
+        # execution_mode=ExecutionMode.PyTorch
+
+        # # AUTODIFF 2 INPUTS 2 OUTPUTS TWO PARALLEL PATHWAYS NESTED
+        # # _test_nested_autodiff_composition_with_nested_one_to_one_with_output_in_outer_pathways
+        # a_inner = AutodiffComposition(nodes=[hidden_1, hidden_2],name='a_inner')
+        # a_outer = AutodiffComposition([[input_1,
+        #                                 MappingProjection(input_1, hidden_1),
+        #                                 a_inner,
+        #                                 MappingProjection(hidden_1, output_1),
+        #                                 output_1
+        #                                 ],
+        #                                [input_2,
+        #                                 MappingProjection(input_2, hidden_2),
+        #                                 a_inner,
+        #                                 MappingProjection(hidden_2, output_2),
+        #                                 output_2
+        #                                 ]],
+        #                               name='a_outer')
+        # execution_mode=ExecutionMode.PyTorch
+        # a_outer.show_graph(show_cim=True, show_node_structure=True)
+
+        # # AUTODIFF 1 INPUT 2 HIDDEN 2 OUTPUTS Nodes ONE-TO-ONE NESTED
+        # # _test_nested_autodiff_composition_with_nested_one_to_one_with_output_in_outer_pathways
+        # a_inner = AutodiffComposition(nodes=[hidden_1, hidden_2],name='a_inner')
+        # a_outer = AutodiffComposition([[input_1,
+        #                                 MappingProjection(input_1, hidden_1),
+        #                                 a_inner,
+        #                                 MappingProjection(hidden_1, output_1),
+        #                                 output_1
+        #                                 ],
+        #                                [input_1,
+        #                                 MappingProjection(input_1, hidden_2),
+        #                                 a_inner,
+        #                                 MappingProjection(hidden_2, output_2),
+        #                                 output_2
+        #                                 ]],
+        #                               name='a_outer')
+        # a_outer.show_graph(show_cim=True, show_node_structure=True)
+        # execution_mode=ExecutionMode.PyTorch
+
+        # # AUTODIFF 1 INPUT 1 HIDDEN 2 OUTPUT (ONE-TO-MANY OUTPUTS) Nodes NESTED
+        # a_inner = AutodiffComposition([hidden_1],name='a_inner')
+        # a_outer = AutodiffComposition([[input_1, a_inner, output_1],
+        #                                # WORKS:
+        #                                [input_1, a_inner, output_2]],
+        #                               # ALSO WORKS:
+        # #                                [a_inner, output_2]],
+        #                               name='a_outer')
+        # a_outer.show_graph(show_cim=True, show_node_structure=True)
+        # execution_mode=ExecutionMode.PyTorch
+
+        # # AUTODIFF 1 INPUT 2 HIDDEN NO OUTPUTS NESTED
+        # # FIX: FAILURE
+        # #      "The output for 'hidden_1' Node of nested Composition 'a_inner' must project to a node in the outer
+        # #       composition ('a_outer') to be learnable."
+        # # _test_nested_autodiff_composition_with_nested_one_to_one_with_no_output_in_outer_pathways
+        # a_inner = AutodiffComposition(nodes=[hidden_1, hidden_2],name='a_inner')
+        # a_outer = AutodiffComposition([[input_1,
+        #                                 MappingProjection(input_1, hidden_1),
+        #                                 a_inner,
+        #                                 ],
+        #                                [input_1,
+        #                                 MappingProjection(input_1, hidden_2),
+        #                                 a_inner,
+        #                                 ]],
+        #                               name='a_outer')
+        # # a_outer.show_graph(show_cim=True, show_node_structure=True)
+        # execution_mode=ExecutionMode.PyTorch
+
+        # # AUTODIFF 2 HIDDEN 1 WITH OUTPUT AND THE OTHER WITHOUT AN OUTPUT NESTED
+        # # FIX: FAILURE
+        # #  "The output for 'hidden_1' Node of nested Composition 'a_inner' must project to a node in the outer
+        # #  composition ('a_outer') to be learnable."
+        # # # _test_nested_autodiff_composition_with_one_direct_and_one_indirect_output_node
+        # a_inner = AutodiffComposition(nodes=[hidden_1, hidden_2],name='a_inner')
+        # a_outer = AutodiffComposition([[input_1,
+        #                                 MappingProjection(input_1, hidden_1),
+        #                                 a_inner,
+        #                                 # MappingProjection(hidden_1, output_1),
+        #                                 # output_1
+        #                                 ],
+        #                                [input_1,
+        #                                 MappingProjection(input_1, hidden_2),
+        #                                 a_inner,
+        #                                 MappingProjection(hidden_2, output_2),
+        #                                 output_2
+        #                                 ]],
+        #                               name='a_outer')
+        # a_outer.show_graph(show_cim=True, show_node_structure=True)
+        # execution_mode=ExecutionMode.PyTorch
+
 
 @pytest.mark.pytorch
 @pytest.mark.acmisc
