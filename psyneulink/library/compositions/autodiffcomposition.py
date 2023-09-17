@@ -435,9 +435,11 @@ class AutodiffComposition(Composition):
             prev = {}
             queue = collections.deque([(input_node, None, self)])
 
-            # FIX:  9/1/23 - THIS VERSION FLATTENS NESTED COMPOSITIONS;  MAY NOT STILL BE NEEDED
-            #                SINCE EXECUTION SETS ARE NOW FLATTENED IN PytorchCompositionWrapper
-            #                ?? REVERT TO OLD VERSION ABOVE? (THOUGH CURRENTLY DOING SO SEEMS TO LOSE TARGET NODE)
+            # FIX:  9/17/23 - THIS VERSION FLATTENS NESTED COMPOSITIONS;  MAY NOT STILL BE NEEDED
+            #                 SINCE EXECUTION SETS ARE NOW FLATTENED IN PytorchCompositionWrapper
+            #                 ?? REVERT TO OLD VERSION (IN PRE-"CLEAN_UP" VERSIONS, OR ON DEVEL?),
+            #                 THOUGH DOING SO PREVIOUSLY SEEMED TO LOSE TARGET NODE;
+            #                 MAYBE NOT NOW THAT THEY ARE CONSTRUCTED EXPLICITLY BELOW?
 
             while len(queue) > 0:
                 node, input_port, current_comp = queue.popleft()
@@ -482,6 +484,7 @@ class AutodiffComposition(Composition):
                         if rcvr == rcvr.composition.input_CIM:
                             assert rcvr.composition is not current_comp
                             rcvr_comp = rcvr.composition
+                            # FIX: 9/17/23:
                             #FIX: NEED TO BRANCH NOT ON EFFERENTS FROM input_CIM BUT RATHER FROM ITS AFFERENT(S) NODE(S)
                             # Get Node(s) in inner Composition to which Node projects (via input_CIM)
                             receivers = rcvr._get_destination_info_from_input_CIM(efferent_proj.receiver)

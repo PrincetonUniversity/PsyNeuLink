@@ -1095,10 +1095,10 @@ class TestControlMechanisms:
         # 4
         f"The '{pnl.STATE_FEATURES}' argument has been specified for 'OptimizationControlMechanism-0' that is using "
         f"a Composition ('OUTER COMP') as its agent_rep, but some of the specifications are not compatible with the "
-        f"inputs required by its 'agent_rep': 'Input stimulus ([0.0]) for OB is incompatible with the shape of its "
-        f"external input ([0.0 0.0 0.0]).' Use the get_inputs_format() method of 'OUTER COMP' to see the required "
-        f"format, or remove the specification of 'state_features' from the constructor for "
-        f"OptimizationControlMechanism-0 to have them automatically assigned.",
+        f"inputs required by its 'agent_rep': 'Input stimulus shape ((1,)) for 'OB' is incompatible with the shape of "
+        f"its external input ((3,)).' Use the get_inputs_format() method of 'OUTER COMP' to see the required format, "
+        f"or remove the specification of 'state_features' from the constructor for OptimizationControlMechanism-0 to "
+        f"have them automatically assigned.",
 
         # 5
         f"The '{pnl.STATE_FEATURES}' specified for OptimizationControlMechanism-0 is associated with a number of "
