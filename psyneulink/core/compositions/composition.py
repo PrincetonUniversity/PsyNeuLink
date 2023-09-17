@@ -8752,11 +8752,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 error_projections.append(MappingProjection(sender=error_source,
                                                            receiver=learning_mechanism.error_signal_input_ports[i]))
 
-        # self.add_node(learning_mechanism, required_roles=NodeRole.LEARNING, context=context)
-        # FIX: 9/1/23 CHECK:
-        #      - IF PROJECTIONS EXIST (ON EXISTING LEARNING MECHANISM) AND ADD THEM IF NOT
-        #      - IF PROJECTIONS THAT HAVE BEEN CREATED HAVE BEEN ADDED TO COMP OR THAT NEEDS TO BE DONE WITH
-        #      add_projections()
 
         # Use try here to be able to abort in case duplicates are found
         try:
