@@ -4,7 +4,7 @@ dill<0.3.8
 fastkde>=1.0.24, <1.0.27
 graph-scheduler>=0.2.0, <1.1.3
 graphviz<0.21.0
-grpcio<1.58.0
+grpcio<1.59.0
 leabra-psyneulink<0.3.3
 llvmlite<0.41
 matplotlib<3.7.3

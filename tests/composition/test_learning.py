@@ -2380,7 +2380,7 @@ class TestBackPropLearning:
 
         xor_autodiff.add_projection(sender=input_autodiff, projection=in_to_hidden_autodiff, receiver=hidden_autodiff)
         xor_autodiff.add_projection(sender=hidden_autodiff, projection=hidden_to_out_autodiff, receiver=output_autodiff)
-        xor_autodiff.infer_backpropagation_learning_pathways()
+        xor_autodiff.infer_backpropagation_learning_pathways(execution_mode=autodiff_mode)
 
         inputs_dict = {"inputs": {input_autodiff:xor_inputs},
                        "targets": {output_autodiff:xor_targets},
