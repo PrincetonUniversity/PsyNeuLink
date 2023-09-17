@@ -8803,7 +8803,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         error_sources = []
         error_projections = []
 
-        for efferent in [p for p in receiver_activity_mech.efferents]:
+        for efferent in [p for p in receiver_activity_mech.efferents if p in self.projections]:
 
             # FIX: 9/9/23 - ADD HANDLING OF MULTI-LEVEL NESTING
             # Deal with OUTPUT Node of a nested Composition (note: this currently only handles one level of nesting)
