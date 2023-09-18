@@ -1069,8 +1069,9 @@ exploiting the acceleration of optimized implementations of learning. This can b
 compilation (**execution_mode** = `ExecutionMode.LLVMRun`); or by automatically translating the model to `PyTorch
 <https://pytorch.org>`_ for training (**execution_mode** = `ExecutionMode.PyTorch`). The advantage of these modes is
 that they can provide up to three orders of magnitude speed-up in training a model. However, there are restrictions
-on the kinds of Compositions that be implemented in this way.  The features of the different ways to implement and
-execute learning are outlined in the following table, and described in more detail in `AutodiffComposition`.
+on the kinds of Compositions that be implemented in this way. Use of the `PyTorch` mode also supports learning of
+`nested Compositions <Composition_Nested>` (see `AutodiffComposition_PyTorch`. The features of the different ways to
+implement and execute learning are outlined in the table below, and described in more detail in `AutodiffComposition`.
 
 The `learning_rate <AutodiffComposition.learning_rate>` for an AutodiffComposition can be specified in its constructor
 (which assigns it as the default) or in its `learn <AutodiffComposition.learn>` method, in which case it applies to
@@ -1094,33 +1095,36 @@ that execution only.
 .. table::
    :widths: 5 34 33 33
 
-   +--------------------+------------------------------------+-----------------------------------------------+
-   |                    |**Composition**                     |**AutodiffComposition**                        |
-   +--------------------+------------------------------------+-----------------------+-----------------------+
-   |                    |*Python*                            |*Direct Compilation*   |*PyTorch*              |
-   +====================+====================================+=======================+=======================+
-   |execution_mode=     |`ExecutionMode.Python`              |`ExecutionMode.LLVMRun`|`ExecutionMode.LLVMRun`|
-   +--------------------+------------------------------------+-----------------------+-----------------------+
-   |`learn()            |                                    |                       |                       |
-   |<Composition.learn>`|Python interpreted                  |LLVM compiled          |PyTorch compiled       |
-   |                    |                                    |                       |                       |
-   |`run()              |                                    |                       |                       |
-   |<Composition.run>`  |Python interpreted                  |LLVM compiled          |Python interpreted     |
-   +--------------------+------------------------------------+-----------------------+-----------------------+
-   |*Speed:*            |slow                                |fastest                |fast                   |
-   +--------------------+------------------------------------+-----------------------+-----------------------+
-   |                    |`BackPropagation`                   |Backpropagation        |Backpropagation        |
-   |                    |                                    |                       |                       |
-   |                    |`Reinforcement` learning            |                       |RNN, inclduing LSTM    |
-   |                    |                                    |                       |                       |
-   |*Supports:*         |`Unspervised learning               |                       |Unsupervised learning  |
-   |                    |<Composition_Learning_Unsupervised>`|                       |                       |
-   |                    |                                    |                       |                       |
-   |                    |`Modulation                         |                       |                       |
-   |                    |<ModulatorySignal_Modulation>`      |                       |                       |
-   |                    |                                    |                       |                       |
-   |                    |Inspection                          |                       |                       |
-   +--------------------+------------------------------------+-----------------------+-----------------------+
+   +--------------------+------------------------------------+--------------------------------------------------------+
+   |                    |**Composition**                     |**AutodiffComposition**                                 |
+   +--------------------+------------------------------------+--------------------------+-----------------------------+
+   |                    |*Python*                            |`AutodiffComposition_LLVM`|`AutodiffComposition_PyTorch`|
+   |                    |                                    |(*Direct Compilation*)    |                             |
+   +====================+====================================+==========================+=============================+
+   |execution_mode=     |`ExecutionMode.Python`              |`ExecutionMode.LLVMRun`   |`ExecutionMode.PyTorch       |
+   +--------------------+------------------------------------+--------------------------+-----------------------------+
+   |`learn()            |                                    |                          |                             |
+   |<Composition.learn>`|Python interpreted                  |LLVM compiled             |PyTorch compiled             |
+   |                    |                                    |                          |                             |
+   |`run()              |                                    |                          |                             |
+   |<Composition.run>`  |Python interpreted                  |LLVM compiled             |Python interpreted           |
+   +--------------------+------------------------------------+--------------------------+------------------------------+
+   |*Speed:*            |slow                                |fastest                   |fast                          |
+   +--------------------+------------------------------------+--------------------------+------------------------------+
+   |                    |`BackPropagation`                   |Backpropagation           |Backpropagation               |
+   |                    |                                    |                          |                              |
+   |                    |`Reinforcement` learning            |                          |RNN, inclduing LSTM           |
+   |                    |                                    |                          |                              |
+   |*Supports:*         |`Unspervised learning               |                          |Unsupervised learning         |
+   |                    |<Composition_Learning_Unsupervised>`|                          |                              |
+   |                    |                                    |                          |                              |
+   |                    |                                    |                          |`Learning of                  |
+   |                    |                                    |                          |nested Compositions           |
+   |                    |`Modulation                         |                          |<AutodiffComposition_Nesting>`|
+   |                    |<ModulatorySignal_Modulation>`      |                          |                              |
+   |                    |                                    |                          |                              |
+   |                    |Inspection                          |                          |                              |
+   +--------------------+------------------------------------+--------------------------+------------------------------+
 
 .. _Composition_Learning_UDF:
 
@@ -8803,7 +8807,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         error_sources = []
         error_projections = []
 
-        for efferent in [p for p in receiver_activity_mech.efferents]:
+        for efferent in [p for p in receiver_activity_mech.efferents if p in self.projections]:
 
             # FIX: 9/9/23 - ADD HANDLING OF MULTI-LEVEL NESTING
             # Deal with OUTPUT Node of a nested Composition (note: this currently only handles one level of nesting)
